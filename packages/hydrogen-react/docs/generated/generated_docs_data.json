@@ -6466,6 +6466,125 @@
     ]
   },
   {
+    "name": "getProductOptions",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "mapSelectedProductOptionToObject",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/mapselectedproductoptiontoobject"
+      },
+      {
+        "name": "getAdjacentAndFirstAvailableVariants",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/getadjacentandfirstavailablevariants"
+      },
+      {
+        "name": "useSelectedOptionInUrlParam",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/useselectedoptioninurlparam"
+      }
+    ],
+    "description": "Returns a product options array with its relevant information about the variant. This function supports combined listing products and products with 2000 variants limit.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import React from 'react';\nimport {getProductOptions} from '@shopify/hydrogen-react';\n\n// Make sure you are querying for the following fields:\n// - product.handle\n// - product.encodedVariantExistence\n// - product.encodedVariantAvailability\n// - product.options.name\n// - product.options.optionValues.name\n// - product.options.optionValues.firstSelectableVariant\n// - product.selectedOrFirstAvailableVariant\n// - product.adjacentVariants\n//\n// For any fields that are ProductVariant type, make sure to query for:\n// - variant.product.handle\n// - variant.selectedOptions.name\n// - variant.selectedOptions.value\n\nexport default function ProductForm() {\n  const product = {\n    /* Result from querying the SFAPI for a product */\n  };\n\n  const productOptions = getProductOptions(product);\n\n  return (\n    &lt;&gt;\n      {productOptions.map((option) =&gt; (\n        &lt;div key={option.name}&gt;\n          &lt;h5&gt;{option.name}&lt;/h5&gt;\n          &lt;div&gt;\n            {option.optionValues.map((value) =&gt; {\n              const {\n                name,\n                handle,\n                variantUriQuery,\n                selected,\n                available,\n                exists,\n                isDifferentProduct,\n                swatch,\n              } = value;\n\n              if (isDifferentProduct) {\n                // SEO - When the variant is a\n                // combined listing child product\n                // that leads to a different url,\n                // we need to render it\n                // as an anchor tag\n                return (\n                  &lt;a\n                    key={option.name + name}\n                    href={`/products/${handle}?${variantUriQuery}`}\n                    style={{\n                      border: selected\n                        ? '1px solid black'\n                        : '1px solid transparent',\n                      opacity: available ? 1 : 0.3,\n                    }}\n                  &gt;\n                    &lt;ProductOptionSwatch swatch={swatch} name={name} /&gt;\n                  &lt;/a&gt;\n                );\n              } else {\n                // SEO - When the variant is an\n                // update to the search param,\n                // render it as a button with\n                // javascript navigating to\n                // the variant so that SEO bots\n                // do not index these as\n                // duplicated links\n                return (\n                  &lt;button\n                    type=\"button\"\n                    key={option.name + name}\n                    style={{\n                      border: selected\n                        ? '1px solid black'\n                        : '1px solid transparent',\n                      opacity: available ? 1 : 0.3,\n                    }}\n                    disabled={!exists}\n                    onClick={() =&gt; {\n                      if (!selected) {\n                        // Navigate to `?${variantUriQuery}`\n                      }\n                    }}\n                  &gt;\n                    &lt;ProductOptionSwatch swatch={swatch} name={name} /&gt;\n                  &lt;/button&gt;\n                );\n              }\n            })}\n          &lt;/div&gt;\n          &lt;br /&gt;\n        &lt;/div&gt;\n      ))}\n    &lt;/&gt;\n  );\n}\n\nfunction ProductOptionSwatch({swatch, name}) {\n  const image = swatch?.image?.previewImage?.url;\n  const color = swatch?.color;\n\n  if (!image && !color) return name;\n\n  return (\n    &lt;div\n      aria-label={name}\n      className=\"product-option-label-swatch\"\n      style={{\n        backgroundColor: color || 'transparent',\n      }}\n    &gt;\n      {!!image && &lt;img src={image} alt={name} /&gt;}\n    &lt;/div&gt;\n  );\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import React from 'react';\nimport {\n  getProductOptions,\n  type MappedProductOptions,\n} from '@shopify/hydrogen-react';\nimport type {\n  ProductOptionValueSwatch,\n  Maybe,\n} from '@shopify/hydrogen-react/storefront-api-types';\n\n// Make sure you are querying for the following fields:\n// - product.handle\n// - product.encodedVariantExistence\n// - product.encodedVariantAvailability\n// - product.options.name\n// - product.options.optionValues.name\n// - product.options.optionValues.firstSelectableVariant\n// - product.selectedOrFirstAvailableVariant\n// - product.adjacentVariants\n//\n// For any fields that are ProductVariant type, make sure to query for:\n// - variant.product.handle\n// - variant.selectedOptions.name\n// - variant.selectedOptions.value\n\nexport default function ProductForm() {\n  const product = {\n    /* Result from querying the SFAPI for a product */\n  };\n\n  const productOptions: MappedProductOptions[] = getProductOptions(product);\n\n  return (\n    &lt;&gt;\n      {productOptions.map((option) =&gt; (\n        &lt;div key={option.name}&gt;\n          &lt;h5&gt;{option.name}&lt;/h5&gt;\n          &lt;div&gt;\n            {option.optionValues.map((value) =&gt; {\n              const {\n                name,\n                handle,\n                variantUriQuery,\n                selected,\n                available,\n                exists,\n                isDifferentProduct,\n                swatch,\n              } = value;\n\n              if (isDifferentProduct) {\n                // SEO - When the variant is a\n                // combined listing child product\n                // that leads to a different url,\n                // we need to render it\n                // as an anchor tag\n                return (\n                  &lt;a\n                    key={option.name + name}\n                    href={`/products/${handle}?${variantUriQuery}`}\n                    style={{\n                      border: selected\n                        ? '1px solid black'\n                        : '1px solid transparent',\n                      opacity: available ? 1 : 0.3,\n                    }}\n                  &gt;\n                    &lt;ProductOptionSwatch swatch={swatch} name={name} /&gt;\n                  &lt;/a&gt;\n                );\n              } else {\n                // SEO - When the variant is an\n                // update to the search param,\n                // render it as a button with\n                // javascript navigating to\n                // the variant so that SEO bots\n                // do not index these as\n                // duplicated links\n                return (\n                  &lt;button\n                    type=\"button\"\n                    key={option.name + name}\n                    style={{\n                      border: selected\n                        ? '1px solid black'\n                        : '1px solid transparent',\n                      opacity: available ? 1 : 0.3,\n                    }}\n                    disabled={!exists}\n                    onClick={() =&gt; {\n                      if (!selected) {\n                        // Navigate to `?${variantUriQuery}`\n                      }\n                    }}\n                  &gt;\n                    &lt;ProductOptionSwatch swatch={swatch} name={name} /&gt;\n                  &lt;/button&gt;\n                );\n              }\n            })}\n          &lt;/div&gt;\n          &lt;br /&gt;\n        &lt;/div&gt;\n      ))}\n    &lt;/&gt;\n  );\n}\n\nfunction ProductOptionSwatch({\n  swatch,\n  name,\n}: {\n  swatch?: Maybe&lt;ProductOptionValueSwatch&gt; | undefined;\n  name: string;\n}) {\n  const image = swatch?.image?.previewImage?.url;\n  const color = swatch?.color;\n\n  if (!image && !color) return name;\n\n  return (\n    &lt;div\n      aria-label={name}\n      style={{\n        backgroundColor: color || 'transparent',\n      }}\n    &gt;\n      {!!image && &lt;img src={image} alt={name} /&gt;}\n    &lt;/div&gt;\n  );\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": []
+  },
+  {
+    "name": "getAdjacentAndFirstAvailableVariants",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "getProductOptions",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/getproductoptions"
+      },
+      {
+        "name": "mapSelectedProductOptionToObject",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/mapselectedproductoptiontoobject"
+      },
+      {
+        "name": "useSelectedOptionInUrlParam",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/useselectedoptioninurlparam"
+      }
+    ],
+    "description": "Finds all the variants provided by `adjacentVariants`, `options.optionValues.firstAvailableVariant`, and `selectedOrFirstAvailableVariant` and return them in a single array. This function will remove any duplicated variants found.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "getAdjacentAndFirstAvailableVariants example",
+            "code": "import {getAdjacentAndFirstAvailableVariants} from '@shopify/hydrogen-react';\n\n// Make sure you are querying for the following fields:\n// - product.options.optionValues.firstSelectableVariant\n// - product.selectedOrFirstAvailableVariant\n// - product.adjacentVariants\n//\n// For any fields that are ProductVariant type, make sure to query for:\n// - variant.selectedOptions.name\n// - variant.selectedOptions.value\n\nconst product = {\n  /* Result from querying the SFAPI for a product */\n};\n\n// Returns a list of unique variants found in product query\nconst variants = getAdjacentAndFirstAvailableVariants(product);\n",
+            "language": "js"
+          }
+        ],
+        "title": "getAdjacentAndFirstAvailableVariants.js"
+      }
+    },
+    "definitions": []
+  },
+  {
+    "name": "mapSelectedProductOptionToObject",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "getProductOptions",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/getproductoptions"
+      },
+      {
+        "name": "getAdjacentAndFirstAvailableVariants",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/getadjacentandfirstavailablevariants"
+      },
+      {
+        "name": "useSelectedOptionInUrlParam",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/useselectedoptioninurlparam"
+      }
+    ],
+    "description": "Converts the product selected option into an `Object<key, value>` format for building URL query params",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "mapSelectedProductOptionToObject example",
+            "code": "import {mapSelectedProductOptionToObject} from '@shopify/hydrogen-react';\n\nconst selectedOption = [\n  {\n    name: 'Color',\n    value: 'Red',\n  },\n  {\n    name: 'Size',\n    value: 'Medium',\n  },\n];\n\nconst optionsObject = mapSelectedProductOptionToObject(selectedOption);\n\n// Output of optionsObject\n// {\n//   Color: 'Red',\n//   Size: 'Medium',\n// }\n\nconst searchParams = new URLSearchParams(optionsObject);\nsearchParams.toString(); // '?Color=Red&Size=Medium'\n",
+            "language": "js"
+          }
+        ],
+        "title": "mapSelectedProductOptionToObject.js"
+      }
+    },
+    "definitions": []
+  },
+  {
     "name": "useLoadScript",
     "category": "hooks",
     "isVisualComponent": false,
@@ -7771,6 +7890,39 @@
         }
       }
     ]
+  },
+  {
+    "name": "useSelectedOptionInUrlParam",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "getProductOptions",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/getproductoptions"
+      },
+      {
+        "name": "getAdjacentAndFirstAvailableVariants",
+        "type": "gear",
+        "url": "/api/hydrogen-react/utilities/getadjacentandfirstavailablevariants"
+      }
+    ],
+    "description": "Sets the url params to the selected option.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "useSelectedOptionInUrlParam example",
+            "code": "import {useSelectedOptionInUrlParam} from '@shopify/hydrogen-react';\n\nconst selectedOption = [\n  {\n    name: 'Color',\n    value: 'Red',\n  },\n  {\n    name: 'Size',\n    value: 'Medium',\n  },\n];\n\nuseSelectedOptionInUrlParam(selectedOption);\n\n// URL will be updated to &lt;original product url&gt;?Color=Red&Size=Medium\n",
+            "language": "js"
+          }
+        ],
+        "title": "Example"
+      }
+    },
+    "definitions": []
   },
   {
     "name": "useShop",

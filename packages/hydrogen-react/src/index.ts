@@ -45,6 +45,12 @@ export {
 export {getShopifyCookies} from './cookies-utils.js';
 export {ExternalVideo} from './ExternalVideo.js';
 export {flattenConnection} from './flatten-connection.js';
+export {
+  getAdjacentAndFirstAvailableVariants,
+  getProductOptions,
+  type MappedProductOptions,
+  mapSelectedProductOptionToObject,
+} from './getProductOptions.js';
 export {Image, IMAGE_FRAGMENT} from './Image.js';
 export {useLoadScript} from './load-script.js';
 export {MediaFile} from './MediaFile.js';
@@ -70,5 +76,6 @@ export type {
 export type {StorefrontClientProps} from './storefront-client.js';
 export {createStorefrontClient} from './storefront-client.js';
 export {useMoney} from './useMoney.js';
+export {useSelectedOptionInUrlParam} from './useSelectedOptionInUrlParam.js';
 export {useShopifyCookies} from './useShopifyCookies.js';
 export {Video} from './Video.js';

@@ -142,11 +142,16 @@ export {
   Video,
   isOptionValueCombinationInEncodedVariant,
   decodeEncodedVariant,
+  getProductOptions,
+  getAdjacentAndFirstAvailableVariants,
+  mapSelectedProductOptionToObject,
+  useSelectedOptionInUrlParam,
 } from '@shopify/hydrogen-react';
 export {RichText} from './RichText';
 
 export type {
   ClientBrowserParameters,
+  MappedProductOptions,
   ParsedMetafields,
   ShopifyAddToCart,
   ShopifyAddToCartPayload,
