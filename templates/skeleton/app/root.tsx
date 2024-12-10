@@ -17,6 +17,7 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from '~/components/PageLayout';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+import {Suspense} from 'react';
 
 export type RootLoader = typeof loader;
 
@@ -143,23 +144,21 @@ export function Layout({children}: {children?: React.ReactNode}) {
         <Links />
       </head>
       <body>
-        <Await resolve={{}}>
-          {() => (
-            <>
-              {data ? (
-                <Analytics.Provider
-                  cart={data.cart}
-                  shop={data.shop}
-                  consent={data.consent}
-                >
-                  <PageLayout {...data}>{children}</PageLayout>
-                </Analytics.Provider>
-              ) : (
-                children
-              )}
-            </>
-          )}
-        </Await>
+        <Suspense fallback={<div>Loading...</div>}>
+          <>
+            {data ? (
+              <Analytics.Provider
+                cart={data.cart}
+                shop={data.shop}
+                consent={data.consent}
+              >
+                <PageLayout {...data}>{children}</PageLayout>
+              </Analytics.Provider>
+            ) : (
+              children
+            )}
+          </>
+        </Suspense>
 
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
