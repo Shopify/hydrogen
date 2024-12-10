@@ -76,6 +76,6 @@ export type {
 export type {StorefrontClientProps} from './storefront-client.js';
 export {createStorefrontClient} from './storefront-client.js';
 export {useMoney} from './useMoney.js';
-export {useSelectedOptionInUrlParam} from './useSelectedOptionInUrlParam.js'
+export {useSelectedOptionInUrlParam} from './useSelectedOptionInUrlParam.js';
 export {useShopifyCookies} from './useShopifyCookies.js';
 export {Video} from './Video.js';

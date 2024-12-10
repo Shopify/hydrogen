@@ -16,8 +16,7 @@ const data: ReferenceEntityTemplateSchema = {
       url: '/api/hydrogen-react/utilities/getadjacentandfirstavailablevariants',
     },
   ],
-  description:
-    'Sets the url params to the selected option.',
+  description: 'Sets the url params to the selected option.',
   type: 'utility',
   defaultExample: {
     description: 'I am the default example',
