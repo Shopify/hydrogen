@@ -1,5 +1,4 @@
 import {Await, useRouteLoaderData} from '@remix-run/react';
-import {Suspense} from 'react';
 import {CartForm, Analytics} from '@shopify/hydrogen';
 import {json} from '@shopify/remix-oxygen';
 import {CartMain} from '~/components/CartMain';
@@ -103,16 +102,14 @@ export default function Cart() {
   return (
     <div className="cart">
       <h1>Cart</h1>
-      <Suspense fallback={<p>Loading cart ...</p>}>
-        <Await
-          resolve={rootData.cart}
-          errorElement={<div>An error occurred</div>}
-        >
-          {(cart) => {
-            return <CartMain layout="page" cart={cart} />;
-          }}
-        </Await>
-      </Suspense>
+      <Await
+        resolve={rootData.cart}
+        errorElement={<div>An error occurred</div>}
+      >
+        {(cart) => {
+          return <CartMain layout="page" cart={cart} />;
+        }}
+      </Await>
       {/* [START cart] */}
       <Analytics.CartView />
       {/* [END cart] */}
