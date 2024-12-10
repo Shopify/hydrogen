@@ -1,7 +1,7 @@
-import {Await, type MetaFunction, useRouteLoaderData} from '@remix-run/react';
+import {type MetaFunction, useLoaderData} from '@remix-run/react';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
-import {json, type ActionFunctionArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs, type ActionFunctionArgs} from '@shopify/remix-oxygen';
 import {CartMain} from '~/components/CartMain';
 import type {RootLoader} from '~/root';
 
@@ -105,21 +105,18 @@ export async function action({request, context}: ActionFunctionArgs) {
   );
 }
 
+export async function loader({context}: LoaderFunctionArgs) {
+  const {cart} = context;
+  return json(await cart.get());
+}
+
 export default function Cart() {
-  const rootData = useRouteLoaderData<RootLoader>('root');
-  if (!rootData) return null;
+  const cart = useLoaderData<typeof loader>();
 
   return (
     <div className="cart">
       <h1>Cart</h1>
-      <Await
-        resolve={rootData.cart}
-        errorElement={<div>An error occurred</div>}
-      >
-        {(cart) => {
-          return <CartMain layout="page" cart={cart} />;
-        }}
-      </Await>
+      <CartMain layout="page" cart={cart} />
     </div>
   );
 }
