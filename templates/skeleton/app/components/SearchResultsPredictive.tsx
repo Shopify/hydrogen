@@ -213,7 +213,8 @@ function SearchResultsPredictiveProducts({
             term: term.current,
           });
 
-          const image = product?.variants?.nodes?.[0].image;
+          const price = product?.selectedOrFirstAvailableVariant?.price;
+          const image = product?.selectedOrFirstAvailableVariant?.image;
           return (
             <li className="predictive-search-result-item" key={product.id}>
               <Link to={productUrl} onClick={closeSearch}>
@@ -228,8 +229,8 @@ function SearchResultsPredictiveProducts({
                 <div>
                   <p>{product.title}</p>
                   <small>
-                    {product?.variants?.nodes?.[0].price && (
-                      <Money data={product.variants.nodes[0].price} />
+                    {price && (
+                      <Money data={price} />
                     )}
                   </small>
                 </div>

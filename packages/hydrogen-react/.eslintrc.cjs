@@ -12,6 +12,7 @@ module.exports = {
   plugins: ['eslint-plugin-tsdoc'],
   ignorePatterns: [
     '**/storefront-api-types.d.ts',
+    '**/customer-account-api-types.d.ts',
     '**/codegen.ts',
     '**/dist/**',
     '**/coverage/**',
