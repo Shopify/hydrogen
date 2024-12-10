@@ -1,14 +1,13 @@
-import {Suspense} from 'react';
-import {defer, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {Await, useLoaderData, type MetaFunction} from '@remix-run/react';
-import type {ProductFragment} from 'storefrontapi.generated';
+import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {
   getSelectedProductOptions,
   Analytics,
   useOptimisticVariant,
+  getProductOptions,
+  getAdjacentAndFirstAvailableVariants,
+  useSelectedOptionInUrlParam,
 } from '@shopify/hydrogen';
-import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
-import {getVariantUrl} from '~/lib/variants';
 import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
@@ -93,24 +92,6 @@ async function loadCriticalData({
     throw new Response(null, {status: 404});
   }
 
-  const firstVariant = product.variants.nodes[0];
-  const firstVariantIsDefault = Boolean(
-    firstVariant.selectedOptions.find(
-      (option: SelectedOption) =>
-        option.name === 'Title' && option.value === 'Default Title',
-    ),
-  );
-
-  if (firstVariantIsDefault) {
-    product.selectedVariant = firstVariant;
-  } else {
-    // if no selected variant was returned from the selected options,
-    // we redirect to the first variant's url with it's selected options applied
-    if (!product.selectedVariant) {
-      throw redirectToFirstVariant({product, request});
-    }
-  }
-
   return {
     product,
   };
@@ -124,60 +105,34 @@ async function loadCriticalData({
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
 function loadDeferredData({context, params}: LoaderFunctionArgs, buyerVariables: BuyerVariables) {
-  const {storefront} = context;
+  // Put any API calls that is not critical to be available on first page render
+  // For example: product reviews, product recommendations, social feeds.
 
-  // In order to show which variants are available in the UI, we need to query
-  // all of them. But there might be a *lot*, so instead separate the variants
-  // into it's own separate query that is deferred. So there's a brief moment
-  // where variant options might show as available when they're not, but after
-  // this deferred query resolves, the UI will update.
-  const variants = context.storefront
-    .query(VARIANTS_QUERY, {
-      variables: {handle: params.handle!, ...buyerVariables},
-      cache: storefront.CacheNone(),
-    })
-    .catch((error) => {
-      // Log query errors, but don't throw them so the page can still render
-      console.error(error);
-      return null;
-    });
+  // Make sure to pass in buyerVariables to any deferred queries to SFAPI
 
-  return {
-    variants,
-  };
+  return {};
 }
 /**********   EXAMPLE UPDATE END   *************/
 /***********************************************/
 
-function redirectToFirstVariant({
-  product,
-  request,
-}: {
-  product: ProductFragment;
-  request: Request;
-}) {
-  const url = new URL(request.url);
-  const firstVariant = product.variants.nodes[0];
-
-  return redirect(
-    getVariantUrl({
-      pathname: url.pathname,
-      handle: product.handle,
-      selectedOptions: firstVariant.selectedOptions,
-      searchParams: new URLSearchParams(url.search),
-    }),
-    {
-      status: 302,
-    },
-  );
-}
-
 export default function Product() {
-  const {product, variants} = useLoaderData<typeof loader>();
+  const {product} = useLoaderData<typeof loader>();
+
+  // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
-    product.selectedVariant,
-    variants,
+    product.selectedOrFirstAvailableVariant,
+    getAdjacentAndFirstAvailableVariants(product),
   );
+
+  // Sets the search param to the selected variant without navigation
+  // only when no search params are set in the url
+  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
+
+  // Get the product options array
+  const productOptions = getProductOptions({
+    ...product,
+    selectedOrFirstAvailableVariant: selectedVariant,
+  });
 
   const {title, descriptionHtml} = product;
 
@@ -191,38 +146,15 @@ export default function Product() {
           compareAtPrice={selectedVariant?.compareAtPrice}
         />
         <br />
-        <Suspense
-          fallback={
-            <ProductForm
-              product={product}
-              selectedVariant={selectedVariant}
-              variants={[]}
-              /***********************************************/
-              /**********  EXAMPLE UPDATE STARTS  ************/
-              quantity={1}
-              /**********   EXAMPLE UPDATE END   ************/
-              /***********************************************/
-            />
-          }
-        >
-          <Await
-            errorElement="There was a problem loading product variants"
-            resolve={variants}
-          >
-            {(data) => (
-              <ProductForm
-                product={product}
-                selectedVariant={selectedVariant}
-                variants={data?.product?.variants.nodes || []}
-                /***********************************************/
-                /**********  EXAMPLE UPDATE STARTS  ************/
-                quantity={selectedVariant?.quantityRule?.increment || 1}
-                /**********   EXAMPLE UPDATE END   ************/
-                /***********************************************/
-              />
-            )}
-          </Await>
-        </Suspense>
+        <ProductForm
+          productOptions={productOptions}
+          selectedVariant={selectedVariant}
+          /***********************************************/
+          /**********  EXAMPLE UPDATE STARTS  ************/
+          quantity={selectedVariant?.quantityRule?.increment || 1}
+          /**********   EXAMPLE UPDATE END   ************/
+          /***********************************************/
+        />
         <br />
         {
           /***********************************************/
@@ -336,19 +268,30 @@ const PRODUCT_FRAGMENT = `#graphql
     handle
     descriptionHtml
     description
+    encodedVariantExistence
+    encodedVariantAvailability
     options {
       name
       optionValues {
         name
+        firstSelectableVariant {
+          ...ProductVariant
+        }
+        swatch {
+          color
+          image {
+            previewImage {
+              url
+            }
+          }
+        }
       }
     }
-    selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
+    selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
       ...ProductVariant
     }
-    variants(first: 1) {
-      nodes {
-        ...ProductVariant
-      }
+    adjacentVariants (selectedOptions: $selectedOptions) {
+      ...ProductVariant
     }
     seo {
       description
@@ -373,35 +316,6 @@ const PRODUCT_QUERY = `#graphql
     }
   }
   ${PRODUCT_FRAGMENT}
-` as const;
-/**********   EXAMPLE UPDATE END   ************/
-/***********************************************/
-
-const PRODUCT_VARIANTS_FRAGMENT = `#graphql
-  fragment ProductVariants on Product {
-    variants(first: 250) {
-      nodes {
-        ...ProductVariant
-      }
-    }
-  }
-  ${PRODUCT_VARIANT_FRAGMENT}
-` as const;
-
-/***********************************************/
-/**********  EXAMPLE UPDATE STARTS  ************/
-const VARIANTS_QUERY = `#graphql
-  ${PRODUCT_VARIANTS_FRAGMENT}
-  query ProductVariants(
-    $country: CountryCode
-    $buyer: BuyerInput
-    $language: LanguageCode
-    $handle: String!
-  ) @inContext(country: $country, language: $language, buyer: $buyer) {
-    product(handle: $handle) {
-      ...ProductVariants
-    }
-  }
 ` as const;
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/

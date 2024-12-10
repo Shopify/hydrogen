@@ -54,7 +54,7 @@ export function useOptimisticVariant<
           ),
         );
       });
-  }, [variants]);
+  }, [JSON.stringify(variants)]);
 
   if (navigation.state === 'loading') {
     const queryParams = new URLSearchParams(navigation.location.search);

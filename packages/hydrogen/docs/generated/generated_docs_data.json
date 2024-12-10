@@ -20578,7 +20578,7 @@
             "filePath": "src/product/VariantSelector.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "VariantSelectorProps",
-            "value": "{\n  /** The product handle for all of the variants */\n  handle: string;\n  /** Product options from the [Storefront API](/docs/api/storefront/2024-10/objects/ProductOption). Make sure both `name` and `values` are a part of your query. */\n  options: Array<PartialProductOption> | undefined;\n  /** Product variants from the [Storefront API](/docs/api/storefront/2024-10/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */\n  variants?:\n    | PartialDeep<ProductVariantConnection>\n    | Array<PartialDeep<ProductVariant>>;\n  /** By default all products are under /products. Use this prop to provide a custom path. */\n  productPath?: string;\n  /** Should the VariantSelector wait to update until after the browser navigates to a variant. */\n  waitForNavigation?: boolean;\n  children: ({option}: {option: VariantOption}) => ReactNode;\n}",
+            "value": "{\n  /** The product handle for all of the variants */\n  handle: string;\n  /** Product options from the [Storefront API](/docs/api/storefront/2024-10/objects/ProductOption). Make sure both `name` and `values` are a part of your query. */\n  options: Array<PartialProductOption> | undefined;\n  /** Product variants from the [Storefront API](/docs/api/storefront/2024-10/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */\n  variants?:\n    | PartialDeep<ProductVariantConnection>\n    | Array<PartialDeep<ProductVariant>>;\n  /** By default all products are under /products. Use this prop to provide a custom path. */\n  productPath?: string;\n  /** Should the VariantSelector wait to update until after the browser navigates to a variant. */\n  waitForNavigation?: boolean;\n  /** An optional selected variant to use for the initial state if no URL parameters are set */\n  selectedVariant?: Maybe<PartialDeep<ProductVariant>>;\n  children: ({option}: {option: VariantOption}) => ReactNode;\n}",
             "description": "",
             "members": [
               {
@@ -20608,6 +20608,14 @@
                 "name": "productPath",
                 "value": "string",
                 "description": "By default all products are under /products. Use this prop to provide a custom path.",
+                "isOptional": true
+              },
+              {
+                "filePath": "src/product/VariantSelector.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "selectedVariant",
+                "value": "Maybe<PartialDeep<ProductVariant>>",
+                "description": "An optional selected variant to use for the initial state if no URL parameters are set",
                 "isOptional": true
               },
               {
@@ -20865,7 +20873,7 @@
               "name": "OptimisticVariant<SelectedVariant = OptimisticVariantInput>",
               "value": "OptimisticVariant<SelectedVariant = OptimisticVariantInput>"
             },
-            "value": "export function useOptimisticVariant<\n  SelectedVariant = OptimisticVariantInput,\n  Variants = OptimisticProductVariants,\n>(\n  selectedVariant: SelectedVariant,\n  variants: Variants,\n): OptimisticVariant<SelectedVariant> {\n  const navigation = useNavigation();\n  const [resolvedVariants, setResolvedVariants] = useState<\n    Array<PartialDeep<ProductVariant>>\n  >([]);\n\n  useEffect(() => {\n    Promise.resolve(variants)\n      .then((productWithVariants) => {\n        if (productWithVariants) {\n          setResolvedVariants(\n            productWithVariants instanceof Array\n              ? productWithVariants\n              : (productWithVariants as PartialDeep<ProductVariant>).product\n                  ?.variants?.nodes || [],\n          );\n        }\n      })\n      .catch((error) => {\n        reportError(\n          new Error(\n            '[h2:error:useOptimisticVariant] An error occurred while resolving the variants for the optimistic product hook.',\n            {\n              cause: error,\n            },\n          ),\n        );\n      });\n  }, [variants]);\n\n  if (navigation.state === 'loading') {\n    const queryParams = new URLSearchParams(navigation.location.search);\n    let reportedError = false;\n\n    // Find matching variant\n    const matchingVariant = resolvedVariants.find((variant) => {\n      if (!variant.selectedOptions) {\n        if (!reportedError) {\n          reportedError = true;\n          reportError(\n            new Error(\n              '[h2:error:useOptimisticVariant] The optimistic product hook requires your product query to include variants with the selectedOptions field.',\n            ),\n          );\n        }\n        return false;\n      }\n\n      return variant.selectedOptions.every((option) => {\n        return queryParams.get(option.name) === option.value;\n      });\n    });\n\n    if (matchingVariant) {\n      return {\n        ...matchingVariant,\n        isOptimistic: true,\n      } as OptimisticVariant<SelectedVariant>;\n    }\n  }\n\n  return selectedVariant as OptimisticVariant<SelectedVariant>;\n}"
+            "value": "export function useOptimisticVariant<\n  SelectedVariant = OptimisticVariantInput,\n  Variants = OptimisticProductVariants,\n>(\n  selectedVariant: SelectedVariant,\n  variants: Variants,\n): OptimisticVariant<SelectedVariant> {\n  const navigation = useNavigation();\n  const [resolvedVariants, setResolvedVariants] = useState<\n    Array<PartialDeep<ProductVariant>>\n  >([]);\n\n  useEffect(() => {\n    Promise.resolve(variants)\n      .then((productWithVariants) => {\n        if (productWithVariants) {\n          setResolvedVariants(\n            productWithVariants instanceof Array\n              ? productWithVariants\n              : (productWithVariants as PartialDeep<ProductVariant>).product\n                  ?.variants?.nodes || [],\n          );\n        }\n      })\n      .catch((error) => {\n        reportError(\n          new Error(\n            '[h2:error:useOptimisticVariant] An error occurred while resolving the variants for the optimistic product hook.',\n            {\n              cause: error,\n            },\n          ),\n        );\n      });\n  }, [JSON.stringify(variants)]);\n\n  if (navigation.state === 'loading') {\n    const queryParams = new URLSearchParams(navigation.location.search);\n    let reportedError = false;\n\n    // Find matching variant\n    const matchingVariant = resolvedVariants.find((variant) => {\n      if (!variant.selectedOptions) {\n        if (!reportedError) {\n          reportedError = true;\n          reportError(\n            new Error(\n              '[h2:error:useOptimisticVariant] The optimistic product hook requires your product query to include variants with the selectedOptions field.',\n            ),\n          );\n        }\n        return false;\n      }\n\n      return variant.selectedOptions.every((option) => {\n        return queryParams.get(option.name) === option.value;\n      });\n    });\n\n    if (matchingVariant) {\n      return {\n        ...matchingVariant,\n        isOptimistic: true,\n      } as OptimisticVariant<SelectedVariant>;\n    }\n  }\n\n  return selectedVariant as OptimisticVariant<SelectedVariant>;\n}"
           },
           "OptimisticVariant": {
             "filePath": "src/product/useOptimisticVariant.ts",
@@ -26826,6 +26834,69 @@
     ]
   },
   {
+    "name": "decodeEncodedVariant",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "isOptionValueCombinationInEncodedVariant",
+        "type": "utility",
+        "url": "/docs/api/hydrogen/2024-10/utilities/isOptionValueCombinationInEncodedVariant"
+      }
+    ],
+    "description": "Decodes an encoded option value string into an array of option value combinations.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "Decode an encoded option value string",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {decodeEncodedVariant} from '@shopify/hydrogen';\n\n// product.options = [\n//   {\n//     name: 'Color',\n//     optionValues: [\n//       {name: 'Red'},\n//       {name: 'Blue'},\n//       {name: 'Green'},\n//     ]\n//   },\n//   {\n//     name: 'Size',\n//     optionValues: [\n//       {name: 'S'},\n//       {name: 'M'},\n//       {name: 'L'},\n//     ]\n//   }\n// ]\n\nconst encodedVariantAvailability = 'v1_0:0-2,1:2,';\n\nconst decodedVariantAvailability = decodeEncodedVariant(\n  encodedVariantAvailability,\n);\n\n// decodedVariantAvailability\n// {\n//   [0,0],    // Red, S\n//   [0,1],    // Red, M\n//   [0,2],    // Red, L\n//   [1,2]     // Blue, L\n// }\n",
+            "language": "js"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "DecodeEncodedVariantGeneratedType",
+        "typeDefinitions": {
+          "DecodeEncodedVariantGeneratedType": {
+            "filePath": "src/optionValueDecoder.ts",
+            "name": "DecodeEncodedVariantGeneratedType",
+            "description": "For an encoded option value string, decode into option value combinations. Entries represent a valid combination formatted as an array of option value positions.",
+            "params": [
+              {
+                "name": "encodedVariantField",
+                "description": "Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)",
+                "value": "string",
+                "filePath": "src/optionValueDecoder.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "src/optionValueDecoder.ts",
+              "description": "Decoded option value combinations",
+              "name": "DecodedOptionValues",
+              "value": "DecodedOptionValues"
+            },
+            "value": "export function decodeEncodedVariant(\n  encodedVariantField: EncodedVariantField,\n): DecodedOptionValues {\n  if (!encodedVariantField) return [];\n\n  if (encodedVariantField.startsWith('v1_')) {\n    return v1Decoder(stripVersion(encodedVariantField));\n  }\n\n  throw new Error('Unsupported option value encoding');\n}"
+          },
+          "DecodedOptionValues": {
+            "filePath": "src/optionValueDecoder.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "DecodedOptionValues",
+            "value": "number[][]",
+            "description": ""
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "flattenConnection",
     "category": "utilities",
     "isVisualComponent": false,
@@ -27170,6 +27241,44 @@
     ]
   },
   {
+    "name": "getAdjacentAndFirstAvailableVariants",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "getProductOptions",
+        "type": "gear",
+        "url": "/api/hydrogen/utilities/getproductoptions"
+      },
+      {
+        "name": "mapSelectedProductOptionToObject",
+        "type": "gear",
+        "url": "/api/hydrogen/utilities/mapselectedproductoptiontoobject"
+      },
+      {
+        "name": "useSelectedOptionInUrlParam",
+        "type": "gear",
+        "url": "/api/hydrogen/utilities/useselectedoptioninurlparam"
+      }
+    ],
+    "description": "Finds all the variants provided by `adjacentVariants`, `options.optionValues.firstAvailableVariant`, and `selectedOrFirstAvailableVariant` and return them in a single array. This function will remove any duplicated variants found.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "getAdjacentAndFirstAvailableVariants example",
+            "code": "import {getAdjacentAndFirstAvailableVariants} from '@shopify/hydrogen';\n\n// Make sure you are querying for the following fields:\n// - product.options.optionValues.firstSelectableVariant\n// - product.selectedOrFirstAvailableVariant\n// - product.adjacentVariants\n//\n// For any fields that are ProductVariant type, make sure to query for:\n// - variant.selectedOptions.name\n// - variant.selectedOptions.value\n\nconst product = {\n  /* Result from querying the SFAPI for a product */\n};\n\n// Returns a list of unique variants found in product query\nconst variants = getAdjacentAndFirstAvailableVariants(product);\n",
+            "language": "js"
+          }
+        ],
+        "title": "getAdjacentAndFirstAvailableVariants.js"
+      }
+    },
+    "definitions": []
+  },
+  {
     "name": "getClientBrowserParameters",
     "category": "utilities",
     "isVisualComponent": false,
@@ -27310,6 +27419,49 @@
     ]
   },
   {
+    "name": "getProductOptions",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "mapSelectedProductOptionToObject",
+        "type": "gear",
+        "url": "/api/hydrogen/utilities/mapselectedproductoptiontoobject"
+      },
+      {
+        "name": "getAdjacentAndFirstAvailableVariants",
+        "type": "gear",
+        "url": "/api/hydrogen/utilities/getadjacentandfirstavailablevariants"
+      },
+      {
+        "name": "useSelectedOptionInUrlParam",
+        "type": "gear",
+        "url": "/api/hydrogen/utilities/useselectedoptioninurlparam"
+      }
+    ],
+    "description": "Returns a product options array with its relevant information about the variant. This function supports combined listing products and products with 2000 variants limit.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import React from 'react';\nimport {getProductOptions} from '@shopify/hydrogen';\n\n// Make sure you are querying for the following fields:\n// - product.handle\n// - product.encodedVariantExistence\n// - product.encodedVariantAvailability\n// - product.options.name\n// - product.options.optionValues.name\n// - product.options.optionValues.firstSelectableVariant\n// - product.selectedOrFirstAvailableVariant\n// - product.adjacentVariants\n//\n// For any fields that are ProductVariant type, make sure to query for:\n// - variant.product.handle\n// - variant.selectedOptions.name\n// - variant.selectedOptions.value\n\nexport default function ProductForm() {\n  const product = {\n    /* Result from querying the SFAPI for a product */\n  };\n\n  const productOptions = getProductOptions(product);\n\n  return (\n    &lt;&gt;\n      {productOptions.map((option) =&gt; (\n        &lt;div key={option.name}&gt;\n          &lt;h5&gt;{option.name}&lt;/h5&gt;\n          &lt;div&gt;\n            {option.optionValues.map((value) =&gt; {\n              const {\n                name,\n                handle,\n                variantUriQuery,\n                selected,\n                available,\n                exists,\n                isDifferentProduct,\n                swatch,\n              } = value;\n\n              if (isDifferentProduct) {\n                // SEO - When the variant is a\n                // combined listing child product\n                // that leads to a different url,\n                // we need to render it\n                // as an anchor tag\n                return (\n                  &lt;a\n                    key={option.name + name}\n                    href={`/products/${handle}?${variantUriQuery}`}\n                    style={{\n                      border: selected\n                        ? '1px solid black'\n                        : '1px solid transparent',\n                      opacity: available ? 1 : 0.3,\n                    }}\n                  &gt;\n                    &lt;ProductOptionSwatch swatch={swatch} name={name} /&gt;\n                  &lt;/a&gt;\n                );\n              } else {\n                // SEO - When the variant is an\n                // update to the search param,\n                // render it as a button with\n                // javascript navigating to\n                // the variant so that SEO bots\n                // do not index these as\n                // duplicated links\n                return (\n                  &lt;button\n                    type=\"button\"\n                    key={option.name + name}\n                    style={{\n                      border: selected\n                        ? '1px solid black'\n                        : '1px solid transparent',\n                      opacity: available ? 1 : 0.3,\n                    }}\n                    disabled={!exists}\n                    onClick={() =&gt; {\n                      if (!selected) {\n                        // Navigate to `?${variantUriQuery}`\n                      }\n                    }}\n                  &gt;\n                    &lt;ProductOptionSwatch swatch={swatch} name={name} /&gt;\n                  &lt;/button&gt;\n                );\n              }\n            })}\n          &lt;/div&gt;\n          &lt;br /&gt;\n        &lt;/div&gt;\n      ))}\n    &lt;/&gt;\n  );\n}\n\nfunction ProductOptionSwatch({swatch, name}) {\n  const image = swatch?.image?.previewImage?.url;\n  const color = swatch?.color;\n\n  if (!image && !color) return name;\n\n  return (\n    &lt;div\n      aria-label={name}\n      className=\"product-option-label-swatch\"\n      style={{\n        backgroundColor: color || 'transparent',\n      }}\n    &gt;\n      {!!image && &lt;img src={image} alt={name} /&gt;}\n    &lt;/div&gt;\n  );\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import React from 'react';\nimport {\n  getProductOptions,\n  type MappedProductOptions,\n} from '@shopify/hydrogen';\nimport type {\n  ProductOptionValueSwatch,\n  Maybe,\n} from '@shopify/hydrogen/storefront-api-types';\n\n// Make sure you are querying for the following fields:\n// - product.handle\n// - product.encodedVariantExistence\n// - product.encodedVariantAvailability\n// - product.options.name\n// - product.options.optionValues.name\n// - product.options.optionValues.firstSelectableVariant\n// - product.selectedOrFirstAvailableVariant\n// - product.adjacentVariants\n//\n// For any fields that are ProductVariant type, make sure to query for:\n// - variant.product.handle\n// - variant.selectedOptions.name\n// - variant.selectedOptions.value\n\nexport default function ProductForm() {\n  const product = {\n    /* Result from querying the SFAPI for a product */\n  };\n\n  const productOptions: MappedProductOptions[] = getProductOptions(product);\n\n  return (\n    &lt;&gt;\n      {productOptions.map((option) =&gt; (\n        &lt;div key={option.name}&gt;\n          &lt;h5&gt;{option.name}&lt;/h5&gt;\n          &lt;div&gt;\n            {option.optionValues.map((value) =&gt; {\n              const {\n                name,\n                handle,\n                variantUriQuery,\n                selected,\n                available,\n                exists,\n                isDifferentProduct,\n                swatch,\n              } = value;\n\n              if (isDifferentProduct) {\n                // SEO - When the variant is a\n                // combined listing child product\n                // that leads to a different url,\n                // we need to render it\n                // as an anchor tag\n                return (\n                  &lt;a\n                    key={option.name + name}\n                    href={`/products/${handle}?${variantUriQuery}`}\n                    style={{\n                      border: selected\n                        ? '1px solid black'\n                        : '1px solid transparent',\n                      opacity: available ? 1 : 0.3,\n                    }}\n                  &gt;\n                    &lt;ProductOptionSwatch swatch={swatch} name={name} /&gt;\n                  &lt;/a&gt;\n                );\n              } else {\n                // SEO - When the variant is an\n                // update to the search param,\n                // render it as a button with\n                // javascript navigating to\n                // the variant so that SEO bots\n                // do not index these as\n                // duplicated links\n                return (\n                  &lt;button\n                    type=\"button\"\n                    key={option.name + name}\n                    style={{\n                      border: selected\n                        ? '1px solid black'\n                        : '1px solid transparent',\n                      opacity: available ? 1 : 0.3,\n                    }}\n                    disabled={!exists}\n                    onClick={() =&gt; {\n                      if (!selected) {\n                        // Navigate to `?${variantUriQuery}`\n                      }\n                    }}\n                  &gt;\n                    &lt;ProductOptionSwatch swatch={swatch} name={name} /&gt;\n                  &lt;/button&gt;\n                );\n              }\n            })}\n          &lt;/div&gt;\n          &lt;br /&gt;\n        &lt;/div&gt;\n      ))}\n    &lt;/&gt;\n  );\n}\n\nfunction ProductOptionSwatch({\n  swatch,\n  name,\n}: {\n  swatch?: Maybe&lt;ProductOptionValueSwatch&gt; | undefined;\n  name: string;\n}) {\n  const image = swatch?.image?.previewImage?.url;\n  const color = swatch?.color;\n\n  if (!image && !color) return name;\n\n  return (\n    &lt;div\n      aria-label={name}\n      style={{\n        backgroundColor: color || 'transparent',\n      }}\n    &gt;\n      {!!image && &lt;img src={image} alt={name} /&gt;}\n    &lt;/div&gt;\n  );\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": []
+  },
+  {
     "name": "getShopifyCookies",
     "category": "utilities",
     "isVisualComponent": false,
@@ -27419,6 +27571,175 @@
                 "description": "Shopify unique user token: Value of `_shopify_y` cookie."
               }
             ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "isOptionValueCombinationInEncodedVariant",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "decodeEncodedVariant",
+        "type": "utility",
+        "url": "/docs/api/hydrogen/2024-10/utilities/decodeEncodedVariant"
+      }
+    ],
+    "description": "\n    Determines whether an option value combination is present in an encoded option value string.\n\n`targetOptionValueCombination` - Indices of option values to look up in the encoded option value string. A partial set of indices may be passed to determine whether a node or any children is present. For example, if a product has 3 options, passing `[0]` will return true if any option value combination for the first option's option value is present in the encoded string.\n  ",
+    "type": "utility",
+    "defaultExample": {
+      "description": "Check if option value is in encoding",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {isOptionValueCombinationInEncodedVariant} from '@shopify/hydrogen';\n\n// product.options = [\n//   {\n//     name: 'Color',\n//     optionValues: [\n//       {name: 'Red'},\n//       {name: 'Blue'},\n//       {name: 'Green'},\n//     ]\n//   },\n//   {\n//     name: 'Size',\n//     optionValues: [\n//       {name: 'S'},\n//       {name: 'M'},\n//       {name: 'L'},\n//     ]\n//   }\n// ]\nconst encodedVariantExistence = 'v1_0:0-1,1:2,';\n\n// For reference: decoded encodedVariantExistence\n// {\n//   [0,0],    // Red, S\n//   [0,1],    // Red, M\n//   [1,2]     // Blue, L\n// }\n\n// Returns true since there are variants exist for [Red]\nisOptionValueCombinationInEncodedVariant([0], encodedVariantExistence); // true\n\nisOptionValueCombinationInEncodedVariant([0, 0], encodedVariantExistence); // true\nisOptionValueCombinationInEncodedVariant([0, 1], encodedVariantExistence); // true\nisOptionValueCombinationInEncodedVariant([0, 2], encodedVariantExistence); // false - no variant exist for [Red, L]\n\n// Returns true since there is a variant exist for [Blue]\nisOptionValueCombinationInEncodedVariant([1], encodedVariantExistence); // true\n\nisOptionValueCombinationInEncodedVariant([1, 0], encodedVariantExistence); // false - no variant exist for [Blue, S]\nisOptionValueCombinationInEncodedVariant([1, 1], encodedVariantExistence); // false - no variant exist for [Blue, M]\nisOptionValueCombinationInEncodedVariant([1, 2], encodedVariantExistence); // true\n\n// Returns false since there is no variant exist for [Green]\nisOptionValueCombinationInEncodedVariant([2], encodedVariantExistence); // false\n",
+            "language": "js"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "IsOptionValueCombinationInEncodedVariant",
+        "typeDefinitions": {
+          "IsOptionValueCombinationInEncodedVariant": {
+            "filePath": "src/optionValueDecoder.ts",
+            "name": "IsOptionValueCombinationInEncodedVariant",
+            "description": "",
+            "params": [
+              {
+                "name": "targetOptionValueCombination",
+                "description": "",
+                "value": "number[]",
+                "filePath": "src/optionValueDecoder.ts"
+              },
+              {
+                "name": "encodedVariantField",
+                "description": "",
+                "value": "string",
+                "filePath": "src/optionValueDecoder.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "src/optionValueDecoder.ts",
+              "description": "",
+              "name": "boolean",
+              "value": "boolean"
+            },
+            "value": "export type IsOptionValueCombinationInEncodedVariant = (\n  targetOptionValueCombination: number[],\n  encodedVariantField: string,\n) => boolean;"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "mapSelectedProductOptionToObject",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "getProductOptions",
+        "type": "gear",
+        "url": "/api/hydrogen/utilities/getproductoptions"
+      },
+      {
+        "name": "getAdjacentAndFirstAvailableVariants",
+        "type": "gear",
+        "url": "/api/hydrogen/utilities/getadjacentandfirstavailablevariants"
+      },
+      {
+        "name": "useSelectedOptionInUrlParam",
+        "type": "gear",
+        "url": "/api/hydrogen/utilities/useselectedoptioninurlparam"
+      }
+    ],
+    "description": "Converts the product selected option into an `Object<key, value>` format for building URL query params",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "mapSelectedProductOptionToObject example",
+            "code": "import {mapSelectedProductOptionToObject} from '@shopify/hydrogen';\n\nconst selectedOption = [\n  {\n    name: 'Color',\n    value: 'Red',\n  },\n  {\n    name: 'Size',\n    value: 'Medium',\n  },\n];\n\nconst optionsObject = mapSelectedProductOptionToObject(selectedOption);\n\n// Output of optionsObject\n// {\n//   Color: 'Red',\n//   Size: 'Medium',\n// }\n\nconst searchParams = new URLSearchParams(optionsObject);\nsearchParams.toString(); // '?Color=Red&Size=Medium'\n",
+            "language": "js"
+          }
+        ],
+        "title": "mapSelectedProductOptionToObject.js"
+      }
+    },
+    "definitions": []
+  },
+  {
+    "name": "parseGid",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "\n    Parses [Shopify Global ID (GID)](https://shopify.dev/api/usage/gids) and returns the resource type and ID.\n  ",
+    "type": "gear",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {parseGid} from '@shopify/hydrogen';\n\nconst {id, resource} = parseGid('gid://shopify/Order/123');\n\nconsole.log(id); // 123\nconsole.log(resource); // Order\n",
+            "language": "js"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "ParseGidGeneratedType",
+        "typeDefinitions": {
+          "ParseGidGeneratedType": {
+            "filePath": "src/analytics-utils.ts",
+            "name": "ParseGidGeneratedType",
+            "description": "Parses global id (gid) and returns the resource type and id.",
+            "params": [
+              {
+                "name": "gid",
+                "description": "A shopify GID (string)",
+                "value": "string",
+                "filePath": "src/analytics-utils.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "src/analytics-utils.ts",
+              "description": "",
+              "name": "ShopifyGid",
+              "value": "ShopifyGid"
+            },
+            "value": "export function parseGid(gid: string | undefined): ShopifyGid {\n  const defaultReturn: ShopifyGid = {\n    id: '',\n    resource: null,\n    resourceId: null,\n    search: '',\n    searchParams: new URLSearchParams(),\n    hash: '',\n  };\n\n  if (typeof gid !== 'string') {\n    return defaultReturn;\n  }\n\n  try {\n    const {search, searchParams, pathname, hash} = new URL(gid);\n    const pathnameParts = pathname.split('/');\n    const lastPathnamePart = pathnameParts[pathnameParts.length - 1];\n    const resourcePart = pathnameParts[pathnameParts.length - 2];\n\n    if (!lastPathnamePart || !resourcePart) {\n      return defaultReturn;\n    }\n\n    const id = `${lastPathnamePart}${search}${hash}` || '';\n    const resourceId = lastPathnamePart || null;\n    const resource = resourcePart ?? null;\n\n    return {id, resource, resourceId, search, searchParams, hash};\n  } catch {\n    return defaultReturn;\n  }\n}",
+            "examples": [
+              {
+                "title": "Example",
+                "description": "",
+                "tabs": [
+                  {
+                    "code": "const {id, resource} = parseGid('gid://shopify/Order/123')\n// => id = \"123\", resource = 'Order'\n\n * const {id, resource} = parseGid('gid://shopify/Cart/abc123')\n// => id = \"abc123\", resource = 'Cart'",
+                    "title": "Example"
+                  }
+                ]
+              }
+            ]
+          },
+          "ShopifyGid": {
+            "filePath": "src/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyGid",
+            "value": "Pick<URL, 'search' | 'searchParams' | 'hash'> & {\n  id: string;\n  resource: string | null;\n  resourceId: string | null;\n}",
+            "description": ""
           }
         }
       }
@@ -28402,6 +28723,39 @@
     ]
   },
   {
+    "name": "useSelectedOptionInUrlParam",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "getProductOptions",
+        "type": "gear",
+        "url": "/api/hydrogen/utilities/getproductoptions"
+      },
+      {
+        "name": "getAdjacentAndFirstAvailableVariants",
+        "type": "gear",
+        "url": "/api/hydrogen/utilities/getadjacentandfirstavailablevariants"
+      }
+    ],
+    "description": "Sets the url params to the selected option.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "useSelectedOptionInUrlParam example",
+            "code": "import {useSelectedOptionInUrlParam} from '@shopify/hydrogen';\n\nconst selectedOption = [\n  {\n    name: 'Color',\n    value: 'Red',\n  },\n  {\n    name: 'Size',\n    value: 'Medium',\n  },\n];\n\nuseSelectedOptionInUrlParam(selectedOption);\n\n// URL will be updated to &lt;original product url&gt;?Color=Red&Size=Medium\n",
+            "language": "js"
+          }
+        ],
+        "title": "Example"
+      }
+    },
+    "definitions": []
+  },
+  {
     "name": "storefrontApiCustomScalars",
     "category": "utilities",
     "isVisualComponent": false,
@@ -28433,75 +28787,6 @@
       }
     },
     "definitions": []
-  },
-  {
-    "name": "parseGid",
-    "category": "utilities",
-    "isVisualComponent": false,
-    "related": [],
-    "description": "\n    Parses [Shopify Global ID (GID)](https://shopify.dev/api/usage/gids) and returns the resource type and ID.\n  ",
-    "type": "gear",
-    "defaultExample": {
-      "description": "I am the default example",
-      "codeblock": {
-        "tabs": [
-          {
-            "title": "JavaScript",
-            "code": "import {parseGid} from '@shopify/hydrogen';\n\nconst {id, resource} = parseGid('gid://shopify/Order/123');\n\nconsole.log(id); // 123\nconsole.log(resource); // Order\n",
-            "language": "js"
-          }
-        ],
-        "title": "Example code"
-      }
-    },
-    "definitions": [
-      {
-        "title": "Props",
-        "description": "",
-        "type": "ParseGidGeneratedType",
-        "typeDefinitions": {
-          "ParseGidGeneratedType": {
-            "filePath": "src/analytics-utils.ts",
-            "name": "ParseGidGeneratedType",
-            "description": "Parses global id (gid) and returns the resource type and id.",
-            "params": [
-              {
-                "name": "gid",
-                "description": "A shopify GID (string)",
-                "value": "string",
-                "filePath": "src/analytics-utils.ts"
-              }
-            ],
-            "returns": {
-              "filePath": "src/analytics-utils.ts",
-              "description": "",
-              "name": "ShopifyGid",
-              "value": "ShopifyGid"
-            },
-            "value": "export function parseGid(gid: string | undefined): ShopifyGid {\n  const defaultReturn: ShopifyGid = {\n    id: '',\n    resource: null,\n    resourceId: null,\n    search: '',\n    searchParams: new URLSearchParams(),\n    hash: '',\n  };\n\n  if (typeof gid !== 'string') {\n    return defaultReturn;\n  }\n\n  try {\n    const {search, searchParams, pathname, hash} = new URL(gid);\n    const pathnameParts = pathname.split('/');\n    const lastPathnamePart = pathnameParts[pathnameParts.length - 1];\n    const resourcePart = pathnameParts[pathnameParts.length - 2];\n\n    if (!lastPathnamePart || !resourcePart) {\n      return defaultReturn;\n    }\n\n    const id = `${lastPathnamePart}${search}${hash}` || '';\n    const resourceId = lastPathnamePart || null;\n    const resource = resourcePart ?? null;\n\n    return {id, resource, resourceId, search, searchParams, hash};\n  } catch {\n    return defaultReturn;\n  }\n}",
-            "examples": [
-              {
-                "title": "Example",
-                "description": "",
-                "tabs": [
-                  {
-                    "code": "const {id, resource} = parseGid('gid://shopify/Order/123')\n// => id = \"123\", resource = 'Order'\n\n * const {id, resource} = parseGid('gid://shopify/Cart/abc123')\n// => id = \"abc123\", resource = 'Cart'",
-                    "title": "Example"
-                  }
-                ]
-              }
-            ]
-          },
-          "ShopifyGid": {
-            "filePath": "src/analytics-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyGid",
-            "value": "Pick<URL, 'search' | 'searchParams' | 'hash'> & {\n  id: string;\n  resource: string | null;\n  resourceId: string | null;\n}",
-            "description": ""
-          }
-        }
-      }
-    ]
   },
   {
     "name": "Storefront Schema",
@@ -28568,130 +28853,5 @@
       }
     },
     "definitions": []
-  },
-  {
-    "name": "decodeEncodedVariant",
-    "category": "utilities",
-    "isVisualComponent": false,
-    "related": [
-      {
-        "name": "isOptionValueCombinationInEncodedVariant",
-        "type": "utility",
-        "url": "/docs/api/hydrogen/2024-10/utilities/isOptionValueCombinationInEncodedVariant"
-      }
-    ],
-    "description": "Decodes an encoded option value string into an array of option value combinations.",
-    "type": "utility",
-    "defaultExample": {
-      "description": "Decode an encoded option value string",
-      "codeblock": {
-        "tabs": [
-          {
-            "title": "JavaScript",
-            "code": "import {decodeEncodedVariant} from '@shopify/hydrogen';\n\n// product.options = [\n//   {\n//     name: 'Color',\n//     optionValues: [\n//       {name: 'Red'},\n//       {name: 'Blue'},\n//       {name: 'Green'},\n//     ]\n//   },\n//   {\n//     name: 'Size',\n//     optionValues: [\n//       {name: 'S'},\n//       {name: 'M'},\n//       {name: 'L'},\n//     ]\n//   }\n// ]\n\nconst encodedVariantAvailability = 'v1_0:0-2,1:2,';\n\nconst decodedVariantAvailability = decodeEncodedVariant(\n  encodedVariantAvailability,\n);\n\n// decodedVariantAvailability\n// {\n//   [0,0],    // Red, S\n//   [0,1],    // Red, M\n//   [0,2],    // Red, L\n//   [1,2]     // Blue, L\n// }\n",
-            "language": "js"
-          }
-        ],
-        "title": "Example code"
-      }
-    },
-    "definitions": [
-      {
-        "title": "Props",
-        "description": "",
-        "type": "DecodeEncodedVariantGeneratedType",
-        "typeDefinitions": {
-          "DecodeEncodedVariantGeneratedType": {
-            "filePath": "src/optionValueDecoder.ts",
-            "name": "DecodeEncodedVariantGeneratedType",
-            "description": "For an encoded option value string, decode into option value combinations. Entries represent a valid combination formatted as an array of option value positions.",
-            "params": [
-              {
-                "name": "encodedVariantField",
-                "description": "Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)",
-                "value": "string",
-                "filePath": "src/optionValueDecoder.ts"
-              }
-            ],
-            "returns": {
-              "filePath": "src/optionValueDecoder.ts",
-              "description": "Decoded option value combinations",
-              "name": "DecodedOptionValues",
-              "value": "DecodedOptionValues"
-            },
-            "value": "export function decodeEncodedVariant(\n  encodedVariantField: EncodedVariantField,\n): DecodedOptionValues {\n  if (!encodedVariantField) return [];\n\n  if (encodedVariantField.startsWith('v1_')) {\n    return v1Decoder(stripVersion(encodedVariantField));\n  }\n\n  throw new Error('Unsupported option value encoding');\n}"
-          },
-          "DecodedOptionValues": {
-            "filePath": "src/optionValueDecoder.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "DecodedOptionValues",
-            "value": "number[][]",
-            "description": ""
-          }
-        }
-      }
-    ]
-  },
-  {
-    "name": "isOptionValueCombinationInEncodedVariant",
-    "category": "utilities",
-    "isVisualComponent": false,
-    "related": [
-      {
-        "name": "decodeEncodedVariant",
-        "type": "utility",
-        "url": "/docs/api/hydrogen/2024-10/utilities/decodeEncodedVariant"
-      }
-    ],
-    "description": "\n    Determines whether an option value combination is present in an encoded option value string.\n\n`targetOptionValueCombination` - Indices of option values to look up in the encoded option value string. A partial set of indices may be passed to determine whether a node or any children is present. For example, if a product has 3 options, passing `[0]` will return true if any option value combination for the first option's option value is present in the encoded string.\n  ",
-    "type": "utility",
-    "defaultExample": {
-      "description": "Check if option value is in encoding",
-      "codeblock": {
-        "tabs": [
-          {
-            "title": "JavaScript",
-            "code": "import {isOptionValueCombinationInEncodedVariant} from '@shopify/hydrogen';\n\n// product.options = [\n//   {\n//     name: 'Color',\n//     optionValues: [\n//       {name: 'Red'},\n//       {name: 'Blue'},\n//       {name: 'Green'},\n//     ]\n//   },\n//   {\n//     name: 'Size',\n//     optionValues: [\n//       {name: 'S'},\n//       {name: 'M'},\n//       {name: 'L'},\n//     ]\n//   }\n// ]\nconst encodedVariantExistence = 'v1_0:0-1,1:2,';\n\n// For reference: decoded encodedVariantExistence\n// {\n//   [0,0],    // Red, S\n//   [0,1],    // Red, M\n//   [1,2]     // Blue, L\n// }\n\n// Returns true since there are variants exist for [Red]\nisOptionValueCombinationInEncodedVariant([0], encodedVariantExistence); // true\n\nisOptionValueCombinationInEncodedVariant([0, 0], encodedVariantExistence); // true\nisOptionValueCombinationInEncodedVariant([0, 1], encodedVariantExistence); // true\nisOptionValueCombinationInEncodedVariant([0, 2], encodedVariantExistence); // false - no variant exist for [Red, L]\n\n// Returns true since there is a variant exist for [Blue]\nisOptionValueCombinationInEncodedVariant([1], encodedVariantExistence); // true\n\nisOptionValueCombinationInEncodedVariant([1, 0], encodedVariantExistence); // false - no variant exist for [Blue, S]\nisOptionValueCombinationInEncodedVariant([1, 1], encodedVariantExistence); // false - no variant exist for [Blue, M]\nisOptionValueCombinationInEncodedVariant([1, 2], encodedVariantExistence); // true\n\n// Returns false since there is no variant exist for [Green]\nisOptionValueCombinationInEncodedVariant([2], encodedVariantExistence); // false\n",
-            "language": "js"
-          }
-        ],
-        "title": "Example code"
-      }
-    },
-    "definitions": [
-      {
-        "title": "Props",
-        "description": "",
-        "type": "IsOptionValueCombinationInEncodedVariant",
-        "typeDefinitions": {
-          "IsOptionValueCombinationInEncodedVariant": {
-            "filePath": "src/optionValueDecoder.ts",
-            "name": "IsOptionValueCombinationInEncodedVariant",
-            "description": "",
-            "params": [
-              {
-                "name": "targetOptionValueCombination",
-                "description": "",
-                "value": "number[]",
-                "filePath": "src/optionValueDecoder.ts"
-              },
-              {
-                "name": "encodedVariantField",
-                "description": "",
-                "value": "string",
-                "filePath": "src/optionValueDecoder.ts"
-              }
-            ],
-            "returns": {
-              "filePath": "src/optionValueDecoder.ts",
-              "description": "",
-              "name": "boolean",
-              "value": "boolean"
-            },
-            "value": "export type IsOptionValueCombinationInEncodedVariant = (\n  targetOptionValueCombination: number[],\n  encodedVariantField: string,\n) => boolean;"
-          }
-        }
-      }
-    ]
   }
 ]
