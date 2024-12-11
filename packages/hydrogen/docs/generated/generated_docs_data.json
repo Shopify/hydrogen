@@ -19904,9 +19904,17 @@
             "filePath": "src/customer/types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerAccountOptions",
-            "value": "{\n  /** The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */\n  session: HydrogenSession;\n  /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use `npx shopify hydrogen env pull` to link your store credentials. */\n  customerAccountId: string;\n  /**\n   * @deprecated use `shopId` instead. The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use `npx shopify hydrogen env pull` to link your store credentials.\n   */\n  customerAccountUrl?: string;\n  /** The shop id. Mock.shop doesn't automatically supply shopId. Use `npx shopify hydrogen env pull` to link your store credentials */\n  shopId?: string;\n  /** Override the version of the API */\n  customerApiVersion?: string;\n  /** The object for the current Request. It should be provided by your platform. */\n  request: CrossRuntimeRequest;\n  /** The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */\n  waitUntil?: WaitUntil;\n  /** This is the route in your app that authorizes the customer after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */\n  authUrl?: string;\n  /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */\n  customAuthStatusHandler?: () => DataFunctionValue;\n  /** Whether it should print GraphQL errors automatically. Defaults to true */\n  logErrors?: boolean | ((error?: Error) => boolean);\n  /** UNSTABLE feature, this will eventually goes away. If true then we will exchange customerAccessToken for storefrontCustomerAccessToken. */\n  unstableB2b?: boolean;\n}",
+            "value": "{\n  /** The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */\n  session: HydrogenSession;\n  /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use `npx shopify hydrogen env pull` to link your store credentials. */\n  customerAccountId: string;\n  /**\n   * @deprecated use `shopId` instead. The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use `npx shopify hydrogen env pull` to link your store credentials.\n   */\n  customerAccountUrl?: string;\n  /** The shop id. Mock.shop doesn't automatically supply shopId. Use `npx shopify hydrogen env pull` to link your store credentials */\n  shopId?: string;\n  /** Override the version of the API */\n  customerApiVersion?: string;\n  /** The object for the current Request. It should be provided by your platform. */\n  request: CrossRuntimeRequest;\n  /** The waitUntil function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */\n  waitUntil?: WaitUntil;\n  /** This is the route in your app that authorizes the customer after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */\n  authUrl?: string;\n  /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */\n  customAuthStatusHandler?: () => DataFunctionValue;\n  /** Whether it should print GraphQL errors automatically. Defaults to true */\n  logErrors?: boolean | ((error?: Error) => boolean);\n  /** UNSTABLE feature, this will eventually goes away. If true then we will exchange customerAccessToken for storefrontCustomerAccessToken. */\n  unstableB2b?: boolean;\n  /** The path to redirect to after login. Defaults to `/account`. */\n  defaultRedirectPath?: string;\n  /** The path to login. Defaults to `/account/login`. */\n  loginPath?: string;\n  /** The oauth authorize path. Defaults to `/account/authorize`. */\n  authorizePath?: string;\n}",
             "description": "",
             "members": [
+              {
+                "filePath": "src/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "authorizePath",
+                "value": "string",
+                "description": "The oauth authorize path. Defaults to `/account/authorize`.",
+                "isOptional": true
+              },
               {
                 "filePath": "src/customer/types.ts",
                 "syntaxKind": "PropertySignature",
@@ -19950,9 +19958,25 @@
               {
                 "filePath": "src/customer/types.ts",
                 "syntaxKind": "PropertySignature",
+                "name": "defaultRedirectPath",
+                "value": "string",
+                "description": "The path to redirect to after login. Defaults to `/account`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "src/customer/types.ts",
+                "syntaxKind": "PropertySignature",
                 "name": "logErrors",
                 "value": "boolean | ((error?: Error) => boolean)",
                 "description": "Whether it should print GraphQL errors automatically. Defaults to true",
+                "isOptional": true
+              },
+              {
+                "filePath": "src/customer/types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "loginPath",
+                "value": "string",
+                "description": "The path to login. Defaults to `/account/login`.",
                 "isOptional": true
               },
               {
@@ -20397,7 +20421,7 @@
             "filePath": "src/pagination/Pagination.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "PaginationProps",
-            "value": "{\n  /** The response from `storefront.query` for a paginated request. Make sure the query is passed pagination variables and that the query has `pageInfo` with `hasPreviousPage`, `hasNextpage`, `startCursor`, and `endCursor` defined. */\n  connection: Connection<NodesType>;\n  /** A render prop that includes pagination data and helpers. */\n  children: PaginationRenderProp<NodesType>;\n}",
+            "value": "{\n  /** The response from `storefront.query` for a paginated request. Make sure the query is passed pagination variables and that the query has `pageInfo` with `hasPreviousPage`, `hasNextpage`, `startCursor`, and `endCursor` defined. */\n  connection: Connection<NodesType>;\n  /** A render prop that includes pagination data and helpers. */\n  children: PaginationRenderProp<NodesType>;\n  /** A namespace for the pagination component to avoid URL param conflicts when using multiple `Pagination` components on a single page. */\n  namespace?: string;\n}",
             "description": "",
             "members": [
               {
@@ -20413,6 +20437,14 @@
                 "name": "connection",
                 "value": "Connection<NodesType>",
                 "description": "The response from `storefront.query` for a paginated request. Make sure the query is passed pagination variables and that the query has `pageInfo` with `hasPreviousPage`, `hasNextpage`, `startCursor`, and `endCursor` defined."
+              },
+              {
+                "filePath": "src/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "namespace",
+                "value": "string",
+                "description": "A namespace for the pagination component to avoid URL param conflicts when using multiple `Pagination` components on a single page.",
+                "isOptional": true
               }
             ]
           },
@@ -20466,7 +20498,35 @@
           }
         }
       }
-    ]
+    ],
+    "examples": {
+      "description": "Other examples using the `Pagination` component.",
+      "exampleGroups": [
+        {
+          "title": "Multiple `Pagination` components on a single page",
+          "examples": [
+            {
+              "description": "Use the `namespace` prop to differentiate between multiple `Pagination` components on a single page",
+              "codeblock": {
+                "title": "Example",
+                "tabs": [
+                  {
+                    "title": "JavaScript",
+                    "code": "import {json} from '@shopify/remix-oxygen';\nimport {useLoaderData, Link} from '@remix-run/react';\nimport {getPaginationVariables, Pagination} from '@shopify/hydrogen';\n\nexport async function loader({request, context: {storefront}}) {\n  const womensPaginationVariables = getPaginationVariables(request, {\n    pageBy: 2,\n    namespace: 'womens', // Specify a unique namespace for the pagination parameters\n  });\n  const mensPaginationVariables = getPaginationVariables(request, {\n    pageBy: 2,\n    namespace: 'mens', // Specify a unique namespace for the pagination parameters\n  });\n\n  const [womensProducts, mensProducts] = await Promise.all([\n    storefront.query(COLLECTION_PRODUCTS_QUERY, {\n      variables: {...womensPaginationVariables, handle: 'women'},\n    }),\n    storefront.query(COLLECTION_PRODUCTS_QUERY, {\n      variables: {...mensPaginationVariables, handle: 'men'},\n    }),\n  ]);\n\n  return json({womensProducts, mensProducts});\n}\n\nexport default function Collection() {\n  const {womensProducts, mensProducts} = useLoaderData();\n  return (\n    &lt;div className=\"collection\"&gt;\n      &lt;h1&gt;Womens&lt;/h1&gt;\n\n      &lt;Pagination\n        connection={womensProducts?.collection?.products}\n        // Specify a unique namespace for the pagination links\n        namespace=\"womens\"\n      &gt;\n        {({nodes, isLoading, PreviousLink, NextLink}) =&gt; {\n          return (\n            &lt;div&gt;\n              &lt;PreviousLink&gt;\n                {isLoading ? 'Loading...' : &lt;span&gt;↑ Load previous&lt;/span&gt;}\n              &lt;/PreviousLink&gt;\n              &lt;div&gt;\n                {nodes.map((product) =&gt; (\n                  &lt;div key={product.id}&gt;\n                    &lt;Link to={`/products/${product.handle}`}&gt;\n                      {product.title}\n                    &lt;/Link&gt;\n                  &lt;/div&gt;\n                ))}\n              &lt;/div&gt;\n              &lt;NextLink&gt;\n                {isLoading ? 'Loading...' : &lt;span&gt;Load more ↓&lt;/span&gt;}\n              &lt;/NextLink&gt;\n            &lt;/div&gt;\n          );\n        }}\n      &lt;/Pagination&gt;\n\n      &lt;h1&gt;Mens&lt;/h1&gt;\n      &lt;Pagination\n        connection={mensProducts?.collection?.products}\n        // Specify a unique namespace for the pagination links\n        namespace=\"mens\"\n      &gt;\n        {({nodes, isLoading, PreviousLink, NextLink}) =&gt; {\n          return (\n            &lt;div&gt;\n              &lt;PreviousLink&gt;\n                {isLoading ? 'Loading...' : &lt;span&gt;↑ Load previous&lt;/span&gt;}\n              &lt;/PreviousLink&gt;\n              &lt;div&gt;\n                {nodes.map((product) =&gt; (\n                  &lt;div key={product.id}&gt;\n                    &lt;Link to={`/products/${product.handle}`}&gt;\n                      {product.title}\n                    &lt;/Link&gt;\n                  &lt;/div&gt;\n                ))}\n              &lt;/div&gt;\n              &lt;NextLink&gt;\n                {isLoading ? 'Loading...' : &lt;span&gt;Load more ↓&lt;/span&gt;}\n              &lt;/NextLink&gt;\n            &lt;/div&gt;\n          );\n        }}\n      &lt;/Pagination&gt;\n    &lt;/div&gt;\n  );\n}\n\nconst COLLECTION_PRODUCTS_QUERY = `#graphql\n  query CollectionProducts(\n    $first: Int\n    $last: Int\n    $startCursor: String\n    $endCursor: String\n    $handle: String!\n  ) {\n    collection(handle: $handle) {\n      products(first: $first, last: $last, before: $startCursor, after: $endCursor) {\n        nodes {\n          id\n          handle\n          title\n        }\n        pageInfo {\n          hasPreviousPage\n          hasNextPage\n          startCursor\n          endCursor\n        }\n      }\n    }\n  }\n`;\n",
+                    "language": "jsx"
+                  },
+                  {
+                    "title": "TypeScript",
+                    "code": "import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {useLoaderData, Link} from '@remix-run/react';\nimport {getPaginationVariables, Pagination} from '@shopify/hydrogen';\nimport {type Collection} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport async function loader({\n  request,\n  context: {storefront},\n}: LoaderFunctionArgs) {\n  const womensPaginationVariables = getPaginationVariables(request, {\n    pageBy: 2,\n    namespace: 'womens', // Specify a unique namespace for the pagination parameters\n  });\n  const mensPaginationVariables = getPaginationVariables(request, {\n    pageBy: 2,\n    namespace: 'mens', // Specify a unique namespace for the pagination parameters\n  });\n\n  const [womensProducts, mensProducts] = await Promise.all([\n    storefront.query&lt;{collection: Collection}&gt;(COLLECTION_PRODUCTS_QUERY, {\n      variables: {...womensPaginationVariables, handle: 'women'},\n    }),\n    storefront.query&lt;{collection: Collection}&gt;(COLLECTION_PRODUCTS_QUERY, {\n      variables: {...mensPaginationVariables, handle: 'men'},\n    }),\n  ]);\n\n  return json({womensProducts, mensProducts});\n}\n\nexport default function Collection() {\n  const {womensProducts, mensProducts} = useLoaderData&lt;typeof loader&gt;();\n  return (\n    &lt;div className=\"collection\"&gt;\n      &lt;h1&gt;Womens&lt;/h1&gt;\n\n      &lt;Pagination\n        connection={womensProducts?.collection?.products}\n        // Specify a unique namespace for the pagination links\n        namespace=\"womens\"\n      &gt;\n        {({nodes, isLoading, PreviousLink, NextLink}) =&gt; {\n          return (\n            &lt;div&gt;\n              &lt;PreviousLink&gt;\n                {isLoading ? 'Loading...' : &lt;span&gt;↑ Load previous&lt;/span&gt;}\n              &lt;/PreviousLink&gt;\n              &lt;div&gt;\n                {nodes.map((product) =&gt; (\n                  &lt;div key={product.id}&gt;\n                    &lt;Link to={`/products/${product.handle}`}&gt;\n                      {product.title}\n                    &lt;/Link&gt;\n                  &lt;/div&gt;\n                ))}\n              &lt;/div&gt;\n              &lt;NextLink&gt;\n                {isLoading ? 'Loading...' : &lt;span&gt;Load more ↓&lt;/span&gt;}\n              &lt;/NextLink&gt;\n            &lt;/div&gt;\n          );\n        }}\n      &lt;/Pagination&gt;\n\n      &lt;h1&gt;Mens&lt;/h1&gt;\n      &lt;Pagination\n        connection={mensProducts?.collection?.products}\n        // Specify a unique namespace for the pagination links\n        namespace=\"mens\"\n      &gt;\n        {({nodes, isLoading, PreviousLink, NextLink}) =&gt; {\n          return (\n            &lt;div&gt;\n              &lt;PreviousLink&gt;\n                {isLoading ? 'Loading...' : &lt;span&gt;↑ Load previous&lt;/span&gt;}\n              &lt;/PreviousLink&gt;\n              &lt;div&gt;\n                {nodes.map((product) =&gt; (\n                  &lt;div key={product.id}&gt;\n                    &lt;Link to={`/products/${product.handle}`}&gt;\n                      {product.title}\n                    &lt;/Link&gt;\n                  &lt;/div&gt;\n                ))}\n              &lt;/div&gt;\n              &lt;NextLink&gt;\n                {isLoading ? 'Loading...' : &lt;span&gt;Load more ↓&lt;/span&gt;}\n              &lt;/NextLink&gt;\n            &lt;/div&gt;\n          );\n        }}\n      &lt;/Pagination&gt;\n    &lt;/div&gt;\n  );\n}\n\nconst COLLECTION_PRODUCTS_QUERY = `#graphql\n  query CollectionProducts(\n    $first: Int\n    $last: Int\n    $startCursor: String\n    $endCursor: String\n    $handle: String!\n  ) {\n    collection(handle: $handle) {\n      products(first: $first, last: $last, before: $startCursor, after: $endCursor) {\n        nodes {\n          id\n          handle\n          title\n        }\n        pageInfo {\n          hasPreviousPage\n          hasNextPage\n          startCursor\n          endCursor\n        }\n      }\n    }\n  }\n` as const;\n",
+                    "language": "tsx"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "name": "getPaginationVariables",
@@ -20518,8 +20578,8 @@
               },
               {
                 "name": "options",
-                "description": "Options for how to configure the pagination variables. Includes the ability to change how many nodes are within each page.",
-                "value": "{ pageBy: number; }",
+                "description": "Options for how to configure the pagination variables. Includes the ability to change how many nodes are within each page as well as a namespace to avoid URL param conflicts when using multiple `Pagination` components on a single page.",
+                "value": "{ pageBy: number; namespace?: string; }",
                 "isOptional": true,
                 "defaultValue": "{pageBy: 20}",
                 "filePath": "src/pagination/Pagination.ts"
@@ -20531,7 +20591,7 @@
               "name": "",
               "value": ""
             },
-            "value": "export function getPaginationVariables(\n  request: Request,\n  options: {pageBy: number} = {pageBy: 20},\n) {\n  if (typeof request?.url === 'undefined') {\n    throw new Error(\n      'getPaginationVariables must be called with the Request object passed to your loader function',\n    );\n  }\n\n  const {pageBy} = options;\n  const searchParams = new URLSearchParams(new URL(request.url).search);\n\n  const cursor = searchParams.get('cursor') ?? undefined;\n  const direction =\n    searchParams.get('direction') === 'previous' ? 'previous' : 'next';\n  const isPrevious = direction === 'previous';\n\n  const prevPage = {\n    last: pageBy,\n    startCursor: cursor ?? null,\n  };\n\n  const nextPage = {\n    first: pageBy,\n    endCursor: cursor ?? null,\n  };\n\n  const variables = isPrevious ? prevPage : nextPage;\n\n  return variables;\n}"
+            "value": "export function getPaginationVariables(\n  request: Request,\n  options: {pageBy: number; namespace?: string} = {pageBy: 20},\n) {\n  if (typeof request?.url === 'undefined') {\n    throw new Error(\n      'getPaginationVariables must be called with the Request object passed to your loader function',\n    );\n  }\n\n  const {pageBy, namespace = ''} = options;\n  const searchParams = new URLSearchParams(new URL(request.url).search);\n\n  const cursorParam = namespace ? `${namespace}_cursor` : 'cursor';\n  const directionParam = namespace ? `${namespace}_direction` : 'direction';\n\n  const cursor = searchParams.get(cursorParam) ?? undefined;\n  const direction =\n    searchParams.get(directionParam) === 'previous' ? 'previous' : 'next';\n  const isPrevious = direction === 'previous';\n\n  const prevPage = {\n    last: pageBy,\n    startCursor: cursor ?? null,\n  };\n\n  const nextPage = {\n    first: pageBy,\n    endCursor: cursor ?? null,\n  };\n\n  const variables = isPrevious ? prevPage : nextPage;\n\n  return variables;\n}"
           }
         }
       }
