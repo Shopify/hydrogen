@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.0.12
+
+### Patch Changes
+
+- Update to skeleton template by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 5.0.11
 
 ### Patch Changes
