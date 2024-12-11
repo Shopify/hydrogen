@@ -3,6 +3,66 @@
   "version": "1",
   "releases": [
     {
+      "title": "Remove unstable exports from remix-oxygen and update customer account buyer authentication exchange",
+      "version": "2024.10.1",
+      "hash": "",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2657",
+      "commit": "https://github.com/Shopify/hydrogen/commit/",
+      "dependencies": {
+        "@remix-run/react": "^2.13.1",
+        "@remix-run/server-runtime": "^2.13.1",
+        "@shopify/hydrogen": "2024.10.1",
+        "@shopify/remix-oxygen": "^2.0.9"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.13.1",
+        "@shopify/cli": "~3.72.0"
+      },
+      "dependenciesMeta": {
+        "typescript": {
+          "required": true
+        },
+        "@shopify/oxygen-workers-types": {
+          "required": true
+        },
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Support multiple <Pagination> components on a single page",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2649",
+          "id": "2649"
+        },
+        {
+          "title": "Allow the default login and authorize path to be overridden",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2648",
+          "id": "2648"
+        },
+        {
+          "title": "<VariantSelector> sets the url search param when landing on a product page",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2665",
+          "id": "2665"
+        },
+        {
+          "title": "Hydrogen deployment contains Hydrogen meta data",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2645",
+          "id": "2645"
+        }
+      ],
+      "features": [
+        {
+          "title": "Support combined listing and 2k variant",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2659",
+          "id": "2659"
+        }
+      ]
+    },
+    {
       "title": "SFAPI 2024.10, Cart mutation warnings, improved createWithCache, sitemap API stabilization, deprecations",
       "version": "2024.10.0",
       "hash": "845a7f61c87b5bbbffe7076814f0413163f72e72",
