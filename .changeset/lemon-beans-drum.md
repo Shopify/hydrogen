@@ -83,7 +83,67 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
 }
 ```
 
-3. Update the `Product` component to use the new data fields.
+3. Remove the redirect logic in the `loadCriticalData` function and completely remove `redirectToFirstVariant` function
+
+```diff
+async function loadCriticalData({
+  context,
+  params,
+  request,
+}: LoaderFunctionArgs) {
+  const {handle} = params;
+  const {storefront} = context;
+  if (!handle) {
+    throw new Error('Expected product handle to be defined');
+  }
+  const [{product}] = await Promise.all([
+    storefront.query(PRODUCT_QUERY, {
+      variables: {handle, selectedOptions: getSelectedProductOptions(request)},
+    }),
+    // Add other queries here, so that they are loaded in parallel
+  ]);
+
+  if (!product?.id) {
+    throw new Response(null, {status: 404});
+  }
+
+-  const firstVariant = product.variants.nodes[0];
+-  const firstVariantIsDefault = Boolean(
+-    firstVariant.selectedOptions.find(
+-      (option: SelectedOption) =>
+-        option.name === 'Title' && option.value === 'Default Title',
+-    ),
+-  );
+
+-  if (firstVariantIsDefault) {
+-    product.selectedVariant = firstVariant;
+-  } else {
+-    // if no selected variant was returned from the selected options,
+-    // we redirect to the first variant's url with it's selected options applied
+-    if (!product.selectedVariant) {
+-      throw redirectToFirstVariant({product, request});
+-    }
+-  }
+
+  return {
+    product,
+  };
+}
+
+...
+
+-  function redirectToFirstVariant({
+-    product,
+-    request,
+-  }: {
+-    product: ProductFragment;
+-    request: Request;
+-  }) {
+-    ...
+-  }
+```
+
+4. Update the `Product` component to use the new data fields.
 
 ```diff
 import {
@@ -108,7 +168,7 @@ export default function Product() {
 -  );
 ```
 
-4. Handle missing search query param in url from selecting a first variant
+5. Handle missing search query param in url from selecting a first variant
 
 ```diff
 import {
@@ -133,7 +193,7 @@ export default function Product() {
 +  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
 ```
 
-5. Get the product options array using `getProductOptions`
+6. Get the product options array using `getProductOptions`
 
 ```diff
 import {
@@ -156,11 +216,7 @@ export default function Product() {
 
   // Sets the search param to the selected variant without navigation
   // only when no search params are set in the url
-  useEffect(() => {
-    // ...
-  }, [
-    JSON.stringify(selectedVariant.selectedOptions),
-  ]);
+  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
 
 +  // Get the product options array
 +  const productOptions = getProductOptions({
@@ -169,7 +225,7 @@ export default function Product() {
 +  });
 ```
 
-6. Remove the `Await` and `Suspense` from the `ProductForm`. We no longer have any queries that we need to wait for.
+7. Remove the `Await` and `Suspense` from the `ProductForm`. We no longer have any queries that we need to wait for.
 
 ```diff
 export default function Product() {
@@ -206,7 +262,7 @@ export default function Product() {
 -        </Suspense>
 ```
 
-7. Update the `ProductForm` component.
+8. Update the `ProductForm` component.
 
 ```tsx
 import {Link, useNavigate} from '@remix-run/react';
@@ -355,7 +411,7 @@ function ProductOptionSwatch({
 }
 ```
 
-8. Update `app.css`
+9. Update `app.css`
 
 ```diff
 +  /*
@@ -390,9 +446,9 @@ function ProductOptionSwatch({
 +  }
 ```
 
-9. Update `lib/variants.ts`
+10. Update `lib/variants.ts`
 
-Make `useVariantUrl` flexible to supplying a selected option param
+Make `useVariantUrl` and `getVariantUrl` flexible to supplying a selected option param
 
 ```diff
 export function useVariantUrl(
@@ -435,7 +491,7 @@ export function getVariantUrl({
   });
 ```
 
-10. Update `routes/collections.$handle.tsx`
+11. Update `routes/collections.$handle.tsx`
 
 We no longer need to query for the variants since product route can efficiently
 obtain the first available variants. Update the code to reflect that:
@@ -492,7 +548,7 @@ function ProductItem({
   return (
 ```
 
-11. Update `routes/collections.all.tsx`
+12. Update `routes/collections.all.tsx`
 
 Same reasoning as `collections.$handle.tsx`
 
@@ -548,7 +604,7 @@ function ProductItem({
   return (
 ```
 
-12. Update `routes/search.tsx`
+13. Update `routes/search.tsx`
 
 Instead of using the first variant, use `selectedOrFirstAvailableVariant`
 
@@ -629,7 +685,7 @@ const PREDICTIVE_SEARCH_PRODUCT_FRAGMENT = `#graphql
   }
 ```
 
-13. Update `components/SearchResults.tsx`
+14. Update `components/SearchResults.tsx`
 
 ```diff
 function SearchResultsProducts({
@@ -682,7 +738,7 @@ function SearchResultsProducts({
           });
 ```
 
-14. Update `components/SearchResultsPredictive.tsx`
+15. Update `components/SearchResultsPredictive.tsx`
 
 ```diff
 function SearchResultsPredictiveProducts({
