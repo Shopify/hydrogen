@@ -5,9 +5,9 @@
     {
       "title": "Remove unstable exports from remix-oxygen and update customer account buyer authentication exchange",
       "version": "2024.10.1",
-      "hash": "",
+      "hash": "c915b67d81ff01e25eeefce8cf0510805d620d64",
       "pr": "https://github.com/Shopify/hydrogen/pull/2657",
-      "commit": "https://github.com/Shopify/hydrogen/commit/",
+      "commit": "https://github.com/Shopify/hydrogen/commit/c915b67d81ff01e25eeefce8cf0510805d620d64",
       "dependencies": {
         "@remix-run/react": "^2.13.1",
         "@remix-run/server-runtime": "^2.13.1",
