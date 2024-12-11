@@ -62,7 +62,7 @@
     "@changesets/changelog-github": "^0.4.8",
     "@changesets/cli": "^2.26.0",
     "@playwright/test": "^1.40.1",
-    "@shopify/cli": "~3.69.4",
+    "@shopify/cli": "~3.72.0",
     "@types/eslint": "^8.4.10",
     "cross-env": "^7.0.3",
     "eslint": "^8.20.0",
