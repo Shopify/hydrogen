@@ -1,5 +1,36 @@
 # @shopify/hydrogen
 
+## 2024.10.1
+
+### Patch Changes
+
+- Added namespace support to prevent conflicts when using multiple Pagination components: ([#2649](https://github.com/Shopify/hydrogen/pull/2649)) by [@scottdixon](https://github.com/scottdixon)
+
+  - New optional `namespace` prop for the `<Pagination/>` component
+  - New optional `namespace` option for `getPaginationVariables()` utility
+  - When specified, pagination URL parameters are prefixed with the namespace (e.g., `products_cursor` instead of `cursor`)
+  - Maintains backwards compatibility when no namespace is provided
+
+- Introduce `getProductOptions`, `getAdjacentAndFirstAvailableVariants`, `useSelectedOptionInUrlParam`, and `mapSelectedProductOptionToObject` to support combined listing products and products with 2000 variants limit. ([#2659](https://github.com/Shopify/hydrogen/pull/2659)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Add params to override the login and authorize paths: ([#2648](https://github.com/Shopify/hydrogen/pull/2648)) by [@blittle](https://github.com/blittle)
+
+  ```ts
+  const hydrogenContext = createHydrogenContext({
+    // ...
+    customerAccount: {
+      loginPath = '/account/login',
+      authorizePath = '/account/authorize',
+      defaultRedirectPath = '/account',
+    },
+  });
+  ```
+
+- Add `selectedVariant` prop to the `VariantSelector` to use for the initial state if no URL parameters are set ([#2643](https://github.com/Shopify/hydrogen/pull/2643)) by [@scottdixon](https://github.com/scottdixon)
+
+- Updated dependencies [[`a57d5267`](https://github.com/Shopify/hydrogen/commit/a57d5267daa2f22fe1a426fb9f62c242957f95b6)]:
+  - @shopify/hydrogen-react@2024.10.1
+
 ## 2024.10.0
 
 ### Patch Changes
