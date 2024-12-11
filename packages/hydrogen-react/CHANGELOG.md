@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2024.10.1
+
+### Patch Changes
+
+- Introduce `getProductOptions`, `getAdjacentAndFirstAvailableVariants`, `useSelectedOptionInUrlParam`, and `mapSelectedProductOptionToObject` to support combined listing products and products with 2000 variants limit. ([#2659](https://github.com/Shopify/hydrogen/pull/2659)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2024.10.0
 
 ### Patch Changes

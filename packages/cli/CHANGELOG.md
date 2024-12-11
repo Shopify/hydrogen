@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 9.0.3
+
+### Patch Changes
+
+- Attach Hydrogen version metadata to deployments ([#2645](https://github.com/Shopify/hydrogen/pull/2645)) by [@benwolfram](https://github.com/benwolfram)
+
 ## 9.0.2
 
 ### Patch Changes
