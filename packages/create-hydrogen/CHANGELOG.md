@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.0.13
+
+### Patch Changes
+
+- Prevent scroll reset on variant change ([#2672](https://github.com/Shopify/hydrogen/pull/2672)) by [@scottdixon](https://github.com/scottdixon)
+
 ## 5.0.12
 
 ### Patch Changes
