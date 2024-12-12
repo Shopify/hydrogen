@@ -1,4 +1,5 @@
 ---
+'@shopify/create-hydrogen': patch
 'skeleton': patch
 ---
 
