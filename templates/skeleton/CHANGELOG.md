@@ -1,5 +1,11 @@
 # skeleton
 
+## 2024.10.3
+
+### Patch Changes
+
+- Prevent scroll reset on variant change ([#2672](https://github.com/Shopify/hydrogen/pull/2672)) by [@scottdixon](https://github.com/scottdixon)
+
 ## 2024.10.2
 
 ### Patch Changes
