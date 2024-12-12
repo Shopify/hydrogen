@@ -86,6 +86,7 @@ export function ProductForm({
                         if (!selected) {
                           navigate(`?${variantUriQuery}`, {
                             replace: true,
+                            preventScrollReset: true,
                           });
                         }
                       }}
@@ -98,7 +99,7 @@ export function ProductForm({
             </div>
             <br />
           </div>
-        )
+        );
       })}
       <AddToCartButton
         disabled={!selectedVariant || !selectedVariant.availableForSale}
