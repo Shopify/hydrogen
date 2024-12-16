@@ -3,7 +3,7 @@
   "version": "1",
   "releases": [
     {
-      "title": "Remove unstable exports from remix-oxygen and update customer account buyer authentication exchange",
+      "title": "Support for 2,000 variants and combined listings",
       "version": "2024.10.1",
       "hash": "c915b67d81ff01e25eeefce8cf0510805d620d64",
       "pr": "https://github.com/Shopify/hydrogen/pull/2657",
