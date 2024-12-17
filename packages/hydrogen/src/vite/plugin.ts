@@ -62,6 +62,8 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                 'react',
                 'react/jsx-runtime',
                 'react/jsx-dev-runtime',
+                'react/compiler-runtime', // react 19
+                'react-compiler-runtime', // react <= 18
                 'react-dom',
                 'react-dom/server',
                 '@remix-run/server-runtime',
