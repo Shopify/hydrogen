@@ -16,7 +16,7 @@
       },
       "devDependencies": {
         "@remix-run/dev": "^2.13.1",
-        "@shopify/cli": "~3.72.0"
+        "@shopify/cli": "~3.73.0"
       },
       "dependenciesMeta": {
         "typescript": {
