@@ -7,4 +7,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Bump vite and Remix versions
+Bump vite, Remix versions and tailwind v4 alpha to beta
