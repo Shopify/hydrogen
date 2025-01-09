@@ -3,6 +3,6 @@
     "defaults"
   ],
   "devDependencies": {
-    "@tailwindcss/vite": "4.0.0-alpha.17"
+    "@tailwindcss/vite": "4.0.0-beta.8"
   }
 }
