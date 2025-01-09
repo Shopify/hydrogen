@@ -41,10 +41,17 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
   return false;
 };
 
+/**
+ * The link to the main stylesheet and the reset stylesheet is purposely not in this list.
+ * Instead, it is added in the Layout function.
+ *
+ * This is to avoid a development bug where after an edit/save, navigating to another
+ * link will cause page rendering error "failed to execute 'insertBefore' on 'Node'".
+ *
+ * This is a workaround until this is fixed in the foundational library.
+ */
 export function links() {
   return [
-    {rel: 'stylesheet', href: resetStyles},
-    {rel: 'stylesheet', href: appStyles},
     {
       rel: 'preconnect',
       href: 'https://cdn.shopify.com',
@@ -144,6 +151,8 @@ export function Layout({children}: {children?: React.ReactNode}) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="stylesheet" href={resetStyles}></link>
+        <link rel="stylesheet" href={appStyles}></link>
         <Meta />
         <Links />
         {/***********************************************/
