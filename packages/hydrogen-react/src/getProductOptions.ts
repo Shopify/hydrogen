@@ -420,7 +420,7 @@ export function getProductOptions(
 
         // Build the query params for this option value
         let variantOptionParam = {};
-        if (!!variant) {
+        if (variant) {
           variantOptionParam = mapSelectedProductOptionToObject(
             variant.selectedOptions || [],
           );
