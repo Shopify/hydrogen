@@ -432,7 +432,7 @@ export function getProductOptions(
           handle,
           variantUriQuery: searchParams.toString(),
           selected: selectedOptions[option.name] === value.name,
-          exists: exists ? !!variant : exists,
+          exists,
           available,
           isDifferentProduct: handle !== productHandle,
         };
