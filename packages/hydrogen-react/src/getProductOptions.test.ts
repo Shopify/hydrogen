@@ -367,7 +367,7 @@ describe('getProductOptions', () => {
         },
       ]
     `);
-  })
+  });
 });
 
 describe('getAdjacentAndFirstAvailableVariants', () => {
@@ -1388,7 +1388,6 @@ const PRODUCT = {
     },
   ],
 };
-
 
 const PRODUCT_2 = {
   id: 'gid://shopify/Product/6730949034040',

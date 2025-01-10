@@ -241,7 +241,9 @@ export function checkProductParam(
       }
 
       // It is possible for firstSelectableVariant to be null
-      firstOptionValues = product.options[0].optionValues.filter((value) => !!value?.firstSelectableVariant)[0];
+      firstOptionValues = product.options[0].optionValues.filter(
+        (value) => !!value?.firstSelectableVariant,
+      )[0];
 
       // Check for options.optionValues.firstSelectableVariant
       if (firstOptionValues?.firstSelectableVariant) {
