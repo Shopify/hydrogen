@@ -50,13 +50,14 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 };
 
 /**
- * The main and reset stylesheets are added in the Layout component 
+ * The main and reset stylesheets are added in the Layout component
  * to prevent a bug in development HMR updates.
  *
- * This avoids the "failed to execute 'insertBefore' on 'Node'" error 
+ * This avoids the "failed to execute 'insertBefore' on 'Node'" error
  * that occurs after editing and navigating to another page.
  *
- * It's a temporary fix until the underlying library issue is resolved.
+ * It's a temporary fix until the issue is resolved.
+ * https://github.com/remix-run/remix/issues/9242
  */
 export function links() {
   return [
