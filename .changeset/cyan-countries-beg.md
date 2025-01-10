@@ -3,11 +3,21 @@
 '@shopify/create-hydrogen': patch
 ---
 
-Fix "Error: failed to execute 'insertBefore' on 'Node'" during development.
+Workaround for "Error: failed to execute 'insertBefore' on 'Node'" that sometimes happen during development.
 
 ```diff
 // root.tsx
 
+/**
+ * The main and reset stylesheets are added in the Layout component
+ * to prevent a bug in development HMR updates.
+ *
+ * This avoids the "failed to execute 'insertBefore' on 'Node'" error
+ * that occurs after editing and navigating to another page.
+ *
+ * It's a temporary fix until the issue is resolved.
+ * https://github.com/remix-run/remix/issues/9242
+ */
 export function links() {
   return [
 -    {rel: 'stylesheet', href: resetStyles},
