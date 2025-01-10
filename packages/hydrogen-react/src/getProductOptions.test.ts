@@ -263,7 +263,7 @@ describe('getProductOptions', () => {
             },
             {
               "available": false,
-              "exists": false,
+              "exists": true,
               "firstSelectableVariant": null,
               "handle": "mail-it-in-freestyle-snowboard",
               "isDifferentProduct": false,
