@@ -59,9 +59,10 @@ function defaultAuthStatusHandler(
 
   const {pathname} = new URL(request.url);
 
+  // Make sure to remove the `.data` that Remix appends on soft navigation (single-fetch)
   const redirectTo =
     defaultLoginUrl +
-    `?${new URLSearchParams({return_to: pathname}).toString()}`;
+    `?${new URLSearchParams({return_to: pathname.replace(/\.data$/, '')}).toString()}`;
 
   return redirect(redirectTo);
 }
