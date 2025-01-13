@@ -6111,6 +6111,8 @@ export type ProductEdge = {
 export type ProductFilter = {
   /** Filter on if the product is available for sale. */
   available?: InputMaybe<Scalars['Boolean']['input']>;
+  /** A product category to filter on. */
+  category?: InputMaybe<CategoryFilter>;
   /** A range of prices to filter with-in. */
   price?: InputMaybe<PriceRangeFilter>;
   /** A product metafield to filter on. */
@@ -6121,10 +6123,32 @@ export type ProductFilter = {
   productVendor?: InputMaybe<Scalars['String']['input']>;
   /** A product tag to filter on. */
   tag?: InputMaybe<Scalars['String']['input']>;
+  /** A standard product attribute metafield to filter on. */
+  taxonomyMetafield?: InputMaybe<TaxonomyMetafieldFilter>;
   /** A variant metafield to filter on. */
   variantMetafield?: InputMaybe<MetafieldFilter>;
   /** A variant option to filter on. */
   variantOption?: InputMaybe<VariantOptionFilter>;
+};
+
+/**
+ * A filter used to view a subset of products in a collection that match a specific category.
+ */
+export type CategoryFilter = {
+  /** The category values to filter on. */
+  id: Scalars['String']['input'];
+};
+
+/**
+ * A filter used to view a subset of products in a collection that match a specific taxonomy metafield.
+ */
+export type TaxonomyMetafieldFilter = {
+  /** The key of the taxonomy metafield to filter on. */
+  key: Scalars['String']['input'];
+  /** The namespace of the taxonomy metafield to filter on. */
+  namespace: Scalars['String']['input'];
+  /** The value of the taxonomy metafield to filter on. */
+  value: Scalars['String']['input'];
 };
 
 /** The set of valid sort keys for the ProductImage query. */
