@@ -6,7 +6,5 @@ export async function loader() {
 }
 
 export async function action({context}: ActionFunctionArgs) {
-  return context.customerAccount.logout({
-    postLogoutRedirectUri: 'https://seasnail-cuddly-correctly.ngrok-free.app',
-  });
+  return context.customerAccount.logout();
 }

@@ -59,10 +59,23 @@ function defaultAuthStatusHandler(
 
   const {pathname} = new URL(request.url);
 
-  // Make sure to remove the `.data` that Remix appends on soft navigation (single-fetch)
+  /**
+   * Remix (single-fetch) request objects have different url
+   * paths when soft navigating. Examples:
+   *
+   *    /_root.data          - home page
+   *    /collections.data    - collections page
+   *
+   * These url annotations needs to be cleaned up before constructing urls to be passed as
+   * GET parameters for customer login url
+   */
+  const cleanedPathname = pathname
+    .replace(/\.data$/, '')
+    .replace(/^\/_root$/, '/');
+
   const redirectTo =
     defaultLoginUrl +
-    `?${new URLSearchParams({return_to: pathname.replace(/\.data$/, '')}).toString()}`;
+    `?${new URLSearchParams({return_to: cleanedPathname}).toString()}`;
 
   return redirect(redirectTo);
 }
