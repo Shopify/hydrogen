@@ -233,12 +233,17 @@ export function checkProductParam(
 
     // Check for options.optionValues
     if (product?.options[0]?.optionValues) {
-      const firstOptionValues = product.options[0].optionValues[0];
+      let firstOptionValues = product.options[0].optionValues[0];
 
       // Check for options.optionValues.name
       if (checkAll && !firstOptionValues?.name) {
         validParam = logErrorAndReturnFalse('options.optionValues.name');
       }
+
+      // It is possible for firstSelectableVariant to be null
+      firstOptionValues = product.options[0].optionValues.filter(
+        (value) => !!value?.firstSelectableVariant,
+      )[0];
 
       // Check for options.optionValues.firstSelectableVariant
       if (firstOptionValues?.firstSelectableVariant) {
@@ -248,10 +253,6 @@ export function checkProductParam(
           'options.optionValues.firstSelectableVariant',
           validParam,
           checkAll,
-        );
-      } else {
-        validParam = logErrorAndReturnFalse(
-          'options.optionValues.firstSelectableVariant',
         );
       }
     } else {
@@ -418,11 +419,14 @@ export function getProductOptions(
           variants[targetKey] || value.firstSelectableVariant;
 
         // Build the query params for this option value
-        const variantOptionParam = mapSelectedProductOptionToObject(
-          variant.selectedOptions || [],
-        );
+        let variantOptionParam = {};
+        if (variant) {
+          variantOptionParam = mapSelectedProductOptionToObject(
+            variant.selectedOptions || [],
+          );
+        }
         const searchParams = new URLSearchParams(variantOptionParam);
-        const handle = variant?.product?.handle;
+        const handle = variant?.product?.handle || productHandle;
 
         return {
           ...value,
