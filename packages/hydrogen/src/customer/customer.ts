@@ -71,7 +71,8 @@ function defaultAuthStatusHandler(
    */
   const cleanedPathname = pathname
     .replace(/\.data$/, '')
-    .replace(/^\/_root$/, '/');
+    .replace(/\/_root$/, '/')
+    .replace(/(.+)\/$/, '$1');
 
   const redirectTo =
     defaultLoginUrl +
