@@ -1,6 +1,6 @@
 # Hydrogen Skeleton Template Guidelines
 
-This initial document provides guidelines and opinionated best practices for developing in Remix and Hydrogen with the goal of building consistent and well structured code. This may evolve into more official recommendationsand other tooling to guide users to the outcomes defined below.
+This initial document provides guidelines and opinionated best practices for developing in Remix and Hydrogen with the goal of building consistent and well structured code. This may evolve into more official recommendations and other tooling to guide users to the outcomes defined below.
 
 Topics covered:
 
