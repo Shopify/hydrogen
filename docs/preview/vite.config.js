@@ -23,7 +23,6 @@ export default defineConfig({
         v3_fetcherPersist: false,
         v3_relativeSplatPath: false,
         v3_throwAbortReason: false,
-        v3_lazyRouteDiscovery: true,
         v3_singleFetch: true,
       },
     }),
