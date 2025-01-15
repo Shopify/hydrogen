@@ -28,8 +28,6 @@ export async function loader({request, context}: LoaderFunctionArgs) {
     return {term: '', result: null, error: error.message};
   });
 
-
-
   return await searchPromise;
 }
 
