@@ -777,8 +777,8 @@ async function displayUpgradeSummary({
   const fromToMsg = `${currentPinnedVersion} → ${selectedPinnedVersion}`;
 
   const headline = upgradedDependenciesOnly
-    ? `You've have upgraded Hydrogen ${selectedPinnedVersion} dependencies`
-    : `You've have upgraded from ${fromToMsg}`;
+    ? `You've upgraded Hydrogen ${selectedPinnedVersion} dependencies`
+    : `You've upgraded from ${fromToMsg}`;
 
   const packageManager = await getPackageManager(appPath);
 
