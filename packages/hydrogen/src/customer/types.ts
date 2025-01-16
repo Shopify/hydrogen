@@ -59,7 +59,7 @@ export type LogoutOptions = {
 };
 
 export type CustomerAccount = {
-  /** Start the OAuth login flow. This function should be called and returned from a Remix loader or an action.
+  /** Start the OAuth login flow. This function should be called and returned from a Remix loader.
    * It redirects the customer to a Shopify login domain. It also defined the final path the customer
    * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is
    * automatically setup unless `customAuthStatusHandler` option is in use)
