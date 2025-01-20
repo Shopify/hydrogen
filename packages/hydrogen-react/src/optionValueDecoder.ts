@@ -29,7 +29,7 @@ export type IsOptionValueCombinationInEncodedVariant = (
  * Determine whether an option value combination is present in an encoded option value string. Function is memoized by encodedVariantField.
  *
  * @param targetOptionValueCombination - Indices of option values to look up in the encoded option value string. A partial set of indices may be passed to determine whether a node or any children is present. For example, if a product has 3 options, passing [0] will return true if any option value combination for the first option's option value is present in the encoded string.
- * @param encodedVariantField - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)
+ * @param encodedVariantField - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2025-01/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2025-01/objects/Product#field-encodedvariantavailability)
  * @returns - True if a full or partial targetOptionValueIndices is present in the encoded option value string, false otherwise.
  */
 export const isOptionValueCombinationInEncodedVariant: IsOptionValueCombinationInEncodedVariant =
@@ -77,7 +77,7 @@ type DecodedOptionValues = number[][];
 
 /**
  * For an encoded option value string, decode into option value combinations. Entries represent a valid combination formatted as an array of option value positions.
- * @param encodedVariantField - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)
+ * @param encodedVariantField - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2025-01/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2025-01/objects/Product#field-encodedvariantavailability)
  * @returns Decoded option value combinations
  */
 export function decodeEncodedVariant(

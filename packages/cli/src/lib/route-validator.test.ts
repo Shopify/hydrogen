@@ -64,7 +64,7 @@ describe('reserved-routes', () => {
 
   it('returns an array of reserved routes', async () => {
     expect(
-      findReservedRoutes(createRoute('api/2024-10/graphql.json')),
+      findReservedRoutes(createRoute('api/2025-01/graphql.json')),
     ).toHaveLength(1);
 
     expect(
