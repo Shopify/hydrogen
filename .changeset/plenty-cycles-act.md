@@ -9,6 +9,8 @@ Turn on Remix `v3_singleFetch` future flag
 Remix single fetch migration quick guide: https://remix.run/docs/en/main/start/future-flags#v3_singlefetch
 Remix single fetch migration guide: https://remix.run/docs/en/main/guides/single-fetch
 
+**Note:** If you have any routes that appends (or looks for) a search param named `_data`, make sure to rename it to something else.
+
 1. In your `vite.config.ts`, add the single fetch future flag.
 
     ```diff
@@ -48,7 +50,7 @@ Remix single fetch migration guide: https://remix.run/docs/en/main/guides/single
        />
      </NonceProvider>,
    ```
-3. Deprecate `json` and `defer` import usage from `@shopify/remix-oxygen`
+3. Deprecate `json` and `defer` import usage from `@shopify/remix-oxygen`.
 
     Remove `json()`/`defer()` in favor of raw objects.
 
