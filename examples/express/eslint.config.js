@@ -25,7 +25,7 @@ export default [
       },
     },
     plugins: {
-      'react': reactPlugin,
+      react: reactPlugin,
       'react-hooks': reactHooksPlugin,
       'jsx-a11y': jsxA11yPlugin,
     },
@@ -35,8 +35,8 @@ export default [
       },
       formComponents: ['Form'],
       linkComponents: [
-        { name: 'Link', linkAttribute: 'to' },
-        { name: 'NavLink', linkAttribute: 'to' },
+        {name: 'Link', linkAttribute: 'to'},
+        {name: 'NavLink', linkAttribute: 'to'},
       ],
       'import/resolver': {
         typescript: {},
@@ -55,7 +55,7 @@ export default [
     files: ['**/*.{ts,tsx}'],
     plugins: {
       '@typescript-eslint': tsPlugin,
-      'import': importPlugin,
+      import: importPlugin,
     },
     languageOptions: {
       parser: tsParser,
@@ -71,11 +71,12 @@ export default [
     settings: {
       'import/internal-regex': '^~/',
       'import/resolver': {
-        node: {
-          extensions: ['.ts', '.tsx'],
-        },
         typescript: {
           alwaysTryTypes: true,
+          project: './tsconfig.json',
+        },
+        node: {
+          extensions: ['.ts', '.tsx', '.js', '.jsx'],
         },
       },
     },
@@ -100,11 +101,11 @@ export default [
   },
 
   {
-    files: ['**/*.mjs'],  // For Node.js ESM files
+    files: ['**/*.mjs'], // For Node.js ESM files
     languageOptions: {
       globals: {
         ...globals.node,
       },
     },
   },
-]; 
+];
