@@ -14,7 +14,7 @@
     "dev:app": "cd templates/skeleton && npm run dev --",
     "docs:build": "turbo run build-docs",
     "docs:preview": "turbo run preview-docs",
-    "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages",
+    "lint": "eslint --no-error-on-unmatched-pattern ./packages",
     "format": "prettier --write --ignore-unknown ./packages",
     "format:check": "prettier --check --ignore-unknown ./packages",
     "typecheck": "turbo typecheck --parallel",
