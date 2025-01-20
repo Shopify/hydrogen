@@ -25,6 +25,9 @@ module.exports = [
         sourceType: 'module',
       },
     },
+    linterOptions: {
+      reportUnusedDisableDirectives: false,
+    },
     plugins: {
       '@typescript-eslint': typescriptPlugin,
     },
