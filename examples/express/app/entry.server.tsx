@@ -9,7 +9,7 @@ import {PassThrough} from 'node:stream';
 import type {AppLoadContext, EntryContext} from '@remix-run/node';
 import {Response} from '@remix-run/web-fetch';
 import {RemixServer} from '@remix-run/react';
-import isbot from 'isbot';
+import isbotua from 'isbot';
 import {renderToPipeableStream} from 'react-dom/server';
 import {createContentSecurityPolicy} from '@shopify/hydrogen';
 
@@ -22,7 +22,7 @@ export default function handleRequest(
   remixContext: EntryContext,
   loadContext: AppLoadContext,
 ) {
-  return isbot(request.headers.get('user-agent'))
+  return isbotua(request.headers.get('user-agent'))
     ? handleBotRequest(
         request,
         responseStatusCode,
