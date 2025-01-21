@@ -1,67 +1,81 @@
-const typescriptParser = require('@typescript-eslint/parser');
-const typescriptPlugin = require('@typescript-eslint/eslint-plugin');
-const eslintJs = require('@eslint/js');
-const eslintCommentsPlugin = require('@eslint-community/eslint-plugin-eslint-comments');
-const reactPlugin = require('eslint-plugin-react');
-const reactHooksPlugin = require('eslint-plugin-react-hooks');
-const jsxA11yPlugin = require('eslint-plugin-jsx-a11y');
-const prettierPlugin = require('eslint-plugin-prettier');
-const nodePlugin = require('eslint-plugin-node');
-const importPlugin = require('eslint-plugin-import');
-const jestPlugin = require('eslint-plugin-jest');
-const tsdocPlugin = require('eslint-plugin-tsdoc');
-const simpleImportSortPlugin = require('eslint-plugin-simple-import-sort');
-const {fixupPluginRules} = require('@eslint/compat');
+const {fixupConfigRules, fixupPluginRules} = require('@eslint/compat');
+const eslintComments = require('eslint-plugin-eslint-comments');
+const react = require('eslint-plugin-react');
+const reactHooks = require('eslint-plugin-react-hooks');
+const jsxA11Y = require('eslint-plugin-jsx-a11y');
+const tsdoc = require('eslint-plugin-tsdoc');
+const globals = require('globals');
+const tsParser = require('@typescript-eslint/parser');
+const jest = require('eslint-plugin-jest');
+const simpleImportSort = require('eslint-plugin-simple-import-sort');
+const js = require('@eslint/js');
+const {FlatCompat} = require('@eslint/eslintrc');
 
-/** @type {import('eslint').Flat.Config[]} */
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+  allConfig: js.configs.all,
+});
+
 module.exports = [
-  // Base configuration
   {
     ignores: [
-      'node_modules/',
-      'build/',
-      '*.graphql.d.ts',
-      '*.graphql.ts',
+      '**/node_modules/',
+      '**/build/',
+      '**/*.graphql.d.ts',
+      '**/*.graphql.ts',
       '**/storefront-api-types.d.ts',
       '**/customer-account-api-types.d.ts',
       '**/codegen.ts',
-      '**/dist/**',
-      '**/coverage/**',
-      '**/docs/**',
+      '**/dist/**/*',
+      '**/coverage/**/*',
+      '**/docs/**/*',
       '**/.eslintrc.cjs',
       '**/src/*.example.tsx',
       '**/src/*.example.ts',
       '**/src/*.example.jsx',
       '**/src/*.example.js',
+      '**/eslint.config.cjs',
+      '**/scripts/**/*',
     ],
   },
-  // Default configuration for all files
+  ...fixupConfigRules(
+    compat.extends(
+      'plugin:node/recommended',
+      'plugin:import/recommended',
+      'plugin:import/typescript',
+      'eslint:recommended',
+      'plugin:eslint-comments/recommended',
+      'plugin:react/recommended',
+      'plugin:react-hooks/recommended',
+      'plugin:jsx-a11y/recommended',
+    ),
+  ),
   {
-    files: ['**/*.{js,jsx,ts,tsx}'],
-    ...eslintJs.configs.recommended,
     plugins: {
-      'eslint-comments': eslintCommentsPlugin,
-      react: reactPlugin,
-      'react-hooks': reactHooksPlugin,
-      'jsx-a11y': jsxA11yPlugin,
-      prettier: prettierPlugin,
-      node: fixupPluginRules(nodePlugin),
-      import: importPlugin,
-      '@typescript-eslint': typescriptPlugin,
-      tsdoc: tsdocPlugin,
-      'simple-import-sort': simpleImportSortPlugin,
+      'eslint-comments': fixupPluginRules(eslintComments),
+      react: fixupPluginRules(react),
+      'react-hooks': fixupPluginRules(reactHooks),
+      'jsx-a11y': fixupPluginRules(jsxA11Y),
+      tsdoc,
     },
     languageOptions: {
-      parser: typescriptParser,
+      parser: tsParser,
       parserOptions: {
-        project: ['./tsconfig.json'],
-        tsconfigRootDir: '.',
+        projectService: {
+          allowDefaultProject: ['vite.config.ts', 'vitest.setup.ts'],
+        },
+        tsconfigRootDir: __dirname,
         ecmaFeatures: {
           jsx: true,
         },
-        sourceType: 'module',
       },
-      ecmaVersion: 2021,
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+      ecmaVersion: 2020,
+      sourceType: 'module',
     },
     linterOptions: {
       reportUnusedDisableDirectives: false,
@@ -75,27 +89,29 @@ module.exports = [
       },
     },
     rules: {
-      // TypeScript
-      '@typescript-eslint/naming-convention': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-empty-function': 'off',
-      '@typescript-eslint/no-empty-interface': 'off',
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-non-null-assertion': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
-
-      // React
+      '@shopify/jsx-no-complex-expressions': 'off',
+      '@shopify/jsx-no-hardcoded-content': 'off',
+      'jsx-a11y/control-has-associated-label': 'off',
+      'jsx-a11y/label-has-for': 'off',
+      'no-use-before-define': 'off',
+      'no-warning-comments': 'off',
+      'object-shorthand': [
+        'error',
+        'always',
+        {
+          avoidQuotes: true,
+        },
+      ],
       'react/display-name': 'off',
       'react/no-array-index-key': 'warn',
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
-      'react-hooks/exhaustive-deps': 'error',
-
-      // A11y
-      'jsx-a11y/control-has-associated-label': 'off',
-      'jsx-a11y/label-has-for': 'off',
-
-      // Node
+      'eslint-comments/no-unused-disable': 'off',
+      'jest/no-disabled-tests': 'off',
+      'jest/no-export': 'off',
+      'no-console': 'off',
+      'no-constant-condition': 'off',
+      'tsdoc/syntax': 'error',
       'node/no-extraneous-import': [
         'error',
         {
@@ -123,65 +139,106 @@ module.exports = [
           ignores: [],
         },
       ],
-      'node/no-missing-import': 'off',
-
-      // Import/Export
+      'prefer-const': [
+        'warn',
+        {
+          destructuring: 'all',
+        },
+      ],
+      '@typescript-eslint/naming-convention': 'off',
       'import/extensions': ['error', 'ignorePackages'],
       'import/no-unresolved': 'off',
-      'simple-import-sort/exports': 'error',
-
-      // General
-      'no-console': 'off',
-      'no-use-before-define': 'off',
-      'no-warning-comments': 'off',
-      'no-constant-condition': 'off',
-      'object-shorthand': ['error', 'always', {avoidQuotes: true}],
-      'prefer-const': ['warn', {destructuring: 'all'}],
-
-      // Testing
-      'jest/no-disabled-tests': 'off',
-      'jest/no-export': 'off',
-
-      // Other
-      'eslint-comments/no-unused-disable': 'off',
-      'tsdoc/syntax': 'error',
+      'node/no-missing-import': 'off',
+      'react-hooks/exhaustive-deps': 'error',
     },
   },
-  // Test files configuration
+  ...compat.extends('plugin:jest/recommended').map((config) => ({
+    ...config,
+    files: ['**/*.test.*'],
+  })),
   {
-    files: ['*.test.*'],
+    files: ['**/*.test.*'],
     plugins: {
-      jest: jestPlugin,
-    },
-    rules: {
-      ...jestPlugin.configs.recommended.rules,
+      jest,
     },
     languageOptions: {
       globals: {
-        jest: true,
-        expect: true,
-        describe: true,
-        it: true,
-        beforeEach: true,
-        afterEach: true,
+        ...globals.node,
+        ...globals.jest,
       },
     },
   },
-  // Server files configuration
   {
-    files: ['*.server.*'],
+    files: ['**/*.server.*'],
     rules: {
       'react-hooks/rules-of-hooks': 'off',
     },
   },
-  // TypeScript files configuration
+  ...fixupConfigRules(
+    compat.extends(
+      'plugin:@typescript-eslint/eslint-recommended',
+      'plugin:@typescript-eslint/recommended',
+      'plugin:@typescript-eslint/recommended-requiring-type-checking',
+    ),
+  ).map((config) => ({
+    ...config,
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        projectService: {
+          allowDefaultProject: ['vite.config.ts', 'vitest.setup.ts'],
+        },
+        tsconfigRootDir: __dirname,
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+  })),
   {
-    files: ['*.ts', '*.tsx'],
-    plugins: {
-      '@typescript-eslint': typescriptPlugin,
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        projectService: {
+          allowDefaultProject: ['vite.config.ts', 'vitest.setup.ts'],
+        },
+        tsconfigRootDir: __dirname,
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
     },
     rules: {
       '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/prefer-promise-reject-errors': 'off',
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          selector: 'default',
+          format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
+          leadingUnderscore: 'allowSingleOrDouble',
+          trailingUnderscore: 'allowSingleOrDouble',
+        },
+        {
+          selector: 'typeLike',
+          format: ['PascalCase'],
+        },
+        {
+          selector: 'typeParameter',
+          format: ['PascalCase'],
+          leadingUnderscore: 'allow',
+        },
+        {
+          selector: 'interface',
+          format: ['PascalCase'],
+        },
+        {
+          selector: 'property',
+          format: null,
+        },
+      ],
       '@typescript-eslint/no-empty-function': 'off',
       '@typescript-eslint/no-empty-interface': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
@@ -190,7 +247,6 @@ module.exports = [
       'react/prop-types': 'off',
     },
   },
-  // Example files configuration
   {
     files: ['src/*.example.?(ts|js|tsx|jsx)'],
     rules: {
@@ -198,17 +254,15 @@ module.exports = [
       'node/no-extraneous-require': 'off',
     },
   },
-  // Index.ts configuration
   {
     files: ['src/index.ts'],
     plugins: {
-      'simple-import-sort': simpleImportSortPlugin,
+      'simple-import-sort': simpleImportSort,
     },
     rules: {
       'simple-import-sort/exports': 'error',
     },
   },
-  // Source files configuration (excluding tests, examples, etc.)
   {
     files: ['src/**/!(*.test|*.example|*.doc|*.stories).?(ts|js|tsx|jsx)'],
     rules: {

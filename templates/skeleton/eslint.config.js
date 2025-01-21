@@ -89,7 +89,6 @@ export default [
       // Other plugin rules
       '@shopify/jsx-no-complex-expressions': 'off',
       '@shopify/jsx-no-hardcoded-content': 'off',
-      'hydrogen/prefer-image-component': 'off',
     },
   },
 
