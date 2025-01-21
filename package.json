@@ -15,6 +15,7 @@
     "docs:build": "turbo run build-docs",
     "docs:preview": "turbo run preview-docs",
     "lint": "eslint --flag unstable_config_lookup_from_file --no-error-on-unmatched-pattern ./packages",
+    "lint-staged": "eslint --flag unstable_config_lookup_from_file --no-error-on-unmatched-pattern",
     "format": "prettier --write --ignore-unknown ./packages",
     "format:check": "prettier --check --ignore-unknown ./packages",
     "typecheck": "turbo typecheck --parallel",
@@ -64,10 +65,14 @@
     "@playwright/test": "^1.40.1",
     "@shopify/cli": "~3.73.0",
     "@types/eslint": "^9.6.1",
+    "@types/semver": "^7.5.8",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
     "@typescript-eslint/parser": "^8.21.0",
     "cross-env": "^7.0.3",
     "eslint": "^9.18.0",
+    "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-plugin-import": "^2.31.0",
+    "globals": "^15.14.0",
     "lint-staged": "^10.5.4",
     "prettier": "^2.8.4",
     "rimraf": "^3.0.2",
@@ -87,8 +92,10 @@
     "*.{js,jsx}": [
       "prettier --write"
     ],
+    "packages/**/*.{ts,tsx}": [
+      "npm run lint-staged --"
+    ],
     "*.{ts,tsx}": [
-      "npm run lint --",
       "prettier --parser=typescript --write"
     ],
     "*.html": [

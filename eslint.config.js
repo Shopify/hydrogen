@@ -18,6 +18,13 @@ module.exports = [
   },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
+    settings: {
+      'import/resolvers': {
+        typescript: {
+          project: ['packages/*/tsconfig.json', 'templates/*/tsconfig.json'],
+        },
+      },
+    },
     languageOptions: {
       parser: typescriptParser,
       parserOptions: {

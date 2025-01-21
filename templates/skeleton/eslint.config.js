@@ -1,49 +1,56 @@
+import {fixupConfigRules, fixupPluginRules} from '@eslint/compat';
+import eslintComments from 'eslint-plugin-eslint-comments';
+import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
+import jsxA11Y from 'eslint-plugin-jsx-a11y';
+import globals from 'globals';
+import typescriptEslint from '@typescript-eslint/eslint-plugin';
+import _import from 'eslint-plugin-import';
+import tsParser from '@typescript-eslint/parser';
+import jest from 'eslint-plugin-jest';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import js from '@eslint/js';
-import eslintConfigPrettier from 'eslint-config-prettier';
-import eslintCommentsPlugin from 'eslint-plugin-eslint-comments';
-import reactRecommended from 'eslint-plugin-react/configs/recommended.js';
-import reactJsxRuntime from 'eslint-plugin-react/configs/jsx-runtime.js';
-import reactHooksPlugin from 'eslint-plugin-react-hooks';
-import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
-import typescriptPlugin from '@typescript-eslint/eslint-plugin';
-import typescriptParser from '@typescript-eslint/parser';
-import jestPlugin from 'eslint-plugin-jest';
-import importPlugin from 'eslint-plugin-import';
-import reactPlugin from 'eslint-plugin-react';
+import {FlatCompat} from '@eslint/eslintrc';
 
-/** @type {import('eslint').Flat.Config[]} */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+  allConfig: js.configs.all,
+});
+
 export default [
-  // Base configuration for all files
   {
-    linterOptions: {
-      reportUnusedDisableDirectives: true,
-    },
     ignores: [
-      'node_modules/',
-      'build/',
-      'bin/',
-      '*.d.ts',
-      'dist/',
-      '*.graphql.d.ts',
-      '*.graphql.ts',
-      '!**/.server',
-      '!**/.client',
+      '**/node_modules/',
+      '**/build/',
+      '**/*.graphql.d.ts',
+      '**/*.graphql.ts',
     ],
   },
-
-  // JavaScript/JSX files
+  ...fixupConfigRules(
+    compat.extends(
+      'eslint:recommended',
+      'plugin:eslint-comments/recommended',
+      'plugin:react/recommended',
+      'plugin:react-hooks/recommended',
+      'plugin:jsx-a11y/recommended',
+    ),
+  ),
   {
-    files: ['**/*.{js,jsx,ts,tsx}'],
-    ...js.configs.recommended,
-    ...reactRecommended,
-    ...reactJsxRuntime,
     plugins: {
-      react: reactPlugin,
-      'eslint-comments': eslintCommentsPlugin,
-      'react-hooks': reactHooksPlugin,
-      'jsx-a11y': jsxA11yPlugin,
+      'eslint-comments': fixupPluginRules(eslintComments),
+      react: fixupPluginRules(react),
+      'react-hooks': fixupPluginRules(reactHooks),
+      'jsx-a11y': fixupPluginRules(jsxA11Y),
     },
     languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
       ecmaVersion: 'latest',
       sourceType: 'module',
       parserOptions: {
@@ -51,11 +58,49 @@ export default [
           jsx: true,
         },
       },
-      globals: {
-        document: 'readonly',
-        navigator: 'readonly',
-        window: 'readonly',
+    },
+    settings: {
+      react: {
+        version: 'detect',
       },
+    },
+    rules: {
+      'eslint-comments/no-unused-disable': 'error',
+      'no-console': [
+        'warn',
+        {
+          allow: ['warn', 'error'],
+        },
+      ],
+      'no-use-before-define': 'off',
+      'no-warning-comments': 'off',
+      'object-shorthand': [
+        'error',
+        'always',
+        {
+          avoidQuotes: true,
+        },
+      ],
+      'no-useless-escape': 'off',
+      'no-case-declarations': 'off',
+    },
+  },
+  ...fixupConfigRules(
+    compat.extends(
+      'plugin:react/recommended',
+      'plugin:react/jsx-runtime',
+      'plugin:react-hooks/recommended',
+      'plugin:jsx-a11y/recommended',
+    ),
+  ).map((config) => ({
+    ...config,
+    files: ['**/*.{js,jsx,ts,tsx}'],
+  })),
+  {
+    files: ['**/*.{js,jsx,ts,tsx}'],
+    plugins: {
+      react: fixupPluginRules(react),
+      'jsx-a11y': fixupPluginRules(jsxA11Y),
     },
     settings: {
       react: {
@@ -63,53 +108,65 @@ export default [
       },
       formComponents: ['Form'],
       linkComponents: [
-        {name: 'Link', linkAttribute: 'to'},
-        {name: 'NavLink', linkAttribute: 'to'},
+        {
+          name: 'Link',
+          linkAttribute: 'to',
+        },
+        {
+          name: 'NavLink',
+          linkAttribute: 'to',
+        },
       ],
+      'import/resolver': {
+        typescript: {},
+      },
     },
     rules: {
-      'eslint-comments/disable-enable-pair': 'error',
-      'eslint-comments/no-unused-disable': 'error',
-      'no-console': ['warn', {allow: ['warn', 'error']}],
-      'no-use-before-define': 'off',
-      'no-warning-comments': 'off',
-      'no-useless-escape': 'off',
-      'object-shorthand': ['error', 'always', {avoidQuotes: true}],
-
-      // React specific rules
+      'jsx-a11y/control-has-associated-label': 'off',
+      'jsx-a11y/label-has-for': 'off',
       'react/display-name': 'off',
       'react/no-array-index-key': 'warn',
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
-
-      // JSX A11y rules
-      'jsx-a11y/control-has-associated-label': 'off',
-      'jsx-a11y/label-has-for': 'off',
-
-      // Other plugin rules
-      '@shopify/jsx-no-complex-expressions': 'off',
-      '@shopify/jsx-no-hardcoded-content': 'off',
     },
   },
-
-  // TypeScript files
+  ...fixupConfigRules(
+    compat.extends(
+      'plugin:@typescript-eslint/recommended',
+      'plugin:import/recommended',
+      'plugin:import/typescript',
+    ),
+  ).map((config) => ({
+    ...config,
+    files: ['**/*.{ts,tsx}'],
+  })),
   {
     files: ['**/*.{ts,tsx}'],
     plugins: {
-      '@typescript-eslint': typescriptPlugin,
-      import: importPlugin,
+      '@typescript-eslint': fixupPluginRules(typescriptEslint),
+      import: fixupPluginRules(_import),
     },
     languageOptions: {
-      parser: typescriptParser,
+      parser: tsParser,
+      parserOptions: {
+        projectService: {
+          allowDefaultProject: ['.graphqlrc.ts'],
+        },
+        tsconfigRootDir: __dirname,
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
     },
     settings: {
       'import/internal-regex': '^~/',
-      'import/resolver': {
+      'import/resolvers': {
         node: {
           extensions: ['.ts', '.tsx'],
         },
         typescript: {
           alwaysTryTypes: true,
+          project: __dirname,
         },
       },
     },
@@ -117,44 +174,87 @@ export default [
       '@typescript-eslint/ban-ts-comment': 'off',
       '@typescript-eslint/naming-convention': 'off',
       '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-empty-function': 'off',
-      '@typescript-eslint/no-empty-interface': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-non-null-assertion': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
     },
   },
-
-  // Test files
   {
-    files: ['*.test.*'],
-    plugins: {
-      jest: jestPlugin,
-    },
-    rules: {
-      ...jestPlugin.configs.recommended.rules,
-    },
+    files: ['**/.eslintrc.cjs'],
     languageOptions: {
       globals: {
-        jest: 'readonly',
-        expect: 'readonly',
-        describe: 'readonly',
-        it: 'readonly',
-        beforeEach: 'readonly',
-        afterEach: 'readonly',
+        ...globals.node,
       },
     },
   },
-
-  // Server files
+  ...compat.extends('plugin:jest/recommended').map((config) => ({
+    ...config,
+    files: ['**/*.test.*'],
+  })),
   {
-    files: ['*.server.*'],
+    files: ['**/*.test.*'],
+    plugins: {
+      jest,
+    },
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.jest,
+      },
+    },
+  },
+  {
+    files: ['**/*.server.*'],
     rules: {
       'react-hooks/rules-of-hooks': 'off',
     },
   },
-
-  // Apply Prettier last
-  eslintConfigPrettier,
+  ...fixupConfigRules(
+    compat.extends(
+      'plugin:@typescript-eslint/eslint-recommended',
+      'plugin:@typescript-eslint/recommended',
+    ),
+  ).map((config) => ({
+    ...config,
+    files: ['**/*.ts', '**/*.tsx'],
+  })),
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parser: tsParser,
+    },
+    rules: {
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          selector: 'default',
+          format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
+          leadingUnderscore: 'allowSingleOrDouble',
+          trailingUnderscore: 'allowSingleOrDouble',
+        },
+        {
+          selector: 'typeLike',
+          format: ['PascalCase'],
+        },
+        {
+          selector: 'typeParameter',
+          format: ['PascalCase'],
+          leadingUnderscore: 'allow',
+        },
+        {
+          selector: 'interface',
+          format: ['PascalCase'],
+        },
+        {
+          selector: 'property',
+          format: null,
+        },
+      ],
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-empty-interface': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'react/prop-types': 'off',
+    },
+  },
 ];

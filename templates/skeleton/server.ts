@@ -1,5 +1,7 @@
-// @ts-ignore
 // Virtual entry point for the app
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+// eslint-disable-next-line import/no-unresolved
 import * as remixBuild from 'virtual:remix/server-build';
 import {storefrontRedirect} from '@shopify/hydrogen';
 import {createRequestHandler} from '@shopify/remix-oxygen';
