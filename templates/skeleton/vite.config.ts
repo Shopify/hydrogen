@@ -9,7 +9,7 @@ export default defineConfig({
     hydrogen(),
     oxygen(),
     remix({
-      presets: [hydrogen.preset()],
+      presets: [hydrogen.v3preset()],
       future: {
         v3_fetcherPersist: true,
         v3_relativeSplatPath: true,
