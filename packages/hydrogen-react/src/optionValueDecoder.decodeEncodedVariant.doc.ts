@@ -8,7 +8,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'isOptionValueCombinationInEncodedVariant',
       type: 'utility',
-      url: '/docs/api/hydrogen/2024-10/utilities/isOptionValueCombinationInEncodedVariant',
+      url: '/docs/api/hydrogen/2025-01/utilities/isOptionValueCombinationInEncodedVariant',
     },
   ],
   description:

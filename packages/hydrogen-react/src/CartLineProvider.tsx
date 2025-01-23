@@ -13,7 +13,7 @@ type CartLinePartialDeep = PartialDeep<
 export const CartLineContext = createContext<CartLinePartialDeep | null>(null);
 
 /**
- * The `useCartLine` hook provides access to the [CartLine object](https://shopify.dev/api/storefront/2024-10/objects/cartline) from the Storefront API. It must be a descendent of a `CartProvider` component.
+ * The `useCartLine` hook provides access to the [CartLine object](https://shopify.dev/api/storefront/2025-01/objects/cartline) from the Storefront API. It must be a descendent of a `CartProvider` component.
  */
 export function useCartLine(): CartLinePartialDeep {
   const context = useContext(CartLineContext);

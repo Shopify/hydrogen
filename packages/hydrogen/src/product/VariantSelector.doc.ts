@@ -8,7 +8,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'getSelectedProductOptions',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2024-10/utilities/getselectedproductoptions',
+      url: '/docs/api/hydrogen/2025-01/utilities/getselectedproductoptions',
     },
   ],
   description: `The \`VariantSelector\` component helps you build a form for selecting available variants of a product. It is important for variant selection state to be maintained in the URL, so that the user can navigate to a product and return back to the same variant selection. It is also important that the variant selection state is shareable via URL. The \`VariantSelector\` component provides a render prop that renders for each product option.`,
