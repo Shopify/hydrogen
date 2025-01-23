@@ -40,7 +40,7 @@ export function Seo({debug}: SeoProps) {
   const location = useLocation();
 
   console.warn(
-    '[h2:warn:Seo] The `<Seo/>` component is deprecated. Use `getSeoMeta` instead.\nSee: https://shopify.dev/docs/api/hydrogen/2024-10/utilities/getseometa',
+    '[h2:warn:Seo] The `<Seo/>` component is deprecated. Use `getSeoMeta` instead.\nSee: https://shopify.dev/docs/api/hydrogen/2025-01/utilities/getseometa',
   );
 
   // Capture the seo and jsonLd configs from the route matches

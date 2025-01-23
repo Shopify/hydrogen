@@ -68,7 +68,7 @@ describe(`useMoney`, () => {
     const SHOPIFY_CONFIG: ShopifyProviderProps = {
       storeDomain: 'https://notashop.myshopify.com',
       storefrontToken: 'abc123',
-      storefrontApiVersion: '2024-10',
+      storefrontApiVersion: '2025-01',
       countryIsoCode: 'BR',
       languageIsoCode: 'PT_PT',
     };
