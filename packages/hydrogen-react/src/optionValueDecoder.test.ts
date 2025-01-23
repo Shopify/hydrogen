@@ -55,7 +55,16 @@ describe('decodeEncodedVariant', () => {
   describe('v1', () => {
     const VERSION_PREFIX = 'v1_';
 
-    it('it correctly decodes a set of 1-dimensional arrays with no gaps in the number sequence', () => {
+    // occurs if a product has no available variants
+    it('returns an empty array if the encoding contains no option values', () => {
+      expect(decodeEncodedVariant(`${VERSION_PREFIX}`)).toStrictEqual([]);
+    });
+
+    it('decodes a single option value', () => {
+      expect(decodeEncodedVariant(`${VERSION_PREFIX}0`)).toStrictEqual([[0]]);
+    });
+
+    it('decodes a set of 1-dimensional arrays with no gaps in the number sequence', () => {
       expect(decodeEncodedVariant(`${VERSION_PREFIX}0-9`)).toStrictEqual([
         [0],
         [1],
@@ -70,13 +79,21 @@ describe('decodeEncodedVariant', () => {
       ]);
     });
 
-    it('it correctly decodes a set of 1-dimensional arrays with gaps in the number sequence', () => {
+    it('decodes a set of 1-dimensional arrays with gaps in the number sequence', () => {
       expect(
-        decodeEncodedVariant(`${VERSION_PREFIX}0-2 4-6 8-9`),
-      ).toStrictEqual([[0], [1], [2], [4], [5], [6], [8], [9]]);
+        decodeEncodedVariant(`${VERSION_PREFIX}0-2 4-6 8-10`),
+      ).toStrictEqual([[0], [1], [2], [4], [5], [6], [8], [9], [10]]);
     });
 
-    it('it correctly decodes a set of 2-dimensional arrays with no gaps in the number sequence', () => {
+    // this can only occur for an availability encoding, not a existence encoding
+    it('decodes a set of 1-dimensional arrays with gaps and no ranges in the number sequence', () => {
+      expect(decodeEncodedVariant(`${VERSION_PREFIX}0 2`)).toStrictEqual([
+        [0],
+        [2],
+      ]);
+    });
+
+    it('decodes a set of 2-dimensional arrays with no gaps in the number sequence', () => {
       expect(
         decodeEncodedVariant(`${VERSION_PREFIX}0:0-2,1:0-2,2:0-2,`),
       ).toStrictEqual([
@@ -92,7 +109,7 @@ describe('decodeEncodedVariant', () => {
       ]);
     });
 
-    it('it correctly decodes a set of 2-dimensional arrays with gaps in the number sequence', () => {
+    it('decodes a set of 2-dimensional arrays with gaps in the number sequence', () => {
       expect(
         decodeEncodedVariant(`${VERSION_PREFIX}0:0-1,1:0 2,2:1-2,`),
       ).toStrictEqual([
@@ -105,7 +122,20 @@ describe('decodeEncodedVariant', () => {
       ]);
     });
 
-    it('it correctly decodes a set of 3-dimensional arrays with no gaps in the number sequence', () => {
+    it('decodes a set of 2-dimensional arrays with gaps and no rangesin the number sequence', () => {
+      expect(
+        decodeEncodedVariant(`${VERSION_PREFIX}0:0-1,1:0 2,2:1 3,`),
+      ).toStrictEqual([
+        [0, 0],
+        [0, 1],
+        [1, 0],
+        [1, 2],
+        [2, 1],
+        [2, 3],
+      ]);
+    });
+
+    it('decodes a set of 3-dimensional arrays with no gaps in the number sequence', () => {
       const output = generateCombinations(3, 3);
       expect(
         decodeEncodedVariant(
@@ -114,7 +144,7 @@ describe('decodeEncodedVariant', () => {
       ).toStrictEqual(output);
     });
 
-    it('it correctly decodes a set of 3-dimensional arrays with gaps in the number sequence', () => {
+    it('decodes a set of 3-dimensional arrays with gaps in the number sequence', () => {
       const output = generateCombinations(3, 3, [
         [1, 0, 1],
         [2, 2, 2],
@@ -127,7 +157,7 @@ describe('decodeEncodedVariant', () => {
       ).toStrictEqual(output);
     });
 
-    it('it correctly decodes a set of 4-dimensional arrays with no gaps in the number sequence', () => {
+    it('decodes a set of 4-dimensional arrays with no gaps in the number sequence', () => {
       const output = generateCombinations(4, 3);
       expect(
         decodeEncodedVariant(
@@ -136,7 +166,7 @@ describe('decodeEncodedVariant', () => {
       ).toStrictEqual(output);
     });
 
-    it('it correctly decodes a set of 4-dimensional arrays with gaps in the number sequence', () => {
+    it('decodes a set of 4-dimensional arrays with gaps in the number sequence', () => {
       const output = generateCombinations(4, 3, [
         [1, 0, 1, 0],
         [2, 2, 2, 0],
