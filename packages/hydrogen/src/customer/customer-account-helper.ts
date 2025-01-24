@@ -12,8 +12,8 @@ export function createCustomerAccountHelper(
   customerApiVersion: string,
   shopId: string,
 ) {
-  const customerAccountUrl = `https://shopify.com/${shopId}`
-  const customerAccountAuthUrl = `https://shopify.com/authentication/${shopId}`
+  const customerAccountUrl = `https://shopify.com/${shopId}`;
+  const customerAccountAuthUrl = `https://shopify.com/authentication/${shopId}`;
 
   return function getCustomerAccountUrl(urlType: URL_TYPE): string {
     switch (urlType) {

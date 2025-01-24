@@ -227,8 +227,7 @@ export function createCustomerAccountClient({
   }
 
   async function isLoggedIn() {
-    if (!shopId)
-      return false;
+    if (!shopId) return false;
 
     const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
     const accessToken = customerAccount?.accessToken;

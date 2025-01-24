@@ -6,10 +6,7 @@ const customerAccountUrl = `https://shopify.com/${shopId}`;
 
 describe('return correct urls', () => {
   describe('when shopId is provided', () => {
-    const getAccountUrl = createCustomerAccountHelper(
-      '2025-01',
-      shopId,
-    );
+    const getAccountUrl = createCustomerAccountHelper('2025-01', shopId);
 
     it('returns customer account base url', () => {
       expect(getAccountUrl(URL_TYPE.CA_BASE_URL)).toBe(customerAccountUrl);
