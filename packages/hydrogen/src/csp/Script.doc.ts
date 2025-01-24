@@ -8,12 +8,12 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'createContentSecurityPolicy',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2024-10/utilities/createcontentsecuritypolicy',
+      url: '/docs/api/hydrogen/2025-01/utilities/createcontentsecuritypolicy',
     },
     {
       name: 'useNonce',
       type: 'hooks',
-      url: '/docs/api/hydrogen/2024-10/hooks/usenonce',
+      url: '/docs/api/hydrogen/2025-01/hooks/usenonce',
     },
   ],
   description: `Use the \`Script\` component to add third-party scripts to your app. It automatically adds a nonce attribute from your [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy). If you load a script that directly modifies the DOM, you are likely to have hydration errors. Use the \`waitForHydration\` prop to load the script after the page hydrates.`,

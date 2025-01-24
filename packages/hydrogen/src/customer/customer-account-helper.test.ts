@@ -7,7 +7,7 @@ const customerAccountUrl = `https://shopify.com/${shopId}`;
 describe('return correct urls', () => {
   describe('when shopId is provided', () => {
     const getAccountUrl = createCustomerAccountHelper(
-      '2024-10',
+      '2025-01',
       customerAccountUrl,
       shopId,
     );
@@ -24,7 +24,7 @@ describe('return correct urls', () => {
 
     it('returns customer account graphql url', () => {
       expect(getAccountUrl(URL_TYPE.GRAPHQL)).toBe(
-        `${customerAccountUrl}/account/customer/api/2024-10/graphql`,
+        `${customerAccountUrl}/account/customer/api/2025-01/graphql`,
       );
     });
 
@@ -55,7 +55,7 @@ describe('return correct urls', () => {
 
   describe('when shopId is not provided', () => {
     const getAccountUrl = createCustomerAccountHelper(
-      '2024-10',
+      '2025-01',
       customerAccountUrl,
       undefined,
     );
@@ -72,7 +72,7 @@ describe('return correct urls', () => {
 
     it('returns customer account graphql url', () => {
       expect(getAccountUrl(URL_TYPE.GRAPHQL)).toBe(
-        `https://shopify.com/${shopId}/account/customer/api/2024-10/graphql`,
+        `https://shopify.com/${shopId}/account/customer/api/2025-01/graphql`,
       );
     });
 

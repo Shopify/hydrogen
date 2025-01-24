@@ -4,8 +4,8 @@ import {
   customerAccountApiCustomScalars,
 } from './src/codegen.helpers';
 
-const SF_API_VERSION = '2024-10';
-const CA_API_VERSION = '2024-10';
+const SF_API_VERSION = '2025-01';
+const CA_API_VERSION = '2025-01';
 
 const storefrontAPISchema: CodegenConfig['schema'] = {
   [`https://hydrogen-preview.myshopify.com/api/${SF_API_VERSION}/graphql.json`]:
