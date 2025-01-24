@@ -175,7 +175,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
           )
         : await cartCreate({giftCardCodes}, optionalParams);
     },
-    removeGiftCardCodes: cartGiftCardCodesUpdateDefault(mutateOptions),
+    removeGiftCardCodes: cartGiftCardCodesRemoveDefault(mutateOptions),
     updateBuyerIdentity: async (buyerIdentity, optionalParams) => {
       return cartId || optionalParams?.cartId
         ? await cartBuyerIdentityUpdateDefault(mutateOptions)(
