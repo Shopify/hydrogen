@@ -15,8 +15,6 @@
     "snakecase-keys": "^5.5.0"
   },
   "devDependencies": {
-    "@remix-run/fs-routes": "^2.15.2",
-    "@remix-run/route-config": "^2.15.2",
     "@types/crypto-js": "^4.2.1"
   }
 }
