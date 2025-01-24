@@ -69,7 +69,6 @@ function defaultAuthStatusHandler(
 export function createCustomerAccountClient({
   session,
   customerAccountId,
-  customerAccountUrl: deprecatedCustomerAccountUrl,
   shopId,
   customerApiVersion = DEFAULT_CUSTOMER_API_VERSION,
   request,
@@ -100,12 +99,6 @@ export function createCustomerAccountClient({
     );
   }
 
-  if (!!deprecatedCustomerAccountUrl && !shopId) {
-    warnOnce(
-      '[h2:warn:createCustomerAccountClient] The `customerAccountUrl` option is deprecated and will be removed in a future version. Please remove `customerAccountUrl` and supply a `shopId: env.SHOP_ID` option instead.\n\nIf using `createHydrogenContext`, ensure there is a SHOP_ID defined in your local .env file.',
-    );
-  }
-
   const authStatusHandler = customAuthStatusHandler
     ? customAuthStatusHandler
     : () => defaultAuthStatusHandler(request, loginPath);
@@ -123,7 +116,6 @@ export function createCustomerAccountClient({
 
   const getCustomerAccountUrl = createCustomerAccountHelper(
     customerApiVersion,
-    deprecatedCustomerAccountUrl,
     shopId,
   );
 
@@ -235,7 +227,7 @@ export function createCustomerAccountClient({
   }
 
   async function isLoggedIn() {
-    if (!shopId && (!deprecatedCustomerAccountUrl || !customerAccountId))
+    if (!shopId)
       return false;
 
     const customerAccount = session.get(CUSTOMER_ACCOUNT_SESSION_KEY);
