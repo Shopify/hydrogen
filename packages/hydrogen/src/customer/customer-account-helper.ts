@@ -10,21 +10,14 @@ export enum URL_TYPE {
 
 export function createCustomerAccountHelper(
   customerApiVersion: string,
-  deprecatedCustomerAccountUrl?: string,
-  shopId?: string,
+  shopId: string,
 ) {
-  const customerAccountUrl = shopId
-    ? `https://shopify.com/${shopId}`
-    : deprecatedCustomerAccountUrl;
-
-  const customerAccountAuthUrl = shopId
-    ? `https://shopify.com/authentication/${shopId}`
-    : `${deprecatedCustomerAccountUrl}/auth`;
+  const customerAccountUrl = `https://shopify.com/${shopId}`;
+  const customerAccountAuthUrl = `https://shopify.com/authentication/${shopId}`;
 
   return function getCustomerAccountUrl(urlType: URL_TYPE): string {
     switch (urlType) {
       case URL_TYPE.CA_BASE_URL:
-        // @ts-expect-error
         return customerAccountUrl;
       case URL_TYPE.CA_BASE_AUTH_URL:
         return customerAccountAuthUrl;

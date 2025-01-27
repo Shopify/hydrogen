@@ -202,9 +202,6 @@ export function createHydrogenContext<
     // defaults
     customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
     shopId: env.SHOP_ID,
-
-    // deprecated - keep until next major release
-    customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_API_URL,
   });
 
   /*

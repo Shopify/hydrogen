@@ -171,100 +171,6 @@ describe('customer', () => {
       });
     });
 
-    describe('using deprecated customerAccountUrl', () => {
-      it('Redirects to the customer account api login url', async () => {
-        const customer = createCustomerAccountClient({
-          session,
-          customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'https://customer-api',
-          request: new Request('https://localhost'),
-          waitUntil: vi.fn(),
-        });
-
-        const response = await customer.login();
-
-        expect(session.set).toHaveBeenCalledWith(
-          CUSTOMER_ACCOUNT_SESSION_KEY,
-          expect.objectContaining({
-            state: expect.any(String),
-            nonce: expect.any(String),
-            codeVerifier: expect.any(String),
-          }),
-        );
-
-        expect(response.status).toBe(302);
-        const url = new URL(response.headers.get('location')!);
-
-        expect(url.origin).toBe('https://customer-api');
-        expect(url.pathname).toBe('/auth/oauth/authorize');
-
-        const params = new URLSearchParams(url.search);
-
-        expect(params.get('client_id')).toBe('customerAccountId');
-        expect(params.get('scope')).toBe(
-          'openid email https://api.customers.com/auth/customer.graphql',
-        );
-        expect(params.get('response_type')).toBe('code');
-        expect(params.get('redirect_uri')).toBe(
-          'https://localhost/account/authorize',
-        );
-        expect(params.get('state')).toBeTruthy();
-        expect(params.get('nonce')).toBeTruthy();
-        expect(params.get('code_challenge')).toBeTruthy();
-        expect(params.get('code_challenge_method')).toBe('S256');
-      });
-
-      it('Redirects to the customer account api login url with authUrl as param', async () => {
-        const origin = 'https://localhost';
-        const authUrl = '/customer-account/auth';
-
-        const customer = createCustomerAccountClient({
-          session,
-          customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'https://customer-api',
-          request: new Request(origin),
-          waitUntil: vi.fn(),
-          authUrl,
-        });
-
-        const response = await customer.login();
-        const url = new URL(response.headers.get('location')!);
-
-        expect(url.origin).toBe('https://customer-api');
-        expect(url.pathname).toBe('/auth/oauth/authorize');
-
-        const params = new URLSearchParams(url.search);
-        expect(params.get('redirect_uri')).toBe(
-          new URL(authUrl, origin).toString(),
-        );
-      });
-
-      it('Redirects to the customer account api login url with DEFAULT_AUTH_URL as param if authUrl is cross domain', async () => {
-        const origin = 'https://something-good.com';
-        const authUrl = 'https://something-bad.com/customer-account/auth';
-
-        const customer = createCustomerAccountClient({
-          session,
-          customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'https://customer-api',
-          request: new Request(origin),
-          waitUntil: vi.fn(),
-          authUrl,
-        });
-
-        const response = await customer.login();
-        const url = new URL(response.headers.get('location')!);
-
-        expect(url.origin).toBe('https://customer-api');
-        expect(url.pathname).toBe('/auth/oauth/authorize');
-
-        const params = new URLSearchParams(url.search);
-        expect(params.get('redirect_uri')).toBe(
-          new URL('/account/authorize', origin).toString(),
-        );
-      });
-    });
-
     describe('logout', () => {
       describe('using new auth url when shopId is present in env', () => {
         it('Redirects to the customer account api logout url', async () => {
@@ -542,161 +448,6 @@ describe('customer', () => {
         );
       });
 
-      describe('using deprecated customerAccountUrl', () => {
-        it('Redirects to the customer account api logout url', async () => {
-          const origin = 'https://shop123.com';
-
-          const customer = createCustomerAccountClient({
-            session,
-            customerAccountId: 'customerAccountId',
-            customerAccountUrl: 'https://customer-api',
-            request: new Request(origin),
-            waitUntil: vi.fn(),
-          });
-
-          const response = await customer.logout();
-
-          expect(response.status).toBe(302);
-          const url = new URL(response.headers.get('location')!);
-
-          expect(url.origin).toBe('https://customer-api');
-          expect(url.pathname).toBe('/auth/logout');
-
-          const params = new URLSearchParams(url.search);
-
-          expect(params.get('id_token_hint')).toBe('id_token');
-          expect(params.get('post_logout_redirect_uri')).toBe(
-            new URL(origin).toString(),
-          );
-
-          // Session is cleared
-          expect(session.unset).toHaveBeenCalledWith(
-            CUSTOMER_ACCOUNT_SESSION_KEY,
-          );
-        });
-
-        it('Redirects to the customer account api logout url with postLogoutRedirectUri in the param', async () => {
-          const origin = 'https://shop123.com';
-          const postLogoutRedirectUri = '/post-logout-landing-page';
-
-          const customer = createCustomerAccountClient({
-            session,
-            customerAccountId: 'customerAccountId',
-            customerAccountUrl: 'https://customer-api',
-            request: new Request(origin),
-            waitUntil: vi.fn(),
-          });
-
-          const response = await customer.logout({postLogoutRedirectUri});
-
-          const url = new URL(response.headers.get('location')!);
-          expect(url.origin).toBe('https://customer-api');
-          expect(url.pathname).toBe('/auth/logout');
-
-          const params = new URLSearchParams(url.search);
-          expect(params.get('id_token_hint')).toBe('id_token');
-          expect(params.get('post_logout_redirect_uri')).toBe(
-            `${origin}${postLogoutRedirectUri}`,
-          );
-
-          // Session is cleared
-          expect(session.unset).toHaveBeenCalledWith(
-            CUSTOMER_ACCOUNT_SESSION_KEY,
-          );
-        });
-
-        it('Redirects to app origin when customer is not login by default', async () => {
-          const origin = 'https://shop123.com';
-          const mockSession: HydrogenSession = {
-            commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
-            get: vi.fn(() => undefined) as HydrogenSession['get'],
-            set: vi.fn(),
-            unset: vi.fn(),
-          };
-
-          const customer = createCustomerAccountClient({
-            session: mockSession,
-            customerAccountId: 'customerAccountId',
-            customerAccountUrl: 'https://customer-api',
-            request: new Request(origin),
-            waitUntil: vi.fn(),
-          });
-
-          const response = await customer.logout();
-
-          const url = new URL(response.headers.get('location')!);
-          expect(url.toString()).toBe(new URL(origin).toString());
-
-          // Session is cleared
-          expect(mockSession.unset).toHaveBeenCalledWith(
-            CUSTOMER_ACCOUNT_SESSION_KEY,
-          );
-        });
-
-        it('Redirects to postLogoutRedirectUri when customer is not login', async () => {
-          const origin = 'https://shop123.com';
-          const postLogoutRedirectUri = '/post-logout-landing-page';
-
-          const mockSession: HydrogenSession = {
-            commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
-            get: vi.fn(() => undefined) as HydrogenSession['get'],
-            set: vi.fn(),
-            unset: vi.fn(),
-          };
-
-          const customer = createCustomerAccountClient({
-            session: mockSession,
-            customerAccountId: 'customerAccountId',
-            customerAccountUrl: 'https://customer-api',
-            request: new Request(origin),
-            waitUntil: vi.fn(),
-          });
-
-          const response = await customer.logout({postLogoutRedirectUri});
-
-          const url = new URL(response.headers.get('location')!);
-          expect(url.toString()).toBe(
-            new URL(postLogoutRedirectUri, origin).toString(),
-          );
-
-          // Session is cleared
-          expect(mockSession.unset).toHaveBeenCalledWith(
-            CUSTOMER_ACCOUNT_SESSION_KEY,
-          );
-        });
-
-        it('Redirects to app origin if postLogoutRedirectUri is cross-site when customer is not login', async () => {
-          const origin = 'https://shop123.com';
-          const postLogoutRedirectUri =
-            'https://something-bad.com/post-logout-landing-page';
-
-          const mockSession: HydrogenSession = {
-            commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
-            get: vi.fn(() => undefined) as HydrogenSession['get'],
-            set: vi.fn(),
-            unset: vi.fn(),
-          };
-
-          const customer = createCustomerAccountClient({
-            session: mockSession,
-            customerAccountId: 'customerAccountId',
-            customerAccountUrl: 'https://customer-api',
-            request: new Request(origin),
-            waitUntil: vi.fn(),
-          });
-
-          const response = await customer.logout({postLogoutRedirectUri});
-
-          const url = new URL(response.headers.get('location')!);
-          expect(url.toString()).toBe(new URL(origin).toString());
-
-          // Session is cleared
-          expect(mockSession.unset).toHaveBeenCalledWith(
-            CUSTOMER_ACCOUNT_SESSION_KEY,
-          );
-        });
-      });
-
       it('Saved redirectPath to session by default if `return_to` param was found', async () => {
         const redirectPath = '/account/orders';
         const request = new Request(
@@ -708,7 +459,7 @@ describe('customer', () => {
         const customer = createCustomerAccountClient({
           session,
           customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'https://customer-api',
+          shopId: '1',
           request,
           waitUntil: vi.fn(),
         });
@@ -734,7 +485,7 @@ describe('customer', () => {
         const customer = createCustomerAccountClient({
           session,
           customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'https://customer-api',
+          shopId: '1',
           request,
           waitUntil: vi.fn(),
         });
@@ -757,7 +508,7 @@ describe('customer', () => {
         const customer = createCustomerAccountClient({
           session,
           customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'https://customer-api',
+          shopId: '1',
           request,
           waitUntil: vi.fn(),
         });
@@ -776,7 +527,7 @@ describe('customer', () => {
         const customer = createCustomerAccountClient({
           session,
           customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'https://customer-api',
+          shopId: '1',
           request: new Request('https://localhost'),
           waitUntil: vi.fn(),
         });
@@ -813,7 +564,7 @@ describe('customer', () => {
         const customer = createCustomerAccountClient({
           session,
           customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'https://customer-api',
+          shopId: '1',
           request: new Request('https://localhost?state=nomatch&code=code'),
           waitUntil: vi.fn(),
         });
@@ -995,208 +746,6 @@ describe('customer', () => {
         );
       });
     });
-
-    describe('using deprecated customerAccountUrl', () => {
-      it('Throws unauthorized if no code or state params are passed', async () => {
-        const customer = createCustomerAccountClient({
-          session,
-          customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'https://customer-api',
-          request: new Request('https://localhost'),
-          waitUntil: vi.fn(),
-        });
-
-        await expect(customer.authorize()).rejects.toThrowError(
-          'Unauthorized No code or state parameter found in the redirect URL.',
-        );
-      });
-
-      it("Throws unauthorized if state doesn't match session value", async () => {
-        const customer = createCustomerAccountClient({
-          session,
-          customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'https://customer-api',
-          request: new Request('https://localhost?state=nomatch&code=code'),
-          waitUntil: vi.fn(),
-        });
-
-        await expect(customer.authorize()).rejects.toThrowError(
-          'Unauthorized The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerAccountClient`.',
-        );
-      });
-
-      it('Throws if requesting the token fails', async () => {
-        const customer = createCustomerAccountClient({
-          session,
-          customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'https://customer-api',
-          request: new Request('https://localhost?state=state&code=code'),
-          waitUntil: vi.fn(),
-        });
-
-        fetch.mockResolvedValue(createFetchResponse('some text', {ok: false}));
-
-        await expect(customer.authorize()).rejects.toThrowError('some text');
-      });
-
-      it("Throws if the encoded nonce doesn't match the value in the session", async () => {
-        const customer = createCustomerAccountClient({
-          session,
-          customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'https://customer-api',
-          request: new Request('https://localhost?state=state&code=code'),
-          waitUntil: vi.fn(),
-        });
-
-        fetch.mockResolvedValue(
-          createFetchResponse(
-            {
-              access_token: 'access_token',
-              expires_in: '',
-              id_token: `${btoa('{}')}.${btoa(
-                '{"nonce": "nomatch"}',
-              )}.signature`,
-              refresh_token: 'refresh_token',
-            },
-            {ok: true},
-          ),
-        );
-
-        await expect(customer.authorize()).rejects.toThrowError(
-          'Unauthorized Returned nonce does not match: nonce !== nomatch',
-        );
-      });
-
-      it('Redirects on successful authorization and updates session', async () => {
-        const customer = createCustomerAccountClient({
-          session,
-          customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'https://customer-api',
-          request: new Request('https://localhost?state=state&code=code'),
-          waitUntil: vi.fn(),
-        });
-
-        fetch.mockResolvedValue(
-          createFetchResponse(
-            {
-              access_token: 'access_token',
-              expires_in: '',
-              id_token: `${btoa('{}')}.${btoa('{"nonce": "nonce"}')}.signature`,
-              refresh_token: 'refresh_token',
-            },
-            {ok: true},
-          ),
-        );
-
-        const response = await customer.authorize();
-
-        expect(response.status).toBe(302);
-        expect(response.headers.get('location')).toBe('/account');
-
-        expect(session.set).toHaveBeenCalledWith(
-          CUSTOMER_ACCOUNT_SESSION_KEY,
-          expect.objectContaining({
-            accessToken: 'access_token',
-            expiresAt: expect.any(String),
-            idToken: 'e30=.eyJub25jZSI6ICJub25jZSJ9.signature',
-            refreshToken: 'refresh_token',
-          }),
-        );
-      });
-
-      it('Redirects to redirectPath on successful authorization and updates session', async () => {
-        const redirectPath = '/account/orders';
-        session = {
-          commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
-          get: vi.fn(() => {
-            return {...mockCustomerAccountSession, redirectPath};
-          }) as HydrogenSession['get'],
-          set: vi.fn(),
-          unset: vi.fn(),
-        };
-
-        const customer = createCustomerAccountClient({
-          session,
-          customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'https://customer-api',
-          request: new Request('https://localhost?state=state&code=code'),
-          waitUntil: vi.fn(),
-        });
-
-        fetch.mockResolvedValue(
-          createFetchResponse(
-            {
-              access_token: 'access_token',
-              expires_in: '',
-              id_token: `${btoa('{}')}.${btoa('{"nonce": "nonce"}')}.signature`,
-              refresh_token: 'refresh_token',
-            },
-            {ok: true},
-          ),
-        );
-
-        const response = await customer.authorize();
-
-        expect(response.status).toBe(302);
-        expect(response.headers.get('location')).toBe(redirectPath);
-
-        expect(session.set).toHaveBeenCalledWith(
-          CUSTOMER_ACCOUNT_SESSION_KEY,
-          expect.objectContaining({
-            accessToken: 'access_token',
-            expiresAt: expect.any(String),
-            idToken: 'e30=.eyJub25jZSI6ICJub25jZSJ9.signature',
-            refreshToken: 'refresh_token',
-          }),
-        );
-      });
-
-      it('exchanges for a storefront customer access token for b2b', async () => {
-        const redirectPath = '/account/orders';
-        session = {
-          commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
-          get: vi.fn(() => {
-            return {...mockCustomerAccountSession, redirectPath};
-          }) as HydrogenSession['get'],
-          set: vi.fn(),
-          unset: vi.fn(),
-        };
-
-        const customer = createCustomerAccountClient({
-          session,
-          customerAccountId: 'customerAccountId',
-          customerAccountUrl: 'https://customer-api',
-          request: new Request('https://localhost?state=state&code=code'),
-          unstableB2b: true,
-          waitUntil: vi.fn(),
-        });
-
-        fetch.mockResolvedValue(
-          createFetchResponse(
-            {
-              access_token: 'access_token',
-              expires_in: '',
-              id_token: `${btoa('{}')}.${btoa('{"nonce": "nonce"}')}.signature`,
-              refresh_token: 'refresh_token',
-            },
-            {ok: true},
-          ),
-        );
-
-        const response = await customer.authorize();
-
-        expect(response.status).toBe(302);
-
-        expect(fetch).toHaveBeenCalledWith(
-          expect.stringContaining('https://customer-api/account/customer/api'),
-          expect.objectContaining({
-            body: expect.stringContaining(
-              'storefrontCustomerAccessTokenCreate',
-            ),
-          }),
-        );
-      });
-    });
   });
 
   describe('isLoggedIn()', () => {
@@ -1204,7 +753,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -1216,7 +765,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -1230,7 +779,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -1254,7 +803,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -1274,7 +823,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -1288,7 +837,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -1302,7 +851,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -1326,7 +875,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -1346,7 +895,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost/account/orders'),
         waitUntil: vi.fn(),
       });
@@ -1366,7 +915,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost/account/orders'),
         waitUntil: vi.fn(),
       });
@@ -1379,7 +928,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost/account/orders'),
         waitUntil: vi.fn(),
         customAuthStatusHandler,
@@ -1399,7 +948,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -1423,7 +972,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost/account/orders/123'),
         waitUntil: vi.fn(),
       });
@@ -1444,7 +993,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost/account/orders'),
         waitUntil: vi.fn(),
         customAuthStatusHandler,
@@ -1464,7 +1013,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -1483,7 +1032,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -1497,7 +1046,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });

@@ -15,8 +15,8 @@ export default {
       waitUntil: (p) => executionContext.waitUntil(p),
       /* Public Customer Account API token for your store */
       customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,
-      /* Public account URL for your store */
-      customerAccountUrl: env.PUBLIC_CUSTOMER_ACCOUNT_URL,
+      /* Shop Id */
+      shopId: env.SHOP_ID,
       request,
       session,
     });
