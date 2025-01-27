@@ -25,7 +25,6 @@
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "@types/react-syntax-highlighter": "^15.5.7",
-    "eslint": "^9.18.0",
     "typescript": "^5.2.2",
     "vite": "^5.1.8",
     "vite-tsconfig-paths": "^4.3.1"
