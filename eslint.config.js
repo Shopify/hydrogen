@@ -1,15 +1,15 @@
 const {fixupConfigRules, fixupPluginRules} = require('@eslint/compat');
+const js = require('@eslint/js');
+const {FlatCompat} = require('@eslint/eslintrc');
 const eslintComments = require('eslint-plugin-eslint-comments');
 const react = require('eslint-plugin-react');
 const reactHooks = require('eslint-plugin-react-hooks');
 const jsxA11Y = require('eslint-plugin-jsx-a11y');
 const tsdoc = require('eslint-plugin-tsdoc');
-const globals = require('globals');
-const tsParser = require('@typescript-eslint/parser');
 const jest = require('eslint-plugin-jest');
 const simpleImportSort = require('eslint-plugin-simple-import-sort');
-const js = require('@eslint/js');
-const {FlatCompat} = require('@eslint/eslintrc');
+const tsParser = require('@typescript-eslint/parser');
+const globals = require('globals');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -25,6 +25,7 @@ const lintedTSPackages = [
 ];
 
 module.exports = [
+  // Global ignores
   {
     ignores: [
       '**/node_modules/',
@@ -53,6 +54,8 @@ module.exports = [
       '**/tsup.config.ts',
     ],
   },
+
+  // Base configurations
   ...fixupConfigRules(
     compat.extends(
       'plugin:node/recommended',
@@ -64,6 +67,8 @@ module.exports = [
       'plugin:react-hooks/recommended',
     ),
   ),
+
+  // Core configuration with plugins and general rules
   {
     plugins: {
       'eslint-comments': fixupPluginRules(eslintComments),
@@ -82,19 +87,13 @@ module.exports = [
           ],
         },
       },
-      react: {
-        version: 'detect',
-      },
-      jest: {
-        version: 28,
-      },
+      react: {version: 'detect'},
+      jest: {version: 28},
     },
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        ecmaFeatures: {
-          jsx: true,
-        },
+        ecmaFeatures: {jsx: true},
       },
       globals: {
         ...globals.browser,
@@ -107,77 +106,69 @@ module.exports = [
       reportUnusedDisableDirectives: false,
     },
     rules: {
-      'no-prototype-builtins': 'off',
-      'no-use-before-define': 'off',
-      'no-warning-comments': 'off',
-      'react/no-children-prop': 'off',
-      'no-empty': 'off',
-      'node/shebang': 'off',
-      'no-control-regex': 'off',
-      'no-async-promise-executor': 'off',
-      'node/no-unpublished-require': 'off',
-      'object-shorthand': [
-        'error',
-        'always',
-        {
-          avoidQuotes: true,
-        },
-      ],
+      // React rules
       'react/display-name': 'off',
       'react/no-array-index-key': 'warn',
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
+      'react/no-children-prop': 'off',
+      'react/no-unescaped-entities': 'off',
+      'react/jsx-no-target-blank': 'off',
+      'react-hooks/exhaustive-deps': 'error',
+
+      // Node rules
+      'node/shebang': 'off',
+      'node/no-unpublished-require': 'off',
+      'node/no-unsupported-features/es-syntax': 'off',
+      'node/no-missing-import': 'off',
+      'node/no-extraneous-import': 'off',
+      'node/no-unpublished-import': 'off',
+      'node/no-unsupported-features/es-builtins': [
+        'error',
+        {version: '>=14.0.0', ignores: []},
+      ],
+      'node/no-unsupported-features/node-builtins': [
+        'error',
+        {version: '>=14.0.0', ignores: []},
+      ],
+
+      // TypeScript rules
+      '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
+
+      // General rules
+      'object-shorthand': ['error', 'always', {avoidQuotes: true}],
+      'prefer-const': ['warn', {destructuring: 'all'}],
+      'no-prototype-builtins': 'off',
+      'no-use-before-define': 'off',
+      'no-warning-comments': 'off',
+      'no-empty': 'off',
+      'no-control-regex': 'off',
+      'no-async-promise-executor': 'off',
       'eslint-comments/no-unused-disable': 'off',
       'jest/no-disabled-tests': 'off',
       'jest/no-export': 'off',
       'no-console': 'off',
       'no-ex-assign': 'off',
       'no-constant-condition': 'off',
-      'react/no-unescaped-entities': 'off',
-      'node/no-unsupported-features/es-syntax': 'off',
-      'node/no-unsupported-features/es-builtins': [
-        'error',
-        {
-          version: '>=14.0.0',
-          ignores: [],
-        },
-      ],
-      'node/no-unsupported-features/node-builtins': [
-        'error',
-        {
-          version: '>=14.0.0',
-          ignores: [],
-        },
-      ],
-      'prefer-const': [
-        'warn',
-        {
-          destructuring: 'all',
-        },
-      ],
-      '@typescript-eslint/ban-ts-comment': 'off',
-      '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
       'no-useless-escape': 'off',
       'no-case-declarations': 'off',
+      'no-process-exit': 'off',
+
+      // Import rules
       'import/extensions': 'off',
       'import/no-unresolved': 'off',
-      'node/no-missing-import': 'off',
-      'react-hooks/exhaustive-deps': 'error',
-      'react/jsx-no-target-blank': 'off',
-      'node/no-extraneous-import': 'off',
-      'node/no-unpublished-import': 'off',
-      'no-process-exit': 'off',
     },
   },
+
+  // Test files configuration
   ...compat.extends('plugin:jest/recommended').map((config) => ({
     ...config,
     files: ['**/*.test.*'],
   })),
   {
     files: ['**/*.test.*'],
-    plugins: {
-      jest,
-    },
+    plugins: {jest},
     languageOptions: {
       globals: {
         ...globals.node,
@@ -185,6 +176,8 @@ module.exports = [
       },
     },
   },
+
+  // TypeScript files configuration
   {
     files: ['**/*.ts', '**/*.tsx'],
     settings: {
@@ -204,9 +197,7 @@ module.exports = [
       parserOptions: {
         projectService: true,
         tsconfigRootDir: __dirname,
-        ecmaFeatures: {
-          jsx: true,
-        },
+        ecmaFeatures: {jsx: true},
       },
     },
     rules: {
@@ -215,12 +206,16 @@ module.exports = [
       'prefer-const': 'off',
     },
   },
+
+  // Server files configuration
   {
     files: ['**/*.server.*'],
     rules: {
       'react-hooks/rules-of-hooks': 'off',
     },
   },
+
+  // Linted TypeScript packages configuration
   {
     files: [
       ...lintedTSPackages.flatMap((pkg) => [
@@ -229,7 +224,6 @@ module.exports = [
       ]),
     ],
     rules: {
-      // handled by @typescript-eslint
       'no-undef': 'off',
       'no-unused-vars': 'off',
       'tsdoc/syntax': 'error',
@@ -252,10 +246,10 @@ module.exports = [
         },
       ],
     },
-    plugins: {
-      tsdoc,
-    },
+    plugins: {tsdoc},
   },
+
+  // TypeScript strict configuration for linted packages
   ...fixupConfigRules(
     compat.extends(
       'plugin:@typescript-eslint/eslint-recommended',
@@ -276,9 +270,7 @@ module.exports = [
       parserOptions: {
         projectService: true,
         tsconfigRootDir: __dirname,
-        ecmaFeatures: {
-          jsx: true,
-        },
+        ecmaFeatures: {jsx: true},
       },
     },
     rules: {
@@ -287,6 +279,8 @@ module.exports = [
       '@typescript-eslint/explicit-function-return-type': 'off',
     },
   })),
+
+  // Example files configuration
   {
     files: [
       '**/*.example.ts',
@@ -306,19 +300,17 @@ module.exports = [
       'node/no-missing-require': 'off',
     },
   },
+
+  // Index files configuration
   {
     files: ['**/src/index.ts'],
-    plugins: {
-      'simple-import-sort': simpleImportSort,
-    },
-    rules: {
-      'simple-import-sort/exports': 'error',
-    },
+    plugins: {'simple-import-sort': simpleImportSort},
+    rules: {'simple-import-sort/exports': 'error'},
   },
+
+  // Hydrogen package configuration
   {
     files: ['packages/hydrogen/**/*.tsx', 'packages/hydrogen/**/*.ts'],
-    rules: {
-      'react-hooks/exhaustive-deps': 'off',
-    },
+    rules: {'react-hooks/exhaustive-deps': 'off'},
   },
 ];
