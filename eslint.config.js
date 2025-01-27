@@ -237,7 +237,12 @@ module.exports = [
       'node/no-extraneous-import': [
         'error',
         {
-          allowModules: ['@shopify/hydrogen', '@shopify/react-testing'],
+          allowModules: [
+            '@shopify/hydrogen',
+            '@shopify/react-testing',
+            '@remix-run/web-fetch',
+            '@total-typescript/ts-reset',
+          ],
         },
       ],
       'node/no-extraneous-require': [
