@@ -11,8 +11,7 @@ jobs:
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/snapit' }}
     runs-on: ubuntu-latest
     steps:
-      # WARNING: DO NOT RUN ANY CUSTOM LOCAL SCRIPT BEFORE RUNNING THE SNAPIT ACTION
-      # This action can be executed by 3rd party users and it should not be able to run arbitrary code from a PR.
+      # This action can be executed by users with write permission to this repo
       - name: Checkout current branch
         uses: actions/checkout@v4
 
