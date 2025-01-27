@@ -38,17 +38,19 @@ module.exports = [
       '**/coverage/**/*',
       '**/docs/**/*',
       '**/.eslintrc.cjs',
-      '**/src/*.example.tsx',
-      '**/src/*.example.ts',
-      '**/src/*.example.jsx',
-      '**/src/*.example.js',
+      '**/src/**/*.example.tsx',
+      '**/src/**/*.example.ts',
+      '**/src/**/*.example.jsx',
+      '**/src/**/*.example.js',
       '**/eslint.config.cjs',
       '**/scripts/**/*',
       'bin/',
       '*.d.ts',
-      'packages/hydrogen-react/codegen.ts',
-      'packages/hydrogen-react/vite.config.ts',
-      'packages/hydrogen-react/vitest.setup.ts',
+      '**/codegen.ts',
+      '**/vite.config.ts',
+      '**/vitest.setup.ts',
+      '**/vitest.config.ts',
+      '**/tsup.config.ts',
     ],
   },
   ...fixupConfigRules(
@@ -60,7 +62,6 @@ module.exports = [
       'plugin:eslint-comments/recommended',
       'plugin:react/recommended',
       'plugin:react-hooks/recommended',
-      'plugin:jsx-a11y/recommended',
     ),
   ),
   {
@@ -106,11 +107,12 @@ module.exports = [
       reportUnusedDisableDirectives: false,
     },
     rules: {
-      'jsx-a11y/control-has-associated-label': 'off',
-      'jsx-a11y/label-has-for': 'off',
       'no-use-before-define': 'off',
       'no-warning-comments': 'off',
       'react/no-children-prop': 'off',
+      'no-empty': 'off',
+      'node/shebang': 'off',
+      'no-control-regex': 'off',
       'object-shorthand': [
         'error',
         'always',
@@ -126,7 +128,9 @@ module.exports = [
       'jest/no-disabled-tests': 'off',
       'jest/no-export': 'off',
       'no-console': 'off',
+      'no-control-regex': 'off',
       'no-constant-condition': 'off',
+      'react/no-unescaped-entities': 'off',
       'node/no-unsupported-features/es-syntax': 'off',
       'node/no-unsupported-features/es-builtins': [
         'error',
@@ -158,6 +162,8 @@ module.exports = [
       'react-hooks/exhaustive-deps': 'error',
       'react/jsx-no-target-blank': 'off',
       'node/no-extraneous-import': 'off',
+      'node/no-unpublished-import': 'off',
+      'no-process-exit': 'off',
     },
   },
   ...compat.extends('plugin:jest/recommended').map((config) => ({
@@ -193,14 +199,7 @@ module.exports = [
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        projectService: {
-          allowDefaultProject: [
-            'vite.config.ts',
-            'vitest.setup.ts',
-            'tsup.config.ts',
-            'vitest.config.ts',
-          ],
-        },
+        projectService: true,
         tsconfigRootDir: __dirname,
         ecmaFeatures: {
           jsx: true,
@@ -231,7 +230,6 @@ module.exports = [
       'no-undef': 'off',
       'no-unused-vars': 'off',
       'tsdoc/syntax': 'error',
-      'no-empty': 'off',
       'react/jsx-no-target-blank': 'error',
       'node/no-extraneous-import': [
         'error',
@@ -255,6 +253,7 @@ module.exports = [
       'plugin:@typescript-eslint/eslint-recommended',
       'plugin:@typescript-eslint/recommended',
       'plugin:@typescript-eslint/recommended-requiring-type-checking',
+      'plugin:jsx-a11y/recommended',
     ),
   ).map((config) => ({
     ...config,
@@ -267,6 +266,7 @@ module.exports = [
     languageOptions: {
       parser: tsParser,
       parserOptions: {
+        projectService: true,
         tsconfigRootDir: __dirname,
         ecmaFeatures: {
           jsx: true,
@@ -274,6 +274,8 @@ module.exports = [
       },
     },
     rules: {
+      'jsx-a11y/control-has-associated-label': 'off',
+      'jsx-a11y/label-has-for': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
     },
   })),
@@ -293,6 +295,7 @@ module.exports = [
       'react-hooks/exhaustive-deps': 'off',
       'prefer-const': 'off',
       'import/no-named-as-default': 'off',
+      'node/no-missing-require': 'off',
     },
   },
   {
@@ -302,6 +305,12 @@ module.exports = [
     },
     rules: {
       'simple-import-sort/exports': 'error',
+    },
+  },
+  {
+    files: ['packages/hydrogen/**/*.tsx', 'packages/hydrogen/**/*.ts'],
+    rules: {
+      'react-hooks/exhaustive-deps': 'off',
     },
   },
 ];
