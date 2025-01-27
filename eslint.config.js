@@ -17,6 +17,13 @@ const compat = new FlatCompat({
   allConfig: js.configs.all,
 });
 
+const lintedTSPackages = [
+  'packages/hydrogen-react',
+  'examples/express',
+  'templates/skeleton',
+  'docs/previews',
+];
+
 module.exports = [
   {
     ignores: [
@@ -62,7 +69,6 @@ module.exports = [
       react: fixupPluginRules(react),
       'react-hooks': fixupPluginRules(reactHooks),
       'jsx-a11y': fixupPluginRules(jsxA11Y),
-      tsdoc,
     },
     settings: {
       'import/resolvers': {
@@ -75,14 +81,16 @@ module.exports = [
           ],
         },
       },
+      react: {
+        version: 'detect',
+      },
+      jest: {
+        version: 28,
+      },
     },
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        projectService: {
-          allowDefaultProject: ['vite.config.ts', 'vitest.setup.ts'],
-        },
-        tsconfigRootDir: __dirname,
         ecmaFeatures: {
           jsx: true,
         },
@@ -97,17 +105,7 @@ module.exports = [
     linterOptions: {
       reportUnusedDisableDirectives: false,
     },
-    settings: {
-      react: {
-        version: 'detect',
-      },
-      jest: {
-        version: 28,
-      },
-    },
     rules: {
-      '@shopify/jsx-no-complex-expressions': 'off',
-      '@shopify/jsx-no-hardcoded-content': 'off',
       'jsx-a11y/control-has-associated-label': 'off',
       'jsx-a11y/label-has-for': 'off',
       'no-use-before-define': 'off',
@@ -129,19 +127,6 @@ module.exports = [
       'jest/no-export': 'off',
       'no-console': 'off',
       'no-constant-condition': 'off',
-      'tsdoc/syntax': 'error',
-      'node/no-extraneous-import': [
-        'error',
-        {
-          allowModules: ['@shopify/hydrogen', '@shopify/react-testing'],
-        },
-      ],
-      'node/no-extraneous-require': [
-        'error',
-        {
-          allowModules: ['@shopify/hydrogen'],
-        },
-      ],
       'node/no-unsupported-features/es-syntax': 'off',
       'node/no-unsupported-features/es-builtins': [
         'error',
@@ -171,6 +156,8 @@ module.exports = [
       'import/no-unresolved': 'off',
       'node/no-missing-import': 'off',
       'react-hooks/exhaustive-deps': 'error',
+      'react/jsx-no-target-blank': 'off',
+      'node/no-extraneous-import': 'off',
     },
   },
   ...compat.extends('plugin:jest/recommended').map((config) => ({
@@ -190,9 +177,77 @@ module.exports = [
     },
   },
   {
+    files: ['**/*.ts', '**/*.tsx'],
+    settings: {
+      'import/resolvers': {
+        typescript: {
+          project: [
+            'packages/*/tsconfig.json',
+            'templates/*/tsconfig.json',
+            'examples/*/tsconfig.json',
+            'docs/*/tsconfig.json',
+          ],
+        },
+      },
+    },
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        projectService: {
+          allowDefaultProject: [
+            'vite.config.ts',
+            'vitest.setup.ts',
+            'tsup.config.ts',
+            'vitest.config.ts',
+          ],
+        },
+        tsconfigRootDir: __dirname,
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+    rules: {
+      'no-unused-vars': 'off',
+      'no-undef': 'off',
+      'prefer-const': 'off',
+    },
+  },
+  {
     files: ['**/*.server.*'],
     rules: {
       'react-hooks/rules-of-hooks': 'off',
+    },
+  },
+  {
+    files: [
+      ...lintedTSPackages.flatMap((pkg) => [
+        `${pkg}/**/*.ts`,
+        `${pkg}/**/*.tsx`,
+      ]),
+    ],
+    rules: {
+      // handled by @typescript-eslint
+      'no-undef': 'off',
+      'no-unused-vars': 'off',
+      'tsdoc/syntax': 'error',
+      'no-empty': 'off',
+      'react/jsx-no-target-blank': 'error',
+      'node/no-extraneous-import': [
+        'error',
+        {
+          allowModules: ['@shopify/hydrogen', '@shopify/react-testing'],
+        },
+      ],
+      'node/no-extraneous-require': [
+        'error',
+        {
+          allowModules: ['@shopify/hydrogen'],
+        },
+      ],
+    },
+    plugins: {
+      tsdoc,
     },
   },
   ...fixupConfigRules(
@@ -204,14 +259,10 @@ module.exports = [
   ).map((config) => ({
     ...config,
     files: [
-      'packages/hydrogen-react/**/*.ts',
-      'packages/hydrogen-react/**/*.tsx',
-      'examples/express/**/*.ts',
-      'examples/express/**/*.tsx',
-      'templates/skeleton/**/*.ts',
-      'templates/skeleton/**/*.tsx',
-      'docs/previews/**/*.ts',
-      'docs/previews/**/*.tsx',
+      ...lintedTSPackages.flatMap((pkg) => [
+        `${pkg}/**/*.ts`,
+        `${pkg}/**/*.tsx`,
+      ]),
     ],
     languageOptions: {
       parser: tsParser,
@@ -223,89 +274,9 @@ module.exports = [
       },
     },
     rules: {
-      '@typescript-eslint/explicit-function-return-type': 'error',
-      // handled by @typescript-eslint
-      'no-unused-vars': 'off',
-      'no-undef': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
     },
   })),
-  // {
-  //   files: ['**/*.ts', '**/*.tsx'],
-  //   languageOptions: {
-  //     parser: tsParser,
-  //     parserOptions: {
-  //       tsconfigRootDir: __dirname,
-  //       ecmaFeatures: {
-  //         jsx: true,
-  //       },
-  //     },
-  //   },
-  //   rules: {
-  //     '@typescript-eslint/explicit-module-boundary-types': 'off',
-  //     '@typescript-eslint/prefer-promise-reject-errors': 'off',
-  //     '@typescript-eslint/naming-convention': [
-  //       'error',
-  //       {
-  //         selector: 'default',
-  //         format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
-  //         leadingUnderscore: 'allowSingleOrDouble',
-  //         trailingUnderscore: 'allowSingleOrDouble',
-  //       },
-  //       {
-  //         selector: 'typeLike',
-  //         format: ['PascalCase'],
-  //       },
-  //       {
-  //         selector: 'typeParameter',
-  //         format: ['PascalCase'],
-  //         leadingUnderscore: 'allow',
-  //       },
-  //       {
-  //         selector: 'interface',
-  //         format: ['PascalCase'],
-  //       },
-  //       {
-  //         selector: 'property',
-  //         format: null,
-  //       },
-  //     ],
-  //     '@typescript-eslint/no-empty-function': 'off',
-  //     '@typescript-eslint/no-empty-interface': 'off',
-  //     '@typescript-eslint/no-explicit-any': 'off',
-  //     '@typescript-eslint/no-non-null-assertion': 'off',
-  //     '@typescript-eslint/no-unused-vars': 'off',
-  //     'react/prop-types': 'off',
-  //     'react/no-children-prop': 'off',
-  //     '@typescript-eslint/no-redundant-type-constituents': 'off',
-  //     '@typescript-eslint/no-unsafe-assignment': 'off',
-  //     '@typescript-eslint/no-unsafe-return': 'off',
-  //     '@typescript-eslint/no-unsafe-argument': 'off',
-  //     '@typescript-eslint/no-unsafe-member-access': 'off',
-  //     '@typescript-eslint/require-await': 'off',
-  //     '@typescript-eslint/only-throw-error': 'off',
-  //     '@typescript-eslint/await-thenable': 'off',
-  //     '@typescript-eslint/no-unsafe-call': 'off',
-  //   },
-  // },
-  // {
-  //   files: [
-  //     'packages/hydrogen-react/**/*.(ts|tsx)',
-  //     'examples/express/**/*.(ts|tsx)',
-  //     'templates/skeleton/**/*.(ts|tsx)',
-  //     'docs/previews/**/*.(ts|tsx)',
-  //   ],
-  //   rules: {
-  //     '@typescript-eslint/no-redundant-type-constituents': 'error',
-  //     '@typescript-eslint/no-unsafe-assignment': 'error',
-  //     '@typescript-eslint/no-unsafe-return': 'error',
-  //     '@typescript-eslint/no-unsafe-argument': 'error',
-  //     '@typescript-eslint/no-unsafe-member-access': 'error',
-  //     '@typescript-eslint/require-await': 'error',
-  //     '@typescript-eslint/only-throw-error': 'error',
-  //     '@typescript-eslint/await-thenable': 'error',
-  //     '@typescript-eslint/no-unsafe-call': 'error',
-  //   },
-  // },
   {
     files: [
       '**/*.example.ts',
@@ -318,6 +289,10 @@ module.exports = [
       'node/no-extraneous-require': 'off',
       'no-unused-vars': 'off',
       'no-undef': 'off',
+      'import/no-duplicates': 'off',
+      'react-hooks/exhaustive-deps': 'off',
+      'prefer-const': 'off',
+      'import/no-named-as-default': 'off',
     },
   },
   {
