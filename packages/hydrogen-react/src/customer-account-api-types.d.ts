@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Customer Account API 2024-10
+ * Based on Customer Account API 2025-01
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -422,7 +422,10 @@ export type Checkout = Node & {
   shippingDiscountAllocations: Array<DiscountAllocation>;
   /** The selected shipping rate, transitioned to a `shipping_line` object. */
   shippingLine?: Maybe<ShippingRate>;
-  /** The configuration values used to initialize a Shop Pay checkout. */
+  /**
+   * The configuration values used to initialize a Shop Pay checkout.
+   * @deprecated This field is deprecated and will be removed in the future.
+   */
   shopPayConfiguration?: Maybe<ShopPayConfiguration>;
   /** The price at checkout before duties, shipping, and taxes. */
   subtotalPrice: MoneyV2;
@@ -2849,7 +2852,7 @@ export type DraftOrderLineItemConnection = {
 /** The discount information for the draft order line item. */
 export type DraftOrderLineItemDiscountInformation = {
   __typename?: 'DraftOrderLineItemDiscountInformation';
-  /** The title of the discount. */
+  /** The discount's name that displays to merchants in the Shopify admin and to customers. */
   title?: Maybe<Scalars['String']['output']>;
   /** The total discount applied to the line item. */
   totalDiscount: MoneyV2;
@@ -3454,6 +3457,8 @@ export type LineItem = Node & {
   discountInformation: Array<LineItemDiscountInformation>;
   /** Whether the line item represents the purchase of a gift card. */
   giftCard: Scalars['Boolean']['output'];
+  /** The line item group associated to the line item. */
+  group?: Maybe<LineItemGroup>;
   /** The title of the line item group associated with the line item. */
   groupTitle?: Maybe<Scalars['String']['output']>;
   /** A globally-unique ID. */
@@ -3575,7 +3580,7 @@ export type LineItemDiscountInformation = {
   __typename?: 'LineItemDiscountInformation';
   /** The value of the applied discount. */
   discountValue: MoneyV2;
-  /** The title of the discount. */
+  /** The discount's name that displays to merchants in the Shopify admin and to customers. */
   title?: Maybe<Scalars['String']['output']>;
 };
 
@@ -3586,6 +3591,25 @@ export type LineItemEdge = {
   cursor: Scalars['String']['output'];
   /** The item at the end of LineItemEdge. */
   node: LineItem;
+};
+
+/** A line item group to which a line item belongs to. */
+export type LineItemGroup = Node & {
+  __typename?: 'LineItemGroup';
+  /** The total price of the line item group, calculated by aggregating the current total price of its line item components. */
+  currentTotalPrice?: Maybe<MoneyV2>;
+  /** The discount information for the line item group. */
+  discountInformation?: Maybe<Array<LineItemDiscountInformation>>;
+  /** A globally-unique ID. */
+  id: Scalars['ID']['output'];
+  /** The image of the line item group variant or the product image if the variant has no image. */
+  image?: Maybe<Image>;
+  /** The number of line item groups ordered. */
+  quantity: Scalars['Int']['output'];
+  /** The title of the line item group. */
+  title: Scalars['String']['output'];
+  /** The total price of the line item group, calculated by aggregating the total price before discounts of its line item components. */
+  totalPriceBeforeDiscounts?: Maybe<MoneyV2>;
 };
 
 /** The selling plan for a line item. */
@@ -3788,7 +3812,7 @@ export type MetafieldsSetInput = {
   compareDigest?: InputMaybe<Scalars['String']['input']>;
   /**
    * The unique identifier for a metafield within its namespace.
-   * Must be 3-64 characters long and can contain alphanumeric, hyphen, and underscore characters.
+   * Must be 2-64 characters long and can contain alphanumeric, hyphen, and underscore characters.
    */
   key: Scalars['String']['input'];
   /**
@@ -3931,7 +3955,7 @@ export type Mutation = {
    *
    * This operation is atomic, meaning no changes are persisted if an error is encountered.
    *
-   * As of `2024-10`, this operation supports compare-and-set functionality to better handle concurrent requests.
+   * As of `2024-07`, this operation supports compare-and-set functionality to better handle concurrent requests.
    * If `compareDigest` is set for any metafield, the mutation will only set that metafield if the persisted metafield value matches the digest used on `compareDigest`.
    * If the metafield doesn't exist yet, but you want to guarantee that the operation will run in a safe manner, set `compareDigest` to `null`.
    * The `compareDigest` value can be acquired by querying the metafield object and selecting `compareDigest` as a field.
@@ -3956,13 +3980,14 @@ export type Mutation = {
   /**
    * Exchanges the Customer Access Token, provided in the Authorization header, into a Storefront Customer Access Token.
    * Renew this token each time you update the Customer Access Token found in the Authorization header.
+   * @deprecated The `storefrontCustomerAccessTokenCreate` is deprecated and will be removed in a future version. Please see [the changelog](https://shopify.dev/changelog/deprecation-of-storefrontcustomeraccesstokencreate-mutation) for more information.
    */
   storefrontCustomerAccessTokenCreate?: Maybe<StorefrontCustomerAccessTokenCreatePayload>;
   /** Skips a Subscription Billing Cycle. */
   subscriptionBillingCycleSkip?: Maybe<SubscriptionBillingCycleSkipPayload>;
   /** Unskips a Subscription Billing Cycle. */
   subscriptionBillingCycleUnskip?: Maybe<SubscriptionBillingCycleUnskipPayload>;
-  /** Activates a Subscription Contract. */
+  /** Activates a Subscription Contract. Contract status must be either active, paused, or failed. */
   subscriptionContractActivate?: Maybe<SubscriptionContractActivatePayload>;
   /** Cancels a Subscription Contract. */
   subscriptionContractCancel?: Maybe<SubscriptionContractCancelPayload>;
@@ -4321,6 +4346,8 @@ export type Order = HasMetafields &
     soldInformation: OrderSoldInformation;
     /** The unique URL for the status page of the order. */
     statusPageUrl: Scalars['URL']['output'];
+    /** The customer Subscription Contracts associated with the order. */
+    subscriptionContracts?: Maybe<SubscriptionContractConnection>;
     /** The price of the order before duties, shipping, and taxes. */
     subtotal?: Maybe<MoneyV2>;
     /** The price of the order before order-level discounts, duties, shipping. It includes taxes in  tax-inclusive orders. */
@@ -4345,6 +4372,8 @@ export type Order = HasMetafields &
     totalTip?: Maybe<MoneyV2>;
     /** A list of transactions associated with the order. */
     transactions: Array<OrderTransaction>;
+    /** The date and time when the order was last updated. */
+    updatedAt: Scalars['DateTime']['output'];
   };
 
 /** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
@@ -4411,6 +4440,17 @@ export type OrderReturnsArgs = {
   sortKey?: InputMaybe<ReturnSortKeys>;
 };
 
+/** A customer’s completed request to purchase one or more products from a shop. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
+export type OrderSubscriptionContractsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  query?: InputMaybe<Scalars['String']['input']>;
+  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+  sortKey?: InputMaybe<SubscriptionContractsSortKeys>;
+};
+
 /**
  * The possible order action types for a
  * [sales agreement](https://shopify.dev/api/admin-graphql/latest/interfaces/salesagreement).
@@ -4461,7 +4501,7 @@ export type OrderAllDiscounts = {
   discountValue: MoneyV2;
   /** The type of line to which the discount applies. */
   targetType: DiscountApplicationTargetType;
-  /** The title of the discount. */
+  /** The discount's name that displays to merchants in the Shopify admin and to customers. */
   title?: Maybe<Scalars['String']['output']>;
 };
 
@@ -5035,7 +5075,10 @@ export type PaymentInstrumentWalletType =
 /** A single payment schedule defined in the payment terms. */
 export type PaymentSchedule = Node & {
   __typename?: 'PaymentSchedule';
-  /** The amount owed for this payment schedule. */
+  /**
+   * The amount owed for this payment schedule.
+   * @deprecated Use `totalBalance` instead.
+   */
   amount: MoneyV2;
   /** Whether the payment has been completed. */
   completed: Scalars['Boolean']['output'];
@@ -5473,7 +5516,9 @@ export type QueryRootUiExtensionMetafieldsArgs = {
 
 /** This acts as the public, top-level API from which all queries start. */
 export type QueryRootUiExtensionSessionTokenArgs = {
-  id: Scalars['ID']['input'];
+  appId?: InputMaybe<Scalars['ID']['input']>;
+  extensionActivationId?: InputMaybe<Scalars['ID']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 /** The record of refunds issued to a customer. */
@@ -5571,9 +5616,9 @@ export type RequestedLineItemInput = {
    * Maximum length: 300 characters.
    */
   customerNote?: InputMaybe<Scalars['String']['input']>;
-  /** The ID of the line item that's to be returned. */
+  /** The ID of the line item that the customer wants to return. */
   lineItemId: Scalars['ID']['input'];
-  /** The quantity of the item that's to be returned. */
+  /** The quantity of the line item that the customer wants to return. */
   quantity: Scalars['Int']['input'];
   /** The reason for returning the item. */
   returnReason: ReturnReason;
@@ -5629,7 +5674,7 @@ export type Return = Node & {
   closedAt?: Maybe<Scalars['DateTime']['output']>;
   /** The date when the return was created. */
   createdAt?: Maybe<Scalars['DateTime']['output']>;
-  /** The additional details about the declined return. */
+  /** The additional details about why the merchant declined the return request. */
   decline?: Maybe<ReturnDecline>;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
@@ -5701,12 +5746,12 @@ export type ReturnConnection = {
   pageInfo: PageInfo;
 };
 
-/** The extra information about why a merchant declined the customer's return request. */
+/** The merchant's reason for declining the customer's return request. */
 export type ReturnDecline = {
   __typename?: 'ReturnDecline';
-  /** The notification message that was sent to the customer about their declined return. */
+  /** The merchant's message to the customer explaining why their return request was declined. */
   note?: Maybe<Scalars['String']['output']>;
-  /** The reason for the decline. */
+  /** The reason the return request was declined. */
   reason: ReturnDeclineReason;
 };
 
@@ -5781,16 +5826,16 @@ export type ReturnErrorCode =
   /** The input value is the wrong length. */
   | 'WRONG_LENGTH';
 
-/** A line item that is being returned. */
+/** A line item that has been returned. */
 export type ReturnLineItem = Node & {
   __typename?: 'ReturnLineItem';
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
-  /** The specific line item that's being returned. */
+  /** The related line item that has been returned. */
   lineItem: LineItem;
-  /** The quantity of the item that's being returned. */
+  /** The line item quantity that has been returned. */
   quantity: Scalars['Int']['output'];
-  /** The reason for returning the item. */
+  /** The reason the line item quantity was returned. */
   returnReason: ReturnReason;
 };
 
@@ -5865,9 +5910,9 @@ export type ReturnStatus =
 /** The supported reason for returning a line item. */
 export type ReturnSupportedReason = {
   __typename?: 'ReturnSupportedReason';
-  /** The specific reason for returning the line item. */
+  /** The standardized return reason (e.g. `DEFECTIVE` or `UNWANTED`) for returning the line item. */
   reason: ReturnReason;
-  /** The user-friendly title for the return reason. */
+  /** The localized, display text for the return reason. */
   title: Scalars['String']['output'];
 };
 
@@ -7001,7 +7046,7 @@ export type SubscriptionDeliveryMethodPickupOption = {
   __typename?: 'SubscriptionDeliveryMethodPickupOption';
   /** The details displayed to the customer to describe the pickup option. */
   description?: Maybe<Scalars['String']['output']>;
-  /** The pickup address where the customer will pick up the merchandise. */
+  /** The address where the customer will pick up the merchandise. */
   pickupAddress: PickupAddress;
   /** The presentment title of the pickup option. */
   presentmentTitle?: Maybe<Scalars['String']['output']>;
@@ -7214,7 +7259,7 @@ export type SubscriptionPickupOption = {
   locationId: Scalars['ID']['output'];
   /** Whether a phone number is required for the pickup option. */
   phoneRequired: Scalars['Boolean']['output'];
-  /** The pickup address where the customer will pickup the merchandise. */
+  /** The address where the customer will pick up the merchandise. */
   pickupAddress: PickupAddress;
   /** The estimated amount of time it takes for the pickup to be ready. For example, "Usually ready in 24 hours". */
   pickupTime: Scalars['String']['output'];

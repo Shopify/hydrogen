@@ -8,12 +8,12 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'VariantSelector',
       type: 'components',
-      url: '/docs/api/hydrogen/2024-10/components/variantselector',
+      url: '/docs/api/hydrogen/2025-01/components/variantselector',
     },
     {
       name: 'useOptimisticCart',
       type: 'hooks',
-      url: '/docs/api/hydrogen/2024-10/hooks/useoptimisticcart',
+      url: '/docs/api/hydrogen/2025-01/hooks/useoptimisticcart',
     },
   ],
   description: `The \`useOptimisticVariant\` takes an existing product variant, processes a pending navigation to another product variant, and returns the data of the destination variant. This makes switching product options immediate.`,
