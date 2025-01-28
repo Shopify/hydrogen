@@ -15,6 +15,8 @@ jobs:
     if: github.repository_owner == 'shopify'
     name: Changelog PR or Release
     permissions:
+      contents: write
+      pull-requests: write
       id-token: write
     outputs:
       published: ${{ steps.changesets.outputs.published }}

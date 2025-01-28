@@ -11,6 +11,8 @@ jobs:
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/snapit' }}
     runs-on: ubuntu-latest
     permissions:
+      contents: write
+      pull-requests: write
       id-token: write
     steps:
       # This action can be executed by users with write permission to this repo
