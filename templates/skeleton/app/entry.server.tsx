@@ -1,6 +1,6 @@
 import type {EntryContext, AppLoadContext} from '@shopify/remix-oxygen';
 import {RemixServer} from '@remix-run/react';
-import isbotua from 'isbot';
+import {isbot} from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
 import {createContentSecurityPolicy} from '@shopify/hydrogen';
 
@@ -32,7 +32,7 @@ export default async function handleRequest(
     },
   );
 
-  if (isbotua(request.headers.get('user-agent'))) {
+  if (isbot(request.headers.get('user-agent'))) {
     await body.allReady;
   }
 
