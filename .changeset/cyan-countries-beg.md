@@ -1,6 +1,5 @@
 ---
 'skeleton': patch
-'@shopify/create-hydrogen': patch
 ---
 
 Workaround for "Error: failed to execute 'insertBefore' on 'Node'" that sometimes happen during development.
