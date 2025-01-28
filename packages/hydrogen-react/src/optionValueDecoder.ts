@@ -173,16 +173,19 @@ function v1Decoder(encodedVariantField: string): number[][] {
     index = tokenizer.lastIndex;
   }
 
-  // Because we iterate over control characters and the range processing happens in the while,
-  // if the last control char is a range we need to manually add the final range to the option list.
-  const lastRangeStartIndex = encodedVariantField.lastIndexOf('-');
-  if (rangeStart != null && lastRangeStartIndex > 0) {
-    const finalValueIndex = parseInt(
-      encodedVariantField.substring(lastRangeStartIndex + 1),
-    );
-    for (; rangeStart <= finalValueIndex; rangeStart++) {
-      currentOptionValue[depth] = rangeStart;
-      options.push([...currentOptionValue]);
+  // The while loop only iterates control characters, meaning if an encoded string ends with an index it will not be processed.
+  const encodingEndsWithIndex = encodedVariantField.match(/\d+$/g);
+  if (encodingEndsWithIndex) {
+    const finalValueIndex = parseInt(encodingEndsWithIndex[0]);
+    if (rangeStart != null) {
+      // process final range
+      for (; rangeStart <= finalValueIndex; rangeStart++) {
+        currentOptionValue[depth] = rangeStart;
+        options.push([...currentOptionValue]);
+      }
+    } else {
+      // process final index
+      options.push([finalValueIndex]);
     }
   }
 
