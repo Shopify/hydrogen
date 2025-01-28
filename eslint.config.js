@@ -53,6 +53,7 @@ module.exports = [
       '**/vitest.config.ts',
       '**/tsup.config.ts',
       '**/src/storefront-api-response.types.ts',
+      '**/storefrontapi.generated.d.ts',
     ],
   },
 
