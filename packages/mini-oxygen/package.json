@@ -12,11 +12,7 @@
   "module": "dist/worker/index.js",
   "types": "./dist/worker/index.d.ts",
   "sideEffects": false,
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Shopify/hydrogen.git",
-    "directory": "packages/mini-oxygen"
-  },
+  "repository": "github:Shopify/hydrogen",
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

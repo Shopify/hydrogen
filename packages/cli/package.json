@@ -7,11 +7,7 @@
   "version": "9.0.4",
   "license": "MIT",
   "type": "module",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Shopify/hydrogen.git",
-    "directory": "packages/cli-hydrogen"
-  },
+  "repository": "github:Shopify/hydrogen",
   "scripts": {
     "build": "tsup && node scripts/build-check.mjs",
     "dev": "tsup --watch ./src --watch ../../templates/skeleton",
