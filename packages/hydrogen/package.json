@@ -11,6 +11,11 @@
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shopify/hydrogen.git",
+    "directory": "packages/hydrogen"
+  },
   "scripts": {
     "build": "tsup --clean",
     "dev": "tsup --watch ./src --watch ../../node_modules/@shopify/hydrogen-react/dist/browser-prod/index.mjs",
