@@ -27,7 +27,11 @@
     },
     "./package.json": "./package.json"
   },
-  "repository": "github:Shopify/hydrogen",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shopify/hydrogen.git",
+    "directory": "packages/hydrogen-codegen"
+  },
   "files": [
     "dist"
   ],
