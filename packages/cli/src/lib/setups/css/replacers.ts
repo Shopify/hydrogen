@@ -47,7 +47,7 @@ export async function replaceRootLinks(
       importNodes.shift();
 
     const layoutStyleNode = root.find({
-      rule:{
+      rule: {
         kind: 'jsx_element',
         regex: 'resetStyles',
         has: {
@@ -70,11 +70,14 @@ export async function replaceRootLinks(
     const layoutStyleNodeContent = layoutStyleNode.text();
     const newLinkNode = importer.isConditional
       ? `{${importer.name} && <link rel="stylesheet" href={${importer.name}}></link>}`
-      : `<link rel="stylesheet" href={${importer.name}}></link>`
+      : `<link rel="stylesheet" href={${importer.name}}></link>`;
 
     return content
       .replace(lastImportContent, lastImportContent + '\n' + importStatement)
-      .replace(layoutStyleNodeContent, newLinkNode + '\n' + layoutStyleNodeContent);
+      .replace(
+        layoutStyleNodeContent,
+        newLinkNode + '\n' + layoutStyleNodeContent,
+      );
   });
 }
 
