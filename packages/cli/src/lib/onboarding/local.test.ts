@@ -199,7 +199,7 @@ describe('local templates', () => {
         const rootFile = await readFile(`${tmpDir}/app/root.tsx`);
         await expect(rootFile).toMatch(/import tailwindCss from/);
         await expect(rootFile).toMatch(
-          /export function links\(\) \{.*?return \[.*\{rel: 'stylesheet', href: tailwindCss\}/ims,
+          /<link rel="stylesheet" href={tailwindCss}><\/link>/ims,
         );
 
         // Adds the Vite plugin
