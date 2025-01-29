@@ -6,7 +6,7 @@ import {CartCheckoutButton} from './CartCheckoutButton.js';
 
 const checkoutUrl = 'https://shopify.com/checkout';
 
-vi.mock('./CartProvider', async () => ({
+vi.doMock('./CartProvider', async () => ({
   ...(await vi.importActual<Record<string, unknown>>('./CartProvider')),
   useCart: () => ({
     checkoutUrl,
@@ -30,6 +30,7 @@ describe('<CartCheckoutButton/>', () => {
       },
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await act(() => user.click(screen.getByRole('button')));
 
     expect(window.location.href).toBe(checkoutUrl);

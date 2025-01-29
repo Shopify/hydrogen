@@ -185,6 +185,7 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
       // @ts-expect-error rotationPerSecond should exist as a type, not sure why it doesn't. https://modelviewer.dev/docs/index.html#entrydocs-stagingandcameras-attributes-rotationPerSecond
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       rotation-per-second={passthroughProps.rotationPerSecond}
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       interaction-policy={passthroughProps.interactionPolicy}
       interaction-prompt={passthroughProps.interactionPrompt}
       interaction-prompt-style={passthroughProps.interactionPromptStyle}
@@ -196,6 +197,7 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
       min-camera-orbit={passthroughProps.minCameraOrbit}
       max-field-of-view={passthroughProps.maxFieldOfView}
       min-field-of-view={passthroughProps.minFieldOfView}
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       bounds={passthroughProps.bounds}
       interpolation-decay={passthroughProps.interpolationDecay ?? 100}
       skybox-image={passthroughProps.skyboxImage}

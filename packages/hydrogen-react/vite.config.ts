@@ -94,7 +94,6 @@ export default defineConfig(({mode, isSsrBuild}) => {
         '@xstate',
         '@xstate/react',
         '@xstate/fsm',
-        '@xstate/react/fsm',
         'use-sync-external-store',
         'use-isomorphic-layout-effect',
       ],

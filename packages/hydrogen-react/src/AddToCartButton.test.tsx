@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event';
 
 const mockLinesAdd = vi.fn();
 
-vi.mock('./CartProvider', async () => ({
+vi.doMock('./CartProvider', async () => ({
   ...(await vi.importActual<Record<string, unknown>>('./CartProvider')),
   useCart: () => ({
     linesAdd: mockLinesAdd,
@@ -83,6 +83,7 @@ describe('<AddToCartButton/>', () => {
         </MockWrapper>,
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       await act(() => user.click(screen.getByRole('button')));
 
       expect(mockLinesAdd).toHaveBeenCalledTimes(1);
@@ -107,6 +108,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         await act(() => user.click(screen.getByRole('button')));
 
         expect(mockLinesAdd).toHaveBeenCalledTimes(1);
@@ -138,6 +140,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         await act(() => user.click(screen.getByRole('button')));
 
         expect(mockLinesAdd).toHaveBeenCalledTimes(1);
@@ -173,6 +176,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         await act(() => user.click(screen.getByRole('button')));
 
         await waitFor(() => {
@@ -194,6 +198,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         await act(() => user.click(screen.getByRole('button')));
 
         await waitFor(() => {

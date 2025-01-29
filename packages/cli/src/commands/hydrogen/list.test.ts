@@ -9,6 +9,11 @@ vi.mock('../../lib/auth.js');
 vi.mock('../../lib/graphql/admin/list-storefronts.js');
 
 describe('list', () => {
+  const dateFormat = new Intl.DateTimeFormat('default', {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  });
   const ADMIN_SESSION: AdminSession = {
     token: 'abc123',
     storeFqdn: 'my-shop',
@@ -45,6 +50,7 @@ describe('list', () => {
   });
 
   describe('and there are storefronts', () => {
+    const createdAt = '2023-03-22T22:28:38Z';
     beforeEach(() => {
       vi.mocked(getStorefrontsWithDeployment).mockResolvedValue([
         {
@@ -61,7 +67,7 @@ describe('list', () => {
           productionUrl: 'https://demo.example.com',
           currentProductionDeployment: {
             id: 'gid://shopify/HydrogenStorefrontDeployment/1',
-            createdAt: '2023-03-22T22:28:38Z',
+            createdAt: createdAt,
             commitMessage: 'Update README.md',
           },
         },
@@ -69,6 +75,9 @@ describe('list', () => {
     });
 
     it('renders a list of storefronts', async () => {
+      // 'default' local will change from machine to machine.
+      const formattedDate = dateFormat.format(new Date(createdAt));
+
       const outputMock = mockAndCaptureOutput();
 
       await runList({});
@@ -80,7 +89,7 @@ describe('list', () => {
       expect(outputMock.info()).toMatch(/https:\/\/example.com/);
       expect(outputMock.info()).toMatch(/Demo Store \(id: 2\)/);
       expect(outputMock.info()).toMatch(/https:\/\/demo.example.com/);
-      expect(outputMock.info()).toMatch(/3\/22\/2023, Update README.md/);
+      expect(outputMock.info()).toContain(`${formattedDate}, Update README.md`);
     });
   });
 
@@ -103,6 +112,24 @@ describe('list', () => {
 
 describe('formatDeployment', () => {
   const createdAt = '2023-03-22T22:28:38Z';
+  const dateFormat = new Intl.DateTimeFormat('default', {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  });
+  // 'default' local will change from machine to machine.
+  const formattedDate = dateFormat.format(new Date(createdAt));
+
+  it('date format for en-us is the expected format', () => {
+    const usDateFormat = new Intl.DateTimeFormat('en-us', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+    });
+    // 'default' local will change from machine to machine.
+    const usFormattedDate = usDateFormat.format(new Date(createdAt));
+    expect(usFormattedDate).toStrictEqual('3/22/2023');
+  });
 
   it('returns a string combined with a date and commit message', () => {
     const deployment = {
@@ -113,7 +140,7 @@ describe('formatDeployment', () => {
     };
 
     expect(formatDeployment(deployment)).toStrictEqual(
-      '3/22/2023, Update README.md',
+      `${formattedDate}, Update README.md`,
     );
   });
 
@@ -126,7 +153,7 @@ describe('formatDeployment', () => {
         commitMessage: null,
       };
 
-      expect(formatDeployment(deployment)).toStrictEqual('3/22/2023');
+      expect(formatDeployment(deployment)).toStrictEqual(formattedDate);
     });
   });
 });
