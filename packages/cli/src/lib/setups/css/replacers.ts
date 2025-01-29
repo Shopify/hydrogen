@@ -46,56 +46,35 @@ export async function replaceRootLinks(
       importNodes.find((node) => node.text().includes('.css')) ||
       importNodes.shift();
 
-    const linksReturnNode = root.find({
-      utils: {
-        'has-links-id': {
+    const layoutStyleNode = root.find({
+      rule:{
+        kind: 'jsx_element',
+        regex: 'resetStyles',
+        has: {
+          kind: 'jsx_opening_element',
           has: {
             kind: 'identifier',
-            pattern: 'links',
-          },
-        },
-      },
-      rule: {
-        kind: 'return_statement',
-        pattern: 'return [$$$]',
-        inside: {
-          any: [
-            {
-              kind: 'function_declaration',
-              matches: 'has-links-id',
-            },
-            {
-              kind: 'variable_declarator',
-              matches: 'has-links-id',
-            },
-          ],
-          stopBy: 'end',
-          inside: {
-            stopBy: 'end',
-            kind: 'export_statement',
+            pattern: 'link',
           },
         },
       },
     });
 
-    if (!lastImportNode || !linksReturnNode) {
+    if (!lastImportNode || !layoutStyleNode) {
       throw new AbortError(
         'Could not find a "links" export in root file. Please add one and try again.',
       );
     }
 
     const lastImportContent = lastImportNode.text();
-    const linksExportReturnContent = linksReturnNode.text();
-    const newLinkReturnItem = importer.isConditional
-      ? `...(${importer.name} ? [{ rel: 'stylesheet', href: ${importer.name} }] : [])`
-      : `{rel: 'stylesheet', href: ${importer.name}}`;
+    const layoutStyleNodeContent = layoutStyleNode.text();
+    const newLinkNode = importer.isConditional
+      ? `{${importer.name} && <link rel="stylesheet" href={${importer.name}}></link>}`
+      : `<link rel="stylesheet" href={${importer.name}}></link>`
 
     return content
       .replace(lastImportContent, lastImportContent + '\n' + importStatement)
-      .replace(
-        linksExportReturnContent,
-        linksExportReturnContent.replace('[', `[${newLinkReturnItem},`),
-      );
+      .replace(layoutStyleNodeContent, newLinkNode + '\n' + layoutStyleNodeContent);
   });
 }
 
