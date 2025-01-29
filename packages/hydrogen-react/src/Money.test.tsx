@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 
 import {render, screen} from '@testing-library/react';
-import {Money} from './Money.js';
+import {Money, MoneyI18n} from './Money.js';
 import {ShopifyProvider} from './ShopifyProvider.js';
 import {getShopifyConfig} from './ShopifyProvider.test.js';
 import {getPrice, getUnitPriceMeasurement} from './Money.test.helpers.js';
@@ -42,7 +42,7 @@ describe('<Money />', () => {
     expect(screen.getByText(money.amount, {exact: false})).toHaveClass('money');
   });
 
-  it(`validates props when a different Element  is passed to the 'as' prop`, () => {
+  it(`validates props when a different Element is passed to the 'as' prop`, () => {
     const money = getPrice();
 
     render(<Money data={money} as="button" disabled />, {
@@ -179,5 +179,31 @@ describe('<Money />', () => {
         },
       ),
     ).toBeInTheDocument();
+  });
+});
+
+describe('<MoneyI18n />', () => {
+  it('renders a string formatted based on the given i18n data', () => {
+    const money = getPrice({currencyCode: 'EUR', amount: '12.34'});
+
+    render(
+      <MoneyI18n
+        data={money}
+        i18n={{countryIsoCode: 'US', languageIsoCode: 'EN'}}
+        data-testid="en-us"
+      />,
+    );
+    expect(screen.getByTestId('en-us').textContent).toBe('€12.34');
+
+    render(
+      <MoneyI18n
+        data={money}
+        i18n={{countryIsoCode: 'FR', languageIsoCode: 'FR'}}
+        data-testid="fr-fr"
+      />,
+    );
+    expect(
+      screen.getByTestId('fr-fr').textContent?.replace(/\s/g, ' '), // fix irregular spaces…
+    ).toMatch(/^12,34 €/);
   });
 });

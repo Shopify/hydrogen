@@ -1,5 +1,5 @@
 import {type ReactNode} from 'react';
-import {useMoney} from './useMoney.js';
+import {I18NData, useMoney, useMoneyI18n, UseMoneyValue} from './useMoney.js';
 import type {MoneyV2, UnitPriceMeasurement} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 
@@ -27,6 +27,21 @@ export type MoneyProps<ComponentGeneric extends React.ElementType> =
           keyof MoneyPropsBase<ComponentGeneric>
         >
       : React.ComponentPropsWithoutRef<ComponentGeneric>);
+
+export type MoneyI18nProps<ComponentGeneric extends React.ElementType> =
+  MoneyProps<ComponentGeneric> & {
+    i18n: I18NData;
+  };
+
+type MoneyPropsWithoutData<ComponentGeneric extends React.ElementType> = Omit<
+  MoneyProps<ComponentGeneric>,
+  'data'
+>;
+
+type MoneyInternalProps<ComponentGeneric extends React.ElementType> =
+  MoneyPropsWithoutData<ComponentGeneric> & {
+    money: UseMoneyValue;
+  };
 
 /**
  * The `Money` component renders a string of the Storefront API's
@@ -63,11 +78,6 @@ export type MoneyProps<ComponentGeneric extends React.ElementType> =
  */
 export function Money<ComponentGeneric extends React.ElementType = 'div'>({
   data,
-  as,
-  withoutCurrency,
-  withoutTrailingZeros,
-  measurement,
-  measurementSeparator = '/',
   ...passthroughProps
 }: MoneyProps<ComponentGeneric>): JSX.Element {
   if (!isMoney(data)) {
@@ -76,18 +86,80 @@ export function Money<ComponentGeneric extends React.ElementType = 'div'>({
     );
   }
   const moneyObject = useMoney(data);
+
+  return <MoneyInternal money={moneyObject} {...passthroughProps} />;
+}
+
+/**
+ * The `MoneyI18n` component renders a string of the Storefront API's
+ * [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2)
+ * according to the `i18n` localization data passed as props.
+ * &nbsp;
+ * @see {@link https://shopify.dev/api/hydrogen/components/moneyi18n}
+ * @example basic usage, outputs: $100.00
+ * ```ts
+ * <MoneyI18n data={{amount: '100.00', currencyCode: 'USD'}} i18n={{languageIsoCode: "EN", countryIsoCode: "US"}} />
+ * ```
+ * &nbsp;
+ *
+ * @example without currency, outputs: 100.00
+ * ```ts
+ * <Money data={{amount: '100.00', currencyCode: 'USD'}} withoutCurrency />
+ * ```
+ * &nbsp;
+ *
+ * @example without trailing zeros, outputs: $100
+ * ```ts
+ * <Money data={{amount: '100.00', currencyCode: 'USD'}} withoutTrailingZeros />
+ * ```
+ * &nbsp;
+ *
+ * @example with per-unit measurement, outputs: $100.00 per G
+ * ```ts
+ * <Money
+ *   data={{amount: '100.00', currencyCode: 'USD'}}
+ *   measurement={{referenceUnit: 'G'}}
+ *   measurementSeparator=" per "
+ * />
+ * ```
+ */
+export function MoneyI18n<ComponentGeneric extends React.ElementType = 'div'>(
+  props: MoneyI18nProps<ComponentGeneric>,
+): JSX.Element {
+  const {data, ...i18nProps} = props;
+  const {i18n, ...passthroughProps} = i18nProps;
+
+  if (!isMoney(data)) {
+    throw new Error(
+      `<Money/> needs a valid 'data' prop that has 'amount' and 'currencyCode'`,
+    );
+  }
+  const moneyObject = useMoneyI18n(data, i18n);
+
+  return <MoneyInternal money={moneyObject} {...passthroughProps} />;
+}
+
+function MoneyInternal<ComponentGeneric extends React.ElementType>({
+  as,
+  withoutCurrency,
+  withoutTrailingZeros,
+  measurement,
+  measurementSeparator = '/',
+  money,
+  ...passthroughProps
+}: MoneyInternalProps<ComponentGeneric>): JSX.Element {
   const Wrapper = as ?? 'div';
 
-  let output = moneyObject.localizedString;
+  let output = money.localizedString;
 
   if (withoutCurrency || withoutTrailingZeros) {
     if (withoutCurrency && !withoutTrailingZeros) {
-      output = moneyObject.amount;
+      output = money.amount;
     } else if (!withoutCurrency && withoutTrailingZeros) {
-      output = moneyObject.withoutTrailingZeros;
+      output = money.withoutTrailingZeros;
     } else {
       // both
-      output = moneyObject.withoutTrailingZerosAndCurrency;
+      output = money.withoutTrailingZerosAndCurrency;
     }
   }
 
