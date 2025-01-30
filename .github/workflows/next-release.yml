@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     # don't run if a commit message with [ci] release is present. The release workflow will do the release
     if: github.repository_owner == 'shopify' && !startsWith(github.event.head_commit.message, '[ci] release')
-    # permissions:
-    #   contents: write
-    #   pull-requests: write
-    #   id-token: write
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
     outputs:
       NEXT_VERSION: ${{ steps.version.outputs.NEXT_VERSION }}
     steps:
@@ -64,7 +64,7 @@ jobs:
           npm run version:post
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # NPM_CONFIG_PROVENANCE: true
+          NPM_CONFIG_PROVENANCE: true
 
       - name: 🏗 Build
         if: steps.version.outputs.NEXT_VERSION
