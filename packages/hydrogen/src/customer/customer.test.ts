@@ -995,7 +995,7 @@ describe('customer', () => {
       expect(buyer).toEqual(
         expect.objectContaining({
           ...mockBuyerSession,
-          customerAccountToken: 'access_token',
+          customerAccessToken: 'access_token',
         }),
       );
     });
