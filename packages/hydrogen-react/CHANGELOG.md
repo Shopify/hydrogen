@@ -1,6 +1,6 @@
 # @shopify/hydrogen-react
 
-## 2025.1.1
+## 2025.1.0
 
 ### Patch Changes
 

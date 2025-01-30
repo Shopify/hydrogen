@@ -1,6 +1,6 @@
 # @shopify/hydrogen
 
-## 2025.1.1
+## 2025.1.0
 
 ### Patch Changes
 
@@ -13,7 +13,7 @@
 - Bump SFAPI to 2025-01 ([#2715](https://github.com/Shopify/hydrogen/pull/2715)) by [@rbshop](https://github.com/rbshop)
 
 - Updated dependencies [[`fdab06f5`](https://github.com/Shopify/hydrogen/commit/fdab06f5d34076b526d406698bdf6fca6787660b), [`650d57b3`](https://github.com/Shopify/hydrogen/commit/650d57b3e07125661e23900e73c0bb3027ddbcde), [`064de138`](https://github.com/Shopify/hydrogen/commit/064de13890c68cabb1c3fdbe7f77409a0cf1c384), [`08b7fa5b`](https://github.com/Shopify/hydrogen/commit/08b7fa5bb99632e4707d0dec4e06f6d16b2816d0)]:
-  - @shopify/hydrogen-react@2025.1.1
+  - @shopify/hydrogen-react@2025.1.0
 
 ## 2024.10.1
 
