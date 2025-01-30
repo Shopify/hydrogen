@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository_owner == 'shopify'
     name: Back-fix changelog PR or Release
-    permissions:
-      contents: write
-      pull-requests: write
-      id-token: write
+    # permissions:
+    #   contents: write
+    #   pull-requests: write
+    #   id-token: write
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4
@@ -54,4 +54,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
+          # NPM_CONFIG_PROVENANCE: true
