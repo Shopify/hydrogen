@@ -12,29 +12,30 @@
         "@remix-run/react": "^2.15.2",
         "@remix-run/server-runtime": "^2.15.2",
         "@shopify/hydrogen": "2025.1.0",
-        "@shopify/remix-oxygen": "^2.0.9"
+        "@shopify/remix-oxygen": "^2.0.10"
       },
       "devDependencies": {
         "@remix-run/dev": "^2.15.2",
         "@shopify/cli": "3.74.1",
-        "@shopify/oxygen-workers-types": "^4.1.2",
-        "typescript": "^5.2.2",
-        "@shopify/mini-oxygen": "^3.1.0"
+        "@shopify/mini-oxygen": "^3.1.1"
       },
       "dependenciesMeta": {
-        "typescript": {
-          "required": true
-        },
-        "@shopify/oxygen-workers-types": {
-          "required": true
-        },
         "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/react": {
           "required": true
         },
         "@remix-run/server-runtime": {
           "required": true
         },
+        "@remix-run/dev": {
+          "required": true
+        },
         "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/remix-oxygen": {
           "required": true
         }
       },
