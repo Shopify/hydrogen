@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "9.0.4",
+  "version": "9.0.5",
   "license": "MIT",
   "type": "module",
   "repository": {
@@ -61,7 +61,7 @@
     "@graphql-codegen/cli": "^5.0.2",
     "@remix-run/dev": "^2.1.0",
     "@shopify/hydrogen-codegen": "^0.3.2",
-    "@shopify/mini-oxygen": "^3.1.0",
+    "@shopify/mini-oxygen": "^3.1.1",
     "graphql-config": "^5.0.3",
     "vite": "^5.1.0"
   },

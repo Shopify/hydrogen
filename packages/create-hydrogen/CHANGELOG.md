@@ -1,5 +1,13 @@
 # @shopify/create-hydrogen
 
+## 5.0.15
+
+### Patch Changes
+
+- Bump cli version ([#2732](https://github.com/Shopify/hydrogen/pull/2732)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Bump SFAPI to 2025-01 ([#2715](https://github.com/Shopify/hydrogen/pull/2715)) by [@rbshop](https://github.com/rbshop)
+
 ## 5.0.14
 
 ### Patch Changes

@@ -1,5 +1,20 @@
 # @shopify/cli-hydrogen
 
+## 9.0.5
+
+### Patch Changes
+
+- Bump vite, Remix versions and tailwind v4 alpha to beta ([#2696](https://github.com/Shopify/hydrogen/pull/2696)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Make sure tailwind stylesheet is generated in a style tag ([#2734](https://github.com/Shopify/hydrogen/pull/2734)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Bump cli version ([#2732](https://github.com/Shopify/hydrogen/pull/2732)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Bump SFAPI to 2025-01 ([#2715](https://github.com/Shopify/hydrogen/pull/2715)) by [@rbshop](https://github.com/rbshop)
+
+- Updated dependencies [[`fdab06f5`](https://github.com/Shopify/hydrogen/commit/fdab06f5d34076b526d406698bdf6fca6787660b), [`68110f3f`](https://github.com/Shopify/hydrogen/commit/68110f3f34beb4a8a429b9df0e28a77072b7d84f)]:
+  - @shopify/mini-oxygen@3.1.1
+
 ## 9.0.4
 
 ### Patch Changes

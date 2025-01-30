@@ -1,5 +1,13 @@
 # @shopify/mini-oxygen
 
+## 3.1.1
+
+### Patch Changes
+
+- Bump vite, Remix versions and tailwind v4 alpha to beta ([#2696](https://github.com/Shopify/hydrogen/pull/2696)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Bump undici package to 6.21.1 ([#2731](https://github.com/Shopify/hydrogen/pull/2731)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 3.1.0
 
 ### Minor Changes

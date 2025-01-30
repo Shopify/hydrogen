@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 2.0.10
+
+### Patch Changes
+
+- Bump vite, Remix versions and tailwind v4 alpha to beta ([#2696](https://github.com/Shopify/hydrogen/pull/2696)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2.0.9
 
 ### Patch Changes
