@@ -5,9 +5,9 @@
     {
       "title": "Remix v3_lazyRouteDiscovery future flag, various bug fixes and package version bumps.",
       "version": "2025.1.0",
-      "hash": "",
+      "hash": "7df8c2076a829d29cb5c0b0276729ddc7d0d4630",
       "pr": "https://github.com/Shopify/hydrogen/pull/2700",
-      "commit": "https://github.com/Shopify/hydrogen/commit/",
+      "commit": "https://github.com/Shopify/hydrogen/commit/7df8c2076a829d29cb5c0b0276729ddc7d0d4630",
       "dependencies": {
         "@remix-run/react": "^2.15.2",
         "@remix-run/server-runtime": "^2.15.2",
