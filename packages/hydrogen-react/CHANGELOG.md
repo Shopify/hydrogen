@@ -1,5 +1,17 @@
 # @shopify/hydrogen-react
 
+## 2025.1.1
+
+### Patch Changes
+
+- Bump vite, Remix versions and tailwind v4 alpha to beta ([#2696](https://github.com/Shopify/hydrogen/pull/2696)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fix `getProductOptions` crashing when one of variants returns a null `firstSelectableVariant`. ([#2704](https://github.com/Shopify/hydrogen/pull/2704)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Bump SFAPI to 2025-01 ([#2715](https://github.com/Shopify/hydrogen/pull/2715)) by [@rbshop](https://github.com/rbshop)
+
+- Update `decodeEncodedVariant` utility to fix bug if encoding ends with index. ([#2721](https://github.com/Shopify/hydrogen/pull/2721)) by [@lhoffbeck](https://github.com/lhoffbeck)
+
 ## 2024.10.1
 
 ### Patch Changes

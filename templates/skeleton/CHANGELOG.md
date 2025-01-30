@@ -1,5 +1,92 @@
 # skeleton
 
+## 2025.1.1
+
+### Patch Changes
+
+- Bump vite, Remix versions and tailwind v4 alpha to beta ([#2696](https://github.com/Shopify/hydrogen/pull/2696)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Workaround for "Error: failed to execute 'insertBefore' on 'Node'" that sometimes happen during development. ([#2701](https://github.com/Shopify/hydrogen/pull/2701)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  ```diff
+  // root.tsx
+
+  /**
+   * The main and reset stylesheets are added in the Layout component
+   * to prevent a bug in development HMR updates.
+   *
+   * This avoids the "failed to execute 'insertBefore' on 'Node'" error
+   * that occurs after editing and navigating to another page.
+   *
+   * It's a temporary fix until the issue is resolved.
+   * https://github.com/remix-run/remix/issues/9242
+   */
+  export function links() {
+    return [
+  -    {rel: 'stylesheet', href: resetStyles},
+  -    {rel: 'stylesheet', href: appStyles},
+      {
+        rel: 'preconnect',
+        href: 'https://cdn.shopify.com',
+      },
+      {
+        rel: 'preconnect',
+        href: 'https://shop.app',
+      },
+      {rel: 'icon', type: 'image/svg+xml', href: favicon},
+    ];
+  }
+
+  ...
+
+  export function Layout({children}: {children?: React.ReactNode}) {
+    const nonce = useNonce();
+    const data = useRouteLoaderData<RootLoader>('root');
+
+    return (
+      <html lang="en">
+        <head>
+          <meta charSet="utf-8" />
+          <meta name="viewport" content="width=device-width,initial-scale=1" />
+  +        <link rel="stylesheet" href={resetStyles}></link>
+  +        <link rel="stylesheet" href={appStyles}></link>
+
+  ```
+
+- Turn on future flag `v3_lazyRouteDiscovery` ([#2702](https://github.com/Shopify/hydrogen/pull/2702)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  In your vite.config.ts, add the following line:
+
+  ```diff
+  export default defineConfig({
+    plugins: [
+      hydrogen(),
+      oxygen(),
+      remix({
+        presets: [hydrogen.preset()],
+        future: {
+          v3_fetcherPersist: true,
+          v3_relativeSplatPath: true,
+          v3_throwAbortReason: true,
+  +        v3_lazyRouteDiscovery: true,
+        },
+      }),
+      tsconfigPaths(),
+    ],
+  ```
+
+  Test your app by running `npm run dev` and nothing should break
+
+- Fix image size warnings on collections page ([#2703](https://github.com/Shopify/hydrogen/pull/2703)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Bump cli version ([#2732](https://github.com/Shopify/hydrogen/pull/2732)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Bump SFAPI to 2025-01 ([#2715](https://github.com/Shopify/hydrogen/pull/2715)) by [@rbshop](https://github.com/rbshop)
+
+- Updated dependencies [[`fdab06f5`](https://github.com/Shopify/hydrogen/commit/fdab06f5d34076b526d406698bdf6fca6787660b), [`ae6d71f0`](https://github.com/Shopify/hydrogen/commit/ae6d71f0976f520ca177c69ff677f852af63859e), [`650d57b3`](https://github.com/Shopify/hydrogen/commit/650d57b3e07125661e23900e73c0bb3027ddbcde), [`064de138`](https://github.com/Shopify/hydrogen/commit/064de13890c68cabb1c3fdbe7f77409a0cf1c384)]:
+  - @shopify/remix-oxygen@2.0.10
+  - @shopify/hydrogen@2025.1.1
+
 ## 2024.10.4
 
 ### Patch Changes
