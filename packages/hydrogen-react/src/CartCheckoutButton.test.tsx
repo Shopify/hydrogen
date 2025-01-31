@@ -6,7 +6,7 @@ import {CartCheckoutButton} from './CartCheckoutButton.js';
 
 const checkoutUrl = 'https://shopify.com/checkout';
 
-vi.doMock('./CartProvider', async () => ({
+vi.mock('./CartProvider', async () => ({
   ...(await vi.importActual<Record<string, unknown>>('./CartProvider')),
   useCart: () => ({
     checkoutUrl,

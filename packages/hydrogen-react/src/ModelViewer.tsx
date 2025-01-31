@@ -173,7 +173,6 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
       ar={passthroughProps.ar}
       ar-modes={passthroughProps.arModes}
       ar-scale={passthroughProps.arScale}
-      // @ts-expect-error arPlacement should exist as a type, not sure why it doesn't. https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-attributes-arPlacement
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       ar-placement={passthroughProps.arPlacement}
       ios-src={passthroughProps.iosSrc}
@@ -186,7 +185,7 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       rotation-per-second={passthroughProps.rotationPerSecond}
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      interaction-policy={passthroughProps.interactionPolicy}
+      interaction-policy={(passthroughProps as any).interactionPolicy}
       interaction-prompt={passthroughProps.interactionPrompt}
       interaction-prompt-style={passthroughProps.interactionPromptStyle}
       interaction-prompt-threshold={passthroughProps.interactionPromptThreshold}
@@ -198,7 +197,7 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
       max-field-of-view={passthroughProps.maxFieldOfView}
       min-field-of-view={passthroughProps.minFieldOfView}
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      bounds={passthroughProps.bounds}
+      bounds={(passthroughProps as any).bounds}
       interpolation-decay={passthroughProps.interpolationDecay ?? 100}
       skybox-image={passthroughProps.skyboxImage}
       environment-image={passthroughProps.environmentImage}

@@ -56,7 +56,7 @@
     "body-parser": "1.20.3",
     "connect": "^3.7.0",
     "get-port": "^7.1.0",
-    "miniflare": "^3.20241230.2",
+    "miniflare": "^3.20250124.0",
     "mrmime": "2.0.0",
     "source-map": "^0.7.4",
     "source-map-support": "^0.5.21",
@@ -69,17 +69,17 @@
     "@types/body-parser": "1.19.5",
     "@types/connect": "^3.4.38",
     "@types/eventsource": "^1.1.15",
-    "@types/node": "^22.10.10",
+    "@types/node": "^22.12.0",
     "@types/source-map-support": "^0.5.10",
     "@types/stack-trace": "^0.0.33",
     "@types/ws": "^8.5.14",
-    "devtools-protocol": "^0.0.1410712",
-    "eventsource": "^3.0.2",
+    "devtools-protocol": "^0.0.1412693",
+    "eventsource": "^3.0.5",
     "tempy": "3.1.0",
     "vitest": "^1.0.4"
   },
   "peerDependencies": {
-    "vite": "^5.1.0"
+    "vite": "^5.1.8"
   },
   "peerDependenciesMeta": {
     "vite": {

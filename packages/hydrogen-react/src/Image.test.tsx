@@ -117,7 +117,7 @@ describe('<Image />', () => {
     // expect(image).toHaveStyle('aspect-ratio: 1 / 1');
 
     it('sets the aspect-ratio on the style prop when set explicitly', () => {
-      const aspectRatio = '4 / 3';
+      const aspectRatio = '4/3';
 
       render(
         <Image {...defaultProps} sizes="100vw" aspectRatio={aspectRatio} />,
@@ -134,7 +134,7 @@ describe('<Image />', () => {
       render(<Image {...defaultProps} sizes="100vw" data={data} />);
 
       expect(screen.getByTestId('test-element').style.aspectRatio).toBe(
-        '400 / 300',
+        '400/300',
       );
     });
 
@@ -144,7 +144,7 @@ describe('<Image />', () => {
       render(<Image {...defaultProps} sizes="100vw" data={data} width={600} />);
 
       expect(screen.getByTestId('test-element').style.aspectRatio).toBe(
-        '400 / 300',
+        '400/300',
       );
     });
 
@@ -162,7 +162,7 @@ describe('<Image />', () => {
       );
 
       expect(screen.getByTestId('test-element').style.aspectRatio).toBe(
-        '400 / 300',
+        '400/300',
       );
     });
 
@@ -180,7 +180,7 @@ describe('<Image />', () => {
       );
 
       expect(screen.getByTestId('test-element').style.aspectRatio).toBe(
-        '600 / 400',
+        '600/400',
       );
     });
 

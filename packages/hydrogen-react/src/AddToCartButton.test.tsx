@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event';
 
 const mockLinesAdd = vi.fn();
 
-vi.doMock('./CartProvider', async () => ({
+vi.mock('./CartProvider', async () => ({
   ...(await vi.importActual<Record<string, unknown>>('./CartProvider')),
   useCart: () => ({
     linesAdd: mockLinesAdd,
@@ -83,8 +83,7 @@ describe('<AddToCartButton/>', () => {
         </MockWrapper>,
       );
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      await act(() => user.click(screen.getByRole('button')));
+      await act(async () => await user.click(screen.getByRole('button')));
 
       expect(mockLinesAdd).toHaveBeenCalledTimes(1);
       expect(mockLinesAdd).toHaveBeenCalledWith([
@@ -108,8 +107,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        await act(() => user.click(screen.getByRole('button')));
+        await act(async () => await user.click(screen.getByRole('button')));
 
         expect(mockLinesAdd).toHaveBeenCalledTimes(1);
         expect(mockLinesAdd).toHaveBeenCalledWith([
@@ -140,8 +138,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        await act(() => user.click(screen.getByRole('button')));
+        await act(async () => await user.click(screen.getByRole('button')));
 
         expect(mockLinesAdd).toHaveBeenCalledTimes(1);
         expect(mockLinesAdd).toHaveBeenCalledWith([
@@ -176,8 +173,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        await act(() => user.click(screen.getByRole('button')));
+        await act(async () => await user.click(screen.getByRole('button')));
 
         await waitFor(() => {
           expect(screen.getByRole('button')).toBeDisabled();
@@ -198,8 +194,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        await act(() => user.click(screen.getByRole('button')));
+        await act(async () => await user.click(screen.getByRole('button')));
 
         await waitFor(() => {
           expect(screen.getByRole('alert')).toHaveTextContent(

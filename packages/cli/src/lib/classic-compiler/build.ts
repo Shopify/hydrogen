@@ -59,12 +59,15 @@ export async function runClassicCompilerBuild({
   lockfileCheck = true,
   assetPath,
 }: RunBuildOptions) {
+  console.log('runClassicCompilerBuild');
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production';
   }
   if (assetPath) {
     process.env.HYDROGEN_ASSET_BASE_URL = assetPath;
   }
+  console.log('directory', directory);
+  process.chdir(directory!);
 
   const {root, buildPath, buildPathClient, buildPathWorkerFile, publicPath} =
     getProjectPaths(directory);

@@ -66,7 +66,7 @@ describe('i18n replacers', () => {
         export async function createAppLoadContext(
           request: Request,
           env: Env,
-          executionContext: ExecutionContext
+          executionContext: ExecutionContext,
         ) {
           /**
            * Open a cache instance in the worker and a custom session instance.

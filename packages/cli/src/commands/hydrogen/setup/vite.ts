@@ -148,10 +148,13 @@ export async function runSetupVite({directory}: {directory: string}) {
             // Sort dependencies:
             pkgJson.devDependencies = Object.keys(pkgJson.devDependencies)
               .sort()
-              .reduce((acc, key) => {
-                acc[key] = pkgJson.devDependencies?.[key]!;
-                return acc;
-              }, {} as Record<string, string>);
+              .reduce(
+                (acc, key) => {
+                  acc[key] = pkgJson.devDependencies?.[key]!;
+                  return acc;
+                },
+                {} as Record<string, string>,
+              );
           }
         }
 
@@ -217,11 +220,7 @@ export async function runSetupVite({directory}: {directory: string}) {
           'vite.config.' + fileExt.slice(0, 2),
         );
 
-        viteConfigContent = await formatCode(
-          viteConfigContent,
-          formatOptions,
-          viteConfigPath,
-        );
+        viteConfigContent = await formatCode(viteConfigContent, formatOptions);
 
         return writeFile(viteConfigPath, viteConfigContent);
       },
