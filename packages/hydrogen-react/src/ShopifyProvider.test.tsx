@@ -7,7 +7,7 @@ import {
   type ShopifyProviderProps,
 } from './ShopifyProvider.js';
 import type {PartialDeep} from 'type-fest';
-import {HydrogenContext, HydrogenContextValue} from './HydrogenProvider.js';
+import {HydrogenProvider} from './HydrogenProvider.js';
 
 const SHOPIFY_CONFIG: ShopifyProviderProps = {
   storeDomain: 'https://notashop.myshopify.com',
@@ -227,35 +227,28 @@ describe('<ShopifyProvider/>', () => {
 
   describe('hydrogen context overrides', () => {
     it('returns the hydrogen overrides if provided (partial override)', () => {
-      function runTest(hydrogenContextValue: HydrogenContextValue) {
-        const {result} = renderHook(() => useShop(), {
-          wrapper: ({children}) => (
-            <HydrogenContext.Provider value={hydrogenContextValue}>
-              <ShopifyProvider {...SHOPIFY_CONFIG}>{children}</ShopifyProvider>
-            </HydrogenContext.Provider>
-          ),
-        });
-        return result;
-      }
+      const {result} = renderHook(() => useShop(), {
+        wrapper: ({children}) => (
+          <HydrogenProvider countryIsoCode={'FR'} languageIsoCode={null}>
+            <ShopifyProvider {...SHOPIFY_CONFIG}>{children}</ShopifyProvider>
+          </HydrogenProvider>
+        ),
+      });
 
-      const result = runTest({languageIsoCode: 'FR', countryIsoCode: null});
-      expect(result.current.countryIsoCode).toBe(SHOPIFY_CONFIG.countryIsoCode);
-      expect(result.current.languageIsoCode).toBe('FR');
+      expect(result.current.countryIsoCode).toBe('FR');
+      expect(result.current.languageIsoCode).toBe(
+        SHOPIFY_CONFIG.languageIsoCode,
+      );
     });
 
     it('returns the hydrogen overrides if provided (full override)', () => {
-      function runTest(hydrogenContextValue: HydrogenContextValue) {
-        const {result} = renderHook(() => useShop(), {
-          wrapper: ({children}) => (
-            <HydrogenContext.Provider value={hydrogenContextValue}>
-              <ShopifyProvider {...SHOPIFY_CONFIG}>{children}</ShopifyProvider>
-            </HydrogenContext.Provider>
-          ),
-        });
-        return result;
-      }
-
-      const result = runTest({languageIsoCode: 'FR', countryIsoCode: 'FR'});
+      const {result} = renderHook(() => useShop(), {
+        wrapper: ({children}) => (
+          <HydrogenProvider countryIsoCode={'FR'} languageIsoCode={'FR'}>
+            <ShopifyProvider {...SHOPIFY_CONFIG}>{children}</ShopifyProvider>
+          </HydrogenProvider>
+        ),
+      });
       expect(result.current.countryIsoCode).toBe('FR');
       expect(result.current.languageIsoCode).toBe('FR');
     });
@@ -263,18 +256,14 @@ describe('<ShopifyProvider/>', () => {
     it('returns the hydrogen overrides if provided (full override, without ShopifyProvider)', () => {
       // Note(FR): this ensures the current behavior – however it's arguable that not having the ShopifyProvider at all
       // should not be possible, as docs currently say it _must_ be there.
-      function runTest(hydrogenContextValue: HydrogenContextValue) {
-        const {result} = renderHook(() => useShop(), {
-          wrapper: ({children}) => (
-            <HydrogenContext.Provider value={hydrogenContextValue}>
-              {children}
-            </HydrogenContext.Provider>
-          ),
-        });
-        return result;
-      }
+      const {result} = renderHook(() => useShop(), {
+        wrapper: ({children}) => (
+          <HydrogenProvider countryIsoCode={'FR'} languageIsoCode={'FR'}>
+            {children}
+          </HydrogenProvider>
+        ),
+      });
 
-      const result = runTest({languageIsoCode: 'FR', countryIsoCode: 'FR'});
       expect(result.current.countryIsoCode).toBe('FR');
       expect(result.current.languageIsoCode).toBe('FR');
     });

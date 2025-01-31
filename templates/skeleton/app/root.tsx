@@ -1,4 +1,5 @@
 import {useNonce, getShopAnalytics, Analytics} from '@shopify/hydrogen';
+import {HydrogenProvider} from '@shopify/hydrogen-react';
 import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   Links,
@@ -16,7 +17,6 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from '~/components/PageLayout';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
-import {HydrogenContext} from '@shopify/hydrogen-react/HydrogenProvider';
 
 export type RootLoader = typeof loader;
 
@@ -155,11 +155,9 @@ export function Layout({children}: {children?: React.ReactNode}) {
         <Links />
       </head>
       <body>
-        <HydrogenContext.Provider
-          value={{
-            countryIsoCode: data?.i18n.country ?? null,
-            languageIsoCode: data?.i18n.language ?? null,
-          }}
+        <HydrogenProvider
+          countryIsoCode={data?.i18n.country ?? null}
+          languageIsoCode={data?.i18n.language ?? null}
         >
           {data ? (
             <Analytics.Provider
@@ -172,7 +170,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
           ) : (
             children
           )}
-        </HydrogenContext.Provider>
+        </HydrogenProvider>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>

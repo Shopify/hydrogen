@@ -2,7 +2,7 @@ import {createContext, useContext, useMemo, type ReactNode} from 'react';
 import type {LanguageCode, CountryCode} from './storefront-api-types.js';
 import {SFAPI_VERSION} from './storefront-api-constants.js';
 import {getPublicTokenHeadersRaw} from './storefront-client.js';
-import {HydrogenContext} from './HydrogenProvider.js';
+import {useHydrogenContext} from './HydrogenProvider.js';
 
 export const defaultShopifyContext: ShopifyContextValue = {
   storeDomain: 'test',
@@ -96,7 +96,7 @@ export function useShop(): ShopifyContextValue {
     throw new Error(`'useShop()' must be a descendent of <ShopifyProvider/>`);
   }
 
-  const hydrogenContext = useContext(HydrogenContext);
+  const hydrogenContext = useHydrogenContext();
 
   return {
     ...shopContext,
