@@ -32,19 +32,15 @@ describe('Classic Remix Compiler dev', () => {
       outputMock.clear();
       vi.stubEnv('NODE_ENV', 'development');
 
-      console.log('runClassicCompilerDev starting');
-      process.chdir(tmpDir);
       const {close, getUrl} = await runClassicCompilerDev({
         path: tmpDir,
         disableVirtualRoutes: true,
         disableVersionCheck: true,
-        cliConfig: {root: tmpDir} as any,
+        cliConfig: {} as any,
         envFile: '.env',
       });
-      console.log('runClassicCompilerDev finished');
 
       try {
-        console.log('outputMock.output()', outputMock.output());
         await vi.waitFor(() => expect(outputMock.output()).toMatch('success'), {
           timeout: 5000,
         });

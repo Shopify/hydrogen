@@ -43,7 +43,6 @@ export async function setupLocalStarterTemplate(
   options: InitOptions,
   controller: AbortController,
 ) {
-  console.log('setupLocalStarterTemplate');
   const templateAction = options.mockShop
     ? 'mock'
     : await renderSelectPrompt<'mock' | 'link'>({

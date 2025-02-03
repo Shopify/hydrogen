@@ -94,15 +94,12 @@ export async function mergePackageJson(
     onResult?: (pkgJson: PackageJson) => PackageJson;
   },
 ) {
-  console.log('mergePackageJson 1');
   const targetPkgJson: PackageJson = await readAndParsePackageJson(
     joinPath(targetDir, 'package.json'),
   );
-  console.log('mergePackageJson 2');
   const sourcePkgJson: PackageJson = await readAndParsePackageJson(
     joinPath(sourceDir, 'package.json'),
   );
-  console.log('mergePackageJson 3');
 
   const ignoredKeys = new Set(['comment', ...(options?.ignoredKeys ?? [])]);
 
@@ -120,12 +117,11 @@ export async function mergePackageJson(
       Array.isArray(sourceValue) && Array.isArray(targetValue)
         ? [...targetValue, ...sourceValue]
         : typeof sourceValue === 'object' && typeof targetValue === 'object'
-          ? {...targetValue, ...sourceValue}
-          : sourceValue;
+        ? {...targetValue, ...sourceValue}
+        : sourceValue;
 
     targetPkgJson[key] = newValue as any;
   }
-  console.log('mergePackageJson 4');
 
   const remixVersion = Object.entries(targetPkgJson.dependencies || {}).find(
     ([dep]) => dep.startsWith('@remix-run/'),
@@ -142,33 +138,27 @@ export async function mergePackageJson(
         ]),
       ]
         .sort()
-        .reduce(
-          (acc, dep) => {
-            let version = (sourcePkgJson[key]?.[dep] ??
-              targetPkgJson[key]?.[dep])!;
+        .reduce((acc, dep) => {
+          let version = (sourcePkgJson[key]?.[dep] ??
+            targetPkgJson[key]?.[dep])!;
 
-            if (dep.startsWith('@remix-run/') && remixVersion) {
-              version = remixVersion;
-            }
+          if (dep.startsWith('@remix-run/') && remixVersion) {
+            version = remixVersion;
+          }
 
-            acc[dep] = version;
-            return acc;
-          },
-          {} as Record<string, string>,
-        );
+          acc[dep] = version;
+          return acc;
+        }, {} as Record<string, string>);
     }
   }
-  console.log('mergePackageJson 5');
 
   await writePackageJSON(
     targetDir,
     options?.onResult?.(targetPkgJson) ?? targetPkgJson,
   );
-  console.log('mergePackageJson 6');
 }
 
 export async function mergeTsConfig(sourceDir: string, targetDir: string) {
-  console.log('mergeTsConfig');
   const sourceTsConfig = await readFile(joinPath(sourceDir, 'tsconfig.json'));
   const sourceTsTypes = sourceTsConfig.match(/"types": \[(.*?)\]/)?.[1];
 

@@ -94,7 +94,6 @@ export async function runClassicCompilerDev({
     getProjectPaths(appPath);
 
   const copyFilesPromise = copyPublicFiles(publicPath, buildPathClient);
-  console.log('root', root);
   const cliCommandPromise = getCliCommand(root);
 
   const reloadConfig = async () => {
@@ -120,7 +119,6 @@ export async function runClassicCompilerDev({
     return [fileRelative, resolvePath(root, fileRelative)] as const;
   };
 
-  console.log('buildPathWorkerFile', buildPathWorkerFile);
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
   if (!appPort) {
@@ -156,7 +154,6 @@ export async function runClassicCompilerDev({
     });
 
   const remixConfig = await reloadConfig();
-  console.log('remixConfig', JSON.stringify(remixConfig, null, 2));
   assertOxygenChecks(remixConfig);
 
   const envPromise = backgroundPromise.then(({fetchRemote, localVariables}) =>
@@ -217,7 +214,6 @@ export async function runClassicCompilerDev({
     const host = (await tunnelPromise)?.host ?? miniOxygen.listeningAt;
 
     const cliCommand = await cliCommandPromise;
-    console.log('cliCommand', cliCommand);
     enhanceH2Logs({host, cliCommand, ...remixConfig});
 
     const {storefrontTitle} = await backgroundPromise;
@@ -265,7 +261,6 @@ export async function runClassicCompilerDev({
     {
       reloadConfig,
       onBuildStart(ctx) {
-        console.log('onBuildStart');
         if (!isInitialBuild && !skipRebuildLogs) {
           outputInfo(LOG_REBUILDING);
           console.time(LOG_REBUILT);
@@ -275,7 +270,6 @@ export async function runClassicCompilerDev({
       },
       onBuildManifest: liveReload?.onBuildManifest,
       async onBuildFinish(context, duration, succeeded) {
-        console.log('onBuildFinish', new Error());
         if (isInitialBuild) {
           await copyFilesPromise;
           initialBuildDurationMs = Date.now() - initialBuildStartTimeMs;
@@ -285,8 +279,6 @@ export async function runClassicCompilerDev({
           console.timeEnd(LOG_REBUILT);
           if (!miniOxygen) console.log(''); // New line
         }
-
-        console.log('serverBundleExists', await serverBundleExists());
 
         if (!miniOxygen && !(await serverBundleExists())) {
           return renderFatalError({

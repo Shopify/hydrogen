@@ -205,15 +205,12 @@ export async function applyTemplateDiff(
   diffDirectory: string,
   templateDir?: string,
 ) {
-  console.log('applyTemplateDiff 1');
   templateDir ??= await getStarterDir();
-  console.log('applyTemplateDiff 2');
 
   const diffPkgJson = await readAndParsePackageJson(
     joinPath(diffDirectory, 'package.json'),
   );
   const diffOptions: DiffOptions = (diffPkgJson as any)['h2:diff'] ?? {};
-  console.log('applyTemplateDiff 3');
 
   const createFilter =
     (re: RegExp, skipFiles?: string[]) => (filepath: string) => {
@@ -221,7 +218,6 @@ export async function applyTemplateDiff(
       return !re.test(filename) && !skipFiles?.includes(filename);
     };
 
-  console.log('applyTemplateDiff 4');
   await copyDirectory(templateDir, targetDirectory, {
     force: true,
     recursive: true,
@@ -231,7 +227,6 @@ export async function applyTemplateDiff(
       diffOptions.skipFiles || [],
     ),
   });
-  console.log('applyTemplateDiff 5');
   await copyDirectory(diffDirectory, targetDirectory, {
     force: true,
     recursive: true,
@@ -240,7 +235,6 @@ export async function applyTemplateDiff(
     ),
   });
 
-  console.log('applyTemplateDiff 6');
   await mergePackageJson(diffDirectory, targetDirectory, {
     ignoredKeys: ['h2:diff'],
     onResult: (pkgJson) => {
@@ -267,6 +261,5 @@ export async function applyTemplateDiff(
     },
   });
 
-  console.log('About to call mergeTsConfig');
   await mergeTsConfig(diffDirectory, targetDirectory);
 }

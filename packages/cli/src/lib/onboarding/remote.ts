@@ -32,7 +32,6 @@ export async function setupRemoteTemplate(
   options: InitOptions & Required<Pick<InitOptions, 'template'>>,
   controller: AbortController,
 ) {
-  console.log('setupRemoteTemplate');
   const appTemplate =
     options.template === 'demo-store' ? DEMO_STORE_REPO : options.template;
 
@@ -54,7 +53,6 @@ export async function setupRemoteTemplate(
 
   let backgroundWorkPromise = Promise.resolve()
     .then(async () => {
-      console.log('backgroundWorkPromise');
       // Result is undefined in certain tests,
       // do not continue if it's already aborted
       if (controller.signal.aborted) return;
@@ -64,7 +62,6 @@ export async function setupRemoteTemplate(
       const pkgJson = await readAndParsePackageJson(
         joinPath(sourcePath, 'package.json'),
       );
-      console.log('pkgJson', pkgJson);
 
       if (pkgJson.scripts?.dev?.includes('--diff')) {
         return applyTemplateDiff(project.directory, sourcePath, skeletonPath);
@@ -134,7 +131,6 @@ export async function setupRemoteTemplate(
 
   if (controller.signal.aborted) return;
 
-  console.log('tasks', tasks);
   await renderTasks(tasks);
 
   if (options.git) {
@@ -152,7 +148,6 @@ export async function setupRemoteTemplate(
     body: `To connect this project to your Shopify store’s inventory, update \`${project.name}/.env\` with your store ID and Storefront API key.`,
   });
 
-  console.log('project', project);
   return {
     ...project,
     ...setupSummary,
@@ -168,9 +163,7 @@ async function getExternalTemplate(
   appTemplate: string,
   signal: AbortSignal,
 ): Promise<DownloadedTemplate> {
-  console.log('getExternalTemplate');
   const {templateDir} = await downloadExternalRepo(appTemplate, signal);
-  console.log('templateDir', templateDir);
   return {sourcePath: templateDir};
 }
 
