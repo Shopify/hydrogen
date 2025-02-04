@@ -26,5 +26,7 @@ export async function hydrogenRoutes(
     children: childVirtualRoutes,
   };
 
-  return [virtualLayout, ...currentRoutes];
+  // The virtual root should land after any existing routes because of the root path
+  // handling.
+  return [...currentRoutes, virtualLayout];
 }
