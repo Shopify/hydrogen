@@ -125,6 +125,10 @@ export type CustomerAccount = {
   setBuyer: (buyer: Buyer) => void;
   /** Get buyer token and company location id from session.*/
   getBuyer: () => Promise<Buyer>;
+  /** Deprecated. Please use setBuyer. Set buyer information into session.*/
+  UNSTABLE_setBuyer: (buyer: Buyer) => void;
+  /** Deprecated. Please use getBuyer. Get buyer token and company location id from session.*/
+  UNSTABLE_getBuyer: () => Promise<Buyer>;
 };
 
 export type CustomerAccountOptions = {
@@ -152,6 +156,8 @@ export type CustomerAccountOptions = {
   loginPath?: string;
   /** The oauth authorize path. Defaults to `/account/authorize`. */
   authorizePath?: string;
+  /** Deprecated. `unstableB2b` is now stable. Please remove. */
+  unstableB2b?: boolean;
 };
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */

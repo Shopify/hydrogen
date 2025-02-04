@@ -25,6 +25,7 @@ import type {
   StorefrontHeaders,
 } from './types';
 import {type CrossRuntimeRequest, getHeader} from './utils/request';
+import {warnOnce} from './utils/warning';
 
 export type HydrogenContextOptions<
   TSession extends HydrogenSession = HydrogenSession,
@@ -61,6 +62,8 @@ export type HydrogenContextOptions<
     authUrl?: CustomerAccountOptions['authUrl'];
     /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */
     customAuthStatusHandler?: CustomerAccountOptions['customAuthStatusHandler'];
+    /** Deprecated. `unstableB2b` is now stable. Please remove. */
+    unstableB2b?: CustomerAccountOptions['unstableB2b'];
   };
   /** Cart handler overwrite options. See documentation for createCartHandler for more information. */
   cart?: {
@@ -159,6 +162,12 @@ export function createHydrogenContext<
   if (!session) {
     console.warn(
       `[h2:warn:createHydrogenContext] A session object is required to create hydrogen context.`,
+    );
+  }
+
+  if (customerAccountOptions?.unstableB2b) {
+    warnOnce(
+      '[h2:warn:createHydrogenContext] `customerAccount.unstableB2b` is now stable. Please remove the `unstableB2b` option.',
     );
   }
 
@@ -271,6 +280,8 @@ export type HydrogenContextOptionsForDocs<
     authUrl?: string;
     /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */
     customAuthStatusHandler?: () => Response | NonNullable<unknown> | null;
+    /** Deprecated. `unstableB2b` is now stable. Please remove. */
+    unstableB2b?: boolean;
   };
   /** Cart handler overwrite options. See documentation for createCartHandler for more information. */
   cart?: {

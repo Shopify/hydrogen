@@ -526,6 +526,20 @@ export function createCustomerAccountClient({
     },
     setBuyer,
     getBuyer,
+    UNSTABLE_setBuyer: (buyer: Buyer) => {
+      warnOnce(
+        '[h2:warn:customerAccount] `customerAccount.UNSTABLE_setBuyer` is deprecated. Please use `customerAccount.setBuyer`.',
+      );
+
+      setBuyer(buyer);
+    },
+    UNSTABLE_getBuyer: () => {
+      warnOnce(
+        '[h2:warn:customerAccount] `customerAccount.UNSTABLE_getBuyer` is deprecated. Please use `customerAccount.getBuyer`.',
+      );
+
+      return getBuyer();
+    },
   };
 }
 
