@@ -3,6 +3,109 @@
   "version": "1",
   "releases": [
     {
+      "title": "Remix v3_lazyRouteDiscovery future flag, various bug fixes and package version bumps.",
+      "version": "2025.1.0",
+      "hash": "7df8c2076a829d29cb5c0b0276729ddc7d0d4630",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2700",
+      "commit": "https://github.com/Shopify/hydrogen/commit/7df8c2076a829d29cb5c0b0276729ddc7d0d4630",
+      "dependencies": {
+        "@remix-run/react": "^2.15.2",
+        "@remix-run/server-runtime": "^2.15.2",
+        "@shopify/hydrogen": "2025.1.0",
+        "@shopify/remix-oxygen": "^2.0.10"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.15.2",
+        "@shopify/cli": "3.74.1",
+        "@shopify/mini-oxygen": "^3.1.1"
+      },
+      "dependenciesMeta": {
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/react": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@remix-run/dev": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/remix-oxygen": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Update to Storefront API 2025-01",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2715",
+          "id": "2715"
+        },
+        {
+          "title": "Workaround for \"Error: failed to execute 'insertBefore' on 'Node'\" that sometimes happen during development.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2710",
+          "id": "2710",
+          "steps": [{
+            "title": "Update your root.tsx so that your style link tags are actual html link tags",
+            "code": "YGBgZGlmZgovLyByb290LnRzeAoKLyoqCiAqIFRoZSBtYWluIGFuZCByZXNldCBzdHlsZXNoZWV0cyBhcmUgYWRkZWQgaW4gdGhlIExheW91dCBjb21wb25lbnQKICogdG8gcHJldmVudCBhIGJ1ZyBpbiBkZXZlbG9wbWVudCBITVIgdXBkYXRlcy4KICoKICogVGhpcyBhdm9pZHMgdGhlICJmYWlsZWQgdG8gZXhlY3V0ZSAnaW5zZXJ0QmVmb3JlJyBvbiAnTm9kZSciIGVycm9yCiAqIHRoYXQgb2NjdXJzIGFmdGVyIGVkaXRpbmcgYW5kIG5hdmlnYXRpbmcgdG8gYW5vdGhlciBwYWdlLgogKgogKiBJdCdzIGEgdGVtcG9yYXJ5IGZpeCB1bnRpbCB0aGUgaXNzdWUgaXMgcmVzb2x2ZWQuCiAqIGh0dHBzOi8vZ2l0aHViLmNvbS9yZW1peC1ydW4vcmVtaXgvaXNzdWVzLzkyNDIKICovCmV4cG9ydCBmdW5jdGlvbiBsaW5rcygpIHsKICByZXR1cm4gWwotICAgIHtyZWw6ICdzdHlsZXNoZWV0JywgaHJlZjogcmVzZXRTdHlsZXN9LAotICAgIHtyZWw6ICdzdHlsZXNoZWV0JywgaHJlZjogYXBwU3R5bGVzfSwKICAgIHsKICAgICAgcmVsOiAncHJlY29ubmVjdCcsCiAgICAgIGhyZWY6ICdodHRwczovL2Nkbi5zaG9waWZ5LmNvbScsCiAgICB9LAogICAgewogICAgICByZWw6ICdwcmVjb25uZWN0JywKICAgICAgaHJlZjogJ2h0dHBzOi8vc2hvcC5hcHAnLAogICAgfSwKICAgIHtyZWw6ICdpY29uJywgdHlwZTogJ2ltYWdlL3N2Zyt4bWwnLCBocmVmOiBmYXZpY29ufSwKICBdOwp9CgouLi4KCmV4cG9ydCBmdW5jdGlvbiBMYXlvdXQoe2NoaWxkcmVufToge2NoaWxkcmVuPzogUmVhY3QuUmVhY3ROb2RlfSkgewogIGNvbnN0IG5vbmNlID0gdXNlTm9uY2UoKTsKICBjb25zdCBkYXRhID0gdXNlUm91dGVMb2FkZXJEYXRhPFJvb3RMb2FkZXI+KCdyb290Jyk7CgogIHJldHVybiAoCiAgICA8aHRtbCBsYW5nPSJlbiI+CiAgICAgIDxoZWFkPgogICAgICAgIDxtZXRhIGNoYXJTZXQ9InV0Zi04IiAvPgogICAgICAgIDxtZXRhIG5hbWU9InZpZXdwb3J0IiBjb250ZW50PSJ3aWR0aD1kZXZpY2Utd2lkdGgsaW5pdGlhbC1zY2FsZT0xIiAvPgorICAgICAgICA8bGluayByZWw9InN0eWxlc2hlZXQiIGhyZWY9e3Jlc2V0U3R5bGVzfT48L2xpbms+CisgICAgICAgIDxsaW5rIHJlbD0ic3R5bGVzaGVldCIgaHJlZj17YXBwU3R5bGVzfT48L2xpbms+CgpgYGA="
+          }]
+        },
+        {
+          "title": "Bump Remix, vite, and Tailwind v4 alpha to v4 beta.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2696",
+          "id": "2696"
+        },
+        {
+          "title": "Fix image size warnings on collections page.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2730",
+          "id": "2730"
+        },
+        {
+          "title": "Bump Shopify cli version.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2732",
+          "id": "2732"
+        },
+        {
+          "title": "Bump undici version.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2731",
+          "id": "2731"
+        },
+        {
+          "title": "Update decodeEncodedVariant utility to fix bug if encoding ends with index.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2721",
+          "id": "2721"
+        },
+        {
+          "title": "Fix getProductOptions crashing when one of variants returns a null firstSelectableVariant.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2704",
+          "id": "2704"
+        },
+        {
+          "title": "Remove deprecated customerAccountUrl.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2730",
+          "id": "2730"
+        },
+        {
+          "title": "Make sure tailwind stylesheet is generated in a style tag.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2734",
+          "id": "2734"
+        }
+      ],
+      "features": [{
+        "title": "Turn on Remix future flag v3_lazyRouteDiscovery",
+        "pr": "https://github.com/Shopify/hydrogen/pull/2702",
+        "id": "2702",
+        "steps": [{
+          "title": "Add the following line to your vite.config.ts and test your app.",
+          "code": "YGBgZGlmZgpleHBvcnQgZGVmYXVsdCBkZWZpbmVDb25maWcoewogIHBsdWdpbnM6IFsKICAgIGh5ZHJvZ2VuKCksCiAgICBveHlnZW4oKSwKICAgIHJlbWl4KHsKICAgICAgcHJlc2V0czogW2h5ZHJvZ2VuLnByZXNldCgpXSwKICAgICAgZnV0dXJlOiB7CiAgICAgICAgdjNfZmV0Y2hlclBlcnNpc3Q6IHRydWUsCiAgICAgICAgdjNfcmVsYXRpdmVTcGxhdFBhdGg6IHRydWUsCiAgICAgICAgdjNfdGhyb3dBYm9ydFJlYXNvbjogdHJ1ZSwKKyAgICAgICAgdjNfbGF6eVJvdXRlRGlzY292ZXJ5OiB0cnVlLAogICAgICB9LAogICAgfSksCiAgICB0c2NvbmZpZ1BhdGhzKCksCiAgXSwKYGBg"
+        }]
+      }]
+    },
+    {
       "title": "Support for 2,000 variants and combined listings",
       "version": "2024.10.1",
       "hash": "c915b67d81ff01e25eeefce8cf0510805d620d64",
