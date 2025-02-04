@@ -18,8 +18,8 @@ function getVirtualRoutesPath(
   return new URL(forFile, virtualRoutesPath).pathname;
 }
 
-export async function getVirtualRoutes() {
-  const routes = [
+function getChildRoutes() {
+  return [
     {
       id: `${VIRTUAL_ROUTES_DIR}/graphiql`,
       path: 'graphiql',
@@ -45,13 +45,24 @@ export async function getVirtualRoutes() {
       index: true,
     },
   ];
+}
 
+export async function getVirtualRoutes() {
   return {
-    routes,
+    routes: getChildRoutes(),
     root: {
       id: VIRTUAL_ROOT,
       path: '',
       file: getVirtualRoutesPath(VIRTUAL_ROUTES_DIR_PARTS, 'virtual-root.jsx'),
+    },
+  };
+}
+
+export async function getVirtualRoutesV3() {
+  return {
+    routes: getChildRoutes(),
+    layout: {
+      file: getVirtualRoutesPath(VIRTUAL_ROUTES_DIR_PARTS, 'layout.jsx'),
     },
   };
 }

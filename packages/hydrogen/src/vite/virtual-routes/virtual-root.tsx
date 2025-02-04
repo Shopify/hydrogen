@@ -12,25 +12,25 @@ import {
   useRouteError,
 } from '@remix-run/react';
 import favicon from './assets/favicon.svg';
-import {Layout} from './components/Layout.jsx';
+import {Layout as VirtualLayout} from './components/Layout.jsx';
 import {useNonce} from '@shopify/hydrogen';
 
 import styles from './assets/styles.css?url';
 
 export const links: LinksFunction = () => {
   return [
-    {rel: 'stylesheet', href: styles},
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
 };
 
-export default function App() {
+export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="stylesheet" href={styles}></link>
         <title>Hydrogen</title>
         <meta
           name="description"
@@ -40,14 +40,18 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout>
-          <Outlet />
-        </Layout>
+        <VirtualLayout>
+          {children}
+        </VirtualLayout>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
     </html>
   );
+}
+
+export default function App() {
+  return <Outlet />;
 }
 
 export function ErrorBoundary() {
@@ -63,7 +67,7 @@ export function ErrorBoundary() {
   }
 
   return (
-    <Layout>
+    <VirtualLayout>
       <div className="route-error">
         <h1>Please report this error</h1>
         <h2>{errorStatus}</h2>
@@ -73,6 +77,6 @@ export function ErrorBoundary() {
           </fieldset>
         )}
       </div>
-    </Layout>
+    </VirtualLayout>
   );
 }

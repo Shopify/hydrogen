@@ -1,4 +1,4 @@
-import {getVirtualRoutes} from '../vite/get-virtual-routes';
+import {getVirtualRoutesV3} from '../vite/get-virtual-routes';
 import {type RouteConfigEntry} from '@remix-run/route-config';
 
 // Make this transform the existing routes instead.
@@ -10,7 +10,7 @@ export async function hydrogenRoutes(
     return currentRoutes;
   }
 
-  const {root, routes: virtualRoutes} = await getVirtualRoutes();
+  const {layout, routes: virtualRoutes} = await getVirtualRoutesV3();
 
   const childVirtualRoutes = virtualRoutes.map(({path, file, index, id}) => {
     return {
@@ -21,13 +21,10 @@ export async function hydrogenRoutes(
     };
   });
 
-  const virtualRoot = {
-    file: root.file,
+  const virtualLayout = {
+    file: layout.file,
     children: childVirtualRoutes,
-    path: root.path,
   };
 
-  // The virtual root should land after any existing routes because of the root path
-  // handling.
-  return [...currentRoutes, virtualRoot];
+  return [virtualLayout, ...currentRoutes];
 }
