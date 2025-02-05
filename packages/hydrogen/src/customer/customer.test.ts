@@ -946,7 +946,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost/account/orders.data'),
         waitUntil: vi.fn(),
       });
@@ -966,7 +966,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost/account/_root.data'),
         waitUntil: vi.fn(),
       });
@@ -986,7 +986,7 @@ describe('customer', () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
-        customerAccountUrl: 'https://customer-api',
+        shopId: '1',
         request: new Request('https://localhost/_root.data'),
         waitUntil: vi.fn(),
       });
