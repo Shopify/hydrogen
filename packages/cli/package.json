@@ -21,7 +21,7 @@
     "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=60000"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.15.2",
+    "@remix-run/dev": "^2.15.3",
     "@types/diff": "^5.0.2",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/prettier": "^2.7.2",

@@ -91,7 +91,6 @@ export function createCustomerAccountClient({
   authUrl,
   customAuthStatusHandler,
   logErrors = true,
-  unstableB2b = false,
   loginPath = '/account/login',
   authorizePath = '/account/authorize',
   defaultRedirectPath = '/account',
@@ -268,7 +267,6 @@ export function createCustomerAccountClient({
           stackInfo,
           ...getDebugHeaders(request),
         },
-        exchangeForStorefrontCustomerAccessToken,
       });
     } catch {
       return false;
@@ -327,46 +325,14 @@ export function createCustomerAccountClient({
   }
 
   async function getBuyer() {
-    // check loggedIn and trigger refresh if expire
-    const hasAccessToken = await isLoggedIn();
+    // get access token and trigger refresh if expire
+    const customerAccessToken = await getAccessToken();
 
-    if (!hasAccessToken) {
+    if (!customerAccessToken) {
       return;
     }
 
-    return session.get(BUYER_SESSION_KEY);
-  }
-
-  async function exchangeForStorefrontCustomerAccessToken() {
-    if (!unstableB2b) {
-      return;
-    }
-
-    const STOREFRONT_CUSTOMER_ACCOUNT_TOKEN_CREATE = `#graphql
-      mutation storefrontCustomerAccessTokenCreate {
-        storefrontCustomerAccessTokenCreate {
-          customerAccessToken
-        }
-      }
-    `;
-
-    // Remove hard coded type later
-    const {data} = (await mutate(STOREFRONT_CUSTOMER_ACCOUNT_TOKEN_CREATE)) as {
-      data: {
-        storefrontCustomerAccessTokenCreate?: {
-          customerAccessToken?: string;
-        };
-      };
-    };
-
-    const customerAccessToken =
-      data?.storefrontCustomerAccessTokenCreate?.customerAccessToken;
-
-    if (customerAccessToken) {
-      setBuyer({
-        customerAccessToken,
-      });
-    }
+    return {...session.get(BUYER_SESSION_KEY), customerAccessToken};
   }
 
   return {
@@ -571,12 +537,24 @@ export function createCustomerAccountClient({
         idToken: id_token,
       });
 
-      await exchangeForStorefrontCustomerAccessToken();
-
       return redirect(redirectPath || defaultRedirectPath);
     },
-    UNSTABLE_setBuyer: setBuyer,
-    UNSTABLE_getBuyer: getBuyer,
+    setBuyer,
+    getBuyer,
+    UNSTABLE_setBuyer: (buyer: Buyer) => {
+      warnOnce(
+        '[h2:warn:customerAccount] `customerAccount.UNSTABLE_setBuyer` is deprecated. Please use `customerAccount.setBuyer`.',
+      );
+
+      setBuyer(buyer);
+    },
+    UNSTABLE_getBuyer: () => {
+      warnOnce(
+        '[h2:warn:customerAccount] `customerAccount.UNSTABLE_getBuyer` is deprecated. Please use `customerAccount.getBuyer`.',
+      );
+
+      return getBuyer();
+    },
   };
 }
 

@@ -36,8 +36,6 @@ function createFetchResponse<T>(data: T, options: {ok: boolean}) {
 
 let session: HydrogenSession;
 
-const exchangeForStorefrontCustomerAccessToken = vi.fn();
-
 describe('auth.helpers', () => {
   describe('refreshToken', () => {
     beforeEach(() => {
@@ -60,7 +58,6 @@ describe('auth.helpers', () => {
           customerAccountId: 'customerAccountId',
           customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
           httpsOrigin: 'https://localhost',
-          exchangeForStorefrontCustomerAccessToken,
         });
       }
 
@@ -80,7 +77,6 @@ describe('auth.helpers', () => {
           customerAccountId: 'customerAccountId',
           customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
           httpsOrigin: 'https://localhost',
-          exchangeForStorefrontCustomerAccessToken,
         });
       }
 
@@ -109,7 +105,6 @@ describe('auth.helpers', () => {
           customerAccountId: 'customerAccountId',
           customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
           httpsOrigin: 'https://localhost',
-          exchangeForStorefrontCustomerAccessToken,
         });
       }
 
@@ -140,7 +135,6 @@ describe('auth.helpers', () => {
         customerAccountId: 'customerAccountId',
         customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
         httpsOrigin: 'https://localhost',
-        exchangeForStorefrontCustomerAccessToken,
       });
 
       expect(session.set).toHaveBeenNthCalledWith(
@@ -199,7 +193,6 @@ describe('auth.helpers', () => {
           customerAccountId: 'customerAccountId',
           customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
           httpsOrigin: 'https://localhost',
-          exchangeForStorefrontCustomerAccessToken,
         });
       }
 
@@ -230,7 +223,6 @@ describe('auth.helpers', () => {
         customerAccountId: 'customerAccountId',
         customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
         httpsOrigin: 'https://localhost',
-        exchangeForStorefrontCustomerAccessToken,
       });
 
       expect(session.set).toHaveBeenNthCalledWith(
@@ -271,7 +263,6 @@ describe('auth.helpers', () => {
         customerAccountId: 'customerAccountId',
         customerAccountTokenExchangeUrl: 'customerAccountTokenExchangeUrl',
         httpsOrigin: 'https://localhost',
-        exchangeForStorefrontCustomerAccessToken,
       });
 
       expect(session.set).not.toHaveBeenNthCalledWith(1, 'customerAccount', {
