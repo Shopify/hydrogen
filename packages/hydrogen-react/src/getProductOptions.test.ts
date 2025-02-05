@@ -208,6 +208,166 @@ describe('getProductOptions', () => {
       ]
     `);
   });
+
+  it('returns the options array with variant information even if one of the optionValue returns a null firstSelectableVariant', () => {
+    const options = getProductOptions(
+      PRODUCT_2 as unknown as RecursivePartial<Product>,
+    );
+    expect(options).toMatchInlineSnapshot(`
+      [
+        {
+          "name": "Size",
+          "optionValues": [
+            {
+              "available": true,
+              "exists": true,
+              "firstSelectableVariant": {
+                "availableForSale": true,
+                "id": "gid://shopify/ProductVariant/41007290613816",
+                "product": {
+                  "handle": "mail-it-in-freestyle-snowboard",
+                },
+                "selectedOptions": [
+                  {
+                    "name": "Size",
+                    "value": "154cm",
+                  },
+                  {
+                    "name": "Color",
+                    "value": "Sea Green / Desert",
+                  },
+                ],
+              },
+              "handle": "mail-it-in-freestyle-snowboard",
+              "isDifferentProduct": false,
+              "name": "154cm",
+              "selected": true,
+              "variant": {
+                "availableForSale": true,
+                "id": "gid://shopify/ProductVariant/41007290613816",
+                "product": {
+                  "handle": "mail-it-in-freestyle-snowboard",
+                },
+                "selectedOptions": [
+                  {
+                    "name": "Size",
+                    "value": "154cm",
+                  },
+                  {
+                    "name": "Color",
+                    "value": "Sea Green / Desert",
+                  },
+                ],
+              },
+              "variantUriQuery": "Size=154cm&Color=Sea+Green+%2F+Desert",
+            },
+            {
+              "available": false,
+              "exists": true,
+              "firstSelectableVariant": null,
+              "handle": "mail-it-in-freestyle-snowboard",
+              "isDifferentProduct": false,
+              "name": "158cm",
+              "selected": false,
+              "variant": null,
+              "variantUriQuery": "",
+            },
+            {
+              "available": true,
+              "exists": true,
+              "firstSelectableVariant": {
+                "availableForSale": true,
+                "id": "gid://shopify/ProductVariant/41007290679352",
+                "product": {
+                  "handle": "mail-it-in-freestyle-snowboard",
+                },
+                "selectedOptions": [
+                  {
+                    "name": "Size",
+                    "value": "160cm",
+                  },
+                  {
+                    "name": "Color",
+                    "value": "Sea Green / Desert",
+                  },
+                ],
+              },
+              "handle": "mail-it-in-freestyle-snowboard",
+              "isDifferentProduct": false,
+              "name": "160cm",
+              "selected": false,
+              "variant": {
+                "availableForSale": true,
+                "id": "gid://shopify/ProductVariant/41007290679352",
+                "product": {
+                  "handle": "mail-it-in-freestyle-snowboard",
+                },
+                "selectedOptions": [
+                  {
+                    "name": "Size",
+                    "value": "160cm",
+                  },
+                  {
+                    "name": "Color",
+                    "value": "Sea Green / Desert",
+                  },
+                ],
+              },
+              "variantUriQuery": "Size=160cm&Color=Sea+Green+%2F+Desert",
+            },
+          ],
+        },
+        {
+          "name": "Color",
+          "optionValues": [
+            {
+              "available": true,
+              "exists": true,
+              "firstSelectableVariant": {
+                "availableForSale": true,
+                "id": "gid://shopify/ProductVariant/41007290613816",
+                "product": {
+                  "handle": "mail-it-in-freestyle-snowboard",
+                },
+                "selectedOptions": [
+                  {
+                    "name": "Size",
+                    "value": "154cm",
+                  },
+                  {
+                    "name": "Color",
+                    "value": "Sea Green / Desert",
+                  },
+                ],
+              },
+              "handle": "mail-it-in-freestyle-snowboard",
+              "isDifferentProduct": false,
+              "name": "Sea Green / Desert",
+              "selected": true,
+              "variant": {
+                "availableForSale": true,
+                "id": "gid://shopify/ProductVariant/41007290613816",
+                "product": {
+                  "handle": "mail-it-in-freestyle-snowboard",
+                },
+                "selectedOptions": [
+                  {
+                    "name": "Size",
+                    "value": "154cm",
+                  },
+                  {
+                    "name": "Color",
+                    "value": "Sea Green / Desert",
+                  },
+                ],
+              },
+              "variantUriQuery": "Size=154cm&Color=Sea+Green+%2F+Desert",
+            },
+          ],
+        },
+      ]
+    `);
+  });
 });
 
 describe('getAdjacentAndFirstAvailableVariants', () => {
@@ -469,39 +629,6 @@ describe('checkProductParam', () => {
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledWith(
       `${ERROR_MSG_START}options.optionValues.name${ERROR_MSG_END}`,
-    );
-  });
-
-  it('logs warnings when provided an invalid options input - missing optionValues.firstSelectableVariant', () => {
-    checkProductParam(
-      {
-        id: 'snowboard',
-        handle: 'snowboard',
-        options: [
-          {
-            name: 'Color',
-            optionValues: [
-              {
-                name: 'Turquoise',
-                swatch: {
-                  color: '#6cbfc0',
-                  image: null,
-                },
-              },
-            ],
-          },
-        ],
-        encodedVariantExistence: '',
-        encodedVariantAvailability: '',
-        selectedOrFirstAvailableVariant: null,
-        adjacentVariants: [],
-      } as unknown as RecursivePartial<Product>,
-      true,
-    );
-
-    expect(console.error).toHaveBeenCalledTimes(1);
-    expect(console.error).toHaveBeenCalledWith(
-      `${ERROR_MSG_START}options.optionValues.firstSelectableVariant${ERROR_MSG_END}`,
     );
   });
 
@@ -1063,6 +1190,47 @@ describe('checkProductParam', () => {
       `${ERROR_MSG_START}adjacentVariants.selectedOptions.value${ERROR_MSG_END}`,
     );
   });
+
+  it('does not log warnings when provided options has one of the optionValue that is returning a null firstSelectableVariant', () => {
+    checkProductParam(
+      {
+        id: 'snowboard',
+        handle: 'snowboard',
+        options: [
+          {
+            name: 'Color',
+            optionValues: [
+              {
+                name: 'Turquoise',
+                firstSelectableVariant: null,
+              },
+              {
+                name: 'Ember',
+                firstSelectableVariant: {
+                  product: {
+                    handle: 'snowboard',
+                  },
+                  selectedOptions: [
+                    {
+                      name: 'Color',
+                      value: 'Ember',
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        encodedVariantExistence: '',
+        encodedVariantAvailability: '',
+        selectedOrFirstAvailableVariant: null,
+        adjacentVariants: [],
+      } as unknown as RecursivePartial<Product>,
+      true,
+    );
+
+    expect(console.error).toHaveBeenCalledTimes(0);
+  });
 });
 
 const PRODUCT = {
@@ -1201,6 +1369,125 @@ const PRODUCT = {
         },
       ],
     },
+    {
+      availableForSale: true,
+      id: 'gid://shopify/ProductVariant/41007290679352',
+      product: {
+        handle: 'mail-it-in-freestyle-snowboard',
+      },
+      selectedOptions: [
+        {
+          name: 'Size',
+          value: '160cm',
+        },
+        {
+          name: 'Color',
+          value: 'Sea Green / Desert',
+        },
+      ],
+    },
+  ],
+};
+
+const PRODUCT_2 = {
+  id: 'gid://shopify/Product/6730949034040',
+  handle: 'mail-it-in-freestyle-snowboard',
+  encodedVariantExistence: 'v1_0:0,1:0,2:0,',
+  encodedVariantAvailability: 'v1_0:0,2:0,',
+  options: [
+    {
+      name: 'Size',
+      optionValues: [
+        {
+          name: '154cm',
+          firstSelectableVariant: {
+            availableForSale: true,
+            id: 'gid://shopify/ProductVariant/41007290613816',
+            product: {
+              handle: 'mail-it-in-freestyle-snowboard',
+            },
+            selectedOptions: [
+              {
+                name: 'Size',
+                value: '154cm',
+              },
+              {
+                name: 'Color',
+                value: 'Sea Green / Desert',
+              },
+            ],
+          },
+        },
+        {
+          name: '158cm',
+          firstSelectableVariant: null,
+        },
+        {
+          name: '160cm',
+          firstSelectableVariant: {
+            availableForSale: true,
+            id: 'gid://shopify/ProductVariant/41007290679352',
+            product: {
+              handle: 'mail-it-in-freestyle-snowboard',
+            },
+            selectedOptions: [
+              {
+                name: 'Size',
+                value: '160cm',
+              },
+              {
+                name: 'Color',
+                value: 'Sea Green / Desert',
+              },
+            ],
+          },
+        },
+      ],
+    },
+    {
+      name: 'Color',
+      optionValues: [
+        {
+          name: 'Sea Green / Desert',
+          firstSelectableVariant: {
+            availableForSale: true,
+            id: 'gid://shopify/ProductVariant/41007290613816',
+            product: {
+              handle: 'mail-it-in-freestyle-snowboard',
+            },
+            selectedOptions: [
+              {
+                name: 'Size',
+                value: '154cm',
+              },
+              {
+                name: 'Color',
+                value: 'Sea Green / Desert',
+              },
+            ],
+          },
+        },
+      ],
+    },
+  ],
+  selectedOrFirstAvailableVariant: {
+    availableForSale: true,
+    id: 'gid://shopify/ProductVariant/41007290613816',
+    product: {
+      handle: 'mail-it-in-freestyle-snowboard',
+    },
+    selectedOptions: [
+      {
+        name: 'Size',
+        value: '154cm',
+      },
+      {
+        name: 'Color',
+        value: 'Sea Green / Desert',
+      },
+    ],
+  },
+  adjacentVariants: [
     {
       availableForSale: true,
       id: 'gid://shopify/ProductVariant/41007290679352',

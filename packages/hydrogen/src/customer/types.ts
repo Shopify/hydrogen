@@ -59,7 +59,7 @@ export type LogoutOptions = {
 };
 
 export type CustomerAccount = {
-  /** Start the OAuth login flow. This function should be called and returned from a Remix action.
+  /** Start the OAuth login flow. This function should be called and returned from a Remix loader.
    * It redirects the customer to a Shopify login domain. It also defined the final path the customer
    * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is
    * automatically setup unless `customAuthStatusHandler` option is in use)
@@ -132,12 +132,8 @@ export type CustomerAccountOptions = {
   session: HydrogenSession;
   /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use `npx shopify hydrogen env pull` to link your store credentials. */
   customerAccountId: string;
-  /**
-   * @deprecated use `shopId` instead. The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use `npx shopify hydrogen env pull` to link your store credentials.
-   */
-  customerAccountUrl?: string;
   /** The shop id. Mock.shop doesn't automatically supply shopId. Use `npx shopify hydrogen env pull` to link your store credentials */
-  shopId?: string;
+  shopId: string;
   /** Override the version of the API */
   customerApiVersion?: string;
   /** The object for the current Request. It should be provided by your platform. */

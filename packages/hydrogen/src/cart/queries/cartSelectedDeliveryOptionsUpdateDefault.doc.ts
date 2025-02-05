@@ -7,7 +7,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'Creates a function that accepts an object of [CartSelectedDeliveryOptionInput](/docs/api/storefront/2024-10/input-objects/CartSelectedDeliveryOptionInput) and updates the selected delivery option of a cart',
+    'Creates a function that accepts an object of [CartSelectedDeliveryOptionInput](/docs/api/storefront/2025-01/input-objects/CartSelectedDeliveryOptionInput) and updates the selected delivery option of a cart',
   type: 'utility',
   defaultExample: {
     description: 'This is the default example',

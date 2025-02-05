@@ -29,7 +29,7 @@ export type IsOptionValueCombinationInEncodedVariant = (
  * Determine whether an option value combination is present in an encoded option value string. Function is memoized by encodedVariantField.
  *
  * @param targetOptionValueCombination - Indices of option values to look up in the encoded option value string. A partial set of indices may be passed to determine whether a node or any children is present. For example, if a product has 3 options, passing [0] will return true if any option value combination for the first option's option value is present in the encoded string.
- * @param encodedVariantField - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)
+ * @param encodedVariantField - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2025-01/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2025-01/objects/Product#field-encodedvariantavailability)
  * @returns - True if a full or partial targetOptionValueIndices is present in the encoded option value string, false otherwise.
  */
 export const isOptionValueCombinationInEncodedVariant: IsOptionValueCombinationInEncodedVariant =
@@ -77,7 +77,7 @@ type DecodedOptionValues = number[][];
 
 /**
  * For an encoded option value string, decode into option value combinations. Entries represent a valid combination formatted as an array of option value positions.
- * @param encodedVariantField - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2024-10/objects/Product#field-encodedvariantavailability)
+ * @param encodedVariantField - Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2025-01/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2025-01/objects/Product#field-encodedvariantavailability)
  * @returns Decoded option value combinations
  */
 export function decodeEncodedVariant(
@@ -172,16 +172,19 @@ function v1Decoder(encodedVariantField: string): number[][] {
     index = tokenizer.lastIndex;
   }
 
-  // Because we iterate over control characters and the range processing happens in the while,
-  // if the last control char is a range we need to manually add the final range to the option list.
-  const lastRangeStartIndex = encodedVariantField.lastIndexOf('-');
-  if (rangeStart != null && lastRangeStartIndex > 0) {
-    const finalValueIndex = parseInt(
-      encodedVariantField.substring(lastRangeStartIndex + 1),
-    );
-    for (; rangeStart <= finalValueIndex; rangeStart++) {
-      currentOptionValue[depth] = rangeStart;
-      options.push([...currentOptionValue]);
+  // The while loop only iterates control characters, meaning if an encoded string ends with an index it will not be processed.
+  const encodingEndsWithIndex = encodedVariantField.match(/\d+$/g);
+  if (encodingEndsWithIndex) {
+    const finalValueIndex = parseInt(encodingEndsWithIndex[0]);
+    if (rangeStart != null) {
+      // process final range
+      for (; rangeStart <= finalValueIndex; rangeStart++) {
+        currentOptionValue[depth] = rangeStart;
+        options.push([...currentOptionValue]);
+      }
+    } else {
+      // process final index
+      options.push([finalValueIndex]);
     }
   }
 

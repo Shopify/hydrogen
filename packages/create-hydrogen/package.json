@@ -5,8 +5,13 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "license": "MIT",
-  "version": "5.0.14",
+  "version": "5.0.15",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shopify/hydrogen.git",
+    "directory": "packages/create-hydrogen"
+  },
   "scripts": {
     "build": "tsup --clean",
     "dev": "tsup --watch src --watch ../cli/src",

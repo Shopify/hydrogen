@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "3.1.0",
+  "version": "3.1.1",
   "license": "MIT",
   "type": "module",
   "description": "Development assistant for custom Shopify Oxygen hosted storefronts",
@@ -12,7 +12,11 @@
   "module": "dist/worker/index.js",
   "types": "./dist/worker/index.d.ts",
   "sideEffects": false,
-  "repository": "https://github.com/Shopify/hydrogen.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shopify/hydrogen.git",
+    "directory": "packages/mini-oxygen"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -57,7 +61,7 @@
     "source-map": "^0.7.4",
     "source-map-support": "^0.5.21",
     "stack-trace": "^1.0.0-pre2",
-    "undici": "^6.11.1",
+    "undici": "^6.21.1",
     "ws": "^8.17.1"
   },
   "devDependencies": {

@@ -14,6 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository_owner == 'shopify'
     name: Changelog PR or Release
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
     outputs:
       published: ${{ steps.changesets.outputs.published }}
       # A JSON array to present the published packages. The format is [{"name": "@xx/xx", "version": "1.2.0"}, {"name": "@xx/xy", "version": "0.8.9"}]
@@ -25,7 +29,7 @@ jobs:
         id: flags
         run: |
           # IMPORTANT: Update this latestBranch whenever we move to a new major version:
-          echo "latestBranch=2024-10" >> $GITHUB_ENV
+          echo "latestBranch=2025-01" >> $GITHUB_ENV
           echo "latest=${{ github.ref_name == 'main' }}" >> $GITHUB_ENV
 
       - name: Checkout the code
@@ -63,6 +67,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
 
   compile:
     needs: changelog
