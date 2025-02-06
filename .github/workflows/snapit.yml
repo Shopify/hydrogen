@@ -10,9 +10,12 @@ jobs:
     name: Snapit
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/snapit' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
     steps:
-      # WARNING: DO NOT RUN ANY CUSTOM LOCAL SCRIPT BEFORE RUNNING THE SNAPIT ACTION
-      # This action can be executed by 3rd party users and it should not be able to run arbitrary code from a PR.
+      # This action can be executed by users with write permission to this repo
       - name: Checkout current branch
         uses: actions/checkout@v4
 
@@ -29,3 +32,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true

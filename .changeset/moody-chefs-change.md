@@ -1,9 +1,9 @@
 ---
-'@shopify/hydrogen-react': patch
+'@shopify/remix-oxygen': patch
 'skeleton': patch
 '@shopify/hydrogen': patch
 '@shopify/cli-hydrogen': patch
 '@shopify/create-hydrogen': patch
 ---
 
-Bump SFAPI to 2025-01
+Bump remix version

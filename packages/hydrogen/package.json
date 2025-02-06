@@ -11,6 +11,11 @@
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shopify/hydrogen.git",
+    "directory": "packages/hydrogen"
+  },
   "scripts": {
     "build": "tsup --clean",
     "dev": "tsup --watch ./src --watch ../../node_modules/@shopify/hydrogen-react/dist/browser-prod/index.mjs",
@@ -71,10 +76,10 @@
     "worktop": "^0.7.3"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.15.2",
-    "@remix-run/react": "^2.15.2",
-    "@remix-run/server-runtime": "^2.15.2",
-    "@remix-run/route-config": "^2.15.2",
+    "@remix-run/dev": "^2.15.3",
+    "@remix-run/react": "^2.15.3",
+    "@remix-run/server-runtime": "^2.15.3",
+    "@remix-run/route-config": "^2.15.3",
     "@shopify/generate-docs": "0.16.2",
     "@shopify/hydrogen-codegen": "*",
     "@testing-library/jest-dom": "^5.17.0",

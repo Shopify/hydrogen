@@ -121,9 +121,13 @@ export type CustomerAccount = {
       'errors'
     > & {errors?: JsonGraphQLError[]}
   >;
-  /** UNSTABLE feature. Set buyer information into session.*/
+  /** Set buyer information into session.*/
+  setBuyer: (buyer: Buyer) => void;
+  /** Get buyer token and company location id from session.*/
+  getBuyer: () => Promise<Buyer>;
+  /** Deprecated. Please use setBuyer. Set buyer information into session.*/
   UNSTABLE_setBuyer: (buyer: Buyer) => void;
-  /** UNSTABLE feature. Get buyer token and company location id from session.*/
+  /** Deprecated. Please use getBuyer. Get buyer token and company location id from session.*/
   UNSTABLE_getBuyer: () => Promise<Buyer>;
 };
 
@@ -132,12 +136,8 @@ export type CustomerAccountOptions = {
   session: HydrogenSession;
   /** Unique UUID prefixed with `shp_` associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountId. Use `npx shopify hydrogen env pull` to link your store credentials. */
   customerAccountId: string;
-  /**
-   * @deprecated use `shopId` instead. The account URL associated with the application, this should be visible in the customer account api settings in the Hydrogen admin channel. Mock.shop doesn't automatically supply customerAccountUrl. Use `npx shopify hydrogen env pull` to link your store credentials.
-   */
-  customerAccountUrl?: string;
   /** The shop id. Mock.shop doesn't automatically supply shopId. Use `npx shopify hydrogen env pull` to link your store credentials */
-  shopId?: string;
+  shopId: string;
   /** Override the version of the API */
   customerApiVersion?: string;
   /** The object for the current Request. It should be provided by your platform. */
@@ -150,14 +150,14 @@ export type CustomerAccountOptions = {
   customAuthStatusHandler?: () => DataFunctionValue;
   /** Whether it should print GraphQL errors automatically. Defaults to true */
   logErrors?: boolean | ((error?: Error) => boolean);
-  /** UNSTABLE feature, this will eventually goes away. If true then we will exchange customerAccessToken for storefrontCustomerAccessToken. */
-  unstableB2b?: boolean;
   /** The path to redirect to after login. Defaults to `/account`. */
   defaultRedirectPath?: string;
   /** The path to login. Defaults to `/account/login`. */
   loginPath?: string;
   /** The oauth authorize path. Defaults to `/account/authorize`. */
   authorizePath?: string;
+  /** Deprecated. `unstableB2b` is now stable. Please remove. */
+  unstableB2b?: boolean;
 };
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */
