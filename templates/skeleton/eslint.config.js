@@ -28,7 +28,7 @@ export default [
       '**/build/',
       '**/*.graphql.d.ts',
       '**/*.graphql.ts',
-      '**/storefrontapi.generated.d.ts',
+      '**/*.generated.d.ts',
     ],
   },
   ...fixupConfigRules(
