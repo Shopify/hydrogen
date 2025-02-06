@@ -78,6 +78,12 @@ Remix single fetch migration guide: https://remix.run/docs/en/main/guides/single
           {status, headers},
         );
       }
+
+      export async function loader({context}: LoaderFunctionArgs) {
+        const {cart} = context;
+   -    return json(await cart.get());
+   +    return await cart.get();
+      }
    ```
 
 4. Deprecate `json` and `defer` import usage from `@shopify/remix-oxygen`.
