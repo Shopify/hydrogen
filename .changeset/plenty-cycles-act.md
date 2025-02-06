@@ -50,7 +50,37 @@ Remix single fetch migration guide: https://remix.run/docs/en/main/guides/single
        />
      </NonceProvider>,
    ```
-3. Deprecate `json` and `defer` import usage from `@shopify/remix-oxygen`.
+
+3. Update `cart.tsx` to add a headers export and update to `data` import usage.
+
+    ```diff
+      import {
+    -  json,
+    +  data,
+        type LoaderFunctionArgs,
+        type ActionFunctionArgs,
+        type HeadersFunction
+      } from '@shopify/remix-oxygen';
+    + export const headers: HeadersFunction = ({ actionHeaders }) => actionHeaders;
+
+      export async function action({request, context}: ActionFunctionArgs) {
+        ...
+    -   return json(
+    +   return data(
+          {
+            cart: cartResult,
+            errors,
+            warnings,
+            analytics: {
+              cartId,
+            },
+          },
+          {status, headers},
+        );
+      }
+   ```
+
+4. Deprecate `json` and `defer` import usage from `@shopify/remix-oxygen`.
 
     Remove `json()`/`defer()` in favor of raw objects.
 
@@ -81,7 +111,13 @@ Remix single fetch migration guide: https://remix.run/docs/en/main/guides/single
 
     ```diff
     -  import {json} from "@shopify/remix-oxygen";
-    +  import {data} from "@shopify/remix-oxygen";
+    +  import {data, type HeadersFunction} from "@shopify/remix-oxygen";
+
+    +  // If your loader or action is returning a response with headers,
+    +  // make sure to export a headers function that merges your headers
+    +  // on your route. Otherwise, your headers may be lost.
+    +  // Remix doc: https://remix.run/docs/en/main/route/headers
+    +  export const headers: HeadersFunction = ({ loaderHeaders }) => loaderHeaders;
 
       export async function loader({}: LoaderFunctionArgs) {
         let tasks = await fetchTasks();
