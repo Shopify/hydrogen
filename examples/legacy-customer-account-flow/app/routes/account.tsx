@@ -1,10 +1,12 @@
 import {Form, NavLink, Outlet, useLoaderData} from '@remix-run/react';
-import {data, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {data, HeadersFunction, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import type {CustomerFragment} from 'storefrontapi.generated';
 
 export function shouldRevalidate() {
   return true;
 }
+
+export const headers: HeadersFunction = ({ loaderHeaders }) => loaderHeaders;
 
 export async function loader({request, context}: LoaderFunctionArgs) {
   const {session, storefront} = context;
@@ -67,7 +69,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
   }
 }
 
-export default function Acccount() {
+export default function Account() {
   const {customer, isPrivateRoute, isAccountHome} =
     useLoaderData<typeof loader>();
 
