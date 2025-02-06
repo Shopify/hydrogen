@@ -15,7 +15,7 @@ type ActionResponse = {
     | null;
 };
 
-export const headers: HeadersFunction = ({ actionHeaders }) => actionHeaders;
+export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
 
 export async function loader({context}: LoaderFunctionArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');

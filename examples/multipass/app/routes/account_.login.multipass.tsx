@@ -3,6 +3,7 @@ import {
   redirect,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
+  type HeadersFunction,
 } from '@shopify/remix-oxygen';
 import {Multipassify} from '~/lib/multipass/multipassify.server';
 import type {
@@ -10,6 +11,8 @@ import type {
   MultipassRequestBody,
   NotLoggedInResponseType,
 } from '~/lib/multipass/types';
+
+export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
 
 /*
   Redirect document GET requests to the login page (housekeeping)

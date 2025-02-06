@@ -1,5 +1,5 @@
 import {useNonce, getShopAnalytics, Analytics} from '@shopify/hydrogen';
-import {data, HeadersFunction, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {data, type HeadersFunction, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
@@ -64,9 +64,10 @@ export function links() {
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
 }
+
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
-export const headers: HeadersFunction = ({ loaderHeaders }) => loaderHeaders;
+export const headers: HeadersFunction = ({loaderHeaders}) => loaderHeaders;
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
 

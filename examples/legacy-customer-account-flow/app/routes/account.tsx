@@ -1,12 +1,12 @@
 import {Form, NavLink, Outlet, useLoaderData} from '@remix-run/react';
-import {data, HeadersFunction, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {data, type HeadersFunction, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import type {CustomerFragment} from 'storefrontapi.generated';
 
 export function shouldRevalidate() {
   return true;
 }
 
-export const headers: HeadersFunction = ({ loaderHeaders }) => loaderHeaders;
+export const headers: HeadersFunction = ({loaderHeaders}) => loaderHeaders;
 
 export async function loader({request, context}: LoaderFunctionArgs) {
   const {session, storefront} = context;

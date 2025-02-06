@@ -61,7 +61,7 @@ Remix single fetch migration guide: https://remix.run/docs/en/main/guides/single
         type ActionFunctionArgs,
         type HeadersFunction
       } from '@shopify/remix-oxygen';
-    + export const headers: HeadersFunction = ({ actionHeaders }) => actionHeaders;
+    + export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
 
       export async function action({request, context}: ActionFunctionArgs) {
         ...
@@ -123,7 +123,7 @@ Remix single fetch migration guide: https://remix.run/docs/en/main/guides/single
     +  // make sure to export a headers function that merges your headers
     +  // on your route. Otherwise, your headers may be lost.
     +  // Remix doc: https://remix.run/docs/en/main/route/headers
-    +  export const headers: HeadersFunction = ({ loaderHeaders }) => loaderHeaders;
+    +  export const headers: HeadersFunction = ({loaderHeaders}) => loaderHeaders;
 
       export async function loader({}: LoaderFunctionArgs) {
         let tasks = await fetchTasks();

@@ -13,7 +13,7 @@ export const meta: MetaFunction = () => {
   return [{title: `Hydrogen | Cart`}];
 };
 
-export const headers: HeadersFunction = ({ actionHeaders }) => actionHeaders;
+export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
 
 export async function action({request, context}: ActionFunctionArgs) {
   const {cart} = context;

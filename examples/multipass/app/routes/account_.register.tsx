@@ -1,5 +1,6 @@
 import {
   data,
+  HeadersFunction,
   redirect,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
@@ -13,6 +14,8 @@ type ActionResponse = {
     | NonNullable<CustomerCreateMutation['customerCreate']>['customer']
     | null;
 };
+
+export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
 
 export async function loader({context}: LoaderFunctionArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
