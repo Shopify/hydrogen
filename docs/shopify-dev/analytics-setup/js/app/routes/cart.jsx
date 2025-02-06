@@ -11,6 +11,11 @@ export const meta = () => {
 };
 
 /**
+ * @type {HeadersFunction}
+ */
+export const headers = ({ actionHeaders }) => actionHeaders;
+
+/**
  * @param {ActionFunctionArgs}
  */
 export async function action({request, context}) {
@@ -118,6 +123,7 @@ export default function Cart() {
 }
 
 /** @template T @typedef {import('@remix-run/react').MetaFunction<T>} MetaFunction */
+/** @template T @typedef {import('@remix-run/react').HeadersFunction<T>} HeadersFunction */
 /** @typedef {import('@shopify/hydrogen').CartQueryDataReturn} CartQueryDataReturn */
 /** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof action>} ActionReturnData */

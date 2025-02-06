@@ -1,12 +1,14 @@
 import {type MetaFunction, useLoaderData} from '@remix-run/react';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
-import {data, type LoaderFunctionArgs, type ActionFunctionArgs} from '@shopify/remix-oxygen';
+import {data, type LoaderFunctionArgs, type ActionFunctionArgs, HeadersFunction} from '@shopify/remix-oxygen';
 import {CartMain} from '~/components/Cart';
 
 export const meta: MetaFunction = () => {
   return [{title: `Hydrogen | Cart`}];
 };
+
+export const headers: HeadersFunction = ({ actionHeaders }) => actionHeaders;
 
 export async function action({request, context}: ActionFunctionArgs) {
   /***********************************************/
