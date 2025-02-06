@@ -2,8 +2,6 @@
 'skeleton': patch
 ---
 
-[**Breaking change**]
-
 Turn on Remix `v3_singleFetch` future flag
 
 Remix single fetch migration quick guide: https://remix.run/docs/en/main/start/future-flags#v3_singlefetch
@@ -119,10 +117,12 @@ Remix single fetch migration guide: https://remix.run/docs/en/main/guides/single
     -  import {json} from "@shopify/remix-oxygen";
     +  import {data, type HeadersFunction} from "@shopify/remix-oxygen";
 
-    +  // If your loader or action is returning a response with headers,
-    +  // make sure to export a headers function that merges your headers
-    +  // on your route. Otherwise, your headers may be lost.
-    +  // Remix doc: https://remix.run/docs/en/main/route/headers
+    +  /**
+    +   * If your loader or action is returning a response with headers,
+    +   * make sure to export a headers function that merges your headers
+    +   * on your route. Otherwise, your headers may be lost.
+    +   * Remix doc: https://remix.run/docs/en/main/route/headers
+    +   **/
     +  export const headers: HeadersFunction = ({loaderHeaders}) => loaderHeaders;
 
       export async function loader({}: LoaderFunctionArgs) {
@@ -134,4 +134,40 @@ Remix single fetch migration guide: https://remix.run/docs/en/main/guides/single
           }
         });
       }
+    ```
+
+5. If you are using legacy customer account flow or multipass, there are a couple more files that requires updating:
+
+    In `root.tsx` and `routes/account.tsx`, add a `headers` export for `loaderHeaders`.
+
+    ```diff
+    + export const headers: HeadersFunction = ({loaderHeaders}) => loaderHeaders;
+    ```
+
+    In `routes/account_.register.tsx`, add a `headers` export for `actionHeaders`.
+
+    ```diff
+    + export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
+    ```
+
+6. If you are using multipass, in `routes/account_.login.multipass.tsx`
+
+    a. export a `headers` export
+
+    ```diff
+    + export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
+    ```
+
+    b.  update the success response wrapper to `Response.json`
+
+    ```diff
+      // success, return token, url
+    -  return json(
+    +  return Response.json(
+        {data: {...data, error: null}},
+        {
+          status: 200,
+          headers: getCorsHeaders(origin),
+        },
+      );
     ```
