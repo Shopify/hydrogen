@@ -65,7 +65,7 @@ export async function action({request, context}: ActionFunctionArgs) {
     if (!customerAccessToken) {
       return handleLoggedOutResponse({
         return_to: body?.return_to ?? null,
-        checkoutDomain: env.PRIVATE_SHOPIFY_CHECKOUT_DOMAIN,
+        checkoutDomain: env.SHOPIFY_CHECKOUT_DOMAIN,
       });
     }
 
@@ -127,7 +127,7 @@ export async function action({request, context}: ActionFunctionArgs) {
       }
 
       // success, return token, url
-      return remixData(
+      return Response.json(
         {data: {...data, error: null}},
         {
           status: 200,
