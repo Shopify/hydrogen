@@ -84,7 +84,7 @@ export function mockGetBuyer() {
 
 export function mockCreateCustomerAccountClient() {
   return {
-    UNSTABLE_getBuyer: mockGetBuyer,
+    getBuyer: mockGetBuyer,
     isLoggedIn: () => Promise.resolve(true),
   } as CustomerAccount;
 }
