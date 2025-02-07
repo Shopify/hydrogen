@@ -51,6 +51,7 @@ export type {
 } from '@remix-run/server-runtime';
 export {
   createSession,
+  data,
   defer,
   isCookie,
   isSession,

@@ -57,7 +57,7 @@ npm i --save-dev @types/crypto-js
 - In your Hydrogen app, create the new files from the file list above, copying in the code as you go.
 - If you already have a `.env` file, copy over these key-value pairs:
   - `PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET`
-  - `PRIVATE_SHOPIFY_CHECKOUT_DOMAIN`
+  - `SHOPIFY_CHECKOUT_DOMAIN`
 
 ### 3. Edit the Cart component file
 
