@@ -23,7 +23,7 @@ declare global {
     /***********************************************/
     /**********  EXAMPLE UPDATE STARTS  ************/
     PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET: string;
-    PRIVATE_SHOPIFY_CHECKOUT_DOMAIN: string;
+    SHOPIFY_CHECKOUT_DOMAIN: string;
     /**********   EXAMPLE UPDATE END   ************/
     /***********************************************/
   }
