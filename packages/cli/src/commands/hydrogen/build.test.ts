@@ -1,3 +1,4 @@
+import whyIsNodeRunning from 'why-is-node-running';
 import '../../lib/onboarding/setup-template.mocks.js';
 import {
   readFile,
@@ -28,14 +29,24 @@ describe('build', () => {
       outputMock.clear();
       vi.stubEnv('NODE_ENV', 'production');
 
-      await expect(
-        runBuild({directory: tmpDir, bundleStats: true}),
-      ).resolves.not.toThrow();
+      const runBuildResultPromise = runBuild({
+        directory: tmpDir,
+        bundleStats: true,
+      });
+
+      await expect(runBuildResultPromise).resolves.not.toThrow();
+      console.log('it apparently resolves not to throw');
+
+      const runBuildResult = await runBuildResultPromise;
+      console.log('After closing the runBuildResult');
 
       const expectedBundlePath = 'dist/server/index.js';
 
       const output = outputMock.output();
+      console.log('output', output);
+      console.log('Mid-point');
       expect(output).toMatch(expectedBundlePath);
+      console.log('After first output match');
       expect(output).toMatch('building for productio');
       expect(output).toMatch('dist/client/assets/root-');
       expect(output).toMatch('building SSR bundle for productio');
@@ -57,6 +68,12 @@ describe('build', () => {
       await expect(
         readFile(joinPath(tmpDir, 'dist', 'server', BUNDLE_ANALYZER_HTML_FILE)),
       ).resolves.toMatch(/globalThis\.METAFILE = '.+';/g);
+
+      await runBuildResult.close();
+
+      console.log('After all the checks');
     });
+    console.log('why is node running?');
+    whyIsNodeRunning();
   });
 });
