@@ -587,7 +587,13 @@ function createIfInvalidCredentialThrowError(
   };
 }
 
-// Exported for testing
+/**
+ * This function returns a locale string in the form <language>[-<COUNTRY_CODE>], based on the provided input params.
+ * If both the i18n and the uiLocalesOverride are provided, the uiLocalesOverride will be used.
+ * If none of the params are provided, it returns null.
+ *
+ * Note: exported for testing purposes.
+ */
 export function getMaybeUILocales(params: {
   i18n: I18nBase | null;
   uiLocalesOverride: LanguageCode | null; // this will override i18nContext if both are provided
