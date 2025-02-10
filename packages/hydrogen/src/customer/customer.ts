@@ -598,38 +598,6 @@ export function getMaybeUILocales(params: {
   i18n: I18nBase | null;
   uiLocalesOverride: LanguageCode | null; // this will override i18nContext if both are provided
 }): string | null {
-  function toMaybeLocaleString(
-    language: string | null,
-    country: string | null,
-  ): string | null {
-    if (language != null) {
-      const languageLower = language.toLowerCase();
-      if (country != null) {
-        const countryUpper = country.toUpperCase();
-        return `${languageLower}-${countryUpper}`;
-      }
-      return languageLower;
-    }
-    return null;
-  }
-
-  function uiLocalesToMaybeLocaleString(
-    uiLocales: string | null,
-  ): string | null {
-    if (uiLocales == null) {
-      return null;
-    }
-
-    // NOTE(ruggi): the locale override coming from `uiLocale` is supposed to be a LanguageCode, so it should not contain other tokens.
-    // The current implementation is kept for backwards compatibility, however we might consider adjusting it in the future.
-    const parts = uiLocales.split('-');
-    if (parts.length === 0) {
-      return null;
-    }
-
-    return toMaybeLocaleString(parts.at(0) ?? null, parts.at(1) ?? null);
-  }
-
   const contextLocale = toMaybeLocaleString(
     params.i18n?.language ?? null,
     params.i18n?.country ?? null,
@@ -639,4 +607,34 @@ export function getMaybeUILocales(params: {
   );
 
   return optionsLocale ?? contextLocale ?? null;
+}
+
+function toMaybeLocaleString(
+  language: string | null,
+  country: string | null,
+): string | null {
+  if (language != null) {
+    const languageLower = language.toLowerCase();
+    if (country != null) {
+      const countryUpper = country.toUpperCase();
+      return `${languageLower}-${countryUpper}`;
+    }
+    return languageLower;
+  }
+  return null;
+}
+
+function uiLocalesToMaybeLocaleString(uiLocales: string | null): string | null {
+  if (uiLocales == null) {
+    return null;
+  }
+
+  // NOTE(ruggi): the locale override coming from `uiLocale` is supposed to be a LanguageCode, so it should not contain other tokens.
+  // The current implementation is kept for backwards compatibility, however we might consider adjusting it in the future.
+  const parts = uiLocales.split('-');
+  if (parts.length === 0) {
+    return null;
+  }
+
+  return toMaybeLocaleString(parts.at(0) ?? null, parts.at(1) ?? null);
 }
