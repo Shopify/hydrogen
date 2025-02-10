@@ -180,13 +180,13 @@ describe('customer', () => {
             shopId: '1',
             request: new Request(origin),
             waitUntil: vi.fn(),
-            i18n: {language: 'FR', country: 'CA'},
+            language: 'FR',
           });
 
           const response = await customer.login();
           const url = new URL(response.headers.get('location')!);
 
-          expect(url.searchParams.get('ui_locales')).toBe('fr-CA');
+          expect(url.searchParams.get('ui_locales')).toBe('fr');
         });
 
         it('Redirects to the customer account api login url with uiLocales as param (uiLocales in the param)', async () => {
@@ -217,7 +217,7 @@ describe('customer', () => {
             shopId: '1',
             request: new Request(origin),
             waitUntil: vi.fn(),
-            i18n: {language: 'IT', country: 'IT'},
+            language: 'IT',
           });
 
           const response = await customer.login({
@@ -1142,40 +1142,65 @@ describe('customer', () => {
 describe('getMaybeUILocales', () => {
   it('returns null if no i18n is provided', () => {
     const uiLocales = getMaybeUILocales({
-      i18n: null,
+      contextLanguage: null,
       uiLocalesOverride: null,
     });
     expect(uiLocales).toBeNull();
   });
 
-  it('returns the i18n locale (formatted) if no options override is provided', () => {
+  it('returns the context locale (formatted) if no options override is provided', () => {
     const uiLocales = getMaybeUILocales({
-      i18n: {language: 'EN', country: 'CA'},
+      contextLanguage: 'EN',
       uiLocalesOverride: null,
     });
-    expect(uiLocales).toBe('en-CA');
+    expect(uiLocales).toBe('en');
+
+    const uiLocalesWithRegion = getMaybeUILocales({
+      contextLanguage: 'PT_PT',
+      uiLocalesOverride: null,
+    });
+    expect(uiLocalesWithRegion).toBe('pt-PT');
   });
 
   it('returns the uiLocales data (formatted) if the i18n locale is not provided', () => {
     const uiLocales = getMaybeUILocales({
-      i18n: null,
+      contextLanguage: null,
       uiLocalesOverride: 'FR',
     });
     expect(uiLocales).toBe('fr');
 
-    // NOTE(ruggi): this is testing the current behavior even if `uiLocale` is not a LanguageCode.
-    const uiLocalesWithCountry = getMaybeUILocales({
-      i18n: null,
-      uiLocalesOverride: 'FR-CA' as unknown as LanguageCode,
+    const uiLocalesWithRegion = getMaybeUILocales({
+      contextLanguage: null,
+      uiLocalesOverride: 'PT_PT',
     });
-    expect(uiLocalesWithCountry).toBe('fr-CA');
+    expect(uiLocalesWithRegion).toBe('pt-PT');
   });
 
   it('overrides the i18n locale if both the it and the uiLocales override are provided', () => {
     const uiLocales = getMaybeUILocales({
-      i18n: {language: 'EN', country: 'CA'},
+      contextLanguage: 'EN',
       uiLocalesOverride: 'FR',
     });
     expect(uiLocales).toBe('fr');
+  });
+
+  it('enforces a regional variant if the language is a regional language', () => {
+    const portuguese = getMaybeUILocales({
+      contextLanguage: 'PT',
+      uiLocalesOverride: null,
+    });
+    expect(portuguese).toBe('pt-PT');
+
+    const mandarin = getMaybeUILocales({
+      contextLanguage: 'ZH',
+      uiLocalesOverride: null,
+    });
+    expect(mandarin).toBe('zh-CN');
+
+    const dutch = getMaybeUILocales({
+      contextLanguage: 'NL',
+      uiLocalesOverride: null,
+    });
+    expect(dutch).toBe('nl');
   });
 });

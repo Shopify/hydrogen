@@ -96,7 +96,7 @@ export function createCustomerAccountClient({
   loginPath = '/account/login',
   authorizePath = '/account/authorize',
   defaultRedirectPath = '/account',
-  i18n,
+  language,
 }: CustomerAccountOptions): CustomerAccount {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -358,7 +358,7 @@ export function createCustomerAccountClient({
       loginUrl.searchParams.append('nonce', nonce);
 
       const uiLocales = getMaybeUILocales({
-        i18n: i18n ?? null,
+        contextLanguage: language ?? null,
         uiLocalesOverride: options?.uiLocales ?? null,
       });
       if (uiLocales != null) {
@@ -595,38 +595,40 @@ function createIfInvalidCredentialThrowError(
  * Note: exported for testing purposes.
  */
 export function getMaybeUILocales(params: {
-  i18n: I18nBase | null;
+  contextLanguage: LanguageCode | null;
   uiLocalesOverride: LanguageCode | null; // this will override i18nContext if both are provided
 }): string | null {
-  const contextLocale = toMaybeLocaleString(
-    params.i18n?.language ?? null,
-    params.i18n?.country ?? null,
-  );
-
-  // NOTE(ruggi): the locale override coming from `uiLocale` is supposed to be a LanguageCode, so it should not contain other tokens.
-  // The current implementation is kept for backwards compatibility, however we might consider adjusting it in the future.
-  const optionsSplit = params.uiLocalesOverride?.split('-');
-  const maybeLanguageToken = optionsSplit?.at(0) ?? null;
-  const maybeCountryToken = optionsSplit?.at(1) ?? null;
-  const optionsLocale = toMaybeLocaleString(
-    maybeLanguageToken,
-    maybeCountryToken,
-  );
+  const contextLocale = toMaybeLocaleString(params.contextLanguage ?? null);
+  const optionsLocale = toMaybeLocaleString(params.uiLocalesOverride);
 
   return optionsLocale ?? contextLocale ?? null;
 }
 
-function toMaybeLocaleString(
-  language: string | null,
-  country: string | null,
-): string | null {
-  if (language != null) {
-    const languageLower = language.toLowerCase();
-    if (country != null) {
-      const countryUpper = country.toUpperCase();
-      return `${languageLower}-${countryUpper}`;
-    }
-    return languageLower;
+function toMaybeLocaleString(language: LanguageCode | null): string | null {
+  if (language == null) {
+    return null;
   }
-  return null;
+
+  const normalizedLanguage = maybeEnforceRegionalVariant(language);
+
+  const base = normalizedLanguage.toLowerCase().replaceAll('_', '-');
+  const tokens = base.split('-');
+  const langToken = tokens.at(0) ?? null;
+  const regionToken = tokens.at(1) ?? null;
+
+  if (regionToken) {
+    return `${langToken}-${regionToken.toUpperCase()}`;
+  }
+
+  return langToken;
+}
+
+// See https://shopify.dev/docs/api/customer#authorization-propertydetail-uilocales
+const regionalLanguageOverrides: Partial<Record<LanguageCode, LanguageCode>> = {
+  PT: 'PT_PT',
+  ZH: 'ZH_CN',
+};
+
+function maybeEnforceRegionalVariant(language: LanguageCode): LanguageCode {
+  return regionalLanguageOverrides[language] ?? language;
 }
