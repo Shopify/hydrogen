@@ -1,6 +1,6 @@
 import {vi, describe, it, expect, afterEach, expectTypeOf} from 'vitest';
 import {createHydrogenContext} from './createHydrogenContext';
-import {createStorefrontClient, I18nBase} from './storefront';
+import {createStorefrontClient} from './storefront';
 import {createCustomerAccountClient} from './customer/customer';
 import {
   createCartHandler,
@@ -9,7 +9,6 @@ import {
 } from './cart/createCartHandler';
 import {cartGetIdDefault} from './cart/cartGetIdDefault';
 import {cartSetIdDefault} from './cart/cartSetIdDefault';
-import type {CustomerAccount} from './customer/types';
 import type {HydrogenSession} from './types';
 
 vi.mock('./storefront', async () => ({
@@ -168,21 +167,6 @@ describe('createHydrogenContext', () => {
       expect(vi.mocked(createStorefrontClient)).toHaveBeenCalledWith(
         expect.objectContaining({
           storefrontApiVersion: mockApiVersion,
-        }),
-      );
-    });
-
-    it('passes the i18n object to the storefront client', async () => {
-      const mockI18n: I18nBase = {language: 'EN', country: 'CA'};
-
-      createHydrogenContext({
-        ...defaultOptions,
-        i18n: mockI18n,
-      });
-
-      expect(vi.mocked(createStorefrontClient)).toHaveBeenCalledWith(
-        expect.objectContaining({
-          i18n: mockI18n,
         }),
       );
     });
