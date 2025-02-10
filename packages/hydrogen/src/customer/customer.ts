@@ -596,7 +596,7 @@ function createIfInvalidCredentialThrowError(
  */
 export function getMaybeUILocales(params: {
   contextLanguage: LanguageCode | null;
-  uiLocalesOverride: LanguageCode | null; // this will override i18nContext if both are provided
+  uiLocalesOverride: LanguageCode | null; // this will override contextLanguage if both are provided
 }): string | null {
   const contextLocale = toMaybeLocaleString(params.contextLanguage ?? null);
   const optionsLocale = toMaybeLocaleString(params.uiLocalesOverride);
