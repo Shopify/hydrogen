@@ -9,6 +9,7 @@ import {
 } from './cart/createCartHandler';
 import {cartGetIdDefault} from './cart/cartGetIdDefault';
 import {cartSetIdDefault} from './cart/cartSetIdDefault';
+import type {CustomerAccount} from './customer/types';
 import type {HydrogenSession} from './types';
 
 vi.mock('./storefront', async () => ({
