@@ -605,7 +605,8 @@ export function getMaybeUILocales(params: {
     if (language != null) {
       const languageLower = language.toLowerCase();
       if (country != null) {
-        return `${languageLower}-${country.toUpperCase()}`;
+        const countryUpper = country.toUpperCase();
+        return `${languageLower}-${countryUpper}`;
       }
       return languageLower;
     }
