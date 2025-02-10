@@ -50,6 +50,8 @@ import type {
 } from './types';
 import {createCustomerAccountHelper, URL_TYPE} from './customer-account-helper';
 import {warnOnce} from '../utils/warning';
+import {I18nBase} from '../storefront';
+import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
 function defaultAuthStatusHandler(
   request: CrossRuntimeRequest,
@@ -94,6 +96,7 @@ export function createCustomerAccountClient({
   loginPath = '/account/login',
   authorizePath = '/account/authorize',
   defaultRedirectPath = '/account',
+  i18n,
 }: CustomerAccountOptions): CustomerAccount {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -354,13 +357,12 @@ export function createCustomerAccountClient({
       loginUrl.searchParams.append('state', state);
       loginUrl.searchParams.append('nonce', nonce);
 
-      if (options?.uiLocales) {
-        const [language, region] = options.uiLocales.split('-');
-        let locale = language.toLowerCase();
-        if (region) {
-          locale += `-${region.toUpperCase()}`;
-        }
-        loginUrl.searchParams.append('ui_locales', locale);
+      const uiLocales = getMaybeUILocales({
+        i18n: i18n ?? null,
+        uiLocalesOverride: options?.uiLocales ?? null,
+      });
+      if (uiLocales != null) {
+        loginUrl.searchParams.append('ui_locales', uiLocales);
       }
 
       const verifier = generateCodeVerifier();
@@ -583,4 +585,51 @@ function createIfInvalidCredentialThrowError(
       throw new Response(publicMessage, {status: 500});
     }
   };
+}
+
+// Exported for testing
+export function getMaybeUILocales(params: {
+  i18n: I18nBase | null;
+  uiLocalesOverride: LanguageCode | null; // this will override i18nContext if both are provided
+}): string | null {
+  function toMaybeLocaleString(
+    language: string | null,
+    country: string | null,
+  ): string | null {
+    if (language != null) {
+      const languageLower = language.toLowerCase();
+      if (country != null) {
+        return `${languageLower}-${country.toUpperCase()}`;
+      }
+      return languageLower;
+    }
+    return null;
+  }
+
+  function uiLocalesToMaybeLocaleString(
+    uiLocales: string | null,
+  ): string | null {
+    if (uiLocales == null) {
+      return null;
+    }
+
+    // NOTE(ruggi): the locale override coming from `uiLocale` is supposed to be a LanguageCode, so it should not contain other tokens.
+    // The current implementation is kept for backwards compatibility, however we might consider adjusting it in the future.
+    const parts = uiLocales.split('-');
+    if (parts.length === 0) {
+      return null;
+    }
+
+    return toMaybeLocaleString(parts.at(0) ?? null, parts.at(1) ?? null);
+  }
+
+  const contextLocale = toMaybeLocaleString(
+    params.i18n?.language ?? null,
+    params.i18n?.country ?? null,
+  );
+  const optionsLocale = uiLocalesToMaybeLocaleString(
+    params.uiLocalesOverride ?? null,
+  );
+
+  return optionsLocale ?? contextLocale ?? null;
 }

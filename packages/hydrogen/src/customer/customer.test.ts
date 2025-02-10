@@ -1,8 +1,9 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import type {HydrogenSession, HydrogenSessionData} from '../types';
-import {createCustomerAccountClient} from './customer';
+import {createCustomerAccountClient, getMaybeUILocales} from './customer';
 import {BUYER_SESSION_KEY, CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
 import crypto from 'node:crypto';
+import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
 if (!globalThis.crypto) {
   globalThis.crypto = crypto as any;
@@ -167,6 +168,71 @@ describe('customer', () => {
         expect(params.get('redirect_uri')).toBe(
           new URL('/account/authorize', origin).toString(),
         );
+      });
+
+      describe('locales', () => {
+        it('Redirects to the customer account api login url with uiLocales as param (i18n in the constructor)', async () => {
+          const origin = 'https://something-good.com';
+          const authUrl = 'https://something-bad.com/customer-account/auth';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+            authUrl,
+            i18n: {language: 'FR', country: 'CA'},
+          });
+
+          const response = await customer.login();
+          const url = new URL(response.headers.get('location')!);
+
+          expect(url.searchParams.get('ui_locales')).toBe('fr-CA');
+        });
+
+        it('Redirects to the customer account api login url with uiLocales as param (uiLocales in the param)', async () => {
+          const origin = 'https://something-good.com';
+          const authUrl = 'https://something-bad.com/customer-account/auth';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+            authUrl,
+          });
+
+          const response = await customer.login({
+            uiLocales: 'FR',
+          });
+          const url = new URL(response.headers.get('location')!);
+
+          expect(url.searchParams.get('ui_locales')).toBe('fr');
+        });
+
+        it('Redirects to the customer account api login url with uiLocales as param (override)', async () => {
+          const origin = 'https://something-good.com';
+          const authUrl = 'https://something-bad.com/customer-account/auth';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+            authUrl,
+            i18n: {language: 'IT', country: 'IT'},
+          });
+
+          const response = await customer.login({
+            uiLocales: 'FR',
+          });
+          const url = new URL(response.headers.get('location')!);
+
+          expect(url.searchParams.get('ui_locales')).toBe('fr');
+        });
       });
     });
 
@@ -1075,5 +1141,47 @@ describe('customer', () => {
 
       expect(buyer).toBeUndefined();
     });
+  });
+});
+
+// Unit test
+describe('getMaybeUILocales', () => {
+  it('returns null if no i18n is provided', () => {
+    const uiLocales = getMaybeUILocales({
+      i18n: null,
+      uiLocalesOverride: null,
+    });
+    expect(uiLocales).toBeNull();
+  });
+
+  it('returns the i18n locale (formatted) if no options override is provided', () => {
+    const uiLocales = getMaybeUILocales({
+      i18n: {language: 'EN', country: 'CA'},
+      uiLocalesOverride: null,
+    });
+    expect(uiLocales).toBe('en-CA');
+  });
+
+  it('returns the uiLocales data (formatted) if the i18n locale is not provided', () => {
+    const uiLocales = getMaybeUILocales({
+      i18n: null,
+      uiLocalesOverride: 'FR',
+    });
+    expect(uiLocales).toBe('fr');
+
+    // NOTE(ruggi): this is testing the current behavior even if `uiLocale` is not a LanguageCode.
+    const uiLocalesWithCountry = getMaybeUILocales({
+      i18n: null,
+      uiLocalesOverride: 'FR-CA' as unknown as LanguageCode,
+    });
+    expect(uiLocalesWithCountry).toBe('fr-CA');
+  });
+
+  it('overrides the i18n locale if both the it and the uiLocales override are provided', () => {
+    const uiLocales = getMaybeUILocales({
+      i18n: {language: 'EN', country: 'CA'},
+      uiLocalesOverride: 'FR',
+    });
+    expect(uiLocales).toBe('fr');
   });
 });

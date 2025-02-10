@@ -9,6 +9,7 @@ import type {
   LanguageCode,
   BuyerInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {I18nBase} from '../storefront';
 
 // Return type of unauthorizedHandler = Return type of loader/action function
 // This type is not exported https://github.com/remix-run/react-router/blob/main/packages/router/utils.ts#L167
@@ -158,6 +159,8 @@ export type CustomerAccountOptions = {
   authorizePath?: string;
   /** Deprecated. `unstableB2b` is now stable. Please remove. */
   unstableB2b?: boolean;
+  /** Localization data. */
+  i18n?: I18nBase;
 };
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */
