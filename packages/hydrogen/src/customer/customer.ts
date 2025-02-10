@@ -591,8 +591,6 @@ function createIfInvalidCredentialThrowError(
  * This function returns a locale string in the form <language>[-<COUNTRY_CODE>], based on the provided input params.
  * If both the i18n and the uiLocalesOverride are provided, the uiLocalesOverride will be used.
  * If none of the params are provided, it returns null.
- *
- * Note: exported for testing purposes.
  */
 export function getMaybeUILocales(params: {
   contextLanguage: LanguageCode | null;
