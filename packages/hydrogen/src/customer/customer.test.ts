@@ -173,7 +173,6 @@ describe('customer', () => {
       describe('locales', () => {
         it('Redirects to the customer account api login url with uiLocales as param (i18n in the constructor)', async () => {
           const origin = 'https://something-good.com';
-          const authUrl = 'https://something-bad.com/customer-account/auth';
 
           const customer = createCustomerAccountClient({
             session,
@@ -181,7 +180,6 @@ describe('customer', () => {
             shopId: '1',
             request: new Request(origin),
             waitUntil: vi.fn(),
-            authUrl,
             i18n: {language: 'FR', country: 'CA'},
           });
 
@@ -193,7 +191,6 @@ describe('customer', () => {
 
         it('Redirects to the customer account api login url with uiLocales as param (uiLocales in the param)', async () => {
           const origin = 'https://something-good.com';
-          const authUrl = 'https://something-bad.com/customer-account/auth';
 
           const customer = createCustomerAccountClient({
             session,
@@ -201,7 +198,6 @@ describe('customer', () => {
             shopId: '1',
             request: new Request(origin),
             waitUntil: vi.fn(),
-            authUrl,
           });
 
           const response = await customer.login({
@@ -214,7 +210,6 @@ describe('customer', () => {
 
         it('Redirects to the customer account api login url with uiLocales as param (override)', async () => {
           const origin = 'https://something-good.com';
-          const authUrl = 'https://something-bad.com/customer-account/auth';
 
           const customer = createCustomerAccountClient({
             session,
@@ -222,7 +217,6 @@ describe('customer', () => {
             shopId: '1',
             request: new Request(origin),
             waitUntil: vi.fn(),
-            authUrl,
             i18n: {language: 'IT', country: 'IT'},
           });
 
