@@ -602,8 +602,15 @@ export function getMaybeUILocales(params: {
     params.i18n?.language ?? null,
     params.i18n?.country ?? null,
   );
-  const optionsLocale = uiLocalesToMaybeLocaleString(
-    params.uiLocalesOverride ?? null,
+
+  // NOTE(ruggi): the locale override coming from `uiLocale` is supposed to be a LanguageCode, so it should not contain other tokens.
+  // The current implementation is kept for backwards compatibility, however we might consider adjusting it in the future.
+  const optionsSplit = params.uiLocalesOverride?.split('-');
+  const maybeLanguageToken = optionsSplit?.at(0) ?? null;
+  const maybeCountryToken = optionsSplit?.at(1) ?? null;
+  const optionsLocale = toMaybeLocaleString(
+    maybeLanguageToken,
+    maybeCountryToken,
   );
 
   return optionsLocale ?? contextLocale ?? null;
@@ -622,19 +629,4 @@ function toMaybeLocaleString(
     return languageLower;
   }
   return null;
-}
-
-function uiLocalesToMaybeLocaleString(uiLocales: string | null): string | null {
-  if (uiLocales == null) {
-    return null;
-  }
-
-  // NOTE(ruggi): the locale override coming from `uiLocale` is supposed to be a LanguageCode, so it should not contain other tokens.
-  // The current implementation is kept for backwards compatibility, however we might consider adjusting it in the future.
-  const parts = uiLocales.split('-');
-  if (parts.length === 0) {
-    return null;
-  }
-
-  return toMaybeLocaleString(parts.at(0) ?? null, parts.at(1) ?? null);
 }
