@@ -160,7 +160,7 @@ export type CustomerAccountOptions = {
   /** Deprecated. `unstableB2b` is now stable. Please remove. */
   unstableB2b?: boolean;
   /** Localization data. */
-  language?: LanguageCode;
+  i18n?: I18nBase;
 };
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */

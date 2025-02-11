@@ -206,7 +206,7 @@ export function createHydrogenContext<
     customAuthStatusHandler: customerAccountOptions?.customAuthStatusHandler,
 
     // locale
-    language: i18n?.language,
+    i18n,
 
     // defaults
     customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,

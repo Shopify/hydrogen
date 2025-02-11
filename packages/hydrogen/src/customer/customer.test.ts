@@ -3,7 +3,6 @@ import type {HydrogenSession, HydrogenSessionData} from '../types';
 import {createCustomerAccountClient, getMaybeUILocales} from './customer';
 import {BUYER_SESSION_KEY, CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
 import crypto from 'node:crypto';
-import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
 if (!globalThis.crypto) {
   globalThis.crypto = crypto as any;
@@ -180,7 +179,7 @@ describe('customer', () => {
             shopId: '1',
             request: new Request(origin),
             waitUntil: vi.fn(),
-            language: 'FR',
+            i18n: {language: 'FR', country: 'FR'},
           });
 
           const response = await customer.login();
@@ -217,7 +216,7 @@ describe('customer', () => {
             shopId: '1',
             request: new Request(origin),
             waitUntil: vi.fn(),
-            language: 'IT',
+            i18n: {language: 'IT', country: 'IT'},
           });
 
           const response = await customer.login({

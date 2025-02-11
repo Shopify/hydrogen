@@ -50,7 +50,6 @@ import type {
 } from './types';
 import {createCustomerAccountHelper, URL_TYPE} from './customer-account-helper';
 import {warnOnce} from '../utils/warning';
-import {I18nBase} from '../storefront';
 import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
 function defaultAuthStatusHandler(
@@ -96,7 +95,7 @@ export function createCustomerAccountClient({
   loginPath = '/account/login',
   authorizePath = '/account/authorize',
   defaultRedirectPath = '/account',
-  language,
+  i18n,
 }: CustomerAccountOptions): CustomerAccount {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -358,7 +357,7 @@ export function createCustomerAccountClient({
       loginUrl.searchParams.append('nonce', nonce);
 
       const uiLocales = getMaybeUILocales({
-        contextLanguage: language ?? null,
+        contextLanguage: i18n?.language ?? null,
         uiLocalesOverride: options?.uiLocales ?? null,
       });
       if (uiLocales != null) {
