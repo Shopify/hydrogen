@@ -179,7 +179,7 @@ describe('customer', () => {
             shopId: '1',
             request: new Request(origin),
             waitUntil: vi.fn(),
-            i18n: {language: 'FR', country: 'FR'},
+            language: 'FR',
           });
 
           const response = await customer.login();
@@ -216,7 +216,7 @@ describe('customer', () => {
             shopId: '1',
             request: new Request(origin),
             waitUntil: vi.fn(),
-            i18n: {language: 'IT', country: 'IT'},
+            language: 'IT',
           });
 
           const response = await customer.login({

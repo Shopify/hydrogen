@@ -95,7 +95,7 @@ export function createCustomerAccountClient({
   loginPath = '/account/login',
   authorizePath = '/account/authorize',
   defaultRedirectPath = '/account',
-  i18n,
+  language,
 }: CustomerAccountOptions): CustomerAccount {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -357,7 +357,7 @@ export function createCustomerAccountClient({
       loginUrl.searchParams.append('nonce', nonce);
 
       const uiLocales = getMaybeUILocales({
-        contextLanguage: i18n?.language ?? null,
+        contextLanguage: language ?? null,
         uiLocalesOverride: options?.uiLocales ?? null,
       });
       if (uiLocales != null) {
