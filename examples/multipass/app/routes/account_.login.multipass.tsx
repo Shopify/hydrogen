@@ -127,7 +127,7 @@ export async function action({request, context}: ActionFunctionArgs) {
       }
 
       // success, return token, url
-      return Response.json(
+      return remixData(
         {data: {...data, error: null}},
         {
           status: 200,
