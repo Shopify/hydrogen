@@ -123,10 +123,10 @@ function encodeSelectedProductOptionAsKey(
     | Record<string, string>,
 ): string {
   if (Array.isArray(selectedOption)) {
-    return Object.assign(
+    return JSON.stringify(Object.assign(
       {},
       ...selectedOption.map((option) => ({[option.name]: option.value})),
-    );
+    ));
   } else {
     return JSON.stringify(selectedOption);
   }
