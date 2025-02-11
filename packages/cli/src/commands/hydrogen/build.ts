@@ -192,6 +192,9 @@ export async function runBuild({
         (process.env.NODE_ENV !== 'production' && sourcemap),
       watch: watch ? {} : null,
     },
+    server: {
+      watch: watch ? {} : null,
+    },
     plugins: [
       {
         name: 'hydrogen:cli:client',
@@ -228,6 +231,9 @@ export async function runBuild({
       minify: serverMinify,
       // Ensure the server rebuild start after the client one
       watch: watch ? {buildDelay: 100} : null,
+    },
+    server: {
+      watch: watch ? {} : null,
     },
     plugins: [
       {
@@ -349,44 +355,29 @@ export async function runBuild({
     warnReservedRoutes(findReservedRoutes(remixConfig));
   }
 
-  console.log('END OF LINE');
-
   return {
     async close() {
       codegenProcess?.removeAllListeners('close');
-      console.log('codegenProcess?.removeAllListeners');
       codegenProcess?.kill('SIGINT');
-      console.log('codegenProcess?.kill');
 
       const promises: Array<Promise<void>> = [];
       if ('close' in clientBuild) promises.push(clientBuild.close());
-      console.log('clientBuild.close');
       if ('close' in serverBuild) promises.push(serverBuild.close());
-      console.log('serverBuild.close');
-      console.log('Promises length: ', promises.length);
 
       await Promise.allSettled(promises);
-      console.log('Promise.allSettled(promises)');
 
       if (
         clientBuildStatus?.state === 'pending' ||
         serverBuildStatus?.state === 'pending'
       ) {
         clientBuildStatus?.promise.catch(() => {});
-        console.log('clientBuildStatus?.promise.catch(() => {})');
         clientBuildStatus?.reject();
-        console.log('clientBuildStatus?.reject()');
         serverBuildStatus?.promise.catch(() => {});
-        console.log('serverBuildStatus?.promise.catch(() => {})');
         serverBuildStatus?.reject();
-        console.log('serverBuildStatus?.reject()');
 
         // Give time for Rollup to stop builds before removing files
         await new Promise((resolve) => setTimeout(resolve, 500));
-        console.log('await new Promise((resolve) => setTimeout(resolve, 500))');
       }
-
-      console.log('Finished all the shit.');
     },
   };
 }

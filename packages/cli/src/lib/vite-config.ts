@@ -72,12 +72,10 @@ export async function getViteConfig(root: string, ssrEntryFlag?: string) {
   );
 
   const ssrEntry = ssrEntryFlag ?? resolvedViteConfig.build.ssr;
-  console.log('ssrEntry', ssrEntry);
   const resolvedSsrEntry = resolvePath(
     resolvedViteConfig.root,
     typeof ssrEntry === 'string' ? ssrEntry : 'server',
   );
-  console.log('resolvedSsrEntry', resolvedSsrEntry);
 
   return {
     clientOutDir,
