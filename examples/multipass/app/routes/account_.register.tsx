@@ -1,5 +1,6 @@
 import {
-  json,
+  data,
+  HeadersFunction,
   redirect,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
@@ -14,18 +15,20 @@ type ActionResponse = {
     | null;
 };
 
+export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
+
 export async function loader({context}: LoaderFunctionArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
   if (customerAccessToken) {
     return redirect('/account');
   }
 
-  return json({});
+  return {};
 }
 
 export async function action({request, context}: ActionFunctionArgs) {
   if (request.method !== 'POST') {
-    return json({error: 'Method not allowed'}, {status: 405});
+    return data({error: 'Method not allowed'}, {status: 405});
   }
 
   const {storefront, session} = context;
@@ -85,7 +88,7 @@ export async function action({request, context}: ActionFunctionArgs) {
       customerAccessTokenCreate?.customerAccessToken,
     );
 
-    return json(
+    return data(
       {error: null, newCustomer},
       {
         status: 302,
@@ -96,9 +99,9 @@ export async function action({request, context}: ActionFunctionArgs) {
     );
   } catch (error: unknown) {
     if (error instanceof Error) {
-      return json({error: error.message}, {status: 400});
+      return data({error: error.message}, {status: 400});
     }
-    return json({error}, {status: 400});
+    return data({error}, {status: 400});
   }
 }
 

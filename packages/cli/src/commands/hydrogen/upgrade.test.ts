@@ -713,7 +713,6 @@ describe('upgrade', async () => {
         '@remix-run/route-config@2.1.0',
         '@remix-run/routes-option-adapter@2.1.0',
         '@remix-run/dev@2.1.0',
-        '@remix-run/eslint-config@2.1.0',
         '@remix-run/css-bundle@2.1.0',
       ];
 
@@ -751,7 +750,6 @@ describe('upgrade', async () => {
         '@remix-run/route-config@2.1.0',
         '@remix-run/routes-option-adapter@2.1.0',
         '@remix-run/dev@2.1.0',
-        '@remix-run/eslint-config@2.1.0',
         '@remix-run/css-bundle@2.1.0',
       ];
 
