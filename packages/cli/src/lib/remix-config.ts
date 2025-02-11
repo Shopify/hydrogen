@@ -101,13 +101,13 @@ export async function getRemixConfig(
   ).catch(handleRemixImportFail);
 
   const appConfig = await getRawRemixConfig(root);
-  const routesViteNodeContext = await createContext({root: root, mode: mode});
+  const routesViteNodeContext = await createContext({root, mode});
   const vite = importViteEsmSync();
   const config = await resolveConfig(appConfig, {
     rootDirectory: root,
     serverMode: mode,
-    vite: vite,
-    routesViteNodeContext: routesViteNodeContext,
+    vite,
+    routesViteNodeContext,
   });
 
   if (isHydrogenMonorepo && hydrogenPackagesPath) {

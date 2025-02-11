@@ -76,7 +76,7 @@ function filterOutVirtualRoutes(config: RemixConfig): RemixConfig {
   });
   return {
     ...config,
-    routes: routes,
+    routes,
   };
 }
 
