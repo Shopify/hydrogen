@@ -6,19 +6,12 @@ Added the ability to provide `language` data to `createCustomerAccountClient`, a
 The provided `language` will be used to set the `uilocales` property in the Customer Account API request.
 
 Calls to `login()` will use the provided `language` without having to pass it explicitly via `uiLocales`; however, if the `login()` method is
-already using its `uilocales` property, the `language` parameter coming from the context/constructor will be ignored.
+already using its `uilocales` property, the `language` parameter coming from the context/constructor will be ignored. If nothing is explicitly passed, `login()` will default to `context.i18n.language`.
 
 ```ts
 const customerAccount = createCustomerAccountClient({
   // ...
-  language: 'EN',
-});
-```
-
-```ts
-const hydrogenContext =  createHydrogenContext({
-  // ...
-  language: 'EN', // will be passed to the `customerAccount` instance
+  i18n,
 });
 ```
 
