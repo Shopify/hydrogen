@@ -1,5 +1,5 @@
 import {
-  useNonce,
+  useNonce
   // [START import]
   getShopAnalytics,
   Analytics,
