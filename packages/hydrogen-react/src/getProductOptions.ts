@@ -36,10 +36,10 @@ type MappedProductOptionValue = ProductOptionValue & ProductOptionValueState;
  *    \}
  *  ]
  * Would return
- *  {
+ *  \{
  *    'Color': \{Red: 0, Blue: 1\},
  *    'Size': \{Small: 0, Medium: 1, Large: 2\}
- *  }
+ *  \}
  */
 function mapProductOptions(options: ProductOption[]): ProductOptionsMapping {
   return Object.assign(
@@ -112,10 +112,10 @@ function mapSelectedProductOptionToObjectAsString(
  *    \}
  *  ]
  * Would return
- *  JSON.stringify({
+ *  JSON.stringify(\{
  *    Color: 'Red',
  *    Size: 'Medium',
- *  })
+ *  \})
  */
 function encodeSelectedProductOptionAsKey(
   selectedOption:
@@ -136,17 +136,17 @@ function encodeSelectedProductOptionAsKey(
  * Build the encoding array for the given selected options. For example, if we have
  * the following productOptionMappings:
  *
- *  {
+ *  \{
  *    'Color': \{Red: 0, Blue: 1\},
  *    'Size': \{Small: 0, Medium: 1, Large: 2\}
- *  }
+ *  \}
  *
  * A selectedOption of
  *
- * {
+ * \{
  *    Color: 'Red',
  *    Size: 'Medium',
- * }
+ * \}
  *
  * `buildEncodingArrayFromSelectedOptions` will produce
  *
@@ -154,11 +154,11 @@ function encodeSelectedProductOptionAsKey(
  *
  * If in the case where a selected option doesn't exists in the mapping array, for example:
  *
- * {
+ * \{
  *    Color: 'Red',
  *    Fabric: 'Cotton',
  *    Size: 'Medium',
- * }
+ * \}
  *
  * `buildEncodingArrayFromSelectedOptions` will still produce
  *
