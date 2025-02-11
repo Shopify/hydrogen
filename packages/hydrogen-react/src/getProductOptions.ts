@@ -42,18 +42,21 @@ type MappedProductOptionValue = ProductOptionValue & ProductOptionValueState;
  *  }
  */
 function mapProductOptions(options: ProductOption[]): ProductOptionsMapping {
-  return Object.assign({}, ...options.map((option: ProductOption) => {
-    return {
-      [option.name]: Object.assign(
-        {},
-        ...(option?.optionValues
-          ? option.optionValues.map((value, index) => {
-              return {[value.name]: index};
-            })
-          : []),
-      )
-    } as Record<string, number>;
-  }));
+  return Object.assign(
+    {},
+    ...options.map((option: ProductOption) => {
+      return {
+        [option.name]: Object.assign(
+          {},
+          ...(option?.optionValues
+            ? option.optionValues.map((value, index) => {
+                return {[value.name]: index};
+              })
+            : []),
+        ),
+      } as Record<string, number>;
+    }),
+  );
 }
 
 /**
@@ -120,7 +123,10 @@ function encodeSelectedProductOptionAsKey(
     | Record<string, string>,
 ): string {
   if (Array.isArray(selectedOption)) {
-    return Object.assign({}, ...selectedOption.map((option) => ({[option.name]: option.value})))
+    return Object.assign(
+      {},
+      ...selectedOption.map((option) => ({[option.name]: option.value})),
+    );
   } else {
     return JSON.stringify(selectedOption);
   }
@@ -166,7 +172,9 @@ function buildEncodingArrayFromSelectedOptions(
   productOptionMappings: ProductOptionsMapping,
 ): Array<number> {
   const encoding = Object.keys(selectedOption).map((key) => {
-    return productOptionMappings[key] ? productOptionMappings[key][selectedOption[key]] : null;
+    return productOptionMappings[key]
+      ? productOptionMappings[key][selectedOption[key]]
+      : null;
   });
   return encoding.filter((code) => code !== null);
 }
@@ -401,10 +409,12 @@ export function getProductOptions(
 
   // The available product options is dictated by the selected options of the current variant:
   // Filter out un-used options (Happens on parent combined listing product)
-  const selectedOptionKeys = selectedVariant?.selectedOptions.map((option) => option.name);
+  const selectedOptionKeys = selectedVariant?.selectedOptions.map(
+    (option) => option.name,
+  );
   const filteredOptions = options.filter((option) => {
-    return selectedOptionKeys && selectedOptionKeys.indexOf(option.name) >= 0
-  })
+    return selectedOptionKeys && selectedOptionKeys.indexOf(option.name) >= 0;
+  });
 
   // Get a mapping of product option names to their index for matching encoded values
   const productOptionMappings = mapProductOptions(options);
@@ -438,10 +448,7 @@ export function getProductOptions(
         );
 
         // Top-down option check for existence and availability
-        const topDownKey = encodingKey.slice(
-          0,
-          optionIndex + 1,
-        );
+        const topDownKey = encodingKey.slice(0, optionIndex + 1);
         const exists = isOptionValueCombinationInEncodedVariant(
           topDownKey,
           encodedVariantExistence || '',
