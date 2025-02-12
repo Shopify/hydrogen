@@ -97,7 +97,7 @@
             },
             {
               "title": "6.2 Update all `json` response wrapper to `remixData`",
-              "code": "YGBgZGlmZgppbXBvcnQgewotICAgICBqc29uLAorICAgICBkYXRhIGFzIHJlbWl4RGF0YSwKICB9IGZyb20gJ0BzaG9waWZ5L3JlbWl4LW94eWdlbic7CgogIC0gIHJldHVybiBqc29uKAogICsgIHJldHVybiByZW1peERhdGEoCiAgICAgIC4uLgogICAgKTsKYGBg"
+              "code": "YGBgZGlmZgppbXBvcnQgewotIGpzb24sCisgZGF0YSBhcyByZW1peERhdGEsCn0gZnJvbSAnQHNob3BpZnkvcmVtaXgtb3h5Z2VuJzsKCi0gIHJldHVybiBqc29uKAorICByZXR1cm4gcmVtaXhEYXRhKAogICAgLi4uCiAgKTsKYGBg"
             }
           ]
         },
