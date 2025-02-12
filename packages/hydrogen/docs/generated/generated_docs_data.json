@@ -2401,12 +2401,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {CacheCustom} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheCustom({\n        maxAge: 1000 * 60 * 60 * 24 * 365,\n        staleWhileRevalidate: 1000 * 60 * 60 * 24 * 7,\n      }),\n    },\n  );\n\n  return data;\n}\n",
+            "code": "import {CacheCustom} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const data = await context.storefront.query(\n    `#grahpql\n      {\n        shop {\n          name\n          description\n        }\n      }\n    `,\n    {\n      cache: CacheCustom({\n        maxAge: 1000 * 60 * 60 * 24 * 365,\n        staleWhileRevalidate: 1000 * 60 * 60 * 24 * 7,\n      }),\n    },\n  );\n\n  return data;\n}\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {CacheCustom} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheCustom({\n        maxAge: 1000 * 60 * 60 * 24 * 365,\n        staleWhileRevalidate: 1000 * 60 * 60 * 24 * 7,\n      }),\n    },\n  );\n\n  return data;\n}\n",
+            "code": "import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {CacheCustom} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const data = await context.storefront.query(\n    `#grahpql\n      {\n        shop {\n          name\n          description\n        }\n      }\n    `,\n    {\n      cache: CacheCustom({\n        maxAge: 1000 * 60 * 60 * 24 * 365,\n        staleWhileRevalidate: 1000 * 60 * 60 * 24 * 7,\n      }),\n    },\n  );\n\n  return data;\n}\n",
             "language": "ts"
           }
         ],
@@ -2526,12 +2526,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {CacheLong} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheLong(),\n    },\n  );\n\n  return data;\n}\n",
+            "code": "import {CacheLong} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const data = await context.storefront.query(\n    `#grahpql\n      {\n        shop {\n          name\n          description\n        }\n      }\n    `,\n    {\n      cache: CacheLong(),\n    },\n  );\n\n  return data;\n}\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {CacheLong} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheLong(),\n    },\n  );\n\n  return data;\n}\n",
+            "code": "import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {CacheLong} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const data = await context.storefront.query(\n    `#grahpql\n      {\n        shop {\n          name\n          description\n        }\n      }\n    `,\n    {\n      cache: CacheLong(),\n    },\n  );\n\n  return data;\n}\n",
             "language": "ts"
           }
         ],
@@ -2652,12 +2652,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {CacheNone} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheNone(),\n    },\n  );\n\n  return data;\n}\n",
+            "code": "import {CacheNone} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const data = await context.storefront.query(\n    `#grahpql\n      {\n        shop {\n          name\n          description\n        }\n      }\n    `,\n    {\n      cache: CacheNone(),\n    },\n  );\n\n  return data;\n}\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {CacheNone} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheNone(),\n    },\n  );\n\n  return data;\n}\n",
+            "code": "import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {CacheNone} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const data = await context.storefront.query(\n    `#grahpql\n      {\n        shop {\n          name\n          description\n        }\n      }\n    `,\n    {\n      cache: CacheNone(),\n    },\n  );\n\n  return data;\n}\n",
             "language": "ts"
           }
         ],
@@ -2738,12 +2738,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {CacheShort} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheShort(),\n    },\n  );\n\n  return data;\n}\n",
+            "code": "import {CacheShort} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const data = await context.storefront.query(\n    `#grahpql\n      {\n        shop {\n          name\n          description\n        }\n      }\n    `,\n    {\n      cache: CacheShort(),\n    },\n  );\n\n  return data;\n}\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {CacheShort} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheShort(),\n    },\n  );\n\n  return data;\n}\n",
+            "code": "import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {CacheShort} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const data = await context.storefront.query(\n    `#grahpql\n      {\n        shop {\n          name\n          description\n        }\n      }\n    `,\n    {\n      cache: CacheShort(),\n    },\n  );\n\n  return data;\n}\n",
             "language": "ts"
           }
         ],
@@ -27331,255 +27331,8 @@
             "filePath": "src/flatten-connection.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "FlattenConnectionReturnForDoc",
-            "value": "Array<unknown>",
-            "description": "",
-            "members": [
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "__@iterator@450",
-                "value": "() => IterableIterator<unknown>",
-                "description": "Iterator"
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "__@unscopables@452",
-                "value": "{ [x: number]: boolean; length?: boolean; toString?: boolean; toLocaleString?: boolean; pop?: boolean; push?: boolean; concat?: boolean; join?: boolean; reverse?: boolean; shift?: boolean; slice?: boolean; sort?: boolean; splice?: boolean; unshift?: boolean; indexOf?: boolean; lastIndexOf?: boolean; every?: boolean; some?: boolean; forEach?: boolean; map?: boolean; filter?: boolean; reduce?: boolean; reduceRight?: boolean; find?: boolean; findIndex?: boolean; fill?: boolean; copyWithin?: boolean; entries?: boolean; keys?: boolean; values?: boolean; includes?: boolean; flatMap?: boolean; flat?: boolean; [Symbol.iterator]?: boolean; readonly [Symbol.unscopables]?: boolean; at?: boolean; }",
-                "description": "Is an object whose properties have the value 'true' when they will be absent when used in a 'with' statement."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "at",
-                "value": "(index: number) => unknown",
-                "description": "Takes an integer value and returns the item at that index, allowing for positive and negative integers. Negative integers count back from the last item in the array."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "concat",
-                "value": "{ (...items: ConcatArray<unknown>[]): unknown[]; (...items: unknown[]): unknown[]; }",
-                "description": "Combines two or more arrays. This method returns a new array without modifying any existing arrays."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "copyWithin",
-                "value": "(target: number, start: number, end?: number) => FlattenConnectionReturnForDoc",
-                "description": "Returns the this object after copying a section of the array identified by start and end to the same array starting at position target"
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "entries",
-                "value": "() => IterableIterator<[number, unknown]>",
-                "description": "Returns an iterable of key, value pairs for every entry in the array"
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "every",
-                "value": "{ <S extends unknown>(predicate: (value: unknown, index: number, array: unknown[]) => value is S, thisArg?: any): this is S[]; (predicate: (value: unknown, index: number, array: unknown[]) => unknown, thisArg?: any): boolean; }",
-                "description": "Determines whether all the members of an array satisfy the specified test."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "fill",
-                "value": "(value: unknown, start?: number, end?: number) => FlattenConnectionReturnForDoc",
-                "description": "Changes all array elements from `start` to `end` index to a static `value` and returns the modified array"
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "filter",
-                "value": "{ <S extends unknown>(predicate: (value: unknown, index: number, array: unknown[]) => value is S, thisArg?: any): S[]; (predicate: (value: unknown, index: number, array: unknown[]) => unknown, thisArg?: any): unknown[]; }",
-                "description": "Returns the elements of an array that meet the condition specified in a callback function."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "find",
-                "value": "{ <S extends unknown>(predicate: (value: unknown, index: number, obj: unknown[]) => value is S, thisArg?: any): S; (predicate: (value: unknown, index: number, obj: unknown[]) => unknown, thisArg?: any): unknown; }",
-                "description": "Returns the value of the first element in the array where predicate is true, and undefined otherwise."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "findIndex",
-                "value": "(predicate: (value: unknown, index: number, obj: unknown[]) => unknown, thisArg?: any) => number",
-                "description": "Returns the index of the first element in the array where predicate is true, and -1 otherwise."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "flat",
-                "value": "<A, D extends number = 1>(this: A, depth?: D) => FlatArray<A, D>[]",
-                "description": "Returns a new array with all sub-array elements concatenated into it recursively up to the specified depth."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "flatMap",
-                "value": "<U, This = undefined>(callback: (this: This, value: unknown, index: number, array: unknown[]) => U | readonly U[], thisArg?: This) => U[]",
-                "description": "Calls a defined callback function on each element of an array. Then, flattens the result into a new array. This is identical to a map followed by flat with depth 1."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "forEach",
-                "value": "(callbackfn: (value: unknown, index: number, array: unknown[]) => void, thisArg?: any) => void",
-                "description": "Performs the specified action for each element in an array."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "includes",
-                "value": "(searchElement: unknown, fromIndex?: number) => boolean",
-                "description": "Determines whether an array includes a certain element, returning true or false as appropriate."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "indexOf",
-                "value": "(searchElement: unknown, fromIndex?: number) => number",
-                "description": "Returns the index of the first occurrence of a value in an array, or -1 if it is not present."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "join",
-                "value": "(separator?: string) => string",
-                "description": "Adds all the elements of an array into a string, separated by the specified separator string."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "keys",
-                "value": "() => IterableIterator<number>",
-                "description": "Returns an iterable of keys in the array"
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "lastIndexOf",
-                "value": "(searchElement: unknown, fromIndex?: number) => number",
-                "description": "Returns the index of the last occurrence of a specified value in an array, or -1 if it is not present."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "length",
-                "value": "number",
-                "description": "Gets or sets the length of the array. This is a number one higher than the highest index in the array."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "map",
-                "value": "<U>(callbackfn: (value: unknown, index: number, array: unknown[]) => U, thisArg?: any) => U[]",
-                "description": "Calls a defined callback function on each element of an array, and returns an array that contains the results."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "pop",
-                "value": "() => unknown",
-                "description": "Removes the last element from an array and returns it. If the array is empty, undefined is returned and the array is not modified."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "push",
-                "value": "(...items: unknown[]) => number",
-                "description": "Appends new elements to the end of an array, and returns the new length of the array."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "reduce",
-                "value": "{ (callbackfn: (previousValue: unknown, currentValue: unknown, currentIndex: number, array: unknown[]) => unknown): unknown; (callbackfn: (previousValue: unknown, currentValue: unknown, currentIndex: number, array: unknown[]) => unknown, initialValue: unknown): unknown; <U>(callbackfn: (previousValue: U, currentValue: unknown, currentIndex: number, array: unknown[]) => U, initialValue: U): U; }",
-                "description": "Calls the specified callback function for all the elements in an array. The return value of the callback function is the accumulated result, and is provided as an argument in the next call to the callback function."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "reduceRight",
-                "value": "{ (callbackfn: (previousValue: unknown, currentValue: unknown, currentIndex: number, array: unknown[]) => unknown): unknown; (callbackfn: (previousValue: unknown, currentValue: unknown, currentIndex: number, array: unknown[]) => unknown, initialValue: unknown): unknown; <U>(callbackfn: (previousValue: U, currentValue: unknown, currentIndex: number, array: unknown[]) => U, initialValue: U): U; }",
-                "description": "Calls the specified callback function for all the elements in an array, in descending order. The return value of the callback function is the accumulated result, and is provided as an argument in the next call to the callback function."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "reverse",
-                "value": "() => unknown[]",
-                "description": "Reverses the elements in an array in place. This method mutates the array and returns a reference to the same array."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "shift",
-                "value": "() => unknown",
-                "description": "Removes the first element from an array and returns it. If the array is empty, undefined is returned and the array is not modified."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "slice",
-                "value": "(start?: number, end?: number) => unknown[]",
-                "description": "Returns a copy of a section of an array. For both start and end, a negative index can be used to indicate an offset from the end of the array. For example, -2 refers to the second to last element of the array."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "some",
-                "value": "(predicate: (value: unknown, index: number, array: unknown[]) => unknown, thisArg?: any) => boolean",
-                "description": "Determines whether the specified callback function returns true for any element of an array."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "sort",
-                "value": "(compareFn?: (a: unknown, b: unknown) => number) => FlattenConnectionReturnForDoc",
-                "description": "Sorts an array in place. This method mutates the array and returns a reference to the same array."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "splice",
-                "value": "{ (start: number, deleteCount?: number): unknown[]; (start: number, deleteCount: number, ...items: unknown[]): unknown[]; }",
-                "description": "Removes elements from an array and, if necessary, inserts new elements in their place, returning the deleted elements."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "toLocaleString",
-                "value": "{ (): string; (locales: string | string[], options?: NumberFormatOptions & DateTimeFormatOptions): string; }",
-                "description": "Returns a string representation of an array. The elements are converted to string using their toLocaleString methods."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "toString",
-                "value": "() => string",
-                "description": "Returns a string representation of an array."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "unshift",
-                "value": "(...items: unknown[]) => number",
-                "description": "Inserts new elements at the start of an array, and returns the new length of the array."
-              },
-              {
-                "filePath": "src/flatten-connection.ts",
-                "syntaxKind": "MethodSignature",
-                "name": "values",
-                "value": "() => IterableIterator<unknown>",
-                "description": "Returns an iterable of values in the array"
-              }
-            ]
+            "value": "unknown[]",
+            "description": ""
           }
         }
       }
