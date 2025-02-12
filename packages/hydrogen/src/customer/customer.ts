@@ -50,6 +50,7 @@ import type {
 } from './types';
 import {createCustomerAccountHelper, URL_TYPE} from './customer-account-helper';
 import {warnOnce} from '../utils/warning';
+import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
 function defaultAuthStatusHandler(
   request: CrossRuntimeRequest,
@@ -94,6 +95,7 @@ export function createCustomerAccountClient({
   loginPath = '/account/login',
   authorizePath = '/account/authorize',
   defaultRedirectPath = '/account',
+  language,
 }: CustomerAccountOptions): CustomerAccount {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -354,13 +356,12 @@ export function createCustomerAccountClient({
       loginUrl.searchParams.append('state', state);
       loginUrl.searchParams.append('nonce', nonce);
 
-      if (options?.uiLocales) {
-        const [language, region] = options.uiLocales.split('-');
-        let locale = language.toLowerCase();
-        if (region) {
-          locale += `-${region.toUpperCase()}`;
-        }
-        loginUrl.searchParams.append('ui_locales', locale);
+      const uiLocales = getMaybeUILocales({
+        contextLanguage: language ?? null,
+        uiLocalesOverride: options?.uiLocales ?? null,
+      });
+      if (uiLocales != null) {
+        loginUrl.searchParams.append('ui_locales', uiLocales);
       }
 
       const verifier = generateCodeVerifier();
@@ -583,4 +584,48 @@ function createIfInvalidCredentialThrowError(
       throw new Response(publicMessage, {status: 500});
     }
   };
+}
+
+/**
+ * This function returns a locale string in the form <language>[-<COUNTRY_CODE>], based on the provided input params.
+ * If both the i18n and the uiLocalesOverride are provided, the uiLocalesOverride will be used.
+ * If none of the params are provided, it returns null.
+ */
+export function getMaybeUILocales(params: {
+  contextLanguage: LanguageCode | null;
+  uiLocalesOverride: LanguageCode | null; // this will override contextLanguage if both are provided
+}): string | null {
+  const contextLocale = toMaybeLocaleString(params.contextLanguage ?? null);
+  const optionsLocale = toMaybeLocaleString(params.uiLocalesOverride);
+
+  return optionsLocale ?? contextLocale ?? null;
+}
+
+function toMaybeLocaleString(language: LanguageCode | null): string | null {
+  if (language == null) {
+    return null;
+  }
+
+  const normalizedLanguage = maybeEnforceRegionalVariant(language);
+
+  const base = normalizedLanguage.toLowerCase().replaceAll('_', '-');
+  const tokens = base.split('-');
+  const langToken = tokens.at(0) ?? null;
+  const regionToken = tokens.at(1) ?? null;
+
+  if (regionToken) {
+    return `${langToken}-${regionToken.toUpperCase()}`;
+  }
+
+  return langToken;
+}
+
+// See https://shopify.dev/docs/api/customer#authorization-propertydetail-uilocales
+const regionalLanguageOverrides: Partial<Record<LanguageCode, LanguageCode>> = {
+  PT: 'PT_PT',
+  ZH: 'ZH_CN',
+};
+
+function maybeEnforceRegionalVariant(language: LanguageCode): LanguageCode {
+  return regionalLanguageOverrides[language] ?? language;
 }

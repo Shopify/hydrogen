@@ -205,6 +205,9 @@ export function createHydrogenContext<
     authUrl: customerAccountOptions?.authUrl,
     customAuthStatusHandler: customerAccountOptions?.customAuthStatusHandler,
 
+    // locale
+    language: i18n?.language,
+
     // defaults
     customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
     shopId: env.SHOP_ID,

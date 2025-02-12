@@ -158,6 +158,8 @@ export type CustomerAccountOptions = {
   authorizePath?: string;
   /** Deprecated. `unstableB2b` is now stable. Please remove. */
   unstableB2b?: boolean;
+  /** Localization data. */
+  language?: LanguageCode;
 };
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */
