@@ -162,8 +162,8 @@ Remix single fetch migration guide: https://remix.run/docs/en/main/guides/single
 
     ```diff
     import {
--     json,
-+     data as remixData,
+    - json,
+    + data as remixData,
     } from '@shopify/remix-oxygen';
 
     -  return json(
