@@ -3,6 +3,144 @@
   "version": "1",
   "releases": [
     {
+      "title": "Remix singleFetch, Stable B2B methods, ESLint 9, and other fixes",
+      "version": "2025.1.1",
+      "hash": "97534c110593acd4db2bb9e739281dbc49f2cd74",
+      "commit": "https://github.com/Shopify/hydrogen/pull/2742/commits/97534c110593acd4db2bb9e739281dbc49f2cd74",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2742",
+      "dependencies": {
+        "@remix-run/react": "^2.15.3",
+        "@remix-run/server-runtime": "^2.15.3",
+        "@shopify/hydrogen": "2025.1.1",
+        "@shopify/remix-oxygen": "^2.0.10"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.15.3",
+        "@shopify/cli": "3.74.1",
+        "@shopify/mini-oxygen": "^3.1.1"
+      },
+      "dependenciesMeta": {
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/react": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@remix-run/dev": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/remix-oxygen": {
+          "required": true
+        }
+      },
+      "fixes": [
+         {
+          "title": "Upgrade eslint to version 9",
+          "desc": "Upgrade eslint to version 9 and unify eslint config across all packages (with the exception of the skeleton, which still keeps its own config)",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2716",
+          "id": "2716"
+         },
+         {
+          "title": "Upgrade Remix to 2.15.3",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2740",
+          "id": "2740"
+         }
+      ],
+      "features": [
+        {
+          "title": "Enable Remix `v3_singleFetch` future flag",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2708",
+          "id": "2708",
+          "docs": "https://remix.run/docs/en/main/guides/single-fetch",
+          "desc": "**Note:** If you have any routes that appends (or looks for) a search param named `_data`, make sure to rename it to something else.",
+          "steps": [
+            {
+              "title": "1. In your `vite.config.ts`, add the single fetch future flag",
+              "code": "YGBgZGlmZgorICBkZWNsYXJlIG1vZHVsZSAiQHJlbWl4LXJ1bi9zZXJ2ZXItcnVudGltZSIgeworICAgIGludGVyZmFjZSBGdXR1cmUgeworICAgICB2M19zaW5nbGVGZXRjaDogdHJ1ZTsKKyAgICB9CisgIH0KCiAgZXhwb3J0IGRlZmF1bHQgZGVmaW5lQ29uZmlnKHsKICAgIHBsdWdpbnM6IFsKICAgICAgaHlkcm9nZW4oKSwKICAgICAgb3h5Z2VuKCksCiAgICAgIHJlbWl4KHsKICAgICAgICBwcmVzZXRzOiBbaHlkcm9nZW4ucHJlc2V0KCldLAogICAgICAgIGZ1dHVyZTogewogICAgICAgICAgdjNfZmV0Y2hlclBlcnNpc3Q6IHRydWUsCiAgICAgICAgICB2M19yZWxhdGl2ZVNwbGF0UGF0aDogdHJ1ZSwKICAgICAgICAgIHYzX3Rocm93QWJvcnRSZWFzb246IHRydWUsCiAgICAgICAgICB2M19sYXp5Um91dGVEaXNjb3Zlcnk6IHRydWUsCisgICAgICAgICB2M19zaW5nbGVGZXRjaDogdHJ1ZSwKICAgICAgICB9LAogICAgICB9KSwKICAgICAgdHNjb25maWdQYXRocygpLAogICAgXSwKYGBg"
+            },
+            {
+              "title": "2. In your `entry.server.tsx`, add `nonce` to the `<RemixServer>`",
+              "code": "YGBgZGlmZgpjb25zdCBib2R5ID0gYXdhaXQgcmVuZGVyVG9SZWFkYWJsZVN0cmVhbSgKIDxOb25jZVByb3ZpZGVyPgogICA8UmVtaXhTZXJ2ZXIKICAgICBjb250ZXh0PXtyZW1peENvbnRleHR9CiAgICAgdXJsPXtyZXF1ZXN0LnVybH0KKyAgICAgbm9uY2U9e25vbmNlfQogICAvPgogPC9Ob25jZVByb3ZpZGVyPiwKYGBg"
+            },
+            {
+              "title": "3. Update `cart.tsx` to add a headers export and update to `data` import usage",
+              "code": "YGBgZGlmZgogICAgaW1wb3J0IHsKICAtICBqc29uLAogICsgIGRhdGEsCiAgICAgIHR5cGUgTG9hZGVyRnVuY3Rpb25BcmdzLAogICAgICB0eXBlIEFjdGlvbkZ1bmN0aW9uQXJncywKICAgICAgdHlwZSBIZWFkZXJzRnVuY3Rpb24KICAgIH0gZnJvbSAnQHNob3BpZnkvcmVtaXgtb3h5Z2VuJzsKICArIGV4cG9ydCBjb25zdCBoZWFkZXJzOiBIZWFkZXJzRnVuY3Rpb24gPSAoe2FjdGlvbkhlYWRlcnN9KSA9PiBhY3Rpb25IZWFkZXJzOwoKICAgIGV4cG9ydCBhc3luYyBmdW5jdGlvbiBhY3Rpb24oe3JlcXVlc3QsIGNvbnRleHR9OiBBY3Rpb25GdW5jdGlvbkFyZ3MpIHsKICAgICAgLi4uCiAgLSAgIHJldHVybiBqc29uKAogICsgICByZXR1cm4gZGF0YSgKICAgICAgICB7CiAgICAgICAgICBjYXJ0OiBjYXJ0UmVzdWx0LAogICAgICAgICAgZXJyb3JzLAogICAgICAgICAgd2FybmluZ3MsCiAgICAgICAgICBhbmFseXRpY3M6IHsKICAgICAgICAgICAgY2FydElkLAogICAgICAgICAgfSwKICAgICAgICB9LAogICAgICAgIHtzdGF0dXMsIGhlYWRlcnN9LAogICAgICApOwogICAgfQoKICAgIGV4cG9ydCBhc3luYyBmdW5jdGlvbiBsb2FkZXIoe2NvbnRleHR9OiBMb2FkZXJGdW5jdGlvbkFyZ3MpIHsKICAgICAgY29uc3Qge2NhcnR9ID0gY29udGV4dDsKIC0gICAgcmV0dXJuIGpzb24oYXdhaXQgY2FydC5nZXQoKSk7CiArICAgIHJldHVybiBhd2FpdCBjYXJ0LmdldCgpOwogICAgfQogYGBg"
+            },
+            {
+              "title": "4.1 Deprecate `json` and `defer` import usage from `@shopify/remix-oxygen`",
+              "desc": "Remove `json()`/`defer()` in favor of raw objects. Single Fetch supports JSON objects and Promises out of the box, so you can return the raw data from your loader/action functions:",
+              "code": "YGBgZGlmZgotIGltcG9ydCB7anNvbn0gZnJvbSAiQHNob3BpZnkvcmVtaXgtb3h5Z2VuIjsKCiAgZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGxvYWRlcih7fTogTG9hZGVyRnVuY3Rpb25BcmdzKSB7CiAgICBsZXQgdGFza3MgPSBhd2FpdCBmZXRjaFRhc2tzKCk7Ci0gICByZXR1cm4ganNvbih0YXNrcyk7CisgICByZXR1cm4gdGFza3M7CiAgfQpgYGAKCmBgYGRpZmYKLSBpbXBvcnQge2RlZmVyfSBmcm9tICJAc2hvcGlmeS9yZW1peC1veHlnZW4iOwoKICBleHBvcnQgYXN5bmMgZnVuY3Rpb24gbG9hZGVyKHt9OiBMb2FkZXJGdW5jdGlvbkFyZ3MpIHsKICAgIGxldCBsYXp5U3R1ZmYgPSBmZXRjaExhenlTdHVmZigpOwogICAgbGV0IHRhc2tzID0gYXdhaXQgZmV0Y2hUYXNrcygpOwotICAgcmV0dXJuIGRlZmVyKHsgdGFza3MsIGxhenlTdHVmZiB9KTsKKyAgIHJldHVybiB7IHRhc2tzLCBsYXp5U3R1ZmYgfTsKICB9CmBgYAo="
+            },
+            {
+              "title": "4.2 If you were using the second parameter of json/defer to set a custom status or headers on your response, you can continue doing so via the new data API:",
+              "code": "YGBgZGlmZgotICBpbXBvcnQge2pzb259IGZyb20gIkBzaG9waWZ5L3JlbWl4LW94eWdlbiI7CisgIGltcG9ydCB7ZGF0YSwgdHlwZSBIZWFkZXJzRnVuY3Rpb259IGZyb20gIkBzaG9waWZ5L3JlbWl4LW94eWdlbiI7CgorICAvKioKKyAgICogSWYgeW91ciBsb2FkZXIgb3IgYWN0aW9uIGlzIHJldHVybmluZyBhIHJlc3BvbnNlIHdpdGggaGVhZGVycywKKyAgICogbWFrZSBzdXJlIHRvIGV4cG9ydCBhIGhlYWRlcnMgZnVuY3Rpb24gdGhhdCBtZXJnZXMgeW91ciBoZWFkZXJzCisgICAqIG9uIHlvdXIgcm91dGUuIE90aGVyd2lzZSwgeW91ciBoZWFkZXJzIG1heSBiZSBsb3N0LgorICAgKiBSZW1peCBkb2M6IGh0dHBzOi8vcmVtaXgucnVuL2RvY3MvZW4vbWFpbi9yb3V0ZS9oZWFkZXJzCisgICAqKi8KKyAgZXhwb3J0IGNvbnN0IGhlYWRlcnM6IEhlYWRlcnNGdW5jdGlvbiA9ICh7bG9hZGVySGVhZGVyc30pID0+IGxvYWRlckhlYWRlcnM7CgogIGV4cG9ydCBhc3luYyBmdW5jdGlvbiBsb2FkZXIoe306IExvYWRlckZ1bmN0aW9uQXJncykgewogICAgbGV0IHRhc2tzID0gYXdhaXQgZmV0Y2hUYXNrcygpOwotICAgIHJldHVybiBqc29uKHRhc2tzLCB7CisgICAgcmV0dXJuIGRhdGEodGFza3MsIHsKICAgICAgaGVhZGVyczogewogICAgICAgICJDYWNoZS1Db250cm9sIjogInB1YmxpYywgbWF4LWFnZT02MDQ4MDAiCiAgICAgIH0KICAgIH0pOwogIH0KYGBgCg=="
+            },
+            {
+              "title": "5.1 If you are using legacy customer account flow or multipass, there are a couple more files that requires updating:",
+              "desc": "In `root.tsx` and `routes/account.tsx`, add a `headers` export for `loaderHeaders`",
+              "code": "YGBgZGlmZgorIGV4cG9ydCBjb25zdCBoZWFkZXJzOiBIZWFkZXJzRnVuY3Rpb24gPSAoe2xvYWRlckhlYWRlcnN9KSA9PiBsb2FkZXJIZWFkZXJzOwpgYGAK"
+            },
+            {
+              "title": "5.2 In `routes/account_.register.tsx`, add a `headers` export for `actionHeaders`",
+              "code": "YGBgZGlmZgorIGV4cG9ydCBjb25zdCBoZWFkZXJzOiBIZWFkZXJzRnVuY3Rpb24gPSAoe2FjdGlvbkhlYWRlcnN9KSA9PiBhY3Rpb25IZWFkZXJzOwpgYGAK"
+            },
+            {
+              "title": "6.1 If you are using multipass, in `routes/account_.login.multipass.tsx`",
+              "desc": "Export `headers` for `actionHeaders`",
+              "code": "YGBgZGlmZgorIGV4cG9ydCBjb25zdCBoZWFkZXJzOiBIZWFkZXJzRnVuY3Rpb24gPSAoe2FjdGlvbkhlYWRlcnN9KSA9PiBhY3Rpb25IZWFkZXJzOwpgYGAK"
+            },
+            {
+              "title": "6.2 Update all `json` response wrapper to `remixData`",
+              "code": "YGBgZGlmZgppbXBvcnQgewotICAgICBqc29uLAorICAgICBkYXRhIGFzIHJlbWl4RGF0YSwKICB9IGZyb20gJ0BzaG9waWZ5L3JlbWl4LW94eWdlbic7CgogIC0gIHJldHVybiBqc29uKAogICsgIHJldHVybiByZW1peERhdGEoCiAgICAgIC4uLgogICAgKTsKYGBg"
+            }
+          ]
+        },
+        {
+          "title": "B2B methods and props are now stable",
+          "desc": "Warnings are in place for unstable usages and will be removed completely in the next major version",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2736",
+          "id": "2736",
+          "steps": [
+            {
+              "title": "1. Search for anywhere using `UNSTABLE_getBuyer` and `UNSTABLE_setBuyer` is update accordingly",
+              "code": "YGBgZGlmZgotIGN1c3RvbWVyQWNjb3VudC5VTlNUQUJMRV9nZXRCdXllcigpOworIGN1c3RvbWVyQWNjb3VudC5nZXRCdXllcigpCgotIGN1c3RvbWVyQWNjb3VudC5VTlNUQUJMRV9zZXRCdXllcih7CisgY3VzdG9tZXJBY2NvdW50LnNldEJ1eWVyKHsKICAgIGNvbXBhbnlMb2NhdGlvbklkLAogIH0pOwpgYGA="
+            },
+            {
+              "title": "2. Update `createHydrogenContext` to remove the `unstableB2b` option",
+              "code": "YGBgZGlmZgogIGNvbnN0IGh5ZHJvZ2VuQ29udGV4dCA9IGNyZWF0ZUh5ZHJvZ2VuQ29udGV4dCh7CiAgICBlbnYsCiAgICByZXF1ZXN0LAogICAgY2FjaGUsCiAgICB3YWl0VW50aWwsCiAgICBzZXNzaW9uLAogICAgaTE4bjoge2xhbmd1YWdlOiAnRU4nLCBjb3VudHJ5OiAnVVMnfSwKLSAgICBjdXN0b21lckFjY291bnQ6IHsKLSAgICAgIHVuc3RhYmxlQjJiOiB0cnVlLAotICAgIH0sCiAgICBjYXJ0OiB7CiAgICAgIHF1ZXJ5RnJhZ21lbnQ6IENBUlRfUVVFUllfRlJBR01FTlQsCiAgICB9LAogIH0pOwpgYGA="
+            }
+          ]
+        },
+                {
+          "title": "Update `getProductOptions` to handle divergent product options",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2747",
+          "id": "2747"
+        },
+        {
+          "title": "Add `language` support to `createCustomerAccountClient` and `createHydrogenContext`",
+          "desc": "Added the ability to optionally provide `language` data to `createCustomerAccountClient`, and automatically pass it down to it from `createHydrogenContext`",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2746",
+          "id": "2746",
+          "steps": [
+            {
+              "title": "If present, the provided `language` will be used to set the `uilocales` property in the Customer Account API request. This will allow the API to return localized data for the provided language.",
+              "code": "YGBgdHMKLy8gT3B0aW9uYWw6IHByb3ZpZGUgbGFuZ3VhZ2UgZGF0YSB0byB0aGUgY29uc3RydWN0b3IKY29uc3QgY3VzdG9tZXJBY2NvdW50ID0gY3JlYXRlQ3VzdG9tZXJBY2NvdW50Q2xpZW50KHsKICAvLyAuLi4KICBsYW5ndWFnZSwKfSk7CmBgYA=="
+            },
+            {
+              "title": "Calls to `login()` will use the provided `language` without having to pass it explicitly via `uiLocales`; however, if the `login()` method is already using its `uilocales` property, the `language` parameter coming from the context/constructor will be ignored. If nothing is explicitly passed, `login()` will default to `context.i18n.language`.",
+              "code": "YGBgdHMKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGxvYWRlcih7cmVxdWVzdCwgY29udGV4dH06IExvYWRlckZ1bmN0aW9uQXJncykgewogIHJldHVybiBjb250ZXh0LmN1c3RvbWVyQWNjb3VudC5sb2dpbih7CiAgICB1aUxvY2FsZXM6ICdGUicsIC8vIHdpbGwgYmUgdXNlZCBpbnN0ZWFkIG9mIHRoZSBvbmUgY29taW5nIGZyb20gdGhlIGNvbnRleHQKICB9KTsKfQpgYGA="
+            }
+          ]
+        }
+      ]
+    },
+    {
       "title": "Remix v3_lazyRouteDiscovery future flag, various bug fixes and package version bumps.",
       "version": "2025.1.0",
       "hash": "7df8c2076a829d29cb5c0b0276729ddc7d0d4630",
