@@ -1,4 +1,4 @@
-import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {B2BLocationSelector} from '../components/B2BLocationSelector';
 import {CUSTOMER_LOCATIONS_QUERY} from '~/graphql/customer-account/CustomerLocationsQuery';
@@ -6,7 +6,7 @@ import {CUSTOMER_LOCATIONS_QUERY} from '~/graphql/customer-account/CustomerLocat
 export async function loader({context}: LoaderFunctionArgs) {
   const {customerAccount} = context;
 
-  const buyer = await customerAccount.UNSTABLE_getBuyer();
+  const buyer = await customerAccount.getBuyer();
 
   let companyLocationId = buyer?.companyLocationId || null;
   let company = null;
@@ -23,14 +23,14 @@ export async function loader({context}: LoaderFunctionArgs) {
   if (!companyLocationId && company?.locations?.edges?.length === 1) {
     companyLocationId = company.locations.edges[0].node.id;
 
-    customerAccount.UNSTABLE_setBuyer({
+    customerAccount.setBuyer({
       companyLocationId,
     });
   }
 
   const modalOpen = Boolean(company) && !companyLocationId;
 
-  return defer({company, companyLocationId, modalOpen});
+  return {company, companyLocationId, modalOpen};
 }
 
 export default function CartRoute() {

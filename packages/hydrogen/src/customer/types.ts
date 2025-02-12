@@ -121,9 +121,13 @@ export type CustomerAccount = {
       'errors'
     > & {errors?: JsonGraphQLError[]}
   >;
-  /** UNSTABLE feature. Set buyer information into session.*/
+  /** Set buyer information into session.*/
+  setBuyer: (buyer: Buyer) => void;
+  /** Get buyer token and company location id from session.*/
+  getBuyer: () => Promise<Buyer>;
+  /** Deprecated. Please use setBuyer. Set buyer information into session.*/
   UNSTABLE_setBuyer: (buyer: Buyer) => void;
-  /** UNSTABLE feature. Get buyer token and company location id from session.*/
+  /** Deprecated. Please use getBuyer. Get buyer token and company location id from session.*/
   UNSTABLE_getBuyer: () => Promise<Buyer>;
 };
 
@@ -146,14 +150,16 @@ export type CustomerAccountOptions = {
   customAuthStatusHandler?: () => DataFunctionValue;
   /** Whether it should print GraphQL errors automatically. Defaults to true */
   logErrors?: boolean | ((error?: Error) => boolean);
-  /** UNSTABLE feature, this will eventually goes away. If true then we will exchange customerAccessToken for storefrontCustomerAccessToken. */
-  unstableB2b?: boolean;
   /** The path to redirect to after login. Defaults to `/account`. */
   defaultRedirectPath?: string;
   /** The path to login. Defaults to `/account/login`. */
   loginPath?: string;
   /** The oauth authorize path. Defaults to `/account/authorize`. */
   authorizePath?: string;
+  /** Deprecated. `unstableB2b` is now stable. Please remove. */
+  unstableB2b?: boolean;
+  /** Localization data. */
+  language?: LanguageCode;
 };
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */

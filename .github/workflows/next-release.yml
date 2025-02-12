@@ -64,7 +64,6 @@ jobs:
           npm run version:post
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
 
       - name: 🏗 Build
         if: steps.version.outputs.NEXT_VERSION
@@ -81,3 +80,5 @@ jobs:
       - name: 🚀 Publish
         if: steps.version.outputs.NEXT_VERSION
         run: npm run changeset -- publish --tag next
+        env:
+          NPM_CONFIG_PROVENANCE: true

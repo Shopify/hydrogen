@@ -25,6 +25,7 @@ import type {
   StorefrontHeaders,
 } from './types';
 import {type CrossRuntimeRequest, getHeader} from './utils/request';
+import {warnOnce} from './utils/warning';
 
 export type HydrogenContextOptions<
   TSession extends HydrogenSession = HydrogenSession,
@@ -61,7 +62,7 @@ export type HydrogenContextOptions<
     authUrl?: CustomerAccountOptions['authUrl'];
     /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */
     customAuthStatusHandler?: CustomerAccountOptions['customAuthStatusHandler'];
-    /** UNSTABLE feature, this will eventually goes away. If true then we will exchange a customerAccessToken for a storefrontCustomerAccessToken. */
+    /** Deprecated. `unstableB2b` is now stable. Please remove. */
     unstableB2b?: CustomerAccountOptions['unstableB2b'];
   };
   /** Cart handler overwrite options. See documentation for createCartHandler for more information. */
@@ -164,6 +165,12 @@ export function createHydrogenContext<
     );
   }
 
+  if (customerAccountOptions?.unstableB2b) {
+    warnOnce(
+      '[h2:warn:createHydrogenContext] `customerAccount.unstableB2b` is now stable. Please remove the `unstableB2b` option.',
+    );
+  }
+
   /**
    * Create Hydrogen's Storefront client.
    */
@@ -197,7 +204,9 @@ export function createHydrogenContext<
     customerApiVersion: customerAccountOptions?.apiVersion,
     authUrl: customerAccountOptions?.authUrl,
     customAuthStatusHandler: customerAccountOptions?.customAuthStatusHandler,
-    unstableB2b: customerAccountOptions?.unstableB2b,
+
+    // locale
+    language: i18n?.language,
 
     // defaults
     customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
@@ -274,7 +283,7 @@ export type HydrogenContextOptionsForDocs<
     authUrl?: string;
     /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */
     customAuthStatusHandler?: () => Response | NonNullable<unknown> | null;
-    /** UNSTABLE feature, this will eventually goes away. If true then we will exchange customerAccessToken for storefrontCustomerAccessToken. */
+    /** Deprecated. `unstableB2b` is now stable. Please remove. */
     unstableB2b?: boolean;
   };
   /** Cart handler overwrite options. See documentation for createCartHandler for more information. */

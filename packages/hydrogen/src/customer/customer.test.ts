@@ -1,6 +1,6 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import type {HydrogenSession, HydrogenSessionData} from '../types';
-import {createCustomerAccountClient} from './customer';
+import {createCustomerAccountClient, getMaybeUILocales} from './customer';
 import {BUYER_SESSION_KEY, CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
 import crypto from 'node:crypto';
 
@@ -56,7 +56,6 @@ const mockCustomerAccountSession: HydrogenSessionData['customerAccount'] = {
 };
 
 const mockBuyerSession = {
-  customerAccessToken: 'sha123',
   companyLocationId: '1',
 };
 
@@ -168,6 +167,65 @@ describe('customer', () => {
         expect(params.get('redirect_uri')).toBe(
           new URL('/account/authorize', origin).toString(),
         );
+      });
+
+      describe('locales', () => {
+        it('Redirects to the customer account api login url with uiLocales as param (i18n in the constructor)', async () => {
+          const origin = 'https://something-good.com';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+            language: 'FR',
+          });
+
+          const response = await customer.login();
+          const url = new URL(response.headers.get('location')!);
+
+          expect(url.searchParams.get('ui_locales')).toBe('fr');
+        });
+
+        it('Redirects to the customer account api login url with uiLocales as param (uiLocales in the param)', async () => {
+          const origin = 'https://something-good.com';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+          });
+
+          const response = await customer.login({
+            uiLocales: 'FR',
+          });
+          const url = new URL(response.headers.get('location')!);
+
+          expect(url.searchParams.get('ui_locales')).toBe('fr');
+        });
+
+        it('Redirects to the customer account api login url with uiLocales as param (override)', async () => {
+          const origin = 'https://something-good.com';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+            language: 'IT',
+          });
+
+          const response = await customer.login({
+            uiLocales: 'FR',
+          });
+          const url = new URL(response.headers.get('location')!);
+
+          expect(url.searchParams.get('ui_locales')).toBe('fr');
+        });
       });
     });
 
@@ -699,52 +757,6 @@ describe('customer', () => {
           }),
         );
       });
-
-      it('exchanges for a storefront customer access token for b2b', async () => {
-        const redirectPath = '/account/orders';
-        session = {
-          commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
-          get: vi.fn(() => {
-            return {...mockCustomerAccountSession, redirectPath};
-          }) as HydrogenSession['get'],
-          set: vi.fn(),
-          unset: vi.fn(),
-        };
-
-        const customer = createCustomerAccountClient({
-          session,
-          customerAccountId: 'customerAccountId',
-          shopId: '1',
-          request: new Request('https://localhost?state=state&code=code'),
-          unstableB2b: true,
-          waitUntil: vi.fn(),
-        });
-
-        fetch.mockResolvedValue(
-          createFetchResponse(
-            {
-              access_token: 'shcat_access_token',
-              expires_in: '',
-              id_token: `${btoa('{}')}.${btoa('{"nonce": "nonce"}')}.signature`,
-              refresh_token: 'shcrt_refresh_token',
-            },
-            {ok: true},
-          ),
-        );
-
-        const response = await customer.authorize();
-
-        expect(response.status).toBe(302);
-
-        expect(fetch).toHaveBeenCalledWith(
-          expect.stringContaining('https://shopify.com/1/account/customer/api'),
-          expect.objectContaining({
-            body: expect.stringContaining(
-              'storefrontCustomerAccessTokenCreate',
-            ),
-          }),
-        );
-      });
     });
   });
 
@@ -941,6 +953,66 @@ describe('customer', () => {
         expect(customAuthStatusHandler).toHaveBeenCalledOnce();
       }
     });
+
+    it('handles Remix `https://localhost/account/orders.data` url extensions when passing current path as param if logged out', async () => {
+      const customer = createCustomerAccountClient({
+        session,
+        customerAccountId: 'customerAccountId',
+        shopId: '1',
+        request: new Request('https://localhost/account/orders.data'),
+        waitUntil: vi.fn(),
+      });
+      (session.get as any).mockReturnValueOnce(undefined);
+
+      try {
+        await customer.handleAuthStatus();
+      } catch (error) {
+        expect((error as Response).status).toBe(302);
+        expect((error as Response).headers.get('location')).toBe(
+          '/account/login?return_to=%2Faccount%2Forders',
+        );
+      }
+    });
+
+    it('handles Remix `https://localhost/account/_root.data` url extensions when passing current path as param if logged out', async () => {
+      const customer = createCustomerAccountClient({
+        session,
+        customerAccountId: 'customerAccountId',
+        shopId: '1',
+        request: new Request('https://localhost/account/_root.data'),
+        waitUntil: vi.fn(),
+      });
+      (session.get as any).mockReturnValueOnce(undefined);
+
+      try {
+        await customer.handleAuthStatus();
+      } catch (error) {
+        expect((error as Response).status).toBe(302);
+        expect((error as Response).headers.get('location')).toBe(
+          '/account/login?return_to=%2Faccount',
+        );
+      }
+    });
+
+    it('handles Remix `https://localhost/_root.data` url extensions when passing current path as param if logged out', async () => {
+      const customer = createCustomerAccountClient({
+        session,
+        customerAccountId: 'customerAccountId',
+        shopId: '1',
+        request: new Request('https://localhost/_root.data'),
+        waitUntil: vi.fn(),
+      });
+      (session.get as any).mockReturnValueOnce(undefined);
+
+      try {
+        await customer.handleAuthStatus();
+      } catch (error) {
+        expect((error as Response).status).toBe(302);
+        expect((error as Response).headers.get('location')).toBe(
+          '/account/login?return_to=%2F',
+        );
+      }
+    });
   });
 
   describe('query', () => {
@@ -1018,7 +1090,7 @@ describe('customer', () => {
         waitUntil: vi.fn(),
       });
 
-      customer.UNSTABLE_setBuyer(mockBuyerSession);
+      customer.setBuyer(mockBuyerSession);
 
       expect(session.set).toHaveBeenCalledWith(
         BUYER_SESSION_KEY,
@@ -1037,9 +1109,14 @@ describe('customer', () => {
         waitUntil: vi.fn(),
       });
 
-      const buyer = await customer.UNSTABLE_getBuyer();
+      const buyer = await customer.getBuyer();
 
-      expect(buyer).toEqual(expect.objectContaining(mockBuyerSession));
+      expect(buyer).toEqual(
+        expect.objectContaining({
+          ...mockBuyerSession,
+          customerAccessToken: 'access_token',
+        }),
+      );
     });
 
     it('returns undefined when not logged in', async () => {
@@ -1053,9 +1130,76 @@ describe('customer', () => {
 
       (session.get as any).mockReturnValueOnce(undefined);
 
-      const buyer = await customer.UNSTABLE_getBuyer();
+      const buyer = await customer.getBuyer();
 
       expect(buyer).toBeUndefined();
     });
+  });
+});
+
+// Unit test
+describe('getMaybeUILocales', () => {
+  it('returns null if no i18n is provided', () => {
+    const uiLocales = getMaybeUILocales({
+      contextLanguage: null,
+      uiLocalesOverride: null,
+    });
+    expect(uiLocales).toBeNull();
+  });
+
+  it('returns the context locale (formatted) if no options override is provided', () => {
+    const uiLocales = getMaybeUILocales({
+      contextLanguage: 'EN',
+      uiLocalesOverride: null,
+    });
+    expect(uiLocales).toBe('en');
+
+    const uiLocalesWithRegion = getMaybeUILocales({
+      contextLanguage: 'PT_PT',
+      uiLocalesOverride: null,
+    });
+    expect(uiLocalesWithRegion).toBe('pt-PT');
+  });
+
+  it('returns the uiLocales data (formatted) if the i18n locale is not provided', () => {
+    const uiLocales = getMaybeUILocales({
+      contextLanguage: null,
+      uiLocalesOverride: 'FR',
+    });
+    expect(uiLocales).toBe('fr');
+
+    const uiLocalesWithRegion = getMaybeUILocales({
+      contextLanguage: null,
+      uiLocalesOverride: 'PT_PT',
+    });
+    expect(uiLocalesWithRegion).toBe('pt-PT');
+  });
+
+  it('overrides the i18n locale if both the it and the uiLocales override are provided', () => {
+    const uiLocales = getMaybeUILocales({
+      contextLanguage: 'EN',
+      uiLocalesOverride: 'FR',
+    });
+    expect(uiLocales).toBe('fr');
+  });
+
+  it('enforces a regional variant if the language is a regional language', () => {
+    const portuguese = getMaybeUILocales({
+      contextLanguage: 'PT',
+      uiLocalesOverride: null,
+    });
+    expect(portuguese).toBe('pt-PT');
+
+    const mandarin = getMaybeUILocales({
+      contextLanguage: 'ZH',
+      uiLocalesOverride: null,
+    });
+    expect(mandarin).toBe('zh-CN');
+
+    const dutch = getMaybeUILocales({
+      contextLanguage: 'NL',
+      uiLocalesOverride: null,
+    });
+    expect(dutch).toBe('nl');
   });
 });

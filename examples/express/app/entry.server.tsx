@@ -9,7 +9,7 @@ import {PassThrough} from 'node:stream';
 import type {AppLoadContext, EntryContext} from '@remix-run/node';
 import {Response} from '@remix-run/web-fetch';
 import {RemixServer} from '@remix-run/react';
-import isbot from 'isbot';
+import {isbot} from 'isbot';
 import {renderToPipeableStream} from 'react-dom/server';
 import {createContentSecurityPolicy} from '@shopify/hydrogen';
 
@@ -28,7 +28,7 @@ export default function handleRequest(
         responseStatusCode,
         responseHeaders,
         remixContext,
-        loadContext
+        loadContext,
       )
     : handleBrowserRequest(
         request,
@@ -50,7 +50,7 @@ function handleBotRequest(
       shop: {
         checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
         storeDomain: context.env.PUBLIC_STORE_DOMAIN,
-      }
+      },
     });
 
     const {pipe, abort} = renderToPipeableStream(
@@ -59,6 +59,7 @@ function handleBotRequest(
           context={remixContext}
           url={request.url}
           abortDelay={ABORT_DELAY}
+          nonce={nonce}
         />
       </NonceProvider>,
       {
@@ -109,6 +110,7 @@ function handleBrowserRequest(
           context={remixContext}
           url={request.url}
           abortDelay={ABORT_DELAY}
+          nonce={nonce}
         />
       </NonceProvider>,
       {

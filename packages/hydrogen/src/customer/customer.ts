@@ -50,6 +50,7 @@ import type {
 } from './types';
 import {createCustomerAccountHelper, URL_TYPE} from './customer-account-helper';
 import {warnOnce} from '../utils/warning';
+import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
 function defaultAuthStatusHandler(
   request: CrossRuntimeRequest,
@@ -59,9 +60,24 @@ function defaultAuthStatusHandler(
 
   const {pathname} = new URL(request.url);
 
+  /**
+   * Remix (single-fetch) request objects have different url
+   * paths when soft navigating. Examples:
+   *
+   *    /_root.data          - home page
+   *    /collections.data    - collections page
+   *
+   * These url annotations needs to be cleaned up before constructing urls to be passed as
+   * GET parameters for customer login url
+   */
+  const cleanedPathname = pathname
+    .replace(/\.data$/, '')
+    .replace(/\/_root$/, '/')
+    .replace(/(.+)\/$/, '$1');
+
   const redirectTo =
     defaultLoginUrl +
-    `?${new URLSearchParams({return_to: pathname}).toString()}`;
+    `?${new URLSearchParams({return_to: cleanedPathname}).toString()}`;
 
   return redirect(redirectTo);
 }
@@ -76,10 +92,10 @@ export function createCustomerAccountClient({
   authUrl,
   customAuthStatusHandler,
   logErrors = true,
-  unstableB2b = false,
   loginPath = '/account/login',
   authorizePath = '/account/authorize',
   defaultRedirectPath = '/account',
+  language,
 }: CustomerAccountOptions): CustomerAccount {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -253,7 +269,6 @@ export function createCustomerAccountClient({
           stackInfo,
           ...getDebugHeaders(request),
         },
-        exchangeForStorefrontCustomerAccessToken,
       });
     } catch {
       return false;
@@ -312,46 +327,14 @@ export function createCustomerAccountClient({
   }
 
   async function getBuyer() {
-    // check loggedIn and trigger refresh if expire
-    const hasAccessToken = await isLoggedIn();
+    // get access token and trigger refresh if expire
+    const customerAccessToken = await getAccessToken();
 
-    if (!hasAccessToken) {
+    if (!customerAccessToken) {
       return;
     }
 
-    return session.get(BUYER_SESSION_KEY);
-  }
-
-  async function exchangeForStorefrontCustomerAccessToken() {
-    if (!unstableB2b) {
-      return;
-    }
-
-    const STOREFRONT_CUSTOMER_ACCOUNT_TOKEN_CREATE = `#graphql
-      mutation storefrontCustomerAccessTokenCreate {
-        storefrontCustomerAccessTokenCreate {
-          customerAccessToken
-        }
-      }
-    `;
-
-    // Remove hard coded type later
-    const {data} = (await mutate(STOREFRONT_CUSTOMER_ACCOUNT_TOKEN_CREATE)) as {
-      data: {
-        storefrontCustomerAccessTokenCreate?: {
-          customerAccessToken?: string;
-        };
-      };
-    };
-
-    const customerAccessToken =
-      data?.storefrontCustomerAccessTokenCreate?.customerAccessToken;
-
-    if (customerAccessToken) {
-      setBuyer({
-        customerAccessToken,
-      });
-    }
+    return {...session.get(BUYER_SESSION_KEY), customerAccessToken};
   }
 
   return {
@@ -373,13 +356,12 @@ export function createCustomerAccountClient({
       loginUrl.searchParams.append('state', state);
       loginUrl.searchParams.append('nonce', nonce);
 
-      if (options?.uiLocales) {
-        const [language, region] = options.uiLocales.split('-');
-        let locale = language.toLowerCase();
-        if (region) {
-          locale += `-${region.toUpperCase()}`;
-        }
-        loginUrl.searchParams.append('ui_locales', locale);
+      const uiLocales = getMaybeUILocales({
+        contextLanguage: language ?? null,
+        uiLocalesOverride: options?.uiLocales ?? null,
+      });
+      if (uiLocales != null) {
+        loginUrl.searchParams.append('ui_locales', uiLocales);
       }
 
       const verifier = generateCodeVerifier();
@@ -556,12 +538,24 @@ export function createCustomerAccountClient({
         idToken: id_token,
       });
 
-      await exchangeForStorefrontCustomerAccessToken();
-
       return redirect(redirectPath || defaultRedirectPath);
     },
-    UNSTABLE_setBuyer: setBuyer,
-    UNSTABLE_getBuyer: getBuyer,
+    setBuyer,
+    getBuyer,
+    UNSTABLE_setBuyer: (buyer: Buyer) => {
+      warnOnce(
+        '[h2:warn:customerAccount] `customerAccount.UNSTABLE_setBuyer` is deprecated. Please use `customerAccount.setBuyer`.',
+      );
+
+      setBuyer(buyer);
+    },
+    UNSTABLE_getBuyer: () => {
+      warnOnce(
+        '[h2:warn:customerAccount] `customerAccount.UNSTABLE_getBuyer` is deprecated. Please use `customerAccount.getBuyer`.',
+      );
+
+      return getBuyer();
+    },
   };
 }
 
@@ -590,4 +584,48 @@ function createIfInvalidCredentialThrowError(
       throw new Response(publicMessage, {status: 500});
     }
   };
+}
+
+/**
+ * This function returns a locale string in the form <language>[-<COUNTRY_CODE>], based on the provided input params.
+ * If both the i18n and the uiLocalesOverride are provided, the uiLocalesOverride will be used.
+ * If none of the params are provided, it returns null.
+ */
+export function getMaybeUILocales(params: {
+  contextLanguage: LanguageCode | null;
+  uiLocalesOverride: LanguageCode | null; // this will override contextLanguage if both are provided
+}): string | null {
+  const contextLocale = toMaybeLocaleString(params.contextLanguage ?? null);
+  const optionsLocale = toMaybeLocaleString(params.uiLocalesOverride);
+
+  return optionsLocale ?? contextLocale ?? null;
+}
+
+function toMaybeLocaleString(language: LanguageCode | null): string | null {
+  if (language == null) {
+    return null;
+  }
+
+  const normalizedLanguage = maybeEnforceRegionalVariant(language);
+
+  const base = normalizedLanguage.toLowerCase().replaceAll('_', '-');
+  const tokens = base.split('-');
+  const langToken = tokens.at(0) ?? null;
+  const regionToken = tokens.at(1) ?? null;
+
+  if (regionToken) {
+    return `${langToken}-${regionToken.toUpperCase()}`;
+  }
+
+  return langToken;
+}
+
+// See https://shopify.dev/docs/api/customer#authorization-propertydetail-uilocales
+const regionalLanguageOverrides: Partial<Record<LanguageCode, LanguageCode>> = {
+  PT: 'PT_PT',
+  ZH: 'ZH_CN',
+};
+
+function maybeEnforceRegionalVariant(language: LanguageCode): LanguageCode {
+  return regionalLanguageOverrides[language] ?? language;
 }

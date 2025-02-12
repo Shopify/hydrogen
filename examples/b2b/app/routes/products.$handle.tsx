@@ -1,4 +1,4 @@
-import {defer, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {
   getSelectedProductOptions,
@@ -20,20 +20,21 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
 
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
-type BuyerVariables = {
-  buyer: {
-    companyLocationId: string;
-    customerAccessToken: string;
-  };
-} | {};
+type BuyerVariables =
+  | {
+      buyer: {
+        companyLocationId: string;
+        customerAccessToken: string;
+      };
+    }
+  | {};
 /**********   EXAMPLE UPDATE END   *************/
 /***********************************************/
 
 export async function loader(args: LoaderFunctionArgs) {
-
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
-  const buyer = await args.context.customerAccount.UNSTABLE_getBuyer();
+  const buyer = await args.context.customerAccount.getBuyer();
 
   const buyerVariables: BuyerVariables =
     buyer?.companyLocationId && buyer?.customerAccessToken
@@ -53,7 +54,7 @@ export async function loader(args: LoaderFunctionArgs) {
   /**********   EXAMPLE UPDATE END   *************/
   /***********************************************/
 
-  return defer({...deferredData, ...criticalData});
+  return {...deferredData, ...criticalData};
 }
 
 /**
@@ -62,11 +63,10 @@ export async function loader(args: LoaderFunctionArgs) {
  */
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
-async function loadCriticalData({
-  context,
-  params,
-  request,
-}: LoaderFunctionArgs, buyerVariables: BuyerVariables) {
+async function loadCriticalData(
+  {context, params, request}: LoaderFunctionArgs,
+  buyerVariables: BuyerVariables,
+) {
   const {handle} = params;
   const {storefront} = context;
 
@@ -85,8 +85,8 @@ async function loadCriticalData({
     }),
     // Add other queries here, so that they are loaded in parallel
   ]);
-/**********   EXAMPLE UPDATE END   *************/
-/***********************************************/
+  /**********   EXAMPLE UPDATE END   *************/
+  /***********************************************/
 
   if (!product?.id) {
     throw new Response(null, {status: 404});
@@ -102,9 +102,12 @@ async function loadCriticalData({
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-  /***********************************************/
-  /**********  EXAMPLE UPDATE STARTS  ************/
-function loadDeferredData({context, params}: LoaderFunctionArgs, buyerVariables: BuyerVariables) {
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
+function loadDeferredData(
+  {context, params}: LoaderFunctionArgs,
+  buyerVariables: BuyerVariables,
+) {
   // Put any API calls that is not critical to be available on first page render
   // For example: product reviews, product recommendations, social feeds.
 
