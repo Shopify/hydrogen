@@ -1,6 +1,6 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import type {HydrogenSession, HydrogenSessionData} from '../types';
-import {createCustomerAccountClient} from './customer';
+import {createCustomerAccountClient, getMaybeUILocales} from './customer';
 import {BUYER_SESSION_KEY, CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
 import crypto from 'node:crypto';
 
@@ -167,6 +167,65 @@ describe('customer', () => {
         expect(params.get('redirect_uri')).toBe(
           new URL('/account/authorize', origin).toString(),
         );
+      });
+
+      describe('locales', () => {
+        it('Redirects to the customer account api login url with uiLocales as param (i18n in the constructor)', async () => {
+          const origin = 'https://something-good.com';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+            language: 'FR',
+          });
+
+          const response = await customer.login();
+          const url = new URL(response.headers.get('location')!);
+
+          expect(url.searchParams.get('ui_locales')).toBe('fr');
+        });
+
+        it('Redirects to the customer account api login url with uiLocales as param (uiLocales in the param)', async () => {
+          const origin = 'https://something-good.com';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+          });
+
+          const response = await customer.login({
+            uiLocales: 'FR',
+          });
+          const url = new URL(response.headers.get('location')!);
+
+          expect(url.searchParams.get('ui_locales')).toBe('fr');
+        });
+
+        it('Redirects to the customer account api login url with uiLocales as param (override)', async () => {
+          const origin = 'https://something-good.com';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+            language: 'IT',
+          });
+
+          const response = await customer.login({
+            uiLocales: 'FR',
+          });
+          const url = new URL(response.headers.get('location')!);
+
+          expect(url.searchParams.get('ui_locales')).toBe('fr');
+        });
       });
     });
 
@@ -1075,5 +1134,72 @@ describe('customer', () => {
 
       expect(buyer).toBeUndefined();
     });
+  });
+});
+
+// Unit test
+describe('getMaybeUILocales', () => {
+  it('returns null if no i18n is provided', () => {
+    const uiLocales = getMaybeUILocales({
+      contextLanguage: null,
+      uiLocalesOverride: null,
+    });
+    expect(uiLocales).toBeNull();
+  });
+
+  it('returns the context locale (formatted) if no options override is provided', () => {
+    const uiLocales = getMaybeUILocales({
+      contextLanguage: 'EN',
+      uiLocalesOverride: null,
+    });
+    expect(uiLocales).toBe('en');
+
+    const uiLocalesWithRegion = getMaybeUILocales({
+      contextLanguage: 'PT_PT',
+      uiLocalesOverride: null,
+    });
+    expect(uiLocalesWithRegion).toBe('pt-PT');
+  });
+
+  it('returns the uiLocales data (formatted) if the i18n locale is not provided', () => {
+    const uiLocales = getMaybeUILocales({
+      contextLanguage: null,
+      uiLocalesOverride: 'FR',
+    });
+    expect(uiLocales).toBe('fr');
+
+    const uiLocalesWithRegion = getMaybeUILocales({
+      contextLanguage: null,
+      uiLocalesOverride: 'PT_PT',
+    });
+    expect(uiLocalesWithRegion).toBe('pt-PT');
+  });
+
+  it('overrides the i18n locale if both the it and the uiLocales override are provided', () => {
+    const uiLocales = getMaybeUILocales({
+      contextLanguage: 'EN',
+      uiLocalesOverride: 'FR',
+    });
+    expect(uiLocales).toBe('fr');
+  });
+
+  it('enforces a regional variant if the language is a regional language', () => {
+    const portuguese = getMaybeUILocales({
+      contextLanguage: 'PT',
+      uiLocalesOverride: null,
+    });
+    expect(portuguese).toBe('pt-PT');
+
+    const mandarin = getMaybeUILocales({
+      contextLanguage: 'ZH',
+      uiLocalesOverride: null,
+    });
+    expect(mandarin).toBe('zh-CN');
+
+    const dutch = getMaybeUILocales({
+      contextLanguage: 'NL',
+      uiLocalesOverride: null,
+    });
+    expect(dutch).toBe('nl');
   });
 });
