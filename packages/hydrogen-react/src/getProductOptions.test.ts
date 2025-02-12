@@ -368,6 +368,50 @@ describe('getProductOptions', () => {
       ]
     `);
   });
+
+  it("only returns options presented in the selected variant's selectedOptions", () => {
+    const options = getProductOptions({
+      ...PRODUCT,
+      selectedOrFirstAvailableVariant: {
+        availableForSale: true,
+        id: 'gid://shopify/ProductVariant/41007290613816',
+        product: {
+          handle: 'mail-it-in-freestyle-snowboard',
+        },
+        selectedOptions: [
+          {
+            name: 'Size',
+            value: '154cm',
+          },
+        ],
+      },
+    } as unknown as RecursivePartial<Product>);
+    expect(options.length).toBe(1);
+  });
+
+  it("does not error if product option doesn't have an entry for one of the selected option", () => {
+    const options = getProductOptions({
+      ...PRODUCT,
+      selectedOrFirstAvailableVariant: {
+        availableForSale: true,
+        id: 'gid://shopify/ProductVariant/41007290613816',
+        product: {
+          handle: 'mail-it-in-freestyle-snowboard',
+        },
+        selectedOptions: [
+          {
+            name: 'Size',
+            value: '154cm',
+          },
+          {
+            name: 'Weight',
+            value: '5lbs',
+          },
+        ],
+      },
+    } as unknown as RecursivePartial<Product>);
+    expect(options.length).toBe(1);
+  });
 });
 
 describe('getAdjacentAndFirstAvailableVariants', () => {

@@ -10,7 +10,7 @@ import type {
 export type RecursivePartial<T> = {
   [P in keyof T]?: RecursivePartial<T[P]>;
 };
-type ProductOptionsMapping = Record<string, number>;
+type ProductOptionsMapping = Record<string, Record<string, number>>;
 type ProductOptionValueState = {
   variant: ProductVariant;
   handle: string;
@@ -36,22 +36,27 @@ type MappedProductOptionValue = ProductOptionValue & ProductOptionValueState;
  *    \}
  *  ]
  * Would return
- *  [
- *    \{Red: 0, Blue: 1\},
- *    \{Small: 0, Medium: 1, Large: 2\}
- *  ]
+ *  \{
+ *    'Color': \{Red: 0, Blue: 1\},
+ *    'Size': \{Small: 0, Medium: 1, Large: 2\}
+ *  \}
  */
-function mapProductOptions(options: ProductOption[]): ProductOptionsMapping[] {
-  return options.map((option: ProductOption) => {
-    return Object.assign(
-      {},
-      ...(option?.optionValues
-        ? option.optionValues.map((value, index) => {
-            return {[value.name]: index};
-          })
-        : []),
-    ) as ProductOptionsMapping;
-  });
+function mapProductOptions(options: ProductOption[]): ProductOptionsMapping {
+  return Object.assign(
+    {},
+    ...options.map((option: ProductOption) => {
+      return {
+        [option.name]: Object.assign(
+          {},
+          ...(option?.optionValues
+            ? option.optionValues.map((value, index) => {
+                return {[value.name]: index};
+              })
+            : []),
+        ),
+      } as Record<string, number>;
+    }),
+  );
 }
 
 /**
@@ -107,39 +112,73 @@ function mapSelectedProductOptionToObjectAsString(
  *    \}
  *  ]
  * Would return
- *  [0,1]
- *
- * Also works with the result of mapSelectedProductOption. For example:
- *  \{
+ *  JSON.stringify(\{
  *    Color: 'Red',
  *    Size: 'Medium',
- *  \}
- * Would return
- *  [0,1]
- *
- * @param selectedOption - The selected product option
- * @param productOptionMappings - The result of product option mapping from mapProductOptions
- * @returns
+ *  \})
  */
 function encodeSelectedProductOptionAsKey(
   selectedOption:
     | Pick<SelectedOption, 'name' | 'value'>[]
     | Record<string, string>,
-  productOptionMappings: ProductOptionsMapping[],
 ): string {
   if (Array.isArray(selectedOption)) {
     return JSON.stringify(
-      selectedOption.map((key, index) => {
-        return productOptionMappings[index][key.value];
-      }),
+      Object.assign(
+        {},
+        ...selectedOption.map((option) => ({[option.name]: option.value})),
+      ),
     );
   } else {
-    return JSON.stringify(
-      Object.keys(selectedOption).map((key, index) => {
-        return productOptionMappings[index][selectedOption[key]];
-      }),
-    );
+    return JSON.stringify(selectedOption);
   }
+}
+
+/**
+ * Build the encoding array for the given selected options. For example, if we have
+ * the following productOptionMappings:
+ *
+ *  \{
+ *    'Color': \{Red: 0, Blue: 1\},
+ *    'Size': \{Small: 0, Medium: 1, Large: 2\}
+ *  \}
+ *
+ * A selectedOption of
+ *
+ * \{
+ *    Color: 'Red',
+ *    Size: 'Medium',
+ * \}
+ *
+ * `buildEncodingArrayFromSelectedOptions` will produce
+ *
+ * [0,1]
+ *
+ * If in the case where a selected option doesn't exists in the mapping array, for example:
+ *
+ * \{
+ *    Color: 'Red',
+ *    Fabric: 'Cotton',
+ *    Size: 'Medium',
+ * \}
+ *
+ * `buildEncodingArrayFromSelectedOptions` will still produce
+ *
+ *  [0,1]
+ *
+ * This can be caused by when we do not have all the product
+ * option information for the loading optimistic variant
+ */
+function buildEncodingArrayFromSelectedOptions(
+  selectedOption: Record<string, string>,
+  productOptionMappings: ProductOptionsMapping,
+): Array<number> {
+  const encoding = Object.keys(selectedOption).map((key) => {
+    return productOptionMappings[key]
+      ? productOptionMappings[key][selectedOption[key]]
+      : null;
+  });
+  return encoding.filter((code) => code !== null);
 }
 
 /**
@@ -169,14 +208,12 @@ function encodeSelectedProductOptionAsKey(
  */
 function mapVariants(
   variants: ProductVariant[],
-  productOptionMappings: ProductOptionsMapping[],
 ): Record<string, ProductVariant> {
   return Object.assign(
     {},
     ...variants.map((variant) => {
       const variantKey = encodeSelectedProductOptionAsKey(
         variant.selectedOptions || [],
-        productOptionMappings,
       );
       return {[variantKey]: variant};
     }),
@@ -371,13 +408,22 @@ export function getProductOptions(
     encodedVariantAvailability,
     handle: productHandle,
   } = checkedProduct;
+
+  // The available product options is dictated by the selected options of the current variant:
+  // Filter out un-used options (Happens on parent combined listing product)
+  const selectedOptionKeys = selectedVariant?.selectedOptions.map(
+    (option) => option.name,
+  );
+  const filteredOptions = options.filter((option) => {
+    return selectedOptionKeys && selectedOptionKeys.indexOf(option.name) >= 0;
+  });
+
   // Get a mapping of product option names to their index for matching encoded values
   const productOptionMappings = mapProductOptions(options);
 
   // Get the adjacent variants mapped to the encoded selected option values
   const variants = mapVariants(
     selectedVariant ? [selectedVariant, ...adjacentVariants] : adjacentVariants,
-    productOptionMappings,
   );
 
   // Get the key:value version of selected options for building url query params
@@ -385,7 +431,7 @@ export function getProductOptions(
     selectedVariant ? selectedVariant.selectedOptions : [],
   );
 
-  const productOptions = options.map((option, optionIndex) => {
+  const productOptions = filteredOptions.map((option, optionIndex) => {
     return {
       ...option,
       optionValues: option.optionValues.map((value) => {
@@ -397,14 +443,14 @@ export function getProductOptions(
         // Encode the new selected option values as a key for mapping to the product variants
         const targetKey = encodeSelectedProductOptionAsKey(
           targetOptionParams || [],
+        );
+        const encodingKey = buildEncodingArrayFromSelectedOptions(
+          targetOptionParams || [],
           productOptionMappings,
         );
 
         // Top-down option check for existence and availability
-        const topDownKey = (JSON.parse(targetKey) as number[]).slice(
-          0,
-          optionIndex + 1,
-        );
+        const topDownKey = encodingKey.slice(0, optionIndex + 1);
         const exists = isOptionValueCombinationInEncodedVariant(
           topDownKey,
           encodedVariantExistence || '',
