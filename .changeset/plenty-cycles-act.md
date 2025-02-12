@@ -158,16 +158,16 @@ Remix single fetch migration guide: https://remix.run/docs/en/main/guides/single
     + export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
     ```
 
-    b.  update the success response wrapper to `Response.json`
+    b.  Update all `json` response wrapper to `remixData`
 
     ```diff
-      // success, return token, url
+    import {
+-     json,
++     data as remixData,
+    } from '@shopify/remix-oxygen';
+
     -  return json(
-    +  return Response.json(
-        {data: {...data, error: null}},
-        {
-          status: 200,
-          headers: getCorsHeaders(origin),
-        },
+    +  return remixData(
+        ...
       );
     ```
