@@ -11,7 +11,7 @@ already using its `uilocales` property, the `language` parameter coming from the
 ```ts
 const customerAccount = createCustomerAccountClient({
   // ...
-  i18n,
+  language,
 });
 ```
 
