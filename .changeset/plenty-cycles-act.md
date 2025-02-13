@@ -49,7 +49,31 @@ Remix single fetch migration guide: https://remix.run/docs/en/main/guides/single
      </NonceProvider>,
    ```
 
-3. Update `cart.tsx` to add a headers export and update to `data` import usage.
+3. Update the `shouldRevalidate` function in `root.tsx`.
+
+   Defaulting to no revalidation for root loader data to improve performance. When using this feature, you risk your UI getting out of sync with your server. Use with caution. If you are uncomfortable with this optimization, update the `return false;` to `return defaultShouldRevalidate;` instead.
+
+   For more details see: https://remix.run/docs/en/main/route/should-revalidate
+
+    ```diff
+    export const shouldRevalidate: ShouldRevalidateFunction = ({
+      formMethod,
+      currentUrl,
+      nextUrl,
+    -  defaultShouldRevalidate,
+    }) => {
+      // revalidate when a mutation is performed e.g add to cart, login...
+      if (formMethod && formMethod !== 'GET') return true;
+
+      // revalidate when manually revalidating via useRevalidator
+      if (currentUrl.toString() === nextUrl.toString()) return true;
+
+    -  return defaultShouldRevalidate;
+    +  return false;
+    };
+    ```
+
+4. Update `cart.tsx` to add a headers export and update to `data` import usage.
 
     ```diff
       import {
@@ -84,7 +108,7 @@ Remix single fetch migration guide: https://remix.run/docs/en/main/guides/single
       }
    ```
 
-4. Deprecate `json` and `defer` import usage from `@shopify/remix-oxygen`.
+5. Deprecate `json` and `defer` import usage from `@shopify/remix-oxygen`.
 
     Remove `json()`/`defer()` in favor of raw objects.
 
@@ -136,7 +160,7 @@ Remix single fetch migration guide: https://remix.run/docs/en/main/guides/single
       }
     ```
 
-5. If you are using legacy customer account flow or multipass, there are a couple more files that requires updating:
+6. If you are using legacy customer account flow or multipass, there are a couple more files that requires updating:
 
     In `root.tsx` and `routes/account.tsx`, add a `headers` export for `loaderHeaders`.
 
@@ -150,7 +174,7 @@ Remix single fetch migration guide: https://remix.run/docs/en/main/guides/single
     + export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
     ```
 
-6. If you are using multipass, in `routes/account_.login.multipass.tsx`
+7. If you are using multipass, in `routes/account_.login.multipass.tsx`
 
     a. export a `headers` export
 
