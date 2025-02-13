@@ -26,7 +26,6 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
   formMethod,
   currentUrl,
   nextUrl,
-  defaultShouldRevalidate,
 }) => {
   // revalidate when a mutation is performed e.g add to cart, login...
   if (formMethod && formMethod !== 'GET') return true;
@@ -34,7 +33,12 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
   // revalidate when manually revalidating via useRevalidator
   if (currentUrl.toString() === nextUrl.toString()) return true;
 
-  return defaultShouldRevalidate;
+  // Defaulting to no revalidation for root loader data to improve performance. 
+  // When using this feature, you risk your UI getting out of sync with your server. 
+  // Use with caution. If you are uncomfortable with this optimization, update the 
+  // line below to `return defaultShouldRevalidate` instead.
+  // For more details see: https://remix.run/docs/en/main/route/should-revalidate
+  return false;
 };
 
 /**
