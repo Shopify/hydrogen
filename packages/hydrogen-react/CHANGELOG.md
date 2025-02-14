@@ -1,5 +1,13 @@
 # @shopify/hydrogen-react
 
+## 2025.1.1
+
+### Patch Changes
+
+- Update `getProductOptions` to handle divergent product options. ([#2747](https://github.com/Shopify/hydrogen/pull/2747)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Upgrade eslint to version 9 and unify eslint config across all packages (with the exception of the skeleton, which still keeps its own config) ([#2716](https://github.com/Shopify/hydrogen/pull/2716)) by [@liady](https://github.com/liady)
+
 ## 2025.1.0
 
 ### Patch Changes

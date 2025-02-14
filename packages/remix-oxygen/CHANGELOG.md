@@ -1,5 +1,13 @@
 # @shopify/remix-oxygen
 
+## 2.0.11
+
+### Patch Changes
+
+- Bump remix version ([#2740](https://github.com/Shopify/hydrogen/pull/2740)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Turn on Remix `v3_singleFetch` future flag ([#2708](https://github.com/Shopify/hydrogen/pull/2708)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2.0.10
 
 ### Patch Changes
