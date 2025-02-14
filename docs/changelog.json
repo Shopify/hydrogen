@@ -69,6 +69,12 @@
               "code": "YGBgZGlmZgpjb25zdCBib2R5ID0gYXdhaXQgcmVuZGVyVG9SZWFkYWJsZVN0cmVhbSgKIDxOb25jZVByb3ZpZGVyPgogICA8UmVtaXhTZXJ2ZXIKICAgICBjb250ZXh0PXtyZW1peENvbnRleHR9CiAgICAgdXJsPXtyZXF1ZXN0LnVybH0KKyAgICAgbm9uY2U9e25vbmNlfQogICAvPgogPC9Ob25jZVByb3ZpZGVyPiwKYGBg"
             },
             {
+              "title": "Update the shouldRevalidate function in root.tsx",
+              "desc": "Defaulting to no revalidation for root loader data to improve performance. When using this feature, you risk your UI getting out of sync with your server. Use with caution. If you are uncomfortable with this optimization, update the return false; to `return defaultShouldRevalidate`; instead",
+              "code": "YGBgZGlmZgpleHBvcnQgY29uc3Qgc2hvdWxkUmV2YWxpZGF0ZTogU2hvdWxkUmV2YWxpZGF0ZUZ1bmN0aW9uID0gKHsKICBmb3JtTWV0aG9kLAogIGN1cnJlbnRVcmwsCiAgbmV4dFVybCwKLSAgZGVmYXVsdFNob3VsZFJldmFsaWRhdGUsCn0pID0+IHsKICAvLyByZXZhbGlkYXRlIHdoZW4gYSBtdXRhdGlvbiBpcyBwZXJmb3JtZWQgZS5nIGFkZCB0byBjYXJ0LCBsb2dpbi4uLgogIGlmIChmb3JtTWV0aG9kICYmIGZvcm1NZXRob2QgIT09ICdHRVQnKSByZXR1cm4gdHJ1ZTsKCiAgLy8gcmV2YWxpZGF0ZSB3aGVuIG1hbnVhbGx5IHJldmFsaWRhdGluZyB2aWEgdXNlUmV2YWxpZGF0b3IKICBpZiAoY3VycmVudFVybC50b1N0cmluZygpID09PSBuZXh0VXJsLnRvU3RyaW5nKCkpIHJldHVybiB0cnVlOwoKLSAgcmV0dXJuIGRlZmF1bHRTaG91bGRSZXZhbGlkYXRlOworICByZXR1cm4gZmFsc2U7Cn07CmBgYA==",
+              "docs": "For more details see: https://remix.run/docs/en/main/route/should-revalidate"
+            },
+            {
               "title": "Update `cart.tsx` to add a headers export and update to `data` import usage",
               "code": "YGBgZGlmZgogICAgaW1wb3J0IHsKICAtICBqc29uLAogICsgIGRhdGEsCiAgICAgIHR5cGUgTG9hZGVyRnVuY3Rpb25BcmdzLAogICAgICB0eXBlIEFjdGlvbkZ1bmN0aW9uQXJncywKICAgICAgdHlwZSBIZWFkZXJzRnVuY3Rpb24KICAgIH0gZnJvbSAnQHNob3BpZnkvcmVtaXgtb3h5Z2VuJzsKICArIGV4cG9ydCBjb25zdCBoZWFkZXJzOiBIZWFkZXJzRnVuY3Rpb24gPSAoe2FjdGlvbkhlYWRlcnN9KSA9PiBhY3Rpb25IZWFkZXJzOwoKICAgIGV4cG9ydCBhc3luYyBmdW5jdGlvbiBhY3Rpb24oe3JlcXVlc3QsIGNvbnRleHR9OiBBY3Rpb25GdW5jdGlvbkFyZ3MpIHsKICAgICAgLi4uCiAgLSAgIHJldHVybiBqc29uKAogICsgICByZXR1cm4gZGF0YSgKICAgICAgICB7CiAgICAgICAgICBjYXJ0OiBjYXJ0UmVzdWx0LAogICAgICAgICAgZXJyb3JzLAogICAgICAgICAgd2FybmluZ3MsCiAgICAgICAgICBhbmFseXRpY3M6IHsKICAgICAgICAgICAgY2FydElkLAogICAgICAgICAgfSwKICAgICAgICB9LAogICAgICAgIHtzdGF0dXMsIGhlYWRlcnN9LAogICAgICApOwogICAgfQoKICAgIGV4cG9ydCBhc3luYyBmdW5jdGlvbiBsb2FkZXIoe2NvbnRleHR9OiBMb2FkZXJGdW5jdGlvbkFyZ3MpIHsKICAgICAgY29uc3Qge2NhcnR9ID0gY29udGV4dDsKIC0gICAgcmV0dXJuIGpzb24oYXdhaXQgY2FydC5nZXQoKSk7CiArICAgIHJldHVybiBhd2FpdCBjYXJ0LmdldCgpOwogICAgfQogYGBg"
             },
@@ -98,12 +104,6 @@
             {
               "title": "Update all `json` response wrapper to `remixData`",
               "code": "YGBgZGlmZgppbXBvcnQgewotIGpzb24sCisgZGF0YSBhcyByZW1peERhdGEsCn0gZnJvbSAnQHNob3BpZnkvcmVtaXgtb3h5Z2VuJzsKCi0gIHJldHVybiBqc29uKAorICByZXR1cm4gcmVtaXhEYXRhKAogICAgLi4uCiAgKTsKYGBg"
-            },
-            {
-              "title": "Update the shouldRevalidate function in root.tsx",
-              "desc": "Defaulting to no revalidation for root loader data to improve performance. When using this feature, you risk your UI getting out of sync with your server. Use with caution. If you are uncomfortable with this optimization, update the return false; to `return defaultShouldRevalidate`; instead",
-              "code": "YGBgZGlmZgpleHBvcnQgY29uc3Qgc2hvdWxkUmV2YWxpZGF0ZTogU2hvdWxkUmV2YWxpZGF0ZUZ1bmN0aW9uID0gKHsKICBmb3JtTWV0aG9kLAogIGN1cnJlbnRVcmwsCiAgbmV4dFVybCwKLSAgZGVmYXVsdFNob3VsZFJldmFsaWRhdGUsCn0pID0+IHsKICAvLyByZXZhbGlkYXRlIHdoZW4gYSBtdXRhdGlvbiBpcyBwZXJmb3JtZWQgZS5nIGFkZCB0byBjYXJ0LCBsb2dpbi4uLgogIGlmIChmb3JtTWV0aG9kICYmIGZvcm1NZXRob2QgIT09ICdHRVQnKSByZXR1cm4gdHJ1ZTsKCiAgLy8gcmV2YWxpZGF0ZSB3aGVuIG1hbnVhbGx5IHJldmFsaWRhdGluZyB2aWEgdXNlUmV2YWxpZGF0b3IKICBpZiAoY3VycmVudFVybC50b1N0cmluZygpID09PSBuZXh0VXJsLnRvU3RyaW5nKCkpIHJldHVybiB0cnVlOwoKLSAgcmV0dXJuIGRlZmF1bHRTaG91bGRSZXZhbGlkYXRlOworICByZXR1cm4gZmFsc2U7Cn07CmBgYA==",
-              "docs": "For more details see: https://remix.run/docs/en/main/route/should-revalidate"
             }
           ]
         },
