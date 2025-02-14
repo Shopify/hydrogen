@@ -5,8 +5,8 @@
     {
       "title": "Remix singleFetch, stable B2B methods, ESLint 9, and other fixes",
       "version": "2025.1.1",
-      "hash": "97534c110593acd4db2bb9e739281dbc49f2cd74",
-      "commit": "https://github.com/Shopify/hydrogen/pull/2742/commits/97534c110593acd4db2bb9e739281dbc49f2cd74",
+      "hash": "eca3df8ce1f2fa436476d41730a3da123d65bc2e",
+      "commit": "https://github.com/Shopify/hydrogen/commit/eca3df8ce1f2fa436476d41730a3da123d65bc2e",
       "pr": "https://github.com/Shopify/hydrogen/pull/2742",
       "dependencies": {
         "@remix-run/react": "^2.15.3",
