@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.0.16
+
+### Patch Changes
+
+- Bump remix version ([#2740](https://github.com/Shopify/hydrogen/pull/2740)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 5.0.15
 
 ### Patch Changes

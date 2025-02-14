@@ -2,7 +2,7 @@
   "name": "skeleton",
   "private": true,
   "sideEffects": false,
-  "version": "2025.1.0",
+  "version": "2025.1.1",
   "type": "module",
   "scripts": {
     "build": "shopify hydrogen build --codegen",
@@ -16,8 +16,8 @@
   "dependencies": {
     "@remix-run/react": "^2.15.3",
     "@remix-run/server-runtime": "^2.15.3",
-    "@shopify/hydrogen": "2025.1.0",
-    "@shopify/remix-oxygen": "^2.0.10",
+    "@shopify/hydrogen": "2025.1.1",
+    "@shopify/remix-oxygen": "^2.0.11",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
     "isbot": "^5.1.21",
