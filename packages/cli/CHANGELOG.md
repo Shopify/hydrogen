@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 9.0.7
+
+### Patch Changes
+
+- Fixed a regression in `hydrogen build` where the environment variable `HYDROGEN_ASSET_BASE_URL` was ignored when used as build command when deploying. ([#2758](https://github.com/Shopify/hydrogen/pull/2758)) by [@vincentezw](https://github.com/vincentezw)
+
 ## 9.0.6
 
 ### Patch Changes
