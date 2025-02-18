@@ -11,7 +11,7 @@ export function getExternalVideoData(
     mediaContentType: 'EXTERNAL_VIDEO',
     embedUrl: externalVideo.embedUrl ?? faker.internet.url(),
     host:
-      (externalVideo.host ?? faker.datatype.number({max: 2, min: 1}) === 1)
+      externalVideo.host ?? faker.datatype.number({max: 2, min: 1}) === 1
         ? 'YOUTUBE'
         : 'VIMEO',
     previewImage: getPreviewImage(externalVideo.previewImage ?? undefined),
