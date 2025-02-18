@@ -225,11 +225,11 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
       const nAspectRatio: string | undefined = aspectRatio
         ? aspectRatio
         : normalizedData.unitsMatch
-          ? [
-              getNormalizedFixedUnit(normalizedData.width),
-              getNormalizedFixedUnit(normalizedData.height),
-            ].join('/')
-          : undefined;
+        ? [
+            getNormalizedFixedUnit(normalizedData.width),
+            getNormalizedFixedUnit(normalizedData.height),
+          ].join('/')
+        : undefined;
 
       return {
         width: nWidth,
@@ -371,10 +371,10 @@ const FixedWidthImage = React.forwardRef<
       const fixedAspectRatio = aspectRatio
         ? aspectRatio
         : unitsMatch(normalizedProps.width, normalizedProps.height)
-          ? [intWidth, intHeight].join('/')
-          : normalizedProps.aspectRatio
-            ? normalizedProps.aspectRatio
-            : undefined;
+        ? [intWidth, intHeight].join('/')
+        : normalizedProps.aspectRatio
+        ? normalizedProps.aspectRatio
+        : undefined;
 
       /*
        * The Sizes Array generates an array of all the parts
@@ -391,8 +391,8 @@ const FixedWidthImage = React.forwardRef<
       const fixedHeight = intHeight
         ? intHeight
         : fixedAspectRatio && intWidth
-          ? intWidth * (parseAspectRatio(fixedAspectRatio) ?? 1)
-          : undefined;
+        ? intWidth * (parseAspectRatio(fixedAspectRatio) ?? 1)
+        : undefined;
 
       const srcSet = generateSrcSet(normalizedProps.src, sizesArray, loader);
       const src = loader({
