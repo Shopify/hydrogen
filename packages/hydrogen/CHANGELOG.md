@@ -1,5 +1,85 @@
 # @shopify/hydrogen
 
+## 2025.1.2
+
+### Patch Changes
+
+- Update cli dependencies ([#2766](https://github.com/Shopify/hydrogen/pull/2766)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`128dfcd6`](https://github.com/Shopify/hydrogen/commit/128dfcd6b254a7465d93be49d3bcbff5251e5ffc)]:
+  - @shopify/hydrogen-react@2025.1.2
+
+## 2025.1.1
+
+### Patch Changes
+
+- Update `getProductOptions` to handle divergent product options. ([#2747](https://github.com/Shopify/hydrogen/pull/2747)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Added the ability to optionally provide `language` data to `createCustomerAccountClient`, and automatically pass it down to it from `createHydrogenContext`. ([#2746](https://github.com/Shopify/hydrogen/pull/2746)) by [@ruggishop](https://github.com/ruggishop)
+
+  If present, the provided `language` will be used to set the `uilocales` property in the Customer Account API request.
+
+  ```ts
+  // Optional: provide language data to the constructor
+  const customerAccount = createCustomerAccountClient({
+    // ...
+    language,
+  });
+  ```
+
+  Calls to `login()` will use the provided `language` without having to pass it explicitly via `uiLocales`; however, if the `login()` method is
+  already using its `uilocales` property, the `language` parameter coming from the context/constructor will be ignored. If nothing is explicitly passed, `login()` will default to `context.i18n.language`.
+
+  ```ts
+  export async function loader({request, context}: LoaderFunctionArgs) {
+    return context.customerAccount.login({
+      uiLocales: 'FR', // will be used instead of the one coming from the context
+    });
+  }
+  ```
+
+- Upgrade eslint to version 9 and unify eslint config across all packages (with the exception of the skeleton, which still keeps its own config) ([#2716](https://github.com/Shopify/hydrogen/pull/2716)) by [@liady](https://github.com/liady)
+
+- Bump remix version ([#2740](https://github.com/Shopify/hydrogen/pull/2740)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Turn on Remix `v3_singleFetch` future flag ([#2708](https://github.com/Shopify/hydrogen/pull/2708)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- B2B methods and props are now stable. Warnings are in place for unstable usages and will be removed completely in the next major version. ([#2736](https://github.com/Shopify/hydrogen/pull/2736)) by [@dustinfirman](https://github.com/dustinfirman)
+
+  1. Search for anywhere using `UNSTABLE_getBuyer` and `UNSTABLE_setBuyer` is update accordingly.
+
+     ```diff
+     - customerAccount.UNSTABLE_getBuyer();
+     + customerAccount.getBuyer()
+
+     - customerAccount.UNSTABLE_setBuyer({
+     + customerAccount.setBuyer({
+         companyLocationId,
+       });
+     ```
+
+  2. Update `createHydrogenContext` to remove the `unstableB2b` option
+
+     ```diff
+       const hydrogenContext = createHydrogenContext({
+         env,
+         request,
+         cache,
+         waitUntil,
+         session,
+         i18n: {language: 'EN', country: 'US'},
+     -    customerAccount: {
+     -      unstableB2b: true,
+     -    },
+         cart: {
+           queryFragment: CART_QUERY_FRAGMENT,
+         },
+       });
+     ```
+
+- Updated dependencies [[`3af2e453`](https://github.com/Shopify/hydrogen/commit/3af2e4534eafe1467f70a35885a2fa2ef7724fa8), [`cd65685c`](https://github.com/Shopify/hydrogen/commit/cd65685c1036233faaead0330f25183900b102a7)]:
+  - @shopify/hydrogen-react@2025.1.1
+
 ## 2025.1.0
 
 ### Patch Changes

@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "9.0.5",
+  "version": "9.0.8",
   "license": "MIT",
   "type": "module",
   "repository": {
@@ -41,9 +41,9 @@
   "dependencies": {
     "@ast-grep/napi": "0.11.0",
     "@oclif/core": "3.26.5",
-    "@shopify/cli-kit": "^3.74.1",
-    "@shopify/oxygen-cli": "4.6.6",
-    "@shopify/plugin-cloudflare": "^3.74.1",
+    "@shopify/cli-kit": "^3.75.3",
+    "@shopify/oxygen-cli": "4.6.10",
+    "@shopify/plugin-cloudflare": "^3.75.3",
     "ansi-escapes": "^6.2.0",
     "chokidar": "3.5.3",
     "cli-truncate": "^4.0.0",

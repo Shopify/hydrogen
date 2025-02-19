@@ -1,6 +1,6 @@
 {
   "name": "@shopify/hydrogen-react",
-  "version": "2025.1.0",
+  "version": "2025.1.2",
   "description": "React components, hooks, and utilities for creating custom Shopify storefronts",
   "homepage": "https://github.com/Shopify/hydrogen/tree/main/packages/hydrogen-react",
   "license": "MIT",
@@ -148,7 +148,6 @@
     "cpy-cli": "^4.2.0",
     "happy-dom": "^17.0.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "^3.4.2",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "rimraf": "^4.1.2",
