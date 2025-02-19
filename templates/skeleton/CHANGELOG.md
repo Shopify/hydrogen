@@ -1,5 +1,14 @@
 # skeleton
 
+## 2025.1.2
+
+### Patch Changes
+
+- Bump cli version ([#2760](https://github.com/Shopify/hydrogen/pull/2760)) by [@rbshop](https://github.com/rbshop)
+
+- Updated dependencies [[`128dfcd6`](https://github.com/Shopify/hydrogen/commit/128dfcd6b254a7465d93be49d3bcbff5251e5ffc)]:
+  - @shopify/hydrogen@2025.1.2
+
 ## 2025.1.1
 
 ### Patch Changes

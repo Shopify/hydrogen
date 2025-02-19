@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2025.1.2
+
+### Patch Changes
+
+- Update cli dependencies ([#2766](https://github.com/Shopify/hydrogen/pull/2766)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 2025.1.1
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # @shopify/cli-hydrogen
 
+## 9.0.8
+
+### Patch Changes
+
+- Update plugin-cloudflare by [@juanpprieto](https://github.com/juanpprieto)
+
+- Update cli-hydrogen & create-hydrogen for latest cli ([#2766](https://github.com/Shopify/hydrogen/pull/2766)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Bump cli version ([#2760](https://github.com/Shopify/hydrogen/pull/2760)) by [@rbshop](https://github.com/rbshop)
+
+- Update oxygen-cli version ([#2763](https://github.com/Shopify/hydrogen/pull/2763)) by [@rbshop](https://github.com/rbshop)
+
 ## 9.0.7
 
 ### Patch Changes

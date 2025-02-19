@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.0.17
+
+### Patch Changes
+
+- Update cli-hydrogen & create-hydrogen for latest cli ([#2766](https://github.com/Shopify/hydrogen/pull/2766)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 5.0.16
 
 ### Patch Changes
