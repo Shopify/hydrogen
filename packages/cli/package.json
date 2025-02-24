@@ -50,7 +50,7 @@
     "get-port": "^7.0.0",
     "gunzip-maybe": "^1.4.2",
     "prettier": "^2.8.4",
-    "semver": "^7.5.3",
+    "semver": "^7.7.1",
     "source-map": "^0.7.4",
     "source-map-support": "^0.5.21",
     "tar-fs": "^2.1.1",

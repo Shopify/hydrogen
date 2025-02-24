@@ -3,4 +3,4 @@
 '@shopify/mini-oxygen': patch
 ---
 
-Bump body-parser and codegen packages
+Bump body-parser, codegen, semver, and ws packages
