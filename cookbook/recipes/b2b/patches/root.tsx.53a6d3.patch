@@ -1,0 +1,58 @@
+index a4f7c673..2f34a0bc 100644
+--- a/templates/skeleton/app/root.tsx
++++ b/templates/skeleton/app/root.tsx
+@@ -16,6 +16,14 @@ import resetStyles from '~/styles/reset.css?url';
+ import appStyles from '~/styles/app.css?url';
+ import {PageLayout} from '~/components/PageLayout';
+ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
++import {
++  Company,
++  CompanyAddress,
++  CompanyLocation,
++  Maybe,
++} from '@shopify/hydrogen/customer-account-api-types';
++import {B2BLocationProvider} from './components/B2BLocationProvider';
++import {B2BLocationSelector} from './components/B2BLocationSelector';
+ 
+ export type RootLoader = typeof loader;
+ 
+@@ -65,6 +73,26 @@ export function links() {
+   ];
+ }
+ 
++export type CustomerCompanyLocation = Pick<CompanyLocation, 'name' | 'id'> & {
++  shippingAddress?:
++    | Maybe<Pick<CompanyAddress, 'countryCode' | 'formattedAddress'>>
++    | undefined;
++};
++
++export type CustomerCompanyLocationConnection = {
++  node: CustomerCompanyLocation;
++};
++
++export type CustomerCompany =
++  | Maybe<
++      Pick<Company, 'name' | 'id'> & {
++        locations: {
++          edges: CustomerCompanyLocationConnection[];
++        };
++      }
++    >
++  | undefined;
++
+ export async function loader(args: LoaderFunctionArgs) {
+   // Start fetching non-critical data without blocking time to first byte
+   const deferredData = loadDeferredData(args);
+@@ -162,7 +190,11 @@ export function Layout({children}: {children?: React.ReactNode}) {
+             shop={data.shop}
+             consent={data.consent}
+           >
+-            <PageLayout {...data}>{children}</PageLayout>
++            {/* @description Wrap the page in a B2BLocationProvider to enable B2B features */}
++            <B2BLocationProvider>
++              <PageLayout {...data}>{children}</PageLayout>
++              <B2BLocationSelector />
++            </B2BLocationProvider>
+           </Analytics.Provider>
+         ) : (
+           children

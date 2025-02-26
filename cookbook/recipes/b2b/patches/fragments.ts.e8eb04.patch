@@ -1,0 +1,26 @@
+index dc4426a9..8c65de3d 100644
+--- a/templates/skeleton/app/lib/fragments.ts
++++ b/templates/skeleton/app/lib/fragments.ts
+@@ -102,6 +102,22 @@ export const CART_QUERY_FRAGMENT = `#graphql
+           name
+           value
+         }
++        # @description Add the quantity rule for the product variant
++        quantityRule {
++          maximum
++          minimum
++          increment
++        }
++        # @description Add the quantity price breaks for the product variant
++        quantityPriceBreaks(first: 5) {
++          nodes {
++            minimumQuantity
++            price {
++              amount
++              currencyCode
++            }
++          }
++        }
+       }
+     }
+   }

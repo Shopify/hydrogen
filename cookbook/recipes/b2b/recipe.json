@@ -1,0 +1,114 @@
+{
+  "title": "B2B",
+  "image": null,
+  "description": "This is an example implementation of a B2B storefront using Hydrogen. It includes the following high level changes.\n\n1. Retrieving company location data from a logged in customer using the [Customer Account API](https://shopify.dev/docs/api/customer/2024-07/queries/customer)\n2. Displaying a list of company locations and setting a `companyLocationId` in session\n3. Using a storefront `customerAccessToken` and `companyLocationId` to update cart and get B2B specific rules and pricing such as [volume pricing and quantity rules](https://help.shopify.com/en/manual/b2b/catalogs/quantity-pricing)\n4. Using a storefront `customerAccessToken` and `companyLocationId` to [contextualize queries](https://shopify.dev/docs/api/storefront#directives) using the `buyer` argument on the product display page",
+  "notes": [
+    "Only queries on the product display page, `app/routes/products.$handle.tsx`, were contextualized in this example. For a production storefront, all queries for product data should be contextualized."
+  ],
+  "deletedFiles": [],
+  "ingredients": [
+    {
+      "path": "templates/skeleton/app/components/B2BLocationProvider.tsx",
+      "description": "Provides context on if the current logged in customer is a B2B customer and keeping track of the location modal open status."
+    },
+    {
+      "path": "templates/skeleton/app/components/B2BLocationSelector.tsx",
+      "description": "Component to choose a Company location to buy for. Rendered if there is no `companyLocationId` set in session."
+    },
+    {
+      "path": "templates/skeleton/app/components/PriceBreaks.tsx",
+      "description": "Component rendered on the product page to highlight quantity price breaks."
+    },
+    {
+      "path": "templates/skeleton/app/components/QuantityRules.tsx",
+      "description": "Component rendered on the product page to highlight quantity rules."
+    },
+    {
+      "path": "templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts",
+      "description": "Customer query to fetch company locations."
+    },
+    {
+      "path": "templates/skeleton/app/routes/b2blocations.tsx",
+      "description": "Route to set the company location in session."
+    }
+  ],
+  "steps": [
+    {
+      "type": "INFO",
+      "name": "Copy ingredients",
+      "description": "Copy the ingredients from the template directory to the current directory",
+      "ingredients": [
+        "templates/skeleton/app/components/B2BLocationProvider.tsx",
+        "templates/skeleton/app/components/B2BLocationSelector.tsx",
+        "templates/skeleton/app/components/PriceBreaks.tsx",
+        "templates/skeleton/app/components/QuantityRules.tsx",
+        "templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts",
+        "templates/skeleton/app/routes/b2blocations.tsx"
+      ]
+    },
+    {
+      "type": "INFO",
+      "name": "Requirements",
+      "description": "- Your store is on a [Shopify Plus plan](https://help.shopify.com/manual/intro-to-shopify/pricing-plans/plans-features/shopify-plus-plan).\n- Your store is using [new customer accounts](https://help.shopify.com/en/manual/customers/customer-accounts/new-customer-accounts).\n- You have access to a customer which has permission to order for a [B2B company](https://help.shopify.com/en/manual/b2b)."
+    },
+    {
+      "type": "PATCH",
+      "name": "Product Form",
+      "description": "- Add the quantity to the product form.\n- Pass the quantity to the add to cart button.",
+      "diffs": [
+        {
+          "file": "app/components/ProductForm.tsx",
+          "patchFile": "ProductForm.tsx.8e409a.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "Update variant fragment",
+      "description": "- Add the quantity rule for the product variant.\n- Add the quantity price breaks for the product variant.",
+      "diffs": [
+        {
+          "file": "app/lib/fragments.ts",
+          "patchFile": "fragments.ts.e8eb04.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "Add provider to the root",
+      "description": "Wrap the page in a B2BLocationProvider to enable B2B features.",
+      "diffs": [
+        {
+          "file": "app/root.tsx",
+          "patchFile": "root.tsx.53a6d3.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "Product page",
+      "description": "- Get the buyer from the customer account.\n- Add the buyer to the variables.\n- Pass the buyer to the graphql query.\n- Add the quantity rules to the product page.\n- Add the quantity price breaks to the product page.\n- Add the quantity rule for the product variant.\n- Add the quantity price breaks for the product variant.\n- Pass the buyer to the graphql query.",
+      "diffs": [
+        {
+          "file": "app/routes/products.$handle.tsx",
+          "patchFile": "products.$handle.tsx.3e0b7e.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "Codegen",
+      "diffs": [
+        {
+          "file": "customer-accountapi.generated.d.ts",
+          "patchFile": "customer-accountapi.generated.d.ts.b5baf7.patch"
+        },
+        {
+          "file": "storefrontapi.generated.d.ts",
+          "patchFile": "storefrontapi.generated.d.ts.92ed93.patch"
+        }
+      ]
+    }
+  ],
+  "commit": "375bdd0618c3142475cd01752048293139aae1d8"
+}

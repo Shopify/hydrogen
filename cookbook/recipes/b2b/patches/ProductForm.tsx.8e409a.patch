@@ -1,0 +1,24 @@
+index e8616a61..33d1a7f8 100644
+--- a/templates/skeleton/app/components/ProductForm.tsx
++++ b/templates/skeleton/app/components/ProductForm.tsx
+@@ -11,9 +11,11 @@ import type {ProductFragment} from 'storefrontapi.generated';
+ export function ProductForm({
+   productOptions,
+   selectedVariant,
++  quantity, // @description Add the quantity to the product form
+ }: {
+   productOptions: MappedProductOptions[];
+   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
++  quantity: number;
+ }) {
+   const navigate = useNavigate();
+   const {open} = useAside();
+@@ -111,7 +113,7 @@ export function ProductForm({
+             ? [
+                 {
+                   merchandiseId: selectedVariant.id,
+-                  quantity: 1,
++                  quantity, // @description Pass the quantity to the add to cart button
+                   selectedVariant,
+                 },
+               ]
