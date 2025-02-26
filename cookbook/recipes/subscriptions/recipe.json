@@ -1,0 +1,95 @@
+{
+  "title": "Subscriptions",
+  "image": null,
+  "description": "This folder contains an example implementation of [subscriptions](https://shopify.dev/docs/apps/selling-strategies/subscriptions) for Hydrogen. It shows how to display selling plans on a product page.\n\n![subscriptions-example](https://github.com/Shopify/hydrogen/assets/12080141/1cea5fbf-5a56-4562-95a7-4821facb3c6d)",
+  "notes": [],
+  "deletedFiles": [
+    "templates/skeleton/app/components/ProductForm.tsx"
+  ],
+  "ingredients": [
+    {
+      "path": "templates/skeleton/app/components/Cart.tsx",
+      "description": "Cart component modified to display selected subscription."
+    },
+    {
+      "path": "templates/skeleton/app/components/SellingPlanSelector.tsx",
+      "description": "A component that simplifies selecting sellingPlans subscription options"
+    },
+    {
+      "path": "templates/skeleton/app/styles/selling-plan.css",
+      "description": null
+    }
+  ],
+  "steps": [
+    {
+      "type": "INFO",
+      "name": "Requirements",
+      "description": "This example is connected to the `hydrogen-preview` storefront which contains one example subscription product (`shopify-wax`).\n\nTo run this example on your own store, you'll need to:\n\n- Install a [subscription app](https://apps.shopify.com/shopify-subscriptions).\n- Use the subscription app to create a selling plan for a product."
+    },
+    {
+      "type": "INFO",
+      "name": "Copy ingredients",
+      "description": "Copy the ingredients from the template directory to the current directory",
+      "ingredients": [
+        "templates/skeleton/app/components/Cart.tsx",
+        "templates/skeleton/app/components/SellingPlanSelector.tsx",
+        "templates/skeleton/app/styles/selling-plan.css"
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/components/CartLineItem.tsx",
+      "description": "- get the selling plan allocation.\n- Optionally render the selling plan name if available.",
+      "diffs": [
+        {
+          "file": "app/components/CartLineItem.tsx",
+          "patchFile": "CartLineItem.tsx.8e657b.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/lib/fragments.ts",
+      "description": null,
+      "diffs": [
+        {
+          "file": "app/lib/fragments.ts",
+          "patchFile": "fragments.ts.e8eb04.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/routes/_index.tsx",
+      "description": null,
+      "diffs": [
+        {
+          "file": "app/routes/_index.tsx",
+          "patchFile": "_index.tsx.8041d5.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/routes/products.$handle.tsx",
+      "description": "- Import the SellingPlanSelector component and type.\n- Get the selected selling plan id from the request url.\n- Get the selected selling plan from the product.\n- If the product includes selling plans but no selling plan is selected,.\n- Pass the selectedSellingPlan to the client.\n- Add the SellingPlanSelector component inside the ProductForm.\n- Render the SellingPlanGroup component inside the SellingPlanSelector.\n- Add the SellingPlanGroup fragment to the Product fragment.\n- Add the SellingPlanGroup fragment to the Product fragment.",
+      "diffs": [
+        {
+          "file": "app/routes/products.$handle.tsx",
+          "patchFile": "products.$handle.tsx.3e0b7e.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "Codegen",
+      "diffs": [
+        {
+          "file": "storefrontapi.generated.d.ts",
+          "patchFile": "storefrontapi.generated.d.ts.92ed93.patch"
+        }
+      ]
+    }
+  ],
+  "commit": "7aa94f917d14ce5fcfc460f22ab737fa72c269a8"
+}
