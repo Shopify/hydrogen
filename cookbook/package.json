@@ -1,0 +1,17 @@
+{
+  "name": "cookbook",
+  "version": "1.0.0",
+  "description": "A CLI tool to generate and apply recipes to the Hydrogen skeleton template.",
+  "scripts": {
+    "cookbook": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "inquirer": "^12.4.2",
+    "ts-node": "^10.9.2",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^22.13.4"
+  }
+}
