@@ -36,7 +36,7 @@
       ]
     },
     {
-      "type": "INFO",
+      "type": "COPY_INGREDIENTS",
       "name": "Copy ingredients",
       "description": "Copy the ingredients from the template directory to the current directory",
       "ingredients": ["templates/skeleton/app/components/GoogleTagManager.tsx"]

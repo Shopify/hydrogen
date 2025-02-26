@@ -104,7 +104,7 @@
       ]
     },
     {
-      "type": "INFO",
+      "type": "COPY_INGREDIENTS",
       "name": "Copy ingredients",
       "description": "Copy the ingredients from the template directory to the current directory",
       "ingredients": [
@@ -118,18 +118,7 @@
         "templates/skeleton/app/sections/SectionStoreProfile.tsx",
         "templates/skeleton/app/sections/SectionStores.tsx",
         "templates/skeleton/app/sections/Sections.tsx",
-        "templates/skeleton/app/utils/parseSection.ts",
-        "templates/skeleton/docs/METAOBJECTS.md",
-        "templates/skeleton/docs/images/definition_link.png",
-        "templates/skeleton/docs/images/definition_section_featured_collections.png",
-        "templates/skeleton/docs/images/definition_section_featured_products.png",
-        "templates/skeleton/docs/images/definition_section_hero.png",
-        "templates/skeleton/docs/images/definition_section_rich_text.png",
-        "templates/skeleton/docs/images/definition_section_store_profile.png",
-        "templates/skeleton/docs/images/definition_section_stores_grid.png",
-        "templates/skeleton/docs/images/definition_store.png",
-        "templates/skeleton/docs/images/definitions_list.png",
-        "templates/skeleton/docs/images/definiton_route.png"
+        "templates/skeleton/app/utils/parseSection.ts"
       ]
     },
     {

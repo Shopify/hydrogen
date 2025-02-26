@@ -68,7 +68,12 @@ export function renderRecipe(params: {
 
   const markdownIngredients = makeIngredients(recipe.ingredients);
 
-  const markdownSteps = makeSteps(recipe.steps, params.format, patchesDir);
+  const markdownSteps = makeSteps(
+    recipe.steps,
+    recipe.ingredients,
+    params.format,
+    patchesDir,
+  );
 
   const markdownDeletedFiles =
     recipe.deletedFiles != null && recipe.deletedFiles.length > 0
@@ -108,21 +113,24 @@ function makeIngredients(ingredients: Ingredient[]): MDBlock[] {
     mdHeading(2, '🍣 Ingredients'),
     mdTable(
       ['File', 'Description'],
-      ingredients.map((ingredient) => {
-        return [
-          `[\`${ingredient.path.replace(
-            TEMPLATE_DIRECTORY,
-            '',
-          )}\`](ingredients/${ingredient.path})`,
-          ingredient.description ?? '',
-        ];
-      }),
+      ingredients
+        .filter((ingredient) => ingredient.description != null)
+        .map((ingredient) => {
+          return [
+            `[\`${ingredient.path.replace(
+              TEMPLATE_DIRECTORY,
+              '',
+            )}\`](ingredients/${ingredient.path})`,
+            ingredient.description,
+          ];
+        }),
     ),
   ];
 }
 
 function makeSteps(
   steps: Step[],
+  ingredients: Ingredient[],
   format: RenderFormat,
   patchesDir: string,
 ): MDBlock[] {
@@ -161,9 +169,11 @@ function makeSteps(
       ...(step.ingredients != null
         ? [
             mdList(
-              step.ingredients.map(
-                (i) => `\`${i.replace(TEMPLATE_DIRECTORY, '')}\``,
-              ),
+              step.ingredients
+                .filter((ingredient) =>
+                  ingredients.some((other) => other.path === ingredient),
+                )
+                .map((i) => `\`${i.replace(TEMPLATE_DIRECTORY, '')}\``),
             ),
           ]
         : []),

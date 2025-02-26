@@ -3,9 +3,7 @@
   "image": null,
   "description": "This folder contains an example implementation of [subscriptions](https://shopify.dev/docs/apps/selling-strategies/subscriptions) for Hydrogen. It shows how to display selling plans on a product page.\n\n![subscriptions-example](https://github.com/Shopify/hydrogen/assets/12080141/1cea5fbf-5a56-4562-95a7-4821facb3c6d)",
   "notes": [],
-  "deletedFiles": [
-    "templates/skeleton/app/components/ProductForm.tsx"
-  ],
+  "deletedFiles": ["templates/skeleton/app/components/ProductForm.tsx"],
   "ingredients": [
     {
       "path": "templates/skeleton/app/components/Cart.tsx",
@@ -27,7 +25,7 @@
       "description": "This example is connected to the `hydrogen-preview` storefront which contains one example subscription product (`shopify-wax`).\n\nTo run this example on your own store, you'll need to:\n\n- Install a [subscription app](https://apps.shopify.com/shopify-subscriptions).\n- Use the subscription app to create a selling plan for a product."
     },
     {
-      "type": "INFO",
+      "type": "COPY_INGREDIENTS",
       "name": "Copy ingredients",
       "description": "Copy the ingredients from the template directory to the current directory",
       "ingredients": [

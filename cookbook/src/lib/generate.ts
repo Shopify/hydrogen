@@ -92,17 +92,18 @@ export async function generateRecipe(params: {
     patchesDirPath,
     existingRecipe,
   });
+
   const copyIngredientsIndex = generatedSteps.findIndex(
-    (step) => step.type === 'INFO' && step.name === 'Copy ingredients',
+    (step) => step.type === 'COPY_INGREDIENTS',
   );
 
   // remove the copy ingredients step...
   const stepsWithoutCopyIngredients: Step[] = generatedSteps.filter(
-    (step) => step.type !== 'INFO' || step.name !== 'Copy ingredients',
+    (step) => step.type !== 'COPY_INGREDIENTS',
   );
   // ...and add it back (in the right position) if there are ingredients
   const steps: Step[] = [
-    ...(ingredients.length > 0
+    ...(ingredients.length > 0 && copyIngredientsIndex >= 0
       ? stepsWithoutCopyIngredients
           .slice(0, copyIngredientsIndex)
           .concat(copyIngredientsStep(ingredients))
@@ -263,7 +264,7 @@ function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
 
 function copyIngredientsStep(ingredients: Ingredient[]): Step {
   return {
-    type: 'INFO',
+    type: 'COPY_INGREDIENTS',
     name: 'Copy ingredients',
     description:
       'Copy the ingredients from the template directory to the current directory',

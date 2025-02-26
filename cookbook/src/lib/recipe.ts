@@ -16,13 +16,14 @@ function isIngredient(value: unknown): value is Ingredient {
   );
 }
 
-type StepType = 'PATCH' | 'INFO';
+export type StepType = 'PATCH' | 'INFO' | 'COPY_INGREDIENTS';
 
 function isStepType(value: unknown): value is StepType {
   const maybe = value as StepType;
   switch (maybe) {
     case 'INFO':
     case 'PATCH':
+    case 'COPY_INGREDIENTS':
       return true;
     default:
       const exhaustiveCheck: never = maybe;
