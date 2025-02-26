@@ -50,17 +50,20 @@ export function applyRecipe(params: {
   // check that each ingredient in the recipe is present in the ingredients folder
   console.log(`- 🍣 Checking ingredients…`);
   // filter out public ingredients as they might contain assets we don't need to cross-check
-  const nonPublicIngredients = fsIngredients.filter(
+  const nonPublicFSIngredients = fsIngredients.filter(
     (ingredient) => !ingredient.startsWith(TEMPLATE_DIRECTORY + 'public/'),
   );
+  const nonPublicRecipeIngredients = recipe.ingredients.filter(
+    (i) => !i.path.startsWith(TEMPLATE_DIRECTORY + 'public/'),
+  );
   if (
-    nonPublicIngredients.length !== recipe.ingredients.length ||
-    !nonPublicIngredients.every((ingredient) =>
-      recipe.ingredients.some((i) => i.path === ingredient),
+    nonPublicFSIngredients.length !== nonPublicRecipeIngredients.length ||
+    !nonPublicFSIngredients.every((ingredient) =>
+      nonPublicRecipeIngredients.some((i) => i.path === ingredient),
     )
   ) {
-    console.error(fsIngredients);
-    console.error(recipe.ingredients.map((i) => i.path));
+    console.error(nonPublicFSIngredients);
+    console.error(nonPublicRecipeIngredients);
     throw new Error('Ingredients do not match.');
   }
 
