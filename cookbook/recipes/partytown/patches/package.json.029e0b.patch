@@ -1,4 +1,4 @@
-index d3638ae4..89d1db0f 100644
+index d3638ae4..4261e075 100644
 --- a/templates/skeleton/package.json
 +++ b/templates/skeleton/package.json
 @@ -5,15 +5,17 @@
@@ -9,7 +9,8 @@ index d3638ae4..89d1db0f 100644
 +    "build": "npm run partytown && shopify hydrogen build --codegen",
      "dev": "shopify hydrogen dev --codegen",
      "preview": "shopify hydrogen preview --build",
-     "lint": "eslint --no-error-on-unmatched-pattern .",
+-    "lint": "eslint --no-error-on-unmatched-pattern .",
++    "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
      "typecheck": "tsc --noEmit",
 -    "codegen": "shopify hydrogen codegen"
 +    "codegen": "shopify hydrogen codegen",
@@ -21,7 +22,15 @@ index d3638ae4..89d1db0f 100644
      "@remix-run/react": "^2.15.3",
      "@remix-run/server-runtime": "^2.15.3",
      "@shopify/hydrogen": "2025.1.2",
-@@ -37,6 +39,7 @@
+@@ -30,13 +32,14 @@
+     "@eslint/js": "^9.18.0",
+     "@graphql-codegen/cli": "5.0.2",
+     "@remix-run/dev": "^2.15.3",
+-    "@shopify/cli": "~3.75.4",
++    "@shopify/cli": "~3.75.3",
+     "@shopify/hydrogen-codegen": "^0.3.2",
+     "@shopify/mini-oxygen": "^3.1.1",
+     "@shopify/oxygen-workers-types": "^4.1.2",
      "@shopify/prettier-config": "^1.1.2",
      "@total-typescript/ts-reset": "^0.4.2",
      "@types/eslint": "^9.6.1",

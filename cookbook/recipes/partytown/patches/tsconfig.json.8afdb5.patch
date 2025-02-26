@@ -1,37 +1,16 @@
-index bf02c20a..fdea6c28 100644
+index bf02c20a..1564d6fa 100644
 --- a/templates/skeleton/tsconfig.json
 +++ b/templates/skeleton/tsconfig.json
-@@ -1,7 +1,15 @@
- {
--  "include": ["./**/*.d.ts", "./**/*.ts", "./**/*.tsx"],
-+  "include": [
-+    "./**/*.d.ts",
-+    "./**/*.ts",
-+    "./**/*.tsx"
-+  ],
-   "compilerOptions": {
--    "lib": ["DOM", "DOM.Iterable", "ES2022"],
-+    "lib": [
-+      "DOM",
-+      "DOM.Iterable",
-+      "ES2022"
-+    ],
-     "isolatedModules": true,
-     "esModuleInterop": true,
-     "jsx": "react-jsx",
-@@ -17,10 +25,13 @@
-     "types": [
-       "@shopify/oxygen-workers-types",
-       "@remix-run/node",
+@@ -14,11 +14,7 @@
+     "forceConsistentCasingInFileNames": true,
+     "skipLibCheck": true,
+     "baseUrl": ".",
+-    "types": [
+-      "@shopify/oxygen-workers-types",
+-      "@remix-run/node",
 -      "vite/client"
-+      "vite/client",
-+      "@types/gtag.js"
-     ],
+-    ],
++    "types": ["@shopify/oxygen-workers-types", "@types/gtag.js"],
      "paths": {
--      "~/*": ["app/*"]
-+      "~/*": [
-+        "app/*"
-+      ]
+       "~/*": ["app/*"]
      },
-     "noEmit": true
-   }

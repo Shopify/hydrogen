@@ -1,7 +1,7 @@
 import {useEffect, useRef} from 'react';
 
 /**
- * @description Component to add Google Tag Manager via Partytown
+ * Component to add Google Tag Manager via Partytown
  * @see https://partytown.builder.io/google-tag-manager
  */
 export function PartytownGoogleTagManager(props: {
@@ -62,7 +62,6 @@ export function PartytownGoogleTagManager(props: {
         height="0"
         width="0"
         style={{display: 'none', visibility: 'hidden'}}
-        title="Google Tag Manager"
       />
     </noscript>
   );

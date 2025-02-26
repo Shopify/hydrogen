@@ -1,4 +1,4 @@
-// @description Reverse proxies partytown libs that require CORS. Used by Partytown resolveUrl
+// Reverse proxies partytown libs that require CORS. Used by Partytown resolveUrl
 //@see: https://developers.cloudflare.com/workers/examples/cors-header-proxy/
 
 import {
