@@ -1,0 +1,131 @@
+{
+  "title": "Partytown",
+  "image": null,
+  "description": "This folder contains a peformance-oriented example lazy-loading [Google Tag Manager](https://support.google.com/tagmanager) using [Partytown](https://partytown.builder.io/).\n\nParty town helps relocate resource intensive scripts off the main thread into a web worker.",
+  "notes": [],
+  "deletedFiles": [],
+  "ingredients": [
+    {
+      "path": "templates/skeleton/app/components/PartytownGoogleTagManager.tsx",
+      "description": "A component that loads Google Tag Manager in a web worker via Partytown with built-in CSP support."
+    },
+    {
+      "path": "templates/skeleton/app/routes/reverse-proxy.ts",
+      "description": "A route that acts as a [reverse proxy](https://partytown.builder.io/proxying-requests#reverse-proxy) for 3P scripts that require CORS headers."
+    },
+    {
+      "path": "templates/skeleton/app/utils.ts",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/app/utils/partytown/maybeProxyRequest.ts",
+      "description": "A Partytown url resolver to control which 3P scripts should be reverse-proxied. Used in Partytown's resolveUrl property"
+    },
+    {
+      "path": "templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts",
+      "description": "Utility that returns the required headers to enable [Atomics mode](https://partytown.builder.io/atomics) for added performance"
+    }
+  ],
+  "steps": [
+    {
+      "type": "INFO",
+      "name": "Requirements",
+      "description": "- [Google Tag Manager ID] - Log in to your Google Tag Manager account and open a container. In the top right corner (next to the Submit and Preview buttons) you'll see some short text that starts with GTM- and then contains some letters/numbers. That's your Google Tag Manager ID\n- [Basic Partytown knowledge](https://dev.to/adamdbradley/introducing-partytown-run-third-party-scripts-from-a-web-worker-2cnp) - Introducing Partytown: Run Third-Party Scripts From a Web Worker"
+    },
+    {
+      "type": "INFO",
+      "name": "Copy ingredients",
+      "description": "Copy the ingredients from the template directory to the current directory",
+      "ingredients": [
+        "templates/skeleton/app/components/PartytownGoogleTagManager.tsx",
+        "templates/skeleton/app/routes/reverse-proxy.ts",
+        "templates/skeleton/app/utils.ts",
+        "templates/skeleton/app/utils/partytown/maybeProxyRequest.ts",
+        "templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts",
+        "templates/skeleton/public/~partytown/partytown-atomics.js",
+        "templates/skeleton/public/~partytown/partytown-media.js",
+        "templates/skeleton/public/~partytown/partytown-sw.js",
+        "templates/skeleton/public/~partytown/partytown.js",
+        "templates/skeleton/public/~partytown/debug/partytown-atomics.js",
+        "templates/skeleton/public/~partytown/debug/partytown-media.js",
+        "templates/skeleton/public/~partytown/debug/partytown-sandbox-sw.js",
+        "templates/skeleton/public/~partytown/debug/partytown-sw.js",
+        "templates/skeleton/public/~partytown/debug/partytown-ww-atomics.js",
+        "templates/skeleton/public/~partytown/debug/partytown-ww-sw.js",
+        "templates/skeleton/public/~partytown/debug/partytown.js"
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "(Optional) - Update Content Security Policy",
+      "description": "Add wwww.googletagmanager.com domain to the scriptSrc directive",
+      "diffs": [
+        {
+          "file": "app/entry.server.tsx",
+          "patchFile": "entry.server.tsx.5c5584.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/root.tsx",
+      "description": null,
+      "diffs": [
+        {
+          "file": "app/root.tsx",
+          "patchFile": "root.tsx.53a6d3.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "Update the index route",
+      "description": null,
+      "diffs": [
+        {
+          "file": "app/routes/_index.tsx",
+          "patchFile": "_index.tsx.8041d5.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "(TypeScript only) - Add the new environment variable to the ENV type definition",
+      "description": null,
+      "diffs": [
+        {
+          "file": "env.d.ts",
+          "patchFile": "env.d.ts.0d505a.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "Modify npm scripts",
+      "description": null,
+      "diffs": [
+        {
+          "file": "package.json",
+          "patchFile": "package.json.029e0b.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "Modify tsconfig.json",
+      "description": null,
+      "diffs": [
+        {
+          "file": "tsconfig.json",
+          "patchFile": "tsconfig.json.8afdb5.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "Codegen",
+      "diffs": []
+    }
+  ],
+  "commit": "7433b2041a9273818d731c0a421221e50d41c470"
+}

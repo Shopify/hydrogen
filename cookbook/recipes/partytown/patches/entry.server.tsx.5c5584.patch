@@ -1,0 +1,17 @@
+index 1480601b..92eb63bf 100644
+--- a/templates/skeleton/app/entry.server.tsx
++++ b/templates/skeleton/app/entry.server.tsx
+@@ -16,11 +16,12 @@ export default async function handleRequest(
+       checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
+       storeDomain: context.env.PUBLIC_STORE_DOMAIN,
+     },
++    scriptSrc: ["'self'", 'cdn.shopify.com', 'www.googletagmanager.com'],
+   });
+ 
+   const body = await renderToReadableStream(
+     <NonceProvider>
+-      <RemixServer context={remixContext} url={request.url} nonce={nonce}/>
++      <RemixServer context={remixContext} url={request.url} nonce={nonce} />
+     </NonceProvider>,
+     {
+       nonce,

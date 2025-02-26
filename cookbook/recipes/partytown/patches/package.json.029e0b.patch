@@ -1,0 +1,31 @@
+index d3638ae4..89d1db0f 100644
+--- a/templates/skeleton/package.json
++++ b/templates/skeleton/package.json
+@@ -5,15 +5,17 @@
+   "version": "2025.1.2",
+   "type": "module",
+   "scripts": {
+-    "build": "shopify hydrogen build --codegen",
++    "build": "npm run partytown && shopify hydrogen build --codegen",
+     "dev": "shopify hydrogen dev --codegen",
+     "preview": "shopify hydrogen preview --build",
+     "lint": "eslint --no-error-on-unmatched-pattern .",
+     "typecheck": "tsc --noEmit",
+-    "codegen": "shopify hydrogen codegen"
++    "codegen": "shopify hydrogen codegen",
++    "partytown": "partytown copylib public/~partytown"
+   },
+   "prettier": "@shopify/prettier-config",
+   "dependencies": {
++    "@builder.io/partytown": "^0.8.1",
+     "@remix-run/react": "^2.15.3",
+     "@remix-run/server-runtime": "^2.15.3",
+     "@shopify/hydrogen": "2025.1.2",
+@@ -37,6 +39,7 @@
+     "@shopify/prettier-config": "^1.1.2",
+     "@total-typescript/ts-reset": "^0.4.2",
+     "@types/eslint": "^9.6.1",
++    "@types/gtag.js": "^0.0.18",
+     "@types/react": "^18.2.22",
+     "@types/react-dom": "^18.2.7",
+     "@typescript-eslint/eslint-plugin": "^8.21.0",
