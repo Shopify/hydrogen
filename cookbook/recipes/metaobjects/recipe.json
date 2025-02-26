@@ -1,0 +1,173 @@
+{
+  "title": "Metaobjects",
+  "image": null,
+  "description": "This folder contains an example implementation of using [metaobjects](https://help.shopify.com/en/manual/custom-data/metaobjects) as a thin Content Management System (CMS) for Hydrogen.\n\nMore specifically, this example focuses on how to render and manage custom content at a route and section level.",
+  "notes": [],
+  "deletedFiles": [],
+  "ingredients": [
+    {
+      "path": "templates/skeleton/app/components/EditRoute.tsx",
+      "description": "A component that overlays an Edit Route button in routes with metaobjects for easy access to the metaobject entry in the admin dashboard"
+    },
+    {
+      "path": "templates/skeleton/app/routes/stores.$name.tsx",
+      "description": "A dynamic route that displays custom store metaobject profiles"
+    },
+    {
+      "path": "templates/skeleton/app/routes/stores._index.tsx",
+      "description": "A route that displays a collection of custom store entries"
+    },
+    {
+      "path": "templates/skeleton/app/sections/RouteContent.tsx",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/app/sections/SectionFeaturedCollections.tsx",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/app/sections/SectionFeaturedProducts.tsx",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/app/sections/SectionHero.tsx",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/app/sections/SectionStoreProfile.tsx",
+      "description": "Override metafields types that have been parsed."
+    },
+    {
+      "path": "templates/skeleton/app/sections/SectionStores.tsx",
+      "description": "Override metafields types that have been parsed."
+    },
+    {
+      "path": "templates/skeleton/app/sections/Sections.tsx",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/app/utils/parseSection.ts",
+      "description": "- Recursively parse metafields (objects containing a type, value and key).\n- Lifts each key in an array from an object, and returns a new object with the keys removed."
+    },
+    {
+      "path": "templates/skeleton/docs/METAOBJECTS.md",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/docs/images/definition_link.png",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/docs/images/definition_section_featured_collections.png",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/docs/images/definition_section_featured_products.png",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/docs/images/definition_section_hero.png",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/docs/images/definition_section_rich_text.png",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/docs/images/definition_section_store_profile.png",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/docs/images/definition_section_stores_grid.png",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/docs/images/definition_store.png",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/docs/images/definitions_list.png",
+      "description": null
+    },
+    {
+      "path": "templates/skeleton/docs/images/definiton_route.png",
+      "description": null
+    }
+  ],
+  "steps": [
+    {
+      "type": "INFO",
+      "name": "Requirements",
+      "description": "- Basic understanding of metaobjects. Creating metaobject [definitions](https://help.shopify.com/en/manual/custom-data/metaobjects/building-a-metaobject), creating metaobject [entries](https://help.shopify.com/en/manual/custom-data/metaobjects/creating-entries). For more info, please refer to this [tutorial](https://help.shopify.com/en/manual/custom-data/metaobjects/using-metaobjects)\n\n- Must use the \"mock.shop\" store because it has the required definitions and entries to make this example work.",
+      "notes": [
+        "(Optional) If you prefer to use your own store instead, please follow the [instructions](./docs/METAOBJECTS.md) to configure the same content architecture."
+      ]
+    },
+    {
+      "type": "INFO",
+      "name": "Copy ingredients",
+      "description": "Copy the ingredients from the template directory to the current directory",
+      "ingredients": [
+        "templates/skeleton/app/components/EditRoute.tsx",
+        "templates/skeleton/app/routes/stores.$name.tsx",
+        "templates/skeleton/app/routes/stores._index.tsx",
+        "templates/skeleton/app/sections/RouteContent.tsx",
+        "templates/skeleton/app/sections/SectionFeaturedCollections.tsx",
+        "templates/skeleton/app/sections/SectionFeaturedProducts.tsx",
+        "templates/skeleton/app/sections/SectionHero.tsx",
+        "templates/skeleton/app/sections/SectionStoreProfile.tsx",
+        "templates/skeleton/app/sections/SectionStores.tsx",
+        "templates/skeleton/app/sections/Sections.tsx",
+        "templates/skeleton/app/utils/parseSection.ts",
+        "templates/skeleton/docs/METAOBJECTS.md",
+        "templates/skeleton/docs/images/definition_link.png",
+        "templates/skeleton/docs/images/definition_section_featured_collections.png",
+        "templates/skeleton/docs/images/definition_section_featured_products.png",
+        "templates/skeleton/docs/images/definition_section_hero.png",
+        "templates/skeleton/docs/images/definition_section_rich_text.png",
+        "templates/skeleton/docs/images/definition_section_store_profile.png",
+        "templates/skeleton/docs/images/definition_section_stores_grid.png",
+        "templates/skeleton/docs/images/definition_store.png",
+        "templates/skeleton/docs/images/definitions_list.png",
+        "templates/skeleton/docs/images/definiton_route.png"
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "Return the PUBLIC_SHOPIFY_STORE_DOMAIN from the root layout",
+      "description": "To enable the Edit Route button return the env variable as `publicStoreSubdomain`.",
+      "diffs": [
+        {
+          "file": "app/root.tsx",
+          "patchFile": "root.tsx.53a6d3.patch"
+        },
+        {
+          "file": "env.d.ts",
+          "patchFile": "env.d.ts.0d505a.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "Modify the homepage route",
+      "description": "- Add metaobject content imports.\n- Query the home route metaobject.",
+      "diffs": [
+        {
+          "file": "app/routes/_index.tsx",
+          "patchFile": "_index.tsx.8041d5.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "Codegen",
+      "diffs": [
+        {
+          "file": "storefrontapi.generated.d.ts",
+          "patchFile": "storefrontapi.generated.d.ts.92ed93.patch"
+        }
+      ]
+    }
+  ],
+  "commit": "de7e946657aac3dd5cc84ccd73adf1ff0259e13d"
+}
