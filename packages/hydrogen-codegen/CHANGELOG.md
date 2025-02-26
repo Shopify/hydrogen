@@ -1,5 +1,11 @@
 # @shopify/hydrogen-codegen
 
+## 0.3.3
+
+### Patch Changes
+
+- Bump body-parser, codegen, semver, and ws packages ([#2776](https://github.com/Shopify/hydrogen/pull/2776)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 0.3.2
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # skeleton
 
+## 2025.1.3
+
+### Patch Changes
+
+- Update skeleton and create-hydrogen cli to 3.75.4 ([#2769](https://github.com/Shopify/hydrogen/pull/2769)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 2025.1.2
 
 ### Patch Changes
