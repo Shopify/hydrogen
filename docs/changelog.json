@@ -3,6 +3,57 @@
   "version": "1",
   "releases": [
     {
+      "title": "Shopify CLI update",
+      "version": "2025.1.2",
+      "hash": "ea72e2417483fce0baeb68ac84a7e0b35c36b1ce",
+      "commit": "https://github.com/Shopify/hydrogen/pull/2764/commits/ea72e2417483fce0baeb68ac84a7e0b35c36b1ce",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2764",
+      "dependencies": {
+        "@remix-run/react": "^2.15.3",
+        "@remix-run/server-runtime": "^2.15.3",
+        "@shopify/hydrogen": "2025.1.2",
+        "@shopify/remix-oxygen": "^2.0.10"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.15.3",
+        "@shopify/cli": "3.75.4",
+        "@shopify/mini-oxygen": "^3.1.1"
+      },
+      "dependenciesMeta": {
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/react": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@remix-run/dev": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/remix-oxygen": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Update @shopify/cli and cli-kit to 3.75.3",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2760",
+          "id": "2760"
+        },
+        {
+          "title": "Update oxygen-cli to 4.6.10",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2763",
+          "id": "2763"
+        }
+      ],
+      "features": []
+    },
+    {
       "title": "Remix singleFetch, stable B2B methods, ESLint 9, and other fixes",
       "version": "2025.1.1",
       "hash": "eca3df8ce1f2fa436476d41730a3da123d65bc2e",
