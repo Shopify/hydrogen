@@ -1,0 +1,33 @@
+{
+  "title": "Infinite Scroll",
+  "image": null,
+  "description": "This folder contains an example implementation of [infinite scroll](https://shopify.dev/docs/custom-storefronts/hydrogen/data-fetching/pagination#automatically-load-pages-on-scroll) within a product collection page using the [Pagination component](https://shopify.dev/docs/api/hydrogen/2024-07/components/pagination).\n\nThe example uses [`react-intersection-observer`](https://www.npmjs.com/package/react-intersection-observer) to detect when the `Load more` button is in view. A `useEffect` then triggers a navigation to the next page url, which seamlessly loads more products as the user scrolls.\n\nA few side effects of this implementation are:\n\n1. The page progressively enhances, so that when JavaScript has yet to load, the page is still interactive because the user can still click the `Load more` button.\n2. As the user scrolls, the URL automatically changes as new pages are loaded.\n3. Because the implementation uses the `Pagination` component, navigating back to the collection list after clicking on a product automatically maintains the user's scroll position.",
+  "notes": [],
+  "deletedFiles": [],
+  "ingredients": [],
+  "steps": [
+    {
+      "type": "PATCH",
+      "name": "Edit the route loader",
+      "description": "- Update the pageBy parameter passed to the getPaginationVariables function call to customize how many products to load at a time.\n- Add a PreviousLink component that renders a link to the previous page.\n- Add a NextLink component that renders a link to the next page.\n- Add a ProductsGrid component that renders a grid of products.",
+      "diffs": [
+        {
+          "file": "app/routes/collections.$handle.tsx",
+          "patchFile": "collections.$handle.tsx.951367.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "package.json",
+      "description": "Add the `react-intersection-observer` dependency.",
+      "diffs": [
+        {
+          "file": "package.json",
+          "patchFile": "package.json.029e0b.patch"
+        }
+      ]
+    }
+  ],
+  "commit": "71ce88f6fff3570dc54a24c6dcf3637479fdaf88"
+}
