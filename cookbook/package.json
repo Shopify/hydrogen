@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A CLI tool to generate and apply recipes to the Hydrogen skeleton template.",
   "scripts": {
-    "cookbook": "tsc && node dist/index.js"
+    "cookbook": "ts-node src/index.ts"
   },
   "dependencies": {
     "inquirer": "^12.4.2",
