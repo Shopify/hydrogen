@@ -1,0 +1,189 @@
+index a4f7c673..988cb27e 100644
+--- a/templates/skeleton/app/root.tsx
++++ b/templates/skeleton/app/root.tsx
+@@ -1,5 +1,9 @@
+ import {useNonce, getShopAnalytics, Analytics} from '@shopify/hydrogen';
+-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
++import {
++  data,
++  type HeadersFunction,
++  type LoaderFunctionArgs,
++} from '@shopify/remix-oxygen';
+ import {
+   Links,
+   Meta,
+@@ -11,6 +15,7 @@ import {
+   isRouteErrorResponse,
+   type ShouldRevalidateFunction,
+ } from '@remix-run/react';
++import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
+ import favicon from '~/assets/favicon.svg';
+ import resetStyles from '~/styles/reset.css?url';
+ import appStyles from '~/styles/app.css?url';
+@@ -65,80 +70,60 @@ export function links() {
+   ];
+ }
+ 
+-export async function loader(args: LoaderFunctionArgs) {
+-  // Start fetching non-critical data without blocking time to first byte
+-  const deferredData = loadDeferredData(args);
++export const headers: HeadersFunction = ({loaderHeaders}) => loaderHeaders;
+ 
+-  // Await the critical data required to render initial state of the page
+-  const criticalData = await loadCriticalData(args);
++export async function loader({context}: LoaderFunctionArgs) {
++  const {storefront, customerAccount, cart, env} = context;
++  const publicStoreDomain = env.PUBLIC_STORE_DOMAIN;
+ 
+-  const {storefront, env} = args.context;
++  const customerAccessToken = await context.session.get('customerAccessToken');
+ 
+-  return {
+-    ...deferredData,
+-    ...criticalData,
+-    publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
+-    shop: getShopAnalytics({
+-      storefront,
+-      publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
+-    }),
+-    consent: {
+-      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+-      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+-      withPrivacyBanner: false,
+-      // localize the privacy banner
+-      country: args.context.storefront.i18n.country,
+-      language: args.context.storefront.i18n.language,
+-    },
+-  };
+-}
++  // validate the customer access token is valid
++  const {isLoggedIn, headers} = await validateCustomerAccessToken(
++    context.session,
++    customerAccessToken,
++  );
+ 
+-/**
+- * Load data necessary for rendering content above the fold. This is the critical data
+- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+- */
+-async function loadCriticalData({context}: LoaderFunctionArgs) {
+-  const {storefront} = context;
+-
+-  const [header] = await Promise.all([
+-    storefront.query(HEADER_QUERY, {
+-      cache: storefront.CacheLong(),
+-      variables: {
+-        headerMenuHandle: 'main-menu', // Adjust to your header menu handle
+-      },
+-    }),
+-    // Add other queries here, so that they are loaded in parallel
+-  ]);
+-
+-  return {header};
+-}
+-
+-/**
+- * Load data for rendering content below the fold. This data is deferred and will be
+- * fetched after the initial page load. If it's unavailable, the page should still 200.
+- * Make sure to not throw any errors here, as it will cause the page to 500.
+- */
+-function loadDeferredData({context}: LoaderFunctionArgs) {
+-  const {storefront, customerAccount, cart} = context;
++  const cartPromise = cart.get();
+ 
+   // defer the footer query (below the fold)
+-  const footer = storefront
+-    .query(FOOTER_QUERY, {
+-      cache: storefront.CacheLong(),
+-      variables: {
+-        footerMenuHandle: 'footer', // Adjust to your footer menu handle
++  const footerPromise = storefront.query(FOOTER_QUERY, {
++    cache: storefront.CacheLong(),
++    variables: {
++      footerMenuHandle: 'footer', // Adjust to your footer menu handle
++    },
++  });
++
++  // await the header query (above the fold)
++  const headerPromise = storefront.query(HEADER_QUERY, {
++    cache: storefront.CacheLong(),
++    variables: {
++      headerMenuHandle: 'main-menu', // Adjust to your header menu handle
++    },
++  });
++
++  return data(
++    {
++      cart: cartPromise,
++      footer: footerPromise,
++      header: await headerPromise,
++      isLoggedIn,
++      publicStoreDomain,
++      shop: getShopAnalytics({
++        storefront,
++        publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
++      }),
++      consent: {
++        checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
++        storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
++        withPrivacyBanner: true,
++        // localize the privacy banner
++        country: context.storefront.i18n.country,
++        language: context.storefront.i18n.language,
+       },
+-    })
+-    .catch((error) => {
+-      // Log query errors, but don't throw them so the page can still render
+-      console.error(error);
+-      return null;
+-    });
+-  return {
+-    cart: cart.get(),
+-    isLoggedIn: customerAccount.isLoggedIn(),
+-    footer,
+-  };
++    },
++    {headers},
++  );
+ }
+ 
+ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -202,3 +187,38 @@ export function ErrorBoundary() {
+     </div>
+   );
+ }
++
++/**
++ * Validates the customer access token and returns a boolean and headers
++ * @see https://shopify.dev/docs/api/storefront/latest/objects/CustomerAccessToken
++ *
++ * @example
++ * ```js
++ * const {isLoggedIn, headers} = await validateCustomerAccessToken(
++ *  customerAccessToken,
++ *  session,
++ * );
++ * ```
++ */
++async function validateCustomerAccessToken(
++  session: LoaderFunctionArgs['context']['session'],
++  customerAccessToken?: CustomerAccessToken,
++) {
++  let isLoggedIn = false;
++  const headers = new Headers();
++  if (!customerAccessToken?.accessToken || !customerAccessToken?.expiresAt) {
++    return {isLoggedIn, headers};
++  }
++
++  const expiresAt = new Date(customerAccessToken.expiresAt).getTime();
++  const dateNow = Date.now();
++  const customerAccessTokenExpired = expiresAt < dateNow;
++
++  if (customerAccessTokenExpired) {
++    session.unset('customerAccessToken');
++  } else {
++    isLoggedIn = true;
++  }
++
++  return {isLoggedIn, headers};
++}

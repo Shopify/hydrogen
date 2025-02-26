@@ -1,0 +1,244 @@
+{
+  "title": "Multipass",
+  "image": null,
+  "description": "This folder contains an example implementation of [Multipass](https://shopify.dev/docs/api/multipass) for Hydrogen. It shows how to persist the user session from a Hydrogen storefront through to checkout.",
+  "notes": [],
+  "deletedFiles": [],
+  "ingredients": [
+    {
+      "path": "templates/skeleton/app/components/Cart.tsx",
+      "description": "A component that displays the cart."
+    },
+    {
+      "path": "templates/skeleton/app/components/MultipassCheckoutButton.tsx",
+      "description": "This component attempts to persist the customer session state in the checkout by using multipass. Note: multipass checkout is a Shopify Plus+ feature only."
+    },
+    {
+      "path": "templates/skeleton/app/lib/multipass/multipass.ts",
+      "description": "A utility that makes a POST request to the local `/account/login/multipass` endpoint to retrieve a multipass `url` and `token` for a given url/customer combination."
+    },
+    {
+      "path": "templates/skeleton/app/lib/multipass/multipassify.server.ts",
+      "description": "A utility that generates and parses multipass tokens."
+    },
+    {
+      "path": "templates/skeleton/app/lib/multipass/types.ts",
+      "description": "Types for the multipass and multipassify utilities."
+    },
+    {
+      "path": "templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx",
+      "description": "A route that activates a customer account."
+    },
+    {
+      "path": "templates/skeleton/app/routes/account_.login.multipass.tsx",
+      "description": "A route that generates a multipass token for a given customer and return_to url."
+    },
+    {
+      "path": "templates/skeleton/app/routes/account_.recover.tsx",
+      "description": "A route that displays a recover password form."
+    },
+    {
+      "path": "templates/skeleton/app/routes/account_.register.tsx",
+      "description": "A route that displays a register form."
+    },
+    {
+      "path": "templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx",
+      "description": "A route that displays a reset password form."
+    }
+  ],
+  "steps": [
+    {
+      "type": "INFO",
+      "name": "Copy ingredients",
+      "description": "Copy the ingredients from the template directory to the current directory",
+      "ingredients": [
+        "templates/skeleton/app/components/Cart.tsx",
+        "templates/skeleton/app/components/MultipassCheckoutButton.tsx",
+        "templates/skeleton/app/lib/multipass/multipass.ts",
+        "templates/skeleton/app/lib/multipass/multipassify.server.ts",
+        "templates/skeleton/app/lib/multipass/types.ts",
+        "templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx",
+        "templates/skeleton/app/routes/account_.login.multipass.tsx",
+        "templates/skeleton/app/routes/account_.recover.tsx",
+        "templates/skeleton/app/routes/account_.register.tsx",
+        "templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx"
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/components/Header.tsx",
+      "description": null,
+      "diffs": [
+        {
+          "file": "app/components/Header.tsx",
+          "patchFile": "Header.tsx.05d0c2.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/components/PageLayout.tsx",
+      "description": null,
+      "diffs": [
+        {
+          "file": "app/components/PageLayout.tsx",
+          "patchFile": "PageLayout.tsx.1c8710.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/root.tsx",
+      "description": "- validate the customer access token is valid.\n- defer the footer query (below the fold).\n- await the header query (above the fold).\n- Adjust to your header menu handle.",
+      "diffs": [
+        {
+          "file": "app/root.tsx",
+          "patchFile": "root.tsx.53a6d3.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/routes/account.$.tsx",
+      "description": null,
+      "diffs": [
+        {
+          "file": "app/routes/account.$.tsx",
+          "patchFile": "account.$.tsx.8045c7.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/routes/account.addresses.tsx",
+      "description": null,
+      "diffs": [
+        {
+          "file": "app/routes/account.addresses.tsx",
+          "patchFile": "account.addresses.tsx.16e919.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/routes/account.orders.$id.tsx",
+      "description": null,
+      "diffs": [
+        {
+          "file": "app/routes/account.orders.$id.tsx",
+          "patchFile": "account.orders.$id.tsx.7be190.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/routes/account.orders._index.tsx",
+      "description": null,
+      "diffs": [
+        {
+          "file": "app/routes/account.orders._index.tsx",
+          "patchFile": "account.orders._index.tsx.4617c8.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/routes/account.profile.tsx",
+      "description": null,
+      "diffs": [
+        {
+          "file": "app/routes/account.profile.tsx",
+          "patchFile": "account.profile.tsx.608202.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/routes/account.tsx",
+      "description": null,
+      "diffs": [
+        {
+          "file": "app/routes/account.tsx",
+          "patchFile": "account.tsx.a0203d.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/routes/account_.login.tsx",
+      "description": "A route that displays a login form.",
+      "diffs": [
+        {
+          "file": "app/routes/account_.login.tsx",
+          "patchFile": "account_.login.tsx.455799.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/routes/account_.logout.tsx",
+      "description": null,
+      "diffs": [
+        {
+          "file": "app/routes/account_.logout.tsx",
+          "patchFile": "account_.logout.tsx.0a2026.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/routes/cart.tsx",
+      "description": null,
+      "diffs": [
+        {
+          "file": "app/routes/cart.tsx",
+          "patchFile": "cart.tsx.a38f76.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "env.d.ts",
+      "description": null,
+      "diffs": [
+        {
+          "file": "env.d.ts",
+          "patchFile": "env.d.ts.0d505a.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "package.json",
+      "description": null,
+      "diffs": [
+        {
+          "file": "package.json",
+          "patchFile": "package.json.029e0b.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "vite.config.ts",
+      "description": null,
+      "diffs": [
+        {
+          "file": "vite.config.ts",
+          "patchFile": "vite.config.ts.616b71.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "Codegen",
+      "diffs": [
+        {
+          "file": "storefrontapi.generated.d.ts",
+          "patchFile": "storefrontapi.generated.d.ts.92ed93.patch"
+        }
+      ]
+    }
+  ],
+  "commit": "ac3bf47267bfeda5fb8797cf71123edd0bfc9b6b"
+}

@@ -1,0 +1,210 @@
+index ba41d03a..d5bda5f2 100644
+--- a/templates/skeleton/app/routes/account.orders._index.tsx
++++ b/templates/skeleton/app/routes/account.orders._index.tsx
+@@ -1,47 +1,60 @@
+ import {Link, useLoaderData, type MetaFunction} from '@remix-run/react';
+-import {
+-  Money,
+-  getPaginationVariables,
+-  flattenConnection,
+-} from '@shopify/hydrogen';
+-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+-import {CUSTOMER_ORDERS_QUERY} from '~/graphql/customer-account/CustomerOrdersQuery';
++import {Money, Pagination, getPaginationVariables} from '@shopify/hydrogen';
++import {data, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import type {
+   CustomerOrdersFragment,
+   OrderItemFragment,
+-} from 'customer-accountapi.generated';
+-import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
++} from 'storefrontapi.generated';
+ 
+ export const meta: MetaFunction = () => {
+   return [{title: 'Orders'}];
+ };
+ 
+ export async function loader({request, context}: LoaderFunctionArgs) {
+-  const paginationVariables = getPaginationVariables(request, {
+-    pageBy: 20,
+-  });
++  const {session, storefront} = context;
+ 
+-  const {data, errors} = await context.customerAccount.query(
+-    CUSTOMER_ORDERS_QUERY,
+-    {
++  const customerAccessToken = await session.get('customerAccessToken');
++  if (!customerAccessToken?.accessToken) {
++    return redirect('/account/login');
++  }
++
++  try {
++    const paginationVariables = getPaginationVariables(request, {
++      pageBy: 20,
++    });
++
++    const {customer} = await storefront.query(CUSTOMER_ORDERS_QUERY, {
+       variables: {
++        customerAccessToken: customerAccessToken.accessToken,
++        country: storefront.i18n.country,
++        language: storefront.i18n.language,
+         ...paginationVariables,
+       },
+-    },
+-  );
++      cache: storefront.CacheNone(),
++    });
+ 
+-  if (errors?.length || !data?.customer) {
+-    throw Error('Customer orders not found');
++    if (!customer) {
++      throw new Error('Customer not found');
++    }
++
++    return {customer};
++  } catch (error: unknown) {
++    if (error instanceof Error) {
++      return data({error: error.message}, {status: 400});
++    }
++    return data({error}, {status: 400});
+   }
+-
+-  return {customer: data.customer};
+ }
+ 
+ export default function Orders() {
+   const {customer} = useLoaderData<{customer: CustomerOrdersFragment}>();
+-  const {orders} = customer;
++  const {orders, numberOfOrders} = customer;
+   return (
+     <div className="orders">
++      <h2>
++        Orders <small>({numberOfOrders})</small>
++      </h2>
++      <br />
+       {orders.nodes.length ? <OrdersTable orders={orders} /> : <EmptyOrders />}
+     </div>
+   );
+@@ -51,9 +64,23 @@ function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
+   return (
+     <div className="acccount-orders">
+       {orders?.nodes.length ? (
+-        <PaginatedResourceSection connection={orders}>
+-          {({node: order}) => <OrderItem key={order.id} order={order} />}
+-        </PaginatedResourceSection>
++        <Pagination connection={orders}>
++          {({nodes, isLoading, PreviousLink, NextLink}) => {
++            return (
++              <>
++                <PreviousLink>
++                  {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
++                </PreviousLink>
++                {nodes.map((order) => {
++                  return <OrderItem key={order.id} order={order} />;
++                })}
++                <NextLink>
++                  {isLoading ? 'Loading...' : <span>Load more ↓</span>}
++                </NextLink>
++              </>
++            );
++          }}
++        </Pagination>
+       ) : (
+         <EmptyOrders />
+       )}
+@@ -74,20 +101,91 @@ function EmptyOrders() {
+ }
+ 
+ function OrderItem({order}: {order: OrderItemFragment}) {
+-  const fulfillmentStatus = flattenConnection(order.fulfillments)[0]?.status;
+   return (
+     <>
+       <fieldset>
+-        <Link to={`/account/orders/${btoa(order.id)}`}>
+-          <strong>#{order.number}</strong>
++        <Link to={`/account/orders/${order.id}`}>
++          <strong>#{order.orderNumber}</strong>
+         </Link>
+         <p>{new Date(order.processedAt).toDateString()}</p>
+         <p>{order.financialStatus}</p>
+-        {fulfillmentStatus && <p>{fulfillmentStatus}</p>}
+-        <Money data={order.totalPrice} />
++        <p>{order.fulfillmentStatus}</p>
++        <Money data={order.currentTotalPrice} />
+         <Link to={`/account/orders/${btoa(order.id)}`}>View Order →</Link>
+       </fieldset>
+       <br />
+     </>
+   );
+ }
++
++const ORDER_ITEM_FRAGMENT = `#graphql
++  fragment OrderItem on Order {
++    currentTotalPrice {
++      amount
++      currencyCode
++    }
++    financialStatus
++    fulfillmentStatus
++    id
++    lineItems(first: 10) {
++      nodes {
++        title
++        variant {
++          image {
++            url
++            altText
++            height
++            width
++          }
++        }
++      }
++    }
++    orderNumber
++    customerUrl
++    statusUrl
++    processedAt
++  }
++` as const;
++
++export const CUSTOMER_FRAGMENT = `#graphql
++  fragment CustomerOrders on Customer {
++    numberOfOrders
++    orders(
++      sortKey: PROCESSED_AT,
++      reverse: true,
++      first: $first,
++      last: $last,
++      before: $startCursor,
++      after: $endCursor
++    ) {
++      nodes {
++        ...OrderItem
++      }
++      pageInfo {
++        hasPreviousPage
++        hasNextPage
++        endCursor
++        startCursor
++      }
++    }
++  }
++  ${ORDER_ITEM_FRAGMENT}
++` as const;
++
++// NOTE: https://shopify.dev/docs/api/storefront/latest/queries/customer
++const CUSTOMER_ORDERS_QUERY = `#graphql
++  ${CUSTOMER_FRAGMENT}
++  query CustomerOrders(
++    $country: CountryCode
++    $customerAccessToken: String!
++    $endCursor: String
++    $first: Int
++    $language: LanguageCode
++    $last: Int
++    $startCursor: String
++  ) @inContext(country: $country, language: $language) {
++    customer(customerAccessToken: $customerAccessToken) {
++      ...CustomerOrders
++    }
++  }
++` as const;
