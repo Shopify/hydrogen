@@ -1,0 +1,69 @@
+{
+  "title": "Custom Cart Method",
+  "image": null,
+  "description": "This is an example of implementation of how to edit product option in cart. It does this by creating an [custom method](https://shopify.dev/docs/api/hydrogen/2023-10/utilities/createcarthandler#example-custom-methods) named `updateLineByOptions` for cart.\n\nThis method takes a product Id, currently selected options, and query for the `merchandiseId` needed to make an cart line item update.\n\nIt also showcase an end-to-end implementation of [custom method](https://shopify.dev/docs/api/hydrogen/2023-10/utilities/createcarthandler#example-custom-methods) including the additional handler for `CustomUpdateLineByOptions` action (all custom method action should be prefix with `Custom`) in cart route, and the UI that trigger the handler.\n\n",
+  "notes": [
+    "This is an isolated example, for a better edit in cart user experience we recommend implementing an optimistic cart along side of this example."
+  ],
+  "deletedFiles": [],
+  "ingredients": [
+    {
+      "path": "templates/skeleton/app/components/Cart.tsx",
+      "description": "The custom Cart component."
+    }
+  ],
+  "steps": [
+    {
+      "type": "INFO",
+      "name": "Copy ingredients",
+      "description": "Copy the ingredients from the template directory to the current directory",
+      "ingredients": [
+        "templates/skeleton/app/components/Cart.tsx"
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/lib/context.ts",
+      "description": "Add the custom cart methods.",
+      "diffs": [
+        {
+          "file": "app/lib/context.ts",
+          "patchFile": "context.ts.12ce79.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/lib/fragments.ts",
+      "description": "Query to get the variant by selected options.",
+      "diffs": [
+        {
+          "file": "app/lib/fragments.ts",
+          "patchFile": "fragments.ts.e8eb04.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "app/routes/cart.tsx",
+      "description": "Custom cart method to update the line by selected options.",
+      "diffs": [
+        {
+          "file": "app/routes/cart.tsx",
+          "patchFile": "cart.tsx.a38f76.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "Codegen",
+      "diffs": [
+        {
+          "file": "storefrontapi.generated.d.ts",
+          "patchFile": "storefrontapi.generated.d.ts.92ed93.patch"
+        }
+      ]
+    }
+  ],
+  "commit": "a493dfc6a90a87bb25d33bcd29f17ea887385049"
+}
