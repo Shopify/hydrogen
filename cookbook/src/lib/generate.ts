@@ -93,9 +93,12 @@ export async function generateRecipe(params: {
     existingRecipe,
   });
 
-  const copyIngredientsIndex = generatedSteps.findIndex(
+  let copyIngredientsIndex = generatedSteps.findIndex(
     (step) => step.type === 'COPY_INGREDIENTS',
   );
+  if (copyIngredientsIndex === -1) {
+    copyIngredientsIndex = 0;
+  }
 
   // remove the copy ingredients step...
   const stepsWithoutCopyIngredients: Step[] = generatedSteps.filter(
@@ -103,7 +106,7 @@ export async function generateRecipe(params: {
   );
   // ...and add it back (in the right position) if there are ingredients
   const steps: Step[] = [
-    ...(ingredients.length > 0 && copyIngredientsIndex >= 0
+    ...(ingredients.length > 0
       ? stepsWithoutCopyIngredients
           .slice(0, copyIngredientsIndex)
           .concat(copyIngredientsStep(ingredients))
