@@ -1,0 +1,67 @@
+index a4f7c673..9c5c5785 100644
+--- a/templates/skeleton/app/root.tsx
++++ b/templates/skeleton/app/root.tsx
+@@ -1,4 +1,4 @@
+-import {useNonce, getShopAnalytics, Analytics} from '@shopify/hydrogen';
++import {useNonce, getShopAnalytics, Analytics, Script} from '@shopify/hydrogen';
+ import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import {
+   Links,
+@@ -16,6 +16,7 @@ import resetStyles from '~/styles/reset.css?url';
+ import appStyles from '~/styles/app.css?url';
+ import {PageLayout} from '~/components/PageLayout';
+ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
++import {GoogleTagManager} from '~/components/GoogleTagManager';
+ 
+ export type RootLoader = typeof loader;
+ 
+@@ -85,7 +86,8 @@ export async function loader(args: LoaderFunctionArgs) {
+     consent: {
+       checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+-      withPrivacyBanner: false,
++      // @description Enable the privacy banner
++      withPrivacyBanner: true,
+       // localize the privacy banner
+       country: args.context.storefront.i18n.country,
+       language: args.context.storefront.i18n.language,
+@@ -154,8 +156,30 @@ export function Layout({children}: {children?: React.ReactNode}) {
+         <link rel="stylesheet" href={appStyles}></link>
+         <Meta />
+         <Links />
++        {/* @description Add Google Tag Manager script */}
++        <Script
++          dangerouslySetInnerHTML={{
++            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
++            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
++            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
++            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
++            })(window,document,'script','dataLayer','GTM-<YOUR_GTM_ID>');`,
++          }}
++        ></Script>
+       </head>
+       <body>
++        <noscript>
++          <iframe
++            src="https://www.googletagmanager.com/ns.html?id=GTM-<YOUR_GTM_ID>"
++            height="0"
++            width="0"
++            style={{
++              display: 'none',
++              visibility: 'hidden',
++            }}
++            title="Google Tag Manager"
++          ></iframe>
++        </noscript>
+         {data ? (
+           <Analytics.Provider
+             cart={data.cart}
+@@ -163,6 +187,8 @@ export function Layout({children}: {children?: React.ReactNode}) {
+             consent={data.consent}
+           >
+             <PageLayout {...data}>{children}</PageLayout>
++            {/* @description Add Google Tag Manager component */}
++            <GoogleTagManager />
+           </Analytics.Provider>
+         ) : (
+           children

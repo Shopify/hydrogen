@@ -1,0 +1,68 @@
+{
+  "title": "Google Tag Manager (GTM) with `<Analytics.Provider>`",
+  "image": null,
+  "description": "This folder contains an end-to-end example of how to implement Google Tag Manager for Hydrogen. Hydrogen supports both Shopify analytics, as well as third-party services.\n\nHydrogen includes built in support for the [Customer Privacy API](https://shopify.dev/docs/api/customer-privacy), a browser-based JavaScript API that you can use to display cookie-consent banners and verify data processing permissions.",
+  "notes": [],
+  "deletedFiles": [],
+  "ingredients": [
+    {
+      "path": "templates/skeleton/app/components/GoogleTagManager.tsx",
+      "description": "Google Tag Manager component to listen to analytics events."
+    }
+  ],
+  "steps": [
+    {
+      "type": "INFO",
+      "name": "Requirements",
+      "description": "- [Configure customer privacy settings](https://help.shopify.com/en/manual/privacy-and-security/privacy/customer-privacy-settings/privacy-settings?shpxid=9f9c768e-AC66-497C-98D0-701334C8173E) - Configure and manage customer privacy settings within your Shopify admin to help comply with privacy and data protection laws.\n- [Add a cookie banner](https://help.shopify.com/en/manual/privacy-and-security/privacy/customer-privacy-settings/privacy-settings#add-a-cookie-banner) - A cookie banner is a notification displayed on a website that informs visitors about the use of cookies and asks for their consent for data collection and tracking activities."
+    },
+    {
+      "type": "INFO",
+      "name": "Enable Customer Privacy / Cookie Consent Banner",
+      "description": "In the Shopify admin, head over to / Settings / Customer Privacy / Cookie Banner.",
+      "substeps": [
+        {
+          "name": "Configure the region(s) visibility for the banner",
+          "description": "![banner-region-visibility](/templates/skeleton/public/banner-region-visibility.jpg)"
+        },
+        {
+          "name": "(Optional) Customize the appearance of the Cookie banner and Cookie preferences",
+          "description": "![banner-appearance](/templates/skeleton/public/banner-appearance.jpg)"
+        },
+        {
+          "name": "(Optional) Customize the position of the banner",
+          "description": "![banner-position](/templates/skeleton/public/banner-position.jpg)"
+        }
+      ]
+    },
+    {
+      "type": "INFO",
+      "name": "Copy ingredients",
+      "description": "Copy the ingredients from the template directory to the current directory",
+      "ingredients": ["templates/skeleton/app/components/GoogleTagManager.tsx"]
+    },
+    {
+      "type": "PATCH",
+      "name": "Update content security policy",
+      "description": "Update security policy for Google Tag Manager.",
+      "diffs": [
+        {
+          "file": "app/entry.server.tsx",
+          "patchFile": "entry.server.tsx.5c5584.patch"
+        }
+      ]
+    },
+    {
+      "type": "PATCH",
+      "name": "Edit the root.tsx layout file",
+      "description": "- Enable privacy banner.\n- Add Google Tag Manager script.\n- Add Google Tag Manager component.",
+      "diffs": [
+        {
+          "file": "app/root.tsx",
+          "patchFile": "root.tsx.53a6d3.patch"
+        }
+      ]
+    }
+  ],
+  "commit": "0a2a8dac0522e32624cb961000cd91dca575f511"
+}
