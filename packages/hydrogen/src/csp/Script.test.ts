@@ -28,7 +28,9 @@ describe('<Script />', () => {
         <script
           nonce="somenonce"
           src="https://some-src.js"
-        />
+        >
+          
+        </script>
       </DocumentFragment>
     `);
   });

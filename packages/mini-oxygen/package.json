@@ -53,7 +53,7 @@
     "@miniflare/shared": "^2.14.2",
     "@miniflare/storage-memory": "^2.14.2",
     "@miniflare/web-sockets": "^2.14.2",
-    "body-parser": "1.20.2",
+    "body-parser": "1.20.3",
     "connect": "^3.7.0",
     "get-port": "^7.0.0",
     "miniflare": "^3.20240925.0",
@@ -62,11 +62,11 @@
     "source-map-support": "^0.5.21",
     "stack-trace": "^1.0.0-pre2",
     "undici": "^6.21.1",
-    "ws": "^8.17.1"
+    "ws": "^8.18.1"
   },
   "devDependencies": {
     "@shopify/oxygen-workers-types": "^4.1.2",
-    "@types/body-parser": "1.19.3",
+    "@types/body-parser": "1.19.5",
     "@types/connect": "^3.4.35",
     "@types/eventsource": "^1.1.10",
     "@types/node": "^18.7.0",
