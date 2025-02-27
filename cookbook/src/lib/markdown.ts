@@ -1,3 +1,5 @@
+import {assertNever} from './util';
+
 export type MDNote = {
   type: 'NOTE';
   text: string;
@@ -208,7 +210,6 @@ export function renderMDBlock(block: MDBlock): string {
           .join('\n'),
       ].join('\n');
     default:
-      const exhaustiveCheck: never = block;
-      throw new Error('invalid type for markdown block');
+      assertNever(block);
   }
 }

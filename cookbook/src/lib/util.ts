@@ -23,8 +23,7 @@ export function getStepDescription(
       case 'ingredient':
         return content.trim().match(/.+@description\s+(.*)/g);
       default:
-        const exhaustiveCheck: never = type;
-        throw new Error('invalid type for content type');
+        assertNever(type);
     }
   }
   const match = getMatch();
@@ -186,4 +185,8 @@ export function parseReferenceBranch(referenceBranch: string): {
     }
   }
   return {branch: referenceBranch};
+}
+
+export function assertNever(n: never): never {
+  throw new Error('Expected `never`, got ' + JSON.stringify(n));
 }

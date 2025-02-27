@@ -169,11 +169,3 @@ async function handler(args: UpdateArgs) {
   // we're golden
   console.log(`🎉 Recipe updated: ${recipeName}`);
 }
-
-async function pause(reason: string) {
-  await inquirer.prompt({
-    type: 'confirm',
-    name: 'confirm',
-    message: `${reason}: continue?`,
-  });
-}

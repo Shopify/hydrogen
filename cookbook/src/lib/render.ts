@@ -20,6 +20,7 @@ import {
   renderMDBlock,
 } from './markdown';
 import {Ingredient, parseRecipeFromString, Recipe, Step} from './recipe';
+import {assertNever} from './util';
 
 // The number of lines to collapse a diff into a details block
 const COLLAPSE_DIFF_LINES = 50;
@@ -115,13 +116,13 @@ function makeIngredients(ingredients: Ingredient[]): MDBlock[] {
       ['File', 'Description'],
       ingredients
         .filter((ingredient) => ingredient.description != null)
-        .map((ingredient) => {
+        .map((ingredient): string[] => {
           return [
             `[\`${ingredient.path.replace(
               TEMPLATE_DIRECTORY,
               '',
             )}\`](ingredients/${ingredient.path})`,
-            ingredient.description,
+            ingredient.description ?? '',
           ];
         }),
     ),
@@ -178,12 +179,6 @@ function makeSteps(
           ]
         : []),
       ...getDiffs(),
-      ...(step.substeps != null
-        ? step.substeps.flatMap((substep, substepIndex) => [
-            mdHeading(4, `${index + 1}.${substepIndex + 1}. ${substep.name}`),
-            mdParagraph(substep.description),
-          ])
-        : []),
     ];
 
     return markdownStep;
@@ -203,8 +198,7 @@ function makeTitle(recipe: Recipe, format: RenderFormat): MDBlock {
     case 'github':
       return mdHeading(1, `🧑‍🍳 ${recipe.title}`);
     default:
-      const exhaustiveCheck: never = format;
-      throw new Error(`Unknown format: ${exhaustiveCheck}`);
+      assertNever(format);
   }
 }
 
