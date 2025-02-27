@@ -1,12 +1,8 @@
 import {execSync} from 'child_process';
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
 import {CommandModule} from 'yargs';
-import {listRecipes} from '../lib/list';
-import {separator} from '../lib/util';
-import {validateRecipe} from '../lib/validate';
 import {TEMPLATE_PATH} from '../lib/constants';
+import {listRecipes, separator} from '../lib/util';
+import {validateRecipe} from '../lib/validate';
 
 type ValidateArgs = {
   recipe: string;
@@ -37,12 +33,10 @@ async function handler(args: ValidateArgs) {
 
   let failed: string[] = [];
   for (const recipe of recipes) {
-    const tempDir = path.join(os.tmpdir(), recipe + '-validate');
     try {
       console.log(`🧐 Validating recipe '${recipe}'`);
       validateRecipe({
         recipeTitle: recipe,
-        tempDir,
       });
       // clean up the skeleton template directory on success
       execSync(`git checkout -- ${TEMPLATE_PATH}`);
@@ -51,9 +45,6 @@ async function handler(args: ValidateArgs) {
       console.error(`❌ Recipe '${recipe}' is invalid`);
       console.error(error);
       failed.push(recipe);
-    } finally {
-      // clean up the temp directory
-      fs.rmSync(tempDir, {recursive: true});
     }
     console.log(separator());
   }

@@ -1,7 +1,9 @@
 import {execSync} from 'child_process';
+import crypto from 'crypto';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
-import {REPO_ROOT, TEMPLATE_PATH} from './constants';
+import {COOKBOOK_PATH, REPO_ROOT, TEMPLATE_PATH} from './constants';
 
 /**
  * Get the description of a step.
@@ -189,4 +191,20 @@ export function parseReferenceBranch(referenceBranch: string): {
 
 export function assertNever(n: never): never {
   throw new Error('Expected `never`, got ' + JSON.stringify(n));
+}
+
+export function makeRandomTempDir(params: {prefix: string}): string {
+  const dir = path.join(
+    os.tmpdir(),
+    `${params.prefix}-${crypto.randomUUID().toString()}`,
+  );
+  createDirectoryIfNotExists(dir);
+  return dir;
+}
+
+export function listRecipes(): string[] {
+  return fs
+    .readdirSync(path.join(COOKBOOK_PATH, 'recipes'), {withFileTypes: true})
+    .filter((file) => file.isDirectory())
+    .map((file) => file.name);
 }

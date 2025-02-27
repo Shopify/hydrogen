@@ -3,9 +3,9 @@ import fs from 'fs';
 import path from 'path';
 import {
   COOKBOOK_PATH,
-  TEMPLATE_DIRECTORY,
   RENDER_FILENAME_GITHUB,
   RENDER_FILENAME_SHOPIFY,
+  TEMPLATE_DIRECTORY,
 } from './constants';
 import {
   MDBlock,

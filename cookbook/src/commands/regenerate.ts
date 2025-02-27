@@ -3,9 +3,8 @@ import {CommandModule} from 'yargs';
 import {applyRecipe} from '../lib/apply';
 import {FILES_TO_IGNORE_FOR_GENERATE, TEMPLATE_PATH} from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
-import {listRecipes} from '../lib/list';
 import {isRenderFormat, RENDER_FORMATS, renderRecipe} from '../lib/render';
-import {separator} from '../lib/util';
+import {listRecipes, separator} from '../lib/util';
 
 type RegenerateArgs = {
   recipe: string;

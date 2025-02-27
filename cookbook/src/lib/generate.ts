@@ -12,8 +12,8 @@ import {
 import {Ingredient, parseRecipeFromString, Recipe, Step} from './recipe';
 import {
   createDirectoryIfNotExists,
-  getStepDescription,
   getMainCommitHash,
+  getStepDescription,
   parseGitStatus,
   parseReferenceBranch,
   recreateDirectory,

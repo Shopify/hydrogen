@@ -1,20 +1,19 @@
 import {execSync} from 'child_process';
+import fs from 'fs';
+import inquirer from 'inquirer';
+import path from 'path';
+import {CommandModule} from 'yargs';
 import {applyRecipe} from '../lib/apply';
-import {generateRecipe} from '../lib/generate';
 import {
   COOKBOOK_PATH,
   FILES_TO_IGNORE_FOR_GENERATE,
   REPO_ROOT,
   TEMPLATE_PATH,
 } from '../lib/constants';
-import {renderRecipe} from '../lib/render';
+import {generateRecipe} from '../lib/generate';
 import {parseRecipeFromString} from '../lib/recipe';
-import path from 'path';
-import fs from 'fs';
-import os from 'os';
-import inquirer from 'inquirer';
-import {CommandModule} from 'yargs';
-import {parseReferenceBranch} from '../lib/util';
+import {renderRecipe} from '../lib/render';
+import {makeRandomTempDir, parseReferenceBranch} from '../lib/util';
 type UpdateArgs = {
   recipe: string;
   referenceBranch: string;
@@ -107,7 +106,7 @@ async function handler(args: UpdateArgs) {
   }
 
   // copy the skeleton to a temp folder, ignoring the node_modules folder
-  const skeletonDir = path.join(os.tmpdir(), `skeleton-${Date.now()}`);
+  const skeletonDir = makeRandomTempDir({prefix: 'skeleton'});
   fs.cpSync(TEMPLATE_PATH, skeletonDir, {
     recursive: true,
     filter: (src) => {
@@ -136,10 +135,7 @@ async function handler(args: UpdateArgs) {
   });
 
   // copy the recipe to the temp folder
-  const tempDir = path.join(
-    os.tmpdir(),
-    `update-recipe-${recipeName}-${Date.now()}`,
-  );
+  const tempDir = makeRandomTempDir({prefix: 'update-recipe'});
   fs.cpSync(path.join(COOKBOOK_PATH, 'recipes', recipeName), tempDir, {
     recursive: true,
   });

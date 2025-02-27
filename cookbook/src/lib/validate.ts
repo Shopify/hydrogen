@@ -2,15 +2,16 @@ import {execSync} from 'child_process';
 import fs from 'fs';
 import {applyRecipe} from './apply';
 import {TEMPLATE_PATH} from './constants';
-
+import {makeRandomTempDir} from './util';
 /**
  * Validate a recipe.
  * @param params - The parameters for the validation.
  */
-export function validateRecipe(params: {recipeTitle: string; tempDir: string}) {
+export function validateRecipe(params: {recipeTitle: string}) {
   let start = Date.now();
 
-  const {recipeTitle, tempDir} = params;
+  const {recipeTitle} = params;
+  const tempDir = makeRandomTempDir({prefix: 'validate-recipe'});
 
   console.log(`- 🧑‍🍳 Applying recipe '${recipeTitle}'`);
   applyRecipe({
