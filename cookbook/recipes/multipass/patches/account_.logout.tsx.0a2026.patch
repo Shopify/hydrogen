@@ -1,0 +1,33 @@
+index 36e05e15..31a41bc5 100644
+--- a/templates/skeleton/app/routes/account_.logout.tsx
++++ b/templates/skeleton/app/routes/account_.logout.tsx
+@@ -1,10 +1,25 @@
+-import {redirect, type ActionFunctionArgs} from '@shopify/remix-oxygen';
++import {data, redirect, type ActionFunctionArgs} from '@shopify/remix-oxygen';
++import {type MetaFunction} from '@remix-run/react';
++
++export const meta: MetaFunction = () => {
++  return [{title: 'Logout'}];
++};
+ 
+-// if we don't implement this, /account/logout will get caught by account.$.tsx to do login
+ export async function loader() {
++  return redirect('/account/login');
++}
++
++export async function action({request, context}: ActionFunctionArgs) {
++  const {session} = context;
++  session.unset('customerAccessToken');
++
++  if (request.method !== 'POST') {
++    return data({error: 'Method not allowed'}, {status: 405});
++  }
++
+   return redirect('/');
+ }
+ 
+-export async function action({context}: ActionFunctionArgs) {
+-  return context.customerAccount.logout();
++export default function Logout() {
++  return null;
+ }

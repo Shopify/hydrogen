@@ -1,0 +1,139 @@
+index a67d4643..7e948b55 100644
+--- a/templates/skeleton/app/routes/collections.$handle.tsx
++++ b/templates/skeleton/app/routes/collections.$handle.tsx
+@@ -1,14 +1,21 @@
+ import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+-import {useLoaderData, Link, type MetaFunction} from '@remix-run/react';
+ import {
++  useLoaderData,
++  useNavigate,
++  Link,
++  type MetaFunction,
++} from '@remix-run/react';
++import {
++  Pagination,
+   getPaginationVariables,
+   Image,
+   Money,
+   Analytics,
+ } from '@shopify/hydrogen';
+ import type {ProductItemFragment} from 'storefrontapi.generated';
++import {useEffect} from 'react';
+ import {useVariantUrl} from '~/lib/variants';
+-import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
++import {useInView} from 'react-intersection-observer';
+ 
+ export const meta: MetaFunction<typeof loader> = ({data}) => {
+   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
+@@ -36,6 +43,7 @@ async function loadCriticalData({
+   const {handle} = params;
+   const {storefront} = context;
+   const paginationVariables = getPaginationVariables(request, {
++    // @description Update the pageBy parameter passed to the getPaginationVariables function call to customize how many products to load at a time.
+     pageBy: 8,
+   });
+ 
+@@ -72,23 +80,44 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
+ 
+ export default function Collection() {
+   const {collection} = useLoaderData<typeof loader>();
++  const {ref, inView} = useInView();
+ 
+   return (
+     <div className="collection">
+       <h1>{collection.title}</h1>
+       <p className="collection-description">{collection.description}</p>
+-      <PaginatedResourceSection
+-        connection={collection.products}
+-        resourcesClassName="products-grid"
+-      >
+-        {({node: product, index}) => (
+-          <ProductItem
+-            key={product.id}
+-            product={product}
+-            loading={index < 8 ? 'eager' : undefined}
+-          />
++      <Pagination connection={collection.products}>
++        {({
++          nodes,
++          isLoading,
++          PreviousLink,
++          NextLink,
++          state,
++          nextPageUrl,
++          hasNextPage,
++        }) => (
++          <>
++            {/* @description Add a PreviousLink component that renders a link to the previous page. */}
++            <PreviousLink>
++              {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
++            </PreviousLink>
++            <ProductsGrid
++              products={nodes}
++              inView={inView}
++              hasNextPage={hasNextPage}
++              nextPageUrl={nextPageUrl}
++              state={state}
++            />
++            <br />
++            {/* @description Add a NextLink component that renders a link to the next page. */}
++            <NextLink ref={ref}>
++              <span ref={ref}>
++                {isLoading ? 'Loading...' : <span>Load more yeah ↓</span>}
++              </span>
++            </NextLink>
++          </>
+         )}
+-      </PaginatedResourceSection>
++      </Pagination>
+       <Analytics.CollectionView
+         data={{
+           collection: {
+@@ -101,6 +130,47 @@ export default function Collection() {
+   );
+ }
+ 
++// @description Add a ProductsGrid component that renders a grid of products.
++function ProductsGrid({
++  products,
++  inView,
++  hasNextPage,
++  nextPageUrl,
++  state,
++}: {
++  products: ProductItemFragment[];
++  inView: boolean;
++  hasNextPage: boolean;
++  nextPageUrl: string;
++  state: any;
++}) {
++  const navigate = useNavigate();
++
++  useEffect(() => {
++    if (inView && hasNextPage) {
++      navigate(nextPageUrl, {
++        replace: true,
++        preventScrollReset: true,
++        state,
++      });
++    }
++  }, [inView, navigate, state, nextPageUrl, hasNextPage]);
++
++  return (
++    <div className="products-grid">
++      {products.map((product, index) => {
++        return (
++          <ProductItem
++            key={product.id}
++            product={product}
++            loading={index < 8 ? 'eager' : undefined}
++          />
++        );
++      })}
++    </div>
++  );
++}
++
+ function ProductItem({
+   product,
+   loading,

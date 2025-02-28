@@ -1,0 +1,16 @@
+index 53543f62..8b14aaa7 100644
+--- a/templates/skeleton/app/routes/account.$.tsx
++++ b/templates/skeleton/app/routes/account.$.tsx
+@@ -1,8 +1,8 @@
+ import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ 
+-// fallback wild card for all unauthenticated routes in account section
+ export async function loader({context}: LoaderFunctionArgs) {
+-  await context.customerAccount.handleAuthStatus();
+-
+-  return redirect('/account');
++  if (await context.session.get('customerAccessToken')) {
++    return redirect('/account');
++  }
++  return redirect('/account/login');
+ }

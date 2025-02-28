@@ -1,0 +1,38 @@
+index 26102b61..dcab4454 100644
+--- a/templates/skeleton/app/components/CartLineItem.tsx
++++ b/templates/skeleton/app/components/CartLineItem.tsx
+@@ -3,8 +3,8 @@ import type {CartLayout} from '~/components/CartMain';
+ import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
+ import {useVariantUrl} from '~/lib/variants';
+ import {Link} from '@remix-run/react';
+-import {ProductPrice} from './ProductPrice';
+-import {useAside} from './Aside';
++import {ProductPrice} from '~/components/ProductPrice';
++import {useAside} from '~/components/Aside';
+ import type {CartApiQueryFragment} from 'storefrontapi.generated';
+ 
+ type CartLine = OptimisticCartLine<CartApiQueryFragment>;
+@@ -20,7 +20,9 @@ export function CartLineItem({
+   layout: CartLayout;
+   line: CartLine;
+ }) {
+-  const {id, merchandise} = line;
++  // @description get the selling plan allocation
++  const {id, merchandise, sellingPlanAllocation} = line;
++
+   const {product, title, image, selectedOptions} = merchandise;
+   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
+   const {close} = useAside();
+@@ -54,6 +56,12 @@ export function CartLineItem({
+         </Link>
+         <ProductPrice price={line?.cost?.totalAmount} />
+         <ul>
++          {/* @description Optionally render the selling plan name if available */}
++          {sellingPlanAllocation && (
++            <li key={sellingPlanAllocation.sellingPlan.name}>
++              <small>{sellingPlanAllocation.sellingPlan.name}</small>
++            </li>
++          )}
+           {selectedOptions.map((option) => (
+             <li key={option.name}>
+               <small>

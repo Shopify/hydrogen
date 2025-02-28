@@ -1,0 +1,112 @@
+index 8a437a10..accb67e1 100644
+--- a/templates/skeleton/app/components/Header.tsx
++++ b/templates/skeleton/app/components/Header.tsx
+@@ -1,17 +1,13 @@
+ import {Suspense} from 'react';
+-import {Await, NavLink, useAsyncValue} from '@remix-run/react';
+-import {
+-  type CartViewPayload,
+-  useAnalytics,
+-  useOptimisticCart,
+-} from '@shopify/hydrogen';
++import {Await, NavLink} from '@remix-run/react';
++import {type CartViewPayload, useAnalytics} from '@shopify/hydrogen';
+ import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
+ import {useAside} from '~/components/Aside';
+ 
+ interface HeaderProps {
+   header: HeaderQuery;
+   cart: Promise<CartApiQueryFragment | null>;
+-  isLoggedIn: Promise<boolean>;
++  isLoggedIn: boolean;
+   publicStoreDomain: string;
+ }
+ 
+@@ -52,14 +48,20 @@ export function HeaderMenu({
+   publicStoreDomain: HeaderProps['publicStoreDomain'];
+ }) {
+   const className = `header-menu-${viewport}`;
+-  const {close} = useAside();
++
++  function closeAside(event: React.MouseEvent<HTMLAnchorElement>) {
++    if (viewport === 'mobile') {
++      event.preventDefault();
++      window.location.href = event.currentTarget.href;
++    }
++  }
+ 
+   return (
+     <nav className={className} role="navigation">
+       {viewport === 'mobile' && (
+         <NavLink
+           end
+-          onClick={close}
++          onClick={closeAside}
+           prefetch="intent"
+           style={activeLinkStyle}
+           to="/"
+@@ -82,7 +84,7 @@ export function HeaderMenu({
+             className="header-menu-item"
+             end
+             key={item.id}
+-            onClick={close}
++            onClick={closeAside}
+             prefetch="intent"
+             style={activeLinkStyle}
+             to={url}
+@@ -103,11 +105,7 @@ function HeaderCtas({
+     <nav className="header-ctas" role="navigation">
+       <HeaderMenuMobileToggle />
+       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
+-        <Suspense fallback="Sign in">
+-          <Await resolve={isLoggedIn} errorElement="Sign in">
+-            {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
+-          </Await>
+-        </Suspense>
++        {isLoggedIn ? 'Account' : 'Sign in'}
+       </NavLink>
+       <SearchToggle />
+       <CartToggle cart={cart} />
+@@ -136,7 +134,7 @@ function SearchToggle() {
+   );
+ }
+ 
+-function CartBadge({count}: {count: number | null}) {
++function CartBadge({count}: {count: number}) {
+   const {open} = useAside();
+   const {publish, shop, cart, prevCart} = useAnalytics();
+ 
+@@ -154,27 +152,24 @@ function CartBadge({count}: {count: number | null}) {
+         } as CartViewPayload);
+       }}
+     >
+-      Cart {count === null ? <span>&nbsp;</span> : count}
++      Cart {count}
+     </a>
+   );
+ }
+ 
+ function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
+   return (
+-    <Suspense fallback={<CartBadge count={null} />}>
++    <Suspense fallback={<CartBadge count={0} />}>
+       <Await resolve={cart}>
+-        <CartBanner />
++        {(cart) => {
++          if (!cart) return <CartBadge count={0} />;
++          return <CartBadge count={cart.totalQuantity || 0} />;
++        }}
+       </Await>
+     </Suspense>
+   );
+ }
+ 
+-function CartBanner() {
+-  const originalCart = useAsyncValue() as CartApiQueryFragment | null;
+-  const cart = useOptimisticCart(originalCart);
+-  return <CartBadge count={cart?.totalQuantity ?? 0} />;
+-}
+-
+ const FALLBACK_HEADER_MENU = {
+   id: 'gid://shopify/Menu/199655587896',
+   items: [

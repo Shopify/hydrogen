@@ -1,0 +1,99 @@
+index dc4426a9..b8aad66f 100644
+--- a/templates/skeleton/app/lib/fragments.ts
++++ b/templates/skeleton/app/lib/fragments.ts
+@@ -47,56 +47,10 @@ export const CART_QUERY_FRAGMENT = `#graphql
+           title
+           id
+           vendor
+-        }
+-        selectedOptions {
+-          name
+-          value
+-        }
+-      }
+-    }
+-  }
+-  fragment CartLineComponent on ComponentizableCartLine {
+-    id
+-    quantity
+-    attributes {
+-      key
+-      value
+-    }
+-    cost {
+-      totalAmount {
+-        ...Money
+-      }
+-      amountPerQuantity {
+-        ...Money
+-      }
+-      compareAtAmountPerQuantity {
+-        ...Money
+-      }
+-    }
+-    merchandise {
+-      ... on ProductVariant {
+-        id
+-        availableForSale
+-        compareAtPrice {
+-          ...Money
+-        }
+-        price {
+-          ...Money
+-        }
+-        requiresShipping
+-        title
+-        image {
+-          id
+-          url
+-          altText
+-          width
+-          height
+-        }
+-        product {
+-          handle
+-          title
+-          id
+-          vendor
++          options {
++            name
++            values
++          }
+         }
+         selectedOptions {
+           name
+@@ -132,9 +86,6 @@ export const CART_QUERY_FRAGMENT = `#graphql
+       nodes {
+         ...CartLine
+       }
+-      nodes {
+-        ...CartLineComponent
+-      }
+     }
+     cost {
+       subtotalAmount {
+@@ -231,3 +182,24 @@ export const FOOTER_QUERY = `#graphql
+   }
+   ${MENU_FRAGMENT}
+ ` as const;
++
++// NOTE: https://shopify.dev/docs/api/storefront/latest/queries/product
++// @description Query to get the variant by selected options
++export const PRODUCT_VARIANT_QUERY = `#graphql
++  query ProductVariant(
++    $productId: ID!
++    $selectedOptions: [SelectedOptionInput!]!
++    $country: CountryCode
++    $language: LanguageCode
++  ) @inContext(country: $country, language: $language) {
++    product(id: $productId) {
++        selectedVariant: variantBySelectedOptions(
++        selectedOptions: $selectedOptions
++        ignoreUnknownOptions: true
++        caseInsensitiveMatch: true
++      ) {
++        id
++      }
++    }
++  }
++`;
