@@ -1,0 +1,142 @@
+index 0028b423..22f8b999 100644
+--- a/templates/skeleton/app/routes/products.$handle.tsx
++++ b/templates/skeleton/app/routes/products.$handle.tsx
+@@ -11,6 +11,8 @@ import {
+ import {ProductPrice} from '~/components/ProductPrice';
+ import {ProductImage} from '~/components/ProductImage';
+ import {ProductForm} from '~/components/ProductForm';
++import {hasQuantityRules, QuantityRules} from '../components/QuantityRules';
++import {PriceBreaks} from '../components/PriceBreaks';
+ 
+ export const meta: MetaFunction<typeof loader> = ({data}) => {
+   return [
+@@ -22,12 +24,35 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
+   ];
+ };
+ 
++type BuyerVariables =
++  | {
++      buyer: {
++        companyLocationId: string;
++        customerAccessToken: string;
++      };
++    }
++  | {};
++
+ export async function loader(args: LoaderFunctionArgs) {
++  // @description Get the buyer from the customer account
++  const buyer = await args.context.customerAccount.getBuyer();
++
++  // @description Add the buyer to the variables
++  const buyerVariables: BuyerVariables =
++    buyer?.companyLocationId && buyer?.customerAccessToken
++      ? {
++          buyer: {
++            companyLocationId: buyer.companyLocationId,
++            customerAccessToken: buyer.customerAccessToken,
++          },
++        }
++      : {};
++
+   // Start fetching non-critical data without blocking time to first byte
+   const deferredData = loadDeferredData(args);
+ 
+   // Await the critical data required to render initial state of the page
+-  const criticalData = await loadCriticalData(args);
++  const criticalData = await loadCriticalData(args, buyerVariables);
+ 
+   return {...deferredData, ...criticalData};
+ }
+@@ -36,11 +61,10 @@ export async function loader(args: LoaderFunctionArgs) {
+  * Load data necessary for rendering content above the fold. This is the critical data
+  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+  */
+-async function loadCriticalData({
+-  context,
+-  params,
+-  request,
+-}: LoaderFunctionArgs) {
++async function loadCriticalData(
++  {context, params, request}: LoaderFunctionArgs,
++  buyerVariables: BuyerVariables,
++) {
+   const {handle} = params;
+   const {storefront} = context;
+ 
+@@ -50,7 +74,12 @@ async function loadCriticalData({
+ 
+   const [{product}] = await Promise.all([
+     storefront.query(PRODUCT_QUERY, {
+-      variables: {handle, selectedOptions: getSelectedProductOptions(request)},
++      variables: {
++        handle,
++        selectedOptions: getSelectedProductOptions(request),
++        // @description Pass the buyer to the graphql query
++        ...buyerVariables,
++      },
+     }),
+     // Add other queries here, so that they are loaded in parallel
+   ]);
+@@ -110,8 +139,25 @@ export default function Product() {
+         <ProductForm
+           productOptions={productOptions}
+           selectedVariant={selectedVariant}
++          quantity={selectedVariant?.quantityRule?.increment || 1}
+         />
+         <br />
++        {/* @description Add the quantity rules to the product page */}
++        {hasQuantityRules(selectedVariant?.quantityRule) ? (
++          <QuantityRules
++            maximum={selectedVariant?.quantityRule.maximum}
++            minimum={selectedVariant?.quantityRule.minimum}
++            increment={selectedVariant?.quantityRule.increment}
++          />
++        ) : null}
++        <br />
++        {/* @description Add the quantity price breaks to the product page */}
++        {selectedVariant?.quantityPriceBreaks?.nodes &&
++        selectedVariant?.quantityPriceBreaks?.nodes?.length > 0 ? (
++          <PriceBreaks
++            priceBreaks={selectedVariant?.quantityPriceBreaks?.nodes}
++          />
++        ) : null}
+         <br />
+         <p>
+           <strong>Description</strong>
+@@ -167,6 +213,22 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+       name
+       value
+     }
++    # @description Add the quantity rule for the product variant
++    quantityRule {
++      maximum
++      minimum
++      increment
++    }
++    # @description Add the quantity price breaks for the product variant
++    quantityPriceBreaks(first: 5) {
++      nodes {
++        minimumQuantity
++        price {
++          amount
++          currencyCode
++        }
++      }
++    }
+     sku
+     title
+     unitPrice {
+@@ -220,10 +282,12 @@ const PRODUCT_FRAGMENT = `#graphql
+ const PRODUCT_QUERY = `#graphql
+   query Product(
+     $country: CountryCode
++    # @description Pass the buyer to the graphql query
++    $buyer: BuyerInput
+     $handle: String!
+     $language: LanguageCode
+     $selectedOptions: [SelectedOptionInput!]!
+-  ) @inContext(country: $country, language: $language) {
++  ) @inContext(country: $country, language: $language, buyer: $buyer) {
+     product(handle: $handle) {
+       ...Product
+     }
