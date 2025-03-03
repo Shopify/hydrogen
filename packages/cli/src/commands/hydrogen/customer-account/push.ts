@@ -135,8 +135,8 @@ export async function runCustomerAccountPush({
           },
         )
       : error.message
-      ? [error.message]
-      : [];
+        ? [error.message]
+        : [];
 
     const nextSteps = [
       {

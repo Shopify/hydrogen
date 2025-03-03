@@ -42,9 +42,10 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
 vi.mock(
   '@shopify/cli-kit/node/node-package-manager',
   async (importOriginal) => {
-    const original = await importOriginal<
-      typeof import('@shopify/cli-kit/node/node-package-manager')
-    >();
+    const original =
+      await importOriginal<
+        typeof import('@shopify/cli-kit/node/node-package-manager')
+      >();
 
     return {
       ...original,

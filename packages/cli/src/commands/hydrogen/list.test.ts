@@ -67,7 +67,7 @@ describe('list', () => {
           productionUrl: 'https://demo.example.com',
           currentProductionDeployment: {
             id: 'gid://shopify/HydrogenStorefrontDeployment/1',
-            createdAt: createdAt,
+            createdAt,
             commitMessage: 'Update README.md',
           },
         },
