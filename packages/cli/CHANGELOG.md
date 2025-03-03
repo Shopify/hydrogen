@@ -1,5 +1,31 @@
 # @shopify/cli-hydrogen
 
+## 9.0.8
+
+### Patch Changes
+
+- Update plugin-cloudflare by [@juanpprieto](https://github.com/juanpprieto)
+
+- Update cli-hydrogen & create-hydrogen for latest cli ([#2766](https://github.com/Shopify/hydrogen/pull/2766)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Bump cli version ([#2760](https://github.com/Shopify/hydrogen/pull/2760)) by [@rbshop](https://github.com/rbshop)
+
+- Update oxygen-cli version ([#2763](https://github.com/Shopify/hydrogen/pull/2763)) by [@rbshop](https://github.com/rbshop)
+
+## 9.0.7
+
+### Patch Changes
+
+- Fixed a regression in `hydrogen build` where the environment variable `HYDROGEN_ASSET_BASE_URL` was ignored when used as build command when deploying. ([#2758](https://github.com/Shopify/hydrogen/pull/2758)) by [@vincentezw](https://github.com/vincentezw)
+
+## 9.0.6
+
+### Patch Changes
+
+- Bump remix version ([#2740](https://github.com/Shopify/hydrogen/pull/2740)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Turn on Remix `v3_singleFetch` future flag ([#2708](https://github.com/Shopify/hydrogen/pull/2708)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 9.0.5
 
 ### Patch Changes

@@ -89,4 +89,4 @@ type ConnectionNodes = {
 export interface ConnectionGenericForDoc {
   connection?: ConnectionEdges | ConnectionNodes;
 }
-export type FlattenConnectionReturnForDoc = Array<unknown>;
+export type FlattenConnectionReturnForDoc = unknown[];

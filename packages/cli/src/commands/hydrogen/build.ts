@@ -136,7 +136,7 @@ export async function runBuild({
   forceClientSourcemap,
   disableRouteWarning = false,
   lockfileCheck = true,
-  assetPath = '/',
+  assetPath,
   bundleStats = !isCI(),
   watch = false,
   onServerBuildStart,
@@ -145,6 +145,8 @@ export async function runBuild({
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production';
   }
+
+  assetPath = assetPath ?? process.env.HYDROGEN_ASSET_BASE_URL ?? '/';
 
   const root = directory ?? process.cwd();
 
