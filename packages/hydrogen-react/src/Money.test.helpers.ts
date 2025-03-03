@@ -39,9 +39,8 @@ export function getUnitPriceMeasurement(
   return {
     measuredType: unitPriceMeasurement.measuredType ?? measuredType,
     quantityUnit: unitPriceMeasurement.quantityUnit ?? quantityUnit,
-    quantityValue: unitPriceMeasurement.quantityValue ?? faker.datatype.float(),
+    quantityValue: unitPriceMeasurement.quantityValue ?? faker.number.float(),
     referenceUnit: unitPriceMeasurement.referenceUnit ?? referenceUnit,
-    referenceValue:
-      unitPriceMeasurement.referenceValue ?? faker.datatype.number(),
+    referenceValue: unitPriceMeasurement.referenceValue ?? faker.number.int(),
   };
 }

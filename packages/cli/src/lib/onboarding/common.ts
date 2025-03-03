@@ -127,10 +127,10 @@ export async function handleRouteGeneration(
     flagRoutes === true
       ? 'all'
       : flagRoutes === false
-      ? []
-      : await renderRoutePrompt({
-          abortSignal: controller.signal,
-        });
+        ? []
+        : await renderRoutePrompt({
+            abortSignal: controller.signal,
+          });
 
   const needsRouteGeneration =
     routesToScaffold === 'all' || routesToScaffold.length > 0;
@@ -532,6 +532,7 @@ export async function handleDependencies(
     shouldInstallDeps,
     installDeps: shouldInstallDeps
       ? async () => {
+          console.log('installDeps');
           await installNodeModules({
             directory: projectDir,
             packageManager: actualPackageManager,

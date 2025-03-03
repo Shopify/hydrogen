@@ -45,8 +45,8 @@ export function logRequestLine({
       response.status < 300
         ? outputToken.green
         : response.status < 400
-        ? outputToken.cyan
-        : outputToken.errorText;
+          ? outputToken.cyan
+          : outputToken.errorText;
 
     outputInfo(
       outputContent`${request.method.padStart(6)}  ${colorizeStatus(

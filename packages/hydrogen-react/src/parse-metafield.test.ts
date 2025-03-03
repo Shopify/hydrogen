@@ -339,8 +339,8 @@ describe(`parseMetafield`, () => {
 
     it(`list.dimension`, () => {
       const listDimensions = [
-        {unit: 'mm', value: faker.datatype.number()},
-        {unit: 'mm', value: faker.datatype.number()},
+        {unit: 'mm', value: faker.number.int()},
+        {unit: 'mm', value: faker.number.int()},
       ];
       const parsed = parseMetafield<ParsedMetafields['list.dimension']>({
         type: 'list.dimension',
@@ -377,7 +377,7 @@ describe(`parseMetafield`, () => {
     });
 
     it(`list.number_integer`, () => {
-      const listOfNumbers = [faker.datatype.number(), faker.datatype.number()];
+      const listOfNumbers = [faker.number.int(), faker.number.int()];
       const parsed = parseMetafield<ParsedMetafields['list.number_integer']>({
         type: 'list.number_integer',
         value: JSON.stringify(listOfNumbers),
@@ -389,7 +389,7 @@ describe(`parseMetafield`, () => {
     });
 
     it(`list.number_decimal`, () => {
-      const listOfNumbers = [faker.datatype.float(), faker.datatype.float()];
+      const listOfNumbers = [faker.number.float(), faker.number.float()];
       const parsed = parseMetafield<ParsedMetafields['list.number_decimal']>({
         type: 'list.number_decimal',
         value: JSON.stringify(listOfNumbers),
@@ -450,8 +450,8 @@ describe(`parseMetafield`, () => {
 
     it(`list.rating`, () => {
       const listOfRatings: Rating[] = [
-        {scale_min: 0, scale_max: 5, value: faker.datatype.number()},
-        {scale_min: 0, scale_max: 5, value: faker.datatype.number()},
+        {scale_min: 0, scale_max: 5, value: faker.number.int()},
+        {scale_min: 0, scale_max: 5, value: faker.number.int()},
       ];
       const parsed = parseMetafield<ParsedMetafields['list.rating']>({
         type: 'list.rating',
@@ -464,7 +464,7 @@ describe(`parseMetafield`, () => {
     });
 
     it(`list.single_line_text_field`, () => {
-      const listOfStrings = [faker.random.words(), faker.random.words()];
+      const listOfStrings = [faker.word.words(), faker.word.words()];
       const parsed = parseMetafield<
         ParsedMetafields['list.single_line_text_field']
       >({

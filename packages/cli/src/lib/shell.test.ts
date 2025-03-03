@@ -14,9 +14,8 @@ vi.mock('node:child_process');
 vi.mock('@shopify/cli-kit/node/fs');
 vi.mock('@shopify/cli-kit/node/node-package-manager');
 vi.mock('./process.js', async () => {
-  const original = await vi.importActual<typeof import('./process.js')>(
-    './process.js',
-  );
+  const original =
+    await vi.importActual<typeof import('./process.js')>('./process.js');
 
   return {
     ...original,

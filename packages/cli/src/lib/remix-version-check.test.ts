@@ -5,9 +5,8 @@ import {cwd} from '@shopify/cli-kit/node/path';
 
 const requireMock = vi.fn();
 vi.mock('node:module', async () => {
-  const {createRequire} = await vi.importActual<typeof import('node:module')>(
-    'node:module',
-  );
+  const {createRequire} =
+    await vi.importActual<typeof import('node:module')>('node:module');
 
   return {
     createRequire: (url: string) => {

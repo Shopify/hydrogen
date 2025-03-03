@@ -46,40 +46,40 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@miniflare/cache": "^2.14.2",
-    "@miniflare/core": "^2.14.2",
-    "@miniflare/queues": "^2.14.2",
-    "@miniflare/runner-vm": "^2.14.2",
-    "@miniflare/shared": "^2.14.2",
-    "@miniflare/storage-memory": "^2.14.2",
-    "@miniflare/web-sockets": "^2.14.2",
+    "@miniflare/cache": "^2.14.4",
+    "@miniflare/core": "^2.14.4",
+    "@miniflare/queues": "^2.14.4",
+    "@miniflare/runner-vm": "^2.14.4",
+    "@miniflare/shared": "^2.14.4",
+    "@miniflare/storage-memory": "^2.14.4",
+    "@miniflare/web-sockets": "^2.14.4",
     "body-parser": "1.20.3",
     "connect": "^3.7.0",
-    "get-port": "^7.0.0",
-    "miniflare": "^3.20240925.0",
-    "mrmime": "1.0.1",
+    "get-port": "^7.1.0",
+    "miniflare": "^3.20250124.0",
+    "mrmime": "2.0.0",
     "source-map": "^0.7.4",
     "source-map-support": "^0.5.21",
     "stack-trace": "^1.0.0-pre2",
-    "undici": "^6.21.1",
-    "ws": "^8.18.1"
+    "undici": "^7.3.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@shopify/oxygen-workers-types": "^4.1.2",
+    "@shopify/oxygen-workers-types": "^4.1.6",
     "@types/body-parser": "1.19.5",
-    "@types/connect": "^3.4.35",
-    "@types/eventsource": "^1.1.10",
-    "@types/node": "^18.7.0",
+    "@types/connect": "^3.4.38",
+    "@types/eventsource": "^1.1.15",
+    "@types/node": "^22.12.0",
     "@types/source-map-support": "^0.5.10",
     "@types/stack-trace": "^0.0.33",
-    "@types/ws": "^8.5.3",
-    "devtools-protocol": "^0.0.1177611",
-    "eventsource": "^2.0.2",
-    "tempy": "3.0.0",
+    "@types/ws": "^8.5.14",
+    "devtools-protocol": "^0.0.1412693",
+    "eventsource": "^3.0.5",
+    "tempy": "3.1.0",
     "vitest": "^1.0.4"
   },
   "peerDependencies": {
-    "vite": "^5.1.0"
+    "vite": "^5.1.8"
   },
   "peerDependenciesMeta": {
     "vite": {

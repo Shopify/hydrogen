@@ -93,6 +93,7 @@ describe('<ProductProvider />', () => {
       </ProductProvider>,
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await act(() => user.click(screen.getByRole('button', {name: 'White'})));
 
     expect(
@@ -175,6 +176,7 @@ describe('<ProductProvider />', () => {
       screen.getByText(JSON.stringify(VARIANTS.nodes?.[0])),
     ).toBeInTheDocument();
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await act(() =>
       user.selectOptions(screen.getByTestId('variant'), [
         VARIANTS.nodes?.[1]?.id ?? '2',
@@ -211,6 +213,7 @@ describe('<ProductProvider />', () => {
       screen.getByText(JSON.stringify(VARIANTS.nodes?.[0])),
     ).toBeInTheDocument();
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await act(() => user.click(screen.getByRole('button')));
 
     expect(screen.getByText('null')).toBeInTheDocument();
@@ -264,6 +267,7 @@ describe('<ProductProvider />', () => {
       screen.queryByRole('button', {name: 'White (out of stock)'}),
     ).not.toBeInTheDocument();
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await act(() => user.click(screen.getByRole('button', {name: 'Large'})));
 
     expect(
@@ -342,6 +346,7 @@ describe('<ProductProvider />', () => {
       screen.queryByTestId('selectedSellingPlanAllocation'),
     ).not.toBeInTheDocument();
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await act(() =>
       user.click(screen.getByRole('button', {name: 'Deliver every week'})),
     );
