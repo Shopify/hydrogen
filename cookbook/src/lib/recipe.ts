@@ -1,0 +1,66 @@
+import {z} from 'zod';
+
+const IngredientSchema = z.object({
+  path: z.string().describe('The path of the ingredient'),
+  description: z
+    .string()
+    .nullable()
+    .optional()
+    .describe('The description of the ingredient'),
+});
+
+export type Ingredient = z.infer<typeof IngredientSchema>;
+
+const DiffSchema = z.object({
+  file: z.string().describe('The file of the diff'),
+  patchFile: z.string().describe('The patch file of the diff'),
+});
+
+export type Diff = z.infer<typeof DiffSchema>;
+
+const StepSchema = z.object({
+  type: z
+    .enum(['PATCH', 'INFO', 'COPY_INGREDIENTS'])
+    .describe('The type of step'),
+  name: z.string().describe('The name of the step'),
+  description: z
+    .string()
+    .nullable()
+    .optional()
+    .describe('The description of the step'),
+  notes: z.array(z.string()).optional().describe('The notes of the step'),
+  ingredients: z
+    .array(z.string())
+    .optional()
+    .describe('The ingredients of the step'),
+  diffs: z.array(DiffSchema).optional().describe('The diffs of the step'),
+});
+
+export type Step = z.infer<typeof StepSchema>;
+
+const RecipeSchema = z.object({
+  title: z.string().describe('The title of the recipe'),
+  description: z.string().describe('The description of the recipe'),
+  notes: z.array(z.string()).optional().describe('The notes of the recipe'),
+  image: z.string().nullable().optional().describe('The image of the recipe'),
+  ingredients: z
+    .array(IngredientSchema)
+    .describe('The ingredients of the recipe'),
+  steps: z.array(StepSchema).describe('The steps of the recipe'),
+  deletedFiles: z
+    .array(z.string())
+    .optional()
+    .describe('The deleted files of the recipe'),
+  commit: z.string().describe('The commit hash the recipe is based on'),
+});
+
+export type Recipe = z.infer<typeof RecipeSchema>;
+
+/**
+ * Parses a recipe from a JSON string
+ * @param data The JSON string to parse
+ * @returns The parsed Recipe object
+ */
+export function parseRecipeFromString(data: string): Recipe {
+  return RecipeSchema.parse(JSON.parse(data));
+}
