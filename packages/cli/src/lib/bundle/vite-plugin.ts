@@ -189,6 +189,9 @@ export function hydrogenBundleAnalyzer(pluginOptions?: BundleAnalyzerOptions) {
         type: 'asset',
         fileName: BUNDLE_ANALYZER_JSON_FILE,
         name: BUNDLE_ANALYZER_JSON_FILE,
+        names: [BUNDLE_ANALYZER_JSON_FILE],
+        originalFileNames: [BUNDLE_ANALYZER_JSON_FILE],
+        originalFileName: BUNDLE_ANALYZER_JSON_FILE,
         needsCodeReference: false,
         source: JSON.stringify(metafile, null, 2),
       };
@@ -197,6 +200,9 @@ export function hydrogenBundleAnalyzer(pluginOptions?: BundleAnalyzerOptions) {
         type: 'asset',
         fileName: BUNDLE_ANALYZER_HTML_FILE,
         name: BUNDLE_ANALYZER_HTML_FILE,
+        names: [BUNDLE_ANALYZER_HTML_FILE],
+        originalFileNames: [BUNDLE_ANALYZER_HTML_FILE],
+        originalFileName: BUNDLE_ANALYZER_HTML_FILE,
         needsCodeReference: false,
         source: injectAnalyzerTemplateData(
           analysisTemplate,
