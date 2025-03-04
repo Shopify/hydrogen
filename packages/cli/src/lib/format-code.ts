@@ -14,7 +14,7 @@ const DEFAULT_PRETTIER_CONFIG: FormatOptions = {
 };
 
 export async function getCodeFormatOptions(filePath = process.cwd()) {
-  // Appears the semantics of `resolvedFonfige` have changed:
+  // Appears the semantics of `resolveConfig` have changed:
   // https://github.com/prettier/prettier/issues/16344
   const pathToUse = (await FS.lstat(filePath)).isFile()
     ? filePath
