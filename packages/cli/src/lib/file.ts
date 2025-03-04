@@ -24,7 +24,7 @@ export async function replaceFileContent(
   if (typeof content !== 'string') return;
 
   if (formatConfig) {
-    content = await formatCode(content, formatConfig, filepath);
+    content = await formatCode(content, formatConfig);
   }
 
   return writeFile(filepath, content);
@@ -117,8 +117,8 @@ export async function mergePackageJson(
       Array.isArray(sourceValue) && Array.isArray(targetValue)
         ? [...targetValue, ...sourceValue]
         : typeof sourceValue === 'object' && typeof targetValue === 'object'
-        ? {...targetValue, ...sourceValue}
-        : sourceValue;
+          ? {...targetValue, ...sourceValue}
+          : sourceValue;
 
     targetPkgJson[key] = newValue as any;
   }
@@ -138,17 +138,20 @@ export async function mergePackageJson(
         ]),
       ]
         .sort()
-        .reduce((acc, dep) => {
-          let version = (sourcePkgJson[key]?.[dep] ??
-            targetPkgJson[key]?.[dep])!;
+        .reduce(
+          (acc, dep) => {
+            let version = (sourcePkgJson[key]?.[dep] ??
+              targetPkgJson[key]?.[dep])!;
 
-          if (dep.startsWith('@remix-run/') && remixVersion) {
-            version = remixVersion;
-          }
+            if (dep.startsWith('@remix-run/') && remixVersion) {
+              version = remixVersion;
+            }
 
-          acc[dep] = version;
-          return acc;
-        }, {} as Record<string, string>);
+            acc[dep] = version;
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
     }
   }
 

@@ -243,17 +243,20 @@ function getSelectedVariant(
 function getOptions(
   variants: PartialDeep<ProductVariantType, {recurseIntoArrays: true}>[],
 ): OptionWithValues[] {
-  const map = variants.reduce((memo, variant) => {
-    if (!variant.selectedOptions) {
-      throw new Error(`'getOptions' requires 'variant.selectedOptions'`);
-    }
-    variant?.selectedOptions?.forEach((opt) => {
-      memo[opt?.name ?? ''] = memo[opt?.name ?? ''] || new Set();
-      memo[opt?.name ?? ''].add(opt?.value ?? '');
-    });
+  const map = variants.reduce(
+    (memo, variant) => {
+      if (!variant.selectedOptions) {
+        throw new Error(`'getOptions' requires 'variant.selectedOptions'`);
+      }
+      variant?.selectedOptions?.forEach((opt) => {
+        memo[opt?.name ?? ''] = memo[opt?.name ?? ''] || new Set();
+        memo[opt?.name ?? ''].add(opt?.value ?? '');
+      });
 
-    return memo;
-  }, {} as Record<string, Set<string>>);
+      return memo;
+    },
+    {} as Record<string, Set<string>>,
+  );
 
   return Object.keys(map).map((option) => {
     return {

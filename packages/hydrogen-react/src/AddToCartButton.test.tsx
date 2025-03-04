@@ -83,7 +83,7 @@ describe('<AddToCartButton/>', () => {
         </MockWrapper>,
       );
 
-      await act(() => user.click(screen.getByRole('button')));
+      await act(async () => await user.click(screen.getByRole('button')));
 
       expect(mockLinesAdd).toHaveBeenCalledTimes(1);
       expect(mockLinesAdd).toHaveBeenCalledWith([
@@ -107,7 +107,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
-        await act(() => user.click(screen.getByRole('button')));
+        await act(async () => await user.click(screen.getByRole('button')));
 
         expect(mockLinesAdd).toHaveBeenCalledTimes(1);
         expect(mockLinesAdd).toHaveBeenCalledWith([
@@ -138,7 +138,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
-        await act(() => user.click(screen.getByRole('button')));
+        await act(async () => await user.click(screen.getByRole('button')));
 
         expect(mockLinesAdd).toHaveBeenCalledTimes(1);
         expect(mockLinesAdd).toHaveBeenCalledWith([
@@ -173,7 +173,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
-        await act(() => user.click(screen.getByRole('button')));
+        await act(async () => await user.click(screen.getByRole('button')));
 
         await waitFor(() => {
           expect(screen.getByRole('button')).toBeDisabled();
@@ -194,7 +194,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
-        await act(() => user.click(screen.getByRole('button')));
+        await act(async () => await user.click(screen.getByRole('button')));
 
         await waitFor(() => {
           expect(screen.getByRole('alert')).toHaveTextContent(

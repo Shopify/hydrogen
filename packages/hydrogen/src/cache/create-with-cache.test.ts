@@ -69,9 +69,7 @@ describe('createWithCache', () => {
 
     it('skips cache when throwing', async () => {
       actionFn.mockImplementationOnce(() => {
-        return Promise.resolve().then(() => {
-          throw new Error('test');
-        });
+        throw new Error('test');
       });
 
       await expect(

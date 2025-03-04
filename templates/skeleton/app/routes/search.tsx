@@ -19,9 +19,10 @@ export const meta: MetaFunction = () => {
 export async function loader({request, context}: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const isPredictive = url.searchParams.has('predictive');
-  const searchPromise = isPredictive
-    ? predictiveSearch({request, context})
-    : regularSearch({request, context});
+  const searchPromise: Promise<PredictiveSearchReturn | RegularSearchReturn> =
+    isPredictive
+      ? predictiveSearch({request, context})
+      : regularSearch({request, context});
 
   searchPromise.catch((error: Error) => {
     console.error(error);

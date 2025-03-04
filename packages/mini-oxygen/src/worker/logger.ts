@@ -167,7 +167,7 @@ async function logConsoleMessage(
           args.push(
             ro.subtype === 'null'
               ? 'null'
-              : ro.description ?? '<no-description>',
+              : (ro.description ?? '<no-description>'),
           );
         } else {
           if (ro.preview.description) args.push(ro.preview.description);
