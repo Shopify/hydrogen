@@ -83,7 +83,7 @@ describe('auth.helpers', () => {
       await expect(run).rejects.toThrowError('Unauthorized');
     });
 
-    it('Throws when there is no valid authorization code in the session', async () => {
+    it('Throws when an invalid access token is received', async () => {
       (session.get as any).mockReturnValueOnce({
         refreshToken: 'refreshToken',
       });
@@ -109,7 +109,7 @@ describe('auth.helpers', () => {
       }
 
       await expect(run).rejects.toThrowError(
-        'Unauthorized oAuth access token was not provided during token exchange.',
+        'Unauthorized Invalid access token received.',
       );
     });
 
