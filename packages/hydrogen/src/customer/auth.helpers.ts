@@ -134,6 +134,10 @@ export async function refreshToken({
     refresh_token,
   }: Omit<AccessTokenResponse, 'id_token'> = await response.json();
 
+  if (!access_token || access_token.length === 0) {
+    throw new BadRequest('Unauthorized', 'Invalid access token received.');
+  }
+
   session.set(CUSTOMER_ACCOUNT_SESSION_KEY, {
     accessToken: access_token,
     // Store the date in future the token expires, separated by two minutes
