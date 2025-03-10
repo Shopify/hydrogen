@@ -149,9 +149,14 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           bundle[oxygenJsonFile] = {
             type: 'asset',
             fileName: oxygenJsonFile,
-            name: oxygenJsonFile,
             needsCodeReference: false,
             source: JSON.stringify(oxygenJsonContent, null, 2),
+            names: [oxygenJsonFile],
+            originalFileNames: [oxygenJsonFile],
+            // name and originalFileName should be deprecated .. but
+            // for some reason, removing them breaks typescript check
+            name: oxygenJsonFile,
+            originalFileName: oxygenJsonFile,
           };
         }
       },

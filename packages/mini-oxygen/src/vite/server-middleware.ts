@@ -142,7 +142,7 @@ function startMiniOxygenRuntime({
               if (!setup) return;
 
               const service = env['wrapped_service_' + index];
-              const wrappedBinding = service 
+              const wrappedBinding = service
                 ? (...args) => {
                   return service.fetch(
                     new Request(
@@ -193,7 +193,7 @@ export function setupOxygenMiddleware(
 
         // `fetchModule` is similar to `viteDevServer.ssrFetchModule`,
         // but it treats source maps differently (avoids adding empty lines).
-        fetchModule(viteDevServer, id, importer)
+        fetchModule(viteDevServer.environments['srr'], id, importer)
           .then((ssrModule) => res.end(JSON.stringify(ssrModule)))
           .catch((error) => {
             console.error('Error during module fetch:', error);

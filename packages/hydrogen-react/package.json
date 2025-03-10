@@ -143,7 +143,7 @@
     "@types/jest": "^29.4.0",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
     "@typescript-eslint/parser": "^8.21.0",
-    "@vitejs/plugin-react": "^4.2.1",
+    "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^1.0.4",
     "cpy-cli": "^4.2.0",
     "happy-dom": "^17.0.0",
