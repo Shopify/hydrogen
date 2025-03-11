@@ -105,62 +105,71 @@ async function handler(args: UpdateArgs) {
     );
   }
 
-  // copy the skeleton to a temp folder, ignoring the node_modules folder
+  // create a temp folder for the transient skeleton files
   const skeletonDir = makeRandomTempDir({prefix: 'skeleton'});
-  fs.cpSync(TEMPLATE_PATH, skeletonDir, {
-    recursive: true,
-    filter: (src) => {
-      return !src.includes('node_modules');
-    },
-  });
-
-  // checkout the reference branch
-  execSync(`git checkout ${parsedReferenceBranch.branch}`);
-
-  // create a new branch
-  const updateBranch = `update-recipe-${recipeName}-${Date.now()}`;
-  execSync(`git checkout -b ${updateBranch}`);
-
-  // copy the temp skeleton to the skeleton folder
-  fs.cpSync(skeletonDir, TEMPLATE_PATH, {
-    recursive: true,
-  });
-
-  // generate the recipe
-  await generateRecipe({
-    recipeName,
-    filenamesToIgnore: FILES_TO_IGNORE_FOR_GENERATE,
-    onlyFiles: false,
-    referenceBranch: args.referenceBranch,
-  });
-
-  // copy the recipe to the temp folder
+  // create a temp folder for the transient recipe files
   const tempDir = makeRandomTempDir({prefix: 'update-recipe'});
-  fs.cpSync(path.join(COOKBOOK_PATH, 'recipes', recipeName), tempDir, {
-    recursive: true,
-  });
 
-  // commit the changes
-  execSync(`git add .`, {cwd: REPO_ROOT});
-  execSync(`git commit -m "Update ${recipeName}"`, {cwd: REPO_ROOT});
+  try {
+    // copy the skeleton to a temp folder, ignoring the node_modules folder
+    fs.cpSync(TEMPLATE_PATH, skeletonDir, {
+      recursive: true,
+      filter: (src) => {
+        return !src.includes('node_modules');
+      },
+    });
 
-  // checkout the main branch
-  execSync(`git checkout ${parsedReferenceBranch.branch}`);
+    // checkout the reference branch
+    execSync(`git checkout ${parsedReferenceBranch.branch}`);
 
-  // copy the temp recipe folder to the recipe folder
-  fs.cpSync(tempDir, path.join(COOKBOOK_PATH, 'recipes', recipeName), {
-    recursive: true,
-  });
+    // create a new branch
+    const updateBranch = `update-recipe-${recipeName}-${Date.now()}`;
+    execSync(`git checkout -b ${updateBranch}`);
 
-  // render the recipe
-  await renderRecipe({
-    recipeName,
-    format: 'github',
-  });
+    // copy the temp skeleton to the skeleton folder
+    fs.cpSync(skeletonDir, TEMPLATE_PATH, {
+      recursive: true,
+    });
 
-  // delete the temp branches
-  execSync(`git branch -D ${applyBranch}`);
-  execSync(`git branch -D ${updateBranch}`);
+    // generate the recipe
+    await generateRecipe({
+      recipeName,
+      filenamesToIgnore: FILES_TO_IGNORE_FOR_GENERATE,
+      onlyFiles: false,
+      referenceBranch: args.referenceBranch,
+    });
+
+    // copy the recipe to the temp folder
+    fs.cpSync(path.join(COOKBOOK_PATH, 'recipes', recipeName), tempDir, {
+      recursive: true,
+    });
+
+    // commit the changes
+    execSync(`git add .`, {cwd: REPO_ROOT});
+    execSync(`git commit -m "Update ${recipeName}"`, {cwd: REPO_ROOT});
+
+    // checkout the main branch
+    execSync(`git checkout ${parsedReferenceBranch.branch}`);
+
+    // copy the temp recipe folder to the recipe folder
+    fs.cpSync(tempDir, path.join(COOKBOOK_PATH, 'recipes', recipeName), {
+      recursive: true,
+    });
+
+    // render the recipe
+    await renderRecipe({
+      recipeName,
+      format: 'github',
+    });
+
+    // delete the temp branches and cleanup temp folders
+    execSync(`git branch -D ${applyBranch}`);
+    execSync(`git branch -D ${updateBranch}`);
+  } finally {
+    // cleanup temp folders
+    fs.rmSync(tempDir, {recursive: true});
+    fs.rmSync(skeletonDir, {recursive: true});
+  }
 
   // we're golden
   console.log(`🎉 Recipe updated: ${recipeName}`);

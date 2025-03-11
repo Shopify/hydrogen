@@ -12,32 +12,36 @@ export function validateRecipe(params: {recipeTitle: string}) {
 
   const {recipeTitle} = params;
   const tempDir = makeRandomTempDir({prefix: 'validate-recipe'});
+  try {
+    console.log(`- 🧑‍🍳 Applying recipe '${recipeTitle}'`);
+    applyRecipe({
+      recipeTitle,
+    });
 
-  console.log(`- 🧑‍🍳 Applying recipe '${recipeTitle}'`);
-  applyRecipe({
-    recipeTitle,
-  });
+    // copy the skeleton template to a temporary directory, except for the node_modules directory and its contents
+    fs.cpSync(TEMPLATE_PATH, tempDir, {
+      recursive: true,
+      filter: (src) => {
+        return !src.includes('node_modules');
+      },
+    });
 
-  // copy the skeleton template to a temporary directory, except for the node_modules directory and its contents
-  fs.cpSync(TEMPLATE_PATH, tempDir, {
-    recursive: true,
-    filter: (src) => {
-      return !src.includes('node_modules');
-    },
-  });
+    // run npm install in the template directory
+    console.log(`- 📦 Installing dependencies…`);
+    execSync(`npm install`, {cwd: tempDir});
 
-  // run npm install in the template directory
-  console.log(`- 📦 Installing dependencies…`);
-  execSync(`npm install`, {cwd: tempDir});
+    // run typecheck in the template directory
+    console.log(`- 🔨 Running typecheck…`);
+    execSync(`npm run typecheck`, {cwd: tempDir});
 
-  // run typecheck in the template directory
-  console.log(`- 🔨 Running typecheck…`);
-  execSync(`npm run typecheck`, {cwd: tempDir});
+    // run npm run build in the template directory
+    console.log(`- 🏗️ Building…`);
+    execSync(`npm run build`, {cwd: tempDir});
 
-  // run npm run build in the template directory
-  console.log(`- 🏗️ Building…`);
-  execSync(`npm run build`, {cwd: tempDir});
-
-  const duration = Date.now() - start;
-  console.log(`✅ Recipe '${recipeTitle}' is valid (${duration}ms)`);
+    const duration = Date.now() - start;
+    console.log(`✅ Recipe '${recipeTitle}' is valid (${duration}ms)`);
+  } finally {
+    // cleanup the temp folder
+    fs.rmSync(tempDir, {recursive: true});
+  }
 }
