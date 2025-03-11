@@ -31,7 +31,10 @@ export async function isViteProject(root: string) {
   return isVite;
 }
 
-export async function getViteConfig(root: string, ssrEntryFlag?: string) {
+export async function getViteConfig(
+  root: string,
+  ssrEntryFlag?: string,
+): Promise<any> {
   const vite = await importVite(root);
 
   const command = 'build';

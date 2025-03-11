@@ -77,10 +77,9 @@
     "worktop": "^0.7.3"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.15.3",
-    "@remix-run/react": "^2.15.3",
-    "@remix-run/server-runtime": "^2.15.3",
-    "@remix-run/route-config": "^2.15.3",
+    "@remix-run/dev": "0.0.0-experimental-15d9a14ad",
+    "@remix-run/react": "0.0.0-experimental-15d9a14ad",
+    "@remix-run/server-runtime": "0.0.0-experimental-15d9a14ad",
     "@shopify/generate-docs": "0.16.2",
     "@shopify/hydrogen-codegen": "*",
     "@testing-library/jest-dom": "^5.17.0",
@@ -93,8 +92,8 @@
     "vitest": "^1.0.4"
   },
   "peerDependencies": {
-    "@remix-run/react": "^2.10.0",
-    "@remix-run/server-runtime": "^2.10.0",
+    "@remix-run/react": "0.0.0-experimental-15d9a14ad",
+    "@remix-run/server-runtime": "0.0.0-experimental-15d9a14ad",
     "react": "^18.2.0",
     "vite": "^5.1.0"
   },
