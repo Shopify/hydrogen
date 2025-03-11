@@ -16,7 +16,7 @@
     "baseUrl": ".",
     "types": [
       "@shopify/oxygen-workers-types",
-      "@remix-run/node",
+      "@remix-run/server-runtime",
       "vite/client"
     ],
     "paths": {
