@@ -26,11 +26,6 @@ export async function hydrogenRoutes(
     children: childVirtualRoutes,
   };
 
-  console.log(
-    'hydrogenRoutes',
-    JSON.stringify([...currentRoutes, virtualLayout], null, 2),
-  );
-
   // The virtual root should land after any existing routes because of the root path
   // handling.
   return [...currentRoutes, virtualLayout];
