@@ -51,10 +51,11 @@ export function applyRecipe(params: {
   console.log(`- 🍣 Checking ingredients…`);
   // filter out public ingredients as they might contain assets we don't need to cross-check
   const nonPublicFSIngredients = fsIngredients.filter(
-    (ingredient) => !ingredient.startsWith(TEMPLATE_DIRECTORY + 'public/'),
+    (ingredient) =>
+      !ingredient.startsWith(path.join(TEMPLATE_DIRECTORY, 'public/')),
   );
   const nonPublicRecipeIngredients = recipe.ingredients.filter(
-    (i) => !i.path.startsWith(TEMPLATE_DIRECTORY + 'public/'),
+    (i) => !i.path.startsWith(path.join(TEMPLATE_DIRECTORY, 'public/')),
   );
   if (
     nonPublicFSIngredients.length !== nonPublicRecipeIngredients.length ||
