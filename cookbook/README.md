@@ -83,7 +83,7 @@ npm run cookbook -- apply --recipe my-recipe
 
 `generate` will build a recipe folder based on the current changes made to the skeleton template, effectively snapshotting its state into a reproducible recipe.
 
-To create a new recipe the workflow all is needed is:
+The workflow for creating a new recipe is as follows:
 
 1. Make the desired changes to the skeleton template
 2. (Optional) Mark relevant portions of the code with `@description` comments describing what the changes are doing
@@ -181,6 +181,8 @@ npm run cookbook -- render --recipe my-recipe --format github
 `regenerate` will apply in sequence: `apply`, `generate`, and `render`.
 
 If no recipe name is provided, all recipes will be regenerated.
+
+This command is intended to be a shorthand
 
 #### Syntax
 
