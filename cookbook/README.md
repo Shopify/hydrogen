@@ -182,7 +182,9 @@ npm run cookbook -- render --recipe my-recipe --format github
 
 If no recipe name is provided, all recipes will be regenerated.
 
-This command is intended to be a shorthand
+This command provides a convenient shorthand to refresh all recipes, particularly useful when cookbook scripts have been modified or enhanced in how they represent output files.
+
+By applying changes across all existing recipes at once, it ensures that every recipe follows the latest implementation of the recipe format.
 
 #### Syntax
 
