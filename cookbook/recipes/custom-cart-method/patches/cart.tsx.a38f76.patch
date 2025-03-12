@@ -1,0 +1,45 @@
+index 62dc7602..805b9cc3 100644
+--- a/templates/skeleton/app/routes/cart.tsx
++++ b/templates/skeleton/app/routes/cart.tsx
+@@ -1,8 +1,17 @@
+ import {type MetaFunction, useLoaderData} from '@remix-run/react';
+ import type {CartQueryDataReturn} from '@shopify/hydrogen';
+ import {CartForm} from '@shopify/hydrogen';
+-import {data, type LoaderFunctionArgs, type ActionFunctionArgs, type HeadersFunction} from '@shopify/remix-oxygen';
+-import {CartMain} from '~/components/CartMain';
++import {
++  data,
++  type LoaderFunctionArgs,
++  type ActionFunctionArgs,
++  type HeadersFunction,
++} from '@shopify/remix-oxygen';
++import type {
++  SelectedOptionInput,
++  CartLineUpdateInput,
++} from '@shopify/hydrogen/storefront-api-types';
++import {CartMain} from '~/components/Cart';
+ 
+ export const meta: MetaFunction = () => {
+   return [{title: `Hydrogen | Cart`}];
+@@ -25,6 +34,21 @@ export async function action({request, context}: ActionFunctionArgs) {
+   let result: CartQueryDataReturn;
+ 
+   switch (action) {
++    // @description Custom cart method to update the line by selected options
++    case 'CustomUpdateLineByOptions':
++      const {productId, line, ...selectedOptionsPairs} = inputs;
++
++      const selectedOptions = [];
++      for (const [name, value] of Object.entries(selectedOptionsPairs)) {
++        selectedOptions.push({name, value});
++      }
++
++      result = await cart.updateLineByOptions(
++        productId as string,
++        selectedOptions as SelectedOptionInput[],
++        line as CartLineUpdateInput,
++      );
++      break;
+     case CartForm.ACTIONS.LinesAdd:
+       result = await cart.addLines(inputs.lines);
+       break;

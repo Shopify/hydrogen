@@ -1,0 +1,57 @@
+index c424c511..ffb17487 100644
+--- a/templates/skeleton/app/lib/context.ts
++++ b/templates/skeleton/app/lib/context.ts
+@@ -1,6 +1,14 @@
+-import {createHydrogenContext} from '@shopify/hydrogen';
++import {
++  createHydrogenContext,
++  cartLinesUpdateDefault,
++  cartGetIdDefault,
++} from '@shopify/hydrogen';
+ import {AppSession} from '~/lib/session';
+-import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
++import {CART_QUERY_FRAGMENT, PRODUCT_VARIANT_QUERY} from '~/lib/fragments';
++import type {
++  SelectedOptionInput,
++  CartLineUpdateInput,
++} from '@shopify/hydrogen/storefront-api-types';
+ 
+ /**
+  * The context implementation is separate from server.ts
+@@ -33,6 +41,36 @@ export async function createAppLoadContext(
+     i18n: {language: 'EN', country: 'US'},
+     cart: {
+       queryFragment: CART_QUERY_FRAGMENT,
++      // @description Add the custom cart methods
++      // Avoid using method definition in customMethods ie. methodDefinition() {}
++      // as TypeScript is unable to correctly infer the type
++      // if method definition is necessary, declaring customMethods separately
++      customMethods: {
++        updateLineByOptions: async (
++          productId: string,
++          selectedOptions: SelectedOptionInput[],
++          line: CartLineUpdateInput,
++        ) => {
++          const {product} = await hydrogenContext.storefront.query(
++            PRODUCT_VARIANT_QUERY,
++            {
++              variables: {
++                productId,
++                selectedOptions,
++              },
++            },
++          );
++
++          const lines = [
++            {...line, merchandiseId: product?.selectedVariant?.id},
++          ];
++
++          return await cartLinesUpdateDefault({
++            storefront: hydrogenContext.storefront,
++            getCartId: cartGetIdDefault(request.headers),
++          })(lines);
++        },
++      },
+     },
+   });
+ 

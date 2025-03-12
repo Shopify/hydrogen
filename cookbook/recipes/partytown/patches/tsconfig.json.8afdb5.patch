@@ -1,0 +1,16 @@
+index bf02c20a..1564d6fa 100644
+--- a/templates/skeleton/tsconfig.json
++++ b/templates/skeleton/tsconfig.json
+@@ -14,11 +14,7 @@
+     "forceConsistentCasingInFileNames": true,
+     "skipLibCheck": true,
+     "baseUrl": ".",
+-    "types": [
+-      "@shopify/oxygen-workers-types",
+-      "@remix-run/node",
+-      "vite/client"
+-    ],
++    "types": ["@shopify/oxygen-workers-types", "@types/gtag.js"],
+     "paths": {
+       "~/*": ["app/*"]
+     },
