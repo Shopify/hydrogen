@@ -87,32 +87,12 @@ export async function generateRecipe(params: {
   }
 
   // parse the modified files into steps, where the step name is TODO and the patch is the diff of the file (the filename is the file path)
-  const generatedSteps: Step[] = await generateSteps({
+  const steps = await generateSteps({
     modifiedFiles,
     patchesDirPath,
     existingRecipe,
+    ingredients,
   });
-
-  let copyIngredientsIndex = generatedSteps.findIndex(
-    (step) => step.type === 'COPY_INGREDIENTS',
-  );
-  if (copyIngredientsIndex === -1) {
-    copyIngredientsIndex = 0;
-  }
-
-  // remove the copy ingredients step...
-  const stepsWithoutCopyIngredients: Step[] = generatedSteps.filter(
-    (step) => step.type !== 'COPY_INGREDIENTS',
-  );
-  // ...and add it back (in the right position) if there are ingredients
-  const steps: Step[] = [
-    ...(ingredients.length > 0
-      ? stepsWithoutCopyIngredients
-          .slice(0, copyIngredientsIndex)
-          .concat(copyIngredientsStep(ingredients))
-          .concat(stepsWithoutCopyIngredients.slice(copyIngredientsIndex))
-      : stepsWithoutCopyIngredients),
-  ];
 
   const recipe: Recipe = {
     title: existingRecipe?.title ?? recipeName,
@@ -138,6 +118,7 @@ async function generateSteps(params: {
   modifiedFiles: string[];
   patchesDirPath: string;
   existingRecipe: Recipe | null;
+  ingredients: Ingredient[];
 }): Promise<Step[]> {
   const existingInfoSteps =
     params.existingRecipe?.steps.filter((step) => step.type === 'INFO') ?? [];
@@ -148,25 +129,11 @@ async function generateSteps(params: {
     (file) => !file.endsWith('.generated.d.ts'),
   );
 
-  function getPatchfile(file: string) {
-    const fullPath = path.join(REPO_ROOT, file);
-
-    // get the diff of the file, keeping only the patch
-    const diff = execSync(`git diff '${fullPath}'`, {
-      encoding: 'utf-8',
-    });
-    // remove the diff header
-    const changes = diff.toString().split('\n').slice(1).join('\n');
-
-    const sha = createHash('sha256').update(fullPath).digest('hex');
-    const patchFilename = `${path.basename(fullPath)}.${sha.slice(0, 6)}.patch`;
-    const patchFilePath = path.join(params.patchesDirPath, patchFilename);
-    fs.writeFileSync(patchFilePath, changes);
-    return {fullPath, patchFilePath, patchFilename};
-  }
-
   for await (const file of modifiedFiles) {
-    const {fullPath, patchFilePath, patchFilename} = getPatchfile(file);
+    const {fullPath, patchFilePath, patchFilename} = getPatchfile({
+      file,
+      patchesDirPath: params.patchesDirPath,
+    });
 
     const inFileDescription = getStepDescription(patchFilePath, 'patch');
 
@@ -237,19 +204,27 @@ async function generateSteps(params: {
   const generatedTypesFiles = params.modifiedFiles.filter((file) =>
     file.endsWith('.generated.d.ts'),
   );
-  const generatedStep: Step = {
-    type: 'PATCH',
-    name: 'Codegen',
-    diffs: generatedTypesFiles.map((file) => {
-      const {fullPath, patchFilename} = getPatchfile(file);
-      return {
-        file: fullPath.replace(TEMPLATE_PATH, ''),
-        patchFile: patchFilename,
-      };
-    }),
-  };
+  const maybeCodegenStep: Step[] =
+    generatedTypesFiles.length > 0
+      ? [
+          codegenStep({
+            generatedTypesFiles,
+            patchesDirPath: params.patchesDirPath,
+          }),
+        ]
+      : [];
+  // add the copy ingredients step if there are ingredients
+  const maybeCopyIngredientsStep: Step[] =
+    params.ingredients.length > 0
+      ? [copyIngredientsStep(params.ingredients)]
+      : [];
 
-  return [...existingInfoSteps, ...patchSteps, generatedStep];
+  return [
+    ...existingInfoSteps,
+    ...maybeCopyIngredientsStep,
+    ...patchSteps,
+    ...maybeCodegenStep,
+  ];
 }
 
 function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
@@ -270,7 +245,46 @@ function copyIngredientsStep(ingredients: Ingredient[]): Step {
     type: 'COPY_INGREDIENTS',
     name: 'Copy ingredients',
     description:
-      'Copy the ingredients from the template directory to the current directory',
+      'Copy the ingredients from the template directory to the current directory.',
     ingredients: ingredients.map((ingredient) => ingredient.path),
   };
+}
+
+function codegenStep(params: {
+  generatedTypesFiles: string[];
+  patchesDirPath: string;
+}): Step {
+  const {generatedTypesFiles, patchesDirPath} = params;
+  return {
+    type: 'PATCH',
+    name: 'Codegen',
+    diffs: generatedTypesFiles.map((file) => {
+      const {fullPath, patchFilename} = getPatchfile({
+        file,
+        patchesDirPath,
+      });
+      return {
+        file: fullPath.replace(TEMPLATE_PATH, ''),
+        patchFile: patchFilename,
+      };
+    }),
+  };
+}
+
+function getPatchfile(params: {file: string; patchesDirPath: string}) {
+  const {file, patchesDirPath} = params;
+  const fullPath = path.join(REPO_ROOT, file);
+
+  // get the diff of the file, keeping only the patch
+  const diff = execSync(`git diff '${fullPath}'`, {
+    encoding: 'utf-8',
+  });
+  // remove the diff header
+  const changes = diff.toString().split('\n').slice(1).join('\n');
+
+  const sha = createHash('sha256').update(fullPath).digest('hex');
+  const patchFilename = `${path.basename(fullPath)}.${sha.slice(0, 6)}.patch`;
+  const patchFilePath = path.join(patchesDirPath, patchFilename);
+  fs.writeFileSync(patchFilePath, changes);
+  return {fullPath, patchFilePath, patchFilename};
 }
