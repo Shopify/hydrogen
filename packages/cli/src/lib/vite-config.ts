@@ -41,7 +41,10 @@ type ViteConfigResult = {
   remixConfig: ResolvedRemixConfig;
 };
 
-export async function getViteConfig(root: string, ssrEntryFlag?: string): Promise<ViteConfigResult> {
+export async function getViteConfig(
+  root: string,
+  ssrEntryFlag?: string,
+): Promise<ViteConfigResult> {
   const vite = await importVite(root);
 
   const command = 'build';

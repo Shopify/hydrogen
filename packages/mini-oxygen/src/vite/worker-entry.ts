@@ -7,11 +7,12 @@
  */
 
 import {
-  ViteRuntime,
+  EvaluatedModuleNode,
+  ModuleRunner,
   ssrModuleExportsKey,
-  type ViteRuntimeModuleContext,
-} from 'vite/runtime';
-import type {HMRPayload} from 'vite';
+  type ModuleRunnerContext,
+} from 'vite/module-runner';
+import type {HotPayload, CustomPayload} from 'vite';
 import type {Response} from 'miniflare';
 import {withRequestHook} from '../worker/handler.js';
 
@@ -81,7 +82,7 @@ function createUserEnv(env: ViteEnv) {
  * The Vite runtime instance. It's a singleton because it's shared
  * across all the requests to workerd and it's stateful (module cache).
  */
-let runtime: ViteRuntime;
+let runtime: ModuleRunner;
 
 /**
  * Setup the whole Vite runtime and HMR the first time this function is called.
@@ -91,7 +92,7 @@ let runtime: ViteRuntime;
  */
 function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
   if (!runtime) {
-    let onHmrRecieve: ((payload: HMRPayload) => void) | undefined;
+    let onHmrRecieve: ((payload: HotPayload) => void) | undefined;
 
     let hmrReady = false;
     connectHmrWsClient(publicUrl, env)
@@ -99,7 +100,7 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
         hmrReady = !!hmrWs;
         hmrWs?.addEventListener('message', (message) => {
           if (!message.data) return;
-          const data: HMRPayload = JSON.parse(message.data.toString());
+          const data: HotPayload = JSON.parse(message.data.toString());
 
           if (!data) return;
 
@@ -107,11 +108,7 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
             // Invalidate cache synchronously without revalidating the
             // module to avoid hanging promises in workerd
             for (const update of data.updates) {
-              runtime.moduleCache.invalidateDepTree([
-                // Module IDs are absolute from root
-                update.path.replace(/^\.\//, '/'),
-                ...(update.ssrInvalidates ?? []),
-              ]);
+              runtime.import(update.acceptedPath);
             }
           } else if (data.type !== 'custom' && onHmrRecieve) {
             // Custom events are only used in browser HMR, so ignore them.
@@ -128,31 +125,29 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
       })
       .catch((error) => console.error(error));
 
-    runtime = new ViteRuntime(
+    runtime = new ModuleRunner(
       {
         root: env.__VITE_ROOT,
         sourcemapInterceptor: 'prepareStackTrace',
-        fetchModule: (id, importer) => {
-          // Do not use WS here because the payload can exceed the limit
-          // of WS in workerd. Instead, use fetch to get the module:
-          const url = new URL(env.__VITE_FETCH_MODULE_PATHNAME, publicUrl);
-          url.searchParams.set('id', id);
-          if (importer) url.searchParams.set('importer', importer);
+        transport: {
+          invoke: async (data) => {
+            // Do not use WS here because the payload can exceed the limit
+            // of WS in workerd. Instead, use fetch to get the module:
+            if (data.type === 'custom') {
+              const customData = data.data;
+              const url = new URL(env.__VITE_FETCH_MODULE_PATHNAME, publicUrl);
+              url.searchParams.set('id', customData.data[0]);
+              if (customData.data[1])
+                url.searchParams.set('importer', customData.data[1]);
 
-          return fetch(url).then((res) => res.json());
-        },
-        hmr: {
-          connection: {
-            isReady: () => hmrReady,
-            send: () => {},
-            onUpdate(receiver) {
-              onHmrRecieve = receiver;
-              return () => {
-                onHmrRecieve = undefined;
-              };
-            },
+              return fetch(url).then((res) => res.json());
+            }
+            return Promise.resolve({
+              error: `Error - invoke: ${JSON.stringify(data)}`,
+            });
           },
         },
+        hmr: false,
       },
       {
         runExternalModule(filepath: string): Promise<any> {
@@ -163,15 +158,17 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
           );
         },
 
-        async runViteModule(
-          context: ViteRuntimeModuleContext,
+        async runInlinedModule(
+          context: ModuleRunnerContext,
           code: string,
-          id: string,
+          module: Readonly<EvaluatedModuleNode>,
         ): Promise<any> {
+          console.log('runInlinedModule', module);
           if (!env.__VITE_UNSAFE_EVAL) {
             throw new Error(`${O2_PREFIX} unsafeEval module is not set`);
           }
 
+          console.log('runInlinedModule', context);
           // We can't use `newAsyncFunction` here because it uses the `id`
           // as the function name AND for sourcemaps. The `id` contains
           // symbols like `@`, `/` or `.` to make the sourcemaps work, but
@@ -184,7 +181,7 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
             `'use strict';async (${Object.keys(context).join(
               ',',
             )})=>{{${code}\n}}`,
-            id,
+            module.id,
           );
 
           await initModule(...Object.values(context));
@@ -196,7 +193,7 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
   }
 
   return (
-    runtime.executeEntrypoint(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
+    runtime.import(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
       default: {fetch: ExportedHandlerFetchHandler};
     }>
   ).catch((error: Error) => {
