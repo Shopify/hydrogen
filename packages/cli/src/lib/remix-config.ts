@@ -92,17 +92,16 @@ export async function getRemixConfig(
     root,
   ).catch(handleRemixImportFail);
 
-  type RemixViteESMConfig =
-    typeof import('@remix-run/dev/dist/vite/import-vite-esm-sync.js');
+  type RemixViteESMConfig = typeof import('@remix-run/dev/dist/vite/vite.js');
 
-  const {importViteEsmSync} = await importLocal<RemixViteESMConfig>(
-    '@remix-run/dev/dist/vite/import-vite-esm-sync.js',
+  const {getVite} = await importLocal<RemixViteESMConfig>(
+    '@remix-run/dev/dist/vite/vite.js',
     root,
   ).catch(handleRemixImportFail);
 
   const appConfig = await getRawRemixConfig(root);
   const routesViteNodeContext = await createContext({root, mode});
-  const vite = importViteEsmSync();
+  const vite = getVite();
   const config = await resolveConfig(appConfig, {
     rootDirectory: root,
     serverMode: mode,
