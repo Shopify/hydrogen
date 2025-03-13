@@ -103,9 +103,6 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
           const data: HotPayload = JSON.parse(message.data.toString());
 
           if (!data) return;
-
-          console.log('connectHmrWsClient', message.data.toString());
-
           if (data.type === 'update') {
             // Invalidate cache synchronously without revalidating the
             // module to avoid hanging promises in workerd
@@ -135,17 +132,14 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
           invoke: async (data) => {
             // Do not use WS here because the payload can exceed the limit
             // of WS in workerd. Instead, use fetch to get the module:
-
-            console.log('invoke', JSON.stringify(data));
-
             if (data.type === 'custom') {
               const customData = data.data;
               const url = new URL(env.__VITE_FETCH_MODULE_PATHNAME, publicUrl);
               url.searchParams.set('id', customData.data[0]);
-              if (customData.data[1])
-                url.searchParams.set('importer', customData.data[1]);
+              if (customData.data)
+                url.searchParams.set('importer', customData.name);
 
-              return fetch(url).then((res) => res.json());
+              return fetch(url).then((res) => ({result: res.json()}));
             }
             return Promise.resolve({
               error: `Error - invoke: ${JSON.stringify(data)}`,
@@ -168,12 +162,10 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
           code: string,
           module: Readonly<EvaluatedModuleNode>,
         ): Promise<any> {
-          console.log('runInlinedModule', module);
           if (!env.__VITE_UNSAFE_EVAL) {
             throw new Error(`${O2_PREFIX} unsafeEval module is not set`);
           }
 
-          console.log('runInlinedModule', context);
           // We can't use `newAsyncFunction` here because it uses the `id`
           // as the function name AND for sourcemaps. The `id` contains
           // symbols like `@`, `/` or `.` to make the sourcemaps work, but
@@ -197,15 +189,11 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
     );
   }
 
-  console.log('runtime execute url', env.__VITE_RUNTIME_EXECUTE_URL);
-
   return (
     runtime.import(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
       default: {fetch: ExportedHandlerFetchHandler};
     }>
   ).catch((error: Error) => {
-    console.log('runtime error');
-
     return {
       errorResponse: new globalThis.Response(
         error?.stack ?? error?.message ?? 'Internal error',
