@@ -1,0 +1,82 @@
+index dc4426a9..92b8da62 100644
+--- a/templates/skeleton/app/lib/fragments.ts
++++ b/templates/skeleton/app/lib/fragments.ts
+@@ -22,6 +22,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
+         ...Money
+       }
+     }
++    sellingPlanAllocation {
++      sellingPlan {
++         name
++      }
++    }
+     merchandise {
+       ... on ProductVariant {
+         id
+@@ -55,56 +60,6 @@ export const CART_QUERY_FRAGMENT = `#graphql
+       }
+     }
+   }
+-  fragment CartLineComponent on ComponentizableCartLine {
+-    id
+-    quantity
+-    attributes {
+-      key
+-      value
+-    }
+-    cost {
+-      totalAmount {
+-        ...Money
+-      }
+-      amountPerQuantity {
+-        ...Money
+-      }
+-      compareAtAmountPerQuantity {
+-        ...Money
+-      }
+-    }
+-    merchandise {
+-      ... on ProductVariant {
+-        id
+-        availableForSale
+-        compareAtPrice {
+-          ...Money
+-        }
+-        price {
+-          ...Money
+-        }
+-        requiresShipping
+-        title
+-        image {
+-          id
+-          url
+-          altText
+-          width
+-          height
+-        }
+-        product {
+-          handle
+-          title
+-          id
+-          vendor
+-        }
+-        selectedOptions {
+-          name
+-          value
+-        }
+-      }
+-    }
+-  }
+   fragment CartApiQuery on Cart {
+     updatedAt
+     id
+@@ -132,9 +87,6 @@ export const CART_QUERY_FRAGMENT = `#graphql
+       nodes {
+         ...CartLine
+       }
+-      nodes {
+-        ...CartLineComponent
+-      }
+     }
+     cost {
+       subtotalAmount {
