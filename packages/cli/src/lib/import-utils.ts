@@ -16,7 +16,7 @@ export async function importVite(root: string): Promise<Vite> {
   const vitePackageJson = await findUpAndReadPackageJson(vitePath);
 
   const viteNodeIndexFile = (vitePackageJson.content as any).exports?.['.']
-    .import.default;
+    .import;
   const viteNodePath = joinPath(
     dirname(vitePackageJson.path),
     viteNodeIndexFile,

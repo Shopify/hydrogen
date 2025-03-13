@@ -12,7 +12,7 @@ import {
   ssrModuleExportsKey,
   type ModuleRunnerContext,
 } from 'vite/module-runner';
-import type {HotPayload, CustomPayload} from 'vite';
+import type {HotPayload} from 'vite';
 import type {Response} from 'miniflare';
 import {withRequestHook} from '../worker/handler.js';
 
