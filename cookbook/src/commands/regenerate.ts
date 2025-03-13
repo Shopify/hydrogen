@@ -7,7 +7,7 @@ import {isRenderFormat, RENDER_FORMATS, renderRecipe} from '../lib/render';
 import {listRecipes, separator} from '../lib/util';
 
 type RegenerateArgs = {
-  recipe: string;
+  recipe?: string;
   onlyFiles: boolean;
   format: string;
   referenceBranch: string;

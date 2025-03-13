@@ -5,7 +5,7 @@ import {listRecipes, separator} from '../lib/util';
 import {validateRecipe} from '../lib/validate';
 
 type ValidateArgs = {
-  recipe: string;
+  recipe?: string;
 };
 
 export const validate: CommandModule<{}, ValidateArgs> = {
