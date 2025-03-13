@@ -194,8 +194,12 @@ export function setupOxygenMiddleware(
         // `fetchModule` is similar to `viteDevServer.ssrFetchModule`,
         // but it treats source maps differently (avoids adding empty lines).
         fetchModule(viteDevServer.environments['ssr'], id, importer)
-          .then((ssrModule) => res.end(JSON.stringify(ssrModule)))
+          .then((ssrModule) => {
+            console.log('fetchModule:', id);
+            res.end(JSON.stringify(ssrModule))
+          })
           .catch((error) => {
+            console.log('fetchModule error:', error);
             console.error('Error during module fetch:', error);
             res.writeHead(500, {'Content-Type': 'text/plain'});
             res.end('Internal server error');

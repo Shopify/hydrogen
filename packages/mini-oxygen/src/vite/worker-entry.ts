@@ -104,6 +104,8 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
 
           if (!data) return;
 
+          console.log('connectHmrWsClient', message.data.toString());
+
           if (data.type === 'update') {
             // Invalidate cache synchronously without revalidating the
             // module to avoid hanging promises in workerd
@@ -133,6 +135,9 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
           invoke: async (data) => {
             // Do not use WS here because the payload can exceed the limit
             // of WS in workerd. Instead, use fetch to get the module:
+
+            console.log('invoke', JSON.stringify(data));
+
             if (data.type === 'custom') {
               const customData = data.data;
               const url = new URL(env.__VITE_FETCH_MODULE_PATHNAME, publicUrl);
@@ -192,11 +197,15 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
     );
   }
 
+  console.log('runtime execute url', env.__VITE_RUNTIME_EXECUTE_URL);
+
   return (
     runtime.import(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
       default: {fetch: ExportedHandlerFetchHandler};
     }>
   ).catch((error: Error) => {
+    console.log('runtime error');
+
     return {
       errorResponse: new globalThis.Response(
         error?.stack ?? error?.message ?? 'Internal error',
