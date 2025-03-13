@@ -208,3 +208,7 @@ export function listRecipes(): string[] {
     .filter((file) => file.isDirectory())
     .map((file) => file.name);
 }
+
+export function getPatchesDir(recipeName: string): string {
+  return path.join(COOKBOOK_PATH, 'recipes', recipeName, 'patches');
+}

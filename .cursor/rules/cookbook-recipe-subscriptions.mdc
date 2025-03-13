@@ -1,17 +1,28 @@
-# 🧑‍🍳 Subscriptions
+---
+description: Cookbook Recipe: subscriptions
+globs: templates/**/*
+alwaysApply: false
+---
+
+This rule describes the `subscriptions` recipe of the Hydrogen cookbook. Please refer to the cookbook instructions on how to use this.
+If the user is asking to apply this recipe, please provide the user with a VERY BRIEF explanation of what the recipe does, and that he can start tinkering by just using the `apply` command for the cookbook. If the user asks for more, then you are free to continue with details explanations of the recipe based on what you know.
+Here's the detailed explanation of the recipe:
+
+--- BEGIN RECIPE DATA ---
+
+## Description
 
 This folder contains an example implementation of [subscriptions](https://shopify.dev/docs/apps/selling-strategies/subscriptions) for Hydrogen. It shows how to display selling plans on a product page.
 
 ![subscriptions-example](https://github.com/Shopify/hydrogen/assets/12080141/1cea5fbf-5a56-4562-95a7-4821facb3c6d)
 
-## 🍣 Ingredients
+## Ingredients
 
-| File | Description |
-| --- | --- |
-| [`app/components/Cart.tsx`](ingredients/templates/skeleton/app/components/Cart.tsx) | Cart component modified to display selected subscription. |
-| [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | A component that simplifies selecting sellingPlans subscription options |
+- `templates/skeleton/app/components/Cart.tsx` : Cart component modified to display selected subscription.
+- `templates/skeleton/app/components/SellingPlanSelector.tsx` : A component that simplifies selecting sellingPlans subscription options
+- `templates/skeleton/app/styles/selling-plan.css` : null
 
-## 🍱 Steps
+## Steps
 
 ### 1. Requirements
 
@@ -1970,6 +1981,8 @@ index d27c5942..5696f7c9 100644
 
 </details>
 
-## 🗑️ Deleted Files
+## Deleted Files
 
 - [`templates/skeleton/app/components/ProductForm.tsx`](templates/skeleton/app/components/ProductForm.tsx)
+
+--- END RECIPE DATA ---
