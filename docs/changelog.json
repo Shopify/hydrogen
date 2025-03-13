@@ -12,7 +12,7 @@
         "@remix-run/react": "^2.15.3",
         "@remix-run/server-runtime": "^2.15.3",
         "@shopify/hydrogen": "2025.1.2",
-        "@shopify/remix-oxygen": "^2.0.10"
+        "@shopify/remix-oxygen": "^2.0.11"
       },
       "devDependencies": {
         "@remix-run/dev": "^2.15.3",
