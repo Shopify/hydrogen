@@ -1,5 +1,11 @@
 # @shopify/mini-oxygen
 
+## 3.1.2
+
+### Patch Changes
+
+- Bump body-parser, codegen, semver, and ws packages ([#2776](https://github.com/Shopify/hydrogen/pull/2776)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 3.1.1
 
 ### Patch Changes

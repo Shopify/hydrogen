@@ -1,5 +1,24 @@
 # skeleton
 
+## 2025.1.3
+
+### Patch Changes
+
+- Update skeleton and create-hydrogen cli to 3.75.4 ([#2769](https://github.com/Shopify/hydrogen/pull/2769)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Fixing typescript compile ([#2787](https://github.com/Shopify/hydrogen/pull/2787)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
+  In tsconfig.json:
+
+  ```diff
+       "types": [
+         "@shopify/oxygen-workers-types",
+  -      "@remix-run/node",
+  +      "@remix-run/server-runtime",
+         "vite/client"
+       ],
+  ```
+
 ## 2025.1.2
 
 ### Patch Changes
