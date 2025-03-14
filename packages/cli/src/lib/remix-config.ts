@@ -71,7 +71,7 @@ export function getRawRemixConfig(root: string) {
 export async function getRemixConfig(
   root: string,
   mode = process.env.NODE_ENV as ServerMode,
-): Promise<ResolvedRemixConfig | ResolvedRemixConfig> {
+): Promise<ResolvedRemixConfig> {
   if (await isViteProject(root)) {
     return (await getViteConfig(root)).remixConfig;
   }
