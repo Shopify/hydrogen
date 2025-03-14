@@ -195,7 +195,7 @@ export function setupOxygenMiddleware(
         // but it treats source maps differently (avoids adding empty lines).
         fetchModule(viteDevServer.environments['ssr'], id, importer)
           .then((ssrModule) => {
-            res.end(JSON.stringify(ssrModule))
+            res.end(JSON.stringify(ssrModule));
           })
           .catch((error) => {
             console.error('Error during module fetch:', error);
