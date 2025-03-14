@@ -86,7 +86,7 @@ export async function generateRecipe(params: {
     fs.copyFileSync(path.join(REPO_ROOT, file), relativePath);
   }
 
-  // parse the modified files into steps, where the step name is TODO and the patch is the diff of the file (the filename is the file path)
+  // parse the modified files into steps
   const steps = await generateSteps({
     modifiedFiles,
     patchesDirPath,
