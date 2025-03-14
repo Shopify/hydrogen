@@ -4,19 +4,17 @@ import type { CartAddressFragment } from 'storefrontapi.generated';
 
 type AddressActionsProps = {
   activeAddress: CartAddressFragment | undefined;
-  onUpdate?: (updatedAddress: CartAddressFragment) => void;
-  onDelete?: () => void;
 }
 
-export function AddressActions({ activeAddress, onUpdate, onDelete }: AddressActionsProps) {
+export function AddressActions({ activeAddress }: AddressActionsProps) {
   const editDialogRef = useRef<HTMLDialogElement>(null);
   const newDialogRef = useRef<HTMLDialogElement>(null);
 
-  function handleEditClick() {
+  function openEditAddressModal() {
     editDialogRef.current?.showModal();
   };
 
-  function handleNewClick() {
+  function openNewAddressModal() {
     newDialogRef.current?.showModal();
   };
 
@@ -25,31 +23,38 @@ export function AddressActions({ activeAddress, onUpdate, onDelete }: AddressAct
     newDialogRef.current?.close();
   };
 
-  // const handleUpdate = (updatedAddress: CartAddressFragment) => {
-  //   onUpdate(updatedAddress);
-  //   handleClose();
-  // };
-
   function handleDelete() {
-    onDelete?.();
     handleClose();
   };
 
-
   return (
     <>
-      <div>
-        <button onClick={handleEditClick}>EDIT</button>
-        <button onClick={handleDelete}>REMOVE</button>
-        <span> | </span>
-        <button onClick={handleNewClick}>NEW</button>
+      <div style={{ display: 'flex', gap: '.25rem' }}>
+        {activeAddress && (
+          <>
+            <button onClick={openEditAddressModal}>EDIT</button>
+            <AddressForm
+              action="CartDeliveryAddressesRemove"
+              inputs={{ addressIds: [activeAddress.id] }}
+            >
+              {() => {
+                return (
+                  <button type="submit">REMOVE</button>
+                )
+              }}
+            </AddressForm>
+            <span> | </span>
+          </>
+        )}
+        <button onClick={openNewAddressModal}>NEW</button>
       </div>
-      <EditAddressModal
-        dialogRef={editDialogRef}
-        handleClose={handleClose}
-        handleDelete={handleDelete}
-        activeAddress={activeAddress}
-      />
+      {activeAddress && (
+        <EditAddressModal
+          dialogRef={editDialogRef}
+          handleClose={handleClose}
+          activeAddress={activeAddress}
+        />
+      )}
       <NewAddressModal
         dialogRef={newDialogRef}
         handleClose={handleClose}
@@ -61,63 +66,50 @@ export function AddressActions({ activeAddress, onUpdate, onDelete }: AddressAct
 function EditAddressModal({
   dialogRef,
   handleClose,
-  handleDelete,
   activeAddress,
 }: {
   dialogRef: React.RefObject<HTMLDialogElement>;
   handleClose: () => void;
-  handleDelete: () => void;
   activeAddress: CartAddressFragment | undefined;
 }) {
+  if (!activeAddress) {
+    return <div>No address selected</div>
+  }
   return (
     <dialog ref={dialogRef} style={{ width: '50%' }}>
-      <div>
-        <button onClick={handleClose}>Close</button>
-        <button onClick={handleDelete} className="danger">Delete</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <h2>Edit Address</h2>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button onClick={handleClose}>Close</button>
+          <AddressForm
+            action="CartDeliveryAddressesRemove"
+            inputs={{ addressIds: [activeAddress.id] }}
+          >
+            {() => {
+              return (
+                <button type="submit">Delete</button>
+              )
+            }}
+          </AddressForm>
+        </div>
       </div>
-      <h2>Edit Address</h2>
-      <AddressForm action='CartDeliveryAddressesUpdate'>
+      <AddressForm
+        action="CartDeliveryAddressesUpdate"
+        inputs={{ id: activeAddress.id }}
+      >
         {() => {
           return (
             <>
-              {!activeAddress ? (
-                <div>No address selected</div>
-              ) : (
-                <>
-                  <AddressForm
-                    action="CartDeliveryAddressesRemove"
-                    inputs={{ addressIds: [activeAddress.id] }}
-                  >
-                    {() => {
-                      return (
-                        <button type="submit">Delete Address</button>
-                      )
-                    }}
-                  </AddressForm>
-                  <AddressForm
-                    action="CartDeliveryAddressesUpdate"
-                    inputs={{ id: activeAddress.id }}
-                  >
-                    {() => {
-                      return (
-                        <>
-                          <FormFields activeAddress={activeAddress} />
-                          <button type="submit">Update Address</button>
-                        </>
-                      )
-                    }}
-                  </AddressForm>
-                </>
-              )}
+              <FormFields activeAddress={activeAddress} />
+              <button type="submit">Update Address</button>
             </>
           )
         }}
       </AddressForm>
       <div>
         <button onClick={handleClose}>Close</button>
-        <button onClick={handleDelete} className="danger">Delete</button>
       </div>
-    </dialog>
+    </dialog >
   )
 }
 
@@ -130,10 +122,10 @@ function NewAddressModal({
 }) {
   return (
     <dialog ref={dialogRef} style={{ width: '50%' }}>
-      <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <h2>New Address</h2>
         <button onClick={handleClose}>Close</button>
       </div>
-      <h2>New Address</h2>
       <AddressForm action='CartDeliveryAddressesAdd'>
         {() => {
           return (

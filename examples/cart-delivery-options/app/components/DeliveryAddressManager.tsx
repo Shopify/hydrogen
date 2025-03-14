@@ -7,9 +7,9 @@ export function DeliveryAddressManager({ cart }: { cart: CartApiQueryFragment })
   console.log('all', cart.delivery.addresses)
   const otherAddresses = cart.delivery?.addresses
     .filter((address => !address.selected))
-  const selectedAddress = cart.delivery.addresses
-    .find((address => address.selected))
-  const addresses = [selectedAddress, ...otherAddresses].filter(Boolean) as CartAddressFragment[]
+  const selectedAddress = cart.delivery.selectedAddress[0]
+
+  const addresses = [selectedAddress, ...otherAddresses].filter(Boolean)
   const [activeAddress, setActiveAddress] = useState<CartAddressFragment | undefined>(selectedAddress || addresses[0])
   return (
     <div>
@@ -33,7 +33,7 @@ export function FormFields({ activeAddress }: { activeAddress?: CartAddressFragm
   const address = activeAddress ? activeAddress.address : {} as CartAddressFragment['address']
   const selected = activeAddress ? activeAddress.selected : false
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: "column" }}>
       <fieldset>
         <label>First Name</label>
         <input type="text" name="firstName" defaultValue={address?.firstName ? address.firstName : undefined} />
@@ -70,7 +70,7 @@ export function FormFields({ activeAddress }: { activeAddress?: CartAddressFragm
         <label>Make default</label>
         <input type="checkbox" name="selected" defaultChecked={selected} />
       </fieldset>
-    </>
+    </div>
   )
 }
 
