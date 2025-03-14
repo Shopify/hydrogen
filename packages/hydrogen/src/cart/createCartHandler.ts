@@ -1,6 +1,6 @@
-import {Storefront} from '../storefront';
-import type {CustomerAccount} from '../customer/types';
-import {type CartGetFunction, cartGetDefault} from './queries/cartGetDefault';
+import { Storefront } from '../storefront';
+import type { CustomerAccount } from '../customer/types';
+import { type CartGetFunction, cartGetDefault } from './queries/cartGetDefault';
 import {
   type CartCreateFunction,
   cartCreateDefault,
@@ -49,6 +49,18 @@ import {
   type CartGiftCardCodesUpdateFunction,
   cartGiftCardCodesUpdateDefault,
 } from './queries/cartGiftCardCodeUpdateDefault';
+import {
+  type CartDeliveryAddressesAddFunction,
+  cartDeliveryAddressesAddDefault,
+} from './queries/cartDeliveryAddressesAdd';
+import {
+  type CartDeliveryAddressesRemoveFunction,
+  cartDeliveryAddressesRemoveDefault,
+} from './queries/cartDeliveryAddressesRemove';
+import {
+  type CartDeliveryAddressesUpdateFunction,
+  cartDeliveryAddressesUpdateDefault,
+} from './queries/cartDeliveryAddressesUpdate';
 
 export type CartHandlerOptions = {
   storefront: Storefront;
@@ -84,6 +96,9 @@ export type HydrogenCart = {
   updateAttributes: ReturnType<typeof cartAttributesUpdateDefault>;
   setMetafields: ReturnType<typeof cartMetafieldsSetDefault>;
   deleteMetafield: ReturnType<typeof cartMetafieldDeleteDefault>;
+  addDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesAddDefault>;
+  removeDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesRemoveDefault>;
+  updateDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesUpdateDefault>;
 };
 
 export type HydrogenCartCustom<
@@ -150,58 +165,61 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
 
       return cartId || optionalParams?.cartId
         ? await cartLinesAddDefault(mutateOptions)(lines, optionalParams)
-        : await cartCreate({lines}, optionalParams);
+        : await cartCreate({ lines }, optionalParams);
     },
     updateLines: cartLinesUpdateDefault(mutateOptions),
     removeLines: cartLinesRemoveDefault(mutateOptions),
     updateDiscountCodes: async (discountCodes, optionalParams) => {
       return cartId || optionalParams?.cartId
         ? await cartDiscountCodesUpdateDefault(mutateOptions)(
-            discountCodes,
-            optionalParams,
-          )
-        : await cartCreate({discountCodes}, optionalParams);
+          discountCodes,
+          optionalParams,
+        )
+        : await cartCreate({ discountCodes }, optionalParams);
     },
     updateGiftCardCodes: async (giftCardCodes, optionalParams) => {
       return cartId || optionalParams?.cartId
         ? await cartGiftCardCodesUpdateDefault(mutateOptions)(
-            giftCardCodes,
-            optionalParams,
-          )
-        : await cartCreate({giftCardCodes}, optionalParams);
+          giftCardCodes,
+          optionalParams,
+        )
+        : await cartCreate({ giftCardCodes }, optionalParams);
     },
     updateBuyerIdentity: async (buyerIdentity, optionalParams) => {
       return cartId || optionalParams?.cartId
         ? await cartBuyerIdentityUpdateDefault(mutateOptions)(
-            buyerIdentity,
-            optionalParams,
-          )
-        : await cartCreate({buyerIdentity}, optionalParams);
+          buyerIdentity,
+          optionalParams,
+        )
+        : await cartCreate({ buyerIdentity }, optionalParams);
     },
     updateNote: async (note, optionalParams) => {
       return cartId || optionalParams?.cartId
         ? await cartNoteUpdateDefault(mutateOptions)(note, optionalParams)
-        : await cartCreate({note}, optionalParams);
+        : await cartCreate({ note }, optionalParams);
     },
     updateSelectedDeliveryOption:
       cartSelectedDeliveryOptionsUpdateDefault(mutateOptions),
     updateAttributes: async (attributes, optionalParams) => {
       return cartId || optionalParams?.cartId
         ? await cartAttributesUpdateDefault(mutateOptions)(
-            attributes,
-            optionalParams,
-          )
-        : await cartCreate({attributes}, optionalParams);
+          attributes,
+          optionalParams,
+        )
+        : await cartCreate({ attributes }, optionalParams);
     },
     setMetafields: async (metafields, optionalParams) => {
       return cartId || optionalParams?.cartId
         ? await cartMetafieldsSetDefault(mutateOptions)(
-            metafields,
-            optionalParams,
-          )
-        : await cartCreate({metafields}, optionalParams);
+          metafields,
+          optionalParams,
+        )
+        : await cartCreate({ metafields }, optionalParams);
     },
     deleteMetafield: cartMetafieldDeleteDefault(mutateOptions),
+    addDeliveryAddresses: cartDeliveryAddressesAddDefault(mutateOptions),
+    removeDeliveryAddresses: cartDeliveryAddressesRemoveDefault(mutateOptions),
+    updateDeliveryAddresses: cartDeliveryAddressesUpdateDefault(mutateOptions),
   };
 
   if ('customMethods' in options) {
@@ -253,6 +271,10 @@ export type HydrogenCartForDocs = {
    */
   addLines?: CartLinesAddFunction;
   /**
+   * Adds a delivery address to the cart.
+   */
+  addDeliveryAddresses?: CartDeliveryAddressesAddFunction;
+  /**
    * Creates a new cart.
    */
   create?: CartCreateFunction;
@@ -270,6 +292,10 @@ export type HydrogenCartForDocs = {
    */
   getCartId?: () => string | undefined;
   /**
+   * Removes a delivery address from the cart
+   */
+  removeDeliveryAddresses?: CartDeliveryAddressesRemoveFunction;
+  /**
    * Removes items from the cart.
    */
   removeLines?: CartLinesRemoveFunction;
@@ -283,6 +309,10 @@ export type HydrogenCartForDocs = {
    * If the cart doesn't exist, a new one will be created.
    */
   setMetafields?: CartMetafieldsSetFunction;
+  /**
+   * Update cart delivery addresses.
+  */
+  updateDeliveryAddresses?: CartDeliveryAddressesUpdateFunction;
   /**
    * Updates additional information (attributes) in the cart.
    */
