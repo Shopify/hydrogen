@@ -19,7 +19,8 @@ export async function importVite(root: string): Promise<Vite> {
     .import;
 
   // If project still using vite 5
-  if ('default' in viteNodeIndexFile) {
+  console.log(typeof viteNodeIndexFile);
+  if (typeof viteNodeIndexFile !== 'string') {
     viteNodeIndexFile = viteNodeIndexFile.default;
   }
 
