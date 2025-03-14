@@ -243,6 +243,7 @@ export async function runDev({
         })
       : undefined,
     server: {
+      port: appPort ?? DEFAULT_APP_PORT,
       host: host ? true : undefined,
       // Allow Vite to read files from the Hydrogen packages in local development.
       fs: hydrogenPackagesPath

@@ -1,8 +1,7 @@
 import {createRequire} from 'node:module';
-import {fileURLToPath} from 'node:url';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 
-export const REQUIRED_REMIX_VERSION = '^2.1.0';
+export const REQUIRED_REMIX_VERSION = '^2.16.1';
 
 export function checkRemixVersions(
   projectPath: string,
