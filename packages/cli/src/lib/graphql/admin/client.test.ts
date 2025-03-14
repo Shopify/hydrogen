@@ -66,8 +66,8 @@ describe('adminRequest', () => {
       });
 
       await expect(response).rejects.toThrowError(AbortError);
-      await expect(response).rejects.toMatch(
-        /Hydrogen sales channel isn\'t installed/,
+      await expect(response).rejects.toMatchInlineSnapshot(
+        `[Error: Hydrogen sales channel isn't installed]`,
       );
     });
   });
@@ -90,8 +90,8 @@ describe('adminRequest', () => {
       });
 
       await expect(response).rejects.toThrowError(AbortError);
-      await expect(response).rejects.toMatch(
-        /Couldn\'t connect storefront to Shopify/,
+      await expect(response).rejects.toMatchInlineSnapshot(
+        `[Error: Couldn't connect storefront to Shopify]`,
       );
     });
   });

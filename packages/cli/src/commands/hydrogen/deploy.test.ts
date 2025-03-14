@@ -66,10 +66,11 @@ vi.mock('@shopify/cli-kit/node/git', async () => {
 
 async function createHydrogenDependencyPackageJson(version?: string) {
   const require = createRequire(import.meta.url);
-  const packageJson: PackageJson = require(require.resolve(
-    '@shopify/hydrogen/package.json',
-    {paths: [getSkeletonSourceDir()]},
-  ));
+  const packageJson: PackageJson = require(
+    require.resolve('@shopify/hydrogen/package.json', {
+      paths: [getSkeletonSourceDir()],
+    }),
+  );
 
   packageJson.version = version;
 

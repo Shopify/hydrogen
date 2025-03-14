@@ -173,7 +173,6 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
       ar={passthroughProps.ar}
       ar-modes={passthroughProps.arModes}
       ar-scale={passthroughProps.arScale}
-      // @ts-expect-error arPlacement should exist as a type, not sure why it doesn't. https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-attributes-arPlacement
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       ar-placement={passthroughProps.arPlacement}
       ios-src={passthroughProps.iosSrc}
@@ -185,7 +184,8 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
       // @ts-expect-error rotationPerSecond should exist as a type, not sure why it doesn't. https://modelviewer.dev/docs/index.html#entrydocs-stagingandcameras-attributes-rotationPerSecond
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       rotation-per-second={passthroughProps.rotationPerSecond}
-      interaction-policy={passthroughProps.interactionPolicy}
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      interaction-policy={(passthroughProps as any).interactionPolicy}
       interaction-prompt={passthroughProps.interactionPrompt}
       interaction-prompt-style={passthroughProps.interactionPromptStyle}
       interaction-prompt-threshold={passthroughProps.interactionPromptThreshold}
@@ -196,7 +196,8 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
       min-camera-orbit={passthroughProps.minCameraOrbit}
       max-field-of-view={passthroughProps.maxFieldOfView}
       min-field-of-view={passthroughProps.minFieldOfView}
-      bounds={passthroughProps.bounds}
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      bounds={(passthroughProps as any).bounds}
       interpolation-decay={passthroughProps.interpolationDecay ?? 100}
       skybox-image={passthroughProps.skyboxImage}
       environment-image={passthroughProps.environmentImage}

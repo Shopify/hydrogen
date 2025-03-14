@@ -7,9 +7,9 @@ export function getModel3d(
   model: PartialDeep<Model3d, {recurseIntoArrays: true}> = {},
 ): PartialDeep<Model3d, {recurseIntoArrays: true}> {
   return {
-    id: model.id ?? faker.random.words(),
+    id: model.id ?? faker.word.words(),
     mediaContentType: 'MODEL_3D',
-    alt: model.alt ?? faker.random.words(),
+    alt: model.alt ?? faker.word.words(),
     previewImage: getPreviewImage(model.previewImage ?? undefined),
     sources: model.sources ?? [
       {url: faker.internet.url()},

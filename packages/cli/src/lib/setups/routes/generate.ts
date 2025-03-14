@@ -318,11 +318,7 @@ export async function generateProjectFile(
     // We format the template content with Prettier.
     // TODO use @shopify/cli-kit's format function once it supports TypeScript
     // templateContent = await file.format(templateContent, destinationPath);
-    templateContent = await formatCode(
-      templateContent,
-      formatOptions,
-      destinationPath,
-    );
+    templateContent = await formatCode(templateContent, formatOptions);
 
     // Write the final file to the user's project.
     await writeFile(destinationPath, templateContent);
@@ -477,7 +473,7 @@ async function copyRouteTemplate({
     templateContent = await transpileFile(templateContent, templatePath);
   }
 
-  templateContent = await formatCode(templateContent, formatOptions, routePath);
+  templateContent = await formatCode(templateContent, formatOptions);
 
   await writeFile(routePath, templateContent);
 }

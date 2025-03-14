@@ -390,11 +390,8 @@ button:active.primary {
   --gradient-color-end: transparent;
   --background-color: transparent;
 
-  background-image: linear-gradient(
-      to right,
-      var(--background-color),
-      var(--background-color)
-    ),
+  background-image:
+    linear-gradient(to right, var(--background-color), var(--background-color)),
     linear-gradient(to right, var(--background-color), var(--background-color)),
     linear-gradient(
       to right,
@@ -406,23 +403,43 @@ button:active.primary {
       var(--gradient-color-start),
       var(--gradient-color-end)
     );
-  background-position: left center, right center, left center, right center;
+  background-position:
+    left center,
+    right center,
+    left center,
+    right center;
   background-repeat: no-repeat;
   background-color: var(--background-color);
-  background-size: 20px 100%, 20px 100%, 0px 100%, 0px 100%;
+  background-size:
+    20px 100%,
+    20px 100%,
+    0px 100%,
+    0px 100%;
   background-attachment: local, local, scroll, scroll;
 }
 
 #tab-buttons-wrapper .fadCover.fadeLeft {
-  background-size: 20px 100%, 20px 100%, 40px 100%, 0px 100%;
+  background-size:
+    20px 100%,
+    20px 100%,
+    40px 100%,
+    0px 100%;
 }
 
 #tab-buttons-wrapper .fadCover.fadeRight {
-  background-size: 20px 100%, 20px 100%, 0px 100%, 40px 100%;
+  background-size:
+    20px 100%,
+    20px 100%,
+    0px 100%,
+    40px 100%;
 }
 
 #tab-buttons-wrapper .fadCover.fadeLeftRight {
-  background-size: 20px 100%, 20px 100%, 40px 100%, 40px 100%;
+  background-size:
+    20px 100%,
+    20px 100%,
+    40px 100%,
+    40px 100%;
 }
 
 .tabPanels .tabPanel {
