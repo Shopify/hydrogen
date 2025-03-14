@@ -1,6 +1,6 @@
-import {type FetcherWithComponents, useFetcher} from '@remix-run/react';
-import {type MetafieldWithoutOwnerId} from './queries/cart-types';
-import type {ReactNode} from 'react';
+import { type FetcherWithComponents, useFetcher } from '@remix-run/react';
+import { type MetafieldWithoutOwnerId } from './queries/cart-types';
+import type { ReactNode } from 'react';
 import type {
   AttributeInput,
   CartBuyerIdentityInput,
@@ -9,6 +9,8 @@ import type {
   CartLineUpdateInput,
   CartSelectedDeliveryOptionInput,
   Scalars,
+  CartSelectableAddressInput,
+  CartSelectableAddressUpdateInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
 type OtherFormData = {
@@ -21,6 +23,7 @@ type CartAttributesUpdateProps = {
     attributes: AttributeInput[];
   } & OtherFormData;
 };
+
 type CartAttributesUpdateRequire = {
   action: 'AttributesUpdateInput';
   inputs: {
@@ -34,6 +37,7 @@ type CartBuyerIdentityUpdateProps = {
     buyerIdentity: CartBuyerIdentityInput;
   } & OtherFormData;
 };
+
 type CartBuyerIdentityUpdateRequire = {
   action: 'BuyerIdentityUpdate';
   inputs: {
@@ -47,30 +51,35 @@ type CartCreateProps = {
     input: CartInput;
   } & OtherFormData;
 };
+
 type CartCreateRequire = {
   action: 'Create';
   inputs: {
     input: CartInput;
   } & OtherFormData;
 };
+
 type CartDiscountCodesUpdateProps = {
   action: 'DiscountCodesUpdate';
   inputs?: {
     discountCodes: string[];
   } & OtherFormData;
 };
+
 type CartDiscountCodesUpdateRequire = {
   action: 'DiscountCodesUpdate';
   inputs: {
     discountCodes: string[];
   } & OtherFormData;
 };
+
 type CartGiftCardCodesUpdateProps = {
   action: 'GiftCardCodesUpdate';
   inputs?: {
     giftCardCodes: string[];
   } & OtherFormData;
 };
+
 type CartGiftCardCodesUpdateRequire = {
   action: 'GiftCardCodesUpdate';
   inputs: {
@@ -102,6 +111,7 @@ type CartLinesUpdateProps = {
     lines: CartLineUpdateInput[];
   } & OtherFormData;
 };
+
 type CartLinesUpdateRequire = {
   action: 'LinesUpdate';
   inputs: {
@@ -115,6 +125,7 @@ type CartLinesRemoveProps = {
     lineIds: string[];
   } & OtherFormData;
 };
+
 type CartLinesRemoveRequire = {
   action: 'LinesRemove';
   inputs: {
@@ -128,6 +139,7 @@ type CartNoteUpdateProps = {
     note: string;
   } & OtherFormData;
 };
+
 type CartNoteUpdateRequire = {
   action: 'NoteUpdate';
   inputs: {
@@ -155,6 +167,7 @@ type CartMetafieldsSetProps = {
     metafields: MetafieldWithoutOwnerId[];
   } & OtherFormData;
 };
+
 type CartMetafieldsSetRequire = {
   action: 'MetafieldsSet';
   inputs: {
@@ -168,6 +181,7 @@ type CartMetafieldDeleteProps = {
     key: Scalars['String']['input'];
   } & OtherFormData;
 };
+
 type CartMetafieldDeleteRequire = {
   action: 'MetafieldsDelete';
   inputs: {
@@ -175,10 +189,32 @@ type CartMetafieldDeleteRequire = {
   } & OtherFormData;
 };
 
+type CartDeliveryAddressesAddProps = {
+  action: 'DeliveryAddressesAdd';
+  inputs?: {
+    addresses: Array<CartSelectableAddressInput>;
+  } & OtherFormData;
+}
+
+type CartDeliveryAddressesRemoveProps = {
+  action: 'DeliveryAddressesRemove';
+  inputs?: {
+    addressIds: Array<Scalars['ID']>;
+  } & OtherFormData;
+}
+
+type CartDeliveryAddressesUpdateProps = {
+  action: 'DeliveryAddressesUpdate';
+  inputs?: {
+    addresses: Array<CartSelectableAddressUpdateInput>
+  } & OtherFormData;
+}
+
 type CartCustomProps = {
   action: `Custom${string}`;
   inputs?: Record<string, unknown>;
 };
+
 type CartCustomRequire = {
   action: `Custom${string}`;
   inputs: Record<string, unknown>;
@@ -214,6 +250,9 @@ type CartActionInputProps =
   | CartSelectedDeliveryOptionsUpdateProps
   | CartMetafieldsSetProps
   | CartMetafieldDeleteProps
+  | CartDeliveryAddressesAddProps
+  | CartDeliveryAddressesRemoveProps
+  | CartDeliveryAddressesUpdateProps
   | CartCustomProps;
 
 export type CartActionInput =
@@ -242,7 +281,7 @@ export function CartForm({
   route,
   fetcherKey,
 }: CartFormProps): JSX.Element {
-  const fetcher = useFetcher({key: fetcherKey});
+  const fetcher = useFetcher({ key: fetcherKey });
 
   return (
     <fetcher.Form action={route || ''} method="post">
@@ -250,14 +289,16 @@ export function CartForm({
         <input
           type="hidden"
           name={INPUT_NAME}
-          value={JSON.stringify({action, inputs})}
+          value={JSON.stringify({ action, inputs })}
         />
       )}
       {typeof children === 'function' ? children(fetcher) : children}
     </fetcher.Form>
   );
 }
+
 CartForm.INPUT_NAME = INPUT_NAME;
+
 CartForm.ACTIONS = {
   AttributesUpdateInput: 'AttributesUpdateInput',
   BuyerIdentityUpdate: 'BuyerIdentityUpdate',
@@ -271,6 +312,9 @@ CartForm.ACTIONS = {
   SelectedDeliveryOptionsUpdate: 'SelectedDeliveryOptionsUpdate',
   MetafieldsSet: 'MetafieldsSet',
   MetafieldDelete: 'MetafieldDelete',
+  DeliveryAddressesAdd: 'CartDeliveryAddressesAdd',
+  DeliveryAddressesUpdate: 'CartDeliveryAddressesUpdate',
+  DeliveryAddressesRemove: 'CartDeliveryAddressesRemove',
 } as const;
 
 function getFormInput(formData: FormData): CartActionInput {
@@ -284,8 +328,8 @@ function getFormInput(formData: FormData): CartActionInput {
   }
 
   // Parse cartFormInput
-  const {cartFormInput, ...otherData} = data;
-  const {action, inputs}: CartActionInput = cartFormInput
+  const { cartFormInput, ...otherData } = data;
+  const { action, inputs }: CartActionInput = cartFormInput
     ? JSON.parse(String(cartFormInput))
     : {};
 
@@ -298,4 +342,21 @@ function getFormInput(formData: FormData): CartActionInput {
   } as unknown as CartActionInput;
 }
 
+/**
+ * Converts form data into a CartActionInput object.
+ *
+ * This function takes a FormData object, extracts its entries, and constructs a CartActionInput object.
+ * It parses the `cartFormInput` field if present and merges it with other form data.
+ *
+ * @param {FormData} formData - The form data to convert.
+ * @returns {CartActionInput} - The resulting CartActionInput object.
+ *
+ * @example
+ * const formData = new FormData();
+ * formData.append('cartFormInput', JSON.stringify({ action: 'add', inputs: { productId: '123' } }));
+ * formData.append('quantity', '2');
+ * const cartActionInput = getFormInput(formData);
+ * console.log(cartActionInput);
+ * // Output: { action: 'add', inputs: { productId: '123', quantity: '2' } }
+ */
 CartForm.getFormInput = getFormInput;
