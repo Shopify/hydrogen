@@ -10,7 +10,7 @@ This folder contains an example implementation of [subscriptions](https://shopif
 | --- | --- |
 | [`app/components/Cart.tsx`](ingredients/templates/skeleton/app/components/Cart.tsx) | Cart component modified to display selected subscription. |
 | [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | A component that simplifies selecting sellingPlans subscription options |
-| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) |  |
+| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) | The CSS file for the selling plan. |
 
 ## 🍱 Steps
 
@@ -25,7 +25,7 @@ To run this example on your own store, you'll need to:
 
 ### 2. Copy ingredients
 
-Copy the ingredients from the template directory to the current directory
+Copy the ingredients from the template directory to the current directory.
 
 - `app/components/Cart.tsx`
 - `app/components/SellingPlanSelector.tsx`

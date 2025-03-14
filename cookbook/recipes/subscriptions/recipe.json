@@ -15,7 +15,7 @@
     },
     {
       "path": "templates/skeleton/app/styles/selling-plan.css",
-      "description": null
+      "description": "The CSS file for the selling plan."
     }
   ],
   "steps": [
@@ -27,7 +27,7 @@
     {
       "type": "COPY_INGREDIENTS",
       "name": "Copy ingredients",
-      "description": "Copy the ingredients from the template directory to the current directory",
+      "description": "Copy the ingredients from the template directory to the current directory.",
       "ingredients": [
         "templates/skeleton/app/components/Cart.tsx",
         "templates/skeleton/app/components/SellingPlanSelector.tsx",
@@ -89,5 +89,5 @@
       ]
     }
   ],
-  "commit": "7aa94f917d14ce5fcfc460f22ab737fa72c269a8"
+  "commit": "516085edb28baf55a33b14e1b01c52c6a6c45cbb"
 }
