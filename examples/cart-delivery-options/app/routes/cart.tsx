@@ -1,8 +1,8 @@
-import type { DeliveryGroupFragment, } from 'storefrontapi.generated'
-import type { CartSelectableAddressInput, CartSelectableAddressUpdateInput } from '@shopify/hydrogen/storefront-api-types';
 import { type MetaFunction, useLoaderData } from '@remix-run/react';
 import type { CartQueryDataReturn } from '@shopify/hydrogen';
 import { CartForm } from '@shopify/hydrogen';
+import { CartSelectableAddressInput } from '@shopify/hydrogen-react/storefront-api-types';
+import { CartSelectableAddressUpdateInput } from '@shopify/hydrogen/storefront-api-types';
 import { data, type LoaderFunctionArgs, type ActionFunctionArgs, type HeadersFunction } from '@shopify/remix-oxygen';
 import { CartMain } from '~/components/Cart';
 
@@ -13,7 +13,7 @@ export const meta: MetaFunction = () => {
 export const headers: HeadersFunction = ({ actionHeaders }) => actionHeaders;
 
 export async function action({ request, context }: ActionFunctionArgs) {
-  const { cart, storefront } = context;
+  const { cart } = context;
 
   const formData = await request.formData();
 
@@ -70,51 +70,35 @@ export async function action({ request, context }: ActionFunctionArgs) {
       });
       break;
     }
-    // @ts-ignore
-    case "CartDeliveryAddressesAdd": {
-      const cartId = cart.getCartId();
-      if (!cartId) {
-        console.warn('Cart not found')
-        break;
-      }
-      result = await cartDeliveryAddressesAdd({ address: inputs, cartId, storefront });
-      console.log("result", JSON.stringify(result))
-      break;
-    }
-    // @ts-ignore
-    case "CartDeliveryAddressesUpdate": {
-      const cartId = cart.getCartId();
-      if (!cartId) {
-        console.warn('Cart not found')
-        break;
-      }
-      console.log('inputs', JSON.stringify(inputs, null, 2))
+    case CartForm.ACTIONS.DeliveryAddressesAdd: {
+      console.log('DeliveryAddressesAdd inputs', inputs)
+      const { id, selected, oneTimeUse, ...deliveryAddress } = inputs
+      const newDeliveryAddresses = [{
+        selected: selected === 'on' ? true : false,
+        oneTimeUse: oneTimeUse === 'on' ? true : false,
+        address: { deliveryAddress }
+      }] as CartSelectableAddressInput[]
 
-      if (typeof inputs.selected === 'string') {
-        inputs.selected = inputs.selected === 'on'
-      }
-      // @ts-ignore
-      result = await cartDeliveryAddressesUpdate({ cartId, storefront, ...inputs });
-      console.log("result", JSON.stringify(result))
+      result = await cart.addDeliveryAddresses(newDeliveryAddresses)
       break;
     }
-    // @ts-ignore
-    case "CartDeliveryAddressesRemove": {
-      const cartId = cart.getCartId();
-      if (!cartId) {
-        console.warn('Cart not found')
-        break;
-      }
-      // @ts-ignore
-      if (!inputs?.addressIds) {
-        console.warn('No addressIds provided')
-        break;
-      }
-      result = await cartDeliveryAddressesRemove({ addressIds: inputs.addressIds, cartId, storefront });
-      console.log("result", JSON.stringify(result))
+    case CartForm.ACTIONS.DeliveryAddressesUpdate: {
+      console.log('DeliveryAddressesUpdate inputs.addresses', inputs)
+      const { formatted, formartedArea, name, id, selected, oneTimeUse, ...deliveryAddress } = inputs
+      const updatedDeliveryAddresses = [{
+        id,
+        selected: selected === 'on' ? true : false,
+        oneTimeUse: oneTimeUse === 'on' ? true : false,
+        address: { deliveryAddress }
+      }] as CartSelectableAddressUpdateInput[]
+      result = await cart.updateDeliveryAddresses(updatedDeliveryAddresses)
       break;
     }
-
+    case CartForm.ACTIONS.DeliveryAddressesRemove: {
+      console.log('DeliveryAddressesRemove inputs', inputs)
+      result = await cart.removeDeliveryAddresses(updatedDeliveryAddress)
+      break;
+    }
     default:
       throw new Error(`${action} cart action is not defined`);
   }
@@ -141,138 +125,6 @@ export async function action({ request, context }: ActionFunctionArgs) {
   );
 }
 
-// TODO: Improve to receive a SFAPI input type instead of a generic object
-async function cartDeliveryAddressesAdd({
-  address,
-  selected = true,
-  oneTimeUse = false,
-  copyFromCustomerAddressId,
-  cartId,
-  storefront
-}: {
-  address: DeliveryGroupFragment['deliveryAddress'] & { selected?: boolean };
-  oneTimeUse?: boolean;
-  selected?: boolean;
-  copyFromCustomerAddressId?: string | undefined;
-  cartId: string
-  storefront: LoaderFunctionArgs['context']['storefront']
-}) {
-  const { selected: inputSelected, ...inputAddress } = address;
-  const addresses: Array<CartSelectableAddressInput> = [
-    {
-      address: {
-        deliveryAddress: inputAddress,
-      },
-      oneTimeUse,
-      selected: typeof inputSelected === 'string' ? Boolean(inputSelected) : selected,
-      validationStrategy: 'COUNTRY_CODE_ONLY' // STRICT
-    }
-  ]
-  if (copyFromCustomerAddressId) {
-    addresses[0].address.copyFromCustomerAddressId = copyFromCustomerAddressId;
-  }
-  const MUTATION = `#graphql
-    mutation cartDeliveryAddresses($addresses: [CartSelectableAddressInput!]!, $cartId: ID!) {
-    cartDeliveryAddressesAdd(addresses: $addresses, cartId: $cartId) {
-      cart {
-        id
-      }
-      userErrors {
-        field
-        message
-      }
-      warnings {
-        message
-      }
-    }
-  }
-  `
-  return await storefront.mutate(
-    MUTATION, {
-    variables: { addresses, cartId },
-    storefrontApiVersion: '2025-01'
-  })
-}
-
-async function cartDeliveryAddressesRemove({
-  addressIds = [],
-  cartId,
-  storefront
-}: {
-  addressIds: Array<DeliveryGroupFragment['deliveryAddress']['id']>;
-  cartId: string
-  storefront: LoaderFunctionArgs['context']['storefront']
-}) {
-  const MUTATION = `#graphql
-  mutation cartDeliveryAddressesRemove($addressIds: [ID!]!, $cartId: ID!) {
-    cartDeliveryAddressesRemove(addressIds: $addressIds, cartId: $cartId) {
-      cart {
-        id
-      }
-      userErrors {
-        code
-        field
-        message
-      }
-      warnings {
-        code
-        message
-        target
-      }
-    }
-  }`
-  return await storefront.mutate(
-    MUTATION, {
-    variables: { addressIds, cartId },
-    storefrontApiVersion: '2025-01'
-  })
-}
-
-async function cartDeliveryAddressesUpdate({
-  id,
-  address,
-  oneTimeUse = true,
-  selected = false,
-  cartId,
-  storefront
-}: CartSelectableAddressUpdateInput & {
-  cartId: string | undefined;
-  storefront: LoaderFunctionArgs['context']['storefront']
-}) {
-  const addresses: Array<CartSelectableAddressUpdateInput> = [
-    {
-      id,
-      address,
-      oneTimeUse,
-      selected,
-      validationStrategy: 'COUNTRY_CODE_ONLY' // STRICT
-    }
-  ];
-  const MUTATION = `#graphql
-    mutation cartDeliveryAddressesUpdate($addresses: [CartSelectableAddressUpdateInput!]!, $cartId: ID!) {
-      cartDeliveryAddressesUpdate(addresses: $addresses, cartId: $cartId) {
-        cart {
-          id
-        }
-        userErrors {
-          code
-          field
-          message
-        }
-        warnings {
-          code
-          message
-          target
-        }
-      }
-    }
-  `;
-  return await storefront.mutate(
-    MUTATION, {
-    variables: { addresses, cartId },
-    storefrontApiVersion: '2025-01'
-  })
-}
 export async function loader({ context }: LoaderFunctionArgs) {
   const { cart } = context;
   return await cart.get();
