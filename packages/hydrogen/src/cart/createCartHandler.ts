@@ -96,6 +96,27 @@ export type HydrogenCart = {
   updateAttributes: ReturnType<typeof cartAttributesUpdateDefault>;
   setMetafields: ReturnType<typeof cartMetafieldsSetDefault>;
   deleteMetafield: ReturnType<typeof cartMetafieldDeleteDefault>;
+  /**
+  * Adds delivery addresses to the cart.
+  *
+  * This function sends a mutation to the storefront API to add one or more delivery addresses to the cart.
+  * It returns the result of the mutation, including any errors that occurred.
+  *
+  * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
+  * @returns {ReturnType<typeof cartDeliveryAddressesAddDefault>} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
+  *
+  * @example
+  * const result = await cart.addDeliveryAddresses(
+  *   [
+  *     {
+  *       address1: '123 Main St',
+  *       city: 'Anytown',
+  *       countryCode: 'US'
+  *     }
+  *   ],
+  *   { someOptionalParam: 'value' }
+  * );
+  */
   addDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesAddDefault>;
   removeDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesRemoveDefault>;
   updateDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesUpdateDefault>;

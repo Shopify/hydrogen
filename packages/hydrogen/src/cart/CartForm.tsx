@@ -196,16 +196,37 @@ type CartDeliveryAddressesAddProps = {
   } & OtherFormData;
 }
 
+type CartDeliveryAddressesAddRequire = {
+  action: 'DeliveryAddressesAdd';
+  inputs: {
+    addresses: Array<CartSelectableAddressInput>;
+  } & OtherFormData;
+}
+
 type CartDeliveryAddressesRemoveProps = {
   action: 'DeliveryAddressesRemove';
   inputs?: {
-    addressIds: Array<Scalars['ID']>;
+    addressIds: Array<String> | Array<Scalars['ID']['input']>;
+  } & OtherFormData;
+}
+
+type CartDeliveryAddressesRemoveRequire = {
+  action: 'DeliveryAddressesRemove';
+  inputs: {
+    addressIds: Array<String> | Array<Scalars['ID']['input']>;
   } & OtherFormData;
 }
 
 type CartDeliveryAddressesUpdateProps = {
   action: 'DeliveryAddressesUpdate';
   inputs?: {
+    addresses: Array<CartSelectableAddressUpdateInput>
+  } & OtherFormData;
+}
+
+type CartDeliveryAddressesUpdateRequire = {
+  action: 'DeliveryAddressesUpdate';
+  inputs: {
     addresses: Array<CartSelectableAddressUpdateInput>
   } & OtherFormData;
 }
@@ -268,6 +289,9 @@ export type CartActionInput =
   | CartSelectedDeliveryOptionsUpdateRequire
   | CartMetafieldsSetRequire
   | CartMetafieldDeleteRequire
+  | CartDeliveryAddressesAddRequire
+  | CartDeliveryAddressesRemoveRequire
+  | CartDeliveryAddressesUpdateRequire
   | CartCustomRequire;
 
 type CartFormProps = CartActionInputProps & CartFormCommonProps;
@@ -312,9 +336,9 @@ CartForm.ACTIONS = {
   SelectedDeliveryOptionsUpdate: 'SelectedDeliveryOptionsUpdate',
   MetafieldsSet: 'MetafieldsSet',
   MetafieldDelete: 'MetafieldDelete',
-  DeliveryAddressesAdd: 'CartDeliveryAddressesAdd',
-  DeliveryAddressesUpdate: 'CartDeliveryAddressesUpdate',
-  DeliveryAddressesRemove: 'CartDeliveryAddressesRemove',
+  DeliveryAddressesAdd: 'DeliveryAddressesAdd',
+  DeliveryAddressesUpdate: 'DeliveryAddressesUpdate',
+  DeliveryAddressesRemove: 'DeliveryAddressesRemove',
 } as const;
 
 function getFormInput(formData: FormData): CartActionInput {
@@ -332,6 +356,8 @@ function getFormInput(formData: FormData): CartActionInput {
   const { action, inputs }: CartActionInput = cartFormInput
     ? JSON.parse(String(cartFormInput))
     : {};
+
+  console.log('input parse', JSON.stringify(inputs, null, 2))
 
   return {
     action,

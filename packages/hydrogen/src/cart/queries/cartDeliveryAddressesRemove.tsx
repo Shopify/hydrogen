@@ -13,7 +13,7 @@ import type {
 } from './cart-types';
 
 export type CartDeliveryAddressesRemoveFunction = (
-  addressIds: Array<Scalars['ID']>,
+  addressIds: Array<Scalars['ID']['input']>,
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
@@ -33,7 +33,7 @@ export type CartDeliveryAddressesRemoveFunction = (
 export function cartDeliveryAddressesRemoveDefault(
   options: CartQueryOptions,
 ): CartDeliveryAddressesRemoveFunction {
-  return async (addressIds: Array<Scalars['ID']>, optionalParams) => {
+  return async (addressIds: Array<Scalars['ID']['input']>, optionalParams) => {
     const { cartDeliveryAddressesRemove, errors } = await options.storefront.mutate<{
       cartDeliveryAddressesRemove: CartQueryData;
       errors: StorefrontApiErrors;
