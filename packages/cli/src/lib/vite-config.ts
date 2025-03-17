@@ -13,6 +13,7 @@ import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
 import {hasRemixConfigFile} from './remix-config.js';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 import type {ResolvedRemixConfig} from '@remix-run/dev';
+import type {ResolvedConfig, UserConfig} from 'vite';
 
 export async function hasViteConfig(root: string) {
   const result = await findFileWithExtension(root, 'vite.config');
@@ -36,8 +37,8 @@ type ViteConfigResult = {
   clientOutDir: string;
   serverOutDir: string;
   serverOutFile: string;
-  resolvedViteConfig: any;
-  userViteConfig: any;
+  resolvedViteConfig: ResolvedConfig;
+  userViteConfig: UserConfig;
   remixConfig: ResolvedRemixConfig;
 };
 
