@@ -873,6 +873,9 @@ export function generateRandomName() {
   return `${colorNames} ${geographicalFeature}`;
 }
 
+const RAW_HYDROGEN_REPO_BASE_URL =
+  'https://raw.githubusercontent.com/Shopify/hydrogen/refs/heads/feat/fr-subscriptions-recipe';
+
 export async function askCopyCursorRules(
   controller: AbortController,
   project: Project,
@@ -883,12 +886,20 @@ export async function askCopyCursorRules(
     abortSignal: controller.signal,
   });
   if (copyCursorRules) {
+    const rulesIndex = await fetch(
+      `${RAW_HYDROGEN_REPO_BASE_URL}/cookbook/rules.txt`,
+    );
+    if (!rulesIndex.ok) {
+      throw new Error('Failed to fetch cursor rules');
+    }
+    const rulesText = await rulesIndex.text();
+    const rules = rulesText
+      .split('\n')
+      .map((rule) => `${RAW_HYDROGEN_REPO_BASE_URL}/${rule}`);
+
     // 1. create the .cursor/rules folder in the project root
     await mkdir(joinPath(project.directory, '.cursor', 'rules'));
     // 2. download the cursor rules into the project
-    const rules = [
-      'https://raw.githubusercontent.com/Shopify/hydrogen/refs/heads/feat/fr-subscriptions-recipe/.cursor/rules/cookbook-recipe-subscriptions.mdc',
-    ];
     for (const rule of rules) {
       const response = await fetch(rule);
       const data = await response.text();
