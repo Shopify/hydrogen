@@ -8,15 +8,15 @@ import {
   createPlatformShortcut,
 } from './shell.js';
 import {execAsync} from './process.js';
+import {PromiseWithChild} from 'node:child_process';
 
 vi.mock('node:os');
 vi.mock('node:child_process');
 vi.mock('@shopify/cli-kit/node/fs');
 vi.mock('@shopify/cli-kit/node/node-package-manager');
 vi.mock('./process.js', async () => {
-  const original = await vi.importActual<typeof import('./process.js')>(
-    './process.js',
-  );
+  const original =
+    await vi.importActual<typeof import('./process.js')>('./process.js');
 
   return {
     ...original,
@@ -143,7 +143,9 @@ describe('shell', () => {
     });
 
     it('returns the used package manager command', async () => {
-      vi.mocked(execAsync).mockImplementation(() => Promise.reject(null));
+      vi.mocked(execAsync).mockImplementation(
+        () => Promise.reject(null) as PromiseWithChild<any>,
+      );
 
       // No package manager found
       vi.mocked(getPackageManager).mockRejectedValueOnce(null);

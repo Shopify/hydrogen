@@ -239,4 +239,4 @@ hydrogen.preset = () =>
         },
       };
     },
-  } satisfies RemixPreset);
+  }) satisfies RemixPreset;

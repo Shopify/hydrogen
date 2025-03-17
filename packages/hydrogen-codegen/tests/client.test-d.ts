@@ -260,9 +260,9 @@ describe('Client types', async () => {
         expectTypeOf(clientQuery<any>)
           .parameter(1)
           .toEqualTypeOf<
-            | WithExtraParam & {
-                variables?: GenericVariables;
-              }
+            WithExtraParam & {
+              variables?: GenericVariables;
+            }
           >();
 
         expectTypeOf(clientQuery<any>)

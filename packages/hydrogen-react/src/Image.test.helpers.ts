@@ -9,10 +9,10 @@ export function getPreviewImage(image: Partial<ImageType> = {}): PartialDeep<
   url: ImageType['url'];
 } {
   return {
-    id: image.id ?? faker.random.words(),
-    altText: image.altText ?? faker.random.words(),
-    url: image.url ?? faker.image.imageUrl(),
-    width: image.width ?? faker.datatype.number(),
-    height: image.height ?? faker.datatype.number(),
+    id: image.id ?? faker.word.words(),
+    altText: image.altText ?? faker.word.words(),
+    url: image.url ?? faker.string.uuid(),
+    width: image.width ?? faker.number.int(),
+    height: image.height ?? faker.number.int(),
   };
 }

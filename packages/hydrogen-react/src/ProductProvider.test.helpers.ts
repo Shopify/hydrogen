@@ -17,11 +17,10 @@ export function getProduct(
   product: PartialDeep<ProductType, {recurseIntoArrays: true}> = {},
 ): PartialDeep<ProductType, {recurseIntoArrays: true}> {
   return {
-    id: product.id ?? faker.datatype.uuid(),
-    handle: product.handle ?? faker.random.word(),
-    title: product.title ?? faker.random.words(),
-    descriptionHtml:
-      product.descriptionHtml ?? `<p>${faker.random.words()}</p>`,
+    id: product.id ?? faker.string.uuid(),
+    handle: product.handle ?? faker.word.noun(),
+    title: product.title ?? faker.word.words(),
+    descriptionHtml: product.descriptionHtml ?? `<p>${faker.word.words()}</p>`,
     priceRange: {
       maxVariantPrice: getPrice(product.priceRange?.maxVariantPrice),
       minVariantPrice: getPrice(product.priceRange?.minVariantPrice),
@@ -60,8 +59,8 @@ export function getVariant(
   const compareAtPrice = getPrice(variant.compareAtPrice ?? undefined);
 
   return {
-    id: variant.id ?? faker.random.words(),
-    title: variant.title ?? faker.random.words(),
+    id: variant.id ?? faker.word.words(),
+    title: variant.title ?? faker.word.words(),
     availableForSale: variant.availableForSale ?? faker.datatype.boolean(),
     image: getPreviewImage(variant?.image ?? undefined),
     unitPrice: getPrice(variant?.unitPrice ?? undefined),
@@ -71,8 +70,8 @@ export function getVariant(
     price,
     compareAtPrice,
     selectedOptions: [
-      {name: faker.random.word(), value: faker.random.word()},
-      {name: faker.random.word(), value: faker.random.word()},
+      {name: faker.word.noun(), value: faker.word.noun()},
+      {name: faker.word.noun(), value: faker.word.noun()},
     ],
     // sellingPlanAllocations: [],
     metafields: variant.metafields ?? [

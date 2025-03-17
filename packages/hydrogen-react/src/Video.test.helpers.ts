@@ -7,7 +7,7 @@ export function getVideoData(
   video: PartialDeep<VideoType, {recurseIntoArrays: true}> = {},
 ): PartialDeep<VideoType, {recurseIntoArrays: true}> {
   return {
-    id: video.id ?? faker.random.words(),
+    id: video.id ?? faker.word.words(),
     mediaContentType: 'VIDEO',
     previewImage: getPreviewImage(video.previewImage ?? undefined),
     sources: video.sources ?? getVideoSources(),

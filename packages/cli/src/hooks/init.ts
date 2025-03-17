@@ -81,10 +81,9 @@ function commandNeedsVM(id = '', argv: string[] = []) {
 function isHydrogenProject(projectPath: string) {
   try {
     const require = createRequire(import.meta.url);
-    const {dependencies, scripts} = require(joinPath(
-      projectPath,
-      'package.json',
-    ));
+    const {dependencies, scripts} = require(
+      joinPath(projectPath, 'package.json'),
+    );
 
     return (
       !!dependencies?.['@shopify/hydrogen'] ||

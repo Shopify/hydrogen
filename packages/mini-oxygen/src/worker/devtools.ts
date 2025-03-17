@@ -307,7 +307,7 @@ function proxyHttp(
   // many requests in parallel. Probably related to this:
   // https://github.com/orgs/nodejs/discussions/49734
   // Also, undici is faster and more efficient than `node:https`.
-  return request(url, {responseHeader: 'raw', headers})
+  return request(url, {responseHeaders: 'raw', headers})
     .then((response) => {
       nodeResponse.writeHead(response.statusCode, response.headers);
 

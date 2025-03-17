@@ -123,16 +123,19 @@ function startMiniOxygenRuntime({
       {
         name: 'setup-environment',
         modules: true,
-        serviceBindings: crossBoundarySetup?.reduce((acc, {binding}, index) => {
-          if (binding) {
-            acc[`wrapped_service_${index}`] = async (request: Request) => {
-              const payload = (await request.json()) as unknown[];
-              const result = await binding(...payload);
-              return new Response(JSON.stringify(result ?? ''));
-            };
-          }
-          return acc;
-        }, {} as Record<string, (request: Request) => Promise<Response>>),
+        serviceBindings: crossBoundarySetup?.reduce(
+          (acc, {binding}, index) => {
+            if (binding) {
+              acc[`wrapped_service_${index}`] = async (request: Request) => {
+                const payload = (await request.json()) as unknown[];
+                const result = await binding(...payload);
+                return new Response(JSON.stringify(result ?? ''));
+              };
+            }
+            return acc;
+          },
+          {} as Record<string, (request: Request) => Promise<Response>>,
+        ),
         script: `
           const setupScripts = [${
             crossBoundarySetup?.map((boundary) => boundary.script) ?? ''
@@ -272,7 +275,7 @@ function getViteUrl(viteDevServer: ViteDevServer) {
     viteUrl =
       address && typeof address !== 'string'
         ? `http://localhost:${address.port}`
-        : address ?? undefined;
+        : (address ?? undefined);
   }
 
   return viteUrl;

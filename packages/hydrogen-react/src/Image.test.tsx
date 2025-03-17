@@ -6,56 +6,66 @@ import {Image} from './Image.js';
 const defaultProps = {
   sizes: '100vw',
   src: 'https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg',
+  ['data-testid']: 'test-element',
 };
 
 describe('<Image />', () => {
   // This test fails because the received src has ?width=100 appended to it
   it.skip('renders an `img` element', () => {
-    const src = faker.image.imageUrl();
+    const src = faker.string.uuid();
 
     render(<Image {...defaultProps} src={src} />);
 
-    expect(screen.getByRole('img')).toHaveAttribute('src', src);
+    expect(screen.getByTestId('test-element')).toHaveAttribute('src', src);
   });
 
   it('accepts passthrough props such as `id`', () => {
-    const id = faker.random.alpha();
+    const id = faker.string.alpha();
 
     render(<Image {...defaultProps} id={id} />);
 
-    expect(screen.getByRole('img')).toHaveAttribute('id', id);
+    expect(screen.getByTestId('test-element')).toHaveAttribute('id', id);
   });
 
   it('sets the `alt` prop on the img tag', () => {
-    const alt = faker.random.alpha();
+    const alt = faker.string.alpha();
 
     render(<Image {...defaultProps} alt={alt} />);
 
-    expect(screen.getByRole('img')).toHaveAttribute('alt', alt);
+    expect(screen.getByTestId('test-element')).toHaveAttribute('alt', alt);
   });
 
   it('has a `loading` prop of `lazy` by default', () => {
     render(<Image {...defaultProps} />);
 
-    expect(screen.getByRole('img')).toHaveAttribute('loading', 'lazy');
+    expect(screen.getByTestId('test-element')).toHaveAttribute(
+      'loading',
+      'lazy',
+    );
   });
 
   it('accepts a `loading` prop', () => {
     render(<Image {...defaultProps} loading="eager" />);
 
-    expect(screen.getByRole('img')).toHaveAttribute('loading', 'eager');
+    expect(screen.getByTestId('test-element')).toHaveAttribute(
+      'loading',
+      'eager',
+    );
   });
 
   it('accepts a `sizes` prop', () => {
     render(<Image {...defaultProps} sizes="100vw" />);
 
-    expect(screen.getByRole('img')).toHaveAttribute('sizes', '100vw');
+    expect(screen.getByTestId('test-element')).toHaveAttribute(
+      'sizes',
+      '100vw',
+    );
   });
 
   describe('loader', () => {
     it('calls the loader with the src, width, height and crop props', () => {
       const loader = vi.fn();
-      const src = faker.image.imageUrl();
+      const src = faker.string.uuid();
       const width = 600;
       const height = 400;
       const crop = 'center';
@@ -81,7 +91,7 @@ describe('<Image />', () => {
 
     it('handles remote assets', () => {
       render(<Image {...defaultProps} />);
-      expect(screen.getByRole('img')).toHaveAttribute(
+      expect(screen.getByTestId('test-element')).toHaveAttribute(
         'src',
         'https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=100&crop=center',
       );
@@ -94,7 +104,7 @@ describe('<Image />', () => {
       };
 
       render(<Image {...props} />);
-      expect(screen.getByRole('img')).toHaveAttribute(
+      expect(screen.getByTestId('test-element')).toHaveAttribute(
         'src',
         '/assets/image.png?width=100&crop=center',
       );
@@ -113,7 +123,9 @@ describe('<Image />', () => {
         <Image {...defaultProps} sizes="100vw" aspectRatio={aspectRatio} />,
       );
 
-      expect(screen.getByRole('img').style.aspectRatio).toBe(aspectRatio);
+      expect(screen.getByTestId('test-element').style.aspectRatio).toBe(
+        aspectRatio,
+      );
     });
 
     it('infers the aspect-ratio from the storefront data', () => {
@@ -180,9 +192,9 @@ describe('<Image />', () => {
         />,
       );
 
-      expect(screen.getByRole<HTMLImageElement>('img').srcset).not.toContain(
-        '600w',
-      );
+      expect(
+        screen.getByTestId<HTMLImageElement>('test-element').srcset,
+      ).not.toContain('600w');
     });
 
     it('does not create srcset with greater dimensions than source image when using width', () => {
@@ -190,9 +202,9 @@ describe('<Image />', () => {
 
       render(<Image {...defaultProps} data={data} width={200} />);
 
-      expect(screen.getByRole<HTMLImageElement>('img').srcset).not.toContain(
-        '3x',
-      );
+      expect(
+        screen.getByTestId<HTMLImageElement>('test-element').srcset,
+      ).not.toContain('3x');
     });
 
     it('does not create srcset with greater dimensions than source image when using aspect-ratio', () => {
@@ -212,9 +224,9 @@ describe('<Image />', () => {
         />,
       );
 
-      expect(screen.getByRole<HTMLImageElement>('img').srcset).not.toContain(
-        '400w',
-      );
+      expect(
+        screen.getByTestId<HTMLImageElement>('test-element').srcset,
+      ).not.toContain('400w');
     });
 
     it('does not create srcset with greater dimensions than source image when using aspect-ratio and width', () => {
@@ -224,9 +236,9 @@ describe('<Image />', () => {
         <Image {...defaultProps} data={data} aspectRatio={'1/1'} width={200} />,
       );
 
-      expect(screen.getByRole<HTMLImageElement>('img').srcset).not.toContain(
-        '2x',
-      );
+      expect(
+        screen.getByTestId<HTMLImageElement>('test-element').srcset,
+      ).not.toContain('2x');
     });
   });
 
