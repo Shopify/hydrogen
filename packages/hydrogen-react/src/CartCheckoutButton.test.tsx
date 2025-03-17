@@ -30,6 +30,7 @@ describe('<CartCheckoutButton/>', () => {
       },
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await act(() => user.click(screen.getByRole('button')));
 
     expect(window.location.href).toBe(checkoutUrl);

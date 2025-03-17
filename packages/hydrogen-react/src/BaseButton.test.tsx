@@ -23,6 +23,7 @@ describe('<BaseButton/>', () => {
 
       render(<BaseButton onClick={mockOnClick}>Base Button</BaseButton>);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       await act(() => user.click(screen.getByRole('button')));
 
       expect(mockOnClick).toHaveBeenCalled();
@@ -38,6 +39,7 @@ describe('<BaseButton/>', () => {
         </BaseButton>,
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       await act(() => user.click(screen.getByRole('button')));
 
       expect(mockDefaultOnClick).toHaveBeenCalled();
@@ -59,6 +61,7 @@ describe('<BaseButton/>', () => {
           </BaseButton>,
         );
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         await act(() => user.click(screen.getByRole('button')));
 
         expect(mockOnClick).toHaveBeenCalled();
@@ -78,6 +81,7 @@ describe('<BaseButton/>', () => {
           </BaseButton>,
         );
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         await act(() => user.click(screen.getByRole('button')));
 
         expect(mockOnClick).toHaveBeenCalled();

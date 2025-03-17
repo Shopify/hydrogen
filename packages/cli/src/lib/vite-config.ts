@@ -82,7 +82,7 @@ export async function getViteConfig(
     serverOutDir,
     typeof entryFileNames === 'string'
       ? entryFileNames
-      : serverBuildFile ?? 'index.js',
+      : (serverBuildFile ?? 'index.js'),
   );
 
   const ssrEntry = ssrEntryFlag ?? resolvedViteConfig.build.ssr;

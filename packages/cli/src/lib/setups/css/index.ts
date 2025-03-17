@@ -11,7 +11,7 @@ export const STYLING_CHOICES = [...SETUP_CSS_STRATEGIES, 'none'] as const;
 export type StylingChoice = (typeof STYLING_CHOICES)[number];
 
 export const CSS_STRATEGY_NAME_MAP: Record<CssStrategy, string> = {
-  tailwind: 'Tailwind (v4 beta)',
+  tailwind: 'Tailwind v4',
   'vanilla-extract': 'Vanilla Extract',
   'css-modules': 'CSS Modules',
   postcss: 'PostCSS',

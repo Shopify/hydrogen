@@ -88,6 +88,7 @@ describe(`useLoadScript`, () => {
       useLoadScript('test6.js', {attributes: {'data-testid': 'test'}}),
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await act(async () => {
       const script = await findByTestId<HTMLScriptElement>(html, 'test');
       expect(hookResult.result.current).toBe('loading');

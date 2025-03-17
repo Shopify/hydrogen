@@ -82,7 +82,7 @@ export function getMediaImage(
   image: PartialDeep<MediaImage, {recurseIntoArrays: true}> = {},
 ): PartialDeep<MediaImage, {recurseIntoArrays: true}> {
   return {
-    id: image.id ?? faker.random.words(),
+    id: image.id ?? faker.word.words(),
     mediaContentType: 'IMAGE',
     image: getPreviewImage(image.previewImage ?? undefined),
   };
