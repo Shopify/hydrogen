@@ -39,6 +39,7 @@ describe('CartLineQuantityAdjustButton', () => {
       (CART_LINE?.quantity ?? 0).toString(),
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await act(() => user.click(screen.getByRole('button')));
 
     expect(linesUpdateMock).toHaveBeenCalledWith([
@@ -83,6 +84,7 @@ describe('CartLineQuantityAdjustButton', () => {
       (tempCartLine?.quantity ?? 0).toString(),
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await act(() => user.click(screen.getByRole('button')));
 
     expect(linesUpdateMock).toHaveBeenCalledWith([
@@ -127,6 +129,7 @@ describe('CartLineQuantityAdjustButton', () => {
       (tempCartLine?.quantity ?? 0).toString(),
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await act(() => user.click(screen.getByRole('button')));
 
     expect(linesRemoveMock).toHaveBeenCalledWith([CART_LINE.id]);
@@ -155,6 +158,7 @@ describe('CartLineQuantityAdjustButton', () => {
       (CART_LINE?.quantity ?? 0).toString(),
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     await act(() => user.click(screen.getByRole('button')));
 
     expect(linesRemoveMock).toHaveBeenCalledWith([CART_LINE.id]);

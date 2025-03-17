@@ -103,7 +103,7 @@ export function spawnCodegenProcess({
 
   child.stderr.on('data', (data) => {
     const dataString: string =
-      typeof data === 'string' ? data : data?.toString?.('utf8') ?? '';
+      typeof data === 'string' ? data : (data?.toString?.('utf8') ?? '');
 
     if (!dataString) return;
 
@@ -204,15 +204,18 @@ async function generateTypes({
 
   await generate(codegenContext, true);
 
-  return Object.entries(codegenConfig.generates).reduce((acc, [key, value]) => {
-    if ('documents' in value) {
-      acc[key] = (
-        Array.isArray(value.documents) ? value.documents : [value.documents]
-      ).filter((document) => typeof document === 'string') as string[];
-    }
+  return Object.entries(codegenConfig.generates).reduce(
+    (acc, [key, value]) => {
+      if ('documents' in value) {
+        acc[key] = (
+          Array.isArray(value.documents) ? value.documents : [value.documents]
+        ).filter((document) => typeof document === 'string') as string[];
+      }
 
-    return acc;
-  }, {} as Record<string, string[]>);
+      return acc;
+    },
+    {} as Record<string, string[]>,
+  );
 }
 
 export async function generateDefaultConfig(
@@ -353,10 +356,13 @@ function getCodegenFromGraphQLConfig(
 
   return Object.entries(
     project.extensions.codegen.generates as CodegenConfig['generates'][string],
-  ).reduce((acc, [key, value]) => {
-    acc[key] = {...project, ...(Array.isArray(value) ? value[0] : value)};
-    return acc;
-  }, {} as CodegenConfig['generates']);
+  ).reduce(
+    (acc, [key, value]) => {
+      acc[key] = {...project, ...(Array.isArray(value) ? value[0] : value)};
+      return acc;
+    },
+    {} as CodegenConfig['generates'],
+  );
 }
 
 /**

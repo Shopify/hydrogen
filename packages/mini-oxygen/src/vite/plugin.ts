@@ -61,7 +61,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
                   config.build?.ssr === true
                     ? // No --entry flag passed by the user, use the
                       // option passed to the plugin or the default value
-                      pluginOptions.entry ?? DEFAULT_SSR_ENTRY
+                      (pluginOptions.entry ?? DEFAULT_SSR_ENTRY)
                     : // --entry flag passed by the user, keep it
                       config.build?.ssr,
               },
@@ -149,6 +149,9 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           bundle[oxygenJsonFile] = {
             type: 'asset',
             fileName: oxygenJsonFile,
+            originalFileName: oxygenJsonFile,
+            names: [oxygenJsonFile],
+            originalFileNames: [oxygenJsonFile],
             name: oxygenJsonFile,
             needsCodeReference: false,
             source: JSON.stringify(oxygenJsonContent, null, 2),

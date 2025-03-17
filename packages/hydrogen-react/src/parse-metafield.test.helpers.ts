@@ -21,10 +21,10 @@ export function getRawMetafield(
   return {
     __typename: 'Metafield',
     createdAt: metafield.createdAt ?? faker.date.recent().toString(),
-    description: metafield.description ?? faker.random.words(),
-    id: metafield.id ?? faker.random.words(),
-    key: metafield.key ?? `${faker.random.word()}.${faker.random.word()}`,
-    namespace: metafield.namespace ?? faker.random.word(),
+    description: metafield.description ?? faker.word.words(),
+    id: metafield.id ?? faker.word.words(),
+    key: metafield.key ?? `${faker.word.noun()}.${faker.word.noun()}`,
+    namespace: metafield.namespace ?? faker.word.noun(),
     type,
     updatedAt: metafield.updatedAt ?? faker.date.recent().toString(),
     value: metafield.value ?? getMetafieldValue(type),
@@ -36,32 +36,52 @@ export function getRawMetafield(
 export function getMetafieldValue(type: MetafieldTypeTypes) {
   switch (type) {
     case 'single_line_text_field':
-      return faker.random.words();
+      return faker.word.words();
     case 'multi_line_text_field':
-      return `${faker.random.words()}\n${faker.random.words()}\n${faker.random.words()}`;
+      return `${faker.word.words()}\n${faker.word.words()}\n${faker.word.words()}`;
     case 'number_integer':
-      return faker.datatype.number().toString();
+      return faker.number.int().toString();
     case 'number_decimal':
-      return faker.datatype.float().toString();
+      return faker.number.float().toString();
     case 'date':
     case 'date_time':
-      return faker.datatype.datetime().toString();
+      return faker.date.anytime().toString();
     case 'url':
       return faker.internet.url();
-    case 'json':
-      return JSON.stringify(faker.datatype.json());
+    case 'json': {
+      const jsonType = Math.abs(faker.number.int()) % 6;
+      switch (jsonType) {
+        case 0:
+          return faker.datatype.boolean().toString();
+        case 1:
+          return 'null';
+        case 2:
+          return faker.number.float().toString();
+        case 3:
+          return faker.string.alpha();
+        case 4:
+          return JSON.stringify([faker.string.alpha(), faker.number.int()]);
+        case 5:
+          return JSON.stringify({
+            [faker.string.alpha()]: faker.string.alpha(),
+            [faker.string.alpha()]: faker.string.alpha(),
+          });
+        default:
+          throw new Error('Unhandled case.');
+      }
+    }
     case 'boolean':
       return faker.datatype.boolean().toString();
     case 'color':
       return faker.internet.color();
     case 'weight':
       return JSON.stringify({
-        value: faker.datatype.number(),
+        value: faker.number.int(),
         unit: faker.helpers.arrayElement(['kg', 'g', 'lb', 'oz']),
       });
     case 'volume':
       return JSON.stringify({
-        value: faker.datatype.number(),
+        value: faker.number.int(),
         unit: faker.helpers.arrayElement([
           'ml',
           'l',
@@ -79,20 +99,20 @@ export function getMetafieldValue(type: MetafieldTypeTypes) {
       });
     case 'dimension':
       return JSON.stringify({
-        value: faker.datatype.number(),
+        value: faker.number.int(),
         unit: faker.helpers.arrayElement(['mm', 'cm', 'm', 'in', 'ft', 'yd']),
       });
     case 'rating': {
-      const max = faker.datatype.number({min: 5, max: 10});
-      const min = faker.datatype.number({min: 1, max: 4});
+      const max = faker.number.int({min: 5, max: 10});
+      const min = faker.number.int({min: 1, max: 4});
       return JSON.stringify({
         scale_max: max,
         scale_min: min,
-        value: faker.datatype.float({min, max, precision: 0.0001}),
+        value: faker.number.float({min, max, fractionDigits: 4}),
       });
     }
     default: {
-      return faker.random.words();
+      return faker.word.words();
     }
   }
 }
