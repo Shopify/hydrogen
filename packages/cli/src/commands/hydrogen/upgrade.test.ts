@@ -1,5 +1,5 @@
 import {createRequire} from 'node:module';
-import execa from 'execa';
+import {execa} from 'execa';
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {
   inTemporaryDirectory,
