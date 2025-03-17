@@ -8,6 +8,7 @@ import {
   TEMPLATE_DIRECTORY,
 } from './constants';
 import {
+  maybeMDBlock,
   MDBlock,
   mdCode,
   mdFrontMatter,
@@ -17,10 +18,10 @@ import {
   mdNote,
   mdParagraph,
   mdTable,
-  renderMDBlock,
+  serializeMDBlocksToFile,
 } from './markdown';
 import {Ingredient, parseRecipeFromString, Recipe, Step} from './recipe';
-import {assertNever} from './util';
+import {assertNever, getPatchesDir} from './util';
 
 // The number of lines to collapse a diff into a details block
 const COLLAPSE_DIFF_LINES = 50;
@@ -55,25 +56,42 @@ export function renderRecipe(params: {
     fs.readFileSync(recipePath, 'utf8'),
   );
 
-  const patchesDir = path.join(recipeDir, 'patches');
+  // Write the markdown file to the current directory as README.md
+  serializeMDBlocksToFile(
+    makeReadmeBlocks(recipeName, recipe, params.format),
+    path.join(
+      recipeDir,
+      params.format === 'github'
+        ? RENDER_FILENAME_GITHUB
+        : RENDER_FILENAME_SHOPIFY,
+    ),
+  );
+}
 
-  const markdownTitle = makeTitle(recipe, params.format);
+function makeReadmeBlocks(
+  recipeName: string,
+  recipe: Recipe,
+  format: RenderFormat,
+) {
+  const markdownTitle = makeTitle(recipe, format);
 
-  const markdownImage = maybeBlock(recipe.image, (image) => [
+  const markdownImage = maybeMDBlock(recipe.image, (image) => [
     mdImage(recipe.title, image),
   ]);
 
   const markdownDescription = mdParagraph(recipe.description);
 
-  const markdownNotes = maybeBlock(recipe.notes, (notes) => notes.map(mdNote));
+  const markdownNotes = maybeMDBlock(recipe.notes, (notes) =>
+    notes.map(mdNote),
+  );
 
   const markdownIngredients = makeIngredients(recipe.ingredients);
 
   const markdownSteps = makeSteps(
     recipe.steps,
     recipe.ingredients,
-    params.format,
-    patchesDir,
+    format,
+    getPatchesDir(recipeName),
   );
 
   const markdownDeletedFiles =
@@ -94,19 +112,7 @@ export function renderRecipe(params: {
     ...markdownDeletedFiles,
   ];
 
-  // Render all the blocks
-  const markdown = blocks.map(renderMDBlock).join('\n\n');
-
-  // Write the markdown file to the current directory as README.md
-  fs.writeFileSync(
-    path.join(
-      recipeDir,
-      params.format === 'github'
-        ? RENDER_FILENAME_GITHUB
-        : RENDER_FILENAME_SHOPIFY,
-    ),
-    markdown,
-  );
+  return blocks;
 }
 
 function makeIngredients(ingredients: Ingredient[]): MDBlock[] {
@@ -136,55 +142,66 @@ function makeSteps(
   patchesDir: string,
 ): MDBlock[] {
   const markdownStepsHeader = mdHeading(2, '🍱 Steps');
-  function renderStep(step: Step, index: number): MDBlock[] {
-    function getDiffs(): MDBlock[] {
-      if (step.diffs == null || step.diffs.length === 0) {
-        return [];
-      }
+  return [
+    markdownStepsHeader,
+    ...steps.flatMap((step, index) =>
+      renderStep(step, index, ingredients, format, patchesDir),
+    ),
+  ];
+}
 
-      return step.diffs.flatMap((diff) => {
-        const patchFile = path.join(patchesDir, diff.patchFile);
-        const patch = fs.readFileSync(patchFile, 'utf8');
-
-        // remove @description comments from the rendered patch
-        const renderedPatch = patch.replace(/[\/# *]*\s+@description.*/g, '');
-
-        const collapsed =
-          format === 'github' &&
-          renderedPatch.split('\n').length > COLLAPSE_DIFF_LINES;
-
-        return [
-          mdHeading(
-            4,
-            `File: [\`${diff.file}\`](/templates/skeleton/${diff.file})`,
-          ),
-          mdCode('diff', renderedPatch, collapsed),
-        ];
-      });
+export function renderStep(
+  step: Step,
+  index: number,
+  ingredients: Ingredient[],
+  format: RenderFormat,
+  patchesDir: string,
+): MDBlock[] {
+  function getDiffs(): MDBlock[] {
+    if (step.diffs == null || step.diffs.length === 0) {
+      return [];
     }
 
-    const markdownStep: MDBlock[] = [
-      mdHeading(3, `${index + 1}. ${step.name}`),
-      ...(step.notes?.map(mdNote) ?? []),
-      mdParagraph(step.description ?? ''),
-      ...(step.ingredients != null
-        ? [
-            mdList(
-              step.ingredients
-                .filter((ingredient) =>
-                  ingredients.some((other) => other.path === ingredient),
-                )
-                .map((i) => `\`${i.replace(TEMPLATE_DIRECTORY, '')}\``),
-            ),
-          ]
-        : []),
-      ...getDiffs(),
-    ];
+    return step.diffs.flatMap((diff) => {
+      const patchFile = path.join(patchesDir, diff.patchFile);
+      const patch = fs.readFileSync(patchFile, 'utf8');
 
-    return markdownStep;
+      // remove @description comments from the rendered patch
+      const renderedPatch = patch.replace(/[\/# *]*\s+@description.*/g, '');
+
+      const collapsed =
+        format === 'github' &&
+        renderedPatch.split('\n').length > COLLAPSE_DIFF_LINES;
+
+      return [
+        mdHeading(
+          4,
+          `File: [\`${diff.file}\`](/templates/skeleton/${diff.file})`,
+        ),
+        mdCode('diff', renderedPatch, collapsed),
+      ];
+    });
   }
 
-  return [markdownStepsHeader, ...steps.flatMap(renderStep)];
+  const markdownStep: MDBlock[] = [
+    mdHeading(3, `${index + 1}. ${step.name}`),
+    ...(step.notes?.map(mdNote) ?? []),
+    mdParagraph(step.description ?? ''),
+    ...(step.ingredients != null
+      ? [
+          mdList(
+            step.ingredients
+              .filter((ingredient) =>
+                ingredients.some((other) => other.path === ingredient),
+              )
+              .map((i) => `\`${i.replace(TEMPLATE_DIRECTORY, '')}\``),
+          ),
+        ]
+      : []),
+    ...getDiffs(),
+  ];
+
+  return markdownStep;
 }
 
 function makeTitle(recipe: Recipe, format: RenderFormat): MDBlock {
@@ -200,14 +217,4 @@ function makeTitle(recipe: Recipe, format: RenderFormat): MDBlock {
     default:
       assertNever(format);
   }
-}
-
-function maybeBlock<T>(
-  value: T | null | undefined,
-  makeBlock: (v: T) => MDBlock[],
-): MDBlock[] {
-  if (value == null) {
-    return [];
-  }
-  return makeBlock(value);
 }

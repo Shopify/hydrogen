@@ -5,7 +5,7 @@ import {FILES_TO_IGNORE_FOR_GENERATE, TEMPLATE_PATH} from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
 import {isRenderFormat, RENDER_FORMATS, renderRecipe} from '../lib/render';
 import {listRecipes, separator} from '../lib/util';
-
+import {generateLLMsFiles} from '../lib/llms';
 type RegenerateArgs = {
   recipe?: string;
   onlyFiles: boolean;
@@ -81,4 +81,8 @@ async function handler(args: RegenerateArgs) {
     console.log(`✅ Regenerated recipe '${recipe}'`);
     console.log(separator());
   }
+
+  // generate the LLM files
+  console.log('🤖 LLM files');
+  generateLLMsFiles(args.recipe);
 }

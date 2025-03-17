@@ -1,4 +1,5 @@
 import {assertNever} from './util';
+import fs from 'fs';
 
 export type MDNote = {
   type: 'NOTE';
@@ -212,4 +213,22 @@ export function renderMDBlock(block: MDBlock): string {
     default:
       assertNever(block);
   }
+}
+
+export function mdLinkString(url: string, text: string): string {
+  return `[${text}](${url})`;
+}
+
+export function maybeMDBlock<T>(
+  value: T | null | undefined,
+  makeBlock: (v: T) => MDBlock[],
+): MDBlock[] {
+  if (value == null) {
+    return [];
+  }
+  return makeBlock(value);
+}
+
+export function serializeMDBlocksToFile(blocks: MDBlock[], filePath: string) {
+  fs.writeFileSync(filePath, blocks.map(renderMDBlock).join('\n\n'));
 }

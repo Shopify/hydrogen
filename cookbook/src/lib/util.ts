@@ -208,3 +208,13 @@ export function listRecipes(): string[] {
     .filter((file) => file.isDirectory())
     .map((file) => file.name);
 }
+
+export function isInGitHistory(params: {path: string}): boolean {
+  const status = execSync(`git log ${params.path} | wc -l`);
+  const count = parseInt(status.toString().trim());
+  return count > 0;
+}
+
+export function getPatchesDir(recipeName: string): string {
+  return path.join(COOKBOOK_PATH, 'recipes', recipeName, 'patches');
+}

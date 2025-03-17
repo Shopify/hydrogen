@@ -1,10 +1,14 @@
-import {readdir} from 'node:fs/promises';
+import {mkdir, readdir, writeFile} from 'node:fs/promises';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController, AbortSignal} from '@shopify/cli-kit/node/abort';
 import {copyFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {joinPath} from '@shopify/cli-kit/node/path';
-import {renderInfo, renderTasks} from '@shopify/cli-kit/node/ui';
+import {
+  renderInfo,
+  renderTasks,
+  renderConfirmationPrompt,
+} from '@shopify/cli-kit/node/ui';
 import {
   downloadExternalRepo,
   downloadMonorepoTemplates,
@@ -22,6 +26,7 @@ import {
   SetupSummary,
   type InitOptions,
 } from './common.js';
+import path from 'node:path';
 
 const DEMO_STORE_REPO = 'shopify/hydrogen-demo-store';
 
@@ -127,6 +132,29 @@ export async function setupRemoteTemplate(
         }
       },
     });
+  }
+
+  const copyCursorRules = await renderConfirmationPrompt({
+    message: 'Would you like to copy over Cursor rules?',
+    defaultValue: true,
+    abortSignal: controller.signal,
+  });
+  if (copyCursorRules) {
+    // 1. create the .cursor/rules folder in the project root
+    await mkdir(joinPath(project.directory, '.cursor', 'rules'));
+    // 2. download the cursor rules into the project
+    const rules = [
+      'https://raw.githubusercontent.com/Shopify/hydrogen/refs/heads/feat/fr-subscriptions-recipe/.cursor/rules/cookbook-recipe-subscriptions.mdc',
+    ];
+    for (const rule of rules) {
+      const response = await fetch(rule);
+      const data = await response.text();
+      const dataWithoutGlobs = data.replace(/globs: .*/, '*');
+      await writeFile(
+        joinPath(project.directory, '.cursor', 'rules', path.basename(rule)),
+        dataWithoutGlobs,
+      );
+    }
   }
 
   if (controller.signal.aborted) return;

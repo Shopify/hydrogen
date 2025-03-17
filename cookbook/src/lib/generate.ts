@@ -14,6 +14,7 @@ import {
   createDirectoryIfNotExists,
   getMainCommitHash,
   getStepDescription,
+  isInGitHistory,
   parseGitStatus,
   parseReferenceBranch,
   recreateDirectory,
@@ -53,8 +54,8 @@ export async function generateRecipe(params: {
   const patchesDirPath = path.join(recipeDirPath, 'patches');
   recreateDirectory(patchesDirPath);
 
-  // rewind changes to the recipe directory
-  if (existingRecipe != null) {
+  // rewind changes to the recipe directory (if the recipe directory is not new)
+  if (existingRecipe != null && !isInGitHistory({path: recipeDirPath})) {
     execSync(`git checkout -- ${recipeDirPath}`);
   }
 
