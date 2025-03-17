@@ -24,7 +24,7 @@ export async function replaceFileContent(
   if (typeof content !== 'string') return;
 
   if (formatConfig) {
-    content = await formatCode(content, formatConfig);
+    content = await formatCode(content, formatConfig, filepath);
   }
 
   return writeFile(filepath, content);

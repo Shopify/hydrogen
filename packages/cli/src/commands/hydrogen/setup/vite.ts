@@ -100,6 +100,13 @@ export async function runSetupVite({directory}: {directory: string}) {
         // Classic Remix supported tailwind without adding it
         // to the postcss.config.js file. We need to add it here now:
         const hasTailwindPlugin = postCssContent.includes('tailwindcss');
+        const isCJS =
+          postCssContent.includes('module.exports') ||
+          postCssContent.includes('exports.') ||
+          postCssContent.includes('require(');
+        const postCSSFilename = isCJS
+          ? postCssConfigPath.replace('.js', '.cjs')
+          : postCssConfigPath;
         if (!hasTailwindPlugin && usesTailwind) {
           postCssContent = await formatCode(
             postCssContent.replace(
@@ -107,18 +114,11 @@ export async function runSetupVite({directory}: {directory: string}) {
               '$1\n    tailwindcss: {},',
             ),
             formatOptions,
+            postCSSFilename,
           );
         }
 
-        const isCJS =
-          postCssContent.includes('module.exports') ||
-          postCssContent.includes('exports.') ||
-          postCssContent.includes('require(');
-
-        return writeFile(
-          isCJS ? postCssConfigPath.replace('.js', '.cjs') : postCssConfigPath,
-          postCssContent,
-        );
+        return writeFile(postCSSFilename, postCssContent);
       })
       .catch(async () => {
         // PostCSS file not found
@@ -220,7 +220,11 @@ export async function runSetupVite({directory}: {directory: string}) {
           'vite.config.' + fileExt.slice(0, 2),
         );
 
-        viteConfigContent = await formatCode(viteConfigContent, formatOptions);
+        viteConfigContent = await formatCode(
+          viteConfigContent,
+          formatOptions,
+          viteConfigPath,
+        );
 
         return writeFile(viteConfigPath, viteConfigContent);
       },

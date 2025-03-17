@@ -415,7 +415,7 @@ async function addHooksToHydrogenOptions(
 
       hydrogenOptions.hooks = {
         beforeOneFileWrite: (file: string, content: string) =>
-          formatCode(content, formatConfig),
+          formatCode(content, formatConfig, file),
         ...hydrogenOptions.hooks,
       };
     }

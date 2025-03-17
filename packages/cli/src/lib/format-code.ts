@@ -30,12 +30,14 @@ export async function getCodeFormatOptions(filePath = process.cwd()) {
 export async function formatCode(
   content: string,
   config: FormatOptions = DEFAULT_PRETTIER_CONFIG,
+  filePath = '',
 ) {
+  const ext = extname(filePath);
   return prettier.format(content, {
     // Specify the TypeScript parser for ts/tsx files. Otherwise
     // we need to use the babel parser instead of the default parser,
     // because prettier will print a warning.
-    parser: 'typescript',
+    parser: ext === '.tsx' || ext === '.ts' ? 'typescript' : 'babel',
     ...config,
   });
 }

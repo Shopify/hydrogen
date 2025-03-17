@@ -532,7 +532,6 @@ export async function handleDependencies(
     shouldInstallDeps,
     installDeps: shouldInstallDeps
       ? async () => {
-          console.log('installDeps');
           await installNodeModules({
             directory: projectDir,
             packageManager: actualPackageManager,
