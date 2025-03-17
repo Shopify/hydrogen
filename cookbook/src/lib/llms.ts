@@ -58,10 +58,8 @@ function generateCookbookCursorRule() {
     recipes,
     fs.readFileSync(path.join(REPO_ROOT, 'cookbook', 'README.md'), 'utf8'),
   );
-  fs.writeFileSync(
-    path.join(REPO_ROOT, '.cursor', 'rules', 'cookbook.mdc'),
-    cookbookCursorRule,
-  );
+  const rulePath = path.join(REPO_ROOT, '.cursor', 'rules', 'cookbook.mdc');
+  fs.writeFileSync(rulePath, cookbookCursorRule);
 }
 
 function generateLLMsFullTxt() {
@@ -225,14 +223,24 @@ export function generateLLMsFiles(recipeName?: string) {
 
     const blocks = renderRecipeRuleBlocks(recipeName, recipe, 'templates/**/*');
 
-    serializeMDBlocksToFile(
-      blocks,
-      path.join(
-        REPO_ROOT,
-        '.cursor',
-        'rules',
-        `cookbook-recipe-${recipeName}.mdc`,
-      ),
-    );
+    serializeMDBlocksToFile(blocks, getRecipeRulePath(recipeName));
   }
+
+  console.log('Generating recipe rules index file…');
+  const rulePaths = listRecipes().map(getRecipeRulePath);
+  fs.writeFileSync(
+    path.join(COOKBOOK_PATH, 'rules.txt'),
+    rulePaths
+      .map((rulePath) => rulePath.replace(REPO_ROOT + '/', ''))
+      .join('\n'),
+  );
+}
+
+function getRecipeRulePath(recipeName: string) {
+  return path.join(
+    REPO_ROOT,
+    '.cursor',
+    'rules',
+    `cookbook-recipe-${recipeName}.mdc`,
+  );
 }
