@@ -28,6 +28,7 @@ import {
   isDirectory,
   writeFile,
   copyFile,
+  mkdir,
 } from '@shopify/cli-kit/node/fs';
 import {
   outputDebug,
@@ -67,6 +68,7 @@ import {
   isHydrogenMonorepo,
 } from '../build.js';
 import {enhanceAuthLogs} from '../log.js';
+import path from 'node:path';
 
 export type InitOptions = {
   path?: string;
@@ -869,4 +871,32 @@ export function generateRandomName() {
     'Topaz',
   ]);
   return `${colorNames} ${geographicalFeature}`;
+}
+
+export async function askCopyCursorRules(
+  controller: AbortController,
+  project: Project,
+) {
+  const copyCursorRules = await renderConfirmationPrompt({
+    message: 'Would you like to copy over Cursor rules?',
+    defaultValue: true,
+    abortSignal: controller.signal,
+  });
+  if (copyCursorRules) {
+    // 1. create the .cursor/rules folder in the project root
+    await mkdir(joinPath(project.directory, '.cursor', 'rules'));
+    // 2. download the cursor rules into the project
+    const rules = [
+      'https://raw.githubusercontent.com/Shopify/hydrogen/refs/heads/feat/fr-subscriptions-recipe/.cursor/rules/cookbook-recipe-subscriptions.mdc',
+    ];
+    for (const rule of rules) {
+      const response = await fetch(rule);
+      const data = await response.text();
+      const dataWithoutGlobs = data.replace(/globs: .*/, '*');
+      await writeFile(
+        joinPath(project.directory, '.cursor', 'rules', path.basename(rule)),
+        dataWithoutGlobs,
+      );
+    }
+  }
 }

@@ -17,6 +17,7 @@ import {applyTemplateDiff} from '../template-diff.js';
 import {getCliCommand} from '../shell.js';
 import {
   commitAll,
+  askCopyCursorRules,
   createAbortHandler,
   createInitialCommit,
   handleDependencies,
@@ -134,28 +135,7 @@ export async function setupRemoteTemplate(
     });
   }
 
-  const copyCursorRules = await renderConfirmationPrompt({
-    message: 'Would you like to copy over Cursor rules?',
-    defaultValue: true,
-    abortSignal: controller.signal,
-  });
-  if (copyCursorRules) {
-    // 1. create the .cursor/rules folder in the project root
-    await mkdir(joinPath(project.directory, '.cursor', 'rules'));
-    // 2. download the cursor rules into the project
-    const rules = [
-      'https://raw.githubusercontent.com/Shopify/hydrogen/refs/heads/feat/fr-subscriptions-recipe/.cursor/rules/cookbook-recipe-subscriptions.mdc',
-    ];
-    for (const rule of rules) {
-      const response = await fetch(rule);
-      const data = await response.text();
-      const dataWithoutGlobs = data.replace(/globs: .*/, '*');
-      await writeFile(
-        joinPath(project.directory, '.cursor', 'rules', path.basename(rule)),
-        dataWithoutGlobs,
-      );
-    }
-  }
+  await askCopyCursorRules(controller, project);
 
   if (controller.signal.aborted) return;
 
