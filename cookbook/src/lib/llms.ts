@@ -154,11 +154,13 @@ If the user is asking on how to implement the feature from scratch, please first
 Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
 
 # User Intent Recognition
+
 <user_queries>
 ${recipe.userQueries.map((query) => `- ${query}`).join('\n')}
 </user_queries>
 
 # Troubleshooting
+
 <troubleshooting>
 ${recipe.troubleshooting
   .map(
