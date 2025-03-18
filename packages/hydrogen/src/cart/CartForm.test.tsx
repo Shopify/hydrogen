@@ -1,6 +1,6 @@
-import {describe, expect, expectTypeOf, it, vi} from 'vitest';
-import {render} from '@testing-library/react';
-import {CartForm, OptimisticCartLineInput} from './CartForm';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { render } from '@testing-library/react';
+import { CartForm, OptimisticCartLineInput } from './CartForm';
 
 function MockForm({
   children,
@@ -32,8 +32,8 @@ function getRenderFormInput(container: HTMLElement) {
 
 describe('<CartForm />', () => {
   it('renders a form with children', () => {
-    const {container} = render(
-      <CartForm action={CartForm.ACTIONS.LinesAdd} inputs={{lines: []}}>
+    const { container } = render(
+      <CartForm action={CartForm.ACTIONS.LinesAdd} inputs={{ lines: [] }}>
         <button>Submit</button>
       </CartForm>,
     );
@@ -45,10 +45,10 @@ describe('<CartForm />', () => {
   });
 
   it('renders a form with render prop', () => {
-    const {container} = render(
+    const { container } = render(
       <CartForm
         action={CartForm.ACTIONS.LinesAdd}
-        inputs={{lines: [], test: 'test'}}
+        inputs={{ lines: [], test: 'test' }}
       >
         {(fetcher) => <button>Submit</button>}
       </CartForm>,
@@ -60,11 +60,11 @@ describe('<CartForm />', () => {
   });
 
   it('renders a form with route', () => {
-    const {container} = render(
+    const { container } = render(
       <CartForm
         route="/cart"
         action={CartForm.ACTIONS.LinesAdd}
-        inputs={{lines: []}}
+        inputs={{ lines: [] }}
       >
         <button>Submit</button>
       </CartForm>,
@@ -82,6 +82,9 @@ describe('<CartForm />', () => {
       AttributesUpdateInput: 'AttributesUpdateInput',
       BuyerIdentityUpdate: 'BuyerIdentityUpdate',
       Create: 'Create',
+      DeliveryAddressesAdd: 'DeliveryAddressesAdd',
+      DeliveryAddressesUpdate: 'DeliveryAddressesUpdate',
+      DeliveryAddressesRemove: 'DeliveryAddressesRemove',
       DiscountCodesUpdate: 'DiscountCodesUpdate',
       GiftCardCodesUpdate: 'GiftCardCodesUpdate',
       LinesAdd: 'LinesAdd',

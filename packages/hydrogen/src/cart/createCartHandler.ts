@@ -52,15 +52,15 @@ import {
 import {
   type CartDeliveryAddressesAddFunction,
   cartDeliveryAddressesAddDefault,
-} from './queries/cartDeliveryAddressesAdd';
+} from './queries/cartDeliveryAddressesAddDefault';
 import {
   type CartDeliveryAddressesRemoveFunction,
   cartDeliveryAddressesRemoveDefault,
-} from './queries/cartDeliveryAddressesRemove';
+} from './queries/cartDeliveryAddressesRemoveDefault';
 import {
   type CartDeliveryAddressesUpdateFunction,
   cartDeliveryAddressesUpdateDefault,
-} from './queries/cartDeliveryAddressesUpdate';
+} from './queries/cartDeliveryAddressesUpdateDefault';
 
 export type CartHandlerOptions = {
   storefront: Storefront;

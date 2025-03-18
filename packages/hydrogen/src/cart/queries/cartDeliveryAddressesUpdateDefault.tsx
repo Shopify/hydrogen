@@ -27,7 +27,7 @@ export type CartDeliveryAddressesUpdateFunction = (
  * @returns {CartDeliveryAddressUpdateFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
  *
  * @example
- * const updateAddresses = cartDeliverAddressAddDefault(cartQueryOptions);
+ * const updateAddresses = cartDeliveryAddressesUpdateDefault(cartQueryOptions);
  * const result = await updateAddresses([
     {
       "address": {

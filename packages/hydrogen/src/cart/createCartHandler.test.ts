@@ -1,4 +1,4 @@
-import {describe, expect, expectTypeOf, it} from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import {
   HydrogenCart,
   HydrogenCartCustom,
@@ -18,7 +18,7 @@ type MockCarthandler = {
 };
 
 function getCartHandler(options: MockCarthandler = {}) {
-  const {cartId, ...rest} = options;
+  const { cartId, ...rest } = options;
   return createCartHandler({
     storefront: mockCreateStorefrontClient(),
     customerAccount: mockCreateCustomerAccountClient(),
@@ -34,7 +34,7 @@ describe('createCartHandler', () => {
     const cart = getCartHandler();
 
     expectTypeOf(cart).toEqualTypeOf<HydrogenCart>;
-    expect(Object.keys(cart)).toHaveLength(15);
+    expect(Object.keys(cart)).toHaveLength(18);
     expect(cart).toHaveProperty('get');
     expect(cart).toHaveProperty('getCartId');
     expect(cart).toHaveProperty('setCartId');
@@ -64,8 +64,8 @@ describe('createCartHandler', () => {
       },
     });
 
-    expectTypeOf(cart).toEqualTypeOf<HydrogenCartCustom<{foo: () => 'bar'}>>;
-    expect(Object.keys(cart)).toHaveLength(16);
+    expectTypeOf(cart).toEqualTypeOf<HydrogenCartCustom<{ foo: () => 'bar' }>>;
+    expect(Object.keys(cart)).toHaveLength(19);
     expect(cart.foo()).toBe('bar');
   });
 
@@ -79,7 +79,7 @@ describe('createCartHandler', () => {
     });
 
     expectTypeOf(cart).toEqualTypeOf<HydrogenCart>;
-    expect(Object.keys(cart)).toHaveLength(15);
+    expect(Object.keys(cart)).toHaveLength(18);
     expect(await cart.get()).toBe('bar');
   });
 
@@ -146,7 +146,7 @@ describe('createCartHandler', () => {
   });
 
   it('function get has a working default implementation', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.get();
 
@@ -154,15 +154,15 @@ describe('createCartHandler', () => {
   });
 
   it('function get can provide overridable parameter', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
-    const result = await cart.get({cartId: 'gid://shopify/Cart/c1-456'});
+    const result = await cart.get({ cartId: 'gid://shopify/Cart/c1-456' });
 
     expect(result).toHaveProperty('id', 'gid://shopify/Cart/c1-456');
   });
 
   it('function create has a working default implementation', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.create({});
 
@@ -170,7 +170,7 @@ describe('createCartHandler', () => {
   });
 
   it('function addLines has a working default implementation', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.addLines([]);
 
@@ -178,7 +178,7 @@ describe('createCartHandler', () => {
   });
 
   it('function addLines can provide overridable parameter', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.addLines([], {
       cartId: 'gid://shopify/Cart/c1-456',
@@ -196,7 +196,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateLines has a working default implementation', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.updateLines([]);
 
@@ -204,7 +204,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateLines can provide overridable parameter', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.updateLines([], {
       cartId: 'gid://shopify/Cart/c1-456',
@@ -214,7 +214,7 @@ describe('createCartHandler', () => {
   });
 
   it('function removeLines has a working default implementation', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.removeLines([]);
 
@@ -222,7 +222,7 @@ describe('createCartHandler', () => {
   });
 
   it('function removeLines can provide overridable parameter', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.removeLines([], {
       cartId: 'gid://shopify/Cart/c1-456',
@@ -232,7 +232,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateDiscountCodes has a working default implementation', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.updateDiscountCodes([]);
 
@@ -240,7 +240,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateDiscountCodes can provide overridable parameter', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.updateDiscountCodes([], {
       cartId: 'gid://shopify/Cart/c1-456',
@@ -258,7 +258,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateGiftCardCodes has a working default implementation', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.updateGiftCardCodes([]);
 
@@ -266,7 +266,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateGiftCardCodes can provide overridable parameter', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.updateGiftCardCodes([], {
       cartId: 'gid://shopify/Cart/c1-456',
@@ -284,7 +284,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateBuyerIdentity has a working default implementation', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.updateBuyerIdentity({});
 
@@ -292,11 +292,11 @@ describe('createCartHandler', () => {
   });
 
   it('function updateBuyerIdentity can provide overridable parameter', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.updateBuyerIdentity(
       {},
-      {cartId: 'gid://shopify/Cart/c1-456'},
+      { cartId: 'gid://shopify/Cart/c1-456' },
     );
 
     expect(result.cart).toHaveProperty('id', 'gid://shopify/Cart/c1-456');
@@ -311,7 +311,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateNote has a working default implementation', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.updateNote('');
 
@@ -319,7 +319,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateNote can provide overridable parameter', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.updateNote('', {
       cartId: 'gid://shopify/Cart/c1-456',
@@ -337,7 +337,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateSelectedDeliveryOption has a working default implementation', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.updateSelectedDeliveryOption([
       {
@@ -350,7 +350,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateSelectedDeliveryOption can provide overridable parameter', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.updateSelectedDeliveryOption(
       [
@@ -359,14 +359,14 @@ describe('createCartHandler', () => {
           deliveryOptionHandle: 'Postal Service',
         },
       ],
-      {cartId: 'gid://shopify/Cart/c1-456'},
+      { cartId: 'gid://shopify/Cart/c1-456' },
     );
 
     expect(result.cart).toHaveProperty('id', 'gid://shopify/Cart/c1-456');
   });
 
   it('function updateAttributes has a working default implementation', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.updateAttributes([]);
 
@@ -392,7 +392,7 @@ describe('createCartHandler', () => {
   });
 
   it('function setMetafields has a working default implementation', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.setMetafields([]);
 
@@ -418,7 +418,7 @@ describe('createCartHandler', () => {
   });
 
   it('function deleteMetafield has a working default implementation', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.deleteMetafield('some.key');
 
@@ -426,7 +426,7 @@ describe('createCartHandler', () => {
   });
 
   it('function deleteMetafield can provide overridable parameter', async () => {
-    const cart = getCartHandler({cartId: 'c1-123'});
+    const cart = getCartHandler({ cartId: 'c1-123' });
 
     const result = await cart.deleteMetafield('some.key', {
       cartId: 'gid://shopify/Cart/c1-456',
