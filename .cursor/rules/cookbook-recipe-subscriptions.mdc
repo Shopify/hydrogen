@@ -40,25 +40,25 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 # Troubleshooting
 
 <troubleshooting>
-- **Issue: Subscription options not appearing on product page**
+- **Issue**: Subscription options not appearing on product page
   **Solution**: Verify that you've created selling plans in Shopify admin and attached them to the product. Also ensure the `sellingPlanGroups` fragment is included in your product query.
-- **Issue: Price calculations for subscriptions appear incorrect**
+- **Issue**: Price calculations for subscriptions appear incorrect
   **Solution**: Check the selling plan price adjustments in your query. Make sure you're handling all three types of price adjustments: fixed amount, fixed price, and percentage.
-- **Issue: Getting "Cannot read properties of undefined" when accessing selling plan data**
+- **Issue**: Getting "Cannot read properties of undefined" when accessing selling plan data
   **Solution**: Add null checks when accessing selling plan data, as not all products have selling plans. Use optional chaining (`?.`) and nullish coalescing (`??`) operators.
-- **Issue: Subscription options appear but selecting them doesn't affect the price**
+- **Issue**: Subscription options appear but selecting them doesn't affect the price
   **Solution**: Ensure the `SellingPlanPrice` component correctly calculates discounted prices based on the price adjustment type.
-- **Issue: Selected subscription doesn't persist when navigating back to product**
+- **Issue**: Selected subscription doesn't persist when navigating back to product
   **Solution**: Make sure your URL includes the `selling_plan` parameter and that your product route correctly processes this parameter.
-- **Issue: Subscription details not appearing in cart**
+- **Issue**: Subscription details not appearing in cart
   **Solution**: Verify that your cart query includes the `sellingPlanAllocation` fragment and that the Cart component displays this information.
-- **Issue: Subscribe button disabled even though selling plans are available**
+- **Issue**: Subscribe button disabled even though selling plans are available
   **Solution**: Check the condition in your AddToCartButton component. It should only be disabled if no selling plan is selected when selling plans are available.
-- **Issue: Multiple subscription groups causing UI confusion**
+- **Issue**: Multiple subscription groups causing UI confusion
   **Solution**: Implement a tabbed interface or clear labeling if your products have multiple subscription group options.
-- **Issue: CSS for subscription selector not applying**
+- **Issue**: CSS for subscription selector not applying
   **Solution**: Ensure you've added the `selling-plan.css` import and that the stylesheet is correctly linked in your component.
-- **Issue: Cannot read `sellingPlanGroups.nodes` of undefined**
+- **Issue**: Cannot read `sellingPlanGroups.nodes` of undefined
   **Solution**: Add null check logic: `{product?.sellingPlanGroups?.nodes?.length > 0 ? ... : ...}`
 </troubleshooting>
 

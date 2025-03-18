@@ -165,7 +165,7 @@ ${recipe.userQueries.map((query) => `- ${query}`).join('\n')}
 ${recipe.troubleshooting
   .map(
     (troubleshooting) =>
-      `- **Issue: ${troubleshooting.issue}**\n  **Solution**: ${troubleshooting.solution}`,
+      `- **Issue**: ${troubleshooting.issue}\n  **Solution**: ${troubleshooting.solution}`,
   )
   .join('\n')}
 </troubleshooting>
