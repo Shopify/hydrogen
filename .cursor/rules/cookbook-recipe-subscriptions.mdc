@@ -4,7 +4,9 @@ globs: templates/**/*
 alwaysApply: false
 ---
 
-This rule describes how to implement "`Subscriptions (subscriptions)`" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+# Overview
+
+This rule describes how to implement "Subscriptions (subscriptions)" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
@@ -15,15 +17,60 @@ If the user is asking on how to implement the feature from scratch, please first
 
 Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
 
+# User Intent Recognition
+<user_queries>
+- How do I add subscription options to my Hydrogen store?
+- I want to let customers subscribe to products in my Shopify Hydrogen site
+- Can you help me implement recurring orders in Hydrogen?
+- How to show subscription pricing on product page in Hydrogen?
+- Need help adding a 'Subscribe and Save' option to my products
+- How do I modify the cart to show subscription details?
+- Making a subscription box with Hydrogen and Shopify
+- I've set up selling plans in Shopify admin, how do I display them in Hydrogen?
+- Help implementing Shopify subscriptions in my Hydrogen storefront
+- My selling plans aren't showing up in my Hydrogen store
+- How to calculate and display subscription discounts in Hydrogen?
+- Adding monthly subscription billing to Hydrogen products
+- Implementing 'delivery every X weeks' options in Hydrogen
+- How to let customers choose between one-time purchase and subscription?
+- Setting up recurring delivery options on my Hydrogen product page
+</user_queries>
+
+# Troubleshooting
+<troubleshooting>
+- **Issue: Subscription options not appearing on product page**
+  **Solution**: Verify that you've created selling plans in Shopify admin and attached them to the product. Also ensure the `sellingPlanGroups` fragment is included in your product query.
+- **Issue: Price calculations for subscriptions appear incorrect**
+  **Solution**: Check the selling plan price adjustments in your query. Make sure you're handling all three types of price adjustments: fixed amount, fixed price, and percentage.
+- **Issue: Getting "Cannot read properties of undefined" when accessing selling plan data**
+  **Solution**: Add null checks when accessing selling plan data, as not all products have selling plans. Use optional chaining (`?.`) and nullish coalescing (`??`) operators.
+- **Issue: Subscription options appear but selecting them doesn't affect the price**
+  **Solution**: Ensure the `SellingPlanPrice` component correctly calculates discounted prices based on the price adjustment type.
+- **Issue: Selected subscription doesn't persist when navigating back to product**
+  **Solution**: Make sure your URL includes the `selling_plan` parameter and that your product route correctly processes this parameter.
+- **Issue: Subscription details not appearing in cart**
+  **Solution**: Verify that your cart query includes the `sellingPlanAllocation` fragment and that the Cart component displays this information.
+- **Issue: Subscribe button disabled even though selling plans are available**
+  **Solution**: Check the condition in your AddToCartButton component. It should only be disabled if no selling plan is selected when selling plans are available.
+- **Issue: Multiple subscription groups causing UI confusion**
+  **Solution**: Implement a tabbed interface or clear labeling if your products have multiple subscription group options.
+- **Issue: CSS for subscription selector not applying**
+  **Solution**: Ensure you've added the `selling-plan.css` import and that the stylesheet is correctly linked in your component.
+- **Issue: Cannot read `sellingPlanGroups.nodes` of undefined**
+  **Solution**: Add null check logic: `{product?.sellingPlanGroups?.nodes?.length > 0 ? ... : ...}`
+</troubleshooting>
+
+# Recipe Implementation
+
 Here's the subscriptions recipe for the base Hydrogen skeleton template:
 
---- BEGIN RECIPE DATA ---
+<recipe_implementation>
 
 ## Description
 
-This folder contains an example implementation of [subscriptions](https://shopify.dev/docs/apps/selling-strategies/subscriptions) for Hydrogen. It shows how to display selling plans on a product page.
+This folder contains an example implementation of [subscriptions](mdc:https:/shopify.dev/docs/apps/selling-strategies/subscriptions) for Hydrogen. It shows how to display selling plans on a product page.
 
-![subscriptions-example](https://github.com/Shopify/hydrogen/assets/12080141/1cea5fbf-5a56-4562-95a7-4821facb3c6d)
+![subscriptions-example](mdc:https:/github.com/Shopify/hydrogen/assets/12080141/1cea5fbf-5a56-4562-95a7-4821facb3c6d)
 
 ## Ingredients
 
@@ -39,7 +86,7 @@ This example is connected to the `hydrogen-preview` storefront which contains on
 
 To run this example on your own store, you'll need to:
 
-- Install a [subscription app](https://apps.shopify.com/shopify-subscriptions).
+- Install a [subscription app](mdc:https:/apps.shopify.com/shopify-subscriptions).
 - Use the subscription app to create a selling plan for a product.
 
 ### 2. Copy ingredients
@@ -55,7 +102,7 @@ Copy the ingredients from the template directory to the current directory.
 - get the selling plan allocation.
 - Optionally render the selling plan name if available.
 
-#### File: [`app/components/CartLineItem.tsx`](/templates/skeleton/app/components/CartLineItem.tsx)
+#### File: [`app/components/CartLineItem.tsx`](mdc:templates/skeleton/app/components/CartLineItem.tsx)
 
 ```diff
 index 26102b61..dcab4454 100644
@@ -103,7 +150,7 @@ index 26102b61..dcab4454 100644
 
 
 
-#### File: [`app/lib/fragments.ts`](/templates/skeleton/app/lib/fragments.ts)
+#### File: [`app/lib/fragments.ts`](mdc:templates/skeleton/app/lib/fragments.ts)
 
 <details>
 
@@ -199,7 +246,7 @@ index dc4426a9..92b8da62 100644
 
 
 
-#### File: [`app/routes/_index.tsx`](/templates/skeleton/app/routes/_index.tsx)
+#### File: [`app/routes/_index.tsx`](mdc:templates/skeleton/app/routes/_index.tsx)
 
 <details>
 
@@ -412,7 +459,7 @@ index 9fa33642..2023c689 100644
 - Add the SellingPlanGroup fragment to the Product fragment.
 - Add the SellingPlanGroup fragment to the Product fragment.
 
-#### File: [`app/routes/products.$handle.tsx`](/templates/skeleton/app/routes/products.$handle.tsx)
+#### File: [`app/routes/products.$handle.tsx`](mdc:templates/skeleton/app/routes/products.$handle.tsx)
 
 <details>
 
@@ -1205,7 +1252,7 @@ index 0028b423..a8081f02 100644
 
 
 
-#### File: [`storefrontapi.generated.d.ts`](/templates/skeleton/storefrontapi.generated.d.ts)
+#### File: [`storefrontapi.generated.d.ts`](mdc:templates/skeleton/storefrontapi.generated.d.ts)
 
 <details>
 
@@ -1992,6 +2039,6 @@ index d27c5942..5696f7c9 100644
 
 ## Deleted Files
 
-- [`templates/skeleton/app/components/ProductForm.tsx`](templates/skeleton/app/components/ProductForm.tsx)
+- [`templates/skeleton/app/components/ProductForm.tsx`](mdc:templates/skeleton/app/components/ProductForm.tsx)
 
---- END RECIPE DATA ---
+</recipe_implementation>

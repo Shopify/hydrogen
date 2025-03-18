@@ -52,6 +52,21 @@ const RecipeSchema = z.object({
     .optional()
     .describe('The deleted files of the recipe'),
   commit: z.string().describe('The commit hash the recipe is based on'),
+  userQueries: z
+    .array(z.string())
+    .optional()
+    .describe('The user queries of the recipe')
+    .default([]),
+  troubleshooting: z
+    .array(
+      z.object({
+        issue: z.string().describe('The issue of the troubleshooting'),
+        solution: z.string().describe('The solution of the troubleshooting'),
+      }),
+    )
+    .optional()
+    .describe('The troubleshooting of the recipe')
+    .default([]),
 });
 
 export type Recipe = z.infer<typeof RecipeSchema>;
