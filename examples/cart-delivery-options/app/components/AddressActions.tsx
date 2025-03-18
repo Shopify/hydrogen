@@ -5,12 +5,9 @@ import { CartForm } from '@shopify/hydrogen';
 
 type AddressActionsProps = {
   activeAddress: CartAddressFragment | undefined;
-  onCreated: () => void;
-  onEdited: () => void;
-  onDeleted: () => void;
 }
 
-export function AddressActions({ activeAddress, onCreated, onEdited, onDeleted }: AddressActionsProps) {
+export function AddressActions({ activeAddress }: AddressActionsProps) {
   const editDialogRef = useRef<HTMLDialogElement>(null);
   const newDialogRef = useRef<HTMLDialogElement>(null);
 
@@ -29,7 +26,7 @@ export function AddressActions({ activeAddress, onCreated, onEdited, onDeleted }
 
   return (
     <>
-      <div style={{ display: 'flex', gap: '.25rem' }}>
+      <div style={{ display: 'flex', gap: '.25rem', marginLeft: '.5rem' }}>
         {activeAddress && (
           <>
             <button onClick={openEditAddressModal}>EDIT</button>
@@ -38,9 +35,9 @@ export function AddressActions({ activeAddress, onCreated, onEdited, onDeleted }
               action={CartForm.ACTIONS.DeliveryAddressesRemove}
               inputs={{ addressIds: [activeAddress.id] }}
             >
-              {(fetcher: FetcherWithComponents<any>) => {
+              {() => {
                 return (
-                  <button type="submit">REMOVE</button>
+                  <button type="submit">DELETE</button>
                 )
               }}
             </CartForm>
@@ -54,17 +51,11 @@ export function AddressActions({ activeAddress, onCreated, onEdited, onDeleted }
           activeAddress={activeAddress}
           dialogRef={editDialogRef}
           onClose={closeModals}
-          onSave={closeModals}
         />
       )}
       <NewAddressModal
         dialogRef={newDialogRef}
-        onSave={() => {
-          closeModals()
-          // TODO: when we create a new address we should updated the selector activeAddress to the newly created one
-        }}
         onClose={closeModals}
-
       />
     </>
   );
@@ -74,12 +65,10 @@ function EditAddressModal({
   activeAddress,
   dialogRef,
   onClose,
-  onSave,
 }: {
   activeAddress: CartAddressFragment | undefined;
   dialogRef: React.RefObject<HTMLDialogElement>;
   onClose: () => void;
-  onSave: () => void;
 }) {
   if (!activeAddress?.id) {
     return <div>No address selected</div>
@@ -88,20 +77,7 @@ function EditAddressModal({
     <dialog ref={dialogRef} style={{ width: '400px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <h2>Edit Address</h2>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button onClick={onClose}>Close</button>
-          <CartForm
-            route='/cart'
-            action={CartForm.ACTIONS.DeliveryAddressesRemove}
-            inputs={{ addressIds: [activeAddress.id] }}
-          >
-            {(fetcher: FetcherWithComponents<any>) => {
-              return (
-                <button type="submit">Delete</button>
-              )
-            }}
-          </CartForm>
-        </div>
+        <button onClick={onClose}>Close</button>
       </div>
       <br />
       <CartForm route='/cart' action={CartForm.ACTIONS.DeliveryAddressesUpdate}>
@@ -109,7 +85,30 @@ function EditAddressModal({
           return (
             <>
               <FormFields activeAddress={activeAddress} />
-              <button onClick={onSave} type="submit">Save</button>
+              <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
+                <button onClick={() => {
+                }} type="submit">Save</button>
+                <button
+                  style={{
+                    display: 'inline-block',
+                    backgroundColor: 'red',
+                    color: 'white'
+                  }}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    const form = new FormData()
+
+                    form.append('addressIds', JSON.stringify([activeAddress.id]))
+
+                    fetcher.submit(form, {
+                      action: CartForm.ACTIONS.DeliveryAddressesRemove,
+                      method: 'POST',
+                    })
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
             </>
           )
         }}
@@ -121,11 +120,9 @@ function EditAddressModal({
 function NewAddressModal({
   dialogRef,
   onClose,
-  onSave,
 }: {
   dialogRef: React.RefObject<HTMLDialogElement>;
   onClose: () => void;
-  onSave: () => void;
 }) {
   return (
     <dialog ref={dialogRef} style={{ width: '400px' }}>
@@ -135,11 +132,11 @@ function NewAddressModal({
       </div>
       <br />
       <CartForm route='/cart' action={CartForm.ACTIONS.DeliveryAddressesAdd}>
-        {(fetcher: FetcherWithComponents<any>) => {
+        {() => {
           return (
             <>
               <FormFields />
-              <button onClick={onSave} type="submit">Add</button>
+              <button type="submit">Add</button>
             </>
           )
         }}
@@ -173,8 +170,8 @@ export function FormFields({ activeAddress }: { activeAddress?: CartAddressFragm
       </fieldset>
       <fieldset>
         <label>City</label>
-        <input type="text" name="city" defaultValue={address?.city ? address.city : undefined} />
       </fieldset>
+      <input type="text" name="city" defaultValue={address?.city ? address.city : undefined} />
       <fieldset>
         <label>Province</label>
         <input type="text" name="provinceCode" defaultValue={address?.provinceCode ? address.provinceCode : undefined} />

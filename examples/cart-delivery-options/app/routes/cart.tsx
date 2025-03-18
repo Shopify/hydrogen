@@ -96,7 +96,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     }
     case CartForm.ACTIONS.DeliveryAddressesRemove: {
       console.log('DeliveryAddressesRemove inputs', inputs)
-      result = await cart.removeDeliveryAddresses(updatedDeliveryAddress)
+      result = await cart.removeDeliveryAddresses(inputs.addressIds)
       break;
     }
     default:

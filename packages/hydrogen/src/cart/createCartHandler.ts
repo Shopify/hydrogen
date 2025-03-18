@@ -118,7 +118,9 @@ export type HydrogenCart = {
   * );
   */
   addDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesAddDefault>;
+  // TODO: add ts docs
   removeDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesRemoveDefault>;
+  // TODO: add ts docs
   updateDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesUpdateDefault>;
 };
 

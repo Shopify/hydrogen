@@ -98,6 +98,14 @@ fieldset {
   border: none;
 }
 
+button {
+  height: 2rem;
+  display: inline-block;
+  line-height: 2rem;
+  padding: 0 .5rem;
+  border: 1px solid #000;
+}
+
 form {
   max-width: 100%;
 }

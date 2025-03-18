@@ -206,14 +206,14 @@ type CartDeliveryAddressesAddRequire = {
 type CartDeliveryAddressesRemoveProps = {
   action: 'DeliveryAddressesRemove';
   inputs?: {
-    addressIds: Array<String> | Array<Scalars['ID']['input']>;
+    addressIds: Array<string> | Array<Scalars['ID']['input']>;
   } & OtherFormData;
 }
 
 type CartDeliveryAddressesRemoveRequire = {
   action: 'DeliveryAddressesRemove';
   inputs: {
-    addressIds: Array<String> | Array<Scalars['ID']['input']>;
+    addressIds: Array<string> | Array<Scalars['ID']['input']>;
   } & OtherFormData;
 }
 
@@ -357,7 +357,6 @@ function getFormInput(formData: FormData): CartActionInput {
     ? JSON.parse(String(cartFormInput))
     : {};
 
-  console.log('input parse', JSON.stringify(inputs, null, 2))
 
   return {
     action,

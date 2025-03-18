@@ -8,15 +8,14 @@ export function AddressesSelector({ addresses, selectedAddress, onAddressChange 
   }
 
   return (
-    <select onChange={(event) => {
-      // TODO: should I update this address as selected when the user selects it in the select?
-      const activeAddress = addresses.find(({ address }) => address.address1 === event.target.value)
+    <select onChange={async (event) => {
+      const addressId = event.target.value
+      const activeAddress = addresses.find(({ address, id }) => id === addressId)
       onAddressChange && onAddressChange(activeAddress)
     }}>
-      {addresses.map(({ address, selected }) => {
-        const title = address.formatted.slice(0, 2).toString()
+      {addresses.map(({ address, selected, id }) => {
         return (
-          <option key={address.formatted.toString()} value={title} defaultChecked={selected}>
+          <option key={id} defaultChecked={selected} value={id}>
             {address.address1} {selected ? '(selected)' : ''}
           </option>
         )
