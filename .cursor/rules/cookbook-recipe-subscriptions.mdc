@@ -18,6 +18,7 @@ If the user is asking on how to implement the feature from scratch, please first
 Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
 
 # User Intent Recognition
+
 <user_queries>
 - How do I add subscription options to my Hydrogen store?
 - I want to let customers subscribe to products in my Shopify Hydrogen site
@@ -37,6 +38,7 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 </user_queries>
 
 # Troubleshooting
+
 <troubleshooting>
 - **Issue: Subscription options not appearing on product page**
   **Solution**: Verify that you've created selling plans in Shopify admin and attached them to the product. Also ensure the `sellingPlanGroups` fragment is included in your product query.
@@ -68,9 +70,9 @@ Here's the subscriptions recipe for the base Hydrogen skeleton template:
 
 ## Description
 
-This folder contains an example implementation of [subscriptions](mdc:https:/shopify.dev/docs/apps/selling-strategies/subscriptions) for Hydrogen. It shows how to display selling plans on a product page.
+This folder contains an example implementation of [subscriptions](https://shopify.dev/docs/apps/selling-strategies/subscriptions) for Hydrogen. It shows how to display selling plans on a product page.
 
-![subscriptions-example](mdc:https:/github.com/Shopify/hydrogen/assets/12080141/1cea5fbf-5a56-4562-95a7-4821facb3c6d)
+![subscriptions-example](https://github.com/Shopify/hydrogen/assets/12080141/1cea5fbf-5a56-4562-95a7-4821facb3c6d)
 
 ## Ingredients
 
@@ -86,7 +88,7 @@ This example is connected to the `hydrogen-preview` storefront which contains on
 
 To run this example on your own store, you'll need to:
 
-- Install a [subscription app](mdc:https:/apps.shopify.com/shopify-subscriptions).
+- Install a [subscription app](https://apps.shopify.com/shopify-subscriptions).
 - Use the subscription app to create a selling plan for a product.
 
 ### 2. Copy ingredients
@@ -102,7 +104,7 @@ Copy the ingredients from the template directory to the current directory.
 - get the selling plan allocation.
 - Optionally render the selling plan name if available.
 
-#### File: [`app/components/CartLineItem.tsx`](mdc:templates/skeleton/app/components/CartLineItem.tsx)
+#### File: [`app/components/CartLineItem.tsx`](/templates/skeleton/app/components/CartLineItem.tsx)
 
 ```diff
 index 26102b61..dcab4454 100644
@@ -150,7 +152,7 @@ index 26102b61..dcab4454 100644
 
 
 
-#### File: [`app/lib/fragments.ts`](mdc:templates/skeleton/app/lib/fragments.ts)
+#### File: [`app/lib/fragments.ts`](/templates/skeleton/app/lib/fragments.ts)
 
 <details>
 
@@ -246,7 +248,7 @@ index dc4426a9..92b8da62 100644
 
 
 
-#### File: [`app/routes/_index.tsx`](mdc:templates/skeleton/app/routes/_index.tsx)
+#### File: [`app/routes/_index.tsx`](/templates/skeleton/app/routes/_index.tsx)
 
 <details>
 
@@ -459,7 +461,7 @@ index 9fa33642..2023c689 100644
 - Add the SellingPlanGroup fragment to the Product fragment.
 - Add the SellingPlanGroup fragment to the Product fragment.
 
-#### File: [`app/routes/products.$handle.tsx`](mdc:templates/skeleton/app/routes/products.$handle.tsx)
+#### File: [`app/routes/products.$handle.tsx`](/templates/skeleton/app/routes/products.$handle.tsx)
 
 <details>
 
@@ -1252,7 +1254,7 @@ index 0028b423..a8081f02 100644
 
 
 
-#### File: [`storefrontapi.generated.d.ts`](mdc:templates/skeleton/storefrontapi.generated.d.ts)
+#### File: [`storefrontapi.generated.d.ts`](/templates/skeleton/storefrontapi.generated.d.ts)
 
 <details>
 
@@ -2039,6 +2041,6 @@ index d27c5942..5696f7c9 100644
 
 ## Deleted Files
 
-- [`templates/skeleton/app/components/ProductForm.tsx`](mdc:templates/skeleton/app/components/ProductForm.tsx)
+- [`templates/skeleton/app/components/ProductForm.tsx`](templates/skeleton/app/components/ProductForm.tsx)
 
 </recipe_implementation>

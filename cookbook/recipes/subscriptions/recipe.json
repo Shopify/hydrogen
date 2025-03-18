@@ -62,7 +62,9 @@
   ],
   "description": "This folder contains an example implementation of [subscriptions](https://shopify.dev/docs/apps/selling-strategies/subscriptions) for Hydrogen. It shows how to display selling plans on a product page.\n\n![subscriptions-example](https://github.com/Shopify/hydrogen/assets/12080141/1cea5fbf-5a56-4562-95a7-4821facb3c6d)",
   "notes": [],
-  "deletedFiles": ["templates/skeleton/app/components/ProductForm.tsx"],
+  "deletedFiles": [
+    "templates/skeleton/app/components/ProductForm.tsx"
+  ],
   "ingredients": [
     {
       "path": "templates/skeleton/app/components/Cart.tsx",
