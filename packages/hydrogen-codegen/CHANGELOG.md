@@ -1,5 +1,11 @@
 # @shopify/hydrogen-codegen
 
+## 0.3.3
+
+### Patch Changes
+
+- Add description and provenance ([#2802](https://github.com/Shopify/hydrogen/pull/2802)) by [@blittle](https://github.com/blittle)
+
 ## 0.3.2
 
 ### Patch Changes
