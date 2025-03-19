@@ -6,6 +6,11 @@ on:
     # Example: If we are currently on 2023-07, do not add 2023-07
     branches:
       - 2023-10
+      - 2024-01
+      - 2024-04
+      - 2024-07
+      - 2024-10
+      - 2025-01
 
 concurrency:
   group: changeset-${{ github.head_ref }}
