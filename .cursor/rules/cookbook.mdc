@@ -22,6 +22,7 @@ The available recipes are the names of the folders in the `cookbooks/recipes/` d
 
 The current available recipes are:
 
+- overlord_greet
 - subscriptions
 
 Here's the detailed explanation of how the cookbook works:

@@ -1,1 +1,2 @@
+.cursor/rules/cookbook-recipe-overlord_greet.mdc
 .cursor/rules/cookbook-recipe-subscriptions.mdc

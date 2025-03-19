@@ -1,0 +1,78 @@
+---
+description: Recipe for implementing "overlord_greet (overlord_greet)" in a Hydrogen storefront. Useful when the user is trying to implement the feature described in this recipe.
+globs: templates/**/*
+alwaysApply: false
+---
+
+# Overview
+
+This rule describes how to implement "overlord_greet (overlord_greet)" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
+
+If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
+
+Please remember that specific documentation about Storefront API, which might be relevant to the user, is available at <https://shopify.dev/docs/api/storefront>.
+
+If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
+
+Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
+
+# User Intent Recognition
+
+<user_queries>
+- How do I add a greeting message to my Shopify Hydrogen header?
+- How can I customize the header text in my Hydrogen store?
+- How to add static text to the Header component in Hydrogen?
+- Can I add custom messages in my Shopify Hydrogen header?
+- How to modify the Header.tsx file in a Hydrogen project?
+- What's the proper way to add text to the header in Shopify Hydrogen?
+- How do I edit the header component in my Hydrogen store?
+- Is it possible to add a welcome message in the Hydrogen header?
+- How to implement custom text in Shopify Hydrogen header?
+- What's the syntax for adding static content to Hydrogen headers?
+</user_queries>
+
+# Troubleshooting
+
+<troubleshooting>
+
+</troubleshooting>
+
+# Recipe Implementation
+
+Here's the overlord_greet recipe for the base Hydrogen skeleton template:
+
+<recipe_implementation>
+
+## Description
+
+*TODO*
+
+## Ingredients
+
+
+
+## Steps
+
+### 1. app/components/Header.tsx
+
+
+
+#### File: [`app/components/Header.tsx`](/templates/skeleton/app/components/Header.tsx)
+
+```diff
+index 8a437a10..f11782ca 100644
+--- a/templates/skeleton/app/components/Header.tsx
++++ b/templates/skeleton/app/components/Header.tsx
+@@ -29,6 +29,7 @@ export function Header({
+       <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
+         <strong>{shop.name}</strong>
+       </NavLink>
++      Hello World! I for one greet our new overlords.
+       <HeaderMenu
+         menu={menu}
+         viewport="desktop"
+
+```
+
+</recipe_implementation>
