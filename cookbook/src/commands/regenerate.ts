@@ -4,13 +4,17 @@ import {applyRecipe} from '../lib/apply';
 import {FILES_TO_IGNORE_FOR_GENERATE, TEMPLATE_PATH} from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
 import {isRenderFormat, RENDER_FORMATS, renderRecipe} from '../lib/render';
-import {listRecipes, separator} from '../lib/util';
-import {generateLLMsFiles} from '../lib/llms';
+import {listRecipes, SkipPrompts, separator} from '../lib/util';
+import {generateLLMsFiles as generateLLMsDocs} from '../lib/llms';
 type RegenerateArgs = {
   recipe?: string;
   onlyFiles: boolean;
   format: string;
   referenceBranch: string;
+  skipPrompts?: SkipPrompts;
+  llmAPIKey?: string;
+  llmURL?: string;
+  llmModel?: string;
 };
 
 export const regenerate: CommandModule<{}, RegenerateArgs> = {
@@ -38,6 +42,22 @@ export const regenerate: CommandModule<{}, RegenerateArgs> = {
       description: 'The reference branch to use for the recipe',
       default: 'origin/main',
     },
+    skipPrompts: {
+      type: 'string',
+      description: 'Default prompts answer',
+    },
+    llmAPIKey: {
+      type: 'string',
+      description: 'The API key for the LLM to use',
+    },
+    llmURL: {
+      type: 'string',
+      description: 'The URL for the LLM to use',
+    },
+    llmModel: {
+      type: 'string',
+      description: 'The model for the LLM to use',
+    },
   },
   handler,
 };
@@ -57,6 +77,8 @@ async function handler(args: RegenerateArgs) {
     throw `Invalid format: ${format}`;
   }
 
+  console.log(args.llmAPIKey);
+
   for await (const recipe of recipes) {
     console.log(`🔄 Regenerating recipe '${recipe}'`);
     // apply the recipe
@@ -69,6 +91,10 @@ async function handler(args: RegenerateArgs) {
       onlyFiles: args.onlyFiles,
       filenamesToIgnore: FILES_TO_IGNORE_FOR_GENERATE,
       referenceBranch: args.referenceBranch,
+      skipPrompts: args.skipPrompts,
+      llmAPIKey: args.llmAPIKey,
+      llmURL: args.llmURL,
+      llmModel: args.llmModel,
     });
     // render the recipe
     renderRecipe({
@@ -83,6 +109,6 @@ async function handler(args: RegenerateArgs) {
   }
 
   // generate the LLM files
-  console.log('🤖 LLM files');
-  generateLLMsFiles(args.recipe);
+  console.log('🤖 LLMs-friendly docs');
+  generateLLMsDocs(args.recipe);
 }

@@ -9,7 +9,13 @@ import {
   TEMPLATE_DIRECTORY,
   TEMPLATE_PATH,
 } from './constants';
-import {Ingredient, parseRecipeFromString, Recipe, Step} from './recipe';
+import {
+  Ingredient,
+  parseRecipeFromString,
+  Recipe,
+  RecipeWithoutLLMs,
+  Step,
+} from './recipe';
 import {
   createDirectoryIfNotExists,
   getMainCommitHash,
@@ -19,7 +25,12 @@ import {
   parseReferenceBranch,
   recreateDirectory,
   separator,
+  SkipPrompts,
 } from './util';
+import {
+  getTroubleshootingQuestionsFromLLM,
+  getUserQueriesFromLLM,
+} from './llms';
 
 const TODO = '*TODO*';
 
@@ -33,8 +44,19 @@ export async function generateRecipe(params: {
   filenamesToIgnore: string[];
   onlyFiles: boolean;
   referenceBranch: string;
+  llmAPIKey?: string;
+  llmURL?: string;
+  llmModel?: string;
+  skipPrompts?: SkipPrompts;
 }): Promise<string> {
-  const {recipeName, filenamesToIgnore, referenceBranch} = params;
+  const {
+    recipeName,
+    filenamesToIgnore,
+    referenceBranch,
+    llmAPIKey,
+    llmURL,
+    llmModel,
+  } = params;
 
   console.log('📖 Generating recipe');
 
@@ -95,17 +117,72 @@ export async function generateRecipe(params: {
     ingredients,
   });
 
-  const recipe: Recipe = {
-    title: existingRecipe?.title ?? recipeName,
+  const userQueries = existingRecipe?.llms.userQueries ?? [];
+  const troubleshooting = existingRecipe?.llms.troubleshooting ?? [];
+
+  const baseRecipe: RecipeWithoutLLMs = {
+    title: existingRecipe?.title ?? recipeName ?? TODO,
     image: existingRecipe?.image ?? null,
-    userQueries: existingRecipe?.userQueries ?? [],
-    troubleshooting: existingRecipe?.troubleshooting ?? [],
     description: existingRecipe?.description ?? TODO,
     notes: existingRecipe?.notes ?? [],
     deletedFiles,
     ingredients,
     steps,
     commit: getMainCommitHash(parseReferenceBranch(referenceBranch)),
+  };
+
+  if (llmAPIKey != null && llmURL != null && llmModel != null) {
+    console.log('- 🤖 LLMs integration…');
+    if (userQueries.length === 0) {
+      let ok = params.skipPrompts === 'yes';
+      if (params.skipPrompts !== 'no') {
+        ok = await renderConfirmationPrompt({
+          message: 'Would you like to generate user queries?',
+          defaultValue: false,
+        });
+      }
+      if (ok) {
+        console.log('  - Asking Claude…');
+        const queries = await getUserQueriesFromLLM({
+          llmAPIKey,
+          llmModel,
+          llmURL,
+          recipeName,
+          baseRecipe,
+        });
+        userQueries.push(...queries);
+      }
+    }
+
+    if (troubleshooting.length === 0) {
+      let ok = params.skipPrompts === 'yes';
+      if (params.skipPrompts !== 'no') {
+        ok = await renderConfirmationPrompt({
+          message: 'Would you like to generate troubleshooting questions?',
+          defaultValue: false,
+        });
+      }
+      if (ok) {
+        console.log('  - Asking Claude…');
+        const questions = await getTroubleshootingQuestionsFromLLM({
+          llmAPIKey,
+          llmModel,
+          llmURL,
+          recipeName,
+          baseRecipe,
+        });
+        troubleshooting.push(...questions);
+      }
+    }
+  } else {
+    console.warn(
+      '⚠️ No LLM integration provided, if you wish to generate user queries and troubleshooting questions, please re-run the command with the relevant parameters.',
+    );
+  }
+
+  const recipe: Recipe = {
+    ...baseRecipe,
+    llms: {userQueries, troubleshooting},
   };
 
   // Write the recipe to recipe.json
@@ -290,4 +367,20 @@ function getPatchfile(params: {file: string; patchesDirPath: string}) {
   const patchFilePath = path.join(patchesDirPath, patchFilename);
   fs.writeFileSync(patchFilePath, changes);
   return {fullPath, patchFilePath, patchFilename};
+}
+
+async function renderConfirmationPrompt(arg0: {
+  message: string;
+  defaultValue: boolean;
+}): Promise<boolean> {
+  // ask the user to confirm the action or return the default value
+  const answer = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'confirm',
+      message: arg0.message,
+      default: arg0.defaultValue,
+    },
+  ]);
+  return answer.confirm;
 }

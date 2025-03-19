@@ -38,6 +38,13 @@ const StepSchema = z.object({
 
 export type Step = z.infer<typeof StepSchema>;
 
+export const TroubleshootingSchema = z.object({
+  issue: z.string().describe('The issue of the troubleshooting'),
+  solution: z.string().describe('The solution of the troubleshooting'),
+});
+
+export type Troubleshooting = z.infer<typeof TroubleshootingSchema>;
+
 const RecipeSchema = z.object({
   title: z.string().describe('The title of the recipe'),
   description: z.string().describe('The description of the recipe'),
@@ -52,25 +59,25 @@ const RecipeSchema = z.object({
     .optional()
     .describe('The deleted files of the recipe'),
   commit: z.string().describe('The commit hash the recipe is based on'),
-  userQueries: z
-    .array(z.string())
+  llms: z
+    .object({
+      userQueries: z
+        .array(z.string())
+        .optional()
+        .describe('The user queries of the recipe')
+        .default([]),
+      troubleshooting: z
+        .array(TroubleshootingSchema)
+        .optional()
+        .describe('The troubleshooting of the recipe')
+        .default([]),
+    })
     .optional()
-    .describe('The user queries of the recipe')
-    .default([]),
-  troubleshooting: z
-    .array(
-      z.object({
-        issue: z.string().describe('The issue of the troubleshooting'),
-        solution: z.string().describe('The solution of the troubleshooting'),
-      }),
-    )
-    .optional()
-    .describe('The troubleshooting of the recipe')
-    .default([]),
+    .default({}),
 });
 
 export type Recipe = z.infer<typeof RecipeSchema>;
-
+export type RecipeWithoutLLMs = Omit<Recipe, 'llms'>;
 /**
  * Parses a recipe from a JSON string
  * @param data The JSON string to parse

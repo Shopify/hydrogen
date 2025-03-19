@@ -13,10 +13,18 @@ import {
 import {generateRecipe} from '../lib/generate';
 import {parseRecipeFromString} from '../lib/recipe';
 import {renderRecipe} from '../lib/render';
-import {makeRandomTempDir, parseReferenceBranch} from '../lib/util';
+import {
+  SkipPrompts,
+  makeRandomTempDir,
+  parseReferenceBranch,
+} from '../lib/util';
 type UpdateArgs = {
   recipe: string;
   referenceBranch: string;
+  skipPrompts?: SkipPrompts;
+  llmAPIKey?: string;
+  llmURL?: string;
+  llmModel?: string;
 };
 
 export const update: CommandModule<{}, UpdateArgs> = {
@@ -32,6 +40,22 @@ export const update: CommandModule<{}, UpdateArgs> = {
       type: 'string',
       description: 'The branch to update the recipe from',
       default: 'origin/main',
+    },
+    skipPrompts: {
+      type: 'string',
+      description: 'Default prompts answer',
+    },
+    llmAPIKey: {
+      type: 'string',
+      description: 'The API key for the LLM to use',
+    },
+    llmURL: {
+      type: 'string',
+      description: 'The URL for the LLM to use',
+    },
+    llmModel: {
+      type: 'string',
+      description: 'The model for the LLM to use',
     },
   },
   handler,
@@ -137,6 +161,10 @@ async function handler(args: UpdateArgs) {
       filenamesToIgnore: FILES_TO_IGNORE_FOR_GENERATE,
       onlyFiles: false,
       referenceBranch: args.referenceBranch,
+      llmAPIKey: args.llmAPIKey,
+      llmURL: args.llmURL,
+      llmModel: args.llmModel,
+      skipPrompts: args.skipPrompts,
     });
 
     // copy the recipe to the temp folder

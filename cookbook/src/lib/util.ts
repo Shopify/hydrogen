@@ -218,3 +218,5 @@ export function isInGitHistory(params: {path: string}): boolean {
 export function getPatchesDir(recipeName: string): string {
   return path.join(COOKBOOK_PATH, 'recipes', recipeName, 'patches');
 }
+
+export type SkipPrompts = 'yes' | 'no';

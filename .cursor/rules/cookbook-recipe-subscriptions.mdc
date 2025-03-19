@@ -20,46 +20,42 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 # User Intent Recognition
 
 <user_queries>
-- How do I add subscription options to my Hydrogen store?
-- I want to let customers subscribe to products in my Shopify Hydrogen site
-- Can you help me implement recurring orders in Hydrogen?
-- How to show subscription pricing on product page in Hydrogen?
-- Need help adding a 'Subscribe and Save' option to my products
-- How do I modify the cart to show subscription details?
-- Making a subscription box with Hydrogen and Shopify
-- I've set up selling plans in Shopify admin, how do I display them in Hydrogen?
-- Help implementing Shopify subscriptions in my Hydrogen storefront
-- My selling plans aren't showing up in my Hydrogen store
-- How to calculate and display subscription discounts in Hydrogen?
-- Adding monthly subscription billing to Hydrogen products
-- Implementing 'delivery every X weeks' options in Hydrogen
-- How to let customers choose between one-time purchase and subscription?
-- Setting up recurring delivery options on my Hydrogen product page
+- How do I implement subscriptions in my Hydrogen store?
+- What are selling plans in Shopify?
+- How do I display subscription options on a product page?
+- How can I show subscription pricing on my Hydrogen site?
+- How do I modify my cart to display selected subscriptions?
+- What changes do I need to make to my product page to support subscriptions?
+- How do I add subscription functionality to my Hydrogen store?
+- What are the requirements for implementing subscriptions in Hydrogen?
+- How do I install a subscription app for my Shopify store?
+- How do I create a selling plan for a product?
+- How do I display different subscription options to customers?
+- How do I handle subscription pricing calculations in Hydrogen?
+- What GraphQL fragments do I need for subscriptions?
+- How do I show subscription details in the cart?
+- How do I style subscription options on my product page?
 </user_queries>
 
 # Troubleshooting
 
 <troubleshooting>
-- **Issue**: Subscription options not appearing on product page
-  **Solution**: Verify that you've created selling plans in Shopify admin and attached them to the product. Also ensure the `sellingPlanGroups` fragment is included in your product query.
-- **Issue**: Price calculations for subscriptions appear incorrect
-  **Solution**: Check the selling plan price adjustments in your query. Make sure you're handling all three types of price adjustments: fixed amount, fixed price, and percentage.
-- **Issue**: Getting "Cannot read properties of undefined" when accessing selling plan data
-  **Solution**: Add null checks when accessing selling plan data, as not all products have selling plans. Use optional chaining (`?.`) and nullish coalescing (`??`) operators.
-- **Issue**: Subscription options appear but selecting them doesn't affect the price
-  **Solution**: Ensure the `SellingPlanPrice` component correctly calculates discounted prices based on the price adjustment type.
-- **Issue**: Selected subscription doesn't persist when navigating back to product
-  **Solution**: Make sure your URL includes the `selling_plan` parameter and that your product route correctly processes this parameter.
-- **Issue**: Subscription details not appearing in cart
-  **Solution**: Verify that your cart query includes the `sellingPlanAllocation` fragment and that the Cart component displays this information.
-- **Issue**: Subscribe button disabled even though selling plans are available
-  **Solution**: Check the condition in your AddToCartButton component. It should only be disabled if no selling plan is selected when selling plans are available.
-- **Issue**: Multiple subscription groups causing UI confusion
-  **Solution**: Implement a tabbed interface or clear labeling if your products have multiple subscription group options.
-- **Issue**: CSS for subscription selector not applying
-  **Solution**: Ensure you've added the `selling-plan.css` import and that the stylesheet is correctly linked in your component.
-- **Issue**: Cannot read `sellingPlanGroups.nodes` of undefined
-  **Solution**: Add null check logic: `{product?.sellingPlanGroups?.nodes?.length > 0 ? ... : ...}`
+- **Issue**: Why isn't my subscription option showing up on the product page?
+  **Solution**: Make sure you have a subscription app installed in your Shopify store and have created a selling plan for the product. The recipe requires a subscription app to be installed and selling plans to be created for products to display subscription options.
+- **Issue**: The subscription price isn't calculating correctly
+  **Solution**: Check the `SellingPlanPrice` component in the product page. The price calculation is based on the selling plan price adjustments. Make sure your selling plan has the correct price adjustments configured in your Shopify admin.
+- **Issue**: Subscription options aren't being saved in the cart
+  **Solution**: Ensure the `sellingPlanId` is being passed correctly in the `AddToCartButton` component. The recipe adds the selling plan ID to the cart line item when a subscription option is selected.
+- **Issue**: The cart isn't showing the selected subscription details
+  **Solution**: Check that the `CartLineItem.tsx` file has been updated to include the selling plan allocation display. The recipe modifies this file to show the selling plan name in the cart.
+- **Issue**: I'm getting an error about missing selling plan fragments in GraphQL
+  **Solution**: Make sure you've added all the required GraphQL fragments in `app/routes/products.$handle.tsx`. The recipe adds several fragments including `SELLING_PLAN_FRAGMENT` and `SELLING_PLAN_GROUP_FRAGMENT` that are necessary for querying subscription data.
+- **Issue**: The subscription styling doesn't match the example
+  **Solution**: Verify that you've imported the selling plan CSS file correctly. The recipe adds a CSS file at `app/styles/selling-plan.css` and imports it in the product page using the `links` export.
+- **Issue**: The default subscription option isn't being selected automatically
+  **Solution**: Check the redirect logic in the loader function of `products.$handle.tsx`. The recipe includes code to redirect to the first selling plan if none is selected, ensuring a default option is always selected.
+- **Issue**: Cart fragment is missing selling plan data
+  **Solution**: Ensure you've updated the `CART_QUERY_FRAGMENT` in `app/lib/fragments.ts` to include the selling plan allocation. The recipe modifies this fragment to include the selling plan name in cart queries.
 </troubleshooting>
 
 # Recipe Implementation

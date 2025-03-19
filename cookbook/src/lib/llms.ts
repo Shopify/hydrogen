@@ -14,8 +14,14 @@ import {
   renderMDBlock,
   serializeMDBlocksToFile,
 } from './markdown';
-import {renderStep} from './render';
-import {parseRecipeFromString, Recipe} from './recipe';
+import {makeReadmeBlocks, renderStep} from './render';
+import {
+  parseRecipeFromString,
+  Recipe,
+  RecipeWithoutLLMs,
+  Troubleshooting,
+  TroubleshootingSchema,
+} from './recipe';
 
 function makeCookbookCursorRule(recipes: string[], data: string) {
   return `---
@@ -156,13 +162,13 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 # User Intent Recognition
 
 <user_queries>
-${recipe.userQueries.map((query) => `- ${query}`).join('\n')}
+${recipe.llms.userQueries.map((query) => `- ${query}`).join('\n')}
 </user_queries>
 
 # Troubleshooting
 
 <troubleshooting>
-${recipe.troubleshooting
+${recipe.llms.troubleshooting
   .map((troubleshooting) =>
     `
 - **Issue**: ${troubleshooting.issue}
@@ -270,4 +276,164 @@ function getRecipeRulePath(recipeName: string) {
     'rules',
     `cookbook-recipe-${recipeName}.mdc`,
   );
+}
+
+type LLMResponse = {
+  choices: {
+    message: {
+      content: string;
+    };
+  }[];
+};
+
+export async function askLLM(params: {
+  apiKey: string;
+  url: string;
+  model: string;
+  message: string;
+}): Promise<LLMResponse> {
+  const {apiKey, url, model, message} = params;
+
+  const response = await fetch(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    method: 'POST',
+    body: JSON.stringify({
+      model,
+      messages: [
+        {
+          role: 'user',
+          content: message,
+        },
+      ],
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`LLM returned a non-ok response: ${response.statusText}`);
+  }
+
+  const data: LLMResponse = await response.json();
+  return data;
+}
+
+export async function getUserQueriesFromLLM(params: {
+  llmAPIKey: string;
+  llmURL: string;
+  llmModel: string;
+  recipeName: string;
+  baseRecipe: RecipeWithoutLLMs;
+}): Promise<string[]> {
+  const {llmAPIKey, llmURL, llmModel, recipeName, baseRecipe} = params;
+  const readme = makeReadmeBlocks(
+    recipeName,
+    {...baseRecipe, llms: {userQueries: [], troubleshooting: []}},
+    'github',
+  );
+  const response = await askLLM({
+    apiKey: llmAPIKey,
+    url: llmURL,
+    model: llmModel,
+    message: `
+I will provide you with a recipe that describes a series of steps to implement a feature using Shopify's Hydrogen framework.
+Given the recipe, please generate a list of user queries that a customer might ask about the recipe.
+Only produce queries that are relevant to the recipe's topic; however if a user query is specific to components introduced in the recipe, then it should not be included.
+
+You should return a list of user queries formatted as a JSON array of strings, and no other text.
+
+The output should **ONLY** contain the JSON object and NO OTHER TEXT.
+
+<recipe_data>
+${readme.map(renderMDBlock).join('\n')}
+</recipe_data>
+`,
+  });
+
+  if (
+    response.choices.length !== 1 ||
+    response.choices[0].message.content == null
+  ) {
+    throw new Error('No response from LLM');
+  }
+
+  const data = cleanupLLMJSONResponse(response);
+
+  const queries = JSON.parse(data);
+  if (
+    !Array.isArray(queries) ||
+    queries.some((query) => typeof query !== 'string')
+  ) {
+    throw new Error('LLM returned a non-strings-array response');
+  }
+  return queries;
+}
+
+export async function getTroubleshootingQuestionsFromLLM(params: {
+  llmAPIKey: string;
+  llmURL: string;
+  llmModel: string;
+  recipeName: string;
+  baseRecipe: RecipeWithoutLLMs;
+}): Promise<Troubleshooting[]> {
+  const {llmAPIKey, llmURL, llmModel, recipeName, baseRecipe} = params;
+  const readme = makeReadmeBlocks(
+    recipeName,
+    {...baseRecipe, llms: {userQueries: [], troubleshooting: []}},
+    'github',
+  );
+
+  const response = await askLLM({
+    apiKey: llmAPIKey,
+    url: llmURL,
+    model: llmModel,
+    message: `
+I will provide you with a recipe that describes a series of steps to implement a feature using Shopify's Hydrogen framework.
+Given the recipe, please generate a list of troubleshooting questions that a customer might ask about the recipe.
+Only produce queries that are relevant to the recipe's topic; however if a user query is specific to components introduced in the recipe, then it should not be included.
+
+You should return a list of troubleshooting questions formatted as a JSON array of objects with the following schema:
+
+\`\`\`ts
+{
+  issue: string
+  solution: string
+}
+\`\`\`
+
+The output should **ONLY** contain the JSON object and NO OTHER TEXT.
+
+<recipe_data>
+${readme.map(renderMDBlock).join('\n')}
+</recipe_data>
+`,
+  });
+
+  if (
+    response.choices.length !== 1 ||
+    response.choices[0].message.content == null
+  ) {
+    throw new Error('No response from LLM');
+  }
+
+  const data = cleanupLLMJSONResponse(response);
+
+  const troubleshootingSteps = JSON.parse(data);
+  if (
+    !Array.isArray(troubleshootingSteps) ||
+    troubleshootingSteps.some(
+      (question) => !TroubleshootingSchema.safeParse(question).success,
+    )
+  ) {
+    throw new Error('LLM returned an invalid response');
+  }
+
+  return troubleshootingSteps;
+}
+
+function cleanupLLMJSONResponse(response: LLMResponse) {
+  return response.choices[0].message.content
+    .split('\n')
+    .filter((line) => !line.startsWith('```'))
+    .join('\n');
 }

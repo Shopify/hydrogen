@@ -68,7 +68,7 @@ export function renderRecipe(params: {
   );
 }
 
-function makeReadmeBlocks(
+export function makeReadmeBlocks(
   recipeName: string,
   recipe: Recipe,
   format: RenderFormat,
