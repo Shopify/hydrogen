@@ -57,25 +57,3 @@ export function pipeFromWeb(webResponse: Response, res: ServerResponse) {
     res.end();
   }
 }
-
-export function getHmrUrl(viteDevServer: ViteDevServer) {
-  const userHmrValue = viteDevServer.config.server?.hmr;
-
-  if (userHmrValue === false) {
-    console.warn(
-      'HMR is disabled. Code changes will not be reflected in neither browser or server.',
-    );
-
-    return '';
-  }
-
-  const configHmr = typeof userHmrValue === 'object' ? userHmrValue : {};
-
-  const hmrPort = configHmr.port;
-  const hmrPath = configHmr.path;
-
-  let hmrBase = viteDevServer.config.base;
-  if (hmrPath) hmrBase = path.posix.join(hmrBase, hmrPath);
-
-  return (hmrPort ? `http://localhost:${hmrPort}` : '') + hmrBase;
-}

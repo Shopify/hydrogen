@@ -18,7 +18,6 @@ import {withRequestHook} from '../worker/handler.js';
 
 export interface ViteEnv {
   __VITE_ROOT: string;
-  __VITE_HMR_URL: string;
   __VITE_FETCH_MODULE_PATHNAME: string;
   __VITE_RUNTIME_EXECUTE_URL: string;
   __VITE_WARMUP_PATHNAME: string;
@@ -92,38 +91,6 @@ let runtime: ModuleRunner;
  */
 function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
   if (!runtime) {
-    let onHmrRecieve: ((payload: HotPayload) => void) | undefined;
-
-    let hmrReady = false;
-    connectHmrWsClient(publicUrl, env)
-      .then((hmrWs) => {
-        hmrReady = !!hmrWs;
-        hmrWs?.addEventListener('message', (message) => {
-          if (!message.data) return;
-          const data: HotPayload = JSON.parse(message.data.toString());
-
-          if (!data) return;
-          if (data.type === 'update') {
-            // Invalidate cache synchronously without revalidating the
-            // module to avoid hanging promises in workerd
-            for (const update of data.updates) {
-              runtime.import(update.acceptedPath);
-            }
-          } else if (data.type !== 'custom' && onHmrRecieve) {
-            // Custom events are only used in browser HMR, so ignore them.
-            // This type is wrong in ViteRuntime:
-            (onHmrRecieve(data) as unknown as Promise<unknown>)?.catch(
-              (error: Error) => {
-                if (!/ReferenceError/.test(error?.message ?? '')) {
-                  console.error('During SSR HMR:', error);
-                }
-              },
-            );
-          }
-        });
-      })
-      .catch((error) => console.error(error));
-
     runtime = new ModuleRunner(
       {
         root: env.__VITE_ROOT,
@@ -203,34 +170,5 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
         },
       ),
     };
-  });
-}
-
-/**
- * Establish a WebSocket connection to the HMR server.
- * Note: HMR in the server is just for invalidating modules
- * in workerd/ViteRuntime cache, not to refresh the browser.
- */
-function connectHmrWsClient(url: URL, env: ViteEnv) {
-  // The HMR URL might come without origin, which means it's relative
-  // to the main Vite HTTP server. Otherwise, it's an absolute URL.
-  const hmrUrl = env.__VITE_HMR_URL.startsWith('http://')
-    ? env.__VITE_HMR_URL
-    : new URL(env.__VITE_HMR_URL, url.origin);
-
-  return fetch(hmrUrl, {
-    // When the HTTP port and the HMR port are the same, Vite reuses the same server for both.
-    // This happens when not specifying the HMR port in the Vite config. Otherwise, Vite creates
-    // a new server for HMR. In the first case, the protocol header is required to specify
-    // that the connection to the main HTTP server via WS is for HMR.
-    // Ref: https://github.com/vitejs/vite/blob/7440191715b07a50992fcf8c90d07600dffc375e/packages/vite/src/node/server/ws.ts#L120-L127
-    headers: {Upgrade: 'websocket', 'sec-websocket-protocol': 'vite-hmr'},
-  }).then((response: unknown) => {
-    const ws = (response as Response).webSocket;
-
-    if (!ws) throw new Error(`${O2_PREFIX} Failed to connect to HMR server`);
-
-    ws.accept();
-    return ws;
   });
 }
