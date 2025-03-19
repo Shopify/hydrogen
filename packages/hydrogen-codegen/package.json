@@ -1,5 +1,6 @@
 {
   "name": "@shopify/hydrogen-codegen",
+  "description": "A codegen plugin and preset for generating TypeScript types from GraphQL queries in a `d.ts` file.",
   "publishConfig": {
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
