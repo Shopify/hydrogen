@@ -119,16 +119,16 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
         // Adopted from https://github.com/cloudflare/workers-sdk/blob/main/packages/vite-plugin-cloudflare/src/runner-worker/module-runner.ts#L77-L91
         runExternalModule(filepath: string): Promise<any> {
           if (
-            filepath.includes("/node_modules") &&
-            !filepath.includes("/node_modules/.vite")
+            filepath.includes('/node_modules') &&
+            !filepath.includes('/node_modules/.vite')
           ) {
             throw new Error(
               `[Error] Trying to import non-prebundled module (only prebundled modules are allowed): ${filepath}` +
-                "\n\n(have you externalized the module via `resolve.external`?)"
+                '\n\n(have you externalized the module via `resolve.external`?)',
             );
           }
 
-          filepath = filepath.replace(/^file:\/\//, "");
+          filepath = filepath.replace(/^file:\/\//, '');
           return import(filepath);
         },
 
