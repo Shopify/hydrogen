@@ -22,7 +22,6 @@ The available recipes are the names of the folders in the `cookbooks/recipes/` d
 
 The current available recipes are:
 
-- overlord_greet
 - subscriptions
 
 Here's the detailed explanation of how the cookbook works:
@@ -51,7 +50,6 @@ Here's the detailed explanation of how the cookbook works:
     - [Update](#update)
       - [Syntax](#syntax-5)
       - [Example](#example-5)
-
 
 This is the Hydrogen Cookbook, a collection of example _recipes_ to showcase specific scenarios and usecases for Hydrogen projects.
 

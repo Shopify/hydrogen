@@ -98,7 +98,6 @@ Learn more about API [release schedules](https://shopify.dev/api/usage/versionin
       - [Syntax](#syntax-5)
       - [Example](#example-5)
 
-
 This is the Hydrogen Cookbook, a collection of example _recipes_ to showcase specific scenarios and usecases for Hydrogen projects.
 
 ## Recipes
@@ -315,38 +314,6 @@ Options:
 npm run cookbook -- update --recipe my-recipe
 ```
 
-
-# 🧑‍🍳 overlord_greet
-
-*TODO*
-
-## 🍣 Ingredients
-
-| File | Description |
-| --- | --- |
-
-## 🍱 Steps
-
-### 1. app/components/Header.tsx
-
-
-
-#### File: [`app/components/Header.tsx`](/templates/skeleton/app/components/Header.tsx)
-
-```diff
-index 8a437a10..f11782ca 100644
---- a/templates/skeleton/app/components/Header.tsx
-+++ b/templates/skeleton/app/components/Header.tsx
-@@ -29,6 +29,7 @@ export function Header({
-       <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
-         <strong>{shop.name}</strong>
-       </NavLink>
-+      Hello World! I for one greet our new overlords.
-       <HeaderMenu
-         menu={menu}
-         viewport="desktop"
-
-```
 
 # 🧑‍🍳 Subscriptions
 
