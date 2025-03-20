@@ -116,12 +116,20 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
         hmr: false,
       },
       {
+        // Adopted from https://github.com/cloudflare/workers-sdk/blob/main/packages/vite-plugin-cloudflare/src/runner-worker/module-runner.ts#L77-L91
         runExternalModule(filepath: string): Promise<any> {
-          // Might need to implement this in the future if we enable `nodejs_compat` flag,
-          // or add custom Oxygen runtime modules (e.g. `import kv from 'oxygen:kv';`).
-          throw new Error(
-            `${O2_PREFIX} External modules are not supported: "${filepath}"`,
-          );
+          if (
+            filepath.includes("/node_modules") &&
+            !filepath.includes("/node_modules/.vite")
+          ) {
+            throw new Error(
+              `[Error] Trying to import non-prebundled module (only prebundled modules are allowed): ${filepath}` +
+                "\n\n(have you externalized the module via `resolve.external`?)"
+            );
+          }
+
+          filepath = filepath.replace(/^file:\/\//, "");
+          return import(filepath);
         },
 
         async runInlinedModule(
