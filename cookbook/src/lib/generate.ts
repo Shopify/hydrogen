@@ -77,7 +77,7 @@ export async function generateRecipe(params: {
   recreateDirectory(patchesDirPath);
 
   // rewind changes to the recipe directory (if the recipe directory is not new)
-  if (existingRecipe != null && !isInGitHistory({path: recipeDirPath})) {
+  if (existingRecipe != null && isInGitHistory({path: recipeDirPath})) {
     execSync(`git checkout -- ${recipeDirPath}`);
   }
 
