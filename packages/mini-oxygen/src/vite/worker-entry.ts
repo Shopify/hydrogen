@@ -7,17 +7,17 @@
  */
 
 import {
-  ViteRuntime,
+  EvaluatedModuleNode,
+  ModuleRunner,
   ssrModuleExportsKey,
-  type ViteRuntimeModuleContext,
-} from 'vite/runtime';
-import type {HMRPayload} from 'vite';
+  type ModuleRunnerContext,
+} from 'vite/module-runner';
+import type {HotPayload} from 'vite';
 import type {Response} from 'miniflare';
 import {withRequestHook} from '../worker/handler.js';
 
 export interface ViteEnv {
   __VITE_ROOT: string;
-  __VITE_HMR_URL: string;
   __VITE_FETCH_MODULE_PATHNAME: string;
   __VITE_RUNTIME_EXECUTE_URL: string;
   __VITE_WARMUP_PATHNAME: string;
@@ -81,7 +81,7 @@ function createUserEnv(env: ViteEnv) {
  * The Vite runtime instance. It's a singleton because it's shared
  * across all the requests to workerd and it's stateful (module cache).
  */
-let runtime: ViteRuntime;
+let runtime: ModuleRunner;
 
 /**
  * Setup the whole Vite runtime and HMR the first time this function is called.
@@ -91,82 +91,51 @@ let runtime: ViteRuntime;
  */
 function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
   if (!runtime) {
-    let onHmrRecieve: ((payload: HMRPayload) => void) | undefined;
-
-    let hmrReady = false;
-    connectHmrWsClient(publicUrl, env)
-      .then((hmrWs) => {
-        hmrReady = !!hmrWs;
-        hmrWs?.addEventListener('message', (message) => {
-          if (!message.data) return;
-          const data: HMRPayload = JSON.parse(message.data.toString());
-
-          if (!data) return;
-
-          if (data.type === 'update') {
-            // Invalidate cache synchronously without revalidating the
-            // module to avoid hanging promises in workerd
-            for (const update of data.updates) {
-              runtime.moduleCache.invalidateDepTree([
-                // Module IDs are absolute from root
-                update.path.replace(/^\.\//, '/'),
-                ...(update.ssrInvalidates ?? []),
-              ]);
-            }
-          } else if (data.type !== 'custom' && onHmrRecieve) {
-            // Custom events are only used in browser HMR, so ignore them.
-            // This type is wrong in ViteRuntime:
-            (onHmrRecieve(data) as unknown as Promise<unknown>)?.catch(
-              (error: Error) => {
-                if (!/ReferenceError/.test(error?.message ?? '')) {
-                  console.error('During SSR HMR:', error);
-                }
-              },
-            );
-          }
-        });
-      })
-      .catch((error) => console.error(error));
-
-    runtime = new ViteRuntime(
+    runtime = new ModuleRunner(
       {
         root: env.__VITE_ROOT,
         sourcemapInterceptor: 'prepareStackTrace',
-        fetchModule: (id, importer) => {
-          // Do not use WS here because the payload can exceed the limit
-          // of WS in workerd. Instead, use fetch to get the module:
-          const url = new URL(env.__VITE_FETCH_MODULE_PATHNAME, publicUrl);
-          url.searchParams.set('id', id);
-          if (importer) url.searchParams.set('importer', importer);
+        transport: {
+          invoke: async (data) => {
+            // Do not use WS here because the payload can exceed the limit
+            // of WS in workerd. Instead, use fetch to get the module:
+            if (data.type === 'custom') {
+              const customData = data.data;
+              const url = new URL(env.__VITE_FETCH_MODULE_PATHNAME, publicUrl);
+              url.searchParams.set('id', customData.data[0]);
+              if (customData.data)
+                url.searchParams.set('importer', customData.name);
 
-          return fetch(url).then((res) => res.json());
-        },
-        hmr: {
-          connection: {
-            isReady: () => hmrReady,
-            send: () => {},
-            onUpdate(receiver) {
-              onHmrRecieve = receiver;
-              return () => {
-                onHmrRecieve = undefined;
-              };
-            },
+              return fetch(url).then((res) => ({result: res.json()}));
+            }
+            return Promise.resolve({
+              error: `Error - invoke: ${JSON.stringify(data)}`,
+            });
           },
         },
+        hmr: false,
       },
       {
+        // Adopted from https://github.com/cloudflare/workers-sdk/blob/main/packages/vite-plugin-cloudflare/src/runner-worker/module-runner.ts#L77-L91
         runExternalModule(filepath: string): Promise<any> {
-          // Might need to implement this in the future if we enable `nodejs_compat` flag,
-          // or add custom Oxygen runtime modules (e.g. `import kv from 'oxygen:kv';`).
-          throw new Error(
-            `${O2_PREFIX} External modules are not supported: "${filepath}"`,
-          );
+          if (
+            filepath.includes('/node_modules') &&
+            !filepath.includes('/node_modules/.vite')
+          ) {
+            throw new Error(
+              `[Error] Trying to import non-prebundled module (only prebundled modules are allowed): ${filepath}` +
+                '\n\n(have you externalized the module via `resolve.external`?)',
+            );
+          }
+
+          filepath = filepath.replace(/^file:\/\//, '');
+          return import(filepath);
         },
 
-        async runViteModule(
-          context: ViteRuntimeModuleContext,
+        async runInlinedModule(
+          context: ModuleRunnerContext,
           code: string,
-          id: string,
+          module: Readonly<EvaluatedModuleNode>,
         ): Promise<any> {
           if (!env.__VITE_UNSAFE_EVAL) {
             throw new Error(`${O2_PREFIX} unsafeEval module is not set`);
@@ -184,7 +153,7 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
             `'use strict';async (${Object.keys(context).join(
               ',',
             )})=>{{${code}\n}}`,
-            id,
+            module.id,
           );
 
           await initModule(...Object.values(context));
@@ -196,7 +165,7 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
   }
 
   return (
-    runtime.executeEntrypoint(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
+    runtime.import(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
       default: {fetch: ExportedHandlerFetchHandler};
     }>
   ).catch((error: Error) => {
@@ -209,34 +178,5 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
         },
       ),
     };
-  });
-}
-
-/**
- * Establish a WebSocket connection to the HMR server.
- * Note: HMR in the server is just for invalidating modules
- * in workerd/ViteRuntime cache, not to refresh the browser.
- */
-function connectHmrWsClient(url: URL, env: ViteEnv) {
-  // The HMR URL might come without origin, which means it's relative
-  // to the main Vite HTTP server. Otherwise, it's an absolute URL.
-  const hmrUrl = env.__VITE_HMR_URL.startsWith('http://')
-    ? env.__VITE_HMR_URL
-    : new URL(env.__VITE_HMR_URL, url.origin);
-
-  return fetch(hmrUrl, {
-    // When the HTTP port and the HMR port are the same, Vite reuses the same server for both.
-    // This happens when not specifying the HMR port in the Vite config. Otherwise, Vite creates
-    // a new server for HMR. In the first case, the protocol header is required to specify
-    // that the connection to the main HTTP server via WS is for HMR.
-    // Ref: https://github.com/vitejs/vite/blob/7440191715b07a50992fcf8c90d07600dffc375e/packages/vite/src/node/server/ws.ts#L120-L127
-    headers: {Upgrade: 'websocket', 'sec-websocket-protocol': 'vite-hmr'},
-  }).then((response: unknown) => {
-    const ws = (response as Response).webSocket;
-
-    if (!ws) throw new Error(`${O2_PREFIX} Failed to connect to HMR server`);
-
-    ws.accept();
-    return ws;
   });
 }

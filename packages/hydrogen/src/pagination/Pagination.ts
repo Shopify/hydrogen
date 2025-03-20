@@ -5,7 +5,7 @@ import {
   useRef,
   forwardRef,
   useState,
-  type LegacyRef,
+  type Ref,
   type FC,
 } from 'react';
 import type {
@@ -54,11 +54,9 @@ interface PaginationInfo<NodesType> {
   /** The paginated array of nodes. You should map over and render this array. */
   nodes: Array<NodesType>;
   /** The `<NextLink>` is a helper component that makes it easy to navigate to the next page of paginated data. Alternatively you can build your own `<Link>` component: `<Link to={nextPageUrl} state={state} preventScrollReset />` */
-  NextLink: FC<Omit<LinkProps, 'to'> & {ref?: LegacyRef<HTMLAnchorElement>}>;
+  NextLink: FC<Omit<LinkProps, 'to'> & {ref?: Ref<HTMLAnchorElement>}>;
   /** The `<PreviousLink>` is a helper component that makes it easy to navigate to the previous page of paginated data. Alternatively you can build your own `<Link>` component: `<Link to={previousPageUrl} state={state} preventScrollReset />` */
-  PreviousLink: FC<
-    Omit<LinkProps, 'to'> & {ref?: LegacyRef<HTMLAnchorElement>}
-  >;
+  PreviousLink: FC<Omit<LinkProps, 'to'> & {ref?: Ref<HTMLAnchorElement>}>;
   /** The URL to the previous page of paginated data. Use this prop to build your own `<Link>` component. */
   previousPageUrl: string;
   /** The URL to the next page of paginated data. Use this prop to build your own `<Link>` component. */

@@ -3,6 +3,7 @@ import path from 'node:path';
 import {readdir} from 'node:fs/promises';
 import type {ServerMode} from '@remix-run/dev/dist/config/serverModes.js';
 import type {RemixConfig, AppConfig} from '@remix-run/dev/dist/config.js';
+import type {ResolvedRemixConfig} from '@remix-run/dev';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputWarn} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
@@ -70,7 +71,7 @@ export function getRawRemixConfig(root: string) {
 export async function getRemixConfig(
   root: string,
   mode = process.env.NODE_ENV as ServerMode,
-) {
+): Promise<ResolvedRemixConfig> {
   if (await isViteProject(root)) {
     return (await getViteConfig(root)).remixConfig;
   }

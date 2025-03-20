@@ -21,6 +21,7 @@ export function parseSection<InputType, ReturnType>(_section: InputType) {
       const isMetafield = node?.type && node?.value;
       const isArray = Array.isArray(node);
       if (isArray) {
+        // @ts-ignore
         parsed[key] = node.map((item) => parseSection(item));
       } else if (isMetafield) {
         parsed[key] = parseMetafieldValue(node);

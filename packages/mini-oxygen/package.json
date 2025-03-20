@@ -79,7 +79,7 @@
     "vitest": "^1.0.4"
   },
   "peerDependencies": {
-    "vite": "^5.1.8"
+    "vite": "^6.2.1"
   },
   "peerDependenciesMeta": {
     "vite": {
