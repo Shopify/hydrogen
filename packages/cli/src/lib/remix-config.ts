@@ -11,7 +11,7 @@ import {muteRemixLogs} from './log.js';
 import {REQUIRED_REMIX_VERSION} from './remix-version-check.js';
 import {findFileWithExtension} from './file.js';
 import {getViteConfig, isViteProject} from './vite-config.js';
-import {importLocal} from './import-utils.js';
+import {importLocal, importVite} from './import-utils.js';
 import {hydrogenPackagesPath, isHydrogenMonorepo} from './build.js';
 
 type RawRemixConfig = AppConfig;
@@ -93,17 +93,9 @@ export async function getRemixConfig(
     root,
   ).catch(handleRemixImportFail);
 
-  type RemixViteESMConfig =
-    typeof import('@remix-run/dev/dist/vite/import-vite-esm-sync.js');
-
-  const {importViteEsmSync} = await importLocal<RemixViteESMConfig>(
-    '@remix-run/dev/dist/vite/import-vite-esm-sync.js',
-    root,
-  ).catch(handleRemixImportFail);
-
   const appConfig = await getRawRemixConfig(root);
   const routesViteNodeContext = await createContext({root, mode});
-  const vite = importViteEsmSync();
+  const vite = await importVite(root);
   const config = await resolveConfig(appConfig, {
     rootDirectory: root,
     serverMode: mode,
