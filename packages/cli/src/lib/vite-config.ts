@@ -12,6 +12,8 @@ import type {HydrogenPlugin} from '~/hydrogen/vite/plugin.js';
 import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
 import {hasRemixConfigFile} from './remix-config.js';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
+import type {ResolvedRemixConfig} from '@remix-run/dev';
+import type {ResolvedConfig, UserConfig} from 'vite';
 
 export async function hasViteConfig(root: string) {
   const result = await findFileWithExtension(root, 'vite.config');
@@ -31,7 +33,19 @@ export async function isViteProject(root: string) {
   return isVite;
 }
 
-export async function getViteConfig(root: string, ssrEntryFlag?: string) {
+type ViteConfigResult = {
+  clientOutDir: string;
+  serverOutDir: string;
+  serverOutFile: string;
+  resolvedViteConfig: ResolvedConfig;
+  userViteConfig: UserConfig;
+  remixConfig: ResolvedRemixConfig;
+};
+
+export async function getViteConfig(
+  root: string,
+  ssrEntryFlag?: string,
+): Promise<ViteConfigResult> {
   const vite = await importVite(root);
 
   const command = 'build';
@@ -68,7 +82,7 @@ export async function getViteConfig(root: string, ssrEntryFlag?: string) {
     serverOutDir,
     typeof entryFileNames === 'string'
       ? entryFileNames
-      : serverBuildFile ?? 'index.js',
+      : (serverBuildFile ?? 'index.js'),
   );
 
   const ssrEntry = ssrEntryFlag ?? resolvedViteConfig.build.ssr;
@@ -94,7 +108,7 @@ export async function getViteConfig(root: string, ssrEntryFlag?: string) {
             basename(resolvedSsrEntry),
           )
         ).filepath || resolvedSsrEntry,
-    },
+    } as ResolvedRemixConfig,
   };
 }
 

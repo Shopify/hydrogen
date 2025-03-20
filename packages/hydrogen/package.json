@@ -72,16 +72,16 @@
     "content-security-policy-builder": "^2.2.0",
     "isbot": "^5.1.21",
     "source-map-support": "^0.5.21",
-    "type-fest": "^4.26.1",
+    "type-fest": "^4.33.0",
     "use-resize-observer": "^9.1.0",
     "worktop": "^0.7.3"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.15.3",
-    "@remix-run/react": "^2.15.3",
-    "@remix-run/server-runtime": "^2.15.3",
-    "@remix-run/route-config": "^2.15.3",
-    "@shopify/generate-docs": "0.16.2",
+    "@remix-run/dev": "^2.16.1",
+    "@remix-run/react": "^2.16.1",
+    "@remix-run/server-runtime": "^2.16.1",
+    "@remix-run/route-config": "^2.16.1",
+    "@shopify/generate-docs": "0.16.4",
     "@shopify/hydrogen-codegen": "*",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^14.0.0",
@@ -89,14 +89,14 @@
     "formdata-polyfill": "^4.0.10",
     "happy-dom": "^17.0.0",
     "react": "^18.2.0",
-    "schema-dts": "^1.1.0",
+    "schema-dts": "^1.1.2",
     "vitest": "^1.0.4"
   },
   "peerDependencies": {
-    "@remix-run/react": "^2.10.0",
-    "@remix-run/server-runtime": "^2.10.0",
+    "@remix-run/react": "^2.16.1",
+    "@remix-run/server-runtime": "^2.16.1",
     "react": "^18.2.0",
-    "vite": "^5.1.0"
+    "vite": "^5.1.0 || ^6.2.1"
   },
   "peerDependenciesMeta": {
     "vite": {

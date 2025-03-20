@@ -130,16 +130,19 @@ export function hydrogenBundleAnalyzer(pluginOptions?: BundleAnalyzerOptions) {
 
           const importsMeta = (
             await Promise.all([...staticImportsMeta, ...dynamicImportsMeta])
-          ).reduce((acc, {importedId, ...meta}) => {
-            if (isViteCjsHelper(importedId)) {
-              // Helpers are CJS
-              isESM = false;
-            } else if (!isViteTransformHelper(importedId)) {
-              acc.push(meta);
-            }
+          ).reduce(
+            (acc, {importedId, ...meta}) => {
+              if (isViteCjsHelper(importedId)) {
+                // Helpers are CJS
+                isESM = false;
+              } else if (!isViteTransformHelper(importedId)) {
+                acc.push(meta);
+              }
 
-            return acc;
-          }, [] as Array<{path: string; kind: string; original: string}>);
+              return acc;
+            },
+            [] as Array<{path: string; kind: string; original: string}>,
+          );
 
           modsMeta.set(relativeModId, {
             bytes: originalCodeBytes,
@@ -169,12 +172,15 @@ export function hydrogenBundleAnalyzer(pluginOptions?: BundleAnalyzerOptions) {
             exports: workerFile.exports,
             entryPoint: relativePath(root, workerFile.facadeModuleId),
             bytes: workerFile.code.length ?? 0,
-            inputs: Object.entries(inputs).reduce((acc, [key, item]) => {
-              acc[key] = {
-                bytesInOutput: renderedSizes.get(key) ?? item.bytes ?? 0,
-              };
-              return acc;
-            }, {} as Record<string, {bytesInOutput: number}>),
+            inputs: Object.entries(inputs).reduce(
+              (acc, [key, item]) => {
+                acc[key] = {
+                  bytesInOutput: renderedSizes.get(key) ?? item.bytes ?? 0,
+                };
+                return acc;
+              },
+              {} as Record<string, {bytesInOutput: number}>,
+            ),
           },
         },
       };
@@ -182,20 +188,30 @@ export function hydrogenBundleAnalyzer(pluginOptions?: BundleAnalyzerOptions) {
       bundle[BUNDLE_ANALYZER_JSON_FILE] = {
         type: 'asset',
         fileName: BUNDLE_ANALYZER_JSON_FILE,
-        name: BUNDLE_ANALYZER_JSON_FILE,
         needsCodeReference: false,
         source: JSON.stringify(metafile, null, 2),
+        names: [BUNDLE_ANALYZER_JSON_FILE],
+        originalFileNames: [BUNDLE_ANALYZER_JSON_FILE],
+        // name and originalFileName should be deprecated .. but
+        // for some reason, removing them breaks typescript check
+        name: BUNDLE_ANALYZER_JSON_FILE,
+        originalFileName: BUNDLE_ANALYZER_JSON_FILE,
       };
 
       bundle[BUNDLE_ANALYZER_HTML_FILE] = {
         type: 'asset',
         fileName: BUNDLE_ANALYZER_HTML_FILE,
-        name: BUNDLE_ANALYZER_HTML_FILE,
         needsCodeReference: false,
         source: injectAnalyzerTemplateData(
           analysisTemplate,
           JSON.stringify(metafile),
         ),
+        names: [BUNDLE_ANALYZER_HTML_FILE],
+        originalFileNames: [BUNDLE_ANALYZER_HTML_FILE],
+        // name and originalFileName should be deprecated .. but
+        // for some reason, removing them breaks typescript check
+        name: BUNDLE_ANALYZER_HTML_FILE,
+        originalFileName: BUNDLE_ANALYZER_HTML_FILE,
       };
     },
   } satisfies Plugin;

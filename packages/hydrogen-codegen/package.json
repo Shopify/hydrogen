@@ -1,5 +1,6 @@
 {
   "name": "@shopify/hydrogen-codegen",
+  "description": "A codegen plugin and preset for generating TypeScript types from GraphQL queries in a `d.ts` file.",
   "publishConfig": {
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
@@ -36,13 +37,13 @@
     "dist"
   ],
   "devDependencies": {
-    "@graphql-codegen/cli": "^5.0.2",
+    "@graphql-codegen/cli": "^5.0.3",
     "@graphql-codegen/plugin-helpers": "^5.1.0",
-    "dts-bundle-generator": "^9.3.1",
-    "type-fest": "^4.26.1",
+    "dts-bundle-generator": "^9.5.1",
+    "type-fest": "^4.33.0",
     "vitest": "^1.0.4"
   },
   "dependencies": {
-    "@shopify/graphql-codegen": "^0.0.2"
+    "@shopify/graphql-codegen": "^0.1.0"
   }
 }

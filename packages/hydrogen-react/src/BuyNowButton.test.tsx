@@ -63,6 +63,7 @@ describe('<BuyNowButton/>', () => {
         </BuyNowButton>,
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       await act(() => user.click(screen.getByRole('button')));
 
       expect(mockCartCreate).toHaveBeenCalledTimes(1);
@@ -90,6 +91,7 @@ describe('<BuyNowButton/>', () => {
 
       expect(button).not.toBeDisabled();
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       await act(() => user.click(button));
 
       expect(button).toBeDisabled();

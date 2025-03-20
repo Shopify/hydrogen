@@ -61,7 +61,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
                   config.build?.ssr === true
                     ? // No --entry flag passed by the user, use the
                       // option passed to the plugin or the default value
-                      pluginOptions.entry ?? DEFAULT_SSR_ENTRY
+                      (pluginOptions.entry ?? DEFAULT_SSR_ENTRY)
                     : // --entry flag passed by the user, keep it
                       config.build?.ssr,
               },
@@ -117,21 +117,6 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           };
         },
       },
-      transform(code, id, options) {
-        if (
-          resolvedConfig?.command === 'serve' &&
-          resolvedConfig?.server?.hmr !== false &&
-          options?.ssr &&
-          (id === absoluteWorkerEntryFile ||
-            id === absoluteWorkerEntryFile + path.extname(id))
-        ) {
-          return {
-            // Accept HMR in server entry module to avoid full-page refresh in the browser.
-            // Note: appending code at the end should not break the source map.
-            code: code + '\nif (import.meta.hot) import.meta.hot.accept();',
-          };
-        }
-      },
       generateBundle(_, bundle) {
         if (apiOptions.compatibilityDate) {
           if (!/^\d{4}-\d{2}-\d{2}$/.test(apiOptions.compatibilityDate)) {
@@ -149,9 +134,14 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           bundle[oxygenJsonFile] = {
             type: 'asset',
             fileName: oxygenJsonFile,
-            name: oxygenJsonFile,
             needsCodeReference: false,
             source: JSON.stringify(oxygenJsonContent, null, 2),
+            names: [oxygenJsonFile],
+            originalFileNames: [oxygenJsonFile],
+            // name and originalFileName should be deprecated .. but
+            // for some reason, removing them breaks typescript check
+            name: oxygenJsonFile,
+            originalFileName: oxygenJsonFile,
           };
         }
       },

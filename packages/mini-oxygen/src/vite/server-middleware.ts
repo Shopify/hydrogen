@@ -8,7 +8,7 @@ import {
   defaultLogRequestLine,
 } from '../worker/index.js';
 import type {OnlyBindings, OnlyServices} from '../worker/utils.js';
-import {getHmrUrl, pipeFromWeb, toURL, toWeb} from './utils.js';
+import {pipeFromWeb, toURL, toWeb} from './utils.js';
 import {
   isEntrypointError,
   handleEntrypointError,
@@ -113,7 +113,6 @@ function startMiniOxygenRuntime({
           __VITE_ROOT: viteDevServer.config.root,
           __VITE_RUNTIME_EXECUTE_URL: workerEntryFile,
           __VITE_FETCH_MODULE_PATHNAME: FETCH_MODULE_PATHNAME,
-          __VITE_HMR_URL: getHmrUrl(viteDevServer),
           __VITE_WARMUP_PATHNAME: WARMUP_PATHNAME,
         } satisfies OnlyBindings<ViteEnv>,
         unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
@@ -123,16 +122,19 @@ function startMiniOxygenRuntime({
       {
         name: 'setup-environment',
         modules: true,
-        serviceBindings: crossBoundarySetup?.reduce((acc, {binding}, index) => {
-          if (binding) {
-            acc[`wrapped_service_${index}`] = async (request: Request) => {
-              const payload = (await request.json()) as unknown[];
-              const result = await binding(...payload);
-              return new Response(JSON.stringify(result ?? ''));
-            };
-          }
-          return acc;
-        }, {} as Record<string, (request: Request) => Promise<Response>>),
+        serviceBindings: crossBoundarySetup?.reduce(
+          (acc, {binding}, index) => {
+            if (binding) {
+              acc[`wrapped_service_${index}`] = async (request: Request) => {
+                const payload = (await request.json()) as unknown[];
+                const result = await binding(...payload);
+                return new Response(JSON.stringify(result ?? ''));
+              };
+            }
+            return acc;
+          },
+          {} as Record<string, (request: Request) => Promise<Response>>,
+        ),
         script: `
           const setupScripts = [${
             crossBoundarySetup?.map((boundary) => boundary.script) ?? ''
@@ -142,7 +144,7 @@ function startMiniOxygenRuntime({
               if (!setup) return;
 
               const service = env['wrapped_service_' + index];
-              const wrappedBinding = service 
+              const wrappedBinding = service
                 ? (...args) => {
                   return service.fetch(
                     new Request(
@@ -193,7 +195,7 @@ export function setupOxygenMiddleware(
 
         // `fetchModule` is similar to `viteDevServer.ssrFetchModule`,
         // but it treats source maps differently (avoids adding empty lines).
-        fetchModule(viteDevServer, id, importer)
+        fetchModule(viteDevServer.environments['ssr'], id, importer)
           .then((ssrModule) => res.end(JSON.stringify(ssrModule)))
           .catch((error) => {
             console.error('Error during module fetch:', error);
@@ -272,7 +274,7 @@ function getViteUrl(viteDevServer: ViteDevServer) {
     viteUrl =
       address && typeof address !== 'string'
         ? `http://localhost:${address.port}`
-        : address ?? undefined;
+        : (address ?? undefined);
   }
 
   return viteUrl;
