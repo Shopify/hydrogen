@@ -4,68 +4,55 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Added support for the Remix future flag `v3_routeConfig`.
+Support for the Remix future flag `v3_routeConfig`.
 
-Remix documentation for the `v3_routeConfig`: [https://remix.run/docs/en/main/start/future-flags#v3_routeconfig](https://remix.run/docs/en/main/start/future-flags#v3_routeconfig)
-Details the base changes that need to be made to enable the flag, including the up to 3 additional dependencies that need to be added.
+Please refer to the Remix documentation for more details on `v3_routeConfig` future flag: [https://remix.run/docs/en/main/start/future-flags#v3_routeconfig](https://remix.run/docs/en/main/start/future-flags#v3_routeconfig)
 
-Two files need to be changed once the above instructions have been applied.
+1. Add the following npm package dev dependencies:
 
-1. In the `app/routes.ts` file, a support function needs to be included to get the additional routes that were originally added in the vite plugin. With a file like the following:
+    ```diff
+      "devDependencies": {
+        "@remix-run/dev": "^2.16.1",
+    +    "@remix-run/fs-routes": "^2.16.1",
+    +    "@remix-run/route-config": "^2.16.1",
+    ```
 
-   ```typescript
-   import {flatRoutes} from '@remix-run/fs-routes';
-   import type {RouteConfig} from '@remix-run/route-config';
-   import {route} from '@remix-run/route-config';
-   import {remixRoutesOptionAdapter} from '@remix-run/routes-option-adapter';
+1. If you have `export function Layout` in your `root.tsx`, move this export into its own file. For example:
 
-   export default [
-     ...(await flatRoutes({rootDirectory: 'fs-routes'})),
+    ```ts
+    // /app/layout.tsx
+    export default function Layout() {
+      const nonce = useNonce();
+      const data = useRouteLoaderData<RootLoader>('root');
 
-     ...(await remixRoutesOptionAdapter(/* ... */)),
+      return (
+        <html lang="en">
+        ...
+      );
+    }
+    ```
 
-     route('/hello', 'routes/hello.tsx'),
-   ] satisfies RouteConfig;
-   ```
+1. Create a `routes.ts` file.
 
-   Include the `hydrogenRoutes` function like so:
+    ```ts
+    import {flatRoutes} from '@remix-run/fs-routes';
+    import {layout, type RouteConfig} from '@remix-run/route-config';
+    import {hydrogenRoutes} from '@shopify/hydrogen';
 
-   ```typescript
-   import {flatRoutes} from '@remix-run/fs-routes';
-   import type {RouteConfig} from '@remix-run/route-config';
-   import {route} from '@remix-run/route-config';
-   import {remixRoutesOptionAdapter} from '@remix-run/routes-option-adapter';
-   import {hydrogenRoutes} from '@shopify/hydrogen';
+    export default hydrogenRoutes([
+      // Your entire app reading from routes folder using Layout from layout.tsx
+      layout('./layout.tsx', (await flatRoutes())),
+    ]) satisfies RouteConfig;
+    ```
 
-   export default hydrogenRoutes([
-     ...(await flatRoutes({rootDirectory: 'fs-routes'})),
+1. Update your `vite.config.ts`.
 
-     ...(await remixRoutesOptionAdapter(/* ... */)),
-
-     route('/hello', 'routes/hello.tsx'),
-   ]) satisfies RouteConfig;
-   ```
-
-   The function should wrap around all of the routes so that the priority of the routes is applied correctly.
-
-2. In the Vite config (`vite.config.ts` usually) the `remix` plugin needs to have it's configuration slightly altered.
-
-   From this:
-
-   ```typescript
-   ...
-   remix({
-     presets: [hydrogen.preset()],
-   ...
-   ```
-
-   To this:
-
-   ```typescript
-   ...
-   remix({
-     presets: [hydrogen.v3preset()],
-   ...
-   ```
-
-   This is due to the `routes` configuration option not being allowed with the `v3_routeConfig` future flag enabled.
+    ```diff
+    export default defineConfig({
+      plugins: [
+        hydrogen(),
+        oxygen(),
+        remix({
+    -      presets: [hydrogen.preset()],
+    +      presets: [hydrogen.v3preset()],
+    ```

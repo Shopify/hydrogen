@@ -15,8 +15,6 @@
     "@remix-run/react": "^2.16.1",
     "@remix-run/server-runtime": "^2.16.1",
     "@remix-run/eslint-config": "^2.16.1",
-    "@remix-run/fs-routes": "^2.16.1",
-    "@remix-run/route-config": "^2.16.1",
     "@shopify/hydrogen": "2025.1.2",
     "compression": "^1.7.4",
     "cross-env": "^7.0.3",
@@ -29,6 +27,8 @@
   "devDependencies": {
     "@eslint/js": "^9.18.0",
     "@remix-run/dev": "^2.16.1",
+    "@remix-run/fs-routes": "^2.16.1",
+    "@remix-run/route-config": "^2.16.1",
     "@shopify/cli": "~3.75.4",
     "@types/compression": "^1.7.2",
     "@types/express": "^4.17.17",
