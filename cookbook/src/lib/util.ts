@@ -203,9 +203,15 @@ export function makeRandomTempDir(params: {prefix: string}): string {
 }
 
 export function listRecipes(): string[] {
+  const recipesFolder = path.join(COOKBOOK_PATH, 'recipes');
   return fs
-    .readdirSync(path.join(COOKBOOK_PATH, 'recipes'), {withFileTypes: true})
-    .filter((file) => file.isDirectory())
+    .readdirSync(recipesFolder, {withFileTypes: true})
+    .filter((file) => {
+      return file.isDirectory();
+    })
+    .filter((file) => {
+      return fs.existsSync(path.join(recipesFolder, file.name, 'recipe.json'));
+    })
     .map((file) => file.name);
 }
 
