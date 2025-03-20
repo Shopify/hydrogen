@@ -58,8 +58,7 @@
   ],
   "prettier": "@shopify/prettier-config",
   "dependencies": {
-    "@shopify/cli-hydrogen": "*",
-    "@remix-run/fs-routes": "^2.15.3"
+    "@shopify/cli-hydrogen": "*"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.4.8",
