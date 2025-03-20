@@ -1,7 +1,7 @@
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import {createRequire} from 'node:module';
-import execa from 'execa';
+import {execa} from 'execa';
 import {temporaryDirectoryTask} from 'tempy';
 import {describe, it, expect} from 'vitest';
 
