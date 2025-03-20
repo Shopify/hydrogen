@@ -22,7 +22,6 @@
       - [Syntax](#syntax-5)
       - [Example](#example-5)
 
-
 This is the Hydrogen Cookbook, a collection of example _recipes_ to showcase specific scenarios and usecases for Hydrogen projects.
 
 ## Recipes
