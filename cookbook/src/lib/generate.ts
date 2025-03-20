@@ -28,11 +28,10 @@ import {
   SkipPrompts,
 } from './util';
 import {
+  getDescriptionFromLLM,
   getTroubleshootingQuestionsFromLLM,
   getUserQueriesFromLLM,
 } from './llms';
-
-const TODO = '*TODO*';
 
 /**
  * Generate a recipe.
@@ -121,9 +120,9 @@ export async function generateRecipe(params: {
   const troubleshooting = existingRecipe?.llms.troubleshooting ?? [];
 
   const baseRecipe: RecipeWithoutLLMs = {
-    title: existingRecipe?.title ?? recipeName ?? TODO,
+    title: existingRecipe?.title ?? recipeName,
     image: existingRecipe?.image ?? null,
-    description: existingRecipe?.description ?? TODO,
+    description: existingRecipe?.description ?? '',
     notes: existingRecipe?.notes ?? [],
     deletedFiles,
     ingredients,
@@ -133,6 +132,26 @@ export async function generateRecipe(params: {
 
   if (llmAPIKey != null && llmURL != null && llmModel != null) {
     console.log('- 🤖 LLMs integration…');
+    if (baseRecipe.description === '') {
+      let ok = params.skipPrompts === 'yes';
+      if (params.skipPrompts !== 'no') {
+        ok = await renderConfirmationPrompt({
+          message: 'Would you like to generate a description for the recipe?',
+          defaultValue: false,
+        });
+      }
+      if (ok) {
+        console.log('  - Asking Claude…');
+        const description = await getDescriptionFromLLM({
+          llmAPIKey,
+          llmModel,
+          llmURL,
+          recipeName,
+          baseRecipe,
+        });
+        baseRecipe.description = description;
+      }
+    }
     if (userQueries.length === 0) {
       let ok = params.skipPrompts === 'yes';
       if (params.skipPrompts !== 'no') {

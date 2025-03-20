@@ -136,7 +136,7 @@ function renderRecipeRuleBlocks(
   return [
     // cursor rule frontmatter
     mdFrontMatter({
-      description: `Recipe for implementing "${recipe.title} (${recipeName})" in a Hydrogen storefront. Useful when the user is trying to implement the feature described in this recipe.`,
+      description: `Recipe for implementing "${recipe.title} (${recipeName})" in a Hydrogen storefront. ${recipe.description}`,
       globs,
       alwaysApply: 'false',
     }),
@@ -311,7 +311,10 @@ export async function askLLM(params: {
     }),
   });
   if (!response.ok) {
-    throw new Error(`LLM returned a non-ok response: ${response.statusText}`);
+    const text = await response.text();
+    throw new Error(
+      `LLM returned a non-ok response: ${response.statusText} ${text}`,
+    );
   }
 
   const data: LLMResponse = await response.json();
@@ -436,4 +439,48 @@ function cleanupLLMJSONResponse(response: LLMResponse) {
     .split('\n')
     .filter((line) => !line.startsWith('```'))
     .join('\n');
+}
+
+export async function getDescriptionFromLLM(params: {
+  llmAPIKey: string;
+  llmURL: string;
+  llmModel: string;
+  recipeName: string;
+  baseRecipe: RecipeWithoutLLMs;
+}): Promise<string> {
+  const {llmAPIKey, llmURL, llmModel, recipeName, baseRecipe} = params;
+  const readme = makeReadmeBlocks(
+    recipeName,
+    {...baseRecipe, llms: {userQueries: [], troubleshooting: []}},
+    'github',
+  );
+
+  const response = await askLLM({
+    apiKey: llmAPIKey,
+    url: llmURL,
+    model: llmModel,
+    message: `
+I will provide you with a recipe that describes a series of steps to implement a feature using Shopify's Hydrogen framework.
+Given the recipe and what it does in the context of the Hydrogen framework, please generate a description for the recipe.
+
+The description should be a broad description of the recipe goals and what it does in the context of the Hydrogen framework, and not include any implementation details, like component names or file names.
+
+The output should **ONLY** contain description for the recipe and NO OTHER TEXT, and it should NOT have titles or headings. The description should also be expressed so that it can be picked up by a LLM to figure out comprehensively what the recipe does. It should absolutely be human-readable as well.
+
+<recipe_data>
+${readme.map(renderMDBlock).join('\n')}
+</recipe_data>
+`,
+  });
+
+  if (
+    response.choices.length !== 1 ||
+    response.choices[0].message.content == null
+  ) {
+    throw new Error('No response from LLM');
+  }
+
+  const data = cleanupLLMJSONResponse(response);
+
+  return data;
 }

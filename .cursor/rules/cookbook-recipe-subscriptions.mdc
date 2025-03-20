@@ -1,5 +1,5 @@
 ---
-description: Recipe for implementing "Subscriptions (subscriptions)" in a Hydrogen storefront. Useful when the user is trying to implement the feature described in this recipe.
+description: Recipe for implementing "Subscriptions (subscriptions)" in a Hydrogen storefront. This recipe demonstrates how to implement subscription functionality in a Shopify Hydrogen storefront. It enables customers to purchase products on a recurring basis by integrating with Shopify's selling plans. The recipe adds a subscription selector component that allows customers to choose from available subscription options (such as delivery frequency) when purchasing eligible products. It modifies the cart to display selected subscription details and handles the proper pricing adjustments based on the chosen subscription plan. The implementation includes UI components for selecting subscription options, logic for calculating subscription pricing, and integration with Shopify's cart functionality to properly process subscription orders. This feature enhances the storefront by providing customers with flexible purchasing options beyond one-time purchases.
 globs: templates/**/*
 alwaysApply: false
 ---
@@ -66,9 +66,7 @@ Here's the subscriptions recipe for the base Hydrogen skeleton template:
 
 ## Description
 
-This folder contains an example implementation of [subscriptions](https://shopify.dev/docs/apps/selling-strategies/subscriptions) for Hydrogen. It shows how to display selling plans on a product page.
-
-![subscriptions-example](https://github.com/Shopify/hydrogen/assets/12080141/1cea5fbf-5a56-4562-95a7-4821facb3c6d)
+This recipe demonstrates how to implement subscription functionality in a Shopify Hydrogen storefront. It enables customers to purchase products on a recurring basis by integrating with Shopify's selling plans. The recipe adds a subscription selector component that allows customers to choose from available subscription options (such as delivery frequency) when purchasing eligible products. It modifies the cart to display selected subscription details and handles the proper pricing adjustments based on the chosen subscription plan. The implementation includes UI components for selecting subscription options, logic for calculating subscription pricing, and integration with Shopify's cart functionality to properly process subscription orders. This feature enhances the storefront by providing customers with flexible purchasing options beyond one-time purchases.
 
 ## Ingredients
 
