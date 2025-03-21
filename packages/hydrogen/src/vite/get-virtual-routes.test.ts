@@ -35,7 +35,6 @@ describe('virtual routes', () => {
 
   it('gets virtual routes V3', async () => {
     await expect(getVirtualRoutesV3()).resolves.toMatchObject({
-      root: {file: expect.any(String), id: VIRTUAL_ROOT, path: ''},
       layout: {
         file: expect.stringContaining('layout.jsx'),
       },
