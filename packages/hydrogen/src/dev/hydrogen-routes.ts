@@ -6,7 +6,7 @@ export async function hydrogenRoutes(
   currentRoutes: Array<RouteConfigEntry>,
 ): Promise<Array<RouteConfigEntry>> {
   // Only run this in development.
-  if (!import.meta.env.DEV) {
+  if (process.env.NODE_ENV !== 'development') {
     return currentRoutes;
   }
 
