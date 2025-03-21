@@ -38,7 +38,9 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <VirtualLayout><Outlet /></VirtualLayout>
+        <VirtualLayout>
+          <Outlet />
+        </VirtualLayout>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>

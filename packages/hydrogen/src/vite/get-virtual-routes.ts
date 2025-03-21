@@ -47,7 +47,10 @@ export async function getVirtualRoutesV3() {
       {
         id: `${VIRTUAL_ROUTES_DIR}/index`,
         path: '',
-        file: getVirtualRoutesPath(VIRTUAL_ROUTES_ROUTES_DIR_PARTS, 'index.jsx'),
+        file: getVirtualRoutesPath(
+          VIRTUAL_ROUTES_ROUTES_DIR_PARTS,
+          'index.jsx',
+        ),
         index: true,
       },
     ],

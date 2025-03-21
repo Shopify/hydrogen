@@ -1,5 +1,10 @@
 import {describe, it, expect} from 'vitest';
-import {getVirtualRoutes, getVirtualRoutesV3, VIRTUAL_ROOT, VIRTUAL_ROOT_ORIG} from './get-virtual-routes.js';
+import {
+  getVirtualRoutes,
+  getVirtualRoutesV3,
+  VIRTUAL_ROOT,
+  VIRTUAL_ROOT_ORIG,
+} from './get-virtual-routes.js';
 
 describe('virtual routes', () => {
   it('gets virtual routes', async () => {
