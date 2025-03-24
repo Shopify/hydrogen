@@ -145,6 +145,8 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           };
         }
       },
-    } satisfies OxygenPlugin,
+    } satisfies Plugin<{
+      registerPluginOptions(newOptions: OxygenApiOptions): void;
+    }>,
   ];
 }

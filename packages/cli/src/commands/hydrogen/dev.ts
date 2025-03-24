@@ -386,6 +386,7 @@ export async function runDev({
       codegenProcess?.removeAllListeners('close');
       codegenProcess?.kill('SIGINT');
       await Promise.allSettled([viteServer.close(), tunnel?.cleanup?.()]);
+      viteServer.watcher.close();
     },
   };
 }
