@@ -17,8 +17,8 @@
     "dev": "tsup --watch ./src --watch ../../templates/skeleton",
     "typecheck": "tsc --noEmit",
     "generate:manifest": "node scripts/generate-manifest.mjs",
-    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --test-timeout=60000",
-    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=60000"
+    "test": "cross-env SHOPIFY_UNIT_TEST=1 LANG=en-US.UTF-8 vitest run --test-timeout=60000",
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 LANG=en-US.UTF-8 vitest --test-timeout=60000"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.16.1",

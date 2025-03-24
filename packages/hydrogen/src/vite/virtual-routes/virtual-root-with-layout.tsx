@@ -21,7 +21,7 @@ export const links: LinksFunction = () => {
   return [{rel: 'icon', type: 'image/svg+xml', href: favicon}];
 };
 
-export function Layout({children}: {children?: React.ReactNode}) {
+export default function App() {
   const nonce = useNonce();
   return (
     <html lang="en">
@@ -38,16 +38,14 @@ export function Layout({children}: {children?: React.ReactNode}) {
         <Links />
       </head>
       <body>
-        <VirtualLayout>{children}</VirtualLayout>
+        <VirtualLayout>
+          <Outlet />
+        </VirtualLayout>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
     </html>
   );
-}
-
-export default function App() {
-  return <Outlet />;
 }
 
 export function ErrorBoundary() {
