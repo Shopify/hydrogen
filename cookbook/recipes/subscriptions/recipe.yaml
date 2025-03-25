@@ -2,17 +2,20 @@
 
 title: Subscriptions
 image: null
-description: This recipe enables subscription functionality in a
-  Hydrogen-powered Shopify storefront by implementing selling plan groups and
-  selling plan options. It allows customers to choose between one-time purchases
-  and subscription options for products. The recipe modifies the cart and
-  product detail pages to display subscription options, handle subscription
-  selection, and properly process subscription orders. It updates the necessary
-  GraphQL fragments to fetch selling plan data from the Shopify API and renders
-  subscription options with appropriate pricing adjustments. The implementation
-  includes a dedicated SellingPlanSelector component that displays available
-  subscription options and their details, while also updating the cart to show
-  selected subscription information.
+description: >
+  This recipe adds subscription capabilities to your Hydrogen storefront by implementing
+  [selling plan groups](https://shopify.dev/docs/api/storefront/latest/objects/SellingPlanGroup)
+  and options. Customers can choose between one-time purchases or recurring subscriptions
+  when available.
+
+  The implementation:
+  - Modifies product detail pages to display subscription options with accurate pricing
+  - Adds a SellingPlanSelector component that presents available subscription options
+  - Enhances GraphQL fragments to fetch all necessary selling plan data
+  - Displays subscription details on applicable cart line items
+
+  With this recipe, merchants can offer flexible purchasing options while maintaining a
+  seamless customer experience.
 notes: []
 deletedFiles:
   - templates/skeleton/app/components/ProductForm.tsx
@@ -24,6 +27,20 @@ ingredients:
   - path: templates/skeleton/app/styles/selling-plan.css
     description: null
 steps:
+  - type: INFO
+    name: Requirements
+    description: >
+      This recipe comes pre-configured for our demo storefront using an example subscription
+      product with the handle `shopify-wax`.
+
+      #### Setting Up in Your Own Store
+
+      To implement subscriptions in your store:
+
+      1. Install a [Shopify Subscriptions](https://apps.shopify.com/shopify-subscriptions) app
+      2. Use the app to create selling plans for your products
+      3. Assign these selling plans to any products you want to offer as subscriptions
+
   - type: COPY_INGREDIENTS
     name: Copy ingredients
     description: Copy the ingredients from the template directory to the current directory.
@@ -33,16 +50,13 @@ steps:
       - templates/skeleton/app/styles/selling-plan.css
   - type: PATCH
     name: app/components/CartLineItem.tsx
-    description: This step enhances the CartLineItem component to support and
-      display selling plan information. It extracts the sellingPlanAllocation
-      from the cart line data and conditionally renders the selling plan name
-      when available. The implementation includes destructuring the
-      sellingPlanAllocation from the line object and adding a conditional
-      rendering block that displays the selling plan name as a list item when a
-      selling plan is associated with the cart item. The component imports are
-      also updated to use absolute paths with the tilde prefix for better
-      consistency. This change allows customers to see their selected
-      subscription or delivery options directly in the cart.
+    description: >
+      This step updates the CartLineItem component to show subscription information when a
+      customer adds a subscription product to their cart.
+
+      The component now:
+      - Extracts subscription details (sellingPlanAllocation) from cart line data
+      - Displays the subscription plan name when available
     diffs:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.f93ff4.patch
