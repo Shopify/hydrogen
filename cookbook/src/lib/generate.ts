@@ -31,6 +31,7 @@ import {
 } from './util';
 import {
   getDescriptionFromLLM,
+  getStepDescriptionFromLLM,
   getTroubleshootingQuestionsFromLLM,
   getUserQueriesFromLLM,
 } from './llms';
@@ -59,6 +60,7 @@ export async function generateRecipe(params: {
     llmURL,
     llmModel,
     recipeManifestFormat,
+    skipPrompts,
   } = params;
 
   console.log('📖 Generating recipe');
@@ -135,16 +137,17 @@ export async function generateRecipe(params: {
 
   if (llmAPIKey != null && llmURL != null && llmModel != null) {
     console.log('- 🤖 LLMs integration…');
+
     if (baseRecipe.description === '') {
-      let ok = params.skipPrompts === 'yes';
-      if (params.skipPrompts !== 'no') {
+      let ok = skipPrompts === 'yes';
+      if (skipPrompts !== 'no') {
         ok = await renderConfirmationPrompt({
           message: 'Would you like to generate a description for the recipe?',
           defaultValue: false,
         });
       }
       if (ok) {
-        console.log('  - Asking Claude…');
+        console.log('  - Asking LLM…');
         const description = await getDescriptionFromLLM({
           llmAPIKey,
           llmModel,
@@ -155,47 +158,64 @@ export async function generateRecipe(params: {
         baseRecipe.description = description;
       }
     }
+
     if (userQueries.length === 0) {
-      let ok = params.skipPrompts === 'yes';
-      if (params.skipPrompts !== 'no') {
-        ok = await renderConfirmationPrompt({
-          message: 'Would you like to generate user queries?',
-          defaultValue: false,
-        });
-      }
-      if (ok) {
-        console.log('  - Asking Claude…');
-        const queries = await getUserQueriesFromLLM({
-          llmAPIKey,
-          llmModel,
-          llmURL,
-          recipeName,
-          baseRecipe,
-        });
-        userQueries.push(...queries);
-      }
+      await runIfPrompt({
+        skipPrompts,
+        message: 'Would you like to generate user queries?',
+        action: async () => {
+          console.log('  - Asking LLM…');
+          const queries = await getUserQueriesFromLLM({
+            llmAPIKey,
+            llmModel,
+            llmURL,
+            recipeName,
+            baseRecipe,
+          });
+          userQueries.push(...queries);
+        },
+      });
     }
 
     if (troubleshooting.length === 0) {
-      let ok = params.skipPrompts === 'yes';
-      if (params.skipPrompts !== 'no') {
-        ok = await renderConfirmationPrompt({
-          message: 'Would you like to generate troubleshooting questions?',
-          defaultValue: false,
-        });
-      }
-      if (ok) {
-        console.log('  - Asking Claude…');
-        const questions = await getTroubleshootingQuestionsFromLLM({
-          llmAPIKey,
-          llmModel,
-          llmURL,
-          recipeName,
-          baseRecipe,
-        });
-        troubleshooting.push(...questions);
-      }
+      await runIfPrompt({
+        skipPrompts,
+        message: 'Would you like to generate troubleshooting questions?',
+        action: async () => {
+          console.log('  - Asking LLM…');
+          const questions = await getTroubleshootingQuestionsFromLLM({
+            llmAPIKey,
+            llmModel,
+            llmURL,
+            recipeName,
+            baseRecipe,
+          });
+          troubleshooting.push(...questions);
+        },
+      });
     }
+
+    await runIfPrompt({
+      skipPrompts,
+      message: 'Would you like to generate step descriptions?',
+      action: async () => {
+        console.log('  - Asking LLM…');
+        for (let i = 0; i < baseRecipe.steps.length; i++) {
+          console.log(`    - ${baseRecipe.steps[i].name}…`);
+          const step = baseRecipe.steps[i];
+          if (step.type === 'PATCH') {
+            const description = await getStepDescriptionFromLLM({
+              llmAPIKey,
+              llmURL,
+              llmModel,
+              recipeName,
+              diffs: step.diffs?.map((d) => d.patchFile) ?? [],
+            });
+            baseRecipe.steps[i].description = description;
+          }
+        }
+      },
+    });
   } else {
     console.warn(
       '⚠️ No LLM integration provided, if you wish to generate user queries and troubleshooting questions, please re-run the command with the relevant parameters.',
@@ -222,6 +242,25 @@ export async function generateRecipe(params: {
   fs.writeFileSync(recipeManifestPath, data);
 
   return recipeManifestPath;
+}
+
+async function runIfPrompt(params: {
+  skipPrompts?: SkipPrompts;
+  message: string;
+  action: () => Promise<void>;
+}) {
+  const {skipPrompts, message, action} = params;
+
+  let ok = skipPrompts === 'yes';
+  if (skipPrompts !== 'no') {
+    ok = await renderConfirmationPrompt({
+      message,
+      defaultValue: false,
+    });
+  }
+  if (ok) {
+    await action();
+  }
 }
 
 async function generateSteps(params: {

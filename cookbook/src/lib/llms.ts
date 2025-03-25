@@ -481,3 +481,47 @@ ${readme.map(renderMDBlock).join('\n')}
 
   return data;
 }
+
+export async function getStepDescriptionFromLLM(params: {
+  llmAPIKey: string;
+  llmURL: string;
+  llmModel: string;
+  diffs: string[];
+  recipeName: string;
+}): Promise<string> {
+  const {llmAPIKey, llmURL, llmModel, diffs, recipeName} = params;
+
+  const descriptions: string[] = [];
+
+  const filteredDiffs = diffs.filter((diff) =>
+    diff.includes('.generated.d.ts'),
+  );
+
+  for (const diff of filteredDiffs) {
+    const patch = fs.readFileSync(
+      path.join(COOKBOOK_PATH, 'recipes', recipeName, 'patches', diff),
+      'utf8',
+    );
+
+    const response = await askLLM({
+      apiKey: llmAPIKey,
+      url: llmURL,
+      model: llmModel,
+      message: `
+  I will provide you with a file patch that represents a step to implement a feature using Shopify's Hydrogen framework.
+  Given the patch, please generate a description for the step.
+
+  The output should **ONLY** contain a description for the step and NO OTHER TEXT, and it should NOT have titles or headings. The description should also be expressed so that it can be picked up by a LLM to figure out comprehensively what the step does. It should absolutely be human-readable as well.
+
+  <patch>
+  ${patch}
+  </patch>
+  `,
+    });
+
+    const data = cleanupLLMJSONResponse(response);
+    descriptions.push(data);
+  }
+
+  return descriptions.join('\n');
+}
