@@ -1,391 +1,3 @@
----
-description: Recipe for implementing "Subscriptions (subscriptions)" in a Hydrogen storefront. This recipe enables subscription functionality in a Hydrogen-powered Shopify storefront by implementing selling plan groups and selling plan options. It allows customers to choose between one-time purchases and subscription options for products. The recipe modifies the cart and product detail pages to display subscription options, handle subscription selection, and properly process subscription orders. It updates the necessary GraphQL fragments to fetch selling plan data from the Shopify API and renders subscription options with appropriate pricing adjustments. The implementation includes a dedicated SellingPlanSelector component that displays available subscription options and their details, while also updating the cart to show selected subscription information.
-globs: templates/**/*
-alwaysApply: false
----
-
-# Overview
-
-This rule describes how to implement "Subscriptions" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
-The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
-
-If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
-
-Please remember that specific documentation about Storefront API, which might be relevant to the user, is available at <https://shopify.dev/docs/api/storefront>.
-
-If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
-
-Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
-
-# User Intent Recognition
-
-<user_queries>
-- How do I add subscription options to my Shopify Hydrogen store?
-- What are selling plan groups in Shopify?
-- How do I display subscription pricing on product pages?
-- Can customers choose between one-time purchases and subscriptions?
-- How do I implement recurring delivery options in my Hydrogen store?
-- How do selling plans work with the cart in Hydrogen?
-- How do I show subscription details in the cart?
-- What GraphQL fragments do I need for subscription functionality?
-- How do I handle price adjustments for subscription options?
-- Can I customize the appearance of subscription options?
-- How do I test if my subscription implementation is working correctly?
-- What's the difference between one-time purchase and subscription in Shopify?
-- How do I set up selling plan allocations in my Hydrogen store?
-- Can customers modify their subscription options after purchase?
-</user_queries>
-
-# Troubleshooting
-
-<troubleshooting>
-- **Issue**: Why isn't my subscription option showing up on the product page?
-  **Solution**: Make sure your product has selling plan groups configured in your Shopify admin. The subscription options will only appear if the product has at least one selling plan group associated with it. Check your product settings in the Shopify admin under 'Selling plans' to ensure subscriptions are properly set up.
-- **Issue**: The subscription price isn't calculating correctly
-  **Solution**: The subscription price calculation depends on the price adjustments defined in your selling plans. Check the `SellingPlanPrice` component to ensure it's correctly processing all types of price adjustments (fixed amount, fixed price, and percentage). Verify that your selling plan configuration in Shopify admin has the correct discount values.
-- **Issue**: Subscription information isn't showing in the cart
-  **Solution**: Check that the `CartLineItem.tsx` file has been properly updated to include the selling plan allocation information. Make sure the GraphQL fragments in `fragments.ts` include the `sellingPlanAllocation` field to fetch the necessary subscription data from the API.
-- **Issue**: I'm getting an error when selecting a subscription option
-  **Solution**: This could be due to incorrect URL handling for selling plans. Ensure that the `selectedSellingPlanId` is being properly extracted from the URL and that the `SellingPlanSelector` component is correctly passing the selected plan to the cart. Check for any console errors that might provide more details about the issue.
-- **Issue**: How do I add more subscription options to my product?
-  **Solution**: Subscription options are managed in your Shopify admin. Go to Settings > Shipping and delivery > Selling plans, and create or modify your subscription offerings there. The changes will automatically reflect in your storefront once the selling plans are associated with your products.
-- **Issue**: The 'Subscribe' button is disabled even though I selected a subscription option
-  **Solution**: The 'Subscribe' button is disabled when either the selected variant is not available for sale or when no selling plan is selected. Check that both a valid variant and a selling plan are selected. Also verify that the `disabled` condition in the `AddToCartButton` component is evaluating correctly.
-- **Issue**: My one-time purchase option disappeared after implementing subscriptions
-  **Solution**: The recipe replaces the standard variant selector with the subscription selector when selling plans are available. If you want to offer both one-time purchases and subscriptions, you'll need to modify the `ProductForm` component to include both options. Consider adding a toggle between one-time purchase and subscription modes.
-- **Issue**: The subscription discount isn't showing on the product page
-  **Solution**: Check that the `SellingPlanPrice` component is correctly rendering the discounted price. Make sure your selling plans have price adjustments configured in Shopify admin, and that the price calculation logic in the component correctly handles all types of adjustments (percentage, fixed amount, fixed price).
-- **Issue**: How do I style the subscription options differently?
-  **Solution**: The recipe includes a `selling-plan.css` file for styling subscription-related components. You can modify this file to customize the appearance of subscription options. The main styling classes are `.selling-plan-group`, `.selling-plan`, `.selected`, and `.unselected`.
-- **Issue**: Customers are confused about subscription options - how can I make them clearer?
-  **Solution**: Consider enhancing the `SellingPlanGroup` component to provide more descriptive information about each subscription option. You could add tooltips explaining the benefits of each plan, show the calculated savings more prominently, or add more descriptive labels. You might also want to add a FAQ section specifically about subscriptions.
-</troubleshooting>
-
-# Recipe Implementation
-
-Here's the subscriptions recipe for the base Hydrogen skeleton template:
-
-<recipe_implementation>
-
-## Description
-
-This recipe enables subscription functionality in a Hydrogen-powered Shopify storefront by implementing selling plan groups and selling plan options. It allows customers to choose between one-time purchases and subscription options for products. The recipe modifies the cart and product detail pages to display subscription options, handle subscription selection, and properly process subscription orders. It updates the necessary GraphQL fragments to fetch selling plan data from the Shopify API and renders subscription options with appropriate pricing adjustments. The implementation includes a dedicated SellingPlanSelector component that displays available subscription options and their details, while also updating the cart to show selected subscription information.
-
-## Ingredients
-
-- `templates/skeleton/app/components/Cart.tsx` : null
-- `templates/skeleton/app/components/SellingPlanSelector.tsx` : null
-- `templates/skeleton/app/styles/selling-plan.css` : null
-
-## Steps
-
-### 1. Copy ingredients
-
-Copy the ingredients from the template directory to the current directory.
-
-- `app/components/Cart.tsx`
-- `app/components/SellingPlanSelector.tsx`
-- `app/styles/selling-plan.css`
-
-### 2. app/components/CartLineItem.tsx
-
-This step enhances the CartLineItem component to support and display selling plan information. It extracts the sellingPlanAllocation from the cart line data and conditionally renders the selling plan name when available. The implementation includes destructuring the sellingPlanAllocation from the line object and adding a conditional rendering block that displays the selling plan name as a list item when a selling plan is associated with the cart item. The component imports are also updated to use absolute paths with the tilde prefix for better consistency. This change allows customers to see their selected subscription or delivery options directly in the cart.
-
-#### File: [`app/components/CartLineItem.tsx`](/templates/skeleton/app/components/CartLineItem.tsx)
-
-```diff
-index 26102b61..dcab4454 100644
---- a/templates/skeleton/app/components/CartLineItem.tsx
-+++ b/templates/skeleton/app/components/CartLineItem.tsx
-@@ -3,8 +3,8 @@ import type {CartLayout} from '~/components/CartMain';
- import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
- import {useVariantUrl} from '~/lib/variants';
- import {Link} from '@remix-run/react';
--import {ProductPrice} from './ProductPrice';
--import {useAside} from './Aside';
-+import {ProductPrice} from '~/components/ProductPrice';
-+import {useAside} from '~/components/Aside';
- import type {CartApiQueryFragment} from 'storefrontapi.generated';
- 
- type CartLine = OptimisticCartLine<CartApiQueryFragment>;
-@@ -20,7 +20,9 @@ export function CartLineItem({
-   layout: CartLayout;
-   line: CartLine;
- }) {
--  const {id, merchandise} = line;
-+
-+  const {id, merchandise, sellingPlanAllocation} = line;
-+
-   const {product, title, image, selectedOptions} = merchandise;
-   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
-   const {close} = useAside();
-@@ -54,6 +56,12 @@ export function CartLineItem({
-         </Link>
-         <ProductPrice price={line?.cost?.totalAmount} />
-         <ul>
-+          {
-+          {sellingPlanAllocation && (
-+            <li key={sellingPlanAllocation.sellingPlan.name}>
-+              <small>{sellingPlanAllocation.sellingPlan.name}</small>
-+            </li>
-+          )}
-           {selectedOptions.map((option) => (
-             <li key={option.name}>
-               <small>
-
-```
-
-### 3. app/lib/fragments.ts
-
-This patch extends the GraphQL fragment for cart queries in a Hydrogen Shopify application to include selling plan information. It adds a `sellingPlanAllocation` field with the selling plan's name to both the standard cart line and the componentizable cart line fragments. This enhancement allows the application to display subscription or other selling plan details (like "Subscribe and save 10%") when viewing cart items, giving users visibility into their selected purchase options.
-
-#### File: [`app/lib/fragments.ts`](/templates/skeleton/app/lib/fragments.ts)
-
-```diff
-index dc4426a9..cfe3a938 100644
---- a/templates/skeleton/app/lib/fragments.ts
-+++ b/templates/skeleton/app/lib/fragments.ts
-@@ -54,6 +54,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
-         }
-       }
-     }
-+    sellingPlanAllocation {
-+      sellingPlan {
-+         name
-+      }
-+    }
-   }
-   fragment CartLineComponent on ComponentizableCartLine {
-     id
-@@ -104,6 +109,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
-         }
-       }
-     }
-+    sellingPlanAllocation {
-+      sellingPlan {
-+         name
-+      }
-+    }
-   }
-   fragment CartApiQuery on Cart {
-     updatedAt
-
-```
-
-### 4. app/routes/_index.tsx
-
-This patch simplifies the homepage by removing the complex data fetching logic and UI components for featured collections and recommended products. The original implementation included GraphQL queries, data loading functions, and components to display product information with images and prices. The new implementation creates a minimal homepage with just a heading "Example subscription" and a link to a specific product page for "Shopify Wax" (/products/shopify-wax). All imports related to Shopify's data fetching, image rendering, and money formatting have been removed, leaving only the essential Link component from Remix. This change likely represents a step toward implementing a subscription-focused interface by stripping away the standard e-commerce homepage elements.
-
-#### File: [`app/routes/_index.tsx`](/templates/skeleton/app/routes/_index.tsx)
-
-<details>
-
-```diff
-index 9fa33642..2023c689 100644
---- a/templates/skeleton/app/routes/_index.tsx
-+++ b/templates/skeleton/app/routes/_index.tsx
-@@ -1,182 +1,12 @@
--import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
--import {Await, useLoaderData, Link, type MetaFunction} from '@remix-run/react';
--import {Suspense} from 'react';
--import {Image, Money} from '@shopify/hydrogen';
--import type {
--  FeaturedCollectionFragment,
--  RecommendedProductsQuery,
--} from 'storefrontapi.generated';
--
--export const meta: MetaFunction = () => {
--  return [{title: 'Hydrogen | Home'}];
--};
--
--export async function loader(args: LoaderFunctionArgs) {
--  // Start fetching non-critical data without blocking time to first byte
--  const deferredData = loadDeferredData(args);
--
--  // Await the critical data required to render initial state of the page
--  const criticalData = await loadCriticalData(args);
--
--  return {...deferredData, ...criticalData};
--}
--
--/**
-- * Load data necessary for rendering content above the fold. This is the critical data
-- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
-- */
--async function loadCriticalData({context}: LoaderFunctionArgs) {
--  const [{collections}] = await Promise.all([
--    context.storefront.query(FEATURED_COLLECTION_QUERY),
--    // Add other queries here, so that they are loaded in parallel
--  ]);
--
--  return {
--    featuredCollection: collections.nodes[0],
--  };
--}
--
--/**
-- * Load data for rendering content below the fold. This data is deferred and will be
-- * fetched after the initial page load. If it's unavailable, the page should still 200.
-- * Make sure to not throw any errors here, as it will cause the page to 500.
-- */
--function loadDeferredData({context}: LoaderFunctionArgs) {
--  const recommendedProducts = context.storefront
--    .query(RECOMMENDED_PRODUCTS_QUERY)
--    .catch((error) => {
--      // Log query errors, but don't throw them so the page can still render
--      console.error(error);
--      return null;
--    });
--
--  return {
--    recommendedProducts,
--  };
--}
-+import {Link} from '@remix-run/react';
- 
- export default function Homepage() {
--  const data = useLoaderData<typeof loader>();
-   return (
-     <div className="home">
--      <FeaturedCollection collection={data.featuredCollection} />
--      <RecommendedProducts products={data.recommendedProducts} />
-+      <h1>Example subscription</h1>
-+      <Link style={{textDecoration: 'underline'}} to="/products/shopify-wax">
-+        Shopify Wax
-+      </Link>
-     </div>
-   );
- }
--
--function FeaturedCollection({
--  collection,
--}: {
--  collection: FeaturedCollectionFragment;
--}) {
--  if (!collection) return null;
--  const image = collection?.image;
--  return (
--    <Link
--      className="featured-collection"
--      to={`/collections/${collection.handle}`}
--    >
--      {image && (
--        <div className="featured-collection-image">
--          <Image data={image} sizes="100vw" />
--        </div>
--      )}
--      <h1>{collection.title}</h1>
--    </Link>
--  );
--}
--
--function RecommendedProducts({
--  products,
--}: {
--  products: Promise<RecommendedProductsQuery | null>;
--}) {
--  return (
--    <div className="recommended-products">
--      <h2>Recommended Products</h2>
--      <Suspense fallback={<div>Loading...</div>}>
--        <Await resolve={products}>
--          {(response) => (
--            <div className="recommended-products-grid">
--              {response
--                ? response.products.nodes.map((product) => (
--                    <Link
--                      key={product.id}
--                      className="recommended-product"
--                      to={`/products/${product.handle}`}
--                    >
--                      <Image
--                        data={product.images.nodes[0]}
--                        aspectRatio="1/1"
--                        sizes="(min-width: 45em) 20vw, 50vw"
--                      />
--                      <h4>{product.title}</h4>
--                      <small>
--                        <Money data={product.priceRange.minVariantPrice} />
--                      </small>
--                    </Link>
--                  ))
--                : null}
--            </div>
--          )}
--        </Await>
--      </Suspense>
--      <br />
--    </div>
--  );
--}
--
--const FEATURED_COLLECTION_QUERY = `#graphql
--  fragment FeaturedCollection on Collection {
--    id
--    title
--    image {
--      id
--      url
--      altText
--      width
--      height
--    }
--    handle
--  }
--  query FeaturedCollection($country: CountryCode, $language: LanguageCode)
--    @inContext(country: $country, language: $language) {
--    collections(first: 1, sortKey: UPDATED_AT, reverse: true) {
--      nodes {
--        ...FeaturedCollection
--      }
--    }
--  }
--` as const;
--
--const RECOMMENDED_PRODUCTS_QUERY = `#graphql
--  fragment RecommendedProduct on Product {
--    id
--    title
--    handle
--    priceRange {
--      minVariantPrice {
--        amount
--        currencyCode
--      }
--    }
--    images(first: 1) {
--      nodes {
--        id
--        url
--        altText
--        width
--        height
--      }
--    }
--  }
--  query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
--    @inContext(country: $country, language: $language) {
--    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
--      nodes {
--        ...RecommendedProduct
--      }
--    }
--  }
--` as const;
-
-```
-
-</details>
-
-### 5. app/routes/products.$handle.tsx
-
-This step implements subscription functionality for products in a Hydrogen Shopify store by integrating selling plans. It adds a SellingPlanSelector component that allows customers to choose subscription options when available for a product. The implementation includes handling selling plan pricing adjustments to display the correct subscription price, managing the selected selling plan state through URL parameters, and updating the add-to-cart button to reflect subscription selection. The code adds GraphQL fragments for selling plans and selling plan groups to fetch necessary subscription data from the Storefront API. When a product has selling plans available, the UI will display subscription options instead of variant selectors, allowing customers to select subscription frequencies and see adjusted pricing before adding the product to their cart.
-
-#### File: [`app/routes/products.$handle.tsx`](/templates/skeleton/app/routes/products.$handle.tsx)
-
-<details>
-
-```diff
 index 0028b423..81c01334 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
@@ -432,7 +44,7 @@ index 0028b423..81c01334 100644
 +} from '@shopify/hydrogen/storefront-api-types';
 +import {getVariantUrl} from '~/lib/variants';
 +import {useAside} from '~/components/Aside';
-+
++// @description Import the SellingPlanSelector component and type
 +import {
 +  SellingPlanSelector,
 +  type SellingPlanGroup,
@@ -497,14 +109,14 @@ index 0028b423..81c01334 100644
      throw new Response(null, {status: 404});
    }
  
-+
++  // @description Initialize the selectedSellingPlan to null
 +  let selectedSellingPlan = null;
 +
-+
++  // @description Get the selected selling plan id from the request url
 +  const selectedSellingPlanId =
 +    new URL(request.url).searchParams.get('selling_plan') ?? null;
 +
-+
++  // @description Get the selected selling plan bsed on the selectedSellingPlanId
 +  if (selectedSellingPlanId) {
 +    const selectedSellingPlanGroup =
 +      product.sellingPlanGroups.nodes?.find((sellingPlanGroup) => {
@@ -552,7 +164,7 @@ index 0028b423..81c01334 100644
    return {
      product,
 +    variants,
-+
++    // @description Pass the selectedSellingPlan to the client
 +    selectedSellingPlan,
    };
  }
@@ -883,13 +495,13 @@ index 0028b423..81c01334 100644
 +    <div className="product-form">
 +      {sellingPlanGroups.nodes.length > 0 ? (
 +        <>
-+          {
++          {/* @description Add the SellingPlanSelector component inside the ProductForm */}
 +          <SellingPlanSelector
 +            sellingPlanGroups={sellingPlanGroups}
 +            selectedSellingPlan={selectedSellingPlan}
 +          >
 +            {({sellingPlanGroup}) => (
-+
++              /* @description Render the SellingPlanGroup component inside the SellingPlanSelector */
 +              <SellingPlanGroup
 +                key={sellingPlanGroup.name}
 +                sellingPlanGroup={sellingPlanGroup}
@@ -1011,7 +623,7 @@ index 0028b423..81c01334 100644
 +  );
 +}
 +
-+
++// @description Add the SellingPlanGroup fragment to the Product fragment
 +const SELLING_PLAN_FRAGMENT = `#graphql
 +  fragment SellingPlanMoney on MoneyV2 {
 +    amount
@@ -1063,7 +675,7 @@ index 0028b423..81c01334 100644
 + }
 +` as const;
 +
-+
++// @description Add the SellingPlanGroup fragment to the Product fragment
 +const SELLING_PLAN_GROUP_FRAGMENT = `#graphql
 +  fragment SellingPlanGroup on SellingPlanGroup {
 +    name
@@ -1164,13 +776,3 @@ index 0028b423..81c01334 100644
 +    }
 +  }
 +` as const;
-
-```
-
-</details>
-
-## Deleted Files
-
-- [`templates/skeleton/app/components/ProductForm.tsx`](templates/skeleton/app/components/ProductForm.tsx)
-
-</recipe_implementation>

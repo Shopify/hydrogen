@@ -1,83 +1,13 @@
----
-description: Recipe for implementing "Subscriptions (subscriptions)" in a Hydrogen storefront. This recipe enables subscription functionality in a Hydrogen-powered Shopify storefront by implementing selling plan groups and selling plan options. It allows customers to choose between one-time purchases and subscription options for products. The recipe modifies the cart and product detail pages to display subscription options, handle subscription selection, and properly process subscription orders. It updates the necessary GraphQL fragments to fetch selling plan data from the Shopify API and renders subscription options with appropriate pricing adjustments. The implementation includes a dedicated SellingPlanSelector component that displays available subscription options and their details, while also updating the cart to show selected subscription information.
-globs: templates/**/*
-alwaysApply: false
----
-
-# Overview
-
-This rule describes how to implement "Subscriptions" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
-The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
-
-If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
-
-Please remember that specific documentation about Storefront API, which might be relevant to the user, is available at <https://shopify.dev/docs/api/storefront>.
-
-If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
-
-Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
-
-# User Intent Recognition
-
-<user_queries>
-- How do I add subscription options to my Shopify Hydrogen store?
-- What are selling plan groups in Shopify?
-- How do I display subscription pricing on product pages?
-- Can customers choose between one-time purchases and subscriptions?
-- How do I implement recurring delivery options in my Hydrogen store?
-- How do selling plans work with the cart in Hydrogen?
-- How do I show subscription details in the cart?
-- What GraphQL fragments do I need for subscription functionality?
-- How do I handle price adjustments for subscription options?
-- Can I customize the appearance of subscription options?
-- How do I test if my subscription implementation is working correctly?
-- What's the difference between one-time purchase and subscription in Shopify?
-- How do I set up selling plan allocations in my Hydrogen store?
-- Can customers modify their subscription options after purchase?
-</user_queries>
-
-# Troubleshooting
-
-<troubleshooting>
-- **Issue**: Why isn't my subscription option showing up on the product page?
-  **Solution**: Make sure your product has selling plan groups configured in your Shopify admin. The subscription options will only appear if the product has at least one selling plan group associated with it. Check your product settings in the Shopify admin under 'Selling plans' to ensure subscriptions are properly set up.
-- **Issue**: The subscription price isn't calculating correctly
-  **Solution**: The subscription price calculation depends on the price adjustments defined in your selling plans. Check the `SellingPlanPrice` component to ensure it's correctly processing all types of price adjustments (fixed amount, fixed price, and percentage). Verify that your selling plan configuration in Shopify admin has the correct discount values.
-- **Issue**: Subscription information isn't showing in the cart
-  **Solution**: Check that the `CartLineItem.tsx` file has been properly updated to include the selling plan allocation information. Make sure the GraphQL fragments in `fragments.ts` include the `sellingPlanAllocation` field to fetch the necessary subscription data from the API.
-- **Issue**: I'm getting an error when selecting a subscription option
-  **Solution**: This could be due to incorrect URL handling for selling plans. Ensure that the `selectedSellingPlanId` is being properly extracted from the URL and that the `SellingPlanSelector` component is correctly passing the selected plan to the cart. Check for any console errors that might provide more details about the issue.
-- **Issue**: How do I add more subscription options to my product?
-  **Solution**: Subscription options are managed in your Shopify admin. Go to Settings > Shipping and delivery > Selling plans, and create or modify your subscription offerings there. The changes will automatically reflect in your storefront once the selling plans are associated with your products.
-- **Issue**: The 'Subscribe' button is disabled even though I selected a subscription option
-  **Solution**: The 'Subscribe' button is disabled when either the selected variant is not available for sale or when no selling plan is selected. Check that both a valid variant and a selling plan are selected. Also verify that the `disabled` condition in the `AddToCartButton` component is evaluating correctly.
-- **Issue**: My one-time purchase option disappeared after implementing subscriptions
-  **Solution**: The recipe replaces the standard variant selector with the subscription selector when selling plans are available. If you want to offer both one-time purchases and subscriptions, you'll need to modify the `ProductForm` component to include both options. Consider adding a toggle between one-time purchase and subscription modes.
-- **Issue**: The subscription discount isn't showing on the product page
-  **Solution**: Check that the `SellingPlanPrice` component is correctly rendering the discounted price. Make sure your selling plans have price adjustments configured in Shopify admin, and that the price calculation logic in the component correctly handles all types of adjustments (percentage, fixed amount, fixed price).
-- **Issue**: How do I style the subscription options differently?
-  **Solution**: The recipe includes a `selling-plan.css` file for styling subscription-related components. You can modify this file to customize the appearance of subscription options. The main styling classes are `.selling-plan-group`, `.selling-plan`, `.selected`, and `.unselected`.
-- **Issue**: Customers are confused about subscription options - how can I make them clearer?
-  **Solution**: Consider enhancing the `SellingPlanGroup` component to provide more descriptive information about each subscription option. You could add tooltips explaining the benefits of each plan, show the calculated savings more prominently, or add more descriptive labels. You might also want to add a FAQ section specifically about subscriptions.
-</troubleshooting>
-
-# Recipe Implementation
-
-Here's the subscriptions recipe for the base Hydrogen skeleton template:
-
-<recipe_implementation>
-
-## Description
+# 🧑‍🍳 Subscriptions
 
 This recipe enables subscription functionality in a Hydrogen-powered Shopify storefront by implementing selling plan groups and selling plan options. It allows customers to choose between one-time purchases and subscription options for products. The recipe modifies the cart and product detail pages to display subscription options, handle subscription selection, and properly process subscription orders. It updates the necessary GraphQL fragments to fetch selling plan data from the Shopify API and renders subscription options with appropriate pricing adjustments. The implementation includes a dedicated SellingPlanSelector component that displays available subscription options and their details, while also updating the cart to show selected subscription information.
 
-## Ingredients
+## 🍣 Ingredients
 
-- `templates/skeleton/app/components/Cart.tsx` : null
-- `templates/skeleton/app/components/SellingPlanSelector.tsx` : null
-- `templates/skeleton/app/styles/selling-plan.css` : null
+| File | Description |
+| --- | --- |
 
-## Steps
+## 🍱 Steps
 
 ### 1. Copy ingredients
 
@@ -1169,8 +1099,6 @@ index 0028b423..81c01334 100644
 
 </details>
 
-## Deleted Files
+## 🗑️ Deleted Files
 
 - [`templates/skeleton/app/components/ProductForm.tsx`](templates/skeleton/app/components/ProductForm.tsx)
-
-</recipe_implementation>

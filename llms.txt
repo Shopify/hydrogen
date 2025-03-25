@@ -6,7 +6,6 @@
 
 - [Hydrogen Documentation](https://shopify.dev/docs/hydrogen/getting-started/overview)
 - [Cookbook](https://github.com/Shopify/hydrogen/blob/451c72ea0f4791ab6fb5796dbbe2ad31cdc2c2e7/cookbook/README.md)
-- [Recipe: subscriptions](https://github.com/Shopify/hydrogen/blob/451c72ea0f4791ab6fb5796dbbe2ad31cdc2c2e7/cookbook/recipes/subscriptions/README.md)
 
 ### Storefront API
 
