@@ -24,11 +24,28 @@ export function AddressActions({ activeAddress }: AddressActionsProps) {
     newDialogRef.current?.close();
   };
 
+  console.log({ activeAddress })
+
+  const { address, selected, id } = activeAddress || {}
+
   return (
     <>
-      <div style={{ display: 'flex', gap: '.25rem', marginLeft: '.5rem' }}>
+      <div style={{ display: 'flex', gap: '.25rem', marginTop: '.5rem' }}>
         {activeAddress && (
           <>
+            {!selected &&
+              <CartForm
+                route='/cart'
+                action={CartForm.ACTIONS.DeliveryAddressesUpdate}
+                inputs={{ id, selected: 'on' }}
+              >
+                {() => {
+                  return (
+                    <button type="submit">SELECT</button>
+                  )
+                }}
+              </CartForm>
+            }
             <button onClick={openEditAddressModal}>EDIT</button>
             <CartForm
               route='/cart'
@@ -41,6 +58,7 @@ export function AddressActions({ activeAddress }: AddressActionsProps) {
                 )
               }}
             </CartForm>
+
             <span> | </span>
           </>
         )}
@@ -136,7 +154,7 @@ function NewAddressModal({
           return (
             <>
               <FormFields />
-              <button type="submit">Add</button>
+              <button onClick={onClose} type="submit">Add</button>
             </>
           )
         }}

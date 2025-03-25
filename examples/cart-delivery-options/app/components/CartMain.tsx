@@ -33,14 +33,17 @@ export function CartMain({ layout, cart: originalCart }: CartMainProps) {
       <CartEmpty hidden={linesCount} layout={layout} />
       <div className="cart-details">
         <div aria-labelledby="cart-lines">
-          <p>Test</p>
           <ul>
             {(cart?.lines?.nodes ?? []).map((line) => (
               <CartLineItem key={line.id} line={line} layout={layout} />
             ))}
           </ul>
         </div>
-        {cartHasItems && <CartSummary cart={cart} layout={layout} />}
+        {cartHasItems && (
+          <>
+            <CartSummary cart={cart} layout={layout} />
+          </>
+        )}
       </div>
     </div>
   );

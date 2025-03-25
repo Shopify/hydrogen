@@ -83,7 +83,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
       break;
     }
     case CartForm.ACTIONS.DeliveryAddressesUpdate: {
-      console.log('DeliveryAddressesUpdate inputs.addresses', inputs)
+      console.log('DeliveryAddressesUpdate inputs', inputs)
       const { formatted, formartedArea, name, id, selected, oneTimeUse, ...deliveryAddress } = inputs
       const updatedDeliveryAddresses = [{
         id,

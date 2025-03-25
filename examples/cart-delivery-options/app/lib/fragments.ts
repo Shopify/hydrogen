@@ -181,10 +181,7 @@ export const CART_QUERY_FRAGMENT = `#graphql
     # /***********************************************/
     # /**********  EXAMPLE UPDATE STARTS  ************/
     delivery {
-      selectedAddress: addresses(selected: true) {
-        ...CartAddress
-      }
-      addresses(selected: false) {
+      addresses {
         ...CartAddress
       }
     }
