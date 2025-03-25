@@ -493,8 +493,8 @@ export async function getStepDescriptionFromLLM(params: {
 
   const descriptions: string[] = [];
 
-  const filteredDiffs = diffs.filter((diff) =>
-    diff.includes('.generated.d.ts'),
+  const filteredDiffs = diffs.filter(
+    (diff) => !diff.includes('.generated.d.ts'),
   );
 
   for (const diff of filteredDiffs) {

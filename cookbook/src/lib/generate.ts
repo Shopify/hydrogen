@@ -211,7 +211,9 @@ export async function generateRecipe(params: {
               recipeName,
               diffs: step.diffs?.map((d) => d.patchFile) ?? [],
             });
-            baseRecipe.steps[i].description = description;
+            if (description.trim().length > 0) {
+              baseRecipe.steps[i].description = description;
+            }
           }
         }
       },
