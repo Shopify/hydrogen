@@ -1,0 +1,179 @@
+{
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "The title of the recipe"
+    },
+    "description": {
+      "type": "string",
+      "description": "The description of the recipe"
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The notes of the recipe"
+    },
+    "image": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The image of the recipe"
+    },
+    "ingredients": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The path of the ingredient"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The description of the ingredient"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      },
+      "description": "The ingredients of the recipe"
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "PATCH",
+              "INFO",
+              "COPY_INGREDIENTS"
+            ],
+            "description": "The type of step"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the step"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The description of the step"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The notes of the step"
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The ingredients of the step"
+          },
+          "diffs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "description": "The file of the diff"
+                },
+                "patchFile": {
+                  "type": "string",
+                  "description": "The patch file of the diff"
+                }
+              },
+              "required": [
+                "file",
+                "patchFile"
+              ],
+              "additionalProperties": false
+            },
+            "description": "The diffs of the step"
+          }
+        },
+        "required": [
+          "type",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "description": "The steps of the recipe"
+    },
+    "deletedFiles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The deleted files of the recipe"
+    },
+    "commit": {
+      "type": "string",
+      "description": "The commit hash the recipe is based on"
+    },
+    "llms": {
+      "type": "object",
+      "properties": {
+        "userQueries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The user queries of the recipe",
+          "default": []
+        },
+        "troubleshooting": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "issue": {
+                "type": "string",
+                "description": "The issue of the troubleshooting"
+              },
+              "solution": {
+                "type": "string",
+                "description": "The solution of the troubleshooting"
+              }
+            },
+            "required": [
+              "issue",
+              "solution"
+            ],
+            "additionalProperties": false
+          },
+          "description": "The troubleshooting of the recipe",
+          "default": []
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
+    }
+  },
+  "required": [
+    "title",
+    "description",
+    "ingredients",
+    "steps",
+    "commit"
+  ],
+  "additionalProperties": false,
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

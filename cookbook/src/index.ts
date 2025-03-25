@@ -11,6 +11,7 @@ const cli = yargs(process.argv.slice(2))
   .command(commands.validate)
   .command(commands.regenerate)
   .command(commands.update)
-  .command(commands.llms);
+  .command(commands.llms)
+  .command(commands.schema);
 
 cli.showHelpOnFail(true).demandCommand().help().argv;

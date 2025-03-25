@@ -3,6 +3,7 @@ import {createHash} from 'crypto';
 import fs from 'fs';
 import inquirer from 'inquirer';
 import path from 'path';
+import YAML from 'yaml';
 import {
   COOKBOOK_PATH,
   REPO_ROOT,
@@ -11,7 +12,7 @@ import {
 } from './constants';
 import {
   Ingredient,
-  parseRecipeFromString,
+  loadRecipe,
   Recipe,
   RecipeWithoutLLMs,
   Step,
@@ -23,6 +24,7 @@ import {
   isInGitHistory,
   parseGitStatus,
   parseReferenceBranch,
+  RecipeManifestFormat,
   recreateDirectory,
   separator,
   SkipPrompts,
@@ -47,6 +49,7 @@ export async function generateRecipe(params: {
   llmURL?: string;
   llmModel?: string;
   skipPrompts?: SkipPrompts;
+  recipeManifestFormat: RecipeManifestFormat;
 }): Promise<string> {
   const {
     recipeName,
@@ -55,6 +58,7 @@ export async function generateRecipe(params: {
     llmAPIKey,
     llmURL,
     llmModel,
+    recipeManifestFormat,
   } = params;
 
   console.log('📖 Generating recipe');
@@ -64,8 +68,7 @@ export async function generateRecipe(params: {
   createDirectoryIfNotExists(recipeDirPath);
 
   // load the existing recipe if it exists
-  const existingRecipePath = path.join(recipeDirPath, 'recipe.json');
-  const existingRecipe = maybeLoadExistingRecipe(existingRecipePath);
+  const existingRecipe = maybeLoadExistingRecipe(recipeDirPath);
 
   // clean up the ingredients directory
   const ingredientsDirPath = path.join(recipeDirPath, 'ingredients');
@@ -204,13 +207,21 @@ export async function generateRecipe(params: {
     llms: {userQueries, troubleshooting},
   };
 
-  // Write the recipe to recipe.json
-  const recipeJSONPath = path.join(recipeDirPath, 'recipe.json');
-  fs.writeFileSync(recipeJSONPath, JSON.stringify(recipe, null, 2));
+  // Write the recipe manifest
+  const recipeManifestPath =
+    recipeManifestFormat === 'json'
+      ? path.join(recipeDirPath, 'recipe.json')
+      : path.join(recipeDirPath, 'recipe.yaml');
 
-  // TODO llms.txt
+  const data =
+    recipeManifestFormat === 'json'
+      ? JSON.stringify(recipe, null, 2)
+      : `# yaml-language-server: $schema=../../recipe.schema.json\n\n` +
+        YAML.stringify(recipe);
 
-  return recipeJSONPath;
+  fs.writeFileSync(recipeManifestPath, data);
+
+  return recipeManifestPath;
 }
 
 async function generateSteps(params: {
@@ -327,12 +338,8 @@ async function generateSteps(params: {
 }
 
 function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
-  if (!fs.existsSync(recipePath)) {
-    return null;
-  }
-
   try {
-    return parseRecipeFromString(fs.readFileSync(recipePath, 'utf8'));
+    return loadRecipe({directory: recipePath});
   } catch (error) {
     console.warn(`❌ Failed to load existing recipe from ${recipePath}`);
     return null;

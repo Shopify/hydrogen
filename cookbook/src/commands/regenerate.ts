@@ -4,7 +4,12 @@ import {applyRecipe} from '../lib/apply';
 import {FILES_TO_IGNORE_FOR_GENERATE, TEMPLATE_PATH} from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
 import {isRenderFormat, RENDER_FORMATS, renderRecipe} from '../lib/render';
-import {listRecipes, SkipPrompts, separator} from '../lib/util';
+import {
+  listRecipes,
+  SkipPrompts,
+  separator,
+  RecipeManifestFormat,
+} from '../lib/util';
 import {generateLLMsFiles as generateLLMsDocs} from '../lib/llms';
 type RegenerateArgs = {
   recipe?: string;
@@ -15,6 +20,7 @@ type RegenerateArgs = {
   llmAPIKey?: string;
   llmURL?: string;
   llmModel?: string;
+  recipeManifestFormat: RecipeManifestFormat;
 };
 
 export const regenerate: CommandModule<{}, RegenerateArgs> = {
@@ -29,7 +35,7 @@ export const regenerate: CommandModule<{}, RegenerateArgs> = {
     onlyFiles: {
       type: 'boolean',
       description:
-        'Only generate the files for the recipe, not the recipe.json file.',
+        'Only generate the files for the recipe, not the recipe.yaml file.',
     },
     format: {
       type: 'string',
@@ -58,6 +64,11 @@ export const regenerate: CommandModule<{}, RegenerateArgs> = {
       type: 'string',
       description: 'The model for the LLM to use',
     },
+    recipeManifestFormat: {
+      type: 'string',
+      description: 'The format of the recipe manifest file',
+      default: 'yaml',
+    },
   },
   handler,
 };
@@ -77,8 +88,6 @@ async function handler(args: RegenerateArgs) {
     throw `Invalid format: ${format}`;
   }
 
-  console.log(args.llmAPIKey);
-
   for await (const recipe of recipes) {
     console.log(`🔄 Regenerating recipe '${recipe}'`);
     // apply the recipe
@@ -95,6 +104,7 @@ async function handler(args: RegenerateArgs) {
       llmAPIKey: args.llmAPIKey,
       llmURL: args.llmURL,
       llmModel: args.llmModel,
+      recipeManifestFormat: args.recipeManifestFormat,
     });
     // render the recipe
     renderRecipe({

@@ -16,7 +16,7 @@ import {
 } from './markdown';
 import {makeReadmeBlocks, renderStep} from './render';
 import {
-  parseRecipeFromString,
+  loadRecipe,
   Recipe,
   RecipeWithoutLLMs,
   Troubleshooting,
@@ -247,12 +247,9 @@ export function generateLLMsFiles(recipeName?: string) {
   console.log('Generating recipe cursor rules…');
   for (const recipeName of recipes) {
     console.log(`- ${recipeName}`);
-    const recipe = parseRecipeFromString(
-      fs.readFileSync(
-        path.join(COOKBOOK_PATH, `recipes/${recipeName}/recipe.json`),
-        'utf8',
-      ),
-    );
+    const recipe = loadRecipe({
+      directory: path.join(COOKBOOK_PATH, 'recipes', recipeName),
+    });
 
     const blocks = renderRecipeRuleBlocks(recipeName, recipe, 'templates/**/*');
 

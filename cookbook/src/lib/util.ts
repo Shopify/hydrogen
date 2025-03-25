@@ -226,3 +226,5 @@ export function getPatchesDir(recipeName: string): string {
 }
 
 export type SkipPrompts = 'yes' | 'no';
+
+export type RecipeManifestFormat = 'json' | 'yaml';

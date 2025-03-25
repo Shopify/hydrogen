@@ -20,7 +20,7 @@ import {
   mdTable,
   serializeMDBlocksToFile,
 } from './markdown';
-import {Ingredient, parseRecipeFromString, Recipe, Step} from './recipe';
+import {Ingredient, loadRecipe, Recipe, Step} from './recipe';
 import {assertNever, getPatchesDir} from './util';
 
 // The number of lines to collapse a diff into a details block
@@ -50,11 +50,8 @@ export function renderRecipe(params: {
 
   const recipeDir = path.join(COOKBOOK_PATH, 'recipes', recipeName);
 
-  // Read and parse the recipe from the recipe.json file
-  const recipePath = path.join(recipeDir, 'recipe.json');
-  const recipe: Recipe = parseRecipeFromString(
-    fs.readFileSync(recipePath, 'utf8'),
-  );
+  // Read and parse the recipe from the recipe manifest file
+  const recipe: Recipe = loadRecipe({directory: recipeDir});
 
   // Write the markdown file to the current directory as README.md
   serializeMDBlocksToFile(

@@ -5,3 +5,4 @@ export {render} from './render';
 export {update} from './update';
 export {validate} from './validate';
 export {llms} from './llms';
+export {schema} from './schema';

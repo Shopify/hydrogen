@@ -1,7 +1,7 @@
 import {CommandModule} from 'yargs';
 import {FILES_TO_IGNORE_FOR_GENERATE} from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
-import {SkipPrompts} from '../lib/util';
+import {RecipeManifestFormat, SkipPrompts} from '../lib/util';
 
 type GenerateArgs = {
   recipe: string;
@@ -11,6 +11,7 @@ type GenerateArgs = {
   llmURL?: string;
   llmModel?: string;
   skipPrompts?: SkipPrompts;
+  recipeManifestFormat: RecipeManifestFormat;
 };
 
 export const generate: CommandModule<{}, GenerateArgs> = {
@@ -25,7 +26,7 @@ export const generate: CommandModule<{}, GenerateArgs> = {
     onlyFiles: {
       type: 'boolean',
       description:
-        'Only generate the files for the recipe, not the recipe.json file.',
+        'Only generate the files for the recipe, not the recipe.yaml file.',
     },
     referenceBranch: {
       type: 'string',
@@ -48,6 +49,11 @@ export const generate: CommandModule<{}, GenerateArgs> = {
       type: 'string',
       description: 'Skip all prompts with "yes" answers',
     },
+    recipeManifestFormat: {
+      type: 'string',
+      description: 'The format of the recipe manifest file',
+      default: 'yaml',
+    },
   },
   handler,
 };
@@ -62,6 +68,7 @@ async function handler(args: GenerateArgs) {
     llmURL: args.llmURL,
     llmModel: args.llmModel,
     skipPrompts: args.skipPrompts,
+    recipeManifestFormat: args.recipeManifestFormat,
   });
 
   console.log();
