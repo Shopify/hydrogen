@@ -3,6 +3,110 @@
   "version": "1",
   "releases": [
     {
+      "title": "Remix routeConfig support, Remix and Vite updates.",
+      "version": "2025.2.0",
+      "hash": "",
+      "commit": "",
+      "pr": "",
+      "dependencies": {
+        "@remix-run/react": "^2.16.1",
+        "@remix-run/server-runtime": "^2.16.1",
+        "@shopify/hydrogen": "2025.2.0",
+        "@shopify/remix-oxygen": "^2.0.10"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.16.1",
+        "@shopify/cli": "3.75.3",
+        "@shopify/mini-oxygen": "^3.1.1"
+      },
+      "dependenciesMeta": {
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/react": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@remix-run/dev": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/remix-oxygen": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Upgrades Remix to 2.16.1-pre.2 and Vite to 6.2.0.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2784",
+          "id": "2784"
+        },
+        {
+          "title": "Add description and provenance for codegen package.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2801",
+          "id": "2801"
+        },
+        {
+          "title": "Updated various smaller dependencies.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2786",
+          "id": "2786"
+        },
+        {
+          "title": "Removed unnecessary call to `exchangeAccessToken`.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2788",
+          "id": "2788"
+        },
+        {
+          "title": "Fix skeleton template's Typescript.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2787",
+          "id": "2787"
+        }
+      ],
+      "features": [
+        {
+          "title": "Add support for `v3_routeConfig` future flag.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2722",
+          "id": "2722",
+          "docs": "https://remix.run/docs/en/main/start/future-flags#v3_routeconfig",
+          "desc": "",
+          "steps": [
+            {
+              "title": "In your `vite.config.ts`, enable the future flag.",
+              "code": "cmVtaXgoewogIGZ1dHVyZTogewogICAgdjNfcm91dGVDb25maWc6IHRydWUsCiAgfSwKfSk7Cg=="
+            },
+            {
+              "title": "Install `@remix-run/route-config`.",
+              "code": "bnBtIGluc3RhbGwgLUQgQHJlbWl4LXJ1bi9yb3V0ZS1jb25maWc="
+            },
+            {
+              "title": "Add an `app/routes.ts` file without any configured routes.",
+              "code": "aW1wb3J0IHR5cGUgeyBSb3V0ZUNvbmZpZyB9IGZyb20gIkByZW1peC1ydW4vcm91dGUtY29uZmlnIjsKCmV4cG9ydCBkZWZhdWx0IFtdIHNhdGlzZmllcyBSb3V0ZUNvbmZpZzs="
+            },
+            {
+              "title": "Install `@remix-run/fs-routes`.",
+              "code": "bnBtIGluc3RhbGwgLUQgQHJlbWl4LXJ1bi9mcy1yb3V0ZXM="
+            },
+            {
+              "title": "Incorporate `@remix-run/fs-routes` into your `routes.ts`.",
+              "code": "aW1wb3J0IHsgZmxhdFJvdXRlcyB9IGZyb20gIkByZW1peC1ydW4vZnMtcm91dGVzIjsKCmV4cG9ydCBkZWZhdWx0IGZsYXRSb3V0ZXMoKTs="
+            },
+            {
+              "title": "If you used the `routes` config option, add `@remix-run/routes-option-adapter` and use it in `routes.ts`.",
+              "code": "bnBtIGluc3RhbGwgLUQgQHJlbWl4LXJ1bi9yb3V0ZXMtb3B0aW9uLWFkYXB0ZXI="
+            }
+          ]
+        }
+      ]
+    },
+
+
+
+
+    {
       "title": "Shopify CLI update",
       "version": "2025.1.2",
       "hash": "ea72e2417483fce0baeb68ac84a7e0b35c36b1ce",
