@@ -163,19 +163,15 @@ export function renderStep(
       const patchFile = path.join(patchesDir, diff.patchFile);
       const patch = fs.readFileSync(patchFile, 'utf8');
 
-      // remove @description comments from the rendered patch
-      const renderedPatch = patch.replace(/[\/# *]*\s+@description.*/g, '');
-
       const collapsed =
-        format === 'github' &&
-        renderedPatch.split('\n').length > COLLAPSE_DIFF_LINES;
+        format === 'github' && patch.split('\n').length > COLLAPSE_DIFF_LINES;
 
       return [
         mdHeading(
           4,
           `File: [\`${diff.file}\`](/templates/skeleton/${diff.file})`,
         ),
-        mdCode('diff', renderedPatch, collapsed),
+        mdCode('diff', patch, collapsed),
       ];
     });
   }

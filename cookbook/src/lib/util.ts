@@ -5,55 +5,6 @@ import os from 'os';
 import path from 'path';
 import {COOKBOOK_PATH, REPO_ROOT, TEMPLATE_PATH} from './constants';
 
-/**
- * Get the description of a step.
- * @param file - The file to get the description from.
- * @param type - The type of step to get the description from.
- * @returns The description of the step or null if the description is not found or it's empty.
- */
-export function getStepDescription(
-  file: string,
-  type: 'patch' | 'ingredient',
-): string | null {
-  const content = fs.readFileSync(file, 'utf-8');
-  // if the description is not found or it's empty, return null. If there are multiple descriptions, concatenate them with a period. There can be multiple @description tags in the file.
-  // if the type is patch, the description must be found on a line that is either new or has been modified (so it starts with a +)
-  function getMatch(): string[] | null {
-    switch (type) {
-      case 'patch':
-        return content.trim().match(/\+.+@description\s+(.*)/g);
-      case 'ingredient':
-        return content.trim().match(/.+@description\s+(.*)/g);
-      default:
-        assertNever(type);
-    }
-  }
-  const match = getMatch();
-  if (!match) {
-    return null;
-  }
-
-  // Concatenate the descriptions so they look like a single description. If the description ends with a period, don't add another period.
-  const lines = match.map(
-    (m) =>
-      m
-        .replace(/.+@description\s+/, '')
-        .replace(/\*\/\s*\}?$/, '') // remove trailing `*/`
-        .trim()
-        .replace(/\.*$/, '') + '.',
-  );
-
-  if (lines.length === 0) {
-    return null;
-  }
-
-  if (lines.length > 1) {
-    return lines.map((line) => `- ${line}`).join('\n');
-  }
-
-  return lines[0];
-}
-
 export function createDirectoryIfNotExists(dir: string) {
   try {
     fs.mkdirSync(dir, {recursive: true});

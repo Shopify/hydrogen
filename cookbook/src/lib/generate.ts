@@ -20,13 +20,11 @@ import {
 import {
   createDirectoryIfNotExists,
   getMainCommitHash,
-  getStepDescription,
   isInGitHistory,
   parseGitStatus,
   parseReferenceBranch,
   RecipeManifestFormat,
   recreateDirectory,
-  separator,
   SkipPrompts,
 } from './util';
 import {
@@ -98,10 +96,7 @@ export async function generateRecipe(params: {
 
     return {
       path: file,
-      description:
-        getStepDescription(path.join(REPO_ROOT, file), 'ingredient') ??
-        existingDescription ??
-        null,
+      description: existingDescription ?? null,
     };
   });
 
@@ -281,17 +276,10 @@ async function generateSteps(params: {
   });
 
   for await (const file of modifiedFiles) {
-    const {fullPath, patchFilePath, patchFilename} = createPatchFile({
+    const {fullPath, patchFilename} = createPatchFile({
       file,
       patchesDirPath: params.patchesDirPath,
     });
-
-    const inFileDescription = getStepDescription(patchFilePath, 'patch');
-
-    let description =
-      inFileDescription != null && inFileDescription.trim() != ''
-        ? inFileDescription
-        : null;
 
     const existingStep = params.existingRecipe?.steps.find(
       (step) =>
@@ -303,44 +291,10 @@ async function generateSteps(params: {
     // Try to find the existing description for the step which has _only_ this file as a diff patch.
     const existingDescription = existingStep?.description ?? null;
 
-    // if the existing description is found, ask the user which one to keep
-    if (existingDescription != null && existingDescription !== description) {
-      console.log(separator());
-      console.log('Existing description:');
-      console.log();
-      console.log(existingDescription);
-      console.log(separator());
-      console.log('New description:');
-      console.log();
-      console.log(description);
-      console.log(separator());
-      const answer = await inquirer.prompt([
-        {
-          type: 'list',
-          name: 'description',
-          message: `The step "${file.replace(
-            TEMPLATE_DIRECTORY,
-            '',
-          )}" has an existing description. Which one do you want to keep?`,
-          choices: [
-            {
-              name: 'Existing description',
-              value: existingDescription,
-            },
-            {
-              name: 'New description',
-              value: description,
-            },
-          ],
-        },
-      ]);
-      description = answer.description;
-    }
-
     const step: Step = {
       type: 'PATCH',
       name: existingStep?.name ?? file.replace(TEMPLATE_DIRECTORY, ''),
-      description: description ?? existingDescription ?? null,
+      description: existingDescription ?? null,
       diffs: [
         {
           file: fullPath.replace(TEMPLATE_PATH, ''),
@@ -380,7 +334,6 @@ function copyIngredientsStep(ingredients: Ingredient[]): Step {
 
 function createPatchFile(params: {file: string; patchesDirPath: string}): {
   fullPath: string;
-  patchFilePath: string;
   patchFilename: string;
 } {
   const {file, patchesDirPath} = params;
@@ -397,7 +350,7 @@ function createPatchFile(params: {file: string; patchesDirPath: string}): {
   const patchFilename = `${path.basename(fullPath)}.${sha.slice(0, 6)}.patch`;
   const patchFilePath = path.join(patchesDirPath, patchFilename);
   fs.writeFileSync(patchFilePath, changes);
-  return {fullPath, patchFilePath, patchFilename};
+  return {fullPath, patchFilename};
 }
 
 async function renderConfirmationPrompt(arg0: {
