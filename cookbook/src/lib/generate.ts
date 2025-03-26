@@ -382,7 +382,6 @@ function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
   try {
     return loadRecipe({directory: recipePath});
   } catch (error) {
-    console.warn(`❌ Failed to load existing recipe from ${recipePath}`);
     return null;
   }
 }

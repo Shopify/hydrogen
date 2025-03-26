@@ -216,9 +216,12 @@ export function listRecipes(): string[] {
 }
 
 export function isInGitHistory(params: {path: string}): boolean {
-  const status = execSync(`git log ${params.path} | wc -l`);
-  const count = parseInt(status.toString().trim());
-  return count > 0;
+  try {
+    execSync(`git ls-files --error-unmatch ${params.path}`);
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 export function getPatchesDir(recipeName: string): string {
