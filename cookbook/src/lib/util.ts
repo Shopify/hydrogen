@@ -170,7 +170,10 @@ export function listRecipes(): string[] {
       return file.isDirectory();
     })
     .filter((file) => {
-      return fs.existsSync(path.join(recipesFolder, file.name, 'recipe.json'));
+      return (
+        fs.existsSync(path.join(recipesFolder, file.name, 'recipe.yaml')) ||
+        fs.existsSync(path.join(recipesFolder, file.name, 'recipe.json'))
+      );
     })
     .map((file) => file.name);
 }

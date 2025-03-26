@@ -122,7 +122,7 @@ The component now: - Extracts subscription details (sellingPlanAllocation) from 
 #### File: [`app/components/CartLineItem.tsx`](/templates/skeleton/app/components/CartLineItem.tsx)
 
 ```diff
-index 26102b61..dcab4454 100644
+index 26102b61..4ec8324b 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
 @@ -3,8 +3,8 @@ import type {CartLayout} from '~/components/CartMain';
@@ -141,7 +141,7 @@ index 26102b61..dcab4454 100644
    line: CartLine;
  }) {
 -  const {id, merchandise} = line;
-+
++  // Get the selling plan allocation
 +  const {id, merchandise, sellingPlanAllocation} = line;
 +
    const {product, title, image, selectedOptions} = merchandise;
@@ -151,7 +151,7 @@ index 26102b61..dcab4454 100644
          </Link>
          <ProductPrice price={line?.cost?.totalAmount} />
          <ul>
-+          {
++          {/* Optionally render the selling plan name if available */}
 +          {sellingPlanAllocation && (
 +            <li key={sellingPlanAllocation.sellingPlan.name}>
 +              <small>{sellingPlanAllocation.sellingPlan.name}</small>
@@ -416,7 +416,7 @@ Adds SellingPlanSelector component to display subscription options on product pa
 <details>
 
 ```diff
-index 0028b423..81c01334 100644
+index 0028b423..bbcc9784 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,46 +1,53 @@
@@ -462,7 +462,7 @@ index 0028b423..81c01334 100644
 +} from '@shopify/hydrogen/storefront-api-types';
 +import {getVariantUrl} from '~/lib/variants';
 +import {useAside} from '~/components/Aside';
-+
++// Import the SellingPlanSelector component and type
 +import {
 +  SellingPlanSelector,
 +  type SellingPlanGroup,
@@ -527,14 +527,14 @@ index 0028b423..81c01334 100644
      throw new Response(null, {status: 404});
    }
  
-+
++  // Initialize the selectedSellingPlan to null
 +  let selectedSellingPlan = null;
 +
-+
++  // Get the selected selling plan id from the request url
 +  const selectedSellingPlanId =
 +    new URL(request.url).searchParams.get('selling_plan') ?? null;
 +
-+
++  // Get the selected selling plan bsed on the selectedSellingPlanId
 +  if (selectedSellingPlanId) {
 +    const selectedSellingPlanGroup =
 +      product.sellingPlanGroups.nodes?.find((sellingPlanGroup) => {
@@ -582,7 +582,7 @@ index 0028b423..81c01334 100644
    return {
      product,
 +    variants,
-+
++    // Pass the selectedSellingPlan to the client
 +    selectedSellingPlan,
    };
  }
@@ -913,13 +913,13 @@ index 0028b423..81c01334 100644
 +    <div className="product-form">
 +      {sellingPlanGroups.nodes.length > 0 ? (
 +        <>
-+          {
++          {/* Add the SellingPlanSelector component inside the ProductForm */}
 +          <SellingPlanSelector
 +            sellingPlanGroups={sellingPlanGroups}
 +            selectedSellingPlan={selectedSellingPlan}
 +          >
 +            {({sellingPlanGroup}) => (
-+
++              /* Render the SellingPlanGroup component inside the SellingPlanSelector */
 +              <SellingPlanGroup
 +                key={sellingPlanGroup.name}
 +                sellingPlanGroup={sellingPlanGroup}
@@ -1041,7 +1041,7 @@ index 0028b423..81c01334 100644
 +  );
 +}
 +
-+
++// Add the SellingPlanGroup fragment to the Product fragment
 +const SELLING_PLAN_FRAGMENT = `#graphql
 +  fragment SellingPlanMoney on MoneyV2 {
 +    amount
@@ -1093,7 +1093,7 @@ index 0028b423..81c01334 100644
 + }
 +` as const;
 +
-+
++// Add the SellingPlanGroup fragment to the Product fragment
 +const SELLING_PLAN_GROUP_FRAGMENT = `#graphql
 +  fragment SellingPlanGroup on SellingPlanGroup {
 +    name
