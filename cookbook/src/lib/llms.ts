@@ -510,7 +510,7 @@ export async function getStepDescriptionFromLLM(params: {
   Given the patch, please generate a description for the step.
 
   The output should **ONLY** contain a description for the step and NO OTHER TEXT, and it should NOT have titles or headings. The description should also be expressed so that it can be picked up by a LLM to figure out comprehensively what the step does. It should absolutely be human-readable as well.
-
+  Please keep the descriptions concise, up to 50 words.
   <patch>
   ${patch}
   </patch>
