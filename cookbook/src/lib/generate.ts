@@ -139,30 +139,28 @@ export async function generateRecipe(params: {
     console.log('- 🤖 LLMs integration…');
 
     if (baseRecipe.description === '') {
-      let ok = skipPrompts === 'yes';
-      if (skipPrompts !== 'no') {
-        ok = await renderConfirmationPrompt({
-          message: 'Would you like to generate a description for the recipe?',
-          defaultValue: false,
-        });
-      }
-      if (ok) {
-        console.log('  - Asking LLM…');
-        const description = await getDescriptionFromLLM({
-          llmAPIKey,
-          llmModel,
-          llmURL,
-          recipeName,
-          baseRecipe,
-        });
-        baseRecipe.description = description;
-      }
+      await runIfPrompt({
+        skipPrompts,
+        message: 'Would you like to generate a description for the recipe?',
+        action: async () => {
+          console.log('  - Asking LLM…');
+          const description = await getDescriptionFromLLM({
+            llmAPIKey,
+            llmModel,
+            llmURL,
+            recipeName,
+            baseRecipe,
+          });
+          baseRecipe.description = description;
+        },
+      });
     }
 
     if (userQueries.length === 0) {
       await runIfPrompt({
         skipPrompts,
-        message: 'Would you like to generate user queries?',
+        message:
+          'Would you like to generate a list of user questions that this recipe might help with?',
         action: async () => {
           console.log('  - Asking LLM…');
           const queries = await getUserQueriesFromLLM({
@@ -180,7 +178,8 @@ export async function generateRecipe(params: {
     if (troubleshooting.length === 0) {
       await runIfPrompt({
         skipPrompts,
-        message: 'Would you like to generate troubleshooting questions?',
+        message:
+          'Would you like to generate FAQs that this recipe might help with?',
         action: async () => {
           console.log('  - Asking LLM…');
           const questions = await getTroubleshootingQuestionsFromLLM({
@@ -197,7 +196,7 @@ export async function generateRecipe(params: {
 
     await runIfPrompt({
       skipPrompts,
-      message: 'Would you like to generate step descriptions?',
+      message: 'Would you like to generate descriptions for the steps?',
       action: async () => {
         console.log('  - Asking LLM…');
         for (let i = 0; i < baseRecipe.steps.length; i++) {
