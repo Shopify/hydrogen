@@ -113,21 +113,23 @@ export function makeReadmeBlocks(
 }
 
 function makeIngredients(ingredients: Ingredient[]): MDBlock[] {
+  if (ingredients.length === 0) {
+    return [];
+  }
+
   return [
     mdHeading(2, '🍣 Ingredients'),
     mdTable(
       ['File', 'Description'],
-      ingredients
-        .filter((ingredient) => ingredient.description != null)
-        .map((ingredient): string[] => {
-          return [
-            `[\`${ingredient.path.replace(
-              TEMPLATE_DIRECTORY,
-              '',
-            )}\`](ingredients/${ingredient.path})`,
-            ingredient.description ?? '',
-          ];
-        }),
+      ingredients.map((ingredient): string[] => {
+        return [
+          `[\`${ingredient.path.replace(
+            TEMPLATE_DIRECTORY,
+            '',
+          )}\`](ingredients/${ingredient.path})`,
+          ingredient.description ?? '',
+        ];
+      }),
     ),
   ];
 }

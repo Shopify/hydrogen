@@ -14,6 +14,9 @@ With this recipe, merchants can offer flexible purchasing options while maintain
 
 | File | Description |
 | --- | --- |
+| [`app/components/Cart.tsx`](ingredients/templates/skeleton/app/components/Cart.tsx) |  |
+| [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) |  |
+| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) |  |
 
 ## 🍱 Steps
 
