@@ -4,7 +4,7 @@
   "releases": [
     {
       "title": "Remix routeConfig support, Remix and Vite updates.",
-      "version": "2025.2.0",
+      "version": "2025.1.3",
       "hash": "",
       "commit": "",
       "pr": "",
@@ -75,37 +75,25 @@
           "desc": "",
           "steps": [
             {
-              "title": "In your `vite.config.ts`, enable the future flag.",
-              "code": "cmVtaXgoewogIGZ1dHVyZTogewogICAgdjNfcm91dGVDb25maWc6IHRydWUsCiAgfSwKfSk7Cg=="
+              "title": "Update your `vite.config.ts`.",
+              "code": "ZXhwb3J0IGRlZmF1bHQgZGVmaW5lQ29uZmlnKHsKIHBsdWdpbnM6IFsKICAgaHlkcm9nZW4oKSwKICAgb3h5Z2VuKCksCiAgIHJlbWl4KHsKICAgICBwcmVzZXRzOiBbaHlkcm9nZW4udjNwcmVzZXQoKV0sICAvLyBVcGRhdGUgdGhpcyB0byBoeWRyb2dlbi52M3ByZXNldCgpCiAgICAgZnV0dXJlOiB7CiAgICAgICB2M19mZXRjaGVyUGVyc2lzdDogdHJ1ZSwKICAgICAgIHYzX3JlbGF0aXZlU3BsYXRQYXRoOiB0cnVlLAogICAgICAgdjNfdGhyb3dBYm9ydFJlYXNvbjogdHJ1ZSwKICAgICAgIHYzX2xhenlSb3V0ZURpc2NvdmVyeTogdHJ1ZSwKICAgICAgIHYzX3NpbmdsZUZldGNoOiB0cnVlLAogICAgICAgdjNfcm91dGVDb25maWc6IHRydWUsIC8vIGFkZCB0aGlzIGZsYWcKICAgICB9LAogICB9KSwKICAgdHNjb25maWdQYXRocygpLAogXSw="
             },
             {
-              "title": "Install `@remix-run/route-config`.",
-              "code": "bnBtIGluc3RhbGwgLUQgQHJlbWl4LXJ1bi9yb3V0ZS1jb25maWc="
+              "title": "Update your `package.json` and install the new packages. Make sure to match the Remix version along with other Remix npm packages and ensure the versions are 2.16.1 or above.",
+              "code": "ImRldkRlcGVuZGVuY2llcyI6IHsKICAuLi4KICAiQHJlbWl4LXJ1bi9mcy1yb3V0ZXMiOiAiXjIuMTYuMSIsCiAgIkByZW1peC1ydW4vcm91dGUtY29uZmlnIjogIl4yLjE2LjEiLA=="
             },
             {
-              "title": "Add an `app/routes.ts` file without any configured routes.",
-              "code": "aW1wb3J0IHR5cGUgeyBSb3V0ZUNvbmZpZyB9IGZyb20gIkByZW1peC1ydW4vcm91dGUtY29uZmlnIjsKCmV4cG9ydCBkZWZhdWx0IFtdIHNhdGlzZmllcyBSb3V0ZUNvbmZpZzs="
+              "title": "Move the `Layout` component export from `root.tsx` into its own file. Make sure to supply an `<Outlet>` so Remix knows where to inject your route content.",
+              "code": "Ly8gL2FwcC9sYXlvdXQudHN4CmltcG9ydCB7T3V0bGV0fSBmcm9tICdAcmVtaXgtcnVuL3JlYWN0JzsKCmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIExheW91dCgpIHsKIGNvbnN0IG5vbmNlID0gdXNlTm9uY2UoKTsKIGNvbnN0IGRhdGEgPSB1c2VSb3V0ZUxvYWRlckRhdGE8Um9vdExvYWRlcj4oJ3Jvb3QnKTsKCiByZXR1cm4gKAogICA8aHRtbCBsYW5nPSJlbiI+CiAgICAgLi4uCiAgICAgPE91dGxldCAvPgogICAgIC4uLgogICA8L2h0bWw+CiApOwp9CgovLyBSZW1lbWJlciB0byByZW1vdmUgdGhlIExheW91dCBleHBvcnQgZnJvbSB5b3VyIHJvb3QudHN4Cg=="
             },
             {
-              "title": "Install `@remix-run/fs-routes`.",
-              "code": "bnBtIGluc3RhbGwgLUQgQHJlbWl4LXJ1bi9mcy1yb3V0ZXM="
-            },
-            {
-              "title": "Incorporate `@remix-run/fs-routes` into your `routes.ts`.",
-              "code": "aW1wb3J0IHsgZmxhdFJvdXRlcyB9IGZyb20gIkByZW1peC1ydW4vZnMtcm91dGVzIjsKCmV4cG9ydCBkZWZhdWx0IGZsYXRSb3V0ZXMoKTs="
-            },
-            {
-              "title": "If you used the `routes` config option, add `@remix-run/routes-option-adapter` and use it in `routes.ts`.",
-              "code": "bnBtIGluc3RhbGwgLUQgQHJlbWl4LXJ1bi9yb3V0ZXMtb3B0aW9uLWFkYXB0ZXI="
+              "title": "Add a `routes.ts` file. This is your new Remix route configuration file.",
+              "code": "aW1wb3J0IHtmbGF0Um91dGVzfSBmcm9tICdAcmVtaXgtcnVuL2ZzLXJvdXRlcyc7CmltcG9ydCB7bGF5b3V0LCB0eXBlIFJvdXRlQ29uZmlnfSBmcm9tICdAcmVtaXgtcnVuL3JvdXRlLWNvbmZpZyc7CmltcG9ydCB7aHlkcm9nZW5Sb3V0ZXN9IGZyb20gJ0BzaG9waWZ5L2h5ZHJvZ2VuJzsKCmV4cG9ydCBkZWZhdWx0IGh5ZHJvZ2VuUm91dGVzKFsKIC8vIFlvdXIgZW50aXJlIGFwcCByZWFkaW5nIGZyb20gcm91dGVzIGZvbGRlciB1c2luZyBMYXlvdXQgZnJvbSBsYXlvdXQudHN4CiBsYXlvdXQoJy4vbGF5b3V0LnRzeCcsIChhd2FpdCBmbGF0Um91dGVzKCkpKSwKXSkgc2F0aXNmaWVzIFJvdXRlQ29uZmlnOw=="
             }
           ]
         }
       ]
     },
-
-
-
-
     {
       "title": "Shopify CLI update",
       "version": "2025.1.2",
