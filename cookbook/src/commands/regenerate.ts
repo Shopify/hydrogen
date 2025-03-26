@@ -40,8 +40,8 @@ export const regenerate: CommandModule<{}, RegenerateArgs> = {
     format: {
       type: 'string',
       description: 'The format to render the recipe in',
-      required: true,
       choices: RENDER_FORMATS,
+      default: 'github',
     },
     referenceBranch: {
       type: 'string',

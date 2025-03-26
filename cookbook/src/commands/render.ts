@@ -18,8 +18,8 @@ export const render: CommandModule<{}, RenderArgs> = {
     format: {
       type: 'string',
       description: 'The format to render the recipe in',
-      required: true,
       choices: RENDER_FORMATS,
+      default: 'github',
     },
   },
   handler,
