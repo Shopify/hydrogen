@@ -194,3 +194,26 @@ export function getPatchesDir(recipeName: string): string {
 export type SkipPrompts = 'yes' | 'no';
 
 export type RecipeManifestFormat = 'json' | 'yaml';
+
+export async function retry<T>(
+  fn: () => Promise<T>,
+  options: {
+    retries: number;
+    retryDelay: number;
+  },
+): Promise<T> {
+  const {retries, retryDelay} = options;
+  try {
+    return await fn();
+  } catch (error) {
+    console.error(error);
+    // wait for a bit before retrying
+    await new Promise((resolve) => setTimeout(resolve, retryDelay));
+    if (retries > 0) {
+      console.log(`Retrying… (${retries} retries left)`);
+      return retry(fn, {retries: retries - 1, retryDelay});
+    }
+    console.error('Too many retries');
+    throw error;
+  }
+}

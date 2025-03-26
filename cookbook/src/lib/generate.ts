@@ -195,9 +195,9 @@ export async function generateRecipe(params: {
       action: async () => {
         console.log('  - Asking LLM…');
         for (let i = 0; i < baseRecipe.steps.length; i++) {
-          console.log(`    - ${baseRecipe.steps[i].name}…`);
           const step = baseRecipe.steps[i];
           if (step.type === 'PATCH') {
+            console.log(`    - Generating for step ${i + 1}: ${step.name}…`);
             const description = await getStepDescriptionFromLLM({
               llmAPIKey,
               llmURL,

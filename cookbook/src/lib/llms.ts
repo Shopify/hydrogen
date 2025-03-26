@@ -1,7 +1,12 @@
 import fs from 'fs';
 import path from 'path';
 import {COOKBOOK_PATH, REPO_ROOT} from './constants';
-import {createDirectoryIfNotExists, getPatchesDir, listRecipes} from './util';
+import {
+  createDirectoryIfNotExists,
+  getPatchesDir,
+  listRecipes,
+  retry,
+} from './util';
 import {
   maybeMDBlock,
   MDBlock,
@@ -325,17 +330,18 @@ export async function getUserQueriesFromLLM(params: {
   recipeName: string;
   baseRecipe: RecipeWithoutLLMs;
 }): Promise<string[]> {
-  const {llmAPIKey, llmURL, llmModel, recipeName, baseRecipe} = params;
-  const readme = makeReadmeBlocks(
-    recipeName,
-    {...baseRecipe, llms: {userQueries: [], troubleshooting: []}},
-    'github',
-  );
-  const response = await askLLM({
-    apiKey: llmAPIKey,
-    url: llmURL,
-    model: llmModel,
-    message: `
+  async function run() {
+    const {llmAPIKey, llmURL, llmModel, recipeName, baseRecipe} = params;
+    const readme = makeReadmeBlocks(
+      recipeName,
+      {...baseRecipe, llms: {userQueries: [], troubleshooting: []}},
+      'github',
+    );
+    const response = await askLLM({
+      apiKey: llmAPIKey,
+      url: llmURL,
+      model: llmModel,
+      message: `
 I will provide you with a recipe that describes a series of steps to implement a feature using Shopify's Hydrogen framework.
 Given the recipe, please generate a list of user queries that a customer might ask about the recipe.
 Only produce queries that are relevant to the recipe's topic; however if a user query is specific to components introduced in the recipe, then it should not be included.
@@ -348,25 +354,28 @@ The output should **ONLY** contain the JSON object and NO OTHER TEXT.
 ${readme.map(renderMDBlock).join('\n')}
 </recipe_data>
 `,
-  });
+    });
 
-  if (
-    response.choices.length !== 1 ||
-    response.choices[0].message.content == null
-  ) {
-    throw new Error('No response from LLM');
+    if (
+      response.choices.length !== 1 ||
+      response.choices[0].message.content == null
+    ) {
+      throw new Error('No response from LLM');
+    }
+
+    const data = cleanupLLMJSONResponse(response);
+
+    const queries = JSON.parse(data);
+    if (
+      !Array.isArray(queries) ||
+      queries.some((query) => typeof query !== 'string')
+    ) {
+      throw new Error('LLM returned a non-strings-array response');
+    }
+    return queries;
   }
 
-  const data = cleanupLLMJSONResponse(response);
-
-  const queries = JSON.parse(data);
-  if (
-    !Array.isArray(queries) ||
-    queries.some((query) => typeof query !== 'string')
-  ) {
-    throw new Error('LLM returned a non-strings-array response');
-  }
-  return queries;
+  return retry(run, {retries: 3, retryDelay: 1000});
 }
 
 export async function getTroubleshootingQuestionsFromLLM(params: {
@@ -376,18 +385,19 @@ export async function getTroubleshootingQuestionsFromLLM(params: {
   recipeName: string;
   baseRecipe: RecipeWithoutLLMs;
 }): Promise<Troubleshooting[]> {
-  const {llmAPIKey, llmURL, llmModel, recipeName, baseRecipe} = params;
-  const readme = makeReadmeBlocks(
-    recipeName,
-    {...baseRecipe, llms: {userQueries: [], troubleshooting: []}},
-    'github',
-  );
+  async function run() {
+    const {llmAPIKey, llmURL, llmModel, recipeName, baseRecipe} = params;
+    const readme = makeReadmeBlocks(
+      recipeName,
+      {...baseRecipe, llms: {userQueries: [], troubleshooting: []}},
+      'github',
+    );
 
-  const response = await askLLM({
-    apiKey: llmAPIKey,
-    url: llmURL,
-    model: llmModel,
-    message: `
+    const response = await askLLM({
+      apiKey: llmAPIKey,
+      url: llmURL,
+      model: llmModel,
+      message: `
 I will provide you with a recipe that describes a series of steps to implement a feature using Shopify's Hydrogen framework.
 Given the recipe, please generate a list of troubleshooting questions that a customer might ask about the recipe.
 Only produce queries that are relevant to the recipe's topic; however if a user query is specific to components introduced in the recipe, then it should not be included.
@@ -407,28 +417,31 @@ The output should **ONLY** contain the JSON object and NO OTHER TEXT.
 ${readme.map(renderMDBlock).join('\n')}
 </recipe_data>
 `,
-  });
+    });
 
-  if (
-    response.choices.length !== 1 ||
-    response.choices[0].message.content == null
-  ) {
-    throw new Error('No response from LLM');
+    if (
+      response.choices.length !== 1 ||
+      response.choices[0].message.content == null
+    ) {
+      throw new Error('No response from LLM');
+    }
+
+    const data = cleanupLLMJSONResponse(response);
+
+    const troubleshootingSteps = JSON.parse(data);
+    if (
+      !Array.isArray(troubleshootingSteps) ||
+      troubleshootingSteps.some(
+        (question) => !TroubleshootingSchema.safeParse(question).success,
+      )
+    ) {
+      throw new Error('LLM returned an invalid response');
+    }
+
+    return troubleshootingSteps;
   }
 
-  const data = cleanupLLMJSONResponse(response);
-
-  const troubleshootingSteps = JSON.parse(data);
-  if (
-    !Array.isArray(troubleshootingSteps) ||
-    troubleshootingSteps.some(
-      (question) => !TroubleshootingSchema.safeParse(question).success,
-    )
-  ) {
-    throw new Error('LLM returned an invalid response');
-  }
-
-  return troubleshootingSteps;
+  return retry(run, {retries: 3, retryDelay: 1000});
 }
 
 function cleanupLLMJSONResponse(response: LLMResponse) {
@@ -445,18 +458,19 @@ export async function getDescriptionFromLLM(params: {
   recipeName: string;
   baseRecipe: RecipeWithoutLLMs;
 }): Promise<string> {
-  const {llmAPIKey, llmURL, llmModel, recipeName, baseRecipe} = params;
-  const readme = makeReadmeBlocks(
-    recipeName,
-    {...baseRecipe, llms: {userQueries: [], troubleshooting: []}},
-    'github',
-  );
+  async function run() {
+    const {llmAPIKey, llmURL, llmModel, recipeName, baseRecipe} = params;
+    const readme = makeReadmeBlocks(
+      recipeName,
+      {...baseRecipe, llms: {userQueries: [], troubleshooting: []}},
+      'github',
+    );
 
-  const response = await askLLM({
-    apiKey: llmAPIKey,
-    url: llmURL,
-    model: llmModel,
-    message: `
+    const response = await askLLM({
+      apiKey: llmAPIKey,
+      url: llmURL,
+      model: llmModel,
+      message: `
 I will provide you with a recipe that describes a series of steps to implement a feature using Shopify's Hydrogen framework.
 Given the recipe and what it does in the context of the Hydrogen framework, please generate a description for the recipe.
 
@@ -468,18 +482,21 @@ The output should **ONLY** contain description for the recipe and NO OTHER TEXT,
 ${readme.map(renderMDBlock).join('\n')}
 </recipe_data>
 `,
-  });
+    });
 
-  if (
-    response.choices.length !== 1 ||
-    response.choices[0].message.content == null
-  ) {
-    throw new Error('No response from LLM');
+    if (
+      response.choices.length !== 1 ||
+      response.choices[0].message.content == null
+    ) {
+      throw new Error('No response from LLM');
+    }
+
+    const data = cleanupLLMJSONResponse(response);
+
+    return data;
   }
 
-  const data = cleanupLLMJSONResponse(response);
-
-  return data;
+  return retry(run, {retries: 3, retryDelay: 1000});
 }
 
 export async function getStepDescriptionFromLLM(params: {
@@ -489,23 +506,24 @@ export async function getStepDescriptionFromLLM(params: {
   diffs: string[];
   recipeName: string;
 }): Promise<string> {
-  const {llmAPIKey, llmURL, llmModel, diffs, recipeName} = params;
+  async function run() {
+    const {llmAPIKey, llmURL, llmModel, diffs, recipeName} = params;
 
-  const descriptions: string[] = [];
+    const descriptions: string[] = [];
 
-  const filteredDiffs = diffs.filter((diff) => !diff.includes('.d.ts'));
+    const filteredDiffs = diffs.filter((diff) => !diff.includes('.d.ts'));
 
-  for (const diff of filteredDiffs) {
-    const patch = fs.readFileSync(
-      path.join(COOKBOOK_PATH, 'recipes', recipeName, 'patches', diff),
-      'utf8',
-    );
+    for (const diff of filteredDiffs) {
+      const patch = fs.readFileSync(
+        path.join(COOKBOOK_PATH, 'recipes', recipeName, 'patches', diff),
+        'utf8',
+      );
 
-    const response = await askLLM({
-      apiKey: llmAPIKey,
-      url: llmURL,
-      model: llmModel,
-      message: `
+      const response = await askLLM({
+        apiKey: llmAPIKey,
+        url: llmURL,
+        model: llmModel,
+        message: `
   I will provide you with a file patch that represents a step to implement a feature using Shopify's Hydrogen framework.
   Given the patch, please generate a description for the step.
 
@@ -515,11 +533,14 @@ export async function getStepDescriptionFromLLM(params: {
   ${patch}
   </patch>
   `,
-    });
+      });
 
-    const data = cleanupLLMJSONResponse(response);
-    descriptions.push(data);
+      const data = cleanupLLMJSONResponse(response);
+      descriptions.push(data);
+    }
+
+    return descriptions.join('\n');
   }
 
-  return descriptions.join('\n');
+  return retry(run, {retries: 3, retryDelay: 1000});
 }
