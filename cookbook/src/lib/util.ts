@@ -95,13 +95,14 @@ export function parseGitStatus(params: {filenamesToIgnore: string[]}): {
   let newFiles: string[] = [];
   let deletedFiles: string[] = [];
 
+  let filesWithUnknownStatuses: string[] = [];
+
   for (const line of status.toString().split('\n')) {
     const tokens = line.trim().split(/\s+/, 2);
     if (tokens.length < 2) {
       continue;
     }
     const [status, file] = tokens;
-
     if (params.filenamesToIgnore.includes(path.basename(file))) {
       continue;
     }
@@ -137,9 +138,17 @@ export function parseGitStatus(params: {filenamesToIgnore: string[]}): {
           newFiles.push(file);
           break;
         default:
-          console.warn('unknown git status symbol', status);
+          filesWithUnknownStatuses.push(file);
       }
     }
+  }
+
+  if (filesWithUnknownStatuses.length > 0) {
+    // unique statuses
+    console.warn(
+      '⚠️ All files in the template directory must not be staged for commit. Please review the following files and stage them manually:',
+    );
+    console.warn(filesWithUnknownStatuses.map((f) => `- ${f}`).join('\n'));
   }
 
   return {modifiedFiles, newFiles, deletedFiles};
