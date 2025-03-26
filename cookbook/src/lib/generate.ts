@@ -276,12 +276,13 @@ async function generateSteps(params: {
 
   let patchSteps: Step[] = [];
 
-  const modifiedFiles = params.modifiedFiles.filter(
-    (file) => !file.endsWith('.generated.d.ts'),
-  );
+  const modifiedFiles = params.modifiedFiles.filter((file) => {
+    // ignore generated types files
+    return !file.endsWith('.d.ts');
+  });
 
   for await (const file of modifiedFiles) {
-    const {fullPath, patchFilePath, patchFilename} = getPatchfile({
+    const {fullPath, patchFilePath, patchFilename} = createPatchFile({
       file,
       patchesDirPath: params.patchesDirPath,
     });
@@ -351,31 +352,13 @@ async function generateSteps(params: {
     patchSteps.push(step);
   }
 
-  // generate the codegen step, if there are any generated types files
-  const generatedTypesFiles = params.modifiedFiles.filter((file) =>
-    file.endsWith('.generated.d.ts'),
-  );
-  const maybeCodegenStep: Step[] =
-    generatedTypesFiles.length > 0
-      ? [
-          codegenStep({
-            generatedTypesFiles,
-            patchesDirPath: params.patchesDirPath,
-          }),
-        ]
-      : [];
   // add the copy ingredients step if there are ingredients
   const maybeCopyIngredientsStep: Step[] =
     params.ingredients.length > 0
       ? [copyIngredientsStep(params.ingredients)]
       : [];
 
-  return [
-    ...existingInfoSteps,
-    ...maybeCopyIngredientsStep,
-    ...patchSteps,
-    ...maybeCodegenStep,
-  ];
+  return [...existingInfoSteps, ...maybeCopyIngredientsStep, ...patchSteps];
 }
 
 function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
@@ -396,28 +379,11 @@ function copyIngredientsStep(ingredients: Ingredient[]): Step {
   };
 }
 
-function codegenStep(params: {
-  generatedTypesFiles: string[];
-  patchesDirPath: string;
-}): Step {
-  const {generatedTypesFiles, patchesDirPath} = params;
-  return {
-    type: 'PATCH',
-    name: 'Codegen',
-    diffs: generatedTypesFiles.map((file) => {
-      const {fullPath, patchFilename} = getPatchfile({
-        file,
-        patchesDirPath,
-      });
-      return {
-        file: fullPath.replace(TEMPLATE_PATH, ''),
-        patchFile: patchFilename,
-      };
-    }),
-  };
-}
-
-function getPatchfile(params: {file: string; patchesDirPath: string}) {
+function createPatchFile(params: {file: string; patchesDirPath: string}): {
+  fullPath: string;
+  patchFilePath: string;
+  patchFilename: string;
+} {
   const {file, patchesDirPath} = params;
   const fullPath = path.join(REPO_ROOT, file);
 
