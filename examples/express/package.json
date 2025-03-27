@@ -29,7 +29,7 @@
     "@remix-run/dev": "^2.16.1",
     "@remix-run/fs-routes": "^2.16.1",
     "@remix-run/route-config": "^2.16.1",
-    "@shopify/cli": "~3.75.4",
+    "@shopify/cli": "~3.77.0",
     "@types/compression": "^1.7.2",
     "@types/express": "^4.17.17",
     "@types/morgan": "^1.9.4",

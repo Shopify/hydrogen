@@ -32,7 +32,7 @@
     "@remix-run/dev": "^2.16.1",
     "@remix-run/fs-routes": "^2.16.1",
     "@remix-run/route-config": "^2.16.1",
-    "@shopify/cli": "~3.75.4",
+    "@shopify/cli": "~3.77.0",
     "@shopify/hydrogen-codegen": "^0.3.2",
     "@shopify/mini-oxygen": "^3.1.1",
     "@shopify/oxygen-workers-types": "^4.1.6",
