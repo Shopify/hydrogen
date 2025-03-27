@@ -1,5 +1,70 @@
 # @shopify/cli-hydrogen
 
+## 9.0.9
+
+### Patch Changes
+
+- Bump Remix to 2.16.1 and vite to 6.2.0 ([#2784](https://github.com/Shopify/hydrogen/pull/2784)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updates `@shopify/cli-kit`, `@shopify/cli` and `@shopify/plugin-cloudflare` to `3.77.0`. ([#2810](https://github.com/Shopify/hydrogen/pull/2810)) by [@seanparsons](https://github.com/seanparsons)
+
+- Support for the Remix future flag `v3_routeConfig`. ([#2722](https://github.com/Shopify/hydrogen/pull/2722)) by [@seanparsons](https://github.com/seanparsons)
+
+  Please refer to the Remix documentation for more details on `v3_routeConfig` future flag: [https://remix.run/docs/en/main/start/future-flags#v3_routeconfig](https://remix.run/docs/en/main/start/future-flags#v3_routeconfig)
+
+  1. Add the following npm package dev dependencies:
+
+     ```diff
+       "devDependencies": {
+         "@remix-run/dev": "^2.16.1",
+     +    "@remix-run/fs-routes": "^2.16.1",
+     +    "@remix-run/route-config": "^2.16.1",
+     ```
+
+  1. If you have `export function Layout` in your `root.tsx`, move this export into its own file. For example:
+
+     ```ts
+     // /app/layout.tsx
+     export default function Layout() {
+       const nonce = useNonce();
+       const data = useRouteLoaderData<RootLoader>('root');
+
+       return (
+         <html lang="en">
+         ...
+       );
+     }
+     ```
+
+  1. Create a `routes.ts` file.
+
+     ```ts
+     import { flatRoutes } from "@remix-run/fs-routes";
+     import { layout, type RouteConfig } from "@remix-run/route-config";
+     import { hydrogenRoutes } from "@shopify/hydrogen";
+
+     export default hydrogenRoutes([
+       // Your entire app reading from routes folder using Layout from layout.tsx
+       layout("./layout.tsx", await flatRoutes()),
+     ]) satisfies RouteConfig;
+     ```
+
+  1. Update your `vite.config.ts`.
+
+     ```diff
+     export default defineConfig({
+       plugins: [
+         hydrogen(),
+         oxygen(),
+         remix({
+     -      presets: [hydrogen.preset()],
+     +      presets: [hydrogen.v3preset()],
+     ```
+
+- Updated dependencies [[`07cc4aaf`](https://github.com/Shopify/hydrogen/commit/07cc4aaf1fa7ce95e695f7ebd5913d504ea47af9), [`0425e50d`](https://github.com/Shopify/hydrogen/commit/0425e50dafe2f42326cba67076e5fcea2905e885), [`64a8ef2f`](https://github.com/Shopify/hydrogen/commit/64a8ef2f2f9f822f302b3ebccb9d5d8affc40953)]:
+  - @shopify/hydrogen-codegen@0.3.3
+  - @shopify/mini-oxygen@3.1.2
+
 ## 9.0.8
 
 ### Patch Changes
@@ -363,10 +428,10 @@
 - This is an important fix to a bug with 404 routes and path-based i18n projects where some unknown routes would not properly render a 404. This fixes all new projects, but to fix existing projects, add a `($locale).tsx` route with the following contents: ([#1732](https://github.com/Shopify/hydrogen/pull/1732)) by [@blittle](https://github.com/blittle)
 
   ```ts
-  import {type LoaderFunctionArgs} from '@remix-run/server-runtime';
+  import { type LoaderFunctionArgs } from "@remix-run/server-runtime";
 
-  export async function loader({params, context}: LoaderFunctionArgs) {
-    const {language, country} = context.storefront.i18n;
+  export async function loader({ params, context }: LoaderFunctionArgs) {
+    const { language, country } = context.storefront.i18n;
 
     if (
       params.locale &&
@@ -374,7 +439,7 @@
     ) {
       // If the locale URL param is defined, yet we still are still at the default locale
       // then the the locale param must be invalid, send to the 404 page
-      throw new Response(null, {status: 404});
+      throw new Response(null, { status: 404 });
     }
 
     return null;
@@ -973,17 +1038,17 @@ Shopify CLI now gives you [more options](https://shopify.dev/docs/custom-storefr
   **Optional**: you can tune the codegen configuration by providing a `<root>/codegen.ts` file (or specify a different path with the `--codegen-config-path` flag) with the following content:
 
   ```ts
-  import type {CodegenConfig} from '@graphql-codegen/cli';
-  import {preset, pluckConfig, schema} from '@shopify/hydrogen-codegen';
+  import type { CodegenConfig } from "@graphql-codegen/cli";
+  import { preset, pluckConfig, schema } from "@shopify/hydrogen-codegen";
 
   export default <CodegenConfig>{
     overwrite: true,
     pluckConfig,
     generates: {
-      ['storefrontapi.generated.d.ts']: {
+      ["storefrontapi.generated.d.ts"]: {
         preset,
         schema,
-        documents: ['*.{ts,tsx}', 'app/**/*.{ts,tsx}'],
+        documents: ["*.{ts,tsx}", "app/**/*.{ts,tsx}"],
       },
     },
   };

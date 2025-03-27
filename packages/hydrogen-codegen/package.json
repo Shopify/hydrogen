@@ -5,7 +5,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "0.3.2",
+  "version": "0.3.3",
   "license": "MIT",
   "type": "module",
   "main": "dist/cjs/index.cjs",

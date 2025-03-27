@@ -1,5 +1,13 @@
 # @shopify/hydrogen-codegen
 
+## 0.3.3
+
+### Patch Changes
+
+- Bump body-parser, codegen, semver, and ws packages ([#2776](https://github.com/Shopify/hydrogen/pull/2776)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Add description and provenance ([#2801](https://github.com/Shopify/hydrogen/pull/2801)) by [@blittle](https://github.com/blittle)
+
 ## 0.3.2
 
 ### Patch Changes
@@ -48,17 +56,17 @@
   If you're using the `graphql-codegen` CLI directly, you can either run it as a Node loader with `node -r @shopify/hydrogen-codegen/patch node_modules/.bin/graphql-codegen` or import it in your `codegen.ts` file before anything else:
 
   ```js
-  import '@shopify/hydrogen-codegen/patch';
-  import {preset, schema, pluckConfig} from '@shopify/hydrogen-codegen';
+  import "@shopify/hydrogen-codegen/patch";
+  import { preset, schema, pluckConfig } from "@shopify/hydrogen-codegen";
 
   export default {
     overwrite: true,
     pluckConfig,
     generates: {
-      'storefrontapi.generated.d.ts': {
+      "storefrontapi.generated.d.ts": {
         preset,
         schema,
-        documents: ['...'],
+        documents: ["..."],
       },
     },
   };

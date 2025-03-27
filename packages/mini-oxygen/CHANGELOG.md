@@ -1,5 +1,13 @@
 # @shopify/mini-oxygen
 
+## 3.1.2
+
+### Patch Changes
+
+- Bump body-parser, codegen, semver, and ws packages ([#2776](https://github.com/Shopify/hydrogen/pull/2776)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Bump Remix to 2.16.1 and vite to 6.2.0 ([#2784](https://github.com/Shopify/hydrogen/pull/2784)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 3.1.1
 
 ### Patch Changes
@@ -75,12 +83,12 @@
   Example usage:
 
   ```js
-  import {createMiniOxygen} from '@shopify/mini-oxygen';
+  import { createMiniOxygen } from "@shopify/mini-oxygen";
 
   const miniOxygen = createMiniOxygen({
     workers: [
       {
-        name: 'main',
+        name: "main",
         modules: true,
         script: `export default {
           async fetch() {
@@ -92,7 +100,7 @@
     ],
   });
 
-  const response = await miniOxygen.dispatchFetch('http://placeholder');
+  const response = await miniOxygen.dispatchFetch("http://placeholder");
   console.log(await response.text());
 
   await miniOxygen.dispose();
