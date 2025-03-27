@@ -49,11 +49,7 @@ steps:
   - type: PATCH
     name: app/components/CartLineItem.tsx
     description: >
-      This step updates the CartLineItem component to show subscription
-      information when a customer adds a subscription product to their cart.
-
-      The component now: - Extracts subscription details (sellingPlanAllocation)
-      from cart line data - Displays the subscription plan name when available
+      CartLineItem now displays subscription plan names when customers add subscription products to their cart.
     diffs:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.8e657b.patch
@@ -62,19 +58,16 @@ steps:
     description: >
       # Add Selling Plan Data to Cart Queries
 
-      Updates GraphQL cart fragments to include selling plan information. Adds
-      the `sellingPlanAllocation` field with plan names to all cart line
-      fragments, enabling the display of subscription details (like "Subscribe
-      and save 10%") directly in the cart.
+      Updates cart GraphQL fragments to include subscription plan names, enabling e.g "Subscribe and save" messaging
+      in the applicable cart lines
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.e8eb04.patch
   - type: PATCH
     name: app/routes/_index.tsx
     description:
-      Removes collection and product components from homepage. Replaces
-      with single heading and link to subscription product example
-      `/products/shopify-wax`.
+      Replaces the base home page with single heading and link to a demonstration subscription
+      product at `/products/shopify-wax`.
     diffs:
       - file: app/routes/_index.tsx
         patchFile: _index.tsx.8041d5.patch
@@ -84,7 +77,7 @@ steps:
       Adds SellingPlanSelector component to display subscription options
       on product pages. Handles pricing adjustments, maintains selection state
       via URL parameters, and updates add-to-cart functionality. Fetches
-      subscription data through new GraphQL fragments.
+      subscription data through the updated cart GraphQL fragments.
     diffs:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.3e0b7e.patch

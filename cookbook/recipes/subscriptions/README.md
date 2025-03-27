@@ -40,8 +40,7 @@ Copy the ingredients from the template directory to the current directory.
 
 ### 3. app/components/CartLineItem.tsx
 
-This step updates the CartLineItem component to show subscription information when a customer adds a subscription product to their cart.
-The component now: - Extracts subscription details (sellingPlanAllocation) from cart line data - Displays the subscription plan name when available
+CartLineItem now displays subscription plan names when customers add subscription products to their cart.
 
 
 #### File: [`app/components/CartLineItem.tsx`](/templates/skeleton/app/components/CartLineItem.tsx)
@@ -91,7 +90,7 @@ index 26102b61..4ec8324b 100644
 ### 4. app/lib/fragments.ts
 
 # Add Selling Plan Data to Cart Queries
-Updates GraphQL cart fragments to include selling plan information. Adds the `sellingPlanAllocation` field with plan names to all cart line fragments, enabling the display of subscription details (like "Subscribe and save 10%") directly in the cart.
+Updates cart GraphQL fragments to include subscription plan names, enabling e.g "Subscribe and save" messaging in the applicable cart lines
 
 
 #### File: [`app/lib/fragments.ts`](/templates/skeleton/app/lib/fragments.ts)
@@ -129,7 +128,7 @@ index dc4426a9..cfe3a938 100644
 
 ### 5. app/routes/_index.tsx
 
-Removes collection and product components from homepage. Replaces with single heading and link to subscription product example `/products/shopify-wax`.
+Replaces the base home page with single heading and link to a demonstration subscription product at `/products/shopify-wax`.
 
 #### File: [`app/routes/_index.tsx`](/templates/skeleton/app/routes/_index.tsx)
 
@@ -334,7 +333,7 @@ index 9fa33642..2023c689 100644
 
 ### 6. app/routes/products.$handle.tsx
 
-Adds SellingPlanSelector component to display subscription options on product pages. Handles pricing adjustments, maintains selection state via URL parameters, and updates add-to-cart functionality. Fetches subscription data through new GraphQL fragments.
+Adds SellingPlanSelector component to display subscription options on product pages. Handles pricing adjustments, maintains selection state via URL parameters, and updates add-to-cart functionality. Fetches subscription data through the updated cart GraphQL fragments.
 
 #### File: [`app/routes/products.$handle.tsx`](/templates/skeleton/app/routes/products.$handle.tsx)
 
