@@ -22,7 +22,10 @@ function getVirtualRoutesPath(
   }, basePath);
 
   // Getting rid of the drive path (ie. '/C:/') in windows
-  return new URL(forFile, virtualRoutesPath).pathname.replace(/^\/[a-zA-Z]:\//, '/');
+  return new URL(forFile, virtualRoutesPath).pathname.replace(
+    /^\/[a-zA-Z]:\//,
+    '/',
+  );
 }
 
 export async function getVirtualRoutesV3() {
