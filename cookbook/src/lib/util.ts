@@ -191,8 +191,6 @@ export function getPatchesDir(recipeName: string): string {
   return path.join(COOKBOOK_PATH, 'recipes', recipeName, 'patches');
 }
 
-export type SkipPrompts = 'yes' | 'no';
-
 export type RecipeManifestFormat = 'json' | 'yaml';
 
 export async function retry<T>(

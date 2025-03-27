@@ -1,16 +1,12 @@
 import {CommandModule} from 'yargs';
 import {FILES_TO_IGNORE_FOR_GENERATE} from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
-import {RecipeManifestFormat, SkipPrompts} from '../lib/util';
+import {RecipeManifestFormat} from '../lib/util';
 
 type GenerateArgs = {
   recipe: string;
   onlyFiles: boolean;
   referenceBranch: string;
-  llmAPIKey?: string;
-  llmURL?: string;
-  llmModel?: string;
-  skipPrompts?: SkipPrompts;
   recipeManifestFormat: RecipeManifestFormat;
 };
 
@@ -33,22 +29,6 @@ export const generate: CommandModule<{}, GenerateArgs> = {
       description: 'The reference branch to use for the recipe',
       default: 'origin/main',
     },
-    llmAPIKey: {
-      type: 'string',
-      description: 'The API key for the LLM to use',
-    },
-    llmURL: {
-      type: 'string',
-      description: 'The URL for the LLM to use',
-    },
-    llmModel: {
-      type: 'string',
-      description: 'The model for the LLM to use',
-    },
-    skipPrompts: {
-      type: 'string',
-      description: 'Skip all prompts with "yes" answers',
-    },
     recipeManifestFormat: {
       type: 'string',
       description: 'The format of the recipe manifest file',
@@ -64,10 +44,6 @@ async function handler(args: GenerateArgs) {
     filenamesToIgnore: FILES_TO_IGNORE_FOR_GENERATE,
     onlyFiles: args.onlyFiles,
     referenceBranch: args.referenceBranch,
-    llmAPIKey: args.llmAPIKey,
-    llmURL: args.llmURL,
-    llmModel: args.llmModel,
-    skipPrompts: args.skipPrompts,
     recipeManifestFormat: args.recipeManifestFormat,
   });
 

@@ -14,18 +14,14 @@ import {generateRecipe} from '../lib/generate';
 import {renderRecipe} from '../lib/render';
 import {
   RecipeManifestFormat,
-  SkipPrompts,
   makeRandomTempDir,
   parseReferenceBranch,
 } from '../lib/util';
 import {loadRecipe} from '../lib/recipe';
+
 type UpdateArgs = {
   recipe: string;
   referenceBranch: string;
-  skipPrompts?: SkipPrompts;
-  llmAPIKey?: string;
-  llmURL?: string;
-  llmModel?: string;
   recipeManifestFormat: RecipeManifestFormat;
 };
 
@@ -42,22 +38,6 @@ export const update: CommandModule<{}, UpdateArgs> = {
       type: 'string',
       description: 'The branch to update the recipe from',
       default: 'origin/main',
-    },
-    skipPrompts: {
-      type: 'string',
-      description: 'Default prompts answer',
-    },
-    llmAPIKey: {
-      type: 'string',
-      description: 'The API key for the LLM to use',
-    },
-    llmURL: {
-      type: 'string',
-      description: 'The URL for the LLM to use',
-    },
-    llmModel: {
-      type: 'string',
-      description: 'The model for the LLM to use',
     },
     recipeManifestFormat: {
       type: 'string',
@@ -165,10 +145,6 @@ async function handler(args: UpdateArgs) {
       filenamesToIgnore: FILES_TO_IGNORE_FOR_GENERATE,
       onlyFiles: false,
       referenceBranch: args.referenceBranch,
-      llmAPIKey: args.llmAPIKey,
-      llmURL: args.llmURL,
-      llmModel: args.llmModel,
-      skipPrompts: args.skipPrompts,
       recipeManifestFormat: args.recipeManifestFormat,
     });
 

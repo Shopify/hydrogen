@@ -4,22 +4,12 @@ import {applyRecipe} from '../lib/apply';
 import {FILES_TO_IGNORE_FOR_GENERATE, TEMPLATE_PATH} from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
 import {isRenderFormat, RENDER_FORMATS, renderRecipe} from '../lib/render';
-import {
-  listRecipes,
-  SkipPrompts,
-  separator,
-  RecipeManifestFormat,
-} from '../lib/util';
-import {generateLLMsFiles as generateLLMsDocs} from '../lib/llms';
+import {listRecipes, separator, RecipeManifestFormat} from '../lib/util';
 type RegenerateArgs = {
   recipe?: string;
   onlyFiles: boolean;
   format: string;
   referenceBranch: string;
-  skipPrompts?: SkipPrompts;
-  llmAPIKey?: string;
-  llmURL?: string;
-  llmModel?: string;
   recipeManifestFormat: RecipeManifestFormat;
 };
 
@@ -47,22 +37,6 @@ export const regenerate: CommandModule<{}, RegenerateArgs> = {
       type: 'string',
       description: 'The reference branch to use for the recipe',
       default: 'origin/main',
-    },
-    skipPrompts: {
-      type: 'string',
-      description: 'Default prompts answer',
-    },
-    llmAPIKey: {
-      type: 'string',
-      description: 'The API key for the LLM to use',
-    },
-    llmURL: {
-      type: 'string',
-      description: 'The URL for the LLM to use',
-    },
-    llmModel: {
-      type: 'string',
-      description: 'The model for the LLM to use',
     },
     recipeManifestFormat: {
       type: 'string',
@@ -100,10 +74,6 @@ async function handler(args: RegenerateArgs) {
       onlyFiles: args.onlyFiles,
       filenamesToIgnore: FILES_TO_IGNORE_FOR_GENERATE,
       referenceBranch: args.referenceBranch,
-      skipPrompts: args.skipPrompts,
-      llmAPIKey: args.llmAPIKey,
-      llmURL: args.llmURL,
-      llmModel: args.llmModel,
       recipeManifestFormat: args.recipeManifestFormat,
     });
     // render the recipe
@@ -117,8 +87,4 @@ async function handler(args: RegenerateArgs) {
     console.log(`✅ Regenerated recipe '${recipe}'`);
     console.log(separator());
   }
-
-  // generate the LLM files
-  console.log('🤖 LLMs-friendly docs');
-  generateLLMsDocs(args.recipe);
 }

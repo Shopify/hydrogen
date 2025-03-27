@@ -17,7 +17,6 @@ import {applyTemplateDiff} from '../template-diff.js';
 import {getCliCommand} from '../shell.js';
 import {
   commitAll,
-  askCopyCursorRules,
   createAbortHandler,
   createInitialCommit,
   handleDependencies,
@@ -134,8 +133,6 @@ export async function setupRemoteTemplate(
       },
     });
   }
-
-  await askCopyCursorRules(controller, project);
 
   if (controller.signal.aborted) return;
 

@@ -27,7 +27,6 @@ import {
   renderProjectReady,
   commitAll,
   generateProjectEntries,
-  askCopyCursorRules,
 } from './common.js';
 import {createStorefront} from '../graphql/admin/create-storefront.js';
 import {waitForJob} from '../graphql/admin/fetch-job.js';
@@ -363,8 +362,6 @@ export async function setupLocalStarterTemplate(
         });
     });
   }
-
-  await askCopyCursorRules(controller, project);
 
   await renderTasks(tasks);
 
