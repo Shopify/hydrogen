@@ -18,7 +18,7 @@
         "@remix-run/dev": "^2.16.1",
         "@shopify/cli": "3.77.1",
         "@shopify/mini-oxygen": "^3.1.2",
-        "@shopify/mhydrogen-codegen": "^0.3.3",
+        "@shopify/hydrogen-codegen": "^0.3.3",
         "@remix-run/fs-routes": "^2.16.1",
         "@remix-run/route-config": "^2.16.1",
         "vite": "^6.2.1"
