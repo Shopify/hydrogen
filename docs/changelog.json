@@ -16,11 +16,10 @@
       },
       "devDependencies": {
         "@remix-run/dev": "^2.16.1",
-        "@shopify/cli": "3.77.1",
+        "@shopify/cli": "3.77.0",
         "@shopify/mini-oxygen": "^3.1.2",
         "@shopify/hydrogen-codegen": "^0.3.3",
-        "@remix-run/fs-routes": "^2.16.1",
-        "@remix-run/route-config": "^2.16.1",
+        "@shopify/oxygen-workers-types": "^4.1.6",
         "vite": "^6.2.1"
       },
       "dependenciesMeta": {
@@ -40,12 +39,6 @@
           "required": true
         },
         "@shopify/remix-oxygen": {
-          "required": true
-        },
-        "@remix-run/fs-routes": {
-          "required": true
-        },
-        "@remix-run/route-config": {
           "required": true
         }
       },
