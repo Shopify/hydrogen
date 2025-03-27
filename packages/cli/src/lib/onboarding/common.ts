@@ -28,7 +28,6 @@ import {
   isDirectory,
   writeFile,
   copyFile,
-  mkdir,
 } from '@shopify/cli-kit/node/fs';
 import {
   outputDebug,
@@ -68,7 +67,6 @@ import {
   isHydrogenMonorepo,
 } from '../build.js';
 import {enhanceAuthLogs} from '../log.js';
-import path from 'node:path';
 
 export type InitOptions = {
   path?: string;

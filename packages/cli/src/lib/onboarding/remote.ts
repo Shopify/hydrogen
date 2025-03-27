@@ -1,14 +1,10 @@
-import {mkdir, readdir, writeFile} from 'node:fs/promises';
+import {readdir} from 'node:fs/promises';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController, AbortSignal} from '@shopify/cli-kit/node/abort';
 import {copyFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {readAndParsePackageJson} from '@shopify/cli-kit/node/node-package-manager';
 import {joinPath} from '@shopify/cli-kit/node/path';
-import {
-  renderInfo,
-  renderTasks,
-  renderConfirmationPrompt,
-} from '@shopify/cli-kit/node/ui';
+import {renderInfo, renderTasks} from '@shopify/cli-kit/node/ui';
 import {
   downloadExternalRepo,
   downloadMonorepoTemplates,
@@ -26,7 +22,6 @@ import {
   SetupSummary,
   type InitOptions,
 } from './common.js';
-import path from 'node:path';
 
 const DEMO_STORE_REPO = 'shopify/hydrogen-demo-store';
 
