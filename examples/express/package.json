@@ -26,7 +26,9 @@
   "devDependencies": {
     "@eslint/js": "^9.18.0",
     "@remix-run/dev": "^2.16.1",
-    "@shopify/cli": "~3.75.4",
+    "@remix-run/fs-routes": "^2.16.1",
+    "@remix-run/route-config": "^2.16.1",
+    "@shopify/cli": "0.0.0-snapshot-20250313171017",
     "@types/compression": "^1.7.2",
     "@types/express": "^4.17.17",
     "@types/morgan": "^1.9.4",

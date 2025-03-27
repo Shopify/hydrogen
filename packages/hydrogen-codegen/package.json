@@ -40,7 +40,7 @@
     "@graphql-codegen/cli": "^5.0.3",
     "@graphql-codegen/plugin-helpers": "^5.1.0",
     "dts-bundle-generator": "^9.5.1",
-    "type-fest": "^4.33.0",
+    "type-fest": "4.33.0",
     "vitest": "^1.0.4"
   },
   "dependencies": {

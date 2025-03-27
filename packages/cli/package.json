@@ -32,14 +32,14 @@
     "fast-glob": "^3.2.12",
     "flame-chart-js": "2.3.2",
     "get-port": "^7.0.0",
-    "type-fest": "^4.33.0",
+    "type-fest": "4.33.0",
     "vite": "^6.2.0",
     "vitest": "^1.0.4"
   },
   "dependencies": {
     "@ast-grep/napi": "0.11.0",
     "@oclif/core": "3.26.5",
-    "@shopify/cli-kit": "^3.75.4",
+    "@shopify/cli-kit": "0.0.0-snapshot-20250313171017",
     "@shopify/oxygen-cli": "4.6.10",
     "@shopify/plugin-cloudflare": "^3.75.4",
     "ansi-escapes": "^6.2.0",

@@ -178,7 +178,8 @@
     "@xstate/fsm": "2.0.0",
     "@xstate/react": "3.2.1",
     "graphql": "^16.10.0",
-    "type-fest": "^4.33.0",
+    "cross-fetch": "4.1.0",
+    "type-fest": "4.33.0",
     "worktop": "^0.7.3"
   },
   "repository": {
