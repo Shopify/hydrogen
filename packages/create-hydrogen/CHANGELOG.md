@@ -1,5 +1,26 @@
 # @shopify/create-hydrogen
 
+## 5.0.18
+
+### Patch Changes
+
+- Bump Remix to 2.16.1 and vite to 6.2.0 ([#2784](https://github.com/Shopify/hydrogen/pull/2784)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Update skeleton and create-hydrogen cli to 3.75.4 ([#2769](https://github.com/Shopify/hydrogen/pull/2769)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Fixing typescript compile ([#2787](https://github.com/Shopify/hydrogen/pull/2787)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
+  In tsconfig.json:
+
+  ```diff
+       "types": [
+         "@shopify/oxygen-workers-types",
+  -      "@remix-run/node",
+  +      "@remix-run/server-runtime",
+         "vite/client"
+       ],
+  ```
+
 ## 5.0.17
 
 ### Patch Changes

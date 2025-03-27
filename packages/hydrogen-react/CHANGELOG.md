@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2025.1.3
+
+### Patch Changes
+
+- Bump Remix to 2.16.1 and vite to 6.2.0 ([#2784](https://github.com/Shopify/hydrogen/pull/2784)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2025.1.2
 
 ### Patch Changes
@@ -91,14 +97,14 @@
 - Add a RichText component to easily render \`rich_text_field\` metafields. Thank you @bastienrobert for the original implementation. Example usage: ([#2144](https://github.com/Shopify/hydrogen/pull/2144)) by [@blittle](https://github.com/blittle)
 
   ```tsx
-  import {RichText} from '@shopify/hydrogen-react';
+  import { RichText } from "@shopify/hydrogen-react";
 
-  export function MainRichText({metaFieldData}: {metaFieldData: string}) {
+  export function MainRichText({ metaFieldData }: { metaFieldData: string }) {
     return (
       <RichText
         data={metaFieldData}
         components={{
-          paragraph({node}) {
+          paragraph({ node }) {
             return <p className="customClass">{node.children}</p>;
           },
         }}
@@ -296,9 +302,9 @@ This major release includes support for the [2023-07 version](https://shopify.de
 - Adds `parseGid()` which is a helper function that takes in a [Shopify GID](https://shopify.dev/docs/api/usage/gids) and returns the `resource` and `id` from it. For example: ([#845](https://github.com/Shopify/hydrogen/pull/845)) by [@frehner](https://github.com/frehner)
 
   ```js
-  import {parseGid} from '@shopify/hydrogen-react';
+  import { parseGid } from "@shopify/hydrogen-react";
 
-  const {id, resource} = parseGid('gid://shopify/Order/123');
+  const { id, resource } = parseGid("gid://shopify/Order/123");
 
   console.log(id); // 123
   console.log(resource); // Order
@@ -344,7 +350,7 @@ This major release includes support for the [2023-07 version](https://shopify.de
     sizes="90vw"
     loaderOptions={{
       scale: 2,
-      crop: 'left',
+      crop: "left",
     }}
   />
   ```
@@ -470,7 +476,7 @@ This major release includes support for the [2023-07 version](https://shopify.de
   ```ts
   type LoaderParams = {
     /** The base URL of the image */
-    src?: ImageType['url'];
+    src?: ImageType["url"];
     /** The URL param that controls width */
     width?: number;
     /** The URL param that controls height */
@@ -483,7 +489,7 @@ This major release includes support for the [2023-07 version](https://shopify.de
   Here is an example of using `Image` with a custom loader function:
 
   ```jsx
-  const customLoader = ({src, width, height, crop}) => {
+  const customLoader = ({ src, width, height, crop }) => {
     return `${src}?w=${width}&h=${height}&gravity=${crop}`;
   };
 
@@ -675,16 +681,16 @@ The detailed changelog now follows:
 
   <ShopifyProvider
     shopifyConfig={{
-      storeDomain: 'my-store',
-      storefrontToken: 'abc123',
-      storefrontApiVersion: '2022-10',
+      storeDomain: "my-store",
+      storefrontToken: "abc123",
+      storefrontApiVersion: "2022-10",
       country: {
-        isoCode: 'CA',
+        isoCode: "CA",
       },
       language: {
-        isoCode: 'EN',
+        isoCode: "EN",
       },
-      locale: 'EN-CA',
+      locale: "EN-CA",
     }}
   >
     {/* rest of your client-side app */}
@@ -712,7 +718,7 @@ The detailed changelog now follows:
   ```tsx
   // before
 
-  const {country, language, locale} = useShop();
+  const { country, language, locale } = useShop();
 
   console.log(country.isoCode);
   console.log(language.isoCode);
@@ -722,7 +728,7 @@ The detailed changelog now follows:
   ```tsx
   // after
 
-  const {countryIsoCode, languageIsoCode} = useShop();
+  const { countryIsoCode, languageIsoCode } = useShop();
 
   console.log(countryIsoCode);
   console.log(languageIsoCode);
@@ -802,7 +808,7 @@ The detailed changelog now follows:
 
       ```ts
       const metafield =
-        parseMetafield<ParsedMetafield['boolean']>(rawMetafield);
+        parseMetafield<ParsedMetafield["boolean"]>(rawMetafield);
 
       // parsedValue is a boolean
       if (metafield.parsedValue === true) {
@@ -861,7 +867,7 @@ The detailed changelog now follows:
   - Added a function `getShopifyDomain()` which will return a fully-qualified domain URL for your Shopify backend. For example:
 
     ```ts
-    const {getShopifyDomain} = useShop();
+    const { getShopifyDomain } = useShop();
     console.log(getShopifyDomain());
     // 'https://test.myshopify.com'
     ```
@@ -905,14 +911,14 @@ The detailed changelog now follows:
   For example:
 
   ```ts
-  import {storefrontApiCustomScalars} from '@shopify/hydrogen-react';
+  import { storefrontApiCustomScalars } from "@shopify/hydrogen-react";
 
   const config: CodegenConfig = {
     // Use the schema that's bundled with @shopify/hydrogen-react
-    schema: './node_modules/@shopify/hydrogen-react/storefront.schema.json',
+    schema: "./node_modules/@shopify/hydrogen-react/storefront.schema.json",
     generates: {
-      './gql/': {
-        preset: 'client',
+      "./gql/": {
+        preset: "client",
         plugins: [],
         config: {
           // Use the custom scalar definitions that @shopify/hydrogen-react provides to improve the custom scalar types
@@ -962,9 +968,9 @@ The detailed changelog now follows:
   For TypeScript developers, we also introduce the new `ParsedMetafield` type to help improve your experience. The `ParsedMetafield` type is an object in which the keys map to the type that will be returned from `metafieldParser()`. For example:
 
   ```ts
-  ParsedMetafield['boolean'];
+  ParsedMetafield["boolean"];
   // or
-  ParsedMetafield['list.collection'];
+  ParsedMetafield["list.collection"];
   ```
 
   When used in conjunction with `metafieldParser()`, it will help TypeScript to understand what the returned object's `parsedValue` type is:
@@ -981,7 +987,7 @@ The detailed changelog now follows:
   or
 
   ```ts
-  const parsed = metafieldParser<ParsedMetafield['list.collection']>(
+  const parsed = metafieldParser<ParsedMetafield["list.collection"]>(
     listCollectionMetafield,
   );
 
