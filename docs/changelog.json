@@ -4,22 +4,24 @@
   "releases": [
     {
       "title": "Remix routeConfig support, Remix and Vite updates.",
-      "version": "2025.1.2",
+      "version": "2025.1.3",
       "hash": "",
       "commit": "",
       "pr": "",
       "dependencies": {
         "@remix-run/react": "^2.16.1",
         "@remix-run/server-runtime": "^2.16.1",
-        "@shopify/hydrogen": "2025.1.2",
-        "@shopify/remix-oxygen": "^2.0.10"
+        "@shopify/hydrogen": "2025.1.3",
+        "@shopify/remix-oxygen": "^2.0.12"
       },
       "devDependencies": {
         "@remix-run/dev": "^2.16.1",
-        "@shopify/cli": "3.75.3",
-        "@shopify/mini-oxygen": "^3.1.1",
+        "@shopify/cli": "3.77.1",
+        "@shopify/mini-oxygen": "^3.1.2",
+        "@shopify/mhydrogen-codegen": "^0.3.3",
         "@remix-run/fs-routes": "^2.16.1",
-        "@remix-run/route-config": "^2.16.1"
+        "@remix-run/route-config": "^2.16.1",
+        "vite": "^6.2.1"
       },
       "dependenciesMeta": {
         "@shopify/cli": {
@@ -49,7 +51,7 @@
       },
       "fixes": [
         {
-          "title": "Upgrades Remix to 2.16.1-pre.2 and Vite to 6.2.0.",
+          "title": "Upgrades Remix to 2.16.1 and Vite to 6.2.0.",
           "pr": "https://github.com/Shopify/hydrogen/pull/2784",
           "id": "2784"
         },
