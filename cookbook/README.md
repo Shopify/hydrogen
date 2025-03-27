@@ -21,6 +21,9 @@
     - [Update](#update)
       - [Syntax](#syntax-5)
       - [Example](#example-5)
+    - [Schema](#schema)
+      - [Syntax](#syntax-6)
+      - [Example](#example-6)
 
 This is the Hydrogen Cookbook, a collection of example _recipes_ to showcase specific scenarios and usecases for Hydrogen projects.
 
@@ -236,4 +239,26 @@ Options:
 
 ```sh
 npm run cookbook -- update --recipe my-recipe
+```
+
+### Schema
+
+`schema` will regenerate the JSON schema for the recipe manifest file off of the Zod schema definition.
+
+#### Syntax
+
+```plain
+cookbook.ts schema
+
+Render the recipe JSON schema out of the Recipe type.
+
+Options:
+  --version  Show version number                                       [boolean]
+  --help     Show help                                                 [boolean]
+```
+
+#### Example
+
+```sh
+npm run cookbook -- schema
 ```
