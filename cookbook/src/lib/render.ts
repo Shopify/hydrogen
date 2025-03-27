@@ -27,7 +27,7 @@ import {assertNever, getPatchesDir} from './util';
 const COLLAPSE_DIFF_LINES = 50;
 
 export const RENDER_FORMATS = ['github', 'shopify.dev'] as const;
-export type RenderFormat = (typeof RENDER_FORMATS)[number];
+export type RenderFormat = typeof RENDER_FORMATS[number];
 
 export function isRenderFormat(format: string): format is RenderFormat {
   return RENDER_FORMATS.includes(format as RenderFormat);
