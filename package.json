@@ -68,7 +68,7 @@
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@playwright/test": "^1.40.1",
-    "@shopify/cli": "~3.75.4",
+    "@shopify/cli": "~3.77.0",
     "@types/eslint": "^9.6.1",
     "@types/semver": "^7.5.8",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
@@ -120,7 +120,7 @@
   },
   "overrides": {
     "@oclif/core": "3.26.5",
-    "@shopify/cli-kit": "3.75.4"
+    "@shopify/cli-kit": "3.77.0"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.34.9"
