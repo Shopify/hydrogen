@@ -20,7 +20,9 @@ function getVirtualRoutesPath(
   const virtualRoutesPath = pathParts.reduce((working, dirPart) => {
     return new URL(`${dirPart}/`, working);
   }, basePath);
-  return new URL(forFile, virtualRoutesPath).pathname;
+
+  // Getting rid of the drive path (ie. '/C:/') in windows
+  return new URL(forFile, virtualRoutesPath).pathname.replace(/^\/[a-zA-Z]:\//, '/');
 }
 
 export async function getVirtualRoutesV3() {
