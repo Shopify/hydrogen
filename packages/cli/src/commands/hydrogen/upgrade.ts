@@ -33,6 +33,7 @@ import {getCliCommand} from '../../lib/shell.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getProjectPaths} from '../../lib/remix-config.js';
 import {hydrogenPackagesPath, isHydrogenMonorepo} from '../../lib/build.js';
+import {fetch} from '@shopify/cli-kit/node/http';
 
 type ReleaseItem = {
   breaking?: boolean;
@@ -292,7 +293,7 @@ export async function getChangelog(): Promise<ChangeLog> {
       throw new Error('Failed to fetch changelog.json');
     }
 
-    const json: ChangeLog = await response.json();
+    const json: ChangeLog = (await response.json()) as ChangeLog;
 
     if ('releases' in json && 'url' in json) {
       CACHED_CHANGELOG = json;
