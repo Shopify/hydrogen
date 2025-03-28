@@ -39,54 +39,72 @@
 
   Please refer to the Remix documentation for more details on `v3_routeConfig` future flag: [https://remix.run/docs/en/main/start/future-flags#v3_routeconfig](https://remix.run/docs/en/main/start/future-flags#v3_routeconfig)
 
-  1. Add the following npm package dev dependencies:
-
-     ```diff
-       "devDependencies": {
-         "@remix-run/dev": "^2.16.1",
-     +    "@remix-run/fs-routes": "^2.16.1",
-     +    "@remix-run/route-config": "^2.16.1",
-     ```
-
-  1. If you have `export function Layout` in your `root.tsx`, move this export into its own file. For example:
-
-     ```ts
-     // /app/layout.tsx
-     export default function Layout() {
-       const nonce = useNonce();
-       const data = useRouteLoaderData<RootLoader>('root');
-
-       return (
-         <html lang="en">
-         ...
-       );
-     }
-     ```
-
-  1. Create a `routes.ts` file.
-
-     ```ts
-     import { flatRoutes } from "@remix-run/fs-routes";
-     import { layout, type RouteConfig } from "@remix-run/route-config";
-     import { hydrogenRoutes } from "@shopify/hydrogen";
-
-     export default hydrogenRoutes([
-       // Your entire app reading from routes folder using Layout from layout.tsx
-       layout("./layout.tsx", await flatRoutes()),
-     ]) satisfies RouteConfig;
-     ```
-
   1. Update your `vite.config.ts`.
 
-     ```diff
-     export default defineConfig({
-       plugins: [
-         hydrogen(),
-         oxygen(),
-         remix({
-     -      presets: [hydrogen.preset()],
-     +      presets: [hydrogen.v3preset()],
-     ```
+      ```diff
+      export default defineConfig({
+        plugins: [
+          hydrogen(),
+          oxygen(),
+          remix({
+      -      presets: [hydrogen.preset()],
+      +      presets: [hydrogen.v3preset()],
+          future: {
+            v3_fetcherPersist: true,
+            v3_relativeSplatPath: true,
+            v3_throwAbortReason: true,
+            v3_lazyRouteDiscovery: true,
+            v3_singleFetch: true,
+      +      v3_routeConfig: true,
+          },
+        }),
+        tsconfigPaths(),
+      ],
+      ```
+
+  1. Update your `package.json` and install the new packages. Make sure to match the Remix version along with other Remix npm packages and ensure the versions are 2.16.1 or above:
+
+      ```diff
+        "devDependencies": {
+          "@remix-run/dev": "^2.16.1",
+      +    "@remix-run/fs-routes": "^2.16.1",
+      +    "@remix-run/route-config": "^2.16.1",
+      ```
+
+  1. Move the `Layout` component export from `root.tsx` into its own file. Make sure to supply an `<Outlet>` so Remix knows where to inject your route content.
+
+      ```ts
+      // /app/layout.tsx
+      import {Outlet} from '@remix-run/react';
+
+      export default function Layout() {
+        const nonce = useNonce();
+        const data = useRouteLoaderData<RootLoader>('root');
+
+        return (
+          <html lang="en">
+            ...
+            <Outlet />
+            ...
+          </html>
+        );
+      }
+
+      // Remember to remove the Layout export from your root.tsx
+      ```
+
+  1. Add a routes.ts file. This is your new Remix route configuration file.
+
+      ```ts
+      import { flatRoutes } from "@remix-run/fs-routes";
+      import { layout, type RouteConfig } from "@remix-run/route-config";
+      import { hydrogenRoutes } from "@shopify/hydrogen";
+
+      export default hydrogenRoutes([
+        // Your entire app reading from routes folder using Layout from layout.tsx
+        layout("./layout.tsx", await flatRoutes()),
+      ]) satisfies RouteConfig;
+      ```
 
 - Updated dependencies [[`0425e50d`](https://github.com/Shopify/hydrogen/commit/0425e50dafe2f42326cba67076e5fcea2905e885), [`74ef1ba7`](https://github.com/Shopify/hydrogen/commit/74ef1ba7d41988350e9d2c81731c90381943d1f0)]:
   - @shopify/remix-oxygen@2.0.12
