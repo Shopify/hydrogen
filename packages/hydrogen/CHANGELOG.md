@@ -37,13 +37,13 @@
   1. Create a `routes.ts` file.
 
      ```ts
-     import { flatRoutes } from "@remix-run/fs-routes";
-     import { layout, type RouteConfig } from "@remix-run/route-config";
-     import { hydrogenRoutes } from "@shopify/hydrogen";
+     import {flatRoutes} from '@remix-run/fs-routes';
+     import {layout, type RouteConfig} from '@remix-run/route-config';
+     import {hydrogenRoutes} from '@shopify/hydrogen';
 
      export default hydrogenRoutes([
        // Your entire app reading from routes folder using Layout from layout.tsx
-       layout("./layout.tsx", await flatRoutes()),
+       layout('./layout.tsx', await flatRoutes()),
      ]) satisfies RouteConfig;
      ```
 
@@ -93,9 +93,9 @@
   already using its `uilocales` property, the `language` parameter coming from the context/constructor will be ignored. If nothing is explicitly passed, `login()` will default to `context.i18n.language`.
 
   ```ts
-  export async function loader({ request, context }: LoaderFunctionArgs) {
+  export async function loader({request, context}: LoaderFunctionArgs) {
     return context.customerAccount.login({
-      uiLocales: "FR", // will be used instead of the one coming from the context
+      uiLocales: 'FR', // will be used instead of the one coming from the context
     });
   }
   ```
@@ -176,9 +176,9 @@
   const hydrogenContext = createHydrogenContext({
     // ...
     customerAccount: {
-      loginPath = "/account/login",
-      authorizePath = "/account/authorize",
-      defaultRedirectPath = "/account",
+      loginPath = '/account/login',
+      authorizePath = '/account/authorize',
+      defaultRedirectPath = '/account',
     },
   });
   ```
@@ -285,21 +285,21 @@
   New `withCache.fetch` is for caching simple fetch requests. This method caches the responses if they are OK responses, and you can pass `shouldCacheResponse`, `cacheKey`, etc. to modify behavior. `data` is the consumed body of the response (we need to consume to cache it).
 
   ```ts
-  const withCache = createWithCache({ cache, waitUntil, request });
+  const withCache = createWithCache({cache, waitUntil, request});
 
-  const { data, response } = await withCache.fetch<{ data: T; error: string }>(
-    "my-cms.com/api",
+  const {data, response} = await withCache.fetch<{data: T; error: string}>(
+    'my-cms.com/api',
     {
-      method: "POST",
-      headers: { "Content-type": "application/json" },
+      method: 'POST',
+      headers: {'Content-type': 'application/json'},
       body,
     },
     {
       cacheStrategy: CacheLong(),
       // Cache if there are no data errors or a specific data that make this result not suited for caching
       shouldCacheResponse: (result) => !result?.error,
-      cacheKey: ["my-cms", body],
-      displayName: "My CMS query",
+      cacheKey: ['my-cms', body],
+      displayName: 'My CMS query',
     },
   );
   ```
@@ -474,7 +474,7 @@
 
   ```tsx
   function Product() {
-    const { product, variants } = useLoaderData<typeof loader>();
+    const {product, variants} = useLoaderData<typeof loader>();
 
     // The selectedVariant optimistically changes during page
     // transitions with one of the preloaded product variants
@@ -514,14 +514,14 @@
 
   ```tsx
   // Root loader returns the cart data
-  export async function loader({ context }: LoaderFunctionArgs) {
+  export async function loader({context}: LoaderFunctionArgs) {
     return defer({
       cart: context.cart.get(),
     });
   }
 
   // The cart component renders each line item in the cart.
-  export function Cart({ cart }) {
+  export function Cart({cart}) {
     if (!cart?.lines?.nodes?.length) return <p>Nothing in cart</p>;
 
     return cart.lines.nodes.map((line) => (
@@ -539,7 +539,7 @@
   If we update the cart implementation with a new `useOptimisticCart()` hook, Hydrogen can take the pending add to cart action, and apply it locally with the existing cart data:
 
   ```tsx
-  export function Cart({ cart }) {
+  export function Cart({cart}) {
     const optimisticCart = useOptimisticCart(cart);
 
     if (!optimisticCart?.lines?.nodes?.length) return <p>Nothing in cart</p>;
@@ -557,7 +557,7 @@
   This works automatically with the `CartForm.ACTIONS.LinesUpdate` and `CartForm.ACTIONS.LinesRemove`. To make it work with `CartForm.Actions.LinesAdd`, update the `CartForm` to include the `selectedVariant`:
 
   ```tsx
-  export function ProductCard({ product }) {
+  export function ProductCard({product}) {
     return (
       <div>
         <h2>{product.title}</h2>
@@ -586,20 +586,20 @@
   Sometimes line items need to render differently when they have yet to process on the server. A new isOptimistic flag is added to each line item:
 
   ```tsx
-  export function Cart({ cart }) {
+  export function Cart({cart}) {
     const optimisticCart = useOptimisticCart(cart);
 
     if (!cart?.lines?.nodes?.length) return <p>Nothing in cart</p>;
 
     return optimisticCart.lines.nodes.map((line) => (
-      <div key={line.id} style={{ opacity: line.isOptimistic ? 0.8 : 1 }}>
+      <div key={line.id} style={{opacity: line.isOptimistic ? 0.8 : 1}}>
         <Link to={`/products${line.merchandise.product.handle}`}>
           {line.merchandise.product.title}
         </Link>
         <CartForm
           route="/cart"
           action={CartForm.ACTIONS.LinesRemove}
-          inputs={{ lineIds }}
+          inputs={{lineIds}}
           disabled={line.isOptimistic}
         >
           <button type="submit">Remove</button>
@@ -689,7 +689,7 @@
     createCartHandler,
     cartGetIdDefault,
     cartSetIdDefault,
-  } from "@shopify/hydrogen";
+  } from '@shopify/hydrogen';
 
   const cartHandler = createCartHandler({
     storefront,
@@ -699,7 +699,7 @@
     cartMutateFragment: CART_MUTATE_FRAGMENT,
   });
 
-  await cartHandler.addLines([{ merchandiseId: "..." }]);
+  await cartHandler.addLines([{merchandiseId: '...'}]);
   // .get() now returns the cart as expected
   const cart = await cartHandler.get();
   ```
@@ -785,7 +785,7 @@
   If your root route loader also returns an `seo` property, make sure to merge that data:
 
   ```ts
-  export const meta = ({ data, matches }) => {
+  export const meta = ({data, matches}) => {
     return getSeoMeta(
       matches[0].data.seo,
       // the current route seo data overrides the root route data
@@ -797,7 +797,7 @@
   Or more simply:
 
   ```ts
-  export const meta = ({ data, matches }) => {
+  export const meta = ({data, matches}) => {
     return getSeoMeta(...matches.map((match) => match.data.seo));
   };
   ```
@@ -807,9 +807,9 @@
   Sometimes `getSeoMeta` might produce a property in a way you'd like to change. Map over the resulting array to change it. For example, Hydrogen removes query parameters from canonical URLs, add them back:
 
   ```ts
-  export const meta = ({ data, location }) => {
+  export const meta = ({data, location}) => {
     return getSeoMeta(data.seo).map((meta) => {
-      if (meta.rel === "canonical") {
+      if (meta.rel === 'canonical') {
         return {
           ...meta,
           href: meta.href + location.search,
@@ -1369,9 +1369,9 @@ Add a `<VariantSelector>` component to make building product forms easier. Also 
 - Adds `parseGid()` which is a helper function that takes in a [Shopify GID](https://shopify.dev/docs/api/usage/gids) and returns the `resource` and `id` from it. For example: ([#845](https://github.com/Shopify/hydrogen/pull/845)) by [@frehner](https://github.com/frehner)
 
   ```js
-  import { parseGid } from "@shopify/hydrogen-react";
+  import {parseGid} from '@shopify/hydrogen-react';
 
-  const { id, resource } = parseGid("gid://shopify/Order/123");
+  const {id, resource} = parseGid('gid://shopify/Order/123');
 
   console.log(id); // 123
   console.log(resource); // Order
@@ -1422,7 +1422,7 @@ Add a `<VariantSelector>` component to make building product forms easier. Also 
     sizes="90vw"
     loaderOptions={{
       scale: 2,
-      crop: "left",
+      crop: 'left',
     }}
   />
   ```
@@ -1548,7 +1548,7 @@ Add a `<VariantSelector>` component to make building product forms easier. Also 
   ```ts
   type LoaderParams = {
     /** The base URL of the image */
-    src?: ImageType["url"];
+    src?: ImageType['url'];
     /** The URL param that controls width */
     width?: number;
     /** The URL param that controls height */
@@ -1561,7 +1561,7 @@ Add a `<VariantSelector>` component to make building product forms easier. Also 
   Here is an example of using `Image` with a custom loader function:
 
   ```jsx
-  const customLoader = ({ src, width, height, crop }) => {
+  const customLoader = ({src, width, height, crop}) => {
     return `${src}?w=${width}&h=${height}&gravity=${crop}`;
   };
 

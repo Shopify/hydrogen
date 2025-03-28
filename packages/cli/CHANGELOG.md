@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 9.0.10
+
+### Patch Changes
+
+- Updates the `@shopify/cli`, `@shopify/cli-kit` and `@shopify/plugin-cloudflare` dependencies to 3.77.1. ([#2816](https://github.com/Shopify/hydrogen/pull/2816)) by [@seanparsons](https://github.com/seanparsons)
+
 ## 9.0.9
 
 ### Patch Changes
