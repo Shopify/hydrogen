@@ -82,9 +82,8 @@ export async function runSetup(options: RunSetupOptions) {
 
   const i18n = i18nStrategy === 'none' ? undefined : i18nStrategy;
 
-  const {needsRouteGeneration, setupRoutes} = await handleRouteGeneration(
-    controller,
-  );
+  const {needsRouteGeneration, setupRoutes} =
+    await handleRouteGeneration(controller);
 
   let routes: Record<string, string[]> | undefined;
 

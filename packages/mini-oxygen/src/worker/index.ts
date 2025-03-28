@@ -139,7 +139,7 @@ export function createMiniOxygen({
     const [privateInspectorUrl, publicInspectorPort] = await Promise.all([
       mf.getInspectorURL(),
       debug
-        ? inspectorPort ?? findPort(DEFAULT_PUBLIC_INSPECTOR_PORT)
+        ? (inspectorPort ?? findPort(DEFAULT_PUBLIC_INSPECTOR_PORT))
         : undefined,
     ]);
 

@@ -156,43 +156,41 @@ export function Pagination<NodesType>({
 
   const NextLink = useMemo(
     () =>
-      forwardRef<HTMLAnchorElement, Omit<LinkProps, 'to'>>(function NextLink(
-        props,
-        ref,
-      ) {
-        return hasNextPage
-          ? createElement(Link, {
-              preventScrollReset: true,
-              ...props,
-              to: nextPageUrl,
-              state,
-              replace: true,
-              ref,
-              onClick: () => setIsLoading(true),
-            })
-          : null;
-      }),
+      forwardRef<HTMLAnchorElement, Omit<LinkProps, 'to'>>(
+        function NextLink(props, ref) {
+          return hasNextPage
+            ? createElement(Link, {
+                preventScrollReset: true,
+                ...props,
+                to: nextPageUrl,
+                state,
+                replace: true,
+                ref,
+                onClick: () => setIsLoading(true),
+              })
+            : null;
+        },
+      ),
     [hasNextPage, nextPageUrl, state],
   );
 
   const PreviousLink = useMemo(
     () =>
-      forwardRef<HTMLAnchorElement, Omit<LinkProps, 'to'>>(function PrevLink(
-        props,
-        ref,
-      ) {
-        return hasPreviousPage
-          ? createElement(Link, {
-              preventScrollReset: true,
-              ...props,
-              to: previousPageUrl,
-              state,
-              replace: true,
-              ref,
-              onClick: () => setIsLoading(true),
-            })
-          : null;
-      }),
+      forwardRef<HTMLAnchorElement, Omit<LinkProps, 'to'>>(
+        function PrevLink(props, ref) {
+          return hasPreviousPage
+            ? createElement(Link, {
+                preventScrollReset: true,
+                ...props,
+                to: previousPageUrl,
+                state,
+                replace: true,
+                ref,
+                onClick: () => setIsLoading(true),
+              })
+            : null;
+        },
+      ),
     [hasPreviousPage, previousPageUrl, state],
   );
 

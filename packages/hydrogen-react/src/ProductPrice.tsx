@@ -44,9 +44,9 @@ export function ProductPrice<
   let measurement: Partial<UnitPriceMeasurement> | undefined | null;
 
   const variant = variantId
-    ? flattenConnection(product?.variants ?? {}).find(
+    ? (flattenConnection(product?.variants ?? {}).find(
         (variant) => variant?.id === variantId,
-      ) ?? null
+      ) ?? null)
     : null;
 
   const variantPriceProperty =
