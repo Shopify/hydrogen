@@ -16,11 +16,11 @@ deletedFiles:
   - templates/skeleton/app/components/ProductForm.tsx
 ingredients:
   - path: templates/skeleton/app/components/Cart.tsx
-    description: null
+    description: Cart component to show subscription options
   - path: templates/skeleton/app/components/SellingPlanSelector.tsx
-    description: null
+    description: A component that simplifies selecting sellingPlans subscription options
   - path: templates/skeleton/app/styles/selling-plan.css
-    description: null
+    description: CSS file for selling plan styles in the product page
 steps:
   - type: INFO
     name: Requirements
@@ -47,7 +47,7 @@ steps:
       - templates/skeleton/app/components/SellingPlanSelector.tsx
       - templates/skeleton/app/styles/selling-plan.css
   - type: PATCH
-    name: app/components/CartLineItem.tsx
+    name: Render the selling plan in the cart
     description: >
       CartLineItem now displays subscription plan names when customers add
       subscription products to their cart.
@@ -55,30 +55,29 @@ steps:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.8e657b.patch
   - type: PATCH
-    name: app/lib/fragments.ts
+    name: Add Selling Plan Data to Cart Queries
     description: >
-      # Add Selling Plan Data to Cart Queries
-
       Updates cart GraphQL fragments to include subscription plan names,
       enabling e.g "Subscribe and save" messaging in the applicable cart lines
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.e8eb04.patch
   - type: PATCH
-    name: app/routes/_index.tsx
-    description: Replaces the base home page with single heading and link to a
+    name: Update the home page
+    description: >
+      Replaces the base home page with single heading and link to a
       demonstration subscription product at `/products/shopify-wax`.
     diffs:
       - file: app/routes/_index.tsx
         patchFile: _index.tsx.8041d5.patch
   - type: PATCH
-    name: app/routes/products.$handle.tsx
-    description:
-      Adds SellingPlanSelector component to display subscription options
-      on product pages. Handles pricing adjustments, maintains selection state
-      via URL parameters, and updates add-to-cart functionality. Fetches
+    name: Add SellingPlanSelector to product pages
+    description: >
+      Adds SellingPlanSelector component to display subscription options on
+      product pages. Handles pricing adjustments, maintains selection state via
+      URL parameters, and updates add-to-cart functionality. Fetches
       subscription data through the updated cart GraphQL fragments.
     diffs:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.3e0b7e.patch
-commit: 1bf1e33c11ea285c4b4bfda307c50a8d9c059e97
+commit: b3fc64a2c9b91cecf993d34b3286a6af85729365
