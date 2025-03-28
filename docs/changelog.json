@@ -5,9 +5,9 @@
     {
       "title": "Remix routeConfig support, Remix and Vite updates.",
       "version": "2025.1.3",
-      "hash": "",
-      "commit": "",
-      "pr": "",
+      "hash": "24bcab25368b6a598a2f35c998746b8bccc03278",
+      "commit": "https://github.com/Shopify/hydrogen/pull/2817/commits/24bcab25368b6a598a2f35c998746b8bccc03278",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2817",
       "dependencies": {
         "@remix-run/react": "^2.16.1",
         "@remix-run/server-runtime": "^2.16.1",
@@ -16,7 +16,7 @@
       },
       "devDependencies": {
         "@remix-run/dev": "^2.16.1",
-        "@shopify/cli": "3.77.0",
+        "@shopify/cli": "3.77.1",
         "@shopify/mini-oxygen": "^3.1.2",
         "@shopify/hydrogen-codegen": "^0.3.3",
         "@shopify/oxygen-workers-types": "^4.1.6",
