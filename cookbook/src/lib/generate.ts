@@ -134,8 +134,6 @@ async function generateSteps(params: {
     return !file.endsWith('.d.ts');
   });
 
-  console.log('modifiedFiles', modifiedFiles);
-
   for await (const file of modifiedFiles) {
     const {fullPath, patchFilename} = createPatchFile({
       file,

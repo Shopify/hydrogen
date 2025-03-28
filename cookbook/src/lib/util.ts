@@ -180,7 +180,7 @@ export function listRecipes(): string[] {
 
 export function isInGitHistory(params: {path: string}): boolean {
   try {
-    execSync(`git ls-files --error-unmatch ${params.path}`);
+    execSync(`git ls-files --error-unmatch ${params.path}`, {stdio: 'ignore'});
     return true;
   } catch (_) {
     return false;
