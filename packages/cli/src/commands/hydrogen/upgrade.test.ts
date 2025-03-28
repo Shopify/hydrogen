@@ -59,9 +59,10 @@ beforeEach(() => {
 
 async function createOutdatedSkeletonPackageJson() {
   const require = createRequire(import.meta.url);
-  const packageJson: PackageJson = require(
-    joinPath(getSkeletonSourceDir(), 'package.json'),
-  );
+  const packageJson: PackageJson = require(joinPath(
+    getSkeletonSourceDir(),
+    'package.json',
+  ));
 
   if (!packageJson) throw new Error('Could not parse package.json');
   if (!packageJson?.dependencies)

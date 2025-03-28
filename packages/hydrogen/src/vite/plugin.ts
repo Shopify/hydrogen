@@ -206,7 +206,7 @@ hydrogen.v3preset = () =>
         buildDirectory: 'dist',
       };
     },
-  }) satisfies RemixPreset;
+  } satisfies RemixPreset);
 
 hydrogen.preset = () =>
   ({
@@ -258,4 +258,4 @@ hydrogen.preset = () =>
         },
       };
     },
-  }) satisfies RemixPreset;
+  } satisfies RemixPreset);

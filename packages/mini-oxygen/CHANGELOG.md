@@ -83,12 +83,12 @@
   Example usage:
 
   ```js
-  import { createMiniOxygen } from "@shopify/mini-oxygen";
+  import {createMiniOxygen} from '@shopify/mini-oxygen';
 
   const miniOxygen = createMiniOxygen({
     workers: [
       {
-        name: "main",
+        name: 'main',
         modules: true,
         script: `export default {
           async fetch() {
@@ -100,7 +100,7 @@
     ],
   });
 
-  const response = await miniOxygen.dispatchFetch("http://placeholder");
+  const response = await miniOxygen.dispatchFetch('http://placeholder');
   console.log(await response.text());
 
   await miniOxygen.dispose();

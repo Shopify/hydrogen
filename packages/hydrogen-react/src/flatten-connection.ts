@@ -24,19 +24,19 @@ export function flattenConnection<
   ? // if it's not a PartialDeep, then return the infered type
     ConnectionBaseType[]
   : ConnectionGeneric extends
-        | PartialDeep<
-            {edges: {node: Array<infer ConnectionBaseType>}},
-            {recurseIntoArrays: true}
-          >
-        | PartialDeep<
-            {
-              nodes: Array<infer ConnectionBaseType>;
-            },
-            {recurseIntoArrays: true}
-          >
-    ? // if it is a PartialDeep, return a PartialDeep inferred type
-      PartialDeep<ConnectionBaseType[], {recurseIntoArrays: true}>
-    : never {
+      | PartialDeep<
+          {edges: {node: Array<infer ConnectionBaseType>}},
+          {recurseIntoArrays: true}
+        >
+      | PartialDeep<
+          {
+            nodes: Array<infer ConnectionBaseType>;
+          },
+          {recurseIntoArrays: true}
+        >
+  ? // if it is a PartialDeep, return a PartialDeep inferred type
+    PartialDeep<ConnectionBaseType[], {recurseIntoArrays: true}>
+  : never {
   if (!connection) {
     const noConnectionErr = `flattenConnection(): needs a 'connection' to flatten, but received '${
       connection ?? ''

@@ -688,11 +688,9 @@ export async function getHydrogenVersion({appPath}: {appPath: string}) {
   const {root} = getProjectPaths(appPath);
 
   const require = createRequire(import.meta.url);
-  const {version} = require(
-    require.resolve('@shopify/hydrogen/package.json', {
-      paths: [root],
-    }),
-  );
+  const {version} = require(require.resolve('@shopify/hydrogen/package.json', {
+    paths: [root],
+  }));
 
   return version;
 }

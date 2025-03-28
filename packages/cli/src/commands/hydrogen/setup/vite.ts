@@ -148,13 +148,10 @@ export async function runSetupVite({directory}: {directory: string}) {
             // Sort dependencies:
             pkgJson.devDependencies = Object.keys(pkgJson.devDependencies)
               .sort()
-              .reduce(
-                (acc, key) => {
-                  acc[key] = pkgJson.devDependencies?.[key]!;
-                  return acc;
-                },
-                {} as Record<string, string>,
-              );
+              .reduce((acc, key) => {
+                acc[key] = pkgJson.devDependencies?.[key]!;
+                return acc;
+              }, {} as Record<string, string>);
           }
         }
 
