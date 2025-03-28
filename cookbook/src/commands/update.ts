@@ -42,7 +42,7 @@ export const update: CommandModule<{}, UpdateArgs> = {
     recipeManifestFormat: {
       type: 'string',
       description: 'The format of the recipe manifest file',
-      default: 'json',
+      default: 'yaml',
     },
   },
   handler,
