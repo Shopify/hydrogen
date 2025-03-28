@@ -7,7 +7,7 @@ import {
   TEMPLATE_DIRECTORY,
   TEMPLATE_PATH,
 } from './constants';
-import {parseRecipeFromString} from './recipe';
+import {loadRecipe} from './recipe';
 import {parseGitStatus} from './util';
 
 /**
@@ -22,8 +22,7 @@ export function applyRecipe(params: {
 
   // load the recipe.json file
   console.log(`- 🍱 Loading recipe '${params.recipeTitle}'…`);
-  const recipePath = path.join(recipeDir, 'recipe.json');
-  const recipe = parseRecipeFromString(fs.readFileSync(recipePath, 'utf8'));
+  const recipe = loadRecipe({directory: recipeDir});
 
   // list the ingredients in the recipe's ingredients folder as a list of flat paths (e.g. foo/bar/baz.txt)
   const ingredientsPath = path.join(recipeDir, 'ingredients');

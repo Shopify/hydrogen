@@ -11,12 +11,18 @@ import {
   TEMPLATE_PATH,
 } from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
-import {parseRecipeFromString} from '../lib/recipe';
 import {renderRecipe} from '../lib/render';
-import {makeRandomTempDir, parseReferenceBranch} from '../lib/util';
+import {
+  RecipeManifestFormat,
+  makeRandomTempDir,
+  parseReferenceBranch,
+} from '../lib/util';
+import {loadRecipe} from '../lib/recipe';
+
 type UpdateArgs = {
   recipe: string;
   referenceBranch: string;
+  recipeManifestFormat: RecipeManifestFormat;
 };
 
 export const update: CommandModule<{}, UpdateArgs> = {
@@ -32,6 +38,11 @@ export const update: CommandModule<{}, UpdateArgs> = {
       type: 'string',
       description: 'The branch to update the recipe from',
       default: 'origin/main',
+    },
+    recipeManifestFormat: {
+      type: 'string',
+      description: 'The format of the recipe manifest file',
+      default: 'yaml',
     },
   },
   handler,
@@ -51,12 +62,9 @@ async function handler(args: UpdateArgs) {
   }
 
   // load the recipe
-  const {commit} = parseRecipeFromString(
-    fs.readFileSync(
-      path.join(COOKBOOK_PATH, 'recipes', recipeName, 'recipe.json'),
-      'utf8',
-    ),
-  );
+  const {commit} = loadRecipe({
+    directory: path.join(COOKBOOK_PATH, 'recipes', recipeName),
+  });
 
   // checkout the repo at the recipe's commit hash
   execSync(`git checkout ${commit}`);
@@ -137,6 +145,7 @@ async function handler(args: UpdateArgs) {
       filenamesToIgnore: FILES_TO_IGNORE_FOR_GENERATE,
       onlyFiles: false,
       referenceBranch: args.referenceBranch,
+      recipeManifestFormat: args.recipeManifestFormat,
     });
 
     // copy the recipe to the temp folder

@@ -21,7 +21,9 @@
     - [Update](#update)
       - [Syntax](#syntax-5)
       - [Example](#example-5)
-
+    - [Schema](#schema)
+      - [Syntax](#syntax-6)
+      - [Example](#example-6)
 
 This is the Hydrogen Cookbook, a collection of example _recipes_ to showcase specific scenarios and usecases for Hydrogen projects.
 
@@ -31,10 +33,10 @@ A _recipe_ is a reproducible sequence of steps meant to be applied to the [skele
 
 Each recipe is located in the [cookbook's recipes folder](/cookbook/recipes/) and is structured with a specific set of conventions. This is how a recipe folder is organized:
 
-- `recipe.json`: the JSON file containig the whole recipe definition, in a machine-readable format.
+- `recipe.yaml`: the JSON file containig the whole recipe definition, in a machine-readable format.
 - `ingredients/`: a folder containing _new_ files that the recipe introduces. They will be copied as-is to the skeleton template.
-- `patches/`: a folder containing patches to be applied to existing files in the skeleton template. The file ↔ patch mappings are defined in the `recipe.json` file under the `ingredients` key.
-- `README.md`: the human-readable Markdown render of the recipe, based off of the `recipe.json` file.
+- `patches/`: a folder containing patches to be applied to existing files in the skeleton template. The file ↔ patch mappings are defined in the `recipe.yaml` file under the `ingredients` key.
+- `README.md`: the human-readable Markdown render of the recipe, based off of the `recipe.yaml` file.
 
 ## Usage
 
@@ -88,7 +90,7 @@ The workflow for creating a new recipe is as follows:
 1. Make the desired changes to the skeleton template
 2. (Optional) Mark relevant portions of the code with `@description` comments describing what the changes are doing
 3. Run the `generate` command with the recipe name
-4. (Optional) Adjust the `recipe.json` output as desired, filling in potential missing information (e.g. the recipe title and description)
+4. (Optional) Adjust the `recipe.yaml` output as desired, filling in potential missing information (e.g. the recipe title and description)
 
 #### Syntax
 
@@ -103,7 +105,7 @@ Options:
   --recipe           The name of the recipe to generate
                                                  [string] [required]
   --onlyFiles        Only generate the files for the recipe, not the
-                     recipe.json file.                     [boolean]
+                     recipe.yaml file.                     [boolean]
   --referenceBranch  The reference branch to use for the recipe
                                    [string] [default: "origin/main"]
 ```
@@ -198,7 +200,7 @@ Options:
   --help             Show help                                         [boolean]
   --recipe           The name of the recipe to regenerate. If not provided, all
                      recipes will be regenerated.                       [string]
-  --onlyFiles        Only generate the files for the recipe, not the recipe.json
+  --onlyFiles        Only generate the files for the recipe, not the recipe.yaml
                      file.                                             [boolean]
   --format           The format to render the recipe in
                           [string] [required] [choices: "github", "shopify.dev"]
@@ -237,4 +239,26 @@ Options:
 
 ```sh
 npm run cookbook -- update --recipe my-recipe
+```
+
+### Schema
+
+`schema` will regenerate the JSON schema for the recipe manifest file off of the Zod schema definition.
+
+#### Syntax
+
+```plain
+cookbook.ts schema
+
+Render the recipe JSON schema out of the Recipe type.
+
+Options:
+  --version  Show version number                                       [boolean]
+  --help     Show help                                                 [boolean]
+```
+
+#### Example
+
+```sh
+npm run cookbook -- schema
 ```
