@@ -39,13 +39,13 @@
   1. Create a `routes.ts` file.
 
      ```ts
-     import { flatRoutes } from "@remix-run/fs-routes";
-     import { layout, type RouteConfig } from "@remix-run/route-config";
-     import { hydrogenRoutes } from "@shopify/hydrogen";
+     import {flatRoutes} from '@remix-run/fs-routes';
+     import {layout, type RouteConfig} from '@remix-run/route-config';
+     import {hydrogenRoutes} from '@shopify/hydrogen';
 
      export default hydrogenRoutes([
        // Your entire app reading from routes folder using Layout from layout.tsx
-       layout("./layout.tsx", await flatRoutes()),
+       layout('./layout.tsx', await flatRoutes()),
      ]) satisfies RouteConfig;
      ```
 
@@ -428,10 +428,10 @@
 - This is an important fix to a bug with 404 routes and path-based i18n projects where some unknown routes would not properly render a 404. This fixes all new projects, but to fix existing projects, add a `($locale).tsx` route with the following contents: ([#1732](https://github.com/Shopify/hydrogen/pull/1732)) by [@blittle](https://github.com/blittle)
 
   ```ts
-  import { type LoaderFunctionArgs } from "@remix-run/server-runtime";
+  import {type LoaderFunctionArgs} from '@remix-run/server-runtime';
 
-  export async function loader({ params, context }: LoaderFunctionArgs) {
-    const { language, country } = context.storefront.i18n;
+  export async function loader({params, context}: LoaderFunctionArgs) {
+    const {language, country} = context.storefront.i18n;
 
     if (
       params.locale &&
@@ -439,7 +439,7 @@
     ) {
       // If the locale URL param is defined, yet we still are still at the default locale
       // then the the locale param must be invalid, send to the 404 page
-      throw new Response(null, { status: 404 });
+      throw new Response(null, {status: 404});
     }
 
     return null;
@@ -1038,17 +1038,17 @@ Shopify CLI now gives you [more options](https://shopify.dev/docs/custom-storefr
   **Optional**: you can tune the codegen configuration by providing a `<root>/codegen.ts` file (or specify a different path with the `--codegen-config-path` flag) with the following content:
 
   ```ts
-  import type { CodegenConfig } from "@graphql-codegen/cli";
-  import { preset, pluckConfig, schema } from "@shopify/hydrogen-codegen";
+  import type {CodegenConfig} from '@graphql-codegen/cli';
+  import {preset, pluckConfig, schema} from '@shopify/hydrogen-codegen';
 
   export default <CodegenConfig>{
     overwrite: true,
     pluckConfig,
     generates: {
-      ["storefrontapi.generated.d.ts"]: {
+      ['storefrontapi.generated.d.ts']: {
         preset,
         schema,
-        documents: ["*.{ts,tsx}", "app/**/*.{ts,tsx}"],
+        documents: ['*.{ts,tsx}', 'app/**/*.{ts,tsx}'],
       },
     },
   };
