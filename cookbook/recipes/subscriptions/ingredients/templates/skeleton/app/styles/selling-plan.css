@@ -1,0 +1,28 @@
+.selling-plan-group {
+  margin-bottom: 1rem;
+}
+
+.selling-plan {
+  border: 1px solid;
+  display: inline-block;
+  padding: 1rem;
+  margin-right: 0.5rem;
+  line-height: 1;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  border-bottom-width: 1.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.selling-plan:hover {
+  text-decoration: none;
+}
+
+.selling-plan.selected {
+  border-color: #6b7280; /* Equivalent to 'border-gray-500' */
+}
+
+.selling-plan.unselected {
+  border-color: #fafafa; /* Equivalent to 'border-neutral-50' */
+}
