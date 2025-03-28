@@ -3,34 +3,32 @@
 This recipe adds subscription capabilities to your Hydrogen storefront by implementing [selling plan groups](https://shopify.dev/docs/api/storefront/latest/objects/SellingPlanGroup) and options. Customers can choose between one-time purchases or recurring subscriptions when available.
 
 The implementation:
-
 1. Modifies product detail pages to display subscription options with accurate pricing
 2. Adds a SellingPlanSelector component that presents available subscription options
 3. Enhances GraphQL fragments to fetch all necessary selling plan data
 4. Displays subscription details on applicable cart line items
-   With this recipe, merchants can offer flexible purchasing options while maintaining a seamless customer experience.
+With this recipe, merchants can offer flexible purchasing options while maintaining a seamless customer experience.
+
 
 ## 🍣 Ingredients
 
-| File                                                                                                              | Description |
-| ----------------------------------------------------------------------------------------------------------------- | ----------- |
-| [`app/components/Cart.tsx`](ingredients/templates/skeleton/app/components/Cart.tsx)                               |             |
-| [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) |             |
-| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css)                       |             |
+| File | Description |
+| --- | --- |
+| [`app/components/Cart.tsx`](ingredients/templates/skeleton/app/components/Cart.tsx) |  |
+| [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) |  |
+| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) |  |
 
 ## 🍱 Steps
 
 ### 1. Requirements
 
 This recipe comes pre-configured for our demo storefront using an example subscription product with the handle `shopify-wax`.
-
 #### Setting Up in Your Own Store
-
 To implement subscriptions in your store:
-
 1. Install a [Shopify Subscriptions](https://apps.shopify.com/shopify-subscriptions) app
 2. Use the app to create selling plans for your products
 3. Assign these selling plans to any products you want to offer as subscriptions
+
 
 ### 2. Copy ingredients
 
@@ -43,6 +41,7 @@ Copy the ingredients from the template directory to the current directory.
 ### 3. app/components/CartLineItem.tsx
 
 CartLineItem now displays subscription plan names when customers add subscription products to their cart.
+
 
 #### File: [`app/components/CartLineItem.tsx`](/templates/skeleton/app/components/CartLineItem.tsx)
 
@@ -59,7 +58,7 @@ index 26102b61..4ec8324b 100644
 +import {ProductPrice} from '~/components/ProductPrice';
 +import {useAside} from '~/components/Aside';
  import type {CartApiQueryFragment} from 'storefrontapi.generated';
-
+ 
  type CartLine = OptimisticCartLine<CartApiQueryFragment>;
 @@ -20,7 +20,9 @@ export function CartLineItem({
    layout: CartLayout;
@@ -91,8 +90,8 @@ index 26102b61..4ec8324b 100644
 ### 4. app/lib/fragments.ts
 
 # Add Selling Plan Data to Cart Queries
-
 Updates cart GraphQL fragments to include subscription plan names, enabling e.g "Subscribe and save" messaging in the applicable cart lines
+
 
 #### File: [`app/lib/fragments.ts`](/templates/skeleton/app/lib/fragments.ts)
 
@@ -127,7 +126,7 @@ index dc4426a9..cfe3a938 100644
 
 ```
 
-### 5. app/routes/\_index.tsx
+### 5. app/routes/_index.tsx
 
 Replaces the base home page with single heading and link to a demonstration subscription product at `/products/shopify-wax`.
 
@@ -197,7 +196,7 @@ index 9fa33642..2023c689 100644
 -  };
 -}
 +import {Link} from '@remix-run/react';
-
+ 
  export default function Homepage() {
 -  const data = useLoaderData<typeof loader>();
    return (
@@ -398,7 +397,7 @@ index 0028b423..bbcc9784 100644
 +export const links: LinksFunction = () => [
 +  {rel: 'stylesheet', href: sellingPanStyle},
 +];
-
+ 
  export const meta: MetaFunction<typeof loader> = ({data}) => {
 -  return [
 -    {title: `Hydrogen | ${data?.product.title ?? ''}`},
@@ -409,7 +408,7 @@ index 0028b423..bbcc9784 100644
 -  ];
 +  return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
  };
-
+ 
 -export async function loader(args: LoaderFunctionArgs) {
 -  // Start fetching non-critical data without blocking time to first byte
 -  const deferredData = loadDeferredData(args);
@@ -432,11 +431,11 @@ index 0028b423..bbcc9784 100644
 +export async function loader({params, request, context}: LoaderFunctionArgs) {
    const {handle} = params;
    const {storefront} = context;
-
+ 
 @@ -48,78 +55,111 @@ async function loadCriticalData({
      throw new Error('Expected product handle to be defined');
    }
-
+ 
 -  const [{product}] = await Promise.all([
 -    storefront.query(PRODUCT_QUERY, {
 -      variables: {handle, selectedOptions: getSelectedProductOptions(request)},
@@ -447,11 +446,11 @@ index 0028b423..bbcc9784 100644
 +  const {product} = await storefront.query(PRODUCT_QUERY, {
 +    variables: {handle, selectedOptions: getSelectedProductOptions(request)},
 +  });
-
+ 
    if (!product?.id) {
      throw new Response(null, {status: 404});
    }
-
+ 
 +  // Initialize the selectedSellingPlan to null
 +  let selectedSellingPlan = null;
 +
@@ -511,7 +510,7 @@ index 0028b423..bbcc9784 100644
 +    selectedSellingPlan,
    };
  }
-
+ 
 -/**
 - * Load data for rendering content below the fold. This data is deferred and will be
 - * fetched after the initial page load. If it's unavailable, the page should still 200.
@@ -529,7 +528,7 @@ index 0028b423..bbcc9784 100644
 +}) {
 +  const url = new URL(request.url);
 +  const firstVariant = product.variants.nodes[0];
-
+ 
 -  return {};
 +  return redirect(
 +    getVariantUrl({
@@ -543,7 +542,7 @@ index 0028b423..bbcc9784 100644
 +    },
 +  );
  }
-
+ 
  export default function Product() {
 -  const {product} = useLoaderData<typeof loader>();
 -
@@ -603,7 +602,7 @@ index 0028b423..bbcc9784 100644
 @@ -139,6 +179,437 @@ export default function Product() {
    );
  }
-
+ 
 +function ProductImage({image}: {image: ProductVariantFragment['image']}) {
 +  if (!image) {
 +    return <div className="product-image" />;
@@ -1089,7 +1088,7 @@ index 0028b423..bbcc9784 100644
    ${PRODUCT_VARIANT_FRAGMENT}
 +  ${SELLING_PLAN_GROUP_FRAGMENT}
  ` as const;
-
+ 
  const PRODUCT_QUERY = `#graphql
 @@ -230,3 +695,27 @@ const PRODUCT_QUERY = `#graphql
    }

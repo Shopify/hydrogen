@@ -49,7 +49,8 @@ steps:
   - type: PATCH
     name: app/components/CartLineItem.tsx
     description: >
-      CartLineItem now displays subscription plan names when customers add subscription products to their cart.
+      CartLineItem now displays subscription plan names when customers add
+      subscription products to their cart.
     diffs:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.8e657b.patch
@@ -58,27 +59,25 @@ steps:
     description: >
       # Add Selling Plan Data to Cart Queries
 
-      Updates cart GraphQL fragments to include subscription plan names, enabling e.g "Subscribe and save" messaging
-      in the applicable cart lines
+      Updates cart GraphQL fragments to include subscription plan names,
+      enabling e.g "Subscribe and save" messaging in the applicable cart lines
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.e8eb04.patch
   - type: PATCH
     name: app/routes/_index.tsx
-    description:
-      Replaces the base home page with single heading and link to a demonstration subscription
-      product at `/products/shopify-wax`.
+    description: Replaces the base home page with single heading and link to a
+      demonstration subscription product at `/products/shopify-wax`.
     diffs:
       - file: app/routes/_index.tsx
         patchFile: _index.tsx.8041d5.patch
   - type: PATCH
     name: app/routes/products.$handle.tsx
-    description:
-      Adds SellingPlanSelector component to display subscription options
+    description: Adds SellingPlanSelector component to display subscription options
       on product pages. Handles pricing adjustments, maintains selection state
       via URL parameters, and updates add-to-cart functionality. Fetches
       subscription data through the updated cart GraphQL fragments.
     diffs:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.3e0b7e.patch
-commit: 74ef1ba7d41988350e9d2c81731c90381943d1f0
+commit: 1bf1e33c11ea285c4b4bfda307c50a8d9c059e97

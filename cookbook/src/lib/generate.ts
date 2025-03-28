@@ -44,6 +44,11 @@ export async function generateRecipe(params: {
   // load the existing recipe if it exists
   const existingRecipe = maybeLoadExistingRecipe(recipeDirPath);
 
+  // rewind changes to the recipe directory (if the recipe directory is not new)
+  if (existingRecipe != null && isInGitHistory({path: recipeDirPath})) {
+    execSync(`git checkout -- ${recipeDirPath}`);
+  }
+
   // clean up the ingredients directory
   const ingredientsDirPath = path.join(recipeDirPath, 'ingredients');
   recreateDirectory(ingredientsDirPath);
@@ -51,11 +56,6 @@ export async function generateRecipe(params: {
   // clean up the patches directory
   const patchesDirPath = path.join(recipeDirPath, 'patches');
   recreateDirectory(patchesDirPath);
-
-  // rewind changes to the recipe directory (if the recipe directory is not new)
-  if (existingRecipe != null && isInGitHistory({path: recipeDirPath})) {
-    execSync(`git checkout -- ${recipeDirPath}`);
-  }
 
   // parse the git status for the template directory
   const {modifiedFiles, newFiles, deletedFiles} = parseGitStatus({
@@ -133,6 +133,8 @@ async function generateSteps(params: {
     // ignore generated types files
     return !file.endsWith('.d.ts');
   });
+
+  console.log('modifiedFiles', modifiedFiles);
 
   for await (const file of modifiedFiles) {
     const {fullPath, patchFilename} = createPatchFile({
