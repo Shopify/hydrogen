@@ -45,28 +45,35 @@ steps:
   - type: PATCH
     name: Render the selling plan in the cart
     description: >
-      CartLineItem now displays subscription plan names when customers add
-      subscription products to their cart.
+      Updates CartLineItem to show subscription information when available. Extracts sellingPlanAllocation
+      from cart line data and displays the plan name. Also standardizes component import paths.
     diffs:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.f93ff4.patch
   - type: PATCH
     name: app/components/ProductForm.tsx
-    description: null
+    description: >
+      Enhances ProductForm to support subscription functionality. Adds conditional rendering to
+      display either subscription options or standard variant selectors. Implements SellingPlanSelector and
+      SellingPlanGroup components to handle subscription plan selection. Updates AddToCartButton to include
+      selling plan data when subscriptions are selected.
     diffs:
       - file: app/components/ProductForm.tsx
         patchFile: ProductForm.tsx.252e88.patch
   - type: PATCH
     name: app/components/ProductPrice.tsx
-    description: null
+    description: >
+      Enhances ProductPrice component to display subscription pricing. Adds SellingPlanPrice function that
+      calculates adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage).
+      Handles different price adjustment types and renders the appropriate subscription price when a selling plan is selected.
     diffs:
       - file: app/components/ProductPrice.tsx
         patchFile: ProductPrice.tsx.49f564.patch
   - type: PATCH
     name: Add Selling Plan Data to Cart Queries
     description: >
-      Updates cart GraphQL fragments to include subscription plan names,
-      enabling e.g "Subscribe and save" messaging in the applicable cart lines
+      Adds `sellingPlanAllocation` field with plan name to both standard and componentizable cart line GraphQL fragments,
+      enabling subscription details display in cart.
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.18726b.patch

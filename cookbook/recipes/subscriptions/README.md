@@ -38,7 +38,7 @@ Copy the ingredients from the template directory to the current directory.
 
 ### 3. Render the selling plan in the cart
 
-CartLineItem now displays subscription plan names when customers add subscription products to their cart.
+Updates CartLineItem to show subscription information when available. Extracts sellingPlanAllocation from cart line data and displays the plan name. Also standardizes component import paths.
 
 
 #### File: [`app/components/CartLineItem.tsx`](/templates/skeleton/app/components/CartLineItem.tsx)
@@ -87,6 +87,7 @@ index 26102b61..4ec8324b 100644
 
 ### 4. app/components/ProductForm.tsx
 
+Enhances ProductForm to support subscription functionality. Adds conditional rendering to display either subscription options or standard variant selectors. Implements SellingPlanSelector and SellingPlanGroup components to handle subscription plan selection. Updates AddToCartButton to include selling plan data when subscriptions are selected.
 
 
 #### File: [`app/components/ProductForm.tsx`](/templates/skeleton/app/components/ProductForm.tsx)
@@ -411,6 +412,7 @@ index e8616a61..e41b91ad 100644
 
 ### 5. app/components/ProductPrice.tsx
 
+Enhances ProductPrice component to display subscription pricing. Adds SellingPlanPrice function that calculates adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage). Handles different price adjustment types and renders the appropriate subscription price when a selling plan is selected.
 
 
 #### File: [`app/components/ProductPrice.tsx`](/templates/skeleton/app/components/ProductPrice.tsx)
@@ -535,7 +537,7 @@ index 32460ae2..59eed1d8 100644
 
 ### 6. Add Selling Plan Data to Cart Queries
 
-Updates cart GraphQL fragments to include subscription plan names, enabling e.g "Subscribe and save" messaging in the applicable cart lines
+Adds `sellingPlanAllocation` field with plan name to both standard and componentizable cart line GraphQL fragments, enabling subscription details display in cart.
 
 
 #### File: [`app/lib/fragments.ts`](/templates/skeleton/app/lib/fragments.ts)
