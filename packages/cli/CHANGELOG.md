@@ -1,5 +1,24 @@
 # @shopify/cli-hydrogen
 
+## 9.0.12
+
+### Patch Changes
+
+- Test ([#2822](https://github.com/Shopify/hydrogen/pull/2822)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  1. Create a `routes.ts` file.
+
+     ```ts
+     import {flatRoutes} from '@remix-run/fs-routes';
+     import {layout, type RouteConfi} from '@remix-run/route-config';
+     import {hydrogenRoutes} from '@shopify/hydrogen';
+
+     export default hydrogenRoutes([
+       // Your entire app reading from routes folder using Layout from layout.tsx
+       layout('./layout.tsx', await flatRoutes()),
+     ]) satisfies RouteConfig;
+     ```
+
 ## 9.0.11
 
 ### Patch Changes
