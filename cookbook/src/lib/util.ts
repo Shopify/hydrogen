@@ -5,55 +5,6 @@ import os from 'os';
 import path from 'path';
 import {COOKBOOK_PATH, REPO_ROOT, TEMPLATE_PATH} from './constants';
 
-/**
- * Get the description of a step.
- * @param file - The file to get the description from.
- * @param type - The type of step to get the description from.
- * @returns The description of the step or null if the description is not found or it's empty.
- */
-export function getStepDescription(
-  file: string,
-  type: 'patch' | 'ingredient',
-): string | null {
-  const content = fs.readFileSync(file, 'utf-8');
-  // if the description is not found or it's empty, return null. If there are multiple descriptions, concatenate them with a period. There can be multiple @description tags in the file.
-  // if the type is patch, the description must be found on a line that is either new or has been modified (so it starts with a +)
-  function getMatch(): string[] | null {
-    switch (type) {
-      case 'patch':
-        return content.trim().match(/\+.+@description\s+(.*)/g);
-      case 'ingredient':
-        return content.trim().match(/.+@description\s+(.*)/g);
-      default:
-        assertNever(type);
-    }
-  }
-  const match = getMatch();
-  if (!match) {
-    return null;
-  }
-
-  // Concatenate the descriptions so they look like a single description. If the description ends with a period, don't add another period.
-  const lines = match.map(
-    (m) =>
-      m
-        .replace(/.+@description\s+/, '')
-        .replace(/\*\/\s*\}?$/, '') // remove trailing `*/`
-        .trim()
-        .replace(/\.*$/, '') + '.',
-  );
-
-  if (lines.length === 0) {
-    return null;
-  }
-
-  if (lines.length > 1) {
-    return lines.map((line) => `- ${line}`).join('\n');
-  }
-
-  return lines[0];
-}
-
 export function createDirectoryIfNotExists(dir: string) {
   try {
     fs.mkdirSync(dir, {recursive: true});
@@ -95,13 +46,14 @@ export function parseGitStatus(params: {filenamesToIgnore: string[]}): {
   let newFiles: string[] = [];
   let deletedFiles: string[] = [];
 
+  let filesWithUnknownStatuses: string[] = [];
+
   for (const line of status.toString().split('\n')) {
     const tokens = line.trim().split(/\s+/, 2);
     if (tokens.length < 2) {
       continue;
     }
     const [status, file] = tokens;
-
     if (params.filenamesToIgnore.includes(path.basename(file))) {
       continue;
     }
@@ -137,9 +89,17 @@ export function parseGitStatus(params: {filenamesToIgnore: string[]}): {
           newFiles.push(file);
           break;
         default:
-          console.warn('unknown git status symbol', status);
+          filesWithUnknownStatuses.push(file);
       }
     }
+  }
+
+  if (filesWithUnknownStatuses.length > 0) {
+    // unique statuses
+    console.warn(
+      '⚠️ All files in the template directory must not be staged for commit. Please review the following files and stage them manually:',
+    );
+    console.warn(filesWithUnknownStatuses.map((f) => `- ${f}`).join('\n'));
   }
 
   return {modifiedFiles, newFiles, deletedFiles};
@@ -203,8 +163,55 @@ export function makeRandomTempDir(params: {prefix: string}): string {
 }
 
 export function listRecipes(): string[] {
+  const recipesFolder = path.join(COOKBOOK_PATH, 'recipes');
   return fs
-    .readdirSync(path.join(COOKBOOK_PATH, 'recipes'), {withFileTypes: true})
-    .filter((file) => file.isDirectory())
+    .readdirSync(recipesFolder, {withFileTypes: true})
+    .filter((file) => {
+      return file.isDirectory();
+    })
+    .filter((file) => {
+      return (
+        fs.existsSync(path.join(recipesFolder, file.name, 'recipe.yaml')) ||
+        fs.existsSync(path.join(recipesFolder, file.name, 'recipe.json'))
+      );
+    })
     .map((file) => file.name);
+}
+
+export function isInGitHistory(params: {path: string}): boolean {
+  try {
+    execSync(`git ls-files --error-unmatch ${params.path}`);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+export function getPatchesDir(recipeName: string): string {
+  return path.join(COOKBOOK_PATH, 'recipes', recipeName, 'patches');
+}
+
+export type RecipeManifestFormat = 'json' | 'yaml';
+
+export async function retry<T>(
+  fn: () => Promise<T>,
+  options: {
+    retries: number;
+    retryDelay: number;
+  },
+): Promise<T> {
+  const {retries, retryDelay} = options;
+  try {
+    return await fn();
+  } catch (error) {
+    console.error(error);
+    // wait for a bit before retrying
+    await new Promise((resolve) => setTimeout(resolve, retryDelay));
+    if (retries > 0) {
+      console.log(`Retrying… (${retries} retries left)`);
+      return retry(fn, {retries: retries - 1, retryDelay});
+    }
+    console.error('Too many retries');
+    throw error;
+  }
 }

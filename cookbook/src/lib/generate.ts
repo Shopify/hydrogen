@@ -1,26 +1,24 @@
 import {execSync} from 'child_process';
 import {createHash} from 'crypto';
 import fs from 'fs';
-import inquirer from 'inquirer';
 import path from 'path';
+import YAML from 'yaml';
 import {
   COOKBOOK_PATH,
   REPO_ROOT,
   TEMPLATE_DIRECTORY,
   TEMPLATE_PATH,
 } from './constants';
-import {Ingredient, parseRecipeFromString, Recipe, Step} from './recipe';
+import {Ingredient, loadRecipe, Recipe, Step} from './recipe';
 import {
   createDirectoryIfNotExists,
   getMainCommitHash,
-  getStepDescription,
+  isInGitHistory,
   parseGitStatus,
   parseReferenceBranch,
+  RecipeManifestFormat,
   recreateDirectory,
-  separator,
 } from './util';
-
-const TODO = '*TODO*';
 
 /**
  * Generate a recipe.
@@ -32,8 +30,10 @@ export async function generateRecipe(params: {
   filenamesToIgnore: string[];
   onlyFiles: boolean;
   referenceBranch: string;
+  recipeManifestFormat: RecipeManifestFormat;
 }): Promise<string> {
-  const {recipeName, filenamesToIgnore, referenceBranch} = params;
+  const {recipeName, filenamesToIgnore, referenceBranch, recipeManifestFormat} =
+    params;
 
   console.log('📖 Generating recipe');
 
@@ -42,8 +42,12 @@ export async function generateRecipe(params: {
   createDirectoryIfNotExists(recipeDirPath);
 
   // load the existing recipe if it exists
-  const existingRecipePath = path.join(recipeDirPath, 'recipe.json');
-  const existingRecipe = maybeLoadExistingRecipe(existingRecipePath);
+  const existingRecipe = maybeLoadExistingRecipe(recipeDirPath);
+
+  // rewind changes to the recipe directory (if the recipe directory is not new)
+  if (existingRecipe != null && isInGitHistory({path: recipeDirPath})) {
+    execSync(`git checkout -- ${recipeDirPath}`);
+  }
 
   // clean up the ingredients directory
   const ingredientsDirPath = path.join(recipeDirPath, 'ingredients');
@@ -52,11 +56,6 @@ export async function generateRecipe(params: {
   // clean up the patches directory
   const patchesDirPath = path.join(recipeDirPath, 'patches');
   recreateDirectory(patchesDirPath);
-
-  // rewind changes to the recipe directory
-  if (existingRecipe != null) {
-    execSync(`git checkout -- ${recipeDirPath}`);
-  }
 
   // parse the git status for the template directory
   const {modifiedFiles, newFiles, deletedFiles} = parseGitStatus({
@@ -71,10 +70,7 @@ export async function generateRecipe(params: {
 
     return {
       path: file,
-      description:
-        getStepDescription(path.join(REPO_ROOT, file), 'ingredient') ??
-        existingDescription ??
-        null,
+      description: existingDescription ?? null,
     };
   });
 
@@ -97,7 +93,7 @@ export async function generateRecipe(params: {
   const recipe: Recipe = {
     title: existingRecipe?.title ?? recipeName,
     image: existingRecipe?.image ?? null,
-    description: existingRecipe?.description ?? TODO,
+    description: existingRecipe?.description ?? '',
     notes: existingRecipe?.notes ?? [],
     deletedFiles,
     ingredients,
@@ -105,13 +101,21 @@ export async function generateRecipe(params: {
     commit: getMainCommitHash(parseReferenceBranch(referenceBranch)),
   };
 
-  // Write the recipe to recipe.json
-  const recipeJSONPath = path.join(recipeDirPath, 'recipe.json');
-  fs.writeFileSync(recipeJSONPath, JSON.stringify(recipe, null, 2));
+  // Write the recipe manifest
+  const recipeManifestPath =
+    recipeManifestFormat === 'json'
+      ? path.join(recipeDirPath, 'recipe.json')
+      : path.join(recipeDirPath, 'recipe.yaml');
 
-  // TODO llms.txt
+  const data =
+    recipeManifestFormat === 'json'
+      ? JSON.stringify(recipe, null, 2)
+      : `# yaml-language-server: $schema=../../recipe.schema.json\n\n` +
+        YAML.stringify(recipe);
 
-  return recipeJSONPath;
+  fs.writeFileSync(recipeManifestPath, data);
+
+  return recipeManifestPath;
 }
 
 async function generateSteps(params: {
@@ -125,22 +129,18 @@ async function generateSteps(params: {
 
   let patchSteps: Step[] = [];
 
-  const modifiedFiles = params.modifiedFiles.filter(
-    (file) => !file.endsWith('.generated.d.ts'),
-  );
+  const modifiedFiles = params.modifiedFiles.filter((file) => {
+    // ignore generated types files
+    return !file.endsWith('.d.ts');
+  });
+
+  console.log('modifiedFiles', modifiedFiles);
 
   for await (const file of modifiedFiles) {
-    const {fullPath, patchFilePath, patchFilename} = getPatchfile({
+    const {fullPath, patchFilename} = createPatchFile({
       file,
       patchesDirPath: params.patchesDirPath,
     });
-
-    const inFileDescription = getStepDescription(patchFilePath, 'patch');
-
-    let description =
-      inFileDescription != null && inFileDescription.trim() != ''
-        ? inFileDescription
-        : null;
 
     const existingStep = params.existingRecipe?.steps.find(
       (step) =>
@@ -152,44 +152,10 @@ async function generateSteps(params: {
     // Try to find the existing description for the step which has _only_ this file as a diff patch.
     const existingDescription = existingStep?.description ?? null;
 
-    // if the existing description is found, ask the user which one to keep
-    if (existingDescription != null && existingDescription !== description) {
-      console.log(separator());
-      console.log('Existing description:');
-      console.log();
-      console.log(existingDescription);
-      console.log(separator());
-      console.log('New description:');
-      console.log();
-      console.log(description);
-      console.log(separator());
-      const answer = await inquirer.prompt([
-        {
-          type: 'list',
-          name: 'description',
-          message: `The step "${file.replace(
-            TEMPLATE_DIRECTORY,
-            '',
-          )}" has an existing description. Which one do you want to keep?`,
-          choices: [
-            {
-              name: 'Existing description',
-              value: existingDescription,
-            },
-            {
-              name: 'New description',
-              value: description,
-            },
-          ],
-        },
-      ]);
-      description = answer.description;
-    }
-
     const step: Step = {
       type: 'PATCH',
       name: existingStep?.name ?? file.replace(TEMPLATE_DIRECTORY, ''),
-      description: description ?? existingDescription ?? null,
+      description: existingDescription ?? null,
       diffs: [
         {
           file: fullPath.replace(TEMPLATE_PATH, ''),
@@ -200,42 +166,19 @@ async function generateSteps(params: {
     patchSteps.push(step);
   }
 
-  // generate the codegen step, if there are any generated types files
-  const generatedTypesFiles = params.modifiedFiles.filter((file) =>
-    file.endsWith('.generated.d.ts'),
-  );
-  const maybeCodegenStep: Step[] =
-    generatedTypesFiles.length > 0
-      ? [
-          codegenStep({
-            generatedTypesFiles,
-            patchesDirPath: params.patchesDirPath,
-          }),
-        ]
-      : [];
   // add the copy ingredients step if there are ingredients
   const maybeCopyIngredientsStep: Step[] =
     params.ingredients.length > 0
       ? [copyIngredientsStep(params.ingredients)]
       : [];
 
-  return [
-    ...existingInfoSteps,
-    ...maybeCopyIngredientsStep,
-    ...patchSteps,
-    ...maybeCodegenStep,
-  ];
+  return [...existingInfoSteps, ...maybeCopyIngredientsStep, ...patchSteps];
 }
 
 function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
-  if (!fs.existsSync(recipePath)) {
-    return null;
-  }
-
   try {
-    return parseRecipeFromString(fs.readFileSync(recipePath, 'utf8'));
+    return loadRecipe({directory: recipePath});
   } catch (error) {
-    console.warn(`❌ Failed to load existing recipe from ${recipePath}`);
     return null;
   }
 }
@@ -250,28 +193,10 @@ function copyIngredientsStep(ingredients: Ingredient[]): Step {
   };
 }
 
-function codegenStep(params: {
-  generatedTypesFiles: string[];
-  patchesDirPath: string;
-}): Step {
-  const {generatedTypesFiles, patchesDirPath} = params;
-  return {
-    type: 'PATCH',
-    name: 'Codegen',
-    diffs: generatedTypesFiles.map((file) => {
-      const {fullPath, patchFilename} = getPatchfile({
-        file,
-        patchesDirPath,
-      });
-      return {
-        file: fullPath.replace(TEMPLATE_PATH, ''),
-        patchFile: patchFilename,
-      };
-    }),
-  };
-}
-
-function getPatchfile(params: {file: string; patchesDirPath: string}) {
+function createPatchFile(params: {file: string; patchesDirPath: string}): {
+  fullPath: string;
+  patchFilename: string;
+} {
   const {file, patchesDirPath} = params;
   const fullPath = path.join(REPO_ROOT, file);
 
@@ -286,5 +211,5 @@ function getPatchfile(params: {file: string; patchesDirPath: string}) {
   const patchFilename = `${path.basename(fullPath)}.${sha.slice(0, 6)}.patch`;
   const patchFilePath = path.join(patchesDirPath, patchFilename);
   fs.writeFileSync(patchFilePath, changes);
-  return {fullPath, patchFilePath, patchFilename};
+  return {fullPath, patchFilename};
 }
