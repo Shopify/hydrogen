@@ -1,111 +1,65 @@
-index 0028b423..bbcc9784 100644
+index 0028b423..8d876bf1 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
-@@ -1,46 +1,53 @@
+@@ -1,16 +1,48 @@
 -import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 -import {useLoaderData, type MetaFunction} from '@remix-run/react';
-+import {Suspense} from 'react';
-+import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
- import {
++import {
++  LinksFunction,
++  redirect,
++  type LoaderFunctionArgs,
++} from '@shopify/remix-oxygen';
++import {
 +  Await,
++  FetcherWithComponents,
 +  Link,
 +  useLoaderData,
 +  type MetaFunction,
-+  type FetcherWithComponents,
 +} from '@remix-run/react';
+ import {
+   getSelectedProductOptions,
+   Analytics,
+-  useOptimisticVariant,
+-  getProductOptions,
+-  getAdjacentAndFirstAvailableVariants,
+-  useSelectedOptionInUrlParam,
++  CartForm,
++  CartViewPayload,
++  Image,
++  Money,
++  OptimisticCartLineInput,
++  useAnalytics,
++  VariantOption,
++  VariantSelector,
+ } from '@shopify/hydrogen';
+-import {ProductPrice} from '~/components/ProductPrice';
+-import {ProductImage} from '~/components/ProductImage';
+-import {ProductForm} from '~/components/ProductForm';
++import {CurrencyCode} from '@shopify/hydrogen/customer-account-api-types';
++import {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
++import {Suspense} from 'react';
++import {useAside} from '../components/Aside';
++import {getVariantUrl} from '../lib/variants';
++import {
++  SellingPlanSelector,
++  type SellingPlanGroup,
++} from '~/components/SellingPlanSelector';
 +import type {
 +  ProductFragment,
 +  ProductVariantsQuery,
 +  ProductVariantFragment,
 +  SellingPlanFragment,
 +} from 'storefrontapi.generated';
-+import {
-+  Image,
-+  Money,
-+  VariantSelector,
-+  type VariantOption,
-   getSelectedProductOptions,
-+  CartForm,
-   Analytics,
--  useOptimisticVariant,
--  getProductOptions,
--  getAdjacentAndFirstAvailableVariants,
--  useSelectedOptionInUrlParam,
-+  type CartViewPayload,
-+  useAnalytics,
-+  type OptimisticCartLineInput,
- } from '@shopify/hydrogen';
--import {ProductPrice} from '~/components/ProductPrice';
--import {ProductImage} from '~/components/ProductImage';
--import {ProductForm} from '~/components/ProductForm';
-+import type {
-+  SelectedOption,
-+  CurrencyCode,
-+} from '@shopify/hydrogen/storefront-api-types';
-+import {getVariantUrl} from '~/lib/variants';
-+import {useAside} from '~/components/Aside';
-+// Import the SellingPlanSelector component and type
-+import {
-+  SellingPlanSelector,
-+  type SellingPlanGroup,
-+} from '~/components/SellingPlanSelector';
++
 +import sellingPanStyle from '~/styles/selling-plan.css?url';
-+import type {LinksFunction} from '@remix-run/node';
 +
 +export const links: LinksFunction = () => [
 +  {rel: 'stylesheet', href: sellingPanStyle},
 +];
  
  export const meta: MetaFunction<typeof loader> = ({data}) => {
--  return [
--    {title: `Hydrogen | ${data?.product.title ?? ''}`},
--    {
--      rel: 'canonical',
--      href: `/products/${data?.product.handle}`,
--    },
--  ];
-+  return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
- };
- 
--export async function loader(args: LoaderFunctionArgs) {
--  // Start fetching non-critical data without blocking time to first byte
--  const deferredData = loadDeferredData(args);
--
--  // Await the critical data required to render initial state of the page
--  const criticalData = await loadCriticalData(args);
--
--  return {...deferredData, ...criticalData};
--}
--
--/**
-- * Load data necessary for rendering content above the fold. This is the critical data
-- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
-- */
--async function loadCriticalData({
--  context,
--  params,
--  request,
--}: LoaderFunctionArgs) {
-+export async function loader({params, request, context}: LoaderFunctionArgs) {
-   const {handle} = params;
-   const {storefront} = context;
- 
-@@ -48,78 +55,111 @@ async function loadCriticalData({
-     throw new Error('Expected product handle to be defined');
-   }
- 
--  const [{product}] = await Promise.all([
--    storefront.query(PRODUCT_QUERY, {
--      variables: {handle, selectedOptions: getSelectedProductOptions(request)},
--    }),
--    // Add other queries here, so that they are loaded in parallel
--  ]);
-+  // await the query for the critical product data
-+  const {product} = await storefront.query(PRODUCT_QUERY, {
-+    variables: {handle, selectedOptions: getSelectedProductOptions(request)},
-+  });
- 
-   if (!product?.id) {
+   return [
+@@ -59,8 +91,63 @@ async function loadCriticalData({
      throw new Response(null, {status: 404});
    }
  
@@ -169,14 +123,10 @@ index 0028b423..bbcc9784 100644
    };
  }
  
--/**
-- * Load data for rendering content below the fold. This data is deferred and will be
-- * fetched after the initial page load. If it's unavailable, the page should still 200.
-- * Make sure to not throw any errors here, as it will cause the page to 500.
-- */
--function loadDeferredData({context, params}: LoaderFunctionArgs) {
--  // Put any API calls that is not critical to be available on first page render
--  // For example: product reviews, product recommendations, social feeds.
+@@ -76,50 +163,42 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
+   return {};
+ }
+ 
 +function redirectToFirstVariant({
 +  product,
 +  request,
@@ -186,8 +136,7 @@ index 0028b423..bbcc9784 100644
 +}) {
 +  const url = new URL(request.url);
 +  const firstVariant = product.variants.nodes[0];
- 
--  return {};
++
 +  return redirect(
 +    getVariantUrl({
 +      pathname: url.pathname,
@@ -199,8 +148,8 @@ index 0028b423..bbcc9784 100644
 +      status: 302,
 +    },
 +  );
- }
- 
++}
++
  export default function Product() {
 -  const {product} = useLoaderData<typeof loader>();
 -
@@ -257,7 +206,7 @@ index 0028b423..bbcc9784 100644
        <Analytics.ProductView
          data={{
            products: [
-@@ -139,6 +179,437 @@ export default function Product() {
+@@ -139,6 +218,437 @@ export default function Product() {
    );
  }
  
@@ -552,8 +501,8 @@ index 0028b423..bbcc9784 100644
 +            ? 'Subscribe'
 +            : 'Select a subscription'
 +          : selectedVariant?.availableForSale
-+          ? 'Add to cart'
-+          : 'Sold out'}
++            ? 'Add to cart'
++            : 'Sold out'}
 +      </AddToCartButton>
 +    </div>
 +  );
@@ -695,7 +644,7 @@ index 0028b423..bbcc9784 100644
  const PRODUCT_VARIANT_FRAGMENT = `#graphql
    fragment ProductVariant on ProductVariant {
      availableForSale
-@@ -184,37 +655,31 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -184,37 +694,31 @@ const PRODUCT_FRAGMENT = `#graphql
      handle
      descriptionHtml
      description
@@ -748,7 +697,7 @@ index 0028b423..bbcc9784 100644
  ` as const;
  
  const PRODUCT_QUERY = `#graphql
-@@ -230,3 +695,27 @@ const PRODUCT_QUERY = `#graphql
+@@ -230,3 +734,27 @@ const PRODUCT_QUERY = `#graphql
    }
    ${PRODUCT_FRAGMENT}
  ` as const;
