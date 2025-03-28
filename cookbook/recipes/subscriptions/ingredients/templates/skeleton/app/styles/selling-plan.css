@@ -2,6 +2,11 @@
   margin-bottom: 1rem;
 }
 
+.selling-plan-group-title {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
 .selling-plan {
   border: 1px solid;
   display: inline-block;
