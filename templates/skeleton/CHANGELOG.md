@@ -1,5 +1,11 @@
 # skeleton
 
+## 2025.1.5
+
+### Patch Changes
+
+- Fixed an issue with the creation of JavaScript projects. ([#2818](https://github.com/Shopify/hydrogen/pull/2818)) by [@seanparsons](https://github.com/seanparsons)
+
 ## 2025.1.4
 
 ### Patch Changes
