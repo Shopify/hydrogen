@@ -140,6 +140,7 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.6.1",
+    "@types/global-agent": "^3.0.0",
     "@types/jest": "^29.5.14",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^1.0.4",
@@ -177,9 +178,11 @@
     "@google/model-viewer": "^4.0.0",
     "@xstate/fsm": "2.0.0",
     "@xstate/react": "3.2.1",
+    "global-agent": "^3.0.0",
     "graphql": "^16.10.0",
     "cross-fetch": "4.1.0",
     "type-fest": "4.33.0",
+    "undici": "^7.3.0",
     "worktop": "^0.7.3"
   },
   "repository": {

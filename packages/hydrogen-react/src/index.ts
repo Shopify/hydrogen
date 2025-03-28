@@ -1,5 +1,6 @@
-// Ensure fetch is replaced as appropriate, so that we can support HTTP proxies.
-import 'cross-fetch/polyfill';
+// Do this as soon as possible, to ensure that calls are setup correctly.
+import {enableProxySupport} from './proxy-support.js';
+enableProxySupport();
 
 export {AddToCartButton} from './AddToCartButton.js';
 export {getClientBrowserParameters, sendShopifyAnalytics} from './analytics.js';
