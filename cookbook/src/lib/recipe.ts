@@ -1,4 +1,7 @@
 import {z} from 'zod';
+import path from 'path';
+import fs from 'fs';
+import YAML from 'yaml';
 
 const IngredientSchema = z.object({
   path: z.string().describe('The path of the ingredient'),
@@ -38,7 +41,7 @@ const StepSchema = z.object({
 
 export type Step = z.infer<typeof StepSchema>;
 
-const RecipeSchema = z.object({
+export const RecipeSchema = z.object({
   title: z.string().describe('The title of the recipe'),
   description: z.string().describe('The description of the recipe'),
   notes: z.array(z.string()).optional().describe('The notes of the recipe'),
@@ -61,6 +64,22 @@ export type Recipe = z.infer<typeof RecipeSchema>;
  * @param data The JSON string to parse
  * @returns The parsed Recipe object
  */
-export function parseRecipeFromString(data: string): Recipe {
-  return RecipeSchema.parse(JSON.parse(data));
+export function loadRecipe(params: {directory: string}): Recipe {
+  if (fs.existsSync(path.join(params.directory, 'recipe.yaml'))) {
+    return RecipeSchema.parse(
+      YAML.parse(
+        fs.readFileSync(path.join(params.directory, 'recipe.yaml'), 'utf8'),
+      ),
+    );
+  } else if (fs.existsSync(path.join(params.directory, 'recipe.json'))) {
+    return RecipeSchema.parse(
+      JSON.parse(
+        fs.readFileSync(path.join(params.directory, 'recipe.json'), 'utf8'),
+      ),
+    );
+  } else {
+    throw new Error(
+      `recipe.yaml or recipe.json not found in ${params.directory}`,
+    );
+  }
 }
