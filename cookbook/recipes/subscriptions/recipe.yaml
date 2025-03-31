@@ -10,6 +10,7 @@ description: |
   2. Adds a SellingPlanSelector component that presents available subscription options
   3. Enhances GraphQL fragments to fetch all necessary selling plan data
   4. Displays subscription details on applicable cart line items
+
   With this recipe, merchants can offer flexible purchasing options while maintaining a seamless customer experience.
 notes: []
 deletedFiles: []
