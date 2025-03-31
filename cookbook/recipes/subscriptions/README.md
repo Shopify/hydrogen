@@ -14,8 +14,8 @@ With this recipe, merchants can offer flexible purchasing options while maintain
 
 | File | Description |
 | --- | --- |
-| [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) |  |
-| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) |  |
+| [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | The SellingPlanSelector component is used to display the available subscription options on product pages. |
+| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) | The selling-plan.css file is used to style the SellingPlanSelector component. |
 
 ## 🍱 Steps
 

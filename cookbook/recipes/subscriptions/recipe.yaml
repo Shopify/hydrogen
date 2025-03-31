@@ -15,9 +15,11 @@ notes: []
 deletedFiles: []
 ingredients:
   - path: templates/skeleton/app/components/SellingPlanSelector.tsx
-    description: null
+    description: The SellingPlanSelector component is used to display the available
+      subscription options on product pages.
   - path: templates/skeleton/app/styles/selling-plan.css
-    description: null
+    description: The selling-plan.css file is used to style the SellingPlanSelector
+      component.
 steps:
   - type: INFO
     name: Requirements
@@ -45,38 +47,43 @@ steps:
   - type: PATCH
     name: Render the selling plan in the cart
     description: >
-      Updates CartLineItem to show subscription information when available. Extracts sellingPlanAllocation
-      from cart line data and displays the plan name. Also standardizes component import paths.
+      Updates CartLineItem to show subscription information when available.
+      Extracts sellingPlanAllocation from cart line data and displays the plan
+      name. Also standardizes component import paths.
     diffs:
       - file: app/components/CartLineItem.tsx
-        patchFile: CartLineItem.tsx.f93ff4.patch
+        patchFile: CartLineItem.tsx.8e657b.patch
   - type: PATCH
     name: app/components/ProductForm.tsx
     description: >
-      Enhances ProductForm to support subscription functionality. Adds conditional rendering to
-      display either subscription options or standard variant selectors. Implements SellingPlanSelector and
-      SellingPlanGroup components to handle subscription plan selection. Updates AddToCartButton to include
-      selling plan data when subscriptions are selected.
+      Enhances ProductForm to support subscription functionality. Adds
+      conditional rendering to display either subscription options or standard
+      variant selectors. Implements SellingPlanSelector and SellingPlanGroup
+      components to handle subscription plan selection. Updates AddToCartButton
+      to include selling plan data when subscriptions are selected.
     diffs:
       - file: app/components/ProductForm.tsx
-        patchFile: ProductForm.tsx.252e88.patch
+        patchFile: ProductForm.tsx.8e409a.patch
   - type: PATCH
     name: app/components/ProductPrice.tsx
     description: >
-      Enhances ProductPrice component to display subscription pricing. Adds SellingPlanPrice function that
-      calculates adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage).
-      Handles different price adjustment types and renders the appropriate subscription price when a selling plan is selected.
+      Enhances ProductPrice component to display subscription pricing. Adds
+      SellingPlanPrice function that calculates adjusted prices based on
+      subscription plan type (fixed amount, fixed price, or percentage). Handles
+      different price adjustment types and renders the appropriate subscription
+      price when a selling plan is selected.
     diffs:
       - file: app/components/ProductPrice.tsx
-        patchFile: ProductPrice.tsx.49f564.patch
+        patchFile: ProductPrice.tsx.a5e47f.patch
   - type: PATCH
     name: Add Selling Plan Data to Cart Queries
     description: >
-      Adds `sellingPlanAllocation` field with plan name to both standard and componentizable cart line GraphQL fragments,
-      enabling subscription details display in cart.
+      Adds `sellingPlanAllocation` field with plan name to both standard and
+      componentizable cart line GraphQL fragments, enabling subscription details
+      display in cart.
     diffs:
       - file: app/lib/fragments.ts
-        patchFile: fragments.ts.18726b.patch
+        patchFile: fragments.ts.e8eb04.patch
   - type: PATCH
     name: Add SellingPlanSelector to product pages
     description: >
@@ -86,5 +93,5 @@ steps:
       subscription data through the updated cart GraphQL fragments.
     diffs:
       - file: app/routes/products.$handle.tsx
-        patchFile: products.$handle.tsx.7addea.patch
+        patchFile: products.$handle.tsx.3e0b7e.patch
 commit: cd76a0df1a585b9e3f6e615bc2cb67c39a3e7a76
