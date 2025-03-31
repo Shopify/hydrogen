@@ -15,19 +15,19 @@ With this recipe, merchants can offer flexible purchasing options while maintain
 
 | File | Description |
 | --- | --- |
-| [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | The SellingPlanSelector component is used to display the available subscription options on product pages. |
-| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) | The selling-plan.css file is used to style the SellingPlanSelector component. |
+| [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | The `SellingPlanSelector` component is used to display the available subscription options on product pages. |
+| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) | The `selling-plan.css` file is used to style the `SellingPlanSelector` component. |
 
 ## 🍱 Steps
 
 ### 1. Requirements
 
-This recipe comes pre-configured for our demo storefront using an example subscription product with the handle `shopify-wax`.
-#### Setting Up in Your Own Store
-To implement subscriptions in your store:
+To implement subscriptions in your own store make sure to:
 1. Install a [Shopify Subscriptions](https://apps.shopify.com/shopify-subscriptions) app
 2. Use the app to create selling plans for your products
 3. Assign these selling plans to any products you want to offer as subscriptions
+
+_For demo purposes, this recipe comes pre-configured for our demo storefront using an example subscription product with the handle `shopify-wax`._
 
 
 ### 2. Copy ingredients
@@ -39,7 +39,8 @@ Copy the ingredients from the template directory to the current directory.
 
 ### 3. Render the selling plan in the cart
 
-Updates CartLineItem to show subscription information when available. Extracts sellingPlanAllocation from cart line data and displays the plan name. Also standardizes component import paths.
+- Update `CartLineItem` to show subscription information when available.
+- Extract `sellingPlanAllocation` from cart line data and display the plan name. Also standardizes component import paths.
 
 
 #### File: [`app/components/CartLineItem.tsx`](/templates/skeleton/app/components/CartLineItem.tsx)
@@ -86,9 +87,12 @@ index 26102b61..4ec8324b 100644
 
 ```
 
-### 4. app/components/ProductForm.tsx
+### 4. Update `ProductForm`
 
-Enhances ProductForm to support subscription functionality. Adds conditional rendering to display either subscription options or standard variant selectors. Implements SellingPlanSelector and SellingPlanGroup components to handle subscription plan selection. Updates AddToCartButton to include selling plan data when subscriptions are selected.
+- Enhance `ProductForm` to support subscription functionality.
+- Add conditional rendering to display either subscription options or standard variant selectors.
+- Implement `SellingPlanSelector` and `SellingPlanGroup` components to handle subscription plan selection.
+- Update `AddToCartButton` to include selling plan data when subscriptions are selected.
 
 
 #### File: [`app/components/ProductForm.tsx`](/templates/skeleton/app/components/ProductForm.tsx)
@@ -411,9 +415,11 @@ index e8616a61..e41b91ad 100644
 
 </details>
 
-### 5. app/components/ProductPrice.tsx
+### 5. Update `ProductPrice`
 
-Enhances ProductPrice component to display subscription pricing. Adds SellingPlanPrice function that calculates adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage). Handles different price adjustment types and renders the appropriate subscription price when a selling plan is selected.
+- Enhance `ProductPrice` component to display subscription pricing.
+- Add `SellingPlanPrice` function that calculates adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage).
+- Handle different price adjustment types and render the appropriate subscription price when a selling plan is selected.
 
 
 #### File: [`app/components/ProductPrice.tsx`](/templates/skeleton/app/components/ProductPrice.tsx)
@@ -538,7 +544,7 @@ index 32460ae2..59eed1d8 100644
 
 ### 6. Add Selling Plan Data to Cart Queries
 
-Adds `sellingPlanAllocation` field with plan name to both standard and componentizable cart line GraphQL fragments, enabling subscription details display in cart.
+Add `sellingPlanAllocation` field with plan name to both standard and componentizable cart line GraphQL fragments, enabling subscription details display in cart.
 
 
 #### File: [`app/lib/fragments.ts`](/templates/skeleton/app/lib/fragments.ts)
@@ -574,9 +580,11 @@ index dc4426a9..cfe3a938 100644
 
 ```
 
-### 7. Add SellingPlanSelector to product pages
+### 7. Add `SellingPlanSelector` to product pages
 
-Adds SellingPlanSelector component to display subscription options on product pages. Handles pricing adjustments, maintains selection state via URL parameters, and updates add-to-cart functionality. Fetches subscription data through the updated cart GraphQL fragments.
+- Add `SellingPlanSelector` component to display subscription options on product pages.
+- Handle pricing adjustments, maintain selection state via URL parameters, and updates add-to-cart functionality.
+- Fetch subscription data through the updated cart GraphQL fragments.
 
 
 #### File: [`app/routes/products.$handle.tsx`](/templates/skeleton/app/routes/products.$handle.tsx)
