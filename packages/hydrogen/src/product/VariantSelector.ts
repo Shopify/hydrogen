@@ -34,6 +34,10 @@ export type VariantOptionValue = {
   optionValue: PartialProductOptionValues;
 };
 
+/**
+ * @deprecated This component will be deprecated and removed in the next major version 2025-07
+ * Please use the [getSelectedProductOptions](https://shopify.dev/docs/api/hydrogen/latest/utilities/getselectedproductoptions) util instead.
+ */
 type VariantSelectorProps = {
   /** The product handle for all of the variants */
   handle: string;
@@ -54,7 +58,9 @@ type VariantSelectorProps = {
 
 /**
  * @deprecated This component will be deprecated and removed in the next major version 2025-07
- * Please use the [getSelectedProductOptions](https://shopify.dev/docs/api/hydrogen/latest/utilities/getselectedproductoptions) util instead.
+ * Please use the [getSelectedProductOptions](https://shopify.dev/docs/api/hydrogen/latest/utilities/getselectedproductoptions)
+ * and [getAdjacentAndFirstAvailableVariants](https://shopify.dev/docs/api/hydrogen/latest/utilities/getadjacentandfirstavailablevariants) utils instead.
+ * See the Skeleton template routes/product.$handle.tsx file for an example of how to use them.
  */
 export function VariantSelector({
   handle,
