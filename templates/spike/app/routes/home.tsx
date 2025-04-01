@@ -1,5 +1,4 @@
 import type {Route} from './+types/home';
-import {Welcome} from '../welcome/welcome';
 import {getShopDetails} from '../lib/shopify';
 
 // eslint-disable-next-line no-empty-pattern
@@ -21,7 +20,6 @@ export async function loader({context}: Route.LoaderArgs) {
 export default function Home({loaderData}: Route.ComponentProps) {
   return (
     <div>
-      <Welcome message={loaderData.message} />
       <div className="text-center mt-4">
         <h2 className="text-xl font-bold">Shop Name: {loaderData.shopName}</h2>
       </div>
