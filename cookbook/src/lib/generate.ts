@@ -9,7 +9,13 @@ import {
   TEMPLATE_DIRECTORY,
   TEMPLATE_PATH,
 } from './constants';
-import {Ingredient, loadRecipe, Recipe, Step} from './recipe';
+import {
+  Ingredient,
+  loadRecipe,
+  Recipe,
+  RecipeWithoutLLMs,
+  Step,
+} from './recipe';
 import {
   createDirectoryIfNotExists,
   getMainCommitHash,
@@ -18,7 +24,15 @@ import {
   parseReferenceBranch,
   RecipeManifestFormat,
   recreateDirectory,
+  SkipPrompts,
 } from './util';
+import inquirer from 'inquirer';
+import {
+  getDescriptionFromLLM,
+  getUserQueriesFromLLM,
+  getTroubleshootingQuestionsFromLLM,
+  getStepDescriptionFromLLM,
+} from './llms';
 
 /**
  * Generate a recipe.
@@ -31,9 +45,21 @@ export async function generateRecipe(params: {
   onlyFiles: boolean;
   referenceBranch: string;
   recipeManifestFormat: RecipeManifestFormat;
+  llmAPIKey?: string;
+  llmURL?: string;
+  llmModel?: string;
+  skipPrompts?: SkipPrompts;
 }): Promise<string> {
-  const {recipeName, filenamesToIgnore, referenceBranch, recipeManifestFormat} =
-    params;
+  const {
+    recipeName,
+    filenamesToIgnore,
+    referenceBranch,
+    recipeManifestFormat,
+    llmAPIKey,
+    llmURL,
+    llmModel,
+    skipPrompts,
+  } = params;
 
   console.log('📖 Generating recipe');
 
@@ -90,7 +116,10 @@ export async function generateRecipe(params: {
     ingredients,
   });
 
-  const recipe: Recipe = {
+  const userQueries = existingRecipe?.llms.userQueries ?? [];
+  const troubleshooting = existingRecipe?.llms.troubleshooting ?? [];
+
+  const baseRecipe: RecipeWithoutLLMs = {
     title: existingRecipe?.title ?? recipeName,
     image: existingRecipe?.image ?? null,
     description: existingRecipe?.description ?? '',
@@ -99,6 +128,102 @@ export async function generateRecipe(params: {
     ingredients,
     steps,
     commit: getMainCommitHash(parseReferenceBranch(referenceBranch)),
+  };
+
+  if (llmAPIKey != null && llmURL != null && llmModel != null) {
+    console.log('- 🤖 LLMs integration…');
+
+    if (baseRecipe.description === '') {
+      await runIfPrompt({
+        skipPrompts,
+        message: 'Would you like to generate a description for the recipe?',
+        action: async () => {
+          console.log('  - Asking LLM…');
+          const description = await getDescriptionFromLLM({
+            llmAPIKey,
+            llmModel,
+            llmURL,
+            recipeName,
+            baseRecipe,
+          });
+          baseRecipe.description = description;
+        },
+      });
+    }
+
+    if (userQueries.length === 0) {
+      await runIfPrompt({
+        skipPrompts,
+        message:
+          'Would you like to generate a list of user questions that this recipe might help with?',
+        action: async () => {
+          console.log('  - Asking LLM…');
+          const queries = await getUserQueriesFromLLM({
+            llmAPIKey,
+            llmModel,
+            llmURL,
+            recipeName,
+            baseRecipe,
+          });
+          userQueries.push(...queries);
+        },
+      });
+    }
+
+    if (troubleshooting.length === 0) {
+      await runIfPrompt({
+        skipPrompts,
+        message:
+          'Would you like to generate FAQs that this recipe might help with?',
+        action: async () => {
+          console.log('  - Asking LLM…');
+          const questions = await getTroubleshootingQuestionsFromLLM({
+            llmAPIKey,
+            llmModel,
+            llmURL,
+            recipeName,
+            baseRecipe,
+          });
+          troubleshooting.push(...questions);
+        },
+      });
+    }
+
+    await runIfPrompt({
+      skipPrompts,
+      message: 'Would you like to generate descriptions for the steps?',
+      action: async () => {
+        console.log('  - Asking LLM…');
+        for (let i = 0; i < baseRecipe.steps.length; i++) {
+          const step = baseRecipe.steps[i];
+          if (step.type === 'PATCH') {
+            console.log(`    - Generating for step ${i + 1}: ${step.name}…`);
+            const description = await getStepDescriptionFromLLM({
+              llmAPIKey,
+              llmURL,
+              llmModel,
+              recipeName,
+              diffs: step.diffs?.map((d) => d.patchFile) ?? [],
+            });
+            if (description.trim().length > 0) {
+              baseRecipe.steps[i].description = description;
+            }
+          }
+        }
+      },
+    });
+  } else {
+    console.warn(
+      '⚠️ No LLM integration provided, if you wish to generate user queries and troubleshooting questions, please re-run the command with the relevant parameters.',
+    );
+  }
+
+  const recipe: Recipe = {
+    ...baseRecipe,
+    llms: {
+      userQueries,
+      troubleshooting,
+    },
   };
 
   // Write the recipe manifest
@@ -210,4 +335,39 @@ function createPatchFile(params: {file: string; patchesDirPath: string}): {
   const patchFilePath = path.join(patchesDirPath, patchFilename);
   fs.writeFileSync(patchFilePath, changes);
   return {fullPath, patchFilename};
+}
+
+async function runIfPrompt(params: {
+  skipPrompts?: SkipPrompts;
+  message: string;
+  action: () => Promise<void>;
+}) {
+  const {skipPrompts, message, action} = params;
+
+  let ok = skipPrompts === 'yes';
+  if (skipPrompts !== 'no') {
+    ok = await renderConfirmationPrompt({
+      message,
+      defaultValue: false,
+    });
+  }
+  if (ok) {
+    await action();
+  }
+}
+
+async function renderConfirmationPrompt(arg0: {
+  message: string;
+  defaultValue: boolean;
+}): Promise<boolean> {
+  // ask the user to confirm the action or return the default value
+  const answer = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'confirm',
+      message: arg0.message,
+      default: arg0.defaultValue,
+    },
+  ]);
+  return answer.confirm;
 }

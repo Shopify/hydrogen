@@ -1,4 +1,81 @@
-# 🧑‍🍳 Subscriptions
+---
+description: Recipe for implementing "Subscriptions (subscriptions)" in a Hydrogen storefront. This recipe adds subscription capabilities to your Hydrogen storefront by implementing [selling plan groups](https://shopify.dev/docs/api/storefront/latest/objects/SellingPlanGroup) and options. Customers can choose between one-time purchases or recurring subscriptions when available.
+
+The implementation:
+1. Modifies product detail pages to display subscription options with accurate pricing
+2. Adds a SellingPlanSelector component that presents available subscription options
+3. Enhances GraphQL fragments to fetch all necessary selling plan data
+4. Displays subscription details on applicable cart line items
+
+With this recipe, merchants can offer flexible purchasing options while maintaining a seamless customer experience.
+
+globs: templates/**/*
+alwaysApply: false
+---
+
+# Overview
+
+This rule describes how to implement "Subscriptions" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
+
+If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
+
+Please remember that specific documentation about Storefront API, which might be relevant to the user, is available at <https://shopify.dev/docs/api/storefront>.
+
+If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
+
+Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
+
+# User Intent Recognition
+
+<user_queries>
+- How do I add subscriptions to my Hydrogen storefront?
+- What are selling plan groups in Shopify?
+- How can I display subscription options on product pages?
+- How do I show subscription details in the cart?
+- What's required to implement subscriptions in my Shopify store?
+- How do I handle subscription pricing in Hydrogen?
+- Can customers choose between one-time purchases and subscriptions?
+- How do I style the subscription selector component?
+- What GraphQL fragments do I need for subscriptions?
+- How do I update my cart to show subscription information?
+- How do I calculate adjusted prices for subscription plans?
+- What types of price adjustments are supported for subscriptions?
+- How do I maintain subscription selection state via URL parameters?
+- What apps do I need to install for subscription functionality?
+- How do I assign selling plans to products?
+</user_queries>
+
+# Troubleshooting
+
+<troubleshooting>
+- **Issue**: Why aren't my subscription options showing up on my product page?
+  **Solution**: Make sure you've completed the requirements: 1) Install a Shopify Subscriptions app, 2) Create selling plans for your products using the app, and 3) Assign these selling plans to the products you want to offer as subscriptions. Also verify that your GraphQL queries include the necessary selling plan fragments.
+- **Issue**: The subscription prices are not calculating correctly on my product page
+  **Solution**: Check the `SellingPlanPrice` function in your `ProductPrice.tsx` file. Make sure it's correctly handling all three types of price adjustments: fixed amount, fixed price, and percentage. Verify that your GraphQL queries are fetching all the necessary price adjustment data.
+- **Issue**: Subscription details are not showing up in the cart
+  **Solution**: Ensure you've updated both cart GraphQL fragments in `app/lib/fragments.ts` to include the `sellingPlanAllocation` field with the plan name. Also check that your `CartLineItem.tsx` component is correctly extracting and displaying the `sellingPlanAllocation` data.
+- **Issue**: I'm getting an error when trying to add a subscription product to cart
+  **Solution**: Make sure your `AddToCartButton` component in `ProductForm.tsx` is correctly passing the `sellingPlanId` when a subscription is selected. Verify that the `selectedSellingPlan` is not null when attempting to add a subscription product to cart.
+- **Issue**: The subscription options are not being maintained when I navigate between pages
+  **Solution**: Check that your URL parameter handling is working correctly. The recipe uses URL parameters to maintain the selected selling plan state. Verify that `selectedSellingPlanId` is being properly extracted from the URL in the loader function in `products.$handle.tsx`.
+- **Issue**: The styling for my subscription options doesn't match the rest of my store
+  **Solution**: You can customize the styling by modifying the `app/styles/selling-plan.css` file. Make sure the CSS file is properly imported in your product page component with the `links` export.
+- **Issue**: How do I test if my subscription implementation is working correctly?
+  **Solution**: You can test with the example product 'shopify-wax' mentioned in the recipe. Alternatively, create a test product with subscription options using your Shopify Subscriptions app, then verify that the subscription options appear on the product page, can be selected, and that the correct subscription details appear in the cart.
+- **Issue**: My subscription products show both one-time purchase and subscription options, but I only want to offer subscriptions
+  **Solution**: The recipe is designed to show both options when available. If you want to offer subscription-only products, you'll need to modify the `ProductForm.tsx` component to remove the one-time purchase option and only display subscription options for those products.
+- **Issue**: The subscription selector is not showing all my available subscription plans
+  **Solution**: Check your GraphQL queries to ensure you're fetching all selling plans. The current implementation limits to the first 10 selling plans with `sellingPlans(first:10)`. If you have more than 10 plans, you may need to increase this limit or implement pagination.
+</troubleshooting>
+
+# Recipe Implementation
+
+Here's the subscriptions recipe for the base Hydrogen skeleton template:
+
+<recipe_implementation>
+
+## Description
 
 This recipe adds subscription capabilities to your Hydrogen storefront by implementing [selling plan groups](https://shopify.dev/docs/api/storefront/latest/objects/SellingPlanGroup) and options. Customers can choose between one-time purchases or recurring subscriptions when available.
 
@@ -11,14 +88,12 @@ The implementation:
 With this recipe, merchants can offer flexible purchasing options while maintaining a seamless customer experience.
 
 
-## 🍣 Ingredients
+## Ingredients
 
-| File | Description |
-| --- | --- |
-| [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | The `SellingPlanSelector` component is used to display the available subscription options on product pages. |
-| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) | The `selling-plan.css` file is used to style the `SellingPlanSelector` component. |
+- `templates/skeleton/app/components/SellingPlanSelector.tsx` : The `SellingPlanSelector` component is used to display the available subscription options on product pages.
+- `templates/skeleton/app/styles/selling-plan.css` : The `selling-plan.css` file is used to style the `SellingPlanSelector` component.
 
-## 🍱 Steps
+## Steps
 
 ### 1. Requirements
 
@@ -39,7 +114,9 @@ Copy the ingredients from the template directory to the current directory.
 
 ### 3. Render the selling plan in the cart
 
-This update enhances the CartLineItem component to display selling plan information when available. It extracts the sellingPlanAllocation from the cart line and conditionally renders the selling plan name below the product details. The component's imports are also updated to use absolute paths.
+- Update `CartLineItem` to show subscription information when available.
+- Extract `sellingPlanAllocation` from cart line data and display the plan name. Also standardizes component import paths.
+
 
 #### File: [`app/components/CartLineItem.tsx`](/templates/skeleton/app/components/CartLineItem.tsx)
 
@@ -87,7 +164,11 @@ index 26102b61..4ec8324b 100644
 
 ### 4. Update `ProductForm`
 
-Enhances ProductForm component to support subscription options through selling plans, adding a SellingPlanSelector that displays available subscription options and a "Subscribe" button when selling plans are available, while maintaining the original product variant selection functionality.
+- Enhance `ProductForm` to support subscription functionality.
+- Add conditional rendering to display either subscription options or standard variant selectors.
+- Implement `SellingPlanSelector` and `SellingPlanGroup` components to handle subscription plan selection.
+- Update `AddToCartButton` to include selling plan data when subscriptions are selected.
+
 
 #### File: [`app/components/ProductForm.tsx`](/templates/skeleton/app/components/ProductForm.tsx)
 
@@ -411,7 +492,10 @@ index e8616a61..e41b91ad 100644
 
 ### 5. Update `ProductPrice`
 
-Enhances ProductPrice component to support selling plans by adding a SellingPlanPrice function that calculates adjusted prices based on different selling plan types (fixed amount, fixed price, or percentage adjustments) when a selling plan is selected for a product variant.
+- Enhance `ProductPrice` component to display subscription pricing.
+- Add `SellingPlanPrice` function that calculates adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage).
+- Handle different price adjustment types and render the appropriate subscription price when a selling plan is selected.
+
 
 #### File: [`app/components/ProductPrice.tsx`](/templates/skeleton/app/components/ProductPrice.tsx)
 
@@ -535,7 +619,8 @@ index 32460ae2..59eed1d8 100644
 
 ### 6. Add Selling Plan Data to Cart Queries
 
-Updates the GraphQL fragment for cart queries to include selling plan allocation information, enabling the display of subscription details in the cart.
+Add `sellingPlanAllocation` field with plan name to both standard and componentizable cart line GraphQL fragments, enabling subscription details display in cart.
+
 
 #### File: [`app/lib/fragments.ts`](/templates/skeleton/app/lib/fragments.ts)
 
@@ -572,7 +657,10 @@ index dc4426a9..cfe3a938 100644
 
 ### 7. Add `SellingPlanSelector` to product pages
 
-This step adds support for selling plans in the product detail page, enabling subscription options. It imports necessary types, adds CSS styling, and modifies the loader function to handle selling plan selection from URL parameters. The product components are updated to pass selling plan data, and GraphQL fragments are added to fetch selling plan information from the Shopify API.
+- Add `SellingPlanSelector` component to display subscription options on product pages.
+- Handle pricing adjustments, maintain selection state via URL parameters, and updates add-to-cart functionality.
+- Fetch subscription data through the updated cart GraphQL fragments.
+
 
 #### File: [`app/routes/products.$handle.tsx`](/templates/skeleton/app/routes/products.$handle.tsx)
 
@@ -768,3 +856,5 @@ index 0028b423..9f634090 100644
 ```
 
 </details>
+
+</recipe_implementation>

@@ -193,6 +193,8 @@ export function getPatchesDir(recipeName: string): string {
 
 export type RecipeManifestFormat = 'json' | 'yaml';
 
+export type SkipPrompts = 'yes' | 'no';
+
 export async function retry<T>(
   fn: () => Promise<T>,
   options: {

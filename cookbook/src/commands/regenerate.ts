@@ -4,13 +4,22 @@ import {applyRecipe} from '../lib/apply';
 import {FILES_TO_IGNORE_FOR_GENERATE, TEMPLATE_PATH} from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
 import {isRenderFormat, RENDER_FORMATS, renderRecipe} from '../lib/render';
-import {listRecipes, separator, RecipeManifestFormat} from '../lib/util';
+import {
+  listRecipes,
+  separator,
+  RecipeManifestFormat,
+  SkipPrompts,
+} from '../lib/util';
 type RegenerateArgs = {
   recipe?: string;
   onlyFiles: boolean;
   format: string;
   referenceBranch: string;
   recipeManifestFormat: RecipeManifestFormat;
+  llmAPIKey?: string;
+  llmURL?: string;
+  llmModel?: string;
+  skipPrompts?: SkipPrompts;
 };
 
 export const regenerate: CommandModule<{}, RegenerateArgs> = {
@@ -42,6 +51,23 @@ export const regenerate: CommandModule<{}, RegenerateArgs> = {
       type: 'string',
       description: 'The format of the recipe manifest file',
       default: 'yaml',
+    },
+    llmAPIKey: {
+      type: 'string',
+      description: 'The API key for the LLM to use',
+    },
+    llmURL: {
+      type: 'string',
+      description: 'The URL for the LLM to use',
+    },
+    llmModel: {
+      type: 'string',
+      description: 'The model for the LLM to use',
+    },
+    skipPrompts: {
+      type: 'string',
+      description: 'Bypass prompts with the given answer',
+      choices: ['yes', 'no'],
     },
   },
   handler,
@@ -75,6 +101,10 @@ async function handler(args: RegenerateArgs) {
       filenamesToIgnore: FILES_TO_IGNORE_FOR_GENERATE,
       referenceBranch: args.referenceBranch,
       recipeManifestFormat: args.recipeManifestFormat,
+      llmAPIKey: args.llmAPIKey,
+      llmURL: args.llmURL,
+      llmModel: args.llmModel,
+      skipPrompts: args.skipPrompts,
     });
     // render the recipe
     renderRecipe({

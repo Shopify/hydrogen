@@ -1,13 +1,17 @@
 import {CommandModule} from 'yargs';
 import {FILES_TO_IGNORE_FOR_GENERATE} from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
-import {RecipeManifestFormat} from '../lib/util';
+import {RecipeManifestFormat, SkipPrompts} from '../lib/util';
 
 type GenerateArgs = {
   recipe: string;
   onlyFiles: boolean;
   referenceBranch: string;
   recipeManifestFormat: RecipeManifestFormat;
+  llmAPIKey?: string;
+  llmURL?: string;
+  llmModel?: string;
+  skipPrompts?: SkipPrompts;
 };
 
 export const generate: CommandModule<{}, GenerateArgs> = {
@@ -34,6 +38,23 @@ export const generate: CommandModule<{}, GenerateArgs> = {
       description: 'The format of the recipe manifest file',
       default: 'yaml',
     },
+    llmAPIKey: {
+      type: 'string',
+      description: 'The API key for the LLM to use',
+    },
+    llmURL: {
+      type: 'string',
+      description: 'The URL for the LLM to use',
+    },
+    llmModel: {
+      type: 'string',
+      description: 'The model for the LLM to use',
+    },
+    skipPrompts: {
+      type: 'string',
+      description: 'Bypass prompts with the given answer',
+      choices: ['yes', 'no'],
+    },
   },
   handler,
 };
@@ -45,6 +66,10 @@ async function handler(args: GenerateArgs) {
     onlyFiles: args.onlyFiles,
     referenceBranch: args.referenceBranch,
     recipeManifestFormat: args.recipeManifestFormat,
+    llmAPIKey: args.llmAPIKey,
+    llmURL: args.llmURL,
+    llmModel: args.llmModel,
+    skipPrompts: args.skipPrompts,
   });
 
   console.log();
