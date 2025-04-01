@@ -197,10 +197,10 @@ describe('local templates', () => {
           readFile(`${tmpDir}/app/styles/tailwind.css`),
         ).resolves.toMatch(/@import 'tailwindcss';/);
 
-        // Injects styles in Layout.
-        const layoutFile = await readFile(`${tmpDir}/app/layout.tsx`);
-        await expect(layoutFile).toMatch(/import tailwindCss from/);
-        await expect(layoutFile).toMatch(
+        // Injects styles in Root
+        const rootFile = await readFile(`${tmpDir}/app/root.tsx`);
+        await expect(rootFile).toMatch(/import tailwindCss from/);
+        await expect(rootFile).toMatch(
           /<link rel="stylesheet" href={tailwindCss}><\/link>/ims,
         );
 
