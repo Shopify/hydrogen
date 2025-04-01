@@ -19,7 +19,6 @@ export async function loader({context}: Route.LoaderArgs) {
 }
 
 export default function Home({loaderData}: Route.ComponentProps) {
-  console.log(loaderData);
   return (
     <div>
       <div className="text-center mt-4">
