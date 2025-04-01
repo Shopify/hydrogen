@@ -1,5 +1,6 @@
 import type {Route} from './+types/home';
 import {Welcome} from '../welcome/welcome';
+import {getShopDetails} from '../lib/shopify';
 
 // eslint-disable-next-line no-empty-pattern
 export function meta({}: Route.MetaArgs) {
@@ -9,10 +10,21 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export function loader({context}: Route.LoaderArgs) {
-  return {message: context.cloudflare.env.VALUE_FROM_CLOUDFLARE};
+export async function loader({context}: Route.LoaderArgs) {
+  const shopData = await getShopDetails(context.cloudflare.env);
+  return {
+    message: context.cloudflare.env.VALUE_FROM_CLOUDFLARE,
+    shopName: shopData.shop.name,
+  };
 }
 
 export default function Home({loaderData}: Route.ComponentProps) {
-  return <Welcome message={loaderData.message} />;
+  return (
+    <div>
+      <Welcome message={loaderData.message} />
+      <div className="text-center mt-4">
+        <h2 className="text-xl font-bold">Shop Name: {loaderData.shopName}</h2>
+      </div>
+    </div>
+  );
 }
