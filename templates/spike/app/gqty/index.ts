@@ -2,12 +2,15 @@
  * GQty: You can safely modify this file based on your needs.
  */
 
+import {createReactClient} from '@gqty/react';
+
 import {
   Cache,
   createClient,
   defaultResponseHandler,
   type QueryFetcher,
 } from 'gqty';
+
 import {
   generatedSchema,
   scalarsEnumsHash,
@@ -64,5 +67,24 @@ export const {resolve, subscribe, schema} = client;
 // Legacy functions
 export const {query, mutation, mutate, subscription, resolved, refetch, track} =
   client;
+
+export const {
+  graphql,
+  useQuery,
+  usePaginatedQuery,
+  useTransactionQuery,
+  useLazyQuery,
+  useRefetch,
+  useMutation,
+  useMetaState,
+  prepareReactRender,
+  useHydrateCache,
+  prepareQuery,
+} = createReactClient<GeneratedSchema>(client, {
+  defaults: {
+    // Enable Suspense, you can override this option at hooks.
+    suspense: false,
+  },
+});
 
 export * from './schema.generated';
