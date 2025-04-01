@@ -1,4 +1,4 @@
-import type {Route} from './+types/home';
+import type {Route} from './+types/_index';
 import type {StorefrontApiClient} from '@shopify/storefront-api-client';
 
 // eslint-disable-next-line no-empty-pattern
