@@ -3,6 +3,7 @@ import type {StorefrontApiClient} from '@shopify/storefront-api-client';
 import {LANDING_PAGES_QUERY} from '~/sanity/queries';
 import type {SanityDocument} from '@sanity/client';
 import LandingPageContent from '~/components/LandingPageContent';
+import {Link} from 'react-router-dom';
 
 // eslint-disable-next-line no-empty-pattern
 export function meta({}: Route.MetaArgs) {
@@ -77,13 +78,16 @@ interface ProductCardProps {
 }
 
 function ProductCard({product}: ProductCardProps) {
-  const {title, images, priceRange} = product;
+  const {title, images, priceRange, handle} = product;
   const image = images.nodes[0];
   const price = priceRange.minVariantPrice.amount;
   const currencyCode = priceRange.minVariantPrice.currencyCode;
 
   return (
-    <div className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+    <Link
+      to={`/products/${handle}`}
+      className="block border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+    >
       {image && (
         <div className="aspect-square overflow-hidden">
           <img
@@ -102,7 +106,7 @@ function ProductCard({product}: ProductCardProps) {
           }).format(parseFloat(price))}
         </p>
       </div>
-    </div>
+    </Link>
   );
 }
 
