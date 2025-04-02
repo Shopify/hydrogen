@@ -5,7 +5,10 @@ export async function loader({context, params}: Route.LoaderArgs) {
   const {storefront} = context;
   const {handle} = params;
 
-  // TODO get handle from params
+  if (!handle) {
+    throw new Response(null, {status: 404});
+  }
+
   const product = await getProduct(storefront, handle);
 
   if (!product?.data?.product?.id) {
