@@ -35,8 +35,12 @@ export type VariantOptionValue = {
 };
 
 /**
- * @deprecated This component will be deprecated and removed in the next major version 2025-07
- * Please use the [getSelectedProductOptions](https://shopify.dev/docs/api/hydrogen/latest/utilities/getselectedproductoptions) util instead.
+ * @deprecated VariantSelector will be deprecated and removed in the next major version 2025-07
+ * Please use [getProductOptions](https://shopify.dev/docs/api/hydrogen/latest/utilities/getproductoptions),
+ * [getSelectedProductOptions](https://shopify.dev/docs/api/hydrogen/latest/utilities/getselectedproductoptions),
+ * [getAdjacentAndFirstAvailableVariants](https://shopify.dev/docs/api/hydrogen/latest/utilities/getadjacentandfirstavailablevariants) utils instead.
+ * and [useSelectedOptionInUrlParam](https://shopify.dev/docs/api/hydrogen/latest/utilities/useselectedoptioninurlparam)
+ * For a full implementation see the Skeleton template [routes/product.$handle.tsx](https://github.com/Shopify/hydrogen/blob/main/templates/skeleton/app/routes/products.%24handle.tsx).
  */
 type VariantSelectorProps = {
   /** The product handle for all of the variants */
@@ -57,10 +61,12 @@ type VariantSelectorProps = {
 };
 
 /**
- * @deprecated This component will be deprecated and removed in the next major version 2025-07
- * Please use the [getSelectedProductOptions](https://shopify.dev/docs/api/hydrogen/latest/utilities/getselectedproductoptions)
- * and [getAdjacentAndFirstAvailableVariants](https://shopify.dev/docs/api/hydrogen/latest/utilities/getadjacentandfirstavailablevariants) utils instead.
- * See the Skeleton template routes/product.$handle.tsx file for an example of how to use them.
+ * @deprecated VariantSelector will be deprecated and removed in the next major version 2025-07
+ * Please use [getProductOptions](https://shopify.dev/docs/api/hydrogen/latest/utilities/getproductoptions),
+ * [getSelectedProductOptions](https://shopify.dev/docs/api/hydrogen/latest/utilities/getselectedproductoptions),
+ * [getAdjacentAndFirstAvailableVariants](https://shopify.dev/docs/api/hydrogen/latest/utilities/getadjacentandfirstavailablevariants) utils instead.
+ * and [useSelectedOptionInUrlParam](https://shopify.dev/docs/api/hydrogen/latest/utilities/useselectedoptioninurlparam)
+ * For a full implementation see the Skeleton template [routes/product.$handle.tsx](https://github.com/Shopify/hydrogen/blob/main/templates/skeleton/app/routes/products.%24handle.tsx).
  */
 export function VariantSelector({
   handle,
