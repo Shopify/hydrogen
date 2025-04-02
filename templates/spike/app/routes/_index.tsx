@@ -111,10 +111,62 @@ function ProductCard({product}: ProductCardProps) {
 }
 
 async function getFeaturedCollection(storefront: StorefrontApiClient) {
-  const featuredCollection = await storefront.request(
-    FEATURED_COLLECTION_QUERY,
+  const cacheKey = 'featured-collection-cache-key';
+  const cache = caches.default; // Cloudflare's default cache
+
+  // Try to get from cache first
+  const cachedResponse = await cache.match(
+    new Request(`https://shopify.dev/?${cacheKey}`),
   );
-  return featuredCollection;
+
+  if (cachedResponse) {
+    try {
+      // Return cached data if available
+      const cachedData = await cachedResponse.json();
+
+      // Check if the cache is stale (implement your own logic for staleness)
+      const cacheDate = cachedResponse.headers.get('cache-put-date');
+      const isStale = cacheDate && Date.now() - Number(cacheDate) > 3600000; // 1 hour
+
+      if (!isStale) {
+        return cachedData;
+      }
+
+      // If stale, fetch in background and return cached data
+      fetchAndCacheInBackground();
+      return cachedData;
+    } catch (error) {
+      console.error('Error reading from cache:', error);
+    }
+  }
+
+  // Cache miss - fetch and cache the data
+  return await fetchAndCache();
+
+  async function fetchAndCache() {
+    const featuredCollection = await storefront.request(
+      FEATURED_COLLECTION_QUERY,
+    );
+
+    // Store in cache
+    const response = new Response(JSON.stringify(featuredCollection));
+    response.headers.set('cache-control', 'public, max-age=3600'); // 1 hour
+    response.headers.set('cache-put-date', String(Date.now()));
+
+    await cache.put(
+      new Request(`https://shopify.dev/?${cacheKey}`),
+      response.clone(),
+    );
+
+    return featuredCollection;
+  }
+
+  async function fetchAndCacheInBackground() {
+    // This runs in the background without blocking the response
+    fetchAndCache().catch((error) => {
+      console.error('Background revalidation failed:', error);
+    });
+  }
 }
 
 const FEATURED_COLLECTION_QUERY = /* GraphQL */ `
