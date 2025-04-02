@@ -57,7 +57,7 @@ export const client = createClient<GeneratedSchema>({
   scalars: scalarsEnumsHash,
   cache,
   fetchOptions: {
-    fetcher: queryFetcher,
+    fetcher: queryFetcher as any, // TODO type error
   },
 });
 
