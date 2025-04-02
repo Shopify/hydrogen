@@ -9,6 +9,10 @@ import {
 
 import type {Route} from './+types/root';
 import './app.css';
+import {stegaEnabled} from './sanity/projectDetails';
+import {lazy, Suspense} from 'react';
+
+const LiveVisualEditing = lazy(() => import('~/components/LiveVisualEditing'));
 
 export const links: Route.LinksFunction = () => [
   {rel: 'preconnect', href: 'https://fonts.googleapis.com'},
@@ -42,7 +46,16 @@ export function Layout({children}: {children: React.ReactNode}) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <>
+      <Outlet />
+      {stegaEnabled ? (
+        <Suspense>
+          <LiveVisualEditing />
+        </Suspense>
+      ) : null}
+    </>
+  );
 }
 
 export function ErrorBoundary({error}: Route.ErrorBoundaryProps) {
