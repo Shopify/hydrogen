@@ -1,11 +1,12 @@
 import type {StorefrontApiClient} from '@shopify/storefront-api-client';
 import type {Route} from './+types/_index';
 
-export async function loader({context}: Route.LoaderArgs) {
+export async function loader({context, params}: Route.LoaderArgs) {
   const {storefront} = context;
+  const {handle} = params;
 
   // TODO get handle from params
-  const product = await getProduct(storefront, 'slides');
+  const product = await getProduct(storefront, handle);
 
   if (!product?.data?.product?.id) {
     throw new Response(null, {status: 404});
