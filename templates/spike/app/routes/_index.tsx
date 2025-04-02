@@ -3,7 +3,6 @@ import type {StorefrontApiClient} from '@shopify/storefront-api-client';
 import {LANDING_PAGES_QUERY} from '~/sanity/queries';
 import type {SanityDocument} from '@sanity/client';
 import LandingPageContent from '~/components/LandingPageContent';
-import type {Product} from '~/graphql-types/storefront.types';
 
 // eslint-disable-next-line no-empty-pattern
 export function meta({}: Route.MetaArgs) {
@@ -27,8 +26,8 @@ export async function loader({context}: Route.LoaderArgs) {
 }
 
 export default function Home({loaderData}: Route.ComponentProps) {
-  const products: Product[] =
-    loaderData.featuredCollection.data.collection.products.nodes;
+  const products =
+    loaderData.featuredCollection.data!.collection!.products.nodes;
 
   const landingPageContent = loaderData.landingPageContent;
 
@@ -37,15 +36,15 @@ export default function Home({loaderData}: Route.ComponentProps) {
       <div className="text-center mt-4">
         <LandingPageContent landingPageContent={landingPageContent} />
         <h3>Featured Collection</h3>
-        <p>{loaderData.featuredCollection.data.collection.title}</p>
+        <p>{loaderData.featuredCollection.data?.collection?.title}</p>
         <img
-          src={loaderData.featuredCollection.data.collection.image.url}
-          alt={loaderData.featuredCollection.data.collection.title}
+          src={loaderData.featuredCollection.data?.collection?.image?.url}
+          alt={loaderData.featuredCollection.data?.collection?.title}
           className="mb-8"
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto px-4">
-          {products.map((product: Product) => (
+          {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
@@ -53,6 +52,25 @@ export default function Home({loaderData}: Route.ComponentProps) {
     </div>
   );
 }
+
+type Product = {
+  id: string;
+  title: string;
+  handle: string;
+  images: {
+    nodes: {
+      id?: string | null;
+      url: string;
+      altText?: string | null;
+    }[];
+  };
+  priceRange: {
+    minVariantPrice: {
+      amount: string;
+      currencyCode: string;
+    };
+  };
+};
 
 interface ProductCardProps {
   product: Product;
@@ -90,40 +108,42 @@ function ProductCard({product}: ProductCardProps) {
 
 async function getFeaturedCollection(storefront: StorefrontApiClient) {
   const featuredCollection = await storefront.request(
-    `#graphql
-      {
-        collection(handle: "featured") {
+    FEATURED_COLLECTION_QUERY,
+  );
+  return featuredCollection;
+}
+
+const FEATURED_COLLECTION_QUERY = /* GraphQL */ `
+  query FeaturedCollection {
+    collection(handle: "featured") {
+      id
+      handle
+      title
+      description
+      image {
+        id
+        url
+      }
+      products(first: 12) {
+        nodes {
           id
-          handle
           title
-          description
-          image {
-            id
-            url
-          }
-          products(first: 12) {
+          handle
+          images(first: 1) {
             nodes {
               id
-              title
-              handle
-              images(first: 1) {
-                nodes {
-                  id
-                  url
-                  altText
-                }
-              }
-              priceRange {
-                minVariantPrice {
-                  amount
-                  currencyCode
-                }
-              }
+              url
+              altText
+            }
+          }
+          priceRange {
+            minVariantPrice {
+              amount
+              currencyCode
             }
           }
         }
       }
-    `,
-  );
-  return featuredCollection;
-}
+    }
+  }
+`;
