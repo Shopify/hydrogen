@@ -1,5 +1,5 @@
-import { StorefrontApiErrors, formatAPIResult } from '../../storefront';
-import type { Scalars } from '@shopify/hydrogen-react/storefront-api-types';
+import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
+import type {Scalars} from '@shopify/hydrogen-react/storefront-api-types';
 import {
   CART_WARNING_FRAGMENT,
   MINIMAL_CART_FRAGMENT,
@@ -36,17 +36,21 @@ export type CartDeliveryAddressesRemoveFunction = (
 export function cartDeliveryAddressesRemoveDefault(
   options: CartQueryOptions,
 ): CartDeliveryAddressesRemoveFunction {
-  return async (addressIds: Array<Scalars['ID']['input']> | string[], optionalParams) => {
-    const { cartDeliveryAddressesRemove, errors } = await options.storefront.mutate<{
-      cartDeliveryAddressesRemove: CartQueryData;
-      errors: StorefrontApiErrors;
-    }>(CART_DELIVERY_ADDRESSES_REMOVE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        addressIds,
-        ...optionalParams,
-      },
-    });
+  return async (
+    addressIds: Array<Scalars['ID']['input']> | string[],
+    optionalParams,
+  ) => {
+    const {cartDeliveryAddressesRemove, errors} =
+      await options.storefront.mutate<{
+        cartDeliveryAddressesRemove: CartQueryData;
+        errors: StorefrontApiErrors;
+      }>(CART_DELIVERY_ADDRESSES_REMOVE_MUTATION(options.cartFragment), {
+        variables: {
+          cartId: options.getCartId(),
+          addressIds,
+          ...optionalParams,
+        },
+      });
 
     return formatAPIResult(cartDeliveryAddressesRemove, errors);
   };

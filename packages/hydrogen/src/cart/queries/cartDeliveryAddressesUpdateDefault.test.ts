@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { CART_ID, mockCreateStorefrontClient } from '../cart-test-helper';
-import { cartDeliveryAddressesUpdateDefault } from './cartDeliveryAddressesUpdateDefault';
+import {describe, it, expect} from 'vitest';
+import {CART_ID, mockCreateStorefrontClient} from '../cart-test-helper';
+import {cartDeliveryAddressesUpdateDefault} from './cartDeliveryAddressesUpdateDefault';
 
 describe('cartDeliveryAddressesUpdateDefault', () => {
   it('should return a default cart delivery address update implementation', async () => {

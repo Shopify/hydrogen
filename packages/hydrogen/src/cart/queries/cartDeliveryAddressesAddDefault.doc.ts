@@ -1,4 +1,4 @@
-import { ReferenceEntityTemplateSchema } from '@shopify/generate-docs';
+import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
   name: 'cartDeliveryAddressesAdd',

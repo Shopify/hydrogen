@@ -1,6 +1,6 @@
-import { type FetcherWithComponents, useFetcher } from '@remix-run/react';
-import { type MetafieldWithoutOwnerId } from './queries/cart-types';
-import type { ReactNode } from 'react';
+import {type FetcherWithComponents, useFetcher} from '@remix-run/react';
+import {type MetafieldWithoutOwnerId} from './queries/cart-types';
+import type {ReactNode} from 'react';
 import type {
   AttributeInput,
   CartBuyerIdentityInput,
@@ -194,42 +194,42 @@ type CartDeliveryAddressesAddProps = {
   inputs?: {
     addresses: Array<CartSelectableAddressInput>;
   } & OtherFormData;
-}
+};
 
 type CartDeliveryAddressesAddRequire = {
   action: 'DeliveryAddressesAdd';
   inputs: {
     addresses: Array<CartSelectableAddressInput>;
   } & OtherFormData;
-}
+};
 
 type CartDeliveryAddressesRemoveProps = {
   action: 'DeliveryAddressesRemove';
   inputs?: {
     addressIds: Array<string> | Array<Scalars['ID']['input']>;
   } & OtherFormData;
-}
+};
 
 type CartDeliveryAddressesRemoveRequire = {
   action: 'DeliveryAddressesRemove';
   inputs: {
     addressIds: Array<string> | Array<Scalars['ID']['input']>;
   } & OtherFormData;
-}
+};
 
 type CartDeliveryAddressesUpdateProps = {
   action: 'DeliveryAddressesUpdate';
   inputs?: {
-    addresses: Array<CartSelectableAddressUpdateInput>
+    addresses: Array<CartSelectableAddressUpdateInput>;
   } & OtherFormData;
-}
+};
 
 type CartDeliveryAddressesUpdateRequire = {
   action: 'DeliveryAddressesUpdate';
   inputs: {
-    addresses: Array<CartSelectableAddressUpdateInput>
+    addresses: Array<CartSelectableAddressUpdateInput>;
   } & OtherFormData;
-}
+};
 
 type CartCustomProps = {
   action: `Custom${string}`;
@@ -305,7 +305,7 @@ export function CartForm({
   route,
   fetcherKey,
 }: CartFormProps): JSX.Element {
-  const fetcher = useFetcher({ key: fetcherKey });
+  const fetcher = useFetcher({key: fetcherKey});
 
   return (
     <fetcher.Form action={route || ''} method="post">
@@ -313,7 +313,7 @@ export function CartForm({
         <input
           type="hidden"
           name={INPUT_NAME}
-          value={JSON.stringify({ action, inputs })}
+          value={JSON.stringify({action, inputs})}
         />
       )}
       {typeof children === 'function' ? children(fetcher) : children}
@@ -352,11 +352,10 @@ function getFormInput(formData: FormData): CartActionInput {
   }
 
   // Parse cartFormInput
-  const { cartFormInput, ...otherData } = data;
-  const { action, inputs }: CartActionInput = cartFormInput
+  const {cartFormInput, ...otherData} = data;
+  const {action, inputs}: CartActionInput = cartFormInput
     ? JSON.parse(String(cartFormInput))
     : {};
-
 
   return {
     action,

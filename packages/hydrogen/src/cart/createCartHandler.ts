@@ -1,6 +1,6 @@
-import { Storefront } from '../storefront';
-import type { CustomerAccount } from '../customer/types';
-import { type CartGetFunction, cartGetDefault } from './queries/cartGetDefault';
+import {Storefront} from '../storefront';
+import type {CustomerAccount} from '../customer/types';
+import {type CartGetFunction, cartGetDefault} from './queries/cartGetDefault';
 import {
   type CartCreateFunction,
   cartCreateDefault,
@@ -97,31 +97,35 @@ export type HydrogenCart = {
   setMetafields: ReturnType<typeof cartMetafieldsSetDefault>;
   deleteMetafield: ReturnType<typeof cartMetafieldDeleteDefault>;
   /**
-  * Adds delivery addresses to the cart.
-  *
-  * This function sends a mutation to the storefront API to add one or more delivery addresses to the cart.
-  * It returns the result of the mutation, including any errors that occurred.
-  *
-  * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
-  * @returns {ReturnType<typeof cartDeliveryAddressesAddDefault>} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
-  *
-  * @example
-  * const result = await cart.addDeliveryAddresses(
-  *   [
-  *     {
-  *       address1: '123 Main St',
-  *       city: 'Anytown',
-  *       countryCode: 'US'
-  *     }
-  *   ],
-  *   { someOptionalParam: 'value' }
-  * );
-  */
+   * Adds delivery addresses to the cart.
+   *
+   * This function sends a mutation to the storefront API to add one or more delivery addresses to the cart.
+   * It returns the result of the mutation, including any errors that occurred.
+   *
+   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
+   * @returns {ReturnType<typeof cartDeliveryAddressesAddDefault>} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
+   *
+   * @example
+   * const result = await cart.addDeliveryAddresses(
+   *   [
+   *     {
+   *       address1: '123 Main St',
+   *       city: 'Anytown',
+   *       countryCode: 'US'
+   *     }
+   *   ],
+   *   { someOptionalParam: 'value' }
+   * );
+   */
   addDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesAddDefault>;
   // TODO: add ts docs
-  removeDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesRemoveDefault>;
+  removeDeliveryAddresses: ReturnType<
+    typeof cartDeliveryAddressesRemoveDefault
+  >;
   // TODO: add ts docs
-  updateDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesUpdateDefault>;
+  updateDeliveryAddresses: ReturnType<
+    typeof cartDeliveryAddressesUpdateDefault
+  >;
 };
 
 export type HydrogenCartCustom<
@@ -188,56 +192,56 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
 
       return cartId || optionalParams?.cartId
         ? await cartLinesAddDefault(mutateOptions)(lines, optionalParams)
-        : await cartCreate({ lines }, optionalParams);
+        : await cartCreate({lines}, optionalParams);
     },
     updateLines: cartLinesUpdateDefault(mutateOptions),
     removeLines: cartLinesRemoveDefault(mutateOptions),
     updateDiscountCodes: async (discountCodes, optionalParams) => {
       return cartId || optionalParams?.cartId
         ? await cartDiscountCodesUpdateDefault(mutateOptions)(
-          discountCodes,
-          optionalParams,
-        )
-        : await cartCreate({ discountCodes }, optionalParams);
+            discountCodes,
+            optionalParams,
+          )
+        : await cartCreate({discountCodes}, optionalParams);
     },
     updateGiftCardCodes: async (giftCardCodes, optionalParams) => {
       return cartId || optionalParams?.cartId
         ? await cartGiftCardCodesUpdateDefault(mutateOptions)(
-          giftCardCodes,
-          optionalParams,
-        )
-        : await cartCreate({ giftCardCodes }, optionalParams);
+            giftCardCodes,
+            optionalParams,
+          )
+        : await cartCreate({giftCardCodes}, optionalParams);
     },
     updateBuyerIdentity: async (buyerIdentity, optionalParams) => {
       return cartId || optionalParams?.cartId
         ? await cartBuyerIdentityUpdateDefault(mutateOptions)(
-          buyerIdentity,
-          optionalParams,
-        )
-        : await cartCreate({ buyerIdentity }, optionalParams);
+            buyerIdentity,
+            optionalParams,
+          )
+        : await cartCreate({buyerIdentity}, optionalParams);
     },
     updateNote: async (note, optionalParams) => {
       return cartId || optionalParams?.cartId
         ? await cartNoteUpdateDefault(mutateOptions)(note, optionalParams)
-        : await cartCreate({ note }, optionalParams);
+        : await cartCreate({note}, optionalParams);
     },
     updateSelectedDeliveryOption:
       cartSelectedDeliveryOptionsUpdateDefault(mutateOptions),
     updateAttributes: async (attributes, optionalParams) => {
       return cartId || optionalParams?.cartId
         ? await cartAttributesUpdateDefault(mutateOptions)(
-          attributes,
-          optionalParams,
-        )
-        : await cartCreate({ attributes }, optionalParams);
+            attributes,
+            optionalParams,
+          )
+        : await cartCreate({attributes}, optionalParams);
     },
     setMetafields: async (metafields, optionalParams) => {
       return cartId || optionalParams?.cartId
         ? await cartMetafieldsSetDefault(mutateOptions)(
-          metafields,
-          optionalParams,
-        )
-        : await cartCreate({ metafields }, optionalParams);
+            metafields,
+            optionalParams,
+          )
+        : await cartCreate({metafields}, optionalParams);
     },
     deleteMetafield: cartMetafieldDeleteDefault(mutateOptions),
     addDeliveryAddresses: cartDeliveryAddressesAddDefault(mutateOptions),
@@ -334,7 +338,7 @@ export type HydrogenCartForDocs = {
   setMetafields?: CartMetafieldsSetFunction;
   /**
    * Update cart delivery addresses.
-  */
+   */
   updateDeliveryAddresses?: CartDeliveryAddressesUpdateFunction;
   /**
    * Updates additional information (attributes) in the cart.

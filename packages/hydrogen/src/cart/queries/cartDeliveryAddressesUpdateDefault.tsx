@@ -1,5 +1,5 @@
-import { StorefrontApiErrors, formatAPIResult } from '../../storefront';
-import type { CartSelectableAddressUpdateInput } from '@shopify/hydrogen-react/storefront-api-types';
+import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
+import type {CartSelectableAddressUpdateInput} from '@shopify/hydrogen-react/storefront-api-types';
 import {
   CART_WARNING_FRAGMENT,
   MINIMAL_CART_FRAGMENT,
@@ -55,17 +55,21 @@ export type CartDeliveryAddressesUpdateFunction = (
 export function cartDeliveryAddressesUpdateDefault(
   options: CartQueryOptions,
 ): CartDeliveryAddressesUpdateFunction {
-  return async (addresses: Array<CartSelectableAddressUpdateInput>, optionalParams) => {
-    const { cartDeliveryAddressesUpdate, errors } = await options.storefront.mutate<{
-      cartDeliveryAddressesUpdate: CartQueryData;
-      errors: StorefrontApiErrors;
-    }>(CART_DELIVERY_ADDRESSES_UPDATE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        addresses,
-        ...optionalParams,
-      },
-    });
+  return async (
+    addresses: Array<CartSelectableAddressUpdateInput>,
+    optionalParams,
+  ) => {
+    const {cartDeliveryAddressesUpdate, errors} =
+      await options.storefront.mutate<{
+        cartDeliveryAddressesUpdate: CartQueryData;
+        errors: StorefrontApiErrors;
+      }>(CART_DELIVERY_ADDRESSES_UPDATE_MUTATION(options.cartFragment), {
+        variables: {
+          cartId: options.getCartId(),
+          addresses,
+          ...optionalParams,
+        },
+      });
 
     return formatAPIResult(cartDeliveryAddressesUpdate, errors);
   };

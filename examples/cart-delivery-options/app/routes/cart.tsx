@@ -1,23 +1,28 @@
-import { type MetaFunction, useLoaderData } from '@remix-run/react';
-import type { CartQueryDataReturn } from '@shopify/hydrogen';
-import { CartForm } from '@shopify/hydrogen';
-import { CartSelectableAddressInput } from '@shopify/hydrogen-react/storefront-api-types';
-import { CartSelectableAddressUpdateInput } from '@shopify/hydrogen/storefront-api-types';
-import { data, type LoaderFunctionArgs, type ActionFunctionArgs, type HeadersFunction } from '@shopify/remix-oxygen';
-import { CartMain } from '~/components/Cart';
+import {type MetaFunction, useLoaderData} from '@remix-run/react';
+import type {CartQueryDataReturn} from '@shopify/hydrogen';
+import {CartForm} from '@shopify/hydrogen';
+import {CartSelectableAddressInput} from '@shopify/hydrogen-react/storefront-api-types';
+import {CartSelectableAddressUpdateInput} from '@shopify/hydrogen/storefront-api-types';
+import {
+  data,
+  type LoaderFunctionArgs,
+  type ActionFunctionArgs,
+  type HeadersFunction,
+} from '@shopify/remix-oxygen';
+import {CartMain} from '~/components/Cart';
 
 export const meta: MetaFunction = () => {
-  return [{ title: `Hydrogen | Cart` }];
+  return [{title: `Hydrogen | Cart`}];
 };
 
-export const headers: HeadersFunction = ({ actionHeaders }) => actionHeaders;
+export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
 
-export async function action({ request, context }: ActionFunctionArgs) {
-  const { cart } = context;
+export async function action({request, context}: ActionFunctionArgs) {
+  const {cart} = context;
 
   const formData = await request.formData();
 
-  const { action, inputs } = CartForm.getFormInput(formData);
+  const {action, inputs} = CartForm.getFormInput(formData);
 
   if (!action) {
     throw new Error('No action provided');
@@ -71,32 +76,44 @@ export async function action({ request, context }: ActionFunctionArgs) {
       break;
     }
     case CartForm.ACTIONS.DeliveryAddressesAdd: {
-      console.log('DeliveryAddressesAdd inputs', inputs)
-      const { id, selected, oneTimeUse, ...deliveryAddress } = inputs
-      const newDeliveryAddresses = [{
-        selected: selected === 'on' ? true : false,
-        oneTimeUse: oneTimeUse === 'on' ? true : false,
-        address: { deliveryAddress }
-      }] as CartSelectableAddressInput[]
+      console.log('DeliveryAddressesAdd inputs', inputs);
+      const {id, selected, oneTimeUse, ...deliveryAddress} = inputs;
+      const newDeliveryAddresses = [
+        {
+          selected: selected === 'on' ? true : false,
+          oneTimeUse: oneTimeUse === 'on' ? true : false,
+          address: {deliveryAddress},
+        },
+      ] as CartSelectableAddressInput[];
 
-      result = await cart.addDeliveryAddresses(newDeliveryAddresses)
+      result = await cart.addDeliveryAddresses(newDeliveryAddresses);
       break;
     }
     case CartForm.ACTIONS.DeliveryAddressesUpdate: {
-      console.log('DeliveryAddressesUpdate inputs', inputs)
-      const { formatted, formartedArea, name, id, selected, oneTimeUse, ...deliveryAddress } = inputs
-      const updatedDeliveryAddresses = [{
+      console.log('DeliveryAddressesUpdate inputs', inputs);
+      const {
+        formatted,
+        formartedArea,
+        name,
         id,
-        selected: selected === 'on' ? true : false,
-        oneTimeUse: oneTimeUse === 'on' ? true : false,
-        address: { deliveryAddress }
-      }] as CartSelectableAddressUpdateInput[]
-      result = await cart.updateDeliveryAddresses(updatedDeliveryAddresses)
+        selected,
+        oneTimeUse,
+        ...deliveryAddress
+      } = inputs;
+      const updatedDeliveryAddresses = [
+        {
+          id,
+          selected: selected === 'on' ? true : false,
+          oneTimeUse: oneTimeUse === 'on' ? true : false,
+          address: {deliveryAddress},
+        },
+      ] as CartSelectableAddressUpdateInput[];
+      result = await cart.updateDeliveryAddresses(updatedDeliveryAddresses);
       break;
     }
     case CartForm.ACTIONS.DeliveryAddressesRemove: {
-      console.log('DeliveryAddressesRemove inputs', inputs)
-      result = await cart.removeDeliveryAddresses(inputs.addressIds)
+      console.log('DeliveryAddressesRemove inputs', inputs);
+      result = await cart.removeDeliveryAddresses(inputs.addressIds);
       break;
     }
     default:
@@ -105,7 +122,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
 
   const cartId = result?.cart?.id;
   const headers = cartId ? cart.setCartId(result.cart.id) : new Headers();
-  const { cart: cartResult, errors } = result;
+  const {cart: cartResult, errors} = result;
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string') {
@@ -121,12 +138,12 @@ export async function action({ request, context }: ActionFunctionArgs) {
         cartId,
       },
     },
-    { status, headers },
+    {status, headers},
   );
 }
 
-export async function loader({ context }: LoaderFunctionArgs) {
-  const { cart } = context;
+export async function loader({context}: LoaderFunctionArgs) {
+  const {cart} = context;
   return await cart.get();
 }
 
