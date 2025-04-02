@@ -124,23 +124,29 @@ async function getFeaturedCollection(storefront: StorefrontApiClient) {
       // Return cached data if available
       const cachedData = await cachedResponse.json();
 
-      // Check if the cache is stale (implement your own logic for staleness)
+      // Check if the cache is stale (beyond the max-age of 1 second)
       const cacheDate = cachedResponse.headers.get('cache-put-date');
-      const isStale = cacheDate && Date.now() - Number(cacheDate) > 3600000; // 1 hour
+      const isStale = cacheDate && Date.now() - Number(cacheDate) > 1000; // 1 second
+
+      // Still valid within stale-while-revalidate window (24 hours)
+      const isWithinSWRWindow =
+        cacheDate && Date.now() - Number(cacheDate) < 86400000; // 24 hours
 
       if (!isStale) {
         return cachedData;
       }
 
-      // If stale, fetch in background and return cached data
-      fetchAndCacheInBackground();
-      return cachedData;
+      // If stale but within SWR window, fetch in background and return cached data
+      if (isWithinSWRWindow) {
+        fetchAndCacheInBackground();
+        return cachedData;
+      }
     } catch (error) {
       console.error('Error reading from cache:', error);
     }
   }
 
-  // Cache miss - fetch and cache the data
+  // Cache miss or expired SWR - fetch and cache the data
   return await fetchAndCache();
 
   async function fetchAndCache() {
@@ -148,9 +154,12 @@ async function getFeaturedCollection(storefront: StorefrontApiClient) {
       FEATURED_COLLECTION_QUERY,
     );
 
-    // Store in cache
+    // Store in cache with 1 second freshness and 24 hour stale-while-revalidate
     const response = new Response(JSON.stringify(featuredCollection));
-    response.headers.set('cache-control', 'public, max-age=3600'); // 1 hour
+    response.headers.set(
+      'cache-control',
+      'public, max-age=1, stale-while-revalidate=86399',
+    );
     response.headers.set('cache-put-date', String(Date.now()));
 
     await cache.put(
