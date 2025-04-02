@@ -14,11 +14,14 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function loader({context}: Route.LoaderArgs) {
-  const {storefront, sanity} = context;
+  const {storefront, sanity, cloudflare} = context;
 
   const landingPageContent = await sanity.fetch(LANDING_PAGES_QUERY);
 
-  const featuredCollection = await getFeaturedCollection(storefront);
+  const featuredCollection = await getFeaturedCollection(
+    storefront,
+    cloudflare.ctx,
+  );
   return {
     message: context.cloudflare.env.VALUE_FROM_CLOUDFLARE,
     featuredCollection,
@@ -110,7 +113,10 @@ function ProductCard({product}: ProductCardProps) {
   );
 }
 
-async function getFeaturedCollection(storefront: StorefrontApiClient) {
+async function getFeaturedCollection(
+  storefront: StorefrontApiClient,
+  ctx?: ExecutionContext,
+) {
   const cacheKey = 'featured-collection-cache-key';
   const cache = caches.default; // Cloudflare's default cache
 
@@ -138,7 +144,12 @@ async function getFeaturedCollection(storefront: StorefrontApiClient) {
 
       // If stale but within SWR window, fetch in background and return cached data
       if (isWithinSWRWindow) {
-        fetchAndCacheInBackground();
+        if (ctx) {
+          // Use waitUntil to keep the worker alive for background refresh
+          ctx.waitUntil(fetchAndCacheInBackground());
+        } else {
+          fetchAndCacheInBackground();
+        }
         return cachedData;
       }
     } catch (error) {
@@ -172,7 +183,7 @@ async function getFeaturedCollection(storefront: StorefrontApiClient) {
 
   async function fetchAndCacheInBackground() {
     // This runs in the background without blocking the response
-    fetchAndCache().catch((error) => {
+    return fetchAndCache().catch((error) => {
       console.error('Background revalidation failed:', error);
     });
   }
