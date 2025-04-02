@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+- this is NOT a hydrogen project. this is a React Router 7 project!! (despite the name of the directory we are in)
