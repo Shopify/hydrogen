@@ -10,6 +10,7 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {type ReactNode, useMemo, createElement, Fragment} from 'react';
 import type {PartialDeep} from 'type-fest';
+import {warnOnce} from '../utils/warning';
 
 export type VariantOption = {
   name: string;
@@ -77,7 +78,22 @@ export function VariantSelector({
   selectedVariant,
   children,
 }: VariantSelectorProps) {
+  // Deprecation notice for product.options.values
+  // TODO: Remove this after product.options.values is removed from the Storefront API
   let options = _options;
+  if (options[0]?.values) {
+    warnOnce(
+      '[h2:warn:VariantSelector] product.options.values is deprecated. Use product.options.optionValues instead.',
+    );
+
+    if (!!options[0] && !options[0].optionValues) {
+      // Convert the old values format to the new optionValues format
+      options = _options.map((option) => ({
+        ...option,
+        optionValues: option.values?.map((value) => ({name: value})) || [],
+      }));
+    }
+  }
 
   const variants =
     _variants instanceof Array ? _variants : flattenConnection(_variants);
