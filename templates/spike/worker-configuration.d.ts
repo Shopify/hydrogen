@@ -2,4 +2,6 @@
 
 interface Env {
   VALUE_FROM_CLOUDFLARE: 'Hello from Cloudflare';
+  PUBLIC_STOREFRONT_API_TOKEN: 'foo';
+  PUBLIC_STORE_DOMAIN: 'mock.shop';
 }
