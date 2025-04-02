@@ -14,15 +14,8 @@
     "typecheck": "wrangler types && react-router typegen && tsc -b"
   },
   "dependencies": {
-    "@portabletext/react": "^3.2.1",
     "@react-router/fs-routes": "^7.4.1",
-    "@sanity/client": "^6.28.3",
-    "@sanity/image-url": "^1.1.0",
-    "@sanity/overlays": "^2.3.59",
-    "@sanity/react-loader": "^1.10.47",
-    "@sanity/visual-editing": "^2.13.7",
     "@shopify/storefront-api-client": "^1.0.6",
-    "groq": "^3.78.0",
     "isbot": "^5.1.17",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
