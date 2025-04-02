@@ -2,17 +2,10 @@ import type {StorefrontApiClient} from '@shopify/storefront-api-client';
 import {createStorefrontApiClient} from '@shopify/storefront-api-client';
 import {createRequestHandler} from 'react-router';
 
-declare global {
-  interface CloudflareEnvironment extends Env {
-    PUBLIC_STOREFRONT_API_TOKEN: string;
-    PUBLIC_STORE_DOMAIN: string;
-  }
-}
-
 declare module 'react-router' {
   export interface AppLoadContext {
     cloudflare: {
-      env: CloudflareEnvironment;
+      env: Env;
       ctx: ExecutionContext;
     };
     storefront: StorefrontApiClient;
@@ -20,7 +13,6 @@ declare module 'react-router' {
 }
 
 const requestHandler = createRequestHandler(
-  // @ts-expect-error - virtual module provided by React Router
   () => import('virtual:react-router/server-build'),
   import.meta.env.MODE,
 );
@@ -39,4 +31,4 @@ export default {
       storefront: storefrontApiClient,
     });
   },
-} satisfies ExportedHandler<CloudflareEnvironment>;
+} satisfies ExportedHandler<Env>;
