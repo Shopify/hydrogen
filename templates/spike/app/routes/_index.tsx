@@ -7,6 +7,9 @@ import {
   useQuery,
   type Product,
 } from '../gqty';
+import {LANDING_PAGES_QUERY} from '~/sanity/queries';
+import type {SanityDocument} from '@sanity/client';
+import LandingPageContent from '~/components/LandingPageContent';
 
 // eslint-disable-next-line no-empty-pattern
 export function meta({}: Route.MetaArgs) {
@@ -17,13 +20,18 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function loader({context}: Route.LoaderArgs) {
-  const {storefront} = context;
+  const {storefront, sanity} = context;
 
-  const {cacheSnapshot} = await prepareReactRender(<HomeInner />);
+  const landingPageContent = await sanity.fetch(LANDING_PAGES_QUERY);
+
+  const {cacheSnapshot} = await prepareReactRender(
+    <HomeInner landingPageContent={landingPageContent} />,
+  );
 
   return {
     message: context.cloudflare.env.VALUE_FROM_CLOUDFLARE,
     cacheSnapshot,
+    landingPageContent,
   };
 }
 
@@ -33,17 +41,23 @@ interface ProductCardProps {
 
 export default function Home({loaderData}: Route.ComponentProps) {
   useHydrateCache({cacheSnapshot: loaderData.cacheSnapshot});
+  const landingPageContent = loaderData.landingPageContent;
 
-  return <HomeInner />;
+  return <HomeInner landingPageContent={landingPageContent} />;
 }
 
-function HomeInner() {
+function HomeInner({
+  landingPageContent,
+}: {
+  landingPageContent: SanityDocument[];
+}) {
   const data = useQuery({suspense: false});
   const collection = data.collection({handle: 'featured'});
 
   return (
     <div>
       <div className="text-center mt-4">
+        <LandingPageContent landingPageContent={landingPageContent} />
         <h3>Featured Collection</h3>
         <p>{collection?.title}</p>
         <img

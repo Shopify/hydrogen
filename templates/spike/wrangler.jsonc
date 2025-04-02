@@ -7,6 +7,9 @@
   "vars": {
     "VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare",
     "PUBLIC_STOREFRONT_API_TOKEN": "foo",
-    "PUBLIC_STORE_DOMAIN": "mock.shop"
+    "PUBLIC_STORE_DOMAIN": "mock.shop",
+    "PUBLIC_SANITY_PROJECT_ID": "7r50z2dj",
+    "PUBLIC_SANITY_DATASET": "production",
+    "PUBLIC_SANITY_STUDIO_URL": "https://shop.sanity.io"
   }
 }

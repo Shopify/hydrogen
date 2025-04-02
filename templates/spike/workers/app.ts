@@ -1,6 +1,8 @@
+import type {SanityClient} from '@sanity/client';
 import type {StorefrontApiClient} from '@shopify/storefront-api-client';
 import {createStorefrontApiClient} from '@shopify/storefront-api-client';
 import {createRequestHandler} from 'react-router';
+import {createSanityClient} from '~/sanity/client';
 
 declare module 'react-router' {
   export interface AppLoadContext {
@@ -9,6 +11,7 @@ declare module 'react-router' {
       ctx: ExecutionContext;
     };
     storefront: StorefrontApiClient;
+    sanity: SanityClient;
   }
 }
 
@@ -26,9 +29,12 @@ export default {
       apiVersion: '2025-01',
     });
 
+    const sanityClient = createSanityClient(env);
+
     return requestHandler(request, {
       cloudflare: {env, ctx},
       storefront: storefrontApiClient,
+      sanity: sanityClient,
     });
   },
 } satisfies ExportedHandler<Env>;
