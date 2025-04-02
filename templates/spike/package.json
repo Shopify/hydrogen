@@ -11,7 +11,7 @@
     "dev": "react-router dev",
     "preview": "vite preview",
     "start": "wrangler dev",
-    "typecheck": "wrangler types && react-router typegen && tsc -b",
+    "typecheck": "wrangler types && react-router typegen && graphql-codegen && tsc -b",
     "graphql-codegen": "graphql-codegen"
   },
   "dependencies": {
