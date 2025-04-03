@@ -149,17 +149,17 @@ export function createMiniOxygen({
         : undefined,
     ]);
 
-    // reconnect = createInspectorConnector({
-    //   sourceMapPath,
-    //   publicInspectorPort,
-    //   privateInspectorPort: Number(privateInspectorUrl.port),
-    //   workerName:
-    //     inspectWorkerName ??
-    //     miniflareOptions.workers[0]?.name ??
-    //     ROUTING_WORKER_NAME,
-    // });
+    reconnect = createInspectorConnector({
+      sourceMapPath,
+      publicInspectorPort,
+      privateInspectorPort: Number(privateInspectorUrl.port),
+      workerName:
+        inspectWorkerName ??
+        miniflareOptions.workers[0]?.name ??
+        ROUTING_WORKER_NAME,
+    });
 
-    // await reconnect();
+    await reconnect();
 
     return {
       workerUrl,
@@ -193,15 +193,15 @@ export function createMiniOxygen({
         workers: miniflareOptions.workers,
       });
 
-      // await reconnect(() =>
-      //   mf.setOptions(
-      //     buildMiniflareOptions(
-      //       {...miniflareOptions, ...newOptions},
-      //       requestHook,
-      //       assets,
-      //     ),
-      //   ),
-      // );
+      await reconnect(() =>
+        mf.setOptions(
+          buildMiniflareOptions(
+            {...miniflareOptions, ...newOptions},
+            requestHook,
+            assets,
+          ),
+        ),
+      );
     },
     async dispose() {
       assetsServer?.closeAllConnections();
