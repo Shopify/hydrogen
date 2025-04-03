@@ -1,14 +1,16 @@
 # 🧑‍🍳 Subscriptions
 
-This recipe adds subscription capabilities to your Hydrogen storefront by implementing [selling plan groups](https://shopify.dev/docs/api/storefront/latest/objects/SellingPlanGroup) and options. Customers can choose between one-time purchases or recurring subscriptions when available.
+This recipe adds subscription capabilities to your Hydrogen storefront by implementing [selling plan groups](https://shopify.dev/docs/api/storefront/latest/objects/SellingPlanGroup) and options.
+With these, your customers can choose between one-time purchases or recurring subscriptions when available.
 
-The implementation:
-1. Modifies product detail pages to display subscription options with accurate pricing
-2. Adds a SellingPlanSelector component that presents available subscription options
-3. Enhances GraphQL fragments to fetch all necessary selling plan data
-4. Displays subscription details on applicable cart line items
 
-With this recipe, merchants can offer flexible purchasing options while maintaining a seamless customer experience.
+Implementing a subscription consists of making the following changes:
+
+
+1. Set up a Subscriptions app on your store (specific details in the steps below) and add selling plans to the desired products.
+2. Modify product detail pages to display subscription options with accurate pricing, for example by implementing a `SellingPlanSelector` component that presents the available subscription options for a product.
+3. Enhance GraphQL fragments to fetch all necessary selling plan data
+4. Display subscription details on applicable cart line items
 
 
 ## 🍣 Ingredients
@@ -22,12 +24,13 @@ With this recipe, merchants can offer flexible purchasing options while maintain
 
 ### 1. Requirements
 
-To implement subscriptions in your own store make sure to:
-1. Install a [Shopify Subscriptions](https://apps.shopify.com/shopify-subscriptions) app
+To implement subscriptions in your own store, you'll need a Subscriptions app installed on it.
+
+For the remainder of this recipe, we'll use the official Shopify Subscriptions app:
+1. Install the official [subscription app](https://apps.shopify.com/shopify-subscriptions) app.
 2. Use the app to create selling plans for your products
 3. Assign these selling plans to any products you want to offer as subscriptions
-
-_For demo purposes, this recipe comes pre-configured for our demo storefront using an example subscription product with the handle `shopify-wax`._
+_Our demo storefront comes pre-configured with an example subscription product with the handle `shopify-wax`._
 
 
 ### 2. Copy ingredients
