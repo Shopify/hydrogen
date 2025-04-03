@@ -1,5 +1,17 @@
 # @shopify/mini-oxygen
 
+## 3.2.0
+
+### Minor Changes
+
+- Add support for HTTP proxies with the environment variables `SHOPIFY_HTTP_PROXY` and `SHOPIFY_HTTPS_PROXY`. Define one of these variables before starting the Hydrogen dev server to make all requests go through a proxy server. ([#2831](https://github.com/Shopify/hydrogen/pull/2831)) by [@blittle](https://github.com/blittle)
+
+  If your proxy uses authentication, provide the auth in the following format:
+
+  ```bash
+  SHOPIFY_HTTP_PROXY=http://user:pass@yourproxy.com:PORT
+  ```
+
 ## 3.1.2
 
 ### Patch Changes
