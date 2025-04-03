@@ -149,17 +149,17 @@ export function createMiniOxygen({
         : undefined,
     ]);
 
-    reconnect = createInspectorConnector({
-      sourceMapPath,
-      publicInspectorPort,
-      privateInspectorPort: Number(privateInspectorUrl.port),
-      workerName:
-        inspectWorkerName ??
-        miniflareOptions.workers[0]?.name ??
-        ROUTING_WORKER_NAME,
-    });
+    // reconnect = createInspectorConnector({
+    //   sourceMapPath,
+    //   publicInspectorPort,
+    //   privateInspectorPort: Number(privateInspectorUrl.port),
+    //   workerName:
+    //     inspectWorkerName ??
+    //     miniflareOptions.workers[0]?.name ??
+    //     ROUTING_WORKER_NAME,
+    // });
 
-    await reconnect();
+    // await reconnect();
 
     return {
       workerUrl,
@@ -193,15 +193,15 @@ export function createMiniOxygen({
         workers: miniflareOptions.workers,
       });
 
-      await reconnect(() =>
-        mf.setOptions(
-          buildMiniflareOptions(
-            {...miniflareOptions, ...newOptions},
-            requestHook,
-            assets,
-          ),
-        ),
-      );
+      // await reconnect(() =>
+      //   mf.setOptions(
+      //     buildMiniflareOptions(
+      //       {...miniflareOptions, ...newOptions},
+      //       requestHook,
+      //       assets,
+      //     ),
+      //   ),
+      // );
     },
     async dispose() {
       assetsServer?.closeAllConnections();
@@ -241,23 +241,30 @@ const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
 // https://nodejs.org/api/cli.html#node_tls_reject_unauthorizedvalue
 const OUTBOUND_SERVICE = {
   async outboundService(request: Request) {
-    const proxy =
-      process.env['SHOPIFY_HTTP_PROXY'] ??
-      process.env['SHOPIFY_HTTPS_PROXY'] ??
-      null;
+    try {
+      const proxy =
+        process.env['SHOPIFY_HTTP_PROXY'] ??
+        process.env['SHOPIFY_HTTPS_PROXY'] ??
+        null;
 
-    if (proxy) {
-      (request as unknown as UndiciRequestInit).dispatcher = new ProxyAgent(
-        proxy,
-      );
+      const url = new URL(request.url);
+
+      if (
+        proxy &&
+        url.hostname !== 'localhost' &&
+        url.hostname !== '127.0.0.1'
+      ) {
+        (request as unknown as UndiciRequestInit).dispatcher = new ProxyAgent(
+          proxy,
+        );
+      }
+
+      return undiciFetch(request.url, request as unknown as UndiciRequestInit);
+    } catch (e) {
+      console.error(`[h2:error:outboundservice] ${request.url}`);
+      console.error(e);
+      throw e;
     }
-
-    const response = await undiciFetch(
-      request.url,
-      request as unknown as UndiciRequestInit,
-    );
-
-    return new Response(response.body, response);
   },
 };
 
