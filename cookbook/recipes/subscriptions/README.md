@@ -1,4 +1,4 @@
-# 🧑‍🍳 Subscriptions
+# Subscriptions
 
 This recipe adds subscription capabilities to your Hydrogen storefront by implementing [selling plan groups](https://shopify.dev/docs/api/storefront/latest/objects/SellingPlanGroup) and options.
 With these, your customers can choose between one-time purchases or recurring subscriptions when available.
@@ -13,34 +13,43 @@ Implementing a subscription consists of making the following changes:
 4. Display subscription details on applicable cart line items
 
 
-## 🍣 Ingredients
+## Requirements
+
+To implement subscriptions in your own store, you'll need a Subscriptions
+app installed on it.
+
+
+For the remainder of this recipe, we'll use the official Shopify
+Subscriptions app:
+
+1. Install the official [subscription app](https://apps.shopify.com/shopify-subscriptions) app.
+
+2. Use the app to create selling plans for your products
+
+3. Assign these selling plans to any products you want to offer as
+subscriptions
+
+_Our demo storefront comes pre-configured with an example subscription
+product with the handle `shopify-wax`._
+
+
+## Ingredients
 
 | File | Description |
 | --- | --- |
 | [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | The `SellingPlanSelector` component is used to display the available subscription options on product pages. |
 | [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) | The `selling-plan.css` file is used to style the `SellingPlanSelector` component. |
 
-## 🍱 Steps
+## Steps
 
-### 1. Requirements
-
-To implement subscriptions in your own store, you'll need a Subscriptions app installed on it.
-
-For the remainder of this recipe, we'll use the official Shopify Subscriptions app:
-1. Install the official [subscription app](https://apps.shopify.com/shopify-subscriptions) app.
-2. Use the app to create selling plans for your products
-3. Assign these selling plans to any products you want to offer as subscriptions
-_Our demo storefront comes pre-configured with an example subscription product with the handle `shopify-wax`._
-
-
-### 2. Copy ingredients
+### Step 1: Copy ingredients
 
 Copy the ingredients from the template directory to the current directory.
 
 - `app/components/SellingPlanSelector.tsx`
 - `app/styles/selling-plan.css`
 
-### 3. Render the selling plan in the cart
+### Step 2: Render the selling plan in the cart
 
 - Update `CartLineItem` to show subscription information when available.
 - Extract `sellingPlanAllocation` from cart line data and display the plan name. Also standardizes component import paths.
@@ -90,7 +99,7 @@ index 26102b61..4ec8324b 100644
 
 ```
 
-### 4. Update `ProductForm`
+### Step 3: Update `ProductForm`
 
 - Enhance `ProductForm` to support subscription functionality.
 - Add conditional rendering to display either subscription options or standard variant selectors.
@@ -418,7 +427,7 @@ index e8616a61..e41b91ad 100644
 
 </details>
 
-### 5. Update `ProductPrice`
+### Step 4: Update `ProductPrice`
 
 - Enhance `ProductPrice` component to display subscription pricing.
 - Add `SellingPlanPrice` function that calculates adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage).
@@ -545,7 +554,7 @@ index 32460ae2..59eed1d8 100644
 
 </details>
 
-### 6. Add Selling Plan Data to Cart Queries
+### Step 5: Add Selling Plan Data to Cart Queries
 
 Add `sellingPlanAllocation` field with plan name to both standard and componentizable cart line GraphQL fragments, enabling subscription details display in cart.
 
@@ -583,7 +592,7 @@ index dc4426a9..cfe3a938 100644
 
 ```
 
-### 7. Add `SellingPlanSelector` to product pages
+### Step 6: Add `SellingPlanSelector` to product pages
 
 - Add `SellingPlanSelector` component to display subscription options on product pages.
 - Handle pricing adjustments, maintain selection state via URL parameters, and updates add-to-cart functionality.

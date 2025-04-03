@@ -43,8 +43,14 @@ export type Step = z.infer<typeof StepSchema>;
 
 export const RecipeSchema = z.object({
   title: z.string().describe('The title of the recipe'),
+  summary: z.string().describe('The summary of what the recipe does'),
   description: z.string().describe('The description of the recipe'),
   notes: z.array(z.string()).optional().describe('The notes of the recipe'),
+  requirements: z
+    .string()
+    .optional()
+    .nullable()
+    .describe('The requirements of the recipe'),
   image: z.string().nullable().optional().describe('The image of the recipe'),
   ingredients: z
     .array(IngredientSchema)

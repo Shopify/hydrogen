@@ -92,9 +92,11 @@ export async function generateRecipe(params: {
 
   const recipe: Recipe = {
     title: existingRecipe?.title ?? recipeName,
+    summary: existingRecipe?.summary ?? '',
     image: existingRecipe?.image ?? null,
     description: existingRecipe?.description ?? '',
     notes: existingRecipe?.notes ?? [],
+    requirements: existingRecipe?.requirements ?? null,
     deletedFiles,
     ingredients,
     steps,
