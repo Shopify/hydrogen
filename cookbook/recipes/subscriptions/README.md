@@ -22,7 +22,7 @@ app installed on it.
 For the remainder of this recipe, we'll use the official Shopify
 Subscriptions app:
 
-1. Install the official [subscription app](https://apps.shopify.com/shopify-subscriptions) app.
+1. Install the official [Subscriptions app](https://apps.shopify.com/shopify-subscriptions) app.
 
 2. Use the app to create selling plans for your products
 
@@ -37,10 +37,10 @@ product with the handle `shopify-wax`._
 
 _New files added to the template by this recipe._
 
-| File | Description |
-| --- | --- |
+| File                                                                                                              | Description                                                                                                 |
+| ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | The `SellingPlanSelector` component is used to display the available subscription options on product pages. |
-| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) | The `selling-plan.css` file is used to style the `SellingPlanSelector` component. |
+| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css)                       | The `selling-plan.css` file is used to style the `SellingPlanSelector` component.                           |
 
 ## Steps
 
@@ -72,7 +72,7 @@ index 26102b61..4ec8324b 100644
 +import {ProductPrice} from '~/components/ProductPrice';
 +import {useAside} from '~/components/Aside';
  import type {CartApiQueryFragment} from 'storefrontapi.generated';
- 
+
  type CartLine = OptimisticCartLine<CartApiQueryFragment>;
 @@ -20,7 +20,9 @@ export function CartLineItem({
    layout: CartLayout;
@@ -130,7 +130,7 @@ index e8616a61..e41b91ad 100644
 +  SellingPlanSelector,
 +  type SellingPlanGroup,
 +} from '~/components/SellingPlanSelector';
- 
+
  export function ProductForm({
    productOptions,
    selectedVariant,
@@ -188,7 +188,7 @@ index e8616a61..e41b91ad 100644
 +        productOptions.map((option) => {
 +          // If there is only a single value in the option values, don't display the option
 +          if (option.optionValues.length === 1) return null;
- 
+
 -        return (
 -          <div className="product-options" key={option.name}>
 -            <h5>{option.name}</h5>
@@ -219,7 +219,7 @@ index e8616a61..e41b91ad 100644
 +                    isDifferentProduct,
 +                    swatch,
 +                  } = value;
- 
+
 -                if (isDifferentProduct) {
 -                  // SEO
 -                  // When the variant is a combined listing child product
@@ -452,7 +452,7 @@ index 32460ae2..59eed1d8 100644
 +} from 'storefrontapi.generated';
  import {Money} from '@shopify/hydrogen';
  import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
- 
+
  export function ProductPrice({
    price,
    compareAtPrice,
@@ -618,7 +618,7 @@ index 0028b423..9f634090 100644
 @@ -12,6 +14,12 @@ import {ProductPrice} from '~/components/ProductPrice';
  import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
- 
+
 +import sellingPanStyle from '~/styles/selling-plan.css?url';
 +
 +export const links: LinksFunction = () => [
@@ -631,7 +631,7 @@ index 0028b423..9f634090 100644
 @@ -59,8 +67,34 @@ async function loadCriticalData({
      throw new Response(null, {status: 404});
    }
- 
+
 +  // Initialize the selectedSellingPlan to null
 +  let selectedSellingPlan = null;
 +
@@ -662,23 +662,23 @@ index 0028b423..9f634090 100644
 +    selectedSellingPlan,
    };
  }
- 
+
 @@ -77,7 +111,7 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
  }
- 
+
  export default function Product() {
 -  const {product} = useLoaderData<typeof loader>();
 +  const {product, selectedSellingPlan} = useLoaderData<typeof loader>();
- 
+
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
 @@ -95,7 +129,7 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
- 
+
 -  const {title, descriptionHtml} = product;
 +  const {title, descriptionHtml, sellingPlanGroups} = product;
- 
+
    return (
      <div className="product">
 @@ -105,11 +139,15 @@ export default function Product() {
@@ -700,7 +700,7 @@ index 0028b423..9f634090 100644
 @@ -176,6 +214,73 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
    }
  ` as const;
- 
+
 +const SELLING_PLAN_FRAGMENT = `#graphql
 +  fragment SellingPlanMoney on MoneyV2 {
 +    amount
@@ -790,7 +790,7 @@ index 0028b423..9f634090 100644
 +  ${SELLING_PLAN_GROUP_FRAGMENT}
    ${PRODUCT_VARIANT_FRAGMENT}
  ` as const;
- 
+
 
 ```
 
