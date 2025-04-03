@@ -18,6 +18,7 @@
     "@react-router/fs-routes": "^7.4.1",
     "@sanity/client": "^6.28.4",
     "@shopify/storefront-api-client": "^1.0.6",
+    "@xstate/fsm": "^2.1.0",
     "groq": "^3.82.0",
     "isbot": "^5.1.17",
     "react": "^19.0.0",

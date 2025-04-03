@@ -3,7 +3,7 @@ import type {StorefrontApiClient} from '@shopify/storefront-api-client';
 import {LANDING_PAGES_QUERY} from '~/sanity/queries';
 import type {SanityDocument} from '@sanity/client';
 import LandingPageContent from '~/components/LandingPageContent';
-import {Link} from 'react-router-dom';
+import {Link} from 'react-router';
 
 // eslint-disable-next-line no-empty-pattern
 export function meta({}: Route.MetaArgs) {
@@ -30,8 +30,8 @@ export async function loader({context}: Route.LoaderArgs) {
 }
 
 export default function Home({loaderData}: Route.ComponentProps) {
-  const products =
-    loaderData.featuredCollection.data!.collection!.products.nodes;
+  const products = loaderData.featuredCollection.data!.collection!.products
+    .nodes as Product[];
 
   const landingPageContent = loaderData.landingPageContent;
 

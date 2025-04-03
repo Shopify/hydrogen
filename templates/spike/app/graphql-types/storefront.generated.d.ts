@@ -3,6 +3,11 @@
 /* eslint-disable */
 import type * as StorefrontTypes from './storefront.types';
 
+export type ImageFragment = Pick<
+  StorefrontTypes.Image,
+  'altText' | 'url' | 'width' | 'height'
+>;
+
 export type FeaturedCollectionQueryVariables = StorefrontTypes.Exact<{
   [key: string]: never;
 }>;

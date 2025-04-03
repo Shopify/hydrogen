@@ -1,7 +1,13 @@
 import type {StorefrontApiClient} from '@shopify/storefront-api-client';
 import type {Route} from './+types/_index';
-import {getSelectedProductOptions} from '~/lib/from-hydrogen';
+import {getSelectedProductOptions} from '~/lib/getSelectedProductOptions';
 import type {SelectedOptionInput} from '~/graphql-types/storefront.types';
+import {getProductOptions} from '~/lib/getProductOptions';
+import {useSelectedOptionInUrlParam} from '~/lib/useSelectedOptionInUrlParam';
+import {Image} from '~/lib/Image';
+import {ProductPrice} from '~/components/ProductPrice';
+import {ProductForm} from '~/components/ProductForm';
+import {Aside} from '~/components/Aside';
 
 export async function loader({context, params, request}: Route.LoaderArgs) {
   const {storefront} = context;
@@ -28,17 +34,89 @@ export async function loader({context, params, request}: Route.LoaderArgs) {
 export default function Product({loaderData}: Route.ComponentProps) {
   const product = (loaderData as any).product;
 
+  // TODO: Optimistically selects a variant with given available variant information
+  //   const selectedVariant = useOptimisticVariant(
+  //     product.selectedOrFirstAvailableVariant,
+  //     getAdjacentAndFirstAvailableVariants(product),
+  //   );
+  const selectedVariant = product.selectedOrFirstAvailableVariant;
+
+  // Sets the search param to the selected variant without navigation
+  // only when no search params are set in the url
+  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
+
+  // Get the product options array
+  const productOptions = getProductOptions({
+    ...product,
+    selectedOrFirstAvailableVariant: selectedVariant,
+  });
+
+  const {title, descriptionHtml} = product;
+
   return (
-    <div className="product">
-      <h1>{product.title}</h1>
-      <p>{product.description}</p>
-      <div>{product.selectedOrFirstAvailableVariant.title}</div>
-      <img
-        src={product.featuredImage.url}
-        alt={product.featuredImage.altText}
-      />
-    </div>
+    <Aside.Provider>
+      <div className="product">
+        <div className="product-image">
+          {selectedVariant.image ? (
+            <Image
+              alt={selectedVariant.image.altText || 'Product Image'}
+              aspectRatio="1/1"
+              data={selectedVariant.image}
+              key={selectedVariant.image.id}
+              sizes="(min-width: 45em) 50vw, 100vw"
+            />
+          ) : null}
+        </div>
+        <div className="product-main">
+          <h1>{title}</h1>
+          <ProductPrice
+            price={selectedVariant?.price}
+            compareAtPrice={selectedVariant?.compareAtPrice}
+          />
+          <br />
+          <ProductForm
+            productOptions={productOptions}
+            selectedVariant={selectedVariant}
+          />
+          <br />
+          <br />
+          <p>
+            <strong>Description</strong>
+          </p>
+          <br />
+          <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
+          <br />
+        </div>
+        {/* <Analytics.ProductView
+        data={{
+          products: [
+            {
+              id: product.id,
+              title: product.title,
+              price: selectedVariant?.price.amount || '0',
+              vendor: product.vendor,
+              variantId: selectedVariant?.id || '',
+              variantTitle: selectedVariant?.title || '',
+              quantity: 1,
+            },
+          ],
+        }}
+      /> */}
+      </div>
+    </Aside.Provider>
   );
+
+  //   return (
+  //     <div className="product">
+  //       <h1>{product.title}</h1>
+  //       <p>{product.description}</p>
+  //       <div>{product.selectedOrFirstAvailableVariant.title}</div>
+  //       <img
+  //         src={product.featuredImage.url}
+  //         alt={product.featuredImage.altText}
+  //       />
+  //     </div>
+  //   );
 }
 
 async function getProduct(
