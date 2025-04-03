@@ -12,6 +12,12 @@ import {
 } from 'miniflare';
 import {createInspectorConnector} from './inspector.js';
 import {
+  fetch as undiciFetch,
+  ProxyAgent,
+  type RequestInit as UndiciRequestInit,
+  type Headers as UndiciHeaders,
+} from 'undici';
+import {
   STATIC_ASSET_EXTENSIONS,
   buildAssetsUrl,
   createAssetsServer,
@@ -230,16 +236,35 @@ const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
   {} as Record<string, string>,
 );
 
-// Opt-out of TLS validation in the worker environment,
-// and run network requests in Node environment.
+// For opt-out of TLS validation and proxying support,
+// run network requests in Node environment.
 // https://nodejs.org/api/cli.html#node_tls_reject_unauthorizedvalue
-const UNSAFE_OUTBOUND_SERVICE = {
+const OUTBOUND_SERVICE = {
   async outboundService(request: Request) {
-    const response = await fetch(request.url, request);
-    // Remove brotli encoding:
-    // https://github.com/cloudflare/workers-sdk/issues/5345
-    response.headers.delete('Content-Encoding');
-    return response;
+    try {
+      const proxy =
+        process.env['SHOPIFY_HTTP_PROXY'] ??
+        process.env['SHOPIFY_HTTPS_PROXY'] ??
+        null;
+
+      const url = new URL(request.url);
+
+      if (
+        proxy &&
+        url.hostname !== 'localhost' &&
+        url.hostname !== '127.0.0.1'
+      ) {
+        (request as unknown as UndiciRequestInit).dispatcher = new ProxyAgent(
+          proxy,
+        );
+      }
+
+      return undiciFetch(request.url, request as unknown as UndiciRequestInit);
+    } catch (e) {
+      console.error(`[h2:error:outboundservice] ${request.url}`);
+      console.error(e);
+      throw e;
+    }
   },
 };
 
@@ -316,14 +341,17 @@ function buildMiniflareOptions(
       },
       ...workers.map((worker) => {
         const isNormalWorker = !wrappedBindings.has(worker.name);
-        const useUnsafeOutboundService =
-          isNormalWorker && process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0';
+        const useOutboundService =
+          isNormalWorker &&
+          (process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0' ||
+            process.env.SHOPIFY_HTTP_PROXY ||
+            process.env.SHOPIFY_HTTPS_PROXY);
 
         return {
           ...(isNormalWorker &&
             !worker.compatibilityDate &&
             OXYGEN_COMPAT_PARAMS),
-          ...(useUnsafeOutboundService && UNSAFE_OUTBOUND_SERVICE),
+          ...(useOutboundService && OUTBOUND_SERVICE),
           ...worker,
         };
       }),
