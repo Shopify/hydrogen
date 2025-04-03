@@ -2,7 +2,7 @@
 '@shopify/hydrogen': patch
 ---
 
-# Deprecation Notice: VariantSelector
+Deprecation Notice: VariantSelector
 
 `VariantSelector` is deprecated because it does not supports 2k variants or combined listing products. Use `getProductOptions` for a streamlined migration to a modern scalable product form.
 
