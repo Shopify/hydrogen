@@ -13,7 +13,6 @@ import {
   mdCode,
   mdFrontMatter,
   mdHeading,
-  mdImage,
   mdList,
   mdNote,
   mdParagraph,
@@ -72,10 +71,6 @@ export function makeReadmeBlocks(
 ) {
   const markdownTitle = makeTitle(recipe, format);
 
-  const markdownImage = maybeMDBlock(recipe.image, (image) => [
-    mdImage(recipe.title, image),
-  ]);
-
   const markdownDescription = mdParagraph(recipe.description);
 
   const markdownNotes = maybeMDBlock(recipe.notes, (notes) =>
@@ -106,7 +101,6 @@ export function makeReadmeBlocks(
 
   const blocks: MDBlock[] = [
     markdownTitle,
-    ...markdownImage,
     markdownDescription,
     ...markdownNotes,
     ...markdownRequirements,
@@ -125,6 +119,7 @@ function makeIngredients(ingredients: Ingredient[]): MDBlock[] {
 
   return [
     mdHeading(2, 'Ingredients'),
+    mdParagraph('_New files added to the template by this recipe._'),
     mdTable(
       ['File', 'Description'],
       ingredients.map((ingredient): string[] => {

@@ -51,7 +51,6 @@ export const RecipeSchema = z.object({
     .optional()
     .nullable()
     .describe('The requirements of the recipe'),
-  image: z.string().nullable().optional().describe('The image of the recipe'),
   ingredients: z
     .array(IngredientSchema)
     .describe('The ingredients of the recipe'),

@@ -38,13 +38,6 @@
       ],
       "description": "The requirements of the recipe"
     },
-    "image": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "description": "The image of the recipe"
-    },
     "ingredients": {
       "type": "array",
       "items": {

@@ -35,6 +35,8 @@ product with the handle `shopify-wax`._
 
 ## Ingredients
 
+_New files added to the template by this recipe._
+
 | File | Description |
 | --- | --- |
 | [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | The `SellingPlanSelector` component is used to display the available subscription options on product pages. |
