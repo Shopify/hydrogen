@@ -1,4 +1,4 @@
-import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
+import {Links, Meta, Outlet, Scripts, ScrollRestoration} from 'react-router';
 import {useNonce} from '@shopify/hydrogen';
 
 export default function App() {
@@ -16,7 +16,6 @@ export default function App() {
         <Outlet />
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
-        <LiveReload nonce={nonce} />
       </body>
     </html>
   );
