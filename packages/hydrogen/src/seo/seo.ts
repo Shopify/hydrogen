@@ -1,8 +1,15 @@
 import {createElement, Fragment, lazy, Suspense, useMemo} from 'react';
-import { type Location, type Params, useLocation, useMatches } from 'react-router';
+import {
+  type Location,
+  type Params,
+  useLocation,
+  useMatches,
+} from 'react-router';
 import {generateSeoTags, type SeoConfig} from './generate-seo-tags';
 
-import type { LoaderFunction, SerializeFrom } from 'react-router';
+import type {LoaderFunction, useLoaderData} from 'react-router';
+
+type SerializeFrom<T> = ReturnType<typeof useLoaderData<T>>;
 
 const SeoLogger = lazy(() => import('./log-seo-tags'));
 

@@ -1,5 +1,4 @@
 import type {Plugin, ConfigEnv} from 'vite';
-import type { Preset as RemixPreset } from '@react-router/dev';
 import {
   setupHydrogenMiddleware,
   type HydrogenMiddlewareOptions,
@@ -14,12 +13,19 @@ import {getCompatDate} from './compat-date.js';
 
 export type {HydrogenPluginOptions};
 
+// Define a local type for the preset to avoid importing from private module
+type RemixPreset = {
+  name: string;
+  reactRouterConfigResolved: (arg: {reactRouterConfig: any}) => void;
+  reactRouterConfig: () => Record<string, any>;
+};
+
 type HydrogenSharedOptions = Partial<
   Pick<HydrogenPluginOptions, 'disableVirtualRoutes'> &
     Pick<ConfigEnv, 'command'> & {
-      remixConfig?: Parameters<
-        NonNullable<RemixPreset['remixConfigResolved']>
-      >[0]['remixConfig'];
+      reactRouterConfig?: Parameters<
+        NonNullable<RemixPreset['reactRouterConfigResolved']>
+      >[0]['reactRouterConfig'];
     }
 >;
 
@@ -198,10 +204,10 @@ function mergeOptions(
 hydrogen.v3preset = () =>
   ({
     name: 'hydrogen',
-    remixConfigResolved({remixConfig}) {
-      sharedOptions.remixConfig = remixConfig;
+    reactRouterConfigResolved({reactRouterConfig}) {
+      sharedOptions.reactRouterConfig = reactRouterConfig;
     },
-    remixConfig() {
+    reactRouterConfig() {
       return {
         buildDirectory: 'dist',
       };
@@ -211,15 +217,15 @@ hydrogen.v3preset = () =>
 hydrogen.preset = () =>
   ({
     name: 'hydrogen',
-    remixConfigResolved({remixConfig}) {
-      sharedOptions.remixConfig = remixConfig;
+    reactRouterConfigResolved({reactRouterConfig}) {
+      sharedOptions.reactRouterConfig = reactRouterConfig;
     },
-    remixConfig() {
+    reactRouterConfig() {
       if (sharedOptions.disableVirtualRoutes) return {};
 
       return {
         buildDirectory: 'dist',
-        async routes(defineRoutes) {
+        async routes(defineRoutes: any) {
           if (
             sharedOptions.disableVirtualRoutes ||
             sharedOptions.command !== 'serve'
@@ -229,7 +235,7 @@ hydrogen.preset = () =>
 
           const {root, routes: virtualRoutes} = await getVirtualRoutes();
 
-          const result = defineRoutes((route) => {
+          const result = defineRoutes((route: any) => {
             route(root.path, root.file, {id: root.id}, () => {
               virtualRoutes.map(({path, file, index, id}) => {
                 route(path, file, {id, index});
@@ -251,7 +257,6 @@ hydrogen.preset = () =>
           // overwrite it with `root`. Later, this value acts as an
           // undefined / empty string when matching routes so it
           // doesn't match the user root.
-          // @ts-expect-error
           result[root.id].parentId = new String('');
 
           return result;
