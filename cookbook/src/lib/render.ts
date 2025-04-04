@@ -11,8 +11,10 @@ import {
   maybeMDBlock,
   MDBlock,
   mdCode,
+  mdCodeString,
   mdFrontMatter,
   mdHeading,
+  mdLinkString,
   mdList,
   mdNote,
   mdParagraph,
@@ -90,7 +92,11 @@ export function makeReadmeBlocks(
     recipe.deletedFiles != null && recipe.deletedFiles.length > 0
       ? [
           mdHeading(2, 'Deleted Files'),
-          mdList(recipe.deletedFiles.map((file) => `[\`${file}\`](${file})`)),
+          mdList(
+            recipe.deletedFiles.map((file) =>
+              mdLinkString(`/templates/skeleton/${file}`, mdCodeString(file)),
+            ),
+          ),
         ]
       : [];
 
@@ -124,10 +130,10 @@ function makeIngredients(ingredients: Ingredient[]): MDBlock[] {
       ['File', 'Description'],
       ingredients.map((ingredient): string[] => {
         return [
-          `[\`${ingredient.path.replace(
-            TEMPLATE_DIRECTORY,
-            '',
-          )}\`](ingredients/${ingredient.path})`,
+          mdLinkString(
+            `ingredients/${ingredient.path}`,
+            mdCodeString(ingredient.path.replace(TEMPLATE_DIRECTORY, '')),
+          ),
           ingredient.description ?? '',
         ];
       }),
@@ -172,7 +178,10 @@ export function renderStep(
       return [
         mdHeading(
           4,
-          `File: [\`${diff.file}\`](/templates/skeleton/${diff.file})`,
+          `File: ${mdLinkString(
+            `/templates/skeleton/${diff.file}`,
+            mdCodeString(diff.file),
+          )}`,
         ),
         mdCode('diff', patch, collapsed),
       ];
@@ -190,7 +199,12 @@ export function renderStep(
               .filter((ingredient) =>
                 ingredients.some((other) => other.path === ingredient),
               )
-              .map((i) => `\`${i.replace(TEMPLATE_DIRECTORY, '')}\``),
+              .map((i) =>
+                mdLinkString(
+                  `ingredients/${i}`,
+                  mdCodeString(i.replace(TEMPLATE_DIRECTORY, '')),
+                ),
+              ),
           ),
         ]
       : []),

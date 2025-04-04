@@ -185,9 +185,9 @@ function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
 function copyIngredientsStep(ingredients: Ingredient[]): Step {
   return {
     type: 'COPY_INGREDIENTS',
-    name: 'Copy ingredients',
+    name: 'Add ingredients to your project',
     description:
-      'Copy the ingredients from the template directory to the current directory.',
+      'Copy the ingredients from the `ingredients/` directory to the current directory.',
     ingredients: ingredients.map((ingredient) => ingredient.path),
   };
 }

@@ -39,10 +39,10 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
 
 ### Step 2: Add ingredients to your project
 
-Copy the ingredients for this recipe to the relevant folders in your project.
+Copy the ingredients from the `ingredients/` directory to the current directory.
 
-- `app/components/SellingPlanSelector.tsx`
-- `app/styles/selling-plan.css`
+- [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
+- [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css)
 
 ### Step 3: Render the selling plan in the cart
 
