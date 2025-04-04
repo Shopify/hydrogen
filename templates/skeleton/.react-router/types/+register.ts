@@ -7,6 +7,7 @@ declare module "react-router" {
 }
 
 type Params = {
+  "/": {};
   "/blogs/:blogHandle/:articleHandle": {
     "blogHandle": string;
     "articleHandle": string;
@@ -60,6 +61,4 @@ type Params = {
   "/*": {
     "*": string;
   };
-  "/graphiql": {};
-  "/subrequest-profiler": {};
 };

@@ -1,8 +1,9 @@
-import type {EntryContext, AppLoadContext} from '@shopify/remix-oxygen';
-import { ServerRouter } from 'react-router';
+import type {AppLoadContext} from '@shopify/remix-oxygen';
+import {ServerRouter} from 'react-router';
 import {isbot} from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
 import {createContentSecurityPolicy} from '@shopify/hydrogen';
+import type {EntryContext} from 'react-router';
 
 export default async function handleRequest(
   request: Request,
@@ -20,7 +21,11 @@ export default async function handleRequest(
 
   const body = await renderToReadableStream(
     <NonceProvider>
-      <ServerRouter context={reactRouterContext} url={request.url} nonce={nonce}/>
+      <ServerRouter
+        context={reactRouterContext}
+        url={request.url}
+        nonce={nonce}
+      />
     </NonceProvider>,
     {
       nonce,
