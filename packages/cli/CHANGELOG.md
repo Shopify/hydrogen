@@ -1,5 +1,49 @@
 # @shopify/cli-hydrogen
 
+## 10.0.0
+
+### Patch Changes
+
+- Add support for HTTP proxies with the environment variables `SHOPIFY_HTTP_PROXY` and `SHOPIFY_HTTPS_PROXY`. Define one of these variables before starting the Hydrogen dev server to make all requests go through a proxy server. ([#2831](https://github.com/Shopify/hydrogen/pull/2831)) by [@blittle](https://github.com/blittle)
+
+  If your proxy uses authentication, provide the auth in the following format:
+
+  ```bash
+  SHOPIFY_HTTP_PROXY=http://user:pass@yourproxy.com:PORT
+  ```
+
+- Moved the `Layout` component back into `root.tsx` to avoid issues with styled errors. ([#2829](https://github.com/Shopify/hydrogen/pull/2829)) by [@ruggishop](https://github.com/ruggishop)
+
+  1. If you have a separate `app/layout.tsx` file, delete it and move its default exported component into your `root.tsx`. For example:
+
+     ```ts
+     // /app/root.tsx
+     export function Layout({children}: {children?: React.ReactNode}) {
+       const nonce = useNonce();
+       const data = useRouteLoaderData<RootLoader>('root');
+
+       return (
+         <html lang="en">
+         ...
+       );
+     }
+     ```
+
+- Updated dependencies [[`92b3d0c4`](https://github.com/Shopify/hydrogen/commit/92b3d0c4443363648053e720420c82a8484695cf)]:
+  - @shopify/mini-oxygen@3.2.0
+
+## 9.0.11
+
+### Patch Changes
+
+- Fixed an issue with the creation of JavaScript projects. ([#2818](https://github.com/Shopify/hydrogen/pull/2818)) by [@seanparsons](https://github.com/seanparsons)
+
+## 9.0.10
+
+### Patch Changes
+
+- Updates the `@shopify/cli`, `@shopify/cli-kit` and `@shopify/plugin-cloudflare` dependencies to 3.77.1. ([#2816](https://github.com/Shopify/hydrogen/pull/2816)) by [@seanparsons](https://github.com/seanparsons)
+
 ## 9.0.9
 
 ### Patch Changes

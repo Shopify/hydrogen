@@ -23,7 +23,7 @@
     "typecheck:examples": "turbo typecheck --parallel --filter=./examples/*",
     "test": "turbo run test --parallel",
     "test:watch": "turbo run test:watch",
-    "version": "changeset version && npm run version:post",
+    "version": "changeset version && npm run version:post && npm run format",
     "version:post": "npm run version:hydrogen && npm run version:cli",
     "version:hydrogen": "node -p \"'export const LIB_VERSION = \\'' + require('./packages/hydrogen/package.json').version + '\\';'\" > packages/hydrogen/src/version.ts",
     "version:cli": "cd packages/cli && npm run generate:manifest",
@@ -68,7 +68,7 @@
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@playwright/test": "^1.40.1",
-    "@shopify/cli": "~3.77.0",
+    "@shopify/cli": "~3.77.1",
     "@types/eslint": "^9.6.1",
     "@types/semver": "^7.5.8",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
@@ -120,7 +120,7 @@
   },
   "overrides": {
     "@oclif/core": "3.26.5",
-    "@shopify/cli-kit": "3.77.0"
+    "@shopify/cli-kit": "3.77.1"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.34.9"
