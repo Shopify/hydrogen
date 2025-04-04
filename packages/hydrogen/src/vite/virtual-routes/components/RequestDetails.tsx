@@ -1,6 +1,6 @@
 import {useState, useRef, useEffect} from 'react';
 import {type ServerEvents} from '../lib/useDebugNetworkServer.js';
-import {Link} from '@remix-run/react';
+import { Link } from 'react-router';
 import {IconClose} from './IconClose.jsx';
 
 // Type is broken in use-resize-observer

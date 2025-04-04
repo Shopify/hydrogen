@@ -1,4 +1,4 @@
-import {data} from '@remix-run/server-runtime';
+import { data } from 'react-router';
 import {CartForm} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 

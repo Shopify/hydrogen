@@ -1,5 +1,5 @@
 import {getVirtualRoutesV3} from '../vite/get-virtual-routes';
-import {type RouteConfigEntry} from '@remix-run/route-config';
+import { type RouteConfigEntry } from '@react-router/dev/routes';
 
 // Make this transform the existing routes instead.
 export async function hydrogenRoutes(

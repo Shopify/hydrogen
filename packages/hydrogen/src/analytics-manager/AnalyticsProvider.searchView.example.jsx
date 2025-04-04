@@ -1,5 +1,5 @@
 import {Analytics} from '@shopify/hydrogen';
-import {useLoaderData} from '@remix-run/react';
+import { useLoaderData } from 'react-router';
 
 export async function loader({request}) {
   const url = new URL(request.url);

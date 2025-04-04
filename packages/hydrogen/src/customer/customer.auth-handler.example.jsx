@@ -1,5 +1,5 @@
 import {createCustomerAccountClient} from '@shopify/hydrogen';
-import * as remixBuild from '@remix-run/dev/server-build';
+import * as remixBuild from '@react-router/dev/server-build';
 import {
   createRequestHandler,
   createCookieSessionStorage,
@@ -95,12 +95,7 @@ class AppSession {
 
 /////////////////////////////////
 // In a route
-import {
-  useLoaderData,
-  useRouteError,
-  isRouteErrorResponse,
-  useLocation,
-} from '@remix-run/react';
+import { useLoaderData, useRouteError, isRouteErrorResponse, useLocation } from 'react-router';
 
 export async function loader({context}) {
   const {data} = await context.customerAccount.query(`#graphql

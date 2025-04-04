@@ -1,5 +1,5 @@
 import {storefrontRedirect, createStorefrontClient} from '@shopify/hydrogen';
-import * as remixBuild from '@remix-run/dev/server-build';
+import * as remixBuild from '@react-router/dev/server-build';
 import {
   createRequestHandler,
   getStorefrontHeaders,

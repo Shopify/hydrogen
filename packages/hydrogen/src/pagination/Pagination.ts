@@ -13,13 +13,7 @@ import type {
   PageInfo,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {flattenConnection} from '@shopify/hydrogen-react';
-import {
-  Link,
-  type LinkProps,
-  useNavigation,
-  useLocation,
-  useNavigate,
-} from '@remix-run/react';
+import { Link, type LinkProps, useNavigation, useLocation, useNavigate } from 'react-router';
 
 declare global {
   interface Window {

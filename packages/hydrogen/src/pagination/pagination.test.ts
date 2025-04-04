@@ -2,7 +2,7 @@ import {getPaginationVariables, Pagination} from './Pagination';
 import {createElement, Fragment} from 'react';
 import {cleanup, render} from '@testing-library/react';
 import {describe, it, expect, afterEach, vi, afterAll} from 'vitest';
-import type {LinkProps} from '@remix-run/react';
+import type { LinkProps } from 'react-router';
 
 vi.mock('react', async (importOriginal) => {
   const mod = (await importOriginal()) as any;
@@ -12,7 +12,7 @@ vi.mock('react', async (importOriginal) => {
   };
 });
 
-vi.mock('@remix-run/react', () => ({
+vi.mock('react-router', () => ({
   useNavigation: vi.fn(() => ({
     state: 'idle',
   })),

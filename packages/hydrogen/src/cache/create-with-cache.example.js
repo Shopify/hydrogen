@@ -1,5 +1,5 @@
 // In your app's `server.ts` file:
-import * as remixBuild from '@remix-run/dev/server-build';
+import * as remixBuild from '@react-router/dev/server-build';
 import {createWithCache, CacheLong} from '@shopify/hydrogen';
 // Use another `createRequestHandler` if deploying off oxygen
 import {createRequestHandler} from '@shopify/remix-oxygen';

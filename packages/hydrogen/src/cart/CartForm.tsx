@@ -1,4 +1,4 @@
-import {type FetcherWithComponents, useFetcher} from '@remix-run/react';
+import { type FetcherWithComponents, useFetcher } from 'react-router';
 import {type MetafieldWithoutOwnerId} from './queries/cart-types';
 import type {ReactNode} from 'react';
 import type {

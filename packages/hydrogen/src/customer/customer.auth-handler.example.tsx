@@ -2,7 +2,7 @@ import {
   createCustomerAccountClient,
   type HydrogenSession,
 } from '@shopify/hydrogen';
-import * as remixBuild from '@remix-run/dev/server-build';
+import * as remixBuild from '@react-router/dev/server-build';
 import {
   createRequestHandler,
   createCookieSessionStorage,
@@ -126,12 +126,7 @@ declare module '@shopify/remix-oxygen' {
 
 /////////////////////////////////
 // In a route
-import {
-  useLoaderData,
-  useRouteError,
-  isRouteErrorResponse,
-  useLocation,
-} from '@remix-run/react';
+import { useLoaderData, useRouteError, isRouteErrorResponse, useLocation } from 'react-router';
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 
 export async function loader({context}: LoaderFunctionArgs) {

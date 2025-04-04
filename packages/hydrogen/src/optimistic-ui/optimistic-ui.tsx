@@ -1,4 +1,4 @@
-import {useFetchers} from '@remix-run/react';
+import { useFetchers } from 'react-router';
 
 export function useOptimisticData<T>(identifier: string) {
   const fetchers = useFetchers();

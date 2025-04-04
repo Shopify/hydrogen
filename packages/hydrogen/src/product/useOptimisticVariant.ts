@@ -1,4 +1,4 @@
-import {useNavigation} from '@remix-run/react';
+import { useNavigation } from 'react-router';
 import {ProductVariant} from '@shopify/hydrogen-react/storefront-api-types';
 import {useEffect, useState} from 'react';
 import type {PartialDeep} from 'type-fest';

@@ -1,11 +1,11 @@
 import {useEffect, useState} from 'react';
-import type {LinksFunction} from '@remix-run/server-runtime';
+import type { LinksFunction } from 'react-router';
 import {Script} from '@shopify/hydrogen';
 
 import {RequestWaterfall} from '../components/RequestWaterfall.jsx';
 import {type ServerEvents} from '../lib/useDebugNetworkServer.jsx';
 import {RequestTable} from '../components/RequestTable.jsx';
-import {Link} from '@remix-run/react';
+import { Link } from 'react-router';
 
 import favicon from '../assets/favicon.svg';
 import faviconDark from '../assets/favicon-dark.svg';

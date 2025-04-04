@@ -1,13 +1,8 @@
 import {createElement, Fragment, lazy, Suspense, useMemo} from 'react';
-import {
-  type Location,
-  type Params,
-  useLocation,
-  useMatches,
-} from '@remix-run/react';
+import { type Location, type Params, useLocation, useMatches } from 'react-router';
 import {generateSeoTags, type SeoConfig} from './generate-seo-tags';
 
-import type {LoaderFunction, SerializeFrom} from '@remix-run/server-runtime';
+import type { LoaderFunction, SerializeFrom } from 'react-router';
 
 const SeoLogger = lazy(() => import('./log-seo-tags'));
 

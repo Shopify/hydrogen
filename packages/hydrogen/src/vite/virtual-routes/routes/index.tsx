@@ -1,5 +1,5 @@
-import {useLoaderData} from '@remix-run/react';
-import type {LinksFunction} from '@remix-run/server-runtime';
+import { useLoaderData } from 'react-router';
+import type { LinksFunction } from 'react-router';
 import type {Shop} from '@shopify/hydrogen-react/storefront-api-types';
 import {HydrogenLogoBaseBW} from '../components/HydrogenLogoBaseBW.jsx';
 import {HydrogenLogoBaseColor} from '../components/HydrogenLogoBaseColor.jsx';

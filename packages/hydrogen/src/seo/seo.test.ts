@@ -1,11 +1,11 @@
 import {createElement} from 'react';
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {Location, UIMatch, useMatches} from '@remix-run/react';
+import { Location, UIMatch, useMatches } from 'react-router';
 import {cleanup, render} from '@testing-library/react';
 
 import {Seo} from './seo';
 
-vi.mock('@remix-run/react', () => ({
+vi.mock('react-router', () => ({
   useMatches: vi.fn(),
   useLocation: vi.fn(() => fillLocation()),
 }));

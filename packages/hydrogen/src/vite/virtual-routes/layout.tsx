@@ -3,13 +3,7 @@
 // It does not affect the routes from the user app.
 
 import {useNonce} from '@shopify/hydrogen';
-import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from '@remix-run/react';
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import {Layout as VirtualLayout} from './components/Layout.jsx';
 
 import styles from './assets/styles.css?url';

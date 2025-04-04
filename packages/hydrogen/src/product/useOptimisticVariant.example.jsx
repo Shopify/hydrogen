@@ -1,4 +1,4 @@
-import {useLoaderData} from '@remix-run/react';
+import { useLoaderData } from 'react-router';
 import {useOptimisticVariant} from '@shopify/hydrogen';
 
 export async function loader({context}) {

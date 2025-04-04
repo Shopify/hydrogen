@@ -1,4 +1,4 @@
-import {Link} from '@remix-run/react';
+import { Link } from 'react-router';
 import {RichText as OriginalRichText} from '@shopify/hydrogen-react';
 
 export const RichText: typeof OriginalRichText = function (props) {

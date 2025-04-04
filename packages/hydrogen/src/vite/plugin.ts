@@ -1,5 +1,5 @@
 import type {Plugin, ConfigEnv} from 'vite';
-import type {Preset as RemixPreset} from '@remix-run/dev';
+import type { Preset as RemixPreset } from '@react-router/dev';
 import {
   setupHydrogenMiddleware,
   type HydrogenMiddlewareOptions,
