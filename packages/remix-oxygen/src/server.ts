@@ -3,7 +3,7 @@ import {
   createRequestHandler as createRemixRequestHandler,
   type AppLoadContext,
   type ServerBuild,
-} from '@remix-run/server-runtime';
+} from 'react-router';
 import {createEventLogger} from './event-logger';
 
 const originalErrorToString = Error.prototype.toString;
