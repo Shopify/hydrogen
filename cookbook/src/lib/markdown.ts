@@ -219,6 +219,10 @@ export function mdLinkString(url: string, text: string): string {
   return `[${text}](${url})`;
 }
 
+export function mdCodeString(code: string): string {
+  return `\`${code}\``;
+}
+
 export function maybeMDBlock<T>(
   value: T | null | undefined,
   makeBlock: (v: T) => MDBlock[],

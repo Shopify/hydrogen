@@ -5,6 +5,10 @@
       "type": "string",
       "description": "The title of the recipe"
     },
+    "summary": {
+      "type": "string",
+      "description": "The summary of what the recipe does"
+    },
     "description": {
       "type": "string",
       "description": "The description of the recipe"
@@ -16,9 +20,23 @@
       },
       "description": "The notes of the recipe"
     },
-    "image": {
-      "type": ["string", "null"],
-      "description": "The image of the recipe"
+    "requirements": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "not": {}
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The requirements of the recipe"
     },
     "ingredients": {
       "type": "array",
@@ -30,11 +48,16 @@
             "description": "The path of the ingredient"
           },
           "description": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "The description of the ingredient"
           }
         },
-        "required": ["path"],
+        "required": [
+          "path"
+        ],
         "additionalProperties": false
       },
       "description": "The ingredients of the recipe"
@@ -46,7 +69,11 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["PATCH", "INFO", "COPY_INGREDIENTS"],
+            "enum": [
+              "PATCH",
+              "INFO",
+              "COPY_INGREDIENTS"
+            ],
             "description": "The type of step"
           },
           "name": {
@@ -54,7 +81,10 @@
             "description": "The name of the step"
           },
           "description": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "The description of the step"
           },
           "notes": {
@@ -85,13 +115,19 @@
                   "description": "The patch file of the diff"
                 }
               },
-              "required": ["file", "patchFile"],
+              "required": [
+                "file",
+                "patchFile"
+              ],
               "additionalProperties": false
             },
             "description": "The diffs of the step"
           }
         },
-        "required": ["type", "name"],
+        "required": [
+          "type",
+          "name"
+        ],
         "additionalProperties": false
       },
       "description": "The steps of the recipe"
@@ -108,7 +144,14 @@
       "description": "The commit hash the recipe is based on"
     }
   },
-  "required": ["title", "description", "ingredients", "steps", "commit"],
+  "required": [
+    "title",
+    "summary",
+    "description",
+    "ingredients",
+    "steps",
+    "commit"
+  ],
   "additionalProperties": false,
   "$schema": "http://json-schema.org/draft-07/schema#"
 }

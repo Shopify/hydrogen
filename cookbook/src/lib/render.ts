@@ -11,9 +11,10 @@ import {
   maybeMDBlock,
   MDBlock,
   mdCode,
+  mdCodeString,
   mdFrontMatter,
   mdHeading,
-  mdImage,
+  mdLinkString,
   mdList,
   mdNote,
   mdParagraph,
@@ -72,10 +73,6 @@ export function makeReadmeBlocks(
 ) {
   const markdownTitle = makeTitle(recipe, format);
 
-  const markdownImage = maybeMDBlock(recipe.image, (image) => [
-    mdImage(recipe.title, image),
-  ]);
-
   const markdownDescription = mdParagraph(recipe.description);
 
   const markdownNotes = maybeMDBlock(recipe.notes, (notes) =>
@@ -94,16 +91,25 @@ export function makeReadmeBlocks(
   const markdownDeletedFiles =
     recipe.deletedFiles != null && recipe.deletedFiles.length > 0
       ? [
-          mdHeading(2, '🗑️ Deleted Files'),
-          mdList(recipe.deletedFiles.map((file) => `[\`${file}\`](${file})`)),
+          mdHeading(2, 'Deleted Files'),
+          mdList(
+            recipe.deletedFiles.map((file) =>
+              mdLinkString(`/templates/skeleton/${file}`, mdCodeString(file)),
+            ),
+          ),
         ]
+      : [];
+
+  const markdownRequirements =
+    recipe.requirements != null
+      ? [mdHeading(2, 'Requirements'), mdParagraph(recipe.requirements)]
       : [];
 
   const blocks: MDBlock[] = [
     markdownTitle,
-    ...markdownImage,
     markdownDescription,
     ...markdownNotes,
+    ...markdownRequirements,
     ...markdownIngredients,
     ...markdownSteps,
     ...markdownDeletedFiles,
@@ -118,15 +124,16 @@ function makeIngredients(ingredients: Ingredient[]): MDBlock[] {
   }
 
   return [
-    mdHeading(2, '🍣 Ingredients'),
+    mdHeading(2, 'Ingredients'),
+    mdParagraph('_New files added to the template by this recipe._'),
     mdTable(
       ['File', 'Description'],
       ingredients.map((ingredient): string[] => {
         return [
-          `[\`${ingredient.path.replace(
-            TEMPLATE_DIRECTORY,
-            '',
-          )}\`](ingredients/${ingredient.path})`,
+          mdLinkString(
+            `ingredients/${ingredient.path}`,
+            mdCodeString(ingredient.path.replace(TEMPLATE_DIRECTORY, '')),
+          ),
           ingredient.description ?? '',
         ];
       }),
@@ -140,7 +147,7 @@ function makeSteps(
   format: RenderFormat,
   patchesDir: string,
 ): MDBlock[] {
-  const markdownStepsHeader = mdHeading(2, '🍱 Steps');
+  const markdownStepsHeader = mdHeading(2, 'Steps');
   return [
     markdownStepsHeader,
     ...steps.flatMap((step, index) =>
@@ -171,7 +178,10 @@ export function renderStep(
       return [
         mdHeading(
           4,
-          `File: [\`${diff.file}\`](/templates/skeleton/${diff.file})`,
+          `File: ${mdLinkString(
+            `/templates/skeleton/${diff.file}`,
+            mdCodeString(diff.file),
+          )}`,
         ),
         mdCode('diff', patch, collapsed),
       ];
@@ -179,7 +189,7 @@ export function renderStep(
   }
 
   const markdownStep: MDBlock[] = [
-    mdHeading(3, `${index + 1}. ${step.name}`),
+    mdHeading(3, `Step ${index + 1}: ${step.name}`),
     ...(step.notes?.map(mdNote) ?? []),
     mdParagraph(step.description ?? ''),
     ...(step.ingredients != null
@@ -189,7 +199,12 @@ export function renderStep(
               .filter((ingredient) =>
                 ingredients.some((other) => other.path === ingredient),
               )
-              .map((i) => `\`${i.replace(TEMPLATE_DIRECTORY, '')}\``),
+              .map((i) =>
+                mdLinkString(
+                  `ingredients/${i}`,
+                  mdCodeString(i.replace(TEMPLATE_DIRECTORY, '')),
+                ),
+              ),
           ),
         ]
       : []),
@@ -208,7 +223,7 @@ function makeTitle(recipe: Recipe, format: RenderFormat): MDBlock {
         description: recipe.description,
       });
     case 'github':
-      return mdHeading(1, `🧑‍🍳 ${recipe.title}`);
+      return mdHeading(1, recipe.title);
     default:
       assertNever(format);
   }
