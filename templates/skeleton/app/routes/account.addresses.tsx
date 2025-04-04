@@ -15,7 +15,7 @@ import {
   useOutletContext,
   type MetaFunction,
   type Fetcher,
-} from '@remix-run/react';
+} from 'react-router';
 import {
   UPDATE_ADDRESS_MUTATION,
   DELETE_ADDRESS_MUTATION,
