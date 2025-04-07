@@ -25,19 +25,26 @@ describe('dev', () => {
 
       const {close, getUrl} = await runDev({
         path: tmpDir,
+        port: Math.floor(Math.random() * (65535 - 3050) + 3050),
         disableVirtualRoutes: true,
         disableVersionCheck: true,
         cliConfig: {} as any,
         envFile: '.env',
       });
 
+      const devUrl = getUrl();
+
       try {
         await vi.waitFor(
-          () => expect(outputMock.output()).toMatch(/View [^:]+? app:/i),
+          () => {
+            const output = outputMock.output();
+            expect(output).toMatch(/View [^:]+? app:/i);
+          },
           {timeout: 5000},
         );
 
-        const response = await fetch(getUrl());
+        const response = await fetch(devUrl);
+
         expect(response.status).toEqual(200);
         expect(response.headers.get('content-type')).toEqual('text/html');
         await expect(response.text()).resolves.toMatch('Mock.shop');
