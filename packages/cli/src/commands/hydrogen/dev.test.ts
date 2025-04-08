@@ -17,12 +17,12 @@ describe('dev', () => {
         i18n: 'subfolders',
         routes: true,
         installDeps: true,
+        mockShop: true,
       });
 
       // Clear previous success messages
       outputMock.clear();
       vi.stubEnv('NODE_ENV', 'development');
-      vi.stubEnv('PUBLIC_STORE_DOMAIN', 'fakestore-ai.myshopify.com');
 
       const {close, getUrl} = await runDev({
         path: tmpDir,
@@ -40,6 +40,9 @@ describe('dev', () => {
           async () => {
             const output = outputMock.output();
             expect(output).toMatch(/View [^:]+? app:/i);
+
+            console.log('devUrl', devUrl);
+            console.log('output', output);
 
             const response = await fetch(devUrl);
 

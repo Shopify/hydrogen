@@ -184,7 +184,14 @@ export async function setupLocalStarterTemplate(
           joinPath(project.directory, '.env'),
           envLeadingComment +
             '\n' +
-            [['SESSION_SECRET', 'foobar']]
+            [
+              ['SESSION_SECRET', 'foobar'],
+              ['PUBLIC_STORE_DOMAIN', 'hydrogen-preview.myshopify.com'],
+              [
+                'PUBLIC_STOREFRONT_API_TOKEN',
+                'bd245f83a4f04754ec9754c9f8ac1d69',
+              ],
+            ]
               .map(([key, value]) => `${key}="${value}"`)
               .join('\n') +
             '\n',
