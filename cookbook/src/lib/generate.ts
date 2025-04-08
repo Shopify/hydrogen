@@ -187,7 +187,7 @@ function copyIngredientsStep(ingredients: Ingredient[]): Step {
     type: 'COPY_INGREDIENTS',
     name: 'Add ingredients to your project',
     description:
-      'Copy the ingredients from the `ingredients/` directory to the current directory.',
+      'Copy all the files found in the `ingredients/` directory to the current directory.',
     ingredients: ingredients.map((ingredient) => ingredient.path),
   };
 }

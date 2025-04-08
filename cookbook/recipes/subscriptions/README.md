@@ -1,6 +1,6 @@
 # Subscriptions
 
-This recipe lets you sell subscription-based products on your Hydrogen storefront by implementing [selling plan groups](https://shopify.dev/docs/api/storefront/latest/objects/SellingPlanGroup). Customers will be able to choose between one-time purchases or recurring subscriptions for any products with available selling plans.
+This recipe lets you sell subscription-based products on your Hydrogen storefront by implementing [selling plan groups](https://shopify.dev/docs/api/storefront/latest/objects/SellingPlanGroup). Your customers will be able to choose between one-time purchases or recurring subscriptions for any products with available selling plans.
 
 
 In this recipe you'll make the following changes:
@@ -32,14 +32,14 @@ _New files added to the template by this recipe._
 
 1. Install the [Shopify Subscriptions app](https://apps.shopify.com/shopify-subscriptions).
 2. In your Shopify admin, use the Subscriptions app to create one or more subscription plans.
-3. Open the product details pages for any products that will be sold as subscriptions, and add the relevant subscription plans in the **Purchase options** section.
+3. On [admin.shopify.com](https://admin.shopify.com), within your store, open the product catalogue pages for any products that will be sold as subscriptions, and add the relevant subscription plans in the **Purchase options** section.
 
 The Hydrogen demo storefront comes pre-configured with an example subscription product with the handle `shopify-wax`.
 
 
 ### Step 2: Add ingredients to your project
 
-Copy the ingredients from the `ingredients/` directory to the current directory.
+Copy all the files found in the `ingredients/` directory to the current directory.
 
 - [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
 - [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css)
