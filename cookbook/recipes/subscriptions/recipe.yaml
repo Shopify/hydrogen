@@ -33,10 +33,12 @@ steps:
       1. Install the [Shopify Subscriptions
       app](https://apps.shopify.com/shopify-subscriptions).
 
-      2. In your Shopify admin, [use the Subscriptions app](https://admin.shopify.com/apps/subscriptions-remix/app) to create one or more
-      subscription plans.
+      2. In your Shopify admin, [use the Subscriptions
+      app](https://admin.shopify.com/apps/subscriptions-remix/app) to create one
+      or more subscription plans.
 
-      3. On [admin.shopify.com](https://admin.shopify.com), within your store, open the product catalogue pages for any products that will be sold as
+      3. On [admin.shopify.com](https://admin.shopify.com), within your store,
+      open the product catalogue pages for any products that will be sold as
       subscriptions, and add the relevant subscription plans in the **Purchase
       options** section.
 
@@ -45,7 +47,8 @@ steps:
       subscription product with the handle `shopify-wax`.
   - type: COPY_INGREDIENTS
     name: Add ingredients to your project
-    description: Copy all the files found in the `ingredients/` directory to the current directory.
+    description: Copy all the files found in the `ingredients/` directory to the
+      current directory.
     ingredients:
       - templates/skeleton/app/components/SellingPlanSelector.tsx
       - templates/skeleton/app/styles/selling-plan.css
