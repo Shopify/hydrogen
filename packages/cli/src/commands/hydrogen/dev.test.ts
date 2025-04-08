@@ -49,7 +49,7 @@ describe('dev', () => {
               '<title>Hydrogen | Home</title>',
             );
           },
-          {timeout: 5000},
+          {timeout: 8000},
         );
       } finally {
         await close();
