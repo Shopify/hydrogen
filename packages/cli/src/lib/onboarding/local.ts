@@ -186,10 +186,10 @@ export async function setupLocalStarterTemplate(
             '\n' +
             [
               ['SESSION_SECRET', 'foobar'],
-              ['PUBLIC_STORE_DOMAIN', 'hydrogen-preview.myshopify.com'],
+              ['PUBLIC_STORE_DOMAIN', 'fakestore-api.myshopify.com'],
               [
                 'PUBLIC_STOREFRONT_API_TOKEN',
-                'bd245f83a4f04754ec9754c9f8ac1d69',
+                'a6136cc465ffc0c946d4de38c4490bb7',
               ],
             ]
               .map(([key, value]) => `${key}="${value}"`)
