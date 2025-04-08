@@ -1,5 +1,5 @@
 ---
-"@shopify/mini-oxygen": patch
+'@shopify/hydrogen': patch
 ---
 
 Fix vite 6 workers module resolution
