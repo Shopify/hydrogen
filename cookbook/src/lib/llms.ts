@@ -183,9 +183,27 @@ ${recipe.llms.troubleshooting
   .join('\n')}
 </troubleshooting>
 
+# New files (ingredients)
+
+The recipe mentions "ingredients", which are new files introduced in the recipe.
+This is their content:
+
+<ingredients>
+${recipe.ingredients
+  .map((ingredient) => {
+    return `## ${ingredient.path}
+\`\`\`
+${fs.readFileSync(path.join(COOKBOOK_PATH, 'recipes', recipeName, 'ingredients', ingredient.path), 'utf8')}
+\`\`\`
+`;
+  })
+  .join('\n')}
+</ingredients>
+
 # Recipe Implementation
 
-Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
+Here's the ${recipeName} recipe for the base Hydrogen skeleton template.
+
 `.trim(),
     ),
 

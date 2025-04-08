@@ -1,18 +1,3 @@
----
-description: Recipe for implementing "Subscriptions (subscriptions)" in a Hydrogen storefront. This recipe adds subscription capabilities to your Hydrogen storefront by implementing [selling plan groups](https://shopify.dev/docs/api/storefront/latest/objects/SellingPlanGroup) and options. Customers can choose between one-time purchases or recurring subscriptions when available.
-
-The implementation:
-1. Modifies product detail pages to display subscription options with accurate pricing
-2. Adds a SellingPlanSelector component that presents available subscription options
-3. Enhances GraphQL fragments to fetch all necessary selling plan data
-4. Displays subscription details on applicable cart line items
-
-With this recipe, merchants can offer flexible purchasing options while maintaining a seamless customer experience.
-
-globs: templates/**/*
-alwaysApply: false
----
-
 # Overview
 
 This rule describes how to implement "Subscriptions" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
@@ -69,9 +54,143 @@ Please note that the recipe steps below are not necessarily ordered in the way t
   **Solution**: Check your GraphQL queries to ensure you're fetching all selling plans. The current implementation limits to the first 10 selling plans with `sellingPlans(first:10)`. If you have more than 10 plans, you may need to increase this limit or implement pagination.
 </troubleshooting>
 
+# New files (ingredients)
+
+The recipe mentions "ingredients", which are new files introduced in the recipe.
+This is their content:
+
+<ingredients>
+## templates/skeleton/app/components/SellingPlanSelector.tsx
+```
+import type {
+  ProductFragment,
+  SellingPlanGroupFragment,
+  SellingPlanFragment,
+} from 'storefrontapi.generated';
+import {useMemo} from 'react';
+import {useLocation} from '@remix-run/react';
+
+/* Enriched sellingPlan type including isSelected and url */
+export type SellingPlan = SellingPlanFragment & {
+  isSelected: boolean;
+  url: string;
+};
+
+/* Enriched sellingPlanGroup type including enriched SellingPlan nodes */
+export type SellingPlanGroup = Omit<
+  SellingPlanGroupFragment,
+  'sellingPlans'
+> & {
+  sellingPlans: {
+    nodes: SellingPlan[];
+  };
+};
+
+/**
+ * A component that simplifies selecting sellingPlans subscription options
+ * @example Example use
+ * ```ts
+ *   <SellingPlanSelector
+ *     sellingPlanGroups={sellingPlanGroups}
+ *     selectedSellingPlanId={selectedSellingPlanId}
+ *   >
+ *     {({sellingPlanGroup}) => ( ...your sellingPlanGroup component )}
+ *  </SellingPlanSelector>
+ *  ```
+ **/
+export function SellingPlanSelector({
+  sellingPlanGroups,
+  selectedSellingPlan,
+  children,
+  paramKey = 'selling_plan',
+}: {
+  sellingPlanGroups: ProductFragment['sellingPlanGroups'];
+  selectedSellingPlan: SellingPlanFragment | null;
+  paramKey?: string;
+  children: (params: {
+    sellingPlanGroup: SellingPlanGroup;
+    selectedSellingPlan: SellingPlanFragment | null;
+  }) => React.ReactNode;
+}) {
+  const {search, pathname} = useLocation();
+  const params = new URLSearchParams(search);
+
+  return useMemo(
+    () =>
+      (sellingPlanGroups.nodes as SellingPlanGroup[]).map(
+        (sellingPlanGroup) => {
+          // Augmnet each sellingPlan node with isSelected and url
+          const sellingPlans = sellingPlanGroup.sellingPlans.nodes
+            .map((sellingPlan: SellingPlan) => {
+              if (!sellingPlan?.id) {
+                //eslint-disable-next-line no-console
+                console.warn(
+                  'SellingPlanSelector: sellingPlan.id is missing in the product query',
+                );
+                return null;
+              }
+              if (!sellingPlan.id) return null;
+              params.set(paramKey, sellingPlan.id);
+              sellingPlan.isSelected =
+                selectedSellingPlan?.id === sellingPlan.id;
+              sellingPlan.url = `${pathname}?${params.toString()}`;
+              return sellingPlan;
+            })
+            .filter(Boolean) as SellingPlan[];
+          sellingPlanGroup.sellingPlans.nodes = sellingPlans;
+          return children({sellingPlanGroup, selectedSellingPlan});
+        },
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sellingPlanGroups, children, selectedSellingPlan, paramKey, pathname],
+  );
+}
+
+```
+
+## templates/skeleton/app/styles/selling-plan.css
+```
+.selling-plan-group {
+  margin-bottom: 1rem;
+}
+
+.selling-plan-group-title {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.selling-plan {
+  border: 1px solid;
+  display: inline-block;
+  padding: 1rem;
+  margin-right: 0.5rem;
+  line-height: 1;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  border-bottom-width: 1.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.selling-plan:hover {
+  text-decoration: none;
+}
+
+.selling-plan.selected {
+  border-color: #6b7280; /* Equivalent to 'border-gray-500' */
+}
+
+.selling-plan.unselected {
+  border-color: #fafafa; /* Equivalent to 'border-neutral-50' */
+}
+
+```
+
+</ingredients>
+
 # Recipe Implementation
 
-Here's the subscriptions recipe for the base Hydrogen skeleton template:
+Here's the subscriptions recipe for the base Hydrogen skeleton template.
 
 <recipe_implementation>
 
@@ -133,7 +252,7 @@ index 26102b61..4ec8324b 100644
 +import {ProductPrice} from '~/components/ProductPrice';
 +import {useAside} from '~/components/Aside';
  import type {CartApiQueryFragment} from 'storefrontapi.generated';
- 
+
  type CartLine = OptimisticCartLine<CartApiQueryFragment>;
 @@ -20,7 +20,9 @@ export function CartLineItem({
    layout: CartLayout;
@@ -191,7 +310,7 @@ index e8616a61..e41b91ad 100644
 +  SellingPlanSelector,
 +  type SellingPlanGroup,
 +} from '~/components/SellingPlanSelector';
- 
+
  export function ProductForm({
    productOptions,
    selectedVariant,
@@ -249,7 +368,7 @@ index e8616a61..e41b91ad 100644
 +        productOptions.map((option) => {
 +          // If there is only a single value in the option values, don't display the option
 +          if (option.optionValues.length === 1) return null;
- 
+
 -        return (
 -          <div className="product-options" key={option.name}>
 -            <h5>{option.name}</h5>
@@ -280,7 +399,7 @@ index e8616a61..e41b91ad 100644
 +                    isDifferentProduct,
 +                    swatch,
 +                  } = value;
- 
+
 -                if (isDifferentProduct) {
 -                  // SEO
 -                  // When the variant is a combined listing child product
@@ -513,7 +632,7 @@ index 32460ae2..59eed1d8 100644
 +} from 'storefrontapi.generated';
  import {Money} from '@shopify/hydrogen';
  import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
- 
+
  export function ProductPrice({
    price,
    compareAtPrice,
@@ -679,7 +798,7 @@ index 0028b423..9f634090 100644
 @@ -12,6 +14,12 @@ import {ProductPrice} from '~/components/ProductPrice';
  import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
- 
+
 +import sellingPanStyle from '~/styles/selling-plan.css?url';
 +
 +export const links: LinksFunction = () => [
@@ -692,7 +811,7 @@ index 0028b423..9f634090 100644
 @@ -59,8 +67,34 @@ async function loadCriticalData({
      throw new Response(null, {status: 404});
    }
- 
+
 +  // Initialize the selectedSellingPlan to null
 +  let selectedSellingPlan = null;
 +
@@ -723,23 +842,23 @@ index 0028b423..9f634090 100644
 +    selectedSellingPlan,
    };
  }
- 
+
 @@ -77,7 +111,7 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
  }
- 
+
  export default function Product() {
 -  const {product} = useLoaderData<typeof loader>();
 +  const {product, selectedSellingPlan} = useLoaderData<typeof loader>();
- 
+
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
 @@ -95,7 +129,7 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
- 
+
 -  const {title, descriptionHtml} = product;
 +  const {title, descriptionHtml, sellingPlanGroups} = product;
- 
+
    return (
      <div className="product">
 @@ -105,11 +139,15 @@ export default function Product() {
@@ -761,7 +880,7 @@ index 0028b423..9f634090 100644
 @@ -176,6 +214,73 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
    }
  ` as const;
- 
+
 +const SELLING_PLAN_FRAGMENT = `#graphql
 +  fragment SellingPlanMoney on MoneyV2 {
 +    amount
@@ -851,7 +970,7 @@ index 0028b423..9f634090 100644
 +  ${SELLING_PLAN_GROUP_FRAGMENT}
    ${PRODUCT_VARIANT_FRAGMENT}
  ` as const;
- 
+
 
 ```
 

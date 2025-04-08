@@ -1,0 +1,19 @@
+{
+  "name": "cookbook-mcp",
+  "version": "0.0.1",
+  "description": "The Hydrogen Cookbook MCP",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && node -e \"require('fs').chmodSync('dist/index.js', '755')\"",
+    "inspector": "npm run build && npm exec @modelcontextprotocol/inspector dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "typescript": "^5.5.4"
+  }
+}
