@@ -186,7 +186,7 @@ export async function setupLocalStarterTemplate(
             '\n' +
             [
               ['SESSION_SECRET', 'foobar'],
-              ['PUBLIC_STORE_DOMAIN', 'fakestore-api.myshopify.com'],
+              ['PUBLIC_STORE_DOMAIN', 'fakestore-ai.myshopify.com'],
               [
                 'PUBLIC_STOREFRONT_API_TOKEN',
                 'a6136cc465ffc0c946d4de38c4490bb7',

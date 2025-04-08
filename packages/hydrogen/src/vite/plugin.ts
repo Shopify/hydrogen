@@ -60,6 +60,9 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
             watch: null,
           },
           ssr: {
+            resolve: {
+              conditions: ['workerd', 'worker'], // Recommended earlier, ideally combined with these settings
+            },
             optimizeDeps: {
               // Add CJS dependencies that break code in workerd
               // with errors like "require/module/exports is not defined":
