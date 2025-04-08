@@ -41,9 +41,6 @@ describe('dev', () => {
             const output = outputMock.output();
             expect(output).toMatch(/View [^:]+? app:/i);
 
-            console.log('devUrl', devUrl);
-            console.log('output', output);
-
             const response = await fetch(devUrl);
 
             expect(response.status).toEqual(200);

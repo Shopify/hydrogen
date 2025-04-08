@@ -73,9 +73,6 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                 '@remix-run/server-runtime',
               ],
             },
-            resolve: {
-              conditions: ['workerd', 'worker'], // Recommended earlier, ideally combined with these settings
-            },
           },
           // Vite performs an initial reload after optimizing these dependencies.
           // Do it early to avoid the initial reload:
