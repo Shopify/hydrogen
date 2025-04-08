@@ -42,6 +42,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
     {
       name: 'oxygen:main',
       config(config, env) {
+        console.log('env', env);
         return {
           appType: 'custom',
           resolve: {
