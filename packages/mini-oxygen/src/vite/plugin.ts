@@ -44,6 +44,9 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
       config(config, env) {
         return {
           appType: 'custom',
+          resolve: {
+            conditions: ['worker', 'workerd'],
+          },
           ssr: {
             noExternal: true,
             target: 'webworker',
