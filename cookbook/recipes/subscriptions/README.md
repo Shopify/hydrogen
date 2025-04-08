@@ -31,7 +31,7 @@ _New files added to the template by this recipe._
 ### Step 1: Set up the Shopify Subscriptions app
 
 1. Install the [Shopify Subscriptions app](https://apps.shopify.com/shopify-subscriptions).
-2. In your Shopify admin, use the Subscriptions app to create one or more subscription plans.
+2. In your Shopify admin, [use the Subscriptions app](https://admin.shopify.com/apps/subscriptions-remix/app) to create one or more subscription plans.
 3. On [admin.shopify.com](https://admin.shopify.com), within your store, open the product catalogue pages for any products that will be sold as subscriptions, and add the relevant subscription plans in the **Purchase options** section.
 
 The Hydrogen demo storefront comes pre-configured with an example subscription product with the handle `shopify-wax`.
