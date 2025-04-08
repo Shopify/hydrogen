@@ -42,6 +42,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
     {
       name: 'oxygen:main',
       config(config, env) {
+        console.log('env', env);
         return {
           appType: 'custom',
           resolve: {
@@ -50,6 +51,9 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           ssr: {
             noExternal: true,
             target: 'webworker',
+            resolve: {
+              conditions: ['workerd', 'worker'], // Recommended earlier, ideally combined with these settings
+            },
           },
           // When building, the CLI will set the `ssr` option to `true`
           // if no --entry flag is passed for the default SSR entry file.
