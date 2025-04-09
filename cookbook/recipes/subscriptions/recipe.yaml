@@ -108,4 +108,4 @@ steps:
     diffs:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.3e0b7e.patch
-commit: 642bde4f3df11511e125b013abd977618da25692
+commit: 366119f5d492f9d3e04df39392b35f343573bbd9
