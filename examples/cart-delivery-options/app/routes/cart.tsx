@@ -55,6 +55,7 @@ export async function action({request, context}: ActionFunctionArgs) {
       result = await cart.updateDiscountCodes(discountCodes);
       break;
     }
+
     case CartForm.ACTIONS.GiftCardCodesUpdate: {
       const formGiftCardCode = inputs.giftCardCode;
 
@@ -69,19 +70,20 @@ export async function action({request, context}: ActionFunctionArgs) {
       result = await cart.updateGiftCardCodes(giftCardCodes);
       break;
     }
+
     case CartForm.ACTIONS.BuyerIdentityUpdate: {
       result = await cart.updateBuyerIdentity({
         ...inputs.buyerIdentity,
       });
       break;
     }
+
     case CartForm.ACTIONS.DeliveryAddressesAdd: {
-      console.log('DeliveryAddressesAdd inputs', inputs);
       const {id, selected, oneTimeUse, ...deliveryAddress} = inputs;
       const newDeliveryAddresses = [
         {
-          selected: selected === 'on' ? true : false,
-          oneTimeUse: oneTimeUse === 'on' ? true : false,
+          selected,
+          oneTimeUse,
           address: {deliveryAddress},
         },
       ] as CartSelectableAddressInput[];
@@ -89,8 +91,8 @@ export async function action({request, context}: ActionFunctionArgs) {
       result = await cart.addDeliveryAddresses(newDeliveryAddresses);
       break;
     }
+
     case CartForm.ACTIONS.DeliveryAddressesUpdate: {
-      console.log('DeliveryAddressesUpdate inputs', inputs);
       const {
         formatted,
         formartedArea,
@@ -103,16 +105,17 @@ export async function action({request, context}: ActionFunctionArgs) {
       const updatedDeliveryAddresses = [
         {
           id,
-          selected: selected === 'on' ? true : false,
-          oneTimeUse: oneTimeUse === 'on' ? true : false,
+          selected,
+          oneTimeUse,
           address: {deliveryAddress},
         },
       ] as CartSelectableAddressUpdateInput[];
+
       result = await cart.updateDeliveryAddresses(updatedDeliveryAddresses);
       break;
     }
+
     case CartForm.ACTIONS.DeliveryAddressesRemove: {
-      console.log('DeliveryAddressesRemove inputs', inputs);
       result = await cart.removeDeliveryAddresses(inputs.addressIds);
       break;
     }
@@ -143,13 +146,13 @@ export async function action({request, context}: ActionFunctionArgs) {
 }
 
 export async function loader({context}: LoaderFunctionArgs) {
-  const {cart} = context;
-  return await cart.get();
+  return await context.cart.get();
 }
 
-export default function Cart() {
-  const cart = useLoaderData<typeof loader>();
+type CartLoader = typeof loader;
 
+export default function Cart() {
+  const cart = useLoaderData<CartLoader>();
   return (
     <div className="cart">
       <h1>Cart</h1>

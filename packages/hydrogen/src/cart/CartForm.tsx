@@ -349,6 +349,13 @@ function getFormInput(formData: FormData): CartActionInput {
     const values = formData.getAll(key);
 
     data[key] = values.length > 1 ? values : pair[1];
+
+    // Convert checkbox string values to boolean
+    if (data[key] === 'on') {
+      data[key] = true;
+    } else if (data[key] === 'off') {
+      data[key] = false;
+    }
   }
 
   // Parse cartFormInput
