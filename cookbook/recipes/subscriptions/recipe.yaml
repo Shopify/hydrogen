@@ -37,11 +37,9 @@ steps:
       app](https://admin.shopify.com/apps/subscriptions-remix/app) to create one
       or more subscription plans.
 
-      3. On [admin.shopify.com](https://admin.shopify.com), within your store,
-      open the product catalogue pages for any products that will be sold as
-      subscriptions, and add the relevant subscription plans in the **Purchase
-      options** section.
-
+      3. On the [Products](https://admin.shopify.com/products) page, open any
+      products that will be sold as subscriptions and add the relevant
+      subscription plans in the **Purchase options** section.
 
       The Hydrogen demo storefront comes pre-configured with an example
       subscription product with the handle `shopify-wax`.
@@ -110,4 +108,4 @@ steps:
     diffs:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.3e0b7e.patch
-commit: f297f0c4672f5855d1f55afbefebe695578ac9e6
+commit: 642bde4f3df11511e125b013abd977618da25692
