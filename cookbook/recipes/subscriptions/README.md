@@ -596,18 +596,18 @@ index dc4426a9..cfe3a938 100644
 <details>
 
 ```diff
-index 0028b423..9f634090 100644
+index 2dc6bda2..aad7e5f1 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,3 +1,5 @@
 +import type {SellingPlanFragment} from 'storefrontapi.generated';
 +import type {LinksFunction} from '@remix-run/node';
- import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
  import {useLoaderData, type MetaFunction} from '@remix-run/react';
  import {
-@@ -12,6 +14,12 @@ import {ProductPrice} from '~/components/ProductPrice';
- import {ProductImage} from '~/components/ProductImage';
+@@ -13,6 +15,12 @@ import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
+ import {redirectIfHandleIsLocalized} from '~/lib/redirect';
  
 +import sellingPanStyle from '~/styles/selling-plan.css?url';
 +
@@ -618,9 +618,9 @@ index 0028b423..9f634090 100644
  export const meta: MetaFunction<typeof loader> = ({data}) => {
    return [
      {title: `Hydrogen | ${data?.product.title ?? ''}`},
-@@ -59,8 +67,34 @@ async function loadCriticalData({
-     throw new Response(null, {status: 404});
-   }
+@@ -63,8 +71,34 @@ async function loadCriticalData({
+   // The API handle might be localized, so redirect to the localized handle
+   redirectIfHandleIsLocalized(request, {handle, data: product});
  
 +  // Initialize the selectedSellingPlan to null
 +  let selectedSellingPlan = null;
@@ -653,7 +653,7 @@ index 0028b423..9f634090 100644
    };
  }
  
-@@ -77,7 +111,7 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
+@@ -81,7 +115,7 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
  }
  
  export default function Product() {
@@ -662,7 +662,7 @@ index 0028b423..9f634090 100644
  
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
-@@ -95,7 +129,7 @@ export default function Product() {
+@@ -99,7 +133,7 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
  
@@ -671,7 +671,7 @@ index 0028b423..9f634090 100644
  
    return (
      <div className="product">
-@@ -105,11 +139,15 @@ export default function Product() {
+@@ -109,11 +143,15 @@ export default function Product() {
          <ProductPrice
            price={selectedVariant?.price}
            compareAtPrice={selectedVariant?.compareAtPrice}
@@ -687,7 +687,7 @@ index 0028b423..9f634090 100644
          />
          <br />
          <br />
-@@ -176,6 +214,73 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+@@ -180,6 +218,73 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
    }
  ` as const;
  
@@ -761,7 +761,7 @@ index 0028b423..9f634090 100644
  const PRODUCT_FRAGMENT = `#graphql
    fragment Product on Product {
      id
-@@ -203,6 +308,11 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -207,6 +312,11 @@ const PRODUCT_FRAGMENT = `#graphql
          }
        }
      }
@@ -773,7 +773,7 @@ index 0028b423..9f634090 100644
      selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
        ...ProductVariant
      }
-@@ -214,6 +324,7 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -218,6 +328,7 @@ const PRODUCT_FRAGMENT = `#graphql
        title
      }
    }
