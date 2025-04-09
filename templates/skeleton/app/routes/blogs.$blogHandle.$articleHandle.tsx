@@ -1,6 +1,7 @@
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen';
+import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.article.title ?? ''} article`}];
@@ -20,7 +21,11 @@ export async function loader(args: LoaderFunctionArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({context, params}: LoaderFunctionArgs) {
+async function loadCriticalData({
+  context,
+  request,
+  params,
+}: LoaderFunctionArgs) {
   const {blogHandle, articleHandle} = params;
 
   if (!articleHandle || !blogHandle) {
@@ -37,6 +42,18 @@ async function loadCriticalData({context, params}: LoaderFunctionArgs) {
   if (!blog?.articleByHandle) {
     throw new Response(null, {status: 404});
   }
+
+  redirectIfHandleIsLocalized(
+    request,
+    {
+      handle: articleHandle,
+      data: blog.articleByHandle,
+    },
+    {
+      handle: blogHandle,
+      data: blog,
+    },
+  );
 
   const article = blog.articleByHandle;
 
@@ -89,7 +106,9 @@ const ARTICLE_QUERY = `#graphql
     $language: LanguageCode
   ) @inContext(language: $language, country: $country) {
     blog(handle: $blogHandle) {
+      handle
       articleByHandle(handle: $articleHandle) {
+        handle
         title
         contentHtml
         publishedAt

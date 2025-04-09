@@ -63,6 +63,7 @@ export function renderRecipe(params: {
         ? RENDER_FILENAME_GITHUB
         : RENDER_FILENAME_SHOPIFY,
     ),
+    params.format,
   );
 }
 
@@ -84,7 +85,6 @@ export function makeReadmeBlocks(
   const markdownSteps = makeSteps(
     recipe.steps,
     recipe.ingredients,
-    format,
     getPatchesDir(recipeName),
   );
 
@@ -144,14 +144,13 @@ function makeIngredients(ingredients: Ingredient[]): MDBlock[] {
 function makeSteps(
   steps: Step[],
   ingredients: Ingredient[],
-  format: RenderFormat,
   patchesDir: string,
 ): MDBlock[] {
   const markdownStepsHeader = mdHeading(2, 'Steps');
   return [
     markdownStepsHeader,
     ...steps.flatMap((step, index) =>
-      renderStep(step, index, ingredients, format, patchesDir),
+      renderStep(step, index, ingredients, patchesDir),
     ),
   ];
 }
@@ -160,7 +159,6 @@ export function renderStep(
   step: Step,
   index: number,
   ingredients: Ingredient[],
-  format: RenderFormat,
   patchesDir: string,
 ): MDBlock[] {
   function getDiffs(): MDBlock[] {
@@ -172,8 +170,7 @@ export function renderStep(
       const patchFile = path.join(patchesDir, diff.patchFile);
       const patch = fs.readFileSync(patchFile, 'utf8');
 
-      const collapsed =
-        format === 'github' && patch.split('\n').length > COLLAPSE_DIFF_LINES;
+      const collapsed = patch.split('\n').length > COLLAPSE_DIFF_LINES;
 
       return [
         mdHeading(
@@ -220,7 +217,7 @@ function makeTitle(recipe: Recipe, format: RenderFormat): MDBlock {
       return mdFrontMatter({
         gid: randomUUID(),
         title: recipe.title,
-        description: recipe.description,
+        description: recipe.summary,
       });
     case 'github':
       return mdHeading(1, recipe.title);
