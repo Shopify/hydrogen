@@ -1,6 +1,7 @@
 import {assertNever} from './util';
 import fs from 'fs';
-
+import YAML from 'yaml';
+import {RenderFormat} from './render';
 export type MDNote = {
   type: 'NOTE';
   text: string;
@@ -155,7 +156,7 @@ export type MDBlock =
   | MDFrontMatter
   | MDNote;
 
-export function renderMDBlock(block: MDBlock): string {
+export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
   switch (block.type) {
     case 'HEADING':
       const hashes = '#'.repeat(block.level);
@@ -165,7 +166,20 @@ export function renderMDBlock(block: MDBlock): string {
     case 'CODE':
       const code = ['```' + block.language, block.content, '```'];
       if (block.collapsed) {
-        return ['<details>\n', ...code, '\n</details>'].join('\n');
+        switch (format) {
+          case 'github':
+            return ['<details>\n', ...code, '\n</details>'].join('\n');
+          case 'shopify.dev':
+            return [
+              '<details>\n',
+              '{% codeblock markdown %}',
+              ...code,
+              '{% endcodeblock %}',
+              '\n</details>',
+            ].join('\n');
+          default:
+            assertNever(format);
+        }
       }
       return code.join('\n');
     case 'SHOPIFY_CODEFILES':
@@ -197,11 +211,7 @@ export function renderMDBlock(block: MDBlock): string {
     case 'QUOTE':
       return `> ${block.text}`;
     case 'FRONTMATTER':
-      return [
-        '---',
-        ...Object.entries(block.data).map(([key, value]) => `${key}: ${value}`),
-        '---',
-      ].join('\n');
+      return ['---', YAML.stringify(block.data), '---'].join('\n');
     case 'NOTE':
       return [
         '> [!NOTE]',
@@ -219,6 +229,10 @@ export function mdLinkString(url: string, text: string): string {
   return `[${text}](${url})`;
 }
 
+export function mdCodeString(code: string): string {
+  return `\`${code}\``;
+}
+
 export function maybeMDBlock<T>(
   value: T | null | undefined,
   makeBlock: (v: T) => MDBlock[],
@@ -229,6 +243,14 @@ export function maybeMDBlock<T>(
   return makeBlock(value);
 }
 
-export function serializeMDBlocksToFile(blocks: MDBlock[], filePath: string) {
-  fs.writeFileSync(filePath, blocks.map(renderMDBlock).join('\n\n'));
+export function serializeMDBlocksToFile(
+  blocks: MDBlock[],
+  filePath: string,
+  format: RenderFormat,
+) {
+  let data = blocks.map((block) => renderMDBlock(block, format)).join('\n\n');
+  if (format === 'shopify.dev') {
+    data = data.replace(/\{\{/g, "{{ '{{' }}");
+  }
+  fs.writeFileSync(filePath, data);
 }
