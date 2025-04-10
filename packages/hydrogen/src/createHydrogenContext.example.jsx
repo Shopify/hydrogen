@@ -1,5 +1,6 @@
 import {createHydrogenContext} from '@shopify/hydrogen';
-import * as remixBuild from '@remix-run/dev/server-build';
+// @ts-expect-error
+import * as remixBuild from 'virtual:react-router/server-build';
 import {
   createRequestHandler,
   createCookieSessionStorage,

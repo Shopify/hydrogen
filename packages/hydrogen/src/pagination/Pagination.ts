@@ -19,7 +19,7 @@ import {
   useNavigation,
   useLocation,
   useNavigate,
-} from '@remix-run/react';
+} from 'react-router';
 
 declare global {
   interface Window {

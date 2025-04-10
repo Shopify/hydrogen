@@ -1,5 +1,5 @@
 import type {Plugin, ConfigEnv} from 'vite';
-import type {Preset as RemixPreset} from '@remix-run/dev';
+import type {Preset} from '@react-router/dev/dist/config'; // TODO BEFORE MERGE: fix this import
 import {
   setupHydrogenMiddleware,
   type HydrogenMiddlewareOptions,
@@ -18,8 +18,8 @@ type HydrogenSharedOptions = Partial<
   Pick<HydrogenPluginOptions, 'disableVirtualRoutes'> &
     Pick<ConfigEnv, 'command'> & {
       remixConfig?: Parameters<
-        NonNullable<RemixPreset['remixConfigResolved']>
-      >[0]['remixConfig'];
+        NonNullable<Preset['reactRouterConfigResolved']>
+      >[0]['reactRouterConfig'];
     }
 >;
 
@@ -198,64 +198,12 @@ function mergeOptions(
 hydrogen.v3preset = () =>
   ({
     name: 'hydrogen',
-    remixConfigResolved({remixConfig}) {
-      sharedOptions.remixConfig = remixConfig;
+    reactRouterConfigResolved({reactRouterConfig}) {
+      sharedOptions.remixConfig = reactRouterConfig;
     },
-    remixConfig() {
+    reactRouterConfig() {
       return {
         buildDirectory: 'dist',
       };
     },
-  }) satisfies RemixPreset;
-
-hydrogen.preset = () =>
-  ({
-    name: 'hydrogen',
-    remixConfigResolved({remixConfig}) {
-      sharedOptions.remixConfig = remixConfig;
-    },
-    remixConfig() {
-      if (sharedOptions.disableVirtualRoutes) return {};
-
-      return {
-        buildDirectory: 'dist',
-        async routes(defineRoutes) {
-          if (
-            sharedOptions.disableVirtualRoutes ||
-            sharedOptions.command !== 'serve'
-          ) {
-            return {};
-          }
-
-          const {root, routes: virtualRoutes} = await getVirtualRoutes();
-
-          const result = defineRoutes((route) => {
-            route(root.path, root.file, {id: root.id}, () => {
-              virtualRoutes.map(({path, file, index, id}) => {
-                route(path, file, {id, index});
-              });
-            });
-          });
-
-          // - Goal: stop matching the user's root with our virtual routes
-          // to avoid adding layouts and calling user loaders.
-          //
-          // - Problem: Even though root-less routes work in Remix, it always
-          // adds the user root as the parentId of every route when we leave it
-          // as undefined. Even if we delete it manually here, it adds it back:
-          // https://github.com/remix-run/remix/blob/b07921efd5e8eed98e2996749852777c71bc3e50/packages/remix-dev/config.ts#L565
-          //
-          // - Solution:
-          // The String object tricks Remix into thinking that the
-          // parentId is defined (!!new String('') === true) so it doesn't
-          // overwrite it with `root`. Later, this value acts as an
-          // undefined / empty string when matching routes so it
-          // doesn't match the user root.
-          // @ts-expect-error
-          result[root.id].parentId = new String('');
-
-          return result;
-        },
-      };
-    },
-  }) satisfies RemixPreset;
+  }) satisfies Preset;
