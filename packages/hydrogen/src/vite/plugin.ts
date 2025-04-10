@@ -1,5 +1,4 @@
 import type {Plugin, ConfigEnv} from 'vite';
-import type {Preset} from '@react-router/dev/dist/config'; // TODO BEFORE MERGE: fix this import
 import {
   setupHydrogenMiddleware,
   type HydrogenMiddlewareOptions,
@@ -16,11 +15,7 @@ export type {HydrogenPluginOptions};
 
 type HydrogenSharedOptions = Partial<
   Pick<HydrogenPluginOptions, 'disableVirtualRoutes'> &
-    Pick<ConfigEnv, 'command'> & {
-      remixConfig?: Parameters<
-        NonNullable<Preset['reactRouterConfigResolved']>
-      >[0]['reactRouterConfig'];
-    }
+    Pick<ConfigEnv, 'command'>
 >;
 
 const sharedOptions: HydrogenSharedOptions = {};
@@ -195,19 +190,11 @@ function mergeOptions(
   return {...acc, ...newOptionsWithoutUndefined};
 }
 
-hydrogen.v3preset = () =>
-  ({
-    name: 'hydrogen',
-    reactRouterConfigResolved({
-      reactRouterConfig,
-    }: {
-      reactRouterConfig: any; // TODO BEFORE MERGE: export ResolvedReactRouterConfig from @react-router/dev!!
-    }) {
-      sharedOptions.remixConfig = reactRouterConfig;
-    },
-    reactRouterConfig() {
-      return {
-        buildDirectory: 'dist',
-      };
-    },
-  }) satisfies Preset;
+hydrogen.v3preset = () => ({
+  name: 'hydrogen',
+  reactRouterConfig() {
+    return {
+      buildDirectory: 'dist',
+    };
+  },
+});
