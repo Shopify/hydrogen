@@ -92,7 +92,7 @@ function EditAddressModal({
     <dialog ref={dialogRef} style={{width: '400px'}}>
       <div style={{display: 'flex', justifyContent: 'space-between'}}>
         <h2>Edit Address</h2>
-        <button onClick={onClose}>Close</button>
+        <button onClick={onClose}>CLOSE</button>
       </div>
       <br />
       <CartForm route="/cart" action={CartForm.ACTIONS.DeliveryAddressesUpdate}>
@@ -101,8 +101,27 @@ function EditAddressModal({
             <>
               <FormFields activeAddress={activeAddress} />
               <div style={{display: 'flex', flexDirection: 'row', gap: '1rem'}}>
-                <button onClick={() => {}} type="submit">
-                  Save
+                <button
+                  onClick={(event) => {
+                    console.log('SAVING TODO:', fetcher);
+                    event.preventDefault();
+                    const form = new FormData();
+
+                    form.append(
+                      'action',
+                      CartForm.ACTIONS.DeliveryAddressesUpdate,
+                    );
+
+                    fetcher.submit(form, {
+                      action: CartForm.ACTIONS.DeliveryAddressesUpdate,
+                      method: 'POST',
+                    });
+
+                    onClose();
+                  }}
+                  type="submit"
+                >
+                  SAVE
                 </button>
                 <button
                   style={{
@@ -123,9 +142,11 @@ function EditAddressModal({
                       action: CartForm.ACTIONS.DeliveryAddressesRemove,
                       method: 'POST',
                     });
+
+                    onClose();
                   }}
                 >
-                  Delete
+                  DELETE
                 </button>
               </div>
             </>
@@ -147,7 +168,7 @@ function NewAddressModal({
     <dialog ref={dialogRef} style={{width: '400px'}}>
       <div style={{display: 'flex', justifyContent: 'space-between'}}>
         <h2>New Address</h2>
-        <button onClick={onClose}>Close</button>
+        <button onClick={onClose}>CLOSE</button>
       </div>
       <br />
       <CartForm route="/cart" action={CartForm.ACTIONS.DeliveryAddressesAdd}>
@@ -156,7 +177,7 @@ function NewAddressModal({
             <>
               <FormFields />
               <button onClick={onClose} type="submit">
-                Add
+                CREATE
               </button>
             </>
           );
