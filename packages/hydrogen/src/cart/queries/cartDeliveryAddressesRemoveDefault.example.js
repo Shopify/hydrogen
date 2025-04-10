@@ -1,11 +1,11 @@
 import {cartDeliveryAddressesRemoveDefault} from '@shopify/hydrogen';
 
-const removeDeliveAddresses = cartDeliveryAddressesRemoveDefault({
+const removeDeliveryAddresses = cartDeliveryAddressesRemoveDefault({
   storefront,
   getCartId,
 });
 
-const result = await removeDeliveAddresses(
+const result = await removeDeliveryAddresses(
   ['gid://shopify/<objectName>/10079785100'],
   {someOptionalParam: 'value'},
 );

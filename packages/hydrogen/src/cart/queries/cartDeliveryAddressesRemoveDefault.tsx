@@ -27,8 +27,8 @@ export type CartDeliveryAddressesRemoveFunction = (
  * @returns {CartDeliveryAddressRemoveFunction} - A function that takes an array of address IDs and optional parameters, and returns the result of the API call.
  *
  * @example
- * const removeDeliveAddresses = cartDeliveryAddressesRemoveDefault({ storefront, getCartId });
- * const result = await removeDeliveAddresses([
+ * const removeDeliveryAddresses = cartDeliveryAddressesRemoveDefault({ storefront, getCartId });
+ * const result = await removeDeliveryAddresses([
  *   "gid://shopify/<objectName>/10079785100"
  * ],
  * { someOptionalParam: 'value' });
