@@ -1,14 +1,14 @@
-import { useOptimisticCart } from '@shopify/hydrogen';
-import { Link } from '@remix-run/react';
-import type { CartApiQueryFragment } from 'storefrontapi.generated';
-import { useAside } from '~/components/Aside';
-import { CartLineItem } from '~/components/CartLineItem';
-import { CartSummary } from './CartSummary';
+import {type OptimisticCartLine, useOptimisticCart} from '@shopify/hydrogen';
+import {Link} from '@remix-run/react';
+import type {CartApiQueryFragment} from 'storefrontapi.generated';
+import {useAside} from '~/components/Aside';
+import {CartLineItem} from '~/components/CartLineItem';
+import {CartSummary} from './CartSummary';
 
 export type CartLayout = 'page' | 'aside';
 
 export type CartMainProps = {
-  cart: CartApiQueryFragment | null;
+  cart: CartApiQueryFragment;
   layout: CartLayout;
 };
 
@@ -16,7 +16,7 @@ export type CartMainProps = {
  * The main cart component that displays the cart items and summary.
  * It is used by both the /cart route and the cart aside dialog.
  */
-export function CartMain({ layout, cart: originalCart }: CartMainProps) {
+export function CartMain({layout, cart: originalCart}: CartMainProps) {
   // The useOptimisticCart hook applies pending actions to the cart
   // so the user immediately sees feedback when they modify the cart.
   const cart = useOptimisticCart(originalCart);
@@ -26,16 +26,15 @@ export function CartMain({ layout, cart: originalCart }: CartMainProps) {
     cart &&
     Boolean(cart?.discountCodes?.filter((code) => code.applicable)?.length);
   const className = `cart-main ${withDiscount ? 'with-discount' : ''}`;
-  const cartHasItems = cart?.totalQuantity && cart?.totalQuantity > 0;
+  const cartHasItems = !!cart && cart.totalQuantity > 0;
 
   return (
     <div className={className}>
       <CartEmpty hidden={linesCount} layout={layout} />
       <div className="cart-details">
         <div aria-labelledby="cart-lines">
-          <p>Test</p>
           <ul>
-            {(cart?.lines?.nodes ?? []).map((line) => (
+            {(cart?.lines?.nodes ?? []).map((line: OptimisticCartLine) => (
               <CartLineItem key={line.id} line={line} layout={layout} />
             ))}
           </ul>
@@ -52,7 +51,7 @@ function CartEmpty({
   hidden: boolean;
   layout?: CartMainProps['layout'];
 }) {
-  const { close } = useAside();
+  const {close} = useAside();
   return (
     <div hidden={hidden}>
       <br />
