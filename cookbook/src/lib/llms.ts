@@ -1,5 +1,5 @@
 import path from 'path';
-import {COOKBOOK_PATH, REPO_ROOT} from './constants';
+import {COOKBOOK_PATH} from './constants';
 import {createDirectoryIfNotExists, getPatchesDir} from './util';
 import {
   maybeMDBlock,
@@ -118,7 +118,10 @@ Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
 }
 
 export function generateLLMsFiles(recipeName: string) {
-  createDirectoryIfNotExists(path.join(REPO_ROOT, '.cursor', 'rules'));
+  const rulesDir = path.join(COOKBOOK_PATH, '.cursor', 'rules');
+  createDirectoryIfNotExists(rulesDir);
+
+  const rulePath = path.join(rulesDir, `cookbook-recipe-${recipeName}.mdc`);
 
   console.log('Generating recipe Cursor rule…');
   console.log(`- ${recipeName}`);
@@ -126,16 +129,7 @@ export function generateLLMsFiles(recipeName: string) {
     directory: path.join(COOKBOOK_PATH, 'recipes', recipeName),
   });
 
-  const blocks = renderRecipeRuleBlocks(recipeName, recipe, 'templates/**/*');
+  const blocks = renderRecipeRuleBlocks(recipeName, recipe, '*');
 
-  serializeMDBlocksToFile(blocks, getRecipeRulePath(recipeName), 'github');
-}
-
-function getRecipeRulePath(recipeName: string) {
-  return path.join(
-    REPO_ROOT,
-    '.cursor',
-    'rules',
-    `cookbook-recipe-${recipeName}.mdc`,
-  );
+  serializeMDBlocksToFile(blocks, rulePath, 'github');
 }
