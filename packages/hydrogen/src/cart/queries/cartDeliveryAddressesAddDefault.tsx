@@ -27,7 +27,7 @@ export type CartDeliveryAddressesAddFunction = (
  * @returns {CartDeliveryAddressAddFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
  *
  * @example
- * const addDeliveryAddresses = cartDeliverAddressesAddDefault({ storefront, getCartId });
+ * const addDeliveryAddresses = cartDeliveryAddressesAddDefault({ storefront, getCartId });
  * const result = await addDeliveryAddresses([
  *    {
  *      address1: '123 Main St',
