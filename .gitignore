@@ -141,3 +141,5 @@ admin.schema.json
 business-platform.schema.json
 
 examples/**/*.generated.d.ts
+/templates/skeleton/.react-router
+/templates/skeleton/.vscode
