@@ -1,0 +1,27 @@
+index dc4426a9..cfe3a938 100644
+--- a/templates/skeleton/app/lib/fragments.ts
++++ b/templates/skeleton/app/lib/fragments.ts
+@@ -54,6 +54,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
+         }
+       }
+     }
++    sellingPlanAllocation {
++      sellingPlan {
++         name
++      }
++    }
+   }
+   fragment CartLineComponent on ComponentizableCartLine {
+     id
+@@ -104,6 +109,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
+         }
+       }
+     }
++    sellingPlanAllocation {
++      sellingPlan {
++         name
++      }
++    }
+   }
+   fragment CartApiQuery on Cart {
+     updatedAt

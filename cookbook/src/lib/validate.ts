@@ -30,6 +30,9 @@ export function validateRecipe(params: {recipeTitle: string}) {
     console.log(`- 📦 Installing dependencies…`);
     execSync(`npm install`, {cwd: tempDir});
 
+    console.log(`- 🔄 Running codegen…`);
+    execSync(`npm run codegen`, {cwd: tempDir});
+
     // run typecheck in the template directory
     console.log(`- 🔨 Running typecheck…`);
     execSync(`npm run typecheck`, {cwd: tempDir});
