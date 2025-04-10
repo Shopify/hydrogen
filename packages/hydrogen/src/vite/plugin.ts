@@ -198,7 +198,11 @@ function mergeOptions(
 hydrogen.v3preset = () =>
   ({
     name: 'hydrogen',
-    reactRouterConfigResolved({reactRouterConfig}) {
+    reactRouterConfigResolved({
+      reactRouterConfig,
+    }: {
+      reactRouterConfig: any; // TODO BEFORE MERGE: export ResolvedReactRouterConfig from @react-router/dev!!
+    }) {
       sharedOptions.remixConfig = reactRouterConfig;
     },
     reactRouterConfig() {
