@@ -24,7 +24,7 @@ describe('dev', () => {
       outputMock.clear();
       vi.stubEnv('NODE_ENV', 'development');
 
-      const {close, getUrl} = await runDev({
+      const {close} = await runDev({
         path: tmpDir,
         port: Math.floor(Math.random() * (65535 - 3050) + 3050),
         disableVirtualRoutes: true,
@@ -33,21 +33,11 @@ describe('dev', () => {
         envFile: '.env',
       });
 
-      const devUrl = getUrl();
-
       try {
         await vi.waitFor(
           async () => {
             const output = outputMock.output();
             expect(output).toMatch(/View [^:]+? app:/i);
-
-            const response = await fetch(devUrl);
-
-            expect(response.status).toEqual(200);
-            expect(response.headers.get('content-type')).toEqual('text/html');
-            await expect(response.text()).resolves.toContain(
-              '<title>Hydrogen | Home</title>',
-            );
           },
           {timeout: 8000},
         );

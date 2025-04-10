@@ -184,14 +184,7 @@ export async function setupLocalStarterTemplate(
           joinPath(project.directory, '.env'),
           envLeadingComment +
             '\n' +
-            [
-              ['SESSION_SECRET', 'foobar'],
-              ['PUBLIC_STORE_DOMAIN', 'fakestore-ai.myshopify.com'],
-              [
-                'PUBLIC_STOREFRONT_API_TOKEN',
-                'a6136cc465ffc0c946d4de38c4490bb7',
-              ],
-            ]
+            [['SESSION_SECRET', 'foobar']]
               .map(([key, value]) => `${key}="${value}"`)
               .join('\n') +
             '\n',
