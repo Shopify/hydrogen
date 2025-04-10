@@ -41,6 +41,13 @@ const StepSchema = z.object({
 
 export type Step = z.infer<typeof StepSchema>;
 
+export const TroubleshootingSchema = z.object({
+  issue: z.string().describe('The issue of the troubleshooting'),
+  solution: z.string().describe('The solution of the troubleshooting'),
+});
+
+export type Troubleshooting = z.infer<typeof TroubleshootingSchema>;
+
 export const RecipeSchema = z.object({
   title: z.string().describe('The title of the recipe'),
   summary: z.string().describe('The summary of what the recipe does'),
@@ -60,6 +67,21 @@ export const RecipeSchema = z.object({
     .optional()
     .describe('The deleted files of the recipe'),
   commit: z.string().describe('The commit hash the recipe is based on'),
+  llms: z
+    .object({
+      userQueries: z
+        .array(z.string())
+        .optional()
+        .describe('The user queries of the recipe')
+        .default([]),
+      troubleshooting: z
+        .array(TroubleshootingSchema)
+        .optional()
+        .describe('The troubleshooting of the recipe')
+        .default([]),
+    })
+    .optional()
+    .default({}),
 });
 
 export type Recipe = z.infer<typeof RecipeSchema>;
