@@ -85,6 +85,8 @@ npm run cookbook -- apply --recipe my-recipe
 
 `generate` will build a recipe folder based on the current changes made to the skeleton template, effectively snapshotting its state into a reproducible recipe.
 
+Additionally, it will also generate the Cursor rule (and related LLM-friendly files) for the recipe.
+
 The workflow for creating a new recipe is as follows:
 
 1. Make the desired changes to the skeleton template
