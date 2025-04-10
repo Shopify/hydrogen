@@ -211,7 +211,11 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
     case 'QUOTE':
       return `> ${block.text}`;
     case 'FRONTMATTER':
-      return ['---', YAML.stringify(block.data), '---'].join('\n');
+      return [
+        '---',
+        YAML.stringify(block.data, {lineWidth: 0}).trim(),
+        '---',
+      ].join('\n');
     case 'NOTE':
       return [
         '> [!NOTE]',
