@@ -2,6 +2,7 @@
 
 - [🧑‍🍳 Hydrogen Cookbook](#-hydrogen-cookbook)
   - [Recipes](#recipes)
+  - [Cursor rules](#cursor-rules)
   - [Usage](#usage)
     - [Apply](#apply)
       - [Syntax](#syntax)
@@ -37,6 +38,10 @@ Each recipe is located in the [cookbook's recipes folder](/cookbook/recipes/) an
 - `ingredients/`: a folder containing _new_ files that the recipe introduces. They will be copied as-is to the skeleton template.
 - `patches/`: a folder containing patches to be applied to existing files in the skeleton template. The file ↔ patch mappings are defined in the `recipe.yaml` file under the `ingredients` key.
 - `README.md`: the human-readable Markdown render of the recipe, based off of the `recipe.yaml` file.
+
+## Cursor rules
+
+Recipes come paired with [Cursor](https://www.cursor.com/) rules that can be included in a Hydrogen project to improve the AI-assisted coding experience. The rules are available in [the .cursor folder](/cookbook/.cursor) and can be copied verbatim into the `.cursor` folder at the root of a Hydrogen project repository.
 
 ## Usage
 
