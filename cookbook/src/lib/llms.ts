@@ -24,7 +24,7 @@ function renderRecipeRuleBlocks(
     mdFrontMatter({
       description: `Recipe for implementing "${recipe.title} (${recipeName})" in a Hydrogen storefront. ${recipe.summary}`,
       globs,
-      alwaysApply: 'false',
+      alwaysApply: false,
     }),
 
     // preamble

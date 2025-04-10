@@ -16,10 +16,10 @@ export function mdNote(text: string): MDNote {
 
 export type MDFrontMatter = {
   type: 'FRONTMATTER';
-  data: Record<string, string>;
+  data: Record<string, unknown>;
 };
 
-export function mdFrontMatter(data: Record<string, string>): MDFrontMatter {
+export function mdFrontMatter(data: Record<string, unknown>): MDFrontMatter {
   return {
     type: 'FRONTMATTER',
     data,
