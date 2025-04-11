@@ -143,6 +143,7 @@ function CartLineUpdateButton({
 }) {
   return (
     <CartForm
+      fetcherKey={CartForm.ACTIONS.LinesUpdate}
       route="/cart"
       action={CartForm.ACTIONS.LinesUpdate}
       inputs={{lines}}
