@@ -141,9 +141,14 @@ function CartLineUpdateButton({
   children: React.ReactNode;
   lines: CartLineUpdateInput[];
 }) {
+  const fetcherKey = [
+    CartForm.ACTIONS.LinesUpdate,
+    lines.map((line) => line.id),
+  ].join('-');
+
   return (
     <CartForm
-      fetcherKey={CartForm.ACTIONS.LinesUpdate}
+      fetcherKey={fetcherKey}
       route="/cart"
       action={CartForm.ACTIONS.LinesUpdate}
       inputs={{lines}}
