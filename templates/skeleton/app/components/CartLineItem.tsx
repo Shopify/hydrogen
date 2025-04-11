@@ -123,6 +123,7 @@ function CartLineRemoveButton({
 }) {
   return (
     <CartForm
+      fetcherKey={getUpdateKey(lineIds)}
       route="/cart"
       action={CartForm.ACTIONS.LinesRemove}
       inputs={{lineIds}}
@@ -134,6 +135,17 @@ function CartLineRemoveButton({
   );
 }
 
+/**
+ * Returns a unique key for the update action. This is used to make sure actions modifying the same line
+ * items are not run concurrently, but cancel each other. For example, if the user clicks "Increase quantity"
+ * and "Decrease quantity" in rapid succession, the actions will cancel each other and only one will run.
+ * @param lineIds
+ * @returns
+ */
+function getUpdateKey(lineIds: string[]) {
+  return [CartForm.ACTIONS.LinesUpdate, ...lineIds].join('-');
+}
+
 function CartLineUpdateButton({
   children,
   lines,
@@ -141,14 +153,9 @@ function CartLineUpdateButton({
   children: React.ReactNode;
   lines: CartLineUpdateInput[];
 }) {
-  const fetcherKey = [
-    CartForm.ACTIONS.LinesUpdate,
-    lines.map((line) => line.id),
-  ].join('-');
-
   return (
     <CartForm
-      fetcherKey={fetcherKey}
+      fetcherKey={getUpdateKey(lines.map((line) => line.id))}
       route="/cart"
       action={CartForm.ACTIONS.LinesUpdate}
       inputs={{lines}}
