@@ -19,6 +19,7 @@ import {
   RecipeManifestFormat,
   recreateDirectory,
 } from './util';
+import {generateLLMsFiles} from './llms';
 
 /**
  * Generate a recipe.
@@ -90,6 +91,9 @@ export async function generateRecipe(params: {
     ingredients,
   });
 
+  const userQueries = existingRecipe?.llms.userQueries ?? [];
+  const troubleshooting = existingRecipe?.llms.troubleshooting ?? [];
+
   const recipe: Recipe = {
     title: existingRecipe?.title ?? recipeName,
     summary: existingRecipe?.summary ?? '',
@@ -99,6 +103,7 @@ export async function generateRecipe(params: {
     ingredients,
     deletedFiles,
     steps,
+    llms: {userQueries, troubleshooting},
     commit: getMainCommitHash(parseReferenceBranch(referenceBranch)),
   };
 
@@ -115,6 +120,9 @@ export async function generateRecipe(params: {
         YAML.stringify(recipe);
 
   fs.writeFileSync(recipeManifestPath, data);
+
+  console.log('- 📖 Generating LLMs files…');
+  generateLLMsFiles(recipeName);
 
   return recipeManifestPath;
 }

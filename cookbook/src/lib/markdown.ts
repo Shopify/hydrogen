@@ -16,10 +16,10 @@ export function mdNote(text: string): MDNote {
 
 export type MDFrontMatter = {
   type: 'FRONTMATTER';
-  data: Record<string, string>;
+  data: Record<string, unknown>;
 };
 
-export function mdFrontMatter(data: Record<string, string>): MDFrontMatter {
+export function mdFrontMatter(data: Record<string, unknown>): MDFrontMatter {
   return {
     type: 'FRONTMATTER',
     data,
@@ -211,7 +211,11 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
     case 'QUOTE':
       return `> ${block.text}`;
     case 'FRONTMATTER':
-      return ['---', YAML.stringify(block.data), '---'].join('\n');
+      return [
+        '---',
+        YAML.stringify(block.data, {lineWidth: 0}).trim(),
+        '---',
+      ].join('\n');
     case 'NOTE':
       return [
         '> [!NOTE]',
