@@ -54,8 +54,12 @@ export type LoginOptions = {
 };
 
 export type LogoutOptions = {
+  /** The url to redirect customer to after logout, should be a relative URL. This url will need to included in Customer Account API's application setup for logout URI. The default value is current app origin, which is automatically setup in admin when using `--customer-account-push` flag with dev. */
   postLogoutRedirectUri?: string;
+  /** Add custom headers to the logout redirect. */
   headers?: HeadersInit;
+  /** If true, custom data in the session will not be cleared on logout. */
+  keepSession?: boolean;
 };
 
 export type CustomerAccount = {
@@ -83,6 +87,7 @@ export type CustomerAccount = {
    *
    * @param options.postLogoutRedirectUri - The url to redirect customer to after logout, should be a relative URL. This url will need to included in Customer Account API's application setup for logout URI. The default value is current app origin, which is automatically setup in admin when using `--customer-account-push` flag with dev.
    * @param options.headers - These will be passed along to the logout redirect. You can use these to set/clear cookies on logout, like the cart.
+   * @param options.keepSession - If true, custom data in the session will not be cleared on logout.
    * */
   logout: (options?: LogoutOptions) => Promise<Response>;
   /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */
@@ -188,6 +193,8 @@ export type CustomerAccountForDocs = {
   /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.
    *
    * @param options.postLogoutRedirectUri - The url to redirect customer to after logout, should be a relative URL. This url will need to included in Customer Account API's application setup for logout URI. The default value is current app origin, which is automatically setup in admin when using `--customer-account-push` flag with dev.
+   * @param options.headers - These will be passed along to the logout redirect. You can use these to set/clear cookies on logout, like the cart.
+   * @param options.keepSession - If true, custom data in the session will not be cleared on logout.
    * */
   logout?: (options?: LogoutOptions) => Promise<Response>;
   /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */
