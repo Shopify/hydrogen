@@ -27,8 +27,8 @@ img {
 * components/Aside
 * --------------------------------------------------
 */
-html:has(.overlay.expanded) {
-  @media (max-width: 45em) {
+@media (max-width: 45em) {
+  html:has(.overlay.expanded) {
     overflow: hidden;
   }
 }
