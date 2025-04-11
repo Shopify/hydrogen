@@ -27,6 +27,12 @@ img {
 * components/Aside
 * --------------------------------------------------
 */
+html:has(.overlay.expanded) {
+  @media (max-width: 45em) {
+    overflow: hidden;
+  }
+}
+
 aside {
   background: var(--color-light);
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
