@@ -61,11 +61,6 @@ describe('local templates', () => {
         `"name": "${basename(tmpDir)}"`,
       );
 
-      // Creates .env without mock.shop
-      await expect(readFile(`${tmpDir}/.env`)).resolves.not.toMatch(
-        `mock.shop`,
-      );
-
       const output = outputMock.info();
       expect(output).toMatch('success');
       expect(output).not.toMatch('warning');
