@@ -24,7 +24,7 @@ describe('dev', () => {
       outputMock.clear();
       vi.stubEnv('NODE_ENV', 'development');
 
-      const {close} = await runDev({
+      const {close, getUrl} = await runDev({
         path: tmpDir,
         port: Math.floor(Math.random() * (65535 - 3050) + 3050),
         disableVirtualRoutes: true,
@@ -38,6 +38,9 @@ describe('dev', () => {
           async () => {
             const output = outputMock.output();
             expect(output).toMatch(/View [^:]+? app:/i);
+            const devUrl = getUrl();
+            const response = await fetch(devUrl);
+            expect(response.status).toBe(200);
           },
           {timeout: 8000},
         );
