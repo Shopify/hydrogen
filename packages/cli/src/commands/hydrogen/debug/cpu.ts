@@ -9,11 +9,11 @@ import {getProjectPaths, isClassicProject} from '../../../lib/remix-config.js';
 import {muteDevLogs} from '../../../lib/log.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {prepareDiffDirectory} from '../../../lib/template-diff.js';
-import {runClassicCompilerDebugCpu} from '../../../lib/classic-compiler/debug-cpu.js';
 import {setupResourceCleanup} from '../../../lib/resource-cleanup.js';
 import {createCpuStartupProfiler} from '../../../lib/cpu-profiler.js';
 import {runBuild} from '../build.js';
 import {getViteConfig} from '../../../lib/vite-config.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 const DEFAULT_OUTPUT_PATH = 'startup.cpuprofile';
 
@@ -105,13 +105,10 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
     },
   };
 
-  if (await isClassicProject(directory)) {
-    return runClassicCompilerDebugCpu({
-      directory,
-      output,
-      buildPathWorkerFile,
-      hooks,
-    });
+  const isClassicCompiler = await isClassicProject(directory);
+
+  if (isClassicCompiler) {
+    throw new AbortError('Classic Remix projects are no longer supported.');
   }
 
   const maybeViteConfig = await getViteConfig(directory).catch(() => null);
