@@ -13,8 +13,8 @@ export function UsingUseShop() {
 
   return (
     <>
-      <div>{shop.language}</div>
-      <div>{shop.country}</div>
+      <div>{shop.languageIsoCode}</div>
+      <div>{shop.countryIsoCode}</div>
     </>
   );
 }
