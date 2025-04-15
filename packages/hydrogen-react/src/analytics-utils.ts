@@ -2,7 +2,9 @@ import type {
   ShopifyMonorailPayload,
   ShopifyMonorailEvent,
   ShopifyGid,
+  ShopifyAnalyticsProduct,
 } from './analytics-types.js';
+import {faker} from '@faker-js/faker';
 
 /**
  * Builds a Shopify Monorail event from a Shopify Monorail payload and a schema ID.
@@ -105,4 +107,35 @@ export function errorIfServer(fnName: string): boolean {
     return true;
   }
   return false;
+}
+
+/**
+ * Get a random number [1,1000]
+ * @returns A random number
+ */
+export function randomNatural() {
+  return faker.number.int({min: 1, max: 1000});
+}
+
+/**
+ * Calculate product price * quantity
+ * @param product - The product
+ * @returns A number
+ */
+export const getProductValue = (product: ShopifyAnalyticsProduct): number =>
+  parseFloat(product.price) * (product.quantity || 0);
+
+/**
+ * Reduce all products and get their total value
+ * @param products - The products
+ * @returns A number
+ */
+export function getProductsValue(
+  products?: ShopifyAnalyticsProduct[],
+): number | undefined {
+  return products?.reduce(
+    (previousValue, currentProduct) =>
+      previousValue + getProductValue(currentProduct),
+    0,
+  );
 }
