@@ -1,0 +1,111 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+title: Subscriptions
+summary: Add subscription-based products to your Hydrogen storefront.
+description: |
+  This recipe lets you sell subscription-based products on your Hydrogen storefront by implementing [selling plan groups](https://shopify.dev/docs/api/storefront/latest/objects/SellingPlanGroup). Your customers will be able to choose between one-time purchases or recurring subscriptions for any products with available selling plans.
+
+
+  In this recipe you'll make the following changes:
+
+
+  1. Set up a subscriptions app in your Shopify admin and add selling plans to any products that will be sold as subscriptions.
+  2. Modify product detail pages to display subscription options with accurate pricing using the `SellingPlanSelector` component.
+  3. Enhance GraphQL fragments to fetch all necessary selling plan data.
+  4. Display subscription details on applicable line items in the cart.
+notes: []
+requirements: >
+  To implement subscriptions in your own store, you need to install a
+  subscriptions app in your Shopify admin. In this recipe, we'll use the
+  [Shopify Subscriptions app](https://apps.shopify.com/shopify-subscriptions).
+ingredients:
+  - path: templates/skeleton/app/components/SellingPlanSelector.tsx
+    description: The `SellingPlanSelector` component is used to display the
+      available subscription options on product pages.
+  - path: templates/skeleton/app/styles/selling-plan.css
+    description: The `selling-plan.css` file is used to style the
+      `SellingPlanSelector` component.
+deletedFiles: []
+steps:
+  - type: INFO
+    name: Set up the Shopify Subscriptions app
+    description: >
+      1. Install the [Shopify Subscriptions
+      app](https://apps.shopify.com/shopify-subscriptions).
+
+      2. In your Shopify admin, [use the Subscriptions
+      app](https://admin.shopify.com/apps/subscriptions-remix/app) to create one
+      or more subscription plans.
+
+      3. On the [Products](https://admin.shopify.com/products) page, open any
+      products that will be sold as subscriptions and add the relevant
+      subscription plans in the **Purchase options** section.
+
+      The Hydrogen demo storefront comes pre-configured with an example
+      subscription product with the handle `shopify-wax`.
+  - type: COPY_INGREDIENTS
+    name: Add ingredients to your project
+    description: Copy all the files found in the `ingredients/` directory to the
+      current directory.
+    ingredients:
+      - templates/skeleton/app/components/SellingPlanSelector.tsx
+      - templates/skeleton/app/styles/selling-plan.css
+  - type: PATCH
+    name: Render the selling plan in the cart
+    description: >
+      1. Update `CartLineItem` to show subscription details when they're
+      available.
+
+      2. Extract `sellingPlanAllocation` from cart line data, display the plan
+      name, and standardize component import paths.
+    diffs:
+      - file: app/components/CartLineItem.tsx
+        patchFile: CartLineItem.tsx.8e657b.patch
+  - type: PATCH
+    name: Update `ProductForm` to support subscriptions
+    description: >
+      1. Add conditional rendering to display either subscription options or
+      standard variant selectors.
+
+      2. Implement `SellingPlanSelector` and `SellingPlanGroup` components to
+      handle subscription plan selection.
+
+      3. Update `AddToCartButton` to include selling plan data when
+      subscriptions are selected.
+    diffs:
+      - file: app/components/ProductForm.tsx
+        patchFile: ProductForm.tsx.8e409a.patch
+  - type: PATCH
+    name: Update `ProductPrice` to display subscription pricing
+    description: >
+      1. Add a `SellingPlanPrice` function to calculate adjusted prices based on
+      subscription plan type (fixed amount, fixed price, or percentage).
+
+      2. Add logic to handle different price adjustment types and render the
+      appropriate subscription price when a selling plan is selected.
+    diffs:
+      - file: app/components/ProductPrice.tsx
+        patchFile: ProductPrice.tsx.a5e47f.patch
+  - type: PATCH
+    name: Add selling plan data to cart queries
+    description: >
+      Add a `sellingPlanAllocation` field with the plan name to the standard and
+      componentizable cart line GraphQL fragments. This displays subscription
+      details in the cart.
+    diffs:
+      - file: app/lib/fragments.ts
+        patchFile: fragments.ts.e8eb04.patch
+  - type: PATCH
+    name: Add `SellingPlanSelector` to product pages
+    description: >
+      1. Add the `SellingPlanSelector` component to display subscription options
+      on product pages.
+
+      2. Add logic to handle pricing adjustments, maintain selection state using
+      URL parameters, and update the add-to-cart functionality.
+
+      3. Fetch subscription data through the updated cart GraphQL fragments.
+    diffs:
+      - file: app/routes/products.$handle.tsx
+        patchFile: products.$handle.tsx.3e0b7e.patch
+commit: 366119f5d492f9d3e04df39392b35f343573bbd9

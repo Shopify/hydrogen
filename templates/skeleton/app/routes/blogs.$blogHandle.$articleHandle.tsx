@@ -84,7 +84,8 @@ export default function Article() {
       <h1>
         {title}
         <div>
-          {publishedDate} &middot; {author?.name}
+          <time dateTime={article.publishedAt}>{publishedDate}</time> &middot;{' '}
+          <address>{author?.name}</address>
         </div>
       </h1>
 

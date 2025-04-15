@@ -27,12 +27,17 @@ img {
 * components/Aside
 * --------------------------------------------------
 */
+@media (max-width: 45em) {
+  html:has(.overlay.expanded) {
+    overflow: hidden;
+  }
+}
+
 aside {
   background: var(--color-light);
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
   height: 100vh;
-  max-width: var(--aside-width);
-  min-width: var(--aside-width);
+  width: min(var(--aside-width), 100vw);
   position: fixed;
   right: calc(-1 * var(--aside-width));
   top: 0;
@@ -201,6 +206,11 @@ button.reset:hover:not(:has(> *)) {
   margin-left: auto;
 }
 
+.header-ctas > * {
+  min-width: fit-content;
+}
+
+
 /*
 * --------------------------------------------------
 * components/Footer
@@ -212,14 +222,16 @@ button.reset:hover:not(:has(> *)) {
 }
 
 .footer-menu {
-  align-items: center;
+  justify-content: center;
   display: flex;
+  flex-wrap: wrap;
   grid-gap: 1rem;
   padding: 1rem;
 }
 
 .footer-menu a {
   color: var(--color-light);
+  min-width: fit-content;
 }
 
 /*
