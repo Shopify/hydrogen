@@ -35,7 +35,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'ShopifyI18nContextProps',
+      type: 'ShopifyI18nProviderProps',
       description: '',
     },
   ],
