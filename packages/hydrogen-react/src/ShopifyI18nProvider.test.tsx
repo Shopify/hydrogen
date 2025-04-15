@@ -7,7 +7,7 @@ import {ShopifyI18nProvider} from './ShopifyI18nProvider.js';
 describe('<ShopifyI18nProvider/>', () => {
   it('renders its children', () => {
     render(
-      <ShopifyI18nProvider countryIsoCode={'US'} languageIsoCode={'EN'}>
+      <ShopifyI18nProvider country={'US'} language={'EN'}>
         <div>child</div>;
       </ShopifyI18nProvider>,
     );
@@ -18,7 +18,7 @@ describe('<ShopifyI18nProvider/>', () => {
   it('returns the hydrogen context values', () => {
     const {result} = renderHook(() => useShop(), {
       wrapper: ({children}) => (
-        <ShopifyI18nProvider countryIsoCode={'CA'} languageIsoCode={'FR'}>
+        <ShopifyI18nProvider country={'CA'} language={'FR'}>
           {children}
         </ShopifyI18nProvider>
       ),

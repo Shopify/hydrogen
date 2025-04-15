@@ -100,8 +100,8 @@ export function useShop(): ShopifyContextValue {
 
   return {
     ...shopContext,
-    countryIsoCode: i18nContext.countryIsoCode ?? shopContext.countryIsoCode,
-    languageIsoCode: i18nContext.languageIsoCode ?? shopContext.languageIsoCode,
+    countryIsoCode: i18nContext.country ?? shopContext.countryIsoCode,
+    languageIsoCode: i18nContext.language ?? shopContext.languageIsoCode,
   };
 }
 

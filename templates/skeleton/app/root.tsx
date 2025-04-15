@@ -164,8 +164,8 @@ export function Layout({children}: {children?: React.ReactNode}) {
       </head>
       <body>
         <ShopifyI18nProvider
-          countryIsoCode={data?.i18n.country ?? null}
-          languageIsoCode={data?.i18n.language ?? null}
+          country={data?.i18n.country ?? null}
+          language={data?.i18n.language ?? null}
         >
           {data ? (
             <Analytics.Provider

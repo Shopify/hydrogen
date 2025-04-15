@@ -228,7 +228,7 @@ describe('<ShopifyProvider/>', () => {
     it('returns the hydrogen overrides if provided (partial override)', () => {
       const {result} = renderHook(() => useShop(), {
         wrapper: ({children}) => (
-          <ShopifyI18nProvider countryIsoCode={'FR'} languageIsoCode={null}>
+          <ShopifyI18nProvider country={'FR'} language={null}>
             <ShopifyProvider {...SHOPIFY_CONFIG}>{children}</ShopifyProvider>
           </ShopifyI18nProvider>
         ),
@@ -243,7 +243,7 @@ describe('<ShopifyProvider/>', () => {
     it('returns the hydrogen overrides if provided (full override)', () => {
       const {result} = renderHook(() => useShop(), {
         wrapper: ({children}) => (
-          <ShopifyI18nProvider countryIsoCode={'FR'} languageIsoCode={'FR'}>
+          <ShopifyI18nProvider country={'FR'} language={'FR'}>
             <ShopifyProvider {...SHOPIFY_CONFIG}>{children}</ShopifyProvider>
           </ShopifyI18nProvider>
         ),
@@ -257,7 +257,7 @@ describe('<ShopifyProvider/>', () => {
       // should not be possible, as docs currently say it _must_ be there.
       const {result} = renderHook(() => useShop(), {
         wrapper: ({children}) => (
-          <ShopifyI18nProvider countryIsoCode={'FR'} languageIsoCode={'FR'}>
+          <ShopifyI18nProvider country={'FR'} language={'FR'}>
             {children}
           </ShopifyI18nProvider>
         ),

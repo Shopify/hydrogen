@@ -2,7 +2,7 @@ import {ShopifyI18nProvider, useShop} from '@shopify/hydrogen-react';
 
 export default function App() {
   return (
-    <ShopifyI18nProvider countryIsoCode="CA" languageIsoCode="EN">
+    <ShopifyI18nProvider country="CA" language="EN">
       <UsingUseShop />
     </ShopifyI18nProvider>
   );
@@ -14,7 +14,7 @@ export function UsingUseShop() {
   return (
     <>
       <div>{shop.languageIsoCode}</div>
-      <div>{shop.countryIsoCode}</div>
+      <div>{shop.country}</div>
     </>
   );
 }
