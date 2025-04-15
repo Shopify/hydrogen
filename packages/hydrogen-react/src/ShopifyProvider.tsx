@@ -2,6 +2,7 @@ import {createContext, useContext, useMemo, type ReactNode} from 'react';
 import type {LanguageCode, CountryCode} from './storefront-api-types.js';
 import {SFAPI_VERSION} from './storefront-api-constants.js';
 import {getPublicTokenHeadersRaw} from './storefront-client.js';
+import {useShopifyI18nContext} from './ShopifyI18nProvider.js';
 
 export const defaultShopifyContext: ShopifyContextValue = {
   storeDomain: 'test',
@@ -94,7 +95,14 @@ export function useShop(): ShopifyContextValue {
   if (!shopContext) {
     throw new Error(`'useShop()' must be a descendent of <ShopifyProvider/>`);
   }
-  return shopContext;
+
+  const i18nContext = useShopifyI18nContext();
+
+  return {
+    ...shopContext,
+    countryIsoCode: i18nContext.countryIsoCode ?? shopContext.countryIsoCode,
+    languageIsoCode: i18nContext.languageIsoCode ?? shopContext.languageIsoCode,
+  };
 }
 
 export interface ShopifyProviderBase {

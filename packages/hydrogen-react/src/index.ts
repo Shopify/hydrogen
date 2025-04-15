@@ -64,6 +64,7 @@ export {type ParsedMetafields, parseMetafield} from './parse-metafield.js';
 export {ProductPrice} from './ProductPrice.js';
 export {ProductProvider, useProduct} from './ProductProvider.js';
 export {RichText} from './RichText.js';
+export {ShopifyI18nProvider} from './ShopifyI18nProvider.js';
 export {ShopifyProvider, useShop} from './ShopifyProvider.js';
 export {ShopPayButton} from './ShopPayButton.js';
 export type {

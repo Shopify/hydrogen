@@ -125,6 +125,7 @@ export type {
   ShopifyAnalyticsPayload,
   ShopifyAnalyticsProduct,
   ShopifyCookies,
+  ShopifyI18nProvider,
   ShopifyPageView,
   ShopifyPageViewPayload,
   StorefrontApiResponse,

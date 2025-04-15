@@ -7,7 +7,7 @@ import {
   type ShopifyProviderProps,
 } from './ShopifyProvider.js';
 import type {PartialDeep} from 'type-fest';
-
+import {ShopifyI18nProvider} from './ShopifyI18nProvider.js';
 const SHOPIFY_CONFIG: ShopifyProviderProps = {
   storeDomain: 'https://notashop.myshopify.com',
   storefrontToken: 'abc123',
@@ -221,6 +221,50 @@ describe('<ShopifyProvider/>', () => {
       expect(result.current.getStorefrontApiUrl()).toBe(
         'https://notashop.myshopify.com/api/2025-01/graphql.json',
       );
+    });
+  });
+
+  describe('hydrogen context overrides', () => {
+    it('returns the hydrogen overrides if provided (partial override)', () => {
+      const {result} = renderHook(() => useShop(), {
+        wrapper: ({children}) => (
+          <ShopifyI18nProvider countryIsoCode={'FR'} languageIsoCode={null}>
+            <ShopifyProvider {...SHOPIFY_CONFIG}>{children}</ShopifyProvider>
+          </ShopifyI18nProvider>
+        ),
+      });
+
+      expect(result.current.countryIsoCode).toBe('FR');
+      expect(result.current.languageIsoCode).toBe(
+        SHOPIFY_CONFIG.languageIsoCode,
+      );
+    });
+
+    it('returns the hydrogen overrides if provided (full override)', () => {
+      const {result} = renderHook(() => useShop(), {
+        wrapper: ({children}) => (
+          <ShopifyI18nProvider countryIsoCode={'FR'} languageIsoCode={'FR'}>
+            <ShopifyProvider {...SHOPIFY_CONFIG}>{children}</ShopifyProvider>
+          </ShopifyI18nProvider>
+        ),
+      });
+      expect(result.current.countryIsoCode).toBe('FR');
+      expect(result.current.languageIsoCode).toBe('FR');
+    });
+
+    it('returns the hydrogen overrides if provided (full override, without ShopifyProvider)', () => {
+      // Note(FR): this ensures the current behavior – however it's arguable that not having the ShopifyProvider at all
+      // should not be possible, as docs currently say it _must_ be there.
+      const {result} = renderHook(() => useShop(), {
+        wrapper: ({children}) => (
+          <ShopifyI18nProvider countryIsoCode={'FR'} languageIsoCode={'FR'}>
+            {children}
+          </ShopifyI18nProvider>
+        ),
+      });
+
+      expect(result.current.countryIsoCode).toBe('FR');
+      expect(result.current.languageIsoCode).toBe('FR');
     });
   });
 });
