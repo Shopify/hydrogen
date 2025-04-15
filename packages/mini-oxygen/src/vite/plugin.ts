@@ -1,3 +1,4 @@
+import {defaultClientConditions} from 'vite';
 import path from 'node:path';
 import type {Plugin, ResolvedConfig} from 'vite';
 import {
@@ -45,11 +46,14 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         return {
           appType: 'custom',
           resolve: {
-            conditions: ['worker', 'workerd'],
+            conditions: ['worker', 'workerd', ...defaultClientConditions],
           },
           ssr: {
             noExternal: true,
             target: 'webworker',
+            resolve: {
+              conditions: ['worker', 'workerd', ...defaultClientConditions],
+            },
           },
           // When building, the CLI will set the `ssr` option to `true`
           // if no --entry flag is passed for the default SSR entry file.
