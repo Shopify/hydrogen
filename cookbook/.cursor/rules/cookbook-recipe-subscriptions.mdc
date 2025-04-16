@@ -1,6 +1,6 @@
 ---
 description: Recipe for implementing "Subscriptions (subscriptions)" in a Hydrogen storefront. Add subscription-based products to your Hydrogen storefront.
-globs: "*"
+globs: *
 alwaysApply: false
 ---
 

@@ -211,11 +211,21 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
     case 'QUOTE':
       return `> ${block.text}`;
     case 'FRONTMATTER':
-      return [
-        '---',
-        YAML.stringify(block.data, {lineWidth: 0}).trim(),
-        '---',
-      ].join('\n');
+      const stringified = YAML.stringify(block.data, {
+        lineWidth: 0,
+        defaultStringType: 'PLAIN',
+        defaultKeyType: 'PLAIN',
+      })
+        .trim()
+        // Remove any quotes wrapping the stringified values manually,
+        // as some of them may have been added by the YAML stringifier while Cursor doesn't like them.
+        .split('\n')
+        .map((line) => {
+          return line.replace(/^([^'"]+): ['"](.+)['"]/, '$1: $2');
+        })
+        .join('\n');
+
+      return ['---', stringified, '---'].join('\n');
     case 'NOTE':
       return [
         '> [!NOTE]',
