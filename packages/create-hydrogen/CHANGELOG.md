@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.0.21
+
+### Patch Changes
+
+- Fix faulty truthiness check for cart quantity ([#2855](https://github.com/Shopify/hydrogen/pull/2855)) by [@frontsideair](https://github.com/frontsideair)
+
 ## 5.0.20
 
 ### Patch Changes
