@@ -44,6 +44,7 @@ import {logRequestLine} from '../../lib/mini-oxygen/common.js';
 import {
   findHydrogenPlugin,
   findOxygenPlugin,
+  getViteConfig,
   isViteProject,
 } from '../../lib/vite-config.js';
 import {importVite} from '../../lib/import-utils.js';
@@ -311,6 +312,7 @@ export async function runDev({
   }
 
   const h2PluginOptions = h2Plugin.api?.getPluginOptions?.();
+  const remixConfig = (await getViteConfig(root)).remixConfig;
 
   let codegenProcess: ReturnType<typeof spawnCodegenProcess> | undefined;
   const setupCodegen = useCodegen
@@ -319,7 +321,7 @@ export async function runDev({
         codegenProcess = spawnCodegenProcess({
           rootDirectory: root,
           configFilePath: codegenConfigPath,
-          appDirectory: h2PluginOptions?.remixConfig?.appDirectory,
+          appDirectory: remixConfig?.appDirectory,
         });
       }
     : undefined;

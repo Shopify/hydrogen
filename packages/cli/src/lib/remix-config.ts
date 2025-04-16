@@ -3,7 +3,6 @@ import path from 'node:path';
 import {readdir} from 'node:fs/promises';
 import type {ServerMode} from '@remix-run/dev/dist/config/serverModes.js';
 import type {RemixConfig, AppConfig} from '@remix-run/dev/dist/config.js';
-import type {ResolvedRemixConfig} from '@remix-run/dev';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputWarn} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
@@ -16,7 +15,27 @@ import {hydrogenPackagesPath, isHydrogenMonorepo} from './build.js';
 
 type RawRemixConfig = AppConfig;
 
-export type {RemixConfig, ServerMode, RawRemixConfig};
+export type ResolvedRoute = {
+  id: string;
+  file: string;
+  path: string;
+  parentId: string;
+  index: boolean | undefined;
+  caseSensitive: boolean | undefined;
+};
+
+export type ResolvedRoutes = {
+  [key: string]: ResolvedRoute;
+};
+
+export type ResolvedRRConfig = {
+  appDirectory: string;
+  rootDirectory: string; // This is technically not coming from the React Router config
+  serverEntryPoint: string; // This is technically not coming from the React Router config
+  routes: ResolvedRoutes;
+};
+
+export type {ServerMode, RawRemixConfig};
 
 export async function hasRemixConfigFile(root: string) {
   const result = await findFileWithExtension(root, 'remix.config');
@@ -71,61 +90,12 @@ export function getRawRemixConfig(root: string) {
 export async function getRemixConfig(
   root: string,
   mode = process.env.NODE_ENV as ServerMode,
-): Promise<ResolvedRemixConfig> {
+): Promise<ResolvedRRConfig> {
   if (await isViteProject(root)) {
     return (await getViteConfig(root)).remixConfig;
   }
 
-  await muteRemixLogs(root);
-
-  type RemixConfig = typeof import('@remix-run/dev/dist/config.js');
-
-  const {resolveConfig} = await importLocal<RemixConfig>(
-    '@remix-run/dev/dist/config.js',
-    root,
-  ).catch(handleRemixImportFail);
-
-  type RemixViteNodeConfig =
-    typeof import('@remix-run/dev/dist/vite/vite-node.js');
-
-  const {createContext} = await importLocal<RemixViteNodeConfig>(
-    '@remix-run/dev/dist/vite/vite-node.js',
-    root,
-  ).catch(handleRemixImportFail);
-
-  const appConfig = await getRawRemixConfig(root);
-  const routesViteNodeContext = await createContext({root, mode});
-  const vite = await importVite(root);
-  const config = await resolveConfig(appConfig, {
-    rootDirectory: root,
-    serverMode: mode,
-    vite,
-    routesViteNodeContext,
-  });
-
-  if (isHydrogenMonorepo && hydrogenPackagesPath) {
-    // Watch local packages when developing in Hydrogen repo
-    const packagesPath = hydrogenPackagesPath;
-    config.watchPaths ??= [];
-
-    config.watchPaths.push(
-      ...(await readdir(packagesPath)).map((pkg) =>
-        pkg === 'hydrogen-react'
-          ? path.resolve(packagesPath, pkg, 'dist', 'browser-dev', 'index.mjs')
-          : path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
-      ),
-    );
-
-    config.watchPaths.push(
-      path.join(packagesPath, 'cli', 'dist', 'virtual-routes', '**', '*'),
-    );
-  }
-
-  // Shut this down so that it doesn't cause the process to fail
-  // when it finishes running.
-  routesViteNodeContext.server.server.close();
-
-  return config;
+  throw new AbortError('Classic Remix projects are no longer supported.');
 }
 
 export function assertOxygenChecks(config: RemixConfig) {
