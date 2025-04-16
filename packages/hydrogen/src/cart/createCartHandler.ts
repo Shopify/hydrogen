@@ -118,11 +118,58 @@ export type HydrogenCart = {
    * );
    */
   addDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesAddDefault>;
-  // TODO: add ts docs
+  /**
+   * Removes delivery addresses from the cart.
+   *
+   * This function sends a mutation to the storefront API to remove one or more delivery addresses from the cart.
+   * It returns the result of the mutation, including any errors that occurred.
+   *
+   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
+   * @returns {CartDeliveryAddressRemoveFunction} - A function that takes an array of address IDs and optional parameters, and returns the result of the API call.
+   *
+   * @example
+   * const result = await cart.removeDeliveryAddresses([
+   *   "gid://shopify/<objectName>/10079785100"
+   * ],
+   * { someOptionalParam: 'value' });
+   */
+
   removeDeliveryAddresses: ReturnType<
     typeof cartDeliveryAddressesRemoveDefault
   >;
-  // TODO: add ts docs
+  /**
+  * Updates delivery addresses in the cart.
+  *
+  * This function sends a mutation to the storefront API to update one or more delivery addresses in the cart.
+  * It returns the result of the mutation, including any errors that occurred.
+  *
+  * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
+  * @returns {CartDeliveryAddressUpdateFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
+  *
+  * const result = await cart.updateDeliveryAddresses([
+      {
+        "address": {
+          "copyFromCustomerAddressId": "gid://shopify/<objectName>/10079785100",
+          "deliveryAddress": {
+            "address1": "<your-address1>",
+            "address2": "<your-address2>",
+            "city": "<your-city>",
+            "company": "<your-company>",
+            "countryCode": "AC",
+            "firstName": "<your-firstName>",
+            "lastName": "<your-lastName>",
+            "phone": "<your-phone>",
+            "provinceCode": "<your-provinceCode>",
+            "zip": "<your-zip>"
+          }
+        },
+        "id": "gid://shopify/<objectName>/10079785100",
+        "oneTimeUse": true,
+        "selected": true,
+        "validationStrategy": "COUNTRY_CODE_ONLY"
+      }
+    ],{ someOptionalParam: 'value' });
+  */
   updateDeliveryAddresses: ReturnType<
     typeof cartDeliveryAddressesUpdateDefault
   >;
