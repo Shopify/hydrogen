@@ -49,7 +49,6 @@ import {
 } from '../../lib/flags.js';
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
-import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {runBuild} from './build.js';
 import {getViteConfig} from '../../lib/vite-config.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
@@ -591,9 +590,11 @@ Continue?`.value,
         outputContent`${colors.whiteBright('Building project...')}`.value,
       );
 
-      const build = isClassicCompiler ? runClassicCompilerBuild : runBuild;
+      if (isClassicCompiler) {
+        throw new AbortError('Classic Remix projects are no longer supported.');
+      }
 
-      await build({
+      await runBuild({
         directory: root,
         assetPath,
         lockfileCheck,
