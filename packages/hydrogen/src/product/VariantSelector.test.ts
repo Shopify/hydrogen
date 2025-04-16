@@ -2,10 +2,10 @@ import {VariantSelector, getSelectedProductOptions} from './VariantSelector';
 import {createElement} from 'react';
 import {cleanup, render} from '@testing-library/react';
 import {describe, it, expect, afterEach, vi, afterAll} from 'vitest';
-import {type LinkProps, useLocation} from '@remix-run/react';
+import {type LinkProps, useLocation} from 'react-router';
 import type {ProductVariant} from '@shopify/hydrogen-react/storefront-api-types';
 
-vi.mock('@remix-run/react', () => ({
+vi.mock('react-router', () => ({
   useNavigation: vi.fn(() => ({
     state: 'idle',
   })),

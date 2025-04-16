@@ -1,9 +1,8 @@
 import {renderSuccess, renderWarning} from '@shopify/cli-kit/node/ui';
-import type {RemixConfig} from './remix-config.js';
 
 const RESERVED_ROUTES = ['^api/[^/]+/graphql.json', '^cdn/', '^_t/'];
 
-export function findReservedRoutes(config: {routes: RemixConfig['routes']}) {
+export function findReservedRoutes(config: {routes: Routes}) {
   const routes = new Set<string>();
 
   Object.values(config.routes)
@@ -65,8 +64,16 @@ const REQUIRED_ROUTES = [
   //   'opening_soon',
 ];
 
+type Routes = {
+  [key: string]: {
+    id: string;
+    path: string;
+    parentId: string;
+  };
+};
+
 export function findMissingRoutes(
-  config: {routes: RemixConfig['routes']},
+  config: {routes: Routes},
   requiredRoutes = REQUIRED_ROUTES,
 ) {
   const userRoutes = Object.values(config.routes);

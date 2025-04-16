@@ -1,4 +1,4 @@
-import {Link, useFetcher, type Fetcher} from '@remix-run/react';
+import { Link, useFetcher, type Fetcher } from 'react-router';
 import {Image, Money} from '@shopify/hydrogen';
 import React, {useRef, useEffect} from 'react';
 import {

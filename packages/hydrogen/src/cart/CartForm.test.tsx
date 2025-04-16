@@ -16,7 +16,7 @@ function MockForm({
   );
 }
 
-vi.mock('@remix-run/react', () => ({
+vi.mock('react-router', () => ({
   useFetcher: vi.fn().mockImplementation(() => {
     return {
       Form: MockForm,

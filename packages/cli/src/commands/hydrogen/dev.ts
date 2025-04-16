@@ -44,9 +44,9 @@ import {logRequestLine} from '../../lib/mini-oxygen/common.js';
 import {
   findHydrogenPlugin,
   findOxygenPlugin,
+  getViteConfig,
   isViteProject,
 } from '../../lib/vite-config.js';
-import {runClassicCompilerDev} from '../../lib/classic-compiler/dev.js';
 import {importVite} from '../../lib/import-utils.js';
 import {createEntryPointErrorHandler} from '../../lib/deps-optimizer.js';
 import {getCodeFormatOptions} from '../../lib/format-code.js';
@@ -134,9 +134,12 @@ export default class Dev extends Command {
       cliConfig: this.config,
     };
 
-    const {close} = (await isViteProject(directory))
-      ? await runDev(devParams)
-      : await runClassicCompilerDev(devParams);
+    const isClassicProject = await isViteProject(directory);
+    if (isClassicProject) {
+      throw new AbortError('Classic Remix projects are no longer supported.');
+    }
+
+    const {close} = await runDev(devParams);
 
     setupResourceCleanup(async () => {
       await close();
@@ -309,6 +312,7 @@ export async function runDev({
   }
 
   const h2PluginOptions = h2Plugin.api?.getPluginOptions?.();
+  const remixConfig = (await getViteConfig(root)).remixConfig;
 
   let codegenProcess: ReturnType<typeof spawnCodegenProcess> | undefined;
   const setupCodegen = useCodegen
@@ -317,7 +321,7 @@ export async function runDev({
         codegenProcess = spawnCodegenProcess({
           rootDirectory: root,
           configFilePath: codegenConfigPath,
-          appDirectory: h2PluginOptions?.remixConfig?.appDirectory,
+          appDirectory: remixConfig?.appDirectory,
         });
       }
     : undefined;

@@ -1,12 +1,12 @@
 import {expect, it, describe, beforeEach, afterEach, vi} from 'vitest';
 import {act, renderHook} from '@testing-library/react';
-import {useNavigation} from '@remix-run/react';
+import {useNavigation} from 'react-router';
 import {useOptimisticVariant} from './useOptimisticVariant';
 
 describe('useOptimisticVariant', () => {
   beforeEach(() => {
     vi.stubGlobal('reportError', vi.fn());
-    vi.mock('@remix-run/react', async (importOrigninal) => {
+    vi.mock('react-router', async (importOrigninal) => {
       return {
         ...(await importOrigninal<typeof import('@remix-run/react')>()),
         useNavigation: vi.fn(() => ({state: 'idle', location: {search: ''}})),

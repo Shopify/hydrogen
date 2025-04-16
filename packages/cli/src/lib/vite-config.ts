@@ -10,9 +10,12 @@ import {importVite} from './import-utils.js';
 // Do not import JS from here, only types
 import type {HydrogenPlugin} from '~/hydrogen/vite/plugin.js';
 import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
-import {hasRemixConfigFile} from './remix-config.js';
+import {
+  hasRemixConfigFile,
+  ResolvedRRConfig,
+  ResolvedRoutes,
+} from './remix-config.js';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
-import type {ResolvedRemixConfig} from '@remix-run/dev';
 import type {ResolvedConfig, UserConfig} from 'vite';
 
 export async function hasViteConfig(root: string) {
@@ -39,7 +42,7 @@ type ViteConfigResult = {
   serverOutFile: string;
   resolvedViteConfig: ResolvedConfig;
   userViteConfig: UserConfig;
-  remixConfig: ResolvedRemixConfig;
+  remixConfig: ResolvedRRConfig;
 };
 
 export async function getViteConfig(
@@ -98,8 +101,8 @@ export async function getViteConfig(
     resolvedViteConfig,
     userViteConfig: maybeConfig.config,
     remixConfig: {
-      routes: routes ?? {},
-      appDirectory: appDirectory ?? joinPath(resolvedViteConfig.root, 'app'),
+      routes,
+      appDirectory,
       rootDirectory: resolvedViteConfig.root,
       serverEntryPoint:
         (
@@ -108,21 +111,27 @@ export async function getViteConfig(
             basename(resolvedSsrEntry),
           )
         ).filepath || resolvedSsrEntry,
-    } as ResolvedRemixConfig,
+    },
   };
 }
 
-function getRemixConfigFromVite(viteConfig: any) {
-  const {remixConfig} =
-    findHydrogenPlugin(viteConfig)?.api?.getPluginOptions() ?? {};
+function getRemixConfigFromVite(viteConfig: any): {
+  appDirectory: string;
+  serverBuildFile: string;
+  routes: ResolvedRoutes;
+} {
+  if (!viteConfig.__reactRouterPluginContext) {
+    throw new Error('Could not resolve React Router config');
+  }
 
-  return remixConfig
-    ? {
-        appDirectory: remixConfig.appDirectory,
-        serverBuildFile: remixConfig.serverBuildFile,
-        routes: remixConfig.routes,
-      }
-    : {};
+  const {appDirectory, serverBuildFile, routes} =
+    viteConfig.__reactRouterPluginContext.reactRouterConfig;
+
+  return {
+    appDirectory,
+    serverBuildFile,
+    routes,
+  };
 }
 
 type MinimalViteConfig = {plugins: Readonly<Array<{name: string}>>};
