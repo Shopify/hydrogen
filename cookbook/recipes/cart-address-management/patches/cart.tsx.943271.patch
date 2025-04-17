@@ -1,0 +1,68 @@
+index 62dc7602..a6a0edfa 100644
+--- a/templates/skeleton/app/routes/cart.tsx
++++ b/templates/skeleton/app/routes/cart.tsx
+@@ -1,8 +1,17 @@
+ import {type MetaFunction, useLoaderData} from '@remix-run/react';
+ import type {CartQueryDataReturn} from '@shopify/hydrogen';
+ import {CartForm} from '@shopify/hydrogen';
+-import {data, type LoaderFunctionArgs, type ActionFunctionArgs, type HeadersFunction} from '@shopify/remix-oxygen';
++import {
++  data,
++  type LoaderFunctionArgs,
++  type ActionFunctionArgs,
++  type HeadersFunction,
++} from '@shopify/remix-oxygen';
+ import {CartMain} from '~/components/CartMain';
++import type {
++  CartSelectableAddressInput,
++  CartSelectableAddressUpdateInput,
++} from '@shopify/hydrogen/storefront-api-types';
+ 
+ export const meta: MetaFunction = () => {
+   return [{title: `Hydrogen | Cart`}];
+@@ -68,6 +77,45 @@ export async function action({request, context}: ActionFunctionArgs) {
+       });
+       break;
+     }
++    case CartForm.ACTIONS.DeliveryAddressesAdd: {
++      const {id, selected, oneTimeUse, ...deliveryAddress} = inputs;
++      const newDeliveryAddresses = [
++        {
++          selected,
++          oneTimeUse,
++          address: {deliveryAddress},
++        },
++      ] as CartSelectableAddressInput[];
++
++      result = await cart.addDeliveryAddresses(newDeliveryAddresses);
++      break;
++    }
++    case CartForm.ACTIONS.DeliveryAddressesUpdate: {
++      const {
++        formatted,
++        formartedArea,
++        name,
++        id,
++        selected,
++        oneTimeUse,
++        ...deliveryAddress
++      } = inputs;
++      const updatedDeliveryAddresses = [
++        {
++          id,
++          selected,
++          oneTimeUse,
++          address: {deliveryAddress},
++        },
++      ] as CartSelectableAddressUpdateInput[];
++      result = await cart.updateDeliveryAddresses(updatedDeliveryAddresses);
++      break;
++    }
++    case CartForm.ACTIONS.DeliveryAddressesRemove: {
++      result = await cart.removeDeliveryAddresses(inputs.addressIds);
++      break;
++    }
++
+     default:
+       throw new Error(`${action} cart action is not defined`);
+   }

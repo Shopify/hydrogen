@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+title: cart-address-management
+summary: ""
+description: ""
+notes: []
+requirements: null
+ingredients:
+  - path: templates/skeleton/app/components/Address.tsx
+    description: null
+  - path: templates/skeleton/app/components/AddressActions.tsx
+    description: null
+  - path: templates/skeleton/app/components/AddressesSelector.tsx
+    description: null
+  - path: templates/skeleton/app/components/DeliveryAddressManager.tsx
+    description: null
+deletedFiles: []
+steps:
+  - type: COPY_INGREDIENTS
+    name: Add ingredients to your project
+    description: Copy all the files found in the `ingredients/` directory to the
+      current directory.
+    ingredients:
+      - templates/skeleton/app/components/Address.tsx
+      - templates/skeleton/app/components/AddressActions.tsx
+      - templates/skeleton/app/components/AddressesSelector.tsx
+      - templates/skeleton/app/components/DeliveryAddressManager.tsx
+  - type: PATCH
+    name: app/components/CartLineItem.tsx
+    description: null
+    diffs:
+      - file: app/components/CartLineItem.tsx
+        patchFile: CartLineItem.tsx.f93ff4.patch
+  - type: PATCH
+    name: app/components/CartMain.tsx
+    description: null
+    diffs:
+      - file: app/components/CartMain.tsx
+        patchFile: CartMain.tsx.6d121b.patch
+  - type: PATCH
+    name: app/lib/fragments.ts
+    description: null
+    diffs:
+      - file: app/lib/fragments.ts
+        patchFile: fragments.ts.18726b.patch
+  - type: PATCH
+    name: app/routes/cart.tsx
+    description: null
+    diffs:
+      - file: app/routes/cart.tsx
+        patchFile: cart.tsx.943271.patch
+  - type: PATCH
+    name: app/styles/reset.css
+    description: null
+    diffs:
+      - file: app/styles/reset.css
+        patchFile: reset.css.8f1552.patch
+commit: 61ddf92487524b3c04632ae2cfdaa2869a3ae02c
