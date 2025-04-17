@@ -33,6 +33,8 @@ ingredients:
     description: Data for the countries and their locales
   - path: templates/skeleton/app/lib/utils.ts
     description: Utilities for getting the locale from the request
+  - path: templates/skeleton/app/routes/($locale)._index.tsx
+    description: Add a localized home page
   - path: templates/skeleton/app/routes/($locale).api.countries.tsx
     description: A route that returns the countries and their locales
   - path: templates/skeleton/app/routes/($locale).products.$handle.tsx
@@ -40,6 +42,7 @@ ingredients:
   - path: templates/skeleton/app/routes/($locale).tsx
     description: A localized action route that handles locale changes
 deletedFiles:
+  - templates/skeleton/app/routes/_index.tsx
   - templates/skeleton/app/routes/products.$handle.tsx
 steps:
   - type: COPY_INGREDIENTS
@@ -50,6 +53,7 @@ steps:
       - templates/skeleton/app/components/CountrySelector.tsx
       - templates/skeleton/app/data/countries.ts
       - templates/skeleton/app/lib/utils.ts
+      - templates/skeleton/app/routes/($locale)._index.tsx
       - templates/skeleton/app/routes/($locale).api.countries.tsx
       - templates/skeleton/app/routes/($locale).products.$handle.tsx
       - templates/skeleton/app/routes/($locale).tsx

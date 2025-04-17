@@ -36,7 +36,6 @@ export const action: ActionFunction = async ({request, context}) => {
 
   // Determine where to redirect to relative to where user navigated from
   // ie. hydrogen.shop/collections -> ca.hydrogen.shop/collections
-  const path = formData.get('path');
   const key = `${languageCode}-${countryCode}`.toLowerCase();
   const toLocale = countries[key] ?? countries.default;
 
@@ -52,39 +51,13 @@ export const action: ActionFunction = async ({request, context}) => {
     });
   }
 
-  // if the user is in a product page with a localized handle, we need to redirect to the localized handle for the new locale
-  let pathString = path?.toString();
-  if (pathString?.includes('/products/')) {
-    // TODO naive implementation, should take into account variants, different urls, etc.
-    const productHandle = pathString.split('/products/')[1].split('?')[0];
-    const vars = {
-      handle: productHandle,
-      language: currentLanguage,
-      country: currentCountry,
-    };
-    const productByHandle = await context.storefront.query(PRODUCT_ID_QUERY, {
-      variables: vars,
-    });
-    if (productByHandle?.product?.id != null) {
-      const vars = {
-        id: productByHandle.product.id,
-        language: languageCode,
-        country: countryCode,
-      };
-      const productByID = await context.storefront.query(PRODUCT_HANDLE_QUERY, {
-        variables: vars,
-      });
-      pathString = `/products/${productByID.product?.handle}`;
-    }
-  }
-
   const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
   const redirectUrl = new URL(
-    `${toLocale.pathPrefix || ''}${pathString}`,
+    `${toLocale.pathPrefix || ''}`,
     `${protocol}://${toLocale.host}`,
   ).toString();
 
-  return redirect(redirectUrl, 302);
+  return redirect(redirectUrl, 301);
 };
 
 async function updateCartBuyerIdentity(
