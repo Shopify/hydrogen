@@ -1,8 +1,14 @@
 # Markets
 
-This recipe adds support for multiple markets in your Hydrogen app.
+This recipe shows you how to add support for multi-region and multilingual in Hydrogen.
 
-It adds a country selector to the app, and a route to handle the locale change.
+In this recipe you'll make the following changes:
+
+1. Create a component that displays a country selector.
+2. Create a data file that defines the countries and their locales supported by your store.
+3. Create a utility function that gets the locale from the request, and then inject it into the context.
+4. Create a localized product route.
+5. Create a localized action route that handles locale changes.
 
 
 ## Requirements
