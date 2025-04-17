@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+title: Markets
+summary: |
+  Add support for multi-region and multilingual in Hydrogen.
+description: >
+  This recipe adds support for multiple markets in your Hydrogen app.
+
+
+  It adds a country selector to the app, and a route to handle the locale
+  change.
+notes: []
+requirements: |
+  - You have setup the regions and languages you chose for your store with [Shopify Markets](https://help.shopify.com/en/manual/international).
+  - You're familiar with using the [Storefront API with Shopify Markets](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/markets).
+ingredients:
+  - path: templates/skeleton/app/components/CountrySelector.tsx
+    description: A component that displays a country selector
+  - path: templates/skeleton/app/data/countries.ts
+    description: Data for the countries and their locales
+  - path: templates/skeleton/app/lib/utils.ts
+    description: Utilities for getting the locale from the request
+  - path: templates/skeleton/app/routes/($locale).api.countries.tsx
+    description: A route that returns the countries and their locales
+  - path: templates/skeleton/app/routes/($locale).products.$handle.tsx
+    description: The localized product route
+  - path: templates/skeleton/app/routes/($locale).tsx
+    description: A localized action route that handles locale changes
+deletedFiles:
+  - templates/skeleton/app/routes/products.$handle.tsx
+steps:
+  - type: COPY_INGREDIENTS
+    name: Add ingredients to your project
+    description: Copy all the files found in the `ingredients/` directory to the
+      current directory.
+    ingredients:
+      - templates/skeleton/app/components/CountrySelector.tsx
+      - templates/skeleton/app/data/countries.ts
+      - templates/skeleton/app/lib/utils.ts
+      - templates/skeleton/app/routes/($locale).api.countries.tsx
+      - templates/skeleton/app/routes/($locale).products.$handle.tsx
+      - templates/skeleton/app/routes/($locale).tsx
+  - type: PATCH
+    name: app/components/Header.tsx
+    description: Add a country selector to the header
+    diffs:
+      - file: app/components/Header.tsx
+        patchFile: Header.tsx.05d0c2.patch
+  - type: PATCH
+    name: app/lib/context.ts
+    description: Get the locale from the request and add it to the context.
+    diffs:
+      - file: app/lib/context.ts
+        patchFile: context.ts.12ce79.patch
+  - type: PATCH
+    name: app/root.tsx
+    description: |
+      - Detect the locale from the request and throw a 404 if it's not found.
+      - Add the locale to the loader context.
+      - Add a key to the page layout to ensure the locale is used as part of
+        the cache key.
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.53a6d3.patch
+commit: 61ddf92487524b3c04632ae2cfdaa2869a3ae02c
