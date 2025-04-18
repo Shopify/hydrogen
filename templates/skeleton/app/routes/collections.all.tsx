@@ -1,7 +1,6 @@
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, Link, type MetaFunction} from '@remix-run/react';
-import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
-import {useVariantUrl} from '~/lib/variants';
+import {useLoaderData, type MetaFunction} from '@remix-run/react';
+import {getPaginationVariables} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {ProductItem} from '~/components/ProductItem';
 
@@ -70,7 +69,7 @@ export default function Collection() {
 }
 
 const COLLECTION_ITEM_FRAGMENT = `#graphql
-  fragment MoneyProductItem on MoneyV2 {
+  fragment MoneyCollectionItem on MoneyV2 {
     amount
     currencyCode
   }
@@ -87,10 +86,10 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
     }
     priceRange {
       minVariantPrice {
-        ...MoneyProductItem
+        ...MoneyCollectionItem
       }
       maxVariantPrice {
-        ...MoneyProductItem
+        ...MoneyCollectionItem
       }
     }
   }
