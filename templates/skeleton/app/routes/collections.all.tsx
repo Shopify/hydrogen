@@ -1,7 +1,7 @@
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Link, type MetaFunction} from '@remix-run/react';
 import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
-import type {ProductItemFragment} from 'storefrontapi.generated';
+import type {CollectionItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 
@@ -58,7 +58,7 @@ export default function Collection() {
         resourcesClassName="products-grid"
       >
         {({node: product, index}) => (
-          <ProductItem
+          <CollectionItem
             key={product.id}
             product={product}
             loading={index < 8 ? 'eager' : undefined}
@@ -69,11 +69,11 @@ export default function Collection() {
   );
 }
 
-function ProductItem({
+function CollectionItem({
   product,
   loading,
 }: {
-  product: ProductItemFragment;
+  product: CollectionItemFragment;
   loading?: 'eager' | 'lazy';
 }) {
   const variantUrl = useVariantUrl(product.handle);
