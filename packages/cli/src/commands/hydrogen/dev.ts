@@ -134,8 +134,8 @@ export default class Dev extends Command {
       cliConfig: this.config,
     };
 
-    const isClassicProject = await isViteProject(directory);
-    if (isClassicProject) {
+    const isVite = await isViteProject(directory);
+    if (!isVite) {
       throw new AbortError('Classic Remix projects are no longer supported.');
     }
 

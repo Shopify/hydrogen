@@ -78,8 +78,8 @@ export default class Build extends Command {
       directory,
     };
 
-    const isClassicCompiler = !(await isViteProject(directory));
-    if (isClassicCompiler) {
+    const isVite = await isViteProject(directory);
+    if (!isVite) {
       throw new AbortError('Classic Remix projects are no longer supported.');
     }
 
