@@ -6,6 +6,7 @@ import type {
   FeaturedCollectionFragment,
   RecommendedProductsQuery,
 } from 'storefrontapi.generated';
+import {ProductItem} from '~/components/ProductItem';
 
 export const meta: MetaFunction = () => {
   return [{title: 'Hydrogen | Home'}];
@@ -101,21 +102,7 @@ function RecommendedProducts({
             <div className="recommended-products-grid">
               {response
                 ? response.products.nodes.map((product) => (
-                    <Link
-                      key={product.id}
-                      className="recommended-product"
-                      to={`/products/${product.handle}`}
-                    >
-                      <Image
-                        data={product.images.nodes[0]}
-                        aspectRatio="1/1"
-                        sizes="(min-width: 45em) 20vw, 50vw"
-                      />
-                      <h4>{product.title}</h4>
-                      <small>
-                        <Money data={product.priceRange.minVariantPrice} />
-                      </small>
-                    </Link>
+                    <ProductItem key={product.id} product={product} />
                   ))
                 : null}
             </div>
@@ -161,14 +148,12 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
         currencyCode
       }
     }
-    images(first: 1) {
-      nodes {
-        id
-        url
-        altText
-        width
-        height
-      }
+    featuredImage {
+      id
+      url
+      altText
+      width
+      height
     }
   }
   query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
