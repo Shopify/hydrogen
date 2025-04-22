@@ -29,7 +29,7 @@ export default {
        */
       const handleRequest = createRequestHandler({
         // @ts-expect-error TODO: fix this before merge
-        build: {...remixBuild,  mode: process.env.NODE_ENV},
+        build: {...remixBuild, mode: process.env.NODE_ENV},
         mode: process.env.NODE_ENV,
         getLoadContext: () => appLoadContext,
       });
