@@ -1,7 +1,4 @@
-import {
-  type LinksFunction,
-  type LoaderFunctionArgs,
-} from '@remix-run/node';
+import {type LinksFunction, type LoaderFunctionArgs} from 'react-router';
 import {
   Links,
   Meta,
@@ -9,7 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
   useRouteLoaderData,
-} from '@remix-run/react';
+} from 'react-router';
 import type {Cart, Shop} from '@shopify/hydrogen/storefront-api-types';
 import styles from './styles/app.css?url';
 import {useNonce} from '@shopify/hydrogen';

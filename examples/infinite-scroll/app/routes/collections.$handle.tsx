@@ -1,10 +1,11 @@
-import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   useLoaderData,
   useNavigate,
   Link,
+  redirect,
+  type LoaderFunctionArgs,
   type MetaFunction,
-} from '@remix-run/react';
+} from 'react-router';
 import {
   Pagination,
   getPaginationVariables,

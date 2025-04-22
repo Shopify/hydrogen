@@ -1,12 +1,13 @@
 import {Suspense} from 'react';
-import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   Await,
   Link,
   useLoaderData,
+  redirect,
+  type LoaderFunctionArgs,
   type MetaFunction,
   type FetcherWithComponents,
-} from '@remix-run/react';
+} from 'react-router';
 import type {
   ProductFragment,
   ProductVariantsQuery,
@@ -47,7 +48,7 @@ import {
   type SellingPlanGroup,
 } from '~/components/SellingPlanSelector';
 import sellingPanStyle from '~/styles/selling-plan.css?url';
-import type {LinksFunction} from '@remix-run/node';
+import type {LinksFunction} from 'react-router';
 
 export const links: LinksFunction = () => [
   {rel: 'stylesheet', href: sellingPanStyle},
@@ -556,8 +557,8 @@ function ProductForm({
             ? 'Subscribe'
             : 'Select a subscription'
           : selectedVariant?.availableForSale
-          ? 'Add to cart'
-          : 'Sold out'}
+            ? 'Add to cart'
+            : 'Sold out'}
         {/**********   EXAMPLE UPDATE END   ************/
         /***********************************************/}
       </AddToCartButton>
