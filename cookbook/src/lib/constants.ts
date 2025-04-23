@@ -24,7 +24,7 @@ export const COOKBOOK_PATH = path.join(REPO_ROOT, 'cookbook');
 /**
  * The files to ignore for generate.
  */
-export const FILES_TO_IGNORE_FOR_GENERATE = ['.env'];
+export const FILES_TO_IGNORE_FOR_GENERATE = ['.env', '.cursor'];
 
 /**
  * The file name of the github README.
