@@ -99,8 +99,7 @@ Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
         : []),
 
       // ingredients
-      mdHeading(2, 'Ingredients'),
-      mdParagraph('_New files added to the template by this recipe._'),
+      mdHeading(2, 'New files added to the template by this recipe'),
       ...recipe.ingredients.flatMap((ingredient) => {
         const contents = fs.readFileSync(
           path.join(
@@ -121,9 +120,16 @@ Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
       }),
 
       mdHeading(2, 'Steps'),
-      ...recipe.steps.flatMap((step, index): MDBlock[] =>
-        renderStep(step, index, recipe.ingredients, getPatchesDir(recipeName)),
-      ),
+      ...recipe.steps
+        .filter((step) => step.type !== 'COPY_INGREDIENTS')
+        .flatMap((step, index): MDBlock[] =>
+          renderStep(
+            step,
+            index,
+            recipe.ingredients,
+            getPatchesDir(recipeName),
+          ),
+        ),
 
       ...(recipe.deletedFiles != null && recipe.deletedFiles.length > 0
         ? [

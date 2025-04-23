@@ -1,8 +1,10 @@
 import {CommandModule} from 'yargs';
-import {FILES_TO_IGNORE_FOR_GENERATE} from '../lib/constants';
+import {FILES_TO_IGNORE_FOR_GENERATE, TEMPLATE_PATH} from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
 import {RecipeManifestFormat} from '../lib/util';
 import {copyCursorRulesToSkeleton} from '../lib/llms';
+import path from 'path';
+import fs from 'fs';
 
 type GenerateArgs = {
   recipe: string;
@@ -40,6 +42,9 @@ export const generate: CommandModule<{}, GenerateArgs> = {
 };
 
 async function handler(args: GenerateArgs) {
+  const skeletonRulesDir = path.join(TEMPLATE_PATH, '.cursor', 'rules');
+  fs.rmSync(skeletonRulesDir, {recursive: true, force: true});
+
   const recipePath = await generateRecipe({
     recipeName: args.recipe,
     filenamesToIgnore: FILES_TO_IGNORE_FOR_GENERATE,
