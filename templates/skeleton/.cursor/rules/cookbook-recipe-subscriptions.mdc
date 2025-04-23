@@ -66,12 +66,139 @@ In this recipe you'll make the following changes:
 To implement subscriptions in your own store, you need to install a subscriptions app in your Shopify admin. In this recipe, we'll use the [Shopify Subscriptions app](https://apps.shopify.com/shopify-subscriptions).
 
 
-## Ingredients
+## New files added to the template by this recipe
 
-_New files added to the template by this recipe._
+### templates/skeleton/app/components/SellingPlanSelector.tsx
 
-- `templates/skeleton/app/components/SellingPlanSelector.tsx` : The `SellingPlanSelector` component is used to display the available subscription options on product pages.
-- `templates/skeleton/app/styles/selling-plan.css` : The `selling-plan.css` file is used to style the `SellingPlanSelector` component.
+The `SellingPlanSelector` component is used to display the available subscription options on product pages.
+
+```tsx
+import type {
+  ProductFragment,
+  SellingPlanGroupFragment,
+  SellingPlanFragment,
+} from 'storefrontapi.generated';
+import {useMemo} from 'react';
+import {useLocation} from '@remix-run/react';
+
+/* Enriched sellingPlan type including isSelected and url */
+export type SellingPlan = SellingPlanFragment & {
+  isSelected: boolean;
+  url: string;
+};
+
+/* Enriched sellingPlanGroup type including enriched SellingPlan nodes */
+export type SellingPlanGroup = Omit<
+  SellingPlanGroupFragment,
+  'sellingPlans'
+> & {
+  sellingPlans: {
+    nodes: SellingPlan[];
+  };
+};
+
+/**
+ * A component that simplifies selecting sellingPlans subscription options
+ * @example Example use
+ * ```ts
+ *   <SellingPlanSelector
+ *     sellingPlanGroups={sellingPlanGroups}
+ *     selectedSellingPlanId={selectedSellingPlanId}
+ *   >
+ *     {({sellingPlanGroup}) => ( ...your sellingPlanGroup component )}
+ *  </SellingPlanSelector>
+ *  ```
+ **/
+export function SellingPlanSelector({
+  sellingPlanGroups,
+  selectedSellingPlan,
+  children,
+  paramKey = 'selling_plan',
+}: {
+  sellingPlanGroups: ProductFragment['sellingPlanGroups'];
+  selectedSellingPlan: SellingPlanFragment | null;
+  paramKey?: string;
+  children: (params: {
+    sellingPlanGroup: SellingPlanGroup;
+    selectedSellingPlan: SellingPlanFragment | null;
+  }) => React.ReactNode;
+}) {
+  const {search, pathname} = useLocation();
+  const params = new URLSearchParams(search);
+
+  return useMemo(
+    () =>
+      (sellingPlanGroups.nodes as SellingPlanGroup[]).map(
+        (sellingPlanGroup) => {
+          // Augmnet each sellingPlan node with isSelected and url
+          const sellingPlans = sellingPlanGroup.sellingPlans.nodes
+            .map((sellingPlan: SellingPlan) => {
+              if (!sellingPlan?.id) {
+                //eslint-disable-next-line no-console
+                console.warn(
+                  'SellingPlanSelector: sellingPlan.id is missing in the product query',
+                );
+                return null;
+              }
+              if (!sellingPlan.id) return null;
+              params.set(paramKey, sellingPlan.id);
+              sellingPlan.isSelected =
+                selectedSellingPlan?.id === sellingPlan.id;
+              sellingPlan.url = `${pathname}?${params.toString()}`;
+              return sellingPlan;
+            })
+            .filter(Boolean) as SellingPlan[];
+          sellingPlanGroup.sellingPlans.nodes = sellingPlans;
+          return children({sellingPlanGroup, selectedSellingPlan});
+        },
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sellingPlanGroups, children, selectedSellingPlan, paramKey, pathname],
+  );
+}
+
+```
+
+### templates/skeleton/app/styles/selling-plan.css
+
+The `selling-plan.css` file is used to style the `SellingPlanSelector` component.
+
+```css
+.selling-plan-group {
+  margin-bottom: 1rem;
+}
+
+.selling-plan-group-title {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.selling-plan {
+  border: 1px solid;
+  display: inline-block;
+  padding: 1rem;
+  margin-right: 0.5rem;
+  line-height: 1;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  border-bottom-width: 1.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.selling-plan:hover {
+  text-decoration: none;
+}
+
+.selling-plan.selected {
+  border-color: #6b7280; /* Equivalent to 'border-gray-500' */
+}
+
+.selling-plan.unselected {
+  border-color: #fafafa; /* Equivalent to 'border-neutral-50' */
+}
+
+```
 
 ## Steps
 
@@ -83,14 +210,7 @@ _New files added to the template by this recipe._
 The Hydrogen demo storefront comes pre-configured with an example subscription product with the handle `shopify-wax`.
 
 
-### Step 2: Add ingredients to your project
-
-Copy all the files found in the `ingredients/` directory to the current directory.
-
-- [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
-- [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css)
-
-### Step 3: Render the selling plan in the cart
+### Step 2: Render the selling plan in the cart
 
 1. Update `CartLineItem` to show subscription details when they're available.
 2. Extract `sellingPlanAllocation` from cart line data, display the plan name, and standardize component import paths.
@@ -140,7 +260,7 @@ index bd33a2cf..a18e4b52 100644
 
 ```
 
-### Step 4: Update `ProductForm` to support subscriptions
+### Step 3: Update `ProductForm` to support subscriptions
 
 1. Add conditional rendering to display either subscription options or standard variant selectors.
 2. Implement `SellingPlanSelector` and `SellingPlanGroup` components to handle subscription plan selection.
@@ -467,7 +587,7 @@ index e8616a61..e41b91ad 100644
 
 </details>
 
-### Step 5: Update `ProductPrice` to display subscription pricing
+### Step 4: Update `ProductPrice` to display subscription pricing
 
 1. Add a `SellingPlanPrice` function to calculate adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage).
 2. Add logic to handle different price adjustment types and render the appropriate subscription price when a selling plan is selected.
@@ -593,7 +713,7 @@ index 32460ae2..59eed1d8 100644
 
 </details>
 
-### Step 6: Add selling plan data to cart queries
+### Step 5: Add selling plan data to cart queries
 
 Add a `sellingPlanAllocation` field with the plan name to the standard and componentizable cart line GraphQL fragments. This displays subscription details in the cart.
 
@@ -631,7 +751,7 @@ index dc4426a9..cfe3a938 100644
 
 ```
 
-### Step 7: Add `SellingPlanSelector` to product pages
+### Step 6: Add `SellingPlanSelector` to product pages
 
 1. Add the `SellingPlanSelector` component to display subscription options on product pages.
 2. Add logic to handle pricing adjustments, maintain selection state using URL parameters, and update the add-to-cart functionality.
