@@ -123,4 +123,4 @@ llms:
     - issue: I'm not seeing the subscription details on my cart line items.
       solution: Make sure you have the Shopify Subscriptions app installed and
         configured correctly.
-commit: 62dc2f367bc73d4f402b96213de9e2f933d0441c
+commit: eeffb748ee428b42bf1ebae35403aa00ad7807b5
