@@ -63,11 +63,50 @@ This recipe handles Shopify [combined listings](https://help.shopify.com/en/manu
 - Add a tag to any combined listing parent products to indicate they're a combined listing, for example `combined`.
 
 
-## Ingredients
+## New files added to the template by this recipe
 
-_New files added to the template by this recipe._
+### templates/skeleton/app/lib/combined-listings.ts
 
-- `templates/skeleton/app/lib/combined-listings.ts` : Utilities and settings for handling combined listings.
+Utilities and settings for handling combined listings.
+
+```ts
+// Edit these values to customize the combined listings behaviors
+export const combinedListingsSettings = {
+  // If true, loading the product page will redirect to the first variant
+  redirectToFirstVariant: false,
+  // The tag that indicates a combined listing
+  combinedListingTag: 'combined',
+  // If true, combined listings will not be shown in the product list
+  hideCombinedListingsFromProductList: true,
+};
+
+export const maybeFilterOutCombinedListingsQuery =
+  combinedListingsSettings.hideCombinedListingsFromProductList
+    ? `NOT tag:${combinedListingsSettings.combinedListingTag}`
+    : '';
+
+interface ProductWithTags {
+  tags: string[];
+}
+
+function isProductWithTags(u: unknown): u is ProductWithTags {
+  const maybe = u as ProductWithTags;
+  return (
+    u != null &&
+    typeof u === 'object' &&
+    'tags' in maybe &&
+    Array.isArray(maybe.tags)
+  );
+}
+
+export function isCombinedListing(product: unknown) {
+  return (
+    isProductWithTags(product) &&
+    product.tags.includes(combinedListingsSettings.combinedListingTag)
+  );
+}
+
+```
 
 ## Steps
 
@@ -90,13 +129,7 @@ export const combinedListingsSettings = {
 ```
 
 
-### Step 2: Add ingredients to your project
-
-Copy all the files found in the `ingredients/` directory to the current directory.
-
-- [`app/lib/combined-listings.ts`](ingredients/templates/skeleton/app/lib/combined-listings.ts)
-
-### Step 3: Update the `ProductForm` component
+### Step 2: Update the `ProductForm` component
 
 Update the `ProductForm` component to hide the `Add to cart` button for combined listings parent products, as well as the selected state for variants.
 
@@ -201,7 +234,7 @@ index e8616a61..838a903a 100644
 
 </details>
 
-### Step 4: Extend the `ProductImage` component
+### Step 3: Extend the `ProductImage` component
 
 Update the `ProductImage` component to support images from both product variants and the product itself.
 
@@ -231,7 +264,7 @@ index 5f3ac1cc..f1c9f2cd 100644
 
 ```
 
-### Step 5: Show a range of prices for combined listings in `ProductItem`
+### Step 4: Show a range of prices for combined listings in `ProductItem`
 
 If the product is a combined listing, show a range of prices for the
 combined listing parent product instead of the variant price.
@@ -275,7 +308,7 @@ index 62c64b50..034b5660 100644
 
 ```
 
-### Step 6: (optional) Add combined listings redirect utility
+### Step 5: (optional) Add combined listings redirect utility
 
 If you wish to redirect automatically to the first variant of a combined listing when the parent handle is selected, add a utility to redirect to the first variant of a combined listing when the handle of the parent is requested, add a utility to redirect to the first variant of a combined listing.
 
@@ -320,7 +353,7 @@ index ce1feb5a..29fe2ecc 100644
 
 ```
 
-### Step 7: Update queries for combined listings
+### Step 6: Update queries for combined listings
 
 - Add the `tags` property to the ones returned by the product query.
 - (optional) Add the filtering query to the product query to exclude combined listings.
@@ -408,7 +441,7 @@ index 34747528..6e485083 100644
 
 </details>
 
-### Step 8: (optional) Filter out combined listings from individual collections pages
+### Step 7: (optional) Filter out combined listings from individual collections pages
 
 Since it's not possible to directly apply query filters when retrieving collection products, you can manually filter out combined listings after they are retrieved, based on their tags.
 
@@ -482,7 +515,7 @@ index f1d7fa3e..17edfb7d 100644
 
 </details>
 
-### Step 9: (optional) Filter out combined listings from collections index page
+### Step 8: (optional) Filter out combined listings from collections index page
 
 Update the `collections.all` route to filter out combined listings from the search results, and include the price range for combined listings.
 
@@ -541,7 +574,7 @@ index 3a31b2f7..c756c9e1 100644
 
 ```
 
-### Step 10: Update the product page
+### Step 9: Update the product page
 
 - Display a range of prices for combined listings instead of the variant price.
 - Show the featured image of the combined listing parent product instead of the variant image.
@@ -685,7 +718,7 @@ index 2dc6bda2..8baafac9 100644
 
 </details>
 
-### Step 11: Update stylesheet
+### Step 10: Update stylesheet
 
 Add a class to the product item to show a range of prices for combined listings.
 
