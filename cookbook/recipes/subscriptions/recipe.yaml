@@ -108,4 +108,19 @@ steps:
     diffs:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.3e0b7e.patch
-commit: 366119f5d492f9d3e04df39392b35f343573bbd9
+llms:
+  userQueries:
+    - How do I add subscriptions to my Hydrogen storefront?
+    - How do I add selling plans to my Hydrogen storefront?
+    - How do I display subscription details on applicable line items in the cart?
+  troubleshooting:
+    - issue: I'm getting an error when I try to add a subscription to my storefront.
+      solution: Make sure you have the Shopify Subscriptions app installed and
+        configured correctly.
+    - issue: I'm not seeing the subscription options on my product pages.
+      solution: Make sure you have the Shopify Subscriptions app installed and
+        configured correctly.
+    - issue: I'm not seeing the subscription details on my cart line items.
+      solution: Make sure you have the Shopify Subscriptions app installed and
+        configured correctly.
+commit: 61ddf92487524b3c04632ae2cfdaa2869a3ae02c
