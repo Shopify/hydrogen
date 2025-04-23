@@ -4,6 +4,7 @@ import {createDirectoryIfNotExists, getPatchesDir} from './util';
 import {
   maybeMDBlock,
   MDBlock,
+  mdCode,
   mdFrontMatter,
   mdHeading,
   mdList,
@@ -13,6 +14,7 @@ import {
 } from './markdown';
 import {renderStep} from './render';
 import {loadRecipe, Recipe} from './recipe';
+import fs from 'fs';
 
 function renderRecipeRuleBlocks(
   recipeName: string,
@@ -95,11 +97,24 @@ Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
       // ingredients
       mdHeading(2, 'Ingredients'),
       mdParagraph('_New files added to the template by this recipe._'),
-      mdList(
-        recipe.ingredients.map(
-          (ingredient) => `\`${ingredient.path}\` : ${ingredient.description}`,
-        ),
-      ),
+      ...recipe.ingredients.flatMap((ingredient) => {
+        const contents = fs.readFileSync(
+          path.join(
+            COOKBOOK_PATH,
+            'recipes',
+            recipeName,
+            'ingredients',
+            ingredient.path,
+          ),
+          'utf8',
+        );
+        const extension = path.extname(ingredient.path).slice(1);
+        return [
+          mdHeading(3, ingredient.path),
+          mdParagraph(ingredient.description ?? ''),
+          mdCode(extension ?? '', contents, false),
+        ];
+      }),
 
       mdHeading(2, 'Steps'),
       ...recipe.steps.flatMap((step, index): MDBlock[] =>
