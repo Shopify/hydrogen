@@ -1,4 +1,4 @@
-index 34747528..dd8699bc 100644
+index 34747528..6e485083 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
 @@ -1,13 +1,13 @@
@@ -13,7 +13,7 @@ index 34747528..dd8699bc 100644
  } from 'storefrontapi.generated';
  import {ProductItem} from '~/components/ProductItem';
 -
-+import {filterOutCombinedListingsQuery} from '~/lib/combined-listings';
++import {maybeFilterOutCombinedListingsQuery} from '~/lib/combined-listings';
  export const meta: MetaFunction = () => {
    return [{title: 'Hydrogen | Home'}];
  };
@@ -24,7 +24,7 @@ index 34747528..dd8699bc 100644
 -    .query(RECOMMENDED_PRODUCTS_QUERY)
 +    .query(RECOMMENDED_PRODUCTS_QUERY, {
 +      variables: {
-+        query: filterOutCombinedListingsQuery,
++        query: maybeFilterOutCombinedListingsQuery,
 +      },
 +    })
      .catch((error) => {

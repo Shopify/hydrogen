@@ -1,13 +1,20 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 title: combined-listings
-summary: 'Handle Shopify combined listings in product pages and search results.'
-description: 'This recipe handles Shopify combined listings in product pages and search results.'
+summary: Handle Shopify combined listings in product pages and search results.
+description: |
+
+  This recipe handles Shopify combined listings in product pages and
+  search results.
 notes:
-  - Combined listings are available only to stores on a [Shopify Plus](https://www.shopify.com/plus) plan.
-requirements: |
-  - Install the [Combined Listings app](https://admin.shopify.com/apps/combined-listings) in your store.
-  - Add a tag to any combined listing parent products to indicate they're a combined listing, for example `combined`.
+  - Combined listings are available only to stores on a [Shopify
+    Plus](https://www.shopify.com/plus) plan.
+requirements: >
+  - Install the [Combined Listings
+  app](https://admin.shopify.com/apps/combined-listings) in your store.
+
+  - Add a tag to any combined listing parent products to indicate they're a
+  combined listing, for example `combined`.
 ingredients:
   - path: templates/skeleton/app/lib/combined-listings.ts
     description: Utilities and settings for handling combined listings.
@@ -21,15 +28,18 @@ steps:
       - templates/skeleton/app/lib/combined-listings.ts
   - type: PATCH
     name: app/components/ProductForm.tsx
-    description: |
-      Update the `ProductForm` component to hide the add to cart button for combined listings parent products, as well as the selected state for variants.
+    description: >
+      Update the `ProductForm` component to hide the add to cart button for
+      combined listings parent products, as well as the selected state for
+      variants.
     diffs:
       - file: app/components/ProductForm.tsx
         patchFile: ProductForm.tsx.8e409a.patch
   - type: PATCH
     name: app/components/ProductImage.tsx
-    description: |
-      Update the `ProductImage` component to support images from both product variants and the product itself.
+    description: >
+      Update the `ProductImage` component to support images from both product
+      variants and the product itself.
     diffs:
       - file: app/components/ProductImage.tsx
         patchFile: ProductImage.tsx.4e6c4c.patch
@@ -42,32 +52,53 @@ steps:
         patchFile: ProductItem.tsx.8ddc67.patch
   - type: PATCH
     name: app/lib/redirect.ts
-    description: |
-      Add a utility to redirect to the first variant of a combined listing when the handle is requested.
+    description: >
+      Add a utility to redirect to the first variant of a combined listing when
+      the handle is requested.
     diffs:
       - file: app/lib/redirect.ts
         patchFile: redirect.ts.1e6242.patch
   - type: PATCH
     name: app/routes/_index.tsx
-    description: |
-      Update the index route to filter out combined listings from the search results, and include the price range for combined listings.
+    description: >
+      Update the index route to filter out combined listings from the search
+      results, and include the price range for combined listings.
     diffs:
       - file: app/routes/_index.tsx
         patchFile: _index.tsx.8041d5.patch
   - type: PATCH
+    name: app/routes/collections.$handle.tsx
+    description: >
+      Manually filter out combined listings from the collection products.
+    diffs:
+      - file: app/routes/collections.$handle.tsx
+        patchFile: collections.$handle.tsx.951367.patch
+  - type: PATCH
     name: app/routes/collections.all.tsx
-    description: |
-      Update the `collections.all` route to filter out combined listings from the search results, and include the price range for combined listings.
+    description: >
+      Update the `collections.all` route to filter out combined listings from
+      the search results, and include the price range for combined listings.
     diffs:
       - file: app/routes/collections.all.tsx
         patchFile: collections.all.tsx.75880b.patch
   - type: PATCH
     name: app/routes/products.$handle.tsx
-    description: |
-      - Redirect to the first variant of a combined listing when the handle is requested
+    description: >
+      - Redirect to the first variant of a combined listing when the handle is
+      requested
+
       - Display a range of prices for combined listings
+
       - Show the featured image of the combined listing parent product
     diffs:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.3e0b7e.patch
+  - type: PATCH
+    name: app/styles/app.css
+    description: >
+      Add a class to the product item to show a range of prices for combined
+      listings.
+    diffs:
+      - file: app/styles/app.css
+        patchFile: app.css.e88d35.patch
 commit: d1bc804efee2b9cab501938628a545cbf635c5bd

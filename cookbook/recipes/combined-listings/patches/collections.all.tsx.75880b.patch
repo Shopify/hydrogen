@@ -1,4 +1,4 @@
-index 3a31b2f7..281e6c9a 100644
+index 3a31b2f7..c756c9e1 100644
 --- a/templates/skeleton/app/routes/collections.all.tsx
 +++ b/templates/skeleton/app/routes/collections.all.tsx
 @@ -3,7 +3,10 @@ import {useLoaderData, type MetaFunction} from '@remix-run/react';
@@ -8,7 +8,7 @@ index 3a31b2f7..281e6c9a 100644
 -
 +import {
 +  combinedListingsSettings,
-+  filterOutCombinedListingsQuery,
++  maybeFilterOutCombinedListingsQuery,
 +} from '../lib/combined-listings';
  export const meta: MetaFunction<typeof loader> = () => {
    return [{title: `Hydrogen | Products`}];
@@ -21,7 +21,7 @@ index 3a31b2f7..281e6c9a 100644
 +      variables: {
 +        ...paginationVariables,
 +        query: combinedListingsSettings.hideCombinedListingsFromProductList
-+          ? filterOutCombinedListingsQuery
++          ? maybeFilterOutCombinedListingsQuery
 +          : '',
 +      },
      }),

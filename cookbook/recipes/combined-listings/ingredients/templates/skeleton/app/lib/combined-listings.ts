@@ -8,7 +8,7 @@ export const combinedListingsSettings = {
   hideCombinedListingsFromProductList: true,
 };
 
-export const filterOutCombinedListingsQuery =
+export const maybeFilterOutCombinedListingsQuery =
   combinedListingsSettings.hideCombinedListingsFromProductList
     ? `NOT tag:${combinedListingsSettings.combinedListingTag}`
     : '';

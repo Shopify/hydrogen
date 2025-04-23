@@ -1,0 +1,23 @@
+index b9294c59..0b5edfe4 100644
+--- a/templates/skeleton/app/styles/app.css
++++ b/templates/skeleton/app/styles/app.css
+@@ -210,7 +210,6 @@ button.reset:hover:not(:has(> *)) {
+   min-width: fit-content;
+ }
+ 
+-
+ /*
+ * --------------------------------------------------
+ * components/Footer
+@@ -419,6 +418,11 @@ button.reset:hover:not(:has(> *)) {
+   width: 100%;
+ }
+ 
++.product-item .combined-listing-price {
++  display: flex;
++  grid-gap: 0.5rem;
++}
++
+ /*
+ * --------------------------------------------------
+ * routes/products.$handle.tsx
