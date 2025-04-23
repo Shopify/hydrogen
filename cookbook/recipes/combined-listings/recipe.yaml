@@ -1,11 +1,25 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
-title: combined-listings
+title: Combined Listings
 summary: Handle Shopify combined listings in product pages and search results.
-description: |
+description: >
+  
+  This recipe handles Shopify combined listings in product pages and search
+  results.
 
-  This recipe handles Shopify combined listings in product pages and
-  search results.
+  Behavior for combined listings is customized by the `combinedListingsSettings`
+  object in `app/lib/combined-listings.ts`.
+
+
+  **Available options:**
+
+  - `redirectToFirstVariant`: Redirect to the first variant of a combined
+    listing when the handle is requested.
+
+  - `combinedListingTag`: The tag that indicates a combined listing.
+
+  - `hideCombinedListingsFromProductList`: Hide combined listings from the
+    product list.
 notes:
   - Combined listings are available only to stores on a [Shopify
     Plus](https://www.shopify.com/plus) plan.
@@ -68,7 +82,7 @@ steps:
         patchFile: _index.tsx.8041d5.patch
   - type: PATCH
     name: app/routes/collections.$handle.tsx
-    description: >
+    description: |
       Manually filter out combined listings from the collection products.
     diffs:
       - file: app/routes/collections.$handle.tsx
