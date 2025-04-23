@@ -52,7 +52,7 @@ Copy all the files found in the `ingredients/` directory to the current director
 #### File: [`app/components/CartLineItem.tsx`](/templates/skeleton/app/components/CartLineItem.tsx)
 
 ```diff
-index 26102b61..4ec8324b 100644
+index bd33a2cf..a18e4b52 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
 @@ -3,8 +3,8 @@ import type {CartLayout} from '~/components/CartMain';

@@ -1,6 +1,10 @@
 import path from 'path';
-import {COOKBOOK_PATH} from './constants';
-import {createDirectoryIfNotExists, getPatchesDir} from './util';
+import {COOKBOOK_PATH, TEMPLATE_PATH} from './constants';
+import {
+  createDirectoryIfNotExists,
+  getPatchesDir,
+  recreateDirectory,
+} from './util';
 import {
   maybeMDBlock,
   MDBlock,
@@ -13,6 +17,7 @@ import {
 } from './markdown';
 import {renderStep} from './render';
 import {loadRecipe, Recipe} from './recipe';
+import fs from 'fs';
 
 function renderRecipeRuleBlocks(
   recipeName: string,
@@ -132,4 +137,18 @@ export function generateLLMsFiles(recipeName: string) {
   const blocks = renderRecipeRuleBlocks(recipeName, recipe, '*');
 
   serializeMDBlocksToFile(blocks, rulePath, 'github');
+}
+
+export function copyCursorRulesToSkeleton() {
+  console.log('📑 Moving Cursor rules to skeleton template…');
+
+  const skeletonRulesDir = path.join(TEMPLATE_PATH, '.cursor', 'rules');
+  recreateDirectory(skeletonRulesDir);
+
+  const rulesDir = path.join(COOKBOOK_PATH, '.cursor', 'rules');
+  const rules = fs.readdirSync(rulesDir);
+  rules.forEach((rule) => {
+    const rulePath = path.join(rulesDir, rule);
+    fs.copyFileSync(rulePath, path.join(skeletonRulesDir, rule));
+  });
 }
