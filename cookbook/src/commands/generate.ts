@@ -2,6 +2,7 @@ import {CommandModule} from 'yargs';
 import {FILES_TO_IGNORE_FOR_GENERATE} from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
 import {RecipeManifestFormat} from '../lib/util';
+import {copyCursorRulesToSkeleton} from '../lib/llms';
 
 type GenerateArgs = {
   recipe: string;
@@ -46,6 +47,8 @@ async function handler(args: GenerateArgs) {
     referenceBranch: args.referenceBranch,
     recipeManifestFormat: args.recipeManifestFormat,
   });
+
+  copyCursorRulesToSkeleton();
 
   console.log();
   console.log(recipePath);
