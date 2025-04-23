@@ -1,8 +1,57 @@
-# Combined Listings
+---
+description: Recipe for implementing "Combined Listings (combined-listings)" in a Hydrogen storefront. Handle Shopify combined listings in product pages and search results.
+globs: *
+alwaysApply: false
+---
+
+# Overview
+
+This rule describes how to implement "Combined Listings" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+
+The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
+
+If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
+
+Please remember that specific documentation about Storefront API, which might be relevant to the user, is available at <https://shopify.dev/docs/api/storefront>.
+
+If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
+
+Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
+
+# Summary
+
+Handle Shopify combined listings in product pages and search results.
+
+# User Intent Recognition
+
+<user_queries>
+- How can I show combined listings in product pages and search results using Hydrogen?
+- How can I display the featured image of the combined listing parent product instead of the variant image?
+- How can I redirect to the first variant of a combined listing when the handle is requested?
+- How can I filter out combined listings from the product list when using Shopify headless?
+- How can I show the price range for combined listings instead of the variant price?
+</user_queries>
+
+# Troubleshooting
+
+<troubleshooting>
+- **Issue**: Combined listings are being displayed in the product list.
+  **Solution**: Make sure to tag combined listing parent products in the Shopify Admin and use that tag to filter out combined listings from the product list in the GraphQL query.
+</troubleshooting>
+
+# Recipe Implementation
+
+Here's the combined-listings recipe for the base Hydrogen skeleton template:
+
+<recipe_implementation>
+
+## Description
 
 
 This recipe handles Shopify [combined listings](https://help.shopify.com/en/manual/products/combined-listings-app) in product pages and search results.
 
+
+## Notes
 
 > [!NOTE]
 > Combined listings are available only to stores on a [Shopify Plus](https://www.shopify.com/plus) or enterprise plan.
@@ -18,9 +67,7 @@ This recipe handles Shopify [combined listings](https://help.shopify.com/en/manu
 
 _New files added to the template by this recipe._
 
-| File | Description |
-| --- | --- |
-| [`app/lib/combined-listings.ts`](ingredients/templates/skeleton/app/lib/combined-listings.ts) | Utilities and settings for handling combined listings. |
+- `templates/skeleton/app/lib/combined-listings.ts` : Utilities and settings for handling combined listings.
 
 ## Steps
 
@@ -663,3 +710,5 @@ index b9294c59..c8fa5109 100644
  * routes/products.$handle.tsx
 
 ```
+
+</recipe_implementation>
