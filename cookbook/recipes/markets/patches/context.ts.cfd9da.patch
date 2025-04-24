@@ -1,11 +1,11 @@
-index c424c511..cfe331ca 100644
+index c424c511..ac5bd850 100644
 --- a/templates/skeleton/app/lib/context.ts
 +++ b/templates/skeleton/app/lib/context.ts
 @@ -1,6 +1,7 @@
  import {createHydrogenContext} from '@shopify/hydrogen';
  import {AppSession} from '~/lib/session';
  import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
-+import {getLocaleFromRequest} from './utils';
++import {getLocaleFromRequest} from '~/lib/locale';
  
  /**
   * The context implementation is separate from server.ts
@@ -13,7 +13,7 @@ index c424c511..cfe331ca 100644
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
  
-+  const i18n = getLocaleFromRequest(request);
++  const i18n = getLocaleFromRequest({request, session});
 +
    const hydrogenContext = createHydrogenContext({
      env,

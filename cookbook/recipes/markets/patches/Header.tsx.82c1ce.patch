@@ -1,11 +1,11 @@
-index 8a437a10..ad1e51f8 100644
+index 8a437a10..4ea5d07c 100644
 --- a/templates/skeleton/app/components/Header.tsx
 +++ b/templates/skeleton/app/components/Header.tsx
 @@ -7,6 +7,7 @@ import {
  } from '@shopify/hydrogen';
  import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
  import {useAside} from '~/components/Aside';
-+import {CountrySelector} from './CountrySelector';
++import {LocaleSelector} from '~/components/LocaleSelector';
  
  interface HeaderProps {
    header: HeaderQuery;
@@ -13,7 +13,7 @@ index 8a437a10..ad1e51f8 100644
    return (
      <nav className="header-ctas" role="navigation">
        <HeaderMenuMobileToggle />
-+      <CountrySelector />
++      <LocaleSelector />
        <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
          <Suspense fallback="Sign in">
            <Await resolve={isLoggedIn} errorElement="Sign in">

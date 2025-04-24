@@ -1,0 +1,24 @@
+index b9294c59..accb0b26 100644
+--- a/templates/skeleton/app/styles/app.css
++++ b/templates/skeleton/app/styles/app.css
+@@ -210,7 +210,6 @@ button.reset:hover:not(:has(> *)) {
+   min-width: fit-content;
+ }
+ 
+-
+ /*
+ * --------------------------------------------------
+ * components/Footer
+@@ -520,3 +519,12 @@ button.reset:hover:not(:has(> *)) {
+ .account-logout {
+   display: inline-block;
+ }
++
++/*
++* --------------------------------------------------
++* Markets
++* --------------------------------------------------
++*/
++.locale-selector {
++  min-width: 160px;
++}

@@ -1,4 +1,4 @@
-index 3426476a..2cdc3ea9 100644
+index 3426476a..b99bf07a 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -16,6 +16,7 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
@@ -9,7 +9,7 @@ index 3426476a..2cdc3ea9 100644
  
  export type RootLoader = typeof loader;
  
-@@ -66,6 +67,14 @@ export function links() {
+@@ -66,6 +67,15 @@ export function links() {
  }
  
  export async function loader(args: LoaderFunctionArgs) {
@@ -18,21 +18,38 @@ index 3426476a..2cdc3ea9 100644
 +    args.params.locale.length !== 2 &&
 +    countries[args.params.locale] == null
 +  ) {
++    // TODO: should we redirect to the default locale instead of 404?
 +    throw new Response(null, {status: 404});
 +  }
 +
    // Start fetching non-critical data without blocking time to first byte
    const deferredData = loadDeferredData(args);
  
-@@ -77,6 +86,7 @@ export async function loader(args: LoaderFunctionArgs) {
+@@ -73,10 +83,12 @@ export async function loader(args: LoaderFunctionArgs) {
+   const criticalData = await loadCriticalData(args);
+ 
+   const {storefront, env} = args.context;
++  const {i18n} = storefront;
+ 
    return {
      ...deferredData,
      ...criticalData,
-+    selectedLocale: args.context.storefront.i18n,
++    selectedLocale: i18n,
      publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
      shop: getShopAnalytics({
        storefront,
-@@ -162,7 +172,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -87,8 +99,8 @@ export async function loader(args: LoaderFunctionArgs) {
+       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+       withPrivacyBanner: false,
+       // localize the privacy banner
+-      country: args.context.storefront.i18n.country,
+-      language: args.context.storefront.i18n.language,
++      country: i18n.country,
++      language: i18n.language,
+     },
+   };
+ }
+@@ -162,7 +174,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
              shop={data.shop}
              consent={data.consent}
            >
