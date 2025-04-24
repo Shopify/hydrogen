@@ -20,6 +20,7 @@ ingredients:
 deletedFiles: []
 steps:
   - type: INFO
+    index: 1
     name: Configure combined listings behavior
     description: >
       Combined listings work out of the box, but you can customize specific
@@ -46,12 +47,14 @@ steps:
 
       ```
   - type: COPY_INGREDIENTS
+    index: 2
     name: Add ingredients to your project
     description: Copy all the files found in the `ingredients/` directory to the
       current directory.
     ingredients:
       - templates/skeleton/app/lib/combined-listings.ts
   - type: PATCH
+    index: 3
     name: Update the `ProductForm` component
     description: >
       Update the `ProductForm` component to hide the `Add to cart` button for
@@ -61,6 +64,7 @@ steps:
       - file: app/components/ProductForm.tsx
         patchFile: ProductForm.tsx.8e409a.patch
   - type: PATCH
+    index: 4
     name: Extend the `ProductImage` component
     description: >
       Update the `ProductImage` component to support images from both product
@@ -69,6 +73,7 @@ steps:
       - file: app/components/ProductImage.tsx
         patchFile: ProductImage.tsx.4e6c4c.patch
   - type: PATCH
+    index: 5
     name: Show a range of prices for combined listings in `ProductItem`
     description: |
       If the product is a combined listing, show a range of prices for the
@@ -77,6 +82,7 @@ steps:
       - file: app/components/ProductItem.tsx
         patchFile: ProductItem.tsx.8ddc67.patch
   - type: PATCH
+    index: 6
     name: (optional) Add combined listings redirect utility
     description: >
       If you wish to redirect automatically to the first variant of a combined
@@ -88,6 +94,7 @@ steps:
       - file: app/lib/redirect.ts
         patchFile: redirect.ts.1e6242.patch
   - type: PATCH
+    index: 7
     name: Update queries for combined listings
     description: >
       - Add the `tags` property to the ones returned by the product query.
@@ -98,6 +105,7 @@ steps:
       - file: app/routes/_index.tsx
         patchFile: _index.tsx.8041d5.patch
   - type: PATCH
+    index: 8
     name: (optional) Filter out combined listings from individual collections pages
     description: >
       Since it's not possible to directly apply query filters when retrieving
@@ -107,6 +115,7 @@ steps:
       - file: app/routes/collections.$handle.tsx
         patchFile: collections.$handle.tsx.951367.patch
   - type: PATCH
+    index: 9
     name: (optional) Filter out combined listings from collections index page
     description: >
       Update the `collections.all` route to filter out combined listings from
@@ -115,6 +124,7 @@ steps:
       - file: app/routes/collections.all.tsx
         patchFile: collections.all.tsx.75880b.patch
   - type: PATCH
+    index: 10
     name: Update the product page
     description: >
       - Display a range of prices for combined listings instead of the variant
@@ -129,6 +139,7 @@ steps:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.3e0b7e.patch
   - type: PATCH
+    index: 11
     name: Update stylesheet
     description: >
       Add a class to the product item to show a range of prices for combined
@@ -153,4 +164,4 @@ llms:
       solution: Make sure to tag combined listing parent products in the Shopify Admin
         and use that tag to filter out combined listings from the product list
         in the GraphQL query.
-commit: eeffb748ee428b42bf1ebae35403aa00ad7807b5
+commit: 2529b8c128ea0b203efdd08d642d4ad07e93be49

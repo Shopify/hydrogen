@@ -149,7 +149,6 @@ index e8616a61..838a903a 100644
      </div>
    );
  }
-
 ```
 
 </details>
@@ -181,7 +180,6 @@ index 5f3ac1cc..f1c9f2cd 100644
  }) {
    if (!image) {
      return <div className="product-image" />;
-
 ```
 
 ### Step 5: Show a range of prices for combined listings in `ProductItem`
@@ -225,7 +223,6 @@ index 62c64b50..034b5660 100644
      </Link>
    );
  }
-
 ```
 
 ### Step 6: (optional) Add combined listings redirect utility
@@ -270,7 +267,6 @@ index ce1feb5a..29fe2ecc 100644
 +    throw redirect(url.toString());
 +  }
 +}
-
 ```
 
 ### Step 7: Update queries for combined listings
@@ -356,7 +352,6 @@ index 34747528..6e485083 100644
        nodes {
          ...RecommendedProduct
        }
-
 ```
 
 </details>
@@ -430,7 +425,6 @@ index f1d7fa3e..17edfb7d 100644
        ) {
          nodes {
            ...ProductItem
-
 ```
 
 </details>
@@ -491,7 +485,6 @@ index 3a31b2f7..c756c9e1 100644
        nodes {
          ...CollectionItem
        }
-
 ```
 
 ### Step 10: Update the product page
@@ -633,7 +626,6 @@ index 2dc6bda2..8baafac9 100644
      options {
        name
        optionValues {
-
 ```
 
 </details>
@@ -661,5 +653,4 @@ index b9294c59..c8fa5109 100644
  /*
  * --------------------------------------------------
  * routes/products.$handle.tsx
-
 ```

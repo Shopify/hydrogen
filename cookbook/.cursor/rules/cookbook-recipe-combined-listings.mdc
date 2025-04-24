@@ -7,16 +7,14 @@ alwaysApply: false
 # Overview
 
 This rule describes how to implement "Combined Listings" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
-
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
-
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
-
-Please remember that specific documentation about Storefront API, which might be relevant to the user, is available at <https://shopify.dev/docs/api/storefront>.
-
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
-
 Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
+
+# AI model verification steps
+
+- Never edit generated files (ending with .d.ts) directly; instead, run the `npm run codegen` command to update them.
 
 # Summary
 
@@ -134,14 +132,9 @@ export const combinedListingsSettings = {
 Update the `ProductForm` component to hide the `Add to cart` button for combined listings parent products, as well as the selected state for variants.
 
 
-#### File: [`app/components/ProductForm.tsx`](/templates/skeleton/app/components/ProductForm.tsx)
-
-<details>
+#### File: /app/components/ProductForm.tsx
 
 ```diff
-index e8616a61..838a903a 100644
---- a/templates/skeleton/app/components/ProductForm.tsx
-+++ b/templates/skeleton/app/components/ProductForm.tsx
 @@ -11,9 +11,11 @@ import type {ProductFragment} from 'storefrontapi.generated';
  export function ProductForm({
    productOptions,
@@ -229,22 +222,16 @@ index e8616a61..838a903a 100644
      </div>
    );
  }
-
 ```
-
-</details>
 
 ### Step 3: Extend the `ProductImage` component
 
 Update the `ProductImage` component to support images from both product variants and the product itself.
 
 
-#### File: [`app/components/ProductImage.tsx`](/templates/skeleton/app/components/ProductImage.tsx)
+#### File: /app/components/ProductImage.tsx
 
 ```diff
-index 5f3ac1cc..f1c9f2cd 100644
---- a/templates/skeleton/app/components/ProductImage.tsx
-+++ b/templates/skeleton/app/components/ProductImage.tsx
 @@ -1,10 +1,13 @@
 -import type {ProductVariantFragment} from 'storefrontapi.generated';
 +import type {
@@ -261,7 +248,6 @@ index 5f3ac1cc..f1c9f2cd 100644
  }) {
    if (!image) {
      return <div className="product-image" />;
-
 ```
 
 ### Step 4: Show a range of prices for combined listings in `ProductItem`
@@ -270,12 +256,9 @@ If the product is a combined listing, show a range of prices for the
 combined listing parent product instead of the variant price.
 
 
-#### File: [`app/components/ProductItem.tsx`](/templates/skeleton/app/components/ProductItem.tsx)
+#### File: /app/components/ProductItem.tsx
 
 ```diff
-index 62c64b50..034b5660 100644
---- a/templates/skeleton/app/components/ProductItem.tsx
-+++ b/templates/skeleton/app/components/ProductItem.tsx
 @@ -6,6 +6,7 @@ import type {
    RecommendedProductFragment,
  } from 'storefrontapi.generated';
@@ -305,7 +288,6 @@ index 62c64b50..034b5660 100644
      </Link>
    );
  }
-
 ```
 
 ### Step 5: (optional) Add combined listings redirect utility
@@ -313,12 +295,9 @@ index 62c64b50..034b5660 100644
 If you wish to redirect automatically to the first variant of a combined listing when the parent handle is selected, add a utility to redirect to the first variant of a combined listing when the handle of the parent is requested, add a utility to redirect to the first variant of a combined listing.
 
 
-#### File: [`app/lib/redirect.ts`](/templates/skeleton/app/lib/redirect.ts)
+#### File: /app/lib/redirect.ts
 
 ```diff
-index ce1feb5a..29fe2ecc 100644
---- a/templates/skeleton/app/lib/redirect.ts
-+++ b/templates/skeleton/app/lib/redirect.ts
 @@ -1,4 +1,6 @@
  import {redirect} from '@shopify/remix-oxygen';
 +import {ProductFragment} from 'storefrontapi.generated';
@@ -350,7 +329,6 @@ index ce1feb5a..29fe2ecc 100644
 +    throw redirect(url.toString());
 +  }
 +}
-
 ```
 
 ### Step 6: Update queries for combined listings
@@ -359,14 +337,9 @@ index ce1feb5a..29fe2ecc 100644
 - (optional) Add the filtering query to the product query to exclude combined listings.
 
 
-#### File: [`app/routes/_index.tsx`](/templates/skeleton/app/routes/_index.tsx)
-
-<details>
+#### File: /app/routes/_index.tsx
 
 ```diff
-index 34747528..6e485083 100644
---- a/templates/skeleton/app/routes/_index.tsx
-+++ b/templates/skeleton/app/routes/_index.tsx
 @@ -1,13 +1,13 @@
  import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
  import {Await, useLoaderData, Link, type MetaFunction} from '@remix-run/react';
@@ -436,24 +409,16 @@ index 34747528..6e485083 100644
        nodes {
          ...RecommendedProduct
        }
-
 ```
-
-</details>
 
 ### Step 7: (optional) Filter out combined listings from individual collections pages
 
 Since it's not possible to directly apply query filters when retrieving collection products, you can manually filter out combined listings after they are retrieved, based on their tags.
 
 
-#### File: [`app/routes/collections.$handle.tsx`](/templates/skeleton/app/routes/collections.$handle.tsx)
-
-<details>
+#### File: /app/routes/collections.$handle.tsx
 
 ```diff
-index f1d7fa3e..17edfb7d 100644
---- a/templates/skeleton/app/routes/collections.$handle.tsx
-+++ b/templates/skeleton/app/routes/collections.$handle.tsx
 @@ -4,7 +4,10 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
  import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
@@ -510,22 +475,16 @@ index f1d7fa3e..17edfb7d 100644
        ) {
          nodes {
            ...ProductItem
-
 ```
-
-</details>
 
 ### Step 8: (optional) Filter out combined listings from collections index page
 
 Update the `collections.all` route to filter out combined listings from the search results, and include the price range for combined listings.
 
 
-#### File: [`app/routes/collections.all.tsx`](/templates/skeleton/app/routes/collections.all.tsx)
+#### File: /app/routes/collections.all.tsx
 
 ```diff
-index 3a31b2f7..c756c9e1 100644
---- a/templates/skeleton/app/routes/collections.all.tsx
-+++ b/templates/skeleton/app/routes/collections.all.tsx
 @@ -3,7 +3,10 @@ import {useLoaderData, type MetaFunction} from '@remix-run/react';
  import {getPaginationVariables} from '@shopify/hydrogen';
  import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
@@ -571,7 +530,6 @@ index 3a31b2f7..c756c9e1 100644
        nodes {
          ...CollectionItem
        }
-
 ```
 
 ### Step 9: Update the product page
@@ -581,14 +539,9 @@ index 3a31b2f7..c756c9e1 100644
 - (optional) Redirect to the first variant of a combined listing when the handle is requested
 
 
-#### File: [`app/routes/products.$handle.tsx`](/templates/skeleton/app/routes/products.$handle.tsx)
-
-<details>
+#### File: /app/routes/products.$handle.tsx
 
 ```diff
-index 2dc6bda2..8baafac9 100644
---- a/templates/skeleton/app/routes/products.$handle.tsx
-+++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,4 +1,4 @@
 -import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 +import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
@@ -713,22 +666,16 @@ index 2dc6bda2..8baafac9 100644
      options {
        name
        optionValues {
-
 ```
-
-</details>
 
 ### Step 10: Update stylesheet
 
 Add a class to the product item to show a range of prices for combined listings.
 
 
-#### File: [`app/styles/app.css`](/templates/skeleton/app/styles/app.css)
+#### File: /app/styles/app.css
 
 ```diff
-index b9294c59..c8fa5109 100644
---- a/templates/skeleton/app/styles/app.css
-+++ b/templates/skeleton/app/styles/app.css
 @@ -419,6 +419,11 @@ button.reset:hover:not(:has(> *)) {
    width: 100%;
  }
@@ -741,7 +688,6 @@ index b9294c59..c8fa5109 100644
  /*
  * --------------------------------------------------
  * routes/products.$handle.tsx
-
 ```
 
 </recipe_implementation>
