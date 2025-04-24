@@ -160,7 +160,7 @@ export function SellingPlanSelector({
 
 ### templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts
 
-
+Mutations for managing customer subscriptions.
 
 ```ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
@@ -183,7 +183,7 @@ export const SUBSCRIPTION_CANCEL_MUTATION = `#graphql
 
 ### templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts
 
-
+Queries for managing customer subscriptions.
 
 ```ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
