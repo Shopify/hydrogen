@@ -7,16 +7,14 @@ alwaysApply: false
 # Overview
 
 This rule describes how to implement "Subscriptions" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
-
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
-
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
-
-Please remember that specific documentation about Storefront API, which might be relevant to the user, is available at <https://shopify.dev/docs/api/storefront>.
-
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
-
 Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
+
+# AI model verification steps
+
+- Never edit generated files (ending with .d.ts) directly; instead, run the `npm run codegen` command to update them.
 
 # Summary
 
@@ -452,12 +450,9 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
 2. Extract `sellingPlanAllocation` from cart line data, display the plan name, and standardize component import paths.
 
 
-#### File: [`app/components/CartLineItem.tsx`](/templates/skeleton/app/components/CartLineItem.tsx)
+#### File: /app/components/CartLineItem.tsx
 
 ```diff
-index bd33a2cf..a18e4b52 100644
---- a/templates/skeleton/app/components/CartLineItem.tsx
-+++ b/templates/skeleton/app/components/CartLineItem.tsx
 @@ -3,8 +3,8 @@ import type {CartLayout} from '~/components/CartMain';
  import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
  import {useVariantUrl} from '~/lib/variants';
@@ -467,7 +462,7 @@ index bd33a2cf..a18e4b52 100644
 +import {ProductPrice} from '~/components/ProductPrice';
 +import {useAside} from '~/components/Aside';
  import type {CartApiQueryFragment} from 'storefrontapi.generated';
- 
+
  type CartLine = OptimisticCartLine<CartApiQueryFragment>;
 @@ -20,7 +20,9 @@ export function CartLineItem({
    layout: CartLayout;
@@ -493,7 +488,6 @@ index bd33a2cf..a18e4b52 100644
            {selectedOptions.map((option) => (
              <li key={option.name}>
                <small>
-
 ```
 
 ### Step 3: Update `ProductForm` to support subscriptions
@@ -503,14 +497,9 @@ index bd33a2cf..a18e4b52 100644
 3. Update `AddToCartButton` to include selling plan data when subscriptions are selected.
 
 
-#### File: [`app/components/ProductForm.tsx`](/templates/skeleton/app/components/ProductForm.tsx)
-
-<details>
+#### File: /app/components/ProductForm.tsx
 
 ```diff
-index e8616a61..e41b91ad 100644
---- a/templates/skeleton/app/components/ProductForm.tsx
-+++ b/templates/skeleton/app/components/ProductForm.tsx
 @@ -6,120 +6,169 @@ import type {
  } from '@shopify/hydrogen/storefront-api-types';
  import {AddToCartButton} from './AddToCartButton';
@@ -524,7 +513,7 @@ index e8616a61..e41b91ad 100644
 +  SellingPlanSelector,
 +  type SellingPlanGroup,
 +} from '~/components/SellingPlanSelector';
- 
+
  export function ProductForm({
    productOptions,
    selectedVariant,
@@ -582,7 +571,7 @@ index e8616a61..e41b91ad 100644
 +        productOptions.map((option) => {
 +          // If there is only a single value in the option values, don't display the option
 +          if (option.optionValues.length === 1) return null;
- 
+
 -        return (
 -          <div className="product-options" key={option.name}>
 -            <h5>{option.name}</h5>
@@ -613,7 +602,7 @@ index e8616a61..e41b91ad 100644
 +                    isDifferentProduct,
 +                    swatch,
 +                  } = value;
- 
+
 -                if (isDifferentProduct) {
 -                  // SEO
 -                  // When the variant is a combined listing child product
@@ -818,10 +807,7 @@ index e8616a61..e41b91ad 100644
 +    </div>
 +  );
 +}
-
 ```
-
-</details>
 
 ### Step 4: Update `ProductPrice` to display subscription pricing
 
@@ -829,14 +815,9 @@ index e8616a61..e41b91ad 100644
 2. Add logic to handle different price adjustment types and render the appropriate subscription price when a selling plan is selected.
 
 
-#### File: [`app/components/ProductPrice.tsx`](/templates/skeleton/app/components/ProductPrice.tsx)
-
-<details>
+#### File: /app/components/ProductPrice.tsx
 
 ```diff
-index 32460ae2..59eed1d8 100644
---- a/templates/skeleton/app/components/ProductPrice.tsx
-+++ b/templates/skeleton/app/components/ProductPrice.tsx
 @@ -1,13 +1,31 @@
 +import type {CurrencyCode} from '@shopify/hydrogen/customer-account-api-types';
 +import type {
@@ -845,7 +826,7 @@ index 32460ae2..59eed1d8 100644
 +} from 'storefrontapi.generated';
  import {Money} from '@shopify/hydrogen';
  import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
- 
+
  export function ProductPrice({
    price,
    compareAtPrice,
@@ -944,22 +925,16 @@ index 32460ae2..59eed1d8 100644
 +    </div>
 +  );
 +}
-
 ```
-
-</details>
 
 ### Step 5: Add selling plan data to cart queries
 
 Add a `sellingPlanAllocation` field with the plan name to the standard and componentizable cart line GraphQL fragments. This displays subscription details in the cart.
 
 
-#### File: [`app/lib/fragments.ts`](/templates/skeleton/app/lib/fragments.ts)
+#### File: /app/lib/fragments.ts
 
 ```diff
-index dc4426a9..cfe3a938 100644
---- a/templates/skeleton/app/lib/fragments.ts
-+++ b/templates/skeleton/app/lib/fragments.ts
 @@ -54,6 +54,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
          }
        }
@@ -984,7 +959,6 @@ index dc4426a9..cfe3a938 100644
    }
    fragment CartApiQuery on Cart {
      updatedAt
-
 ```
 
 ### Step 6: Add `SellingPlanSelector` to product pages
@@ -994,14 +968,9 @@ index dc4426a9..cfe3a938 100644
 3. Fetch subscription data through the updated cart GraphQL fragments.
 
 
-#### File: [`app/routes/products.$handle.tsx`](/templates/skeleton/app/routes/products.$handle.tsx)
-
-<details>
+#### File: /app/routes/products.$handle.tsx
 
 ```diff
-index 2dc6bda2..aad7e5f1 100644
---- a/templates/skeleton/app/routes/products.$handle.tsx
-+++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,3 +1,5 @@
 +import type {SellingPlanFragment} from 'storefrontapi.generated';
 +import type {LinksFunction} from '@remix-run/node';
@@ -1011,7 +980,7 @@ index 2dc6bda2..aad7e5f1 100644
 @@ -13,6 +15,12 @@ import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
- 
+
 +import sellingPanStyle from '~/styles/selling-plan.css?url';
 +
 +export const links: LinksFunction = () => [
@@ -1024,7 +993,7 @@ index 2dc6bda2..aad7e5f1 100644
 @@ -63,8 +71,34 @@ async function loadCriticalData({
    // The API handle might be localized, so redirect to the localized handle
    redirectIfHandleIsLocalized(request, {handle, data: product});
- 
+
 +  // Initialize the selectedSellingPlan to null
 +  let selectedSellingPlan = null;
 +
@@ -1055,23 +1024,23 @@ index 2dc6bda2..aad7e5f1 100644
 +    selectedSellingPlan,
    };
  }
- 
+
 @@ -81,7 +115,7 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
  }
- 
+
  export default function Product() {
 -  const {product} = useLoaderData<typeof loader>();
 +  const {product, selectedSellingPlan} = useLoaderData<typeof loader>();
- 
+
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
 @@ -99,7 +133,7 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
- 
+
 -  const {title, descriptionHtml} = product;
 +  const {title, descriptionHtml, sellingPlanGroups} = product;
- 
+
    return (
      <div className="product">
 @@ -109,11 +143,15 @@ export default function Product() {
@@ -1093,7 +1062,7 @@ index 2dc6bda2..aad7e5f1 100644
 @@ -180,6 +218,73 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
    }
  ` as const;
- 
+
 +const SELLING_PLAN_FRAGMENT = `#graphql
 +  fragment SellingPlanMoney on MoneyV2 {
 +    amount
@@ -1183,113 +1152,6 @@ index 2dc6bda2..aad7e5f1 100644
 +  ${SELLING_PLAN_GROUP_FRAGMENT}
    ${PRODUCT_VARIANT_FRAGMENT}
  ` as const;
- 
-
-```
-
-</details>
-
-### Step 7: Add subscription management GraphQL queries and mutations
-
-- Add a query to fetch subscription details for the customer.
-
-- Add a mutation to cancel a subscription.
-
-
-#### File: [`app/graphql/customer-account/CustomerDetailsQuery.ts`](/templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts)
-
-<details>
-
-```diff
-index 382d6972..18fa7509 100644
---- a/templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts
-+++ b/templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts
-@@ -38,3 +38,57 @@ export const CUSTOMER_DETAILS_QUERY = `#graphql
-   }
-   ${CUSTOMER_FRAGMENT}
- ` as const;
-+
-+// NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
-+const SUBSCRIPTION_CONTRACT_FRAGMENT = `#graphql
-+  fragment SubscriptionContract on SubscriptionContract {
-+    id
-+    status
-+    createdAt
-+    billingPolicy {
-+      ...SubscriptionBillingPolicy
-+    }
-+  }
-+  fragment SubscriptionBillingPolicy on SubscriptionBillingPolicy {
-+    interval
-+    intervalCount {
-+      count
-+      precision
-+    }
-+  }
-+` as const;
-+
-+// NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
-+export const SUBSCRIPTIONS_CONTRACTS_QUERY = `#graphql
-+  query SubscriptionsContractsQuery {
-+    customer {
-+      subscriptionContracts(first: 100) {
-+        nodes {
-+          ...SubscriptionContract
-+          lines(first: 100) {
-+            nodes {
-+              name
-+              id
-+            }
-+          }
-+        }
-+      }
-+    }
-+  }
-+  ${SUBSCRIPTION_CONTRACT_FRAGMENT}
-+` as const;
-+
-+// NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
-+export const SUBSCRIPTION_CANCEL_MUTATION = `#graphql
-+  mutation subscriptionContractCancel($subscriptionContractId: ID!) {
-+    subscriptionContractCancel(subscriptionContractId: $subscriptionContractId) {
-+      contract {
-+        id
-+      }
-+      userErrors {
-+        field
-+        message
-+      }
-+    }
-+  }
-+` as const;
-
-```
-
-</details>
-
-### Step 8: Add a `Subscriptions` link to the account menu
-
-Add a `Subscriptions` link to the account menu.
-
-
-#### File: [`app/routes/account.tsx`](/templates/skeleton/app/routes/account.tsx)
-
-```diff
-index 0941d4e0..976ae9df 100644
---- a/templates/skeleton/app/routes/account.tsx
-+++ b/templates/skeleton/app/routes/account.tsx
-@@ -74,6 +74,10 @@ function AccountMenu() {
-         &nbsp; Addresses &nbsp;
-       </NavLink>
-       &nbsp;|&nbsp;
-+      <NavLink to="/account/subscriptions" style={isActiveStyle}>
-+        &nbsp; Subscriptions &nbsp;
-+      </NavLink>
-+      &nbsp;|&nbsp;
-       <Logout />
-     </nav>
-   );
-
 ```
 
 </recipe_implementation>

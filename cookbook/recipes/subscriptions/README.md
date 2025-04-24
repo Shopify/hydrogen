@@ -95,7 +95,6 @@ index bd33a2cf..a18e4b52 100644
            {selectedOptions.map((option) => (
              <li key={option.name}>
                <small>
-
 ```
 
 ### Step 4: Update `ProductForm` to support subscriptions
@@ -420,7 +419,6 @@ index e8616a61..e41b91ad 100644
 +    </div>
 +  );
 +}
-
 ```
 
 </details>
@@ -546,7 +544,6 @@ index 32460ae2..59eed1d8 100644
 +    </div>
 +  );
 +}
-
 ```
 
 </details>
@@ -586,7 +583,6 @@ index dc4426a9..cfe3a938 100644
    }
    fragment CartApiQuery on Cart {
      updatedAt
-
 ```
 
 ### Step 7: Add `SellingPlanSelector` to product pages
@@ -785,8 +781,6 @@ index 2dc6bda2..aad7e5f1 100644
 +  ${SELLING_PLAN_GROUP_FRAGMENT}
    ${PRODUCT_VARIANT_FRAGMENT}
  ` as const;
- 
-
 ```
 
 </details>
