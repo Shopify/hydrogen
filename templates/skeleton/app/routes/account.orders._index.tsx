@@ -26,6 +26,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
     {
       variables: {
         ...paginationVariables,
+        language: context.storefront.i18n.language,
       },
     },
   );

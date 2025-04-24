@@ -1,4 +1,7 @@
-import {data as remixData, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {
+  data as remixData,
+  type LoaderFunctionArgs,
+} from '@shopify/remix-oxygen';
 import {Form, NavLink, Outlet, useLoaderData} from '@remix-run/react';
 import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
 
@@ -9,6 +12,11 @@ export function shouldRevalidate() {
 export async function loader({context}: LoaderFunctionArgs) {
   const {data, errors} = await context.customerAccount.query(
     CUSTOMER_DETAILS_QUERY,
+    {
+      variables: {
+        language: context.storefront.i18n.language,
+      },
+    },
   );
 
   if (errors?.length || !data?.customer) {

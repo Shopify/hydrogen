@@ -56,6 +56,7 @@ export async function action({request, context}: ActionFunctionArgs) {
       {
         variables: {
           customer,
+          language: context.storefront.i18n.language,
         },
       },
     );
