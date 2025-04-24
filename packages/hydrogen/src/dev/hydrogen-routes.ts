@@ -8,7 +8,7 @@ export async function hydrogenRoutes(
   // Only run this in development.
   if (
     process.env.NODE_ENV !== 'development' ||
-    process.env.HYDROGEN_DISABLE_VIRTUAL_ROUTES === 'true' // TODO before merge: this should be a separate PR
+    (process.env as any).HYDROGEN_DISABLE_VIRTUAL_ROUTES === 'true' // TODO before merge: this should be a separate PR
   ) {
     return currentRoutes;
   }
