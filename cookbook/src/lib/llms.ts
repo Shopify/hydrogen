@@ -128,7 +128,6 @@ Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
             getPatchesDir(recipeName),
             {
               diffsRelativeToTemplate: true,
-              dontCollapseDiffs: true,
               trimDiffHeaders: true,
             },
           ),

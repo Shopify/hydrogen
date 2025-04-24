@@ -150,7 +150,9 @@ function makeSteps(
   return [
     markdownStepsHeader,
     ...steps.flatMap((step, index) =>
-      renderStep(step, index, ingredients, patchesDir),
+      renderStep(step, index, ingredients, patchesDir, {
+        collapseDiffs: true,
+      }),
     ),
   ];
 }
@@ -161,8 +163,8 @@ export function renderStep(
   ingredients: Ingredient[],
   patchesDir: string,
   options: {
+    collapseDiffs?: boolean;
     diffsRelativeToTemplate?: boolean;
-    dontCollapseDiffs?: boolean;
     trimDiffHeaders?: boolean;
   } = {},
 ): MDBlock[] {
@@ -180,7 +182,7 @@ export function renderStep(
         : rawPatch;
 
       const collapsed =
-        !options.dontCollapseDiffs &&
+        options.collapseDiffs === true &&
         patch.split('\n').length > COLLAPSE_DIFF_LINES;
 
       return [
