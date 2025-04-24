@@ -28,6 +28,7 @@ ingredients:
 deletedFiles: []
 steps:
   - type: INFO
+    index: 1
     name: Set up the Shopify Subscriptions app
     description: >
       1. Install the [Shopify Subscriptions
@@ -44,6 +45,7 @@ steps:
       The Hydrogen demo storefront comes pre-configured with an example
       subscription product with the handle `shopify-wax`.
   - type: COPY_INGREDIENTS
+    index: 2
     name: Add ingredients to your project
     description: Copy all the files found in the `ingredients/` directory to the
       current directory.
@@ -51,6 +53,7 @@ steps:
       - templates/skeleton/app/components/SellingPlanSelector.tsx
       - templates/skeleton/app/styles/selling-plan.css
   - type: PATCH
+    index: 3
     name: Render the selling plan in the cart
     description: >
       1. Update `CartLineItem` to show subscription details when they're
@@ -62,6 +65,7 @@ steps:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.8e657b.patch
   - type: PATCH
+    index: 4
     name: Update `ProductForm` to support subscriptions
     description: >
       1. Add conditional rendering to display either subscription options or
@@ -76,6 +80,7 @@ steps:
       - file: app/components/ProductForm.tsx
         patchFile: ProductForm.tsx.8e409a.patch
   - type: PATCH
+    index: 5
     name: Update `ProductPrice` to display subscription pricing
     description: >
       1. Add a `SellingPlanPrice` function to calculate adjusted prices based on
@@ -87,6 +92,7 @@ steps:
       - file: app/components/ProductPrice.tsx
         patchFile: ProductPrice.tsx.a5e47f.patch
   - type: PATCH
+    index: 6
     name: Add selling plan data to cart queries
     description: >
       Add a `sellingPlanAllocation` field with the plan name to the standard and
@@ -96,6 +102,7 @@ steps:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.e8eb04.patch
   - type: PATCH
+    index: 7
     name: Add `SellingPlanSelector` to product pages
     description: >
       1. Add the `SellingPlanSelector` component to display subscription options
@@ -123,4 +130,4 @@ llms:
     - issue: I'm not seeing the subscription details on my cart line items.
       solution: Make sure you have the Shopify Subscriptions app installed and
         configured correctly.
-commit: eeffb748ee428b42bf1ebae35403aa00ad7807b5
+commit: e72580831c4dd0aec3e977351366d199b4857980
