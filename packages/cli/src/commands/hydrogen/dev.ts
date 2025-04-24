@@ -220,6 +220,10 @@ export async function runDev({
     getCodeFormatOptions(root),
   );
 
+  process.env.HYDROGEN_DISABLE_VIRTUAL_ROUTES = disableVirtualRoutes
+    ? 'true'
+    : undefined;
+
   const viteServer = await vite.createServer({
     root,
     clearScreen: false,
