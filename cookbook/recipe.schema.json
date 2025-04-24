@@ -76,6 +76,10 @@
             ],
             "description": "The type of step"
           },
+          "index": {
+            "type": "number",
+            "description": "The index of the step"
+          },
           "name": {
             "type": "string",
             "description": "The name of the step"
@@ -126,6 +130,7 @@
         },
         "required": [
           "type",
+          "index",
           "name"
         ],
         "additionalProperties": false

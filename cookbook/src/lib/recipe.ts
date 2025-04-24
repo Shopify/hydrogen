@@ -25,6 +25,7 @@ const StepSchema = z.object({
   type: z
     .enum(['PATCH', 'INFO', 'COPY_INGREDIENTS'])
     .describe('The type of step'),
+  index: z.number().describe('The index of the step'),
   name: z.string().describe('The name of the step'),
   description: z
     .string()
