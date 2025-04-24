@@ -23,6 +23,10 @@ ingredients:
   - path: templates/skeleton/app/components/SellingPlanSelector.tsx
     description: The `SellingPlanSelector` component is used to display the
       available subscription options on product pages.
+  - path: templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts
+    description: Mutations for managing customer subscriptions.
+  - path: templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts
+    description: Queries for managing customer subscriptions.
   - path: templates/skeleton/app/routes/account.subscriptions.tsx
     description: Subscriptions management page.
   - path: templates/skeleton/app/styles/account-subscriptions.css
@@ -56,6 +60,8 @@ steps:
       current directory.
     ingredients:
       - templates/skeleton/app/components/SellingPlanSelector.tsx
+      - templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts
+      - templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts
       - templates/skeleton/app/routes/account.subscriptions.tsx
       - templates/skeleton/app/styles/account-subscriptions.css
       - templates/skeleton/app/styles/selling-plan.css
@@ -124,16 +130,6 @@ steps:
         patchFile: products.$handle.tsx.3e0b7e.patch
   - type: PATCH
     index: 8
-    name: Add subscription management GraphQL queries and mutations
-    description: |
-      - Add a query to fetch subscription details for the customer.
-
-      - Add a mutation to cancel a subscription.
-    diffs:
-      - file: app/graphql/customer-account/CustomerDetailsQuery.ts
-        patchFile: CustomerDetailsQuery.ts.525c87.patch
-  - type: PATCH
-    index: 9
     name: Add a `Subscriptions` link to the account menu
     description: |
       Add a `Subscriptions` link to the account menu.
