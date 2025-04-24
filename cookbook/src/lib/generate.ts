@@ -143,7 +143,9 @@ async function generateSteps(params: {
     return !file.endsWith('.d.ts');
   });
 
+  let i = 0;
   for await (const file of modifiedFiles) {
+    i++;
     const {fullPath, patchFilename} = createPatchFile({
       file,
       patchesDirPath: params.patchesDirPath,
@@ -161,6 +163,7 @@ async function generateSteps(params: {
 
     const step: Step = {
       type: 'PATCH',
+      index: existingStep?.index ?? i,
       name: existingStep?.name ?? file.replace(TEMPLATE_DIRECTORY, ''),
       description: existingDescription ?? null,
       diffs: [
@@ -179,7 +182,16 @@ async function generateSteps(params: {
       ? [copyIngredientsStep(params.ingredients)]
       : [];
 
-  return [...existingInfoSteps, ...maybeCopyIngredientsStep, ...patchSteps];
+  const steps = [
+    ...existingInfoSteps,
+    ...maybeCopyIngredientsStep,
+    ...patchSteps.sort((a, b) => a.index - b.index),
+  ];
+
+  return steps.map((step, index) => ({
+    ...step,
+    index: index + 1, // normalize the indexes
+  }));
 }
 
 function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
@@ -193,6 +205,7 @@ function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
 function copyIngredientsStep(ingredients: Ingredient[]): Step {
   return {
     type: 'COPY_INGREDIENTS',
+    index: 0,
     name: 'Add ingredients to your project',
     description:
       'Copy all the files found in the `ingredients/` directory to the current directory.',
