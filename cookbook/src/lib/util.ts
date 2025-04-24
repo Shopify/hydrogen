@@ -54,7 +54,11 @@ export function parseGitStatus(params: {filenamesToIgnore: string[]}): {
       continue;
     }
     const [status, file] = tokens;
-    if (params.filenamesToIgnore.includes(path.basename(file))) {
+    if (
+      params.filenamesToIgnore.some((f) =>
+        file.split('/').some((part) => part.includes(f)),
+      )
+    ) {
       continue;
     }
 
