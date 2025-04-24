@@ -76,6 +76,10 @@
             ],
             "description": "The type of step"
           },
+          "index": {
+            "type": "number",
+            "description": "The index of the step"
+          },
           "name": {
             "type": "string",
             "description": "The name of the step"
@@ -126,6 +130,7 @@
         },
         "required": [
           "type",
+          "index",
           "name"
         ],
         "additionalProperties": false
@@ -142,6 +147,44 @@
     "commit": {
       "type": "string",
       "description": "The commit hash the recipe is based on"
+    },
+    "llms": {
+      "type": "object",
+      "properties": {
+        "userQueries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The user queries of the recipe",
+          "default": []
+        },
+        "troubleshooting": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "issue": {
+                "type": "string",
+                "description": "The issue of the troubleshooting"
+              },
+              "solution": {
+                "type": "string",
+                "description": "The solution of the troubleshooting"
+              }
+            },
+            "required": [
+              "issue",
+              "solution"
+            ],
+            "additionalProperties": false
+          },
+          "description": "The troubleshooting of the recipe",
+          "default": []
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
     }
   },
   "required": [
