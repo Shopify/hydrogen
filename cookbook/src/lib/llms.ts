@@ -39,16 +39,14 @@ function renderRecipeRuleBlocks(
 # Overview
 
 This rule describes how to implement "${recipe.title}" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
-
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
-
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
-
-Please remember that specific documentation about Storefront API, which might be relevant to the user, is available at <https://shopify.dev/docs/api/storefront>.
-
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
-
 Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
+
+# AI model verification steps
+
+- Never edit generated files (ending with .d.ts) directly; instead, run the \`npm run codegen\` command to update them.
 
 # Summary
 
@@ -80,7 +78,7 @@ Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
     ),
 
     // recipe data
-    mdParagraph(`<recipe_implementation>`),
+    mdParagraph('<recipe_implementation>'),
     ...[
       mdHeading(2, 'Description'),
       mdParagraph(recipe.description),
@@ -128,6 +126,11 @@ Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
             index,
             recipe.ingredients,
             getPatchesDir(recipeName),
+            {
+              diffsRelativeToTemplate: true,
+              dontCollapseDiffs: true,
+              trimDiffHeaders: true,
+            },
           ),
         ),
 
@@ -138,7 +141,7 @@ Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
           ]
         : []),
     ],
-    mdParagraph(`</recipe_implementation>`),
+    mdParagraph('</recipe_implementation>'),
   ];
 }
 

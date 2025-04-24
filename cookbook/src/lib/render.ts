@@ -160,6 +160,11 @@ export function renderStep(
   index: number,
   ingredients: Ingredient[],
   patchesDir: string,
+  options: {
+    diffsRelativeToTemplate?: boolean;
+    dontCollapseDiffs?: boolean;
+    trimDiffHeaders?: boolean;
+  } = {},
 ): MDBlock[] {
   function getDiffs(): MDBlock[] {
     if (step.diffs == null || step.diffs.length === 0) {
@@ -168,17 +173,25 @@ export function renderStep(
 
     return step.diffs.flatMap((diff) => {
       const patchFile = path.join(patchesDir, diff.patchFile);
-      const patch = fs.readFileSync(patchFile, 'utf8');
+      const rawPatch = fs.readFileSync(patchFile, 'utf8').trim();
 
-      const collapsed = patch.split('\n').length > COLLAPSE_DIFF_LINES;
+      const patch = options.trimDiffHeaders
+        ? rawPatch.split('\n').slice(3).join('\n')
+        : rawPatch;
+
+      const collapsed =
+        !options.dontCollapseDiffs &&
+        patch.split('\n').length > COLLAPSE_DIFF_LINES;
 
       return [
         mdHeading(
           4,
-          `File: ${mdLinkString(
-            `/templates/skeleton/${diff.file}`,
-            mdCodeString(diff.file),
-          )}`,
+          options.diffsRelativeToTemplate
+            ? `File: /${diff.file}`
+            : `File: ${mdLinkString(
+                `/templates/skeleton/${diff.file}`,
+                mdCodeString(diff.file),
+              )}`,
         ),
         mdCode('diff', patch, collapsed),
       ];
