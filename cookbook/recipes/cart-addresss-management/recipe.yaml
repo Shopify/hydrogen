@@ -1,44 +1,50 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 title: cart-addresss-management
-summary: ""
-description: ""
+summary: ''
+description: ''
 notes: []
 requirements: null
 ingredients: []
 deletedFiles: []
 steps:
   - type: PATCH
+    index: 1
     name: app/components/CartLineItem.tsx
     description: null
     diffs:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.f93ff4.patch
   - type: PATCH
+    index: 2
     name: app/components/CartMain.tsx
     description: null
     diffs:
       - file: app/components/CartMain.tsx
         patchFile: CartMain.tsx.6d121b.patch
   - type: PATCH
+    index: 3
     name: app/components/CartSummary.tsx
     description: null
     diffs:
       - file: app/components/CartSummary.tsx
         patchFile: CartSummary.tsx.d6b372.patch
   - type: PATCH
+    index: 4
     name: app/lib/fragments.ts
     description: null
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.18726b.patch
   - type: PATCH
+    index: 5
     name: app/routes/cart.tsx
     description: null
     diffs:
       - file: app/routes/cart.tsx
         patchFile: cart.tsx.943271.patch
   - type: PATCH
+    index: 6
     name: app/styles/reset.css
     description: null
     diffs:

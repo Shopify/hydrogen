@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 title: cart-address-management
-summary: ""
-description: ""
+summary: ''
+description: ''
 notes: []
 requirements: null
 ingredients:
@@ -17,6 +17,7 @@ ingredients:
 deletedFiles: []
 steps:
   - type: COPY_INGREDIENTS
+    index: 1
     name: Add ingredients to your project
     description: Copy all the files found in the `ingredients/` directory to the
       current directory.
@@ -26,30 +27,35 @@ steps:
       - templates/skeleton/app/components/AddressesSelector.tsx
       - templates/skeleton/app/components/DeliveryAddressManager.tsx
   - type: PATCH
+    index: 2
     name: app/components/CartLineItem.tsx
     description: null
     diffs:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.f93ff4.patch
   - type: PATCH
+    index: 3
     name: app/components/CartMain.tsx
     description: null
     diffs:
       - file: app/components/CartMain.tsx
         patchFile: CartMain.tsx.6d121b.patch
   - type: PATCH
+    index: 4
     name: app/lib/fragments.ts
     description: null
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.18726b.patch
   - type: PATCH
+    index: 5
     name: app/routes/cart.tsx
     description: null
     diffs:
       - file: app/routes/cart.tsx
         patchFile: cart.tsx.943271.patch
   - type: PATCH
+    index: 6
     name: app/styles/reset.css
     description: null
     diffs:
