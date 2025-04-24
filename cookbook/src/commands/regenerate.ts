@@ -5,6 +5,10 @@ import {FILES_TO_IGNORE_FOR_GENERATE, TEMPLATE_PATH} from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
 import {isRenderFormat, RENDER_FORMATS, renderRecipe} from '../lib/render';
 import {listRecipes, separator, RecipeManifestFormat} from '../lib/util';
+import {copyCursorRulesToSkeleton} from '../lib/llms';
+import path from 'path';
+import fs from 'fs';
+
 type RegenerateArgs = {
   recipe?: string;
   onlyFiles: boolean;
@@ -57,6 +61,14 @@ async function handler(args: RegenerateArgs) {
     recipes = [args.recipe];
   }
 
+  if (recipes.length === 0) {
+    console.log('No recipes to regenerate');
+    return;
+  }
+
+  const skeletonRulesDir = path.join(TEMPLATE_PATH, '.cursor', 'rules');
+  fs.rmSync(skeletonRulesDir, {recursive: true, force: true});
+
   const format = args.format;
   if (!isRenderFormat(format)) {
     throw `Invalid format: ${format}`;
@@ -86,5 +98,7 @@ async function handler(args: RegenerateArgs) {
     execSync(`git clean -fd ${TEMPLATE_PATH}`);
     console.log(`✅ Regenerated recipe '${recipe}'`);
     console.log(separator());
+
+    copyCursorRulesToSkeleton();
   }
 }
