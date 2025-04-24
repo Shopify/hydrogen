@@ -35,6 +35,9 @@ export interface HydrogenSession<
   commit: () => ReturnType<
     SessionStorage<HydrogenSessionData & Data, FlashData>['commitSession']
   >;
+  destroy?: () => ReturnType<
+    SessionStorage<HydrogenSessionData & Data, FlashData>['destroySession']
+  >;
   isPending?: boolean;
 }
 
