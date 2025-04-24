@@ -59,6 +59,7 @@ In this recipe you'll make the following changes:
 2. Modify product detail pages to display subscription options with accurate pricing using the `SellingPlanSelector` component.
 3. Enhance GraphQL fragments to fetch all necessary selling plan data.
 4. Display subscription details on applicable line items in the cart.
+5. Add a `Subscriptions` page to manage customer subscriptions, with the ability to list them and cancel the active ones.
 
 
 ## Requirements
@@ -155,6 +156,241 @@ export function SellingPlanSelector({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [sellingPlanGroups, children, selectedSellingPlan, paramKey, pathname],
   );
+}
+
+```
+
+### templates/skeleton/app/routes/account.subscriptions.tsx
+
+Subscriptions management page.
+
+```tsx
+import type {
+  CustomerFragment,
+  SubscriptionBillingPolicyFragment,
+} from 'customer-accountapi.generated';
+import {
+  data,
+  LinksFunction,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs,
+} from '@shopify/remix-oxygen';
+import {
+  Form,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+  type MetaFunction,
+} from '@remix-run/react';
+import {
+  SUBSCRIPTION_CANCEL_MUTATION,
+  SUBSCRIPTIONS_CONTRACTS_QUERY,
+} from '../graphql/customer-account/CustomerDetailsQuery';
+
+import accountSubscriptionsStyle from '~/styles/account-subscriptions.css?url';
+
+export type ActionResponse = {
+  error: string | null;
+};
+
+export const meta: MetaFunction = () => {
+  return [{title: 'Subscriptions'}];
+};
+
+export const links: LinksFunction = () => [
+  {rel: 'stylesheet', href: accountSubscriptionsStyle},
+];
+
+export async function loader({context}: LoaderFunctionArgs) {
+  await context.customerAccount.handleAuthStatus();
+
+  const {data: subscriptions} = await context.customerAccount.query(
+    SUBSCRIPTIONS_CONTRACTS_QUERY,
+  );
+
+  return {subscriptions};
+}
+
+export async function action({request, context}: ActionFunctionArgs) {
+  const {customerAccount} = context;
+
+  if (request.method !== 'DELETE') {
+    return data({error: 'Method not allowed'}, {status: 405});
+  }
+
+  const form = await request.formData();
+
+  try {
+    const subId = form.get('subId');
+
+    if (!subId) {
+      throw new Error('Subscription ID is required');
+    }
+
+    await customerAccount.mutate(SUBSCRIPTION_CANCEL_MUTATION, {
+      variables: {
+        subscriptionContractId: subId.toString(),
+      },
+    });
+
+    return {
+      error: null,
+    };
+  } catch (error: any) {
+    return data(
+      {
+        error: error.message,
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+}
+
+export default function AccountProfile() {
+  const {state} = useNavigation();
+  const action = useActionData<ActionResponse>();
+
+  const {subscriptions} = useLoaderData<typeof loader>();
+
+  const sortedSubscriptions =
+    subscriptions?.customer?.subscriptionContracts.nodes.sort((a, b) => {
+      // active subscriptions first
+      if (a.status === 'ACTIVE' && b.status !== 'ACTIVE') {
+        return -1;
+      }
+      if (a.status !== 'ACTIVE' && b.status === 'ACTIVE') {
+        return 1;
+      }
+      // then, newest first
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+  return (
+    <div className="account-profile">
+      <h2>My subscriptions</h2>
+      {action?.error ? (
+        <p>
+          <mark>
+            <small>{action.error}</small>
+          </mark>
+        </p>
+      ) : null}
+      <div className="account-subscriptions">
+        {sortedSubscriptions.map((subscription) => {
+          return (
+            <div key={subscription.id} className="subscription-row">
+              <div className="subscription-row-content">
+                <div>
+                  {subscription.lines.nodes.map((line) => (
+                    <div key={line.id}>{line.name}</div>
+                  ))}
+                </div>
+                <div>
+                  Every{' '}
+                  <SubscriptionInterval
+                    billingPolicy={subscription.billingPolicy}
+                  />
+                </div>
+              </div>
+              <div className="subscription-row-actions">
+                <div
+                  className={
+                    subscription.status === 'ACTIVE'
+                      ? 'subscription-status-active'
+                      : 'subscription-status-inactive'
+                  }
+                >
+                  {subscription.status}
+                </div>
+                {subscription.status === 'ACTIVE' && (
+                  <Form key={subscription.id} method="DELETE">
+                    <input
+                      type="hidden"
+                      id="subId"
+                      name="subId"
+                      value={subscription.id}
+                    />
+                    <button type="submit" disabled={state !== 'idle'}>
+                      {state !== 'idle' ? 'Canceling' : 'Cancel subscription'}
+                    </button>
+                  </Form>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SubscriptionInterval({
+  billingPolicy,
+}: {
+  billingPolicy: SubscriptionBillingPolicyFragment;
+}) {
+  const count = billingPolicy.intervalCount?.count;
+  function getInterval() {
+    const suffix = count === 1 ? '' : 's';
+    switch (billingPolicy.interval) {
+      case 'DAY':
+        return 'day' + suffix;
+      case 'WEEK':
+        return 'week' + suffix;
+      case 'MONTH':
+        return 'month' + suffix;
+      case 'YEAR':
+        return 'year' + suffix;
+    }
+  }
+  return (
+    <span>
+      {count} {getInterval()}
+    </span>
+  );
+}
+
+```
+
+### templates/skeleton/app/styles/account-subscriptions.css
+
+Subscriptions management page styles.
+
+```css
+.account-subscriptions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.account-subscriptions .subscription-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid lightgray;
+  padding: 10px;
+}
+
+.account-subscriptions .subscription-row .subscription-row-content {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+}
+
+.account-subscriptions .subscription-row .subscription-row-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.account-subscriptions .subscription-row .subscription-status-active {
+  color: green;
+}
+
+.account-subscriptions .subscription-row .subscription-status-inactive {
+  color: gray;
 }
 
 ```
@@ -952,5 +1188,108 @@ index 2dc6bda2..aad7e5f1 100644
 ```
 
 </details>
+
+### Step 7: Add subscription management GraphQL queries and mutations
+
+- Add a query to fetch subscription details for the customer.
+
+- Add a mutation to cancel a subscription.
+
+
+#### File: [`app/graphql/customer-account/CustomerDetailsQuery.ts`](/templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts)
+
+<details>
+
+```diff
+index 382d6972..18fa7509 100644
+--- a/templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts
++++ b/templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts
+@@ -38,3 +38,57 @@ export const CUSTOMER_DETAILS_QUERY = `#graphql
+   }
+   ${CUSTOMER_FRAGMENT}
+ ` as const;
++
++// NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
++const SUBSCRIPTION_CONTRACT_FRAGMENT = `#graphql
++  fragment SubscriptionContract on SubscriptionContract {
++    id
++    status
++    createdAt
++    billingPolicy {
++      ...SubscriptionBillingPolicy
++    }
++  }
++  fragment SubscriptionBillingPolicy on SubscriptionBillingPolicy {
++    interval
++    intervalCount {
++      count
++      precision
++    }
++  }
++` as const;
++
++// NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
++export const SUBSCRIPTIONS_CONTRACTS_QUERY = `#graphql
++  query SubscriptionsContractsQuery {
++    customer {
++      subscriptionContracts(first: 100) {
++        nodes {
++          ...SubscriptionContract
++          lines(first: 100) {
++            nodes {
++              name
++              id
++            }
++          }
++        }
++      }
++    }
++  }
++  ${SUBSCRIPTION_CONTRACT_FRAGMENT}
++` as const;
++
++// NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
++export const SUBSCRIPTION_CANCEL_MUTATION = `#graphql
++  mutation subscriptionContractCancel($subscriptionContractId: ID!) {
++    subscriptionContractCancel(subscriptionContractId: $subscriptionContractId) {
++      contract {
++        id
++      }
++      userErrors {
++        field
++        message
++      }
++    }
++  }
++` as const;
+
+```
+
+</details>
+
+### Step 8: Add a `Subscriptions` link to the account menu
+
+Add a `Subscriptions` link to the account menu.
+
+
+#### File: [`app/routes/account.tsx`](/templates/skeleton/app/routes/account.tsx)
+
+```diff
+index 0941d4e0..976ae9df 100644
+--- a/templates/skeleton/app/routes/account.tsx
++++ b/templates/skeleton/app/routes/account.tsx
+@@ -74,6 +74,10 @@ function AccountMenu() {
+         &nbsp; Addresses &nbsp;
+       </NavLink>
+       &nbsp;|&nbsp;
++      <NavLink to="/account/subscriptions" style={isActiveStyle}>
++        &nbsp; Subscriptions &nbsp;
++      </NavLink>
++      &nbsp;|&nbsp;
+       <Logout />
+     </nav>
+   );
+
+```
 
 </recipe_implementation>

@@ -10,6 +10,7 @@ In this recipe you'll make the following changes:
 2. Modify product detail pages to display subscription options with accurate pricing using the `SellingPlanSelector` component.
 3. Enhance GraphQL fragments to fetch all necessary selling plan data.
 4. Display subscription details on applicable line items in the cart.
+5. Add a `Subscriptions` page to manage customer subscriptions, with the ability to list them and cancel the active ones.
 
 
 ## Requirements
@@ -24,6 +25,8 @@ _New files added to the template by this recipe._
 | File | Description |
 | --- | --- |
 | [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | The `SellingPlanSelector` component is used to display the available subscription options on product pages. |
+| [`app/routes/account.subscriptions.tsx`](ingredients/templates/skeleton/app/routes/account.subscriptions.tsx) | Subscriptions management page. |
+| [`app/styles/account-subscriptions.css`](ingredients/templates/skeleton/app/styles/account-subscriptions.css) | Subscriptions management page styles. |
 | [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) | The `selling-plan.css` file is used to style the `SellingPlanSelector` component. |
 
 ## Steps
@@ -41,6 +44,8 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
 Copy all the files found in the `ingredients/` directory to the current directory.
 
 - [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
+- [`app/routes/account.subscriptions.tsx`](ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
+- [`app/styles/account-subscriptions.css`](ingredients/templates/skeleton/app/styles/account-subscriptions.css)
 - [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css)
 
 ### Step 3: Render the selling plan in the cart
@@ -785,3 +790,106 @@ index 2dc6bda2..aad7e5f1 100644
 ```
 
 </details>
+
+### Step 8: Add subscription management GraphQL queries and mutations
+
+- Add a query to fetch subscription details for the customer.
+
+- Add a mutation to cancel a subscription.
+
+
+#### File: [`app/graphql/customer-account/CustomerDetailsQuery.ts`](/templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts)
+
+<details>
+
+```diff
+index 382d6972..18fa7509 100644
+--- a/templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts
++++ b/templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts
+@@ -38,3 +38,57 @@ export const CUSTOMER_DETAILS_QUERY = `#graphql
+   }
+   ${CUSTOMER_FRAGMENT}
+ ` as const;
++
++// NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
++const SUBSCRIPTION_CONTRACT_FRAGMENT = `#graphql
++  fragment SubscriptionContract on SubscriptionContract {
++    id
++    status
++    createdAt
++    billingPolicy {
++      ...SubscriptionBillingPolicy
++    }
++  }
++  fragment SubscriptionBillingPolicy on SubscriptionBillingPolicy {
++    interval
++    intervalCount {
++      count
++      precision
++    }
++  }
++` as const;
++
++// NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
++export const SUBSCRIPTIONS_CONTRACTS_QUERY = `#graphql
++  query SubscriptionsContractsQuery {
++    customer {
++      subscriptionContracts(first: 100) {
++        nodes {
++          ...SubscriptionContract
++          lines(first: 100) {
++            nodes {
++              name
++              id
++            }
++          }
++        }
++      }
++    }
++  }
++  ${SUBSCRIPTION_CONTRACT_FRAGMENT}
++` as const;
++
++// NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
++export const SUBSCRIPTION_CANCEL_MUTATION = `#graphql
++  mutation subscriptionContractCancel($subscriptionContractId: ID!) {
++    subscriptionContractCancel(subscriptionContractId: $subscriptionContractId) {
++      contract {
++        id
++      }
++      userErrors {
++        field
++        message
++      }
++    }
++  }
++` as const;
+
+```
+
+</details>
+
+### Step 9: Add a `Subscriptions` link to the account menu
+
+Add a `Subscriptions` link to the account menu.
+
+
+#### File: [`app/routes/account.tsx`](/templates/skeleton/app/routes/account.tsx)
+
+```diff
+index 0941d4e0..976ae9df 100644
+--- a/templates/skeleton/app/routes/account.tsx
++++ b/templates/skeleton/app/routes/account.tsx
+@@ -74,6 +74,10 @@ function AccountMenu() {
+         &nbsp; Addresses &nbsp;
+       </NavLink>
+       &nbsp;|&nbsp;
++      <NavLink to="/account/subscriptions" style={isActiveStyle}>
++        &nbsp; Subscriptions &nbsp;
++      </NavLink>
++      &nbsp;|&nbsp;
+       <Logout />
+     </nav>
+   );
+
+```
