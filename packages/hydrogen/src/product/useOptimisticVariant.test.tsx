@@ -8,7 +8,7 @@ describe('useOptimisticVariant', () => {
     vi.stubGlobal('reportError', vi.fn());
     vi.mock('react-router', async (importOrigninal) => {
       return {
-        ...(await importOrigninal<typeof import('@remix-run/react')>()),
+        ...(await importOrigninal<typeof import('react-router')>()),
         useNavigation: vi.fn(() => ({state: 'idle', location: {search: ''}})),
       };
     });

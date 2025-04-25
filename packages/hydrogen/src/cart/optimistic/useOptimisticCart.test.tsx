@@ -12,7 +12,7 @@ const consoleWarnSpy = vi.spyOn(console, 'warn');
 vi.spyOn(RemixReact, 'useFetchers');
 vi.mock('react-router', async (importOrigninal) => {
   return {
-    ...(await importOrigninal<typeof import('@remix-run/react')>()),
+    ...(await importOrigninal<typeof import('react-router')>()),
     useFetchers: () => {
       return fetchers;
     },
