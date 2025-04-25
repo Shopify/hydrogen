@@ -31,7 +31,7 @@
     "@graphql-codegen/cli": "5.0.2",
     "@react-router/dev": "^7.0.0",
     "@react-router/fs-routes": "^7.0.0",
-    "@shopify/cli": "~3.77.1",
+    "@shopify/cli": "~3.78.1",
     "@shopify/hydrogen-codegen": "^0.3.3",
     "@shopify/mini-oxygen": "^3.2.0",
     "@shopify/oxygen-workers-types": "^4.1.6",

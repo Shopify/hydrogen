@@ -68,6 +68,7 @@ describe('customer', () => {
       }) as HydrogenSession['get'],
       set: vi.fn(),
       unset: vi.fn(),
+      destroy: vi.fn(() => Promise.resolve('logout cookie')),
     };
   });
 
@@ -261,6 +262,8 @@ describe('customer', () => {
           expect(session.unset).toHaveBeenCalledWith(
             CUSTOMER_ACCOUNT_SESSION_KEY,
           );
+
+          expect(session.destroy).toHaveBeenCalled();
         });
 
         it('Redirects to the customer account api logout url with postLogoutRedirectUri in the param', async () => {
@@ -295,7 +298,6 @@ describe('customer', () => {
 
         it('Redirects to the customer account api logout url with optional headers from params included', async () => {
           const origin = 'https://shop123.com';
-          const postLogoutRedirectUri = '/post-logout-landing-page';
           const headers = {'Set-Cookie': 'cookie=test;'};
 
           const customer = createCustomerAccountClient({
@@ -312,9 +314,36 @@ describe('customer', () => {
           expect(url.origin).toBe('https://shopify.com');
           expect(url.pathname).toBe('/authentication/1/logout');
 
-          expect(response.headers.get('Set-Cookie')).toBe('cookie=test;');
+          // Session destroyed
+          expect(response.headers.get('Set-Cookie')).toBe('logout cookie');
 
           // Session is cleared
+          expect(session.unset).toHaveBeenCalledWith(
+            CUSTOMER_ACCOUNT_SESSION_KEY,
+          );
+        });
+
+        it('Keeps session data when keepSession is true', async () => {
+          const origin = 'https://shop123.com';
+          const headers = {'Set-Cookie': 'cookie=test;'};
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+          });
+
+          const response = await customer.logout({headers, keepSession: true});
+
+          const url = new URL(response.headers.get('location')!);
+          expect(url.origin).toBe('https://shopify.com');
+          expect(url.pathname).toBe('/authentication/1/logout');
+
+          // Standard cookie, session isn't destroyed
+          expect(response.headers.get('Set-Cookie')).toBe('cookie=test;');
+
           expect(session.unset).toHaveBeenCalledWith(
             CUSTOMER_ACCOUNT_SESSION_KEY,
           );
@@ -327,6 +356,7 @@ describe('customer', () => {
             get: vi.fn(() => undefined) as HydrogenSession['get'],
             set: vi.fn(),
             unset: vi.fn(),
+            destroy: vi.fn(() => Promise.resolve('logout cookie')),
           };
 
           const customer = createCustomerAccountClient({
@@ -357,6 +387,7 @@ describe('customer', () => {
             get: vi.fn(() => undefined) as HydrogenSession['get'],
             set: vi.fn(),
             unset: vi.fn(),
+            destroy: vi.fn(() => Promise.resolve('logout cookie')),
           };
 
           const customer = createCustomerAccountClient({
@@ -390,6 +421,7 @@ describe('customer', () => {
             get: vi.fn(() => undefined) as HydrogenSession['get'],
             set: vi.fn(),
             unset: vi.fn(),
+            destroy: vi.fn(() => Promise.resolve('logout cookie')),
           };
 
           const customer = createCustomerAccountClient({
@@ -720,6 +752,7 @@ describe('customer', () => {
           }) as HydrogenSession['get'],
           set: vi.fn(),
           unset: vi.fn(),
+          destroy: vi.fn(() => Promise.resolve('logout cookie')),
         };
 
         const customer = createCustomerAccountClient({
