@@ -46,6 +46,7 @@ export const CUSTOMER_ORDER_QUERY = `#graphql
     id
     name
     statusPageUrl
+    fulfillmentStatus
     processedAt
     fulfillments(first: 1) {
       nodes {
