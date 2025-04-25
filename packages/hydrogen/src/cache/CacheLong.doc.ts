@@ -9,22 +9,22 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'createStorefrontClient',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2025-01/utilities/createstorefrontclient',
+      url: '/docs/api/hydrogen/2025-04/utilities/createstorefrontclient',
     },
     {
       name: 'CacheNone',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2025-01/utilities/cachenone',
+      url: '/docs/api/hydrogen/2025-04/utilities/cachenone',
     },
     {
       name: 'CacheShort',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2025-01/utilities/cacheshort',
+      url: '/docs/api/hydrogen/2025-04/utilities/cacheshort',
     },
     {
       name: 'CacheCustom',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2025-01/utilities/cachecustom',
+      url: '/docs/api/hydrogen/2025-04/utilities/cachecustom',
     },
   ],
   description: `The \`CacheLong\` strategy instructs caches to store data for 1 hour, and \`staleWhileRevalidate\` data for an additional 23 hours. Note: these time values are subject to change.
