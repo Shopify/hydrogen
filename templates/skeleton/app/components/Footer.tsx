@@ -1,5 +1,5 @@
 import {Suspense} from 'react';
-import { Await, NavLink } from 'react-router';
+import {Await, NavLink} from 'react-router';
 import type {FooterQuery, HeaderQuery} from 'storefrontapi.generated';
 
 interface FooterProps {
