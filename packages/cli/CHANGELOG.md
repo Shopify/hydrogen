@@ -1,5 +1,25 @@
 # @shopify/cli-hydrogen
 
+## 10.0.1
+
+### Patch Changes
+
+- Fix an issue with our starter template where duplicate content can exist on URLs that use internationalized handles. For example, if you have a product handle in english of `the-havoc` and translate it to `das-chaos` in German, duplicate content exists at both: ([#2821](https://github.com/Shopify/hydrogen/pull/2821)) by [@blittle](https://github.com/blittle)
+
+  1. https://hydrogen.shop/de-de/products/das-chaos
+  2. https://hydrogen.shop/de-de/products/the-havoc
+
+  We've changed the starter template to make the second redirect to the first.
+
+- Fix faulty truthiness check for cart quantity ([#2855](https://github.com/Shopify/hydrogen/pull/2855)) by [@frontsideair](https://github.com/frontsideair)
+
+- Update oxygen-cli to 4.6.18 ([#2889](https://github.com/Shopify/hydrogen/pull/2889)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Refactor ProductItem into a separate component ([#2872](https://github.com/Shopify/hydrogen/pull/2872)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`e7db0a54`](https://github.com/Shopify/hydrogen/commit/e7db0a546cc432c365f04296895cdd5b71e123d0)]:
+  - @shopify/mini-oxygen@3.2.1
+
 ## 10.0.0
 
 ### Patch Changes
