@@ -1,7 +1,4 @@
-import type {
-  CustomerFragment,
-  SubscriptionBillingPolicyFragment,
-} from 'customer-accountapi.generated';
+import type {SubscriptionBillingPolicyFragment} from 'customer-accountapi.generated';
 import {
   data,
   LinksFunction,
@@ -9,10 +6,9 @@ import {
   type LoaderFunctionArgs,
 } from '@shopify/remix-oxygen';
 import {
-  Form,
   useActionData,
+  useFetcher,
   useLoaderData,
-  useNavigation,
   type MetaFunction,
 } from '@remix-run/react';
 import {SUBSCRIPTIONS_CONTRACTS_QUERY} from '../graphql/customer-account/CustomerSubscriptionsQuery';
@@ -80,10 +76,11 @@ export async function action({request, context}: ActionFunctionArgs) {
 }
 
 export default function AccountProfile() {
-  const {state} = useNavigation();
   const action = useActionData<ActionResponse>();
 
   const {subscriptions} = useLoaderData<typeof loader>();
+
+  const fetcher = useFetcher();
 
   return (
     <div className="account-profile">
@@ -98,6 +95,9 @@ export default function AccountProfile() {
       <div className="account-subscriptions">
         {subscriptions?.customer?.subscriptionContracts.nodes.map(
           (subscription) => {
+            const isBeingCancelled =
+              fetcher.state !== 'idle' &&
+              fetcher.formData?.get('subId') === subscription.id;
             return (
               <div key={subscription.id} className="subscription-row">
                 <div className="subscription-row-content">
@@ -124,17 +124,17 @@ export default function AccountProfile() {
                     {subscription.status}
                   </div>
                   {subscription.status === 'ACTIVE' && (
-                    <Form key={subscription.id} method="DELETE">
+                    <fetcher.Form key={subscription.id} method="DELETE">
                       <input
                         type="hidden"
                         id="subId"
                         name="subId"
                         value={subscription.id}
                       />
-                      <button type="submit" disabled={state !== 'idle'}>
-                        {state !== 'idle' ? 'Canceling' : 'Cancel subscription'}
+                      <button type="submit" disabled={isBeingCancelled}>
+                        {isBeingCancelled ? 'Canceling' : 'Cancel subscription'}
                       </button>
-                    </Form>
+                    </fetcher.Form>
                   )}
                 </div>
               </div>
