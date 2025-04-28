@@ -40,7 +40,7 @@
     "@ast-grep/napi": "0.11.0",
     "@oclif/core": "3.26.5",
     "@shopify/cli-kit": "^3.78.1",
-    "@shopify/oxygen-cli": "4.6.10",
+    "@shopify/oxygen-cli": "4.6.18",
     "@shopify/plugin-cloudflare": "^3.78.1",
     "ansi-escapes": "^6.2.0",
     "chokidar": "3.5.3",
