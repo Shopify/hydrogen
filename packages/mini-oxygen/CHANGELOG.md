@@ -1,5 +1,11 @@
 # @shopify/mini-oxygen
 
+## 3.2.1
+
+### Patch Changes
+
+- Update resolve conditions for vite 6 ([#2863](https://github.com/Shopify/hydrogen/pull/2863)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 3.2.0
 
 ### Minor Changes
