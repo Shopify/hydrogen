@@ -249,10 +249,8 @@ import {
   useNavigation,
   type MetaFunction,
 } from '@remix-run/react';
-import {
-  SUBSCRIPTION_CANCEL_MUTATION,
-  SUBSCRIPTIONS_CONTRACTS_QUERY,
-} from '../graphql/customer-account/CustomerDetailsQuery';
+import {SUBSCRIPTIONS_CONTRACTS_QUERY} from '../graphql/customer-account/CustomerSubscriptionsQuery';
+import {SUBSCRIPTION_CANCEL_MUTATION} from '../graphql/customer-account/CustomerSubscriptionsMutations';
 
 import accountSubscriptionsStyle from '~/styles/account-subscriptions.css?url';
 
@@ -321,19 +319,6 @@ export default function AccountProfile() {
 
   const {subscriptions} = useLoaderData<typeof loader>();
 
-  const sortedSubscriptions =
-    subscriptions?.customer?.subscriptionContracts.nodes.sort((a, b) => {
-      // active subscriptions first
-      if (a.status === 'ACTIVE' && b.status !== 'ACTIVE') {
-        return -1;
-      }
-      if (a.status !== 'ACTIVE' && b.status === 'ACTIVE') {
-        return 1;
-      }
-      // then, newest first
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
-
   return (
     <div className="account-profile">
       <h2>My subscriptions</h2>
@@ -345,49 +330,51 @@ export default function AccountProfile() {
         </p>
       ) : null}
       <div className="account-subscriptions">
-        {sortedSubscriptions.map((subscription) => {
-          return (
-            <div key={subscription.id} className="subscription-row">
-              <div className="subscription-row-content">
-                <div>
-                  {subscription.lines.nodes.map((line) => (
-                    <div key={line.id}>{line.name}</div>
-                  ))}
-                </div>
-                <div>
-                  Every{' '}
-                  <SubscriptionInterval
-                    billingPolicy={subscription.billingPolicy}
-                  />
-                </div>
-              </div>
-              <div className="subscription-row-actions">
-                <div
-                  className={
-                    subscription.status === 'ACTIVE'
-                      ? 'subscription-status-active'
-                      : 'subscription-status-inactive'
-                  }
-                >
-                  {subscription.status}
-                </div>
-                {subscription.status === 'ACTIVE' && (
-                  <Form key={subscription.id} method="DELETE">
-                    <input
-                      type="hidden"
-                      id="subId"
-                      name="subId"
-                      value={subscription.id}
+        {subscriptions?.customer?.subscriptionContracts.nodes.map(
+          (subscription) => {
+            return (
+              <div key={subscription.id} className="subscription-row">
+                <div className="subscription-row-content">
+                  <div>
+                    {subscription.lines.nodes.map((line) => (
+                      <div key={line.id}>{line.name}</div>
+                    ))}
+                  </div>
+                  <div>
+                    Every{' '}
+                    <SubscriptionInterval
+                      billingPolicy={subscription.billingPolicy}
                     />
-                    <button type="submit" disabled={state !== 'idle'}>
-                      {state !== 'idle' ? 'Canceling' : 'Cancel subscription'}
-                    </button>
-                  </Form>
-                )}
+                  </div>
+                </div>
+                <div className="subscription-row-actions">
+                  <div
+                    className={
+                      subscription.status === 'ACTIVE'
+                        ? 'subscription-status-active'
+                        : 'subscription-status-inactive'
+                    }
+                  >
+                    {subscription.status}
+                  </div>
+                  {subscription.status === 'ACTIVE' && (
+                    <Form key={subscription.id} method="DELETE">
+                      <input
+                        type="hidden"
+                        id="subId"
+                        name="subId"
+                        value={subscription.id}
+                      />
+                      <button type="submit" disabled={state !== 'idle'}>
+                        {state !== 'idle' ? 'Canceling' : 'Cancel subscription'}
+                      </button>
+                    </Form>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          },
+        )}
       </div>
     </div>
   );
