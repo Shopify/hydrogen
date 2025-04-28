@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-/// <reference types="@shopify/remix-oxygen" />
+/// <reference types="react-router" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
 // Enhance TypeScript's built-in typings.
@@ -23,7 +23,7 @@ declare global {
   }
 }
 
-declare module '@shopify/remix-oxygen' {
+declare module 'react-router' {
   interface AppLoadContext
     extends Awaited<ReturnType<typeof createAppLoadContext>> {
     // to change context type, change the return of createAppLoadContext() instead
