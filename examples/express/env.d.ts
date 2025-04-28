@@ -22,7 +22,7 @@ declare global {
   }
 }
 
-declare module '@remix-run/node' {
+declare module 'react-router' {
   /**
    * Declare local additions to the Remix loader context.
    */
