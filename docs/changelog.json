@@ -3,7 +3,7 @@
   "version": "1",
   "releases": [
     {
-      "title": "Cart delivery adddress supprot, fixes in Vite 6 SSR conditions, Skeleton & Customer Accounts session",
+      "title": "Cart delivery adddress support, fixes in Vite 6 SSR conditions, Skeleton & Customer Accounts session",
       "version": "2025.1.4",
       "hash": "3be68ae72730e6780aa04fcd02ba586816b7f613",
       "commit": "https://github.com/Shopify/hydrogen/pull/2842/commits/3be68ae72730e6780aa04fcd02ba586816b7f613",
