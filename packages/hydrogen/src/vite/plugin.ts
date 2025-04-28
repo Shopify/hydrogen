@@ -55,9 +55,6 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
         return {
           build: {
             outDir: 'dist',
-            rollupOptions: {
-              external: ['/app/entry.server.ts'], // Exclude server-only files
-            },
           },
           server: {
             watch: null,
