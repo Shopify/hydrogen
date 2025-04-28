@@ -143,7 +143,15 @@ type CodegenOptions = ProjectDirs & {
   forceSfapiVersion?: string;
 };
 
-export function codegen(options: CodegenOptions) {
+export async function codegen(options: CodegenOptions) {
+  // react-router typegen is not exposed as a package, so we need to run it in the terminal
+  // TODO: we should use it imported as a library instead
+  const {execSync} = await import('child_process');
+  execSync('npx react-router typegen', {
+    cwd: options.rootDirectory,
+    stdio: 'inherit',
+  });
+
   return generateTypes(options).catch((error: Error) => {
     if (error instanceof AbortError) throw error;
 
