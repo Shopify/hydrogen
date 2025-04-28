@@ -110,13 +110,23 @@ class AppSession implements HydrogenSession {
 
 // In env.d.ts
 import type {CustomerAccount, HydrogenSessionData} from '@shopify/hydrogen';
-declare module '@shopify/remix-oxygen' {
+declare module 'react-router' {
   /**
    * Declare local additions to the Remix loader context.
    */
   interface AppLoadContext {
     customerAccount: CustomerAccount;
     session: AppSession;
+  }
+
+  // TODO: remove this once we've migrated to `Route.LoaderArgs` instead for our loaders
+  interface LoaderFunctionArgs {
+    context: AppLoadContext;
+  }
+
+  // TODO: remove this once we've migrated to `Route.ActionArgs` instead for our actions
+  interface ActionFunctionArgs {
+    context: AppLoadContext;
   }
 
   /**
