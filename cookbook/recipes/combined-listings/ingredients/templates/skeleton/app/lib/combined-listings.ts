@@ -1,4 +1,4 @@
-// Edit these values to customize the combined listings behaviors
+// Edit these values to customize combined listings' behavior
 export const combinedListingsSettings = {
   // If true, loading the product page will redirect to the first variant
   redirectToFirstVariant: false,

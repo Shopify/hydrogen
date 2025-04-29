@@ -164,4 +164,4 @@ llms:
       solution: Make sure to tag combined listing parent products in the Shopify Admin
         and use that tag to filter out combined listings from the product list
         in the GraphQL query.
-commit: 2529b8c128ea0b203efdd08d642d4ad07e93be49
+commit: e1d77d5714e2472fa87fcc56473078f9fd263f72
