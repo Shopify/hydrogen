@@ -1,17 +1,22 @@
 # Combined Listings
 
 
-This recipe handles Shopify [combined listings](https://help.shopify.com/en/manual/products/combined-listings-app) in product pages and search results.
+This recipe lets you display [combined listings](https://help.shopify.com/en/manual/products/combined-listings-app) on product pages and in search results for your Hydrogen storefront. A combined listing groups separate products together into a single product listing using a shared option like color or size.
+Each product appears as a variant but can have its own title, description, URL, and images.
 
+In this recipe, you'll make the following changes:
 
-> [!NOTE]
-> Combined listings are available only to stores on a [Shopify Plus](https://www.shopify.com/plus) or enterprise plan.
+1. Set up the Combined Listings app in your Shopify admin and group relevant products together as combined listings.
+2. Configure how combined listings will be handled on your storefront.
+3. Update the `ProductForm` component to hide the `Add to cart` button for the parent products of combined listings.
+4. Update the `ProductImage` component to support images from product variants and the product itself.
+5. Show a range of prices for combined listings in `ProductItem`.
+
 
 ## Requirements
 
-- Install the [Combined Listings app](https://admin.shopify.com/apps/combined-listings) in your store.
-- [Create combined listing products in your store](https://help.shopify.com/en/manual/products/combined-listings-app#creating-a-combined-listing).
-- Add a tag to any combined listing parent products to indicate they're a combined listing, for example `combined`.
+- Your store must be on either a [Shopify Plus](https://www.shopify.com/plus) or enterprise plan.
+- Your store must have the [Combined Listings app](https://admin.shopify.com/apps/combined-listings) installed.
 
 
 ## Ingredients
@@ -20,13 +25,18 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [`app/lib/combined-listings.ts`](ingredients/templates/skeleton/app/lib/combined-listings.ts) | Utilities and settings for handling combined listings. |
+| [`app/lib/combined-listings.ts`](ingredients/templates/skeleton/app/lib/combined-listings.ts) | The `combined-listings.ts` file contains utilities and settings for handling combined listings. |
 
 ## Steps
 
-### Step 1: Configure combined listings behavior
+### Step 1: Set up the Combined Listings app
 
-Combined listings work out of the box, but you can customize specific behaviors when retrieving and displaying combined listing parent products.
+1. Install the [Combined Listings app](https://admin.shopify.com/apps/combined-listings). 2. [Create combined listing products in your store](https://help.shopify.com/en/manual/products/combined-listings-app#creating-a-combined-listing). 3. Add tags to the parent products of combined listings to indicate that they're part of a combined listing (for example `combined`).
+
+
+### Step 2: Configure combined listings behavior
+
+You can customize how the parent products of combined listings are retrieved and displayed.
 
 To make this process easier, we included a configuration object in the `combined-listings.ts` file that you can edit to customize according to your preferences.
 
@@ -43,15 +53,15 @@ export const combinedListingsSettings = {
 ```
 
 
-### Step 2: Add ingredients to your project
+### Step 3: Add ingredients to your project
 
 Copy all the files found in the `ingredients/` directory to the current directory.
 
 - [`app/lib/combined-listings.ts`](ingredients/templates/skeleton/app/lib/combined-listings.ts)
 
-### Step 3: Update the `ProductForm` component
+### Step 4: Update the `ProductForm` component
 
-Update the `ProductForm` component to hide the `Add to cart` button for combined listings parent products, as well as the selected state for variants.
+Update the `ProductForm` component to hide the `Add to cart` button for the parent products of combined listings and for variants' selected state.
 
 
 #### File: [`app/components/ProductForm.tsx`](/templates/skeleton/app/components/ProductForm.tsx)
@@ -153,7 +163,7 @@ index e8616a61..838a903a 100644
 
 </details>
 
-### Step 4: Extend the `ProductImage` component
+### Step 5: Extend the `ProductImage` component
 
 Update the `ProductImage` component to support images from both product variants and the product itself.
 
@@ -182,10 +192,9 @@ index 5f3ac1cc..f1c9f2cd 100644
      return <div className="product-image" />;
 ```
 
-### Step 5: Show a range of prices for combined listings in `ProductItem`
+### Step 6: Show a range of prices for combined listings in `ProductItem`
 
-If the product is a combined listing, show a range of prices for the
-combined listing parent product instead of the variant price.
+Update `ProductItem.tsx` to show a range of prices for the combined listing parent product instead of the variant price.
 
 
 #### File: [`app/components/ProductItem.tsx`](/templates/skeleton/app/components/ProductItem.tsx)
@@ -225,9 +234,9 @@ index 62c64b50..034b5660 100644
  }
 ```
 
-### Step 6: (optional) Add combined listings redirect utility
+### Step 7: (Optional) Add redirect utility to first variant of a combined listing
 
-If you wish to redirect automatically to the first variant of a combined listing when the parent handle is selected, add a utility to redirect to the first variant of a combined listing when the handle of the parent is requested, add a utility to redirect to the first variant of a combined listing.
+If you want to redirect automatically to the first variant of a combined listing when the parent handle is selected, add a redirect utility that's called whenever the parent handle is requested.
 
 
 #### File: [`app/lib/redirect.ts`](/templates/skeleton/app/lib/redirect.ts)
@@ -269,10 +278,10 @@ index ce1feb5a..29fe2ecc 100644
 +}
 ```
 
-### Step 7: Update queries for combined listings
+### Step 8: Update queries for combined listings
 
-- Add the `tags` property to the ones returned by the product query.
-- (optional) Add the filtering query to the product query to exclude combined listings.
+- Add the `tags` property to the items returned by the product query.
+- (Optional) Add the filtering query to the product query to exclude combined listings.
 
 
 #### File: [`app/routes/_index.tsx`](/templates/skeleton/app/routes/_index.tsx)
@@ -356,9 +365,9 @@ index 34747528..6e485083 100644
 
 </details>
 
-### Step 8: (optional) Filter out combined listings from individual collections pages
+### Step 9: (Optional) Filter out combined listings from collections pages
 
-Since it's not possible to directly apply query filters when retrieving collection products, you can manually filter out combined listings after they are retrieved, based on their tags.
+Since it's not possible to directly apply query filters when retrieving collection products, you can manually filter out combined listings after they're retrieved based on their tags.
 
 
 #### File: [`app/routes/collections.$handle.tsx`](/templates/skeleton/app/routes/collections.$handle.tsx)
@@ -429,7 +438,7 @@ index f1d7fa3e..17edfb7d 100644
 
 </details>
 
-### Step 9: (optional) Filter out combined listings from collections index page
+### Step 10: (Optional) Filter out combined listings from the collections index page
 
 Update the `collections.all` route to filter out combined listings from the search results, and include the price range for combined listings.
 
@@ -487,11 +496,11 @@ index 3a31b2f7..c756c9e1 100644
        }
 ```
 
-### Step 10: Update the product page
+### Step 11: Update the product page
 
 - Display a range of prices for combined listings instead of the variant price.
 - Show the featured image of the combined listing parent product instead of the variant image.
-- (optional) Redirect to the first variant of a combined listing when the handle is requested
+- (Optional) Redirect to the first variant of a combined listing when the handle is requested.
 
 
 #### File: [`app/routes/products.$handle.tsx`](/templates/skeleton/app/routes/products.$handle.tsx)
@@ -630,7 +639,7 @@ index 2dc6bda2..8baafac9 100644
 
 </details>
 
-### Step 11: Update stylesheet
+### Step 12: Update stylesheet
 
 Add a class to the product item to show a range of prices for combined listings.
 
