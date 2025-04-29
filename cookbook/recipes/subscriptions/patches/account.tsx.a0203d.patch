@@ -1,0 +1,14 @@
+index 0941d4e0..976ae9df 100644
+--- a/templates/skeleton/app/routes/account.tsx
++++ b/templates/skeleton/app/routes/account.tsx
+@@ -74,6 +74,10 @@ function AccountMenu() {
+         &nbsp; Addresses &nbsp;
+       </NavLink>
+       &nbsp;|&nbsp;
++      <NavLink to="/account/subscriptions" style={isActiveStyle}>
++        &nbsp; Subscriptions &nbsp;
++      </NavLink>
++      &nbsp;|&nbsp;
+       <Logout />
+     </nav>
+   );
