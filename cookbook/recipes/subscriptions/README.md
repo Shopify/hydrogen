@@ -10,7 +10,7 @@ In this recipe you'll make the following changes:
 2. Modify product detail pages to display subscription options with accurate pricing using the `SellingPlanSelector` component.
 3. Enhance GraphQL fragments to fetch all necessary selling plan data.
 4. Display subscription details on applicable line items in the cart.
-5. Add a `Subscriptions` page to manage customer subscriptions, with the ability to list them and cancel the active ones.
+5. Add a **Subscriptions** page where customers can manage their subscriptions, which includes the option to cancel active subscriptions.
 
 
 ## Requirements
@@ -24,12 +24,12 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | The `SellingPlanSelector` component is used to display the available subscription options on product pages. |
+| [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | Displays the available subscription options on product pages. |
 | [`app/graphql/customer-account/CustomerSubscriptionsMutations.ts`](ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts) | Mutations for managing customer subscriptions. |
 | [`app/graphql/customer-account/CustomerSubscriptionsQuery.ts`](ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts) | Queries for managing customer subscriptions. |
 | [`app/routes/account.subscriptions.tsx`](ingredients/templates/skeleton/app/routes/account.subscriptions.tsx) | Subscriptions management page. |
 | [`app/styles/account-subscriptions.css`](ingredients/templates/skeleton/app/styles/account-subscriptions.css) | Subscriptions management page styles. |
-| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) | The `selling-plan.css` file is used to style the `SellingPlanSelector` component. |
+| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) | Styles the `SellingPlanSelector` component. |
 
 ## Steps
 
@@ -789,7 +789,7 @@ index 2dc6bda2..aad7e5f1 100644
 
 </details>
 
-### Step 8: Add a `Subscriptions` link to the account menu
+### Step 8: Add a link to the **Subscriptions** page in the account menu
 
 Add a `Subscriptions` link to the account menu.
 
