@@ -85,8 +85,11 @@ steps:
     index: 4
     name: Update the `ProductForm` component
     description: >
-      Update the `ProductForm` component to hide the `Add to cart` button for
+      - Update the `ProductForm` component to hide the `Add to cart` button for
       the parent products of combined listings and for variants' selected state.
+
+      - Update the `Link` component to not replace the current URL when the
+      product is a combined listing parent product.
     diffs:
       - file: app/components/ProductForm.tsx
         patchFile: ProductForm.tsx.8e409a.patch

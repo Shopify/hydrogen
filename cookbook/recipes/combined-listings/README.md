@@ -61,7 +61,8 @@ Copy all the files found in the `ingredients/` directory to the current director
 
 ### Step 4: Update the `ProductForm` component
 
-Update the `ProductForm` component to hide the `Add to cart` button for the parent products of combined listings and for variants' selected state.
+- Update the `ProductForm` component to hide the `Add to cart` button for the parent products of combined listings and for variants' selected state.
+- Update the `Link` component to not replace the current URL when the product is a combined listing parent product.
 
 
 #### File: [`app/components/ProductForm.tsx`](/templates/skeleton/app/components/ProductForm.tsx)
@@ -69,7 +70,7 @@ Update the `ProductForm` component to hide the `Add to cart` button for the pare
 <details>
 
 ```diff
-index e8616a61..838a903a 100644
+index e8616a61..b6567c21 100644
 --- a/templates/skeleton/app/components/ProductForm.tsx
 +++ b/templates/skeleton/app/components/ProductForm.tsx
 @@ -11,9 +11,11 @@ import type {ProductFragment} from 'storefrontapi.generated';
@@ -84,8 +85,12 @@ index e8616a61..838a903a 100644
  }) {
    const navigate = useNavigate();
    const {open} = useAside();
-@@ -53,9 +55,10 @@ export function ProductForm({
-                       replace
+@@ -50,12 +52,13 @@ export function ProductForm({
+                       key={option.name + name}
+                       prefetch="intent"
+                       preventScrollReset
+-                      replace
++                      replace={!combinedListing}
                        to={`/products/${handle}?${variantUriQuery}`}
                        style={{
 -                        border: selected
