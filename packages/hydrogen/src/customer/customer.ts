@@ -405,7 +405,24 @@ export function createCustomerAccountClient({
 
       clearSession(session);
 
-      return redirect(logoutUrl, {headers: options?.headers || {}});
+      const headers =
+        options?.headers instanceof Headers
+          ? options?.headers
+          : new Headers(options?.headers);
+
+      if (!options?.keepSession) {
+        if (session.destroy) {
+          headers.set('Set-Cookie', await session.destroy());
+        } else {
+          console.warn(
+            '[h2:warn:customerAccount] session.destroy is not available on your session implementation. All session data might not be cleared on logout.',
+          );
+        }
+
+        session.isPending = false;
+      }
+
+      return redirect(logoutUrl, {headers});
     },
     isLoggedIn,
     handleAuthStatus,
