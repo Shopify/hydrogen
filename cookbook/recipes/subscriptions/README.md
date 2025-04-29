@@ -10,6 +10,7 @@ In this recipe you'll make the following changes:
 2. Modify product detail pages to display subscription options with accurate pricing using the `SellingPlanSelector` component.
 3. Enhance GraphQL fragments to fetch all necessary selling plan data.
 4. Display subscription details on applicable line items in the cart.
+5. Add a **Subscriptions** page where customers can manage their subscriptions, which includes the option to cancel active subscriptions.
 
 
 ## Requirements
@@ -23,8 +24,12 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | The `SellingPlanSelector` component is used to display the available subscription options on product pages. |
-| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) | The `selling-plan.css` file is used to style the `SellingPlanSelector` component. |
+| [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | Displays the available subscription options on product pages. |
+| [`app/graphql/customer-account/CustomerSubscriptionsMutations.ts`](ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts) | Mutations for managing customer subscriptions. |
+| [`app/graphql/customer-account/CustomerSubscriptionsQuery.ts`](ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts) | Queries for managing customer subscriptions. |
+| [`app/routes/account.subscriptions.tsx`](ingredients/templates/skeleton/app/routes/account.subscriptions.tsx) | Subscriptions management page. |
+| [`app/styles/account-subscriptions.css`](ingredients/templates/skeleton/app/styles/account-subscriptions.css) | Subscriptions management page styles. |
+| [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css) | Styles the `SellingPlanSelector` component. |
 
 ## Steps
 
@@ -41,6 +46,10 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
 Copy all the files found in the `ingredients/` directory to the current directory.
 
 - [`app/components/SellingPlanSelector.tsx`](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
+- [`app/graphql/customer-account/CustomerSubscriptionsMutations.ts`](ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
+- [`app/graphql/customer-account/CustomerSubscriptionsQuery.ts`](ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
+- [`app/routes/account.subscriptions.tsx`](ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
+- [`app/styles/account-subscriptions.css`](ingredients/templates/skeleton/app/styles/account-subscriptions.css)
 - [`app/styles/selling-plan.css`](ingredients/templates/skeleton/app/styles/selling-plan.css)
 
 ### Step 3: Render the selling plan in the cart
@@ -779,3 +788,27 @@ index 2dc6bda2..aad7e5f1 100644
 ```
 
 </details>
+
+### Step 8: Add a link to the **Subscriptions** page in the account menu
+
+Add a `Subscriptions` link to the account menu.
+
+
+#### File: [`app/routes/account.tsx`](/templates/skeleton/app/routes/account.tsx)
+
+```diff
+index 0941d4e0..976ae9df 100644
+--- a/templates/skeleton/app/routes/account.tsx
++++ b/templates/skeleton/app/routes/account.tsx
+@@ -74,6 +74,10 @@ function AccountMenu() {
+         &nbsp; Addresses &nbsp;
+       </NavLink>
+       &nbsp;|&nbsp;
++      <NavLink to="/account/subscriptions" style={isActiveStyle}>
++        &nbsp; Subscriptions &nbsp;
++      </NavLink>
++      &nbsp;|&nbsp;
+       <Logout />
+     </nav>
+   );
+```
