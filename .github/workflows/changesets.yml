@@ -29,7 +29,7 @@ jobs:
         id: flags
         run: |
           # IMPORTANT: Update this latestBranch whenever we move to a new major version:
-          echo "latestBranch=2025-01" >> $GITHUB_ENV
+          echo "latestBranch=2025-04" >> $GITHUB_ENV
           echo "latest=${{ github.ref_name == 'main' }}" >> $GITHUB_ENV
 
       - name: Checkout the code
@@ -121,7 +121,7 @@ jobs:
           url: ${{ secrets.SLACK_NOTIFICATION_URL }}
           method: 'POST'
           customHeaders: '{"Content-Type": "application/json"}'
-          data: "{\"version\": \"${{ env.HYDROGEN_VERSION }}\"}"
+          data: '{"version": "${{ env.HYDROGEN_VERSION }}"}'
 
   # sync_latest:
   #   needs: changelog
