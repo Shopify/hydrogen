@@ -20,7 +20,7 @@ import {
   mdTable,
   serializeMDBlocksToFile,
 } from './markdown';
-import {Ingredient, loadRecipe, Recipe, Step} from './recipe';
+import {loadRecipe, Recipe, Step} from './recipe';
 import {assertNever, getPatchesDir} from './util';
 
 // The number of lines to collapse a diff into a details block
@@ -79,15 +79,11 @@ export function makeReadmeBlocks(
     notes.map(mdNote),
   );
 
-  const markdownIngredients = makeIngredients(
-    recipeName,
-    recipe.ingredients,
-    format,
-  );
+  const markdownIngredients = makeIngredients(recipe, recipeName, format);
 
   const markdownSteps = makeSteps(
     recipe.steps,
-    recipe.ingredients,
+    recipe,
     recipeName,
     getPatchesDir(recipeName),
     format,
@@ -100,7 +96,9 @@ export function makeReadmeBlocks(
           mdList(
             recipe.deletedFiles.map((file) => {
               const linkPrefix =
-                format === 'shopify.dev' ? hydrogenRepoFolderURL('') : '';
+                format === 'shopify.dev'
+                  ? hydrogenRepoFolderURL({path: '', hash: recipe.commit})
+                  : '';
               return mdLinkString(
                 `${linkPrefix}/templates/skeleton/${file}`,
                 file,
@@ -129,11 +127,11 @@ export function makeReadmeBlocks(
 }
 
 function makeIngredients(
+  recipe: Recipe,
   recipeName: string,
-  ingredients: Ingredient[],
   format: RenderFormat,
 ): MDBlock[] {
-  if (ingredients.length === 0) {
+  if (recipe.ingredients.length === 0) {
     return [];
   }
 
@@ -142,11 +140,13 @@ function makeIngredients(
     mdParagraph('_New files added to the template by this recipe._'),
     mdTable(
       ['File', 'Description'],
-      ingredients.map((ingredient): string[] => {
+      recipe.ingredients.map((ingredient): string[] => {
         const link =
           format === 'shopify.dev'
-            ? hydrogenRepoRecipeBaseURL(recipeName) +
-              `/ingredients/${ingredient.path}`
+            ? hydrogenRepoRecipeBaseURL({
+                recipeName,
+                hash: recipe.commit,
+              }) + `/ingredients/${ingredient.path}`
             : `ingredients/${ingredient.path}`;
         return [
           mdLinkString(link, ingredient.path.replace(TEMPLATE_DIRECTORY, '')),
@@ -159,7 +159,7 @@ function makeIngredients(
 
 function makeSteps(
   steps: Step[],
-  ingredients: Ingredient[],
+  recipe: Recipe,
   recipeName: string,
   patchesDir: string,
   format: RenderFormat,
@@ -168,7 +168,7 @@ function makeSteps(
   return [
     markdownStepsHeader,
     ...steps.flatMap((step, index) =>
-      renderStep(step, index, ingredients, recipeName, patchesDir, format, {
+      renderStep(step, index, recipe, recipeName, patchesDir, format, {
         collapseDiffs: true,
         diffsRelativeToTemplate: format === 'shopify.dev',
         trimDiffHeaders: format === 'shopify.dev',
@@ -180,7 +180,7 @@ function makeSteps(
 export function renderStep(
   step: Step,
   index: number,
-  ingredients: Ingredient[],
+  recipe: Recipe,
   recipeName: string,
   patchesDir: string,
   format: RenderFormat,
@@ -208,9 +208,13 @@ export function renderStep(
         patch.split('\n').length > COLLAPSE_DIFF_LINES;
 
       const linkPrefixRepo =
-        format === 'shopify.dev' ? hydrogenRepoFolderURL('') : '';
+        format === 'shopify.dev'
+          ? hydrogenRepoFolderURL({path: '', hash: recipe.commit})
+          : '';
       const linkPrefixRecipe =
-        format === 'shopify.dev' ? hydrogenRepoRecipeBaseURL(recipeName) : '';
+        format === 'shopify.dev'
+          ? hydrogenRepoRecipeBaseURL({recipeName, hash: recipe.commit})
+          : '';
       const link = `${linkPrefixRepo}/templates/skeleton/${diff.file}`;
 
       return [
@@ -246,12 +250,15 @@ export function renderStep(
           mdList(
             step.ingredients
               .filter((ingredient) =>
-                ingredients.some((other) => other.path === ingredient),
+                recipe.ingredients.some((other) => other.path === ingredient),
               )
               .map((i) => {
                 const linkPrefix =
                   format === 'shopify.dev'
-                    ? hydrogenRepoRecipeBaseURL(recipeName)
+                    ? hydrogenRepoRecipeBaseURL({
+                        recipeName,
+                        hash: recipe.commit,
+                      })
                     : '';
                 return mdLinkString(
                   `${linkPrefix}/ingredients/${i}`,
@@ -284,12 +291,17 @@ function makeTitle(recipe: Recipe, format: RenderFormat): MDBlock {
 
 const HYDROGEN_REPO_BASE_URL = 'https://github.com/Shopify/hydrogen';
 
-function hydrogenRepoFolderURL(path: string): string {
+function hydrogenRepoFolderURL(params: {path: string; hash: string}): string {
+  const {path, hash} = params;
   const pathWithoutLeadingSlash = path.startsWith('/') ? path.slice(1) : path;
-  const url = `${HYDROGEN_REPO_BASE_URL}/tree/main/${pathWithoutLeadingSlash}`;
+  const url = `${HYDROGEN_REPO_BASE_URL}/blob/${hash}/${pathWithoutLeadingSlash}`;
   return url.replace(/\/+$/, '');
 }
 
-function hydrogenRepoRecipeBaseURL(recipeName: string): string {
-  return hydrogenRepoFolderURL(`/cookbook/recipes/${recipeName}`);
+function hydrogenRepoRecipeBaseURL(params: {
+  recipeName: string;
+  hash: string;
+}): string {
+  const {recipeName, hash} = params;
+  return hydrogenRepoFolderURL({path: `/cookbook/recipes/${recipeName}`, hash});
 }
