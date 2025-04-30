@@ -1,7 +1,7 @@
 # Combined Listings
 
 
-This recipe lets you display more precisely [combined listings](https://help.shopify.com/en/manual/products/combined-listings-app) on product pages and in search results for your Hydrogen storefront. A combined listing groups separate products together into a single product listing using a shared option like color or size.
+This recipe lets you more precisely display and manage [combined listings](https://help.shopify.com/en/manual/products/combined-listings-app) on product pages and in search results for your Hydrogen storefront. A combined listing groups separate products together into a single product listing using a shared option like color or size.
 Each product appears as a variant but can have its own title, description, URL, and images.
 
 In this recipe, you'll make the following changes:
