@@ -124,8 +124,10 @@ Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
           renderStep(
             step,
             index,
-            recipe.ingredients,
+            recipe,
+            recipeName,
             getPatchesDir(recipeName),
+            'github',
             {
               diffsRelativeToTemplate: true,
               trimDiffHeaders: true,
