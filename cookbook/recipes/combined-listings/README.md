@@ -25,7 +25,7 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [`app/lib/combined-listings.ts`](ingredients/templates/skeleton/app/lib/combined-listings.ts) | The `combined-listings.ts` file contains utilities and settings for handling combined listings. |
+| [app/lib/combined-listings.ts](ingredients/templates/skeleton/app/lib/combined-listings.ts) | The `combined-listings.ts` file contains utilities and settings for handling combined listings. |
 
 ## Steps
 
@@ -55,9 +55,9 @@ export const combinedListingsSettings = {
 
 ### Step 3: Add ingredients to your project
 
-Copy all the files found in the `ingredients/` directory to the current directory.
+Copy all the files found in the `ingredients/` directory into your project.
 
-- [`app/lib/combined-listings.ts`](ingredients/templates/skeleton/app/lib/combined-listings.ts)
+- [app/lib/combined-listings.ts](/ingredients/templates/skeleton/app/lib/combined-listings.ts)
 
 ### Step 4: Update the `ProductForm` component
 
@@ -65,7 +65,7 @@ Copy all the files found in the `ingredients/` directory to the current director
 - Update the `Link` component to not replace the current URL when the product is a combined listing parent product.
 
 
-#### File: [`app/components/ProductForm.tsx`](/templates/skeleton/app/components/ProductForm.tsx)
+#### File: [app/components/ProductForm.tsx](/templates/skeleton/app/components/ProductForm.tsx)
 
 <details>
 
@@ -173,7 +173,7 @@ index e8616a61..b6567c21 100644
 Update the `ProductImage` component to support images from both product variants and the product itself.
 
 
-#### File: [`app/components/ProductImage.tsx`](/templates/skeleton/app/components/ProductImage.tsx)
+#### File: [app/components/ProductImage.tsx](/templates/skeleton/app/components/ProductImage.tsx)
 
 ```diff
 index 5f3ac1cc..f1c9f2cd 100644
@@ -202,7 +202,7 @@ index 5f3ac1cc..f1c9f2cd 100644
 Update `ProductItem.tsx` to show a range of prices for the combined listing parent product instead of the variant price.
 
 
-#### File: [`app/components/ProductItem.tsx`](/templates/skeleton/app/components/ProductItem.tsx)
+#### File: [app/components/ProductItem.tsx](/templates/skeleton/app/components/ProductItem.tsx)
 
 ```diff
 index 62c64b50..034b5660 100644
@@ -244,7 +244,7 @@ index 62c64b50..034b5660 100644
 If you want to redirect automatically to the first variant of a combined listing when the parent handle is selected, add a redirect utility that's called whenever the parent handle is requested.
 
 
-#### File: [`app/lib/redirect.ts`](/templates/skeleton/app/lib/redirect.ts)
+#### File: [app/lib/redirect.ts](/templates/skeleton/app/lib/redirect.ts)
 
 ```diff
 index ce1feb5a..29fe2ecc 100644
@@ -289,7 +289,7 @@ index ce1feb5a..29fe2ecc 100644
 - (Optional) Add the filtering query to the product query to exclude combined listings.
 
 
-#### File: [`app/routes/_index.tsx`](/templates/skeleton/app/routes/_index.tsx)
+#### File: [app/routes/_index.tsx](/templates/skeleton/app/routes/_index.tsx)
 
 <details>
 
@@ -375,7 +375,7 @@ index 34747528..6e485083 100644
 Since it's not possible to directly apply query filters when retrieving collection products, you can manually filter out combined listings after they're retrieved based on their tags.
 
 
-#### File: [`app/routes/collections.$handle.tsx`](/templates/skeleton/app/routes/collections.$handle.tsx)
+#### File: [app/routes/collections.$handle.tsx](/templates/skeleton/app/routes/collections.$handle.tsx)
 
 <details>
 
@@ -448,7 +448,7 @@ index f1d7fa3e..17edfb7d 100644
 Update the `collections.all` route to filter out combined listings from the search results, and include the price range for combined listings.
 
 
-#### File: [`app/routes/collections.all.tsx`](/templates/skeleton/app/routes/collections.all.tsx)
+#### File: [app/routes/collections.all.tsx](/templates/skeleton/app/routes/collections.all.tsx)
 
 ```diff
 index 3a31b2f7..c756c9e1 100644
@@ -508,7 +508,7 @@ index 3a31b2f7..c756c9e1 100644
 - (Optional) Redirect to the first variant of a combined listing when the handle is requested.
 
 
-#### File: [`app/routes/products.$handle.tsx`](/templates/skeleton/app/routes/products.$handle.tsx)
+#### File: [app/routes/products.$handle.tsx](/templates/skeleton/app/routes/products.$handle.tsx)
 
 <details>
 
@@ -649,7 +649,7 @@ index 2dc6bda2..8baafac9 100644
 Add a class to the product item to show a range of prices for combined listings.
 
 
-#### File: [`app/styles/app.css`](/templates/skeleton/app/styles/app.css)
+#### File: [app/styles/app.css](/templates/skeleton/app/styles/app.css)
 
 ```diff
 index b9294c59..c8fa5109 100644

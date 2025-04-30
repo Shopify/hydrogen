@@ -77,8 +77,7 @@ steps:
   - type: COPY_INGREDIENTS
     index: 3
     name: Add ingredients to your project
-    description: Copy all the files found in the `ingredients/` directory to the
-      current directory.
+    description: Copy all the files found in the `ingredients/` directory into your project.
     ingredients:
       - templates/skeleton/app/lib/combined-listings.ts
   - type: PATCH
@@ -192,4 +191,4 @@ llms:
       solution: Make sure to tag combined listing parent products in the Shopify admin
         and use that tag to filter out combined listings from the product list
         in the GraphQL query.
-commit: e1d77d5714e2472fa87fcc56473078f9fd263f72
+commit: c34d66c5781af2c56725f35fd978b1af09fd4bbd

@@ -21,8 +21,7 @@ requirements: >
   [Shopify Subscriptions app](https://apps.shopify.com/shopify-subscriptions).
 ingredients:
   - path: templates/skeleton/app/components/SellingPlanSelector.tsx
-    description: Displays the
-      available subscription options on product pages.
+    description: Displays the available subscription options on product pages.
   - path: templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts
     description: Mutations for managing customer subscriptions.
   - path: templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts
@@ -32,8 +31,7 @@ ingredients:
   - path: templates/skeleton/app/styles/account-subscriptions.css
     description: Subscriptions management page styles.
   - path: templates/skeleton/app/styles/selling-plan.css
-    description: Styles the
-      `SellingPlanSelector` component.
+    description: Styles the `SellingPlanSelector` component.
 deletedFiles: []
 steps:
   - type: INFO
@@ -56,8 +54,7 @@ steps:
   - type: COPY_INGREDIENTS
     index: 2
     name: Add ingredients to your project
-    description: Copy all the files found in the `ingredients/` directory to the
-      current directory.
+    description: Copy all the files found in the `ingredients/` directory into your project.
     ingredients:
       - templates/skeleton/app/components/SellingPlanSelector.tsx
       - templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts
@@ -130,7 +127,7 @@ steps:
         patchFile: products.$handle.tsx.3e0b7e.patch
   - type: PATCH
     index: 8
-    name: Add a link to the **Subscriptions** page 
+    name: Add a link to the **Subscriptions** page
     description: |
       Add a `Subscriptions` link to the account menu.
     diffs:
@@ -143,9 +140,12 @@ llms:
     - How do I display subscription details on applicable line items in the cart?
   troubleshooting:
     - issue: I'm getting an error when I try to add a subscription to my storefront.
-      solution: Make sure you've installed the Shopify Subscriptions app and set up selling plans for subscription products in your Shopify admin.
+      solution: Make sure you've installed the Shopify Subscriptions app and set up
+        selling plans for subscription products in your Shopify admin.
     - issue: I'm not seeing the subscription options on my product pages.
-      solution: Make sure you've installed the Shopify Subscriptions app and set up selling plans for subscription products in your Shopify admin.
+      solution: Make sure you've installed the Shopify Subscriptions app and set up
+        selling plans for subscription products in your Shopify admin.
     - issue: I'm not seeing the subscription details on my cart line items.
-      solution: Make sure you've installed the Shopify Subscriptions app and set up selling plans for subscription products in your Shopify admin.
-commit: bb04693ef039b7f68b782011f79f91773819c3e4
+      solution: Make sure you've installed the Shopify Subscriptions app and set up
+        selling plans for subscription products in your Shopify admin.
+commit: c34d66c5781af2c56725f35fd978b1af09fd4bbd
