@@ -1,5 +1,25 @@
 # skeleton
 
+## 2025.1.7
+
+### Patch Changes
+
+- Fix an issue with our starter template where duplicate content can exist on URLs that use internationalized handles. For example, if you have a product handle in english of `the-havoc` and translate it to `das-chaos` in German, duplicate content exists at both: ([#2821](https://github.com/Shopify/hydrogen/pull/2821)) by [@blittle](https://github.com/blittle)
+
+  1. https://hydrogen.shop/de-de/products/das-chaos
+  2. https://hydrogen.shop/de-de/products/the-havoc
+
+  We've changed the starter template to make the second redirect to the first.
+
+- Added the Cursor rule for the subscriptions recipe. ([#2874](https://github.com/Shopify/hydrogen/pull/2874)) by [@ruggishop](https://github.com/ruggishop)
+
+- Fix faulty truthiness check for cart quantity ([#2855](https://github.com/Shopify/hydrogen/pull/2855)) by [@frontsideair](https://github.com/frontsideair)
+
+- Refactor ProductItem into a separate component ([#2872](https://github.com/Shopify/hydrogen/pull/2872)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`f80f3bc7`](https://github.com/Shopify/hydrogen/commit/f80f3bc7239b3ee6641cb468a17e15c77bb7815b), [`61ddf924`](https://github.com/Shopify/hydrogen/commit/61ddf92487524b3c04632ae2cfdaa2869a3ae02c), [`642bde4f`](https://github.com/Shopify/hydrogen/commit/642bde4f3df11511e125b013abd977618da25692)]:
+  - @shopify/hydrogen@2025.1.4
+
 ## 2025.1.6
 
 ### Patch Changes

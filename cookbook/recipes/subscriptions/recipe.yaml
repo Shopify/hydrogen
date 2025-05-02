@@ -13,6 +13,7 @@ description: |
   2. Modify product detail pages to display subscription options with accurate pricing using the `SellingPlanSelector` component.
   3. Enhance GraphQL fragments to fetch all necessary selling plan data.
   4. Display subscription details on applicable line items in the cart.
+  5. Add a **Subscriptions** page where customers can manage their subscriptions, which includes the option to cancel active subscriptions.
 notes: []
 requirements: >
   To implement subscriptions in your own store, you need to install a
@@ -20,11 +21,17 @@ requirements: >
   [Shopify Subscriptions app](https://apps.shopify.com/shopify-subscriptions).
 ingredients:
   - path: templates/skeleton/app/components/SellingPlanSelector.tsx
-    description: The `SellingPlanSelector` component is used to display the
-      available subscription options on product pages.
+    description: Displays the available subscription options on product pages.
+  - path: templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts
+    description: Mutations for managing customer subscriptions.
+  - path: templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts
+    description: Queries for managing customer subscriptions.
+  - path: templates/skeleton/app/routes/account.subscriptions.tsx
+    description: Subscriptions management page.
+  - path: templates/skeleton/app/styles/account-subscriptions.css
+    description: Subscriptions management page styles.
   - path: templates/skeleton/app/styles/selling-plan.css
-    description: The `selling-plan.css` file is used to style the
-      `SellingPlanSelector` component.
+    description: Styles the `SellingPlanSelector` component.
 deletedFiles: []
 steps:
   - type: INFO
@@ -47,10 +54,13 @@ steps:
   - type: COPY_INGREDIENTS
     index: 2
     name: Add ingredients to your project
-    description: Copy all the files found in the `ingredients/` directory to the
-      current directory.
+    description: Copy all the files found in the `ingredients/` directory into your project.
     ingredients:
       - templates/skeleton/app/components/SellingPlanSelector.tsx
+      - templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts
+      - templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts
+      - templates/skeleton/app/routes/account.subscriptions.tsx
+      - templates/skeleton/app/styles/account-subscriptions.css
       - templates/skeleton/app/styles/selling-plan.css
   - type: PATCH
     index: 3
@@ -115,6 +125,14 @@ steps:
     diffs:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.3e0b7e.patch
+  - type: PATCH
+    index: 8
+    name: Add a link to the **Subscriptions** page
+    description: |
+      Add a `Subscriptions` link to the account menu.
+    diffs:
+      - file: app/routes/account.tsx
+        patchFile: account.tsx.a0203d.patch
 llms:
   userQueries:
     - How do I add subscriptions to my Hydrogen storefront?
@@ -122,12 +140,12 @@ llms:
     - How do I display subscription details on applicable line items in the cart?
   troubleshooting:
     - issue: I'm getting an error when I try to add a subscription to my storefront.
-      solution: Make sure you have the Shopify Subscriptions app installed and
-        configured correctly.
+      solution: Make sure you've installed the Shopify Subscriptions app and set up
+        selling plans for subscription products in your Shopify admin.
     - issue: I'm not seeing the subscription options on my product pages.
-      solution: Make sure you have the Shopify Subscriptions app installed and
-        configured correctly.
+      solution: Make sure you've installed the Shopify Subscriptions app and set up
+        selling plans for subscription products in your Shopify admin.
     - issue: I'm not seeing the subscription details on my cart line items.
-      solution: Make sure you have the Shopify Subscriptions app installed and
-        configured correctly.
-commit: e72580831c4dd0aec3e977351366d199b4857980
+      solution: Make sure you've installed the Shopify Subscriptions app and set up
+        selling plans for subscription products in your Shopify admin.
+commit: c34d66c5781af2c56725f35fd978b1af09fd4bbd

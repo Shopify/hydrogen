@@ -1,5 +1,13 @@
 # @shopify/create-hydrogen
 
+## 5.0.21
+
+### Patch Changes
+
+- Fix faulty truthiness check for cart quantity ([#2855](https://github.com/Shopify/hydrogen/pull/2855)) by [@frontsideair](https://github.com/frontsideair)
+
+- Refactor ProductItem into a separate component ([#2872](https://github.com/Shopify/hydrogen/pull/2872)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 5.0.20
 
 ### Patch Changes
