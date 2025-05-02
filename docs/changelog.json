@@ -15,7 +15,7 @@
       },
       "devDependencies": {
         "@remix-run/dev": "^2.16.1",
-        "@shopify/cli": "~3.78.2",
+        "@shopify/cli": "~3.79.0",
         "@remix-run/route-config": "^2.16.1",
         "@remix-run/fs-routes": "^2.16.1",
         "@shopify/mini-oxygen": "^3.2.1",
