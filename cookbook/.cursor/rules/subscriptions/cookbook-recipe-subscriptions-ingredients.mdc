@@ -1,0 +1,445 @@
+---
+description: New files added by the subscriptions recipe.
+alwaysApply: false
+globs: *
+---
+
+## Overview
+
+New files added by the subscriptions recipe:
+
+## AI model instructions
+
+DO NOT use this file in isolation, but rather as part of a flow to implement the subscriptions recipe, which is available at [cookbook-recipe-subscriptions.mdc](mdc:.cursor/rules/subscriptions/cookbook-recipe-subscriptions.mdc)
+
+- templates/skeleton/app/components/SellingPlanSelector.tsx
+- templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts
+- templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts
+- templates/skeleton/app/routes/account.subscriptions.tsx
+- templates/skeleton/app/styles/account-subscriptions.css
+- templates/skeleton/app/styles/selling-plan.css
+
+## Files
+
+### templates/skeleton/app/components/SellingPlanSelector.tsx
+
+Displays the available subscription options on product pages.
+
+```tsx
+import type {
+  ProductFragment,
+  SellingPlanGroupFragment,
+  SellingPlanFragment,
+} from 'storefrontapi.generated';
+import {useMemo} from 'react';
+import {useLocation} from '@remix-run/react';
+
+/* Enriched sellingPlan type including isSelected and url */
+export type SellingPlan = SellingPlanFragment & {
+  isSelected: boolean;
+  url: string;
+};
+
+/* Enriched sellingPlanGroup type including enriched SellingPlan nodes */
+export type SellingPlanGroup = Omit<
+  SellingPlanGroupFragment,
+  'sellingPlans'
+> & {
+  sellingPlans: {
+    nodes: SellingPlan[];
+  };
+};
+
+/**
+ * A component that simplifies selecting sellingPlans subscription options
+ * @example Example use
+ * ```ts
+ *   <SellingPlanSelector
+ *     sellingPlanGroups={sellingPlanGroups}
+ *     selectedSellingPlanId={selectedSellingPlanId}
+ *   >
+ *     {({sellingPlanGroup}) => ( ...your sellingPlanGroup component )}
+ *  </SellingPlanSelector>
+ *  ```
+ **/
+export function SellingPlanSelector({
+  sellingPlanGroups,
+  selectedSellingPlan,
+  children,
+  paramKey = 'selling_plan',
+}: {
+  sellingPlanGroups: ProductFragment['sellingPlanGroups'];
+  selectedSellingPlan: SellingPlanFragment | null;
+  paramKey?: string;
+  children: (params: {
+    sellingPlanGroup: SellingPlanGroup;
+    selectedSellingPlan: SellingPlanFragment | null;
+  }) => React.ReactNode;
+}) {
+  const {search, pathname} = useLocation();
+  const params = new URLSearchParams(search);
+
+  return useMemo(
+    () =>
+      (sellingPlanGroups.nodes as SellingPlanGroup[]).map(
+        (sellingPlanGroup) => {
+          // Augmnet each sellingPlan node with isSelected and url
+          const sellingPlans = sellingPlanGroup.sellingPlans.nodes
+            .map((sellingPlan: SellingPlan) => {
+              if (!sellingPlan?.id) {
+                //eslint-disable-next-line no-console
+                console.warn(
+                  'SellingPlanSelector: sellingPlan.id is missing in the product query',
+                );
+                return null;
+              }
+              if (!sellingPlan.id) return null;
+              params.set(paramKey, sellingPlan.id);
+              sellingPlan.isSelected =
+                selectedSellingPlan?.id === sellingPlan.id;
+              sellingPlan.url = `${pathname}?${params.toString()}`;
+              return sellingPlan;
+            })
+            .filter(Boolean) as SellingPlan[];
+          sellingPlanGroup.sellingPlans.nodes = sellingPlans;
+          return children({sellingPlanGroup, selectedSellingPlan});
+        },
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sellingPlanGroups, children, selectedSellingPlan, paramKey, pathname],
+  );
+}
+
+```
+
+### templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts
+
+Mutations for managing customer subscriptions.
+
+```ts
+// NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
+
+export const SUBSCRIPTION_CANCEL_MUTATION = `#graphql
+  mutation subscriptionContractCancel($subscriptionContractId: ID!) {
+    subscriptionContractCancel(subscriptionContractId: $subscriptionContractId) {
+      contract {
+        id
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+` as const;
+
+```
+
+### templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts
+
+Queries for managing customer subscriptions.
+
+```ts
+// NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
+
+const SUBSCRIPTION_CONTRACT_FRAGMENT = `#graphql
+  fragment SubscriptionContract on SubscriptionContract {
+    id
+    status
+    createdAt
+    billingPolicy {
+      ...SubscriptionBillingPolicy
+    }
+  }
+  fragment SubscriptionBillingPolicy on SubscriptionBillingPolicy {
+    interval
+    intervalCount {
+      count
+      precision
+    }
+  }
+` as const;
+
+export const SUBSCRIPTIONS_CONTRACTS_QUERY = `#graphql
+  query SubscriptionsContractsQuery {
+    customer {
+      subscriptionContracts(first: 100) {
+        nodes {
+          ...SubscriptionContract
+          lines(first: 100) {
+            nodes {
+              name
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+  ${SUBSCRIPTION_CONTRACT_FRAGMENT}
+` as const;
+
+```
+
+### templates/skeleton/app/routes/account.subscriptions.tsx
+
+Subscriptions management page.
+
+```tsx
+import type {SubscriptionBillingPolicyFragment} from 'customer-accountapi.generated';
+import {
+  data,
+  LinksFunction,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs,
+} from '@shopify/remix-oxygen';
+import {
+  useActionData,
+  useFetcher,
+  useLoaderData,
+  type MetaFunction,
+} from '@remix-run/react';
+import {SUBSCRIPTIONS_CONTRACTS_QUERY} from '../graphql/customer-account/CustomerSubscriptionsQuery';
+import {SUBSCRIPTION_CANCEL_MUTATION} from '../graphql/customer-account/CustomerSubscriptionsMutations';
+
+import accountSubscriptionsStyle from '~/styles/account-subscriptions.css?url';
+
+export type ActionResponse = {
+  error: string | null;
+};
+
+export const meta: MetaFunction = () => {
+  return [{title: 'Subscriptions'}];
+};
+
+export const links: LinksFunction = () => [
+  {rel: 'stylesheet', href: accountSubscriptionsStyle},
+];
+
+export async function loader({context}: LoaderFunctionArgs) {
+  await context.customerAccount.handleAuthStatus();
+
+  const {data: subscriptions} = await context.customerAccount.query(
+    SUBSCRIPTIONS_CONTRACTS_QUERY,
+  );
+
+  return {subscriptions};
+}
+
+export async function action({request, context}: ActionFunctionArgs) {
+  const {customerAccount} = context;
+
+  if (request.method !== 'DELETE') {
+    return data({error: 'Method not allowed'}, {status: 405});
+  }
+
+  const form = await request.formData();
+
+  try {
+    const subId = form.get('subId');
+
+    if (!subId) {
+      throw new Error('Subscription ID is required');
+    }
+
+    await customerAccount.mutate(SUBSCRIPTION_CANCEL_MUTATION, {
+      variables: {
+        subscriptionContractId: subId.toString(),
+      },
+    });
+
+    return {
+      error: null,
+    };
+  } catch (error: any) {
+    return data(
+      {
+        error: error.message,
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+}
+
+export default function AccountProfile() {
+  const action = useActionData<ActionResponse>();
+
+  const {subscriptions} = useLoaderData<typeof loader>();
+
+  const fetcher = useFetcher();
+
+  return (
+    <div className="account-profile">
+      <h2>My subscriptions</h2>
+      {action?.error ? (
+        <p>
+          <mark>
+            <small>{action.error}</small>
+          </mark>
+        </p>
+      ) : null}
+      <div className="account-subscriptions">
+        {subscriptions?.customer?.subscriptionContracts.nodes.map(
+          (subscription) => {
+            const isBeingCancelled =
+              fetcher.state !== 'idle' &&
+              fetcher.formData?.get('subId') === subscription.id;
+            return (
+              <div key={subscription.id} className="subscription-row">
+                <div className="subscription-row-content">
+                  <div>
+                    {subscription.lines.nodes.map((line) => (
+                      <div key={line.id}>{line.name}</div>
+                    ))}
+                  </div>
+                  <div>
+                    Every{' '}
+                    <SubscriptionInterval
+                      billingPolicy={subscription.billingPolicy}
+                    />
+                  </div>
+                </div>
+                <div className="subscription-row-actions">
+                  <div
+                    className={
+                      subscription.status === 'ACTIVE'
+                        ? 'subscription-status-active'
+                        : 'subscription-status-inactive'
+                    }
+                  >
+                    {subscription.status}
+                  </div>
+                  {subscription.status === 'ACTIVE' && (
+                    <fetcher.Form key={subscription.id} method="DELETE">
+                      <input
+                        type="hidden"
+                        id="subId"
+                        name="subId"
+                        value={subscription.id}
+                      />
+                      <button type="submit" disabled={isBeingCancelled}>
+                        {isBeingCancelled ? 'Canceling' : 'Cancel subscription'}
+                      </button>
+                    </fetcher.Form>
+                  )}
+                </div>
+              </div>
+            );
+          },
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SubscriptionInterval({
+  billingPolicy,
+}: {
+  billingPolicy: SubscriptionBillingPolicyFragment;
+}) {
+  const count = billingPolicy.intervalCount?.count;
+  function getInterval() {
+    const suffix = count === 1 ? '' : 's';
+    switch (billingPolicy.interval) {
+      case 'DAY':
+        return 'day' + suffix;
+      case 'WEEK':
+        return 'week' + suffix;
+      case 'MONTH':
+        return 'month' + suffix;
+      case 'YEAR':
+        return 'year' + suffix;
+    }
+  }
+  return (
+    <span>
+      {count} {getInterval()}
+    </span>
+  );
+}
+
+```
+
+### templates/skeleton/app/styles/account-subscriptions.css
+
+Subscriptions management page styles.
+
+```css
+.account-subscriptions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.account-subscriptions .subscription-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid lightgray;
+  padding: 10px;
+}
+
+.account-subscriptions .subscription-row .subscription-row-content {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+}
+
+.account-subscriptions .subscription-row .subscription-row-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.account-subscriptions .subscription-row .subscription-status-active {
+  color: green;
+}
+
+.account-subscriptions .subscription-row .subscription-status-inactive {
+  color: gray;
+}
+
+```
+
+### templates/skeleton/app/styles/selling-plan.css
+
+Styles the `SellingPlanSelector` component.
+
+```css
+.selling-plan-group {
+  margin-bottom: 1rem;
+}
+
+.selling-plan-group-title {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.selling-plan {
+  border: 1px solid;
+  display: inline-block;
+  padding: 1rem;
+  margin-right: 0.5rem;
+  line-height: 1;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  border-bottom-width: 1.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.selling-plan:hover {
+  text-decoration: none;
+}
+
+.selling-plan.selected {
+  border-color: #6b7280; /* Equivalent to 'border-gray-500' */
+}
+
+.selling-plan.unselected {
+  border-color: #fafafa; /* Equivalent to 'border-neutral-50' */
+}
+
+```

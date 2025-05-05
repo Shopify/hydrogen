@@ -1,0 +1,149 @@
+---
+description: Recipe for implementing "Subscriptions (subscriptions)" in a Hydrogen storefront. Add subscription-based products to your Hydrogen storefront.
+globs: *
+alwaysApply: false
+---
+
+# Overview
+
+This rule describes how to implement "Subscriptions" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
+If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
+If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
+Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
+
+# AI model verification steps
+
+- Never edit generated files (ending with .d.ts) directly; instead, run the `npm run codegen` command to update them.
+
+# Summary
+
+Add subscription-based products to your Hydrogen storefront.
+
+# User Intent Recognition
+
+<user_queries>
+- How do I add subscriptions to my Hydrogen storefront?
+- How do I add selling plans to my Hydrogen storefront?
+- How do I display subscription details on applicable line items in the cart?
+</user_queries>
+
+# Troubleshooting
+
+<troubleshooting>
+- **Issue**: I'm getting an error when I try to add a subscription to my storefront.
+  **Solution**: Make sure you've installed the Shopify Subscriptions app and set up selling plans for subscription products in your Shopify admin.
+- **Issue**: I'm not seeing the subscription options on my product pages.
+  **Solution**: Make sure you've installed the Shopify Subscriptions app and set up selling plans for subscription products in your Shopify admin.
+- **Issue**: I'm not seeing the subscription details on my cart line items.
+  **Solution**: Make sure you've installed the Shopify Subscriptions app and set up selling plans for subscription products in your Shopify admin.
+</troubleshooting>
+
+# Recipe Implementation
+
+Here's the subscriptions recipe for the base Hydrogen skeleton template:
+
+<recipe_implementation>
+
+## Description
+
+This recipe lets you sell subscription-based products on your Hydrogen storefront by implementing [selling plan groups](https://shopify.dev/docs/api/storefront/latest/objects/SellingPlanGroup). Your customers will be able to choose between one-time purchases or recurring subscriptions for any products with available selling plans.
+
+
+In this recipe you'll make the following changes:
+
+
+1. Set up a subscriptions app in your Shopify admin and add selling plans to any products that will be sold as subscriptions.
+2. Modify product detail pages to display subscription options with accurate pricing using the `SellingPlanSelector` component.
+3. Enhance GraphQL fragments to fetch all necessary selling plan data.
+4. Display subscription details on applicable line items in the cart.
+5. Add a **Subscriptions** page where customers can manage their subscriptions, which includes the option to cancel active subscriptions.
+
+
+## Requirements
+
+To implement subscriptions in your own store, you need to install a subscriptions app in your Shopify admin. In this recipe, we'll use the [Shopify Subscriptions app](https://apps.shopify.com/shopify-subscriptions).
+
+
+## New files added to the template by this recipe
+
+- templates/skeleton/app/components/SellingPlanSelector.tsx
+- templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts
+- templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts
+- templates/skeleton/app/routes/account.subscriptions.tsx
+- templates/skeleton/app/styles/account-subscriptions.css
+- templates/skeleton/app/styles/selling-plan.css
+
+The file contents are available in this rule: [cookbook-recipe-subscriptions-ingredients.mdc](mdc:.cursor/rules/subscriptions/cookbook-recipe-subscriptions-ingredients.mdc)
+
+## Steps
+
+### Step 1: Set up the Shopify Subscriptions app
+
+1. Install the [Shopify Subscriptions app](https://apps.shopify.com/shopify-subscriptions).
+2. In your Shopify admin, [use the Subscriptions app](https://admin.shopify.com/apps/subscriptions-remix/app) to create one or more subscription plans.
+3. On the [Products](https://admin.shopify.com/products) page, open any products that will be sold as subscriptions and add the relevant subscription plans in the **Purchase options** section.
+The Hydrogen demo storefront comes pre-configured with an example subscription product with the handle `shopify-wax`.
+
+
+### Step 2: Render the selling plan in the cart
+
+1. Update `CartLineItem` to show subscription details when they're available.
+2. Extract `sellingPlanAllocation` from cart line data, display the plan name, and standardize component import paths.
+
+
+#### File: /app/components/CartLineItem.tsx
+
+Patch file: [cookbook-recipe-subscriptions-patch-CartLineItem.tsx.8e657b.patch.mdc](mdc:.cursor/rules/subscriptions/cookbook-recipe-subscriptions-patch-CartLineItem.tsx.8e657b.patch.mdc)
+
+### Step 3: Update `ProductForm` to support subscriptions
+
+1. Add conditional rendering to display either subscription options or standard variant selectors.
+2. Implement `SellingPlanSelector` and `SellingPlanGroup` components to handle subscription plan selection.
+3. Update `AddToCartButton` to include selling plan data when subscriptions are selected.
+
+
+#### File: /app/components/ProductForm.tsx
+
+Patch file: [cookbook-recipe-subscriptions-patch-ProductForm.tsx.8e409a.patch.mdc](mdc:.cursor/rules/subscriptions/cookbook-recipe-subscriptions-patch-ProductForm.tsx.8e409a.patch.mdc)
+
+### Step 4: Update `ProductPrice` to display subscription pricing
+
+1. Add a `SellingPlanPrice` function to calculate adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage).
+2. Add logic to handle different price adjustment types and render the appropriate subscription price when a selling plan is selected.
+
+
+#### File: /app/components/ProductPrice.tsx
+
+Patch file: [cookbook-recipe-subscriptions-patch-ProductPrice.tsx.a5e47f.patch.mdc](mdc:.cursor/rules/subscriptions/cookbook-recipe-subscriptions-patch-ProductPrice.tsx.a5e47f.patch.mdc)
+
+### Step 5: Add selling plan data to cart queries
+
+Add a `sellingPlanAllocation` field with the plan name to the standard and componentizable cart line GraphQL fragments. This displays subscription details in the cart.
+
+
+#### File: /app/lib/fragments.ts
+
+Patch file: [cookbook-recipe-subscriptions-patch-fragments.ts.e8eb04.patch.mdc](mdc:.cursor/rules/subscriptions/cookbook-recipe-subscriptions-patch-fragments.ts.e8eb04.patch.mdc)
+
+### Step 6: Add `SellingPlanSelector` to product pages
+
+1. Add the `SellingPlanSelector` component to display subscription options on product pages.
+2. Add logic to handle pricing adjustments, maintain selection state using URL parameters, and update the add-to-cart functionality.
+3. Fetch subscription data through the updated cart GraphQL fragments.
+
+
+#### File: /app/routes/products.$handle.tsx
+
+Patch file: [cookbook-recipe-subscriptions-patch-products.$handle.tsx.3e0b7e.patch.mdc](mdc:.cursor/rules/subscriptions/cookbook-recipe-subscriptions-patch-products.$handle.tsx.3e0b7e.patch.mdc)
+
+### Step 7: Add a link to the **Subscriptions** page
+
+Add a `Subscriptions` link to the account menu.
+
+
+#### File: /app/routes/account.tsx
+
+Patch file: [cookbook-recipe-subscriptions-patch-account.tsx.a0203d.patch.mdc](mdc:.cursor/rules/subscriptions/cookbook-recipe-subscriptions-patch-account.tsx.a0203d.patch.mdc)
+
+</recipe_implementation>

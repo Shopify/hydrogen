@@ -260,6 +260,10 @@ export function copyCursorRulesToSkeleton(recipeName: string) {
   );
   recreateDirectory(skeletonRulesDir);
 
+  console.log(skeletonRulesDir);
+
   const rulesDir = path.join(COOKBOOK_PATH, '.cursor', 'rules', recipeName);
+  console.log(rulesDir);
+
   fs.cpSync(rulesDir, skeletonRulesDir, {recursive: true});
 }

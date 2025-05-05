@@ -1,0 +1,299 @@
+---
+description: Patch for the app/lib/fragments.ts used by the subscriptions recipe.
+alwaysApply: false
+globs: *
+---
+
+## Overview
+
+Patch for the app/lib/fragments.ts.
+
+## AI model instructions
+
+DO NOT use this file in isolation, but rather as part of a flow to implement the subscriptions recipe, which is available at [cookbook-recipe-subscriptions.mdc](mdc:.cursor/rules/subscriptions/cookbook-recipe-subscriptions.mdc)
+
+## Patch
+
+The following patch relates to the original file contents included later on.
+
+```diff
+index dc4426a9..cfe3a938 100644
+--- a/templates/skeleton/app/lib/fragments.ts
++++ b/templates/skeleton/app/lib/fragments.ts
+@@ -54,6 +54,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
+         }
+       }
+     }
++    sellingPlanAllocation {
++      sellingPlan {
++         name
++      }
++    }
+   }
+   fragment CartLineComponent on ComponentizableCartLine {
+     id
+@@ -104,6 +109,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
+         }
+       }
+     }
++    sellingPlanAllocation {
++      sellingPlan {
++         name
++      }
++    }
+   }
+   fragment CartApiQuery on Cart {
+     updatedAt
+
+```
+
+### Original file
+
+This is the original file contents before applying the patch, so you have the full context of the changes applied by the patch.
+
+```
+// NOTE: https://shopify.dev/docs/api/storefront/latest/queries/cart
+export const CART_QUERY_FRAGMENT = `#graphql
+  fragment Money on MoneyV2 {
+    currencyCode
+    amount
+  }
+  fragment CartLine on CartLine {
+    id
+    quantity
+    attributes {
+      key
+      value
+    }
+    cost {
+      totalAmount {
+        ...Money
+      }
+      amountPerQuantity {
+        ...Money
+      }
+      compareAtAmountPerQuantity {
+        ...Money
+      }
+    }
+    merchandise {
+      ... on ProductVariant {
+        id
+        availableForSale
+        compareAtPrice {
+          ...Money
+        }
+        price {
+          ...Money
+        }
+        requiresShipping
+        title
+        image {
+          id
+          url
+          altText
+          width
+          height
+
+        }
+        product {
+          handle
+          title
+          id
+          vendor
+        }
+        selectedOptions {
+          name
+          value
+        }
+      }
+    }
+    sellingPlanAllocation {
+      sellingPlan {
+         name
+      }
+    }
+  }
+  fragment CartLineComponent on ComponentizableCartLine {
+    id
+    quantity
+    attributes {
+      key
+      value
+    }
+    cost {
+      totalAmount {
+        ...Money
+      }
+      amountPerQuantity {
+        ...Money
+      }
+      compareAtAmountPerQuantity {
+        ...Money
+      }
+    }
+    merchandise {
+      ... on ProductVariant {
+        id
+        availableForSale
+        compareAtPrice {
+          ...Money
+        }
+        price {
+          ...Money
+        }
+        requiresShipping
+        title
+        image {
+          id
+          url
+          altText
+          width
+          height
+        }
+        product {
+          handle
+          title
+          id
+          vendor
+        }
+        selectedOptions {
+          name
+          value
+        }
+      }
+    }
+    sellingPlanAllocation {
+      sellingPlan {
+         name
+      }
+    }
+  }
+  fragment CartApiQuery on Cart {
+    updatedAt
+    id
+    appliedGiftCards {
+      lastCharacters
+      amountUsed {
+        ...Money
+      }
+    }
+    checkoutUrl
+    totalQuantity
+    buyerIdentity {
+      countryCode
+      customer {
+        id
+        email
+        firstName
+        lastName
+        displayName
+      }
+      email
+      phone
+    }
+    lines(first: $numCartLines) {
+      nodes {
+        ...CartLine
+      }
+      nodes {
+        ...CartLineComponent
+      }
+    }
+    cost {
+      subtotalAmount {
+        ...Money
+      }
+      totalAmount {
+        ...Money
+      }
+      totalDutyAmount {
+        ...Money
+      }
+      totalTaxAmount {
+        ...Money
+      }
+    }
+    note
+    attributes {
+      key
+      value
+    }
+    discountCodes {
+      code
+      applicable
+    }
+  }
+` as const;
+
+const MENU_FRAGMENT = `#graphql
+  fragment MenuItem on MenuItem {
+    id
+    resourceId
+    tags
+    title
+    type
+    url
+  }
+  fragment ChildMenuItem on MenuItem {
+    ...MenuItem
+  }
+  fragment ParentMenuItem on MenuItem {
+    ...MenuItem
+    items {
+      ...ChildMenuItem
+    }
+  }
+  fragment Menu on Menu {
+    id
+    items {
+      ...ParentMenuItem
+    }
+  }
+` as const;
+
+export const HEADER_QUERY = `#graphql
+  fragment Shop on Shop {
+    id
+    name
+    description
+    primaryDomain {
+      url
+    }
+    brand {
+      logo {
+        image {
+          url
+        }
+      }
+    }
+  }
+  query Header(
+    $country: CountryCode
+    $headerMenuHandle: String!
+    $language: LanguageCode
+  ) @inContext(language: $language, country: $country) {
+    shop {
+      ...Shop
+    }
+    menu(handle: $headerMenuHandle) {
+      ...Menu
+    }
+  }
+  ${MENU_FRAGMENT}
+` as const;
+
+export const FOOTER_QUERY = `#graphql
+  query Footer(
+    $country: CountryCode
+    $footerMenuHandle: String!
+    $language: LanguageCode
+  ) @inContext(language: $language, country: $country) {
+    menu(handle: $footerMenuHandle) {
+      ...Menu
+    }
+  }
+  ${MENU_FRAGMENT}
+` as const;
+
+```

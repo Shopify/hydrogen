@@ -1,0 +1,255 @@
+---
+description: Patch for the app/components/ProductPrice.tsx used by the subscriptions recipe.
+alwaysApply: false
+globs: *
+---
+
+## Overview
+
+Patch for the app/components/ProductPrice.tsx.
+
+## AI model instructions
+
+DO NOT use this file in isolation, but rather as part of a flow to implement the subscriptions recipe, which is available at [cookbook-recipe-subscriptions.mdc](mdc:.cursor/rules/subscriptions/cookbook-recipe-subscriptions.mdc)
+
+## Patch
+
+The following patch relates to the original file contents included later on.
+
+```diff
+index 32460ae2..59eed1d8 100644
+--- a/templates/skeleton/app/components/ProductPrice.tsx
++++ b/templates/skeleton/app/components/ProductPrice.tsx
+@@ -1,13 +1,31 @@
++import type {CurrencyCode} from '@shopify/hydrogen/customer-account-api-types';
++import type {
++  ProductFragment,
++  SellingPlanFragment,
++} from 'storefrontapi.generated';
+ import {Money} from '@shopify/hydrogen';
+ import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
+ 
+ export function ProductPrice({
+   price,
+   compareAtPrice,
++  selectedSellingPlan,
++  selectedVariant,
+ }: {
+   price?: MoneyV2;
+   compareAtPrice?: MoneyV2 | null;
++  selectedVariant?: ProductFragment['selectedOrFirstAvailableVariant'];
++  selectedSellingPlan?: SellingPlanFragment | null;
+ }) {
++  if (selectedSellingPlan) {
++    return (
++      <SellingPlanPrice
++        selectedSellingPlan={selectedSellingPlan}
++        selectedVariant={selectedVariant}
++      />
++    );
++  }
++
+   return (
+     <div className="product-price">
+       {compareAtPrice ? (
+@@ -25,3 +43,74 @@ export function ProductPrice({
+     </div>
+   );
+ }
++
++type SellingPlanPrice = {
++  amount: number;
++  currencyCode: CurrencyCode;
++};
++
++/*
++  Render the selected selling plan price is available
++*/
++function SellingPlanPrice({
++  selectedSellingPlan,
++  selectedVariant,
++}: {
++  selectedSellingPlan: SellingPlanFragment;
++  selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
++}) {
++  if (!selectedVariant) {
++    return null;
++  }
++
++  const sellingPlanPriceAdjustments = selectedSellingPlan?.priceAdjustments;
++
++  if (!sellingPlanPriceAdjustments?.length) {
++    return selectedVariant ? <Money data={selectedVariant.price} /> : null;
++  }
++
++  const selectedVariantPrice: SellingPlanPrice = {
++    amount: parseFloat(selectedVariant.price.amount),
++    currencyCode: selectedVariant.price.currencyCode,
++  };
++
++  const sellingPlanPrice: SellingPlanPrice = sellingPlanPriceAdjustments.reduce(
++    (acc, adjustment) => {
++      switch (adjustment.adjustmentValue.__typename) {
++        case 'SellingPlanFixedAmountPriceAdjustment':
++          return {
++            amount:
++              acc.amount +
++              parseFloat(adjustment.adjustmentValue.adjustmentAmount.amount),
++            currencyCode: acc.currencyCode,
++          };
++        case 'SellingPlanFixedPriceAdjustment':
++          return {
++            amount: parseFloat(adjustment.adjustmentValue.price.amount),
++            currencyCode: acc.currencyCode,
++          };
++        case 'SellingPlanPercentagePriceAdjustment':
++          return {
++            amount:
++              acc.amount *
++              (1 - adjustment.adjustmentValue.adjustmentPercentage / 100),
++            currencyCode: acc.currencyCode,
++          };
++        default:
++          return acc;
++      }
++    },
++    selectedVariantPrice,
++  );
++
++  return (
++    <div className="selling-plan-price">
++      <Money
++        data={{
++          amount: `${sellingPlanPrice.amount}`,
++          currencyCode: sellingPlanPrice.currencyCode,
++        }}
++      />
++    </div>
++  );
++}
+
+```
+
+### Original file
+
+This is the original file contents before applying the patch, so you have the full context of the changes applied by the patch.
+
+```
+import type {CurrencyCode} from '@shopify/hydrogen/customer-account-api-types';
+import type {
+  ProductFragment,
+  SellingPlanFragment,
+} from 'storefrontapi.generated';
+import {Money} from '@shopify/hydrogen';
+import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
+
+export function ProductPrice({
+  price,
+  compareAtPrice,
+  selectedSellingPlan,
+  selectedVariant,
+}: {
+  price?: MoneyV2;
+  compareAtPrice?: MoneyV2 | null;
+  selectedVariant?: ProductFragment['selectedOrFirstAvailableVariant'];
+  selectedSellingPlan?: SellingPlanFragment | null;
+}) {
+  if (selectedSellingPlan) {
+    return (
+      <SellingPlanPrice
+        selectedSellingPlan={selectedSellingPlan}
+        selectedVariant={selectedVariant}
+      />
+    );
+  }
+
+  return (
+    <div className="product-price">
+      {compareAtPrice ? (
+        <div className="product-price-on-sale">
+          {price ? <Money data={price} /> : null}
+          <s>
+            <Money data={compareAtPrice} />
+          </s>
+        </div>
+      ) : price ? (
+        <Money data={price} />
+      ) : (
+        <span>&nbsp;</span>
+      )}
+    </div>
+  );
+}
+
+type SellingPlanPrice = {
+  amount: number;
+  currencyCode: CurrencyCode;
+};
+
+/*
+  Render the selected selling plan price is available
+*/
+function SellingPlanPrice({
+  selectedSellingPlan,
+  selectedVariant,
+}: {
+  selectedSellingPlan: SellingPlanFragment;
+  selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
+}) {
+  if (!selectedVariant) {
+    return null;
+  }
+
+  const sellingPlanPriceAdjustments = selectedSellingPlan?.priceAdjustments;
+
+  if (!sellingPlanPriceAdjustments?.length) {
+    return selectedVariant ? <Money data={selectedVariant.price} /> : null;
+  }
+
+  const selectedVariantPrice: SellingPlanPrice = {
+    amount: parseFloat(selectedVariant.price.amount),
+    currencyCode: selectedVariant.price.currencyCode,
+  };
+
+  const sellingPlanPrice: SellingPlanPrice = sellingPlanPriceAdjustments.reduce(
+    (acc, adjustment) => {
+      switch (adjustment.adjustmentValue.__typename) {
+        case 'SellingPlanFixedAmountPriceAdjustment':
+          return {
+            amount:
+              acc.amount +
+              parseFloat(adjustment.adjustmentValue.adjustmentAmount.amount),
+            currencyCode: acc.currencyCode,
+          };
+        case 'SellingPlanFixedPriceAdjustment':
+          return {
+            amount: parseFloat(adjustment.adjustmentValue.price.amount),
+            currencyCode: acc.currencyCode,
+          };
+        case 'SellingPlanPercentagePriceAdjustment':
+          return {
+            amount:
+              acc.amount *
+              (1 - adjustment.adjustmentValue.adjustmentPercentage / 100),
+            currencyCode: acc.currencyCode,
+          };
+        default:
+          return acc;
+      }
+    },
+    selectedVariantPrice,
+  );
+
+  return (
+    <div className="selling-plan-price">
+      <Money
+        data={{
+          amount: `${sellingPlanPrice.amount}`,
+          currencyCode: sellingPlanPrice.currencyCode,
+        }}
+      />
+    </div>
+  );
+}
+
+```
