@@ -1,0 +1,108 @@
+---
+description: Patch for the app/lib/redirect.ts used by the combined-listings recipe.
+alwaysApply: false
+globs: *
+---
+
+## Overview
+
+Patch for the app/lib/redirect.ts.
+
+## AI model instructions
+
+DO NOT use this file in isolation, but rather as part of a flow to implement the combined-listings recipe, which is available at [cookbook-recipe-combined-listings.mdc](mdc:.cursor/rules/combined-listings/cookbook-recipe-combined-listings.mdc)
+
+## Patch
+
+The following patch relates to the original file contents included later on.
+
+```diff
+index ce1feb5a..29fe2ecc 100644
+--- a/templates/skeleton/app/lib/redirect.ts
++++ b/templates/skeleton/app/lib/redirect.ts
+@@ -1,4 +1,6 @@
+ import {redirect} from '@shopify/remix-oxygen';
++import {ProductFragment} from 'storefrontapi.generated';
++import {isCombinedListing} from './combined-listings';
+ 
+ export function redirectIfHandleIsLocalized(
+   request: Request,
+@@ -21,3 +23,23 @@ export function redirectIfHandleIsLocalized(
+     throw redirect(url.toString());
+   }
+ }
++
++export function redirectIfCombinedListing(
++  request: Request,
++  product: ProductFragment,
++) {
++  const url = new URL(request.url);
++  let shouldRedirect = false;
++
++  if (isCombinedListing(product)) {
++    url.pathname = url.pathname.replace(
++      product.handle,
++      product.selectedOrFirstAvailableVariant?.product.handle ?? '',
++    );
++    shouldRedirect = true;
++  }
++
++  if (shouldRedirect) {
++    throw redirect(url.toString());
++  }
++}
+
+```
+
+### Original file
+
+This is the original file contents before applying the patch, so you have the full context of the changes applied by the patch.
+
+```
+import {redirect} from '@shopify/remix-oxygen';
+import {ProductFragment} from 'storefrontapi.generated';
+import {isCombinedListing} from './combined-listings';
+
+export function redirectIfHandleIsLocalized(
+  request: Request,
+  ...localizedResources: Array<{
+    handle: string;
+    data: {handle: string} & unknown;
+  }>
+) {
+  const url = new URL(request.url);
+  let shouldRedirect = false;
+
+  localizedResources.forEach(({handle, data}) => {
+    if (handle !== data.handle) {
+      url.pathname = url.pathname.replace(handle, data.handle);
+      shouldRedirect = true;
+    }
+  });
+
+  if (shouldRedirect) {
+    throw redirect(url.toString());
+  }
+}
+
+export function redirectIfCombinedListing(
+  request: Request,
+  product: ProductFragment,
+) {
+  const url = new URL(request.url);
+  let shouldRedirect = false;
+
+  if (isCombinedListing(product)) {
+    url.pathname = url.pathname.replace(
+      product.handle,
+      product.selectedOrFirstAvailableVariant?.product.handle ?? '',
+    );
+    shouldRedirect = true;
+  }
+
+  if (shouldRedirect) {
+    throw redirect(url.toString());
+  }
+}
+
+```

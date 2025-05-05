@@ -1,0 +1,114 @@
+---
+description: Patch for the app/components/ProductItem.tsx used by the combined-listings recipe.
+alwaysApply: false
+globs: *
+---
+
+## Overview
+
+Patch for the app/components/ProductItem.tsx.
+
+## AI model instructions
+
+DO NOT use this file in isolation, but rather as part of a flow to implement the combined-listings recipe, which is available at [cookbook-recipe-combined-listings.mdc](mdc:.cursor/rules/combined-listings/cookbook-recipe-combined-listings.mdc)
+
+## Patch
+
+The following patch relates to the original file contents included later on.
+
+```diff
+index 62c64b50..034b5660 100644
+--- a/templates/skeleton/app/components/ProductItem.tsx
++++ b/templates/skeleton/app/components/ProductItem.tsx
+@@ -6,6 +6,7 @@ import type {
+   RecommendedProductFragment,
+ } from 'storefrontapi.generated';
+ import {useVariantUrl} from '~/lib/variants';
++import {isCombinedListing} from '../lib/combined-listings';
+ 
+ export function ProductItem({
+   product,
+@@ -36,9 +37,17 @@ export function ProductItem({
+         />
+       )}
+       <h4>{product.title}</h4>
+-      <small>
+-        <Money data={product.priceRange.minVariantPrice} />
+-      </small>
++      {isCombinedListing(product) ? (
++        <small className="combined-listing-price">
++          <Money data={product.priceRange.minVariantPrice} />
++          <span>–</span>
++          <Money data={product.priceRange.maxVariantPrice} />
++        </small>
++      ) : (
++        <small>
++          <Money data={product.priceRange.minVariantPrice} />
++        </small>
++      )}
+     </Link>
+   );
+ }
+
+```
+
+### Original file
+
+This is the original file contents before applying the patch, so you have the full context of the changes applied by the patch.
+
+```
+import {Link} from '@remix-run/react';
+import {Image, Money} from '@shopify/hydrogen';
+import type {
+  ProductItemFragment,
+  CollectionItemFragment,
+  RecommendedProductFragment,
+} from 'storefrontapi.generated';
+import {useVariantUrl} from '~/lib/variants';
+import {isCombinedListing} from '../lib/combined-listings';
+
+export function ProductItem({
+  product,
+  loading,
+}: {
+  product:
+    | CollectionItemFragment
+    | ProductItemFragment
+    | RecommendedProductFragment;
+  loading?: 'eager' | 'lazy';
+}) {
+  const variantUrl = useVariantUrl(product.handle);
+  const image = product.featuredImage;
+  return (
+    <Link
+      className="product-item"
+      key={product.id}
+      prefetch="intent"
+      to={variantUrl}
+    >
+      {image && (
+        <Image
+          alt={image.altText || product.title}
+          aspectRatio="1/1"
+          data={image}
+          loading={loading}
+          sizes="(min-width: 45em) 400px, 100vw"
+        />
+      )}
+      <h4>{product.title}</h4>
+      {isCombinedListing(product) ? (
+        <small className="combined-listing-price">
+          <Money data={product.priceRange.minVariantPrice} />
+          <span>–</span>
+          <Money data={product.priceRange.maxVariantPrice} />
+        </small>
+      ) : (
+        <small>
+          <Money data={product.priceRange.minVariantPrice} />
+        </small>
+      )}
+    </Link>
+  );
+}
+
+```

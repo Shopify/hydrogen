@@ -1,0 +1,74 @@
+---
+description: Patch for the app/components/ProductImage.tsx used by the combined-listings recipe.
+alwaysApply: false
+globs: *
+---
+
+## Overview
+
+Patch for the app/components/ProductImage.tsx.
+
+## AI model instructions
+
+DO NOT use this file in isolation, but rather as part of a flow to implement the combined-listings recipe, which is available at [cookbook-recipe-combined-listings.mdc](mdc:.cursor/rules/combined-listings/cookbook-recipe-combined-listings.mdc)
+
+## Patch
+
+The following patch relates to the original file contents included later on.
+
+```diff
+index 5f3ac1cc..f1c9f2cd 100644
+--- a/templates/skeleton/app/components/ProductImage.tsx
++++ b/templates/skeleton/app/components/ProductImage.tsx
+@@ -1,10 +1,13 @@
+-import type {ProductVariantFragment} from 'storefrontapi.generated';
++import type {
++  ProductVariantFragment,
++  ProductFragment,
++} from 'storefrontapi.generated';
+ import {Image} from '@shopify/hydrogen';
+ 
+ export function ProductImage({
+   image,
+ }: {
+-  image: ProductVariantFragment['image'];
++  image: ProductVariantFragment['image'] | ProductFragment['featuredImage'];
+ }) {
+   if (!image) {
+     return <div className="product-image" />;
+
+```
+
+### Original file
+
+This is the original file contents before applying the patch, so you have the full context of the changes applied by the patch.
+
+```
+import type {
+  ProductVariantFragment,
+  ProductFragment,
+} from 'storefrontapi.generated';
+import {Image} from '@shopify/hydrogen';
+
+export function ProductImage({
+  image,
+}: {
+  image: ProductVariantFragment['image'] | ProductFragment['featuredImage'];
+}) {
+  if (!image) {
+    return <div className="product-image" />;
+  }
+  return (
+    <div className="product-image">
+      <Image
+        alt={image.altText || 'Product Image'}
+        aspectRatio="1/1"
+        data={image}
+        key={image.id}
+        sizes="(min-width: 45em) 50vw, 100vw"
+      />
+    </div>
+  );
+}
+
+```

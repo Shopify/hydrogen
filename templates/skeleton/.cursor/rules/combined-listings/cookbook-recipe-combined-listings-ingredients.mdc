@@ -1,0 +1,60 @@
+---
+description: New files added by the combined-listings recipe.
+alwaysApply: false
+globs: *
+---
+
+## Overview
+
+New files added by the combined-listings recipe:
+
+## AI model instructions
+
+DO NOT use this file in isolation, but rather as part of a flow to implement the combined-listings recipe, which is available at [cookbook-recipe-combined-listings.mdc](mdc:.cursor/rules/combined-listings/cookbook-recipe-combined-listings.mdc)
+
+- templates/skeleton/app/lib/combined-listings.ts
+
+## Files
+
+### templates/skeleton/app/lib/combined-listings.ts
+
+The `combined-listings.ts` file contains utilities and settings for handling combined listings.
+
+```ts
+// Edit these values to customize combined listings' behavior
+export const combinedListingsSettings = {
+  // If true, loading the product page will redirect to the first variant
+  redirectToFirstVariant: false,
+  // The tag that indicates a combined listing
+  combinedListingTag: 'combined',
+  // If true, combined listings will not be shown in the product list
+  hideCombinedListingsFromProductList: true,
+};
+
+export const maybeFilterOutCombinedListingsQuery =
+  combinedListingsSettings.hideCombinedListingsFromProductList
+    ? `NOT tag:${combinedListingsSettings.combinedListingTag}`
+    : '';
+
+interface ProductWithTags {
+  tags: string[];
+}
+
+function isProductWithTags(u: unknown): u is ProductWithTags {
+  const maybe = u as ProductWithTags;
+  return (
+    u != null &&
+    typeof u === 'object' &&
+    'tags' in maybe &&
+    Array.isArray(maybe.tags)
+  );
+}
+
+export function isCombinedListing(product: unknown) {
+  return (
+    isProductWithTags(product) &&
+    product.tags.includes(combinedListingsSettings.combinedListingTag)
+  );
+}
+
+```
