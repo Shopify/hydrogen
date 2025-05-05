@@ -188,6 +188,7 @@ export function renderStep(
     collapseDiffs?: boolean;
     diffsRelativeToTemplate?: boolean;
     trimDiffHeaders?: boolean;
+    patchesAsLinks?: boolean;
   } = {},
 ): MDBlock[] {
   function getDiffs(): MDBlock[] {
@@ -236,7 +237,11 @@ export function renderStep(
                 )})`,
               ].join(' '),
             ),
-        mdCode('diff', patch, collapsed),
+        options.patchesAsLinks
+          ? mdParagraph(
+              `Patch file: [cookbook-recipe-${recipeName}-patch-${diff.patchFile}.mdc](mdc:.cursor/rules/${recipeName}/cookbook-recipe-${recipeName}-patch-${diff.patchFile}.mdc)`,
+            )
+          : mdCode('diff', patch, collapsed),
       ];
     });
   }

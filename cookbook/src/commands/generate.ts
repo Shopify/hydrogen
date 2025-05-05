@@ -42,7 +42,12 @@ export const generate: CommandModule<{}, GenerateArgs> = {
 };
 
 async function handler(args: GenerateArgs) {
-  const skeletonRulesDir = path.join(TEMPLATE_PATH, '.cursor', 'rules');
+  const skeletonRulesDir = path.join(
+    TEMPLATE_PATH,
+    '.cursor',
+    'rules',
+    args.recipe,
+  );
   fs.rmSync(skeletonRulesDir, {recursive: true, force: true});
 
   const recipePath = await generateRecipe({
@@ -53,7 +58,7 @@ async function handler(args: GenerateArgs) {
     recipeManifestFormat: args.recipeManifestFormat,
   });
 
-  copyCursorRulesToSkeleton();
+  copyCursorRulesToSkeleton(args.recipe);
 
   console.log();
   console.log(recipePath);

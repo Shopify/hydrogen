@@ -4,13 +4,11 @@ import {applyRecipe} from '../lib/apply';
 import {FILES_TO_IGNORE_FOR_GENERATE, TEMPLATE_PATH} from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
 import {isRenderFormat, RENDER_FORMATS, renderRecipe} from '../lib/render';
-import {listRecipes, separator, RecipeManifestFormat} from '../lib/util';
+import {separator, RecipeManifestFormat} from '../lib/util';
 import {copyCursorRulesToSkeleton} from '../lib/llms';
-import path from 'path';
-import fs from 'fs';
 
 type RegenerateArgs = {
-  recipe?: string;
+  recipe: string;
   onlyFiles: boolean;
   format: string;
   referenceBranch: string;
@@ -25,6 +23,7 @@ export const regenerate: CommandModule<{}, RegenerateArgs> = {
       type: 'string',
       description:
         'The name of the recipe to regenerate. If not provided, all recipes will be regenerated.',
+      required: true,
     },
     onlyFiles: {
       type: 'boolean',
@@ -52,53 +51,34 @@ export const regenerate: CommandModule<{}, RegenerateArgs> = {
 };
 
 async function handler(args: RegenerateArgs) {
-  let recipes: string[] = [];
-  if (args.recipe == null) {
-    recipes = listRecipes();
-    console.log('Will regenerate all recipes:', recipes.join(', '));
-    console.log(separator());
-  } else {
-    recipes = [args.recipe];
-  }
-
-  if (recipes.length === 0) {
-    console.log('No recipes to regenerate');
-    return;
-  }
-
-  const skeletonRulesDir = path.join(TEMPLATE_PATH, '.cursor', 'rules');
-  fs.rmSync(skeletonRulesDir, {recursive: true, force: true});
-
   const format = args.format;
   if (!isRenderFormat(format)) {
     throw `Invalid format: ${format}`;
   }
 
-  for await (const recipe of recipes) {
-    console.log(`🔄 Regenerating recipe '${recipe}'`);
-    // apply the recipe
-    applyRecipe({
-      recipeTitle: recipe,
-    });
-    // generate the recipe
-    await generateRecipe({
-      recipeName: recipe,
-      onlyFiles: args.onlyFiles,
-      filenamesToIgnore: FILES_TO_IGNORE_FOR_GENERATE,
-      referenceBranch: args.referenceBranch,
-      recipeManifestFormat: args.recipeManifestFormat,
-    });
-    // render the recipe
-    renderRecipe({
-      recipeName: recipe,
-      format,
-    });
-    // clean up the skeleton template directory
-    execSync(`git checkout -- ${TEMPLATE_PATH}`);
-    execSync(`git clean -fd ${TEMPLATE_PATH}`);
-    console.log(`✅ Regenerated recipe '${recipe}'`);
-    console.log(separator());
+  console.log(`🔄 Regenerating recipe '${args.recipe}'`);
+  // apply the recipe
+  applyRecipe({
+    recipeTitle: args.recipe,
+  });
+  // generate the recipe
+  await generateRecipe({
+    recipeName: args.recipe,
+    onlyFiles: args.onlyFiles,
+    filenamesToIgnore: FILES_TO_IGNORE_FOR_GENERATE,
+    referenceBranch: args.referenceBranch,
+    recipeManifestFormat: args.recipeManifestFormat,
+  });
+  // render the recipe
+  renderRecipe({
+    recipeName: args.recipe,
+    format,
+  });
+  // clean up the skeleton template directory
+  execSync(`git checkout -- ${TEMPLATE_PATH}`);
+  execSync(`git clean -fd ${TEMPLATE_PATH}`);
+  console.log(`✅ Regenerated recipe '${args.recipe}'`);
+  console.log(separator());
 
-    copyCursorRulesToSkeleton();
-  }
+  copyCursorRulesToSkeleton(args.recipe);
 }
