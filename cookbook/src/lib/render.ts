@@ -166,7 +166,7 @@ function makeSteps(
 ): MDBlock[] {
   const markdownStepsHeader = mdHeading(2, 'Steps');
   return [
-    markdownStepsHeader,
+    ...(format === 'github' ? [markdownStepsHeader] : []),
     ...steps.flatMap((step, index) =>
       renderStep(step, index, recipe, recipeName, patchesDir, format, {
         collapseDiffs: true,
@@ -242,7 +242,7 @@ export function renderStep(
   }
 
   const markdownStep: MDBlock[] = [
-    mdHeading(3, `Step ${index + 1}: ${step.name}`),
+    mdHeading(format === 'github' ? 3 : 2, `Step ${index + 1}: ${step.name}`),
     ...(step.notes?.map(mdNote) ?? []),
     mdParagraph(step.description ?? ''),
     ...(step.ingredients != null
