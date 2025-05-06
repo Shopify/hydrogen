@@ -45,7 +45,7 @@ export function cartMetafieldDeleteDefault(
   };
 }
 
-//! @see https://shopify.dev/docs/api/storefront/2025-01/mutations/cartMetafieldDelete
+//! @see https://shopify.dev/docs/api/storefront/2025-04/mutations/cartMetafieldDelete
 export const CART_METAFIELD_DELETE_MUTATION = () => `#graphql
   mutation cartMetafieldDelete(
     $input: CartMetafieldDeleteInput!
