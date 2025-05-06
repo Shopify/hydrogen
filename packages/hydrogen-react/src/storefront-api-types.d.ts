@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Storefront API 2025-01
+ * Based on Storefront API 2025-04
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -708,7 +708,7 @@ export type CartBuyerIdentity = {
    * The rank of the preferences is determined by the order of the addresses in the array. Preferences
    * can be used to populate relevant fields in the checkout flow.
    *
-   * As of the `2025-01` release, `buyerIdentity.deliveryAddressPreferences` is deprecated.
+   * As of the `2025-04` release, `buyerIdentity.deliveryAddressPreferences` is deprecated.
    * Delivery addresses are now part of the `CartDelivery` object and managed with three new mutations:
    * - `cartDeliveryAddressAdd`
    * - `cartDeliveryAddressUpdate`
