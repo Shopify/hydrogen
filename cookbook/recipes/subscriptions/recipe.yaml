@@ -76,7 +76,7 @@ steps:
         patchFile: CartLineItem.tsx.8e657b.patch
   - type: PATCH
     index: 4
-    name: Update `ProductForm` to support subscriptions
+    name: Update ProductForm to support subscriptions
     description: >
       1. Add conditional rendering to display either subscription options or
       standard variant selectors.
@@ -91,7 +91,7 @@ steps:
         patchFile: ProductForm.tsx.8e409a.patch
   - type: PATCH
     index: 5
-    name: Update `ProductPrice` to display subscription pricing
+    name: Update ProductPrice to display subscription pricing
     description: >
       1. Add a `SellingPlanPrice` function to calculate adjusted prices based on
       subscription plan type (fixed amount, fixed price, or percentage).
@@ -113,7 +113,7 @@ steps:
         patchFile: fragments.ts.e8eb04.patch
   - type: PATCH
     index: 7
-    name: Add `SellingPlanSelector` to product pages
+    name: Add SellingPlanSelector to product pages
     description: >
       1. Add the `SellingPlanSelector` component to display subscription options
       on product pages.
@@ -127,7 +127,7 @@ steps:
         patchFile: products.$handle.tsx.3e0b7e.patch
   - type: PATCH
     index: 8
-    name: Add a link to the **Subscriptions** page
+    name: Add a link to the Subscriptions page
     description: |
       Add a `Subscriptions` link to the account menu.
     diffs:
@@ -148,4 +148,4 @@ llms:
     - issue: I'm not seeing the subscription details on my cart line items.
       solution: Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
-commit: 01b89bb30d1cf985e5b61961cffc6cffa002d3a0
+commit: 2ff53492d0c9152bd59063ae6ea34576ea9a4608

@@ -546,7 +546,7 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
                <small>
 ```
 
-### Step 3: Update `ProductForm` to support subscriptions
+### Step 3: Update ProductForm to support subscriptions
 
 1. Add conditional rendering to display either subscription options or standard variant selectors.
 2. Implement `SellingPlanSelector` and `SellingPlanGroup` components to handle subscription plan selection.
@@ -865,7 +865,7 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
 +}
 ```
 
-### Step 4: Update `ProductPrice` to display subscription pricing
+### Step 4: Update ProductPrice to display subscription pricing
 
 1. Add a `SellingPlanPrice` function to calculate adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage).
 2. Add logic to handle different price adjustment types and render the appropriate subscription price when a selling plan is selected.
@@ -1017,7 +1017,7 @@ Add a `sellingPlanAllocation` field with the plan name to the standard and compo
      updatedAt
 ```
 
-### Step 6: Add `SellingPlanSelector` to product pages
+### Step 6: Add SellingPlanSelector to product pages
 
 1. Add the `SellingPlanSelector` component to display subscription options on product pages.
 2. Add logic to handle pricing adjustments, maintain selection state using URL parameters, and update the add-to-cart functionality.
@@ -1210,7 +1210,7 @@ Add a `sellingPlanAllocation` field with the plan name to the standard and compo
  ` as const;
 ```
 
-### Step 7: Add a link to the **Subscriptions** page
+### Step 7: Add a link to the Subscriptions page
 
 Add a `Subscriptions` link to the account menu.
 
