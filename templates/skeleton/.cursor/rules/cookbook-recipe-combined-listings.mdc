@@ -135,7 +135,7 @@ export const combinedListingsSettings = {
 ```
 
 
-### Step 3: Update the `ProductForm` component
+### Step 3: Update the ProductForm component
 
 - Update the `ProductForm` component to hide the `Add to cart` button for the parent products of combined listings and for variants' selected state.
 - Update the `Link` component to not replace the current URL when the product is a combined listing parent product.
@@ -237,7 +237,7 @@ export const combinedListingsSettings = {
  }
 ```
 
-### Step 4: Extend the `ProductImage` component
+### Step 4: Extend the ProductImage component
 
 Update the `ProductImage` component to support images from both product variants and the product itself.
 
@@ -263,7 +263,7 @@ Update the `ProductImage` component to support images from both product variants
      return <div className="product-image" />;
 ```
 
-### Step 5: Show a range of prices for combined listings in `ProductItem`
+### Step 5: Show a range of prices for combined listings in ProductItem
 
 Update `ProductItem.tsx` to show a range of prices for the combined listing parent product instead of the variant price.
 
