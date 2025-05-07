@@ -11,6 +11,7 @@ type GenerateArgs = {
   onlyFiles: boolean;
   referenceBranch: string;
   recipeManifestFormat: RecipeManifestFormat;
+  filePath?: string;
 };
 
 export const generate: CommandModule<{}, GenerateArgs> = {
@@ -37,6 +38,11 @@ export const generate: CommandModule<{}, GenerateArgs> = {
       description: 'The format of the recipe manifest file',
       default: 'yaml',
     },
+    filePath: {
+      type: 'string',
+      description:
+        'If specified, only generate the diffs for this file (and update any references in the recipe.',
+    },
   },
   handler,
 };
@@ -51,6 +57,7 @@ async function handler(args: GenerateArgs) {
     onlyFiles: args.onlyFiles,
     referenceBranch: args.referenceBranch,
     recipeManifestFormat: args.recipeManifestFormat,
+    filePath: args.filePath,
   });
 
   copyCursorRulesToSkeleton();
