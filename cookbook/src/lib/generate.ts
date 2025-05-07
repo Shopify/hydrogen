@@ -21,20 +21,34 @@ import {
 } from './util';
 import {generateLLMsFiles} from './llms';
 
-/**
- * Generate a recipe.
- * @param params - The parameters for the recipe.
- * @returns The path to the recipe.
- */
-export async function generateRecipe(params: {
+type GenerateRecipeParams = {
   recipeName: string;
   filenamesToIgnore: string[];
   onlyFiles: boolean;
   referenceBranch: string;
   recipeManifestFormat: RecipeManifestFormat;
-}): Promise<string> {
-  const {recipeName, filenamesToIgnore, referenceBranch, recipeManifestFormat} =
-    params;
+  filePath?: string;
+};
+
+/**
+ * Generate a recipe.
+ * @param params - The parameters for the recipe.
+ * @returns The path to the recipe.
+ */
+export async function generateRecipe(
+  params: GenerateRecipeParams,
+): Promise<string> {
+  const {
+    recipeName,
+    filenamesToIgnore,
+    referenceBranch,
+    recipeManifestFormat,
+    filePath,
+  } = params;
+
+  if (filePath != null) {
+    return generateForSingleFile(params);
+  }
 
   console.log('📖 Generating recipe');
 
@@ -232,4 +246,65 @@ function createPatchFile(params: {file: string; patchesDirPath: string}): {
   const patchFilePath = path.join(patchesDirPath, patchFilename);
   fs.writeFileSync(patchFilePath, changes);
   return {fullPath, patchFilename};
+}
+
+export async function generateForSingleFile(
+  params: GenerateRecipeParams,
+): Promise<string> {
+  const {recipeName, filePath: rawFilePath, recipeManifestFormat} = params;
+  if (rawFilePath == null) {
+    throw new Error('filePath is required');
+  }
+
+  const absoluteFilePath = path.resolve(rawFilePath);
+  const filePathRelativeToRepo = path.relative(REPO_ROOT, absoluteFilePath);
+  const filePathRelativeToTemplate = path.relative(
+    TEMPLATE_PATH,
+    absoluteFilePath,
+  );
+
+  console.log('📖 Generating for single file');
+
+  const recipeDirPath = path.join(COOKBOOK_PATH, 'recipes', recipeName);
+  if (!fs.existsSync(recipeDirPath)) {
+    throw new Error(`Recipe directory ${recipeDirPath} does not exist`);
+  }
+
+  // load the existing recipe, which MUST exist
+  const existingRecipe = maybeLoadExistingRecipe(recipeDirPath);
+  if (existingRecipe == null) {
+    throw new Error(`Recipe ${recipeName} not found`);
+  }
+
+  const patchesDirPath = path.join(recipeDirPath, 'patches');
+
+  // find the existing step for this file
+  const existingStepIndex = existingRecipe.steps.findIndex((step) =>
+    step.diffs?.some((diff) => diff.file === filePathRelativeToTemplate),
+  );
+  if (existingStepIndex < 0) {
+    throw new Error(`Step for file ${filePathRelativeToRepo} not found`);
+  }
+
+  // generate the single step for this file
+  const steps = await generateSteps({
+    modifiedFiles: [filePathRelativeToRepo],
+    patchesDirPath,
+    existingRecipe: null,
+    ingredients: [],
+  });
+  if (steps.length !== 1) {
+    throw new Error(`Expected 1 step, got ${steps.length}`);
+  }
+
+  // Write the recipe manifest
+  const recipeManifestPath =
+    recipeManifestFormat === 'json'
+      ? path.join(recipeDirPath, 'recipe.json')
+      : path.join(recipeDirPath, 'recipe.yaml');
+
+  console.log('- 📖 Generating LLMs files…');
+  generateLLMsFiles(recipeName);
+
+  return recipeManifestPath;
 }
