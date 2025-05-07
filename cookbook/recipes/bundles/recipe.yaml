@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
-title: bundles
-summary: ""
-description: ""
+title: Bundles
+summary: ''
+description: ''
 notes: []
 requirements: null
 ingredients:
@@ -21,56 +21,56 @@ steps:
       - templates/skeleton/app/components/BundledVariants.tsx
   - type: PATCH
     index: 2
-    name: app/components/CartLineItem.tsx
+    name: Conditionally render the `BundleBadge` in Cart lines
     description: null
     diffs:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.f93ff4.patch
   - type: PATCH
     index: 3
-    name: app/components/ProductForm.tsx
+    name: Conditionally render "Add bundle to cart" in ProductForm
     description: null
     diffs:
       - file: app/components/ProductForm.tsx
         patchFile: ProductForm.tsx.252e88.patch
   - type: PATCH
     index: 4
-    name: app/components/ProductImage.tsx
+    name: Conditionally render the `BundleBadge in ProductImage
     description: null
     diffs:
       - file: app/components/ProductImage.tsx
         patchFile: ProductImage.tsx.ac6815.patch
   - type: PATCH
     index: 5
-    name: app/components/ProductItem.tsx
+    name: Conditionally render the BundleBadge in ProductItem
     description: null
     diffs:
       - file: app/components/ProductItem.tsx
         patchFile: ProductItem.tsx.f84e8c.patch
   - type: PATCH
     index: 6
-    name: app/lib/fragments.ts
+    name: Update the Cart fragment to query for bundles
     description: null
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.18726b.patch
   - type: PATCH
     index: 7
-    name: app/routes/collections.$handle.tsx
+    name: Update collections fragment to query for bundles
     description: null
     diffs:
       - file: app/routes/collections.$handle.tsx
         patchFile: collections.$handle.tsx.c46c36.patch
   - type: PATCH
     index: 8
-    name: app/routes/products.$handle.tsx
+    name: Update product fragment to query for bundles and display `BundledVariants`
     description: null
     diffs:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.7addea.patch
   - type: PATCH
     index: 9
-    name: app/styles/app.css
+    name: Add a product-image class to the app stylesheet
     description: null
     diffs:
       - file: app/styles/app.css
