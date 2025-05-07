@@ -1,27 +1,15 @@
-index 5b6c1bf2..d0934b99 100644
+index f1d7fa3e..a74a6a38 100644
 --- a/templates/skeleton/app/routes/collections.$handle.tsx
 +++ b/templates/skeleton/app/routes/collections.$handle.tsx
-@@ -1,15 +1,10 @@
- import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
--import {useLoaderData, Link, type MetaFunction} from '@remix-run/react';
--import {
--  getPaginationVariables,
--  Image,
--  Money,
--  Analytics,
--} from '@shopify/hydrogen';
--import type {ProductItemFragment} from 'storefrontapi.generated';
--import {useVariantUrl} from '~/lib/variants';
-+import {useLoaderData, type MetaFunction} from '@remix-run/react';
-+import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
+@@ -4,6 +4,7 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
  import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
-+import {ProductItem} from '~/components/ProductItem';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
-+import type {ProductItemFragment} from 'storefrontapi.generated';
+ import {ProductItem} from '~/components/ProductItem';
++import {ProductItemFragment} from 'storefrontapi.generated';
  
  export const meta: MetaFunction<typeof loader> = ({data}) => {
    return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
-@@ -85,7 +80,13 @@ export default function Collection() {
+@@ -79,7 +80,13 @@ export default function Collection() {
          connection={collection.products}
          resourcesClassName="products-grid"
        >
@@ -36,54 +24,10 @@ index 5b6c1bf2..d0934b99 100644
            <ProductItem
              key={product.id}
              product={product}
-@@ -105,38 +106,6 @@ export default function Collection() {
-   );
- }
- 
--function ProductItem({
--  product,
--  loading,
--}: {
--  product: ProductItemFragment;
--  loading?: 'eager' | 'lazy';
--}) {
--  const variantUrl = useVariantUrl(product.handle);
--  return (
--    <Link
--      className="product-item"
--      key={product.id}
--      prefetch="intent"
--      to={variantUrl}
--    >
--      {product.featuredImage && (
--        <Image
--          alt={product.featuredImage.altText || product.title}
--          aspectRatio="1/1"
--          data={product.featuredImage}
--          loading={loading}
--          sizes="(min-width: 45em) 400px, 100vw"
--        />
--      )}
--      <h4>{product.title}</h4>
--      <small>
--        <Money data={product.priceRange.minVariantPrice} />
--      </small>
--    </Link>
--  );
--}
--
- const PRODUCT_ITEM_FRAGMENT = `#graphql
-   fragment MoneyProductItem on MoneyV2 {
-     amount
-@@ -161,10 +130,21 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
+@@ -123,10 +130,16 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
          ...MoneyProductItem
        }
      }
-+    variants(first: 250) {
-+       nodes {
-+          requiresComponents
-+       }
-+    }
 +    # Check wether the product is a bundle
 +    isBundle: selectedOrFirstAvailableVariant(ignoreUnknownOptions: true, selectedOptions: { name: "", value: ""}) {
 +      ...on ProductVariant {

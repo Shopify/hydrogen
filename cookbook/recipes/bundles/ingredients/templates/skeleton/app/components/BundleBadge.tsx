@@ -9,7 +9,6 @@ export function BundleBadge() {
         color: 'white',
         top: '1rem',
         right: '1rem',
-        zIndex: 1,
       }}
     >
       BUNDLE

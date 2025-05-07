@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 title: bundles
-summary: ''
-description: ''
+summary: ""
+description: ""
 notes: []
 requirements: null
 ingredients:
@@ -10,67 +10,57 @@ ingredients:
     description: null
   - path: templates/skeleton/app/components/BundledVariants.tsx
     description: null
-  - path: templates/skeleton/app/components/ProductItem.tsx
-    description: null
 deletedFiles: []
 steps:
   - type: COPY_INGREDIENTS
+    index: 1
     name: Add ingredients to your project
-    description: Copy all the files found in the `ingredients/` directory to the
-      current directory.
+    description: Copy all the files found in the `ingredients/` directory into your project.
     ingredients:
       - templates/skeleton/app/components/BundleBadge.tsx
       - templates/skeleton/app/components/BundledVariants.tsx
-      - templates/skeleton/app/components/ProductItem.tsx
   - type: PATCH
-    index: 1
+    index: 2
     name: app/components/CartLineItem.tsx
     description: null
     diffs:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.f93ff4.patch
   - type: PATCH
-    index: 2
+    index: 3
     name: app/components/ProductForm.tsx
     description: null
     diffs:
       - file: app/components/ProductForm.tsx
         patchFile: ProductForm.tsx.252e88.patch
   - type: PATCH
-    index: 3
+    index: 4
     name: app/components/ProductImage.tsx
     description: null
     diffs:
       - file: app/components/ProductImage.tsx
         patchFile: ProductImage.tsx.ac6815.patch
   - type: PATCH
-    index: 4
+    index: 5
+    name: app/components/ProductItem.tsx
+    description: null
+    diffs:
+      - file: app/components/ProductItem.tsx
+        patchFile: ProductItem.tsx.f84e8c.patch
+  - type: PATCH
+    index: 6
     name: app/lib/fragments.ts
     description: null
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.18726b.patch
   - type: PATCH
-    index: 5
-    name: app/routes/cart.tsx
-    description: null
-    diffs:
-      - file: app/routes/cart.tsx
-        patchFile: cart.tsx.943271.patch
-  - type: PATCH
-    index: 6
+    index: 7
     name: app/routes/collections.$handle.tsx
     description: null
     diffs:
       - file: app/routes/collections.$handle.tsx
         patchFile: collections.$handle.tsx.c46c36.patch
-  - type: PATCH
-    index: 7
-    name: app/routes/collections.all.tsx
-    description: null
-    diffs:
-      - file: app/routes/collections.all.tsx
-        patchFile: collections.all.tsx.df435d.patch
   - type: PATCH
     index: 8
     name: app/routes/products.$handle.tsx
@@ -85,4 +75,7 @@ steps:
     diffs:
       - file: app/styles/app.css
         patchFile: app.css.48239a.patch
-commit: 06bb44ae3a018c48b8374a3826c52581fc1d486c
+llms:
+  userQueries: []
+  troubleshooting: []
+commit: 658f0c7ed75d10c0789d426a1dbc771e31a6c2a9
