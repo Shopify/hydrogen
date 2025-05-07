@@ -1,4 +1,4 @@
-# bundles
+# Bundles
 
 
 
@@ -20,7 +20,7 @@ Copy all the files found in the `ingredients/` directory into your project.
 - [app/components/BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
 - [app/components/BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
 
-### Step 2: app/components/CartLineItem.tsx
+### Step 2: Conditionally render the `BundleBadge` in Cart lines
 
 
 
@@ -71,7 +71,7 @@ index bd33a2cf..0790a6f2 100644
          <ul>
 ```
 
-### Step 3: app/components/ProductForm.tsx
+### Step 3: Conditionally render "Add bundle to cart" in ProductForm
 
 
 
@@ -108,7 +108,7 @@ index e8616a61..07a984dc 100644
    );
 ```
 
-### Step 4: app/components/ProductImage.tsx
+### Step 4: Conditionally render the `BundleBadge in ProductImage
 
 
 
@@ -142,7 +142,7 @@ index 5f3ac1cc..c16b947b 100644
  }
 ```
 
-### Step 5: app/components/ProductItem.tsx
+### Step 5: Conditionally render the BundleBadge in ProductItem
 
 
 
@@ -224,7 +224,7 @@ index 62c64b50..970916bd 100644
 
 </details>
 
-### Step 6: app/lib/fragments.ts
+### Step 6: Update the Cart fragment to query for bundles
 
 
 
@@ -289,7 +289,7 @@ index dc4426a9..13cc34e5 100644
 
 </details>
 
-### Step 7: app/routes/collections.$handle.tsx
+### Step 7: Update collections fragment to query for bundles
 
 
 
@@ -342,7 +342,7 @@ index f1d7fa3e..ae341f8a 100644
    query Collection(
 ```
 
-### Step 8: app/routes/products.$handle.tsx
+### Step 8: Update product fragment to query for bundles and display `BundledVariants`
 
 
 
@@ -465,7 +465,7 @@ index 2dc6bda2..0339d128 100644
 
 </details>
 
-### Step 9: app/styles/app.css
+### Step 9: Add a product-image class to the app stylesheet
 
 
 

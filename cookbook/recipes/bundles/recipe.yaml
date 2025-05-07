@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 title: Bundles
-summary: ''
-description: ''
+summary: ""
+description: ""
 notes: []
 requirements: null
 ingredients:
