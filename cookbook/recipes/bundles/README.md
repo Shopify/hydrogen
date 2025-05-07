@@ -1,0 +1,507 @@
+# bundles
+
+
+
+## Ingredients
+
+_New files added to the template by this recipe._
+
+| File | Description |
+| --- | --- |
+| [`app/components/BundleBadge.tsx`](ingredients/templates/skeleton/app/components/BundleBadge.tsx) |  |
+| [`app/components/BundledVariants.tsx`](ingredients/templates/skeleton/app/components/BundledVariants.tsx) |  |
+| [`app/components/ProductItem.tsx`](ingredients/templates/skeleton/app/components/ProductItem.tsx) |  |
+
+## Steps
+
+### Step 1: Add ingredients to your project
+
+Copy all the files found in the `ingredients/` directory to the current directory.
+
+- [`app/components/BundleBadge.tsx`](ingredients/templates/skeleton/app/components/BundleBadge.tsx)
+- [`app/components/BundledVariants.tsx`](ingredients/templates/skeleton/app/components/BundledVariants.tsx)
+- [`app/components/ProductItem.tsx`](ingredients/templates/skeleton/app/components/ProductItem.tsx)
+
+### Step 2: app/components/CartLineItem.tsx
+
+
+
+#### File: [`app/components/CartLineItem.tsx`](/templates/skeleton/app/components/CartLineItem.tsx)
+
+```diff
+index bd33a2cf..0790a6f2 100644
+--- a/templates/skeleton/app/components/CartLineItem.tsx
++++ b/templates/skeleton/app/components/CartLineItem.tsx
+@@ -6,6 +6,7 @@ import {Link} from '@remix-run/react';
+ import {ProductPrice} from './ProductPrice';
+ import {useAside} from './Aside';
+ import type {CartApiQueryFragment} from 'storefrontapi.generated';
++import {BundleBadge} from '~/components/BundleBadge';
+ 
+ type CartLine = OptimisticCartLine<CartApiQueryFragment>;
+ 
+@@ -24,6 +25,7 @@ export function CartLineItem({
+   const {product, title, image, selectedOptions} = merchandise;
+   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
+   const {close} = useAside();
++  const isBundle = Boolean(line.merchandise.requiresComponents);
+ 
+   return (
+     <li key={id} className="cart-line">
+@@ -38,8 +40,9 @@ export function CartLineItem({
+         />
+       )}
+ 
+-      <div>
++      <div style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
+         <Link
++          style={{position: 'relative'}}
+           prefetch="intent"
+           to={lineItemUrl}
+           onClick={() => {
+@@ -48,9 +51,10 @@ export function CartLineItem({
+             }
+           }}
+         >
+-          <p>
++          <p style={{maxWidth: '60%'}}>
+             <strong>{product.title}</strong>
+           </p>
++          {isBundle ? <BundleBadge /> : null}
+         </Link>
+         <ProductPrice price={line?.cost?.totalAmount} />
+         <ul>
+
+```
+
+### Step 3: app/components/ProductForm.tsx
+
+
+
+#### File: [`app/components/ProductForm.tsx`](/templates/skeleton/app/components/ProductForm.tsx)
+
+```diff
+index e8616a61..07a984dc 100644
+--- a/templates/skeleton/app/components/ProductForm.tsx
++++ b/templates/skeleton/app/components/ProductForm.tsx
+@@ -11,9 +11,11 @@ import type {ProductFragment} from 'storefrontapi.generated';
+ export function ProductForm({
+   productOptions,
+   selectedVariant,
++  isBundle,
+ }: {
+   productOptions: MappedProductOptions[];
+   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
++  isBundle: boolean;
+ }) {
+   const navigate = useNavigate();
+   const {open} = useAside();
+@@ -118,7 +120,11 @@ export function ProductForm({
+             : []
+         }
+       >
+-        {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
++        {selectedVariant?.availableForSale
++          ? isBundle
++            ? 'Add bundle to cart'
++            : 'Add to cart'
++          : 'Sold out'}
+       </AddToCartButton>
+     </div>
+   );
+
+```
+
+### Step 4: app/components/ProductImage.tsx
+
+
+
+#### File: [`app/components/ProductImage.tsx`](/templates/skeleton/app/components/ProductImage.tsx)
+
+```diff
+index 5f3ac1cc..c16b947b 100644
+--- a/templates/skeleton/app/components/ProductImage.tsx
++++ b/templates/skeleton/app/components/ProductImage.tsx
+@@ -1,10 +1,13 @@
+ import type {ProductVariantFragment} from 'storefrontapi.generated';
+ import {Image} from '@shopify/hydrogen';
++import {BundleBadge} from './BundleBadge';
+ 
+ export function ProductImage({
+   image,
++  isBundle = false,
+ }: {
+   image: ProductVariantFragment['image'];
++  isBundle: boolean;
+ }) {
+   if (!image) {
+     return <div className="product-image" />;
+@@ -18,6 +21,7 @@ export function ProductImage({
+         key={image.id}
+         sizes="(min-width: 45em) 50vw, 100vw"
+       />
++      {isBundle ? <BundleBadge /> : null}
+     </div>
+   );
+ }
+
+```
+
+### Step 5: app/lib/fragments.ts
+
+
+
+#### File: [`app/lib/fragments.ts`](/templates/skeleton/app/lib/fragments.ts)
+
+<details>
+
+```diff
+index dc4426a9..13cc34e5 100644
+--- a/templates/skeleton/app/lib/fragments.ts
++++ b/templates/skeleton/app/lib/fragments.ts
+@@ -52,6 +52,19 @@ export const CART_QUERY_FRAGMENT = `#graphql
+           name
+           value
+         }
++        requiresComponents
++        components(first: 10) {
++          nodes {
++            productVariant {
++              id
++              title
++              product {
++                handle
++              }
++            }
++            quantity
++          }
++        }
+       }
+     }
+   }
+@@ -102,6 +115,28 @@ export const CART_QUERY_FRAGMENT = `#graphql
+           name
+           value
+         }
++        requiresComponents
++        components(first: 10) {
++          nodes {
++            productVariant {
++              id
++              title
++              product {
++                handle
++              }
++            }
++            quantity
++          }
++        }
++        groupedBy(first: 10) {
++          nodes {
++            id
++            title
++            product {
++              handle
++            }
++          }
++        }
+       }
+     }
+   }
+
+```
+
+</details>
+
+### Step 6: app/routes/collections.$handle.tsx
+
+
+
+#### File: [`app/routes/collections.$handle.tsx`](/templates/skeleton/app/routes/collections.$handle.tsx)
+
+<details>
+
+```diff
+index 5b6c1bf2..d0934b99 100644
+--- a/templates/skeleton/app/routes/collections.$handle.tsx
++++ b/templates/skeleton/app/routes/collections.$handle.tsx
+@@ -1,15 +1,10 @@
+ import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+-import {useLoaderData, Link, type MetaFunction} from '@remix-run/react';
+-import {
+-  getPaginationVariables,
+-  Image,
+-  Money,
+-  Analytics,
+-} from '@shopify/hydrogen';
+-import type {ProductItemFragment} from 'storefrontapi.generated';
+-import {useVariantUrl} from '~/lib/variants';
++import {useLoaderData, type MetaFunction} from '@remix-run/react';
++import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
+ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
++import {ProductItem} from '~/components/ProductItem';
+ import {redirectIfHandleIsLocalized} from '~/lib/redirect';
++import type {ProductItemFragment} from 'storefrontapi.generated';
+ 
+ export const meta: MetaFunction<typeof loader> = ({data}) => {
+   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
+@@ -85,7 +80,13 @@ export default function Collection() {
+         connection={collection.products}
+         resourcesClassName="products-grid"
+       >
+-        {({node: product, index}) => (
++        {({
++          node: product,
++          index,
++        }: {
++          node: ProductItemFragment;
++          index: number;
++        }) => (
+           <ProductItem
+             key={product.id}
+             product={product}
+@@ -105,38 +106,6 @@ export default function Collection() {
+   );
+ }
+ 
+-function ProductItem({
+-  product,
+-  loading,
+-}: {
+-  product: ProductItemFragment;
+-  loading?: 'eager' | 'lazy';
+-}) {
+-  const variantUrl = useVariantUrl(product.handle);
+-  return (
+-    <Link
+-      className="product-item"
+-      key={product.id}
+-      prefetch="intent"
+-      to={variantUrl}
+-    >
+-      {product.featuredImage && (
+-        <Image
+-          alt={product.featuredImage.altText || product.title}
+-          aspectRatio="1/1"
+-          data={product.featuredImage}
+-          loading={loading}
+-          sizes="(min-width: 45em) 400px, 100vw"
+-        />
+-      )}
+-      <h4>{product.title}</h4>
+-      <small>
+-        <Money data={product.priceRange.minVariantPrice} />
+-      </small>
+-    </Link>
+-  );
+-}
+-
+ const PRODUCT_ITEM_FRAGMENT = `#graphql
+   fragment MoneyProductItem on MoneyV2 {
+     amount
+@@ -161,10 +130,21 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
+         ...MoneyProductItem
+       }
+     }
++    variants(first: 250) {
++       nodes {
++          requiresComponents
++       }
++    }
++    # Check wether the product is a bundle
++    isBundle: selectedOrFirstAvailableVariant(ignoreUnknownOptions: true, selectedOptions: { name: "", value: ""}) {
++      ...on ProductVariant {
++        requiresComponents
++      }
++    }
+   }
+ ` as const;
+ 
+-// NOTE: https://shopify.dev/docs/api/storefront/2022-04/objects/collection
++// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/collection
+ const COLLECTION_QUERY = `#graphql
+   ${PRODUCT_ITEM_FRAGMENT}
+   query Collection(
+
+```
+
+</details>
+
+### Step 7: app/routes/collections.all.tsx
+
+
+
+#### File: [`app/routes/collections.all.tsx`](/templates/skeleton/app/routes/collections.all.tsx)
+
+```diff
+index 84c768bb..c17902e6 100644
+--- a/templates/skeleton/app/routes/collections.all.tsx
++++ b/templates/skeleton/app/routes/collections.all.tsx
+@@ -106,7 +106,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
+     amount
+     currencyCode
+   }
+-  fragment ProductItem on Product {
++  fragment CollectionItem on Product {
+     id
+     handle
+     title
+@@ -140,7 +140,7 @@ const CATALOG_QUERY = `#graphql
+   ) @inContext(country: $country, language: $language) {
+     products(first: $first, last: $last, before: $startCursor, after: $endCursor) {
+       nodes {
+-        ...ProductItem
++        ...CollectionItem
+       }
+       pageInfo {
+         hasPreviousPage
+
+```
+
+### Step 8: app/routes/products.$handle.tsx
+
+
+
+#### File: [`app/routes/products.$handle.tsx`](/templates/skeleton/app/routes/products.$handle.tsx)
+
+<details>
+
+```diff
+index 2dc6bda2..54c9997b 100644
+--- a/templates/skeleton/app/routes/products.$handle.tsx
++++ b/templates/skeleton/app/routes/products.$handle.tsx
+@@ -1,4 +1,4 @@
+-import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
++import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import {useLoaderData, type MetaFunction} from '@remix-run/react';
+ import {
+   getSelectedProductOptions,
+@@ -12,6 +12,8 @@ import {ProductPrice} from '~/components/ProductPrice';
+ import {ProductImage} from '~/components/ProductImage';
+ import {ProductForm} from '~/components/ProductForm';
+ import {redirectIfHandleIsLocalized} from '~/lib/redirect';
++import type {ProductVariantComponent} from '@shopify/hydrogen/storefront-api-types';
++import {BundledVariants} from '~/components/BundledVariants';
+ 
+ export const meta: MetaFunction<typeof loader> = ({data}) => {
+   return [
+@@ -101,9 +103,12 @@ export default function Product() {
+ 
+   const {title, descriptionHtml} = product;
+ 
++  const isBundle = Boolean(product.isBundle?.requiresComponents);
++  const bundledVariants = isBundle ? product.isBundle?.components.nodes : null;
++
+   return (
+     <div className="product">
+-      <ProductImage image={selectedVariant?.image} />
++      <ProductImage image={selectedVariant?.image} isBundle={isBundle} />
+       <div className="product-main">
+         <h1>{title}</h1>
+         <ProductPrice
+@@ -114,6 +119,7 @@ export default function Product() {
+         <ProductForm
+           productOptions={productOptions}
+           selectedVariant={selectedVariant}
++          isBundle={isBundle}
+         />
+         <br />
+         <br />
+@@ -123,6 +129,14 @@ export default function Product() {
+         <br />
+         <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
+         <br />
++        {isBundle && (
++          <div>
++            <h4>Bundled Products</h4>
++            <BundledVariants
++              variants={bundledVariants as ProductVariantComponent[]}
++            />
++          </div>
++        )}
+       </div>
+       <Analytics.ProductView
+         data={{
+@@ -177,6 +191,28 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+       amount
+       currencyCode
+     }
++    requiresComponents
++    components(first: 10) {
++      nodes {
++        productVariant {
++          id
++          title
++          product {
++            handle
++          }
++        }
++        quantity
++      }
++    }
++    groupedBy(first: 10) {
++      nodes {
++        id
++        title
++        product {
++          handle
++        }
++      }
++    }
+   }
+ ` as const;
+ 
+@@ -213,6 +249,25 @@ const PRODUCT_FRAGMENT = `#graphql
+     adjacentVariants (selectedOptions: $selectedOptions) {
+       ...ProductVariant
+     }
++    # Check wether the product is a bundle
++    isBundle: selectedOrFirstAvailableVariant(ignoreUnknownOptions: true, selectedOptions: { name: "", value: ""}) {
++      ...on ProductVariant {
++        requiresComponents
++        components(first: 100) {
++           nodes {
++              productVariant {
++                ...ProductVariant
++              }
++              quantity
++           }
++        }
++        groupedBy(first: 100) {
++          nodes {
++              id
++            }
++          }
++        }
++    }
+     seo {
+       description
+       title
+
+```
+
+</details>
+
+### Step 9: app/styles/app.css
+
+
+
+#### File: [`app/styles/app.css`](/templates/skeleton/app/styles/app.css)
+
+```diff
+index b9294c59..de48b6c6 100644
+--- a/templates/skeleton/app/styles/app.css
++++ b/templates/skeleton/app/styles/app.css
+@@ -436,6 +436,10 @@ button.reset:hover:not(:has(> *)) {
+   margin-top: 0;
+ }
+ 
++.product-image {
++  position: relative;
++}
++
+ .product-image img {
+   height: auto;
+   width: 100%;
+
+```

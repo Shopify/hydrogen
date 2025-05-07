@@ -1,4 +1,4 @@
-index bd33a2cf..06340164 100644
+index bd33a2cf..0790a6f2 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
 @@ -6,6 +6,7 @@ import {Link} from '@remix-run/react';
@@ -40,11 +40,3 @@ index bd33a2cf..06340164 100644
          </Link>
          <ProductPrice price={line?.cost?.totalAmount} />
          <ul>
-@@ -64,6 +68,7 @@ export function CartLineItem({
-         </ul>
-         <CartLineQuantity line={line} />
-       </div>
-+      {/* Add bundle items component when available */}
-     </li>
-   );
- }

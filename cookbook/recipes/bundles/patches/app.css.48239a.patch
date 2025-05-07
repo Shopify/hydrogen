@@ -1,15 +1,7 @@
-index b9294c59..7d724b83 100644
+index b9294c59..de48b6c6 100644
 --- a/templates/skeleton/app/styles/app.css
 +++ b/templates/skeleton/app/styles/app.css
-@@ -210,7 +210,6 @@ button.reset:hover:not(:has(> *)) {
-   min-width: fit-content;
- }
- 
--
- /*
- * --------------------------------------------------
- * components/Footer
-@@ -436,6 +435,10 @@ button.reset:hover:not(:has(> *)) {
+@@ -436,6 +436,10 @@ button.reset:hover:not(:has(> *)) {
    margin-top: 0;
  }
  

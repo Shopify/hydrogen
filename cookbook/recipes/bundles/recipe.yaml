@@ -5,9 +5,23 @@ summary: ''
 description: ''
 notes: []
 requirements: null
-ingredients: []
+ingredients:
+  - path: templates/skeleton/app/components/BundleBadge.tsx
+    description: null
+  - path: templates/skeleton/app/components/BundledVariants.tsx
+    description: null
+  - path: templates/skeleton/app/components/ProductItem.tsx
+    description: null
 deletedFiles: []
 steps:
+  - type: COPY_INGREDIENTS
+    name: Add ingredients to your project
+    description: Copy all the files found in the `ingredients/` directory to the
+      current directory.
+    ingredients:
+      - templates/skeleton/app/components/BundleBadge.tsx
+      - templates/skeleton/app/components/BundledVariants.tsx
+      - templates/skeleton/app/components/ProductItem.tsx
   - type: PATCH
     index: 1
     name: app/components/CartLineItem.tsx
@@ -71,4 +85,4 @@ steps:
     diffs:
       - file: app/styles/app.css
         patchFile: app.css.48239a.patch
-commit: 61ddf92487524b3c04632ae2cfdaa2869a3ae02c
+commit: 06bb44ae3a018c48b8374a3826c52581fc1d486c
