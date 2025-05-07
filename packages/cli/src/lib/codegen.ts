@@ -145,7 +145,8 @@ type CodegenOptions = ProjectDirs & {
 
 export async function codegen(options: CodegenOptions) {
   // react-router typegen is not exposed as a package, so we need to run it in the terminal
-  // TODO: we should use it imported as a library instead
+  // TODO: watch option!!!
+  // TODO: access react-router as a js file from `./node_modules/react-router/...`
   const {execSync} = await import('child_process');
   execSync('npx react-router typegen', {
     cwd: options.rootDirectory,
