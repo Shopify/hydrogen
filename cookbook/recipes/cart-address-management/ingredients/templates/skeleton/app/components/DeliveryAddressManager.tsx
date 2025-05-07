@@ -14,16 +14,22 @@ type ParsedAddresses = {
 };
 
 type DeliveryAddressManagerProps = {
-  cart: CartApiQueryFragment | OptimisticCart | null;
+  cart: OptimisticCart<CartApiQueryFragment | null>;
 };
 
+/**
+ * Component that manages delivery addresses for a cart.
+ * This component displays a list of delivery addresses associated with the cart,
+ * allows the user to select an address, and provides actions for the selected address.
+ * @param props.cart - The cart object containing delivery information and addresses
+ */
 export function DeliveryAddressManager({cart}: DeliveryAddressManagerProps) {
   const defaultAddreses: ParsedAddresses = {
     selectedAddress: null,
     otherAddresses: [],
   };
   const {selectedAddress, otherAddresses} =
-    cart?.delivery?.addresses.reduce((acc, address) => {
+    (cart?.delivery?.addresses || []).reduce((acc, address) => {
       if (address.selected) {
         acc.selectedAddress = address;
       } else {
@@ -37,10 +43,12 @@ export function DeliveryAddressManager({cart}: DeliveryAddressManagerProps) {
     CartAddressFragment | undefined
   >(selectedAddress || addresses[0]);
 
+  const cartHasItems = Boolean(cart?.totalQuantity && cart?.totalQuantity > 0);
+
   return (
     <div style={{marginTop: '1rem'}}>
       <h4>Addresses ({addresses.length})</h4>
-      {addresses && (
+      {cartHasItems && addresses ? (
         <div style={{display: 'flex', flexDirection: 'column'}}>
           <AddressesSelector
             addresses={addresses}
@@ -50,6 +58,8 @@ export function DeliveryAddressManager({cart}: DeliveryAddressManagerProps) {
           <AddressActions activeAddress={activeAddress} />
           <br />
         </div>
+      ) : (
+        <p>Updating..</p>
       )}
     </div>
   );

@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 title: cart-address-management
-summary: ''
-description: ''
+summary: ""
+description: ""
 notes: []
 requirements: null
 ingredients:
@@ -19,8 +19,7 @@ steps:
   - type: COPY_INGREDIENTS
     index: 1
     name: Add ingredients to your project
-    description: Copy all the files found in the `ingredients/` directory to the
-      current directory.
+    description: Copy all the files found in the `ingredients/` directory into your project.
     ingredients:
       - templates/skeleton/app/components/Address.tsx
       - templates/skeleton/app/components/AddressActions.tsx
@@ -42,23 +41,33 @@ steps:
         patchFile: CartMain.tsx.6d121b.patch
   - type: PATCH
     index: 4
+    name: app/components/CartSummary.tsx
+    description: null
+    diffs:
+      - file: app/components/CartSummary.tsx
+        patchFile: CartSummary.tsx.d6b372.patch
+  - type: PATCH
+    index: 5
     name: app/lib/fragments.ts
     description: null
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.18726b.patch
   - type: PATCH
-    index: 5
+    index: 6
     name: app/routes/cart.tsx
     description: null
     diffs:
       - file: app/routes/cart.tsx
         patchFile: cart.tsx.943271.patch
   - type: PATCH
-    index: 6
+    index: 7
     name: app/styles/reset.css
     description: null
     diffs:
       - file: app/styles/reset.css
         patchFile: reset.css.8f1552.patch
-commit: 61ddf92487524b3c04632ae2cfdaa2869a3ae02c
+llms:
+  userQueries: []
+  troubleshooting: []
+commit: 658f0c7ed75d10c0789d426a1dbc771e31a6c2a9

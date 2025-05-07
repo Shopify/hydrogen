@@ -1,3 +1,79 @@
+---
+description: Recipe for implementing "cart-address-management (cart-address-management)" in a Hydrogen storefront. 
+globs: *
+alwaysApply: false
+---
+
+# Overview
+
+This rule describes how to implement "cart-address-management" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
+If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
+If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
+Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
+
+# AI model verification steps
+
+- Never edit generated files (ending with .d.ts) directly; instead, run the `npm run codegen` command to update them.
+
+# Summary
+
+
+
+# User Intent Recognition
+
+<user_queries>
+
+</user_queries>
+
+# Troubleshooting
+
+<troubleshooting>
+
+</troubleshooting>
+
+# Recipe Implementation
+
+Here's the cart-address-management recipe for the base Hydrogen skeleton template:
+
+<recipe_implementation>
+
+## Description
+
+
+
+## New files added to the template by this recipe
+
+### templates/skeleton/app/components/Address.tsx
+
+
+
+```tsx
+import type { DeliveryGroupFragment } from 'storefrontapi.generated'
+
+export function Address({ address }: { address: DeliveryGroupFragment['deliveryAddress'] }) {
+  if (!address) {
+    return <div>Address not provided</div>
+  }
+  return (
+    <div>
+      <div>{address.firstName} {address.lastName}</div>
+      <div>{address.address1}</div>
+      {address.address2 && <div>{address.address2}</div>}
+      <div>{address.city}, {address.provinceCode} {address.zip}</div>
+      <div>{address.country}</div>
+      <div>{address.phone}</div>
+    </div>
+  )
+}
+
+```
+
+### templates/skeleton/app/components/AddressActions.tsx
+
+
+
+```tsx
 import {useRef} from 'react';
 import type {CartAddressFragment} from 'storefrontapi.generated';
 import {CartForm} from '@shopify/hydrogen';
@@ -305,3 +381,194 @@ export function FormFields({
     </div>
   );
 }
+
+```
+
+### templates/skeleton/app/components/AddressesSelector.tsx
+
+
+
+```tsx
+import type {CartAddressFragment} from 'storefrontapi.generated';
+
+/**
+ * A dropdown component for selecting shipping/billing addresses.
+ *
+ * @param addresses - Array of available addresses to select from
+ * @param selectedAddress - Currently selected address (can be null)
+ * @param onAddressChange - Optional callback function triggered when address selection changes
+ * @returns A select dropdown populated with address options or a message if no addresses exist
+ */
+export function AddressesSelector({
+  addresses,
+  selectedAddress,
+  onAddressChange,
+}: {
+  addresses: Array<CartAddressFragment>;
+  selectedAddress: CartAddressFragment | null;
+  onAddressChange?: React.Dispatch<
+    React.SetStateAction<CartAddressFragment | undefined>
+  >;
+}) {
+  if (!addresses || addresses.length === 0) {
+    return <div>No addresses found</div>;
+  }
+
+  function onChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    const addressId = event.target.value;
+    const activeAddress = addresses.find(({id}) => id === addressId);
+    onAddressChange?.(activeAddress || selectedAddress || addresses[0]);
+  }
+
+  return (
+    <select onChange={onChange}>
+      {addresses.map(({address, selected, id}) => {
+        return (
+          <option key={id} defaultChecked={selected} value={id}>
+            {address.address1} {selected ? '(selected)' : ''}
+          </option>
+        );
+      })}
+    </select>
+  );
+}
+
+```
+
+### templates/skeleton/app/components/DeliveryAddressManager.tsx
+
+
+
+```tsx
+import {useState} from 'react';
+import {AddressesSelector} from './AddressesSelector';
+import type {
+  CartAddressFragment,
+  CartApiQueryFragment,
+} from 'storefrontapi.generated';
+import {type OptimisticCart} from '@shopify/hydrogen';
+import {AddressActions} from './AddressActions';
+import type {CartSelectableAddress} from '@shopify/hydrogen/storefront-api-types';
+
+type ParsedAddresses = {
+  selectedAddress: null | CartSelectableAddress;
+  otherAddresses: CartSelectableAddress[];
+};
+
+type DeliveryAddressManagerProps = {
+  cart: OptimisticCart<CartApiQueryFragment | null>;
+};
+
+/**
+ * Component that manages delivery addresses for a cart.
+ * This component displays a list of delivery addresses associated with the cart,
+ * allows the user to select an address, and provides actions for the selected address.
+ * @param props.cart - The cart object containing delivery information and addresses
+ */
+export function DeliveryAddressManager({cart}: DeliveryAddressManagerProps) {
+  const defaultAddreses: ParsedAddresses = {
+    selectedAddress: null,
+    otherAddresses: [],
+  };
+  const {selectedAddress, otherAddresses} =
+    (cart?.delivery?.addresses || []).reduce((acc, address) => {
+      if (address.selected) {
+        acc.selectedAddress = address;
+      } else {
+        acc.otherAddresses.push(address);
+      }
+      return acc;
+    }, defaultAddreses) || defaultAddreses;
+
+  const addresses = [selectedAddress, ...otherAddresses].filter(Boolean);
+  const [activeAddress, setActiveAddress] = useState<
+    CartAddressFragment | undefined
+  >(selectedAddress || addresses[0]);
+
+  const cartHasItems = Boolean(cart?.totalQuantity && cart?.totalQuantity > 0);
+
+  return (
+    <div style={{marginTop: '1rem'}}>
+      <h4>Addresses ({addresses.length})</h4>
+      {cartHasItems && addresses ? (
+        <div style={{display: 'flex', flexDirection: 'column'}}>
+          <AddressesSelector
+            addresses={addresses}
+            selectedAddress={selectedAddress}
+            onAddressChange={setActiveAddress}
+          />
+          <AddressActions activeAddress={activeAddress} />
+          <br />
+        </div>
+      ) : (
+        <p>Updating..</p>
+      )}
+    </div>
+  );
+}
+
+```
+
+## Steps
+
+### Step 1: app/components/CartLineItem.tsx
+
+
+
+#### File: /app/components/CartLineItem.tsx
+
+```diff
+
+```
+
+### Step 2: app/components/CartMain.tsx
+
+
+
+#### File: /app/components/CartMain.tsx
+
+```diff
+
+```
+
+### Step 3: app/components/CartSummary.tsx
+
+
+
+#### File: /app/components/CartSummary.tsx
+
+```diff
+
+```
+
+### Step 4: app/lib/fragments.ts
+
+
+
+#### File: /app/lib/fragments.ts
+
+```diff
+
+```
+
+### Step 5: app/routes/cart.tsx
+
+
+
+#### File: /app/routes/cart.tsx
+
+```diff
+
+```
+
+### Step 6: app/styles/reset.css
+
+
+
+#### File: /app/styles/reset.css
+
+```diff
+
+```
+
+</recipe_implementation>

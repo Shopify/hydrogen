@@ -1,5 +1,13 @@
 import type {CartAddressFragment} from 'storefrontapi.generated';
 
+/**
+ * A dropdown component for selecting shipping/billing addresses.
+ *
+ * @param addresses - Array of available addresses to select from
+ * @param selectedAddress - Currently selected address (can be null)
+ * @param onAddressChange - Optional callback function triggered when address selection changes
+ * @returns A select dropdown populated with address options or a message if no addresses exist
+ */
 export function AddressesSelector({
   addresses,
   selectedAddress,
@@ -18,9 +26,7 @@ export function AddressesSelector({
   function onChange(event: React.ChangeEvent<HTMLSelectElement>) {
     const addressId = event.target.value;
     const activeAddress = addresses.find(({id}) => id === addressId);
-    if (onAddressChange) {
-      onAddressChange(activeAddress || selectedAddress || addresses[0]);
-    }
+    onAddressChange?.(activeAddress || selectedAddress || addresses[0]);
   }
 
   return (
