@@ -10,6 +10,7 @@
     - [Generate](#generate)
       - [Syntax](#syntax-1)
       - [Example](#example-1)
+      - [Single-file flag (`filePath`)](#single-file-flag-filepath)
     - [Validate](#validate)
       - [Syntax](#syntax-2)
       - [Example](#example-2)
@@ -107,14 +108,17 @@ cookbook.ts generate
 Generate a recipe from the skeleton's changes
 
 Options:
-  --version          Show version number                   [boolean]
-  --help             Show help                             [boolean]
-  --recipe           The name of the recipe to generate
-                                                 [string] [required]
-  --onlyFiles        Only generate the files for the recipe, not the
-                     recipe.yaml file.                     [boolean]
-  --referenceBranch  The reference branch to use for the recipe
-                                   [string] [default: "origin/main"]
+  --version               Show version number                          [boolean]
+  --help                  Show help                                    [boolean]
+  --recipe                The name of the recipe to generate [string] [required]
+  --onlyFiles             Only generate the files for the recipe, not the
+                          recipe.yaml file.                            [boolean]
+  --referenceBranch       The reference branch to use for the recipe
+                                               [string] [default: "origin/main"]
+  --recipeManifestFormat  The format of the recipe manifest file
+                                                      [string] [default: "yaml"]
+  --filePath              If specified, only generate the diffs for this file
+                          (and update any references in the recipe.     [string]
 ```
 
 #### Example
@@ -122,6 +126,13 @@ Options:
 ```sh
 npm run cookbook -- generate --recipe my-recipe
 ```
+
+
+#### Single-file flag (`filePath`)
+
+If `filePath` is provided, and it points to a file in the skeleton template folder, the command will generate the diff patch **only** for that file, without updating the manifest.
+
+The recipe must exist, as well as a step for that file.
 
 ### Validate
 
