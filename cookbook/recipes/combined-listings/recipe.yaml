@@ -1,0 +1,194 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+title: Combined Listings
+summary: Handle combined listings on product pages and in search results.
+description: >
+  
+  This recipe lets you more precisely display and manage [combined
+  listings](https://help.shopify.com/en/manual/products/combined-listings-app)
+  on product pages and in search results for your Hydrogen storefront. A
+  combined listing groups separate products together into a single product
+  listing using a shared option like color or size.
+
+  Each product appears as a variant but can have its own title, description,
+  URL, and images.
+
+
+  In this recipe, you'll make the following changes:
+
+
+  1. Set up the Combined Listings app in your Shopify admin and group relevant
+  products together as combined listings.
+
+  2. Configure how combined listings will be handled on your storefront.
+
+  3. Update the `ProductForm` component to hide the `Add to cart` button for the
+  parent products of combined listings.
+
+  4. Update the `ProductImage` component to support images from product variants
+  and the product itself.
+
+  5. Show a range of prices for combined listings in `ProductItem`.
+notes: []
+requirements: >
+  - Your store must be on either a [Shopify Plus](https://www.shopify.com/plus)
+  or enterprise plan.
+
+  - Your store must have the [Combined Listings
+  app](https://admin.shopify.com/apps/combined-listings) installed.
+ingredients:
+  - path: templates/skeleton/app/lib/combined-listings.ts
+    description: The `combined-listings.ts` file contains utilities and settings for
+      handling combined listings.
+deletedFiles: []
+steps:
+  - type: INFO
+    index: 1
+    name: Set up the Combined Listings app
+    description: |
+      1. Install the [Combined Listings app](https://admin.shopify.com/apps/combined-listings). 2. [Create combined listing products in your store](https://help.shopify.com/en/manual/products/combined-listings-app#creating-a-combined-listing). 3. Add tags to the parent products of combined listings to indicate that they're part of a combined listing (for example `combined`).
+  - type: INFO
+    index: 2
+    name: Configure combined listings behavior
+    description: >
+      You can customize how the parent products of combined listings are
+      retrieved and displayed.
+
+
+      To make this process easier, we included a configuration object in the
+      `combined-listings.ts` file that you can edit to customize according to
+      your preferences.
+
+
+      ```ts
+
+      // Edit these values to customize the combined listings behaviors
+
+      export const combinedListingsSettings = {
+        // If true, loading the product page will redirect to the first variant
+        redirectToFirstVariant: false,
+        // The tag that indicates a combined listing
+        combinedListingTag: 'combined',
+        // If true, combined listings will not be shown in the product list
+        hideCombinedListingsFromProductList: true,
+      };
+
+      ```
+  - type: COPY_INGREDIENTS
+    index: 3
+    name: Add ingredients to your project
+    description: Copy all the files found in the `ingredients/` directory into your project.
+    ingredients:
+      - templates/skeleton/app/lib/combined-listings.ts
+  - type: PATCH
+    index: 4
+    name: Update the ProductForm component
+    description: >
+      - Update the `ProductForm` component to hide the `Add to cart` button for
+      the parent products of combined listings and for variants' selected state.
+
+      - Update the `Link` component to not replace the current URL when the
+      product is a combined listing parent product.
+    diffs:
+      - file: app/components/ProductForm.tsx
+        patchFile: ProductForm.tsx.8e409a.patch
+  - type: PATCH
+    index: 5
+    name: Extend the ProductImage component
+    description: >
+      Update the `ProductImage` component to support images from both product
+      variants and the product itself.
+    diffs:
+      - file: app/components/ProductImage.tsx
+        patchFile: ProductImage.tsx.4e6c4c.patch
+  - type: PATCH
+    index: 6
+    name: Show a range of prices for combined listings in ProductItem
+    description: >
+      Update `ProductItem.tsx` to show a range of prices for the combined
+      listing parent product instead of the variant price.
+    diffs:
+      - file: app/components/ProductItem.tsx
+        patchFile: ProductItem.tsx.8ddc67.patch
+  - type: PATCH
+    index: 7
+    name: (Optional) Add redirect utility to first variant of a combined listing
+    description: >
+      If you want to redirect automatically to the first variant of a combined
+      listing when the parent handle is selected, add a redirect utility that's
+      called whenever the parent handle is requested.
+    diffs:
+      - file: app/lib/redirect.ts
+        patchFile: redirect.ts.1e6242.patch
+  - type: PATCH
+    index: 8
+    name: Update queries for combined listings
+    description: >
+      - Add the `tags` property to the items returned by the product query.
+
+      - (Optional) Add the filtering query to the product query to exclude
+      combined listings.
+    diffs:
+      - file: app/routes/_index.tsx
+        patchFile: _index.tsx.8041d5.patch
+  - type: PATCH
+    index: 9
+    name: (Optional) Filter out combined listings from collections pages
+    description: >
+      Since it's not possible to directly apply query filters when retrieving
+      collection products, you can manually filter out combined listings after
+      they're retrieved based on their tags.
+    diffs:
+      - file: app/routes/collections.$handle.tsx
+        patchFile: collections.$handle.tsx.951367.patch
+  - type: PATCH
+    index: 10
+    name: (Optional) Filter out combined listings from the collections index page
+    description: >
+      Update the `collections.all` route to filter out combined listings from
+      the search results, and include the price range for combined listings.
+    diffs:
+      - file: app/routes/collections.all.tsx
+        patchFile: collections.all.tsx.75880b.patch
+  - type: PATCH
+    index: 11
+    name: Update the product page
+    description: >
+      - Display a range of prices for combined listings instead of the variant
+      price.
+
+      - Show the featured image of the combined listing parent product instead
+      of the variant image.
+
+      - (Optional) Redirect to the first variant of a combined listing when the
+      handle is requested.
+    diffs:
+      - file: app/routes/products.$handle.tsx
+        patchFile: products.$handle.tsx.3e0b7e.patch
+  - type: PATCH
+    index: 12
+    name: Update stylesheet
+    description: >
+      Add a class to the product item to show a range of prices for combined
+      listings.
+    diffs:
+      - file: app/styles/app.css
+        patchFile: app.css.e88d35.patch
+llms:
+  userQueries:
+    - How can I show combined listings on product pages and search results using
+      Hydrogen?
+    - How can I display the featured image of the combined listing parent
+      product instead of the variant image?
+    - How can I redirect to the first variant of a combined listing when the
+      handle is requested?
+    - How can I filter out combined listings from the product list when using
+      Shopify headless?
+    - How can I show the price range for combined listings instead of the
+      variant price?
+  troubleshooting:
+    - issue: Combined listings are being displayed in the product list.
+      solution: Make sure to tag combined listing parent products in the Shopify admin
+        and use that tag to filter out combined listings from the product list
+        in the GraphQL query.
+commit: 2ff53492d0c9152bd59063ae6ea34576ea9a4608

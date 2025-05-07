@@ -32,11 +32,11 @@ Add subscription-based products to your Hydrogen storefront.
 
 <troubleshooting>
 - **Issue**: I'm getting an error when I try to add a subscription to my storefront.
-  **Solution**: Make sure you have the Shopify Subscriptions app installed and configured correctly.
+  **Solution**: Make sure you've installed the Shopify Subscriptions app and set up selling plans for subscription products in your Shopify admin.
 - **Issue**: I'm not seeing the subscription options on my product pages.
-  **Solution**: Make sure you have the Shopify Subscriptions app installed and configured correctly.
+  **Solution**: Make sure you've installed the Shopify Subscriptions app and set up selling plans for subscription products in your Shopify admin.
 - **Issue**: I'm not seeing the subscription details on my cart line items.
-  **Solution**: Make sure you have the Shopify Subscriptions app installed and configured correctly.
+  **Solution**: Make sure you've installed the Shopify Subscriptions app and set up selling plans for subscription products in your Shopify admin.
 </troubleshooting>
 
 # Recipe Implementation
@@ -57,7 +57,7 @@ In this recipe you'll make the following changes:
 2. Modify product detail pages to display subscription options with accurate pricing using the `SellingPlanSelector` component.
 3. Enhance GraphQL fragments to fetch all necessary selling plan data.
 4. Display subscription details on applicable line items in the cart.
-5. Add a `Subscriptions` page to manage customer subscriptions, with the ability to list them and cancel the active ones.
+5. Add a **Subscriptions** page where customers can manage their subscriptions, which includes the option to cancel active subscriptions.
 
 
 ## Requirements
@@ -69,7 +69,7 @@ To implement subscriptions in your own store, you need to install a subscription
 
 ### templates/skeleton/app/components/SellingPlanSelector.tsx
 
-The `SellingPlanSelector` component is used to display the available subscription options on product pages.
+Displays the available subscription options on product pages.
 
 ```tsx
 import type {
@@ -451,7 +451,7 @@ Subscriptions management page styles.
 
 ### templates/skeleton/app/styles/selling-plan.css
 
-The `selling-plan.css` file is used to style the `SellingPlanSelector` component.
+Styles the `SellingPlanSelector` component.
 
 ```css
 .selling-plan-group {
@@ -546,7 +546,7 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
                <small>
 ```
 
-### Step 3: Update `ProductForm` to support subscriptions
+### Step 3: Update ProductForm to support subscriptions
 
 1. Add conditional rendering to display either subscription options or standard variant selectors.
 2. Implement `SellingPlanSelector` and `SellingPlanGroup` components to handle subscription plan selection.
@@ -865,7 +865,7 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
 +}
 ```
 
-### Step 4: Update `ProductPrice` to display subscription pricing
+### Step 4: Update ProductPrice to display subscription pricing
 
 1. Add a `SellingPlanPrice` function to calculate adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage).
 2. Add logic to handle different price adjustment types and render the appropriate subscription price when a selling plan is selected.
@@ -1017,7 +1017,7 @@ Add a `sellingPlanAllocation` field with the plan name to the standard and compo
      updatedAt
 ```
 
-### Step 6: Add `SellingPlanSelector` to product pages
+### Step 6: Add SellingPlanSelector to product pages
 
 1. Add the `SellingPlanSelector` component to display subscription options on product pages.
 2. Add logic to handle pricing adjustments, maintain selection state using URL parameters, and update the add-to-cart functionality.
@@ -1210,7 +1210,7 @@ Add a `sellingPlanAllocation` field with the plan name to the standard and compo
  ` as const;
 ```
 
-### Step 7: Add a `Subscriptions` link to the account menu
+### Step 7: Add a link to the Subscriptions page
 
 Add a `Subscriptions` link to the account menu.
 
