@@ -422,7 +422,7 @@ export function BundledVariants({
          ...MoneyProductItem
        }
      }
-+    # Check wether the product is a bundle
++    # Check if the product is a bundle
 +    isBundle: selectedOrFirstAvailableVariant(ignoreUnknownOptions: true, selectedOptions: { name: "", value: ""}) {
 +      ...on ProductVariant {
 +        requiresComponents
@@ -530,7 +530,7 @@ export function BundledVariants({
      adjacentVariants (selectedOptions: $selectedOptions) {
        ...ProductVariant
      }
-+    # Check wether the product is a bundle
++    # Check if the product is a bundle
 +    isBundle: selectedOrFirstAvailableVariant(ignoreUnknownOptions: true, selectedOptions: { name: "", value: ""}) {
 +      ...on ProductVariant {
 +        requiresComponents

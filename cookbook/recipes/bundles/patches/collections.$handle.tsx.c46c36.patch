@@ -1,4 +1,4 @@
-index f1d7fa3e..a74a6a38 100644
+index f1d7fa3e..ae341f8a 100644
 --- a/templates/skeleton/app/routes/collections.$handle.tsx
 +++ b/templates/skeleton/app/routes/collections.$handle.tsx
 @@ -4,6 +4,7 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
@@ -28,7 +28,7 @@ index f1d7fa3e..a74a6a38 100644
          ...MoneyProductItem
        }
      }
-+    # Check wether the product is a bundle
++    # Check if the product is a bundle
 +    isBundle: selectedOrFirstAvailableVariant(ignoreUnknownOptions: true, selectedOptions: { name: "", value: ""}) {
 +      ...on ProductVariant {
 +        requiresComponents

@@ -296,7 +296,7 @@ index dc4426a9..13cc34e5 100644
 #### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/routes/collections.$handle.tsx)
 
 ```diff
-index f1d7fa3e..a74a6a38 100644
+index f1d7fa3e..ae341f8a 100644
 --- a/templates/skeleton/app/routes/collections.$handle.tsx
 +++ b/templates/skeleton/app/routes/collections.$handle.tsx
 @@ -4,6 +4,7 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
@@ -326,7 +326,7 @@ index f1d7fa3e..a74a6a38 100644
          ...MoneyProductItem
        }
      }
-+    # Check wether the product is a bundle
++    # Check if the product is a bundle
 +    isBundle: selectedOrFirstAvailableVariant(ignoreUnknownOptions: true, selectedOptions: { name: "", value: ""}) {
 +      ...on ProductVariant {
 +        requiresComponents
@@ -351,7 +351,7 @@ index f1d7fa3e..a74a6a38 100644
 <details>
 
 ```diff
-index 2dc6bda2..54c9997b 100644
+index 2dc6bda2..0339d128 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,4 +1,4 @@
@@ -439,7 +439,7 @@ index 2dc6bda2..54c9997b 100644
      adjacentVariants (selectedOptions: $selectedOptions) {
        ...ProductVariant
      }
-+    # Check wether the product is a bundle
++    # Check if the product is a bundle
 +    isBundle: selectedOrFirstAvailableVariant(ignoreUnknownOptions: true, selectedOptions: { name: "", value: ""}) {
 +      ...on ProductVariant {
 +        requiresComponents

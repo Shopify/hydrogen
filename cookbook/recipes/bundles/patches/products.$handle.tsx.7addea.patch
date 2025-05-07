@@ -1,4 +1,4 @@
-index 2dc6bda2..54c9997b 100644
+index 2dc6bda2..0339d128 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,4 +1,4 @@
@@ -86,7 +86,7 @@ index 2dc6bda2..54c9997b 100644
      adjacentVariants (selectedOptions: $selectedOptions) {
        ...ProductVariant
      }
-+    # Check wether the product is a bundle
++    # Check if the product is a bundle
 +    isBundle: selectedOrFirstAvailableVariant(ignoreUnknownOptions: true, selectedOptions: { name: "", value: ""}) {
 +      ...on ProductVariant {
 +        requiresComponents
