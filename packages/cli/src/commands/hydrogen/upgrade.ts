@@ -34,6 +34,7 @@ import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getProjectPaths} from '../../lib/remix-config.js';
 import {hydrogenPackagesPath, isHydrogenMonorepo} from '../../lib/build.js';
 import {fetch} from '@shopify/cli-kit/node/http';
+import {runCodemodUpgrades} from '../../codemods/codemod.js';
 
 type ReleaseItem = {
   breaking?: boolean;
@@ -200,6 +201,8 @@ export async function runUpgrade({
 
   const instrunctionsFilePath = await instrunctionsFilePathPromise;
 
+  await runCodemodUpgrades(currentVersion, selectedRelease.version, appPath);
+
   // Display a summary of the upgrade and next steps
   await displayUpgradeSummary({
     appPath,
@@ -281,9 +284,11 @@ export async function getChangelog(): Promise<ChangeLog> {
     process.env.FORCE_CHANGELOG_SOURCE !== 'remote'
   ) {
     const require = createRequire(import.meta.url);
-    return require(
-      joinPath(dirname(hydrogenPackagesPath), 'docs', 'changelog.json'),
-    ) as ChangeLog;
+    return require(joinPath(
+      dirname(hydrogenPackagesPath),
+      'docs',
+      'changelog.json',
+    )) as ChangeLog;
   }
 
   try {
@@ -388,14 +393,11 @@ export function getAvailableUpgrades({
     return false;
   }) as Array<Release>;
 
-  const uniqueAvailableUpgrades = availableUpgrades.reduce(
-    (acc, release) => {
-      if (acc[release.version]) return acc;
-      acc[release.version] = release;
-      return acc;
-    },
-    {} as Record<string, Release>,
-  );
+  const uniqueAvailableUpgrades = availableUpgrades.reduce((acc, release) => {
+    if (acc[release.version]) return acc;
+    acc[release.version] = release;
+    return acc;
+  }, {} as Record<string, Release>);
 
   return {availableUpgrades, uniqueAvailableUpgrades};
 }
@@ -713,10 +715,10 @@ async function promptUpgradeOptions(
       index === 0
         ? '(latest)'
         : semver.patch(version) === 0
-          ? '(major)'
-          : getAbsoluteVersion(currentVersion) === getAbsoluteVersion(version)
-            ? '(outdated)'
-            : '';
+        ? '(major)'
+        : getAbsoluteVersion(currentVersion) === getAbsoluteVersion(version)
+        ? '(outdated)'
+        : '';
 
     // TODO: add group sorting function to cli-kit select prompt
     // so that we can group by major version
@@ -1034,13 +1036,10 @@ export async function displayDevUpgradeNotice({
     // for the same version. Older releases (the first one of a version) probably
     // have more information than a newer release that only changes dependencies.
     const nextReleases = Object.values(
-      [...relevantReleases].reverse().reduce(
-        (acc, release) => {
-          acc[release.version] ??= `${release.version} - ${release.title}`;
-          return acc;
-        },
-        {} as Record<string, string>,
-      ),
+      [...relevantReleases].reverse().reduce((acc, release) => {
+        acc[release.version] ??= `${release.version} - ${release.title}`;
+        return acc;
+      }, {} as Record<string, string>),
     ).slice(0, 5);
 
     let headline =
