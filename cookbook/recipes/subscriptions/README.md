@@ -103,7 +103,7 @@ index bd33a2cf..a18e4b52 100644
 
 ### Step 4: Update ProductForm to support subscriptions
 
-1. Add conditional rendering to display either subscription options or standard variant selectors.
+1. Add conditional rendering to display subscription options alongside the standard variant selectors.
 2. Implement `SellingPlanSelector` and `SellingPlanGroup` components to handle subscription plan selection.
 3. Update `AddToCartButton` to include selling plan data when subscriptions are selected.
 
