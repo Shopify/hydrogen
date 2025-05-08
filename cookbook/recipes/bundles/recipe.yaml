@@ -2,11 +2,10 @@
 
 title: Bundles
 summary: |
-  Manage bundle products and display bundled products in the storefront.
+  Display product bundles on your Hydrogen storefront.
 description: >
-  This recipe helps you better render product bundles in your Hydrogen
-  storefront, by discriminating between a bundle and a non-bundle product,
-  showing badges and the right cover image in the product and collections pages.
+  This recipe adds special styling for product bundles on your Hydrogen storefront. Customers will see
+  badges and relevant cover images for bundles when they're viewing product and collection pages.
 
 
 
@@ -14,23 +13,22 @@ description: >
 
 
 
-  1. Set up the Shopify Bundles app in your Shopify admin, and create a new
-  bundle in your Shopify admin.
+  1. Set up the Shopify Bundles app in your Shopify admin and create a new
+  product bundle.
 
 
-  2. Update the GraphQL fragments to query for bundles, in order to identify
-  bundle products.
+  2. Update the GraphQL fragments to query for bundles to identify bundled products.
 
 
   3. Update the product and collection templates to display badges on product
   listings, update the copy for the cart buttons, and display bundle-specific
-  information on product pages and the collection pages.
+  information on product and collection pages.
 
 
   4. Update the cart line item template to display the bundle badge as needed.
 notes: []
 requirements: >
-  To use bundles in your own store, you need to install a bundles app in your
+  To use product bundles, you need to install a bundles app in your
   Shopify admin.
 
   In this recipe, we'll use the [Shopify Bundles
@@ -47,11 +45,11 @@ steps:
     index: 1
     name: Set up the Shopify Bundles app
     description: |
-      1. Install the [Shopify Bundles app](https://apps.shopify.com/shopify-bundles).
+      1. Install the [Shopify Bundles app](https://apps.shopify.com/shopify-bundles) in your Shopify admin.
 
-      2. Make sure you meet the [eligibility requirements](https://help.shopify.com/en/manual/products/bundles/eligibility-and-considerations) as outlined in the Shopify Help Center.
+      2. Make sure your store meets the [eligibility requirements](https://help.shopify.com/en/manual/products/bundles/eligibility-and-considerations).
 
-      3. Create a new bundle in your [Shopify admin](https://admin.shopify.com) following the instructions on [how to create a bundle using Shopify Bundles](https://help.shopify.com/en/manual/products/bundles/shopify-bundles).
+      3. From the [**Bundles**](https://admin.shopify.com/apps/shopify-bundles/app) page, [create a new bundle](https://help.shopify.com/en/manual/products/bundles/shopify-bundles).
   - type: COPY_INGREDIENTS
     index: 2
     name: Add ingredients to your project
@@ -61,7 +59,7 @@ steps:
       - templates/skeleton/app/components/BundledVariants.tsx
   - type: PATCH
     index: 3
-    name: Update product fragment to query for bundles and display BundledVariants
+    name: Update the product fragment to query for bundles and display BundledVariants
     description: >
       - Add the `requiresComponents` field to the `Product` fragment, which is
       used to identify bundled products.
@@ -72,25 +70,25 @@ steps:
         patchFile: products.$handle.tsx.3e0b7e.patch
   - type: PATCH
     index: 4
-    name: Update collections fragment to query for bundles
+    name: Update the collections fragment to query for bundles
     description: >
-      Similarly to what we did for products, we detect if the product item is a
-      bundle via the `requiresComponents` field.
+      Like the previous step, use the `requiresComponents` field to detect if the product item is a
+      bundle.
     diffs:
       - file: app/routes/collections.$handle.tsx
         patchFile: collections.$handle.tsx.951367.patch
   - type: PATCH
     index: 5
-    name: Update the Cart fragment to query for bundles
+    name: Update the cart fragment to query for bundles
     description: >
-      Finally, we also use the `requiresComponents` field to determine if a cart
+      Use the `requiresComponents` field to determine if a cart
       line item is a bundle.
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.e8eb04.patch
   - type: PATCH
     index: 6
-    name: Conditionally render the BundleBadge in Cart lines
+    name: Conditionally render the BundleBadge in cart line items
     description: >
       If a product is a bundle, show the `BundleBadge` component in the cart
       line item.
@@ -127,7 +125,7 @@ steps:
     index: 10
     name: Add a product-image class to the app stylesheet
     description: |
-      Make sure the bundle badge is positioned relatively to the product image.
+      Make sure the bundle badge is positioned relative to the product image.
     diffs:
       - file: app/styles/app.css
         patchFile: app.css.e88d35.patch
