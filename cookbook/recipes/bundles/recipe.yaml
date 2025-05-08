@@ -1,80 +1,136 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 title: Bundles
-summary: ""
-description: ""
+summary: |
+  Manage bundle products and display bundled products in the storefront.
+description: >
+  This recipe helps you better render product bundles in your Hydrogen
+  storefront, by discriminating between a bundle and a non-bundle product,
+  showing badges and the right cover image in the product and collections pages.
+
+
+
+  In this recipe you'll make the following changes:
+
+
+
+  1. Set up the Shopify Bundles app in your Shopify admin, and create a new
+  bundle in your Shopify admin.
+
+
+  2. Update the GraphQL fragments to query for bundles, in order to identify
+  bundle products.
+
+
+  3. Update the product and collection templates to display badges on product
+  listings, update the copy for the cart buttons, and display bundle-specific
+  information on product pages and the collection pages.
+
+
+  4. Update the cart line item template to display the bundle badge as needed.
 notes: []
-requirements: null
+requirements: >
+  To use bundles in your own store, you need to install a bundles app in your
+  Shopify admin.
+
+  In this recipe, we'll use the [Shopify Bundles
+  app](https://apps.shopify.com/shopify-bundles).
 ingredients:
   - path: templates/skeleton/app/components/BundleBadge.tsx
-    description: null
+    description: A badge displayed on bundle product listings.
   - path: templates/skeleton/app/components/BundledVariants.tsx
-    description: null
+    description: A component that wraps the variants of a bundle product in a single
+      product listing.
 deletedFiles: []
 steps:
-  - type: COPY_INGREDIENTS
+  - type: INFO
     index: 1
+    name: Set up the Shopify Bundles app
+    description: |
+      1. Install the [Shopify Bundles app](https://apps.shopify.com/shopify-bundles).
+
+      2. Make sure you meet the [eligibility requirements](https://help.shopify.com/en/manual/products/bundles/eligibility-and-considerations) as outlined in the Shopify Help Center.
+
+      3. Create a new bundle in your [Shopify admin](https://admin.shopify.com) following the instructions on [how to create a bundle using Shopify Bundles](https://help.shopify.com/en/manual/products/bundles/shopify-bundles).
+  - type: COPY_INGREDIENTS
+    index: 2
     name: Add ingredients to your project
     description: Copy all the files found in the `ingredients/` directory into your project.
     ingredients:
       - templates/skeleton/app/components/BundleBadge.tsx
       - templates/skeleton/app/components/BundledVariants.tsx
   - type: PATCH
-    index: 2
-    name: Conditionally render the `BundleBadge` in Cart lines
-    description: null
-    diffs:
-      - file: app/components/CartLineItem.tsx
-        patchFile: CartLineItem.tsx.f93ff4.patch
-  - type: PATCH
     index: 3
-    name: Conditionally render "Add bundle to cart" in ProductForm
-    description: null
-    diffs:
-      - file: app/components/ProductForm.tsx
-        patchFile: ProductForm.tsx.252e88.patch
-  - type: PATCH
-    index: 4
-    name: Conditionally render the `BundleBadge in ProductImage
-    description: null
-    diffs:
-      - file: app/components/ProductImage.tsx
-        patchFile: ProductImage.tsx.ac6815.patch
-  - type: PATCH
-    index: 5
-    name: Conditionally render the BundleBadge in ProductItem
-    description: null
-    diffs:
-      - file: app/components/ProductItem.tsx
-        patchFile: ProductItem.tsx.f84e8c.patch
-  - type: PATCH
-    index: 6
-    name: Update the Cart fragment to query for bundles
-    description: null
-    diffs:
-      - file: app/lib/fragments.ts
-        patchFile: fragments.ts.18726b.patch
-  - type: PATCH
-    index: 7
-    name: Update collections fragment to query for bundles
-    description: null
-    diffs:
-      - file: app/routes/collections.$handle.tsx
-        patchFile: collections.$handle.tsx.c46c36.patch
-  - type: PATCH
-    index: 8
-    name: Update product fragment to query for bundles and display `BundledVariants`
-    description: null
+    name: Update product fragment to query for bundles and display BundledVariants
+    description: >
+      - Add the `requiresComponents` field to the `Product` fragment, which is
+      used to identify bundled products.
+
+      - Pass the `isBundle` flag to the `ProductImage` component.
     diffs:
       - file: app/routes/products.$handle.tsx
-        patchFile: products.$handle.tsx.7addea.patch
+        patchFile: products.$handle.tsx.3e0b7e.patch
+  - type: PATCH
+    index: 4
+    name: Update collections fragment to query for bundles
+    description: >
+      Similarly to what we did for products, we detect if the product item is a
+      bundle via the `requiresComponents` field.
+    diffs:
+      - file: app/routes/collections.$handle.tsx
+        patchFile: collections.$handle.tsx.951367.patch
+  - type: PATCH
+    index: 5
+    name: Update the Cart fragment to query for bundles
+    description: >
+      Finally, we also use the `requiresComponents` field to determine if a cart
+      line item is a bundle.
+    diffs:
+      - file: app/lib/fragments.ts
+        patchFile: fragments.ts.e8eb04.patch
+  - type: PATCH
+    index: 6
+    name: Conditionally render the BundleBadge in Cart lines
+    description: >
+      If a product is a bundle, show the `BundleBadge` component in the cart
+      line item.
+    diffs:
+      - file: app/components/CartLineItem.tsx
+        patchFile: CartLineItem.tsx.8e657b.patch
+  - type: PATCH
+    index: 7
+    name: Conditionally render "Add bundle to cart" in ProductForm
+    description: |
+      If a product is a bundle, update the text of the product button.
+    diffs:
+      - file: app/components/ProductForm.tsx
+        patchFile: ProductForm.tsx.8e409a.patch
+  - type: PATCH
+    index: 8
+    name: Conditionally render the BundleBadge in ProductImage
+    description: >
+      If a product is a bundle, show the `BundleBadge` component in the
+      `ProductImage` component.
+    diffs:
+      - file: app/components/ProductImage.tsx
+        patchFile: ProductImage.tsx.4e6c4c.patch
   - type: PATCH
     index: 9
+    name: Conditionally render the BundleBadge in ProductItem
+    description: >
+      If a product is a bundle, show the `BundleBadge` component in the
+      `ProductItem` component.
+    diffs:
+      - file: app/components/ProductItem.tsx
+        patchFile: ProductItem.tsx.8ddc67.patch
+  - type: PATCH
+    index: 10
     name: Add a product-image class to the app stylesheet
-    description: null
+    description: |
+      Make sure the bundle badge is positioned relatively to the product image.
     diffs:
       - file: app/styles/app.css
-        patchFile: app.css.48239a.patch
+        patchFile: app.css.e88d35.patch
 llms:
   userQueries: []
   troubleshooting: []

@@ -1,5 +1,24 @@
 # Bundles
 
+This recipe helps you better render product bundles in your Hydrogen storefront, by discriminating between a bundle and a non-bundle product, showing badges and the right cover image in the product and collections pages.
+
+
+In this recipe you'll make the following changes:
+
+
+1. Set up the Shopify Bundles app in your Shopify admin, and create a new bundle in your Shopify admin.
+
+2. Update the GraphQL fragments to query for bundles, in order to identify bundle products.
+
+3. Update the product and collection templates to display badges on product listings, update the copy for the cart buttons, and display bundle-specific information on product pages and the collection pages.
+
+4. Update the cart line item template to display the bundle badge as needed.
+
+
+## Requirements
+
+To use bundles in your own store, you need to install a bundles app in your Shopify admin.
+In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/shopify-bundles).
 
 
 ## Ingredients
@@ -8,342 +27,31 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx) |  |
-| [app/components/BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx) |  |
+| [app/components/BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx) | A badge displayed on bundle product listings. |
+| [app/components/BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx) | A component that wraps the variants of a bundle product in a single product listing. |
 
 ## Steps
 
-### Step 1: Add ingredients to your project
+### Step 1: Set up the Shopify Bundles app
+
+1. Install the [Shopify Bundles app](https://apps.shopify.com/shopify-bundles).
+
+2. Make sure you meet the [eligibility requirements](https://help.shopify.com/en/manual/products/bundles/eligibility-and-considerations) as outlined in the Shopify Help Center.
+
+3. Create a new bundle in your [Shopify admin](https://admin.shopify.com) following the instructions on [how to create a bundle using Shopify Bundles](https://help.shopify.com/en/manual/products/bundles/shopify-bundles).
+
+
+### Step 2: Add ingredients to your project
 
 Copy all the files found in the `ingredients/` directory into your project.
 
 - [app/components/BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
 - [app/components/BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
 
-### Step 2: Conditionally render the `BundleBadge` in Cart lines
+### Step 3: Update product fragment to query for bundles and display BundledVariants
 
-
-
-#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/components/CartLineItem.tsx)
-
-```diff
-index bd33a2cf..0790a6f2 100644
---- a/templates/skeleton/app/components/CartLineItem.tsx
-+++ b/templates/skeleton/app/components/CartLineItem.tsx
-@@ -6,6 +6,7 @@ import {Link} from '@remix-run/react';
- import {ProductPrice} from './ProductPrice';
- import {useAside} from './Aside';
- import type {CartApiQueryFragment} from 'storefrontapi.generated';
-+import {BundleBadge} from '~/components/BundleBadge';
- 
- type CartLine = OptimisticCartLine<CartApiQueryFragment>;
- 
-@@ -24,6 +25,7 @@ export function CartLineItem({
-   const {product, title, image, selectedOptions} = merchandise;
-   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
-   const {close} = useAside();
-+  const isBundle = Boolean(line.merchandise.requiresComponents);
- 
-   return (
-     <li key={id} className="cart-line">
-@@ -38,8 +40,9 @@ export function CartLineItem({
-         />
-       )}
- 
--      <div>
-+      <div style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
-         <Link
-+          style={{position: 'relative'}}
-           prefetch="intent"
-           to={lineItemUrl}
-           onClick={() => {
-@@ -48,9 +51,10 @@ export function CartLineItem({
-             }
-           }}
-         >
--          <p>
-+          <p style={{maxWidth: '60%'}}>
-             <strong>{product.title}</strong>
-           </p>
-+          {isBundle ? <BundleBadge /> : null}
-         </Link>
-         <ProductPrice price={line?.cost?.totalAmount} />
-         <ul>
-```
-
-### Step 3: Conditionally render "Add bundle to cart" in ProductForm
-
-
-
-#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/components/ProductForm.tsx)
-
-```diff
-index e8616a61..07a984dc 100644
---- a/templates/skeleton/app/components/ProductForm.tsx
-+++ b/templates/skeleton/app/components/ProductForm.tsx
-@@ -11,9 +11,11 @@ import type {ProductFragment} from 'storefrontapi.generated';
- export function ProductForm({
-   productOptions,
-   selectedVariant,
-+  isBundle,
- }: {
-   productOptions: MappedProductOptions[];
-   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
-+  isBundle: boolean;
- }) {
-   const navigate = useNavigate();
-   const {open} = useAside();
-@@ -118,7 +120,11 @@ export function ProductForm({
-             : []
-         }
-       >
--        {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
-+        {selectedVariant?.availableForSale
-+          ? isBundle
-+            ? 'Add bundle to cart'
-+            : 'Add to cart'
-+          : 'Sold out'}
-       </AddToCartButton>
-     </div>
-   );
-```
-
-### Step 4: Conditionally render the `BundleBadge in ProductImage
-
-
-
-#### File: [app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/components/ProductImage.tsx)
-
-```diff
-index 5f3ac1cc..c16b947b 100644
---- a/templates/skeleton/app/components/ProductImage.tsx
-+++ b/templates/skeleton/app/components/ProductImage.tsx
-@@ -1,10 +1,13 @@
- import type {ProductVariantFragment} from 'storefrontapi.generated';
- import {Image} from '@shopify/hydrogen';
-+import {BundleBadge} from './BundleBadge';
- 
- export function ProductImage({
-   image,
-+  isBundle = false,
- }: {
-   image: ProductVariantFragment['image'];
-+  isBundle: boolean;
- }) {
-   if (!image) {
-     return <div className="product-image" />;
-@@ -18,6 +21,7 @@ export function ProductImage({
-         key={image.id}
-         sizes="(min-width: 45em) 50vw, 100vw"
-       />
-+      {isBundle ? <BundleBadge /> : null}
-     </div>
-   );
- }
-```
-
-### Step 5: Conditionally render the BundleBadge in ProductItem
-
-
-
-#### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/components/ProductItem.tsx)
-
-<details>
-
-```diff
-index 62c64b50..970916bd 100644
---- a/templates/skeleton/app/components/ProductItem.tsx
-+++ b/templates/skeleton/app/components/ProductItem.tsx
-@@ -1,24 +1,19 @@
- import {Link} from '@remix-run/react';
- import {Image, Money} from '@shopify/hydrogen';
--import type {
--  ProductItemFragment,
--  CollectionItemFragment,
--  RecommendedProductFragment,
--} from 'storefrontapi.generated';
-+import type {ProductItemFragment} from 'storefrontapi.generated';
- import {useVariantUrl} from '~/lib/variants';
-+import {BundleBadge} from '~/components/BundleBadge';
- 
- export function ProductItem({
-   product,
-   loading,
- }: {
--  product:
--    | CollectionItemFragment
--    | ProductItemFragment
--    | RecommendedProductFragment;
-+  product: ProductItemFragment;
-   loading?: 'eager' | 'lazy';
- }) {
-   const variantUrl = useVariantUrl(product.handle);
--  const image = product.featuredImage;
-+  const isBundle = product?.isBundle?.requiresComponents;
-+
-   return (
-     <Link
-       className="product-item"
-@@ -26,19 +21,22 @@ export function ProductItem({
-       prefetch="intent"
-       to={variantUrl}
-     >
--      {image && (
--        <Image
--          alt={image.altText || product.title}
--          aspectRatio="1/1"
--          data={image}
--          loading={loading}
--          sizes="(min-width: 45em) 400px, 100vw"
--        />
--      )}
--      <h4>{product.title}</h4>
--      <small>
--        <Money data={product.priceRange.minVariantPrice} />
--      </small>
-+      <div style={{position: 'relative'}}>
-+        {product.featuredImage && (
-+          <Image
-+            alt={product.featuredImage.altText || product.title}
-+            aspectRatio="1/1"
-+            data={product.featuredImage}
-+            loading={loading}
-+            sizes="(min-width: 45em) 400px, 100vw"
-+          />
-+        )}
-+        <h4>{product.title}</h4>
-+        <small>
-+          <Money data={product.priceRange.minVariantPrice} />
-+        </small>
-+        {isBundle && <BundleBadge />}
-+      </div>
-     </Link>
-   );
- }
-```
-
-</details>
-
-### Step 6: Update the Cart fragment to query for bundles
-
-
-
-#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/lib/fragments.ts)
-
-<details>
-
-```diff
-index dc4426a9..13cc34e5 100644
---- a/templates/skeleton/app/lib/fragments.ts
-+++ b/templates/skeleton/app/lib/fragments.ts
-@@ -52,6 +52,19 @@ export const CART_QUERY_FRAGMENT = `#graphql
-           name
-           value
-         }
-+        requiresComponents
-+        components(first: 10) {
-+          nodes {
-+            productVariant {
-+              id
-+              title
-+              product {
-+                handle
-+              }
-+            }
-+            quantity
-+          }
-+        }
-       }
-     }
-   }
-@@ -102,6 +115,28 @@ export const CART_QUERY_FRAGMENT = `#graphql
-           name
-           value
-         }
-+        requiresComponents
-+        components(first: 10) {
-+          nodes {
-+            productVariant {
-+              id
-+              title
-+              product {
-+                handle
-+              }
-+            }
-+            quantity
-+          }
-+        }
-+        groupedBy(first: 10) {
-+          nodes {
-+            id
-+            title
-+            product {
-+              handle
-+            }
-+          }
-+        }
-       }
-     }
-   }
-```
-
-</details>
-
-### Step 7: Update collections fragment to query for bundles
-
-
-
-#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/routes/collections.$handle.tsx)
-
-```diff
-index f1d7fa3e..ae341f8a 100644
---- a/templates/skeleton/app/routes/collections.$handle.tsx
-+++ b/templates/skeleton/app/routes/collections.$handle.tsx
-@@ -4,6 +4,7 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
- import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
- import {redirectIfHandleIsLocalized} from '~/lib/redirect';
- import {ProductItem} from '~/components/ProductItem';
-+import {ProductItemFragment} from 'storefrontapi.generated';
- 
- export const meta: MetaFunction<typeof loader> = ({data}) => {
-   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
-@@ -79,7 +80,13 @@ export default function Collection() {
-         connection={collection.products}
-         resourcesClassName="products-grid"
-       >
--        {({node: product, index}) => (
-+        {({
-+          node: product,
-+          index,
-+        }: {
-+          node: ProductItemFragment;
-+          index: number;
-+        }) => (
-           <ProductItem
-             key={product.id}
-             product={product}
-@@ -123,10 +130,16 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
-         ...MoneyProductItem
-       }
-     }
-+    # Check if the product is a bundle
-+    isBundle: selectedOrFirstAvailableVariant(ignoreUnknownOptions: true, selectedOptions: { name: "", value: ""}) {
-+      ...on ProductVariant {
-+        requiresComponents
-+      }
-+    }
-   }
- ` as const;
- 
--// NOTE: https://shopify.dev/docs/api/storefront/2022-04/objects/collection
-+// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/collection
- const COLLECTION_QUERY = `#graphql
-   ${PRODUCT_ITEM_FRAGMENT}
-   query Collection(
-```
-
-### Step 8: Update product fragment to query for bundles and display `BundledVariants`
-
+- Add the `requiresComponents` field to the `Product` fragment, which is used to identify bundled products.
+- Pass the `isBundle` flag to the `ProductImage` component.
 
 
 #### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/routes/products.$handle.tsx)
@@ -465,8 +173,337 @@ index 2dc6bda2..0339d128 100644
 
 </details>
 
-### Step 9: Add a product-image class to the app stylesheet
+### Step 4: Update collections fragment to query for bundles
 
+Similarly to what we did for products, we detect if the product item is a bundle via the `requiresComponents` field.
+
+
+#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/routes/collections.$handle.tsx)
+
+```diff
+index f1d7fa3e..ae341f8a 100644
+--- a/templates/skeleton/app/routes/collections.$handle.tsx
++++ b/templates/skeleton/app/routes/collections.$handle.tsx
+@@ -4,6 +4,7 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
+ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+ import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+ import {ProductItem} from '~/components/ProductItem';
++import {ProductItemFragment} from 'storefrontapi.generated';
+ 
+ export const meta: MetaFunction<typeof loader> = ({data}) => {
+   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
+@@ -79,7 +80,13 @@ export default function Collection() {
+         connection={collection.products}
+         resourcesClassName="products-grid"
+       >
+-        {({node: product, index}) => (
++        {({
++          node: product,
++          index,
++        }: {
++          node: ProductItemFragment;
++          index: number;
++        }) => (
+           <ProductItem
+             key={product.id}
+             product={product}
+@@ -123,10 +130,16 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
+         ...MoneyProductItem
+       }
+     }
++    # Check if the product is a bundle
++    isBundle: selectedOrFirstAvailableVariant(ignoreUnknownOptions: true, selectedOptions: { name: "", value: ""}) {
++      ...on ProductVariant {
++        requiresComponents
++      }
++    }
+   }
+ ` as const;
+ 
+-// NOTE: https://shopify.dev/docs/api/storefront/2022-04/objects/collection
++// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/collection
+ const COLLECTION_QUERY = `#graphql
+   ${PRODUCT_ITEM_FRAGMENT}
+   query Collection(
+```
+
+### Step 5: Update the Cart fragment to query for bundles
+
+Finally, we also use the `requiresComponents` field to determine if a cart line item is a bundle.
+
+
+#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/lib/fragments.ts)
+
+<details>
+
+```diff
+index dc4426a9..13cc34e5 100644
+--- a/templates/skeleton/app/lib/fragments.ts
++++ b/templates/skeleton/app/lib/fragments.ts
+@@ -52,6 +52,19 @@ export const CART_QUERY_FRAGMENT = `#graphql
+           name
+           value
+         }
++        requiresComponents
++        components(first: 10) {
++          nodes {
++            productVariant {
++              id
++              title
++              product {
++                handle
++              }
++            }
++            quantity
++          }
++        }
+       }
+     }
+   }
+@@ -102,6 +115,28 @@ export const CART_QUERY_FRAGMENT = `#graphql
+           name
+           value
+         }
++        requiresComponents
++        components(first: 10) {
++          nodes {
++            productVariant {
++              id
++              title
++              product {
++                handle
++              }
++            }
++            quantity
++          }
++        }
++        groupedBy(first: 10) {
++          nodes {
++            id
++            title
++            product {
++              handle
++            }
++          }
++        }
+       }
+     }
+   }
+```
+
+</details>
+
+### Step 6: Conditionally render the BundleBadge in Cart lines
+
+If a product is a bundle, show the `BundleBadge` component in the cart line item.
+
+
+#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/components/CartLineItem.tsx)
+
+```diff
+index bd33a2cf..0790a6f2 100644
+--- a/templates/skeleton/app/components/CartLineItem.tsx
++++ b/templates/skeleton/app/components/CartLineItem.tsx
+@@ -6,6 +6,7 @@ import {Link} from '@remix-run/react';
+ import {ProductPrice} from './ProductPrice';
+ import {useAside} from './Aside';
+ import type {CartApiQueryFragment} from 'storefrontapi.generated';
++import {BundleBadge} from '~/components/BundleBadge';
+ 
+ type CartLine = OptimisticCartLine<CartApiQueryFragment>;
+ 
+@@ -24,6 +25,7 @@ export function CartLineItem({
+   const {product, title, image, selectedOptions} = merchandise;
+   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
+   const {close} = useAside();
++  const isBundle = Boolean(line.merchandise.requiresComponents);
+ 
+   return (
+     <li key={id} className="cart-line">
+@@ -38,8 +40,9 @@ export function CartLineItem({
+         />
+       )}
+ 
+-      <div>
++      <div style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
+         <Link
++          style={{position: 'relative'}}
+           prefetch="intent"
+           to={lineItemUrl}
+           onClick={() => {
+@@ -48,9 +51,10 @@ export function CartLineItem({
+             }
+           }}
+         >
+-          <p>
++          <p style={{maxWidth: '60%'}}>
+             <strong>{product.title}</strong>
+           </p>
++          {isBundle ? <BundleBadge /> : null}
+         </Link>
+         <ProductPrice price={line?.cost?.totalAmount} />
+         <ul>
+```
+
+### Step 7: Conditionally render "Add bundle to cart" in ProductForm
+
+If a product is a bundle, update the text of the product button.
+
+
+#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/components/ProductForm.tsx)
+
+```diff
+index e8616a61..07a984dc 100644
+--- a/templates/skeleton/app/components/ProductForm.tsx
++++ b/templates/skeleton/app/components/ProductForm.tsx
+@@ -11,9 +11,11 @@ import type {ProductFragment} from 'storefrontapi.generated';
+ export function ProductForm({
+   productOptions,
+   selectedVariant,
++  isBundle,
+ }: {
+   productOptions: MappedProductOptions[];
+   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
++  isBundle: boolean;
+ }) {
+   const navigate = useNavigate();
+   const {open} = useAside();
+@@ -118,7 +120,11 @@ export function ProductForm({
+             : []
+         }
+       >
+-        {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
++        {selectedVariant?.availableForSale
++          ? isBundle
++            ? 'Add bundle to cart'
++            : 'Add to cart'
++          : 'Sold out'}
+       </AddToCartButton>
+     </div>
+   );
+```
+
+### Step 8: Conditionally render the BundleBadge in ProductImage
+
+If a product is a bundle, show the `BundleBadge` component in the `ProductImage` component.
+
+
+#### File: [app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/components/ProductImage.tsx)
+
+```diff
+index 5f3ac1cc..c16b947b 100644
+--- a/templates/skeleton/app/components/ProductImage.tsx
++++ b/templates/skeleton/app/components/ProductImage.tsx
+@@ -1,10 +1,13 @@
+ import type {ProductVariantFragment} from 'storefrontapi.generated';
+ import {Image} from '@shopify/hydrogen';
++import {BundleBadge} from './BundleBadge';
+ 
+ export function ProductImage({
+   image,
++  isBundle = false,
+ }: {
+   image: ProductVariantFragment['image'];
++  isBundle: boolean;
+ }) {
+   if (!image) {
+     return <div className="product-image" />;
+@@ -18,6 +21,7 @@ export function ProductImage({
+         key={image.id}
+         sizes="(min-width: 45em) 50vw, 100vw"
+       />
++      {isBundle ? <BundleBadge /> : null}
+     </div>
+   );
+ }
+```
+
+### Step 9: Conditionally render the BundleBadge in ProductItem
+
+If a product is a bundle, show the `BundleBadge` component in the `ProductItem` component.
+
+
+#### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/components/ProductItem.tsx)
+
+<details>
+
+```diff
+index 62c64b50..970916bd 100644
+--- a/templates/skeleton/app/components/ProductItem.tsx
++++ b/templates/skeleton/app/components/ProductItem.tsx
+@@ -1,24 +1,19 @@
+ import {Link} from '@remix-run/react';
+ import {Image, Money} from '@shopify/hydrogen';
+-import type {
+-  ProductItemFragment,
+-  CollectionItemFragment,
+-  RecommendedProductFragment,
+-} from 'storefrontapi.generated';
++import type {ProductItemFragment} from 'storefrontapi.generated';
+ import {useVariantUrl} from '~/lib/variants';
++import {BundleBadge} from '~/components/BundleBadge';
+ 
+ export function ProductItem({
+   product,
+   loading,
+ }: {
+-  product:
+-    | CollectionItemFragment
+-    | ProductItemFragment
+-    | RecommendedProductFragment;
++  product: ProductItemFragment;
+   loading?: 'eager' | 'lazy';
+ }) {
+   const variantUrl = useVariantUrl(product.handle);
+-  const image = product.featuredImage;
++  const isBundle = product?.isBundle?.requiresComponents;
++
+   return (
+     <Link
+       className="product-item"
+@@ -26,19 +21,22 @@ export function ProductItem({
+       prefetch="intent"
+       to={variantUrl}
+     >
+-      {image && (
+-        <Image
+-          alt={image.altText || product.title}
+-          aspectRatio="1/1"
+-          data={image}
+-          loading={loading}
+-          sizes="(min-width: 45em) 400px, 100vw"
+-        />
+-      )}
+-      <h4>{product.title}</h4>
+-      <small>
+-        <Money data={product.priceRange.minVariantPrice} />
+-      </small>
++      <div style={{position: 'relative'}}>
++        {product.featuredImage && (
++          <Image
++            alt={product.featuredImage.altText || product.title}
++            aspectRatio="1/1"
++            data={product.featuredImage}
++            loading={loading}
++            sizes="(min-width: 45em) 400px, 100vw"
++          />
++        )}
++        <h4>{product.title}</h4>
++        <small>
++          <Money data={product.priceRange.minVariantPrice} />
++        </small>
++        {isBundle && <BundleBadge />}
++      </div>
+     </Link>
+   );
+ }
+```
+
+</details>
+
+### Step 10: Add a product-image class to the app stylesheet
+
+Make sure the bundle badge is positioned relatively to the product image.
 
 
 #### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/styles/app.css)
