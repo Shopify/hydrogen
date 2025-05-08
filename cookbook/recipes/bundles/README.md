@@ -1,23 +1,23 @@
 # Bundles
 
-This recipe helps you better render product bundles in your Hydrogen storefront, by discriminating between a bundle and a non-bundle product, showing badges and the right cover image in the product and collections pages.
+This recipe adds special styling for product bundles on your Hydrogen storefront. Customers will see badges and relevant cover images for bundles when they're viewing product and collection pages.
 
 
 In this recipe you'll make the following changes:
 
 
-1. Set up the Shopify Bundles app in your Shopify admin, and create a new bundle in your Shopify admin.
+1. Set up the Shopify Bundles app in your Shopify admin and create a new product bundle.
 
-2. Update the GraphQL fragments to query for bundles, in order to identify bundle products.
+2. Update the GraphQL fragments to query for bundles to identify bundled products.
 
-3. Update the product and collection templates to display badges on product listings, update the copy for the cart buttons, and display bundle-specific information on product pages and the collection pages.
+3. Update the product and collection templates to display badges on product listings, update the copy for the cart buttons, and display bundle-specific information on product and collection pages.
 
 4. Update the cart line item template to display the bundle badge as needed.
 
 
 ## Requirements
 
-To use bundles in your own store, you need to install a bundles app in your Shopify admin.
+To use product bundles, you need to install a bundles app in your Shopify admin.
 In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/shopify-bundles).
 
 
@@ -34,11 +34,11 @@ _New files added to the template by this recipe._
 
 ### Step 1: Set up the Shopify Bundles app
 
-1. Install the [Shopify Bundles app](https://apps.shopify.com/shopify-bundles).
+1. Install the [Shopify Bundles app](https://apps.shopify.com/shopify-bundles) in your Shopify admin.
 
-2. Make sure you meet the [eligibility requirements](https://help.shopify.com/en/manual/products/bundles/eligibility-and-considerations) as outlined in the Shopify Help Center.
+2. Make sure your store meets the [eligibility requirements](https://help.shopify.com/en/manual/products/bundles/eligibility-and-considerations).
 
-3. Create a new bundle in your [Shopify admin](https://admin.shopify.com) following the instructions on [how to create a bundle using Shopify Bundles](https://help.shopify.com/en/manual/products/bundles/shopify-bundles).
+3. From the [**Bundles**](https://admin.shopify.com/apps/shopify-bundles/app) page, [create a new bundle](https://help.shopify.com/en/manual/products/bundles/shopify-bundles).
 
 
 ### Step 2: Add ingredients to your project
@@ -48,7 +48,7 @@ Copy all the files found in the `ingredients/` directory into your project.
 - [app/components/BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
 - [app/components/BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
 
-### Step 3: Update product fragment to query for bundles and display BundledVariants
+### Step 3: Update the product fragment to query for bundles and display BundledVariants
 
 - Add the `requiresComponents` field to the `Product` fragment, which is used to identify bundled products.
 - Pass the `isBundle` flag to the `ProductImage` component.
@@ -173,9 +173,9 @@ index 2dc6bda2..0339d128 100644
 
 </details>
 
-### Step 4: Update collections fragment to query for bundles
+### Step 4: Update the collections fragment to query for bundles
 
-Similarly to what we did for products, we detect if the product item is a bundle via the `requiresComponents` field.
+Like the previous step, use the `requiresComponents` field to detect if the product item is a bundle.
 
 
 #### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/routes/collections.$handle.tsx)
@@ -227,9 +227,9 @@ index f1d7fa3e..ae341f8a 100644
    query Collection(
 ```
 
-### Step 5: Update the Cart fragment to query for bundles
+### Step 5: Update the cart fragment to query for bundles
 
-Finally, we also use the `requiresComponents` field to determine if a cart line item is a bundle.
+Use the `requiresComponents` field to determine if a cart line item is a bundle.
 
 
 #### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/lib/fragments.ts)
@@ -293,7 +293,7 @@ index dc4426a9..13cc34e5 100644
 
 </details>
 
-### Step 6: Conditionally render the BundleBadge in Cart lines
+### Step 6: Conditionally render the BundleBadge in cart line items
 
 If a product is a bundle, show the `BundleBadge` component in the cart line item.
 
@@ -503,7 +503,7 @@ index 62c64b50..970916bd 100644
 
 ### Step 10: Add a product-image class to the app stylesheet
 
-Make sure the bundle badge is positioned relatively to the product image.
+Make sure the bundle badge is positioned relative to the product image.
 
 
 #### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/658f0c7ed75d10c0789d426a1dbc771e31a6c2a9/templates/skeleton/app/styles/app.css)
