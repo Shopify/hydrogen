@@ -78,7 +78,7 @@ steps:
     index: 4
     name: Update ProductForm to support subscriptions
     description: >
-      1. Add conditional rendering to display either subscription options or
+      1. Add conditional rendering to display subscription options alongside the
       standard variant selectors.
 
       2. Implement `SellingPlanSelector` and `SellingPlanGroup` components to
@@ -148,4 +148,4 @@ llms:
     - issue: I'm not seeing the subscription details on my cart line items.
       solution: Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
-commit: 2ff53492d0c9152bd59063ae6ea34576ea9a4608
+commit: 658f0c7ed75d10c0789d426a1dbc771e31a6c2a9
