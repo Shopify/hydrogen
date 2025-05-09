@@ -98,6 +98,7 @@ export default class Dev extends Command {
       default: false,
     }),
 
+    // TODO BEFORE MERGE remove ALL references to legacy-runtime!
     // For the classic compiler:
     ...overrideFlag(commonFlags.legacyRuntime, {
       'legacy-runtime': {
