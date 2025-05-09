@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+title: Markets
+summary: |
+  Add support for multi-region and multilingual in Hydrogen.
+description: >
+  This recipe shows you how to add support for multi-region and multilingual in
+  Hydrogen.
+
+
+  In this recipe you'll make the following changes:
+
+
+  1. Create a component that displays a country selector.
+
+  2. Create a data file that defines the countries and their locales supported
+  by your store.
+
+  3. Create a utility function that gets the locale from the request, and then
+  inject it into the context.
+
+  4. Create a localized product route.
+
+  5. Create a localized action route that handles locale changes.
+notes: []
+requirements: |
+  - You have setup the regions and languages you chose for your store with [Shopify Markets](https://help.shopify.com/en/manual/international).
+  - You're familiar with using the [Storefront API with Shopify Markets](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/markets).
+ingredients: []
+deletedFiles:
+  - templates/skeleton/app/routes/_index.tsx
+  - templates/skeleton/app/routes/products.$handle.tsx
+steps:
+  - type: PATCH
+    name: app/components/Header.tsx
+    description: Add a country selector to the header
+    diffs:
+      - file: app/components/Header.tsx
+        patchFile: Header.tsx.82c1ce.patch
+  - type: PATCH
+    name: app/lib/context.ts
+    description: Get the locale from the request and add it to the context.
+    diffs:
+      - file: app/lib/context.ts
+        patchFile: context.ts.cfd9da.patch
+  - type: PATCH
+    name: app/root.tsx
+    description: |
+      - Detect the locale from the request and throw a 404 if it's not found.
+      - Add the locale to the loader context.
+      - Add a key to the page layout to ensure the locale is used as part of
+        the cache key.
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.8c182c.patch
+  - type: PATCH
+    name: app/styles/app.css
+    description: null
+    diffs:
+      - file: app/styles/app.css
+        patchFile: app.css.48239a.patch
+commit: f80f3bc7239b3ee6641cb468a17e15c77bb7815b
