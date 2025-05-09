@@ -238,12 +238,8 @@
               "code": "ImRldkRlcGVuZGVuY2llcyI6IHsKICAuLi4KICAiQHJlbWl4LXJ1bi9mcy1yb3V0ZXMiOiAiXjIuMTYuMSIsCiAgIkByZW1peC1ydW4vcm91dGUtY29uZmlnIjogIl4yLjE2LjEiLA=="
             },
             {
-              "title": "Move the `Layout` component export from `root.tsx` into its own file. Make sure to supply an `<Outlet>` so Remix knows where to inject your route content.",
-              "code": "Ly8gL2FwcC9sYXlvdXQudHN4CmltcG9ydCB7T3V0bGV0fSBmcm9tICdAcmVtaXgtcnVuL3JlYWN0JzsKCmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIExheW91dCgpIHsKIGNvbnN0IG5vbmNlID0gdXNlTm9uY2UoKTsKIGNvbnN0IGRhdGEgPSB1c2VSb3V0ZUxvYWRlckRhdGE8Um9vdExvYWRlcj4oJ3Jvb3QnKTsKCiByZXR1cm4gKAogICA8aHRtbCBsYW5nPSJlbiI+CiAgICAgLi4uCiAgICAgPE91dGxldCAvPgogICAgIC4uLgogICA8L2h0bWw+CiApOwp9CgovLyBSZW1lbWJlciB0byByZW1vdmUgdGhlIExheW91dCBleHBvcnQgZnJvbSB5b3VyIHJvb3QudHN4Cg=="
-            },
-            {
               "title": "Add a `routes.ts` file. This is your new Remix route configuration file.",
-              "code": "aW1wb3J0IHtmbGF0Um91dGVzfSBmcm9tICdAcmVtaXgtcnVuL2ZzLXJvdXRlcyc7CmltcG9ydCB7bGF5b3V0LCB0eXBlIFJvdXRlQ29uZmlnfSBmcm9tICdAcmVtaXgtcnVuL3JvdXRlLWNvbmZpZyc7CmltcG9ydCB7aHlkcm9nZW5Sb3V0ZXN9IGZyb20gJ0BzaG9waWZ5L2h5ZHJvZ2VuJzsKCmV4cG9ydCBkZWZhdWx0IGh5ZHJvZ2VuUm91dGVzKFsKIC8vIFlvdXIgZW50aXJlIGFwcCByZWFkaW5nIGZyb20gcm91dGVzIGZvbGRlciB1c2luZyBMYXlvdXQgZnJvbSBsYXlvdXQudHN4CiBsYXlvdXQoJy4vbGF5b3V0LnRzeCcsIChhd2FpdCBmbGF0Um91dGVzKCkpKSwKXSkgc2F0aXNmaWVzIFJvdXRlQ29uZmlnOw=="
+              "code": "aW1wb3J0IHtmbGF0Um91dGVzfSBmcm9tICdAcmVtaXgtcnVuL2ZzLXJvdXRlcyc7CmltcG9ydCB7dHlwZSBSb3V0ZUNvbmZpZ30gZnJvbSAnQHJlbWl4LXJ1bi9yb3V0ZS1jb25maWcnOwppbXBvcnQge2h5ZHJvZ2VuUm91dGVzfSBmcm9tICdAc2hvcGlmeS9oeWRyb2dlbic7CgpleHBvcnQgZGVmYXVsdCBoeWRyb2dlblJvdXRlcyhbCiAgLi4uKGF3YWl0IGZsYXRSb3V0ZXMoKSksCiAgLy8gTWFudWFsIHJvdXRlIGRlZmluaXRpb25zIGNhbiBiZSBhZGRlZCB0byB0aGlzIGFycmF5LCBpbiBhZGRpdGlvbiB0byBvciBpbnN0ZWFkIG9mIHVzaW5nIHRoZSBgZmxhdFJvdXRlc2AgZmlsZS1iYXNlZCByb3V0aW5nIGNvbnZlbnRpb24uCiAgLy8gU2VlIGh0dHBzOi8vcmVtaXgucnVuL2RvY3MvZW4vbWFpbi9ndWlkZXMvcm91dGluZyBmb3IgbW9yZSBkZXRhaWxzCl0pIHNhdGlzZmllcyBSb3V0ZUNvbmZpZzs="
             }
           ]
         }
