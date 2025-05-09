@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 11.0.0
+
+### Major Changes
+
+- Update SFAPI and CAAPI versions to 2025.04 ([#2886](https://github.com/Shopify/hydrogen/pull/2886)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 10.0.1
 
 ### Patch Changes

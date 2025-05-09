@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.0.22
+
+### Patch Changes
+
+- Bump skeleton @shopify/cli and @shopify/mini-oxygen ([#2883](https://github.com/Shopify/hydrogen/pull/2883)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 5.0.21
 
 ### Patch Changes

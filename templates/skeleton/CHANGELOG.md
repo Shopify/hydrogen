@@ -1,5 +1,24 @@
 # skeleton
 
+## 2026.0.0
+
+### Major Changes
+
+- Update SFAPI and CAAPI versions to 2025.04 ([#2886](https://github.com/Shopify/hydrogen/pull/2886)) by [@juanpprieto](https://github.com/juanpprieto)
+
+### Patch Changes
+
+- Added bundles recipe ([#2915](https://github.com/Shopify/hydrogen/pull/2915)) by [@ruggishop](https://github.com/ruggishop)
+
+- Bump skeleton @shopify/cli and @shopify/mini-oxygen ([#2883](https://github.com/Shopify/hydrogen/pull/2883)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated the subscriptions recipe to better display the purchase options. ([#2912](https://github.com/Shopify/hydrogen/pull/2912)) by [@ruggishop](https://github.com/ruggishop)
+
+- Added a Combined Listings recipe. ([#2876](https://github.com/Shopify/hydrogen/pull/2876)) by [@ruggishop](https://github.com/ruggishop)
+
+- Updated dependencies [[`af23e710`](https://github.com/Shopify/hydrogen/commit/af23e710dac83bb57498d9c2ef1d8bcf9df55d34), [`9d8a6644`](https://github.com/Shopify/hydrogen/commit/9d8a6644a5b67dca890c6687df390aee78fc85c3)]:
+  - @shopify/hydrogen@2026.0.0
+
 ## 2025.1.7
 
 ### Patch Changes
