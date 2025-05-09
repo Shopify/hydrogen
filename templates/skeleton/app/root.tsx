@@ -10,7 +10,7 @@ import {
   Scripts,
   ScrollRestoration,
   useRouteLoaderData,
-} from '@remix-run/react';
+} from 'react-router';
 import favicon from '~/assets/favicon.svg';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 import resetStyles from '~/styles/reset.css?url';

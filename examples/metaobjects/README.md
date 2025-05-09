@@ -41,9 +41,9 @@ create are labeled with 🆕.
 | 🆕 [`app/sections/SectionStoreProfile.tsx`](app/sections/SectionStoreProfile.tsx)         | A component that renders the SectionStoreProfile definition and entries                                                                  |
 | 🆕 [`app/sections/SectionStores.tsx`](app/sections/SectionStores.tsx)                     | A component that renders the SectionStores definition and entries                                                                        |
 | 🆕 [`app/components/EditRoute.tsx`](app/components/EditRoute.tsx)                         | A component that overlays an Edit Route button in routes with metaobjects for easy access to the metaobject entry in the admin dashboard |
-| 🆕 [`app/utils/parseSection.ts`](app/utils/parseSection.ts)                             | A utility that parses and cleans up SFAPI metaobject responses for easier consumption                                                    |
+| 🆕 [`app/utils/parseSection.ts`](app/utils/parseSection.ts)                               | A utility that parses and cleans up SFAPI metaobject responses for easier consumption                                                    |
 | 🆕 [`app/routes/stores._index.tsx`](app/routes/stores._index.tsx)                         | A route that displays a collection of custom store entries                                                                               |
-| 🆕 [`app/routes/stores.$name.tsx`](app/routes/stores.$name.tsx)                                     | A dynamic route that displays custom store metaobject profiles                                                                           |
+| 🆕 [`app/routes/stores.$name.tsx`](app/routes/stores.$name.tsx)                           | A dynamic route that displays custom store metaobject profiles                                                                           |
 | [`app/routes/_index.tsx`](app/routes/_index.tsx)                                          | Modified home route to display metaobjects route content / sections                                                                      |
 
 ## Dependencies
@@ -76,7 +76,7 @@ To enable the Edit Route button return the env variable as `publicStoreSubdomain
 like so
 
 ```ts
-import {data, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {data, type LoaderFunctionArgs} from 'react-router';
 
 export async function loader({context}: LoaderFunctionArgs) {
   // other code ...

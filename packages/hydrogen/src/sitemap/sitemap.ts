@@ -1,4 +1,4 @@
-import type {LoaderFunctionArgs} from '@remix-run/server-runtime';
+import type {LoaderFunctionArgs} from 'react-router';
 import type {Storefront} from '../storefront';
 
 const SITEMAP_INDEX_PREFIX = `<?xml version="1.0" encoding="UTF-8"?>

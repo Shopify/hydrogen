@@ -1,5 +1,5 @@
 import {useEffect} from 'react';
-import {useLocation} from '@remix-run/react';
+import {useLocation} from 'react-router';
 
 export default function Index() {
   return (
@@ -14,7 +14,10 @@ function TrackPageView() {
   const location = useLocation();
 
   useEffect(() => {
-    window.gtag('event', 'page_view', {path: location.pathname, title: document.title});
+    window.gtag('event', 'page_view', {
+      path: location.pathname,
+      title: document.title,
+    });
   }, []);
 
   return <pre>pageView event tracked</pre>;

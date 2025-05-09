@@ -16,9 +16,11 @@ import {startMiniOxygen, type MiniOxygen} from '../../lib/mini-oxygen/index.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 import {findPort} from '../../lib/find-port.js';
-import {getViteConfig} from '../../lib/vite-config.js';
+import {
+  getViteConfig,
+  REMIX_COMPILER_ERROR_MESSAGE,
+} from '../../lib/vite-config.js';
 import {runBuild} from './build.js';
-import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 import {deferPromise} from '../../lib/defer.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
@@ -137,11 +139,8 @@ export async function runPreview({
 
   const useClassicCompiler = await isClassicProject(root);
 
-  if (watch && useClassicCompiler) {
-    throw new AbortError(
-      'Preview in watch mode is not supported for classic Remix projects.',
-      'Please use the dev command instead, which is the equivalent for classic projects.',
-    );
+  if (useClassicCompiler) {
+    throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
   }
 
   let miniOxygen: MiniOxygen;
@@ -159,23 +158,19 @@ export async function runPreview({
   };
 
   const buildProcess = shouldBuild
-    ? useClassicCompiler
-      ? await runClassicCompilerBuild({
-          ...buildOptions,
-        }).then(projectBuild.resolve)
-      : await runBuild({
-          ...buildOptions,
-          watch,
-          async onServerBuildFinish() {
-            if (projectBuild.state === 'pending') {
-              projectBuild.resolve();
-            } else {
-              outputInfo('🏗️  Project rebuilt. Reloading server...');
-            }
+    ? await runBuild({
+        ...buildOptions,
+        watch,
+        async onServerBuildFinish() {
+          if (projectBuild.state === 'pending') {
+            projectBuild.resolve();
+          } else {
+            outputInfo('🏗️  Project rebuilt. Reloading server...');
+          }
 
-            await miniOxygen?.reload();
-          },
-        })
+          await miniOxygen?.reload();
+        },
+      })
     : projectBuild.resolve();
 
   if (!useClassicCompiler) {
