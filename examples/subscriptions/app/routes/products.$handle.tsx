@@ -4,6 +4,7 @@ import {
   Link,
   useLoaderData,
   redirect,
+  type LinksFunction,
   type LoaderFunctionArgs,
   type MetaFunction,
   type FetcherWithComponents,
@@ -48,7 +49,6 @@ import {
   type SellingPlanGroup,
 } from '~/components/SellingPlanSelector';
 import sellingPanStyle from '~/styles/selling-plan.css?url';
-import type {LinksFunction} from 'react-router';
 
 export const links: LinksFunction = () => [
   {rel: 'stylesheet', href: sellingPanStyle},

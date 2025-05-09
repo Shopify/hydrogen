@@ -1,5 +1,6 @@
-import {type LinksFunction, type LoaderFunctionArgs} from 'react-router';
 import {
+  type LinksFunction,
+  type LoaderFunctionArgs,
   Links,
   Meta,
   Outlet,
