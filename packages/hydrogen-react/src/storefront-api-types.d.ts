@@ -1347,6 +1347,26 @@ export type CartErrorCode =
   | 'NOTE_TOO_LONG'
   /** Only one delivery address can be selected. */
   | 'ONLY_ONE_DELIVERY_ADDRESS_CAN_BE_SELECTED'
+  /** Credit card has expired. */
+  | 'PAYMENTS_CREDIT_CARD_BASE_EXPIRED'
+  /** Credit card gateway is not supported. */
+  | 'PAYMENTS_CREDIT_CARD_BASE_GATEWAY_NOT_SUPPORTED'
+  /** Credit card error. */
+  | 'PAYMENTS_CREDIT_CARD_GENERIC'
+  /** Credit card month is invalid. */
+  | 'PAYMENTS_CREDIT_CARD_MONTH_INCLUSION'
+  /** Credit card number is invalid. */
+  | 'PAYMENTS_CREDIT_CARD_NUMBER_INVALID'
+  /** Credit card number format is invalid. */
+  | 'PAYMENTS_CREDIT_CARD_NUMBER_INVALID_FORMAT'
+  /** Credit card verification value is blank. */
+  | 'PAYMENTS_CREDIT_CARD_VERIFICATION_VALUE_BLANK'
+  /** Credit card verification value is invalid for card type. */
+  | 'PAYMENTS_CREDIT_CARD_VERIFICATION_VALUE_INVALID_FOR_CARD_TYPE'
+  /** Credit card has expired. */
+  | 'PAYMENTS_CREDIT_CARD_YEAR_EXPIRED'
+  /** Credit card expiry year is invalid. */
+  | 'PAYMENTS_CREDIT_CARD_YEAR_INVALID_EXPIRY_YEAR'
   /** The payment method is not supported. */
   | 'PAYMENT_METHOD_NOT_SUPPORTED'
   /** The given province cannot be found. */
@@ -1862,6 +1882,8 @@ export type CartSubmitForCompletionResult =
  */
 export type CartThrottled = {
   __typename?: 'CartThrottled';
+  /** The result of cart preparation for completion. */
+  cart?: Maybe<Cart>;
   /** The polling delay. */
   pollAfter: Scalars['DateTime']['output'];
 };
@@ -2272,9 +2294,14 @@ export type Country = {
   availableLanguages: Array<Language>;
   /** The currency of the country. */
   currency: Currency;
+  /** The default language for the country. */
+  defaultLanguage: Language;
   /** The ISO code of the country. */
   isoCode: CountryCode;
-  /** The market that includes this country. */
+  /**
+   * The market that includes this country.
+   * @deprecated This `market` field will be removed in a future version of the API.
+   */
   market?: Maybe<Market>;
   /** The name of the country. */
   name: Scalars['String']['output'];
@@ -4422,7 +4449,10 @@ export type Localization = {
   country: Country;
   /** The language of the active localized experience. Use the `@inContext` directive to change this value. */
   language: Language;
-  /** The market including the country of the active localized experience. Use the `@inContext` directive to change this value. */
+  /**
+   * The market including the country of the active localized experience. Use the `@inContext` directive to change this value.
+   * @deprecated This `market` field will be removed in a future version of the API.
+   */
   market: Market;
 };
 
@@ -5572,8 +5602,8 @@ export type MutationShopPayPaymentRequestSessionSubmitArgs = {
 /**
  * An object with an ID field to support global identification, in accordance with the
  * [Relay specification](https://relay.dev/graphql/objectidentification.htm#sec-Node-Interface).
- * This interface is used by the [node](https://shopify.dev/api/admin-graphql/unstable/queries/node)
- * and [nodes](https://shopify.dev/api/admin-graphql/unstable/queries/nodes) queries.
+ * This interface is used by the [node](/docs/api/storefront/latest/queries/node)
+ * and [nodes](/docs/api/storefront/latest/queries/nodes) queries.
  *
  */
 export type Node = {
@@ -8681,9 +8711,13 @@ export type SubmissionErrorCode =
   | 'PAYMENTS_SHOPIFY_PAYMENTS_REQUIRED'
   | 'PAYMENTS_UNACCEPTABLE_PAYMENT_AMOUNT'
   | 'PAYMENTS_WALLET_CONTENT_MISSING'
+  /** Redirect to checkout required to complete this action. */
+  | 'REDIRECT_TO_CHECKOUT_REQUIRED'
   | 'TAXES_DELIVERY_GROUP_ID_NOT_FOUND'
   | 'TAXES_LINE_ID_NOT_FOUND'
-  | 'TAXES_MUST_BE_DEFINED';
+  | 'TAXES_MUST_BE_DEFINED'
+  /** Validation failed. */
+  | 'VALIDATION_CUSTOM';
 
 /** Cart submit for checkout completion is successful. */
 export type SubmitAlreadyAccepted = {
