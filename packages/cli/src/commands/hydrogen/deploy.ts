@@ -50,7 +50,10 @@ import {
 import {getOxygenDeploymentData} from '../../lib/get-oxygen-deployment-data.js';
 import {OxygenDeploymentData} from '../../lib/graphql/admin/get-oxygen-data.js';
 import {runBuild} from './build.js';
-import {getViteConfig} from '../../lib/vite-config.js';
+import {
+  getViteConfig,
+  REMIX_COMPILER_ERROR_MESSAGE,
+} from '../../lib/vite-config.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {getProjectPaths, isClassicProject} from '../../lib/remix-config.js';
 import {packageManagers} from '../../lib/package-managers.js';
@@ -591,7 +594,7 @@ Continue?`.value,
       );
 
       if (isClassicCompiler) {
-        throw new AbortError('Classic Remix projects are no longer supported.');
+        throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
       }
 
       await runBuild({

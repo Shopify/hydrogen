@@ -12,7 +12,11 @@ import {fileSize, removeFile} from '@shopify/cli-kit/node/fs';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
-import {getViteConfig, isViteProject} from '../../lib/vite-config.js';
+import {
+  getViteConfig,
+  isViteProject,
+  REMIX_COMPILER_ERROR_MESSAGE,
+} from '../../lib/vite-config.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {
   findMissingRoutes,
@@ -80,7 +84,7 @@ export default class Build extends Command {
 
     const isVite = await isViteProject(directory);
     if (!isVite) {
-      throw new AbortError('Classic Remix projects are no longer supported.');
+      throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
     }
 
     const result = await runBuild(buildParams);

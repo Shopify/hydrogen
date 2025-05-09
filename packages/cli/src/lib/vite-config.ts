@@ -18,6 +18,9 @@ import {
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 import type {ResolvedConfig, UserConfig} from 'vite';
 
+export const REMIX_COMPILER_ERROR_MESSAGE =
+  "Classic Remix Compiler projects are no longer supported, please upgrade to Vite by running 'npx shopify hydrogen setup vite'";
+
 export async function hasViteConfig(root: string) {
   const result = await findFileWithExtension(root, 'vite.config');
   return !!result.filepath;

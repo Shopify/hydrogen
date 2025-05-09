@@ -7,7 +7,11 @@ import {fileExists} from '@shopify/cli-kit/node/fs';
 import {muteRemixLogs} from './log.js';
 import {REQUIRED_REMIX_VERSION} from './remix-version-check.js';
 import {findFileWithExtension} from './file.js';
-import {getViteConfig, isViteProject} from './vite-config.js';
+import {
+  getViteConfig,
+  isViteProject,
+  REMIX_COMPILER_ERROR_MESSAGE,
+} from './vite-config.js';
 import {importLocal, importVite} from './import-utils.js';
 import {hydrogenPackagesPath, isHydrogenMonorepo} from './build.js';
 
@@ -89,7 +93,7 @@ export async function getRemixConfig(
     return (await getViteConfig(root)).remixConfig;
   }
 
-  throw new AbortError('Classic Remix projects are no longer supported.');
+  throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
 }
 
 async function assertEntryFileExists(root: string, fileRelative: string) {

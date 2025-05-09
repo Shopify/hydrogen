@@ -46,6 +46,7 @@ import {
   findOxygenPlugin,
   getViteConfig,
   isViteProject,
+  REMIX_COMPILER_ERROR_MESSAGE,
 } from '../../lib/vite-config.js';
 import {importVite} from '../../lib/import-utils.js';
 import {createEntryPointErrorHandler} from '../../lib/deps-optimizer.js';
@@ -137,7 +138,7 @@ export default class Dev extends Command {
 
     const isVite = await isViteProject(directory);
     if (!isVite) {
-      throw new AbortError('Classic Remix projects are no longer supported.');
+      throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
     }
 
     const {close} = await runDev(devParams);

@@ -16,7 +16,10 @@ import {startMiniOxygen, type MiniOxygen} from '../../lib/mini-oxygen/index.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 import {findPort} from '../../lib/find-port.js';
-import {getViteConfig} from '../../lib/vite-config.js';
+import {
+  getViteConfig,
+  REMIX_COMPILER_ERROR_MESSAGE,
+} from '../../lib/vite-config.js';
 import {runBuild} from './build.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 import {deferPromise} from '../../lib/defer.js';
@@ -137,7 +140,7 @@ export async function runPreview({
   const useClassicCompiler = await isClassicProject(root);
 
   if (useClassicCompiler) {
-    throw new AbortError('Classic Remix projects are no longer supported.');
+    throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
   }
 
   let miniOxygen: MiniOxygen;

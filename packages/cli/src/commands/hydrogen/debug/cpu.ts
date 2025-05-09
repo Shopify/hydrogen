@@ -12,7 +12,10 @@ import {prepareDiffDirectory} from '../../../lib/template-diff.js';
 import {setupResourceCleanup} from '../../../lib/resource-cleanup.js';
 import {createCpuStartupProfiler} from '../../../lib/cpu-profiler.js';
 import {runBuild} from '../build.js';
-import {getViteConfig} from '../../../lib/vite-config.js';
+import {
+  getViteConfig,
+  REMIX_COMPILER_ERROR_MESSAGE,
+} from '../../../lib/vite-config.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 
 const DEFAULT_OUTPUT_PATH = 'startup.cpuprofile';
@@ -108,7 +111,7 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
   const isClassicCompiler = await isClassicProject(directory);
 
   if (isClassicCompiler) {
-    throw new AbortError('Classic Remix projects are no longer supported.');
+    throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
   }
 
   const maybeViteConfig = await getViteConfig(directory).catch(() => null);
