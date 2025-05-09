@@ -113,10 +113,12 @@ export function SellingPlanSelector({
   selectedSellingPlan,
   children,
   paramKey = 'selling_plan',
+  selectedVariant,
 }: {
   sellingPlanGroups: ProductFragment['sellingPlanGroups'];
   selectedSellingPlan: SellingPlanFragment | null;
   paramKey?: string;
+  selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
   children: (params: {
     sellingPlanGroup: SellingPlanGroup;
     selectedSellingPlan: SellingPlanFragment | null;
@@ -125,21 +127,35 @@ export function SellingPlanSelector({
   const {search, pathname} = useLocation();
   const params = new URLSearchParams(search);
 
+  const planAllocationIds: string[] =
+    selectedVariant?.sellingPlanAllocations.nodes.map(
+      (node) => node.sellingPlan.id,
+    ) ?? [];
+
   return useMemo(
     () =>
-      (sellingPlanGroups.nodes as SellingPlanGroup[]).map(
-        (sellingPlanGroup) => {
-          // Augmnet each sellingPlan node with isSelected and url
+      (sellingPlanGroups.nodes as SellingPlanGroup[])
+        // Filter out groups that don't have plans usable for the selected variant
+        .filter((group) => {
+          return group.sellingPlans.nodes.some((sellingPlan) =>
+            planAllocationIds.includes(sellingPlan.id),
+          );
+        })
+        .map((sellingPlanGroup) => {
+          // Augment each sellingPlan node with isSelected and url
           const sellingPlans = sellingPlanGroup.sellingPlans.nodes
             .map((sellingPlan: SellingPlan) => {
               if (!sellingPlan?.id) {
-                //eslint-disable-next-line no-console
                 console.warn(
                   'SellingPlanSelector: sellingPlan.id is missing in the product query',
                 );
                 return null;
               }
-              if (!sellingPlan.id) return null;
+
+              if (!sellingPlan.id) {
+                return null;
+              }
+
               params.set(paramKey, sellingPlan.id);
               sellingPlan.isSelected =
                 selectedSellingPlan?.id === sellingPlan.id;
@@ -149,10 +165,16 @@ export function SellingPlanSelector({
             .filter(Boolean) as SellingPlan[];
           sellingPlanGroup.sellingPlans.nodes = sellingPlans;
           return children({sellingPlanGroup, selectedSellingPlan});
-        },
-      ),
+        }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [sellingPlanGroups, children, selectedSellingPlan, paramKey, pathname],
+    [
+      sellingPlanGroups,
+      children,
+      selectedSellingPlan,
+      paramKey,
+      pathname,
+      selectedVariant,
+    ],
   );
 }
 
@@ -546,9 +568,9 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
                <small>
 ```
 
-### Step 3: Update `ProductForm` to support subscriptions
+### Step 3: Update ProductForm to support subscriptions
 
-1. Add conditional rendering to display either subscription options or standard variant selectors.
+1. Add conditional rendering to display subscription options alongside the standard variant selectors.
 2. Implement `SellingPlanSelector` and `SellingPlanGroup` components to handle subscription plan selection.
 3. Update `AddToCartButton` to include selling plan data when subscriptions are selected.
 
@@ -556,7 +578,7 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
 #### File: /app/components/ProductForm.tsx
 
 ```diff
-@@ -6,120 +6,169 @@ import type {
+@@ -6,14 +6,25 @@ import type {
  } from '@shopify/hydrogen/storefront-api-types';
  import {AddToCartButton} from './AddToCartButton';
  import {useAside} from './Aside';
@@ -583,16 +605,20 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
  }) {
    const navigate = useNavigate();
    const {open} = useAside();
-   return (
-     <div className="product-form">
--      {productOptions.map((option) => {
--        // If there is only a single value in the option values, don't display the option
--        if (option.optionValues.length === 1) return null;
+@@ -120,6 +131,47 @@ export function ProductForm({
+       >
+         {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
+       </AddToCartButton>
 +      {sellingPlanGroups.nodes.length > 0 ? (
 +        <>
++          <br />
++          <hr />
++          <br />
++          <h3>Subscription Options</h3>
 +          <SellingPlanSelector
 +            sellingPlanGroups={sellingPlanGroups}
 +            selectedSellingPlan={selectedSellingPlan}
++            selectedVariant={selectedVariant}
 +          >
 +            {({sellingPlanGroup}) => (
 +              <SellingPlanGroup
@@ -623,208 +649,11 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
 +            {selectedSellingPlan ? 'Subscribe' : 'Select Subscription'}
 +          </AddToCartButton>
 +        </>
-+      ) : (
-+        productOptions.map((option) => {
-+          // If there is only a single value in the option values, don't display the option
-+          if (option.optionValues.length === 1) return null;
- 
--        return (
--          <div className="product-options" key={option.name}>
--            <h5>{option.name}</h5>
--            <div className="product-options-grid">
--              {option.optionValues.map((value) => {
--                const {
--                  name,
--                  handle,
--                  variantUriQuery,
--                  selected,
--                  available,
--                  exists,
--                  isDifferentProduct,
--                  swatch,
--                } = value;
-+          return (
-+            <div className="product-options" key={option.name}>
-+              <h5>{option.name}</h5>
-+              <div className="product-options-grid">
-+                {option.optionValues.map((value) => {
-+                  const {
-+                    name,
-+                    handle,
-+                    variantUriQuery,
-+                    selected,
-+                    available,
-+                    exists,
-+                    isDifferentProduct,
-+                    swatch,
-+                  } = value;
- 
--                if (isDifferentProduct) {
--                  // SEO
--                  // When the variant is a combined listing child product
--                  // that leads to a different url, we need to render it
--                  // as an anchor tag
--                  return (
--                    <Link
--                      className="product-options-item"
--                      key={option.name + name}
--                      prefetch="intent"
--                      preventScrollReset
--                      replace
--                      to={`/products/${handle}?${variantUriQuery}`}
--                      style={{
--                        border: selected
--                          ? '1px solid black'
--                          : '1px solid transparent',
--                        opacity: available ? 1 : 0.3,
--                      }}
--                    >
--                      <ProductOptionSwatch swatch={swatch} name={name} />
--                    </Link>
--                  );
--                } else {
--                  // SEO
--                  // When the variant is an update to the search param,
--                  // render it as a button with javascript navigating to
--                  // the variant so that SEO bots do not index these as
--                  // duplicated links
--                  return (
--                    <button
--                      type="button"
--                      className={`product-options-item${
--                        exists && !selected ? ' link' : ''
--                      }`}
--                      key={option.name + name}
--                      style={{
--                        border: selected
--                          ? '1px solid black'
--                          : '1px solid transparent',
--                        opacity: available ? 1 : 0.3,
--                      }}
--                      disabled={!exists}
--                      onClick={() => {
--                        if (!selected) {
--                          navigate(`?${variantUriQuery}`, {
--                            replace: true,
--                            preventScrollReset: true,
--                          });
--                        }
--                      }}
--                    >
--                      <ProductOptionSwatch swatch={swatch} name={name} />
--                    </button>
--                  );
-+                  if (isDifferentProduct) {
-+                    // SEO
-+                    // When the variant is a combined listing child product
-+                    // that leads to a different url, we need to render it
-+                    // as an anchor tag
-+                    return (
-+                      <Link
-+                        className="product-options-item"
-+                        key={option.name + name}
-+                        prefetch="intent"
-+                        preventScrollReset
-+                        replace
-+                        to={`/products/${handle}?${variantUriQuery}`}
-+                        style={{
-+                          border: selected
-+                            ? '1px solid black'
-+                            : '1px solid transparent',
-+                          opacity: available ? 1 : 0.3,
-+                        }}
-+                      >
-+                        <ProductOptionSwatch swatch={swatch} name={name} />
-+                      </Link>
-+                    );
-+                  } else {
-+                    // SEO
-+                    // When the variant is an update to the search param,
-+                    // render it as a button with javascript navigating to
-+                    // the variant so that SEO bots do not index these as
-+                    // duplicated links
-+                    return (
-+                      <button
-+                        type="button"
-+                        className={`product-options-item${
-+                          exists && !selected ? ' link' : ''
-+                        }`}
-+                        key={option.name + name}
-+                        style={{
-+                          border: selected
-+                            ? '1px solid black'
-+                            : '1px solid transparent',
-+                          opacity: available ? 1 : 0.3,
-+                        }}
-+                        disabled={!exists}
-+                        onClick={() => {
-+                          if (!selected) {
-+                            navigate(`?${variantUriQuery}`, {
-+                              replace: true,
-+                              preventScrollReset: true,
-+                            });
-+                          }
-+                        }}
-+                      >
-+                        <ProductOptionSwatch swatch={swatch} name={name} />
-+                      </button>
-+                    );
-+                  }
-+                })}
-+              </div>
-+              <AddToCartButton
-+                disabled={!selectedVariant || !selectedVariant.availableForSale}
-+                onClick={() => {
-+                  open('cart');
-+                }}
-+                lines={
-+                  selectedVariant
-+                    ? [
-+                        {
-+                          merchandiseId: selectedVariant.id,
-+                          quantity: 1,
-+                          selectedVariant,
-+                        },
-+                      ]
-+                    : []
-                 }
--              })}
-+              >
-+                {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
-+              </AddToCartButton>
-+
-+              <br />
-             </div>
--            <br />
--          </div>
--        );
--      })}
--      <AddToCartButton
--        disabled={!selectedVariant || !selectedVariant.availableForSale}
--        onClick={() => {
--          open('cart');
--        }}
--        lines={
--          selectedVariant
--            ? [
--                {
--                  merchandiseId: selectedVariant.id,
--                  quantity: 1,
--                  selectedVariant,
--                },
--              ]
--            : []
--        }
--      >
--        {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
--      </AddToCartButton>
-+          );
-+        })
-+      )}
++      ) : null}
      </div>
    );
  }
-@@ -148,3 +197,38 @@ function ProductOptionSwatch({
+@@ -148,3 +200,38 @@ function ProductOptionSwatch({
      </div>
    );
  }
@@ -865,7 +694,7 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
 +}
 ```
 
-### Step 4: Update `ProductPrice` to display subscription pricing
+### Step 4: Update ProductPrice to display subscription pricing
 
 1. Add a `SellingPlanPrice` function to calculate adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage).
 2. Add logic to handle different price adjustment types and render the appropriate subscription price when a selling plan is selected.
@@ -1017,7 +846,7 @@ Add a `sellingPlanAllocation` field with the plan name to the standard and compo
      updatedAt
 ```
 
-### Step 6: Add `SellingPlanSelector` to product pages
+### Step 6: Add SellingPlanSelector to product pages
 
 1. Add the `SellingPlanSelector` component to display subscription options on product pages.
 2. Add logic to handle pricing adjustments, maintain selection state using URL parameters, and update the add-to-cart functionality.
@@ -1115,7 +944,17 @@ Add a `sellingPlanAllocation` field with the plan name to the standard and compo
          />
          <br />
          <br />
-@@ -180,6 +218,73 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+@@ -177,9 +215,83 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+       amount
+       currencyCode
+     }
++    sellingPlanAllocations(first: 10) {
++      nodes {
++        sellingPlan {
++          id
++        }
++      }
++    }
    }
  ` as const;
  
@@ -1189,7 +1028,7 @@ Add a `sellingPlanAllocation` field with the plan name to the standard and compo
  const PRODUCT_FRAGMENT = `#graphql
    fragment Product on Product {
      id
-@@ -207,6 +312,11 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -207,6 +319,11 @@ const PRODUCT_FRAGMENT = `#graphql
          }
        }
      }
@@ -1201,7 +1040,7 @@ Add a `sellingPlanAllocation` field with the plan name to the standard and compo
      selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
        ...ProductVariant
      }
-@@ -218,6 +328,7 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -218,6 +335,7 @@ const PRODUCT_FRAGMENT = `#graphql
        title
      }
    }
@@ -1210,7 +1049,7 @@ Add a `sellingPlanAllocation` field with the plan name to the standard and compo
  ` as const;
 ```
 
-### Step 7: Add a link to the **Subscriptions** page
+### Step 7: Add a link to the Subscriptions page
 
 Add a `Subscriptions` link to the account menu.
 

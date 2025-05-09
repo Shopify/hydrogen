@@ -24,12 +24,12 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/SellingPlanSelector.tsx](ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | Displays the available subscription options on product pages. |
-| [app/graphql/customer-account/CustomerSubscriptionsMutations.ts](ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts) | Mutations for managing customer subscriptions. |
-| [app/graphql/customer-account/CustomerSubscriptionsQuery.ts](ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts) | Queries for managing customer subscriptions. |
-| [app/routes/account.subscriptions.tsx](ingredients/templates/skeleton/app/routes/account.subscriptions.tsx) | Subscriptions management page. |
-| [app/styles/account-subscriptions.css](ingredients/templates/skeleton/app/styles/account-subscriptions.css) | Subscriptions management page styles. |
-| [app/styles/selling-plan.css](ingredients/templates/skeleton/app/styles/selling-plan.css) | Styles the `SellingPlanSelector` component. |
+| [app/components/SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | Displays the available subscription options on product pages. |
+| [app/graphql/customer-account/CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts) | Mutations for managing customer subscriptions. |
+| [app/graphql/customer-account/CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts) | Queries for managing customer subscriptions. |
+| [app/routes/account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx) | Subscriptions management page. |
+| [app/styles/account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css) | Subscriptions management page styles. |
+| [app/styles/selling-plan.css](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css) | Styles the `SellingPlanSelector` component. |
 
 ## Steps
 
@@ -45,12 +45,12 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
 
 Copy all the files found in the `ingredients/` directory into your project.
 
-- [app/components/SellingPlanSelector.tsx](/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
-- [app/graphql/customer-account/CustomerSubscriptionsMutations.ts](/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
-- [app/graphql/customer-account/CustomerSubscriptionsQuery.ts](/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
-- [app/routes/account.subscriptions.tsx](/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
-- [app/styles/account-subscriptions.css](/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
-- [app/styles/selling-plan.css](/ingredients/templates/skeleton/app/styles/selling-plan.css)
+- [app/components/SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
+- [app/graphql/customer-account/CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
+- [app/graphql/customer-account/CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
+- [app/routes/account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
+- [app/styles/account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
+- [app/styles/selling-plan.css](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css)
 
 ### Step 3: Render the selling plan in the cart
 
@@ -58,7 +58,7 @@ Copy all the files found in the `ingredients/` directory into your project.
 2. Extract `sellingPlanAllocation` from cart line data, display the plan name, and standardize component import paths.
 
 
-#### File: [app/components/CartLineItem.tsx](/templates/skeleton/app/components/CartLineItem.tsx)
+#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/templates/skeleton/app/components/CartLineItem.tsx)
 
 ```diff
 index bd33a2cf..a18e4b52 100644
@@ -101,22 +101,22 @@ index bd33a2cf..a18e4b52 100644
                <small>
 ```
 
-### Step 4: Update `ProductForm` to support subscriptions
+### Step 4: Update ProductForm to support subscriptions
 
-1. Add conditional rendering to display either subscription options or standard variant selectors.
+1. Add conditional rendering to display subscription options alongside the standard variant selectors.
 2. Implement `SellingPlanSelector` and `SellingPlanGroup` components to handle subscription plan selection.
 3. Update `AddToCartButton` to include selling plan data when subscriptions are selected.
 
 
-#### File: [app/components/ProductForm.tsx](/templates/skeleton/app/components/ProductForm.tsx)
+#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/templates/skeleton/app/components/ProductForm.tsx)
 
 <details>
 
 ```diff
-index e8616a61..e41b91ad 100644
+index e8616a61..8b7fe8ca 100644
 --- a/templates/skeleton/app/components/ProductForm.tsx
 +++ b/templates/skeleton/app/components/ProductForm.tsx
-@@ -6,120 +6,169 @@ import type {
+@@ -6,14 +6,25 @@ import type {
  } from '@shopify/hydrogen/storefront-api-types';
  import {AddToCartButton} from './AddToCartButton';
  import {useAside} from './Aside';
@@ -143,16 +143,20 @@ index e8616a61..e41b91ad 100644
  }) {
    const navigate = useNavigate();
    const {open} = useAside();
-   return (
-     <div className="product-form">
--      {productOptions.map((option) => {
--        // If there is only a single value in the option values, don't display the option
--        if (option.optionValues.length === 1) return null;
+@@ -120,6 +131,47 @@ export function ProductForm({
+       >
+         {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
+       </AddToCartButton>
 +      {sellingPlanGroups.nodes.length > 0 ? (
 +        <>
++          <br />
++          <hr />
++          <br />
++          <h3>Subscription Options</h3>
 +          <SellingPlanSelector
 +            sellingPlanGroups={sellingPlanGroups}
 +            selectedSellingPlan={selectedSellingPlan}
++            selectedVariant={selectedVariant}
 +          >
 +            {({sellingPlanGroup}) => (
 +              <SellingPlanGroup
@@ -183,208 +187,11 @@ index e8616a61..e41b91ad 100644
 +            {selectedSellingPlan ? 'Subscribe' : 'Select Subscription'}
 +          </AddToCartButton>
 +        </>
-+      ) : (
-+        productOptions.map((option) => {
-+          // If there is only a single value in the option values, don't display the option
-+          if (option.optionValues.length === 1) return null;
- 
--        return (
--          <div className="product-options" key={option.name}>
--            <h5>{option.name}</h5>
--            <div className="product-options-grid">
--              {option.optionValues.map((value) => {
--                const {
--                  name,
--                  handle,
--                  variantUriQuery,
--                  selected,
--                  available,
--                  exists,
--                  isDifferentProduct,
--                  swatch,
--                } = value;
-+          return (
-+            <div className="product-options" key={option.name}>
-+              <h5>{option.name}</h5>
-+              <div className="product-options-grid">
-+                {option.optionValues.map((value) => {
-+                  const {
-+                    name,
-+                    handle,
-+                    variantUriQuery,
-+                    selected,
-+                    available,
-+                    exists,
-+                    isDifferentProduct,
-+                    swatch,
-+                  } = value;
- 
--                if (isDifferentProduct) {
--                  // SEO
--                  // When the variant is a combined listing child product
--                  // that leads to a different url, we need to render it
--                  // as an anchor tag
--                  return (
--                    <Link
--                      className="product-options-item"
--                      key={option.name + name}
--                      prefetch="intent"
--                      preventScrollReset
--                      replace
--                      to={`/products/${handle}?${variantUriQuery}`}
--                      style={{
--                        border: selected
--                          ? '1px solid black'
--                          : '1px solid transparent',
--                        opacity: available ? 1 : 0.3,
--                      }}
--                    >
--                      <ProductOptionSwatch swatch={swatch} name={name} />
--                    </Link>
--                  );
--                } else {
--                  // SEO
--                  // When the variant is an update to the search param,
--                  // render it as a button with javascript navigating to
--                  // the variant so that SEO bots do not index these as
--                  // duplicated links
--                  return (
--                    <button
--                      type="button"
--                      className={`product-options-item${
--                        exists && !selected ? ' link' : ''
--                      }`}
--                      key={option.name + name}
--                      style={{
--                        border: selected
--                          ? '1px solid black'
--                          : '1px solid transparent',
--                        opacity: available ? 1 : 0.3,
--                      }}
--                      disabled={!exists}
--                      onClick={() => {
--                        if (!selected) {
--                          navigate(`?${variantUriQuery}`, {
--                            replace: true,
--                            preventScrollReset: true,
--                          });
--                        }
--                      }}
--                    >
--                      <ProductOptionSwatch swatch={swatch} name={name} />
--                    </button>
--                  );
-+                  if (isDifferentProduct) {
-+                    // SEO
-+                    // When the variant is a combined listing child product
-+                    // that leads to a different url, we need to render it
-+                    // as an anchor tag
-+                    return (
-+                      <Link
-+                        className="product-options-item"
-+                        key={option.name + name}
-+                        prefetch="intent"
-+                        preventScrollReset
-+                        replace
-+                        to={`/products/${handle}?${variantUriQuery}`}
-+                        style={{
-+                          border: selected
-+                            ? '1px solid black'
-+                            : '1px solid transparent',
-+                          opacity: available ? 1 : 0.3,
-+                        }}
-+                      >
-+                        <ProductOptionSwatch swatch={swatch} name={name} />
-+                      </Link>
-+                    );
-+                  } else {
-+                    // SEO
-+                    // When the variant is an update to the search param,
-+                    // render it as a button with javascript navigating to
-+                    // the variant so that SEO bots do not index these as
-+                    // duplicated links
-+                    return (
-+                      <button
-+                        type="button"
-+                        className={`product-options-item${
-+                          exists && !selected ? ' link' : ''
-+                        }`}
-+                        key={option.name + name}
-+                        style={{
-+                          border: selected
-+                            ? '1px solid black'
-+                            : '1px solid transparent',
-+                          opacity: available ? 1 : 0.3,
-+                        }}
-+                        disabled={!exists}
-+                        onClick={() => {
-+                          if (!selected) {
-+                            navigate(`?${variantUriQuery}`, {
-+                              replace: true,
-+                              preventScrollReset: true,
-+                            });
-+                          }
-+                        }}
-+                      >
-+                        <ProductOptionSwatch swatch={swatch} name={name} />
-+                      </button>
-+                    );
-+                  }
-+                })}
-+              </div>
-+              <AddToCartButton
-+                disabled={!selectedVariant || !selectedVariant.availableForSale}
-+                onClick={() => {
-+                  open('cart');
-+                }}
-+                lines={
-+                  selectedVariant
-+                    ? [
-+                        {
-+                          merchandiseId: selectedVariant.id,
-+                          quantity: 1,
-+                          selectedVariant,
-+                        },
-+                      ]
-+                    : []
-                 }
--              })}
-+              >
-+                {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
-+              </AddToCartButton>
-+
-+              <br />
-             </div>
--            <br />
--          </div>
--        );
--      })}
--      <AddToCartButton
--        disabled={!selectedVariant || !selectedVariant.availableForSale}
--        onClick={() => {
--          open('cart');
--        }}
--        lines={
--          selectedVariant
--            ? [
--                {
--                  merchandiseId: selectedVariant.id,
--                  quantity: 1,
--                  selectedVariant,
--                },
--              ]
--            : []
--        }
--      >
--        {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
--      </AddToCartButton>
-+          );
-+        })
-+      )}
++      ) : null}
      </div>
    );
  }
-@@ -148,3 +197,38 @@ function ProductOptionSwatch({
+@@ -148,3 +200,38 @@ function ProductOptionSwatch({
      </div>
    );
  }
@@ -427,13 +234,13 @@ index e8616a61..e41b91ad 100644
 
 </details>
 
-### Step 5: Update `ProductPrice` to display subscription pricing
+### Step 5: Update ProductPrice to display subscription pricing
 
 1. Add a `SellingPlanPrice` function to calculate adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage).
 2. Add logic to handle different price adjustment types and render the appropriate subscription price when a selling plan is selected.
 
 
-#### File: [app/components/ProductPrice.tsx](/templates/skeleton/app/components/ProductPrice.tsx)
+#### File: [app/components/ProductPrice.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/templates/skeleton/app/components/ProductPrice.tsx)
 
 <details>
 
@@ -557,7 +364,7 @@ index 32460ae2..59eed1d8 100644
 Add a `sellingPlanAllocation` field with the plan name to the standard and componentizable cart line GraphQL fragments. This displays subscription details in the cart.
 
 
-#### File: [app/lib/fragments.ts](/templates/skeleton/app/lib/fragments.ts)
+#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/templates/skeleton/app/lib/fragments.ts)
 
 ```diff
 index dc4426a9..cfe3a938 100644
@@ -589,19 +396,19 @@ index dc4426a9..cfe3a938 100644
      updatedAt
 ```
 
-### Step 7: Add `SellingPlanSelector` to product pages
+### Step 7: Add SellingPlanSelector to product pages
 
 1. Add the `SellingPlanSelector` component to display subscription options on product pages.
 2. Add logic to handle pricing adjustments, maintain selection state using URL parameters, and update the add-to-cart functionality.
 3. Fetch subscription data through the updated cart GraphQL fragments.
 
 
-#### File: [app/routes/products.$handle.tsx](/templates/skeleton/app/routes/products.$handle.tsx)
+#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/templates/skeleton/app/routes/products.$handle.tsx)
 
 <details>
 
 ```diff
-index 2dc6bda2..aad7e5f1 100644
+index 2dc6bda2..3507d496 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,3 +1,5 @@
@@ -692,7 +499,17 @@ index 2dc6bda2..aad7e5f1 100644
          />
          <br />
          <br />
-@@ -180,6 +218,73 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+@@ -177,9 +215,83 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+       amount
+       currencyCode
+     }
++    sellingPlanAllocations(first: 10) {
++      nodes {
++        sellingPlan {
++          id
++        }
++      }
++    }
    }
  ` as const;
  
@@ -766,7 +583,7 @@ index 2dc6bda2..aad7e5f1 100644
  const PRODUCT_FRAGMENT = `#graphql
    fragment Product on Product {
      id
-@@ -207,6 +312,11 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -207,6 +319,11 @@ const PRODUCT_FRAGMENT = `#graphql
          }
        }
      }
@@ -778,7 +595,7 @@ index 2dc6bda2..aad7e5f1 100644
      selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
        ...ProductVariant
      }
-@@ -218,6 +328,7 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -218,6 +335,7 @@ const PRODUCT_FRAGMENT = `#graphql
        title
      }
    }
@@ -789,12 +606,12 @@ index 2dc6bda2..aad7e5f1 100644
 
 </details>
 
-### Step 8: Add a link to the **Subscriptions** page
+### Step 8: Add a link to the Subscriptions page
 
 Add a `Subscriptions` link to the account menu.
 
 
-#### File: [app/routes/account.tsx](/templates/skeleton/app/routes/account.tsx)
+#### File: [app/routes/account.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/templates/skeleton/app/routes/account.tsx)
 
 ```diff
 index 0941d4e0..976ae9df 100644

@@ -82,7 +82,7 @@ steps:
       - templates/skeleton/app/lib/combined-listings.ts
   - type: PATCH
     index: 4
-    name: Update the `ProductForm` component
+    name: Update the ProductForm component
     description: >
       - Update the `ProductForm` component to hide the `Add to cart` button for
       the parent products of combined listings and for variants' selected state.
@@ -94,7 +94,7 @@ steps:
         patchFile: ProductForm.tsx.8e409a.patch
   - type: PATCH
     index: 5
-    name: Extend the `ProductImage` component
+    name: Extend the ProductImage component
     description: >
       Update the `ProductImage` component to support images from both product
       variants and the product itself.
@@ -103,7 +103,7 @@ steps:
         patchFile: ProductImage.tsx.4e6c4c.patch
   - type: PATCH
     index: 6
-    name: Show a range of prices for combined listings in `ProductItem`
+    name: Show a range of prices for combined listings in ProductItem
     description: >
       Update `ProductItem.tsx` to show a range of prices for the combined
       listing parent product instead of the variant price.
@@ -191,4 +191,4 @@ llms:
       solution: Make sure to tag combined listing parent products in the Shopify admin
         and use that tag to filter out combined listings from the product list
         in the GraphQL query.
-commit: c34d66c5781af2c56725f35fd978b1af09fd4bbd
+commit: 2ff53492d0c9152bd59063ae6ea34576ea9a4608
