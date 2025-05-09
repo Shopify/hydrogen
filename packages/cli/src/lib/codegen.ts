@@ -147,11 +147,17 @@ export async function codegen(options: CodegenOptions) {
   // react-router typegen is not exposed as a package, so we need to run it in the terminal
   // TODO: watch option!!!
   // TODO: access react-router as a js file from `./node_modules/react-router/...`
-  const {execSync} = await import('child_process');
-  execSync('npx react-router typegen', {
-    cwd: options.rootDirectory,
-    stdio: 'inherit',
-  });
+  const {execSync, exec} = await import('child_process');
+  if (options.watch) {
+    exec('npx react-router typegen --watch', {
+      cwd: options.rootDirectory,
+    });
+  } else {
+    execSync('npx react-router typegen', {
+      cwd: options.rootDirectory,
+      stdio: 'inherit',
+    });
+  }
 
   return generateTypes(options).catch((error: Error) => {
     if (error instanceof AbortError) throw error;
