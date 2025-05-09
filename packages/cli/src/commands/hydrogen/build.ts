@@ -19,7 +19,6 @@ import {
   findReservedRoutes,
   warnReservedRoutes,
 } from '../../lib/route-validator.js';
-import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {hydrogenBundleAnalyzer} from '../../lib/bundle/vite-plugin.js';
 import {
   BUNDLE_ANALYZER_HTML_FILE,
@@ -30,6 +29,7 @@ import {isCI} from '../../lib/is-ci.js';
 import {importVite} from '../../lib/import-utils.js';
 import {deferPromise, type DeferredPromise} from '../../lib/defer.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 export default class Build extends Command {
   static descriptionWithMarkdown = `Builds a Hydrogen storefront for production. The client and app worker files are compiled to a \`/dist\` folder in your Hydrogen project directory.`;
@@ -78,9 +78,12 @@ export default class Build extends Command {
       directory,
     };
 
-    const result = (await isViteProject(directory))
-      ? await runBuild(buildParams)
-      : await runClassicCompilerBuild(buildParams);
+    const isClassicCompiler = !(await isViteProject(directory));
+    if (isClassicCompiler) {
+      throw new AbortError('Classic Remix projects are no longer supported.');
+    }
+
+    const result = await runBuild(buildParams);
 
     if (buildParams.watch) {
       if (diff || result?.close) {
