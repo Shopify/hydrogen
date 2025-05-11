@@ -2,6 +2,9 @@
   "browserslist": [
     "defaults"
   ],
+  "dependencies": {
+    "tailwindcss": "^4.1.6"
+  },
   "devDependencies": {
     "@tailwindcss/vite": "4.0.14"
   }
