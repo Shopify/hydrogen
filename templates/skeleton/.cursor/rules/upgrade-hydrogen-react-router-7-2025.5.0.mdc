@@ -1,0 +1,64 @@
+---
+description: how to apply the Hydrogen React Router 7 update! Hydrogen version 2025.5.0 or snapshot 0.0.0-snapshot-20250506161608 is now using React Router 7.
+globs: *
+alwaysApply: false
+---
+This rule explains how to apply the Hydrogen React Router 7 update! Hydrogen version 2025.5.0 or snapshot 0.0.0-snapshot-20250506161608 is now using React Router 7. 
+
+Execute each step in this specific order, and do not request constant user feedback. Try to do all this in one pass!
+
+1. Make sure you are on Hydrogen 2025.1.4 with all Remix Future Flags turned on! Make sure your storefront runs fine and commit all changes before proceeding. 
+
+2. In vite.config.ts Remove all options from the reactRouter() vite plugin, and delete declare module '@remix-run/server-runtime'
+Add react-router.config.ts file with these contents:
+import type {Config} from '@react-router/dev/config';
+
+export default {
+  appDirectory: 'app',
+  buildDirectory: 'dist',
+  ssr: true,
+} satisfies Config;
+
+3. Change env.d.ts: the declare module should be aimed at 'react-router' and you have to add LoaderFunctionArgs and ActionFunctionArgs. Full text here:
+```
+declare module 'react-router' {
+  interface AppLoadContext
+    extends Awaited<ReturnType<typeof createAppLoadContext>> {
+    // to change context type, change the return of createAppLoadContext() instead
+  }
+
+  // TODO: remove this once we've migrated to `Route.LoaderArgs` instead for our loaders
+  interface LoaderFunctionArgs {
+    context: AppLoadContext;
+  }
+
+  // TODO: remove this once we've migrated to `Route.ActionArgs` instead for our actions
+  interface ActionFunctionArgs {
+    context: AppLoadContext;
+  }
+
+  interface SessionData extends HydrogenSessionData {
+    // declare local additions to the Remix session data here
+  }
+}
+```
+
+4. Change tsconfig.json: add ".react-router/types/**/*" to include, and add "rootDirs": [".", "./.react-router/types"] 
+
+5. Add .react-router to .gitignore
+
+6. Run npx codemod remix/2/react-router/upgrade 
+
+7. Run npm install again
+
+8. Update the hydrogen dependencies to the 0.0.0-snapshot-20250506161608 version
+// optional in case npm install fails (it will likely fail):
+rm -r node_modules
+rm package-lock.json
+
+// for now, install the tarballs directly, because the snapshot is recent and did not propagate to the npm CDN.
+
+npm install https://registry.npmjs.org/@shopify/cli-hydrogen/-/cli-hydrogen-0.0.0-snapshot-20250506161608.tgz https://registry.npmjs.org/@shopify/hydrogen/-/hydrogen-0.0.0-snapshot-20250506161608.tgz https://registry.npmjs.org/@shopify/remix-oxygen/-/remix-oxygen-0.0.0-snapshot-20250506161608.tgz
+
+
+9. Now try running npm run codegen and npm run typecheck and npm run dev ! 
