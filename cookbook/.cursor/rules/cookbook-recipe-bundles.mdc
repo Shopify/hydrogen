@@ -25,13 +25,21 @@ Display product bundles on your Hydrogen storefront.
 # User Intent Recognition
 
 <user_queries>
-
+- How do I show product bundles on my Hydrogen storefront?
+- How do I add badges to bundled products on my Hydrogen storefront?
+- How do I display product bundles on applicable line items in the cart?
+- How do I detect if a product is a bundle?
 </user_queries>
 
 # Troubleshooting
 
 <troubleshooting>
-
+- **Issue**: I'm not seeing product bundles on my storefront.
+  **Solution**: Make sure you've installed the Shopify Bundles app and set up product bundles in your Shopify admin.
+- **Issue**: I'm not seeing product bundle badges on product pages.
+  **Solution**: Make sure you've installed the Shopify Bundles app and set up product bundles in your Shopify admin. Then make sure you've updated the product fragment to query for bundles and display BundledVariants.
+- **Issue**: I'm not seeing the product bundle badges on my cart line items.
+  **Solution**: Make sure you've installed the Shopify Bundles app and set up product bundles in your Shopify admin. Then make sure you've updated the cart fragment to query for bundles.
 </troubleshooting>
 
 # Recipe Implementation
