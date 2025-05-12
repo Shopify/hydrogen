@@ -1,5 +1,5 @@
 import {VariantSelector} from '@shopify/hydrogen';
-import {Link} from '@remix-run/react';
+import {Link} from '@react-router';
 
 const ProductForm = ({product}) => {
   return (

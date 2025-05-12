@@ -1,4 +1,4 @@
-import {useLoaderData} from '@remix-run/react';
+import {useLoaderData} from '@react-router';
 import {LoaderFunctionArgs} from '@remix-run/server-runtime';
 import {useOptimisticVariant} from '@shopify/hydrogen';
 
