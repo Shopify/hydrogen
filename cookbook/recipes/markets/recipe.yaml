@@ -1,0 +1,105 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+title: Markets
+summary: |
+  This recipe shows how to add support for markets to your Hydrogen app.
+description: >
+  This recipe shows how to add support for [Shopify
+  Markets](https://www.shopify.com/ca/blog/markets) to your Hydrogen app.
+
+
+  Markets allow you to segment your audience and serve different content to each
+  market.
+
+
+  You can set up Markets and use them in a variety of ways; in this recipe,
+  you'll learn how to set up basic localization support for your Hydrogen store,
+  understand what options are available for routing, and how to add a country
+  selector component to your app and how to set up links that work across
+  localized versions of your store.
+notes:
+  - This recipe is particularly useful for existing Hydrogen projects. If you
+    need to set up a brand new Hydrogen app, you can get a solid foundation by
+    selecting the localization options when setting up your new project via the
+    Shopify CLI. You can also use `h2 setup markets` to add localization support
+    to your new Hydrogen app.
+requirements: >
+  - Set up your store's regions and languages via [Shopify
+  Markets](https://help.shopify.com/en/manual/markets).
+
+  - Configure your products appropriately for each market.
+
+  - Make sure your Hydrogen app is configured to use a default `language` and
+  `country code`. They will be used as the fallback when no market is explicitly
+  selected.
+ingredients:
+  - path: templates/skeleton/app/components/CountrySelector.tsx
+    description: A component that displays a country selector inside the Header.
+  - path: templates/skeleton/app/components/Link.tsx
+    description: A wrapper around the Remix Link component that uses the selected locale path prefix.
+  - path: templates/skeleton/app/lib/i18n.ts
+    description: A helper function to get locale information from the context, a hook to retrieve the selected locale, and a list of available locales.
+  - path: templates/skeleton/app/routes/($locale)._index.tsx
+    description: A route that renders a localized version of the home page.
+  - path: templates/skeleton/app/routes/($locale).products.$handle.tsx
+    description: A route that renders a localized version of the product page.
+deletedFiles:
+  - templates/skeleton/app/routes/_index.tsx
+  - templates/skeleton/app/routes/products.$handle.tsx
+steps:
+  - type: INFO
+    index: 1
+    name: Path-based localization, subdomain-based localization, …?
+    description: |
+      There are many ways to localize your store. This recipe focuses on path-based localization, but you could just as easily apply these concepts to subdomain-based localization, or header-based localization.
+
+      Any of these approaches have different trade-offs, and the approach you take will depend on your project's requirements.
+
+      For the remainder of this recipe, we'll focus on path-based localization.
+  - type: COPY_INGREDIENTS
+    index: 2
+    name: Add ingredients to your project
+    description: Copy all the files found in the `ingredients/` directory into your project.
+    ingredients:
+      - templates/skeleton/app/components/CountrySelector.tsx
+      - templates/skeleton/app/components/Link.tsx
+      - templates/skeleton/app/lib/i18n.ts
+      - templates/skeleton/app/routes/($locale)._index.tsx
+      - templates/skeleton/app/routes/($locale).products.$handle.tsx
+  - type: INFO
+    index: 3
+    name: Add language splat to the desired route's
+    description: |
+      If you're going with path-based localization, you should add a language splat to your localized routes, for example renaming `routes/_index.tsx` to `routes/($locale)._index.tsx`.
+
+      For brevity, in this example we only focused on two files – the index page and the product page; however this should be done for all the app routes.
+  - type: PATCH
+    index: 4
+    name: Add the CountrySelector component to the Header
+    description: |
+      Add a CountrySelector component to the Header.
+    diffs:
+      - file: app/components/Header.tsx
+        patchFile: Header.tsx.05d0c2.patch
+  - type: PATCH
+    index: 5
+    name: Add the selected locale to the context
+    description: |
+      Detect the locale from the URL path, and add it to the Hydrogencontext.
+    diffs:
+      - file: app/lib/context.ts
+        patchFile: context.ts.12ce79.patch
+  - type: PATCH
+    index: 6
+    name: Add the selected locale to the root route
+    description: |
+      - Include the selected locale in the root route's loader data.
+
+      - Add a key prop to the `PageLayout` component to make sure it re-renders when the locale changes.
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.53a6d3.patch
+llms:
+  userQueries: []
+  troubleshooting: []
+commit: 4fa2550c0cf7b07e2cf3b948b42c67cf3d552789
