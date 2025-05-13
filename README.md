@@ -37,13 +37,7 @@ Hydrogen legacy v1 has been moved [to a separate repo](https://github.com/Shopif
    npm run dev
    ```
 
-   To run the development server with HTTPS:
-
-   ```bash
-   npm run dev -- --https
-   ```
-
-1. Open your new Hydrogen app running at <http://localhost:3000> (or https://localhost:3000 if using HTTPS).
+1. Open your new Hydrogen app running at <http://localhost:3000>.
 
 See the complete [Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen).
 

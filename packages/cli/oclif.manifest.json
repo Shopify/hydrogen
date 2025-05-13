@@ -647,17 +647,6 @@
           "allowNo": false,
           "type": "boolean"
         },
-        "tunnel": {
-          "description": "Creates a public URL for your local development server using a secure tunnel.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_TUNNEL",
-          "exclusive": [
-            "customer-account-push__unstable"
-          ],
-          "name": "tunnel",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
-        },
         "verbose": {
           "description": "Outputs more information about the command's execution.",
           "env": "SHOPIFY_HYDROGEN_FLAG_VERBOSE",

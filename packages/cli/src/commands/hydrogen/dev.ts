@@ -87,7 +87,6 @@ export default class Dev extends Command {
     }),
     ...commonFlags.diff,
     ...commonFlags.customerAccountPush,
-    ...commonFlags.tunnel,
     ...commonFlags.verbose,
     host: Flags.boolean({
       description: 'Expose the server to the local network',
@@ -186,7 +185,6 @@ type DevOptions = {
   sourcemap?: boolean;
   inspectorPort?: number;
   customerAccountPush?: boolean;
-  tunnel?: boolean;
   cliConfig: Config;
   verbose?: boolean;
   envFile: string;
@@ -209,7 +207,6 @@ export async function runDev({
   disableVersionCheck = false,
   inspectorPort,
   customerAccountPush: customerAccountPushFlag = false,
-  tunnel: tunnelFlag = false,
   envFile,
   cliConfig,
   verbose,
@@ -225,7 +222,6 @@ export async function runDev({
   const backgroundPromise = getDevConfigInBackground(
     root,
     customerAccountPushFlag,
-    tunnelFlag,
     envFile,
   );
 
@@ -340,18 +336,6 @@ export async function runDev({
           });
         },
         configureServer: (viteDevServer) => {
-          if (useLocalhost) {
-            viteDevServer.middlewares.use((req, res, next) => {
-              const host = req.headers.host;
-
-              req.headers.host = 'localhost';
-
-              console.log('host', req.headers.host);
-
-              next();
-            });
-          }
-
           if (customerAccountPushFlag) {
             viteDevServer.middlewares.use((req, res, next) => {
               const host = req.headers.host;
@@ -405,15 +389,9 @@ export async function runDev({
     appPort ?? viteServer.config.server.port ?? DEFAULT_APP_PORT;
 
   const [tunnel, cliCommand] = await Promise.all([
-    backgroundPromise.then(({customerAccountPush, useTunnel, storefrontId}) =>
-      useTunnel
-        ? startTunnelAndPushConfig(
-            root,
-            cliConfig,
-            publicPort,
-            storefrontId,
-            tunnelFlag && !customerAccountPush,
-          )
+    backgroundPromise.then(({customerAccountPush, storefrontId}) =>
+      customerAccountPush
+        ? startTunnelAndPushConfig(root, cliConfig, publicPort, storefrontId)
         : undefined,
     ),
     cliCommandPromise,
@@ -448,7 +426,6 @@ export async function runDev({
     inspectorPort,
     finalHost,
     storefrontTitle,
-    tunnel: tunnelFlag || customerAccountPushFlag,
     useLocalhost: useLocalhost && httpsConfig !== undefined,
   });
 
@@ -477,12 +454,10 @@ function showSuccessBanner({
   inspectorPort,
   finalHost,
   storefrontTitle,
-  tunnel,
   useLocalhost,
 }: Pick<DevOptions, 'disableVirtualRoutes' | 'debug' | 'inspectorPort'> & {
   finalHost: string;
   storefrontTitle?: string;
-  tunnel?: boolean;
   useLocalhost?: boolean;
 }) {
   const customSections: AlertCustomSection[] = [];
@@ -494,14 +469,6 @@ function showSuccessBanner({
   if (debug && inspectorPort) {
     customSections.push({
       body: {warn: getDebugBannerLine(inspectorPort)},
-    });
-  }
-
-  if (tunnel) {
-    customSections.push({
-      body: {
-        info: `Your local server is also accessible via public URL: ${colors.cyan(finalHost)}`,
-      },
     });
   }
 
