@@ -1,5 +1,5 @@
 import {execSync} from 'child_process';
-import {createHash} from 'crypto';
+import {createHash, randomUUID} from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import YAML from 'yaml';
@@ -109,6 +109,7 @@ export async function generateRecipe(
   const troubleshooting = existingRecipe?.llms.troubleshooting ?? [];
 
   const recipe: Recipe = {
+    gid: existingRecipe?.gid ?? randomUUID(),
     title: existingRecipe?.title ?? recipeName,
     summary: existingRecipe?.summary ?? '',
     description: existingRecipe?.description ?? '',

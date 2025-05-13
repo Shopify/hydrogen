@@ -50,6 +50,7 @@ export const TroubleshootingSchema = z.object({
 export type Troubleshooting = z.infer<typeof TroubleshootingSchema>;
 
 export const RecipeSchema = z.object({
+  gid: z.string().uuid().describe('The unique identifier of the recipe'),
   title: z.string().describe('The title of the recipe'),
   summary: z.string().describe('The summary of what the recipe does'),
   description: z.string().describe('The description of the recipe'),

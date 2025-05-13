@@ -1,4 +1,3 @@
-import {randomUUID} from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import {
@@ -71,7 +70,7 @@ export function makeReadmeBlocks(
   recipe: Recipe,
   format: RenderFormat,
 ) {
-  const markdownTitle = makeTitle(recipe, format);
+  const markdownTitle = makeTitle(recipeName, recipe, format);
 
   const markdownDescription = mdParagraph(recipe.description);
 
@@ -265,14 +264,21 @@ export function renderStep(
   return markdownStep;
 }
 
-function makeTitle(recipe: Recipe, format: RenderFormat): MDBlock {
+function makeTitle(
+  recipeName: string,
+  recipe: Recipe,
+  format: RenderFormat,
+): MDBlock {
   switch (format) {
     case 'shopify.dev':
-      return mdFrontMatter({
-        gid: randomUUID(),
-        title: recipe.title,
-        description: recipe.summary,
-      });
+      return mdFrontMatter(
+        {
+          gid: recipe.gid,
+          title: `${recipe.title} in Hydrogen`,
+          description: recipe.summary,
+        },
+        [doNotEditComment(recipeName)],
+      );
     case 'github':
       return mdHeading(1, recipe.title);
     default:
@@ -295,4 +301,8 @@ function hydrogenRepoRecipeBaseURL(params: {
 }): string {
   const {recipeName, hash} = params;
   return hydrogenRepoFolderURL({path: `/cookbook/recipes/${recipeName}`, hash});
+}
+
+function doNotEditComment(recipeName: string): string {
+  return `DO NOT EDIT. This file is generated from the shopify/hydrogen repo from this source file: \`cookbook/recipes/${recipeName}/recipe.yaml\``;
 }

@@ -1,13 +1,12 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
+gid: f2158739-840f-4091-a375-fcefce7e0bab
 title: Subscriptions
 summary: Add subscription-based products to your Hydrogen storefront.
 description: |
   This recipe lets you sell subscription-based products on your Hydrogen storefront by implementing [selling plan groups](https://shopify.dev/docs/api/storefront/latest/objects/SellingPlanGroup). Your customers will be able to choose between one-time purchases or recurring subscriptions for any products with available selling plans.
 
-
   In this recipe you'll make the following changes:
-
 
   1. Set up a subscriptions app in your Shopify admin and add selling plans to any products that will be sold as subscriptions.
   2. Modify product detail pages to display subscription options with accurate pricing using the `SellingPlanSelector` component.
@@ -140,12 +139,15 @@ llms:
     - How do I display subscription details on applicable line items in the cart?
   troubleshooting:
     - issue: I'm getting an error when I try to add a subscription to my storefront.
-      solution: Make sure you've installed the Shopify Subscriptions app and set up
+      solution:
+        Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
     - issue: I'm not seeing the subscription options on my product pages.
-      solution: Make sure you've installed the Shopify Subscriptions app and set up
+      solution:
+        Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
     - issue: I'm not seeing the subscription details on my cart line items.
-      solution: Make sure you've installed the Shopify Subscriptions app and set up
+      solution:
+        Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
 commit: a78a9f59352087b69475794057d4ccf9f5c08a6e

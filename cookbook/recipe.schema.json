@@ -1,6 +1,11 @@
 {
   "type": "object",
   "properties": {
+    "gid": {
+      "type": "string",
+      "format": "uuid",
+      "description": "The unique identifier of the recipe"
+    },
     "title": {
       "type": "string",
       "description": "The title of the recipe"
@@ -188,6 +193,7 @@
     }
   },
   "required": [
+    "gid",
     "title",
     "summary",
     "description",
