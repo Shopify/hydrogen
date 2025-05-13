@@ -262,7 +262,9 @@ export function serializeMDBlocksToFile(
   filePath: string,
   format: RenderFormat,
 ) {
-  let data = blocks.map((block) => renderMDBlock(block, format)).join('\n\n');
+  let data = blocks
+    .map((block) => renderMDBlock(block, format).trim())
+    .join('\n\n');
   if (format === 'shopify.dev') {
     data = data.replace(/\{\{/g, "{{ '{{' }}");
   }
