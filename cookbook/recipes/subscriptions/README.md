@@ -20,12 +20,12 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | Displays the available subscription options on product pages. |
-| [app/graphql/customer-account/CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts) | Mutations for managing customer subscriptions. |
-| [app/graphql/customer-account/CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts) | Queries for managing customer subscriptions. |
-| [app/routes/account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx) | Subscriptions management page. |
-| [app/styles/account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css) | Subscriptions management page styles. |
-| [app/styles/selling-plan.css](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css) | Styles the `SellingPlanSelector` component. |
+| [app/components/SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | Displays the available subscription options on product pages. |
+| [app/graphql/customer-account/CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts) | Mutations for managing customer subscriptions. |
+| [app/graphql/customer-account/CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts) | Queries for managing customer subscriptions. |
+| [app/routes/account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx) | Subscriptions management page. |
+| [app/styles/account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css) | Subscriptions management page styles. |
+| [app/styles/selling-plan.css](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css) | Styles the `SellingPlanSelector` component. |
 
 ## Steps
 
@@ -40,19 +40,19 @@ The Hydrogen demo storefront comes pre-configured with an example subscription p
 
 Copy all the files found in the `ingredients/` directory into your project.
 
-- [app/components/SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
-- [app/graphql/customer-account/CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
-- [app/graphql/customer-account/CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
-- [app/routes/account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
-- [app/styles/account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
-- [app/styles/selling-plan.css](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css)
+- [app/components/SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
+- [app/graphql/customer-account/CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
+- [app/graphql/customer-account/CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
+- [app/routes/account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
+- [app/styles/account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
+- [app/styles/selling-plan.css](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css)
 
 ### Step 3: Render the selling plan in the cart
 
 1. Update `CartLineItem` to show subscription details when they're available.
 2. Extract `sellingPlanAllocation` from cart line data, display the plan name, and standardize component import paths.
 
-#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/templates/skeleton/app/components/CartLineItem.tsx)
+#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/templates/skeleton/app/components/CartLineItem.tsx)
 
 ```diff
 index bd33a2cf..a18e4b52 100644
@@ -101,7 +101,7 @@ index bd33a2cf..a18e4b52 100644
 2. Implement `SellingPlanSelector` and `SellingPlanGroup` components to handle subscription plan selection.
 3. Update `AddToCartButton` to include selling plan data when subscriptions are selected.
 
-#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/templates/skeleton/app/components/ProductForm.tsx)
+#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/templates/skeleton/app/components/ProductForm.tsx)
 
 <details>
 
@@ -232,7 +232,7 @@ index e8616a61..8b7fe8ca 100644
 1. Add a `SellingPlanPrice` function to calculate adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage).
 2. Add logic to handle different price adjustment types and render the appropriate subscription price when a selling plan is selected.
 
-#### File: [app/components/ProductPrice.tsx](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/templates/skeleton/app/components/ProductPrice.tsx)
+#### File: [app/components/ProductPrice.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/templates/skeleton/app/components/ProductPrice.tsx)
 
 <details>
 
@@ -355,7 +355,7 @@ index 32460ae2..59eed1d8 100644
 
 Add a `sellingPlanAllocation` field with the plan name to the standard and componentizable cart line GraphQL fragments. This displays subscription details in the cart.
 
-#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/templates/skeleton/app/lib/fragments.ts)
+#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/templates/skeleton/app/lib/fragments.ts)
 
 ```diff
 index dc4426a9..cfe3a938 100644
@@ -393,7 +393,7 @@ index dc4426a9..cfe3a938 100644
 2. Add logic to handle pricing adjustments, maintain selection state using URL parameters, and update the add-to-cart functionality.
 3. Fetch subscription data through the updated cart GraphQL fragments.
 
-#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/templates/skeleton/app/routes/products.$handle.tsx)
+#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/templates/skeleton/app/routes/products.$handle.tsx)
 
 <details>
 
@@ -600,7 +600,7 @@ index 2dc6bda2..3507d496 100644
 
 Add a `Subscriptions` link to the account menu.
 
-#### File: [app/routes/account.tsx](https://github.com/Shopify/hydrogen/blob/b81c24730f207492216f2720691922bb3eed3b7b/templates/skeleton/app/routes/account.tsx)
+#### File: [app/routes/account.tsx](https://github.com/Shopify/hydrogen/blob/a78a9f59352087b69475794057d4ccf9f5c08a6e/templates/skeleton/app/routes/account.tsx)
 
 ```diff
 index 0941d4e0..976ae9df 100644

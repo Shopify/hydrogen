@@ -155,4 +155,4 @@ llms:
         Make sure you've installed the Shopify Bundles app and set up product
         bundles in your Shopify admin. Then make sure you've updated the cart
         fragment to query for bundles.
-commit: b81c24730f207492216f2720691922bb3eed3b7b
+commit: 4fa2550c0cf7b07e2cf3b948b42c67cf3d552789
