@@ -187,6 +187,34 @@ Defaults to the '.env' located in your project path `--path`.",
       env: 'SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH',
     }),
   },
+  tunnel: {
+    tunnel: Flags.boolean({
+      description:
+        'Creates a public URL for your local development server using a secure tunnel.',
+      required: false,
+      env: 'SHOPIFY_HYDROGEN_FLAG_TUNNEL',
+      default: false,
+      exclusive: ['customer-account-push__unstable'],
+    }),
+  },
+  https: {
+    https: Flags.boolean({
+      description:
+        'Runs the dev server with HTTPS using a self-signed certificate.',
+      required: false,
+      env: 'SHOPIFY_HYDROGEN_FLAG_HTTPS',
+      default: false,
+    }),
+  },
+  localhostPort: {
+    'localhost-port': Flags.integer({
+      description:
+        'The port to use for the local HTTPS server when using the --https flag.',
+      required: false,
+      env: 'SHOPIFY_HYDROGEN_FLAG_LOCALHOST_PORT',
+      dependsOn: ['https'],
+    }),
+  },
   verbose: {
     verbose: Flags.boolean({
       description: "Outputs more information about the command's execution.",

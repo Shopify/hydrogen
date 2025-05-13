@@ -44,12 +44,14 @@ export function notifyIssueWithTunnelAndMockShop(cliCommand: string) {
 export function getDevConfigInBackground(
   root: string,
   customerAccountPushFlag: boolean,
+  tunnelFlag: boolean = false,
   envFile: string,
 ) {
   return getLocalVariables(root, envFile).then(
     async ({variables: localVariables}) => {
       const customerAccountPush =
         customerAccountPushFlag && !isMockShop(localVariables);
+      const useTunnel = tunnelFlag || customerAccountPush;
 
       // ensure this occur before `getConfig` since it can run link and changed env vars
       if (customerAccountPush) {
@@ -62,6 +64,7 @@ export function getDevConfigInBackground(
       return {
         storefrontId,
         customerAccountPush,
+        useTunnel,
         fetchRemote: !!shop && !!storefrontId,
         localVariables,
         storefrontTitle: storefront?.title,
@@ -80,6 +83,7 @@ export async function startTunnelAndPushConfig(
   cliConfig: Config,
   port: number,
   storefrontId?: string,
+  tunnelOnly: boolean = false,
 ) {
   outputInfo('\nStarting tunnel...\n');
 
@@ -89,19 +93,40 @@ export async function startTunnelAndPushConfig(
     host.replace(TUNNEL_DOMAIN.ORIGINAL, TUNNEL_DOMAIN.REBRANDED),
   );
 
-  const cleanup = await runCustomerAccountPush({
-    path: root,
-    devOrigin: host,
-    storefrontId,
-  }).catch((error) => {
-    if (error instanceof AbortError) {
-      renderInfo({
-        headline: 'Customer Account Application setup update fail.',
-        body: error.tryMessage || undefined,
-        nextSteps: error.nextSteps,
-      });
+  let cleanup = async () => {
+    await tunnel.close();
+  };
+
+  if (!tunnelOnly) {
+    const accountPushCleanup = await runCustomerAccountPush({
+      path: root,
+      devOrigin: host,
+      storefrontId,
+    }).catch((error) => {
+      if (error instanceof AbortError) {
+        renderInfo({
+          headline: 'Customer Account Application setup update fail.',
+          body: error.tryMessage || undefined,
+          nextSteps: error.nextSteps,
+        });
+      }
+      return undefined;
+    });
+
+    if (accountPushCleanup) {
+      const originalCleanup = cleanup;
+      cleanup = async () => {
+        await originalCleanup();
+        await accountPushCleanup();
+      };
     }
-  });
+  } else {
+    // Just display tunnel URL info for tunnel-only mode
+    renderInfo({
+      headline: 'Public tunnel URL created successfully',
+      body: `Your local development server is now accessible at: ${colors.cyan(host)}`,
+    });
+  }
 
   return {host, cleanup};
 }

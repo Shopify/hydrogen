@@ -8,6 +8,7 @@ import {
   type AlertCustomSection,
   renderSuccess,
   renderInfo,
+  renderWarning,
 } from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {removeFile} from '@shopify/cli-kit/node/fs';
@@ -25,6 +26,7 @@ import {
   flagsToCamelObject,
   overrideFlag,
 } from '../../lib/flags.js';
+import {configureHttpsServer} from '../../lib/https.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
@@ -85,11 +87,26 @@ export default class Dev extends Command {
     }),
     ...commonFlags.diff,
     ...commonFlags.customerAccountPush,
+    ...commonFlags.tunnel,
     ...commonFlags.verbose,
     host: Flags.boolean({
       description: 'Expose the server to the local network',
       default: false,
       required: false,
+    }),
+    'use-localhost': Flags.boolean({
+      description:
+        'Use localhost with HTTPS for development with auto-generated SSL certificates',
+      default: false,
+      required: false,
+      env: 'SHOPIFY_HYDROGEN_FLAG_USE_LOCALHOST',
+    }),
+    'localhost-port': Flags.integer({
+      description:
+        'The port to use for the local HTTPS server when using the --use-localhost flag',
+      required: false,
+      env: 'SHOPIFY_HYDROGEN_FLAG_LOCALHOST_PORT',
+      dependsOn: ['use-localhost'],
     }),
     'disable-deps-optimizer': Flags.boolean({
       description:
@@ -130,6 +147,8 @@ export default class Dev extends Command {
     const devParams = {
       ...flagsToCamelObject(flags),
       customerAccountPush: flags['customer-account-push__unstable'],
+      useLocalhost: flags['use-localhost'],
+      localhostPort: flags['localhost-port'],
       path: directory,
       cliConfig: this.config,
     };
@@ -155,6 +174,8 @@ type DevOptions = {
   path?: string;
   codegen?: boolean;
   host?: boolean;
+  useLocalhost?: boolean;
+  localhostPort?: number;
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
   disableVersionCheck?: boolean;
@@ -165,6 +186,7 @@ type DevOptions = {
   sourcemap?: boolean;
   inspectorPort?: number;
   customerAccountPush?: boolean;
+  tunnel?: boolean;
   cliConfig: Config;
   verbose?: boolean;
   envFile: string;
@@ -175,6 +197,8 @@ export async function runDev({
   port: appPort,
   path: appPath,
   host,
+  useLocalhost = false,
+  localhostPort,
   codegen: useCodegen = false,
   codegenConfigPath,
   disableVirtualRoutes,
@@ -185,6 +209,7 @@ export async function runDev({
   disableVersionCheck = false,
   inspectorPort,
   customerAccountPush: customerAccountPushFlag = false,
+  tunnel: tunnelFlag = false,
   envFile,
   cliConfig,
   verbose,
@@ -200,6 +225,7 @@ export async function runDev({
   const backgroundPromise = getDevConfigInBackground(
     root,
     customerAccountPushFlag,
+    tunnelFlag,
     envFile,
   );
 
@@ -232,6 +258,39 @@ export async function runDev({
     getCodeFormatOptions(root),
   );
 
+  // Setup localhost HTTPS if enabled
+  let httpsConfig = undefined;
+  if (useLocalhost) {
+    renderInfo({
+      headline: 'Setting up localhost with HTTPS for development server...',
+    });
+
+    try {
+      const httpsOptions = await configureHttpsServer(
+        useLocalhost,
+        localhostPort,
+      );
+
+      if (httpsOptions) {
+        httpsConfig = httpsOptions.https;
+        // Override port if provided by HTTPS config
+        if (localhostPort) {
+          appPort = localhostPort;
+        }
+
+        renderInfo({
+          headline:
+            'Localhost HTTPS successfully configured with self-signed certificates',
+        });
+      }
+    } catch (error) {
+      renderWarning({
+        headline: 'Failed to setup localhost with HTTPS',
+        body: 'Falling back to HTTP. Make sure mkcert is installed for HTTPS support.',
+      });
+    }
+  }
+
   const viteServer = await vite.createServer({
     root,
     clearScreen: false,
@@ -245,6 +304,7 @@ export async function runDev({
     server: {
       port: appPort ?? DEFAULT_APP_PORT,
       host: host ? true : undefined,
+      https: httpsConfig,
       // Allow Vite to read files from the Hydrogen packages in local development.
       fs: hydrogenPackagesPath
         ? {allow: [root, hydrogenPackagesPath]}
@@ -280,6 +340,18 @@ export async function runDev({
           });
         },
         configureServer: (viteDevServer) => {
+          if (useLocalhost) {
+            viteDevServer.middlewares.use((req, res, next) => {
+              const host = req.headers.host;
+
+              req.headers.host = 'localhost';
+
+              console.log('host', req.headers.host);
+
+              next();
+            });
+          }
+
           if (customerAccountPushFlag) {
             viteDevServer.middlewares.use((req, res, next) => {
               const host = req.headers.host;
@@ -333,9 +405,15 @@ export async function runDev({
     appPort ?? viteServer.config.server.port ?? DEFAULT_APP_PORT;
 
   const [tunnel, cliCommand] = await Promise.all([
-    backgroundPromise.then(({customerAccountPush, storefrontId}) =>
-      customerAccountPush
-        ? startTunnelAndPushConfig(root, cliConfig, publicPort, storefrontId)
+    backgroundPromise.then(({customerAccountPush, useTunnel, storefrontId}) =>
+      useTunnel
+        ? startTunnelAndPushConfig(
+            root,
+            cliConfig,
+            publicPort,
+            storefrontId,
+            tunnelFlag && !customerAccountPush,
+          )
         : undefined,
     ),
     cliCommandPromise,
@@ -370,6 +448,8 @@ export async function runDev({
     inspectorPort,
     finalHost,
     storefrontTitle,
+    tunnel: tunnelFlag || customerAccountPushFlag,
+    useLocalhost: useLocalhost && httpsConfig !== undefined,
   });
 
   if (!disableVersionCheck) {
@@ -397,9 +477,13 @@ function showSuccessBanner({
   inspectorPort,
   finalHost,
   storefrontTitle,
+  tunnel,
+  useLocalhost,
 }: Pick<DevOptions, 'disableVirtualRoutes' | 'debug' | 'inspectorPort'> & {
   finalHost: string;
   storefrontTitle?: string;
+  tunnel?: boolean;
+  useLocalhost?: boolean;
 }) {
   const customSections: AlertCustomSection[] = [];
 
@@ -410,6 +494,20 @@ function showSuccessBanner({
   if (debug && inspectorPort) {
     customSections.push({
       body: {warn: getDebugBannerLine(inspectorPort)},
+    });
+  }
+
+  if (tunnel) {
+    customSections.push({
+      body: {
+        info: `Your local server is also accessible via public URL: ${colors.cyan(finalHost)}`,
+      },
+    });
+  }
+
+  if (useLocalhost) {
+    customSections.push({
+      body: {info: `Localhost HTTPS enabled with self-signed certificates`},
     });
   }
 

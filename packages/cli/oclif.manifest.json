@@ -647,6 +647,17 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "tunnel": {
+          "description": "Creates a public URL for your local development server using a secure tunnel.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_TUNNEL",
+          "exclusive": [
+            "customer-account-push__unstable"
+          ],
+          "name": "tunnel",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
         "verbose": {
           "description": "Outputs more information about the command's execution.",
           "env": "SHOPIFY_HYDROGEN_FLAG_VERBOSE",
@@ -661,6 +672,26 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "use-localhost": {
+          "description": "Use localhost with HTTPS for development with auto-generated SSL certificates",
+          "env": "SHOPIFY_HYDROGEN_FLAG_USE_LOCALHOST",
+          "name": "use-localhost",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "localhost-port": {
+          "dependsOn": [
+            "use-localhost"
+          ],
+          "description": "The port to use for the local HTTPS server when using the --use-localhost flag",
+          "env": "SHOPIFY_HYDROGEN_FLAG_LOCALHOST_PORT",
+          "name": "localhost-port",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "disable-deps-optimizer": {
           "description": "Disable adding dependencies to Vite's `ssr.optimizeDeps.include` automatically",
