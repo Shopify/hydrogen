@@ -40,7 +40,8 @@ ingredients:
   - path: templates/skeleton/app/components/BundleBadge.tsx
     description: A badge displayed on bundle product listings.
   - path: templates/skeleton/app/components/BundledVariants.tsx
-    description: A component that wraps the variants of a bundle product in a single
+    description:
+      A component that wraps the variants of a bundle product in a single
       product listing.
 deletedFiles: []
 steps:
@@ -134,6 +135,24 @@ steps:
       - file: app/styles/app.css
         patchFile: app.css.e88d35.patch
 llms:
-  userQueries: []
-  troubleshooting: []
+  userQueries:
+    - How do I show product bundles on my Hydrogen storefront?
+    - How do I add badges to bundled products on my Hydrogen storefront?
+    - How do I display product bundles on applicable line items in the cart?
+    - How do I detect if a product is a bundle?
+  troubleshooting:
+    - issue: I'm not seeing product bundles on my storefront.
+      solution:
+        Make sure you've installed the Shopify Bundles app and set up product
+        bundles in your Shopify admin.
+    - issue: I'm not seeing product bundle badges on product pages.
+      solution:
+        Make sure you've installed the Shopify Bundles app and set up product
+        bundles in your Shopify admin. Then make sure you've updated the product
+        fragment to query for bundles and display BundledVariants.
+    - issue: I'm not seeing the product bundle badges on my cart line items.
+      solution:
+        Make sure you've installed the Shopify Bundles app and set up product
+        bundles in your Shopify admin. Then make sure you've updated the cart
+        fragment to query for bundles.
 commit: b81c24730f207492216f2720691922bb3eed3b7b
