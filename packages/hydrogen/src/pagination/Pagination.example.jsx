@@ -1,5 +1,5 @@
 import {Pagination, getPaginationVariables} from '@shopify/hydrogen';
-import {useLoaderData, Link} from '@react-router';
+import {useLoaderData, Link} from 'react-router';
 
 export async function loader({request, context: {storefront}}) {
   const variables = getPaginationVariables(request, {pageBy: 8});

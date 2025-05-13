@@ -1,6 +1,6 @@
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {Pagination, getPaginationVariables} from '@shopify/hydrogen';
-import {useLoaderData, Link} from '@react-router';
+import {useLoaderData, Link} from 'react-router';
 import {ProductConnection} from '@shopify/hydrogen/storefront-api-types';
 
 export async function loader({

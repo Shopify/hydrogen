@@ -1,4 +1,4 @@
-import {useLoaderData, Link} from '@react-router';
+import {useLoaderData, Link} from 'react-router';
 import {getPaginationVariables, Pagination} from '@shopify/hydrogen';
 
 export async function loader({request, context: {storefront}}) {

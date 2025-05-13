@@ -5,7 +5,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-} from '@react-router';
+} from 'react-router';
 import {useNonce, Script} from '@shopify/hydrogen';
 export default function App() {
   const nonce = useNonce();
