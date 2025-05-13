@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
+gid: 8495ffc3-e69c-431a-ac0b-1abb16ab50a2
 title: Bundles
 summary: |
   Display product bundles on your Hydrogen storefront.
@@ -39,7 +40,8 @@ ingredients:
   - path: templates/skeleton/app/components/BundleBadge.tsx
     description: A badge displayed on bundle product listings.
   - path: templates/skeleton/app/components/BundledVariants.tsx
-    description: A component that wraps the variants of a bundle product in a single
+    description:
+      A component that wraps the variants of a bundle product in a single
       product listing.
 deletedFiles: []
 steps:
@@ -140,14 +142,17 @@ llms:
     - How do I detect if a product is a bundle?
   troubleshooting:
     - issue: I'm not seeing product bundles on my storefront.
-      solution: Make sure you've installed the Shopify Bundles app and set up product
+      solution:
+        Make sure you've installed the Shopify Bundles app and set up product
         bundles in your Shopify admin.
     - issue: I'm not seeing product bundle badges on product pages.
-      solution: Make sure you've installed the Shopify Bundles app and set up product
+      solution:
+        Make sure you've installed the Shopify Bundles app and set up product
         bundles in your Shopify admin. Then make sure you've updated the product
         fragment to query for bundles and display BundledVariants.
     - issue: I'm not seeing the product bundle badges on my cart line items.
-      solution: Make sure you've installed the Shopify Bundles app and set up product
+      solution:
+        Make sure you've installed the Shopify Bundles app and set up product
         bundles in your Shopify admin. Then make sure you've updated the cart
         fragment to query for bundles.
 commit: 4fa2550c0cf7b07e2cf3b948b42c67cf3d552789
