@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
+gid: 8495ffc3-e69c-431a-ac0b-1abb16ab50a2
 title: Bundles
 summary: |
   Display product bundles on your Hydrogen storefront.
@@ -135,4 +136,4 @@ steps:
 llms:
   userQueries: []
   troubleshooting: []
-commit: 55039b91aaac891f75b426a723e71dd07bb37716
+commit: b81c24730f207492216f2720691922bb3eed3b7b
