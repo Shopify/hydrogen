@@ -12,13 +12,23 @@ import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {WithLocale, DEFAULT_LOCALE} from '~/lib/i18n';
 
-export const meta: MetaFunction<typeof loader> = ({data}) => {
+export const meta: MetaFunction<typeof loader> = (args) => {
+  const rootMatch = args.matches.at(0) ?? null;
+  const selectedLocale =
+    (rootMatch?.data as WithLocale)?.selectedLocale ?? null;
+
+  const prefix = (
+    selectedLocale?.pathPrefix ?? DEFAULT_LOCALE.pathPrefix
+  ).replace(/\/+$/, '');
+  const href = `${prefix}/products/${args.data?.product.handle}`;
+
   return [
-    {title: `Hydrogen | ${data?.product.title ?? ''}`},
+    {title: `Hydrogen | ${args.data?.product.title ?? ''}`},
     {
       rel: 'canonical',
-      href: `/products/${data?.product.handle}`,
+      href,
     },
   ];
 };

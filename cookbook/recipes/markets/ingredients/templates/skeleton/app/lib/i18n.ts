@@ -10,6 +10,12 @@ export type Locale = {
   pathPrefix: string;
 };
 
+export const DEFAULT_LOCALE: Locale = {
+  language: 'EN',
+  country: 'US',
+  pathPrefix: '/',
+};
+
 export function getLocaleFromRequest(request: Request): Locale {
   const url = new URL(request.url);
   const firstPathPart = url.pathname.split('/')[1]?.toUpperCase() ?? '';
@@ -17,17 +23,18 @@ export function getLocaleFromRequest(request: Request): Locale {
   type LocaleFromUrl = [Locale['language'], Locale['country']];
 
   let pathPrefix = '';
-  let [language, country]: LocaleFromUrl = ['EN', 'US'];
 
-  if (/^[A-Z]{2}-[A-Z]{2}$/i.test(firstPathPart)) {
-    pathPrefix = '/' + firstPathPart;
-    [language, country] = firstPathPart.split('-') as LocaleFromUrl;
+  // If the first path part is not a valid locale, return the default locale
+  if (!/^[A-Z]{2}-[A-Z]{2}$/i.test(firstPathPart)) {
+    return DEFAULT_LOCALE;
   }
 
+  pathPrefix = '/' + firstPathPart;
+  const [language, country] = firstPathPart.split('-') as LocaleFromUrl;
   return {language, country, pathPrefix};
 }
 
-interface WithLocale {
+export interface WithLocale {
   selectedLocale: Locale;
 }
 
@@ -37,26 +44,3 @@ export function useSelectedLocale(): Locale | null {
 
   return selectedLocale ?? null;
 }
-
-export const locales: Locale[] = [
-  {
-    country: 'US',
-    language: 'EN',
-    pathPrefix: '/',
-  },
-  {
-    country: 'CA',
-    language: 'EN',
-    pathPrefix: '/EN-CA',
-  },
-  {
-    country: 'CA',
-    language: 'FR',
-    pathPrefix: '/FR-CA',
-  },
-  {
-    country: 'FR',
-    language: 'FR',
-    pathPrefix: '/FR-FR',
-  },
-];
