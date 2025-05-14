@@ -4,7 +4,7 @@ import {
   cartGetIdDefault,
   cartSetIdDefault,
 } from '@shopify/hydrogen';
-import * as remixBuild from '@remix-run/dev/server-build';
+import * as reactRouterBuild from 'virtual:react-router/server-build';
 import {
   createRequestHandler,
   getStorefrontHeaders,
