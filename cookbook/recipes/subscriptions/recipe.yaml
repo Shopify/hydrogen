@@ -50,17 +50,19 @@ steps:
 
       The Hydrogen demo storefront comes pre-configured with an example
       subscription product with the handle `shopify-wax`.
-
   - type: INFO
     step: 2
     name: Showing subscriptions in product pages
-    description: |
-      In this step we'll implement the ability to display and select subscriptions in product pages, alongside the existing one-off purchase options.
+    description: >
+      In this step we'll implement the ability to display and select
+      subscriptions in product pages, alongside the existing one-off purchase
+      options.
   - type: NEW_FILE
     step: 2.1
     name: Create a SellingPlanSelector component
-    description: |
-      Create a new `SellingPlanSelector` component that displays the available subscription options for a product.
+    description: >
+      Create a new `SellingPlanSelector` component that displays the available
+      subscription options for a product.
     ingredients:
       - templates/skeleton/app/components/SellingPlanSelector.tsx
   - type: NEW_FILE
@@ -111,12 +113,12 @@ steps:
     diffs:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.3e0b7e.patch
-
   - type: INFO
     step: 3
     name: Subscriptions in the cart
-    description: |
-      In this step we'll implement support for showing subscriptions info in the Cart lines.
+    description: >
+      In this step we'll implement support for showing subscriptions info in the
+      Cart lines.
   - type: PATCH
     step: 3.1
     name: Add selling plan data to cart queries
@@ -139,17 +141,19 @@ steps:
     diffs:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.8e657b.patch
-
   - type: INFO
     step: 4
     name: Managing account subscriptions
-    description: |
-      In this step we'll implement support for unsubscribing from active subscriptions via an account subpage which lists existing subscription contracts.
+    description: >
+      In this step we'll implement support for unsubscribing from active
+      subscriptions via an account subpage which lists existing subscription
+      contracts.
   - type: NEW_FILE
     step: 4.1
     name: Add queries to retrieve customer subscriptions
-    description: |
-      Create GraphQL queries that retrieves the subscription info from the customer account client.
+    description: >
+      Create GraphQL queries that retrieves the subscription info from the
+      customer account client.
     ingredients:
       - templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts
   - type: NEW_FILE
@@ -162,8 +166,10 @@ steps:
   - type: NEW_FILE
     step: 4.3
     name: Add an account subscriptions page
-    description: |
-      Create a new account subpage that allows management of existing customer subscriptions based on the new GraphQL queries and mutations created previously.
+    description: >
+      Create a new account subpage that allows management of existing customer
+      subscriptions based on the new GraphQL queries and mutations created
+      previously.
     ingredients:
       - templates/skeleton/app/routes/account.subscriptions.tsx
   - type: PATCH
@@ -181,7 +187,6 @@ steps:
       Add styles for the Subscriptions page.
     ingredients:
       - templates/skeleton/app/styles/account-subscriptions.css
-
 llms:
   userQueries:
     - How do I add subscriptions to my Hydrogen storefront?
@@ -189,15 +194,12 @@ llms:
     - How do I display subscription details on applicable line items in the cart?
   troubleshooting:
     - issue: I'm getting an error when I try to add a subscription to my storefront.
-      solution:
-        Make sure you've installed the Shopify Subscriptions app and set up
+      solution: Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
     - issue: I'm not seeing the subscription options on my product pages.
-      solution:
-        Make sure you've installed the Shopify Subscriptions app and set up
+      solution: Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
     - issue: I'm not seeing the subscription details on my cart line items.
-      solution:
-        Make sure you've installed the Shopify Subscriptions app and set up
+      solution: Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
 commit: bd55b241191304945704c0b9ef278e945c55d3da
