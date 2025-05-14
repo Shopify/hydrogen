@@ -239,6 +239,9 @@ export function renderStep(
     if (step.type !== 'NEW_FILE' || step.ingredients == null) {
       return [];
     }
+
+    const collapsed = options.collapseDiffs === true;
+
     let blocks: MDBlock[] = [];
     for (const ingredient of step.ingredients) {
       const headingLevel = 4 + (isSubstep(step) ? 1 : 0);
@@ -266,7 +269,7 @@ export function renderStep(
             ' ',
           ),
         ),
-        mdCode(path.extname(ingredient).slice(1), content, true),
+        mdCode(path.extname(ingredient).slice(1), content, collapsed),
       );
     }
     return blocks;

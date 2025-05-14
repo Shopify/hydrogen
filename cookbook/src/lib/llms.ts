@@ -1,5 +1,5 @@
 import path from 'path';
-import {COOKBOOK_PATH, TEMPLATE_PATH} from './constants';
+import {COOKBOOK_PATH, TEMPLATE_DIRECTORY, TEMPLATE_PATH} from './constants';
 import {
   createDirectoryIfNotExists,
   getPatchesDir,
@@ -8,7 +8,6 @@ import {
 import {
   maybeMDBlock,
   MDBlock,
-  mdCode,
   mdFrontMatter,
   mdHeading,
   mdList,
@@ -98,24 +97,11 @@ Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
 
       // ingredients
       mdHeading(2, 'New files added to the template by this recipe'),
-      ...recipe.ingredients.flatMap((ingredient) => {
-        const contents = fs.readFileSync(
-          path.join(
-            COOKBOOK_PATH,
-            'recipes',
-            recipeName,
-            'ingredients',
-            ingredient.path,
-          ),
-          'utf8',
-        );
-        const extension = path.extname(ingredient.path).slice(1);
-        return [
-          mdHeading(3, ingredient.path),
-          mdParagraph(ingredient.description ?? ''),
-          mdCode(extension ?? '', contents, false),
-        ];
-      }),
+      mdList(
+        recipe.ingredients.map((ingredient) =>
+          ingredient.path.replace(TEMPLATE_DIRECTORY, ''),
+        ),
+      ),
 
       mdHeading(2, 'Steps'),
       ...recipe.steps.flatMap((step): MDBlock[] =>

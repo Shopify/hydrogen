@@ -62,48 +62,7 @@ In this recipe, you'll make the following changes:
 
 ## New files added to the template by this recipe
 
-### templates/skeleton/app/lib/combined-listings.ts
-
-The `combined-listings.ts` file contains utilities and settings for handling combined listings.
-
-```ts
-// Edit these values to customize combined listings' behavior
-export const combinedListingsSettings = {
-  // If true, loading the product page will redirect to the first variant
-  redirectToFirstVariant: false,
-  // The tag that indicates a combined listing
-  combinedListingTag: 'combined',
-  // If true, combined listings will not be shown in the product list
-  hideCombinedListingsFromProductList: true,
-};
-
-export const maybeFilterOutCombinedListingsQuery =
-  combinedListingsSettings.hideCombinedListingsFromProductList
-    ? `NOT tag:${combinedListingsSettings.combinedListingTag}`
-    : '';
-
-interface ProductWithTags {
-  tags: string[];
-}
-
-function isProductWithTags(u: unknown): u is ProductWithTags {
-  const maybe = u as ProductWithTags;
-  return (
-    u != null &&
-    typeof u === 'object' &&
-    'tags' in maybe &&
-    Array.isArray(maybe.tags)
-  );
-}
-
-export function isCombinedListing(product: unknown) {
-  return (
-    isProductWithTags(product) &&
-    product.tags.includes(combinedListingsSettings.combinedListingTag)
-  );
-}
-
-```
+- app/lib/combined-listings.ts
 
 ## Steps
 
@@ -139,8 +98,6 @@ Create a new `combined-listings.ts` file that contains utilities and settings fo
 
 #### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
 
-<details>
-
 ```ts
 // Edit these values to customize combined listings' behavior
 export const combinedListingsSettings = {
@@ -179,8 +136,6 @@ export function isCombinedListing(product: unknown) {
 }
 
 ```
-
-</details>
 
 ### Step 4: Update the ProductForm component
 

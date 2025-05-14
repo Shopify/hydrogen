@@ -71,101 +71,8 @@ In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/sho
 
 ## New files added to the template by this recipe
 
-### templates/skeleton/app/components/BundleBadge.tsx
-
-A badge displayed on bundle product listings.
-
-```tsx
-export function BundleBadge() {
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        padding: '.5rem .75rem',
-        fontSize: '11px',
-        backgroundColor: '#10804c',
-        color: 'white',
-        top: '1rem',
-        right: '1rem',
-      }}
-    >
-      BUNDLE
-    </div>
-  );
-}
-
-```
-
-### templates/skeleton/app/components/BundledVariants.tsx
-
-A component that wraps the variants of a bundle product in a single product listing.
-
-```tsx
-import {Link} from '@remix-run/react';
-import {Image} from '@shopify/hydrogen';
-import type {
-  ProductVariantComponent,
-  Image as ShopifyImage,
-} from '@shopify/hydrogen/storefront-api-types';
-
-export function BundledVariants({
-  variants,
-}: {
-  variants: ProductVariantComponent[];
-}) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        paddingTop: '1rem',
-      }}
-    >
-      {variants
-        ?.map(({productVariant: bundledVariant, quantity}) => {
-          const url = `/products/${bundledVariant.product.handle}`;
-          return (
-            <Link
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                marginBottom: '.5rem',
-              }}
-              to={url}
-              key={bundledVariant.id}
-            >
-              <Image
-                alt={bundledVariant.title}
-                aspectRatio="1/1"
-                height={60}
-                loading="lazy"
-                width={60}
-                data={bundledVariant.image as ShopifyImage}
-              />
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  paddingLeft: '1rem',
-                }}
-              >
-                <small>
-                  {bundledVariant.product.title}
-                  {bundledVariant.title !== 'Default Title'
-                    ? `- ${bundledVariant.title}`
-                    : null}
-                </small>
-                <small>Qty: {quantity}</small>
-              </div>
-            </Link>
-          );
-        })
-        .filter(Boolean)}
-    </div>
-  );
-}
-
-```
+- app/components/BundleBadge.tsx
+- app/components/BundledVariants.tsx
 
 ## Steps
 
@@ -183,8 +90,6 @@ Create a new BundleBadge component to be displayed on bundle product listings.
 
 #### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
 
-<details>
-
 ```tsx
 export function BundleBadge() {
   return (
@@ -206,15 +111,11 @@ export function BundleBadge() {
 
 ```
 
-</details>
-
 ### Step 3: Create a new BundledVariants component
 
 Create a new `BundledVariants` component that wraps the variants of a bundle product in a single product listing.
 
 #### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
-
-<details>
 
 ```tsx
 import {Link} from '@remix-run/react';
@@ -282,8 +183,6 @@ export function BundledVariants({
 }
 
 ```
-
-</details>
 
 ### Step 4: Update the product fragment to query for bundles and display BundledVariants
 
