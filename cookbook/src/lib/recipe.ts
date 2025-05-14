@@ -22,9 +22,7 @@ const DiffSchema = z.object({
 export type Diff = z.infer<typeof DiffSchema>;
 
 const StepSchema = z.object({
-  type: z
-    .enum(['PATCH', 'INFO', 'COPY_INGREDIENTS', 'NEW_FILE'])
-    .describe('The type of step'),
+  type: z.enum(['PATCH', 'INFO', 'NEW_FILE']).describe('The type of step'),
   step: z
     .number()
     .or(

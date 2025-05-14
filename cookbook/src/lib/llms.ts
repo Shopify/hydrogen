@@ -118,21 +118,19 @@ Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
       }),
 
       mdHeading(2, 'Steps'),
-      ...recipe.steps
-        .filter((step) => step.type !== 'COPY_INGREDIENTS')
-        .flatMap((step): MDBlock[] =>
-          renderStep(
-            step,
-            recipe,
-            recipeName,
-            getPatchesDir(recipeName),
-            'github',
-            {
-              diffsRelativeToTemplate: true,
-              trimDiffHeaders: true,
-            },
-          ),
+      ...recipe.steps.flatMap((step): MDBlock[] =>
+        renderStep(
+          step,
+          recipe,
+          recipeName,
+          getPatchesDir(recipeName),
+          'github',
+          {
+            diffsRelativeToTemplate: true,
+            trimDiffHeaders: true,
+          },
         ),
+      ),
 
       ...(recipe.deletedFiles != null && recipe.deletedFiles.length > 0
         ? [

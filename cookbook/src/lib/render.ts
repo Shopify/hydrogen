@@ -188,6 +188,8 @@ export function renderStep(
     }
 
     return step.diffs.flatMap((diff) => {
+      const headingLevel = 4 + (isSubstep(step) ? 1 : 0);
+
       const patchFile = path.join(patchesDir, diff.patchFile);
       const rawPatch = fs.readFileSync(patchFile, 'utf8').trim();
 
@@ -208,11 +210,6 @@ export function renderStep(
         hash: recipe.commit,
       });
       const link = `${linkPrefixRepo}/templates/skeleton/${diff.file}`;
-
-      let headingLevel = 4;
-      if (isSubstep(step)) {
-        headingLevel++;
-      }
 
       return [
         format === 'github'
@@ -244,6 +241,8 @@ export function renderStep(
     }
     let blocks: MDBlock[] = [];
     for (const ingredient of step.ingredients) {
+      const headingLevel = 4 + (isSubstep(step) ? 1 : 0);
+
       const link =
         hydrogenRepoRecipeBaseURL({
           recipeName,
@@ -259,16 +258,13 @@ export function renderStep(
         ),
         'utf8',
       );
+
       blocks.push(
         mdHeading(
           headingLevel,
-          [
-            'File:',
-            `${mdLinkString(
-              `${link}/ingredients/${ingredient}`,
-              path.basename(ingredient),
-            )}`,
-          ].join(' '),
+          ['File:', `${mdLinkString(link, path.basename(ingredient))}`].join(
+            ' ',
+          ),
         ),
         mdCode(path.extname(ingredient).slice(1), content, true),
       );
@@ -276,15 +272,14 @@ export function renderStep(
     return blocks;
   }
 
-  let headingLevel = format === 'github' ? 3 : 2;
-  if (isSubstep(step)) {
-    headingLevel++;
-  }
+  const headingLevel =
+    (format === 'github' ? 3 : 2) + (isSubstep(step) ? 1 : 0);
+
   const markdownStep: MDBlock[] = [
     mdHeading(headingLevel, `Step ${step.step}: ${step.name}`),
     ...(step.notes?.map(mdNote) ?? []),
     mdParagraph(step.description ?? ''),
-    ...(step.type === 'COPY_INGREDIENTS' && step.ingredients != null
+    ...(step.type !== 'NEW_FILE' && step.ingredients != null
       ? [
           mdList(
             step.ingredients

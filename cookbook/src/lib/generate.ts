@@ -9,7 +9,7 @@ import {
   TEMPLATE_DIRECTORY,
   TEMPLATE_PATH,
 } from './constants';
-import {Ingredient, loadRecipe, Recipe, Step} from './recipe';
+import {Ingredient, isSubstep, loadRecipe, Recipe, Step} from './recipe';
 import {
   createDirectoryIfNotExists,
   getMainCommitHash,
@@ -217,26 +217,14 @@ async function generateSteps(params: {
     newFileSteps.push(step);
   }
 
-  // // add the copy ingredients step if there are ingredients
-  // const maybeCopyIngredientsStep: Step[] =
-  //   params.ingredients.length > 0
-  //     ? [
-  //         copyIngredientsStep(
-  //           params.ingredients,
-  //           params.existingRecipe?.steps.find(
-  //             (step) => step.type === 'COPY_INGREDIENTS',
-  //           ) ?? null,
-  //         ),
-  //       ]
-  //     : [];
-
   const steps = [
     ...existingInfoSteps,
-    // ...maybeCopyIngredientsStep,
-    ...[...patchSteps, ...newFileSteps].sort((a, b) => {
-      return a.step.toString().localeCompare(b.step.toString());
-    }),
-  ];
+    ...[...patchSteps, ...newFileSteps],
+  ].sort((a, b) => {
+    const normalizedA = isSubstep(a) ? `${a.step}` : `${a.step}.0`;
+    const normalizedB = isSubstep(b) ? `${b.step}` : `${b.step}.0`;
+    return normalizedA.localeCompare(normalizedB);
+  });
 
   return steps;
 }
@@ -248,21 +236,6 @@ function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
     return null;
   }
 }
-
-// function _copyIngredientsStep(
-//   ingredients: Ingredient[],
-//   existingStep: Step | null,
-// ): Step {
-//   return {
-//     type: 'COPY_INGREDIENTS',
-//     index: existingStep?.index ?? 0,
-//     step: existingStep?.step ?? 0,
-//     name: 'Add ingredients to your project',
-//     description:
-//       'Copy all the files found in the `ingredients/` directory into your project.',
-//     ingredients: ingredients.map((ingredient) => ingredient.path),
-//   };
-// }
 
 function createPatchFile(params: {file: string; patchesDirPath: string}): {
   fullPath: string;

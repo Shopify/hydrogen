@@ -77,7 +77,6 @@
             "enum": [
               "PATCH",
               "INFO",
-              "COPY_INGREDIENTS",
               "NEW_FILE"
             ],
             "description": "The type of step"
