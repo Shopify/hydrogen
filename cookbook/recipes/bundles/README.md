@@ -1,17 +1,18 @@
 # Bundles
 
-This recipe adds special styling for product bundles on your Hydrogen storefront. Customers will see badges and relevant cover images for bundles when they're viewing product and collection pages.
-
+This recipe adds special styling for product bundles on your Hydrogen
+storefront. Customers will see badges and relevant cover images for bundles
+when they're viewing product and collection pages.
 
 In this recipe you'll make the following changes:
 
-
-1. Set up the Shopify Bundles app in your Shopify admin and create a new product bundle.
-
-2. Update the GraphQL fragments to query for bundles to identify bundled products.
-
-3. Update the product and collection templates to display badges on product listings, update the copy for the cart buttons, and display bundle-specific information on product and collection pages.
-
+1. Set up the Shopify Bundles app in your Shopify admin and create a new
+product bundle.
+2. Update the GraphQL fragments to query for bundles to identify bundled
+products.
+3. Update the product and collection templates to display badges on product
+listings, update the copy for the cart buttons, and display bundle-specific
+information on product and collection pages.
 4. Update the cart line item template to display the bundle badge as needed.
 
 ## Requirements
@@ -148,8 +149,9 @@ export function BundledVariants({
 
 ### Step 4: Update the product fragment to query for bundles and display BundledVariants
 
-- Add the `requiresComponents` field to the `Product` fragment, which is used to identify bundled products.
-- Pass the `isBundle` flag to the `ProductImage` component.
+1. Add the `requiresComponents` field to the `Product` fragment, which is
+used to identify bundled products.
+2. Pass the `isBundle` flag to the `ProductImage` component.
 
 #### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/templates/skeleton/app/routes/products.$handle.tsx)
 
