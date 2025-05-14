@@ -1,0 +1,78 @@
+{
+  "name": "@shopify/hydrogen-upgrade",
+  "description": "Upgrade Hydrogen project dependencies, preview features, fixes and breaking changes. The command also generates an instruction file for each upgrade.",
+  "version": "0.0.0",
+  "author": "Shopify",
+  "bin": {
+    "hydrogen-upgrade": "./bin/run.js"
+  },
+  "bugs": "https://github.com/shopify/hydrogen/issues",
+  "dependencies": {
+    "@oclif/core": "^4",
+    "@oclif/plugin-help": "^6",
+    "@oclif/plugin-plugins": "^5",
+    "semver": "^7.7.2",
+    "cli-truncate": "^0.14.0",
+    "@shopify/cli-kit": "^3.79.2"
+  },
+  "devDependencies": {
+    "type-fest": "^4.26.0",
+    "@eslint/compat": "^1",
+    "@oclif/prettier-config": "^0.2.1",
+    "@oclif/test": "^4",
+    "@types/chai": "^4",
+    "@types/node": "^18",
+    "@vitest/coverage-v8": "^1.0.4",
+    "chai": "^4",
+    "eslint": "^9",
+    "eslint-config-oclif": "^6",
+    "eslint-config-prettier": "^10",
+    "oclif": "^4",
+    "shx": "^0.3.3",
+    "ts-node": "^10",
+    "typescript": "^5",
+    "vitest": "^1.0.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "./bin",
+    "./dist",
+    "./oclif.manifest.json"
+  ],
+  "homepage": "https://github.com/shopify/hydrogen",
+  "keywords": [
+    "oclif"
+  ],
+  "license": "MIT",
+  "main": "dist/index.js",
+  "type": "module",
+  "oclif": {
+    "bin": "hydrogen-upgrade",
+    "dirname": "hydrogen-upgrade",
+    "commands": "./dist/commands",
+    "plugins": [
+      "@oclif/plugin-help",
+      "@oclif/plugin-plugins"
+    ],
+    "topicSeparator": " ",
+    "topics": {
+      "hello": {
+        "description": "Say hello to the world and others"
+      }
+    }
+  },
+  "repository": "shopify/hydrogen",
+  "scripts": {
+    "build": "shx rm -rf dist && tsc -b",
+    "watch": "tsc -b --watch",
+    "lint": "eslint",
+    "postpack": "shx rm -f oclif.manifest.json",
+    "posttest": "npm run lint",
+    "prepack": "oclif manifest && oclif readme",
+    "version": "oclif readme && git add README.md",
+    "test": "vitest run --test-timeout=60000"
+  },
+  "types": "dist/index.d.ts"
+}

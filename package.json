@@ -54,6 +54,7 @@
     "packages/hydrogen",
     "packages/mini-oxygen",
     "packages/remix-oxygen",
+    "packages/upgrade",
     "templates/skeleton"
   ],
   "prettier": "@shopify/prettier-config",
