@@ -40,12 +40,13 @@ ingredients:
   - path: templates/skeleton/app/components/BundleBadge.tsx
     description: A badge displayed on bundle product listings.
   - path: templates/skeleton/app/components/BundledVariants.tsx
-    description: A component that wraps the variants of a bundle product in a single
+    description:
+      A component that wraps the variants of a bundle product in a single
       product listing.
 deletedFiles: []
 steps:
   - type: INFO
-    index: 1
+    step: 1
     name: Set up the Shopify Bundles app
     description: |
       1. Install the [Shopify Bundles app](https://apps.shopify.com/shopify-bundles) in your Shopify admin.
@@ -54,14 +55,14 @@ steps:
 
       3. From the [**Bundles**](https://admin.shopify.com/apps/shopify-bundles/app) page, [create a new bundle](https://help.shopify.com/en/manual/products/bundles/shopify-bundles).
   - type: COPY_INGREDIENTS
-    index: 2
+    step: 2
     name: Add ingredients to your project
     description: Copy all the files found in the `ingredients/` directory into your project.
     ingredients:
       - templates/skeleton/app/components/BundleBadge.tsx
       - templates/skeleton/app/components/BundledVariants.tsx
   - type: PATCH
-    index: 3
+    step: 3
     name: Update the product fragment to query for bundles and display
       BundledVariants
     description: >
@@ -73,7 +74,7 @@ steps:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.3e0b7e.patch
   - type: PATCH
-    index: 4
+    step: 4
     name: Update the collections fragment to query for bundles
     description: >
       Like the previous step, use the `requiresComponents` field to detect if
@@ -82,7 +83,7 @@ steps:
       - file: app/routes/collections.$handle.tsx
         patchFile: collections.$handle.tsx.951367.patch
   - type: PATCH
-    index: 5
+    step: 5
     name: Update the cart fragment to query for bundles
     description: >
       Use the `requiresComponents` field to determine if a cart line item is a
@@ -91,7 +92,7 @@ steps:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.e8eb04.patch
   - type: PATCH
-    index: 6
+    step: 6
     name: Conditionally render the BundleBadge in cart line items
     description: >
       If a product is a bundle, show the `BundleBadge` component in the cart
@@ -100,7 +101,7 @@ steps:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.8e657b.patch
   - type: PATCH
-    index: 7
+    step: 7
     name: Conditionally render "Add bundle to cart" in ProductForm
     description: |
       If a product is a bundle, update the text of the product button.
@@ -108,7 +109,7 @@ steps:
       - file: app/components/ProductForm.tsx
         patchFile: ProductForm.tsx.8e409a.patch
   - type: PATCH
-    index: 8
+    step: 8
     name: Conditionally render the BundleBadge in ProductImage
     description: >
       If a product is a bundle, show the `BundleBadge` component in the
@@ -117,7 +118,7 @@ steps:
       - file: app/components/ProductImage.tsx
         patchFile: ProductImage.tsx.4e6c4c.patch
   - type: PATCH
-    index: 9
+    step: 9
     name: Conditionally render the BundleBadge in ProductItem
     description: >
       If a product is a bundle, show the `BundleBadge` component in the
@@ -126,7 +127,7 @@ steps:
       - file: app/components/ProductItem.tsx
         patchFile: ProductItem.tsx.8ddc67.patch
   - type: PATCH
-    index: 10
+    step: 10
     name: Add a product-image class to the app stylesheet
     description: |
       Make sure the bundle badge is positioned relative to the product image.
@@ -141,14 +142,17 @@ llms:
     - How do I detect if a product is a bundle?
   troubleshooting:
     - issue: I'm not seeing product bundles on my storefront.
-      solution: Make sure you've installed the Shopify Bundles app and set up product
+      solution:
+        Make sure you've installed the Shopify Bundles app and set up product
         bundles in your Shopify admin.
     - issue: I'm not seeing product bundle badges on product pages.
-      solution: Make sure you've installed the Shopify Bundles app and set up product
+      solution:
+        Make sure you've installed the Shopify Bundles app and set up product
         bundles in your Shopify admin. Then make sure you've updated the product
         fragment to query for bundles and display BundledVariants.
     - issue: I'm not seeing the product bundle badges on my cart line items.
-      solution: Make sure you've installed the Shopify Bundles app and set up product
+      solution:
+        Make sure you've installed the Shopify Bundles app and set up product
         bundles in your Shopify admin. Then make sure you've updated the cart
         fragment to query for bundles.
 commit: 24a6a51cb6f1790844b207a9ce42d70325043a3d
