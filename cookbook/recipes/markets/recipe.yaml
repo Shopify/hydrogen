@@ -102,11 +102,10 @@ steps:
   - type: INFO
     index: 2
     name: Add language splat to the desired route's
-    description: >
+    description: |
       If you're going with path-based localization, you should add a language
       splat to your localized routes, for example renaming `routes/_index.tsx`
       to `routes/($locale)._index.tsx`.
-
 
       For brevity, in this example we only focused on two files – the index page
       and the product page; however this should be done for all the app routes.
@@ -160,9 +159,8 @@ steps:
   - type: PATCH
     index: 8
     name: Add the selected locale to the root route
-    description: >
+    description: |
       - Include the selected locale in the root route's loader data.
-
 
       - Add a key prop to the `PageLayout` component to make sure it re-renders
       when the locale changes.

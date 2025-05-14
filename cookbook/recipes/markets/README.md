@@ -1,10 +1,16 @@
 # Markets
 
-This recipe shows how to add support for [Shopify Markets](https://www.shopify.com/ca/blog/markets) to your Hydrogen app.
+This recipe shows how to add support for [Shopify
+Markets](https://www.shopify.com/ca/blog/markets) to your Hydrogen app.
 
-Markets allow you to segment your audience and serve different content to each market.
+Markets allow you to segment your audience and serve different content to each
+market.
 
-You can set up Markets and use them in a variety of ways; in this recipe, you'll learn how to set up basic localization support for your Hydrogen store, understand what options are available for routing, and how to add a country selector component to your app and how to set up links that work across localized versions of your store.
+You can set up Markets and use them in a variety of ways; in this recipe,
+you'll learn how to set up basic localization support for your Hydrogen store,
+understand what options are available for routing, and how to add a country
+selector component to your app and how to set up links that work across
+localized versions of your store.
 
 
 > [!NOTE]
@@ -27,6 +33,7 @@ _New files added to the template by this recipe._
 | [app/components/Link.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx) | A wrapper around the Remix Link component that uses the selected locale path prefix. |
 | [app/lib/i18n.ts](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts) | A helper function to get locale information from the context, a hook to retrieve the selected locale, and a list of available locales. |
 | [app/routes/($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx) | A route that renders a localized version of the home page. |
+| [app/routes/($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx) | A localized cart route. |
 | [app/routes/($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx) | A route that renders a localized version of the product page. |
 
 ## Steps
@@ -66,9 +73,12 @@ While you could use other methods like cookies or HTTP headers for localization,
 
 ### Step 2: Add language splat to the desired route's
 
-If you're going with path-based localization, you should add a language splat to your localized routes, for example renaming `routes/_index.tsx` to `routes/($locale)._index.tsx`.
+If you're going with path-based localization, you should add a language
+splat to your localized routes, for example renaming `routes/_index.tsx`
+to `routes/($locale)._index.tsx`.
 
-For brevity, in this example we only focused on two files – the index page and the product page; however this should be done for all the app routes.
+For brevity, in this example we only focused on two files – the index page
+and the product page; however this should be done for all the app routes.
 
 
 ### Step 3: Add ingredients to your project
@@ -79,6 +89,7 @@ Copy all the files found in the `ingredients/` directory into your project.
 - [app/components/Link.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
 - [app/lib/i18n.ts](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
 - [app/routes/($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
+- [app/routes/($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
 - [app/routes/($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
 
 ### Step 4: Add language splat to the desired route's
@@ -193,7 +204,8 @@ index c424c511..b5d3737a 100644
 
 - Include the selected locale in the root route's loader data.
 
-- Add a key prop to the `PageLayout` component to make sure it re-renders when the locale changes.
+- Add a key prop to the `PageLayout` component to make sure it re-renders
+when the locale changes.
 
 
 #### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/templates/skeleton/app/root.tsx)
@@ -254,4 +266,5 @@ index 3426476a..4f67b72b 100644
 ## Deleted Files
 
 - [templates/skeleton/app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/templates/skeleton/templates/skeleton/app/routes/_index.tsx)
+- [templates/skeleton/app/routes/cart.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/templates/skeleton/templates/skeleton/app/routes/cart.tsx)
 - [templates/skeleton/app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/templates/skeleton/templates/skeleton/app/routes/products.$handle.tsx)
