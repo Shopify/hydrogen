@@ -12,7 +12,7 @@
     "@oclif/plugin-help": "^6",
     "@oclif/plugin-plugins": "^5",
     "semver": "^7.7.2",
-    "cli-truncate": "^0.14.0",
+    "cli-truncate": "^4.0.0",
     "@shopify/cli-kit": "^3.79.2"
   },
   "devDependencies": {
