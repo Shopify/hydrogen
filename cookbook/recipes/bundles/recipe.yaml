@@ -54,15 +54,24 @@ steps:
       2. Make sure your store meets the [eligibility requirements](https://help.shopify.com/en/manual/products/bundles/eligibility-and-considerations).
 
       3. From the [**Bundles**](https://admin.shopify.com/apps/shopify-bundles/app) page, [create a new bundle](https://help.shopify.com/en/manual/products/bundles/shopify-bundles).
-  - type: COPY_INGREDIENTS
+  - type: NEW_FILE
     step: 2
-    name: Add ingredients to your project
-    description: Copy all the files found in the `ingredients/` directory into your project.
+    name: Create the BundleBadge component
+    description: >
+      Create a new BundleBadge component to be displayed on bundle product
+      listings.
     ingredients:
       - templates/skeleton/app/components/BundleBadge.tsx
+  - type: NEW_FILE
+    step: 3
+    name: Create a new BundledVariants component
+    description:
+      Create a new `BundledVariants` component that wraps the variants of
+      a bundle product in a single product listing.
+    ingredients:
       - templates/skeleton/app/components/BundledVariants.tsx
   - type: PATCH
-    step: 3
+    step: 4
     name: Update the product fragment to query for bundles and display
       BundledVariants
     description: >
@@ -74,7 +83,7 @@ steps:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.3e0b7e.patch
   - type: PATCH
-    step: 4
+    step: 5
     name: Update the collections fragment to query for bundles
     description: >
       Like the previous step, use the `requiresComponents` field to detect if
@@ -83,7 +92,7 @@ steps:
       - file: app/routes/collections.$handle.tsx
         patchFile: collections.$handle.tsx.951367.patch
   - type: PATCH
-    step: 5
+    step: 6
     name: Update the cart fragment to query for bundles
     description: >
       Use the `requiresComponents` field to determine if a cart line item is a
@@ -92,7 +101,7 @@ steps:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.e8eb04.patch
   - type: PATCH
-    step: 6
+    step: 7
     name: Conditionally render the BundleBadge in cart line items
     description: >
       If a product is a bundle, show the `BundleBadge` component in the cart
@@ -101,7 +110,7 @@ steps:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.8e657b.patch
   - type: PATCH
-    step: 7
+    step: 8
     name: Conditionally render "Add bundle to cart" in ProductForm
     description: |
       If a product is a bundle, update the text of the product button.
@@ -109,7 +118,7 @@ steps:
       - file: app/components/ProductForm.tsx
         patchFile: ProductForm.tsx.8e409a.patch
   - type: PATCH
-    step: 8
+    step: 9
     name: Conditionally render the BundleBadge in ProductImage
     description: >
       If a product is a bundle, show the `BundleBadge` component in the
@@ -118,7 +127,7 @@ steps:
       - file: app/components/ProductImage.tsx
         patchFile: ProductImage.tsx.4e6c4c.patch
   - type: PATCH
-    step: 9
+    step: 10
     name: Conditionally render the BundleBadge in ProductItem
     description: >
       If a product is a bundle, show the `BundleBadge` component in the
@@ -127,7 +136,7 @@ steps:
       - file: app/components/ProductItem.tsx
         patchFile: ProductItem.tsx.8ddc67.patch
   - type: PATCH
-    step: 10
+    step: 11
     name: Add a product-image class to the app stylesheet
     description: |
       Make sure the bundle badge is positioned relative to the product image.
@@ -155,4 +164,4 @@ llms:
         Make sure you've installed the Shopify Bundles app and set up product
         bundles in your Shopify admin. Then make sure you've updated the cart
         fragment to query for bundles.
-commit: 24a6a51cb6f1790844b207a9ce42d70325043a3d
+commit: bd55b241191304945704c0b9ef278e945c55d3da

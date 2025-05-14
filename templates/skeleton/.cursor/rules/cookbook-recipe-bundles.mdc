@@ -177,7 +177,115 @@ export function BundledVariants({
 
 3. From the [**Bundles**](https://admin.shopify.com/apps/shopify-bundles/app) page, [create a new bundle](https://help.shopify.com/en/manual/products/bundles/shopify-bundles).
 
-### Step 2: Update the product fragment to query for bundles and display BundledVariants
+### Step 2: Create the BundleBadge component
+
+Create a new BundleBadge component to be displayed on bundle product listings.
+
+#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
+
+<details>
+
+```tsx
+export function BundleBadge() {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        padding: '.5rem .75rem',
+        fontSize: '11px',
+        backgroundColor: '#10804c',
+        color: 'white',
+        top: '1rem',
+        right: '1rem',
+      }}
+    >
+      BUNDLE
+    </div>
+  );
+}
+
+```
+
+</details>
+
+### Step 3: Create a new BundledVariants component
+
+Create a new `BundledVariants` component that wraps the variants of a bundle product in a single product listing.
+
+#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
+
+<details>
+
+```tsx
+import {Link} from '@remix-run/react';
+import {Image} from '@shopify/hydrogen';
+import type {
+  ProductVariantComponent,
+  Image as ShopifyImage,
+} from '@shopify/hydrogen/storefront-api-types';
+
+export function BundledVariants({
+  variants,
+}: {
+  variants: ProductVariantComponent[];
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        paddingTop: '1rem',
+      }}
+    >
+      {variants
+        ?.map(({productVariant: bundledVariant, quantity}) => {
+          const url = `/products/${bundledVariant.product.handle}`;
+          return (
+            <Link
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                marginBottom: '.5rem',
+              }}
+              to={url}
+              key={bundledVariant.id}
+            >
+              <Image
+                alt={bundledVariant.title}
+                aspectRatio="1/1"
+                height={60}
+                loading="lazy"
+                width={60}
+                data={bundledVariant.image as ShopifyImage}
+              />
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  paddingLeft: '1rem',
+                }}
+              >
+                <small>
+                  {bundledVariant.product.title}
+                  {bundledVariant.title !== 'Default Title'
+                    ? `- ${bundledVariant.title}`
+                    : null}
+                </small>
+                <small>Qty: {quantity}</small>
+              </div>
+            </Link>
+          );
+        })
+        .filter(Boolean)}
+    </div>
+  );
+}
+
+```
+
+</details>
+
+### Step 4: Update the product fragment to query for bundles and display BundledVariants
 
 - Add the `requiresComponents` field to the `Product` fragment, which is used to identify bundled products.
 - Pass the `isBundle` flag to the `ProductImage` component.
@@ -294,7 +402,7 @@ export function BundledVariants({
        title
 ```
 
-### Step 3: Update the collections fragment to query for bundles
+### Step 5: Update the collections fragment to query for bundles
 
 Like the previous step, use the `requiresComponents` field to detect if the product item is a bundle.
 
@@ -344,7 +452,7 @@ Like the previous step, use the `requiresComponents` field to detect if the prod
    query Collection(
 ```
 
-### Step 4: Update the cart fragment to query for bundles
+### Step 6: Update the cart fragment to query for bundles
 
 Use the `requiresComponents` field to determine if a cart line item is a bundle.
 
@@ -402,7 +510,7 @@ Use the `requiresComponents` field to determine if a cart line item is a bundle.
    }
 ```
 
-### Step 5: Conditionally render the BundleBadge in cart line items
+### Step 7: Conditionally render the BundleBadge in cart line items
 
 If a product is a bundle, show the `BundleBadge` component in the cart line item.
 
@@ -450,7 +558,7 @@ If a product is a bundle, show the `BundleBadge` component in the cart line item
          <ul>
 ```
 
-### Step 6: Conditionally render "Add bundle to cart" in ProductForm
+### Step 8: Conditionally render "Add bundle to cart" in ProductForm
 
 If a product is a bundle, update the text of the product button.
 
@@ -484,7 +592,7 @@ If a product is a bundle, update the text of the product button.
    );
 ```
 
-### Step 7: Conditionally render the BundleBadge in ProductImage
+### Step 9: Conditionally render the BundleBadge in ProductImage
 
 If a product is a bundle, show the `BundleBadge` component in the `ProductImage` component.
 
@@ -515,7 +623,7 @@ If a product is a bundle, show the `BundleBadge` component in the `ProductImage`
  }
 ```
 
-### Step 8: Conditionally render the BundleBadge in ProductItem
+### Step 10: Conditionally render the BundleBadge in ProductItem
 
 If a product is a bundle, show the `BundleBadge` component in the `ProductItem` component.
 
@@ -590,7 +698,7 @@ If a product is a bundle, show the `BundleBadge` component in the `ProductItem` 
  }
 ```
 
-### Step 9: Add a product-image class to the app stylesheet
+### Step 11: Add a product-image class to the app stylesheet
 
 Make sure the bundle badge is positioned relative to the product image.
 

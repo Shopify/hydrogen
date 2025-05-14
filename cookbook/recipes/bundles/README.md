@@ -25,8 +25,8 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx) | A badge displayed on bundle product listings. |
-| [app/components/BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx) | A component that wraps the variants of a bundle product in a single product listing. |
+| [app/components/BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx) | A badge displayed on bundle product listings. |
+| [app/components/BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx) | A component that wraps the variants of a bundle product in a single product listing. |
 
 ## Steps
 
@@ -38,19 +38,120 @@ _New files added to the template by this recipe._
 
 3. From the [**Bundles**](https://admin.shopify.com/apps/shopify-bundles/app) page, [create a new bundle](https://help.shopify.com/en/manual/products/bundles/shopify-bundles).
 
-### Step 2: Add ingredients to your project
+### Step 2: Create the BundleBadge component
 
-Copy all the files found in the `ingredients/` directory into your project.
+Create a new BundleBadge component to be displayed on bundle product listings.
 
-- [app/components/BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
-- [app/components/BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
+#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
 
-### Step 3: Update the product fragment to query for bundles and display BundledVariants
+<details>
+
+```tsx
+export function BundleBadge() {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        padding: '.5rem .75rem',
+        fontSize: '11px',
+        backgroundColor: '#10804c',
+        color: 'white',
+        top: '1rem',
+        right: '1rem',
+      }}
+    >
+      BUNDLE
+    </div>
+  );
+}
+
+```
+
+</details>
+
+### Step 3: Create a new BundledVariants component
+
+Create a new `BundledVariants` component that wraps the variants of a bundle product in a single product listing.
+
+#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
+
+<details>
+
+```tsx
+import {Link} from '@remix-run/react';
+import {Image} from '@shopify/hydrogen';
+import type {
+  ProductVariantComponent,
+  Image as ShopifyImage,
+} from '@shopify/hydrogen/storefront-api-types';
+
+export function BundledVariants({
+  variants,
+}: {
+  variants: ProductVariantComponent[];
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        paddingTop: '1rem',
+      }}
+    >
+      {variants
+        ?.map(({productVariant: bundledVariant, quantity}) => {
+          const url = `/products/${bundledVariant.product.handle}`;
+          return (
+            <Link
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                marginBottom: '.5rem',
+              }}
+              to={url}
+              key={bundledVariant.id}
+            >
+              <Image
+                alt={bundledVariant.title}
+                aspectRatio="1/1"
+                height={60}
+                loading="lazy"
+                width={60}
+                data={bundledVariant.image as ShopifyImage}
+              />
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  paddingLeft: '1rem',
+                }}
+              >
+                <small>
+                  {bundledVariant.product.title}
+                  {bundledVariant.title !== 'Default Title'
+                    ? `- ${bundledVariant.title}`
+                    : null}
+                </small>
+                <small>Qty: {quantity}</small>
+              </div>
+            </Link>
+          );
+        })
+        .filter(Boolean)}
+    </div>
+  );
+}
+
+```
+
+</details>
+
+### Step 4: Update the product fragment to query for bundles and display BundledVariants
 
 - Add the `requiresComponents` field to the `Product` fragment, which is used to identify bundled products.
 - Pass the `isBundle` flag to the `ProductImage` component.
 
-#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/routes/products.$handle.tsx)
+#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/templates/skeleton/app/routes/products.$handle.tsx)
 
 <details>
 
@@ -169,11 +270,11 @@ index 2dc6bda2..0339d128 100644
 
 </details>
 
-### Step 4: Update the collections fragment to query for bundles
+### Step 5: Update the collections fragment to query for bundles
 
 Like the previous step, use the `requiresComponents` field to detect if the product item is a bundle.
 
-#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/routes/collections.$handle.tsx)
+#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/templates/skeleton/app/routes/collections.$handle.tsx)
 
 ```diff
 index f1d7fa3e..ae341f8a 100644
@@ -222,11 +323,11 @@ index f1d7fa3e..ae341f8a 100644
    query Collection(
 ```
 
-### Step 5: Update the cart fragment to query for bundles
+### Step 6: Update the cart fragment to query for bundles
 
 Use the `requiresComponents` field to determine if a cart line item is a bundle.
 
-#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/lib/fragments.ts)
+#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/templates/skeleton/app/lib/fragments.ts)
 
 <details>
 
@@ -287,11 +388,11 @@ index dc4426a9..13cc34e5 100644
 
 </details>
 
-### Step 6: Conditionally render the BundleBadge in cart line items
+### Step 7: Conditionally render the BundleBadge in cart line items
 
 If a product is a bundle, show the `BundleBadge` component in the cart line item.
 
-#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/components/CartLineItem.tsx)
+#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/templates/skeleton/app/components/CartLineItem.tsx)
 
 ```diff
 index bd33a2cf..0790a6f2 100644
@@ -338,11 +439,11 @@ index bd33a2cf..0790a6f2 100644
          <ul>
 ```
 
-### Step 7: Conditionally render "Add bundle to cart" in ProductForm
+### Step 8: Conditionally render "Add bundle to cart" in ProductForm
 
 If a product is a bundle, update the text of the product button.
 
-#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/components/ProductForm.tsx)
+#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/templates/skeleton/app/components/ProductForm.tsx)
 
 ```diff
 index e8616a61..07a984dc 100644
@@ -375,11 +476,11 @@ index e8616a61..07a984dc 100644
    );
 ```
 
-### Step 8: Conditionally render the BundleBadge in ProductImage
+### Step 9: Conditionally render the BundleBadge in ProductImage
 
 If a product is a bundle, show the `BundleBadge` component in the `ProductImage` component.
 
-#### File: [app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/components/ProductImage.tsx)
+#### File: [app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/templates/skeleton/app/components/ProductImage.tsx)
 
 ```diff
 index 5f3ac1cc..c16b947b 100644
@@ -409,11 +510,11 @@ index 5f3ac1cc..c16b947b 100644
  }
 ```
 
-### Step 9: Conditionally render the BundleBadge in ProductItem
+### Step 10: Conditionally render the BundleBadge in ProductItem
 
 If a product is a bundle, show the `BundleBadge` component in the `ProductItem` component.
 
-#### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/components/ProductItem.tsx)
+#### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/templates/skeleton/app/components/ProductItem.tsx)
 
 <details>
 
@@ -491,11 +592,11 @@ index 62c64b50..970916bd 100644
 
 </details>
 
-### Step 10: Add a product-image class to the app stylesheet
+### Step 11: Add a product-image class to the app stylesheet
 
 Make sure the bundle badge is positioned relative to the product image.
 
-#### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/styles/app.css)
+#### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/templates/skeleton/app/styles/app.css)
 
 ```diff
 index b9294c59..de48b6c6 100644
