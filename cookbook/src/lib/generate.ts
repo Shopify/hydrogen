@@ -178,7 +178,7 @@ async function generateSteps(params: {
 
     const step: Step = {
       type: 'PATCH',
-      index: existingStep?.index ?? i,
+      step: existingStep?.step ?? `${i}`,
       name: existingStep?.name ?? file.replace(TEMPLATE_DIRECTORY, ''),
       description: existingDescription ?? null,
       diffs: [
@@ -191,22 +191,54 @@ async function generateSteps(params: {
     patchSteps.push(step);
   }
 
-  // add the copy ingredients step if there are ingredients
-  const maybeCopyIngredientsStep: Step[] =
-    params.ingredients.length > 0
-      ? [copyIngredientsStep(params.ingredients)]
-      : [];
+  let newFileSteps: Step[] = [];
+
+  i = 0;
+  for await (const file of params.ingredients) {
+    i++;
+
+    const existingStep = params.existingRecipe?.steps.find(
+      (step) =>
+        step.type === 'NEW_FILE' &&
+        step.ingredients?.length === 1 &&
+        step.ingredients[0] === file.path,
+    );
+
+    // Try to find the existing description for the step which has _only_ this file as a diff patch.
+    const existingDescription = existingStep?.description ?? null;
+
+    const step: Step = {
+      type: 'NEW_FILE',
+      step: existingStep?.step ?? `${i}`,
+      name: existingStep?.name ?? file.path.replace(TEMPLATE_DIRECTORY, ''),
+      description: existingDescription ?? file.description ?? null,
+      ingredients: [file.path],
+    };
+    newFileSteps.push(step);
+  }
+
+  // // add the copy ingredients step if there are ingredients
+  // const maybeCopyIngredientsStep: Step[] =
+  //   params.ingredients.length > 0
+  //     ? [
+  //         copyIngredientsStep(
+  //           params.ingredients,
+  //           params.existingRecipe?.steps.find(
+  //             (step) => step.type === 'COPY_INGREDIENTS',
+  //           ) ?? null,
+  //         ),
+  //       ]
+  //     : [];
 
   const steps = [
     ...existingInfoSteps,
-    ...maybeCopyIngredientsStep,
-    ...patchSteps.sort((a, b) => a.index - b.index),
+    // ...maybeCopyIngredientsStep,
+    ...[...patchSteps, ...newFileSteps].sort((a, b) => {
+      return a.step.toString().localeCompare(b.step.toString());
+    }),
   ];
 
-  return steps.map((step, index) => ({
-    ...step,
-    index: index + 1, // normalize the indexes
-  }));
+  return steps;
 }
 
 function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
@@ -217,16 +249,20 @@ function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
   }
 }
 
-function copyIngredientsStep(ingredients: Ingredient[]): Step {
-  return {
-    type: 'COPY_INGREDIENTS',
-    index: 0,
-    name: 'Add ingredients to your project',
-    description:
-      'Copy all the files found in the `ingredients/` directory into your project.',
-    ingredients: ingredients.map((ingredient) => ingredient.path),
-  };
-}
+// function _copyIngredientsStep(
+//   ingredients: Ingredient[],
+//   existingStep: Step | null,
+// ): Step {
+//   return {
+//     type: 'COPY_INGREDIENTS',
+//     index: existingStep?.index ?? 0,
+//     step: existingStep?.step ?? 0,
+//     name: 'Add ingredients to your project',
+//     description:
+//       'Copy all the files found in the `ingredients/` directory into your project.',
+//     ingredients: ingredients.map((ingredient) => ingredient.path),
+//   };
+// }
 
 function createPatchFile(params: {file: string; patchesDirPath: string}): {
   fullPath: string;

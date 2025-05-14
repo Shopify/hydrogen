@@ -120,10 +120,9 @@ Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
       mdHeading(2, 'Steps'),
       ...recipe.steps
         .filter((step) => step.type !== 'COPY_INGREDIENTS')
-        .flatMap((step, index): MDBlock[] =>
+        .flatMap((step): MDBlock[] =>
           renderStep(
             step,
-            index,
             recipe,
             recipeName,
             getPatchesDir(recipeName),

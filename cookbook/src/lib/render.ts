@@ -19,7 +19,7 @@ import {
   mdTable,
   serializeMDBlocksToFile,
 } from './markdown';
-import {loadRecipe, Recipe, Step} from './recipe';
+import {isSubstep, loadRecipe, Recipe, Step} from './recipe';
 import {assertNever, getPatchesDir} from './util';
 
 // The number of lines to collapse a diff into a details block
@@ -160,8 +160,8 @@ function makeSteps(
   const markdownStepsHeader = mdHeading(2, 'Steps');
   return [
     ...(format === 'github' ? [markdownStepsHeader] : []),
-    ...steps.flatMap((step, index) =>
-      renderStep(step, index, recipe, recipeName, patchesDir, format, {
+    ...steps.flatMap((step) =>
+      renderStep(step, recipe, recipeName, patchesDir, format, {
         collapseDiffs: true,
         diffsRelativeToTemplate: format === 'shopify.dev',
         trimDiffHeaders: format === 'shopify.dev',
@@ -172,7 +172,6 @@ function makeSteps(
 
 export function renderStep(
   step: Step,
-  index: number,
   recipe: Recipe,
   recipeName: string,
   patchesDir: string,
@@ -210,16 +209,21 @@ export function renderStep(
       });
       const link = `${linkPrefixRepo}/templates/skeleton/${diff.file}`;
 
+      let headingLevel = 4;
+      if (isSubstep(step)) {
+        headingLevel++;
+      }
+
       return [
         format === 'github'
           ? mdHeading(
-              4,
+              headingLevel,
               options.diffsRelativeToTemplate
                 ? `File: /${diff.file}`
                 : `File: ${mdLinkString(link, diff.file)}`,
             )
           : mdHeading(
-              4,
+              headingLevel,
               [
                 'File:',
                 mdLinkString(link, path.basename(diff.file)),
@@ -234,11 +238,53 @@ export function renderStep(
     });
   }
 
+  function getIngredientFile(): MDBlock[] {
+    if (step.type !== 'NEW_FILE' || step.ingredients == null) {
+      return [];
+    }
+    let blocks: MDBlock[] = [];
+    for (const ingredient of step.ingredients) {
+      const link =
+        hydrogenRepoRecipeBaseURL({
+          recipeName,
+          hash: recipe.commit,
+        }) + `/ingredients/${ingredient}`;
+      const content = fs.readFileSync(
+        path.join(
+          COOKBOOK_PATH,
+          'recipes',
+          recipeName,
+          'ingredients',
+          ingredient,
+        ),
+        'utf8',
+      );
+      blocks.push(
+        mdHeading(
+          headingLevel,
+          [
+            'File:',
+            `${mdLinkString(
+              `${link}/ingredients/${ingredient}`,
+              path.basename(ingredient),
+            )}`,
+          ].join(' '),
+        ),
+        mdCode(path.extname(ingredient).slice(1), content, true),
+      );
+    }
+    return blocks;
+  }
+
+  let headingLevel = format === 'github' ? 3 : 2;
+  if (isSubstep(step)) {
+    headingLevel++;
+  }
   const markdownStep: MDBlock[] = [
-    mdHeading(format === 'github' ? 3 : 2, `Step ${index + 1}: ${step.name}`),
+    mdHeading(headingLevel, `Step ${step.step}: ${step.name}`),
     ...(step.notes?.map(mdNote) ?? []),
     mdParagraph(step.description ?? ''),
-    ...(step.ingredients != null
+    ...(step.type === 'COPY_INGREDIENTS' && step.ingredients != null
       ? [
           mdList(
             step.ingredients
@@ -259,6 +305,7 @@ export function renderStep(
         ]
       : []),
     ...getDiffs(),
+    ...getIngredientFile(),
   ];
 
   return markdownStep;

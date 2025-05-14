@@ -77,13 +77,23 @@
             "enum": [
               "PATCH",
               "INFO",
-              "COPY_INGREDIENTS"
+              "COPY_INGREDIENTS",
+              "NEW_FILE"
             ],
             "description": "The type of step"
           },
-          "index": {
-            "type": "number",
-            "description": "The index of the step"
+          "step": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^\\d+(?:\\.\\d+)?$",
+                "description": "The step numerical representation, with optional substep if applicable"
+              }
+            ],
+            "description": "The step numerical representation, with optional substep if applicable"
           },
           "name": {
             "type": "string",
@@ -135,7 +145,7 @@
         },
         "required": [
           "type",
-          "index",
+          "step",
           "name"
         ],
         "additionalProperties": false

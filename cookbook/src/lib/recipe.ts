@@ -23,9 +23,21 @@ export type Diff = z.infer<typeof DiffSchema>;
 
 const StepSchema = z.object({
   type: z
-    .enum(['PATCH', 'INFO', 'COPY_INGREDIENTS'])
+    .enum(['PATCH', 'INFO', 'COPY_INGREDIENTS', 'NEW_FILE'])
     .describe('The type of step'),
-  index: z.number().describe('The index of the step'),
+  step: z
+    .number()
+    .or(
+      z
+        .string()
+        .regex(/^\d+(?:\.\d+)?$/)
+        .describe(
+          'The step numerical representation, with optional substep if applicable',
+        ),
+    )
+    .describe(
+      'The step numerical representation, with optional substep if applicable',
+    ),
   name: z.string().describe('The name of the step'),
   description: z
     .string()
@@ -111,4 +123,8 @@ export function loadRecipe(params: {directory: string}): Recipe {
       `recipe.yaml or recipe.json not found in ${params.directory}`,
     );
   }
+}
+
+export function isSubstep(step: Step): boolean {
+  return `${step.step}`.includes('.');
 }
