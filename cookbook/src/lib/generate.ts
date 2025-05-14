@@ -221,9 +221,15 @@ async function generateSteps(params: {
     ...existingInfoSteps,
     ...[...patchSteps, ...newFileSteps],
   ].sort((a, b) => {
-    const normalizedA = isSubstep(a) ? `${a.step}` : `${a.step}.0`;
-    const normalizedB = isSubstep(b) ? `${b.step}` : `${b.step}.0`;
-    return normalizedA.localeCompare(normalizedB);
+    function normalize(step: Step): string {
+      const expanded = isSubstep(a) ? `${step.step}` : `${step.step}.0`;
+      return expanded
+        .split('.')
+        .map((v) => parseInt(v, 10).toString().padStart(4, '0'))
+        .join('.');
+    }
+
+    return normalize(a).localeCompare(normalize(b));
   });
 
   return steps;
