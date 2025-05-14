@@ -215,6 +215,13 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   const _cartCreate = cartCreateDefault(mutateOptions);
 
   const cartCreate: CartCreateFunction = async function (...args) {
+    // Default buyerIdentity to what is passed into the handler
+    // Only override if buyerIdentity is passed directly to the method
+    args[0].buyerIdentity = {
+      ...buyerIdentity,
+      ...args[0].buyerIdentity,
+    };
+
     const result = await _cartCreate(...args);
     cartId = result?.cart?.id;
     return result;
@@ -339,6 +346,11 @@ export type CartHandlerOptionsForDocs<
    * See the [example usage](/docs/api/hydrogen/2025-04/utilities/createcarthandler#example-custom-methods) in the documentation.
    */
   customMethods?: TCustomMethods;
+
+  /**
+   * Buyer identity. Default buyer identity is passed to cartCreate.
+   */
+  buyerIdentity?: CartBuyerIdentityInput;
 };
 
 export type HydrogenCartForDocs = {

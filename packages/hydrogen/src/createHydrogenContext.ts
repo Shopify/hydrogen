@@ -312,4 +312,8 @@ export type HydrogenContextOptionsForDocs<
      */
     customMethods?: Record<string, Function>;
   };
+  /**
+   * Buyer identity. Default buyer identity is passed to cartCreate.
+   */
+  buyerIdentity?: CartBuyerIdentityInput;
 };

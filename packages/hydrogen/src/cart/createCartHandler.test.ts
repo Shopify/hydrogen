@@ -1,4 +1,5 @@
-import {describe, expect, expectTypeOf, it} from 'vitest';
+import {describe, expect, expectTypeOf, it, vi} from 'vitest';
+import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
 import {
   HydrogenCart,
   HydrogenCartCustom,
@@ -9,12 +10,16 @@ import {
   mockCreateStorefrontClient,
   mockHeaders,
 } from './cart-test-helper';
+import {Storefront} from '../storefront';
+import {CART_CREATE_MUTATION} from './queries/cartCreateDefault';
 
 type MockCarthandler = {
   cartId?: string;
   cartQueryFragment?: string;
   cartMutateFragment?: string;
   customMethods?: Record<string, Function>;
+  buyerIdentity?: CartBuyerIdentityInput;
+  storefront?: Storefront;
 };
 
 function getCartHandler(options: MockCarthandler = {}) {
@@ -446,5 +451,123 @@ describe('createCartHandler', () => {
     ]);
 
     expect(await cart.get()).toHaveProperty('id', 'c1-new-cart-id');
+  });
+
+  it('passes default buyerIdentity to cartCreate when addLines is called', async () => {
+    const storefront = mockCreateStorefrontClient();
+
+    vi.spyOn(storefront, 'mutate');
+
+    const cart = getCartHandler({
+      buyerIdentity: {companyLocationId: 'someLocation'},
+      storefront,
+    });
+
+    await cart.addLines([
+      {
+        merchandiseId: '1',
+        quantity: 1,
+      },
+    ]);
+
+    expect(storefront.mutate).toHaveBeenCalledWith(CART_CREATE_MUTATION(), {
+      variables: {
+        input: {
+          buyerIdentity: {
+            companyLocationId: 'someLocation',
+            customerAccessToken: 'sha123',
+          },
+          lines: [
+            {
+              attributes: undefined,
+              merchandiseId: '1',
+              quantity: 1,
+              sellingPlanId: undefined,
+            },
+          ],
+        },
+      },
+    });
+  });
+
+  it('passes default buyerIdentity to cartCreate', async () => {
+    const storefront = mockCreateStorefrontClient();
+
+    vi.spyOn(storefront, 'mutate');
+
+    const cart = getCartHandler({
+      buyerIdentity: {companyLocationId: 'someLocation'},
+      storefront,
+    });
+
+    await cart.create({
+      lines: [
+        {
+          merchandiseId: '1',
+          quantity: 1,
+        },
+      ],
+    });
+
+    expect(storefront.mutate).toHaveBeenCalledWith(CART_CREATE_MUTATION(), {
+      variables: {
+        input: {
+          buyerIdentity: {
+            companyLocationId: 'someLocation',
+            customerAccessToken: 'sha123',
+          },
+          lines: [
+            {
+              attributes: undefined,
+              merchandiseId: '1',
+              quantity: 1,
+              sellingPlanId: undefined,
+            },
+          ],
+        },
+      },
+    });
+  });
+
+  it('overrides default buyerIdentity with buyerIdentity passed to cartCreate', async () => {
+    const storefront = mockCreateStorefrontClient();
+
+    vi.spyOn(storefront, 'mutate');
+
+    const cart = getCartHandler({
+      buyerIdentity: {companyLocationId: 'someLocation'},
+      storefront,
+    });
+
+    await cart.create({
+      lines: [
+        {
+          merchandiseId: '1',
+          quantity: 1,
+        },
+      ],
+      buyerIdentity: {
+        companyLocationId: 'newLocation',
+      },
+    });
+
+    expect(storefront.mutate).toHaveBeenCalledWith(CART_CREATE_MUTATION(), {
+      variables: {
+        input: {
+          buyerIdentity: {
+            companyLocationId: 'newLocation',
+            customerAccessToken: 'sha123',
+          },
+          lines: [
+            {
+              attributes: undefined,
+              merchandiseId: '1',
+              quantity: 1,
+              sellingPlanId: undefined,
+            },
+          ],
+        },
+      },
+    });
   });
 });
