@@ -178,6 +178,12 @@ steps:
     diffs:
       - file: app/styles/app.css
         patchFile: app.css.e88d35.patch
+  - type: INFO
+    index: 13
+    name: Next steps
+    description: >
+      * Test your implementation by going to your store and searching for a combined listing. Make sure that the combined listing's details appear in the search results and on the product page. 
+      * (Optional) [Place a test order](https://help.shopify.com/en/manual/checkout-settings/test-orders) to see how orders for combined listings appear in your Shopify admin.
 llms:
   userQueries:
     - How can I show combined listings on product pages and search results using

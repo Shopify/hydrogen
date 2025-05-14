@@ -133,6 +133,12 @@ steps:
     diffs:
       - file: app/styles/app.css
         patchFile: app.css.e88d35.patch
+  - type: INFO
+    index: 11
+    name: Next steps
+    description: >
+      * Test your implementation by going to your store and adding a bundle to the cart. Make sure that the bundle's badge appears on the product page and in the cart. 
+      * (Optional) [Place a test order](https://help.shopify.com/en/manual/checkout-settings/test-orders) to see how orders for bundles appear in your Shopify admin.
 llms:
   userQueries:
     - How do I show product bundles on my Hydrogen storefront?

@@ -132,6 +132,13 @@ steps:
     diffs:
       - file: app/routes/account.tsx
         patchFile: account.tsx.a0203d.patch
+  - type: INFO
+    index: 9
+    name: Next steps
+    description: >
+      * Test your implementation by going to your store and adding a subscription-based product to the cart. Make sure that the product's subscription details appear on the product page and in the cart. 
+      * (Optional) [Place a test order](https://help.shopify.com/en/manual/checkout-settings/test-orders) to see how orders for subscription-based products appear in your Shopify admin.
+
 llms:
   userQueries:
     - How do I add subscriptions to my Hydrogen storefront?
