@@ -2,14 +2,12 @@
 
 title: Markets
 summary: This recipe shows how to add support for markets to your Hydrogen app.
-description: >
+description: |
   This recipe shows how to add support for [Shopify
   Markets](https://www.shopify.com/ca/blog/markets) to your Hydrogen app.
 
-
   Markets allow you to segment your audience and serve different content to each
   market.
-
 
   You can set up Markets and use them in a variety of ways; in this recipe,
   you'll learn how to set up basic localization support for your Hydrogen store,
@@ -43,10 +41,13 @@ ingredients:
       hook to retrieve the selected locale, and a list of available locales.
   - path: templates/skeleton/app/routes/($locale)._index.tsx
     description: A route that renders a localized version of the home page.
+  - path: templates/skeleton/app/routes/($locale).cart.tsx
+    description: A localized cart route.
   - path: templates/skeleton/app/routes/($locale).products.$handle.tsx
     description: A route that renders a localized version of the product page.
 deletedFiles:
   - templates/skeleton/app/routes/_index.tsx
+  - templates/skeleton/app/routes/cart.tsx
   - templates/skeleton/app/routes/products.$handle.tsx
 steps:
   - type: INFO
@@ -118,19 +119,25 @@ steps:
       - templates/skeleton/app/components/Link.tsx
       - templates/skeleton/app/lib/i18n.ts
       - templates/skeleton/app/routes/($locale)._index.tsx
+      - templates/skeleton/app/routes/($locale).cart.tsx
       - templates/skeleton/app/routes/($locale).products.$handle.tsx
   - type: INFO
     index: 4
     name: Add language splat to the desired route's
-    description: |
-      If you're going with path-based localization, you should add a language splat to your localized routes, for example renaming `routes/_index.tsx` to `routes/($locale)._index.tsx`.
+    description: >
+      If you're going with path-based localization, you should add a language
+      splat to your localized routes, for example renaming `routes/_index.tsx`
+      to `routes/($locale)._index.tsx`.
 
-      For brevity, in this example we only focused on two files – the index page and the product page; however this should be done for all the app routes.
+
+      For brevity, in this example we only focused on two files – the index page
+      and the product page; however this should be done for all the app routes.
   - type: PATCH
     index: 5
     name: Use the new Link component in the ProductItem component
-    description: |
-      Update the `ProductItem` component to use the `Link` component from the `app/components/Link.tsx` file.
+    description: >
+      Update the `ProductItem` component to use the `Link` component from the
+      `app/components/Link.tsx` file.
     diffs:
       - file: app/components/ProductItem.tsx
         patchFile: ProductItem.tsx.8ddc67.patch
