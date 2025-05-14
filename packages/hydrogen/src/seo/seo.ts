@@ -4,7 +4,7 @@ import {
   type Params,
   useLocation,
   useMatches,
-} from 'react-router';
+} from '@remix-run/react';
 import {generateSeoTags, type SeoConfig} from './generate-seo-tags';
 
 import type {LoaderFunction, SerializeFrom} from '@remix-run/server-runtime';

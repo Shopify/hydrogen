@@ -24543,7 +24543,7 @@
           },
           {
             "title": "TypeScript",
-            "code": "import {MetaFunction} from '@remix-run/react';\nimport {LoaderFunctionArgs} from '@remix-run/server-runtime';\nimport {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\nexport const meta: MetaFunction&lt;typeof loader&gt; = ({data, matches}) =&gt; {\n  // Pass one or more arguments, preserving properties from parent routes\n  return getSeoMeta((matches as any)[0].data.seo, data!.seo);\n};\n",
+            "code": "import {MetaFunction} from 'react-router';\nimport {LoaderFunctionArgs} from '@remix-run/server-runtime';\nimport {getSeoMeta} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {shop} = await context.storefront.query(`\n    query layout {\n      shop {\n        name\n        description\n      }\n    }\n  `);\n\n  return {\n    seo: {\n      title: shop.title,\n      description: shop.description,\n    },\n  };\n}\n\nexport const meta: MetaFunction&lt;typeof loader&gt; = ({data, matches}) =&gt; {\n  // Pass one or more arguments, preserving properties from parent routes\n  return getSeoMeta((matches as any)[0].data.seo, data!.seo);\n};\n",
             "language": "ts"
           }
         ],
@@ -24896,7 +24896,7 @@
           },
           {
             "title": "TypeScript",
-            "code": "import {Seo} from '@shopify/hydrogen';\nimport {\n  Links,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from '@remix-run/react';\n\nexport default function App() {\n  /** ... */\n  return (\n    &lt;html&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n        {/* Add &lt;Seo /&gt; before &lt;Meta /&gt; and &lt;Link /&gt; */}\n        &lt;Seo /&gt;\n        &lt;Meta /&gt;\n        &lt;Links /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;Outlet /&gt;\n        &lt;ScrollRestoration /&gt;\n        &lt;Scripts /&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
+            "code": "import {Seo} from '@shopify/hydrogen';\nimport {\n  Links,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from 'react-router';\n\nexport default function App() {\n  /** ... */\n  return (\n    &lt;html&gt;\n      &lt;head&gt;\n        &lt;meta charSet=\"utf-8\" /&gt;\n        &lt;meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" /&gt;\n        {/* Add &lt;Seo /&gt; before &lt;Meta /&gt; and &lt;Link /&gt; */}\n        &lt;Seo /&gt;\n        &lt;Meta /&gt;\n        &lt;Links /&gt;\n      &lt;/head&gt;\n      &lt;body&gt;\n        &lt;Outlet /&gt;\n        &lt;ScrollRestoration /&gt;\n        &lt;Scripts /&gt;\n      &lt;/body&gt;\n    &lt;/html&gt;\n  );\n}\n",
             "language": "ts"
           }
         ],
