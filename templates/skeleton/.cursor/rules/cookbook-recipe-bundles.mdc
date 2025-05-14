@@ -25,13 +25,21 @@ Display product bundles on your Hydrogen storefront.
 # User Intent Recognition
 
 <user_queries>
-
+- How do I show product bundles on my Hydrogen storefront?
+- How do I add badges to bundled products on my Hydrogen storefront?
+- How do I display product bundles on applicable line items in the cart?
+- How do I detect if a product is a bundle?
 </user_queries>
 
 # Troubleshooting
 
 <troubleshooting>
-
+- **Issue**: I'm not seeing product bundles on my storefront.
+  **Solution**: Make sure you've installed the Shopify Bundles app and set up product bundles in your Shopify admin.
+- **Issue**: I'm not seeing product bundle badges on product pages.
+  **Solution**: Make sure you've installed the Shopify Bundles app and set up product bundles in your Shopify admin. Then make sure you've updated the product fragment to query for bundles and display BundledVariants.
+- **Issue**: I'm not seeing the product bundle badges on my cart line items.
+  **Solution**: Make sure you've installed the Shopify Bundles app and set up product bundles in your Shopify admin. Then make sure you've updated the cart fragment to query for bundles.
 </troubleshooting>
 
 # Recipe Implementation
@@ -56,12 +64,10 @@ In this recipe you'll make the following changes:
 
 4. Update the cart line item template to display the bundle badge as needed.
 
-
 ## Requirements
 
 To use product bundles, you need to install a bundles app in your Shopify admin.
 In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/shopify-bundles).
-
 
 ## New files added to the template by this recipe
 
@@ -171,12 +177,10 @@ export function BundledVariants({
 
 3. From the [**Bundles**](https://admin.shopify.com/apps/shopify-bundles/app) page, [create a new bundle](https://help.shopify.com/en/manual/products/bundles/shopify-bundles).
 
-
 ### Step 2: Update the product fragment to query for bundles and display BundledVariants
 
 - Add the `requiresComponents` field to the `Product` fragment, which is used to identify bundled products.
 - Pass the `isBundle` flag to the `ProductImage` component.
-
 
 #### File: /app/routes/products.$handle.tsx
 
@@ -294,7 +298,6 @@ export function BundledVariants({
 
 Like the previous step, use the `requiresComponents` field to detect if the product item is a bundle.
 
-
 #### File: /app/routes/collections.$handle.tsx
 
 ```diff
@@ -344,7 +347,6 @@ Like the previous step, use the `requiresComponents` field to detect if the prod
 ### Step 4: Update the cart fragment to query for bundles
 
 Use the `requiresComponents` field to determine if a cart line item is a bundle.
-
 
 #### File: /app/lib/fragments.ts
 
@@ -404,7 +406,6 @@ Use the `requiresComponents` field to determine if a cart line item is a bundle.
 
 If a product is a bundle, show the `BundleBadge` component in the cart line item.
 
-
 #### File: /app/components/CartLineItem.tsx
 
 ```diff
@@ -453,7 +454,6 @@ If a product is a bundle, show the `BundleBadge` component in the cart line item
 
 If a product is a bundle, update the text of the product button.
 
-
 #### File: /app/components/ProductForm.tsx
 
 ```diff
@@ -488,7 +488,6 @@ If a product is a bundle, update the text of the product button.
 
 If a product is a bundle, show the `BundleBadge` component in the `ProductImage` component.
 
-
 #### File: /app/components/ProductImage.tsx
 
 ```diff
@@ -519,7 +518,6 @@ If a product is a bundle, show the `BundleBadge` component in the `ProductImage`
 ### Step 8: Conditionally render the BundleBadge in ProductItem
 
 If a product is a bundle, show the `BundleBadge` component in the `ProductItem` component.
-
 
 #### File: /app/components/ProductItem.tsx
 
@@ -595,7 +593,6 @@ If a product is a bundle, show the `BundleBadge` component in the `ProductItem` 
 ### Step 9: Add a product-image class to the app stylesheet
 
 Make sure the bundle badge is positioned relative to the product image.
-
 
 #### File: /app/styles/app.css
 
