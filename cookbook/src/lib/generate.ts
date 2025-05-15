@@ -205,7 +205,7 @@ async function generateSteps(params: {
         (step) =>
           step.type === 'NEW_FILE' &&
           step.ingredients?.length === 1 &&
-          step.ingredients[0] === file.path,
+          step.ingredients[0].path === file.path,
       );
 
       // Try to find the existing description for the step which has _only_ this file as a diff patch.
@@ -216,7 +216,12 @@ async function generateSteps(params: {
         step: existingStep?.step ?? `${i}`,
         name: existingStep?.name ?? file.path.replace(TEMPLATE_DIRECTORY, ''),
         description: existingDescription ?? file.description ?? null,
-        ingredients: [file.path],
+        ingredients: [
+          {
+            path: file.path,
+            renamedFrom: existingStep?.ingredients?.[0]?.renamedFrom,
+          },
+        ],
       };
       newFileSteps.push(step);
     }

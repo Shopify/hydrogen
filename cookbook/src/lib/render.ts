@@ -88,12 +88,19 @@ export function makeReadmeBlocks(
     format,
   );
 
+  const deletedFilesThatWereNotRenamed = recipe.deletedFiles?.filter(
+    (file) =>
+      !recipe.steps.some((step) =>
+        step.ingredients?.some((ingredient) => ingredient.renamedFrom === file),
+      ),
+  );
   const markdownDeletedFiles =
-    recipe.deletedFiles != null && recipe.deletedFiles.length > 0
+    deletedFilesThatWereNotRenamed != null &&
+    deletedFilesThatWereNotRenamed.length > 0
       ? [
           mdHeading(2, 'Deleted Files'),
           mdList(
-            recipe.deletedFiles.map((file) => {
+            deletedFilesThatWereNotRenamed.map((file) => {
               const linkPrefix = hydrogenRepoFolderURL({
                 path: '',
                 hash: recipe.commit,
@@ -251,7 +258,7 @@ export function renderStep(
 
     let blocks: MDBlock[] = [];
     const baseHeadingLevel = 4;
-    for (const ingredient of step.ingredients) {
+    for (const {path: ingredient, renamedFrom} of step.ingredients) {
       const headingLevel = baseHeadingLevel + (isSubstep(step) ? 1 : 0);
 
       const link =
@@ -271,6 +278,13 @@ export function renderStep(
       );
 
       blocks.push(
+        ...(renamedFrom != null
+          ? [
+              mdParagraph(
+                `Rename \`${renamedFrom.replace(TEMPLATE_DIRECTORY, '')}\` to \`${ingredient.replace(TEMPLATE_DIRECTORY, '')}\``,
+              ),
+            ]
+          : []),
         mdHeading(
           headingLevel,
           ['File:', `${mdLinkString(link, path.basename(ingredient))}`].join(
@@ -295,16 +309,18 @@ export function renderStep(
           mdList(
             step.ingredients
               .filter((ingredient) =>
-                recipe.ingredients.some((other) => other.path === ingredient),
+                recipe.ingredients.some(
+                  (other) => other.path === ingredient.path,
+                ),
               )
-              .map((i) => {
+              .map((ingredient) => {
                 const linkPrefix = hydrogenRepoRecipeBaseURL({
                   recipeName,
                   hash: recipe.commit,
                 });
                 return mdLinkString(
-                  `${linkPrefix}/ingredients/${i}`,
-                  i.replace(TEMPLATE_DIRECTORY, ''),
+                  `${linkPrefix}/ingredients/${ingredient.path}`,
+                  ingredient.path.replace(TEMPLATE_DIRECTORY, ''),
                 );
               }),
           ),
