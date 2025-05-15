@@ -158,6 +158,24 @@
       },
       "description": "The deleted files of the recipe"
     },
+    "nextSteps": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "not": {}
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The next steps of the recipe"
+    },
     "commit": {
       "type": "string",
       "description": "The commit hash the recipe is based on"

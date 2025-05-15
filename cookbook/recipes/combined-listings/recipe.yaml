@@ -179,12 +179,14 @@ steps:
     diffs:
       - file: app/styles/app.css
         patchFile: app.css.e88d35.patch
-  - type: INFO
-    index: 13
-    name: Next steps
-    description: >
-      * Test your implementation by going to your store and searching for a combined listing. Make sure that the combined listing's details appear in the search results and on the product page. 
-      * (Optional) [Place a test order](https://help.shopify.com/en/manual/checkout-settings/test-orders) to see how orders for combined listings appear in your Shopify admin.
+nextSteps: >
+  - Test your implementation by going to your store and searching for a combined
+  listing. Make sure that the combined listing's details appear in the search
+  results and on the product page.
+
+  - (Optional) [Place a test
+  order](https://help.shopify.com/en/manual/checkout-settings/test-orders) to
+  see how orders for combined listings appear in your Shopify admin.
 llms:
   userQueries:
     - How can I show combined listings on product pages and search results using
@@ -202,4 +204,4 @@ llms:
       solution: Make sure to tag combined listing parent products in the Shopify admin
         and use that tag to filter out combined listings from the product list
         in the GraphQL query.
-commit: bd55b241191304945704c0b9ef278e945c55d3da
+commit: 90f894418e0b37dc31b5f428fad08aaa98163cde
