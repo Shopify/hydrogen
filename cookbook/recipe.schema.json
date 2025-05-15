@@ -115,7 +115,21 @@
           "ingredients": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "description": "The path of the ingredient"
+                },
+                "renamedFrom": {
+                  "type": "string",
+                  "description": "The file that was renamed from"
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
             },
             "description": "The ingredients of the step"
           },

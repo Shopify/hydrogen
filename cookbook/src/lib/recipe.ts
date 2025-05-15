@@ -44,7 +44,15 @@ const StepSchema = z.object({
     .describe('The description of the step'),
   notes: z.array(z.string()).optional().describe('The notes of the step'),
   ingredients: z
-    .array(z.string())
+    .array(
+      z.object({
+        path: z.string().describe('The path of the ingredient'),
+        renamedFrom: z
+          .string()
+          .optional()
+          .describe('The file that was renamed from'),
+      }),
+    )
     .optional()
     .describe('The ingredients of the step'),
   diffs: z.array(DiffSchema).optional().describe('The diffs of the step'),

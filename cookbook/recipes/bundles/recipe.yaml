@@ -49,14 +49,14 @@ steps:
       Create a new BundleBadge component to be displayed on bundle product
       listings.
     ingredients:
-      - templates/skeleton/app/components/BundleBadge.tsx
+      - path: templates/skeleton/app/components/BundleBadge.tsx
   - type: NEW_FILE
     step: 3
     name: Create a new BundledVariants component
     description: Create a new `BundledVariants` component that wraps the variants of
       a bundle product in a single product listing.
     ingredients:
-      - templates/skeleton/app/components/BundledVariants.tsx
+      - path: templates/skeleton/app/components/BundledVariants.tsx
   - type: PATCH
     step: 4
     name: Update the product fragment to query for bundles and display
@@ -155,4 +155,4 @@ llms:
       solution: Make sure you've installed the Shopify Bundles app and set up product
         bundles in your Shopify admin. Then make sure you've updated the cart
         fragment to query for bundles.
-commit: 90f894418e0b37dc31b5f428fad08aaa98163cde
+commit: c58ddde879b8f1f4c14893ee7cf3db76dee00ae6

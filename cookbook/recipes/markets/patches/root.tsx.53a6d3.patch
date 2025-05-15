@@ -1,0 +1,50 @@
+index 3426476a..4f67b72b 100644
+--- a/templates/skeleton/app/root.tsx
++++ b/templates/skeleton/app/root.tsx
+@@ -74,9 +74,12 @@ export async function loader(args: LoaderFunctionArgs) {
+ 
+   const {storefront, env} = args.context;
+ 
++  const {i18n} = storefront;
++
+   return {
+     ...deferredData,
+     ...criticalData,
++    selectedLocale: args.context.storefront.i18n,
+     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
+     shop: getShopAnalytics({
+       storefront,
+@@ -87,8 +90,8 @@ export async function loader(args: LoaderFunctionArgs) {
+       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+       withPrivacyBanner: false,
+       // localize the privacy banner
+-      country: args.context.storefront.i18n.country,
+-      language: args.context.storefront.i18n.language,
++      country: i18n.country,
++      language: i18n.language,
+     },
+   };
+ }
+@@ -105,6 +108,8 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
+       cache: storefront.CacheLong(),
+       variables: {
+         headerMenuHandle: 'main-menu', // Adjust to your header menu handle
++        country: storefront.i18n.country,
++        language: storefront.i18n.language,
+       },
+     }),
+     // Add other queries here, so that they are loaded in parallel
+@@ -162,7 +167,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
+             shop={data.shop}
+             consent={data.consent}
+           >
+-            <PageLayout {...data}>{children}</PageLayout>
++            <PageLayout
++              key={`${data.selectedLocale.language}-${data.selectedLocale.country}`}
++              {...data}
++            >
++              {children}
++            </PageLayout>
+           </Analytics.Provider>
+         ) : (
+           children
