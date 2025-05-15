@@ -177,7 +177,7 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
           case 'shopify.dev':
             return [
               '<details>\n',
-              '{% codeblock markdown %}',
+              '{% codeblock file %}',
               ...code,
               '{% endcodeblock %}',
               '\n</details>',

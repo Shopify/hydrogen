@@ -42,7 +42,7 @@ ingredients:
 deletedFiles: []
 steps:
   - type: INFO
-    index: 1
+    step: 1
     name: Set up the Combined Listings app
     description: |
       1. Install the [Combined Listings app](https://admin.shopify.com/apps/combined-listings).
@@ -51,7 +51,7 @@ steps:
 
       3. Add tags to the parent products of combined listings to indicate that they're part of a combined listing (for example `combined`).
   - type: INFO
-    index: 2
+    step: 2
     name: Configure combined listings behavior
     description: >
       You can customize how the parent products of combined listings are
@@ -77,14 +77,15 @@ steps:
       };
 
       ```
-  - type: COPY_INGREDIENTS
-    index: 3
-    name: Add ingredients to your project
-    description: Copy all the files found in the `ingredients/` directory into your project.
+  - type: NEW_FILE
+    step: 3
+    name: Add combined listings utilities
+    description: Create a new `combined-listings.ts` file that contains utilities
+      and settings for handling combined listings.
     ingredients:
       - templates/skeleton/app/lib/combined-listings.ts
   - type: PATCH
-    index: 4
+    step: 4
     name: Update the ProductForm component
     description: >
       1. Update the `ProductForm` component to hide the **Add to cart** button
@@ -97,7 +98,7 @@ steps:
       - file: app/components/ProductForm.tsx
         patchFile: ProductForm.tsx.8e409a.patch
   - type: PATCH
-    index: 5
+    step: 5
     name: Extend the ProductImage component
     description: >
       Update the `ProductImage` component to support images from both product
@@ -106,7 +107,7 @@ steps:
       - file: app/components/ProductImage.tsx
         patchFile: ProductImage.tsx.4e6c4c.patch
   - type: PATCH
-    index: 6
+    step: 6
     name: Show a range of prices for combined listings in ProductItem
     description: >
       Update `ProductItem.tsx` to show a range of prices for the combined
@@ -115,7 +116,7 @@ steps:
       - file: app/components/ProductItem.tsx
         patchFile: ProductItem.tsx.8ddc67.patch
   - type: PATCH
-    index: 7
+    step: 7
     name: (Optional) Add redirect utility to first variant of a combined listing
     description: >
       If you want to redirect automatically to the first variant of a combined
@@ -125,7 +126,7 @@ steps:
       - file: app/lib/redirect.ts
         patchFile: redirect.ts.1e6242.patch
   - type: PATCH
-    index: 8
+    step: 8
     name: Update queries for combined listings
     description: >
       1. Add the `tags` property to the items returned by the product query.
@@ -136,7 +137,7 @@ steps:
       - file: app/routes/_index.tsx
         patchFile: _index.tsx.8041d5.patch
   - type: PATCH
-    index: 9
+    step: 9
     name: (Optional) Filter out combined listings from collections pages
     description: >
       Since it's not possible to directly apply query filters when retrieving
@@ -146,7 +147,7 @@ steps:
       - file: app/routes/collections.$handle.tsx
         patchFile: collections.$handle.tsx.951367.patch
   - type: PATCH
-    index: 10
+    step: 10
     name: (Optional) Filter out combined listings from the collections index page
     description: >
       Update the `collections.all` route to filter out combined listings from
@@ -155,7 +156,7 @@ steps:
       - file: app/routes/collections.all.tsx
         patchFile: collections.all.tsx.75880b.patch
   - type: PATCH
-    index: 11
+    step: 11
     name: Update the product page
     description: >
       1. Display a range of prices for combined listings instead of the variant
@@ -170,7 +171,7 @@ steps:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.3e0b7e.patch
   - type: PATCH
-    index: 12
+    step: 12
     name: Update stylesheet
     description: >
       Add a class to the product item to show a range of prices for combined
@@ -195,4 +196,4 @@ llms:
       solution: Make sure to tag combined listing parent products in the Shopify admin
         and use that tag to filter out combined listings from the product list
         in the GraphQL query.
-commit: 24a6a51cb6f1790844b207a9ce42d70325043a3d
+commit: bd55b241191304945704c0b9ef278e945c55d3da
