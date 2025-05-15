@@ -118,6 +118,7 @@ export async function generateRecipe(
     ingredients,
     deletedFiles,
     steps,
+    nextSteps: existingRecipe?.nextSteps ?? null,
     llms: {userQueries, troubleshooting},
     commit: getMainCommitHash(parseReferenceBranch(referenceBranch)),
   };

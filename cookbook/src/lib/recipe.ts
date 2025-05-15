@@ -78,6 +78,11 @@ export const RecipeSchema = z.object({
     .array(z.string())
     .optional()
     .describe('The deleted files of the recipe'),
+  nextSteps: z
+    .string()
+    .optional()
+    .nullable()
+    .describe('The next steps of the recipe'),
   commit: z.string().describe('The commit hash the recipe is based on'),
   llms: z
     .object({
