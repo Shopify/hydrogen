@@ -98,23 +98,6 @@ export default class Dev extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_DEPS_OPTIMIZER',
       default: false,
     }),
-
-    // TODO BEFORE MERGE remove ALL references to legacy-runtime!
-    // For the classic compiler:
-    ...overrideFlag(commonFlags.legacyRuntime, {
-      'legacy-runtime': {
-        description:
-          '[Classic Remix Compiler] ' +
-          commonFlags.legacyRuntime['legacy-runtime'].description,
-      },
-    }),
-    ...overrideFlag(commonFlags.sourcemap, {
-      sourcemap: {
-        description:
-          '[Classic Remix Compiler] ' +
-          commonFlags.sourcemap.sourcemap.description,
-      },
-    }),
   };
 
   async run(): Promise<void> {
