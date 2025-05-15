@@ -199,15 +199,12 @@ llms:
     - How do I display subscription details on applicable line items in the cart?
   troubleshooting:
     - issue: I'm getting an error when I try to add a subscription to my storefront.
-      solution:
-        Make sure you've installed the Shopify Subscriptions app and set up
+      solution: Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
     - issue: I'm not seeing the subscription options on my product pages.
-      solution:
-        Make sure you've installed the Shopify Subscriptions app and set up
+      solution: Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
     - issue: I'm not seeing the subscription details on my cart line items.
-      solution:
-        Make sure you've installed the Shopify Subscriptions app and set up
+      solution: Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
-commit: 90f894418e0b37dc31b5f428fad08aaa98163cde
+commit: c58ddde879b8f1f4c14893ee7cf3db76dee00ae6

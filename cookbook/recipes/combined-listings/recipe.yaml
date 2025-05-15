@@ -37,8 +37,7 @@ requirements: >
   app](https://admin.shopify.com/apps/combined-listings) installed.
 ingredients:
   - path: templates/skeleton/app/lib/combined-listings.ts
-    description:
-      The `combined-listings.ts` file contains utilities and settings for
+    description: The `combined-listings.ts` file contains utilities and settings for
       handling combined listings.
 deletedFiles: []
 steps:
@@ -81,8 +80,7 @@ steps:
   - type: NEW_FILE
     step: 3
     name: Add combined listings utilities
-    description:
-      Create a new `combined-listings.ts` file that contains utilities
+    description: Create a new `combined-listings.ts` file that contains utilities
       and settings for handling combined listings.
     ingredients:
       - path: templates/skeleton/app/lib/combined-listings.ts
@@ -203,8 +201,7 @@ llms:
       variant price?
   troubleshooting:
     - issue: Combined listings are being displayed in the product list.
-      solution:
-        Make sure to tag combined listing parent products in the Shopify admin
+      solution: Make sure to tag combined listing parent products in the Shopify admin
         and use that tag to filter out combined listings from the product list
         in the GraphQL query.
-commit: 90f894418e0b37dc31b5f428fad08aaa98163cde
+commit: c58ddde879b8f1f4c14893ee7cf3db76dee00ae6
