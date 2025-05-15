@@ -96,7 +96,7 @@ export const combinedListingsSettings = {
 
 Create a new `combined-listings.ts` file that contains utilities and settings for handling combined listings.
 
-#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/c58ddde879b8f1f4c14893ee7cf3db76dee00ae6/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
+#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/55f1e46ea602b35806cb594de69291a1ef674118/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
 
 ```ts
 // Edit these values to customize combined listings' behavior
