@@ -76,56 +76,7 @@ export async function getRemixConfig(
     return (await getViteConfig(root)).remixConfig;
   }
 
-  await muteRemixLogs(root);
-
-  type RemixConfig = typeof import('@remix-run/dev/dist/config.js');
-
-  const {resolveConfig} = await importLocal<RemixConfig>(
-    '@remix-run/dev/dist/config.js',
-    root,
-  ).catch(handleRemixImportFail);
-
-  type RemixViteNodeConfig =
-    typeof import('@remix-run/dev/dist/vite/vite-node.js');
-
-  const {createContext} = await importLocal<RemixViteNodeConfig>(
-    '@remix-run/dev/dist/vite/vite-node.js',
-    root,
-  ).catch(handleRemixImportFail);
-
-  const appConfig = await getRawRemixConfig(root);
-  const routesViteNodeContext = await createContext({root, mode});
-  const vite = await importVite(root);
-  const config = await resolveConfig(appConfig, {
-    rootDirectory: root,
-    serverMode: mode,
-    vite,
-    routesViteNodeContext,
-  });
-
-  if (isHydrogenMonorepo && hydrogenPackagesPath) {
-    // Watch local packages when developing in Hydrogen repo
-    const packagesPath = hydrogenPackagesPath;
-    config.watchPaths ??= [];
-
-    config.watchPaths.push(
-      ...(await readdir(packagesPath)).map((pkg) =>
-        pkg === 'hydrogen-react'
-          ? path.resolve(packagesPath, pkg, 'dist', 'browser-dev', 'index.mjs')
-          : path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
-      ),
-    );
-
-    config.watchPaths.push(
-      path.join(packagesPath, 'cli', 'dist', 'virtual-routes', '**', '*'),
-    );
-  }
-
-  // Shut this down so that it doesn't cause the process to fail
-  // when it finishes running.
-  routesViteNodeContext.server.server.close();
-
-  return config;
+  throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
 }
 
 export function assertOxygenChecks(config: RemixConfig) {
