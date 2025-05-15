@@ -36,9 +36,9 @@ _New files added to the template by this recipe._
 3. On the [Products](https://admin.shopify.com/products) page, open any products that will be sold as subscriptions and add the relevant subscription plans in the **Purchase options** section.
 The Hydrogen demo storefront comes pre-configured with an example subscription product with the handle `shopify-wax`.
 
-### Step 2: Showing subscriptions in product pages
+### Step 2: Show subscription options on product pages
 
-In this step we'll implement the ability to display and select subscriptions in product pages, alongside the existing one-off purchase options.
+In this step we'll implement the ability to display subscription options on  product pages, alongside the existing one-off purchase options.
 
 #### Step 2.1: Create a SellingPlanSelector component
 
@@ -671,9 +671,9 @@ index 2dc6bda2..3507d496 100644
 
 </details>
 
-### Step 3: Subscriptions in the cart
+### Step 3: Show subscription details in the cart
 
-In this step we'll implement support for showing subscriptions info in the Cart lines.
+In this step we'll implement support for showing subscription info in the cart's line items.
 
 #### Step 3.1: Add selling plan data to cart queries
 
@@ -759,13 +759,13 @@ index bd33a2cf..a18e4b52 100644
                <small>
 ```
 
-### Step 4: Managing account subscriptions
+### Step 4: Add subscription management to the account page
 
-In this step we'll implement support for unsubscribing from active subscriptions via an account subpage which lists existing subscription contracts.
+In this step we'll implement support for subscription management through an account subpage that lists existing subscription contracts.
 
 #### Step 4.1: Add queries to retrieve customer subscriptions
 
-Create GraphQL queries that retrieves the subscription info from the customer account client.
+Create GraphQL queries that retrieve the subscription info from the customer account client.
 
 ##### File: [CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
 
@@ -846,7 +846,7 @@ export const SUBSCRIPTION_CANCEL_MUTATION = `#graphql
 
 #### Step 4.3: Add an account subscriptions page
 
-Create a new account subpage that allows management of existing customer subscriptions based on the new GraphQL queries and mutations created previously.
+Create a new account subpage that lets customers manage their existing  subscriptions based on the new GraphQL queries and mutations.
 
 ##### File: [account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
 

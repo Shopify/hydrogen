@@ -54,8 +54,8 @@ steps:
     step: 2
     name: Show subscription options on product pages
     description: >
-      In this step we'll implement the ability to display subscription options on 
-      product pages, alongside the existing one-off purchase options.
+      In this step we'll implement the ability to display subscription options
+      on  product pages, alongside the existing one-off purchase options.
   - type: NEW_FILE
     step: 2.1
     name: Create a SellingPlanSelector component
@@ -144,8 +144,8 @@ steps:
     step: 4
     name: Add subscription management to the account page
     description: >
-      In this step we'll implement support for subscription management
-      through an account subpage that lists existing subscription contracts.
+      In this step we'll implement support for subscription management through
+      an account subpage that lists existing subscription contracts.
   - type: NEW_FILE
     step: 4.1
     name: Add queries to retrieve customer subscriptions
@@ -165,8 +165,8 @@ steps:
     step: 4.3
     name: Add an account subscriptions page
     description: >
-      Create a new account subpage that lets customers manage their existing 
-      subscriptions based on the new GraphQL queries and mutations.
+      Create a new account subpage that lets customers manage their
+      existing  subscriptions based on the new GraphQL queries and mutations.
     ingredients:
       - templates/skeleton/app/routes/account.subscriptions.tsx
   - type: PATCH
