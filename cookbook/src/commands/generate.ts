@@ -2,7 +2,6 @@ import {CommandModule} from 'yargs';
 import {FILES_TO_IGNORE_FOR_GENERATE, TEMPLATE_PATH} from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
 import {RecipeManifestFormat} from '../lib/util';
-import {copyCursorRulesToSkeleton} from '../lib/llms';
 import path from 'path';
 import fs from 'fs';
 
@@ -59,8 +58,6 @@ async function handler(args: GenerateArgs) {
     recipeManifestFormat: args.recipeManifestFormat,
     filePath: args.filePath,
   });
-
-  copyCursorRulesToSkeleton();
 
   console.log();
   console.log(recipePath);
