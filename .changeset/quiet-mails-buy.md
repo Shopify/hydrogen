@@ -1,8 +1,8 @@
 ---
-'@shopify/hydrogen-react': minor
-'skeleton': minor
-'@shopify/hydrogen': minor
-'@shopify/cli-hydrogen': minor
+'@shopify/hydrogen-react': patch
+'skeleton': patch
+'@shopify/hydrogen': patch
+'@shopify/cli-hydrogen': patch
 ---
 
 Update SFAPI and CAAPI versions to 2025.04
