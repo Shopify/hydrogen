@@ -2,27 +2,59 @@
 
 gid: e1bfda7e-18d3-497e-8917-9d15ab0ef1cf
 title: Markets
-summary: This recipe shows how to add support for markets to your Hydrogen app.
+summary: This recipe adds basic localization support to your Hydrogen app using Shopify Markets.
 description: |
   This recipe shows how to add support for [Shopify
-  Markets](https://www.shopify.com/ca/blog/markets) to your Hydrogen app.
+  Markets](https://www.shopify.com/ca/blog/markets) to your Hydrogen app. Markets 
+  let you segment your audience based on location and serve different content to each market.
 
-  Markets allow you to segment your audience and serve different content to each
-  market.
-
-  You can set up Markets and use them in a variety of ways; in this recipe,
-  you'll learn how to set up basic localization support for your Hydrogen store,
-  understand what options are available for routing, and how to add a country
-  selector component to your app and how to set up links that work across
+  You can use Markets in a variety of ways. In this recipe,
+  you'll set up basic localization support for your Hydrogen store,
+  learn what options are available for routing, add a country
+  selector component to your app, and set up links that work across
   localized versions of your store.
+
+  There are several ways to implement localization in your Shopify Hydrogen
+  store, and the approach you take will depend on your project's
+  requirements. This recipe uses **URL-based localization**, which makes 
+  market information visible in the URL. This provides two key benefits:
+
+  - It's transparent to search engine crawlers.
+
+  - It allows each localized version of your store to be properly indexed.
+
+
+  This approach is typically implemented in two ways:
+
+
+  1. Path-based localization (recommended)
+      - **Example:** `example.com/fr-ca/products`
+      - **Implementation:** Requires adding a locale parameter to your routes
+        - Rename `routes/_index.tsx` to `routes/($locale)._index.tsx`
+      - **Advantages:** No infrastructure changes needed
+      - **Considerations:** Requires additional code to handle link formatting throughout your application
+  2. Subdomain or top-level domain localization
+      - **Example:** `fr-ca.example.com/products` (or `example.fr/products`)
+      - **Implementation:** Requires infrastructure configuration
+      - **Advantages:** Maintains consistent URL structure across localized stores
+      - **Considerations:** More complex setup at the infrastructure level
+
+  Although you can use other methods for localization (like cookies or HTTP headers), 
+  these approaches have one significant disadvantage: they're
+  not visible to search engine crawlers. This can negatively impact your
+  SEO for different markets.
+
+
+  In this recipe, we'll implement **path-based localization**.
+
 notes:
   - This recipe is particularly useful for existing Hydrogen projects. If you
     need to set up a brand new Hydrogen app, you can get a solid foundation by
-    selecting the localization options when setting up your new project via the
+    selecting the localization options when setting up your new project using the
     Shopify CLI. You can also use `h2 setup markets` to add localization support
     to your new Hydrogen app.
 requirements: >
-  - Set up your store's regions and languages via [Shopify
+  - Set up your store's regions and languages using [Shopify
   Markets](https://help.shopify.com/en/manual/markets).
 
   - Configure your products appropriately for each market.
@@ -52,80 +84,30 @@ deletedFiles:
 steps:
   - type: INFO
     step: 1
-    name: "Decide what localization method to use: path-based localization,
-      subdomain-based localization, …?"
-    description: >
-      There are several ways to implement localization in your Shopify Hydrogen
-      store, and the approach you take will depend on your project's
-      requirements.
-
-
-      Each localization method offers different trade-offs:
-
-
-      **URL-Based Localization (Recommended)**
-
-
-      URL-based approaches make market information visible in the URL, which
-      provides two key benefits:
-
-      - It's transparent to search engine crawlers
-
-      - It allows each localized version of your store to be properly indexed
-
-
-      This approach can be implemented usually in two ways:
-
-
-      1. Path-Based Localization
-          - **Example:** `example.com/fr-ca/products`
-          - **Implementation:** Requires adding a locale parameter to your routes
-            - Rename `routes/_index.tsx` to `routes/($locale)._index.tsx`
-          - **Advantages:** No infrastructure changes needed
-          - **Considerations:** Requires additional code to handle link formatting throughout your application
-      2. Subdomain or Top-Level Domain Localization
-          - **Example:** `fr-ca.example.com/products` (or `example.fr/products`)
-          - **Implementation:** Requires infrastructure configuration
-          - **Advantages:** Maintains consistent URL structure across localized stores
-          - **Considerations:** More complex setup at the infrastructure level
-
-      **Alternative Approaches**
-
-
-      While you could use other methods like cookies or HTTP headers for
-      localization, these approaches have a significant disadvantage: they're
-      not visible to search engine crawlers, which can negatively impact your
-      SEO for different markets.
-
-
-      💡 _**For the remainder of this recipe, we'll focus on implementing
-      path-based localization.**_
-  - type: INFO
-    step: 2
     name: Add localization utilities and update core components
     description: >
-      Create utilities to handle localization and country selection, and update
+      In this section, we'll create utilities to handle localization and country selection, and update
       the core components to use these utilities.
   - type: NEW_FILE
-    step: 2.1
+    step: 1.1
     name: Create a CountrySelector component
     description: >
-      A component that displays a country selector inside the Header.
+      This component displays a country selector inside the Header.
 
 
       To handle redirects, use a `Fetcher` that updates the cart buyer identity,
-      that will eventually redirect to the localized root of the app.
+      which eventually redirects to the localized root of the app.
     ingredients:
       - path: templates/skeleton/app/components/CountrySelector.tsx
   - type: NEW_FILE
-    step: 2.2
+    step: 1.2
     name: Create a Link wrapper component
     description: Create a wrapper component around the Remix `Link` component that
       prepends the selected locale path prefix (if any) to the actual links.
     ingredients:
       - path: templates/skeleton/app/components/Link.tsx
   - type: NEW_FILE
-    step: 2.3
+    step: 1.3
     name: Create i18n helpers
     description: >
       - Create a helper function to get locale information from the context, and
@@ -136,7 +118,7 @@ steps:
     ingredients:
       - path: templates/skeleton/app/lib/i18n.ts
   - type: PATCH
-    step: 2.4
+    step: 1.4
     name: Use the new Link component in the ProductItem component
     description: >
       Update the `ProductItem` component to use the `Link` component from the
@@ -145,23 +127,23 @@ steps:
       - file: app/components/ProductItem.tsx
         patchFile: ProductItem.tsx.8ddc67.patch
   - type: PATCH
-    step: 2.5
+    step: 1.5
     name: Add the selected locale to the context
     description: |
-      Detect the locale from the URL path, and add it to the Hydrogencontext.
+      Detect the locale from the URL path, and add it to the HydrogenContext.
     diffs:
       - file: app/lib/context.ts
         patchFile: context.ts.12ce79.patch
   - type: PATCH
-    step: 2.6
+    step: 1.6
     name: Add the CountrySelector component to the Header
     description: |
-      Add a CountrySelector component to the Header.
+      This adds a country selector component to the navigation.
     diffs:
       - file: app/components/Header.tsx
         patchFile: Header.tsx.05d0c2.patch
   - type: PATCH
-    step: 2.7
+    step: 1.7
     name: Add the selected locale to the root route
     description: |
       - Include the selected locale in the root route's loader data.
@@ -172,21 +154,24 @@ steps:
       - file: app/root.tsx
         patchFile: root.tsx.53a6d3.patch
   - type: INFO
-    step: 3
+    step: 2
     name: Localizing the individual routes
-  - type: INFO
-    step: 3.1
-    name: Add language splat to the desired route's
     description: >
-      If you're going with path-based localization, you should add a language
-      splat to your localized routes, for example renaming `routes/_index.tsx`
-      to `routes/($locale)._index.tsx`.
+      In this section, we'll add localization to the individual routes using the
+      language splat.
+  - type: INFO
+    step: 2.1
+    name: Add language splat to the desired routes
+    description: >
+      To implement path-based localization, add a language
+      splat to your localized routes (for example, renaming `routes/_index.tsx`
+      to `routes/($locale)._index.tsx`).
 
 
-      For brevity, in this example we only focused on two files – the index page
-      and the product page; however this should be done for all the app routes.
+      For brevity, this example only includes changes to two files: the index page
+      and the product page. However, this should be done for all the app routes.
   - type: NEW_FILE
-    step: 3.2
+    step: 2.2
     name: Add localization to the home page
     description: >
       - Add the splat to the home page route.
@@ -197,14 +182,14 @@ steps:
       - path: templates/skeleton/app/routes/($locale)._index.tsx
         renamedFrom: templates/skeleton/app/routes/_index.tsx
   - type: NEW_FILE
-    step: 3.3
+    step: 2.3
     name: Add localization to the cart page
     description: Add the splat to the cart page route.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).cart.tsx
         renamedFrom: templates/skeleton/app/routes/cart.tsx
   - type: NEW_FILE
-    step: 3.4
+    step: 2.4
     name: Add localization to the product page
     description: >
       - Add the splat to the product page route.
@@ -214,7 +199,13 @@ steps:
     ingredients:
       - path: templates/skeleton/app/routes/($locale).products.$handle.tsx
         renamedFrom: templates/skeleton/app/routes/products.$handle.tsx
-nextSteps: null
+nextSteps: >
+  - Test your implementation by going to your store and selecting a different
+  market from the country selector.
+
+  - Refer to the [Shopify
+  Help Center](https://help.shopify.com/en/manual/markets) for
+  more information on how to optimize and manage your international markets.
 llms:
   userQueries: []
   troubleshooting: []
