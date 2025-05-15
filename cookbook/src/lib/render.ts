@@ -112,6 +112,11 @@ export function makeReadmeBlocks(
       ? [mdHeading(2, 'Requirements'), mdParagraph(recipe.requirements)]
       : [];
 
+  const markdownNextSteps =
+    recipe.nextSteps != null
+      ? [mdHeading(2, 'Next Steps'), mdParagraph(recipe.nextSteps)]
+      : [];
+
   const blocks: MDBlock[] = [
     markdownTitle,
     markdownDescription,
@@ -120,6 +125,7 @@ export function makeReadmeBlocks(
     ...markdownIngredients,
     ...markdownSteps,
     ...markdownDeletedFiles,
+    ...markdownNextSteps,
   ];
 
   return blocks;

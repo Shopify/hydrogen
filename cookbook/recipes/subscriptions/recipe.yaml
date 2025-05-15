@@ -184,6 +184,14 @@ steps:
       Add styles for the Subscriptions page.
     ingredients:
       - templates/skeleton/app/styles/account-subscriptions.css
+nextSteps: >
+  - Test your implementation by going to your store and adding a
+  subscription-based product to the cart. Make sure that the product's
+  subscription details appear on the product page and in the cart.
+
+  - (Optional) [Place a test
+  order](https://help.shopify.com/en/manual/checkout-settings/test-orders) to
+  see how orders for subscription-based products appear in your Shopify admin.
 llms:
   userQueries:
     - How do I add subscriptions to my Hydrogen storefront?
@@ -199,4 +207,4 @@ llms:
     - issue: I'm not seeing the subscription details on my cart line items.
       solution: Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
-commit: bd55b241191304945704c0b9ef278e945c55d3da
+commit: 90f894418e0b37dc31b5f428fad08aaa98163cde
