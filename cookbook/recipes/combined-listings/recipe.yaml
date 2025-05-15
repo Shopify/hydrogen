@@ -83,7 +83,7 @@ steps:
     description: Create a new `combined-listings.ts` file that contains utilities
       and settings for handling combined listings.
     ingredients:
-      - templates/skeleton/app/lib/combined-listings.ts
+      - path: templates/skeleton/app/lib/combined-listings.ts
   - type: PATCH
     step: 4
     name: Update the ProductForm component
@@ -204,4 +204,4 @@ llms:
       solution: Make sure to tag combined listing parent products in the Shopify admin
         and use that tag to filter out combined listings from the product list
         in the GraphQL query.
-commit: 90f894418e0b37dc31b5f428fad08aaa98163cde
+commit: c58ddde879b8f1f4c14893ee7cf3db76dee00ae6
