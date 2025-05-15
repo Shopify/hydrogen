@@ -29,7 +29,8 @@ ingredients:
   - path: templates/skeleton/app/components/BundleBadge.tsx
     description: A badge displayed on bundle product listings.
   - path: templates/skeleton/app/components/BundledVariants.tsx
-    description: A component that wraps the variants of a bundle product in a single
+    description:
+      A component that wraps the variants of a bundle product in a single
       product listing.
 deletedFiles: []
 steps:
@@ -49,14 +50,15 @@ steps:
       Create a new BundleBadge component to be displayed on bundle product
       listings.
     ingredients:
-      - templates/skeleton/app/components/BundleBadge.tsx
+      - path: templates/skeleton/app/components/BundleBadge.tsx
   - type: NEW_FILE
     step: 3
     name: Create a new BundledVariants component
-    description: Create a new `BundledVariants` component that wraps the variants of
+    description:
+      Create a new `BundledVariants` component that wraps the variants of
       a bundle product in a single product listing.
     ingredients:
-      - templates/skeleton/app/components/BundledVariants.tsx
+      - path: templates/skeleton/app/components/BundledVariants.tsx
   - type: PATCH
     step: 4
     name: Update the product fragment to query for bundles and display
@@ -145,14 +147,17 @@ llms:
     - How do I detect if a product is a bundle?
   troubleshooting:
     - issue: I'm not seeing product bundles on my storefront.
-      solution: Make sure you've installed the Shopify Bundles app and set up product
+      solution:
+        Make sure you've installed the Shopify Bundles app and set up product
         bundles in your Shopify admin.
     - issue: I'm not seeing product bundle badges on product pages.
-      solution: Make sure you've installed the Shopify Bundles app and set up product
+      solution:
+        Make sure you've installed the Shopify Bundles app and set up product
         bundles in your Shopify admin. Then make sure you've updated the product
         fragment to query for bundles and display BundledVariants.
     - issue: I'm not seeing the product bundle badges on my cart line items.
-      solution: Make sure you've installed the Shopify Bundles app and set up product
+      solution:
+        Make sure you've installed the Shopify Bundles app and set up product
         bundles in your Shopify admin. Then make sure you've updated the cart
         fragment to query for bundles.
 commit: 90f894418e0b37dc31b5f428fad08aaa98163cde
