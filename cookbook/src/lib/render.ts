@@ -187,8 +187,9 @@ export function renderStep(
       return [];
     }
 
+    const baseHeadingLevel = 4;
     return step.diffs.flatMap((diff) => {
-      const headingLevel = 4 + (isSubstep(step) ? 1 : 0);
+      const headingLevel = baseHeadingLevel + (isSubstep(step) ? 1 : 0);
 
       const patchFile = path.join(patchesDir, diff.patchFile);
       const rawPatch = fs.readFileSync(patchFile, 'utf8').trim();
@@ -243,8 +244,9 @@ export function renderStep(
     const collapsed = options.collapseDiffs === true;
 
     let blocks: MDBlock[] = [];
+    const baseHeadingLevel = 4;
     for (const ingredient of step.ingredients) {
-      const headingLevel = 4 + (isSubstep(step) ? 1 : 0);
+      const headingLevel = baseHeadingLevel + (isSubstep(step) ? 1 : 0);
 
       const link =
         hydrogenRepoRecipeBaseURL({
@@ -275,8 +277,8 @@ export function renderStep(
     return blocks;
   }
 
-  const headingLevel =
-    (format === 'github' ? 3 : 2) + (isSubstep(step) ? 1 : 0);
+  const baseHeadingLevel = format === 'github' ? 3 : 2;
+  const headingLevel = baseHeadingLevel + (isSubstep(step) ? 1 : 0);
 
   const markdownStep: MDBlock[] = [
     mdHeading(headingLevel, `Step ${step.step}: ${step.name}`),
