@@ -34,7 +34,8 @@ ingredients:
   - path: templates/skeleton/app/components/CountrySelector.tsx
     description: A component that displays a country selector inside the Header.
   - path: templates/skeleton/app/components/Link.tsx
-    description: A wrapper around the Remix Link component that uses the selected
+    description:
+      A wrapper around the Remix Link component that uses the selected
       locale path prefix.
   - path: templates/skeleton/app/lib/i18n.ts
     description: A helper function to get locale information from the context, a
@@ -52,8 +53,8 @@ deletedFiles:
 steps:
   - type: INFO
     step: 1
-    name: "Decide what localization method to use: path-based localization,
-      subdomain-based localization, …?"
+    name: 'Decide what localization method to use: path-based localization,
+      subdomain-based localization, …?'
     description: >
       There are several ways to implement localization in your Shopify Hydrogen
       store, and the approach you take will depend on your project's
@@ -120,7 +121,8 @@ steps:
   - type: NEW_FILE
     step: 2.2
     name: Create a Link wrapper component
-    description: Create a wrapper component around the Remix `Link` component that
+    description:
+      Create a wrapper component around the Remix `Link` component that
       prepends the selected locale path prefix (if any) to the actual links.
     ingredients:
       - path: templates/skeleton/app/components/Link.tsx
@@ -188,21 +190,25 @@ steps:
   - type: NEW_FILE
     step: 3.2
     name: Add localization to the home page
-    description: A route that renders a localized version of the home page.
+    description: |
+      - Add the splat to the home page route.
+      - Use the new `Link` component as a drop-in replacement for the existing Remix counterpart.
     ingredients:
       - path: templates/skeleton/app/routes/($locale)._index.tsx
         renamedFrom: templates/skeleton/app/routes/_index.tsx
   - type: NEW_FILE
     step: 3.3
     name: Add localization to the cart page
-    description: A localized cart route.
+    description: Add the splat to the cart page route.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).cart.tsx
         renamedFrom: templates/skeleton/app/routes/cart.tsx
   - type: NEW_FILE
     step: 3.4
     name: Add localization to the product page
-    description: A route that renders a localized version of the product page.
+    description: |
+      - Add the splat to the product page route.
+      - Update the `meta` function to also update the canonical URL to use the localized prefix.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).products.$handle.tsx
         renamedFrom: templates/skeleton/app/routes/products.$handle.tsx

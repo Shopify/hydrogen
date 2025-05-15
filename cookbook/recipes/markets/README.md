@@ -424,7 +424,8 @@ For brevity, in this example we only focused on two files – the index page and
 
 #### Step 3.2: Add localization to the home page
 
-A route that renders a localized version of the home page.
+- Add the splat to the home page route.
+- Use the new `Link` component as a drop-in replacement for the existing Remix counterpart.
 
 > [!NOTE]
 > Rename `app/routes/_index.tsx` to `app/routes/($locale)._index.tsx`
@@ -609,7 +610,7 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
 
 #### Step 3.3: Add localization to the cart page
 
-A localized cart route.
+Add the splat to the cart page route.
 
 > [!NOTE]
 > Rename `app/routes/cart.tsx` to `app/routes/($locale).cart.tsx`
@@ -743,7 +744,8 @@ export default function Cart() {
 
 #### Step 3.4: Add localization to the product page
 
-A route that renders a localized version of the product page.
+- Add the splat to the product page route.
+- Update the `meta` function to also update the canonical URL to use the localized prefix.
 
 > [!NOTE]
 > Rename `app/routes/products.$handle.tsx` to `app/routes/($locale).products.$handle.tsx`
