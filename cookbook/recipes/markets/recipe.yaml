@@ -34,8 +34,7 @@ ingredients:
   - path: templates/skeleton/app/components/CountrySelector.tsx
     description: A component that displays a country selector inside the Header.
   - path: templates/skeleton/app/components/Link.tsx
-    description:
-      A wrapper around the Remix Link component that uses the selected
+    description: A wrapper around the Remix Link component that uses the selected
       locale path prefix.
   - path: templates/skeleton/app/lib/i18n.ts
     description: A helper function to get locale information from the context, a
@@ -53,7 +52,8 @@ deletedFiles:
 steps:
   - type: INFO
     step: 1
-    name: 'Decide what localization method to use: path-based localization, subdomain-based localization, …?'
+    name: "Decide what localization method to use: path-based localization,
+      subdomain-based localization, …?"
     description: >
       There are several ways to implement localization in your Shopify Hydrogen
       store, and the approach you take will depend on your project's
@@ -103,31 +103,36 @@ steps:
   - type: INFO
     step: 2
     name: Add localization utilities and update core components
-    description: |
-      Create utilities to handle localization and country selection, and update the core components to use these utilities.
+    description: >
+      Create utilities to handle localization and country selection, and update
+      the core components to use these utilities.
   - type: NEW_FILE
     step: 2.1
     name: Create a CountrySelector component
-    description: |
+    description: >
       A component that displays a country selector inside the Header.
 
-      To handle redirects, use a `Fetcher` that updates the cart buyer identity, that will eventually redirect to the localized root of the app.
+
+      To handle redirects, use a `Fetcher` that updates the cart buyer identity,
+      that will eventually redirect to the localized root of the app.
     ingredients:
       - path: templates/skeleton/app/components/CountrySelector.tsx
   - type: NEW_FILE
     step: 2.2
     name: Create a Link wrapper component
-    description: Create a wrapper component around the Remix `Link` component that prepends the selected locale path prefix (if any) to the actual links.
+    description: Create a wrapper component around the Remix `Link` component that
+      prepends the selected locale path prefix (if any) to the actual links.
     ingredients:
       - path: templates/skeleton/app/components/Link.tsx
   - type: NEW_FILE
     step: 2.3
     name: Create i18n helpers
-    description: |
-      - Create a helper function to get locale information from the context, and a
-      hook to retrieve the selected locale.
-      - Define a default locale that will be used as a fallback when no market is explicitly
-      selected.
+    description: >
+      - Create a helper function to get locale information from the context, and
+      a hook to retrieve the selected locale.
+
+      - Define a default locale that will be used as a fallback when no market
+      is explicitly selected.
     ingredients:
       - path: templates/skeleton/app/lib/i18n.ts
   - type: PATCH
@@ -205,4 +210,4 @@ nextSteps: null
 llms:
   userQueries: []
   troubleshooting: []
-commit: fbc7d1228f1a9c50a0192e1b51a7bb6a35c852b5
+commit: c58ddde879b8f1f4c14893ee7cf3db76dee00ae6

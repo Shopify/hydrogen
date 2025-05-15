@@ -52,7 +52,6 @@ understand what options are available for routing, and how to add a country
 selector component to your app and how to set up links that work across
 localized versions of your store.
 
-
 ## Notes
 
 > [!NOTE]
@@ -64,12 +63,60 @@ localized versions of your store.
 - Configure your products appropriately for each market.
 - Make sure your Hydrogen app is configured to use a default `language` and `country code`. They will be used as the fallback when no market is explicitly selected.
 
-
 ## New files added to the template by this recipe
 
-### templates/skeleton/app/components/CountrySelector.tsx
+- app/components/CountrySelector.tsx
+- app/components/Link.tsx
+- app/lib/i18n.ts
+- app/routes/($locale)._index.tsx
+- app/routes/($locale).cart.tsx
+- app/routes/($locale).products.$handle.tsx
+
+## Steps
+
+### Step 1: Decide what localization method to use: path-based localization, subdomain-based localization, …?
+
+There are several ways to implement localization in your Shopify Hydrogen store, and the approach you take will depend on your project's requirements.
+
+Each localization method offers different trade-offs:
+
+**URL-Based Localization (Recommended)**
+
+URL-based approaches make market information visible in the URL, which provides two key benefits:
+- It's transparent to search engine crawlers
+- It allows each localized version of your store to be properly indexed
+
+This approach can be implemented usually in two ways:
+
+1. Path-Based Localization
+    - **Example:** `example.com/fr-ca/products`
+    - **Implementation:** Requires adding a locale parameter to your routes
+      - Rename `routes/_index.tsx` to `routes/($locale)._index.tsx`
+    - **Advantages:** No infrastructure changes needed
+    - **Considerations:** Requires additional code to handle link formatting throughout your application
+2. Subdomain or Top-Level Domain Localization
+    - **Example:** `fr-ca.example.com/products` (or `example.fr/products`)
+    - **Implementation:** Requires infrastructure configuration
+    - **Advantages:** Maintains consistent URL structure across localized stores
+    - **Considerations:** More complex setup at the infrastructure level
+
+**Alternative Approaches**
+
+While you could use other methods like cookies or HTTP headers for localization, these approaches have a significant disadvantage: they're not visible to search engine crawlers, which can negatively impact your SEO for different markets.
+
+💡 _**For the remainder of this recipe, we'll focus on implementing path-based localization.**_
+
+### Step 2: Add localization utilities and update core components
+
+Create utilities to handle localization and country selection, and update the core components to use these utilities.
+
+#### Step 2.1: Create a CountrySelector component
 
 A component that displays a country selector inside the Header.
+
+To handle redirects, use a `Fetcher` that updates the cart buyer identity, that will eventually redirect to the localized root of the app.
+
+##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/c58ddde879b8f1f4c14893ee7cf3db76dee00ae6/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
 
 ```tsx
 import {Form} from '@remix-run/react';
@@ -144,9 +191,11 @@ const LocaleLink = ({locale}: {locale: Locale}) => {
 
 ```
 
-### templates/skeleton/app/components/Link.tsx
+#### Step 2.2: Create a Link wrapper component
 
-A wrapper around the Remix Link component that uses the selected locale path prefix.
+Create a wrapper component around the Remix `Link` component that prepends the selected locale path prefix (if any) to the actual links.
+
+##### File: [Link.tsx](https://github.com/Shopify/hydrogen/blob/c58ddde879b8f1f4c14893ee7cf3db76dee00ae6/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
 
 ```tsx
 import {Link as RemixLink} from '@remix-run/react';
@@ -164,9 +213,12 @@ export function Link({...props}: RemixLinkProps) {
 
 ```
 
-### templates/skeleton/app/lib/i18n.ts
+#### Step 2.3: Create i18n helpers
 
-A helper function to get locale information from the context, a hook to retrieve the selected locale, and a list of available locales.
+- Create a helper function to get locale information from the context, and a hook to retrieve the selected locale.
+- Define a default locale that will be used as a fallback when no market is explicitly selected.
+
+##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/c58ddde879b8f1f4c14893ee7cf3db76dee00ae6/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
 
 ```ts
 import {useMatches} from '@remix-run/react';
@@ -226,9 +278,171 @@ export function useSelectedLocale(): Locale | null {
 
 ```
 
-### templates/skeleton/app/routes/($locale)._index.tsx
+#### Step 2.4: Use the new Link component in the ProductItem component
+
+Update the `ProductItem` component to use the `Link` component from the `app/components/Link.tsx` file.
+
+##### File: /app/components/ProductItem.tsx
+
+```diff
+@@ -1,4 +1,3 @@
+-import {Link} from '@remix-run/react';
+ import {Image, Money} from '@shopify/hydrogen';
+ import type {
+   ProductItemFragment,
+@@ -6,6 +5,7 @@ import type {
+   RecommendedProductFragment,
+ } from 'storefrontapi.generated';
+ import {useVariantUrl} from '~/lib/variants';
++import {Link} from './Link';
+ 
+ export function ProductItem({
+   product,
+```
+
+#### Step 2.5: Add the selected locale to the context
+
+Detect the locale from the URL path, and add it to the Hydrogencontext.
+
+##### File: /app/lib/context.ts
+
+```diff
+@@ -1,6 +1,7 @@
+ import {createHydrogenContext} from '@shopify/hydrogen';
+ import {AppSession} from '~/lib/session';
+ import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
++import {getLocaleFromRequest} from './i18n';
+ 
+ /**
+  * The context implementation is separate from server.ts
+@@ -24,13 +25,15 @@ export async function createAppLoadContext(
+     AppSession.init(request, [env.SESSION_SECRET]),
+   ]);
+ 
++  const i18n = getLocaleFromRequest(request);
++
+   const hydrogenContext = createHydrogenContext({
+     env,
+     request,
+     cache,
+     waitUntil,
+     session,
+-    i18n: {language: 'EN', country: 'US'},
++    i18n,
+     cart: {
+       queryFragment: CART_QUERY_FRAGMENT,
+     },
+```
+
+#### Step 2.6: Add the CountrySelector component to the Header
+
+Add a CountrySelector component to the Header.
+
+##### File: /app/components/Header.tsx
+
+```diff
+@@ -7,6 +7,7 @@ import {
+ } from '@shopify/hydrogen';
+ import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
+ import {useAside} from '~/components/Aside';
++import {CountrySelector} from './CountrySelector';
+ 
+ interface HeaderProps {
+   header: HeaderQuery;
+@@ -77,6 +78,7 @@ export function HeaderMenu({
+           item.url.includes(primaryDomainUrl)
+             ? new URL(item.url).pathname
+             : item.url;
++
+         return (
+           <NavLink
+             className="header-menu-item"
+@@ -102,6 +104,7 @@ function HeaderCtas({
+   return (
+     <nav className="header-ctas" role="navigation">
+       <HeaderMenuMobileToggle />
++      <CountrySelector />
+       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
+         <Suspense fallback="Sign in">
+           <Await resolve={isLoggedIn} errorElement="Sign in">
+```
+
+#### Step 2.7: Add the selected locale to the root route
+
+- Include the selected locale in the root route's loader data.
+
+- Add a key prop to the `PageLayout` component to make sure it re-renders
+when the locale changes.
+
+##### File: /app/root.tsx
+
+```diff
+@@ -74,9 +74,12 @@ export async function loader(args: LoaderFunctionArgs) {
+ 
+   const {storefront, env} = args.context;
+ 
++  const {i18n} = storefront;
++
+   return {
+     ...deferredData,
+     ...criticalData,
++    selectedLocale: args.context.storefront.i18n,
+     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
+     shop: getShopAnalytics({
+       storefront,
+@@ -87,8 +90,8 @@ export async function loader(args: LoaderFunctionArgs) {
+       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+       withPrivacyBanner: false,
+       // localize the privacy banner
+-      country: args.context.storefront.i18n.country,
+-      language: args.context.storefront.i18n.language,
++      country: i18n.country,
++      language: i18n.language,
+     },
+   };
+ }
+@@ -105,6 +108,8 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
+       cache: storefront.CacheLong(),
+       variables: {
+         headerMenuHandle: 'main-menu', // Adjust to your header menu handle
++        country: storefront.i18n.country,
++        language: storefront.i18n.language,
+       },
+     }),
+     // Add other queries here, so that they are loaded in parallel
+@@ -162,7 +167,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
+             shop={data.shop}
+             consent={data.consent}
+           >
+-            <PageLayout {...data}>{children}</PageLayout>
++            <PageLayout
++              key={`${data.selectedLocale.language}-${data.selectedLocale.country}`}
++              {...data}
++            >
++              {children}
++            </PageLayout>
+           </Analytics.Provider>
+         ) : (
+           children
+```
+
+### Step 3: Localizing the individual routes
+
+
+
+#### Step 3.1: Add language splat to the desired route's
+
+If you're going with path-based localization, you should add a language splat to your localized routes, for example renaming `routes/_index.tsx` to `routes/($locale)._index.tsx`.
+
+For brevity, in this example we only focused on two files – the index page and the product page; however this should be done for all the app routes.
+
+#### Step 3.2: Add localization to the home page
 
 A route that renders a localized version of the home page.
+
+Rename `app/routes/_index.tsx` to `app/routes/($locale)._index.tsx`
+
+##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/c58ddde879b8f1f4c14893ee7cf3db76dee00ae6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
 
 ```tsx
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
@@ -402,9 +616,13 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
 
 ```
 
-### templates/skeleton/app/routes/($locale).cart.tsx
+#### Step 3.3: Add localization to the cart page
 
 A localized cart route.
+
+Rename `app/routes/cart.tsx` to `app/routes/($locale).cart.tsx`
+
+##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/c58ddde879b8f1f4c14893ee7cf3db76dee00ae6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
 
 ```tsx
 import {type MetaFunction, useLoaderData} from '@remix-run/react';
@@ -527,9 +745,13 @@ export default function Cart() {
 
 ```
 
-### templates/skeleton/app/routes/($locale).products.$handle.tsx
+#### Step 3.4: Add localization to the product page
 
 A route that renders a localized version of the product page.
+
+Rename `app/routes/products.$handle.tsx` to `app/routes/($locale).products.$handle.tsx`
+
+##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/c58ddde879b8f1f4c14893ee7cf3db76dee00ae6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
 
 ```tsx
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
@@ -784,210 +1006,6 @@ const PRODUCT_QUERY = `#graphql
   ${PRODUCT_FRAGMENT}
 ` as const;
 
-```
-
-## Steps
-
-### Step 1: Path-based localization, subdomain-based localization, …?
-
-There are several ways to implement localization in your Shopify Hydrogen store, and the approach you take will depend on your project's requirements.
-
-Each localization method offers different trade-offs:
-
-**URL-Based Localization (Recommended)**
-
-URL-based approaches make market information visible in the URL, which provides two key benefits:
-- It's transparent to search engine crawlers
-- It allows each localized version of your store to be properly indexed
-
-This approach can be implemented usually in two ways:
-
-1. Path-Based Localization
-    - **Example:** `example.com/fr-ca/products`
-    - **Implementation:** Requires adding a locale parameter to your routes
-      - Rename `routes/_index.tsx` to `routes/($locale)._index.tsx`
-    - **Advantages:** No infrastructure changes needed
-    - **Considerations:** Requires additional code to handle link formatting throughout your application
-2. Subdomain or Top-Level Domain Localization
-    - **Example:** `fr-ca.example.com/products` (or `example.fr/products`)
-    - **Implementation:** Requires infrastructure configuration
-    - **Advantages:** Maintains consistent URL structure across localized stores
-    - **Considerations:** More complex setup at the infrastructure level
-
-**Alternative Approaches**
-
-While you could use other methods like cookies or HTTP headers for localization, these approaches have a significant disadvantage: they're not visible to search engine crawlers, which can negatively impact your SEO for different markets.
-
-💡 _**For the remainder of this recipe, we'll focus on implementing path-based localization.**_
-
-
-### Step 2: Add language splat to the desired route's
-
-If you're going with path-based localization, you should add a language
-splat to your localized routes, for example renaming `routes/_index.tsx`
-to `routes/($locale)._index.tsx`.
-
-For brevity, in this example we only focused on two files – the index page
-and the product page; however this should be done for all the app routes.
-
-
-### Step 3: Add language splat to the desired route's
-
-If you're going with path-based localization, you should add a language splat to your localized routes, for example renaming `routes/_index.tsx` to `routes/($locale)._index.tsx`.
-
-For brevity, in this example we only focused on two files – the index page and the product page; however this should be done for all the app routes.
-
-
-### Step 4: Use the new Link component in the ProductItem component
-
-Update the `ProductItem` component to use the `Link` component from the `app/components/Link.tsx` file.
-
-
-#### File: /app/components/ProductItem.tsx
-
-```diff
-@@ -1,4 +1,3 @@
--import {Link} from '@remix-run/react';
- import {Image, Money} from '@shopify/hydrogen';
- import type {
-   ProductItemFragment,
-@@ -6,6 +5,7 @@ import type {
-   RecommendedProductFragment,
- } from 'storefrontapi.generated';
- import {useVariantUrl} from '~/lib/variants';
-+import {Link} from './Link';
- 
- export function ProductItem({
-   product,
-```
-
-### Step 5: Add the CountrySelector component to the Header
-
-Add a CountrySelector component to the Header.
-
-
-#### File: /app/components/Header.tsx
-
-```diff
-@@ -7,6 +7,7 @@ import {
- } from '@shopify/hydrogen';
- import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
- import {useAside} from '~/components/Aside';
-+import {CountrySelector} from './CountrySelector';
- 
- interface HeaderProps {
-   header: HeaderQuery;
-@@ -77,6 +78,7 @@ export function HeaderMenu({
-           item.url.includes(primaryDomainUrl)
-             ? new URL(item.url).pathname
-             : item.url;
-+
-         return (
-           <NavLink
-             className="header-menu-item"
-@@ -102,6 +104,7 @@ function HeaderCtas({
-   return (
-     <nav className="header-ctas" role="navigation">
-       <HeaderMenuMobileToggle />
-+      <CountrySelector />
-       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
-         <Suspense fallback="Sign in">
-           <Await resolve={isLoggedIn} errorElement="Sign in">
-```
-
-### Step 6: Add the selected locale to the context
-
-Detect the locale from the URL path, and add it to the Hydrogencontext.
-
-
-#### File: /app/lib/context.ts
-
-```diff
-@@ -1,6 +1,7 @@
- import {createHydrogenContext} from '@shopify/hydrogen';
- import {AppSession} from '~/lib/session';
- import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
-+import {getLocaleFromRequest} from './i18n';
- 
- /**
-  * The context implementation is separate from server.ts
-@@ -24,13 +25,15 @@ export async function createAppLoadContext(
-     AppSession.init(request, [env.SESSION_SECRET]),
-   ]);
- 
-+  const i18n = getLocaleFromRequest(request);
-+
-   const hydrogenContext = createHydrogenContext({
-     env,
-     request,
-     cache,
-     waitUntil,
-     session,
--    i18n: {language: 'EN', country: 'US'},
-+    i18n,
-     cart: {
-       queryFragment: CART_QUERY_FRAGMENT,
-     },
-```
-
-### Step 7: Add the selected locale to the root route
-
-- Include the selected locale in the root route's loader data.
-
-- Add a key prop to the `PageLayout` component to make sure it re-renders
-when the locale changes.
-
-
-#### File: /app/root.tsx
-
-```diff
-@@ -74,9 +74,12 @@ export async function loader(args: LoaderFunctionArgs) {
- 
-   const {storefront, env} = args.context;
- 
-+  const {i18n} = storefront;
-+
-   return {
-     ...deferredData,
-     ...criticalData,
-+    selectedLocale: args.context.storefront.i18n,
-     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
-     shop: getShopAnalytics({
-       storefront,
-@@ -87,8 +90,8 @@ export async function loader(args: LoaderFunctionArgs) {
-       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-       withPrivacyBanner: false,
-       // localize the privacy banner
--      country: args.context.storefront.i18n.country,
--      language: args.context.storefront.i18n.language,
-+      country: i18n.country,
-+      language: i18n.language,
-     },
-   };
- }
-@@ -105,6 +108,8 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
-       cache: storefront.CacheLong(),
-       variables: {
-         headerMenuHandle: 'main-menu', // Adjust to your header menu handle
-+        country: storefront.i18n.country,
-+        language: storefront.i18n.language,
-       },
-     }),
-     // Add other queries here, so that they are loaded in parallel
-@@ -162,7 +167,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
-             shop={data.shop}
-             consent={data.consent}
-           >
--            <PageLayout {...data}>{children}</PageLayout>
-+            <PageLayout
-+              key={`${data.selectedLocale.language}-${data.selectedLocale.country}`}
-+              {...data}
-+            >
-+              {children}
-+            </PageLayout>
-           </Analytics.Provider>
-         ) : (
-           children
 ```
 
 ## Deleted Files
