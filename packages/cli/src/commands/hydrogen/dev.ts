@@ -47,7 +47,6 @@ import {
   isViteProject,
   REMIX_COMPILER_ERROR_MESSAGE,
 } from '../../lib/vite-config.js';
-import {runClassicCompilerDev} from '../../lib/classic-compiler/dev.js';
 import {importVite} from '../../lib/import-utils.js';
 import {createEntryPointErrorHandler} from '../../lib/deps-optimizer.js';
 import {getCodeFormatOptions} from '../../lib/format-code.js';

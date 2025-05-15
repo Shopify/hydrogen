@@ -9,7 +9,6 @@ import {getProjectPaths, isClassicProject} from '../../../lib/remix-config.js';
 import {muteDevLogs} from '../../../lib/log.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {prepareDiffDirectory} from '../../../lib/template-diff.js';
-import {runClassicCompilerDebugCpu} from '../../../lib/classic-compiler/debug-cpu.js';
 import {setupResourceCleanup} from '../../../lib/resource-cleanup.js';
 import {createCpuStartupProfiler} from '../../../lib/cpu-profiler.js';
 import {runBuild} from '../build.js';

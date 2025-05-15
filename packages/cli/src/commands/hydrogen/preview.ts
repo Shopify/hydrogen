@@ -21,7 +21,6 @@ import {
   REMIX_COMPILER_ERROR_MESSAGE,
 } from '../../lib/vite-config.js';
 import {runBuild} from './build.js';
-import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 import {deferPromise} from '../../lib/defer.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';

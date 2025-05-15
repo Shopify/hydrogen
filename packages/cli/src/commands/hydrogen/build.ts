@@ -23,7 +23,6 @@ import {
   findReservedRoutes,
   warnReservedRoutes,
 } from '../../lib/route-validator.js';
-import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {hydrogenBundleAnalyzer} from '../../lib/bundle/vite-plugin.js';
 import {
   BUNDLE_ANALYZER_HTML_FILE,
