@@ -35,7 +35,6 @@ export default class Preview extends Command {
   static flags = {
     ...commonFlags.path,
     ...commonFlags.port,
-    ...commonFlags.legacyRuntime,
     ...commonFlags.env,
     ...commonFlags.envBranch,
     ...commonFlags.envFile,
@@ -98,7 +97,6 @@ export default class Preview extends Command {
 type PreviewOptions = {
   port?: number;
   directory?: string;
-  legacyRuntime?: boolean;
   env?: string;
   envBranch?: string;
   inspectorPort?: number;
@@ -115,7 +113,6 @@ type PreviewOptions = {
 export async function runPreview({
   port: appPort,
   directory,
-  legacyRuntime = false,
   env: envHandle,
   envBranch,
   inspectorPort,
@@ -195,7 +192,7 @@ export async function runPreview({
     appPort = await findPort(DEFAULT_APP_PORT);
   }
 
-  const assetsPort = legacyRuntime ? 0 : await findPort(appPort + 100);
+  const assetsPort = await findPort(appPort + 100);
 
   // Note: we don't need to add any asset prefix in preview because
   // we don't control the build at this point. However, the assets server
@@ -205,20 +202,17 @@ export async function runPreview({
 
   logInjectedVariables();
 
-  miniOxygen = await startMiniOxygen(
-    {
-      root,
-      appPort,
-      assetsPort,
-      env: allVariables,
-      buildPathClient,
-      buildPathWorkerFile,
-      inspectorPort,
-      debug,
-      watch,
-    },
-    legacyRuntime,
-  );
+  miniOxygen = await startMiniOxygen({
+    root,
+    appPort,
+    assetsPort,
+    env: allVariables,
+    buildPathClient,
+    buildPathWorkerFile,
+    inspectorPort,
+    debug,
+    watch,
+  });
 
   miniOxygen.showBanner({
     mode: 'preview',
