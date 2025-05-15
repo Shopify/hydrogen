@@ -208,20 +208,17 @@ export async function runClassicCompilerDev({
 
     const {allVariables, logInjectedVariables} = await envPromise;
 
-    miniOxygen = await startMiniOxygen(
-      {
-        root,
-        debug,
-        appPort,
-        assetsPort,
-        inspectorPort,
-        watch: !liveReload,
-        buildPathWorkerFile,
-        buildPathClient,
-        env: allVariables,
-      },
-      legacyRuntime,
-    );
+    miniOxygen = await startMiniOxygen({
+      root,
+      debug,
+      appPort,
+      assetsPort,
+      inspectorPort,
+      watch: !liveReload,
+      buildPathWorkerFile,
+      buildPathClient,
+      env: allVariables,
+    });
 
     logInjectedVariables();
 

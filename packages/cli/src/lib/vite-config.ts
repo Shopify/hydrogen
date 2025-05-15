@@ -13,6 +13,7 @@ import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
 import {hasRemixConfigFile} from './remix-config.js';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 import type {ResolvedConfig, UserConfig} from 'vite';
+import {ResolvedRemixConfig} from '@remix-run/dev';
 
 export const REMIX_COMPILER_ERROR_MESSAGE =
   "Classic Remix Compiler projects are no longer supported, please upgrade to Vite by running 'npx shopify hydrogen setup vite'";
