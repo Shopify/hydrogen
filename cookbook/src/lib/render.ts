@@ -280,7 +280,7 @@ export function renderStep(
       blocks.push(
         ...(renamedFrom != null
           ? [
-              mdParagraph(
+              mdNote(
                 `Rename \`${renamedFrom.replace(TEMPLATE_DIRECTORY, '')}\` to \`${ingredient.replace(TEMPLATE_DIRECTORY, '')}\``,
               ),
             ]

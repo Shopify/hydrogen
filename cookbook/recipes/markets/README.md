@@ -426,7 +426,8 @@ For brevity, in this example we only focused on two files – the index page and
 
 A route that renders a localized version of the home page.
 
-Rename `app/routes/_index.tsx` to `app/routes/($locale)._index.tsx`
+> [!NOTE]
+> Rename `app/routes/_index.tsx` to `app/routes/($locale)._index.tsx`
 
 ##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/c58ddde879b8f1f4c14893ee7cf3db76dee00ae6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
 
@@ -610,7 +611,8 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
 
 A localized cart route.
 
-Rename `app/routes/cart.tsx` to `app/routes/($locale).cart.tsx`
+> [!NOTE]
+> Rename `app/routes/cart.tsx` to `app/routes/($locale).cart.tsx`
 
 ##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/c58ddde879b8f1f4c14893ee7cf3db76dee00ae6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
 
@@ -743,7 +745,8 @@ export default function Cart() {
 
 A route that renders a localized version of the product page.
 
-Rename `app/routes/products.$handle.tsx` to `app/routes/($locale).products.$handle.tsx`
+> [!NOTE]
+> Rename `app/routes/products.$handle.tsx` to `app/routes/($locale).products.$handle.tsx`
 
 ##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/c58ddde879b8f1f4c14893ee7cf3db76dee00ae6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
 
