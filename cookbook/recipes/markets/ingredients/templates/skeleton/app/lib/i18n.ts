@@ -18,14 +18,22 @@ export const DEFAULT_LOCALE: Locale = {
 
 export function getLocaleFromRequest(request: Request): Locale {
   const url = new URL(request.url);
-  const firstPathPart = url.pathname.split('/')[1]?.toUpperCase() ?? '';
+
+  const firstPathPart = url.pathname
+    // take the first part of the pathname (split by /)
+    .split('/')
+    .at(1)
+    // replace the .data suffix, if present
+    ?.replace(/\.data$/, '')
+    // normalize to uppercase
+    ?.toUpperCase();
 
   type LocaleFromUrl = [Locale['language'], Locale['country']];
 
   let pathPrefix = '';
 
   // If the first path part is not a valid locale, return the default locale
-  if (!/^[A-Z]{2}-[A-Z]{2}$/i.test(firstPathPart)) {
+  if (firstPathPart == null || !/^[A-Z]{2}-[A-Z]{2}$/i.test(firstPathPart)) {
     return DEFAULT_LOCALE;
   }
 

@@ -1,7 +1,6 @@
-import {Link, useFetcher} from '@remix-run/react';
+import {Form} from '@remix-run/react';
 import {DEFAULT_LOCALE, Locale, useSelectedLocale} from '../lib/i18n';
 import {CartForm} from '@shopify/hydrogen';
-import {useCallback, useEffect, useState} from 'react';
 
 export function CountrySelector() {
   const selectedLocale = useSelectedLocale();
@@ -12,7 +11,7 @@ export function CountrySelector() {
       : 'Country';
 
   return (
-    <details style={{position: 'relative'}}>
+    <details style={{position: 'relative', cursor: 'pointer'}}>
       <summary>{label}</summary>
       <div
         style={{
@@ -44,51 +43,27 @@ export function CountrySelector() {
 }
 
 const LocaleLink = ({locale}: {locale: Locale}) => {
-  const selectedLocale = useSelectedLocale();
-  const fetcher = useFetcher();
-  const [updating, setUpdating] = useState(false);
-
-  const updateCartBuyerIdentity = useCallback(() => {
-    if (selectedLocale?.pathPrefix === locale.pathPrefix) {
-      return;
-    }
-    setUpdating(true);
-
-    const target = `${locale.pathPrefix.replace(/\/+$/, '')}/cart`;
-
-    const form = new FormData();
-    const variables = {
-      action: CartForm.ACTIONS.BuyerIdentityUpdate,
-      inputs: {
-        buyerIdentity: {
-          countryCode: locale.country.toUpperCase(),
-        },
-        redirectTo: target,
+  const action = `${locale.pathPrefix.replace(/\/+$/, '')}/cart`;
+  const variables = {
+    action: CartForm.ACTIONS.BuyerIdentityUpdate,
+    inputs: {
+      buyerIdentity: {
+        countryCode: locale.country.toUpperCase(),
       },
-    };
-    form.append('cartFormInput', JSON.stringify(variables));
-
-    // update the country code in the cart's buyer identity
-    fetcher.submit(form, {
-      method: 'POST',
-      action: target,
-    });
-  }, [fetcher, locale, selectedLocale]);
-
-  useEffect(() => {
-    if (updating && fetcher.state === 'loading') {
-      setUpdating(false);
-      window.location.replace(locale.pathPrefix);
-    }
-  }, [fetcher, updating, locale]);
+    },
+  };
 
   return (
-    <button
-      key={locale.country}
-      onClick={updateCartBuyerIdentity}
-      disabled={updating}
-    >
-      {locale.language}-{locale.country}
-    </button>
+    <Form method="POST" action={action}>
+      <input type="hidden" name="redirectTo" value={locale.pathPrefix} />
+      <input
+        type="hidden"
+        name="cartFormInput"
+        value={JSON.stringify(variables)}
+      />
+      <button type="submit">
+        {locale.language}-{locale.country}
+      </button>
+    </Form>
   );
 };

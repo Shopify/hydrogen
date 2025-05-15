@@ -1,4 +1,4 @@
-import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, type MetaFunction} from '@remix-run/react';
 import {
   getSelectedProductOptions,

@@ -27,14 +27,14 @@ localized versions of your store.
 
 _New files added to the template by this recipe._
 
-| File | Description |
-| --- | --- |
-| [app/components/CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx) | A component that displays a country selector inside the Header. |
-| [app/components/Link.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx) | A wrapper around the Remix Link component that uses the selected locale path prefix. |
-| [app/lib/i18n.ts](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts) | A helper function to get locale information from the context, a hook to retrieve the selected locale, and a list of available locales. |
-| [app/routes/($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx) | A route that renders a localized version of the home page. |
-| [app/routes/($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx) | A localized cart route. |
-| [app/routes/($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx) | A route that renders a localized version of the product page. |
+| File                                                                                                                                                                                                                             | Description                                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| [app/components/CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)               | A component that displays a country selector inside the Header.                                                                        |
+| [app/components/Link.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)                                     | A wrapper around the Remix Link component that uses the selected locale path prefix.                                                   |
+| [app/lib/i18n.ts](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)                                                     | A helper function to get locale information from the context, a hook to retrieve the selected locale, and a list of available locales. |
+| [app/routes/($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)                     | A route that renders a localized version of the home page.                                                                             |
+| [app/routes/($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)                         | A localized cart route.                                                                                                                |
+| [app/routes/($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/bd55b241191304945704c0b9ef278e945c55d3da/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx) | A route that renders a localized version of the product page.                                                                          |
 
 ## Steps
 
@@ -98,7 +98,6 @@ If you're going with path-based localization, you should add a language splat to
 
 For brevity, in this example we only focused on two files – the index page and the product page; however this should be done for all the app routes.
 
-
 ### Step 5: Use the new Link component in the ProductItem component
 
 Update the `ProductItem` component to use the `Link` component from the `app/components/Link.tsx` file.
@@ -120,7 +119,7 @@ index 62c64b50..81ff9ec9 100644
  } from 'storefrontapi.generated';
  import {useVariantUrl} from '~/lib/variants';
 +import {Link} from './Link';
- 
+
  export function ProductItem({
    product,
 ```
@@ -141,7 +140,7 @@ index 8a437a10..757808eb 100644
  import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
  import {useAside} from '~/components/Aside';
 +import {CountrySelector} from './CountrySelector';
- 
+
  interface HeaderProps {
    header: HeaderQuery;
 @@ -77,6 +78,7 @@ export function HeaderMenu({
@@ -178,13 +177,13 @@ index c424c511..b5d3737a 100644
  import {AppSession} from '~/lib/session';
  import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 +import {getLocaleFromRequest} from './i18n';
- 
+
  /**
   * The context implementation is separate from server.ts
 @@ -24,13 +25,15 @@ export async function createAppLoadContext(
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
- 
+
 +  const i18n = getLocaleFromRequest(request);
 +
    const hydrogenContext = createHydrogenContext({
@@ -215,9 +214,9 @@ index 3426476a..4f67b72b 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -74,9 +74,12 @@ export async function loader(args: LoaderFunctionArgs) {
- 
+
    const {storefront, env} = args.context;
- 
+
 +  const {i18n} = storefront;
 +
    return {
