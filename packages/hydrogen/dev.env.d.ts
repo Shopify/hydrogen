@@ -34,12 +34,12 @@ declare module 'react-router' {
     // declare additional Remix loader context here
   }
 
-  // TODO: remove this once we've migrated to `Route.LoaderArgs` instead for our loaders
+  // TODO: remove this once we've migrated our loaders to `Route.LoaderArgs`
   interface LoaderFunctionArgs {
     context: AppLoadContext;
   }
 
-  // TODO: remove this once we've migrated to `Route.ActionArgs` instead for our actions
+  // TODO: remove this once we've migrated our actions to `Route.ActionArgs`
   interface ActionFunctionArgs {
     context: AppLoadContext;
   }
