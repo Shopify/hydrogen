@@ -1,14 +1,9 @@
 import path from 'path';
-import {COOKBOOK_PATH, TEMPLATE_PATH} from './constants';
-import {
-  createDirectoryIfNotExists,
-  getPatchesDir,
-  recreateDirectory,
-} from './util';
+import {COOKBOOK_PATH, TEMPLATE_DIRECTORY} from './constants';
+import {createDirectoryIfNotExists, getPatchesDir} from './util';
 import {
   maybeMDBlock,
   MDBlock,
-  mdCode,
   mdFrontMatter,
   mdHeading,
   mdList,
@@ -18,7 +13,6 @@ import {
 } from './markdown';
 import {renderStep} from './render';
 import {loadRecipe, Recipe} from './recipe';
-import fs from 'fs';
 
 function renderRecipeRuleBlocks(
   recipeName: string,
@@ -98,42 +92,26 @@ Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
 
       // ingredients
       mdHeading(2, 'New files added to the template by this recipe'),
-      ...recipe.ingredients.flatMap((ingredient) => {
-        const contents = fs.readFileSync(
-          path.join(
-            COOKBOOK_PATH,
-            'recipes',
-            recipeName,
-            'ingredients',
-            ingredient.path,
-          ),
-          'utf8',
-        );
-        const extension = path.extname(ingredient.path).slice(1);
-        return [
-          mdHeading(3, ingredient.path),
-          mdParagraph(ingredient.description ?? ''),
-          mdCode(extension ?? '', contents, false),
-        ];
-      }),
+      mdList(
+        recipe.ingredients.map((ingredient) =>
+          ingredient.path.replace(TEMPLATE_DIRECTORY, ''),
+        ),
+      ),
 
       mdHeading(2, 'Steps'),
-      ...recipe.steps
-        .filter((step) => step.type !== 'COPY_INGREDIENTS')
-        .flatMap((step, index): MDBlock[] =>
-          renderStep(
-            step,
-            index,
-            recipe,
-            recipeName,
-            getPatchesDir(recipeName),
-            'github',
-            {
-              diffsRelativeToTemplate: true,
-              trimDiffHeaders: true,
-            },
-          ),
+      ...recipe.steps.flatMap((step): MDBlock[] =>
+        renderStep(
+          step,
+          recipe,
+          recipeName,
+          getPatchesDir(recipeName),
+          'github',
+          {
+            diffsRelativeToTemplate: true,
+            trimDiffHeaders: true,
+          },
         ),
+      ),
 
       ...(recipe.deletedFiles != null && recipe.deletedFiles.length > 0
         ? [
@@ -161,18 +139,4 @@ export function generateLLMsFiles(recipeName: string) {
   const blocks = renderRecipeRuleBlocks(recipeName, recipe, '*');
 
   serializeMDBlocksToFile(blocks, rulePath, 'github');
-}
-
-export function copyCursorRulesToSkeleton() {
-  console.log('📑 Moving Cursor rules to skeleton template…');
-
-  const skeletonRulesDir = path.join(TEMPLATE_PATH, '.cursor', 'rules');
-  recreateDirectory(skeletonRulesDir);
-
-  const rulesDir = path.join(COOKBOOK_PATH, '.cursor', 'rules');
-  const rules = fs.readdirSync(rulesDir);
-  rules.forEach((rule) => {
-    const rulePath = path.join(rulesDir, rule);
-    fs.copyFileSync(rulePath, path.join(skeletonRulesDir, rule));
-  });
 }

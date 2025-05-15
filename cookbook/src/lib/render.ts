@@ -19,7 +19,7 @@ import {
   mdTable,
   serializeMDBlocksToFile,
 } from './markdown';
-import {loadRecipe, Recipe, Step} from './recipe';
+import {isSubstep, loadRecipe, Recipe, Step} from './recipe';
 import {assertNever, getPatchesDir} from './util';
 
 // The number of lines to collapse a diff into a details block
@@ -88,12 +88,19 @@ export function makeReadmeBlocks(
     format,
   );
 
+  const deletedFilesThatWereNotRenamed = recipe.deletedFiles?.filter(
+    (file) =>
+      !recipe.steps.some((step) =>
+        step.ingredients?.some((ingredient) => ingredient.renamedFrom === file),
+      ),
+  );
   const markdownDeletedFiles =
-    recipe.deletedFiles != null && recipe.deletedFiles.length > 0
+    deletedFilesThatWereNotRenamed != null &&
+    deletedFilesThatWereNotRenamed.length > 0
       ? [
           mdHeading(2, 'Deleted Files'),
           mdList(
-            recipe.deletedFiles.map((file) => {
+            deletedFilesThatWereNotRenamed.map((file) => {
               const linkPrefix = hydrogenRepoFolderURL({
                 path: '',
                 hash: recipe.commit,
@@ -112,6 +119,11 @@ export function makeReadmeBlocks(
       ? [mdHeading(2, 'Requirements'), mdParagraph(recipe.requirements)]
       : [];
 
+  const markdownNextSteps =
+    recipe.nextSteps != null
+      ? [mdHeading(2, 'Next Steps'), mdParagraph(recipe.nextSteps)]
+      : [];
+
   const blocks: MDBlock[] = [
     markdownTitle,
     markdownDescription,
@@ -120,6 +132,7 @@ export function makeReadmeBlocks(
     ...markdownIngredients,
     ...markdownSteps,
     ...markdownDeletedFiles,
+    ...markdownNextSteps,
   ];
 
   return blocks;
@@ -160,8 +173,8 @@ function makeSteps(
   const markdownStepsHeader = mdHeading(2, 'Steps');
   return [
     ...(format === 'github' ? [markdownStepsHeader] : []),
-    ...steps.flatMap((step, index) =>
-      renderStep(step, index, recipe, recipeName, patchesDir, format, {
+    ...steps.flatMap((step) =>
+      renderStep(step, recipe, recipeName, patchesDir, format, {
         collapseDiffs: true,
         diffsRelativeToTemplate: format === 'shopify.dev',
         trimDiffHeaders: format === 'shopify.dev',
@@ -172,7 +185,6 @@ function makeSteps(
 
 export function renderStep(
   step: Step,
-  index: number,
   recipe: Recipe,
   recipeName: string,
   patchesDir: string,
@@ -188,7 +200,10 @@ export function renderStep(
       return [];
     }
 
+    const baseHeadingLevel = 4;
     return step.diffs.flatMap((diff) => {
+      const headingLevel = baseHeadingLevel + (isSubstep(step) ? 1 : 0);
+
       const patchFile = path.join(patchesDir, diff.patchFile);
       const rawPatch = fs.readFileSync(patchFile, 'utf8').trim();
 
@@ -213,13 +228,13 @@ export function renderStep(
       return [
         format === 'github'
           ? mdHeading(
-              4,
+              headingLevel,
               options.diffsRelativeToTemplate
                 ? `File: /${diff.file}`
                 : `File: ${mdLinkString(link, diff.file)}`,
             )
           : mdHeading(
-              4,
+              headingLevel,
               [
                 'File:',
                 mdLinkString(link, path.basename(diff.file)),
@@ -234,31 +249,85 @@ export function renderStep(
     });
   }
 
+  function getIngredientFile(): MDBlock[] {
+    if (step.type !== 'NEW_FILE' || step.ingredients == null) {
+      return [];
+    }
+
+    const collapsed = options.collapseDiffs === true;
+
+    let blocks: MDBlock[] = [];
+    const baseHeadingLevel = 4;
+    for (const {path: ingredient, renamedFrom} of step.ingredients) {
+      const headingLevel = baseHeadingLevel + (isSubstep(step) ? 1 : 0);
+
+      const link =
+        hydrogenRepoRecipeBaseURL({
+          recipeName,
+          hash: recipe.commit,
+        }) + `/ingredients/${ingredient}`;
+      const content = fs.readFileSync(
+        path.join(
+          COOKBOOK_PATH,
+          'recipes',
+          recipeName,
+          'ingredients',
+          ingredient,
+        ),
+        'utf8',
+      );
+
+      blocks.push(
+        ...(renamedFrom != null
+          ? [
+              mdNote(
+                `Rename \`${renamedFrom.replace(TEMPLATE_DIRECTORY, '')}\` to \`${ingredient.replace(TEMPLATE_DIRECTORY, '')}\``,
+              ),
+            ]
+          : []),
+        mdHeading(
+          headingLevel,
+          ['File:', `${mdLinkString(link, path.basename(ingredient))}`].join(
+            ' ',
+          ),
+        ),
+        mdCode(path.extname(ingredient).slice(1), content, collapsed),
+      );
+    }
+    return blocks;
+  }
+
+  const baseHeadingLevel = format === 'github' ? 3 : 2;
+  const headingLevel = baseHeadingLevel + (isSubstep(step) ? 1 : 0);
+
   const markdownStep: MDBlock[] = [
-    mdHeading(format === 'github' ? 3 : 2, `Step ${index + 1}: ${step.name}`),
+    mdHeading(headingLevel, `Step ${step.step}: ${step.name}`),
     ...(step.notes?.map(mdNote) ?? []),
     mdParagraph(step.description ?? ''),
-    ...(step.ingredients != null
+    ...(step.type !== 'NEW_FILE' && step.ingredients != null
       ? [
           mdList(
             step.ingredients
               .filter((ingredient) =>
-                recipe.ingredients.some((other) => other.path === ingredient),
+                recipe.ingredients.some(
+                  (other) => other.path === ingredient.path,
+                ),
               )
-              .map((i) => {
+              .map((ingredient) => {
                 const linkPrefix = hydrogenRepoRecipeBaseURL({
                   recipeName,
                   hash: recipe.commit,
                 });
                 return mdLinkString(
-                  `${linkPrefix}/ingredients/${i}`,
-                  i.replace(TEMPLATE_DIRECTORY, ''),
+                  `${linkPrefix}/ingredients/${ingredient.path}`,
+                  ingredient.path.replace(TEMPLATE_DIRECTORY, ''),
                 );
               }),
           ),
         ]
       : []),
     ...getDiffs(),
+    ...getIngredientFile(),
   ];
 
   return markdownStep;

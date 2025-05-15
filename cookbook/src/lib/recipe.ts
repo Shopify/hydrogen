@@ -22,10 +22,20 @@ const DiffSchema = z.object({
 export type Diff = z.infer<typeof DiffSchema>;
 
 const StepSchema = z.object({
-  type: z
-    .enum(['PATCH', 'INFO', 'COPY_INGREDIENTS'])
-    .describe('The type of step'),
-  index: z.number().describe('The index of the step'),
+  type: z.enum(['PATCH', 'INFO', 'NEW_FILE']).describe('The type of step'),
+  step: z
+    .number()
+    .or(
+      z
+        .string()
+        .regex(/^\d+(?:\.\d+)?$/)
+        .describe(
+          'The step numerical representation, with optional substep if applicable',
+        ),
+    )
+    .describe(
+      'The step numerical representation, with optional substep if applicable',
+    ),
   name: z.string().describe('The name of the step'),
   description: z
     .string()
@@ -34,7 +44,15 @@ const StepSchema = z.object({
     .describe('The description of the step'),
   notes: z.array(z.string()).optional().describe('The notes of the step'),
   ingredients: z
-    .array(z.string())
+    .array(
+      z.object({
+        path: z.string().describe('The path of the ingredient'),
+        renamedFrom: z
+          .string()
+          .optional()
+          .describe('The file that was renamed from'),
+      }),
+    )
     .optional()
     .describe('The ingredients of the step'),
   diffs: z.array(DiffSchema).optional().describe('The diffs of the step'),
@@ -68,6 +86,11 @@ export const RecipeSchema = z.object({
     .array(z.string())
     .optional()
     .describe('The deleted files of the recipe'),
+  nextSteps: z
+    .string()
+    .optional()
+    .nullable()
+    .describe('The next steps of the recipe'),
   commit: z.string().describe('The commit hash the recipe is based on'),
   llms: z
     .object({
@@ -111,4 +134,8 @@ export function loadRecipe(params: {directory: string}): Recipe {
       `recipe.yaml or recipe.json not found in ${params.directory}`,
     );
   }
+}
+
+export function isSubstep(step: Step): boolean {
+  return `${step.step}`.includes('.');
 }

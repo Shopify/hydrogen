@@ -21,7 +21,7 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/lib/combined-listings.ts](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts) | The `combined-listings.ts` file contains utilities and settings for handling combined listings. |
+| [app/lib/combined-listings.ts](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts) | The `combined-listings.ts` file contains utilities and settings for handling combined listings. |
 
 ## Steps
 
@@ -51,18 +51,61 @@ export const combinedListingsSettings = {
 };
 ```
 
-### Step 3: Add ingredients to your project
+### Step 3: Add combined listings utilities
 
-Copy all the files found in the `ingredients/` directory into your project.
+Create a new `combined-listings.ts` file that contains utilities and settings for handling combined listings.
 
-- [app/lib/combined-listings.ts](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
+#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
+
+<details>
+
+```ts
+// Edit these values to customize combined listings' behavior
+export const combinedListingsSettings = {
+  // If true, loading the product page will redirect to the first variant
+  redirectToFirstVariant: false,
+  // The tag that indicates a combined listing
+  combinedListingTag: 'combined',
+  // If true, combined listings will not be shown in the product list
+  hideCombinedListingsFromProductList: true,
+};
+
+export const maybeFilterOutCombinedListingsQuery =
+  combinedListingsSettings.hideCombinedListingsFromProductList
+    ? `NOT tag:${combinedListingsSettings.combinedListingTag}`
+    : '';
+
+interface ProductWithTags {
+  tags: string[];
+}
+
+function isProductWithTags(u: unknown): u is ProductWithTags {
+  const maybe = u as ProductWithTags;
+  return (
+    u != null &&
+    typeof u === 'object' &&
+    'tags' in maybe &&
+    Array.isArray(maybe.tags)
+  );
+}
+
+export function isCombinedListing(product: unknown) {
+  return (
+    isProductWithTags(product) &&
+    product.tags.includes(combinedListingsSettings.combinedListingTag)
+  );
+}
+
+```
+
+</details>
 
 ### Step 4: Update the ProductForm component
 
 1. Update the `ProductForm` component to hide the **Add to cart** button for the parent products of combined listings and for variants' selected state.
 2. Update the `Link` component to not replace the current URL when the product is a combined listing parent product.
 
-#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/components/ProductForm.tsx)
+#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/templates/skeleton/app/components/ProductForm.tsx)
 
 <details>
 
@@ -169,7 +212,7 @@ index e8616a61..b6567c21 100644
 
 Update the `ProductImage` component to support images from both product variants and the product itself.
 
-#### File: [app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/components/ProductImage.tsx)
+#### File: [app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/templates/skeleton/app/components/ProductImage.tsx)
 
 ```diff
 index 5f3ac1cc..f1c9f2cd 100644
@@ -197,7 +240,7 @@ index 5f3ac1cc..f1c9f2cd 100644
 
 Update `ProductItem.tsx` to show a range of prices for the combined listing parent product instead of the variant price.
 
-#### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/components/ProductItem.tsx)
+#### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/templates/skeleton/app/components/ProductItem.tsx)
 
 ```diff
 index 62c64b50..034b5660 100644
@@ -238,7 +281,7 @@ index 62c64b50..034b5660 100644
 
 If you want to redirect automatically to the first variant of a combined listing when the parent handle is selected, add a redirect utility that's called whenever the parent handle is requested.
 
-#### File: [app/lib/redirect.ts](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/lib/redirect.ts)
+#### File: [app/lib/redirect.ts](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/templates/skeleton/app/lib/redirect.ts)
 
 ```diff
 index ce1feb5a..29fe2ecc 100644
@@ -282,7 +325,7 @@ index ce1feb5a..29fe2ecc 100644
 1. Add the `tags` property to the items returned by the product query.
 2. (Optional) Add the filtering query to the product query to exclude combined listings.
 
-#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/routes/_index.tsx)
+#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/templates/skeleton/app/routes/_index.tsx)
 
 <details>
 
@@ -367,7 +410,7 @@ index 34747528..6e485083 100644
 
 Since it's not possible to directly apply query filters when retrieving collection products, you can manually filter out combined listings after they're retrieved based on their tags.
 
-#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/routes/collections.$handle.tsx)
+#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/templates/skeleton/app/routes/collections.$handle.tsx)
 
 <details>
 
@@ -439,7 +482,7 @@ index f1d7fa3e..17edfb7d 100644
 
 Update the `collections.all` route to filter out combined listings from the search results, and include the price range for combined listings.
 
-#### File: [app/routes/collections.all.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/routes/collections.all.tsx)
+#### File: [app/routes/collections.all.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/templates/skeleton/app/routes/collections.all.tsx)
 
 ```diff
 index 3a31b2f7..c756c9e1 100644
@@ -498,7 +541,7 @@ index 3a31b2f7..c756c9e1 100644
 2. Show the featured image of the combined listing parent product instead of the variant image.
 3. (Optional) Redirect to the first variant of a combined listing when the handle is requested.
 
-#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/routes/products.$handle.tsx)
+#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/templates/skeleton/app/routes/products.$handle.tsx)
 
 <details>
 
@@ -638,7 +681,7 @@ index 2dc6bda2..8baafac9 100644
 
 Add a class to the product item to show a range of prices for combined listings.
 
-#### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/24a6a51cb6f1790844b207a9ce42d70325043a3d/templates/skeleton/app/styles/app.css)
+#### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/templates/skeleton/app/styles/app.css)
 
 ```diff
 index b9294c59..c8fa5109 100644
@@ -657,3 +700,8 @@ index b9294c59..c8fa5109 100644
  * --------------------------------------------------
  * routes/products.$handle.tsx
 ```
+
+## Next Steps
+
+- Test your implementation by going to your store and searching for a combined listing. Make sure that the combined listing's details appear in the search results and on the product page.
+- (Optional) [Place a test order](https://help.shopify.com/en/manual/checkout-settings/test-orders) to see how orders for combined listings appear in your Shopify admin.

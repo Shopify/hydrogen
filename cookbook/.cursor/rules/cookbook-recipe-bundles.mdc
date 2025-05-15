@@ -1,6 +1,5 @@
 ---
-description: |
-  Recipe for implementing "Bundles (bundles)" in a Hydrogen storefront. Display product bundles on your Hydrogen storefront.
+description: Recipe for implementing "Bundles (bundles)" in a Hydrogen storefront. Display product bundles on your Hydrogen storefront.
 globs: *
 alwaysApply: false
 ---
@@ -20,7 +19,6 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 # Summary
 
 Display product bundles on your Hydrogen storefront.
-
 
 # User Intent Recognition
 
@@ -50,18 +48,19 @@ Here's the bundles recipe for the base Hydrogen skeleton template:
 
 ## Description
 
-This recipe adds special styling for product bundles on your Hydrogen storefront. Customers will see badges and relevant cover images for bundles when they're viewing product and collection pages.
-
+This recipe adds special styling for product bundles on your Hydrogen
+storefront. Customers will see badges and relevant cover images for bundles
+when they're viewing product and collection pages.
 
 In this recipe you'll make the following changes:
 
-
-1. Set up the Shopify Bundles app in your Shopify admin and create a new product bundle.
-
-2. Update the GraphQL fragments to query for bundles to identify bundled products.
-
-3. Update the product and collection templates to display badges on product listings, update the copy for the cart buttons, and display bundle-specific information on product and collection pages.
-
+1. Set up the Shopify Bundles app in your Shopify admin and create a new
+product bundle.
+2. Update the GraphQL fragments to query for bundles to identify bundled
+products.
+3. Update the product and collection templates to display badges on product
+listings, update the copy for the cart buttons, and display bundle-specific
+information on product and collection pages.
 4. Update the cart line item template to display the bundle badge as needed.
 
 ## Requirements
@@ -71,9 +70,24 @@ In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/sho
 
 ## New files added to the template by this recipe
 
-### templates/skeleton/app/components/BundleBadge.tsx
+- app/components/BundleBadge.tsx
+- app/components/BundledVariants.tsx
 
-A badge displayed on bundle product listings.
+## Steps
+
+### Step 1: Set up the Shopify Bundles app
+
+1. Install the [Shopify Bundles app](https://apps.shopify.com/shopify-bundles) in your Shopify admin.
+
+2. Make sure your store meets the [eligibility requirements](https://help.shopify.com/en/manual/products/bundles/eligibility-and-considerations).
+
+3. From the [**Bundles**](https://admin.shopify.com/apps/shopify-bundles/app) page, [create a new bundle](https://help.shopify.com/en/manual/products/bundles/shopify-bundles).
+
+### Step 2: Create the BundleBadge component
+
+Create a new BundleBadge component to be displayed on bundle product listings.
+
+#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
 
 ```tsx
 export function BundleBadge() {
@@ -96,9 +110,11 @@ export function BundleBadge() {
 
 ```
 
-### templates/skeleton/app/components/BundledVariants.tsx
+### Step 3: Create a new BundledVariants component
 
-A component that wraps the variants of a bundle product in a single product listing.
+Create a new `BundledVariants` component that wraps the variants of a bundle product in a single product listing.
+
+#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
 
 ```tsx
 import {Link} from '@remix-run/react';
@@ -167,20 +183,11 @@ export function BundledVariants({
 
 ```
 
-## Steps
+### Step 4: Update the product fragment to query for bundles and display BundledVariants
 
-### Step 1: Set up the Shopify Bundles app
-
-1. Install the [Shopify Bundles app](https://apps.shopify.com/shopify-bundles) in your Shopify admin.
-
-2. Make sure your store meets the [eligibility requirements](https://help.shopify.com/en/manual/products/bundles/eligibility-and-considerations).
-
-3. From the [**Bundles**](https://admin.shopify.com/apps/shopify-bundles/app) page, [create a new bundle](https://help.shopify.com/en/manual/products/bundles/shopify-bundles).
-
-### Step 2: Update the product fragment to query for bundles and display BundledVariants
-
-- Add the `requiresComponents` field to the `Product` fragment, which is used to identify bundled products.
-- Pass the `isBundle` flag to the `ProductImage` component.
+1. Add the `requiresComponents` field to the `Product` fragment, which is
+used to identify bundled products.
+2. Pass the `isBundle` flag to the `ProductImage` component.
 
 #### File: /app/routes/products.$handle.tsx
 
@@ -294,7 +301,7 @@ export function BundledVariants({
        title
 ```
 
-### Step 3: Update the collections fragment to query for bundles
+### Step 5: Update the collections fragment to query for bundles
 
 Like the previous step, use the `requiresComponents` field to detect if the product item is a bundle.
 
@@ -344,7 +351,7 @@ Like the previous step, use the `requiresComponents` field to detect if the prod
    query Collection(
 ```
 
-### Step 4: Update the cart fragment to query for bundles
+### Step 6: Update the cart fragment to query for bundles
 
 Use the `requiresComponents` field to determine if a cart line item is a bundle.
 
@@ -402,7 +409,7 @@ Use the `requiresComponents` field to determine if a cart line item is a bundle.
    }
 ```
 
-### Step 5: Conditionally render the BundleBadge in cart line items
+### Step 7: Conditionally render the BundleBadge in cart line items
 
 If a product is a bundle, show the `BundleBadge` component in the cart line item.
 
@@ -450,7 +457,7 @@ If a product is a bundle, show the `BundleBadge` component in the cart line item
          <ul>
 ```
 
-### Step 6: Conditionally render "Add bundle to cart" in ProductForm
+### Step 8: Conditionally render "Add bundle to cart" in ProductForm
 
 If a product is a bundle, update the text of the product button.
 
@@ -484,7 +491,7 @@ If a product is a bundle, update the text of the product button.
    );
 ```
 
-### Step 7: Conditionally render the BundleBadge in ProductImage
+### Step 9: Conditionally render the BundleBadge in ProductImage
 
 If a product is a bundle, show the `BundleBadge` component in the `ProductImage` component.
 
@@ -515,7 +522,7 @@ If a product is a bundle, show the `BundleBadge` component in the `ProductImage`
  }
 ```
 
-### Step 8: Conditionally render the BundleBadge in ProductItem
+### Step 10: Conditionally render the BundleBadge in ProductItem
 
 If a product is a bundle, show the `BundleBadge` component in the `ProductItem` component.
 
@@ -590,7 +597,7 @@ If a product is a bundle, show the `BundleBadge` component in the `ProductItem` 
  }
 ```
 
-### Step 9: Add a product-image class to the app stylesheet
+### Step 11: Add a product-image class to the app stylesheet
 
 Make sure the bundle badge is positioned relative to the product image.
 

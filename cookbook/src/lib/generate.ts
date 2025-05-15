@@ -9,7 +9,7 @@ import {
   TEMPLATE_DIRECTORY,
   TEMPLATE_PATH,
 } from './constants';
-import {Ingredient, loadRecipe, Recipe, Step} from './recipe';
+import {Ingredient, isSubstep, loadRecipe, Recipe, Step} from './recipe';
 import {
   createDirectoryIfNotExists,
   getMainCommitHash,
@@ -118,6 +118,7 @@ export async function generateRecipe(
     ingredients,
     deletedFiles,
     steps,
+    nextSteps: existingRecipe?.nextSteps ?? null,
     llms: {userQueries, troubleshooting},
     commit: getMainCommitHash(parseReferenceBranch(referenceBranch)),
   };
@@ -151,62 +152,101 @@ async function generateSteps(params: {
   const existingInfoSteps =
     params.existingRecipe?.steps.filter((step) => step.type === 'INFO') ?? [];
 
-  let patchSteps: Step[] = [];
-
-  const modifiedFiles = params.modifiedFiles.filter((file) => {
-    // ignore generated types files
-    return !file.endsWith('.d.ts');
-  });
-
-  let i = 0;
-  for await (const file of modifiedFiles) {
-    i++;
-    const {fullPath, patchFilename} = createPatchFile({
-      file,
-      patchesDirPath: params.patchesDirPath,
+  function processModifiedFiles(): Step[] {
+    let patchSteps: Step[] = [];
+    const modifiedFiles = params.modifiedFiles.filter((file) => {
+      // ignore generated types files
+      return !file.endsWith('.d.ts');
     });
+    let i = 0;
+    for (const file of modifiedFiles) {
+      i++;
+      const {fullPath, patchFilename} = createPatchFile({
+        file,
+        patchesDirPath: params.patchesDirPath,
+      });
 
-    const existingStep = params.existingRecipe?.steps.find(
-      (step) =>
-        step.diffs != null &&
-        step.diffs.length === 1 &&
-        step.diffs[0].file === fullPath.replace(TEMPLATE_PATH, ''),
-    );
+      const existingStep = params.existingRecipe?.steps.find(
+        (step) =>
+          step.diffs != null &&
+          step.diffs.length === 1 &&
+          step.diffs[0].file === fullPath.replace(TEMPLATE_PATH, ''),
+      );
 
-    // Try to find the existing description for the step which has _only_ this file as a diff patch.
-    const existingDescription = existingStep?.description ?? null;
+      // Try to find the existing description for the step which has _only_ this file as a diff patch.
+      const existingDescription = existingStep?.description ?? null;
 
-    const step: Step = {
-      type: 'PATCH',
-      index: existingStep?.index ?? i,
-      name: existingStep?.name ?? file.replace(TEMPLATE_DIRECTORY, ''),
-      description: existingDescription ?? null,
-      diffs: [
-        {
-          file: fullPath.replace(TEMPLATE_PATH, ''),
-          patchFile: patchFilename,
-        },
-      ],
-    };
-    patchSteps.push(step);
+      const step: Step = {
+        type: 'PATCH',
+        step: existingStep?.step ?? `${i}`,
+        name: existingStep?.name ?? file.replace(TEMPLATE_DIRECTORY, ''),
+        description: existingDescription ?? null,
+        diffs: [
+          {
+            file: fullPath.replace(TEMPLATE_PATH, ''),
+            patchFile: patchFilename,
+          },
+        ],
+      };
+      patchSteps.push(step);
+    }
+    return patchSteps;
   }
+  const patchSteps = processModifiedFiles();
 
-  // add the copy ingredients step if there are ingredients
-  const maybeCopyIngredientsStep: Step[] =
-    params.ingredients.length > 0
-      ? [copyIngredientsStep(params.ingredients)]
-      : [];
+  function processNewFiles(): Step[] {
+    let newFileSteps: Step[] = [];
+
+    let i = 0;
+    for (const file of params.ingredients) {
+      i++;
+
+      const existingStep = params.existingRecipe?.steps.find(
+        (step) =>
+          step.type === 'NEW_FILE' &&
+          step.ingredients?.length === 1 &&
+          step.ingredients[0].path === file.path,
+      );
+
+      // Try to find the existing description for the step which has _only_ this file as a diff patch.
+      const existingDescription = existingStep?.description ?? null;
+
+      const step: Step = {
+        type: 'NEW_FILE',
+        step: existingStep?.step ?? `${i}`,
+        name: existingStep?.name ?? file.path.replace(TEMPLATE_DIRECTORY, ''),
+        description: existingDescription ?? file.description ?? null,
+        ingredients: [
+          {
+            path: file.path,
+            renamedFrom: existingStep?.ingredients?.[0]?.renamedFrom,
+          },
+        ],
+      };
+      newFileSteps.push(step);
+    }
+    return newFileSteps;
+  }
+  const newFileSteps = processNewFiles();
 
   const steps = [
     ...existingInfoSteps,
-    ...maybeCopyIngredientsStep,
-    ...patchSteps.sort((a, b) => a.index - b.index),
-  ];
+    ...[...patchSteps, ...newFileSteps],
+  ].sort(compareSteps);
 
-  return steps.map((step, index) => ({
-    ...step,
-    index: index + 1, // normalize the indexes
-  }));
+  return steps;
+}
+
+function compareSteps(a: Step, b: Step): number {
+  function normalize(step: Step): string {
+    const expanded = isSubstep(a) ? `${step.step}` : `${step.step}.0`;
+    return expanded
+      .split('.')
+      .map((v) => parseInt(v, 10).toString().padStart(4, '0'))
+      .join('.');
+  }
+
+  return normalize(a).localeCompare(normalize(b));
 }
 
 function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
@@ -215,17 +255,6 @@ function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
   } catch (error) {
     return null;
   }
-}
-
-function copyIngredientsStep(ingredients: Ingredient[]): Step {
-  return {
-    type: 'COPY_INGREDIENTS',
-    index: 0,
-    name: 'Add ingredients to your project',
-    description:
-      'Copy all the files found in the `ingredients/` directory into your project.',
-    ingredients: ingredients.map((ingredient) => ingredient.path),
-  };
 }
 
 function createPatchFile(params: {file: string; patchesDirPath: string}): {
