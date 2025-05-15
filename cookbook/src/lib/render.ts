@@ -1,4 +1,3 @@
-import {randomUUID} from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import {
@@ -20,7 +19,7 @@ import {
   mdTable,
   serializeMDBlocksToFile,
 } from './markdown';
-import {loadRecipe, Recipe, Step} from './recipe';
+import {isSubstep, loadRecipe, Recipe, Step} from './recipe';
 import {assertNever, getPatchesDir} from './util';
 
 // The number of lines to collapse a diff into a details block
@@ -71,7 +70,7 @@ export function makeReadmeBlocks(
   recipe: Recipe,
   format: RenderFormat,
 ) {
-  const markdownTitle = makeTitle(recipe, format);
+  const markdownTitle = makeTitle(recipeName, recipe, format);
 
   const markdownDescription = mdParagraph(recipe.description);
 
@@ -113,6 +112,11 @@ export function makeReadmeBlocks(
       ? [mdHeading(2, 'Requirements'), mdParagraph(recipe.requirements)]
       : [];
 
+  const markdownNextSteps =
+    recipe.nextSteps != null
+      ? [mdHeading(2, 'Next Steps'), mdParagraph(recipe.nextSteps)]
+      : [];
+
   const blocks: MDBlock[] = [
     markdownTitle,
     markdownDescription,
@@ -121,6 +125,7 @@ export function makeReadmeBlocks(
     ...markdownIngredients,
     ...markdownSteps,
     ...markdownDeletedFiles,
+    ...markdownNextSteps,
   ];
 
   return blocks;
@@ -161,8 +166,8 @@ function makeSteps(
   const markdownStepsHeader = mdHeading(2, 'Steps');
   return [
     ...(format === 'github' ? [markdownStepsHeader] : []),
-    ...steps.flatMap((step, index) =>
-      renderStep(step, index, recipe, recipeName, patchesDir, format, {
+    ...steps.flatMap((step) =>
+      renderStep(step, recipe, recipeName, patchesDir, format, {
         collapseDiffs: true,
         diffsRelativeToTemplate: format === 'shopify.dev',
         trimDiffHeaders: format === 'shopify.dev',
@@ -173,7 +178,6 @@ function makeSteps(
 
 export function renderStep(
   step: Step,
-  index: number,
   recipe: Recipe,
   recipeName: string,
   patchesDir: string,
@@ -189,7 +193,10 @@ export function renderStep(
       return [];
     }
 
+    const baseHeadingLevel = 4;
     return step.diffs.flatMap((diff) => {
+      const headingLevel = baseHeadingLevel + (isSubstep(step) ? 1 : 0);
+
       const patchFile = path.join(patchesDir, diff.patchFile);
       const rawPatch = fs.readFileSync(patchFile, 'utf8').trim();
 
@@ -214,13 +221,13 @@ export function renderStep(
       return [
         format === 'github'
           ? mdHeading(
-              4,
+              headingLevel,
               options.diffsRelativeToTemplate
                 ? `File: /${diff.file}`
                 : `File: ${mdLinkString(link, diff.file)}`,
             )
           : mdHeading(
-              4,
+              headingLevel,
               [
                 'File:',
                 mdLinkString(link, path.basename(diff.file)),
@@ -235,11 +242,55 @@ export function renderStep(
     });
   }
 
+  function getIngredientFile(): MDBlock[] {
+    if (step.type !== 'NEW_FILE' || step.ingredients == null) {
+      return [];
+    }
+
+    const collapsed = options.collapseDiffs === true;
+
+    let blocks: MDBlock[] = [];
+    const baseHeadingLevel = 4;
+    for (const ingredient of step.ingredients) {
+      const headingLevel = baseHeadingLevel + (isSubstep(step) ? 1 : 0);
+
+      const link =
+        hydrogenRepoRecipeBaseURL({
+          recipeName,
+          hash: recipe.commit,
+        }) + `/ingredients/${ingredient}`;
+      const content = fs.readFileSync(
+        path.join(
+          COOKBOOK_PATH,
+          'recipes',
+          recipeName,
+          'ingredients',
+          ingredient,
+        ),
+        'utf8',
+      );
+
+      blocks.push(
+        mdHeading(
+          headingLevel,
+          ['File:', `${mdLinkString(link, path.basename(ingredient))}`].join(
+            ' ',
+          ),
+        ),
+        mdCode(path.extname(ingredient).slice(1), content, collapsed),
+      );
+    }
+    return blocks;
+  }
+
+  const baseHeadingLevel = format === 'github' ? 3 : 2;
+  const headingLevel = baseHeadingLevel + (isSubstep(step) ? 1 : 0);
+
   const markdownStep: MDBlock[] = [
-    mdHeading(format === 'github' ? 3 : 2, `Step ${index + 1}: ${step.name}`),
+    mdHeading(headingLevel, `Step ${step.step}: ${step.name}`),
     ...(step.notes?.map(mdNote) ?? []),
     mdParagraph(step.description ?? ''),
-    ...(step.ingredients != null
+    ...(step.type !== 'NEW_FILE' && step.ingredients != null
       ? [
           mdList(
             step.ingredients
@@ -260,19 +311,27 @@ export function renderStep(
         ]
       : []),
     ...getDiffs(),
+    ...getIngredientFile(),
   ];
 
   return markdownStep;
 }
 
-function makeTitle(recipe: Recipe, format: RenderFormat): MDBlock {
+function makeTitle(
+  recipeName: string,
+  recipe: Recipe,
+  format: RenderFormat,
+): MDBlock {
   switch (format) {
     case 'shopify.dev':
-      return mdFrontMatter({
-        gid: randomUUID(),
-        title: recipe.title,
-        description: recipe.summary,
-      });
+      return mdFrontMatter(
+        {
+          gid: recipe.gid,
+          title: `${recipe.title} in Hydrogen`,
+          description: recipe.summary,
+        },
+        [doNotEditComment(recipeName)],
+      );
     case 'github':
       return mdHeading(1, recipe.title);
     default:
@@ -295,4 +354,8 @@ function hydrogenRepoRecipeBaseURL(params: {
 }): string {
   const {recipeName, hash} = params;
   return hydrogenRepoFolderURL({path: `/cookbook/recipes/${recipeName}`, hash});
+}
+
+function doNotEditComment(recipeName: string): string {
+  return `DO NOT EDIT. This file is generated from the shopify/hydrogen repo from this source file: \`cookbook/recipes/${recipeName}/recipe.yaml\``;
 }

@@ -1,32 +1,22 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
+gid: 8495ffc3-e69c-431a-ac0b-1abb16ab50a2
 title: Bundles
-summary: |
-  Display product bundles on your Hydrogen storefront.
-description: >
+summary: Display product bundles on your Hydrogen storefront.
+description: |
   This recipe adds special styling for product bundles on your Hydrogen
   storefront. Customers will see badges and relevant cover images for bundles
   when they're viewing product and collection pages.
 
-
-
   In this recipe you'll make the following changes:
-
-
 
   1. Set up the Shopify Bundles app in your Shopify admin and create a new
   product bundle.
-
-
   2. Update the GraphQL fragments to query for bundles to identify bundled
   products.
-
-
   3. Update the product and collection templates to display badges on product
   listings, update the copy for the cart buttons, and display bundle-specific
   information on product and collection pages.
-
-
   4. Update the cart line item template to display the bundle badge as needed.
 notes: []
 requirements: >
@@ -44,7 +34,7 @@ ingredients:
 deletedFiles: []
 steps:
   - type: INFO
-    index: 1
+    step: 1
     name: Set up the Shopify Bundles app
     description: |
       1. Install the [Shopify Bundles app](https://apps.shopify.com/shopify-bundles) in your Shopify admin.
@@ -52,27 +42,34 @@ steps:
       2. Make sure your store meets the [eligibility requirements](https://help.shopify.com/en/manual/products/bundles/eligibility-and-considerations).
 
       3. From the [**Bundles**](https://admin.shopify.com/apps/shopify-bundles/app) page, [create a new bundle](https://help.shopify.com/en/manual/products/bundles/shopify-bundles).
-  - type: COPY_INGREDIENTS
-    index: 2
-    name: Add ingredients to your project
-    description: Copy all the files found in the `ingredients/` directory into your project.
+  - type: NEW_FILE
+    step: 2
+    name: Create the BundleBadge component
+    description: >
+      Create a new BundleBadge component to be displayed on bundle product
+      listings.
     ingredients:
       - templates/skeleton/app/components/BundleBadge.tsx
+  - type: NEW_FILE
+    step: 3
+    name: Create a new BundledVariants component
+    description: Create a new `BundledVariants` component that wraps the variants of
+      a bundle product in a single product listing.
+    ingredients:
       - templates/skeleton/app/components/BundledVariants.tsx
   - type: PATCH
-    index: 3
+    step: 4
     name: Update the product fragment to query for bundles and display
       BundledVariants
-    description: >
-      - Add the `requiresComponents` field to the `Product` fragment, which is
+    description: |
+      1. Add the `requiresComponents` field to the `Product` fragment, which is
       used to identify bundled products.
-
-      - Pass the `isBundle` flag to the `ProductImage` component.
+      2. Pass the `isBundle` flag to the `ProductImage` component.
     diffs:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.3e0b7e.patch
   - type: PATCH
-    index: 4
+    step: 5
     name: Update the collections fragment to query for bundles
     description: >
       Like the previous step, use the `requiresComponents` field to detect if
@@ -81,7 +78,7 @@ steps:
       - file: app/routes/collections.$handle.tsx
         patchFile: collections.$handle.tsx.951367.patch
   - type: PATCH
-    index: 5
+    step: 6
     name: Update the cart fragment to query for bundles
     description: >
       Use the `requiresComponents` field to determine if a cart line item is a
@@ -90,7 +87,7 @@ steps:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.e8eb04.patch
   - type: PATCH
-    index: 6
+    step: 7
     name: Conditionally render the BundleBadge in cart line items
     description: >
       If a product is a bundle, show the `BundleBadge` component in the cart
@@ -99,7 +96,7 @@ steps:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.8e657b.patch
   - type: PATCH
-    index: 7
+    step: 8
     name: Conditionally render "Add bundle to cart" in ProductForm
     description: |
       If a product is a bundle, update the text of the product button.
@@ -107,7 +104,7 @@ steps:
       - file: app/components/ProductForm.tsx
         patchFile: ProductForm.tsx.8e409a.patch
   - type: PATCH
-    index: 8
+    step: 9
     name: Conditionally render the BundleBadge in ProductImage
     description: >
       If a product is a bundle, show the `BundleBadge` component in the
@@ -116,7 +113,7 @@ steps:
       - file: app/components/ProductImage.tsx
         patchFile: ProductImage.tsx.4e6c4c.patch
   - type: PATCH
-    index: 9
+    step: 10
     name: Conditionally render the BundleBadge in ProductItem
     description: >
       If a product is a bundle, show the `BundleBadge` component in the
@@ -125,14 +122,37 @@ steps:
       - file: app/components/ProductItem.tsx
         patchFile: ProductItem.tsx.8ddc67.patch
   - type: PATCH
-    index: 10
+    step: 11
     name: Add a product-image class to the app stylesheet
     description: |
       Make sure the bundle badge is positioned relative to the product image.
     diffs:
       - file: app/styles/app.css
         patchFile: app.css.e88d35.patch
+nextSteps: >
+  - Test your implementation by going to your store and adding a bundle to the
+  cart. Make sure that the bundle's badge appears on the product page and in the
+  cart.
+
+  - (Optional) [Place a test
+  order](https://help.shopify.com/en/manual/checkout-settings/test-orders) to
+  see how orders for bundles appear in your Shopify admin.
 llms:
-  userQueries: []
-  troubleshooting: []
-commit: 55039b91aaac891f75b426a723e71dd07bb37716
+  userQueries:
+    - How do I show product bundles on my Hydrogen storefront?
+    - How do I add badges to bundled products on my Hydrogen storefront?
+    - How do I display product bundles on applicable line items in the cart?
+    - How do I detect if a product is a bundle?
+  troubleshooting:
+    - issue: I'm not seeing product bundles on my storefront.
+      solution: Make sure you've installed the Shopify Bundles app and set up product
+        bundles in your Shopify admin.
+    - issue: I'm not seeing product bundle badges on product pages.
+      solution: Make sure you've installed the Shopify Bundles app and set up product
+        bundles in your Shopify admin. Then make sure you've updated the product
+        fragment to query for bundles and display BundledVariants.
+    - issue: I'm not seeing the product bundle badges on my cart line items.
+      solution: Make sure you've installed the Shopify Bundles app and set up product
+        bundles in your Shopify admin. Then make sure you've updated the cart
+        fragment to query for bundles.
+commit: 90f894418e0b37dc31b5f428fad08aaa98163cde

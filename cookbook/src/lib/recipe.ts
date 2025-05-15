@@ -22,10 +22,20 @@ const DiffSchema = z.object({
 export type Diff = z.infer<typeof DiffSchema>;
 
 const StepSchema = z.object({
-  type: z
-    .enum(['PATCH', 'INFO', 'COPY_INGREDIENTS'])
-    .describe('The type of step'),
-  index: z.number().describe('The index of the step'),
+  type: z.enum(['PATCH', 'INFO', 'NEW_FILE']).describe('The type of step'),
+  step: z
+    .number()
+    .or(
+      z
+        .string()
+        .regex(/^\d+(?:\.\d+)?$/)
+        .describe(
+          'The step numerical representation, with optional substep if applicable',
+        ),
+    )
+    .describe(
+      'The step numerical representation, with optional substep if applicable',
+    ),
   name: z.string().describe('The name of the step'),
   description: z
     .string()
@@ -50,6 +60,7 @@ export const TroubleshootingSchema = z.object({
 export type Troubleshooting = z.infer<typeof TroubleshootingSchema>;
 
 export const RecipeSchema = z.object({
+  gid: z.string().uuid().describe('The unique identifier of the recipe'),
   title: z.string().describe('The title of the recipe'),
   summary: z.string().describe('The summary of what the recipe does'),
   description: z.string().describe('The description of the recipe'),
@@ -67,6 +78,11 @@ export const RecipeSchema = z.object({
     .array(z.string())
     .optional()
     .describe('The deleted files of the recipe'),
+  nextSteps: z
+    .string()
+    .optional()
+    .nullable()
+    .describe('The next steps of the recipe'),
   commit: z.string().describe('The commit hash the recipe is based on'),
   llms: z
     .object({
@@ -110,4 +126,8 @@ export function loadRecipe(params: {directory: string}): Recipe {
       `recipe.yaml or recipe.json not found in ${params.directory}`,
     );
   }
+}
+
+export function isSubstep(step: Step): boolean {
+  return `${step.step}`.includes('.');
 }

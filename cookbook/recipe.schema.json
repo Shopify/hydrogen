@@ -1,6 +1,11 @@
 {
   "type": "object",
   "properties": {
+    "gid": {
+      "type": "string",
+      "format": "uuid",
+      "description": "The unique identifier of the recipe"
+    },
     "title": {
       "type": "string",
       "description": "The title of the recipe"
@@ -72,13 +77,22 @@
             "enum": [
               "PATCH",
               "INFO",
-              "COPY_INGREDIENTS"
+              "NEW_FILE"
             ],
             "description": "The type of step"
           },
-          "index": {
-            "type": "number",
-            "description": "The index of the step"
+          "step": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^\\d+(?:\\.\\d+)?$",
+                "description": "The step numerical representation, with optional substep if applicable"
+              }
+            ],
+            "description": "The step numerical representation, with optional substep if applicable"
           },
           "name": {
             "type": "string",
@@ -130,7 +144,7 @@
         },
         "required": [
           "type",
-          "index",
+          "step",
           "name"
         ],
         "additionalProperties": false
@@ -143,6 +157,24 @@
         "type": "string"
       },
       "description": "The deleted files of the recipe"
+    },
+    "nextSteps": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "not": {}
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The next steps of the recipe"
     },
     "commit": {
       "type": "string",
@@ -188,6 +220,7 @@
     }
   },
   "required": [
+    "gid",
     "title",
     "summary",
     "description",

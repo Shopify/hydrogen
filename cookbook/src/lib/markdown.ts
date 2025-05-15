@@ -17,12 +17,17 @@ export function mdNote(text: string): MDNote {
 export type MDFrontMatter = {
   type: 'FRONTMATTER';
   data: Record<string, unknown>;
+  comments?: string[];
 };
 
-export function mdFrontMatter(data: Record<string, unknown>): MDFrontMatter {
+export function mdFrontMatter(
+  data: Record<string, unknown>,
+  comments?: string[],
+): MDFrontMatter {
   return {
     type: 'FRONTMATTER',
     data,
+    comments,
   };
 }
 
@@ -172,7 +177,7 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
           case 'shopify.dev':
             return [
               '<details>\n',
-              '{% codeblock markdown %}',
+              '{% codeblock file %}',
               ...code,
               '{% endcodeblock %}',
               '\n</details>',
@@ -225,7 +230,12 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
         })
         .join('\n');
 
-      return ['---', stringified, '---'].join('\n');
+      return [
+        '---',
+        ...(block.comments ?? []).map((comment) => `# ${comment}`),
+        stringified,
+        '---',
+      ].join('\n');
     case 'NOTE':
       return [
         '> [!NOTE]',
@@ -262,7 +272,9 @@ export function serializeMDBlocksToFile(
   filePath: string,
   format: RenderFormat,
 ) {
-  let data = blocks.map((block) => renderMDBlock(block, format)).join('\n\n');
+  let data = blocks
+    .map((block) => renderMDBlock(block, format).trim())
+    .join('\n\n');
   if (format === 'shopify.dev') {
     data = data.replace(/\{\{/g, "{{ '{{' }}");
   }
