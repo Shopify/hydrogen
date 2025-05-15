@@ -438,9 +438,11 @@ For brevity, in this example we only focused on two files – the index page and
 
 #### Step 3.2: Add localization to the home page
 
-A route that renders a localized version of the home page.
+- Add the splat to the home page route.
+- Use the new `Link` component as a drop-in replacement for the existing Remix counterpart.
 
-Rename `app/routes/_index.tsx` to `app/routes/($locale)._index.tsx`
+> [!NOTE]
+> Rename `app/routes/_index.tsx` to `app/routes/($locale)._index.tsx`
 
 ##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/c58ddde879b8f1f4c14893ee7cf3db76dee00ae6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
 
@@ -618,9 +620,10 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
 
 #### Step 3.3: Add localization to the cart page
 
-A localized cart route.
+Add the splat to the cart page route.
 
-Rename `app/routes/cart.tsx` to `app/routes/($locale).cart.tsx`
+> [!NOTE]
+> Rename `app/routes/cart.tsx` to `app/routes/($locale).cart.tsx`
 
 ##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/c58ddde879b8f1f4c14893ee7cf3db76dee00ae6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
 
@@ -747,9 +750,11 @@ export default function Cart() {
 
 #### Step 3.4: Add localization to the product page
 
-A route that renders a localized version of the product page.
+- Add the splat to the product page route.
+- Update the `meta` function to also update the canonical URL to use the localized prefix.
 
-Rename `app/routes/products.$handle.tsx` to `app/routes/($locale).products.$handle.tsx`
+> [!NOTE]
+> Rename `app/routes/products.$handle.tsx` to `app/routes/($locale).products.$handle.tsx`
 
 ##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/c58ddde879b8f1f4c14893ee7cf3db76dee00ae6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
 
