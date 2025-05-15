@@ -10,7 +10,11 @@ import {fileExists} from '@shopify/cli-kit/node/fs';
 import {muteRemixLogs} from './log.js';
 import {REQUIRED_REMIX_VERSION} from './remix-version-check.js';
 import {findFileWithExtension} from './file.js';
-import {getViteConfig, isViteProject} from './vite-config.js';
+import {
+  getViteConfig,
+  isViteProject,
+  REMIX_COMPILER_ERROR_MESSAGE,
+} from './vite-config.js';
 import {importLocal, importVite} from './import-utils.js';
 import {hydrogenPackagesPath, isHydrogenMonorepo} from './build.js';
 

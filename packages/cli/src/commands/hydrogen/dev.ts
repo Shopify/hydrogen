@@ -45,6 +45,7 @@ import {
   findHydrogenPlugin,
   findOxygenPlugin,
   isViteProject,
+  REMIX_COMPILER_ERROR_MESSAGE,
 } from '../../lib/vite-config.js';
 import {runClassicCompilerDev} from '../../lib/classic-compiler/dev.js';
 import {importVite} from '../../lib/import-utils.js';

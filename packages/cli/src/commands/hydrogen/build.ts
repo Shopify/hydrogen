@@ -34,6 +34,7 @@ import {isCI} from '../../lib/is-ci.js';
 import {importVite} from '../../lib/import-utils.js';
 import {deferPromise, type DeferredPromise} from '../../lib/defer.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 export default class Build extends Command {
   static descriptionWithMarkdown = `Builds a Hydrogen storefront for production. The client and app worker files are compiled to a \`/dist\` folder in your Hydrogen project directory.`;
