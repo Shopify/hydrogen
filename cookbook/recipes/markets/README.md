@@ -1,7 +1,7 @@
 # Markets
 
 This recipe shows how to add support for [Shopify
-Markets](https://www.shopify.com/ca/blog/markets) to your Hydrogen app. Markets 
+Markets](https://shopify.dev/docs/apps/build/markets) to your Hydrogen app. Markets
 let you segment your audience based on location and serve different content to each market.
 
 You can use Markets in a variety of ways. In this recipe,
@@ -12,16 +12,13 @@ localized versions of your store.
 
 There are several ways to implement localization in your Shopify Hydrogen
 store, and the approach you take will depend on your project's
-requirements. This recipe uses **URL-based localization**, which makes 
+requirements. This recipe uses **URL-based localization**, which makes
 market information visible in the URL. This provides two key benefits:
 
 - It's transparent to search engine crawlers.
-
 - It allows each localized version of your store to be properly indexed.
 
-
 This approach is typically implemented in two ways:
-
 
 1. Path-based localization (recommended)
     - **Example:** `example.com/fr-ca/products`
@@ -35,11 +32,10 @@ This approach is typically implemented in two ways:
     - **Advantages:** Maintains consistent URL structure across localized stores
     - **Considerations:** More complex setup at the infrastructure level
 
-Although you can use other methods for localization (like cookies or HTTP headers), 
+Although you can use other methods for localization (like cookies or HTTP headers),
 these approaches have one significant disadvantage: they're
 not visible to search engine crawlers. This can negatively impact your
 SEO for different markets.
-
 
 In this recipe, we'll implement **path-based localization**.
 
@@ -48,9 +44,12 @@ In this recipe, we'll implement **path-based localization**.
 
 ## Requirements
 
-- Set up your store's regions and languages using [Shopify Markets](https://help.shopify.com/en/manual/markets).
+- Set up your store's regions and languages using [Shopify
+Markets](https://help.shopify.com/en/manual/markets).
 - Configure your products appropriately for each market.
-- Make sure your Hydrogen app is configured to use a default `language` and `country code`. They will be used as the fallback when no market is explicitly selected.
+- Make sure your Hydrogen app is configured to use a default `language` and
+`country code`. They will be used as the fallback when no market is explicitly
+selected.
 
 ## Ingredients
 
@@ -58,12 +57,12 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx) | A component that displays a country selector inside the Header. |
-| [app/components/Link.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx) | A wrapper around the Remix Link component that uses the selected locale path prefix. |
-| [app/lib/i18n.ts](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts) | A helper function to get locale information from the context, a hook to retrieve the selected locale, and a list of available locales. |
-| [app/routes/($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx) | A route that renders a localized version of the home page. |
-| [app/routes/($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx) | A localized cart route. |
-| [app/routes/($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx) | A route that renders a localized version of the product page. |
+| [app/components/CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx) | A component that displays a country selector inside the Header. |
+| [app/components/Link.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx) | A wrapper around the Remix Link component that uses the selected locale path prefix. |
+| [app/lib/i18n.ts](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts) | A helper function to get locale information from the context, a hook to retrieve the selected locale, and a list of available locales. |
+| [app/routes/($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx) | A route that renders a localized version of the home page. |
+| [app/routes/($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx) | A localized cart route. |
+| [app/routes/($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx) | A route that renders a localized version of the product page. |
 
 ## Steps
 
@@ -75,9 +74,10 @@ In this section, we'll create utilities to handle localization and country selec
 
 This component displays a country selector inside the Header.
 
-To handle redirects, use a `Fetcher` that updates the cart buyer identity, which eventually redirects to the localized root of the app.
+To handle redirects, use a `Fetcher` that updates the cart buyer identity,
+which eventually redirects to the localized root of the app.
 
-##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
+##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
 
 <details>
 
@@ -160,7 +160,7 @@ const LocaleLink = ({locale}: {locale: Locale}) => {
 
 Create a wrapper component around the Remix `Link` component that prepends the selected locale path prefix (if any) to the actual links.
 
-##### File: [Link.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
+##### File: [Link.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
 
 <details>
 
@@ -184,10 +184,12 @@ export function Link({...props}: RemixLinkProps) {
 
 #### Step 1.3: Create i18n helpers
 
-- Create a helper function to get locale information from the context, and a hook to retrieve the selected locale.
-- Define a default locale that will be used as a fallback when no market is explicitly selected.
+- Create a helper function to get locale information from the context, and
+a hook to retrieve the selected locale.
+- Define a default locale that will be used as a fallback when no market
+is explicitly selected.
 
-##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
+##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
 
 <details>
 
@@ -253,9 +255,10 @@ export function useSelectedLocale(): Locale | null {
 
 #### Step 1.4: Use the new Link component in the ProductItem component
 
-Update the `ProductItem` component to use the `Link` component from the `app/components/Link.tsx` file.
+Update the `ProductItem` component to use the `Link` component from the
+`app/components/Link.tsx` file.
 
-##### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/templates/skeleton/app/components/ProductItem.tsx)
+##### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/templates/skeleton/app/components/ProductItem.tsx)
 
 ```diff
 index 62c64b50..81ff9ec9 100644
@@ -280,7 +283,7 @@ index 62c64b50..81ff9ec9 100644
 
 Detect the locale from the URL path, and add it to the HydrogenContext.
 
-##### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/templates/skeleton/app/lib/context.ts)
+##### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/templates/skeleton/app/lib/context.ts)
 
 ```diff
 index c424c511..b5d3737a 100644
@@ -317,7 +320,7 @@ index c424c511..b5d3737a 100644
 
 This adds a country selector component to the navigation.
 
-##### File: [app/components/Header.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/templates/skeleton/app/components/Header.tsx)
+##### File: [app/components/Header.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/templates/skeleton/app/components/Header.tsx)
 
 ```diff
 index 8a437a10..757808eb 100644
@@ -352,11 +355,10 @@ index 8a437a10..757808eb 100644
 #### Step 1.7: Add the selected locale to the root route
 
 - Include the selected locale in the root route's loader data.
-
 - Add a key prop to the `PageLayout` component to make sure it re-renders
 when the locale changes.
 
-##### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/templates/skeleton/app/root.tsx)
+##### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/templates/skeleton/app/root.tsx)
 
 ```diff
 index 3426476a..4f67b72b 100644
@@ -417,19 +419,23 @@ In this section, we'll add localization to the individual routes using the langu
 
 #### Step 2.1: Add language splat to the desired routes
 
-To implement path-based localization, add a language splat to your localized routes (for example, renaming `routes/_index.tsx` to `routes/($locale)._index.tsx`).
+To implement path-based localization, add a language
+splat to your localized routes (for example, renaming `routes/_index.tsx`
+to `routes/($locale)._index.tsx`).
 
-For brevity, this example only includes changes to two files: the index page and the product page. However, this should be done for all the app routes.
+For brevity, this example only includes changes to two files: the index page
+and the product page. However, this should be done for all the app routes.
 
 #### Step 2.2: Add localization to the home page
 
 - Add the splat to the home page route.
-- Use the new `Link` component as a drop-in replacement for the existing Remix counterpart.
+- Use the new `Link` component as a drop-in replacement for the existing
+Remix counterpart.
 
 > [!NOTE]
 > Rename `app/routes/_index.tsx` to `app/routes/($locale)._index.tsx`.
 
-##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
+##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
 
 <details>
 
@@ -614,7 +620,7 @@ Add the splat to the cart page route.
 > [!NOTE]
 > Rename `app/routes/cart.tsx` to `app/routes/($locale).cart.tsx`.
 
-##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
+##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
 
 <details>
 
@@ -744,12 +750,13 @@ export default function Cart() {
 #### Step 2.4: Add localization to the product page
 
 - Add the splat to the product page route.
-- Update the `meta` function to also update the canonical URL to use the localized prefix.
+- Update the `meta` function to also update the canonical URL to use the
+localized prefix.
 
 > [!NOTE]
 > Rename `app/routes/products.$handle.tsx` to `app/routes/($locale).products.$handle.tsx`.
 
-##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
+##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
 
 <details>
 
@@ -1012,5 +1019,8 @@ const PRODUCT_QUERY = `#graphql
 
 ## Next steps
 
-- Test your implementation by going to your store and selecting a different market from the country selector.
-- Refer to the [Shopify Help Center](https://help.shopify.com/en/manual/markets) for more information on how to optimize and manage your international markets.
+- Test your implementation by going to your store and selecting a different
+market from the country selector.
+- Refer to the [Shopify
+Help Center](https://help.shopify.com/en/manual/markets) for
+more information on how to optimize and manage your international markets.

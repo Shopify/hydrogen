@@ -238,7 +238,7 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
       ].join('\n');
     case 'NOTE':
       return [
-        '> [!NOTE]',
+        format === 'shopify.dev' ? '> Note' : '> [!NOTE]',
         block.text
           .split('\n')
           .map((line) => `> ${line}`)
