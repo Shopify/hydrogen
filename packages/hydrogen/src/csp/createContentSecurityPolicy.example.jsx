@@ -1,4 +1,4 @@
-import {RemixServer} from '@remix-run/react';
+import {ServerRouter} from 'react-router';
 import {isbot} from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
 import {createContentSecurityPolicy} from '@shopify/hydrogen';

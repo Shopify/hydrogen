@@ -1,4 +1,4 @@
-import {data} from '@remix-run/server-runtime';
+import {data} from 'react-router';
 import {cartGetIdDefault, cartSetIdDefault} from '@shopify/hydrogen';
 
 // server.js

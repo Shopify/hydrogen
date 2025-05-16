@@ -1,4 +1,4 @@
-import {MetaFunction} from '@remix-run/react';
+import {MetaFunction} from 'react-router';
 import {LoaderFunctionArgs} from '@remix-run/server-runtime';
 import {getSeoMeta} from '@shopify/hydrogen';
 
