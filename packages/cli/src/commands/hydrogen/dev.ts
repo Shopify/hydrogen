@@ -45,8 +45,8 @@ import {
   findHydrogenPlugin,
   findOxygenPlugin,
   isViteProject,
+  REMIX_COMPILER_ERROR_MESSAGE,
 } from '../../lib/vite-config.js';
-import {runClassicCompilerDev} from '../../lib/classic-compiler/dev.js';
 import {importVite} from '../../lib/import-utils.js';
 import {createEntryPointErrorHandler} from '../../lib/deps-optimizer.js';
 import {getCodeFormatOptions} from '../../lib/format-code.js';
@@ -99,20 +99,6 @@ export default class Dev extends Command {
     }),
 
     // For the classic compiler:
-    ...overrideFlag(commonFlags.legacyRuntime, {
-      'legacy-runtime': {
-        description:
-          '[Classic Remix Compiler] ' +
-          commonFlags.legacyRuntime['legacy-runtime'].description,
-      },
-    }),
-    ...overrideFlag(commonFlags.sourcemap, {
-      sourcemap: {
-        description:
-          '[Classic Remix Compiler] ' +
-          commonFlags.sourcemap.sourcemap.description,
-      },
-    }),
   };
 
   async run(): Promise<void> {
@@ -134,9 +120,12 @@ export default class Dev extends Command {
       cliConfig: this.config,
     };
 
-    const {close} = (await isViteProject(directory))
-      ? await runDev(devParams)
-      : await runClassicCompilerDev(devParams);
+    const isVite = await isViteProject(directory);
+    if (!isVite) {
+      throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
+    }
+
+    const {close} = await runDev(devParams);
 
     setupResourceCleanup(async () => {
       await close();
