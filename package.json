@@ -35,7 +35,6 @@
   "workspaces": [
     "docs/preview",
     "examples/b2b",
-    "examples/classic-remix",
     "examples/custom-cart-method",
     "examples/express",
     "examples/gtm",
