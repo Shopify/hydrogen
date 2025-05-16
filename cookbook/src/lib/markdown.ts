@@ -223,7 +223,7 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
       })
         .trim()
         // Remove any quotes wrapping the stringified values manually,
-        // as some of them may have been added by the YAML stringifier while Cursor doesn't like them.
+        // as some of them may have been added by the YAML stringifier.
         .split('\n')
         .map((line) => {
           return line.replace(/^([^'"]+): ['"](.+)['"]/, '$1: $2');

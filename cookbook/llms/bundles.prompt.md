@@ -1,12 +1,6 @@
----
-description: Recipe for implementing "Bundles (bundles)" in a Hydrogen storefront. Display product bundles on your Hydrogen storefront.
-globs: *
-alwaysApply: false
----
-
 # Overview
 
-This rule describes how to implement "Bundles" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "Bundles" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -14,7 +8,7 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 
 # AI model verification steps
 
-- Never edit generated files (ending with .d.ts) directly; instead, run the `npm run codegen` command to update them.
+- Never edit generated files (ending with .d.ts) directly; instead, run the `npm run codegen` command to update them (if the command is available).
 
 # Summary
 
@@ -87,7 +81,7 @@ In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/sho
 
 Create a new BundleBadge component to be displayed on bundle product listings.
 
-#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/afc73119e3e97b2dcffd6b18b8b1048d454bf66d/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
+#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
 
 ```tsx
 export function BundleBadge() {
@@ -114,7 +108,7 @@ export function BundleBadge() {
 
 Create a new `BundledVariants` component that wraps the variants of a bundle product in a single product listing.
 
-#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/afc73119e3e97b2dcffd6b18b8b1048d454bf66d/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
+#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
 
 ```tsx
 import {Link} from '@remix-run/react';

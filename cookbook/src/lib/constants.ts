@@ -22,6 +22,11 @@ export const TEMPLATE_PATH = path.join(REPO_ROOT, TEMPLATE_DIRECTORY);
 export const COOKBOOK_PATH = path.join(REPO_ROOT, 'cookbook');
 
 /**
+ * The directory of the llms.
+ */
+export const LLMS_PATH = path.join(COOKBOOK_PATH, 'llms');
+
+/**
  * The files to ignore for generate.
  */
 export const FILES_TO_IGNORE_FOR_GENERATE = ['.env', '.cursor'];
