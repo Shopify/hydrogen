@@ -31,7 +31,7 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 
 # AI model verification steps
 
-- Never edit generated files (ending with .d.ts) directly; instead, run the \`npm run codegen\` command to update them (if the command isavailable).
+- Never edit generated files (ending with .d.ts) directly; instead, run the \`npm run codegen\` command to update them (if the command is available).
 
 # Summary
 
