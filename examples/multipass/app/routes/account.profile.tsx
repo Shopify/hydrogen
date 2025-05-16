@@ -1,18 +1,16 @@
 import type {CustomerFragment} from 'storefrontapi.generated';
 import type {CustomerUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import {
-  data,
-  redirect,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
-import {
   Form,
   useActionData,
   useNavigation,
   useOutletContext,
+  data,
+  redirect,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs,
   type MetaFunction,
-} from '@remix-run/react';
+} from 'react-router';
 
 export type ActionResponse = {
   error: string | null;

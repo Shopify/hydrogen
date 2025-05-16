@@ -1,5 +1,9 @@
-import {data, redirect, type ActionFunctionArgs} from '@shopify/remix-oxygen';
-import {type MetaFunction} from '@remix-run/react';
+import {
+  data,
+  redirect,
+  type ActionFunctionArgs,
+  type MetaFunction,
+} from 'react-router';
 
 export const meta: MetaFunction = () => {
   return [{title: 'Logout'}];

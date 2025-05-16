@@ -1,9 +1,9 @@
 /// <reference types="@shopify/hydrogen" />
 import {
-  createRequestHandler as createRemixRequestHandler,
+  createRequestHandler as createReactRouterRequestHandler,
   type AppLoadContext,
   type ServerBuild,
-} from '@remix-run/server-runtime';
+} from 'react-router';
 import {createEventLogger} from './event-logger';
 
 const originalErrorToString = Error.prototype.toString;
@@ -22,7 +22,7 @@ export function createRequestHandler<Context = unknown>({
   poweredByHeader?: boolean;
   getLoadContext?: (request: Request) => Promise<Context> | Context;
 }) {
-  const handleRequest = createRemixRequestHandler(build, mode);
+  const handleRequest = createReactRouterRequestHandler(build, mode);
 
   return async (request: Request) => {
     const method = request.method;

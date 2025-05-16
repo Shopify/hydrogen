@@ -4,7 +4,7 @@ import type {
   SellingPlanFragment,
 } from 'storefrontapi.generated';
 import {useMemo} from 'react';
-import {useLocation} from '@remix-run/react';
+import {useLocation} from 'react-router';
 
 /* Enriched sellingPlan type including isSelected and url */
 export type SellingPlan = SellingPlanFragment & {

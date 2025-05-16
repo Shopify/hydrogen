@@ -1,12 +1,15 @@
 import {getVirtualRoutesV3} from '../vite/get-virtual-routes';
-import {type RouteConfigEntry} from '@remix-run/route-config';
+import {type RouteConfigEntry} from '@react-router/dev/dist/routes'; // TODO BEFORE MERGE: fix this import
 
 // Make this transform the existing routes instead.
 export async function hydrogenRoutes(
   currentRoutes: Array<RouteConfigEntry>,
 ): Promise<Array<RouteConfigEntry>> {
   // Only run this in development.
-  if (process.env.NODE_ENV !== 'development') {
+  if (
+    process.env.NODE_ENV !== 'development' ||
+    (process.env as any).HYDROGEN_DISABLE_VIRTUAL_ROUTES === 'true' // TODO before merge: this should be a separate PR
+  ) {
     return currentRoutes;
   }
 

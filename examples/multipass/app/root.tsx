@@ -1,5 +1,4 @@
 import {useNonce, getShopAnalytics, Analytics} from '@shopify/hydrogen';
-import {data, type HeadersFunction, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
@@ -9,8 +8,11 @@ import {
   useRouteLoaderData,
   ScrollRestoration,
   isRouteErrorResponse,
+  data,
+  type HeadersFunction,
+  type LoaderFunctionArgs,
   type ShouldRevalidateFunction,
-} from '@remix-run/react';
+} from 'react-router';
 import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
 import favicon from '~/assets/favicon.svg';
 import resetStyles from '~/styles/reset.css?url';
@@ -65,13 +67,11 @@ export function links() {
   ];
 }
 
-
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
 export const headers: HeadersFunction = ({loaderHeaders}) => loaderHeaders;
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
-
 
 export async function loader({context}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart, env} = context;

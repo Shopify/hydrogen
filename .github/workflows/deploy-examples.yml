@@ -19,7 +19,6 @@ jobs:
       matrix:
         examples:
           [
-            {name: 'classic-remix', token: '1000014892'},
             {name: 'metaobjects', token: '1000014928'},
             {name: 'third-party-queries-caching', token: '1000014929'},
             {name: 'custom-cart-method', token: '1000014930'},

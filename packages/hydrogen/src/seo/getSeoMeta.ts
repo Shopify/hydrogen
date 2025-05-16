@@ -6,7 +6,7 @@ import {
   validate,
   type SeoConfig,
 } from './generate-seo-tags';
-import {MetaFunction} from '@remix-run/react';
+import {MetaFunction} from 'react-router';
 
 export type GetSeoMetaReturn = ReturnType<MetaFunction>;
 

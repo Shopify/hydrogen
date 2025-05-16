@@ -1,4 +1,4 @@
-import {useRouteError, isRouteErrorResponse, Link} from '@remix-run/react';
+import {useRouteError, isRouteErrorResponse, Link} from 'react-router';
 
 export default function Index() {
   return (

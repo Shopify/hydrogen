@@ -1,5 +1,5 @@
 import {Suspense} from 'react';
-import {Await, NavLink, useAsyncValue} from '@remix-run/react';
+import { Await, NavLink, useAsyncValue } from 'react-router';
 import {
   type CartViewPayload,
   useAnalytics,

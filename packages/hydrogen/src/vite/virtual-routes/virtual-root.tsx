@@ -1,7 +1,7 @@
 // This file is the root of every virtual route tree.
 // It does not affect the routes from the user app.
 
-import type {LinksFunction} from '@remix-run/server-runtime';
+import type {LinksFunction} from 'react-router';
 import {
   Links,
   Meta,
@@ -10,7 +10,7 @@ import {
   ScrollRestoration,
   isRouteErrorResponse,
   useRouteError,
-} from '@remix-run/react';
+} from 'react-router';
 import favicon from './assets/favicon.svg';
 import {Layout as VirtualLayout} from './components/Layout.jsx';
 import {useNonce} from '@shopify/hydrogen';

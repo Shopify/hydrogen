@@ -1,5 +1,5 @@
-import {createRequestHandler} from '@remix-run/express';
-import {installGlobals, createCookieSessionStorage} from '@remix-run/node';
+import {createRequestHandler} from '@react-router/express';
+import {installGlobals, createCookieSessionStorage} from 'react-router';
 import compression from 'compression';
 import express from 'express';
 import morgan from 'morgan';
@@ -50,7 +50,7 @@ app.all(
 
         return createRequestHandler({
           build: vite
-            ? () => vite.ssrLoadModule('virtual:remix/server-build')
+            ? () => vite.ssrLoadModule('virtual:react-router/server-build')
             : await import('./build/server/index.js'),
           mode: process.env.NODE_ENV,
           getLoadContext: () => context,
@@ -61,7 +61,7 @@ app.all(
 
         return createRequestHandler({
           build: vite
-            ? () => vite.ssrLoadModule('virtual:remix/server-build')
+            ? () => vite.ssrLoadModule('virtual:react-router/server-build')
             : await import('./build/server/index.js'),
           mode: process.env.NODE_ENV,
           getLoadContext: () => context,

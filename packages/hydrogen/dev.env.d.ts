@@ -29,9 +29,19 @@ declare global {
   type ExportedHandlerFetchHandler = Function;
 }
 
-declare module '@shopify/remix-oxygen' {
+declare module 'react-router' {
   interface AppLoadContext extends HydrogenContext<AppSession> {
     // declare additional Remix loader context here
+  }
+
+  // TODO: remove this once we've migrated our loaders to `Route.LoaderArgs`
+  interface LoaderFunctionArgs {
+    context: AppLoadContext;
+  }
+
+  // TODO: remove this once we've migrated our actions to `Route.ActionArgs`
+  interface ActionFunctionArgs {
+    context: AppLoadContext;
   }
 
   interface SessionData extends HydrogenSessionData {

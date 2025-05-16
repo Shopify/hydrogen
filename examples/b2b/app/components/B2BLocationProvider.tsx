@@ -1,5 +1,5 @@
 import {createContext, useContext, useEffect, useState, useMemo} from 'react';
-import {useFetcher} from '@remix-run/react';
+import {useFetcher} from 'react-router';
 import {type CustomerCompany} from '~/root';
 
 export type B2BLocationContextValue = {
