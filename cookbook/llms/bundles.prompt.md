@@ -81,7 +81,7 @@ In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/sho
 
 Create a new BundleBadge component to be displayed on bundle product listings.
 
-#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/afc73119e3e97b2dcffd6b18b8b1048d454bf66d/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
+#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
 
 ```tsx
 export function BundleBadge() {
@@ -108,7 +108,7 @@ export function BundleBadge() {
 
 Create a new `BundledVariants` component that wraps the variants of a bundle product in a single product listing.
 
-#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/afc73119e3e97b2dcffd6b18b8b1048d454bf66d/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
+#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
 
 ```tsx
 import {Link} from '@remix-run/react';
