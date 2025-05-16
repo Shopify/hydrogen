@@ -4,43 +4,26 @@ gid: e1bfda7e-18d3-497e-8917-9d15ab0ef1cf
 title: Markets
 summary: This recipe adds basic localization support to your Hydrogen app using
   Shopify Markets.
-description: >
+description: |
   This recipe shows how to add support for [Shopify
-
-  Markets](https://shopify.dev/docs/apps/build/markets) to your Hydrogen app.
-  Markets
-
-  let you segment your audience based on location and serve different content to
-  each market.
-
+  Markets](https://shopify.dev/docs/apps/build/markets) to your Hydrogen app. Markets
+  let you segment your audience based on location and serve different content to each market.
 
   You can use Markets in a variety of ways. In this recipe,
-
   you'll set up basic localization support for your Hydrogen store,
-
   learn what options are available for routing, add a country
-
   selector component to your app, and set up links that work across
-
   localized versions of your store.
 
-
   There are several ways to implement localization in your Shopify Hydrogen
-
   store, and the approach you take will depend on your project's
-
   requirements. This recipe uses **URL-based localization**, which makes
-
   market information visible in the URL. This provides two key benefits:
 
-
   - It's transparent to search engine crawlers.
-
   - It allows each localized version of your store to be properly indexed.
 
-
   This approach is typically implemented in two ways:
-
 
   1. Path-based localization (recommended)
       - **Example:** `example.com/fr-ca/products`
@@ -54,15 +37,10 @@ description: >
       - **Advantages:** Maintains consistent URL structure across localized stores
       - **Considerations:** More complex setup at the infrastructure level
 
-  Although you can use other methods for localization (like cookies or HTTP
-  headers),
-
+  Although you can use other methods for localization (like cookies or HTTP headers),
   these approaches have one significant disadvantage: they're
-
   not visible to search engine crawlers. This can negatively impact your
-
   SEO for different markets.
-
 
   In this recipe, we'll implement **path-based localization**.
 notes:
@@ -101,9 +79,8 @@ steps:
   - type: INFO
     step: 1
     name: Add localization utilities and update core components
-    description: >
-      In this section, we'll create utilities to handle localization and country
-      selection, and update the core components to use these utilities.
+    description: In this section, we'll create utilities to handle localization and
+      country selection, and update the core components to use these utilities.
   - type: NEW_FILE
     step: 1.1
     name: Create a CountrySelector component
@@ -169,23 +146,17 @@ steps:
   - type: INFO
     step: 2
     name: Localizing the individual routes
-    description: >
-      In this section, we'll add localization to the individual routes using the
-      language splat.
+    description: |
+      In this section, we'll add localization to the individual routes using the language splat.
   - type: INFO
     step: 2.1
     name: Add language splat to the desired routes
-    description: >
+    description: |
       To implement path-based localization, add a language
-
       splat to your localized routes (for example, renaming `routes/_index.tsx`
-
       to `routes/($locale)._index.tsx`).
 
-
-      For brevity, this example only includes changes to two files: the index
-      page
-
+      For brevity, this example only includes changes to two files: the index page
       and the product page. However, this should be done for all the app routes.
   - type: NEW_FILE
     step: 2.2

@@ -134,7 +134,7 @@ export async function generateRecipe(
       ? JSON.stringify(recipe, null, 2)
       : `# yaml-language-server: $schema=../../recipe.schema.json\n\n` +
         YAML.stringify(recipe, {
-          defaultStringType: 'BLOCK_FOLDED',
+          blockQuote: 'literal',
         });
 
   fs.writeFileSync(recipeManifestPath, data);
