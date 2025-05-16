@@ -1,5 +1,32 @@
 # skeleton
 
+## 2025.4.1
+
+### Patch Changes
+
+- Moved the Cursor rules into more generic LLM prompt files. If you were using the Cursor rules, you will find the prompts in the `cookbook/llms` folder and they can be put into your `.cursor/rules` folder manually. LLM prompt files will be maintained moving forward, while previous Cursor rules will not be updated anymore. ([#2936](https://github.com/Shopify/hydrogen/pull/2936)) by [@ruggishop](https://github.com/ruggishop)
+
+- Added bundles recipe ([#2915](https://github.com/Shopify/hydrogen/pull/2915)) by [@ruggishop](https://github.com/ruggishop)
+
+- Update copy for subscriptions, combined listings, bundles recipes ([#2924](https://github.com/Shopify/hydrogen/pull/2924)) by [@ruggishop](https://github.com/ruggishop)
+
+- Bump skeleton @shopify/cli and @shopify/mini-oxygen ([#2883](https://github.com/Shopify/hydrogen/pull/2883)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Remove rules from the template. ([#2931](https://github.com/Shopify/hydrogen/pull/2931)) by [@ruggishop](https://github.com/ruggishop)
+
+- Update SFAPI and CAAPI versions to 2025.04 ([#2886](https://github.com/Shopify/hydrogen/pull/2886)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated recipes: subscriptions, bundles, combined-listings. New recipe: markets. ([#2930](https://github.com/Shopify/hydrogen/pull/2930)) by [@ruggishop](https://github.com/ruggishop)
+
+- Updated the subscriptions recipe to better display the purchase options. ([#2912](https://github.com/Shopify/hydrogen/pull/2912)) by [@ruggishop](https://github.com/ruggishop)
+
+- Bump recipes with copy adjustments ([#2935](https://github.com/Shopify/hydrogen/pull/2935)) by [@ruggishop](https://github.com/ruggishop)
+
+- Added a Combined Listings recipe. ([#2876](https://github.com/Shopify/hydrogen/pull/2876)) by [@ruggishop](https://github.com/ruggishop)
+
+- Updated dependencies [[`af23e710`](https://github.com/Shopify/hydrogen/commit/af23e710dac83bb57498d9c2ef1d8bcf9df55d34), [`9d8a6644`](https://github.com/Shopify/hydrogen/commit/9d8a6644a5b67dca890c6687df390aee78fc85c3)]:
+  - @shopify/hydrogen@2025.4.1
+
 ## 2025.1.7
 
 ### Patch Changes
