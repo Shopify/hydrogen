@@ -102,9 +102,9 @@ steps:
     step: 1.3
     name: Create i18n helpers
     description: |
-      - Create a helper function to get locale information from the context, and
+      1. Create a helper function to get locale information from the context, and
       a hook to retrieve the selected locale.
-      - Define a default locale that will be used as a fallback when no market
+      2. Define a default locale that will be used as a fallback when no market
       is explicitly selected.
     ingredients:
       - path: templates/skeleton/app/lib/i18n.ts
@@ -137,8 +137,8 @@ steps:
     step: 1.7
     name: Add the selected locale to the root route
     description: |
-      - Include the selected locale in the root route's loader data.
-      - Add a key prop to the `PageLayout` component to make sure it re-renders
+      1. Include the selected locale in the root route's loader data.
+      2. Add a key prop to the `PageLayout` component to make sure it re-renders
       when the locale changes.
     diffs:
       - file: app/root.tsx
@@ -147,23 +147,22 @@ steps:
     step: 2
     name: Localizing the individual routes
     description: |
-      In this section, we'll add localization to the individual routes using the language splat.
+      In this section, we'll add localization to the individual routes using the language [dynamic segment](https://remix.run/docs/en/main/file-conventions/routes#optional-segments).
   - type: INFO
     step: 2.1
-    name: Add language splat to the desired routes
+    name: Add language dynamic segment to the desired routes
     description: |
       To implement path-based localization, add a language
-      splat to your localized routes (for example, renaming `routes/_index.tsx`
+      dynamic segment to your localized routes (for example, renaming `routes/_index.tsx`
       to `routes/($locale)._index.tsx`).
 
-      For brevity, this example only includes changes to two files: the index page
-      and the product page. However, this should be done for all the app routes.
+      For brevity, we'll focus on the home page, the cart page, and the product page in this example. In your app, you should do this for all the app routes.
   - type: NEW_FILE
     step: 2.2
     name: Add localization to the home page
     description: |
-      - Add the splat to the home page route.
-      - Use the new `Link` component as a drop-in replacement for the existing
+      1. Add the dynamic segment to the home page route.
+      2. Use the new `Link` component as a drop-in replacement for the existing
       Remix counterpart.
     ingredients:
       - path: templates/skeleton/app/routes/($locale)._index.tsx
@@ -171,7 +170,7 @@ steps:
   - type: NEW_FILE
     step: 2.3
     name: Add localization to the cart page
-    description: Add the splat to the cart page route.
+    description: Add the dynamic segment to the cart page route.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).cart.tsx
         renamedFrom: templates/skeleton/app/routes/cart.tsx
@@ -179,8 +178,8 @@ steps:
     step: 2.4
     name: Add localization to the product page
     description: |
-      - Add the splat to the product page route.
-      - Update the `meta` function to also update the canonical URL to use the
+      1. Add the dynamic segment to the product page route.
+      2. Update the `meta` function to also update the canonical URL to use the
       localized prefix.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).products.$handle.tsx
