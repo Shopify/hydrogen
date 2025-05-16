@@ -2,7 +2,7 @@
 
 - [🧑‍🍳 Hydrogen Cookbook](#-hydrogen-cookbook)
   - [Recipes](#recipes)
-  - [Cursor rules](#cursor-rules)
+  - [LLM prompts](#llm-prompts)
   - [Usage](#usage)
     - [Apply](#apply)
       - [Syntax](#syntax)
@@ -40,9 +40,9 @@ Each recipe is located in the [cookbook's recipes folder](/cookbook/recipes/) an
 - `patches/`: a folder containing patches to be applied to existing files in the skeleton template. The file ↔ patch mappings are defined in the `recipe.yaml` file under the `ingredients` key.
 - `README.md`: the human-readable Markdown render of the recipe, based off of the `recipe.yaml` file.
 
-## Cursor rules
+## LLM prompts
 
-Recipes come paired with [Cursor](https://www.cursor.com/) rules that can be included in a Hydrogen project to improve the AI-assisted coding experience. The rules are available in [the .cursor folder](/cookbook/.cursor) and can be copied verbatim into the `.cursor` folder at the root of a Hydrogen project repository.
+Recipes come paired with LLM prompts that can be included in a Hydrogen project to improve the AI-assisted coding experience. The prompts are available in [the llms folder](/cookbook/llms).
 
 ## Usage
 
@@ -91,7 +91,7 @@ npm run cookbook -- apply --recipe my-recipe
 
 `generate` will build a recipe folder based on the current changes made to the skeleton template, effectively snapshotting its state into a reproducible recipe.
 
-Additionally, it will also generate the Cursor rule (and related LLM-friendly files) for the recipe.
+Additionally, it will also generate the LLM prompt (and related LLM-friendly files) for the recipe.
 
 The workflow for creating a new recipe is as follows:
 

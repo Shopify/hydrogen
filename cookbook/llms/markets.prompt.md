@@ -1,12 +1,6 @@
----
-description: Recipe for implementing "Markets (markets)" in a Hydrogen storefront. This recipe adds basic localization support to your Hydrogen app using Shopify Markets.
-globs: *
-alwaysApply: false
----
-
 # Overview
 
-This rule describes how to implement "Markets" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "Markets" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -14,7 +8,7 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 
 # AI model verification steps
 
-- Never edit generated files (ending with .d.ts) directly; instead, run the `npm run codegen` command to update them.
+- Never edit generated files (ending with .d.ts) directly; instead, run the `npm run codegen` command to update them (if the command isavailable).
 
 # Summary
 
@@ -115,7 +109,7 @@ This component displays a country selector inside the Header.
 To handle redirects, use a `Fetcher` that updates the cart buyer identity,
 which eventually redirects to the localized root of the app.
 
-##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
+##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/afc73119e3e97b2dcffd6b18b8b1048d454bf66d/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
 
 ```tsx
 import {Form} from '@remix-run/react';
@@ -194,7 +188,7 @@ const LocaleLink = ({locale}: {locale: Locale}) => {
 
 Create a wrapper component around the Remix `Link` component that prepends the selected locale path prefix (if any) to the actual links.
 
-##### File: [Link.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
+##### File: [Link.tsx](https://github.com/Shopify/hydrogen/blob/afc73119e3e97b2dcffd6b18b8b1048d454bf66d/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
 
 ```tsx
 import {Link as RemixLink} from '@remix-run/react';
@@ -219,7 +213,7 @@ a hook to retrieve the selected locale.
 2. Define a default locale that will be used as a fallback when no market
 is explicitly selected.
 
-##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
+##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/afc73119e3e97b2dcffd6b18b8b1048d454bf66d/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
 
 ```ts
 import {useMatches} from '@remix-run/react';
@@ -448,7 +442,7 @@ Remix counterpart.
 > [!NOTE]
 > Rename `app/routes/_index.tsx` to `app/routes/($locale)._index.tsx`.
 
-##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
+##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/afc73119e3e97b2dcffd6b18b8b1048d454bf66d/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
 
 ```tsx
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
@@ -629,7 +623,7 @@ Add the dynamic segment to the cart page route.
 > [!NOTE]
 > Rename `app/routes/cart.tsx` to `app/routes/($locale).cart.tsx`.
 
-##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
+##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/afc73119e3e97b2dcffd6b18b8b1048d454bf66d/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
 
 ```tsx
 import {type MetaFunction, useLoaderData} from '@remix-run/react';
@@ -761,7 +755,7 @@ localized prefix.
 > [!NOTE]
 > Rename `app/routes/products.$handle.tsx` to `app/routes/($locale).products.$handle.tsx`.
 
-##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1fff0f889223660ecc3b266b7e483a664aecd6c3/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
+##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/afc73119e3e97b2dcffd6b18b8b1048d454bf66d/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
 
 ```tsx
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';

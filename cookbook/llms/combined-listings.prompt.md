@@ -1,12 +1,6 @@
----
-description: Recipe for implementing "Combined Listings (combined-listings)" in a Hydrogen storefront. Handle combined listings on product pages and in search results.
-globs: *
-alwaysApply: false
----
-
 # Overview
 
-This rule describes how to implement "Combined Listings" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "Combined Listings" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -14,7 +8,7 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 
 # AI model verification steps
 
-- Never edit generated files (ending with .d.ts) directly; instead, run the `npm run codegen` command to update them.
+- Never edit generated files (ending with .d.ts) directly; instead, run the `npm run codegen` command to update them (if the command isavailable).
 
 # Summary
 
@@ -96,7 +90,7 @@ export const combinedListingsSettings = {
 
 Create a new `combined-listings.ts` file that contains utilities and settings for handling combined listings.
 
-#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/f1187827f0d7baadbc0a28105e928a339e6ec54c/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
+#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/afc73119e3e97b2dcffd6b18b8b1048d454bf66d/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
 
 ```ts
 // Edit these values to customize combined listings' behavior
