@@ -154,11 +154,13 @@ export {
   parseGid,
   parseMetafield,
   sendShopifyAnalytics,
+  ShopifyI18nProvider,
   ShopifySalesChannel,
   storefrontApiCustomScalars,
   useLoadScript,
   useMoney,
   useSelectedOptionInUrlParam,
   useShopifyCookies,
+  useShopifyI18nContext,
   Video,
 } from '@shopify/hydrogen-react';
