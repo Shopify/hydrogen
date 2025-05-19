@@ -382,6 +382,8 @@ function doNotEditComment(recipeName: string): string {
   return `DO NOT EDIT. This file is generated from the shopify/hydrogen repo from this source file: \`cookbook/recipes/${recipeName}/recipe.yaml\``;
 }
 
+const copyPromptTargetClass = 'copy-prompt-target';
+
 function makeCopyPromptTarget(
   recipe: Recipe,
   recipeName: string,
@@ -395,6 +397,6 @@ function makeCopyPromptTarget(
   const dataInstructions = 'Follow this recipe to implement this feature.';
 
   return mdRawHTML(
-    `<div class="copy-prompt-button" data-url="${dataURL}" data-instructions="${dataInstructions}"></div>`,
+    `<div class="${copyPromptTargetClass}" data-url="${dataURL}" data-instructions="${dataInstructions}"></div>`,
   );
 }
