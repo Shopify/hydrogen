@@ -87,9 +87,9 @@ steps:
     step: 1.1
     name: Create a CountrySelector component
     description: |
-      This component displays a country selector inside the Header.
+      Create a new `CountrySelector` component that allows users to select the locale from a dropdown of the supported locales.
 
-      To handle redirects, use a `Fetcher` that updates the cart buyer identity,
+      To handle redirects, use a `Form` that updates the cart buyer identity,
       which eventually redirects to the localized root of the app.
     ingredients:
       - path: templates/skeleton/app/components/CountrySelector.tsx

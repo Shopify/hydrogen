@@ -73,9 +73,9 @@ In this section, we'll create utilities to handle localization and country selec
 
 #### Step 1.1: Create a CountrySelector component
 
-This component displays a country selector inside the Header.
+Create a new `CountrySelector` component that allows users to select the locale from a dropdown of the supported locales.
 
-To handle redirects, use a `Fetcher` that updates the cart buyer identity,
+To handle redirects, use a `Form` that updates the cart buyer identity,
 which eventually redirects to the localized root of the app.
 
 ##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/a7e33c1dd45e3c7c27ab2e1125851468051cee0b/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
