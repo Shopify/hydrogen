@@ -133,7 +133,9 @@ export async function generateRecipe(
     recipeManifestFormat === 'json'
       ? JSON.stringify(recipe, null, 2)
       : `# yaml-language-server: $schema=../../recipe.schema.json\n\n` +
-        YAML.stringify(recipe);
+        YAML.stringify(recipe, {
+          blockQuote: 'literal',
+        });
 
   fs.writeFileSync(recipeManifestPath, data);
 

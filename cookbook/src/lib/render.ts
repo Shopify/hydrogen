@@ -121,7 +121,7 @@ export function makeReadmeBlocks(
 
   const markdownNextSteps =
     recipe.nextSteps != null
-      ? [mdHeading(2, 'Next Steps'), mdParagraph(recipe.nextSteps)]
+      ? [mdHeading(2, 'Next steps'), mdParagraph(recipe.nextSteps)]
       : [];
 
   const blocks: MDBlock[] = [
@@ -281,7 +281,7 @@ export function renderStep(
         ...(renamedFrom != null
           ? [
               mdNote(
-                `Rename \`${renamedFrom.replace(TEMPLATE_DIRECTORY, '')}\` to \`${ingredient.replace(TEMPLATE_DIRECTORY, '')}\``,
+                `Rename \`${renamedFrom.replace(TEMPLATE_DIRECTORY, '')}\` to \`${ingredient.replace(TEMPLATE_DIRECTORY, '')}\`.`,
               ),
             ]
           : []),

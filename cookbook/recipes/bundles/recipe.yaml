@@ -19,12 +19,9 @@ description: |
   information on product and collection pages.
   4. Update the cart line item template to display the bundle badge as needed.
 notes: []
-requirements: >
-  To use product bundles, you need to install a bundles app in your Shopify
-  admin.
-
-  In this recipe, we'll use the [Shopify Bundles
-  app](https://apps.shopify.com/shopify-bundles).
+requirements: |
+  To use product bundles, you need to install a bundles app in your Shopify admin.
+  In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/shopify-bundles).
 ingredients:
   - path: templates/skeleton/app/components/BundleBadge.tsx
     description: A badge displayed on bundle product listings.
@@ -45,9 +42,8 @@ steps:
   - type: NEW_FILE
     step: 2
     name: Create the BundleBadge component
-    description: >
-      Create a new BundleBadge component to be displayed on bundle product
-      listings.
+    description: |
+      Create a new BundleBadge component to be displayed on bundle product listings.
     ingredients:
       - path: templates/skeleton/app/components/BundleBadge.tsx
   - type: NEW_FILE
@@ -71,27 +67,24 @@ steps:
   - type: PATCH
     step: 5
     name: Update the collections fragment to query for bundles
-    description: >
-      Like the previous step, use the `requiresComponents` field to detect if
-      the product item is a bundle.
+    description: |
+      Like the previous step, use the `requiresComponents` field to detect if the product item is a bundle.
     diffs:
       - file: app/routes/collections.$handle.tsx
         patchFile: collections.$handle.tsx.951367.patch
   - type: PATCH
     step: 6
     name: Update the cart fragment to query for bundles
-    description: >
-      Use the `requiresComponents` field to determine if a cart line item is a
-      bundle.
+    description: |
+      Use the `requiresComponents` field to determine if a cart line item is a bundle.
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.e8eb04.patch
   - type: PATCH
     step: 7
     name: Conditionally render the BundleBadge in cart line items
-    description: >
-      If a product is a bundle, show the `BundleBadge` component in the cart
-      line item.
+    description: |
+      If a product is a bundle, show the `BundleBadge` component in the cart line item.
     diffs:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.8e657b.patch
@@ -106,18 +99,16 @@ steps:
   - type: PATCH
     step: 9
     name: Conditionally render the BundleBadge in ProductImage
-    description: >
-      If a product is a bundle, show the `BundleBadge` component in the
-      `ProductImage` component.
+    description: |
+      If a product is a bundle, show the `BundleBadge` component in the `ProductImage` component.
     diffs:
       - file: app/components/ProductImage.tsx
         patchFile: ProductImage.tsx.4e6c4c.patch
   - type: PATCH
     step: 10
     name: Conditionally render the BundleBadge in ProductItem
-    description: >
-      If a product is a bundle, show the `BundleBadge` component in the
-      `ProductItem` component.
+    description: |
+      If a product is a bundle, show the `BundleBadge` component in the `ProductItem` component.
     diffs:
       - file: app/components/ProductItem.tsx
         patchFile: ProductItem.tsx.8ddc67.patch
@@ -129,14 +120,9 @@ steps:
     diffs:
       - file: app/styles/app.css
         patchFile: app.css.e88d35.patch
-nextSteps: >
-  - Test your implementation by going to your store and adding a bundle to the
-  cart. Make sure that the bundle's badge appears on the product page and in the
-  cart.
-
-  - (Optional) [Place a test
-  order](https://help.shopify.com/en/manual/checkout-settings/test-orders) to
-  see how orders for bundles appear in your Shopify admin.
+nextSteps: |
+  - Test your implementation by going to your store and adding a bundle to the cart. Make sure that the bundle's badge appears on the product page and in the cart.
+  - (Optional) [Place a test order](https://help.shopify.com/en/manual/checkout-settings/test-orders) to see how orders for bundles appear in your Shopify admin.
 llms:
   userQueries:
     - How do I show product bundles on my Hydrogen storefront?
@@ -155,4 +141,4 @@ llms:
       solution: Make sure you've installed the Shopify Bundles app and set up product
         bundles in your Shopify admin. Then make sure you've updated the cart
         fragment to query for bundles.
-commit: f1187827f0d7baadbc0a28105e928a339e6ec54c
+commit: 87da752246ad519f744a791cd21fd75546c7273e
