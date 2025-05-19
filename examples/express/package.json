@@ -10,7 +10,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@remix-run/express": "^2.16.1",
+    "@remix-run/express": "^2.16.3",
     "@remix-run/node": "^2.16.1",
     "@remix-run/react": "^2.16.1",
     "@remix-run/server-runtime": "^2.16.1",
