@@ -71,11 +71,7 @@ const EXPERIMENTAL_VM_MODULES_FLAG = '--experimental-vm-modules';
 
 function commandNeedsVM(id = '', argv: string[] = []) {
   // All the commands that rely on MiniOxygen's Node sandbox:
-  return (
-    id === 'hydrogen:debug:cpu' ||
-    (['hydrogen:dev', 'hydrogen:preview'].includes(id) &&
-      argv.includes('--legacy-runtime'))
-  );
+  return id === 'hydrogen:debug:cpu';
 }
 
 function isHydrogenProject(projectPath: string) {
