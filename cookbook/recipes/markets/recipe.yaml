@@ -71,6 +71,8 @@ ingredients:
     description: A localized cart route.
   - path: templates/skeleton/app/routes/($locale).products.$handle.tsx
     description: A route that renders a localized version of the product page.
+  - path: templates/skeleton/app/routes/($locale).tsx
+    description: A utility route that makes sure the locale is valid.
 deletedFiles:
   - templates/skeleton/app/routes/_index.tsx
   - templates/skeleton/app/routes/cart.tsx
@@ -105,6 +107,7 @@ steps:
       1. Create a helper function to get locale information from the context, and
       a hook to retrieve the selected locale.
       2. Define a set of supported locales for the app.
+      3. Add a utility function to validate the locale from the route param against the supported locales.
     ingredients:
       - path: templates/skeleton/app/lib/i18n.ts
   - type: PATCH
@@ -184,8 +187,17 @@ steps:
     ingredients:
       - path: templates/skeleton/app/routes/($locale).products.$handle.tsx
         renamedFrom: templates/skeleton/app/routes/products.$handle.tsx
-  - type: PATCH
+  - type: NEW_FILE
     step: 2.5
+    name: Add a utility route to validate the locale.
+    description: |
+      Add a utility route in `$(locale).tsx` that will use `localeMatchesPrefix`
+      to validate the locale from the URL params. If the locale is invalid,
+      the route will throw a 404 error.
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).tsx
+  - type: PATCH
+    step: 2.6
     name: Update the sitemap route's locales.
     description: |
       Update the sitemap route to use the locales included in `SUPPORTED_LOCALES`.

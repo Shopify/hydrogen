@@ -69,6 +69,6 @@ export function useSelectedLocale(): Locale | null {
 export function localeMatchesPrefix(localeSegment: string | null): boolean {
   const prefix = '/' + (localeSegment ?? '');
   return SUPPORTED_LOCALES.some((supportedLocale) => {
-    return supportedLocale.pathPrefix === prefix;
+    return supportedLocale.pathPrefix.toUpperCase() === prefix.toUpperCase();
   });
 }

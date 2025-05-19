@@ -1,15 +1,14 @@
-index 20b39d82..7abeb46a 100644
+index 20b39d82..8cf08fc6 100644
 --- a/templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx
 +++ b/templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx
-@@ -1,6 +1,6 @@
+@@ -1,5 +1,6 @@
  import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
  import {getSitemap} from '@shopify/hydrogen';
--
 +import {SUPPORTED_LOCALES} from '../lib/i18n';
+ 
  export async function loader({
    request,
-   params,
-@@ -10,7 +10,9 @@ export async function loader({
+@@ -10,7 +11,9 @@ export async function loader({
      storefront,
      request,
      params,
@@ -20,8 +19,3 @@ index 20b39d82..7abeb46a 100644
      getLink: ({type, baseUrl, handle, locale}) => {
        if (!locale) return `${baseUrl}/${type}/${handle}`;
        return `${baseUrl}/${locale}/${type}/${handle}`;
-@@ -21,4 +23,3 @@ export async function loader({
- 
-   return response;
- }
--
