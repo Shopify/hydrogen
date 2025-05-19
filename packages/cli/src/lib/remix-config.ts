@@ -89,11 +89,10 @@ export async function getRemixConfig(
   root: string,
   mode = process.env.NODE_ENV,
 ): Promise<ResolvedRRConfig> {
-  if (await isViteProject(root)) {
-    return (await getViteConfig(root)).remixConfig;
+  if (!(await isViteProject(root))) {
+    throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
   }
-
-  throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
+  return (await getViteConfig(root)).remixConfig;
 }
 
 async function assertEntryFileExists(root: string, fileRelative: string) {
