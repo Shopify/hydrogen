@@ -52,3 +52,8 @@ export function useSelectedLocale(): Locale | null {
 
   return selectedLocale ?? null;
 }
+
+export function localeMatchesPrefix(locale: Locale, url: URL): boolean {
+  const pathPrefix = ('/' + url.pathname.split('/').at(1)).replace(/^\/+/, '/');
+  return pathPrefix === locale.pathPrefix;
+}

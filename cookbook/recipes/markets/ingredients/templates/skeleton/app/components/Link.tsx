@@ -4,9 +4,9 @@ import {useSelectedLocale} from '../lib/i18n';
 
 export function Link({...props}: RemixLinkProps) {
   const selectedLocale = useSelectedLocale();
-  const to =
-    selectedLocale != null
-      ? `${selectedLocale.pathPrefix}${props.to}`
-      : props.to;
+
+  const prefix = selectedLocale?.pathPrefix.replace(/\/+$/, '') ?? '';
+  const to = `${prefix}${props.to}`;
+
   return <RemixLink {...props} to={to} />;
 }

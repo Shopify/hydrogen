@@ -1,20 +1,39 @@
-index 3426476a..4f67b72b 100644
+index 3426476a..ba51bab8 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
-@@ -74,9 +74,12 @@ export async function loader(args: LoaderFunctionArgs) {
+@@ -1,5 +1,5 @@
+ import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
+-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
++import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import {
+   Outlet,
+   useRouteError,
+@@ -16,7 +16,7 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+ import resetStyles from '~/styles/reset.css?url';
+ import appStyles from '~/styles/app.css?url';
+ import {PageLayout} from './components/PageLayout';
+-
++import {localeMatchesPrefix} from './lib/i18n';
+ export type RootLoader = typeof loader;
+ 
+ /**
+@@ -74,9 +74,15 @@ export async function loader(args: LoaderFunctionArgs) {
  
    const {storefront, env} = args.context;
  
 +  const {i18n} = storefront;
++  if (!localeMatchesPrefix(i18n, new URL(args.request.url))) {
++    throw redirect(i18n.pathPrefix);
++  }
 +
    return {
      ...deferredData,
      ...criticalData,
-+    selectedLocale: args.context.storefront.i18n,
++    selectedLocale: i18n,
      publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
      shop: getShopAnalytics({
        storefront,
-@@ -87,8 +90,8 @@ export async function loader(args: LoaderFunctionArgs) {
+@@ -87,8 +93,8 @@ export async function loader(args: LoaderFunctionArgs) {
        storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
        withPrivacyBanner: false,
        // localize the privacy banner
@@ -25,7 +44,7 @@ index 3426476a..4f67b72b 100644
      },
    };
  }
-@@ -105,6 +108,8 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
+@@ -105,6 +111,8 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
        cache: storefront.CacheLong(),
        variables: {
          headerMenuHandle: 'main-menu', // Adjust to your header menu handle
@@ -34,7 +53,7 @@ index 3426476a..4f67b72b 100644
        },
      }),
      // Add other queries here, so that they are loaded in parallel
-@@ -162,7 +167,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -162,7 +170,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
              shop={data.shop}
              consent={data.consent}
            >
