@@ -149,6 +149,15 @@ export function mdQuote(text: string): MDQuote {
   };
 }
 
+export type RawHTML = {
+  type: 'RAW_HTML';
+  html: string;
+};
+
+export function mdRawHTML(html: string): RawHTML {
+  return {type: 'RAW_HTML', html};
+}
+
 export type MDBlock =
   | MDHeading
   | MDImage
@@ -159,7 +168,8 @@ export type MDBlock =
   | MDTable
   | MDQuote
   | MDFrontMatter
-  | MDNote;
+  | MDNote
+  | RawHTML;
 
 export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
   switch (block.type) {
@@ -244,6 +254,8 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
           .map((line) => `> ${line}`)
           .join('\n'),
       ].join('\n');
+    case 'RAW_HTML':
+      return block.html;
     default:
       assertNever(block);
   }
