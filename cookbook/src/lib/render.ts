@@ -16,6 +16,7 @@ import {
   mdList,
   mdNote,
   mdParagraph,
+  mdRawHTML,
   mdTable,
   serializeMDBlocksToFile,
 } from './markdown';
@@ -69,8 +70,10 @@ export function makeReadmeBlocks(
   recipeName: string,
   recipe: Recipe,
   format: RenderFormat,
-) {
+): MDBlock[] {
   const markdownTitle = makeTitle(recipeName, recipe, format);
+
+  const htmlCopyPromptTarget = makeCopyPromptTarget(recipe, recipeName, format);
 
   const markdownDescription = mdParagraph(recipe.description);
 
@@ -126,6 +129,7 @@ export function makeReadmeBlocks(
 
   const blocks: MDBlock[] = [
     markdownTitle,
+    ...(htmlCopyPromptTarget != null ? [htmlCopyPromptTarget] : []),
     markdownDescription,
     ...markdownNotes,
     ...markdownRequirements,
@@ -356,6 +360,8 @@ function makeTitle(
 }
 
 const HYDROGEN_REPO_BASE_URL = 'https://github.com/Shopify/hydrogen';
+const HYDROGEN_REPO_RAW_BASE_URL =
+  'https://raw.githubusercontent.com/Shopify/hydrogen';
 
 function hydrogenRepoFolderURL(params: {path: string; hash: string}): string {
   const {path, hash} = params;
@@ -374,4 +380,21 @@ function hydrogenRepoRecipeBaseURL(params: {
 
 function doNotEditComment(recipeName: string): string {
   return `DO NOT EDIT. This file is generated from the shopify/hydrogen repo from this source file: \`cookbook/recipes/${recipeName}/recipe.yaml\``;
+}
+
+function makeCopyPromptTarget(
+  recipe: Recipe,
+  recipeName: string,
+  format: RenderFormat,
+): MDBlock | null {
+  if (format !== 'shopify.dev') {
+    return null;
+  }
+
+  const dataURL = `${HYDROGEN_REPO_RAW_BASE_URL}/${recipe.commit}/cookbook/llms/${recipeName}.prompt.md`;
+  const dataInstructions = 'Follow this recipe to implement this feature.';
+
+  return mdRawHTML(
+    `<div class="copy-prompt-button" data-url="${dataURL}" data-instructions="${dataInstructions}"></div>`,
+  );
 }
