@@ -1,5 +1,5 @@
 import {getVirtualRoutesV3} from '../vite/get-virtual-routes';
-import {type RouteConfigEntry} from '@react-router/dev/dist/routes'; // TODO BEFORE MERGE: fix this import
+import {type RouteConfigEntry} from '@react-router/dev/dist/routes';
 
 // Make this transform the existing routes instead.
 export async function hydrogenRoutes(

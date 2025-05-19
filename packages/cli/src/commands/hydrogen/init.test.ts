@@ -88,15 +88,6 @@ describe('init', () => {
       return () => removeFile(tmpDir);
     });
 
-    // TODO BEFORE MERGE: fix this test
-    /**
-     * Caused by: Error: Command failed with exit code 1: npm run typecheck
-     * Error: EACCES: permission denied, mkdir '/private/var/Users/bayjorix/src/github.com/Shopify/hydrogen/packages/hydrogen/dist/vite/virtual-routes/+types'
-     *
-     * it seems like react-router typegen prepends /private/var to the absolute path. this is probably because we run it in a temporary tmpDir which is under /private/var but in a specific directory where it WOULD have write access.
-
-
-     */
     it('typechecks the project', async () => {
       // This will throw if TSC fails
       await expect(
