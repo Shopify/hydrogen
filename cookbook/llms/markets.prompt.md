@@ -17,13 +17,19 @@ This recipe adds basic localization support to your Hydrogen app using Shopify M
 # User Intent Recognition
 
 <user_queries>
-
+- How do I add localization support to my Hydrogen app?
+- How do I add a country selector to my Hydrogen app?
+- Set up Shopify Markets in Hydrogen
+- Help me segment my customers based on their location
 </user_queries>
 
 # Troubleshooting
 
 <troubleshooting>
-
+- **Issue**: I'm not seeing the localized content on my storefront.
+  **Solution**: In your Shopify admin, make sure you've set up your store's regions and langauges using Shopify Markets, then check that your products are appropriately configured for each market. In your Hydrogen app, make sure you've added the dynamic segment to the desired routes and that the routes are correctly named.
+- **Issue**: Some pages are showing localized content, but others aren't.
+  **Solution**: Make sure you update *all* routes that need localization (not only the routes for the home page, the cart page, and the product page). See step 2.1 for details.
 </troubleshooting>
 
 # Recipe Implementation
