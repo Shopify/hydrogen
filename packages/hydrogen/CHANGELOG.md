@@ -1,6 +1,6 @@
 # @shopify/hydrogen
 
-## 2025.4.1
+## 2025.4.0
 
 ### Patch Changes
 
@@ -9,7 +9,7 @@
 - Switch to an evergreen URL for Perfkit. Users will no longer need to update Hydrogen to get the newest features and bugfixes. ([#2895](https://github.com/Shopify/hydrogen/pull/2895)) by [@krzksz](https://github.com/krzksz)
 
 - Updated dependencies [[`af23e710`](https://github.com/Shopify/hydrogen/commit/af23e710dac83bb57498d9c2ef1d8bcf9df55d34)]:
-  - @shopify/hydrogen-react@2025.4.1
+  - @shopify/hydrogen-react@2025.4.0
 
 ## 2025.1.4
 
