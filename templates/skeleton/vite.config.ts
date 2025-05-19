@@ -1,4 +1,4 @@
-import {defaultClientConditions, defineConfig} from 'vite';
+import {defineConfig} from 'vite';
 import {hydrogen} from '@shopify/hydrogen/vite';
 import {oxygen} from '@shopify/mini-oxygen/vite';
 import {reactRouter} from '@react-router/dev/vite';
@@ -10,9 +10,6 @@ export default defineConfig({
     // Allow a strict Content-Security-Policy
     // withtout inlining assets as base64:
     assetsInlineLimit: 0,
-  },
-  resolve: {
-    conditions: ['worker', 'workerd', ...defaultClientConditions],
   },
   ssr: {
     optimizeDeps: {
@@ -26,10 +23,7 @@ export default defineConfig({
        * Include 'example-dep' in the array below.
        * @see https://vitejs.dev/config/dep-optimization-options
        */
-      include: ['set-cookie-parser', 'cookie'], // TODO Before merge: npm run dev somehow auto-included these, need to understand it
-    },
-    resolve: {
-      conditions: ['worker', 'workerd', ...defaultClientConditions],
+      include: [],
     },
   },
 });
