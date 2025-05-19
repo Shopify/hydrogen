@@ -6,10 +6,7 @@ export async function hydrogenRoutes(
   currentRoutes: Array<RouteConfigEntry>,
 ): Promise<Array<RouteConfigEntry>> {
   // Only run this in development.
-  if (
-    process.env.NODE_ENV !== 'development' ||
-    (process.env as any).HYDROGEN_DISABLE_VIRTUAL_ROUTES === 'true' // TODO before merge: this should be a separate PR
-  ) {
+  if (process.env.NODE_ENV !== 'development') {
     return currentRoutes;
   }
 
