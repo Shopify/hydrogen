@@ -97,7 +97,7 @@ describe('init', () => {
 
 
      */
-    it.skip('typechecks the project', async () => {
+    it('typechecks the project', async () => {
       // This will throw if TSC fails
       await expect(
         exec('npm', ['run', 'typecheck'], {cwd: tmpDir}),
