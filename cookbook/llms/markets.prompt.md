@@ -113,7 +113,7 @@ which eventually redirects to the localized root of the app.
 
 ```tsx
 import {Form} from '@remix-run/react';
-import {DEFAULT_LOCALE, Locale, useSelectedLocale} from '../lib/i18n';
+import {Locale, SUPPORTED_LOCALES, useSelectedLocale} from '../lib/i18n';
 import {CartForm} from '@shopify/hydrogen';
 
 export function CountrySelector() {
@@ -141,16 +141,12 @@ export function CountrySelector() {
           boxShadow: '0 0 10px 0 rgba(0, 0, 0, 0.1)',
         }}
       >
-        <LocaleLink locale={DEFAULT_LOCALE} />
-        <LocaleLink
-          locale={{country: 'CA', language: 'EN', pathPrefix: '/EN-CA'}}
-        />
-        <LocaleLink
-          locale={{country: 'CA', language: 'FR', pathPrefix: '/FR-CA'}}
-        />
-        <LocaleLink
-          locale={{country: 'FR', language: 'FR', pathPrefix: '/FR-FR'}}
-        />
+        {SUPPORTED_LOCALES.map((locale) => (
+          <LocaleLink
+            key={`locale-${locale.language}-${locale.country}`}
+            locale={locale}
+          />
+        ))}
       </div>
     </details>
   );
@@ -210,8 +206,7 @@ export function Link({...props}: RemixLinkProps) {
 
 1. Create a helper function to get locale information from the context, and
 a hook to retrieve the selected locale.
-2. Define a default locale that will be used as a fallback when no market
-is explicitly selected.
+2. Define a set of supported locales for the app.
 
 ##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/a7e33c1dd45e3c7c27ab2e1125851468051cee0b/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
 
@@ -234,24 +229,37 @@ export const DEFAULT_LOCALE: Locale = {
   pathPrefix: '/',
 };
 
-export function getLocaleFromRequest(request: Request): Locale {
-  const url = new URL(request.url);
+export const SUPPORTED_LOCALES: Locale[] = [
+  DEFAULT_LOCALE,
+  {language: 'EN', country: 'CA', pathPrefix: '/EN-CA'},
+  {language: 'FR', country: 'CA', pathPrefix: '/FR-CA'},
+  {language: 'FR', country: 'FR', pathPrefix: '/FR-FR'},
+];
 
-  const firstPathPart = url.pathname
-    // take the first part of the pathname (split by /)
-    .split('/')
-    .at(1)
-    // replace the .data suffix, if present
-    ?.replace(/\.data$/, '')
-    // normalize to uppercase
-    ?.toUpperCase();
+const RE_LOCALE_PREFIX = /^[A-Z]{2}-[A-Z]{2}$/i;
+
+function getFirstPathPart(url: URL): string | null {
+  return (
+    url.pathname
+      // take the first part of the pathname (split by /)
+      .split('/')
+      .at(1)
+      // replace the .data suffix, if present
+      ?.replace(/\.data$/, '')
+      // normalize to uppercase
+      ?.toUpperCase() ?? null
+  );
+}
+
+export function getLocaleFromRequest(request: Request): Locale {
+  const firstPathPart = getFirstPathPart(new URL(request.url));
 
   type LocaleFromUrl = [Locale['language'], Locale['country']];
 
   let pathPrefix = '';
 
   // If the first path part is not a valid locale, return the default locale
-  if (firstPathPart == null || !/^[A-Z]{2}-[A-Z]{2}$/i.test(firstPathPart)) {
+  if (firstPathPart == null || !RE_LOCALE_PREFIX.test(firstPathPart)) {
     return DEFAULT_LOCALE;
   }
 
@@ -271,9 +279,11 @@ export function useSelectedLocale(): Locale | null {
   return selectedLocale ?? null;
 }
 
-export function localeMatchesPrefix(locale: Locale, url: URL): boolean {
-  const pathPrefix = ('/' + url.pathname.split('/').at(1)).replace(/^\/+/, '/');
-  return pathPrefix === locale.pathPrefix;
+export function localeMatchesPrefix(localeSegment: string | null): boolean {
+  const prefix = '/' + (localeSegment ?? '');
+  return SUPPORTED_LOCALES.some((supportedLocale) => {
+    return supportedLocale.pathPrefix === prefix;
+  });
 }
 
 ```
@@ -371,7 +381,8 @@ This adds a country selector component to the navigation.
 #### Step 1.7: Add the selected locale to the root route
 
 1. Include the selected locale in the root route's loader data.
-2. Add a key prop to the `PageLayout` component to make sure it re-renders
+2. Make sure to redirect to the 404 page if the requested locale is not supported.
+3. Add a key prop to the `PageLayout` component to make sure it re-renders
 when the locale changes.
 
 ##### File: /app/root.tsx
@@ -393,13 +404,14 @@ when the locale changes.
  export type RootLoader = typeof loader;
  
  /**
-@@ -74,9 +74,15 @@ export async function loader(args: LoaderFunctionArgs) {
+@@ -74,9 +74,16 @@ export async function loader(args: LoaderFunctionArgs) {
  
    const {storefront, env} = args.context;
  
-+  const {i18n} = storefront;
-+  if (!localeMatchesPrefix(i18n, new URL(args.request.url))) {
-+    throw redirect(i18n.pathPrefix);
++  // use the locale key from the URL params; make sure the key name matches what's used in the route definition (e.g. `($locale).myRoute.tsx`)
++  const localeSegment = args.params.locale;
++  if (!localeMatchesPrefix(localeSegment ?? null)) {
++    throw new Response(null, {status: 404});
 +  }
 +
    return {
@@ -409,7 +421,7 @@ when the locale changes.
      publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
      shop: getShopAnalytics({
        storefront,
-@@ -162,7 +168,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -162,7 +169,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
              shop={data.shop}
              consent={data.consent}
            >

@@ -1,5 +1,5 @@
 import {Form} from '@remix-run/react';
-import {DEFAULT_LOCALE, Locale, useSelectedLocale} from '../lib/i18n';
+import {Locale, SUPPORTED_LOCALES, useSelectedLocale} from '../lib/i18n';
 import {CartForm} from '@shopify/hydrogen';
 
 export function CountrySelector() {
@@ -27,16 +27,12 @@ export function CountrySelector() {
           boxShadow: '0 0 10px 0 rgba(0, 0, 0, 0.1)',
         }}
       >
-        <LocaleLink locale={DEFAULT_LOCALE} />
-        <LocaleLink
-          locale={{country: 'CA', language: 'EN', pathPrefix: '/EN-CA'}}
-        />
-        <LocaleLink
-          locale={{country: 'CA', language: 'FR', pathPrefix: '/FR-CA'}}
-        />
-        <LocaleLink
-          locale={{country: 'FR', language: 'FR', pathPrefix: '/FR-FR'}}
-        />
+        {SUPPORTED_LOCALES.map((locale) => (
+          <LocaleLink
+            key={`locale-${locale.language}-${locale.country}`}
+            locale={locale}
+          />
+        ))}
       </div>
     </details>
   );

@@ -104,8 +104,7 @@ steps:
     description: |
       1. Create a helper function to get locale information from the context, and
       a hook to retrieve the selected locale.
-      2. Define a default locale that will be used as a fallback when no market
-      is explicitly selected.
+      2. Define a set of supported locales for the app.
     ingredients:
       - path: templates/skeleton/app/lib/i18n.ts
   - type: PATCH
@@ -138,7 +137,8 @@ steps:
     name: Add the selected locale to the root route
     description: |
       1. Include the selected locale in the root route's loader data.
-      2. Add a key prop to the `PageLayout` component to make sure it re-renders
+      2. Make sure to redirect to the 404 page if the requested locale is not supported.
+      3. Add a key prop to the `PageLayout` component to make sure it re-renders
       when the locale changes.
     diffs:
       - file: app/root.tsx

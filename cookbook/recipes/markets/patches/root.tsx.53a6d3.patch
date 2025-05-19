@@ -1,4 +1,4 @@
-index 3426476a..9d6ee70a 100644
+index 3426476a..f6c6f86b 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -1,5 +1,5 @@
@@ -17,13 +17,14 @@ index 3426476a..9d6ee70a 100644
  export type RootLoader = typeof loader;
  
  /**
-@@ -74,9 +74,15 @@ export async function loader(args: LoaderFunctionArgs) {
+@@ -74,9 +74,16 @@ export async function loader(args: LoaderFunctionArgs) {
  
    const {storefront, env} = args.context;
  
-+  const {i18n} = storefront;
-+  if (!localeMatchesPrefix(i18n, new URL(args.request.url))) {
-+    throw redirect(i18n.pathPrefix);
++  // use the locale key from the URL params; make sure the key name matches what's used in the route definition (e.g. `($locale).myRoute.tsx`)
++  const localeSegment = args.params.locale;
++  if (!localeMatchesPrefix(localeSegment ?? null)) {
++    throw new Response(null, {status: 404});
 +  }
 +
    return {
@@ -33,7 +34,7 @@ index 3426476a..9d6ee70a 100644
      publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
      shop: getShopAnalytics({
        storefront,
-@@ -162,7 +168,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -162,7 +169,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
              shop={data.shop}
              consent={data.consent}
            >
