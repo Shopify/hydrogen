@@ -16,9 +16,11 @@ import {startMiniOxygen, type MiniOxygen} from '../../lib/mini-oxygen/index.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 import {findPort} from '../../lib/find-port.js';
-import {getViteConfig} from '../../lib/vite-config.js';
+import {
+  getViteConfig,
+  REMIX_COMPILER_ERROR_MESSAGE,
+} from '../../lib/vite-config.js';
 import {runBuild} from './build.js';
-import {runClassicCompilerBuild} from '../../lib/classic-compiler/build.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 import {deferPromise} from '../../lib/defer.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
@@ -33,7 +35,6 @@ export default class Preview extends Command {
   static flags = {
     ...commonFlags.path,
     ...commonFlags.port,
-    ...commonFlags.legacyRuntime,
     ...commonFlags.env,
     ...commonFlags.envBranch,
     ...commonFlags.envFile,
@@ -96,7 +97,6 @@ export default class Preview extends Command {
 type PreviewOptions = {
   port?: number;
   directory?: string;
-  legacyRuntime?: boolean;
   env?: string;
   envBranch?: string;
   inspectorPort?: number;
@@ -113,7 +113,6 @@ type PreviewOptions = {
 export async function runPreview({
   port: appPort,
   directory,
-  legacyRuntime = false,
   env: envHandle,
   envBranch,
   inspectorPort,
@@ -137,11 +136,8 @@ export async function runPreview({
 
   const useClassicCompiler = await isClassicProject(root);
 
-  if (watch && useClassicCompiler) {
-    throw new AbortError(
-      'Preview in watch mode is not supported for classic Remix projects.',
-      'Please use the dev command instead, which is the equivalent for classic projects.',
-    );
+  if (useClassicCompiler) {
+    throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
   }
 
   let miniOxygen: MiniOxygen;
@@ -159,23 +155,19 @@ export async function runPreview({
   };
 
   const buildProcess = shouldBuild
-    ? useClassicCompiler
-      ? await runClassicCompilerBuild({
-          ...buildOptions,
-        }).then(projectBuild.resolve)
-      : await runBuild({
-          ...buildOptions,
-          watch,
-          async onServerBuildFinish() {
-            if (projectBuild.state === 'pending') {
-              projectBuild.resolve();
-            } else {
-              outputInfo('🏗️  Project rebuilt. Reloading server...');
-            }
+    ? await runBuild({
+        ...buildOptions,
+        watch,
+        async onServerBuildFinish() {
+          if (projectBuild.state === 'pending') {
+            projectBuild.resolve();
+          } else {
+            outputInfo('🏗️  Project rebuilt. Reloading server...');
+          }
 
-            await miniOxygen?.reload();
-          },
-        })
+          await miniOxygen?.reload();
+        },
+      })
     : projectBuild.resolve();
 
   if (!useClassicCompiler) {
@@ -200,7 +192,7 @@ export async function runPreview({
     appPort = await findPort(DEFAULT_APP_PORT);
   }
 
-  const assetsPort = legacyRuntime ? 0 : await findPort(appPort + 100);
+  const assetsPort = await findPort(appPort + 100);
 
   // Note: we don't need to add any asset prefix in preview because
   // we don't control the build at this point. However, the assets server
@@ -210,20 +202,17 @@ export async function runPreview({
 
   logInjectedVariables();
 
-  miniOxygen = await startMiniOxygen(
-    {
-      root,
-      appPort,
-      assetsPort,
-      env: allVariables,
-      buildPathClient,
-      buildPathWorkerFile,
-      inspectorPort,
-      debug,
-      watch,
-    },
-    legacyRuntime,
-  );
+  miniOxygen = await startMiniOxygen({
+    root,
+    appPort,
+    assetsPort,
+    env: allVariables,
+    buildPathClient,
+    buildPathWorkerFile,
+    inspectorPort,
+    debug,
+    watch,
+  });
 
   miniOxygen.showBanner({
     mode: 'preview',
