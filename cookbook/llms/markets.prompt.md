@@ -1028,6 +1028,39 @@ const PRODUCT_QUERY = `#graphql
 
 ```
 
+#### Step 2.5: Update the sitemap route's locales.
+
+Update the sitemap route to use the locales included in `SUPPORTED_LOCALES`.
+
+##### File: /app/routes/sitemap.$type.$page[.xml].tsx
+
+```diff
+@@ -1,6 +1,6 @@
+ import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import {getSitemap} from '@shopify/hydrogen';
+-
++import {SUPPORTED_LOCALES} from '../lib/i18n';
+ export async function loader({
+   request,
+   params,
+@@ -10,7 +10,9 @@ export async function loader({
+     storefront,
+     request,
+     params,
+-    locales: ['EN-US', 'EN-CA', 'FR-CA'],
++    locales: SUPPORTED_LOCALES.map(
++      (locale) => `${locale.language}-${locale.country}`,
++    ),
+     getLink: ({type, baseUrl, handle, locale}) => {
+       if (!locale) return `${baseUrl}/${type}/${handle}`;
+       return `${baseUrl}/${locale}/${type}/${handle}`;
+@@ -21,4 +23,3 @@ export async function loader({
+ 
+   return response;
+ }
+-
+```
+
 ## Deleted Files
 
 - [`templates/skeleton/app/routes/_index.tsx`](templates/skeleton/app/routes/_index.tsx)

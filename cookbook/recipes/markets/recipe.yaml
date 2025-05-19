@@ -184,6 +184,14 @@ steps:
     ingredients:
       - path: templates/skeleton/app/routes/($locale).products.$handle.tsx
         renamedFrom: templates/skeleton/app/routes/products.$handle.tsx
+  - type: PATCH
+    step: 2.5
+    name: Update the sitemap route's locales.
+    description: |
+      Update the sitemap route to use the locales included in `SUPPORTED_LOCALES`.
+    diffs:
+      - file: app/routes/sitemap.$type.$page[.xml].tsx
+        patchFile: sitemap.$type.$page[.xml].tsx.9700e3.patch
 nextSteps: |
   - Test your implementation by going to your store and selecting a different
   market from the country selector.

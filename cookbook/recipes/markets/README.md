@@ -1032,6 +1032,42 @@ const PRODUCT_QUERY = `#graphql
 
 </details>
 
+#### Step 2.5: Update the sitemap route's locales.
+
+Update the sitemap route to use the locales included in `SUPPORTED_LOCALES`.
+
+##### File: [app/routes/sitemap.$type.$page[.xml].tsx](https://github.com/Shopify/hydrogen/blob/a7e33c1dd45e3c7c27ab2e1125851468051cee0b/templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx)
+
+```diff
+index 20b39d82..7abeb46a 100644
+--- a/templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx
++++ b/templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx
+@@ -1,6 +1,6 @@
+ import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import {getSitemap} from '@shopify/hydrogen';
+-
++import {SUPPORTED_LOCALES} from '../lib/i18n';
+ export async function loader({
+   request,
+   params,
+@@ -10,7 +10,9 @@ export async function loader({
+     storefront,
+     request,
+     params,
+-    locales: ['EN-US', 'EN-CA', 'FR-CA'],
++    locales: SUPPORTED_LOCALES.map(
++      (locale) => `${locale.language}-${locale.country}`,
++    ),
+     getLink: ({type, baseUrl, handle, locale}) => {
+       if (!locale) return `${baseUrl}/${type}/${handle}`;
+       return `${baseUrl}/${locale}/${type}/${handle}`;
+@@ -21,4 +23,3 @@ export async function loader({
+ 
+   return response;
+ }
+-
+```
+
 ## Next steps
 
 - Test your implementation by going to your store and selecting a different
