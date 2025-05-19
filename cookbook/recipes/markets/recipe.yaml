@@ -60,7 +60,8 @@ ingredients:
   - path: templates/skeleton/app/components/CountrySelector.tsx
     description: A component that displays a country selector inside the Header.
   - path: templates/skeleton/app/components/Link.tsx
-    description: A wrapper around the Remix Link component that uses the selected
+    description:
+      A wrapper around the Remix Link component that uses the selected
       locale path prefix.
   - path: templates/skeleton/app/lib/i18n.ts
     description: A helper function to get locale information from the context, a
@@ -81,7 +82,8 @@ steps:
   - type: INFO
     step: 1
     name: Add localization utilities and update core components
-    description: In this section, we'll create utilities to handle localization and
+    description:
+      In this section, we'll create utilities to handle localization and
       country selection, and update the core components to use these utilities.
   - type: NEW_FILE
     step: 1.1
@@ -96,7 +98,8 @@ steps:
   - type: NEW_FILE
     step: 1.2
     name: Create a Link wrapper component
-    description: Create a wrapper component around the Remix `Link` component that
+    description:
+      Create a wrapper component around the Remix `Link` component that
       prepends the selected locale path prefix (if any) to the actual links.
     ingredients:
       - path: templates/skeleton/app/components/Link.tsx
@@ -211,6 +214,14 @@ nextSteps: |
   Help Center](https://help.shopify.com/en/manual/markets) for
   more information on how to optimize and manage your international markets.
 llms:
-  userQueries: []
-  troubleshooting: []
+  userQueries:
+    - How do I add localization support to my Hydrogen app?
+    - How do I add a country selector to my Hydrogen app?
+    - Set up Shopify Markets in Hydrogen
+    - Help me segment my customers based on their location
+  troubleshooting:
+    - issue: I'm not seeing the localized content on my storefront.
+      solution: In your Shopify admin, make sure you've set up your store's regions and langauges using Shopify Markets, then check that your products are appropriately configured for each market. In your Hydrogen app, make sure you've added the dynamic segment to the desired routes and that the routes are correctly named.
+    - issue: Some pages are showing localized content, but others aren't.
+      solution: Make sure you update *all* routes that need localization (not only the routes for the home page, the cart page, and the product page). See step 2.1 for details.
 commit: a7e33c1dd45e3c7c27ab2e1125851468051cee0b
