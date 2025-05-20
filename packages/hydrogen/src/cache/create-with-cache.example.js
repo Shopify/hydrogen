@@ -1,6 +1,6 @@
 // In your app's `server.ts` file:
 // @ts-expect-error
-import * as remixBuild from 'virtual:react-router/server-build';
+import * as reactRouterBuild from 'virtual:react-router/server-build';
 import {createWithCache, CacheLong} from '@shopify/hydrogen';
 // Use another `createRequestHandler` if deploying off oxygen
 import {createRequestHandler} from '@shopify/remix-oxygen';
@@ -101,7 +101,7 @@ export default {
     };
 
     const handleRequest = createRequestHandler({
-      build: remixBuild,
+      build: reactRouterBuild,
       mode: process.env.NODE_ENV,
       getLoadContext: () => ({
         // Make sure to update env.d.ts to
