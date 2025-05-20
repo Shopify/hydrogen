@@ -1,8 +1,8 @@
 index 3a31b2f7..c756c9e1 100644
 --- a/templates/skeleton/app/routes/collections.all.tsx
 +++ b/templates/skeleton/app/routes/collections.all.tsx
-@@ -3,7 +3,10 @@ import { useLoaderData, type MetaFunction } from 'react-router';
- import {getPaginationVariables} from '@shopify/hydrogen';
+@@ -3,7 +3,10 @@ import {useLoaderData, type MetaFunction} from 'react-router';
+ import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
  import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  import {ProductItem} from '~/components/ProductItem';
 -
