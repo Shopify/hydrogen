@@ -423,7 +423,7 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "StorefrontApiErrors": {
             "filePath": "src/storefront.ts",
@@ -1506,7 +1506,7 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "StorefrontApiErrors": {
             "filePath": "src/storefront.ts",
@@ -3344,7 +3344,7 @@
             "name": "AttributeInput",
             "value": "AttributeInput",
             "members": [],
-            "override": "[AttributeInput](/docs/api/storefront/2025-01/input-objects/AttributeInput) - Storefront API type"
+            "override": "[AttributeInput](/docs/api/storefront/2025-04/input-objects/AttributeInput) - Storefront API type"
           },
           "OtherFormData": {
             "description": "",
@@ -3382,7 +3382,7 @@
             "name": "CartBuyerIdentityInput",
             "value": "CartBuyerIdentityInput",
             "members": [],
-            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2025-01/input-objects/CartBuyerIdentityInput) - Storefront API type"
+            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2025-04/input-objects/CartBuyerIdentityInput) - Storefront API type"
           },
           "CartCreateProps": {
             "filePath": "src/cart/CartForm.tsx",
@@ -3413,7 +3413,7 @@
             "name": "CartInput",
             "value": "CartInput",
             "members": [],
-            "override": "[CartInput](/docs/api/storefront/2025-01/input-objects/CartInput) - Storefront API type"
+            "override": "[CartInput](/docs/api/storefront/2025-04/input-objects/CartInput) - Storefront API type"
           },
           "CartDiscountCodesUpdateProps": {
             "filePath": "src/cart/CartForm.tsx",
@@ -3499,7 +3499,7 @@
             "name": "CartLineInput",
             "value": "CartLineInput",
             "members": [],
-            "override": "[CartLineInput](/docs/api/storefront/2025-01/input-objects/CartLineInput) - Storefront API type"
+            "override": "[CartLineInput](/docs/api/storefront/2025-04/input-objects/CartLineInput) - Storefront API type"
           },
           "CartLinesUpdateProps": {
             "filePath": "src/cart/CartForm.tsx",
@@ -3530,7 +3530,7 @@
             "name": "CartLineUpdateInput",
             "value": "CartLineUpdateInput",
             "members": [],
-            "override": "[CartLineUpdateInput](/docs/api/storefront/2025-01/input-objects/CartLineUpdateInput) - Storefront API type"
+            "override": "[CartLineUpdateInput](/docs/api/storefront/2025-04/input-objects/CartLineUpdateInput) - Storefront API type"
           },
           "CartLinesRemoveProps": {
             "filePath": "src/cart/CartForm.tsx",
@@ -3609,7 +3609,7 @@
             "name": "CartSelectedDeliveryOptionInput",
             "value": "CartSelectedDeliveryOptionInput",
             "members": [],
-            "override": "[CartSelectedDeliveryOptionInput](/docs/api/storefront/2025-01/input-objects/CartSelectedDeliveryOptionInput) - Storefront API type"
+            "override": "[CartSelectedDeliveryOptionInput](/docs/api/storefront/2025-04/input-objects/CartSelectedDeliveryOptionInput) - Storefront API type"
           },
           "CartMetafieldsSetProps": {
             "filePath": "src/cart/CartForm.tsx",
@@ -3640,7 +3640,7 @@
             "name": "MetafieldWithoutOwnerId",
             "value": "MetafieldWithoutOwnerId",
             "members": [],
-            "override": "Same as [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2025-01/input-objects/CartMetafieldsSetInput) Storefront API type but without `ownerId`. `ownerId` is always set to the cart id."
+            "override": "Same as [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2025-04/input-objects/CartMetafieldsSetInput) Storefront API type but without `ownerId`. `ownerId` is always set to the cart id."
           },
           "CartMetafieldDeleteProps": {
             "filePath": "src/cart/CartForm.tsx",
@@ -4707,35 +4707,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           },
           "StorefrontApiErrors": {
             "filePath": "src/storefront.ts",
@@ -4784,7 +4784,7 @@
             "name": "CartLineInput",
             "value": "CartLineInput",
             "members": [],
-            "override": "[CartLineInput](/docs/api/storefront/2025-01/input-objects/CartLineInput) - Storefront API type"
+            "override": "[CartLineInput](/docs/api/storefront/2025-04/input-objects/CartLineInput) - Storefront API type"
           },
           "CartCreateFunction": {
             "filePath": "src/cart/queries/cartCreateDefault.ts",
@@ -4818,7 +4818,7 @@
             "name": "CartInput",
             "value": "CartInput",
             "members": [],
-            "override": "[CartInput](/docs/api/storefront/2025-01/input-objects/CartInput) - Storefront API type"
+            "override": "[CartInput](/docs/api/storefront/2025-04/input-objects/CartInput) - Storefront API type"
           },
           "CartMetafieldDeleteFunction": {
             "filePath": "src/cart/queries/cartMetafieldDeleteDefault.ts",
@@ -5013,7 +5013,7 @@
             "name": "MetafieldWithoutOwnerId",
             "value": "MetafieldWithoutOwnerId",
             "members": [],
-            "override": "Same as [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2025-01/input-objects/CartMetafieldsSetInput) Storefront API type but without `ownerId`. `ownerId` is always set to the cart id."
+            "override": "Same as [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2025-04/input-objects/CartMetafieldsSetInput) Storefront API type but without `ownerId`. `ownerId` is always set to the cart id."
           },
           "CartAttributesUpdateFunction": {
             "filePath": "src/cart/queries/cartAttributesUpdateDefault.ts",
@@ -5047,7 +5047,7 @@
             "name": "AttributeInput",
             "value": "AttributeInput",
             "members": [],
-            "override": "[AttributeInput](/docs/api/storefront/2025-01/input-objects/AttributeInput) - Storefront API type"
+            "override": "[AttributeInput](/docs/api/storefront/2025-04/input-objects/AttributeInput) - Storefront API type"
           },
           "CartBuyerIdentityUpdateFunction": {
             "filePath": "src/cart/queries/cartBuyerIdentityUpdateDefault.ts",
@@ -5081,7 +5081,34 @@
             "name": "CartBuyerIdentityInput",
             "value": "CartBuyerIdentityInput",
             "members": [],
-            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2025-01/input-objects/CartBuyerIdentityInput) - Storefront API type"
+            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2025-04/input-objects/CartBuyerIdentityInput) - Storefront API type"
+          },
+          "CartDeliveryAddressesUpdateFunction": {
+            "filePath": "src/cart/queries/cartDeliveryAddressesUpdateDefault.tsx",
+            "name": "CartDeliveryAddressesUpdateFunction",
+            "description": "",
+            "params": [
+              {
+                "name": "addresses",
+                "description": "",
+                "value": "CartSelectableAddressUpdateInput[]",
+                "filePath": "src/cart/queries/cartDeliveryAddressesUpdateDefault.tsx"
+              },
+              {
+                "name": "optionalParams",
+                "description": "",
+                "value": "CartOptionalInput",
+                "isOptional": true,
+                "filePath": "src/cart/queries/cartDeliveryAddressesUpdateDefault.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "src/cart/queries/cartDeliveryAddressesUpdateDefault.tsx",
+              "description": "",
+              "name": "Promise<CartQueryDataReturn>",
+              "value": "Promise<CartQueryDataReturn>"
+            },
+            "value": "export type CartDeliveryAddressesUpdateFunction = (\n  addresses: Array<CartSelectableAddressUpdateInput>,\n  optionalParams?: CartOptionalInput,\n) => Promise<CartQueryDataReturn>;"
           },
           "CartDeliveryAddressesUpdateFunction": {
             "filePath": "src/cart/queries/cartDeliveryAddressesUpdateDefault.tsx",
@@ -5196,7 +5223,7 @@
             "name": "CartLineUpdateInput",
             "value": "CartLineUpdateInput",
             "members": [],
-            "override": "[CartLineUpdateInput](/docs/api/storefront/2025-01/input-objects/CartLineUpdateInput) - Storefront API type"
+            "override": "[CartLineUpdateInput](/docs/api/storefront/2025-04/input-objects/CartLineUpdateInput) - Storefront API type"
           },
           "CartNoteUpdateFunction": {
             "filePath": "src/cart/queries/cartNoteUpdateDefault.ts",
@@ -5257,7 +5284,7 @@
             "name": "CartSelectedDeliveryOptionInput",
             "value": "CartSelectedDeliveryOptionInput",
             "members": [],
-            "override": "[CartSelectedDeliveryOptionInput](/docs/api/storefront/2025-01/input-objects/CartSelectedDeliveryOptionInput) - Storefront API type"
+            "override": "[CartSelectedDeliveryOptionInput](/docs/api/storefront/2025-04/input-objects/CartSelectedDeliveryOptionInput) - Storefront API type"
           }
         }
       }
@@ -5581,7 +5608,7 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "StorefrontApiErrors": {
             "filePath": "src/storefront.ts",
@@ -6330,7 +6357,7 @@
             "name": "AttributeInput",
             "value": "AttributeInput",
             "members": [],
-            "override": "[AttributeInput](/docs/api/storefront/2025-01/input-objects/AttributeInput) - Storefront API type"
+            "override": "[AttributeInput](/docs/api/storefront/2025-04/input-objects/AttributeInput) - Storefront API type"
           },
           "CartOptionalInput": {
             "filePath": "src/cart/queries/cart-types.ts",
@@ -6412,35 +6439,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           }
         }
       }
@@ -7144,7 +7171,7 @@
             "name": "CartBuyerIdentityInput",
             "value": "CartBuyerIdentityInput",
             "members": [],
-            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2025-01/input-objects/CartBuyerIdentityInput) - Storefront API type"
+            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2025-04/input-objects/CartBuyerIdentityInput) - Storefront API type"
           },
           "CartOptionalInput": {
             "filePath": "src/cart/queries/cart-types.ts",
@@ -7226,35 +7253,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           }
         }
       }
@@ -7958,7 +7985,7 @@
             "name": "CartInput",
             "value": "CartInput",
             "members": [],
-            "override": "[CartInput](/docs/api/storefront/2025-01/input-objects/CartInput) - Storefront API type"
+            "override": "[CartInput](/docs/api/storefront/2025-04/input-objects/CartInput) - Storefront API type"
           },
           "CartOptionalInput": {
             "filePath": "src/cart/queries/cart-types.ts",
@@ -8040,35 +8067,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           }
         }
       }
@@ -8859,35 +8886,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           }
         }
       }
@@ -9678,35 +9705,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           }
         }
       }
@@ -10497,35 +10524,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           }
         }
       }
@@ -11304,35 +11331,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           }
         }
       }
@@ -12089,7 +12116,7 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           }
         }
       }
@@ -12868,35 +12895,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           }
         }
       }
@@ -13600,7 +13627,7 @@
             "name": "CartLineInput",
             "value": "CartLineInput",
             "members": [],
-            "override": "[CartLineInput](/docs/api/storefront/2025-01/input-objects/CartLineInput) - Storefront API type"
+            "override": "[CartLineInput](/docs/api/storefront/2025-04/input-objects/CartLineInput) - Storefront API type"
           },
           "CartOptionalInput": {
             "filePath": "src/cart/queries/cart-types.ts",
@@ -13682,35 +13709,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           }
         }
       }
@@ -14489,35 +14516,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           }
         }
       }
@@ -15221,7 +15248,7 @@
             "name": "CartLineUpdateInput",
             "value": "CartLineUpdateInput",
             "members": [],
-            "override": "[CartLineUpdateInput](/docs/api/storefront/2025-01/input-objects/CartLineUpdateInput) - Storefront API type"
+            "override": "[CartLineUpdateInput](/docs/api/storefront/2025-04/input-objects/CartLineUpdateInput) - Storefront API type"
           },
           "CartOptionalInput": {
             "filePath": "src/cart/queries/cart-types.ts",
@@ -15303,35 +15330,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           }
         }
       }
@@ -16110,35 +16137,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           }
         }
       }
@@ -16842,7 +16869,7 @@
             "name": "MetafieldWithoutOwnerId",
             "value": "MetafieldWithoutOwnerId",
             "members": [],
-            "override": "Same as [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2025-01/input-objects/CartMetafieldsSetInput) Storefront API type but without `ownerId`. `ownerId` is always set to the cart id."
+            "override": "Same as [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2025-04/input-objects/CartMetafieldsSetInput) Storefront API type but without `ownerId`. `ownerId` is always set to the cart id."
           },
           "CartOptionalInput": {
             "filePath": "src/cart/queries/cart-types.ts",
@@ -16924,35 +16951,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           }
         }
       }
@@ -17731,35 +17758,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           }
         }
       }
@@ -18463,7 +18490,7 @@
             "name": "CartSelectedDeliveryOptionInput",
             "value": "CartSelectedDeliveryOptionInput",
             "members": [],
-            "override": "[CartSelectedDeliveryOptionInput](/docs/api/storefront/2025-01/input-objects/CartSelectedDeliveryOptionInput) - Storefront API type"
+            "override": "[CartSelectedDeliveryOptionInput](/docs/api/storefront/2025-04/input-objects/CartSelectedDeliveryOptionInput) - Storefront API type"
           },
           "CartOptionalInput": {
             "filePath": "src/cart/queries/cart-types.ts",
@@ -18545,35 +18572,35 @@
             "name": "Cart",
             "value": "Cart",
             "members": [],
-            "override": "[Cart](/docs/api/storefront/2025-01/objects/Cart) - Storefront API type"
+            "override": "[Cart](/docs/api/storefront/2025-04/objects/Cart) - Storefront API type"
           },
           "CartUserError": {
             "description": "",
             "name": "CartUserError",
             "value": "CartUserError",
             "members": [],
-            "override": "[CartUserError](/docs/api/storefront/2025-01/objects/CartUserError) - Storefront API type"
+            "override": "[CartUserError](/docs/api/storefront/2025-04/objects/CartUserError) - Storefront API type"
           },
           "MetafieldsSetUserError": {
             "description": "",
             "name": "MetafieldsSetUserError",
             "value": "MetafieldsSetUserError",
             "members": [],
-            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-01/objects/MetafieldsSetUserError) - Storefront API type"
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2025-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
           "MetafieldDeleteUserError": {
             "description": "",
             "name": "MetafieldDeleteUserError",
             "value": "MetafieldDeleteUserError",
             "members": [],
-            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-01/objects/MetafieldDeleteUserError) - Storefront API type"
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2025-04/objects/MetafieldDeleteUserError) - Storefront API type"
           },
           "CartWarning": {
             "description": "",
             "name": "CartWarning",
             "value": "CartWarning",
             "members": [],
-            "override": "[CartWarning](/docs/api/storefront/2025-01/objects/CartWarning) - Storefront API type"
+            "override": "[CartWarning](/docs/api/storefront/2025-04/objects/CartWarning) - Storefront API type"
           }
         }
       }
@@ -25805,7 +25832,7 @@
             "filePath": "src/Image.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "HydrogenImageBaseProps",
-            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-01/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n}",
+            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-04/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n}",
             "description": "",
             "members": [
               {
@@ -25842,7 +25869,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialDeep<ImageType, {recurseIntoArrays: true}>",
-                "description": "Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-01/objects/Image) object. Must be an Image object.",
+                "description": "Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-04/objects/Image) object. Must be an Image object.",
                 "isOptional": true,
                 "examples": [
                   {
@@ -28648,7 +28675,7 @@
             "filePath": "src/Image.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "HydrogenImageBaseProps",
-            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-01/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n}",
+            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-04/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n}",
             "description": "",
             "members": [
               {
@@ -28685,7 +28712,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialDeep<ImageType, {recurseIntoArrays: true}>",
-                "description": "Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-01/objects/Image) object. Must be an Image object.",
+                "description": "Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-04/objects/Image) object. Must be an Image object.",
                 "isOptional": true,
                 "examples": [
                   {
@@ -28893,7 +28920,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "measurement",
                 "value": "PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>",
-                "description": "A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2025-01/objects/unitpricemeasurement).",
+                "description": "A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2025-04/objects/unitpricemeasurement).",
                 "isOptional": true
               },
               {
@@ -28921,7 +28948,7 @@
                 "isOptional": true
               }
             ],
-            "value": "export interface MoneyPropsBase<ComponentGeneric extends React.ElementType> {\n  /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */\n  as?: ComponentGeneric;\n  /** An object with fields that correspond to the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2). */\n  data: PartialDeep<MoneyV2, {recurseIntoArrays: true}>;\n  /** Whether to remove the currency symbol from the output. */\n  withoutCurrency?: boolean;\n  /** Whether to remove trailing zeros (fractional money) from the output. */\n  withoutTrailingZeros?: boolean;\n  /** A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2025-01/objects/unitpricemeasurement). */\n  measurement?: PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>;\n  /** Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`. */\n  measurementSeparator?: ReactNode;\n}"
+            "value": "export interface MoneyPropsBase<ComponentGeneric extends React.ElementType> {\n  /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */\n  as?: ComponentGeneric;\n  /** An object with fields that correspond to the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2). */\n  data: PartialDeep<MoneyV2, {recurseIntoArrays: true}>;\n  /** Whether to remove the currency symbol from the output. */\n  withoutCurrency?: boolean;\n  /** Whether to remove trailing zeros (fractional money) from the output. */\n  withoutTrailingZeros?: boolean;\n  /** A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2025-04/objects/unitpricemeasurement). */\n  measurement?: PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>;\n  /** Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`. */\n  measurementSeparator?: ReactNode;\n}"
           }
         }
       }
@@ -28969,7 +28996,7 @@
             "filePath": "src/ModelViewer.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ModelViewerBaseProps",
-            "value": "{\n  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2025-01/objects/model3d). */\n  data: PartialDeep<Model3d, {recurseIntoArrays: true}>;\n  /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */\n  onError?: (event: Event) => void;\n  /** The callback to invoke when the `load` event is triggered. Refer to [load in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-load). */\n  onLoad?: (event: Event) => void;\n  /** The callback to invoke when the 'preload' event is triggered. Refer to [preload in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-preload). */\n  onPreload?: (event: Event) => void;\n  /** The callback to invoke when the 'model-visibility' event is triggered. Refer to [model-visibility in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-modelVisibility). */\n  onModelVisibility?: (event: Event) => void;\n  /** The callback to invoke when the 'progress' event is triggered. Refer to [progress in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-progress). */\n  onProgress?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-status' event is triggered. Refer to [ar-status in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arStatus). */\n  onArStatus?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-tracking' event is triggered. Refer to [ar-tracking in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arTracking). */\n  onArTracking?: (event: Event) => void;\n  /** The callback to invoke when the 'quick-look-button-tapped' event is triggered. Refer to [quick-look-button-tapped in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-quickLookButtonTapped). */\n  onQuickLookButtonTapped?: (event: Event) => void;\n  /** The callback to invoke when the 'camera-change' event is triggered. Refer to [camera-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-stagingandcameras-events-cameraChange). */\n  onCameraChange?: (event: Event) => void;\n  /** The callback to invoke when the 'environment-change' event is triggered. Refer to [environment-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-lightingandenv-events-environmentChange).  */\n  onEnvironmentChange?: (event: Event) => void;\n  /**  The callback to invoke when the 'play' event is triggered. Refer to [play in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-play). */\n  onPlay?: (event: Event) => void;\n  /**  The callback to invoke when the 'pause' event is triggered. Refer to [pause in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-pause). */\n  onPause?: (event: Event) => void;\n  /** The callback to invoke when the 'scene-graph-ready' event is triggered. Refer to [scene-graph-ready in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-scenegraph-events-sceneGraphReady). */\n  onSceneGraphReady?: (event: Event) => void;\n}",
+            "value": "{\n  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2025-04/objects/model3d). */\n  data: PartialDeep<Model3d, {recurseIntoArrays: true}>;\n  /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */\n  onError?: (event: Event) => void;\n  /** The callback to invoke when the `load` event is triggered. Refer to [load in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-load). */\n  onLoad?: (event: Event) => void;\n  /** The callback to invoke when the 'preload' event is triggered. Refer to [preload in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-preload). */\n  onPreload?: (event: Event) => void;\n  /** The callback to invoke when the 'model-visibility' event is triggered. Refer to [model-visibility in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-modelVisibility). */\n  onModelVisibility?: (event: Event) => void;\n  /** The callback to invoke when the 'progress' event is triggered. Refer to [progress in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-progress). */\n  onProgress?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-status' event is triggered. Refer to [ar-status in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arStatus). */\n  onArStatus?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-tracking' event is triggered. Refer to [ar-tracking in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arTracking). */\n  onArTracking?: (event: Event) => void;\n  /** The callback to invoke when the 'quick-look-button-tapped' event is triggered. Refer to [quick-look-button-tapped in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-quickLookButtonTapped). */\n  onQuickLookButtonTapped?: (event: Event) => void;\n  /** The callback to invoke when the 'camera-change' event is triggered. Refer to [camera-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-stagingandcameras-events-cameraChange). */\n  onCameraChange?: (event: Event) => void;\n  /** The callback to invoke when the 'environment-change' event is triggered. Refer to [environment-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-lightingandenv-events-environmentChange).  */\n  onEnvironmentChange?: (event: Event) => void;\n  /**  The callback to invoke when the 'play' event is triggered. Refer to [play in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-play). */\n  onPlay?: (event: Event) => void;\n  /**  The callback to invoke when the 'pause' event is triggered. Refer to [pause in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-pause). */\n  onPause?: (event: Event) => void;\n  /** The callback to invoke when the 'scene-graph-ready' event is triggered. Refer to [scene-graph-ready in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-scenegraph-events-sceneGraphReady). */\n  onSceneGraphReady?: (event: Event) => void;\n}",
             "description": "",
             "members": [
               {
@@ -28977,7 +29004,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialDeep<Model3d, {recurseIntoArrays: true}>",
-                "description": "An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2025-01/objects/model3d)."
+                "description": "An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2025-04/objects/model3d)."
               },
               {
                 "filePath": "src/ModelViewer.tsx",
@@ -29123,12 +29150,12 @@
             "tabs": [
               {
                 "title": "JavaScript",
-                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2025-01\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
+                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2025-04\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
                 "language": "jsx"
               },
               {
                 "title": "TypeScript",
-                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2025-01\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}: {variantId: string}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
+                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2025-04\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}: {variantId: string}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
                 "language": "tsx"
               }
             ],
@@ -29454,7 +29481,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialDeep<VideoType, {recurseIntoArrays: true}>",
-                "description": "An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2025-01/objects/video)."
+                "description": "An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2025-04/objects/video)."
               },
               {
                 "filePath": "src/Video.tsx",
@@ -29473,7 +29500,7 @@
                 "isOptional": true
               }
             ],
-            "value": "export interface VideoProps {\n  /** An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2025-01/objects/video). */\n  data: PartialDeep<VideoType, {recurseIntoArrays: true}>;\n  /** An object of image size options for the video's `previewImage`. Uses `shopifyImageLoader` to generate the `poster` URL. */\n  previewImageOptions?: Parameters<typeof shopifyLoader>[0];\n  /** Props that will be passed to the `video` element's `source` children elements. */\n  sourceProps?: HTMLAttributes<HTMLSourceElement> & {\n    'data-testid'?: string;\n  };\n}"
+            "value": "export interface VideoProps {\n  /** An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2025-04/objects/video). */\n  data: PartialDeep<VideoType, {recurseIntoArrays: true}>;\n  /** An object of image size options for the video's `previewImage`. Uses `shopifyImageLoader` to generate the `poster` URL. */\n  previewImageOptions?: Parameters<typeof shopifyLoader>[0];\n  /** Props that will be passed to the `video` element's `source` children elements. */\n  sourceProps?: HTMLAttributes<HTMLSourceElement> & {\n    'data-testid'?: string;\n  };\n}"
           },
           "LoaderParams": {
             "filePath": "src/Image.tsx",
@@ -29985,7 +30012,7 @@
       {
         "name": "isOptionValueCombinationInEncodedVariant",
         "type": "utility",
-        "url": "/docs/api/hydrogen/2025-01/utilities/isOptionValueCombinationInEncodedVariant"
+        "url": "/docs/api/hydrogen/2025-04/utilities/isOptionValueCombinationInEncodedVariant"
       }
     ],
     "description": "Decodes an encoded option value string into an array of option value combinations.",
@@ -30016,7 +30043,7 @@
             "params": [
               {
                 "name": "encodedVariantField",
-                "description": "Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2025-01/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2025-01/objects/Product#field-encodedvariantavailability)",
+                "description": "Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2025-04/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2025-04/objects/Product#field-encodedvariantavailability)",
                 "value": "string",
                 "filePath": "src/optionValueDecoder.ts"
               }
@@ -30481,7 +30508,7 @@
       {
         "name": "decodeEncodedVariant",
         "type": "utility",
-        "url": "/docs/api/hydrogen/2025-01/utilities/decodeEncodedVariant"
+        "url": "/docs/api/hydrogen/2025-04/utilities/decodeEncodedVariant"
       }
     ],
     "description": "\n    Determines whether an option value combination is present in an encoded option value string.\n\n`targetOptionValueCombination` - Indices of option values to look up in the encoded option value string. A partial set of indices may be passed to determine whether a node or any children is present. For example, if a product has 3 options, passing `[0]` will return true if any option value combination for the first option's option value is present in the encoded string.\n  ",

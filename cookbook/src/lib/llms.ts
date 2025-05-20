@@ -1,15 +1,9 @@
 import path from 'path';
-import {COOKBOOK_PATH, TEMPLATE_PATH} from './constants';
-import {
-  createDirectoryIfNotExists,
-  getPatchesDir,
-  recreateDirectory,
-} from './util';
+import {COOKBOOK_PATH, LLMS_PATH, TEMPLATE_DIRECTORY} from './constants';
+import {createDirectoryIfNotExists, getPatchesDir} from './util';
 import {
   maybeMDBlock,
   MDBlock,
-  mdCode,
-  mdFrontMatter,
   mdHeading,
   mdList,
   mdNote,
@@ -18,27 +12,18 @@ import {
 } from './markdown';
 import {renderStep} from './render';
 import {loadRecipe, Recipe} from './recipe';
-import fs from 'fs';
 
-function renderRecipeRuleBlocks(
+function renderRecipeLLMPromptBlocks(
   recipeName: string,
   recipe: Recipe,
-  globs: 'templates/**/*' | '*',
 ): MDBlock[] {
   return [
-    // cursor rule frontmatter
-    mdFrontMatter({
-      description: `Recipe for implementing "${recipe.title} (${recipeName})" in a Hydrogen storefront. ${recipe.summary}`,
-      globs,
-      alwaysApply: false,
-    }),
-
     // preamble
     mdParagraph(
       `
 # Overview
 
-This rule describes how to implement "${recipe.title}" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "${recipe.title}" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -46,7 +31,7 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 
 # AI model verification steps
 
-- Never edit generated files (ending with .d.ts) directly; instead, run the \`npm run codegen\` command to update them.
+- Never edit generated files (ending with .d.ts) directly; instead, run the \`npm run codegen\` command to update them (if the command is available).
 
 # Summary
 
@@ -98,42 +83,26 @@ Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
 
       // ingredients
       mdHeading(2, 'New files added to the template by this recipe'),
-      ...recipe.ingredients.flatMap((ingredient) => {
-        const contents = fs.readFileSync(
-          path.join(
-            COOKBOOK_PATH,
-            'recipes',
-            recipeName,
-            'ingredients',
-            ingredient.path,
-          ),
-          'utf8',
-        );
-        const extension = path.extname(ingredient.path).slice(1);
-        return [
-          mdHeading(3, ingredient.path),
-          mdParagraph(ingredient.description ?? ''),
-          mdCode(extension ?? '', contents, false),
-        ];
-      }),
+      mdList(
+        recipe.ingredients.map((ingredient) =>
+          ingredient.path.replace(TEMPLATE_DIRECTORY, ''),
+        ),
+      ),
 
       mdHeading(2, 'Steps'),
-      ...recipe.steps
-        .filter((step) => step.type !== 'COPY_INGREDIENTS')
-        .flatMap((step, index): MDBlock[] =>
-          renderStep(
-            step,
-            index,
-            recipe,
-            recipeName,
-            getPatchesDir(recipeName),
-            'github',
-            {
-              diffsRelativeToTemplate: true,
-              trimDiffHeaders: true,
-            },
-          ),
+      ...recipe.steps.flatMap((step): MDBlock[] =>
+        renderStep(
+          step,
+          recipe,
+          recipeName,
+          getPatchesDir(recipeName),
+          'github',
+          {
+            diffsRelativeToTemplate: true,
+            trimDiffHeaders: true,
+          },
         ),
+      ),
 
       ...(recipe.deletedFiles != null && recipe.deletedFiles.length > 0
         ? [
@@ -147,32 +116,17 @@ Here's the ${recipeName} recipe for the base Hydrogen skeleton template:
 }
 
 export function generateLLMsFiles(recipeName: string) {
-  const rulesDir = path.join(COOKBOOK_PATH, '.cursor', 'rules');
-  createDirectoryIfNotExists(rulesDir);
+  createDirectoryIfNotExists(LLMS_PATH);
 
-  const rulePath = path.join(rulesDir, `cookbook-recipe-${recipeName}.mdc`);
+  const promptPath = path.join(LLMS_PATH, `${recipeName}.prompt.md`);
 
-  console.log('Generating recipe Cursor rule…');
+  console.log('Generating recipe LLM prompt');
   console.log(`- ${recipeName}`);
   const recipe = loadRecipe({
     directory: path.join(COOKBOOK_PATH, 'recipes', recipeName),
   });
 
-  const blocks = renderRecipeRuleBlocks(recipeName, recipe, '*');
+  const blocks = renderRecipeLLMPromptBlocks(recipeName, recipe);
 
-  serializeMDBlocksToFile(blocks, rulePath, 'github');
-}
-
-export function copyCursorRulesToSkeleton() {
-  console.log('📑 Moving Cursor rules to skeleton template…');
-
-  const skeletonRulesDir = path.join(TEMPLATE_PATH, '.cursor', 'rules');
-  recreateDirectory(skeletonRulesDir);
-
-  const rulesDir = path.join(COOKBOOK_PATH, '.cursor', 'rules');
-  const rules = fs.readdirSync(rulesDir);
-  rules.forEach((rule) => {
-    const rulePath = path.join(rulesDir, rule);
-    fs.copyFileSync(rulePath, path.join(skeletonRulesDir, rule));
-  });
+  serializeMDBlocksToFile(blocks, promptPath, 'github');
 }

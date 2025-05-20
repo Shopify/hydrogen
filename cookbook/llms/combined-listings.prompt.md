@@ -1,12 +1,6 @@
----
-description: Recipe for implementing "Combined Listings (combined-listings)" in a Hydrogen storefront. Handle combined listings on product pages and in search results.
-globs: *
-alwaysApply: false
----
-
 # Overview
 
-This rule describes how to implement "Combined Listings" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "Combined Listings" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -14,7 +8,7 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 
 # AI model verification steps
 
-- Never edit generated files (ending with .d.ts) directly; instead, run the `npm run codegen` command to update them.
+- Never edit generated files (ending with .d.ts) directly; instead, run the `npm run codegen` command to update them (if the command is available).
 
 # Summary
 
@@ -45,30 +39,58 @@ Here's the combined-listings recipe for the base Hydrogen skeleton template:
 
 ## Description
 
-
 This recipe lets you more precisely display and manage [combined listings](https://help.shopify.com/en/manual/products/combined-listings-app) on product pages and in search results for your Hydrogen storefront. A combined listing groups separate products together into a single product listing using a shared option like color or size.
 Each product appears as a variant but can have its own title, description, URL, and images.
-
 In this recipe, you'll make the following changes:
 
 1. Set up the Combined Listings app in your Shopify admin and group relevant products together as combined listings.
 2. Configure how combined listings will be handled on your storefront.
-3. Update the `ProductForm` component to hide the `Add to cart` button for the parent products of combined listings.
+3. Update the `ProductForm` component to hide the **Add to cart** button for the parent products of combined listings.
 4. Update the `ProductImage` component to support images from product variants and the product itself.
 5. Show a range of prices for combined listings in `ProductItem`.
-
 
 ## Requirements
 
 - Your store must be on either a [Shopify Plus](https://www.shopify.com/plus) or enterprise plan.
 - Your store must have the [Combined Listings app](https://admin.shopify.com/apps/combined-listings) installed.
 
-
 ## New files added to the template by this recipe
 
-### templates/skeleton/app/lib/combined-listings.ts
+- app/lib/combined-listings.ts
 
-The `combined-listings.ts` file contains utilities and settings for handling combined listings.
+## Steps
+
+### Step 1: Set up the Combined Listings app
+
+1. Install the [Combined Listings app](https://admin.shopify.com/apps/combined-listings).
+
+2. [Create combined listing products in your store](https://help.shopify.com/en/manual/products/combined-listings-app#creating-a-combined-listing).
+
+3. Add tags to the parent products of combined listings to indicate that they're part of a combined listing (for example `combined`).
+
+### Step 2: Configure combined listings behavior
+
+You can customize how the parent products of combined listings are retrieved and displayed.
+
+To make this process easier, we included a configuration object in the `combined-listings.ts` file that you can edit to customize according to your preferences.
+
+```ts
+// Edit these values to customize the combined listings behaviors
+export const combinedListingsSettings = {
+  // If true, loading the product page will redirect to the first variant
+  redirectToFirstVariant: false,
+  // The tag that indicates a combined listing
+  combinedListingTag: 'combined',
+  // If true, combined listings will not be shown in the product list
+  hideCombinedListingsFromProductList: true,
+};
+```
+
+### Step 3: Add combined listings utilities
+
+Create a new `combined-listings.ts` file that contains utilities and settings for handling combined listings.
+
+#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
 
 ```ts
 // Edit these values to customize combined listings' behavior
@@ -109,37 +131,10 @@ export function isCombinedListing(product: unknown) {
 
 ```
 
-## Steps
+### Step 4: Update the ProductForm component
 
-### Step 1: Set up the Combined Listings app
-
-1. Install the [Combined Listings app](https://admin.shopify.com/apps/combined-listings). 2. [Create combined listing products in your store](https://help.shopify.com/en/manual/products/combined-listings-app#creating-a-combined-listing). 3. Add tags to the parent products of combined listings to indicate that they're part of a combined listing (for example `combined`).
-
-
-### Step 2: Configure combined listings behavior
-
-You can customize how the parent products of combined listings are retrieved and displayed.
-
-To make this process easier, we included a configuration object in the `combined-listings.ts` file that you can edit to customize according to your preferences.
-
-```ts
-// Edit these values to customize the combined listings behaviors
-export const combinedListingsSettings = {
-  // If true, loading the product page will redirect to the first variant
-  redirectToFirstVariant: false,
-  // The tag that indicates a combined listing
-  combinedListingTag: 'combined',
-  // If true, combined listings will not be shown in the product list
-  hideCombinedListingsFromProductList: true,
-};
-```
-
-
-### Step 3: Update the ProductForm component
-
-- Update the `ProductForm` component to hide the `Add to cart` button for the parent products of combined listings and for variants' selected state.
-- Update the `Link` component to not replace the current URL when the product is a combined listing parent product.
-
+1. Update the `ProductForm` component to hide the **Add to cart** button for the parent products of combined listings and for variants' selected state.
+2. Update the `Link` component to not replace the current URL when the product is a combined listing parent product.
 
 #### File: /app/components/ProductForm.tsx
 
@@ -237,10 +232,9 @@ export const combinedListingsSettings = {
  }
 ```
 
-### Step 4: Extend the ProductImage component
+### Step 5: Extend the ProductImage component
 
 Update the `ProductImage` component to support images from both product variants and the product itself.
-
 
 #### File: /app/components/ProductImage.tsx
 
@@ -263,10 +257,9 @@ Update the `ProductImage` component to support images from both product variants
      return <div className="product-image" />;
 ```
 
-### Step 5: Show a range of prices for combined listings in ProductItem
+### Step 6: Show a range of prices for combined listings in ProductItem
 
 Update `ProductItem.tsx` to show a range of prices for the combined listing parent product instead of the variant price.
-
 
 #### File: /app/components/ProductItem.tsx
 
@@ -302,10 +295,9 @@ Update `ProductItem.tsx` to show a range of prices for the combined listing pare
  }
 ```
 
-### Step 6: (Optional) Add redirect utility to first variant of a combined listing
+### Step 7: (Optional) Add redirect utility to first variant of a combined listing
 
 If you want to redirect automatically to the first variant of a combined listing when the parent handle is selected, add a redirect utility that's called whenever the parent handle is requested.
-
 
 #### File: /app/lib/redirect.ts
 
@@ -343,11 +335,10 @@ If you want to redirect automatically to the first variant of a combined listing
 +}
 ```
 
-### Step 7: Update queries for combined listings
+### Step 8: Update queries for combined listings
 
-- Add the `tags` property to the items returned by the product query.
-- (Optional) Add the filtering query to the product query to exclude combined listings.
-
+1. Add the `tags` property to the items returned by the product query.
+2. (Optional) Add the filtering query to the product query to exclude combined listings.
 
 #### File: /app/routes/_index.tsx
 
@@ -423,10 +414,9 @@ If you want to redirect automatically to the first variant of a combined listing
        }
 ```
 
-### Step 8: (Optional) Filter out combined listings from collections pages
+### Step 9: (Optional) Filter out combined listings from collections pages
 
 Since it's not possible to directly apply query filters when retrieving collection products, you can manually filter out combined listings after they're retrieved based on their tags.
-
 
 #### File: /app/routes/collections.$handle.tsx
 
@@ -489,10 +479,9 @@ Since it's not possible to directly apply query filters when retrieving collecti
            ...ProductItem
 ```
 
-### Step 9: (Optional) Filter out combined listings from the collections index page
+### Step 10: (Optional) Filter out combined listings from the collections index page
 
 Update the `collections.all` route to filter out combined listings from the search results, and include the price range for combined listings.
-
 
 #### File: /app/routes/collections.all.tsx
 
@@ -544,12 +533,11 @@ Update the `collections.all` route to filter out combined listings from the sear
        }
 ```
 
-### Step 10: Update the product page
+### Step 11: Update the product page
 
-- Display a range of prices for combined listings instead of the variant price.
-- Show the featured image of the combined listing parent product instead of the variant image.
-- (Optional) Redirect to the first variant of a combined listing when the handle is requested.
-
+1. Display a range of prices for combined listings instead of the variant price.
+2. Show the featured image of the combined listing parent product instead of the variant image.
+3. (Optional) Redirect to the first variant of a combined listing when the handle is requested.
 
 #### File: /app/routes/products.$handle.tsx
 
@@ -680,10 +668,9 @@ Update the `collections.all` route to filter out combined listings from the sear
        optionValues {
 ```
 
-### Step 11: Update stylesheet
+### Step 12: Update stylesheet
 
 Add a class to the product item to show a range of prices for combined listings.
-
 
 #### File: /app/styles/app.css
 
