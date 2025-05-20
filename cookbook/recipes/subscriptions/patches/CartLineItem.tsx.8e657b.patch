@@ -1,4 +1,4 @@
-index bd33a2cf..a18e4b52 100644
+index c96b3d83..cf9fdeaf 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
 @@ -3,8 +3,8 @@ import type {CartLayout} from '~/components/CartMain';

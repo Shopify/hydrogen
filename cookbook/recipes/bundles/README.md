@@ -26,8 +26,8 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx) | A badge displayed on bundle product listings. |
-| [app/components/BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx) | A component that wraps the variants of a bundle product in a single product listing. |
+| [app/components/BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx) | A badge displayed on bundle product listings. |
+| [app/components/BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx) | A component that wraps the variants of a bundle product in a single product listing. |
 
 ## Steps
 
@@ -43,7 +43,7 @@ _New files added to the template by this recipe._
 
 Create a new BundleBadge component to be displayed on bundle product listings.
 
-#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
+#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
 
 <details>
 
@@ -74,12 +74,12 @@ export function BundleBadge() {
 
 Create a new `BundledVariants` component that wraps the variants of a bundle product in a single product listing.
 
-#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
+#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
 
 <details>
 
 ```tsx
-import {Link} from '@remix-run/react';
+import {Link} from 'react-router';
 import {Image} from '@shopify/hydrogen';
 import type {
   ProductVariantComponent,
@@ -153,18 +153,18 @@ export function BundledVariants({
 used to identify bundled products.
 2. Pass the `isBundle` flag to the `ProductImage` component.
 
-#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/templates/skeleton/app/routes/products.$handle.tsx)
+#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/templates/skeleton/app/routes/products.$handle.tsx)
 
 <details>
 
 ```diff
-index 2dc6bda2..0339d128 100644
+index 4989ca00..0356b373 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,4 +1,4 @@
 -import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 +import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
- import {useLoaderData, type MetaFunction} from '@remix-run/react';
+ import { useLoaderData, type MetaFunction } from 'react-router';
  import {
    getSelectedProductOptions,
 @@ -12,6 +12,8 @@ import {ProductPrice} from '~/components/ProductPrice';
@@ -276,10 +276,10 @@ index 2dc6bda2..0339d128 100644
 
 Like the previous step, use the `requiresComponents` field to detect if the product item is a bundle.
 
-#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/templates/skeleton/app/routes/collections.$handle.tsx)
+#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/templates/skeleton/app/routes/collections.$handle.tsx)
 
 ```diff
-index f1d7fa3e..ae341f8a 100644
+index b44bc1ba..e0c90371 100644
 --- a/templates/skeleton/app/routes/collections.$handle.tsx
 +++ b/templates/skeleton/app/routes/collections.$handle.tsx
 @@ -4,6 +4,7 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
@@ -329,7 +329,7 @@ index f1d7fa3e..ae341f8a 100644
 
 Use the `requiresComponents` field to determine if a cart line item is a bundle.
 
-#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/templates/skeleton/app/lib/fragments.ts)
+#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/templates/skeleton/app/lib/fragments.ts)
 
 <details>
 
@@ -394,13 +394,13 @@ index dc4426a9..13cc34e5 100644
 
 If a product is a bundle, show the `BundleBadge` component in the cart line item.
 
-#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/templates/skeleton/app/components/CartLineItem.tsx)
+#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/templates/skeleton/app/components/CartLineItem.tsx)
 
 ```diff
-index bd33a2cf..0790a6f2 100644
+index c96b3d83..61e7c2e3 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
-@@ -6,6 +6,7 @@ import {Link} from '@remix-run/react';
+@@ -6,6 +6,7 @@ import { Link } from 'react-router';
  import {ProductPrice} from './ProductPrice';
  import {useAside} from './Aside';
  import type {CartApiQueryFragment} from 'storefrontapi.generated';
@@ -445,10 +445,10 @@ index bd33a2cf..0790a6f2 100644
 
 If a product is a bundle, update the text of the product button.
 
-#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/templates/skeleton/app/components/ProductForm.tsx)
+#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/templates/skeleton/app/components/ProductForm.tsx)
 
 ```diff
-index e8616a61..07a984dc 100644
+index 61290120..b1eaea07 100644
 --- a/templates/skeleton/app/components/ProductForm.tsx
 +++ b/templates/skeleton/app/components/ProductForm.tsx
 @@ -11,9 +11,11 @@ import type {ProductFragment} from 'storefrontapi.generated';
@@ -482,7 +482,7 @@ index e8616a61..07a984dc 100644
 
 If a product is a bundle, show the `BundleBadge` component in the `ProductImage` component.
 
-#### File: [app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/templates/skeleton/app/components/ProductImage.tsx)
+#### File: [app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/templates/skeleton/app/components/ProductImage.tsx)
 
 ```diff
 index 5f3ac1cc..c16b947b 100644
@@ -516,16 +516,16 @@ index 5f3ac1cc..c16b947b 100644
 
 If a product is a bundle, show the `BundleBadge` component in the `ProductItem` component.
 
-#### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/templates/skeleton/app/components/ProductItem.tsx)
+#### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/templates/skeleton/app/components/ProductItem.tsx)
 
 <details>
 
 ```diff
-index 62c64b50..970916bd 100644
+index 3b0f6913..1b6cb130 100644
 --- a/templates/skeleton/app/components/ProductItem.tsx
 +++ b/templates/skeleton/app/components/ProductItem.tsx
 @@ -1,24 +1,19 @@
- import {Link} from '@remix-run/react';
+ import {Link} from 'react-router';
  import {Image, Money} from '@shopify/hydrogen';
 -import type {
 -  ProductItemFragment,
@@ -598,7 +598,7 @@ index 62c64b50..970916bd 100644
 
 Make sure the bundle badge is positioned relative to the product image.
 
-#### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/templates/skeleton/app/styles/app.css)
+#### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/templates/skeleton/app/styles/app.css)
 
 ```diff
 index b9294c59..de48b6c6 100644

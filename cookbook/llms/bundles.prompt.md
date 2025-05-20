@@ -81,7 +81,7 @@ In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/sho
 
 Create a new BundleBadge component to be displayed on bundle product listings.
 
-#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
+#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
 
 ```tsx
 export function BundleBadge() {
@@ -108,10 +108,10 @@ export function BundleBadge() {
 
 Create a new `BundledVariants` component that wraps the variants of a bundle product in a single product listing.
 
-#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
+#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
 
 ```tsx
-import {Link} from '@remix-run/react';
+import {Link} from 'react-router';
 import {Image} from '@shopify/hydrogen';
 import type {
   ProductVariantComponent,
@@ -189,7 +189,7 @@ used to identify bundled products.
 @@ -1,4 +1,4 @@
 -import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 +import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
- import {useLoaderData, type MetaFunction} from '@remix-run/react';
+ import { useLoaderData, type MetaFunction } from 'react-router';
  import {
    getSelectedProductOptions,
 @@ -12,6 +12,8 @@ import {ProductPrice} from '~/components/ProductPrice';
@@ -410,7 +410,7 @@ If a product is a bundle, show the `BundleBadge` component in the cart line item
 #### File: /app/components/CartLineItem.tsx
 
 ```diff
-@@ -6,6 +6,7 @@ import {Link} from '@remix-run/react';
+@@ -6,6 +6,7 @@ import { Link } from 'react-router';
  import {ProductPrice} from './ProductPrice';
  import {useAside} from './Aside';
  import type {CartApiQueryFragment} from 'storefrontapi.generated';
@@ -524,7 +524,7 @@ If a product is a bundle, show the `BundleBadge` component in the `ProductItem` 
 
 ```diff
 @@ -1,24 +1,19 @@
- import {Link} from '@remix-run/react';
+ import {Link} from 'react-router';
  import {Image, Money} from '@shopify/hydrogen';
 -import type {
 -  ProductItemFragment,
