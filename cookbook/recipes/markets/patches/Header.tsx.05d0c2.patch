@@ -1,4 +1,4 @@
-index 8a437a10..757808eb 100644
+index 8a437a10..ad1e51f8 100644
 --- a/templates/skeleton/app/components/Header.tsx
 +++ b/templates/skeleton/app/components/Header.tsx
 @@ -7,6 +7,7 @@ import {
@@ -9,15 +9,7 @@ index 8a437a10..757808eb 100644
  
  interface HeaderProps {
    header: HeaderQuery;
-@@ -77,6 +78,7 @@ export function HeaderMenu({
-           item.url.includes(primaryDomainUrl)
-             ? new URL(item.url).pathname
-             : item.url;
-+
-         return (
-           <NavLink
-             className="header-menu-item"
-@@ -102,6 +104,7 @@ function HeaderCtas({
+@@ -102,6 +103,7 @@ function HeaderCtas({
    return (
      <nav className="header-ctas" role="navigation">
        <HeaderMenuMobileToggle />
