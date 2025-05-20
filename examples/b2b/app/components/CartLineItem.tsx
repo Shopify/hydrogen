@@ -2,7 +2,7 @@ import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import type {CartLayout} from '~/components/CartMain';
 import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
-import {Link} from '@remix-run/react';
+import {Link} from 'react-router';
 import {ProductPrice} from '~/components/ProductPrice';
 import {useAside} from '~/components/Aside';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
@@ -113,7 +113,9 @@ function CartLineQuantity({line}: {line: CartLine}) {
           value={nextQuantity}
           /***********************************************/
           /**********  EXAMPLE UPDATE STARTS  ************/
-          disabled={Boolean(maximum && nextQuantity > maximum || !!isOptimistic)}
+          disabled={Boolean(
+            (maximum && nextQuantity > maximum) || !!isOptimistic,
+          )}
           /**********   EXAMPLE UPDATE END   ************/
           /***********************************************/
         >

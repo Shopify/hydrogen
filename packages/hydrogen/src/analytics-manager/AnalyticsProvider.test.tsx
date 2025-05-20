@@ -90,7 +90,7 @@ const CART_DATA_3 = {
 
 // Mock the useLocation hook to return a different path each time to simulate page navigation
 let pathCount = 1;
-vi.mock('@remix-run/react', () => ({
+vi.mock('react-router', () => ({
   useLocation: () => ({
     pathname: `/example/path/${pathCount++}`,
     search: '',

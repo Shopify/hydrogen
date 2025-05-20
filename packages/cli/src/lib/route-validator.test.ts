@@ -7,6 +7,7 @@ const createRoute = (path: string) => ({
       file: 'a/file',
       id: 'route-id',
       path,
+      parentId: 'root',
     },
   },
 });

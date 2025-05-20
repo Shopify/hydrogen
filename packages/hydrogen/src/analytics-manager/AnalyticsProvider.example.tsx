@@ -1,6 +1,6 @@
 import {Analytics, getShopAnalytics} from '@shopify/hydrogen';
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {Outlet, useLoaderData} from '@remix-run/react';
+import {Outlet, useLoaderData} from 'react-router';
 
 export async function loader({context}: LoaderFunctionArgs) {
   const {cart, env} = context;

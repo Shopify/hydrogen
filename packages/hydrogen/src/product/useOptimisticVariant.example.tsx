@@ -1,5 +1,5 @@
-import {useLoaderData} from '@remix-run/react';
-import {LoaderFunctionArgs} from '@remix-run/server-runtime';
+import {useLoaderData} from 'react-router';
+import {LoaderFunctionArgs} from 'react-router';
 import {useOptimisticVariant} from '@shopify/hydrogen';
 
 export async function loader({context}: LoaderFunctionArgs) {

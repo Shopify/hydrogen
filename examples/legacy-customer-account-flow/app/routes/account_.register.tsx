@@ -1,11 +1,13 @@
 import {
+  Form,
+  Link,
+  useActionData,
   data,
   HeadersFunction,
   redirect,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
-import {Form, Link, useActionData} from '@remix-run/react';
+} from 'react-router';
 import type {CustomerCreateMutation} from 'storefrontapi.generated';
 
 type ActionResponse = {

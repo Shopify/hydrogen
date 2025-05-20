@@ -1,5 +1,11 @@
-import {type ActionFunctionArgs, data, redirect} from '@shopify/remix-oxygen';
-import {Form, useActionData, type MetaFunction} from '@remix-run/react';
+import {
+  Form,
+  useActionData,
+  data,
+  redirect,
+  type ActionFunctionArgs,
+  type MetaFunction,
+} from 'react-router';
 
 type ActionResponse = {
   error: string | null;

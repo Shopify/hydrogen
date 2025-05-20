@@ -1,4 +1,4 @@
-import {useLocation} from '@remix-run/react';
+import {useLocation} from 'react-router';
 import {useEffect} from 'react';
 import {
   type ShopAnalytics,

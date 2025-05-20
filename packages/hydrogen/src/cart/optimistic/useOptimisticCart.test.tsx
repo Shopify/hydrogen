@@ -1,6 +1,6 @@
 import {expect, it, describe, afterEach, vi} from 'vitest';
 import {useOptimisticCart} from './useOptimisticCart';
-import * as RemixReact from '@remix-run/react';
+import * as RemixReact from 'react-router';
 import {type CartActionInput, CartForm} from '../CartForm';
 import {FormData} from 'formdata-polyfill/esm.min.js';
 
@@ -10,9 +10,9 @@ const consoleErrorSpy = vi.spyOn(console, 'error');
 const consoleWarnSpy = vi.spyOn(console, 'warn');
 
 vi.spyOn(RemixReact, 'useFetchers');
-vi.mock('@remix-run/react', async (importOrigninal) => {
+vi.mock('react-router', async (importOrigninal) => {
   return {
-    ...(await importOrigninal<typeof import('@remix-run/react')>()),
+    ...(await importOrigninal<typeof import('react-router')>()),
     useFetchers: () => {
       return fetchers;
     },

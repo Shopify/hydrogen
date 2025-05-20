@@ -1,5 +1,4 @@
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {type LoaderFunctionArgs, useLoaderData} from 'react-router';
 import {B2BLocationSelector} from '../components/B2BLocationSelector';
 import {CUSTOMER_LOCATIONS_QUERY} from '~/graphql/customer-account/CustomerLocationsQuery';
 

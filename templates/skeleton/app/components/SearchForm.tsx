@@ -1,5 +1,5 @@
 import {useRef, useEffect} from 'react';
-import {Form, type FormProps} from '@remix-run/react';
+import { Form, type FormProps } from 'react-router';
 
 type SearchFormProps = Omit<FormProps, 'children'> & {
   children: (args: {

@@ -1,6 +1,12 @@
-import {Link, useLoaderData, type MetaFunction} from '@remix-run/react';
+import {
+  Link,
+  useLoaderData,
+  data,
+  redirect,
+  type LoaderFunctionArgs,
+  type MetaFunction,
+} from 'react-router';
 import {Money, Pagination, getPaginationVariables} from '@shopify/hydrogen';
-import {data, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import type {
   CustomerOrdersFragment,
   OrderItemFragment,

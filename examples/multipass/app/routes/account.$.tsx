@@ -1,4 +1,4 @@
-import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {redirect, type LoaderFunctionArgs} from 'react-router';
 
 export async function loader({context}: LoaderFunctionArgs) {
   if (await context.session.get('customerAccessToken')) {

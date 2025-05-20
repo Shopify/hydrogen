@@ -4,7 +4,7 @@ import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
   type HeadersFunction,
-} from '@shopify/remix-oxygen';
+} from 'react-router';
 import {Multipassify} from '~/lib/multipass/multipassify.server';
 import type {
   CustomerInfoType,

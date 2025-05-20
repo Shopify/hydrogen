@@ -1,4 +1,4 @@
-import {useLocation, useNavigation} from '@remix-run/react';
+import {useLocation, useNavigation} from 'react-router';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import type {
   ProductOption,
@@ -31,7 +31,7 @@ export type VariantOptionValue = {
   to: string;
   search: string;
   isActive: boolean;
-  variant?: PartialDeep<ProductVariant>;
+  variant?: PartialDeep<ProductVariant, {recurseIntoArrays: true}>;
   optionValue: PartialProductOptionValues;
 };
 

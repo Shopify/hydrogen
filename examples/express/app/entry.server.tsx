@@ -6,9 +6,9 @@
 
 import {PassThrough} from 'node:stream';
 
-import type {AppLoadContext, EntryContext} from '@remix-run/node';
+import type {AppLoadContext, EntryContext} from 'react-router';
 import {Response} from '@remix-run/web-fetch';
-import {RemixServer} from '@remix-run/react';
+import {ServerRouter} from 'react-router';
 import {isbot} from 'isbot';
 import {renderToPipeableStream} from 'react-dom/server';
 import {createContentSecurityPolicy} from '@shopify/hydrogen';
@@ -19,7 +19,7 @@ export default function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  remixContext: EntryContext,
+  reactRouterContext: EntryContext,
   loadContext: AppLoadContext,
 ) {
   return isbot(request.headers.get('user-agent'))
@@ -27,14 +27,14 @@ export default function handleRequest(
         request,
         responseStatusCode,
         responseHeaders,
-        remixContext,
+        reactRouterContext,
         loadContext,
       )
     : handleBrowserRequest(
         request,
         responseStatusCode,
         responseHeaders,
-        remixContext,
+        reactRouterContext,
       );
 }
 
@@ -42,7 +42,7 @@ function handleBotRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  remixContext: EntryContext,
+  reactRouterContext: EntryContext,
   context: AppLoadContext,
 ) {
   return new Promise((resolve, reject) => {
@@ -55,10 +55,9 @@ function handleBotRequest(
 
     const {pipe, abort} = renderToPipeableStream(
       <NonceProvider>
-        <RemixServer
-          context={remixContext}
+        <ServerRouter
+          context={reactRouterContext}
           url={request.url}
-          abortDelay={ABORT_DELAY}
           nonce={nonce}
         />
       </NonceProvider>,
@@ -99,17 +98,16 @@ function handleBrowserRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  remixContext: EntryContext,
+  reactRouterContext: EntryContext,
 ) {
   const {nonce, header, NonceProvider} = createContentSecurityPolicy();
 
   return new Promise((resolve, reject) => {
     const {pipe, abort} = renderToPipeableStream(
       <NonceProvider>
-        <RemixServer
-          context={remixContext}
+        <ServerRouter
+          context={reactRouterContext}
           url={request.url}
-          abortDelay={ABORT_DELAY}
           nonce={nonce}
         />
       </NonceProvider>,

@@ -1,4 +1,4 @@
-import {Link, useNavigate} from '@remix-run/react';
+import {Link, useNavigate} from 'react-router';
 import {type MappedProductOptions} from '@shopify/hydrogen';
 import type {
   Maybe,
@@ -104,7 +104,7 @@ export function ProductForm({
             </div>
             <br />
           </div>
-        )
+        );
       })}
       <br />
       <AddToCartButton

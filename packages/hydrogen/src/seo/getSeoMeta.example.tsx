@@ -1,5 +1,5 @@
-import {MetaFunction} from '@remix-run/react';
-import {LoaderFunctionArgs} from '@remix-run/server-runtime';
+import {MetaFunction} from 'react-router';
+import {LoaderFunctionArgs} from 'react-router';
 import {getSeoMeta} from '@shopify/hydrogen';
 
 export async function loader({context}: LoaderFunctionArgs) {

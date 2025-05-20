@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import {Link, useMatches} from '@remix-run/react';
+import {Link, useMatches} from 'react-router';
 
 /**
  * Displays an `Edit Route` button in the top right corner of the page
@@ -10,7 +10,7 @@ export function EditRoute({routeId}: {routeId: string}) {
   const [url, setUrl] = useState<URL | null>(null);
   const [root] = useMatches();
   // @ts-ignore
-  const publicStoreSubdomain= root?.data?.publicStoreSubdomain;
+  const publicStoreSubdomain = root?.data?.publicStoreSubdomain;
 
   useEffect(() => {
     setUrl(new URL(window.location.href));

@@ -1,4 +1,4 @@
-import {useLocation} from '@remix-run/react';
+import {useLocation} from 'react-router';
 import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
 import {useMemo} from 'react';
 
