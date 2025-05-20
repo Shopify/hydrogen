@@ -2,7 +2,8 @@ import {
   createCustomerAccountClient,
   type HydrogenSession,
 } from '@shopify/hydrogen';
-import * as remixBuild from '@remix-run/dev/server-build';
+// @ts-expect-error
+import * as reactRouterBuild from 'virtual:react-router/server-build';
 import {
   createRequestHandler,
   createCookieSessionStorage,
@@ -39,7 +40,7 @@ export default {
     });
 
     const handleRequest = createRequestHandler({
-      build: remixBuild,
+      build: reactRouterBuild,
       mode: process.env.NODE_ENV,
       /* Inject the customer account client in the Remix context */
       getLoadContext: () => ({session, customerAccount}),
@@ -109,13 +110,23 @@ class AppSession implements HydrogenSession {
 
 // In env.d.ts
 import type {CustomerAccount, HydrogenSessionData} from '@shopify/hydrogen';
-declare module '@shopify/remix-oxygen' {
+declare module 'react-router' {
   /**
    * Declare local additions to the Remix loader context.
    */
   interface AppLoadContext {
     customerAccount: CustomerAccount;
     session: AppSession;
+  }
+
+  // TODO: remove this once we've migrated to `Route.LoaderArgs` instead for our loaders
+  interface LoaderFunctionArgs {
+    context: AppLoadContext;
+  }
+
+  // TODO: remove this once we've migrated to `Route.ActionArgs` instead for our actions
+  interface ActionFunctionArgs {
+    context: AppLoadContext;
   }
 
   /**
@@ -131,7 +142,7 @@ import {
   useRouteError,
   isRouteErrorResponse,
   useLocation,
-} from '@remix-run/react';
+} from 'react-router';
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 
 export async function loader({context}: LoaderFunctionArgs) {

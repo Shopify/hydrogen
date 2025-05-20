@@ -1,5 +1,5 @@
 import {Analytics, getShopAnalytics} from '@shopify/hydrogen';
-import {Outlet, useLoaderData} from '@remix-run/react';
+import {Outlet, useLoaderData} from 'react-router';
 
 export async function loader({context}) {
   const {cart, env} = context;

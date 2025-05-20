@@ -526,6 +526,13 @@ function isRemixDependency([name]: [string, string]) {
   return false;
 }
 
+function isReactRouterDependency([name]: [string, string]) {
+  if (name.includes('react-router')) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Checks if a dependency should be included in the upgrade command
  */
@@ -544,6 +551,11 @@ function maybeIncludeDependency({
 
   // Remix dependencies are handled later
   if (isRemixPackage) return false;
+
+  const isReactRouterPackage = isReactRouterDependency([name, version]);
+
+  // React Router dependencies are handled later
+  if (isReactRouterPackage) return false;
 
   const isNextVersion = existingDependencyVersion === 'next';
 
@@ -627,6 +639,30 @@ export function buildUpgradeCommandArgs({
     }
   }
 
+  // Maybe upgrade React Router dependencies
+  const currentReactRouter = Object.entries(currentDependencies).find(
+    isReactRouterDependency,
+  );
+  const selectedReactRouter = Object.entries(selectedRelease.dependencies).find(
+    isReactRouterDependency,
+  );
+
+  if (currentReactRouter && selectedReactRouter) {
+    const shouldUpgradeReactRouter = semver.lt(
+      getAbsoluteVersion(currentReactRouter[1]),
+      getAbsoluteVersion(selectedReactRouter[1]),
+    );
+
+    if (shouldUpgradeReactRouter) {
+      args.push(
+        ...appendReactRouterDependencies({
+          currentDependencies,
+          selectedReactRouter,
+        }),
+      );
+    }
+  }
+
   return args;
 }
 
@@ -679,6 +715,27 @@ function appendRemixDependencies({
       continue;
     }
     command.push(`${name}@${getAbsoluteVersion(selectedRemix[1])}`);
+  }
+  return command;
+}
+
+/**
+ * Appends the current react-router dependencies to the upgrade command
+ */
+function appendReactRouterDependencies({
+  currentDependencies,
+  selectedReactRouter,
+}: {
+  currentDependencies: Record<string, string>;
+  selectedReactRouter: [string, string];
+}) {
+  const command: string[] = [];
+  for (const [name, version] of Object.entries(currentDependencies)) {
+    const isReactRouterPackage = isReactRouterDependency([name, version]);
+    if (!isReactRouterPackage) {
+      continue;
+    }
+    command.push(`${name}@${getAbsoluteVersion(selectedReactRouter[1])}`);
   }
   return command;
 }

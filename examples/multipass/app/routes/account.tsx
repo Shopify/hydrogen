@@ -1,5 +1,13 @@
-import {Form, NavLink, Outlet, useLoaderData} from '@remix-run/react';
-import {data, type HeadersFunction, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {
+  data,
+  Form,
+  NavLink,
+  Outlet,
+  redirect,
+  useLoaderData,
+  type HeadersFunction,
+  type LoaderFunctionArgs,
+} from 'react-router';
 import type {CustomerFragment} from 'storefrontapi.generated';
 
 export function shouldRevalidate() {

@@ -1,5 +1,5 @@
-import {useFetcher} from '@remix-run/react';
-import {data} from '@remix-run/server-runtime';
+import {useFetcher} from 'react-router';
+import {data} from 'react-router';
 import {CartForm} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 

@@ -4,7 +4,8 @@ import {
   cartGetIdDefault,
   cartSetIdDefault,
 } from '@shopify/hydrogen';
-import * as remixBuild from '@remix-run/dev/server-build';
+// @ts-expect-error
+import * as reactRouterBuild from 'virtual:react-router/server-build';
 import {
   createRequestHandler,
   getStorefrontHeaders,
@@ -24,7 +25,7 @@ export default {
     });
 
     const handleRequest = createRequestHandler({
-      build: remixBuild,
+      build: reactRouterBuild,
       mode: process.env.NODE_ENV,
       getLoadContext: () => ({
         storefront,
