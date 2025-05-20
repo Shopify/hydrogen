@@ -10,7 +10,7 @@ import {
   useFetcher,
   useLoaderData,
   type MetaFunction,
-} from '@remix-run/react';
+} from 'react-router';
 import {SUBSCRIPTIONS_CONTRACTS_QUERY} from '../graphql/customer-account/CustomerSubscriptionsQuery';
 import {SUBSCRIPTION_CANCEL_MUTATION} from '../graphql/customer-account/CustomerSubscriptionsMutations';
 

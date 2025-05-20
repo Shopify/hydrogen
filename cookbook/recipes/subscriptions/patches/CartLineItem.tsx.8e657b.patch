@@ -4,7 +4,7 @@ index bd33a2cf..a18e4b52 100644
 @@ -3,8 +3,8 @@ import type {CartLayout} from '~/components/CartMain';
  import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
  import {useVariantUrl} from '~/lib/variants';
- import {Link} from '@remix-run/react';
+ import {Link} from 'react-router';
 -import {ProductPrice} from './ProductPrice';
 -import {useAside} from './Aside';
 +import {ProductPrice} from '~/components/ProductPrice';

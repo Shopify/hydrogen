@@ -5,7 +5,7 @@ index 2dc6bda2..3507d496 100644
 +import type {SellingPlanFragment} from 'storefrontapi.generated';
 +import type {LinksFunction} from '@remix-run/node';
  import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
- import {useLoaderData, type MetaFunction} from '@remix-run/react';
+ import { useLoaderData, type MetaFunction } from 'react-router';
  import {
 @@ -13,6 +15,12 @@ import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';

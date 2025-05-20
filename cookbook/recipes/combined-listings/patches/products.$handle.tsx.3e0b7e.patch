@@ -4,7 +4,7 @@ index 2dc6bda2..8baafac9 100644
 @@ -1,4 +1,4 @@
 -import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 +import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
- import {useLoaderData, type MetaFunction} from '@remix-run/react';
+ import { useLoaderData, type MetaFunction } from 'react-router';
  import {
    getSelectedProductOptions,
 @@ -11,7 +11,14 @@ import {
