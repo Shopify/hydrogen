@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 10.1.0
+
+### Minor Changes
+
+- Add a new tokenless Storefront API route to the starter template. ([#2948](https://github.com/Shopify/hydrogen/pull/2948)) by [@blittle](https://github.com/blittle)
+
 ## 10.0.2
 
 ### Patch Changes

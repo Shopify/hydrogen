@@ -1,5 +1,20 @@
 # @shopify/hydrogen
 
+## 2025.4.1
+
+### Patch Changes
+
+- Add a `buyerIdentity` parameter to `createHydrogenContext` and `createCartHandler`. This buyer identity will be used as the default buyer identity for all new cart creations: ([#2927](https://github.com/Shopify/hydrogen/pull/2927)) by [@blittle](https://github.com/blittle)
+
+  ```ts
+  const hydrogenContext = createHydrogenContext({
+    // ...
+    buyerIdentity: {
+      companyLocationId: '...',
+    },
+  });
+  ```
+
 ## 2025.4.0
 
 ### Patch Changes
