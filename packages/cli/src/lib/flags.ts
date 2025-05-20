@@ -25,13 +25,6 @@ export const commonFlags = {
       env: 'SHOPIFY_HYDROGEN_FLAG_PORT',
     }),
   },
-  legacyRuntime: {
-    'legacy-runtime': Flags.boolean({
-      description:
-        'Runs the app in a Node.js sandbox instead of an Oxygen worker.',
-      env: 'SHOPIFY_HYDROGEN_FLAG_LEGACY_RUNTIME',
-    }),
-  },
   force: {
     force: Flags.boolean({
       description:
