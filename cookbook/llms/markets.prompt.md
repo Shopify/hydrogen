@@ -17,13 +17,19 @@ This recipe adds basic localization support to your Hydrogen app using Shopify M
 # User Intent Recognition
 
 <user_queries>
-
+- How do I add localization support to my Hydrogen app?
+- How do I add a country selector to my Hydrogen app?
+- Set up Shopify Markets in Hydrogen
+- Help me segment my customers based on their location
 </user_queries>
 
 # Troubleshooting
 
 <troubleshooting>
-
+- **Issue**: I'm not seeing the localized content on my storefront.
+  **Solution**: In your Shopify admin, make sure you've set up your store's regions and langauges using Shopify Markets, then check that your products are appropriately configured for each market. In your Hydrogen app, make sure you've added the dynamic segment to the desired routes and that the routes are correctly named.
+- **Issue**: Some pages are showing localized content, but others aren't.
+  **Solution**: Make sure you update *all* routes that need localization (not only the routes for the home page, the cart page, and the product page). See step 2.1 for details.
 </troubleshooting>
 
 # Recipe Implementation
@@ -95,6 +101,7 @@ selected.
 - app/routes/($locale)._index.tsx
 - app/routes/($locale).cart.tsx
 - app/routes/($locale).products.$handle.tsx
+- app/routes/($locale).tsx
 
 ## Steps
 
@@ -104,16 +111,16 @@ In this section, we'll create utilities to handle localization and country selec
 
 #### Step 1.1: Create a CountrySelector component
 
-This component displays a country selector inside the Header.
+Create a new `CountrySelector` component that allows users to select the locale from a dropdown of the supported locales.
 
-To handle redirects, use a `Fetcher` that updates the cart buyer identity,
+To handle redirects, use a `Form` that updates the cart buyer identity,
 which eventually redirects to the localized root of the app.
 
-##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
+##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/a7e33c1dd45e3c7c27ab2e1125851468051cee0b/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
 
 ```tsx
 import {Form} from '@remix-run/react';
-import {DEFAULT_LOCALE, Locale, useSelectedLocale} from '../lib/i18n';
+import {Locale, SUPPORTED_LOCALES, useSelectedLocale} from '../lib/i18n';
 import {CartForm} from '@shopify/hydrogen';
 
 export function CountrySelector() {
@@ -141,16 +148,12 @@ export function CountrySelector() {
           boxShadow: '0 0 10px 0 rgba(0, 0, 0, 0.1)',
         }}
       >
-        <LocaleLink locale={DEFAULT_LOCALE} />
-        <LocaleLink
-          locale={{country: 'CA', language: 'EN', pathPrefix: '/EN-CA'}}
-        />
-        <LocaleLink
-          locale={{country: 'CA', language: 'FR', pathPrefix: '/FR-CA'}}
-        />
-        <LocaleLink
-          locale={{country: 'FR', language: 'FR', pathPrefix: '/FR-FR'}}
-        />
+        {SUPPORTED_LOCALES.map((locale) => (
+          <LocaleLink
+            key={`locale-${locale.language}-${locale.country}`}
+            locale={locale}
+          />
+        ))}
       </div>
     </details>
   );
@@ -188,7 +191,7 @@ const LocaleLink = ({locale}: {locale: Locale}) => {
 
 Create a wrapper component around the Remix `Link` component that prepends the selected locale path prefix (if any) to the actual links.
 
-##### File: [Link.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
+##### File: [Link.tsx](https://github.com/Shopify/hydrogen/blob/a7e33c1dd45e3c7c27ab2e1125851468051cee0b/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
 
 ```tsx
 import {Link as RemixLink} from '@remix-run/react';
@@ -197,10 +200,10 @@ import {useSelectedLocale} from '../lib/i18n';
 
 export function Link({...props}: RemixLinkProps) {
   const selectedLocale = useSelectedLocale();
-  const to =
-    selectedLocale != null
-      ? `${selectedLocale.pathPrefix}${props.to}`
-      : props.to;
+
+  const prefix = selectedLocale?.pathPrefix.replace(/\/+$/, '') ?? '';
+  const to = `${prefix}${props.to}`;
+
   return <RemixLink {...props} to={to} />;
 }
 
@@ -210,10 +213,10 @@ export function Link({...props}: RemixLinkProps) {
 
 1. Create a helper function to get locale information from the context, and
 a hook to retrieve the selected locale.
-2. Define a default locale that will be used as a fallback when no market
-is explicitly selected.
+2. Define a set of supported locales for the app.
+3. Add a utility function to validate the locale from the route param against the supported locales.
 
-##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
+##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/a7e33c1dd45e3c7c27ab2e1125851468051cee0b/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
 
 ```ts
 import {useMatches} from '@remix-run/react';
@@ -234,24 +237,37 @@ export const DEFAULT_LOCALE: Locale = {
   pathPrefix: '/',
 };
 
-export function getLocaleFromRequest(request: Request): Locale {
-  const url = new URL(request.url);
+export const SUPPORTED_LOCALES: Locale[] = [
+  DEFAULT_LOCALE,
+  {language: 'EN', country: 'CA', pathPrefix: '/EN-CA'},
+  {language: 'FR', country: 'CA', pathPrefix: '/FR-CA'},
+  {language: 'FR', country: 'FR', pathPrefix: '/FR-FR'},
+];
 
-  const firstPathPart = url.pathname
-    // take the first part of the pathname (split by /)
-    .split('/')
-    .at(1)
-    // replace the .data suffix, if present
-    ?.replace(/\.data$/, '')
-    // normalize to uppercase
-    ?.toUpperCase();
+const RE_LOCALE_PREFIX = /^[A-Z]{2}-[A-Z]{2}$/i;
+
+function getFirstPathPart(url: URL): string | null {
+  return (
+    url.pathname
+      // take the first part of the pathname (split by /)
+      .split('/')
+      .at(1)
+      // replace the .data suffix, if present
+      ?.replace(/\.data$/, '')
+      // normalize to uppercase
+      ?.toUpperCase() ?? null
+  );
+}
+
+export function getLocaleFromRequest(request: Request): Locale {
+  const firstPathPart = getFirstPathPart(new URL(request.url));
 
   type LocaleFromUrl = [Locale['language'], Locale['country']];
 
   let pathPrefix = '';
 
   // If the first path part is not a valid locale, return the default locale
-  if (firstPathPart == null || !/^[A-Z]{2}-[A-Z]{2}$/i.test(firstPathPart)) {
+  if (firstPathPart == null || !RE_LOCALE_PREFIX.test(firstPathPart)) {
     return DEFAULT_LOCALE;
   }
 
@@ -269,6 +285,13 @@ export function useSelectedLocale(): Locale | null {
   const {selectedLocale} = root.data as WithLocale;
 
   return selectedLocale ?? null;
+}
+
+export function localeMatchesPrefix(localeSegment: string | null): boolean {
+  const prefix = '/' + (localeSegment ?? '');
+  return SUPPORTED_LOCALES.some((supportedLocale) => {
+    return supportedLocale.pathPrefix.toUpperCase() === prefix.toUpperCase();
+  });
 }
 
 ```
@@ -345,15 +368,7 @@ This adds a country selector component to the navigation.
  
  interface HeaderProps {
    header: HeaderQuery;
-@@ -77,6 +78,7 @@ export function HeaderMenu({
-           item.url.includes(primaryDomainUrl)
-             ? new URL(item.url).pathname
-             : item.url;
-+
-         return (
-           <NavLink
-             className="header-menu-item"
-@@ -102,6 +104,7 @@ function HeaderCtas({
+@@ -102,6 +103,7 @@ function HeaderCtas({
    return (
      <nav className="header-ctas" role="navigation">
        <HeaderMenuMobileToggle />
@@ -366,18 +381,14 @@ This adds a country selector component to the navigation.
 #### Step 1.7: Add the selected locale to the root route
 
 1. Include the selected locale in the root route's loader data.
-2. Add a key prop to the `PageLayout` component to make sure it re-renders
+2. Make sure to redirect to the 404 page if the requested locale is not supported.
+3. Add a key prop to the `PageLayout` component to make sure it re-renders
 when the locale changes.
 
 ##### File: /app/root.tsx
 
 ```diff
-@@ -74,9 +74,12 @@ export async function loader(args: LoaderFunctionArgs) {
- 
-   const {storefront, env} = args.context;
- 
-+  const {i18n} = storefront;
-+
+@@ -77,6 +77,7 @@ export async function loader(args: LoaderFunctionArgs) {
    return {
      ...deferredData,
      ...criticalData,
@@ -385,27 +396,7 @@ when the locale changes.
      publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
      shop: getShopAnalytics({
        storefront,
-@@ -87,8 +90,8 @@ export async function loader(args: LoaderFunctionArgs) {
-       storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-       withPrivacyBanner: false,
-       // localize the privacy banner
--      country: args.context.storefront.i18n.country,
--      language: args.context.storefront.i18n.language,
-+      country: i18n.country,
-+      language: i18n.language,
-     },
-   };
- }
-@@ -105,6 +108,8 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
-       cache: storefront.CacheLong(),
-       variables: {
-         headerMenuHandle: 'main-menu', // Adjust to your header menu handle
-+        country: storefront.i18n.country,
-+        language: storefront.i18n.language,
-       },
-     }),
-     // Add other queries here, so that they are loaded in parallel
-@@ -162,7 +167,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -162,7 +163,12 @@ export function Layout({children}: {children?: React.ReactNode}) {
              shop={data.shop}
              consent={data.consent}
            >
@@ -442,7 +433,7 @@ Remix counterpart.
 > [!NOTE]
 > Rename `app/routes/_index.tsx` to `app/routes/($locale)._index.tsx`.
 
-##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
+##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/a7e33c1dd45e3c7c27ab2e1125851468051cee0b/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
 
 ```tsx
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
@@ -623,7 +614,7 @@ Add the dynamic segment to the cart page route.
 > [!NOTE]
 > Rename `app/routes/cart.tsx` to `app/routes/($locale).cart.tsx`.
 
-##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
+##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/a7e33c1dd45e3c7c27ab2e1125851468051cee0b/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
 
 ```tsx
 import {type MetaFunction, useLoaderData} from '@remix-run/react';
@@ -755,7 +746,7 @@ localized prefix.
 > [!NOTE]
 > Rename `app/routes/products.$handle.tsx` to `app/routes/($locale).products.$handle.tsx`.
 
-##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
+##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/a7e33c1dd45e3c7c27ab2e1125851468051cee0b/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
 
 ```tsx
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
@@ -1010,6 +1001,55 @@ const PRODUCT_QUERY = `#graphql
   ${PRODUCT_FRAGMENT}
 ` as const;
 
+```
+
+#### Step 2.5: Add a utility route to validate the locale.
+
+Add a utility route in `$(locale).tsx` that will use `localeMatchesPrefix`
+to validate the locale from the URL params. If the locale is invalid,
+the route will throw a 404 error.
+
+##### File: [($locale).tsx](https://github.com/Shopify/hydrogen/blob/a7e33c1dd45e3c7c27ab2e1125851468051cee0b/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).tsx)
+
+```tsx
+import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {localeMatchesPrefix} from '~/lib/i18n';
+
+export async function loader({params}: LoaderFunctionArgs) {
+  if (!localeMatchesPrefix(params.locale ?? null)) {
+    throw new Response('Invalid locale', {status: 404});
+  }
+
+  return null;
+}
+
+```
+
+#### Step 2.6: Update the sitemap route's locales.
+
+Update the sitemap route to use the locales included in `SUPPORTED_LOCALES`.
+
+##### File: /app/routes/sitemap.$type.$page[.xml].tsx
+
+```diff
+@@ -1,5 +1,6 @@
+ import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import {getSitemap} from '@shopify/hydrogen';
++import {SUPPORTED_LOCALES} from '../lib/i18n';
+ 
+ export async function loader({
+   request,
+@@ -10,7 +11,9 @@ export async function loader({
+     storefront,
+     request,
+     params,
+-    locales: ['EN-US', 'EN-CA', 'FR-CA'],
++    locales: SUPPORTED_LOCALES.map(
++      (locale) => `${locale.language}-${locale.country}`,
++    ),
+     getLink: ({type, baseUrl, handle, locale}) => {
+       if (!locale) return `${baseUrl}/${type}/${handle}`;
+       return `${baseUrl}/${locale}/${type}/${handle}`;
 ```
 
 ## Deleted Files

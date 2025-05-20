@@ -71,6 +71,8 @@ ingredients:
     description: A localized cart route.
   - path: templates/skeleton/app/routes/($locale).products.$handle.tsx
     description: A route that renders a localized version of the product page.
+  - path: templates/skeleton/app/routes/($locale).tsx
+    description: A utility route that makes sure the locale is valid.
 deletedFiles:
   - templates/skeleton/app/routes/_index.tsx
   - templates/skeleton/app/routes/cart.tsx
@@ -85,9 +87,9 @@ steps:
     step: 1.1
     name: Create a CountrySelector component
     description: |
-      This component displays a country selector inside the Header.
+      Create a new `CountrySelector` component that allows users to select the locale from a dropdown of the supported locales.
 
-      To handle redirects, use a `Fetcher` that updates the cart buyer identity,
+      To handle redirects, use a `Form` that updates the cart buyer identity,
       which eventually redirects to the localized root of the app.
     ingredients:
       - path: templates/skeleton/app/components/CountrySelector.tsx
@@ -104,8 +106,8 @@ steps:
     description: |
       1. Create a helper function to get locale information from the context, and
       a hook to retrieve the selected locale.
-      2. Define a default locale that will be used as a fallback when no market
-      is explicitly selected.
+      2. Define a set of supported locales for the app.
+      3. Add a utility function to validate the locale from the route param against the supported locales.
     ingredients:
       - path: templates/skeleton/app/lib/i18n.ts
   - type: PATCH
@@ -138,7 +140,8 @@ steps:
     name: Add the selected locale to the root route
     description: |
       1. Include the selected locale in the root route's loader data.
-      2. Add a key prop to the `PageLayout` component to make sure it re-renders
+      2. Make sure to redirect to the 404 page if the requested locale is not supported.
+      3. Add a key prop to the `PageLayout` component to make sure it re-renders
       when the locale changes.
     diffs:
       - file: app/root.tsx
@@ -184,6 +187,23 @@ steps:
     ingredients:
       - path: templates/skeleton/app/routes/($locale).products.$handle.tsx
         renamedFrom: templates/skeleton/app/routes/products.$handle.tsx
+  - type: NEW_FILE
+    step: 2.5
+    name: Add a utility route to validate the locale.
+    description: |
+      Add a utility route in `$(locale).tsx` that will use `localeMatchesPrefix`
+      to validate the locale from the URL params. If the locale is invalid,
+      the route will throw a 404 error.
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).tsx
+  - type: PATCH
+    step: 2.6
+    name: Update the sitemap route's locales.
+    description: |
+      Update the sitemap route to use the locales included in `SUPPORTED_LOCALES`.
+    diffs:
+      - file: app/routes/sitemap.$type.$page[.xml].tsx
+        patchFile: sitemap.$type.$page[.xml].tsx.9700e3.patch
 nextSteps: |
   - Test your implementation by going to your store and selecting a different
   market from the country selector.
@@ -191,6 +211,20 @@ nextSteps: |
   Help Center](https://help.shopify.com/en/manual/markets) for
   more information on how to optimize and manage your international markets.
 llms:
-  userQueries: []
-  troubleshooting: []
-commit: 87da752246ad519f744a791cd21fd75546c7273e
+  userQueries:
+    - How do I add localization support to my Hydrogen app?
+    - How do I add a country selector to my Hydrogen app?
+    - Set up Shopify Markets in Hydrogen
+    - Help me segment my customers based on their location
+  troubleshooting:
+    - issue: I'm not seeing the localized content on my storefront.
+      solution: In your Shopify admin, make sure you've set up your store's regions
+        and langauges using Shopify Markets, then check that your products are
+        appropriately configured for each market. In your Hydrogen app, make
+        sure you've added the dynamic segment to the desired routes and that the
+        routes are correctly named.
+    - issue: Some pages are showing localized content, but others aren't.
+      solution: Make sure you update *all* routes that need localization (not only the
+        routes for the home page, the cart page, and the product page). See step
+        2.1 for details.
+commit: a7e33c1dd45e3c7c27ab2e1125851468051cee0b
