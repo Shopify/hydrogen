@@ -403,6 +403,33 @@ Use the `requiresComponents` field to determine if a cart line item is a bundle.
    }
 ```
 
+### Step 6: app/routes/_index.tsx
+
+
+
+#### File: /app/routes/_index.tsx
+
+```diff
+@@ -1,5 +1,5 @@
+ import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+-import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
++import {Await, useLoaderData, Link, type MetaFunction} from 'react-router';
+ import {Suspense} from 'react';
+ import {Image, Money} from '@shopify/hydrogen';
+ import type {
+@@ -147,6 +147,10 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+         amount
+         currencyCode
+       }
++      maxVariantPrice {
++        amount
++        currencyCode
++      }
+     }
+     featuredImage {
+       id
+```
+
 ### Step 7: Conditionally render the BundleBadge in cart line items
 
 If a product is a bundle, show the `BundleBadge` component in the cart line item.

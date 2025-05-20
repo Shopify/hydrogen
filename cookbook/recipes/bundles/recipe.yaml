@@ -81,6 +81,13 @@ steps:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.e8eb04.patch
   - type: PATCH
+    step: "6"
+    name: app/routes/_index.tsx
+    description: null
+    diffs:
+      - file: app/routes/_index.tsx
+        patchFile: _index.tsx.8041d5.patch
+  - type: PATCH
     step: 7
     name: Conditionally render the BundleBadge in cart line items
     description: |
