@@ -1,7 +1,7 @@
 ---
-description: This Hydrogen project is based on react-router, NOT @remix-run/react!
-globs: *
-alwaysApply: false
+description: 
+globs: 
+alwaysApply: true
 ---
 
 # React Router Import Rule for Hydrogen
@@ -28,6 +28,8 @@ When you see imports from Remix packages, replace them with their equivalent Rea
 | `@remix-run/serve` | `@react-router/serve` |
 | `@remix-run/server-runtime` | `react-router` |
 | `@remix-run/testing` | `react-router` |
+
+NEVER USE 'react-router-dom' imports!
 
 ## Common Import Examples
 
