@@ -67,8 +67,8 @@ const REQUIRED_ROUTES = [
 type Routes = {
   [key: string]: {
     id: string;
-    path: string;
-    parentId: string;
+    path?: string;
+    parentId?: string;
   };
 };
 
