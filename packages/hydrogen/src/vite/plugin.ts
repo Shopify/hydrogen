@@ -1,4 +1,5 @@
 import type {Plugin, ConfigEnv} from 'vite';
+import type {Preset as RemixPreset} from '@remix-run/dev';
 import {
   setupHydrogenMiddleware,
   type HydrogenMiddlewareOptions,
@@ -15,7 +16,11 @@ export type {HydrogenPluginOptions};
 
 type HydrogenSharedOptions = Partial<
   Pick<HydrogenPluginOptions, 'disableVirtualRoutes'> &
-    Pick<ConfigEnv, 'command'>
+    Pick<ConfigEnv, 'command'> & {
+      remixConfig?: Parameters<
+        NonNullable<RemixPreset['remixConfigResolved']>
+      >[0]['remixConfig'];
+    }
 >;
 
 const sharedOptions: HydrogenSharedOptions = {};
@@ -65,7 +70,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                 'react/jsx-dev-runtime',
                 'react-dom',
                 'react-dom/server',
-                'react-router',
+                '@remix-run/server-runtime',
               ],
             },
           },
@@ -190,11 +195,15 @@ function mergeOptions(
   return {...acc, ...newOptionsWithoutUndefined};
 }
 
-hydrogen.v3preset = () => ({
-  name: 'hydrogen',
-  reactRouterConfig() {
-    return {
-      buildDirectory: 'dist',
-    };
-  },
-});
+hydrogen.v3preset = () =>
+  ({
+    name: 'hydrogen',
+    remixConfigResolved({remixConfig}) {
+      sharedOptions.remixConfig = remixConfig;
+    },
+    remixConfig() {
+      return {
+        buildDirectory: 'dist',
+      };
+    },
+  }) satisfies RemixPreset;

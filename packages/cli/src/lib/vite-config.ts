@@ -75,7 +75,7 @@ export async function getViteConfig(
   );
 
   const {appDirectory, serverBuildFile, routes} =
-    getRemixConfigFromVite(resolvedViteConfig);
+    getReactRouterOrRemixConfigFromVite(resolvedViteConfig);
 
   const serverOutDir = resolvedViteConfig.build.outDir;
   const clientOutDir = serverOutDir.replace(/server$/, 'client');
@@ -104,8 +104,8 @@ export async function getViteConfig(
     resolvedViteConfig,
     userViteConfig: maybeConfig.config,
     remixConfig: {
-      routes,
-      appDirectory,
+      routes: routes ?? {},
+      appDirectory: appDirectory ?? joinPath(resolvedViteConfig.root, 'app'),
       rootDirectory: resolvedViteConfig.root,
       serverEntryPoint:
         (
@@ -114,11 +114,21 @@ export async function getViteConfig(
             basename(resolvedSsrEntry),
           )
         ).filepath || resolvedSsrEntry,
-    },
+    } satisfies ResolvedRRConfig,
   };
 }
 
-function getRemixConfigFromVite(viteConfig: any): {
+function getReactRouterOrRemixConfigFromVite(viteConfig: any) {
+  try {
+    const reactRouterConfig = getReactRouterConfigFromVite(viteConfig);
+    return reactRouterConfig;
+  } catch (error) {
+    const remixConfig = getRemixConfigFromVite(viteConfig);
+    return remixConfig;
+  }
+}
+
+function getReactRouterConfigFromVite(viteConfig: any): {
   appDirectory: string;
   serverBuildFile: string;
   routes: ResolvedRoutes;
@@ -135,6 +145,19 @@ function getRemixConfigFromVite(viteConfig: any): {
     serverBuildFile,
     routes,
   };
+}
+
+function getRemixConfigFromVite(viteConfig: any) {
+  const {remixConfig} =
+    findHydrogenPlugin(viteConfig)?.api?.getPluginOptions() ?? {};
+
+  return remixConfig
+    ? {
+        appDirectory: remixConfig.appDirectory,
+        serverBuildFile: remixConfig.serverBuildFile,
+        routes: remixConfig.routes satisfies ResolvedRoutes,
+      }
+    : {};
 }
 
 type MinimalViteConfig = {plugins: Readonly<Array<{name: string}>>};
