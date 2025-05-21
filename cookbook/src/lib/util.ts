@@ -1,7 +1,6 @@
 import {execSync} from 'child_process';
 import crypto from 'crypto';
 import fs from 'fs';
-import os from 'os';
 import path from 'path';
 import {COOKBOOK_PATH, REPO_ROOT, TEMPLATE_PATH} from './constants';
 
@@ -159,7 +158,7 @@ export function assertNever(n: never): never {
 
 export function makeRandomTempDir(params: {prefix: string}): string {
   const dir = path.join(
-    os.tmpdir(),
+    path.join(REPO_ROOT, 'temp'),
     `${params.prefix}-${crypto.randomUUID().toString()}`,
   );
   createDirectoryIfNotExists(dir);

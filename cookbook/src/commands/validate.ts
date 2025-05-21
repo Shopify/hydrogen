@@ -6,6 +6,7 @@ import {validateRecipe} from '../lib/validate';
 
 type ValidateArgs = {
   recipe?: string;
+  hydrogenPackagesVersion?: string;
 };
 
 export const validate: CommandModule<{}, ValidateArgs> = {
@@ -16,6 +17,11 @@ export const validate: CommandModule<{}, ValidateArgs> = {
       type: 'string',
       description:
         'The name of the recipe to validate. If not provided, all recipes will be validated.',
+    },
+    hydrogenPackagesVersion: {
+      type: 'string',
+      description:
+        'The version of Hydrogen to use for the recipe. If not provided, the latest version will be used.',
     },
   },
   handler,
@@ -37,6 +43,7 @@ async function handler(args: ValidateArgs) {
       console.log(`🧐 Validating recipe '${recipe}'`);
       validateRecipe({
         recipeTitle: recipe,
+        hydrogenPackagesVersion: args.hydrogenPackagesVersion,
       });
       // clean up the skeleton template directory on success
       execSync(`git checkout -- ${TEMPLATE_PATH}`);
