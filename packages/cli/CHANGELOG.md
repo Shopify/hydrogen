@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 11.1.0
+
+### Minor Changes
+
+- Fixing the CLI for Remix-based hydrogen projects ([#2958](https://github.com/Shopify/hydrogen/pull/2958)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
 ## 11.0.1
 
 ### Patch Changes

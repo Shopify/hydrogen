@@ -1,5 +1,11 @@
 # skeleton
 
+## 2025.5.2
+
+### Patch Changes
+
+- Fixing the skeleton's Vite Config ([#2958](https://github.com/Shopify/hydrogen/pull/2958)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
 ## 2025.5.1
 
 ### Patch Changes
