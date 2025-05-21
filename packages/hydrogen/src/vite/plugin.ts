@@ -194,16 +194,3 @@ function mergeOptions(
 
   return {...acc, ...newOptionsWithoutUndefined};
 }
-
-hydrogen.v3preset = () =>
-  ({
-    name: 'hydrogen',
-    remixConfigResolved({remixConfig}) {
-      sharedOptions.remixConfig = remixConfig;
-    },
-    remixConfig() {
-      return {
-        buildDirectory: 'dist',
-      };
-    },
-  }) satisfies RemixPreset;
