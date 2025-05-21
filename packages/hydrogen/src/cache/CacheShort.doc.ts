@@ -9,22 +9,22 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'createStorefrontClient',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2025-04/utilities/createstorefrontclient',
+      url: '/docs/api/hydrogen/utilities/createstorefrontclient',
     },
     {
       name: 'CacheNone',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2025-04/utilities/cachenone',
+      url: '/docs/api/hydrogen/utilities/cachenone',
     },
     {
       name: 'CacheLong',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2025-04/utilities/cachelong',
+      url: '/docs/api/hydrogen/utilities/cachelong',
     },
     {
       name: 'CacheCustom',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2025-04/utilities/cachecustom',
+      url: '/docs/api/hydrogen/utilities/cachecustom',
     },
   ],
   description: `The \`CacheShort\` strategy instructs caches to store data for 1 second, and \`staleWhileRevalidate\` data for an additional 9 seconds. Note: these time values are subject to change.

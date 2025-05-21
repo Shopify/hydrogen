@@ -3,7 +3,7 @@ import {LandingTemplateSchema} from '@shopify/generate-docs';
 const data: LandingTemplateSchema = {
   title: 'Hydrogen',
   description:
-    'Hydrogen is Shopify’s opinionated stack for headless commerce, built on [Remix](https://remix.run). It provides a set of tools, utilities, and best-in-class examples for building dynamic and performant commerce applications.',
+    'Hydrogen is Shopify’s opinionated stack for headless commerce, built on [React Router](https://reactrouter.com/home). It provides a set of tools, utilities, and best-in-class examples for building dynamic and performant commerce applications.',
   id: 'hydrogen',
   sections: [
     {
@@ -97,7 +97,7 @@ const data: LandingTemplateSchema = {
       anchorLink: 'hydrogen_react',
       title: 'How Hydrogen works with Hydrogen React',
       sectionContent:
-        'Hydrogen is [built on Remix](/docs/custom-storefronts/hydrogen/project-structure). But many of the components, hooks and utilities built into Hydrogen come from [Hydrogen React](/docs/api/hydrogen-react), an underlying package that’s framework-agnostic. For convenience, the Hydrogen package re-exports those resources. This means that if you’re building a Hydrogen app, then you should import modules from the `@shopify/hydrogen` package.',
+        'Hydrogen is [built on React Router](/docs/custom-storefronts/hydrogen/project-structure). But many of the components, hooks and utilities built into Hydrogen come from [Hydrogen React](/docs/api/hydrogen-react), an underlying package that’s framework-agnostic. For convenience, the Hydrogen package re-exports those resources. This means that if you’re building a Hydrogen app, then you should import modules from the `@shopify/hydrogen` package.',
       codeblock: {
         title: 'Importing Hydrogen components',
         tabs: [

@@ -8,7 +8,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'decodeEncodedVariant',
       type: 'utility',
-      url: '/docs/api/hydrogen/2025-04/utilities/decodeEncodedVariant',
+      url: '/docs/api/hydrogen/utilities/decodeEncodedVariant',
     },
   ],
   description: `

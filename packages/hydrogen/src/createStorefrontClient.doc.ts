@@ -8,27 +8,27 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'CacheNone',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2025-04/utilities/cachenone',
+      url: '/docs/api/hydrogen/utilities/cachenone',
     },
     {
       name: 'CacheShort',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2025-04/utilities/cacheshort',
+      url: '/docs/api/hydrogen/utilities/cacheshort',
     },
     {
       name: 'CacheLong',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2025-04/utilities/cachelong',
+      url: '/docs/api/hydrogen/utilities/cachelong',
     },
     {
       name: 'CacheCustom',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2025-04/utilities/cachecustom',
+      url: '/docs/api/hydrogen/utilities/cachecustom',
     },
     {
       name: 'InMemoryCache',
       type: 'utilities',
-      url: '/docs/api/hydrogen/2025-04/utilities/inmemorycache',
+      url: '/docs/api/hydrogen/utilities/inmemorycache',
     },
   ],
   description: `This function extends \`createStorefrontClient\` from [Hydrogen React](/docs/api/hydrogen-react/2025-04/utilities/createstorefrontclient).

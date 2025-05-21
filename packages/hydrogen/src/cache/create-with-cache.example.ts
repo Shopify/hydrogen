@@ -1,6 +1,6 @@
 // In your app's `server.ts` file:
 // @ts-ignore
-import * as reactRouterBuild from 'virtual:virtual:react-router/server-build';
+import * as reactRouterBuild from 'virtual:react-router/server-build';
 import {createWithCache, CacheLong} from '@shopify/hydrogen';
 // Use another `createRequestHandler` if deploying off oxygen
 import {createRequestHandler} from '@shopify/remix-oxygen';

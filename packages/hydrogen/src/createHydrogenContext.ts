@@ -74,17 +74,17 @@ export type HydrogenContextOptions<
     setId?: CartHandlerOptions['setCartId'];
     /**
      * The cart query fragment used by `cart.get()`.
-     * See the [example usage](/docs/api/hydrogen/2025-04/utilities/createcarthandler#example-cart-fragments) in the documentation.
+     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.
      */
     queryFragment?: CartHandlerOptions['cartQueryFragment'];
     /**
      * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.
-     * See the [example usage](/docs/api/hydrogen/2025-04/utilities/createcarthandler#example-cart-fragments) in the documentation.
+     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.
      */
     mutateFragment?: CartHandlerOptions['cartMutateFragment'];
     /**
      * Define custom methods or override existing methods for your cart API instance.
-     * See the [example usage](/docs/api/hydrogen/2025-04/utilities/createcarthandler#example-custom-methods) in the documentation.
+     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) in the documentation.
      */
     customMethods?: TCustomMethods;
   };
@@ -298,17 +298,17 @@ export type HydrogenContextOptionsForDocs<
     setId?: (cartId: string) => Headers;
     /**
      * The cart query fragment used by `cart.get()`.
-     * See the [example usage](/docs/api/hydrogen/2025-04/utilities/createcarthandler#example-cart-fragments) in the documentation.
+     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.
      */
     queryFragment?: string;
     /**
      * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.
-     * See the [example usage](/docs/api/hydrogen/2025-04/utilities/createcarthandler#example-cart-fragments) in the documentation.
+     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.
      */
     mutateFragment?: string;
     /**
      * Define custom methods or override existing methods for your cart API instance.
-     * See the [example usage](/docs/api/hydrogen/2025-04/utilities/createcarthandler#example-custom-methods) in the documentation.
+     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) in the documentation.
      */
     customMethods?: Record<string, Function>;
   };

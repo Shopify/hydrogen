@@ -1,6 +1,6 @@
-const {createRequestHandler} = require('@remix-run/express');
+const {createRequestHandler} = require('react-router');
 const path = require('path');
-const {installGlobals} = require('@remix-run/node');
+const {installGlobals} = require('react-router');
 const express = require('express');
 const {createStorefrontClient, InMemoryCache} = require('@shopify/hydrogen');
 
