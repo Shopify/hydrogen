@@ -26,6 +26,7 @@ import type {
 } from './types';
 import {type CrossRuntimeRequest, getHeader} from './utils/request';
 import {warnOnce} from './utils/warning';
+import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
 
 export type HydrogenContextOptions<
   TSession extends HydrogenSession = HydrogenSession,
@@ -87,6 +88,7 @@ export type HydrogenContextOptions<
      */
     customMethods?: TCustomMethods;
   };
+  buyerIdentity?: CartBuyerIdentityInput;
 };
 
 export interface HydrogenContext<
@@ -157,6 +159,7 @@ export function createHydrogenContext<
     storefront: storefrontOptions = {},
     customerAccount: customerAccountOptions,
     cart: cartOptions = {},
+    buyerIdentity,
   } = options;
 
   if (!session) {
@@ -224,6 +227,7 @@ export function createHydrogenContext<
     cartQueryFragment: cartOptions.queryFragment,
     cartMutateFragment: cartOptions.mutateFragment,
     customMethods: cartOptions.customMethods,
+    buyerIdentity,
 
     // defaults
     storefront,
@@ -308,4 +312,8 @@ export type HydrogenContextOptionsForDocs<
      */
     customMethods?: Record<string, Function>;
   };
+  /**
+   * Buyer identity. Default buyer identity is passed to cartCreate.
+   */
+  buyerIdentity?: CartBuyerIdentityInput;
 };
