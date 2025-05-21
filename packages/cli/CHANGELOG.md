@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 11.0.1
+
+### Patch Changes
+
+- Bumping the cli to 3.80.4 ([#2956](https://github.com/Shopify/hydrogen/pull/2956)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
 ## 11.0.0
 
 ### Major Changes
