@@ -382,7 +382,7 @@ function doNotEditComment(recipeName: string): string {
   return `DO NOT EDIT. This file is generated from the shopify/hydrogen repo from this source file: \`cookbook/recipes/${recipeName}/recipe.yaml\``;
 }
 
-const copyPromptTargetClass = 'copy-prompt-target';
+const copyPromptTargetClass = 'copy-prompt-button';
 
 function makeCopyPromptTarget(
   recipe: Recipe,
