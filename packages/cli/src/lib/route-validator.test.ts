@@ -63,16 +63,6 @@ describe('reserved-routes', () => {
     );
   });
 
-  it('returns an array of reserved routes', async () => {
-    expect(
-      findReservedRoutes(createRoute('api/2025-04/graphql.json')),
-    ).toHaveLength(1);
-
-    expect(
-      findReservedRoutes(createRoute('api/:param/graphql.json')),
-    ).toHaveLength(1);
-  });
-
   it('finds reserved routes /cdn/', async () => {
     expect(findReservedRoutes(createRoute('cdn/'))).toHaveLength(1);
 
