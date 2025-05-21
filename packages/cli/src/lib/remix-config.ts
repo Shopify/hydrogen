@@ -18,10 +18,10 @@ import {hydrogenPackagesPath, isHydrogenMonorepo} from './build.js';
 export type ResolvedRoute = {
   id: string;
   file: string;
-  path: string;
-  parentId: string;
-  index: boolean | undefined;
-  caseSensitive: boolean | undefined;
+  path?: string;
+  parentId?: string;
+  index?: boolean;
+  caseSensitive?: boolean;
 };
 
 export type ResolvedRoutes = {
