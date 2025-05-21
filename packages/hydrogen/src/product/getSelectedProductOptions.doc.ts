@@ -8,7 +8,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'VariantSelector',
       type: 'components',
-      url: '/docs/api/hydrogen/2025-04/components/variantselector',
+      url: '/docs/api/hydrogen/components/variantselector',
     },
   ],
   description: `The \`getSelectedProductOptions\` returns the selected options from the Request search parameters. The selected options can then be easily passed to your GraphQL query with [\`variantBySelectedOptions\`](https://shopify.dev/docs/api/storefront/2025-04/objects/product#field-product-variantbyselectedoptions).`,
