@@ -2,7 +2,7 @@
   "name": "skeleton",
   "private": true,
   "sideEffects": false,
-  "version": "2025.5.1",
+  "version": "2025.5.0",
   "type": "module",
   "scripts": {
     "build": "shopify hydrogen build --codegen",
@@ -14,7 +14,7 @@
   },
   "prettier": "@shopify/prettier-config",
   "dependencies": {
-    "@shopify/hydrogen": "2025.5.1",
+    "@shopify/hydrogen": "2025.5.0",
     "@shopify/remix-oxygen": "^3.0.0",
     "graphql": "^16.10.0",
     "graphql-tag": "^2.12.6",

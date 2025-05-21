@@ -1,6 +1,6 @@
 # @shopify/hydrogen
 
-## 2025.5.1
+## 2025.5.0
 
 ### Patch Changes
 
