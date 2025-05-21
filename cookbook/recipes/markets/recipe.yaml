@@ -60,8 +60,8 @@ ingredients:
   - path: templates/skeleton/app/components/CountrySelector.tsx
     description: A component that displays a country selector inside the Header.
   - path: templates/skeleton/app/components/Link.tsx
-    description: A wrapper around the Remix Link component that uses the selected
-      locale path prefix.
+    description: A wrapper around the Link component that uses the selected locale
+      path prefix.
   - path: templates/skeleton/app/lib/i18n.ts
     description: A helper function to get locale information from the context, a
       hook to retrieve the selected locale, and a list of available locales.
@@ -96,7 +96,7 @@ steps:
   - type: NEW_FILE
     step: 1.2
     name: Create a Link wrapper component
-    description: Create a wrapper component around the Remix `Link` component that
+    description: Create a wrapper component around the `Link` component that
       prepends the selected locale path prefix (if any) to the actual links.
     ingredients:
       - path: templates/skeleton/app/components/Link.tsx
@@ -165,8 +165,7 @@ steps:
     name: Add localization to the home page
     description: |
       1. Add the dynamic segment to the home page route.
-      2. Use the new `Link` component as a drop-in replacement for the existing
-      Remix counterpart.
+      2. Use the new `Link` component as a drop-in replacement.
     ingredients:
       - path: templates/skeleton/app/routes/($locale)._index.tsx
         renamedFrom: templates/skeleton/app/routes/_index.tsx
@@ -227,4 +226,4 @@ llms:
       solution: Make sure you update *all* routes that need localization (not only the
         routes for the home page, the cart page, and the product page). See step
         2.1 for details.
-commit: 2e32e77efa32aca00b18552fbdbfcb8af012f4ca
+commit: 91d129a5fc039b84b23bcf189a65a6a10976948d
