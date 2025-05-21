@@ -1,5 +1,15 @@
 # skeleton
 
+## 2025.5.0
+
+### Patch Changes
+
+- Migrating to React Router 7 ([#2866](https://github.com/Shopify/hydrogen/pull/2866)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
+- Updated dependencies [[`e9132d88`](https://github.com/Shopify/hydrogen/commit/e9132d8888ad090d3db41fe4d5d63569a30e9d8e), [`e9132d88`](https://github.com/Shopify/hydrogen/commit/e9132d8888ad090d3db41fe4d5d63569a30e9d8e)]:
+  - @shopify/remix-oxygen@3.0.0
+  - @shopify/hydrogen@2025.5.0
+
 ## 2025.4.0
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.0.23
+
+### Patch Changes
+
+- Migrating to React Router 7 ([#2866](https://github.com/Shopify/hydrogen/pull/2866)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
 ## 5.0.22
 
 ### Patch Changes
