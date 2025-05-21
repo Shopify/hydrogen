@@ -81,7 +81,7 @@ In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/sho
 
 Create a new BundleBadge component to be displayed on bundle product listings.
 
-#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
+#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/9d4e99420c23c272258e2e749bc38ecc0dea2752/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
 
 ```tsx
 export function BundleBadge() {
@@ -108,7 +108,7 @@ export function BundleBadge() {
 
 Create a new `BundledVariants` component that wraps the variants of a bundle product in a single product listing.
 
-#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/71a4a71c27faafe613e54557661cbaa7659b4935/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
+#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/9d4e99420c23c272258e2e749bc38ecc0dea2752/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
 
 ```tsx
 import {Link} from 'react-router';
@@ -177,7 +177,34 @@ export function BundledVariants({
 
 ```
 
-### Step 4: Update the product fragment to query for bundles and display BundledVariants
+### Step 4: Add maxVariantPrice to the RecommendedProducts query's product fields.
+
+Add `maxVariantPrice` to the `RecommendedProducts` query's product fields.
+
+#### File: /app/routes/_index.tsx
+
+```diff
+@@ -1,5 +1,5 @@
+ import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+-import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
++import {Await, useLoaderData, Link, type MetaFunction} from 'react-router';
+ import {Suspense} from 'react';
+ import {Image, Money} from '@shopify/hydrogen';
+ import type {
+@@ -147,6 +147,10 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+         amount
+         currencyCode
+       }
++      maxVariantPrice {
++        amount
++        currencyCode
++      }
+     }
+     featuredImage {
+       id
+```
+
+### Step 5: Update the product fragment to query for bundles and display BundledVariants
 
 1. Add the `requiresComponents` field to the `Product` fragment, which is
 used to identify bundled products.
@@ -295,7 +322,7 @@ used to identify bundled products.
        title
 ```
 
-### Step 5: Update the collections fragment to query for bundles
+### Step 6: Update the collections fragment to query for bundles
 
 Like the previous step, use the `requiresComponents` field to detect if the product item is a bundle.
 
@@ -345,7 +372,7 @@ Like the previous step, use the `requiresComponents` field to detect if the prod
    query Collection(
 ```
 
-### Step 6: Update the cart fragment to query for bundles
+### Step 7: Update the cart fragment to query for bundles
 
 Use the `requiresComponents` field to determine if a cart line item is a bundle.
 
@@ -403,34 +430,7 @@ Use the `requiresComponents` field to determine if a cart line item is a bundle.
    }
 ```
 
-### Step 6: app/routes/_index.tsx
-
-
-
-#### File: /app/routes/_index.tsx
-
-```diff
-@@ -1,5 +1,5 @@
- import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
--import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
-+import {Await, useLoaderData, Link, type MetaFunction} from 'react-router';
- import {Suspense} from 'react';
- import {Image, Money} from '@shopify/hydrogen';
- import type {
-@@ -147,6 +147,10 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
-         amount
-         currencyCode
-       }
-+      maxVariantPrice {
-+        amount
-+        currencyCode
-+      }
-     }
-     featuredImage {
-       id
-```
-
-### Step 7: Conditionally render the BundleBadge in cart line items
+### Step 8: Conditionally render the BundleBadge in cart line items
 
 If a product is a bundle, show the `BundleBadge` component in the cart line item.
 
@@ -478,7 +478,7 @@ If a product is a bundle, show the `BundleBadge` component in the cart line item
          <ul>
 ```
 
-### Step 8: Conditionally render "Add bundle to cart" in ProductForm
+### Step 9: Conditionally render "Add bundle to cart" in ProductForm
 
 If a product is a bundle, update the text of the product button.
 
@@ -512,7 +512,7 @@ If a product is a bundle, update the text of the product button.
    );
 ```
 
-### Step 9: Conditionally render the BundleBadge in ProductImage
+### Step 10: Conditionally render the BundleBadge in ProductImage
 
 If a product is a bundle, show the `BundleBadge` component in the `ProductImage` component.
 
@@ -543,7 +543,7 @@ If a product is a bundle, show the `BundleBadge` component in the `ProductImage`
  }
 ```
 
-### Step 10: Conditionally render the BundleBadge in ProductItem
+### Step 11: Conditionally render the BundleBadge in ProductItem
 
 If a product is a bundle, show the `BundleBadge` component in the `ProductItem` component.
 
@@ -618,7 +618,7 @@ If a product is a bundle, show the `BundleBadge` component in the `ProductItem` 
  }
 ```
 
-### Step 11: Add a product-image class to the app stylesheet
+### Step 12: Add a product-image class to the app stylesheet
 
 Make sure the bundle badge is positioned relative to the product image.
 
