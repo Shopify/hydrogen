@@ -552,6 +552,7 @@ node_modules
 /.mf
 .env
 .shopify
+.react-router
 `.slice(1);
 
 export async function createInitialCommit(directory: string) {
