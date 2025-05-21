@@ -413,7 +413,7 @@ when the locale changes.
 
 ### Step 2: Localizing the individual routes
 
-In this section, we'll add localization to the individual routes using the language [dynamic segment](https://remix.run/docs/en/main/file-conventions/routes#optional-segments).
+In this section, we'll add localization to the individual routes using the language [dynamic segment](https://reactrouter.com/start/data/routing#optional-segments).
 
 #### Step 2.1: Add language dynamic segment to the desired routes
 
