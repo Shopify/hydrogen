@@ -1,4 +1,4 @@
-index 0941d4e0..976ae9df 100644
+index 7e6f4654..f1be31a3 100644
 --- a/templates/skeleton/app/routes/account.tsx
 +++ b/templates/skeleton/app/routes/account.tsx
 @@ -74,6 +74,10 @@ function AccountMenu() {

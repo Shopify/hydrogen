@@ -1,8 +1,8 @@
-index 62c64b50..970916bd 100644
+index 3b0f6913..1b6cb130 100644
 --- a/templates/skeleton/app/components/ProductItem.tsx
 +++ b/templates/skeleton/app/components/ProductItem.tsx
 @@ -1,24 +1,19 @@
- import {Link} from '@remix-run/react';
+ import {Link} from 'react-router';
  import {Image, Money} from '@shopify/hydrogen';
 -import type {
 -  ProductItemFragment,
