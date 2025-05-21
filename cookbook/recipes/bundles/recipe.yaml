@@ -55,7 +55,7 @@ steps:
       - path: templates/skeleton/app/components/BundledVariants.tsx
   - type: PATCH
     step: 4
-    name: Add maxVariantPrice to the RecommendedProducts query's product fields.
+    name: Add maxVariantPrice to the RecommendedProducts query's product fields
     description: |
       Add `maxVariantPrice` to the `RecommendedProducts` query's product fields.
     diffs:
