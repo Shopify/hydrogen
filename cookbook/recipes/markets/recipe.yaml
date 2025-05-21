@@ -150,7 +150,7 @@ steps:
     step: 2
     name: Localizing the individual routes
     description: |
-      In this section, we'll add localization to the individual routes using the language [dynamic segment](https://remix.run/docs/en/main/file-conventions/routes#optional-segments).
+      In this section, we'll add localization to the individual routes using the language [dynamic segment](https://reactrouter.com/start/data/routing#optional-segments).
   - type: INFO
     step: 2.1
     name: Add language dynamic segment to the desired routes
@@ -226,4 +226,4 @@ llms:
       solution: Make sure you update *all* routes that need localization (not only the
         routes for the home page, the cart page, and the product page). See step
         2.1 for details.
-commit: 91d129a5fc039b84b23bcf189a65a6a10976948d
+commit: 2955dea8606effa5a8f288e805257e8994b665c2
