@@ -2375,22 +2375,22 @@
       {
         "name": "createStorefrontClient",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/createstorefrontclient"
+        "url": "/docs/api/hydrogen/utilities/createstorefrontclient"
       },
       {
         "name": "CacheNone",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cachenone"
+        "url": "/docs/api/hydrogen/utilities/cachenone"
       },
       {
         "name": "CacheShort",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cacheshort"
+        "url": "/docs/api/hydrogen/utilities/cacheshort"
       },
       {
         "name": "CacheLong",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cachelong"
+        "url": "/docs/api/hydrogen/utilities/cachelong"
       }
     ],
     "description": "This allows you to create your own caching strategy, using any of the options available in a `CachingStrategy` object.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
@@ -2500,22 +2500,22 @@
       {
         "name": "createStorefrontClient",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/createstorefrontclient"
+        "url": "/docs/api/hydrogen/utilities/createstorefrontclient"
       },
       {
         "name": "CacheNone",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cachenone"
+        "url": "/docs/api/hydrogen/utilities/cachenone"
       },
       {
         "name": "CacheShort",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cacheshort"
+        "url": "/docs/api/hydrogen/utilities/cacheshort"
       },
       {
         "name": "CacheCustom",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cachecustom"
+        "url": "/docs/api/hydrogen/utilities/cachecustom"
       }
     ],
     "description": "The `CacheLong` strategy instructs caches to store data for 1 hour, and `staleWhileRevalidate` data for an additional 23 hours. Note: these time values are subject to change.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
@@ -2626,22 +2626,22 @@
       {
         "name": "createStorefrontClient",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/createstorefrontclient"
+        "url": "/docs/api/hydrogen/utilities/createstorefrontclient"
       },
       {
         "name": "CacheShort",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cacheshort"
+        "url": "/docs/api/hydrogen/utilities/cacheshort"
       },
       {
         "name": "CacheLong",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cachelong"
+        "url": "/docs/api/hydrogen/utilities/cachelong"
       },
       {
         "name": "CacheCustom",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cachecustom"
+        "url": "/docs/api/hydrogen/utilities/cachecustom"
       }
     ],
     "description": "The CacheNone() strategy instructs caches not to store any data. The function accepts no arguments.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
@@ -2712,22 +2712,22 @@
       {
         "name": "createStorefrontClient",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/createstorefrontclient"
+        "url": "/docs/api/hydrogen/utilities/createstorefrontclient"
       },
       {
         "name": "CacheNone",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cachenone"
+        "url": "/docs/api/hydrogen/utilities/cachenone"
       },
       {
         "name": "CacheLong",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cachelong"
+        "url": "/docs/api/hydrogen/utilities/cachelong"
       },
       {
         "name": "CacheCustom",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cachecustom"
+        "url": "/docs/api/hydrogen/utilities/cachecustom"
       }
     ],
     "description": "The `CacheShort` strategy instructs caches to store data for 1 second, and `staleWhileRevalidate` data for an additional 9 seconds. Note: these time values are subject to change.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
@@ -2838,7 +2838,7 @@
       {
         "name": "createStorefrontClient",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/createstorefrontclient"
+        "url": "/docs/api/hydrogen/utilities/createstorefrontclient"
       }
     ],
     "description": "> Caution:\n> This utility should only be used when deploying Hydrogen to a Node.js environment. It should *not* be used when deploying Hydrogen to Oxygen.\n\nIf you are deploying Hydrogen to a Node.js environment, you can use this limited implementation of an in-memory cache. It only supports the `cache-control` header. It does NOT support `age` or `expires` headers.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
@@ -5512,7 +5512,7 @@
       {
         "name": "CartForm",
         "type": "components",
-        "url": "/docs/api/hydrogen/2025-04/components/cartform"
+        "url": "/docs/api/hydrogen/components/cartform"
       }
     ],
     "description": "The `useOptimisticCart` takes an existing cart object, processes all pending cart actions, and locally mutates the cart with optimistic state. An optimistic cart makes cart actions immediately render in the browser while actions sync to the server. This increases the perceived performance of the application.",
@@ -18587,7 +18587,7 @@
       {
         "name": "createHydrogenContext",
         "type": "utility",
-        "url": "/docs/api/hydrogen/2025-04/utilities/createhydrogencontext"
+        "url": "/docs/api/hydrogen/utilities/createhydrogencontext"
       }
     ],
     "description": "\nThe `createHydrogenContext` function creates the context object required to use Hydrogen utilities throughout a Hydrogen project.",
@@ -19572,27 +19572,27 @@
       {
         "name": "CacheNone",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cachenone"
+        "url": "/docs/api/hydrogen/utilities/cachenone"
       },
       {
         "name": "CacheShort",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cacheshort"
+        "url": "/docs/api/hydrogen/utilities/cacheshort"
       },
       {
         "name": "CacheLong",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cachelong"
+        "url": "/docs/api/hydrogen/utilities/cachelong"
       },
       {
         "name": "CacheCustom",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/cachecustom"
+        "url": "/docs/api/hydrogen/utilities/cachecustom"
       },
       {
         "name": "InMemoryCache",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/inmemorycache"
+        "url": "/docs/api/hydrogen/utilities/inmemorycache"
       }
     ],
     "description": "This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/2025-04/utilities/createstorefrontclient).\nThe additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
@@ -20069,12 +20069,12 @@
       {
         "name": "createContentSecurityPolicy",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/createcontentsecuritypolicy"
+        "url": "/docs/api/hydrogen/utilities/createcontentsecuritypolicy"
       },
       {
         "name": "useNonce",
         "type": "hooks",
-        "url": "/docs/api/hydrogen/2025-04/hooks/usenonce"
+        "url": "/docs/api/hydrogen/hooks/usenonce"
       }
     ],
     "description": "Use the `Script` component to add third-party scripts to your app. It automatically adds a nonce attribute from your [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy). If you load a script that directly modifies the DOM, you are likely to have hydration errors. Use the `waitForHydration` prop to load the script after the page hydrates.",
@@ -22351,12 +22351,12 @@
       {
         "name": "useNonce",
         "type": "hooks",
-        "url": "/docs/api/hydrogen/2025-04/hooks/usenonce"
+        "url": "/docs/api/hydrogen/hooks/usenonce"
       },
       {
         "name": "Script",
         "type": "components",
-        "url": "/docs/api/hydrogen/2025-04/components/script"
+        "url": "/docs/api/hydrogen/components/script"
       }
     ],
     "description": "Create a [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy) to secure your application. The default content security policy includes exclusions for cdn.shopify.com and a script nonce.",
@@ -22698,12 +22698,12 @@
       {
         "name": "createContentSecurityPolicy",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/createcontentsecuritypolicy"
+        "url": "/docs/api/hydrogen/utilities/createcontentsecuritypolicy"
       },
       {
         "name": "Script",
         "type": "components",
-        "url": "/docs/api/hydrogen/2025-04/components/script"
+        "url": "/docs/api/hydrogen/components/script"
       }
     ],
     "description": "The `useNonce` hook returns the [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy) nonce. Use the hook to manually add a nonce to third party scripts. The `Script` component automatically does this for you. Note, the nonce should never be available in the client, and should always return undefined in the browser.",
@@ -22949,7 +22949,7 @@
       {
         "name": "createStorefrontClient",
         "type": "utility",
-        "url": "/docs/api/hydrogen/2025-04/utilities/createstorefrontclient"
+        "url": "/docs/api/hydrogen/utilities/createstorefrontclient"
       }
     ],
     "description": "\nThe `createCustomerAccountClient` function creates a GraphQL client for querying the [Customer Account API](https://shopify.dev/docs/api/customer). It also provides methods to authenticate and check if the user is logged in.",
@@ -23472,7 +23472,7 @@
       {
         "name": "getPaginationVariables",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/getpaginationvariables"
+        "url": "/docs/api/hydrogen/utilities/getpaginationvariables"
       }
     ],
     "description": "The [Storefront API uses cursors](https://shopify.dev/docs/api/usage/pagination-graphql) to paginate through lists of data and the `<Pagination />` component makes it easy to paginate data from the Storefront API. It is important for pagination state to be maintained in the URL, so that the user can navigate to a product and return back to the same scrolled position in a list. It is also important that the list state is shareable via URL. The `<Pagination>` component provides a render prop with properties to load more elements into your list.",
@@ -23620,7 +23620,7 @@
       {
         "name": "Pagination",
         "type": "components",
-        "url": "/docs/api/hydrogen/2025-04/components/pagination"
+        "url": "/docs/api/hydrogen/components/pagination"
       }
     ],
     "description": "The `getPaginationVariables` function is used with the [`<Pagination>`](/docs/api/hydrogen/components/pagnination) component to generate the variables needed to fetch paginated data from the Storefront API. The returned variables should be used within your storefront GraphQL query.",
@@ -23689,7 +23689,7 @@
       {
         "name": "getSelectedProductOptions",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-04/utilities/getselectedproductoptions"
+        "url": "/docs/api/hydrogen/utilities/getselectedproductoptions"
       }
     ],
     "description": "The `VariantSelector` component helps you build a form for selecting available variants of a product. It is important for variant selection state to be maintained in the URL, so that the user can navigate to a product and return back to the same variant selection. It is also important that the variant selection state is shareable via URL. The `VariantSelector` component provides a render prop that renders for each product option.",
@@ -23898,7 +23898,7 @@
       {
         "name": "VariantSelector",
         "type": "components",
-        "url": "/docs/api/hydrogen/2025-04/components/variantselector"
+        "url": "/docs/api/hydrogen/components/variantselector"
       }
     ],
     "description": "The `getSelectedProductOptions` returns the selected options from the Request search parameters. The selected options can then be easily passed to your GraphQL query with [`variantBySelectedOptions`](https://shopify.dev/docs/api/storefront/2025-04/objects/product#field-product-variantbyselectedoptions).",
@@ -23959,12 +23959,12 @@
       {
         "name": "VariantSelector",
         "type": "components",
-        "url": "/docs/api/hydrogen/2025-04/components/variantselector"
+        "url": "/docs/api/hydrogen/components/variantselector"
       },
       {
         "name": "useOptimisticCart",
         "type": "hooks",
-        "url": "/docs/api/hydrogen/2025-04/hooks/useoptimisticcart"
+        "url": "/docs/api/hydrogen/hooks/useoptimisticcart"
       }
     ],
     "description": "The `useOptimisticVariant` takes an existing product variant, processes a pending navigation to another product variant, and returns the data of the destination variant. This makes switching product options immediate.",
