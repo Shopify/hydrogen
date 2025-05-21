@@ -1,5 +1,13 @@
 # @shopify/hydrogen
 
+## 2025.5.0
+
+### Patch Changes
+
+- Migrating to React Router 7 ([#2866](https://github.com/Shopify/hydrogen/pull/2866)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
+- Major version bumping libraries that now depend on react-router@7 ([#2866](https://github.com/Shopify/hydrogen/pull/2866)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
 ## 2025.4.0
 
 ### Patch Changes
