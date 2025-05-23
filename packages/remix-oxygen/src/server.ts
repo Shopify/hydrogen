@@ -4,12 +4,16 @@ import {
   type AppLoadContext,
   type ServerBuild,
 } from 'react-router';
+import {Headers as HeadersPolyfill} from 'headers-polyfill';
 import {createEventLogger} from './event-logger';
 
 const originalErrorToString = Error.prototype.toString;
 Error.prototype.toString = function () {
   return this.stack || originalErrorToString.call(this);
 };
+
+Headers.prototype.getSetCookie =
+  Headers.prototype.getSetCookie || HeadersPolyfill.prototype.getSetCookie;
 
 export function createRequestHandler<Context = unknown>({
   build,
