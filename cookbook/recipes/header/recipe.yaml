@@ -6,11 +6,7 @@ summary: ""
 description: ""
 notes: []
 requirements: null
-ingredients:
-  - path: templates/skeleton/app/components/Aside.tsx
-    description: null
-  - path: templates/skeleton/app/components/Header.tsx
-    description: null
+ingredients: []
 deletedFiles: []
 steps:
   - type: PATCH
@@ -20,12 +16,6 @@ steps:
     diffs:
       - file: app/components/PageLayout.tsx
         patchFile: PageLayout.tsx.130b44.patch
-  - type: NEW_FILE
-    step: "1"
-    name: app/components/Aside.tsx
-    description: null
-    ingredients:
-      - path: templates/skeleton/app/components/Aside.tsx
   - type: PATCH
     step: "2"
     name: app/lib/fragments.ts
@@ -33,12 +23,6 @@ steps:
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.18726b.patch
-  - type: NEW_FILE
-    step: "2"
-    name: app/components/Header.tsx
-    description: null
-    ingredients:
-      - path: templates/skeleton/app/components/Header.tsx
   - type: PATCH
     step: "3"
     name: app/root.tsx
