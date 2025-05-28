@@ -1,0 +1,64 @@
+index e69de29b..02a8f975 100644
+--- a/templates/skeleton/app/lib/fragments.ts
++++ b/templates/skeleton/app/lib/fragments.ts
+@@ -0,0 +1,60 @@
++const MENU_FRAGMENT = `#graphql
++  fragment MenuItem on MenuItem {
++    id
++    resourceId
++    tags
++    title
++    type
++    url
++  }
++  fragment ChildMenuItem on MenuItem {
++    ...MenuItem
++  }
++  fragment ParentMenuItem on MenuItem {
++    ...MenuItem
++    items {
++      ...ChildMenuItem
++    }
++  }
++  fragment Menu on Menu {
++    id
++    items {
++      ...ParentMenuItem
++    }
++  }
++` as const;
++
++export const SHOP_FRAGMENT = `#graphql
++  fragment Shop on Shop {
++    id
++    name
++    description
++    primaryDomain {
++      url
++    }
++    brand {
++      logo {
++        image {
++          url
++        }
++      }
++    }
++  }
++`;
++
++export const FOOTER_QUERY = `#graphql
++  query Footer(
++    $country: CountryCode
++    $footerMenuHandle: String!
++    $language: LanguageCode
++  ) @inContext(language: $language, country: $country) {
++    shop {
++      ...Shop
++    }
++    menu(handle: $footerMenuHandle) {
++      ...Menu
++    }
++  }
++  ${MENU_FRAGMENT}
++  ${SHOP_FRAGMENT}
++` as const;

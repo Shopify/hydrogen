@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+gid: 8f841505-d7e2-488d-87d1-4500e6bf0738
+title: footer
+summary: ""
+description: ""
+notes: []
+requirements: null
+ingredients:
+  - path: templates/skeleton/app/components/Footer.tsx
+    description: null
+deletedFiles: []
+steps:
+  - type: PATCH
+    step: "1"
+    name: app/components/PageLayout.tsx
+    description: null
+    diffs:
+      - file: app/components/PageLayout.tsx
+        patchFile: PageLayout.tsx.130b44.patch
+  - type: NEW_FILE
+    step: "1"
+    name: app/components/Footer.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/Footer.tsx
+  - type: PATCH
+    step: "2"
+    name: app/lib/fragments.ts
+    description: null
+    diffs:
+      - file: app/lib/fragments.ts
+        patchFile: fragments.ts.18726b.patch
+  - type: PATCH
+    step: "3"
+    name: app/root.tsx
+    description: null
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.8c182c.patch
+nextSteps: null
+llms:
+  userQueries: []
+  troubleshooting: []
+commit: 3dbbb1ee554d96261a2249d8126c8afd11e7ad47

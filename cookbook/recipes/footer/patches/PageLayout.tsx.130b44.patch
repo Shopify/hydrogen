@@ -1,0 +1,34 @@
+index 2f602b60..c96c980e 100644
+--- a/templates/skeleton/app/components/PageLayout.tsx
++++ b/templates/skeleton/app/components/PageLayout.tsx
+@@ -1,7 +1,28 @@
++import {Footer} from './Footer';
++import type {FooterQuery, HeaderQuery} from 'storefrontapi.generated';
++
+ interface PageLayoutProps {
++  footer: Promise<FooterQuery | null>;
++  header: HeaderQuery;
++  isLoggedIn: Promise<boolean>;
++  publicStoreDomain: string;
+   children?: React.ReactNode;
+ }
+ 
+-export function PageLayout({children = null}: PageLayoutProps) {
+-  return <main>{children}</main>;
++export function PageLayout({
++  children = null,
++  footer,
++  header,
++  publicStoreDomain,
++}: PageLayoutProps) {
++  return (
++    <main>
++      {children}
++      <Footer
++        footer={footer}
++        header={header}
++        publicStoreDomain={publicStoreDomain}
++      />
++    </main>
++  );
+ }
