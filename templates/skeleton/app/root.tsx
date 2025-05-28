@@ -14,7 +14,7 @@ import {
 import favicon from '~/assets/favicon.svg';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
-import {PageLayout} from './components/PageLayout';
+import {PageLayout} from '~/components/PageLayout';
 
 export type RootLoader = typeof loader;
 
@@ -110,14 +110,6 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
     cart: cart.get(),
     isLoggedIn: customerAccount.isLoggedIn(),
   };
-}
-
-interface PageLayoutProps {
-  children?: React.ReactNode;
-}
-
-export function PageLayout({children = null}: PageLayoutProps) {
-  return <main>{children}</main>;
 }
 
 export function Layout({children}: {children?: React.ReactNode}) {
