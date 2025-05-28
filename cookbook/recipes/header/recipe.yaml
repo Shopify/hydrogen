@@ -15,26 +15,42 @@ description: |
   4. Display the header inside the <PageLayout /> and <Aside />
 notes: []
 requirements: null
-ingredients: []
+ingredients:
+  - path: templates/skeleton/app/components/Aside.tsx
+    description: null
+  - path: templates/skeleton/app/components/Header.tsx
+    description: null
 deletedFiles: []
 steps:
   - type: PATCH
     step: '1'
-    name: app/components/PageLayout.tsx
+    name: Add the <Header /> to the <PageLayout /> component
     description: null
     diffs:
       - file: app/components/PageLayout.tsx
         patchFile: PageLayout.tsx.130b44.patch
+  - type: NEW_FILE
+    step: '1'
+    name: Create the <Aside /> component
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/Aside.tsx
   - type: PATCH
     step: '2'
-    name: app/lib/fragments.ts
+    name: Add the header menu query to the fragments file
     description: null
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.18726b.patch
+  - type: NEW_FILE
+    step: '2'
+    name: Create the <Header /> file
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/Header.tsx
   - type: PATCH
     step: '3'
-    name: app/root.tsx
+    name: Update the root layout to query for the header menu
     description: null
     diffs:
       - file: app/root.tsx
