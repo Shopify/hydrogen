@@ -57,6 +57,13 @@ steps:
         patchFile: root.tsx.8c182c.patch
 nextSteps: null
 llms:
-  userQueries: []
-  troubleshooting: []
+  userQueries:
+    - How can I add a header to my Hydrogen store?
+    - Help me add a Hydrogen header menu to my store
+    - I want to display some links and my logo at the top of my hydrogen store?,
+  troubleshooting:
+    - issue: I can see a header bar, but there are no links inside
+      solution: Make sure you've configured a menu in the Shopify admin with the
+        handle of `skeleton-header-menu` at
+        https://admin.shopify.com/store/YOUR_STORE_DOMAIN/content/menus
 commit: 3dbbb1ee554d96261a2249d8126c8afd11e7ad47
