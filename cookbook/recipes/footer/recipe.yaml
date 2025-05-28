@@ -2,13 +2,42 @@
 
 gid: 8f841505-d7e2-488d-87d1-4500e6bf0738
 title: footer
-summary: ""
-description: ""
+summary: ''
+description: ''
 notes: []
 requirements: null
-ingredients: []
+ingredients:
+  - path: templates/skeleton/app/components/Footer.tsx
+    description: null
 deletedFiles: []
-steps: []
+steps:
+  - type: PATCH
+    step: '1'
+    name: Render the <Footer /> component in the <PageLayout />
+    description: null
+    diffs:
+      - file: app/components/PageLayout.tsx
+        patchFile: PageLayout.tsx.130b44.patch
+  - type: NEW_FILE
+    step: '1'
+    name: Create the <Footer /> component
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/Footer.tsx
+  - type: PATCH
+    step: '2'
+    name: Add the footer MENU GraphQL query
+    description: null
+    diffs:
+      - file: app/lib/fragments.ts
+        patchFile: fragments.ts.18726b.patch
+  - type: PATCH
+    step: '3'
+    name: Asynchronously query the Footer menu at the root layout
+    description: null
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.8c182c.patch
 nextSteps: null
 llms:
   userQueries: []
