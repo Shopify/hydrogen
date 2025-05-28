@@ -2,29 +2,38 @@
 
 gid: 9be0e1a5-5337-4343-ac41-1317a48c8d23
 title: header
-summary: ""
-description: ""
+summary: Add a header menu to your Hydrogen store
+description: |
+  This recipe lets you add a header menu to your Hydrogen store
+
+  In this recipe you'll make the following changes:
+
+  1. Set up a header menu in the admin
+  2. Modify the root layout to query for the header menu
+  3. Add  <Header /> and <MobileHeaderMenu /> components display the header links
+  4. Add an <Aside /> component to render the mobile header menu
+  4. Display the header inside the <PageLayout /> and <Aside />
 notes: []
 requirements: null
 ingredients: []
 deletedFiles: []
 steps:
   - type: PATCH
-    step: "1"
+    step: '1'
     name: app/components/PageLayout.tsx
     description: null
     diffs:
       - file: app/components/PageLayout.tsx
         patchFile: PageLayout.tsx.130b44.patch
   - type: PATCH
-    step: "2"
+    step: '2'
     name: app/lib/fragments.ts
     description: null
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.18726b.patch
   - type: PATCH
-    step: "3"
+    step: '3'
     name: app/root.tsx
     description: null
     diffs:
