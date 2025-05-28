@@ -1,0 +1,101 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+gid: 951cf1ff-f4ff-4db7-a9a3-3c0303d03d20
+title: search
+summary: ""
+description: ""
+notes: []
+requirements: null
+ingredients:
+  - path: templates/skeleton/app/components/Aside.tsx
+    description: null
+  - path: templates/skeleton/app/components/Header.tsx
+    description: null
+  - path: templates/skeleton/app/components/SearchForm.tsx
+    description: null
+  - path: templates/skeleton/app/components/SearchFormPredictive.tsx
+    description: null
+  - path: templates/skeleton/app/components/SearchResults.tsx
+    description: null
+  - path: templates/skeleton/app/components/SearchResultsPredictive.tsx
+    description: null
+  - path: templates/skeleton/app/lib/search.ts
+    description: null
+  - path: templates/skeleton/app/routes/search.tsx
+    description: null
+deletedFiles: []
+steps:
+  - type: PATCH
+    step: "1"
+    name: app/components/PageLayout.tsx
+    description: null
+    diffs:
+      - file: app/components/PageLayout.tsx
+        patchFile: PageLayout.tsx.130b44.patch
+  - type: NEW_FILE
+    step: "1"
+    name: app/components/Aside.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/Aside.tsx
+  - type: PATCH
+    step: "2"
+    name: app/lib/fragments.ts
+    description: null
+    diffs:
+      - file: app/lib/fragments.ts
+        patchFile: fragments.ts.18726b.patch
+  - type: NEW_FILE
+    step: "2"
+    name: app/components/Header.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/Header.tsx
+  - type: PATCH
+    step: "3"
+    name: app/root.tsx
+    description: null
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.8c182c.patch
+  - type: NEW_FILE
+    step: "3"
+    name: app/components/SearchForm.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/SearchForm.tsx
+  - type: NEW_FILE
+    step: "4"
+    name: app/components/SearchFormPredictive.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/SearchFormPredictive.tsx
+  - type: NEW_FILE
+    step: "5"
+    name: app/components/SearchResults.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/SearchResults.tsx
+  - type: NEW_FILE
+    step: "6"
+    name: app/components/SearchResultsPredictive.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/SearchResultsPredictive.tsx
+  - type: NEW_FILE
+    step: "7"
+    name: app/lib/search.ts
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/lib/search.ts
+  - type: NEW_FILE
+    step: "8"
+    name: app/routes/search.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/search.tsx
+nextSteps: null
+llms:
+  userQueries: []
+  troubleshooting: []
+commit: 3dbbb1ee554d96261a2249d8126c8afd11e7ad47
