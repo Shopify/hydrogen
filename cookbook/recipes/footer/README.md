@@ -1,41 +1,4 @@
-# Overview
-
-This prompt describes how to implement "footer" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
-The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
-If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
-If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
-Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
-
-# AI model verification steps
-
-- Never edit generated files (ending with .d.ts) directly; instead, run the `npm run codegen` command to update them (if the command is available).
-
-# Summary
-
-Add a footer menu to your Hydrogen store
-
-# User Intent Recognition
-
-<user_queries>
-- How can I add a footer to my Hydrogen store?
-- Help me add a hydrogen footer menu to my store
-- I want to display some links at the bottom of my hydrogen store?,
-</user_queries>
-
-# Troubleshooting
-
-<troubleshooting>
-- **Issue**: I can see a black bar, but there are no links inside
-  **Solution**: Make sure you've configured a menu in the Shopify admin with the handle of `skeleton-footer-menu` at https://admin.shopify.com/store/YOUR_STORE_DOMAIN/content/menus
-</troubleshooting>
-
-# Recipe Implementation
-
-Here's the footer recipe for the base Hydrogen skeleton template:
-
-<recipe_implementation>
-
-## Description
+# footer
 
 This recipe lets you add a footer menu to your Hydrogen store
 
@@ -50,9 +13,13 @@ In this recipe you'll make the following changes:
 
 To implement a footer menu in your own store, you need to create a menu in the Shopify admin with the handle of `skeleton-footer-menu` at https://admin.shopify.com/store/YOUR_STORE_DOMAIN/content/menus
 
-## New files added to the template by this recipe
+## Ingredients
 
-- app/components/Footer.tsx
+_New files added to the template by this recipe._
+
+| File | Description |
+| --- | --- |
+| [app/components/Footer.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/footer/ingredients/templates/skeleton/app/components/Footer.tsx) |  |
 
 ## Steps
 
@@ -60,9 +27,12 @@ To implement a footer menu in your own store, you need to create a menu in the S
 
 
 
-#### File: /app/components/PageLayout.tsx
+#### File: [app/components/PageLayout.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/templates/skeleton/app/components/PageLayout.tsx)
 
 ```diff
+index 2f602b60..c96c980e 100644
+--- a/templates/skeleton/app/components/PageLayout.tsx
++++ b/templates/skeleton/app/components/PageLayout.tsx
 @@ -1,7 +1,28 @@
 +import {Footer} from './Footer';
 +import type {FooterQuery, HeaderQuery} from 'storefrontapi.generated';
@@ -101,6 +71,8 @@ To implement a footer menu in your own store, you need to create a menu in the S
 
 
 #### File: [Footer.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/footer/ingredients/templates/skeleton/app/components/Footer.tsx)
+
+<details>
 
 ```tsx
 import {Suspense} from 'react';
@@ -233,13 +205,20 @@ function activeLinkStyle({
 
 ```
 
+</details>
+
 ### Step 2: Add the footer MENU GraphQL query
 
 
 
-#### File: /app/lib/fragments.ts
+#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/templates/skeleton/app/lib/fragments.ts)
+
+<details>
 
 ```diff
+index e69de29b..02a8f975 100644
+--- a/templates/skeleton/app/lib/fragments.ts
++++ b/templates/skeleton/app/lib/fragments.ts
 @@ -0,0 +1,60 @@
 +const MENU_FRAGMENT = `#graphql
 +  fragment MenuItem on MenuItem {
@@ -303,13 +282,18 @@ function activeLinkStyle({
 +` as const;
 ```
 
+</details>
+
 ### Step 3: Asynchronously query the Footer menu at the root layout
 
 
 
-#### File: /app/root.tsx
+#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/templates/skeleton/app/root.tsx)
 
 ```diff
+index 543380c7..bbb2b24b 100644
+--- a/templates/skeleton/app/root.tsx
++++ b/templates/skeleton/app/root.tsx
 @@ -15,6 +15,7 @@ import favicon from '~/assets/favicon.svg';
  import resetStyles from '~/styles/reset.css?url';
  import appStyles from '~/styles/app.css?url';
@@ -345,5 +329,3 @@ function activeLinkStyle({
    };
  }
 ```
-
-</recipe_implementation>
