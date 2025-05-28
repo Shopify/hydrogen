@@ -1,0 +1,62 @@
+index 2f602b60..b6a45be2 100644
+--- a/templates/skeleton/app/components/PageLayout.tsx
++++ b/templates/skeleton/app/components/PageLayout.tsx
+@@ -1,7 +1,56 @@
++import type {CartApiQueryFragment, HeaderQuery} from 'storefrontapi.generated';
++import {Header, HeaderMenu} from '~/components/Header';
++import {Aside} from '~/components/Aside';
++
+ interface PageLayoutProps {
++  cart: Promise<CartApiQueryFragment | null>;
++  header: HeaderQuery;
++  isLoggedIn: Promise<boolean>;
++  publicStoreDomain: string;
+   children?: React.ReactNode;
+ }
+ 
+-export function PageLayout({children = null}: PageLayoutProps) {
+-  return <main>{children}</main>;
++export function PageLayout({
++  cart,
++  children = null,
++  header,
++  isLoggedIn,
++  publicStoreDomain,
++}: PageLayoutProps) {
++  return (
++    <Aside.Provider>
++      <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
++      {header && (
++        <Header
++          header={header}
++          cart={cart}
++          isLoggedIn={isLoggedIn}
++          publicStoreDomain={publicStoreDomain}
++        />
++      )}
++      <main>{children}</main>
++    </Aside.Provider>
++  );
++}
++
++function MobileMenuAside({
++  header,
++  publicStoreDomain,
++}: {
++  header: PageLayoutProps['header'];
++  publicStoreDomain: PageLayoutProps['publicStoreDomain'];
++}) {
++  return (
++    header?.menu &&
++    header?.shop?.primaryDomain?.url && (
++      <Aside type="mobile" heading="MENU">
++        <HeaderMenu
++          menu={header.menu}
++          viewport="mobile"
++          primaryDomainUrl={header.shop.primaryDomain.url}
++          publicStoreDomain={publicStoreDomain}
++        />
++      </Aside>
++    )
++  );
+ }
