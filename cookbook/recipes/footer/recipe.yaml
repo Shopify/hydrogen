@@ -6,38 +6,9 @@ summary: ""
 description: ""
 notes: []
 requirements: null
-ingredients:
-  - path: templates/skeleton/app/components/Footer.tsx
-    description: null
+ingredients: []
 deletedFiles: []
-steps:
-  - type: PATCH
-    step: "1"
-    name: app/components/PageLayout.tsx
-    description: null
-    diffs:
-      - file: app/components/PageLayout.tsx
-        patchFile: PageLayout.tsx.130b44.patch
-  - type: NEW_FILE
-    step: "1"
-    name: app/components/Footer.tsx
-    description: null
-    ingredients:
-      - path: templates/skeleton/app/components/Footer.tsx
-  - type: PATCH
-    step: "2"
-    name: app/lib/fragments.ts
-    description: null
-    diffs:
-      - file: app/lib/fragments.ts
-        patchFile: fragments.ts.18726b.patch
-  - type: PATCH
-    step: "3"
-    name: app/root.tsx
-    description: null
-    diffs:
-      - file: app/root.tsx
-        patchFile: root.tsx.8c182c.patch
+steps: []
 nextSteps: null
 llms:
   userQueries: []
