@@ -1,39 +1,4 @@
-# Overview
-
-This prompt describes how to implement "cart" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
-The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
-If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
-If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
-Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
-
-# AI model verification steps
-
-- Never edit generated files (ending with .d.ts) directly; instead, run the `npm run codegen` command to update them (if the command is available).
-
-# Summary
-
-Add a shopping cart to your Hydrogen store
-
-# User Intent Recognition
-
-<user_queries>
-- How can I add shopping cart functionality to my Hydrogen store?
-- I want to allow our users to use a shopping cart
-</user_queries>
-
-# Troubleshooting
-
-<troubleshooting>
-
-</troubleshooting>
-
-# Recipe Implementation
-
-Here's the cart recipe for the base Hydrogen skeleton template:
-
-<recipe_implementation>
-
-## Description
+# cart
 
 This recipe lets you add shopping cart functionality to your Hydrogen store
 
@@ -48,17 +13,21 @@ In this recipe you'll make the following changes:
 7. Add <CartAside /> component to display the sliding shopping cart
 8. Add the cart route to respond to cart mutations and render the /cart
 
-## New files added to the template by this recipe
+## Ingredients
 
-- app/components/Aside.tsx
-- app/components/CartLineItem.tsx
-- app/components/CartMain.tsx
-- app/components/CartSummary.tsx
-- app/components/Header.tsx
-- app/components/ProductPrice.tsx
-- app/lib/variants.ts
-- app/routes/cart.$lines.tsx
-- app/routes/cart.tsx
+_New files added to the template by this recipe._
+
+| File | Description |
+| --- | --- |
+| [app/components/Aside.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/components/Aside.tsx) |  |
+| [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/components/CartLineItem.tsx) |  |
+| [app/components/CartMain.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/components/CartMain.tsx) |  |
+| [app/components/CartSummary.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/components/CartSummary.tsx) |  |
+| [app/components/Header.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/components/Header.tsx) |  |
+| [app/components/ProductPrice.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/components/ProductPrice.tsx) |  |
+| [app/lib/variants.ts](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/lib/variants.ts) |  |
+| [app/routes/cart.$lines.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/routes/cart.$lines.tsx) |  |
+| [app/routes/cart.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/routes/cart.tsx) |  |
 
 ## Steps
 
@@ -66,9 +35,14 @@ In this recipe you'll make the following changes:
 
 
 
-#### File: /app/components/PageLayout.tsx
+#### File: [app/components/PageLayout.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/templates/skeleton/app/components/PageLayout.tsx)
+
+<details>
 
 ```diff
+index 2f602b60..ce8cddb8 100644
+--- a/templates/skeleton/app/components/PageLayout.tsx
++++ b/templates/skeleton/app/components/PageLayout.tsx
 @@ -1,7 +1,51 @@
 +import {Await} from 'react-router';
 +import {Suspense} from 'react';
@@ -125,11 +99,15 @@ In this recipe you'll make the following changes:
  }
 ```
 
+</details>
+
 ### Step 1: Create the <Aside /> component
 
 
 
 #### File: [Aside.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/components/Aside.tsx)
+
+<details>
 
 ```tsx
 import {
@@ -234,13 +212,18 @@ export function useAside() {
 
 ```
 
+</details>
+
 ### Step 2: Add the cart query fragment to the application context
 
 
 
-#### File: /app/lib/context.ts
+#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/templates/skeleton/app/lib/context.ts)
 
 ```diff
+index be910889..c424c511 100644
+--- a/templates/skeleton/app/lib/context.ts
++++ b/templates/skeleton/app/lib/context.ts
 @@ -1,5 +1,6 @@
  import {createHydrogenContext} from '@shopify/hydrogen';
  import {AppSession} from '~/lib/session';
@@ -265,6 +248,8 @@ export function useAside() {
 
 
 #### File: [CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/components/CartLineItem.tsx)
+
+<details>
 
 ```tsx
 import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
@@ -438,13 +423,20 @@ function getUpdateKey(lineIds: string[]) {
 
 ```
 
+</details>
+
 ### Step 3: Add the Cart fragment to the fragments file
 
 
 
-#### File: /app/lib/fragments.ts
+#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/templates/skeleton/app/lib/fragments.ts)
+
+<details>
 
 ```diff
+index e69de29b..9886fb39 100644
+--- a/templates/skeleton/app/lib/fragments.ts
++++ b/templates/skeleton/app/lib/fragments.ts
 @@ -0,0 +1,220 @@
 +// NOTE: https://shopify.dev/docs/api/storefront/latest/queries/cart
 +export const CART_QUERY_FRAGMENT = `#graphql
@@ -668,11 +660,15 @@ function getUpdateKey(lineIds: string[]) {
 +` as const;
 ```
 
+</details>
+
 ### Step 3: Add the <CartMain /> component to render the shopping cart on the <CartAside />
 
 
 
 #### File: [CartMain.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/components/CartMain.tsx)
+
+<details>
 
 ```tsx
 import {useOptimisticCart} from '@shopify/hydrogen';
@@ -746,13 +742,18 @@ function CartEmpty({
 
 ```
 
+</details>
+
 ### Step 4: app/root.tsx
 
 
 
-#### File: /app/root.tsx
+#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/templates/skeleton/app/root.tsx)
 
 ```diff
+index 543380c7..c4a449f6 100644
+--- a/templates/skeleton/app/root.tsx
++++ b/templates/skeleton/app/root.tsx
 @@ -1,4 +1,4 @@
 -import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
 +import {getShopAnalytics, useNonce} from '@shopify/hydrogen';
@@ -804,6 +805,8 @@ function CartEmpty({
 
 #### File: [CartSummary.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/components/CartSummary.tsx)
 
+<details>
+
 ```tsx
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import type {CartLayout} from '~/components/CartMain';
@@ -851,11 +854,15 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
 
 ```
 
+</details>
+
 ### Step 5: (optional) Create a <Header /> component to render a menu
 
 
 
 #### File: [Header.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/components/Header.tsx)
+
+<details>
 
 ```tsx
 import {Suspense} from 'react';
@@ -1075,11 +1082,15 @@ function activeLinkStyle({
 
 ```
 
+</details>
+
 ### Step 6: Create a <ProductPrice /> to render the shopping cart item prices
 
 
 
 #### File: [ProductPrice.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/components/ProductPrice.tsx)
+
+<details>
 
 ```tsx
 import {Money} from '@shopify/hydrogen';
@@ -1112,11 +1123,15 @@ export function ProductPrice({
 
 ```
 
+</details>
+
 ### Step 7: Add product variant lib utilities
 
 
 
 #### File: [variants.ts](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/lib/variants.ts)
+
+<details>
 
 ```ts
 import { useLocation } from 'react-router';
@@ -1168,11 +1183,15 @@ export function getVariantUrl({
 
 ```
 
+</details>
+
 ### Step 8: Add a cart lines route to handle cart magic links
 
 
 
 #### File: [cart.$lines.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/routes/cart.$lines.tsx)
+
+<details>
 
 ```tsx
 import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
@@ -1247,11 +1266,15 @@ export default function Component() {
 
 ```
 
+</details>
+
 ### Step 9: Create a /cart route to handle cart mutations and display the shopping list inside the /cart route
 
 
 
 #### File: [cart.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/cart/ingredients/templates/skeleton/app/routes/cart.tsx)
+
+<details>
 
 ```tsx
 import {type MetaFunction, useLoaderData} from 'react-router';
@@ -1374,4 +1397,4 @@ export default function Cart() {
 
 ```
 
-</recipe_implementation>
+</details>

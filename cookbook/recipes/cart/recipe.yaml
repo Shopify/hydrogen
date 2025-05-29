@@ -40,84 +40,86 @@ ingredients:
 deletedFiles: []
 steps:
   - type: PATCH
-    step: '1'
+    step: "1"
     name: Add the <CartAside /> to the <PageLayout />
     description: null
     diffs:
       - file: app/components/PageLayout.tsx
         patchFile: PageLayout.tsx.130b44.patch
   - type: NEW_FILE
-    step: '1'
+    step: "1"
     name: Create the <Aside /> component
     description: null
     ingredients:
       - path: templates/skeleton/app/components/Aside.tsx
   - type: PATCH
-    step: '2'
+    step: "2"
     name: Add the cart query fragment to the application context
     description: null
     diffs:
       - file: app/lib/context.ts
         patchFile: context.ts.cfd9da.patch
   - type: NEW_FILE
-    step: '2'
+    step: "2"
     name: Add a <CartLineItem /> to render products added to the cart
     description: null
     ingredients:
       - path: templates/skeleton/app/components/CartLineItem.tsx
   - type: PATCH
-    step: '3'
+    step: "3"
     name: Add the Cart fragment to the fragments file
     description: null
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.18726b.patch
   - type: NEW_FILE
-    step: '3'
-    name: Add the <CartMain /> component to render the shopping cart on the <CartAside />
+    step: "3"
+    name: Add the <CartMain /> component to render the shopping cart on the
+      <CartAside />
     description: null
     ingredients:
       - path: templates/skeleton/app/components/CartMain.tsx
   - type: PATCH
-    step: '4'
+    step: "4"
     name: app/root.tsx
     description: null
     diffs:
       - file: app/root.tsx
         patchFile: root.tsx.8c182c.patch
   - type: NEW_FILE
-    step: '4'
+    step: "4"
     name: Create the <CartSummary /> to render the cart totals in the <CartAside />
     description: null
     ingredients:
       - path: templates/skeleton/app/components/CartSummary.tsx
   - type: NEW_FILE
-    step: '5'
+    step: "5"
     name: (optional) Create a <Header /> component to render a menu
     description: null
     ingredients:
       - path: templates/skeleton/app/components/Header.tsx
   - type: NEW_FILE
-    step: '6'
+    step: "6"
     name: Create a <ProductPrice /> to render the shopping cart item prices
     description: null
     ingredients:
       - path: templates/skeleton/app/components/ProductPrice.tsx
   - type: NEW_FILE
-    step: '7'
+    step: "7"
     name: Add product variant lib utilities
     description: null
     ingredients:
       - path: templates/skeleton/app/lib/variants.ts
   - type: NEW_FILE
-    step: '8'
+    step: "8"
     name: Add a cart lines route to handle cart magic links
     description: null
     ingredients:
       - path: templates/skeleton/app/routes/cart.$lines.tsx
   - type: NEW_FILE
-    step: '9'
-    name: Create a /cart route to handle cart mutations and display the shopping list inside the /cart route
+    step: "9"
+    name: Create a /cart route to handle cart mutations and display the shopping
+      list inside the /cart route
     description: null
     ingredients:
       - path: templates/skeleton/app/routes/cart.tsx
