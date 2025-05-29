@@ -1,0 +1,57 @@
+index 2f602b60..ce8cddb8 100644
+--- a/templates/skeleton/app/components/PageLayout.tsx
++++ b/templates/skeleton/app/components/PageLayout.tsx
+@@ -1,7 +1,51 @@
++import {Await} from 'react-router';
++import {Suspense} from 'react';
++import type {CartApiQueryFragment, HeaderQuery} from 'storefrontapi.generated';
++import {Aside} from '~/components/Aside';
++import {Header} from '~/components/Header';
++import {CartMain} from '~/components/CartMain';
++
+ interface PageLayoutProps {
++  cart: Promise<CartApiQueryFragment | null>;
++  header: HeaderQuery;
++  isLoggedIn: Promise<boolean>;
++  publicStoreDomain: string;
+   children?: React.ReactNode;
+ }
+ 
+-export function PageLayout({children = null}: PageLayoutProps) {
+-  return <main>{children}</main>;
++export function PageLayout({
++  cart,
++  children = null,
++  header,
++  isLoggedIn,
++  publicStoreDomain,
++}: PageLayoutProps) {
++  return (
++    <Aside.Provider>
++      <CartAside cart={cart} />
++      {header && (
++        <Header
++          header={header}
++          cart={cart}
++          isLoggedIn={isLoggedIn}
++          publicStoreDomain={publicStoreDomain}
++        />
++      )}
++      <main>{children}</main>
++    </Aside.Provider>
++  );
++}
++
++function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
++  return (
++    <Aside type="cart" heading="CART">
++      <Suspense fallback={<p>Loading cart ...</p>}>
++        <Await resolve={cart}>
++          {(cart) => {
++            return <CartMain cart={cart} layout="aside" />;
++          }}
++        </Await>
++      </Suspense>
++    </Aside>
++  );
+ }

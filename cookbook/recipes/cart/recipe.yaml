@@ -1,0 +1,116 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+gid: d028f37f-5e9e-4ed5-b7d3-d81e74c669e1
+title: cart
+summary: ""
+description: ""
+notes: []
+requirements: null
+ingredients:
+  - path: templates/skeleton/app/components/Aside.tsx
+    description: null
+  - path: templates/skeleton/app/components/CartLineItem.tsx
+    description: null
+  - path: templates/skeleton/app/components/CartMain.tsx
+    description: null
+  - path: templates/skeleton/app/components/CartSummary.tsx
+    description: null
+  - path: templates/skeleton/app/components/Header.tsx
+    description: null
+  - path: templates/skeleton/app/components/ProductPrice.tsx
+    description: null
+  - path: templates/skeleton/app/lib/variants.ts
+    description: null
+  - path: templates/skeleton/app/routes/cart.$lines.tsx
+    description: null
+  - path: templates/skeleton/app/routes/cart.tsx
+    description: null
+deletedFiles: []
+steps:
+  - type: PATCH
+    step: "1"
+    name: app/components/PageLayout.tsx
+    description: null
+    diffs:
+      - file: app/components/PageLayout.tsx
+        patchFile: PageLayout.tsx.130b44.patch
+  - type: NEW_FILE
+    step: "1"
+    name: app/components/Aside.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/Aside.tsx
+  - type: PATCH
+    step: "2"
+    name: app/lib/context.ts
+    description: null
+    diffs:
+      - file: app/lib/context.ts
+        patchFile: context.ts.cfd9da.patch
+  - type: NEW_FILE
+    step: "2"
+    name: app/components/CartLineItem.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/CartLineItem.tsx
+  - type: PATCH
+    step: "3"
+    name: app/lib/fragments.ts
+    description: null
+    diffs:
+      - file: app/lib/fragments.ts
+        patchFile: fragments.ts.18726b.patch
+  - type: NEW_FILE
+    step: "3"
+    name: app/components/CartMain.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/CartMain.tsx
+  - type: PATCH
+    step: "4"
+    name: app/root.tsx
+    description: null
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.8c182c.patch
+  - type: NEW_FILE
+    step: "4"
+    name: app/components/CartSummary.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/CartSummary.tsx
+  - type: NEW_FILE
+    step: "5"
+    name: app/components/Header.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/Header.tsx
+  - type: NEW_FILE
+    step: "6"
+    name: app/components/ProductPrice.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/ProductPrice.tsx
+  - type: NEW_FILE
+    step: "7"
+    name: app/lib/variants.ts
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/lib/variants.ts
+  - type: NEW_FILE
+    step: "8"
+    name: app/routes/cart.$lines.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/cart.$lines.tsx
+  - type: NEW_FILE
+    step: "9"
+    name: app/routes/cart.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/cart.tsx
+nextSteps: null
+llms:
+  userQueries: []
+  troubleshooting: []
+commit: 3dbbb1ee554d96261a2249d8126c8afd11e7ad47

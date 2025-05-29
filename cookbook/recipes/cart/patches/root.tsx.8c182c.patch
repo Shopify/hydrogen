@@ -1,0 +1,46 @@
+index 543380c7..c4a449f6 100644
+--- a/templates/skeleton/app/root.tsx
++++ b/templates/skeleton/app/root.tsx
+@@ -1,4 +1,4 @@
+-import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
++import {getShopAnalytics, useNonce} from '@shopify/hydrogen';
+ import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import {
+   Outlet,
+@@ -15,6 +15,7 @@ import favicon from '~/assets/favicon.svg';
+ import resetStyles from '~/styles/reset.css?url';
+ import appStyles from '~/styles/app.css?url';
+ import {PageLayout} from '~/components/PageLayout';
++import {HEADER_QUERY} from '~/lib/fragments';
+ 
+ export type RootLoader = typeof loader;
+ 
+@@ -74,6 +75,7 @@ export async function loader(args: LoaderFunctionArgs) {
+   const {storefront, env} = args.context;
+ 
+   return {
++    ...criticalData,
+     ...deferredData,
+     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
+     shop: getShopAnalytics({
+@@ -96,7 +98,19 @@ export async function loader(args: LoaderFunctionArgs) {
+  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+  */
+ async function loadCriticalData({context}: LoaderFunctionArgs) {
+-  return {};
++  const {storefront} = context;
++
++  const [header] = await Promise.all([
++    storefront.query(HEADER_QUERY, {
++      cache: storefront.CacheLong(),
++      variables: {
++        headerMenuHandle: 'main-menu', // Adjust to your header menu handle
++      },
++    }),
++    // Add other queries here, so that they are loaded in parallel
++  ]);
++
++  return {header};
+ }
+ 
+ /**
