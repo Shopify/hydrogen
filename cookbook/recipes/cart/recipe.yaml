@@ -2,8 +2,20 @@
 
 gid: d028f37f-5e9e-4ed5-b7d3-d81e74c669e1
 title: cart
-summary: ""
-description: ""
+summary: Add a shopping cart to your Hydrogen store
+description: |
+  This recipe lets you add shopping cart functionality to your Hydrogen store
+
+  In this recipe you'll make the following changes:
+
+  1. Set up a header menu in the admin
+  2. Modify the root layout to query for the header and cart
+  3. Add  <Header /> components to display the header links
+  4. Add an <Aside /> component to render the mobile header menu
+  5. Create a <CartSummary /> that renders the cart totals
+  6. Add a <CartForm /> to render the cart inside <CartAside />
+  7. Add <CartAside /> component to display the sliding shopping cart
+  8. Add the cart route to respond to cart mutations and render the /cart
 notes: []
 requirements: null
 ingredients:
@@ -28,89 +40,91 @@ ingredients:
 deletedFiles: []
 steps:
   - type: PATCH
-    step: "1"
-    name: app/components/PageLayout.tsx
+    step: '1'
+    name: Add the <CartAside /> to the <PageLayout />
     description: null
     diffs:
       - file: app/components/PageLayout.tsx
         patchFile: PageLayout.tsx.130b44.patch
   - type: NEW_FILE
-    step: "1"
-    name: app/components/Aside.tsx
+    step: '1'
+    name: Create the <Aside /> component
     description: null
     ingredients:
       - path: templates/skeleton/app/components/Aside.tsx
   - type: PATCH
-    step: "2"
-    name: app/lib/context.ts
+    step: '2'
+    name: Add the cart query fragment to the application context
     description: null
     diffs:
       - file: app/lib/context.ts
         patchFile: context.ts.cfd9da.patch
   - type: NEW_FILE
-    step: "2"
-    name: app/components/CartLineItem.tsx
+    step: '2'
+    name: Add a <CartLineItem /> to render products added to the cart
     description: null
     ingredients:
       - path: templates/skeleton/app/components/CartLineItem.tsx
   - type: PATCH
-    step: "3"
-    name: app/lib/fragments.ts
+    step: '3'
+    name: Add the Cart fragment to the fragments file
     description: null
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.18726b.patch
   - type: NEW_FILE
-    step: "3"
-    name: app/components/CartMain.tsx
+    step: '3'
+    name: Add the <CartMain /> component to render the shopping cart on the <CartAside />
     description: null
     ingredients:
       - path: templates/skeleton/app/components/CartMain.tsx
   - type: PATCH
-    step: "4"
+    step: '4'
     name: app/root.tsx
     description: null
     diffs:
       - file: app/root.tsx
         patchFile: root.tsx.8c182c.patch
   - type: NEW_FILE
-    step: "4"
-    name: app/components/CartSummary.tsx
+    step: '4'
+    name: Create the <CartSummary /> to render the cart totals in the <CartAside />
     description: null
     ingredients:
       - path: templates/skeleton/app/components/CartSummary.tsx
   - type: NEW_FILE
-    step: "5"
-    name: app/components/Header.tsx
+    step: '5'
+    name: (optional) Create a <Header /> component to render a menu
     description: null
     ingredients:
       - path: templates/skeleton/app/components/Header.tsx
   - type: NEW_FILE
-    step: "6"
-    name: app/components/ProductPrice.tsx
+    step: '6'
+    name: Create a <ProductPrice /> to render the shopping cart item prices
     description: null
     ingredients:
       - path: templates/skeleton/app/components/ProductPrice.tsx
   - type: NEW_FILE
-    step: "7"
-    name: app/lib/variants.ts
+    step: '7'
+    name: Add product variant lib utilities
     description: null
     ingredients:
       - path: templates/skeleton/app/lib/variants.ts
   - type: NEW_FILE
-    step: "8"
-    name: app/routes/cart.$lines.tsx
+    step: '8'
+    name: Add a cart lines route to handle cart magic links
     description: null
     ingredients:
       - path: templates/skeleton/app/routes/cart.$lines.tsx
   - type: NEW_FILE
-    step: "9"
-    name: app/routes/cart.tsx
+    step: '9'
+    name: Create a /cart route to handle cart mutations and display the shopping list inside the /cart route
     description: null
     ingredients:
       - path: templates/skeleton/app/routes/cart.tsx
 nextSteps: null
 llms:
-  userQueries: []
+  userQueries:
+    - How can I add shopping cart functionality to my Hydrogen store?
+    - I want to allow our users to use a shopping cart
   troubleshooting: []
 commit: 3dbbb1ee554d96261a2249d8126c8afd11e7ad47
