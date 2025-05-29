@@ -47,6 +47,7 @@ In this recipe you'll make the following changes:
 6. Add a <CartForm /> to render the cart inside <CartAside />
 7. Add <CartAside /> component to display the sliding shopping cart
 8. Add the cart route to respond to cart mutations and render the /cart
+9. Initialize the application context with the custom cart fragment
 
 ## New files added to the template by this recipe
 
@@ -234,7 +235,7 @@ export function useAside() {
 
 ```
 
-### Step 2: Add the cart query fragment to the application context
+### Step 2: Add the cart query fragment to the application context during initialization
 
 
 
