@@ -1,41 +1,4 @@
-# Overview
-
-This prompt describes how to implement "search" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
-The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
-If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
-If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
-Please note that the recipe steps below are not necessarily ordered in the way they should be executed, as it depends on the user's needs and the specific details of the project. The recipe steps descriptions should allow you to understand what is required to be done in a certain order and what is not. Remember that file names in the recipe are related to the Hydrogen skeleton template, not the user's project, so make sure to adapt the file names to the user's project.
-
-# AI model verification steps
-
-- Never edit generated files (ending with .d.ts) directly; instead, run the `npm run codegen` command to update them (if the command is available).
-
-# Summary
-
-S
-
-# User Intent Recognition
-
-<user_queries>
-- How can I add a search function to my Hydrogen store?
-- How can I add a predictive search function to my Hydrogen store?
-- I want to allow our users to search for products in my store
-</user_queries>
-
-# Troubleshooting
-
-<troubleshooting>
-- **Issue**: Search results are not accurate
-  **Solution**: Make sure you've installed the Shopify Search & Discovery app and set up search filters, recommendations and revelance in the app settings
-</troubleshooting>
-
-# Recipe Implementation
-
-Here's the search recipe for the base Hydrogen skeleton template:
-
-<recipe_implementation>
-
-## Description
+# search
 
 
 
@@ -44,16 +7,20 @@ Here's the search recipe for the base Hydrogen skeleton template:
 To implement Shopify's predictive search feature, you need to install a search & discovery app via the Shopify admin.
 In this recipe, we'll use the [Shopify Search & Discovery app](https://apps.shopify.com/search-and-discovery).
 
-## New files added to the template by this recipe
+## Ingredients
 
-- app/components/Aside.tsx
-- app/components/Header.tsx
-- app/components/SearchForm.tsx
-- app/components/SearchFormPredictive.tsx
-- app/components/SearchResults.tsx
-- app/components/SearchResultsPredictive.tsx
-- app/lib/search.ts
-- app/routes/search.tsx
+_New files added to the template by this recipe._
+
+| File | Description |
+| --- | --- |
+| [app/components/Aside.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/components/Aside.tsx) |  |
+| [app/components/Header.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/components/Header.tsx) |  |
+| [app/components/SearchForm.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/components/SearchForm.tsx) |  |
+| [app/components/SearchFormPredictive.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/components/SearchFormPredictive.tsx) |  |
+| [app/components/SearchResults.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/components/SearchResults.tsx) |  |
+| [app/components/SearchResultsPredictive.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/components/SearchResultsPredictive.tsx) |  |
+| [app/lib/search.ts](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/lib/search.ts) |  |
+| [app/routes/search.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/routes/search.tsx) |  |
 
 ## Steps
 
@@ -61,9 +28,14 @@ In this recipe, we'll use the [Shopify Search & Discovery app](https://apps.shop
 
 
 
-#### File: /app/components/PageLayout.tsx
+#### File: [app/components/PageLayout.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/templates/skeleton/app/components/PageLayout.tsx)
+
+<details>
 
 ```diff
+index 2f602b60..6c11cb22 100644
+--- a/templates/skeleton/app/components/PageLayout.tsx
++++ b/templates/skeleton/app/components/PageLayout.tsx
 @@ -1,7 +1,127 @@
 +import {Link} from 'react-router';
 +import {useId} from 'react';
@@ -196,11 +168,15 @@ In this recipe, we'll use the [Shopify Search & Discovery app](https://apps.shop
  }
 ```
 
+</details>
+
 ### Step 1: Create the <Aside /> component (if needed) to display the predictive search sliding drawer
 
 
 
 #### File: [Aside.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/components/Aside.tsx)
+
+<details>
 
 ```tsx
 import {
@@ -305,13 +281,20 @@ export function useAside() {
 
 ```
 
+</details>
+
 ### Step 2: Add the search and predictive search queries to the fragments
 
 
 
-#### File: /app/lib/fragments.ts
+#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/templates/skeleton/app/lib/fragments.ts)
+
+<details>
 
 ```diff
+index e69de29b..dc5254be 100644
+--- a/templates/skeleton/app/lib/fragments.ts
++++ b/templates/skeleton/app/lib/fragments.ts
 @@ -0,0 +1,56 @@
 +const MENU_FRAGMENT = `#graphql
 +  fragment MenuItem on MenuItem {
@@ -371,11 +354,15 @@ export function useAside() {
 +` as const;
 ```
 
+</details>
+
 ### Step 2: Create or update the Header file (if needed) to later add the <SearchToggle /> icon
 
 
 
 #### File: [Header.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/components/Header.tsx)
+
+<details>
 
 ```tsx
 import {NavLink} from 'react-router';
@@ -556,13 +543,18 @@ function activeLinkStyle({
 
 ```
 
+</details>
+
 ### Step 3: (optional) Add the header menu queries to the root layout
 
 
 
-#### File: /app/root.tsx
+#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/templates/skeleton/app/root.tsx)
 
 ```diff
+index 543380c7..c4a449f6 100644
+--- a/templates/skeleton/app/root.tsx
++++ b/templates/skeleton/app/root.tsx
 @@ -1,4 +1,4 @@
 -import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
 +import {getShopAnalytics, useNonce} from '@shopify/hydrogen';
@@ -613,6 +605,8 @@ function activeLinkStyle({
 
 
 #### File: [SearchForm.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/components/SearchForm.tsx)
+
+<details>
 
 ```tsx
 import {useRef, useEffect} from 'react';
@@ -686,11 +680,15 @@ function useFocusOnCmdK(inputRef: React.RefObject<HTMLInputElement>) {
 
 ```
 
+</details>
+
 ### Step 4: Create the <SearchFormPredictive /> component to capture the input on the sliding predictive search drawer
 
 
 
 #### File: [SearchFormPredictive.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/components/SearchFormPredictive.tsx)
+
+<details>
 
 ```tsx
 import { useFetcher, useNavigate, type FormProps, type Fetcher } from 'react-router';
@@ -767,11 +765,15 @@ export function SearchFormPredictive({
 
 ```
 
+</details>
+
 ### Step 5: Create the <SearchResults /> component to render the search results in the /search route
 
 
 
 #### File: [SearchResults.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/components/SearchResults.tsx)
+
+<details>
 
 ```tsx
 import { Link } from 'react-router';
@@ -946,11 +948,15 @@ function SearchResultsEmpty() {
 
 ```
 
+</details>
+
 ### Step 6: Create the <SearchResultsPredictive /> component to render search results in the <SearchAside />
 
 
 
 #### File: [SearchResultsPredictive.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/components/SearchResultsPredictive.tsx)
+
+<details>
 
 ```tsx
 import { Link, useFetcher, type Fetcher } from 'react-router';
@@ -1264,11 +1270,15 @@ function usePredictiveSearch(): UsePredictiveSearchReturn {
 
 ```
 
+</details>
+
 ### Step 7: Create the search.ts lib utility
 
 
 
 #### File: [search.ts](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/lib/search.ts)
+
+<details>
 
 ```ts
 import type {
@@ -1353,11 +1363,15 @@ export function urlWithTrackingParams({
 
 ```
 
+</details>
+
 ### Step 8: Create the /search route to display regular search results
 
 
 
 #### File: [search.tsx](https://github.com/Shopify/hydrogen/blob/3dbbb1ee554d96261a2249d8126c8afd11e7ad47/cookbook/recipes/search/ingredients/templates/skeleton/app/routes/search.tsx)
+
+<details>
 
 ```tsx
 import {
@@ -1783,4 +1797,9 @@ async function predictiveSearch({
 
 ```
 
-</recipe_implementation>
+</details>
+
+## Next steps
+
+- Test your predictive search implementation by clicking the search toggle in the header and entering a search query.
+- Test your regular search implementation by going to /search and entering a search query.
