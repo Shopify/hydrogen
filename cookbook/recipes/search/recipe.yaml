@@ -2,10 +2,13 @@
 
 gid: 951cf1ff-f4ff-4db7-a9a3-3c0303d03d20
 title: search
-summary: ""
-description: ""
+summary: 'S'
+description: ''
 notes: []
-requirements: null
+requirements: |
+  To implement Shopify's predictive search feature, you need to install a search & discovery app via the Shopify admin.
+  In this recipe, we'll use the [Shopify Search & Discovery app](https://apps.shopify.com/search-and-discovery).
+
 ingredients:
   - path: templates/skeleton/app/components/Aside.tsx
     description: null
@@ -26,76 +29,85 @@ ingredients:
 deletedFiles: []
 steps:
   - type: PATCH
-    step: "1"
-    name: app/components/PageLayout.tsx
+    step: '1'
+    name: Add the <SearchAside /> component to the <PageLayout />
     description: null
     diffs:
       - file: app/components/PageLayout.tsx
         patchFile: PageLayout.tsx.130b44.patch
   - type: NEW_FILE
-    step: "1"
-    name: app/components/Aside.tsx
+    step: '1'
+    name: Create the <Aside /> component (if needed) to display the predictive search sliding drawer
     description: null
     ingredients:
       - path: templates/skeleton/app/components/Aside.tsx
   - type: PATCH
-    step: "2"
-    name: app/lib/fragments.ts
+    step: '2'
+    name: Add the search and predictive search queries to the fragments
     description: null
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.18726b.patch
   - type: NEW_FILE
-    step: "2"
-    name: app/components/Header.tsx
+    step: '2'
+    name: Create or update the Header file (if needed) to later add the <SearchToggle /> icon
     description: null
     ingredients:
       - path: templates/skeleton/app/components/Header.tsx
   - type: PATCH
-    step: "3"
-    name: app/root.tsx
+    step: '3'
+    name: (optional) Add the header menu queries to the root layout
     description: null
     diffs:
       - file: app/root.tsx
         patchFile: root.tsx.8c182c.patch
   - type: NEW_FILE
-    step: "3"
-    name: app/components/SearchForm.tsx
+    step: '3'
+    name: Create the <SearchForm /> component which captures the search input from the user
     description: null
     ingredients:
       - path: templates/skeleton/app/components/SearchForm.tsx
   - type: NEW_FILE
-    step: "4"
-    name: app/components/SearchFormPredictive.tsx
+    step: '4'
+    name: Create the <SearchFormPredictive /> component to capture the input on the sliding predictive search drawer
     description: null
     ingredients:
       - path: templates/skeleton/app/components/SearchFormPredictive.tsx
   - type: NEW_FILE
-    step: "5"
-    name: app/components/SearchResults.tsx
+    step: '5'
+    name: Create the <SearchResults /> component to render the search results in the /search route
     description: null
     ingredients:
       - path: templates/skeleton/app/components/SearchResults.tsx
   - type: NEW_FILE
-    step: "6"
-    name: app/components/SearchResultsPredictive.tsx
+    step: '6'
+    name: Create the <SearchResultsPredictive /> component to render search results in the <SearchAside />
     description: null
     ingredients:
       - path: templates/skeleton/app/components/SearchResultsPredictive.tsx
   - type: NEW_FILE
-    step: "7"
-    name: app/lib/search.ts
+    step: '7'
+    name: Create the search.ts lib utility
     description: null
     ingredients:
       - path: templates/skeleton/app/lib/search.ts
   - type: NEW_FILE
-    step: "8"
-    name: app/routes/search.tsx
+    step: '8'
+    name: Create the /search route to display regular search results
     description: null
     ingredients:
       - path: templates/skeleton/app/routes/search.tsx
-nextSteps: null
+nextSteps: |
+  - Test your predictive search implementation by clicking the search toggle in the header and entering a search query.
+  - Test your regular search implementation by going to /search and entering a search query.
 llms:
-  userQueries: []
-  troubleshooting: []
+  userQueries:
+    - How can I add a search function to my Hydrogen store?
+    - How can I add a predictive search function to my Hydrogen store?
+    - I want to allow our users to search for products in my store
+  troubleshooting:
+    - issue: Search results are not accurate
+      solution:
+        Make sure you've installed the Shopify Search & Discovery app and set up search
+        filters, recommendations and revelance in the app settings
 commit: 3dbbb1ee554d96261a2249d8126c8afd11e7ad47
