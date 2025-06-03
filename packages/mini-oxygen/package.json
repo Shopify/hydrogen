@@ -46,17 +46,10 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@miniflare/cache": "^2.14.4",
-    "@miniflare/core": "^2.14.4",
-    "@miniflare/queues": "^2.14.4",
-    "@miniflare/runner-vm": "^2.14.4",
-    "@miniflare/shared": "^2.14.4",
-    "@miniflare/storage-memory": "^2.14.4",
-    "@miniflare/web-sockets": "^2.14.4",
     "body-parser": "1.20.3",
     "connect": "^3.7.0",
     "get-port": "^7.1.0",
-    "miniflare": "^3.20250124.0",
+    "miniflare": "^4.20250525.1",
     "mrmime": "2.0.0",
     "source-map": "^0.7.4",
     "source-map-support": "^0.5.21",

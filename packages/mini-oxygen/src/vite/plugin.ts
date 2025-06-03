@@ -7,6 +7,9 @@ import {
   type MiniOxygenViteOptions,
 } from './server-middleware.js';
 
+export {oxygenExtensions} from './oxygen-extensions.js';
+export type {OxygenExtensionsOptions} from './oxygen-extensions.js';
+
 // Note: Vite resolves extensions like .js or .ts automatically.
 const DEFAULT_SSR_ENTRY = './server';
 

@@ -1,0 +1,67 @@
+# Example wrangler.toml configuration for Oxygen apps using @cloudflare/vite-plugin
+
+# Application name
+name = "my-oxygen-app"
+
+# Compatibility date for Workers runtime features
+compatibility_date = "2025-03-06"
+
+# Main worker script (built by Vite)
+main = "./dist/server/index.js"
+
+# Account ID (optional, can be set via environment variable)
+# account_id = "your-account-id"
+
+# Environment variables
+[vars]
+# Add your environment variables here
+PUBLIC_STORE_DOMAIN = "example.myshopify.com"
+SESSION_SECRET = "your-session-secret"
+
+# Development-specific configuration
+[dev]
+port = 8787
+local_protocol = "http"
+
+# Bindings for external services
+# [env.production.vars]
+# API_KEY = "production-api-key"
+
+# [env.staging.vars]
+# API_KEY = "staging-api-key"
+
+# Durable Objects (if needed)
+# [[durable_objects.bindings]]
+# name = "MY_DURABLE_OBJECT"
+# class_name = "MyDurableObject"
+
+# KV Namespaces (if needed)
+# [[kv_namespaces]]
+# binding = "MY_KV_NAMESPACE"
+# id = "namespace-id"
+
+# R2 Buckets (if needed)
+# [[r2_buckets]]
+# binding = "MY_BUCKET"
+# bucket_name = "my-bucket"
+
+# D1 Databases (if needed)
+# [[d1_databases]]
+# binding = "MY_DB"
+# database_name = "my-database"
+# database_id = "database-id"
+
+# Service bindings (if using multiple workers)
+# [[services]]
+# binding = "AUTH_SERVICE"
+# service = "auth-worker"
+
+# Build configuration
+[build]
+command = "npm run build"
+
+# Upload rules for static assets
+# [[rules]]
+# type = "Data"
+# globs = ["**/*.html"]
+# fallthrough = false

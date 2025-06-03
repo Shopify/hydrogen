@@ -7,6 +7,7 @@ import {it, vi, describe, beforeEach, expect, afterEach} from 'vitest';
 import {EventSource} from 'eventsource';
 
 import {startServer, Response, type MiniOxygenOptions} from './index.js';
+import crypto from 'node:crypto';
 
 describe('start()', () => {
   let fixture: Fixture;
@@ -98,9 +99,9 @@ describe('start()', () => {
       `http://localhost:${miniOxygen.port}/__minioxygen_events`,
     );
     const eventsCaught: MessageEvent[] = [];
-    eventStream.addEventListener('message', (event: MessageEvent) =>
-      eventsCaught.push(event),
-    );
+    eventStream.addEventListener('message', (event: MessageEvent) => {
+      eventsCaught.push(event);
+    });
     fixture.updateWorker();
 
     // we need a short timeout to allow the "reload" event on the MiniOxygen instance to fire
@@ -300,7 +301,8 @@ interface Fixture {
 }
 
 async function createFixture(name: string): Promise<Fixture> {
-  const directory = await temporaryDirectory({prefix: name});
+  const pathUUID = crypto.randomUUID();
+  const directory = `./${name}-${pathUUID}`;
   const paths = {
     root: directory,
     config: join(directory, 'mini-oxygen.config.json'),

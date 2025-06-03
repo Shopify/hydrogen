@@ -1,5 +1,7 @@
 import getPort, {portNumbers} from 'get-port';
 
+export {getPort};
+
 /**
  *
  * Finds an available port in the range of `portPreference` to `portPreference + range`.
