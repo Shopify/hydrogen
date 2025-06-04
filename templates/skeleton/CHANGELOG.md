@@ -1,5 +1,40 @@
 # skeleton
 
+## 2025.5.2
+
+### Patch Changes
+
+- Fixing the skeleton's Vite Config ([#2958](https://github.com/Shopify/hydrogen/pull/2958)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
+## 2025.5.1
+
+### Patch Changes
+
+- Bumping the cli to 3.80.4 ([#2956](https://github.com/Shopify/hydrogen/pull/2956)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
+## 2025.5.0
+
+### Patch Changes
+
+- Migrating to React Router 7 ([#2866](https://github.com/Shopify/hydrogen/pull/2866)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
+- Updated dependencies [[`e9132d88`](https://github.com/Shopify/hydrogen/commit/e9132d8888ad090d3db41fe4d5d63569a30e9d8e), [`e9132d88`](https://github.com/Shopify/hydrogen/commit/e9132d8888ad090d3db41fe4d5d63569a30e9d8e)]:
+  - @shopify/remix-oxygen@3.0.0
+  - @shopify/hydrogen@2025.5.0
+
+## 2025.4.0
+
+### Patch Changes
+
+- Moved the Cursor rules into more generic LLM prompt files. If you were using the Cursor rules, you will find the prompts in the `cookbook/llms` folder and they can be put into your `.cursor/rules` folder manually. LLM prompt files will be maintained moving forward, while previous Cursor rules will not be updated anymore. ([#2936](https://github.com/Shopify/hydrogen/pull/2936)) by [@ruggishop](https://github.com/ruggishop)
+
+- Bump skeleton @shopify/cli and @shopify/mini-oxygen ([#2883](https://github.com/Shopify/hydrogen/pull/2883)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Update SFAPI and CAAPI versions to 2025.04 ([#2886](https://github.com/Shopify/hydrogen/pull/2886)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`af23e710`](https://github.com/Shopify/hydrogen/commit/af23e710dac83bb57498d9c2ef1d8bcf9df55d34), [`9d8a6644`](https://github.com/Shopify/hydrogen/commit/9d8a6644a5b67dca890c6687df390aee78fc85c3)]:
+  - @shopify/hydrogen@2025.4.0
+
 ## 2025.1.7
 
 ### Patch Changes

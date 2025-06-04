@@ -1,4 +1,4 @@
-import {Link} from '@remix-run/react';
+import { Link } from 'react-router';
 import {Image, Money, Pagination} from '@shopify/hydrogen';
 import {urlWithTrackingParams, type RegularSearchReturn} from '~/lib/search';
 

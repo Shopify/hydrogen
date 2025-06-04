@@ -1,4 +1,4 @@
-index 2dc6bda2..aad7e5f1 100644
+index 2dc6bda2..3507d496 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,3 +1,5 @@
@@ -89,7 +89,17 @@ index 2dc6bda2..aad7e5f1 100644
          />
          <br />
          <br />
-@@ -180,6 +218,73 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+@@ -177,9 +215,83 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+       amount
+       currencyCode
+     }
++    sellingPlanAllocations(first: 10) {
++      nodes {
++        sellingPlan {
++          id
++        }
++      }
++    }
    }
  ` as const;
  
@@ -163,7 +173,7 @@ index 2dc6bda2..aad7e5f1 100644
  const PRODUCT_FRAGMENT = `#graphql
    fragment Product on Product {
      id
-@@ -207,6 +312,11 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -207,6 +319,11 @@ const PRODUCT_FRAGMENT = `#graphql
          }
        }
      }
@@ -175,7 +185,7 @@ index 2dc6bda2..aad7e5f1 100644
      selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
        ...ProductVariant
      }
-@@ -218,6 +328,7 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -218,6 +335,7 @@ const PRODUCT_FRAGMENT = `#graphql
        title
      }
    }

@@ -1,16 +1,14 @@
 import {CommandModule} from 'yargs';
-import {FILES_TO_IGNORE_FOR_GENERATE, TEMPLATE_PATH} from '../lib/constants';
+import {FILES_TO_IGNORE_FOR_GENERATE} from '../lib/constants';
 import {generateRecipe} from '../lib/generate';
 import {RecipeManifestFormat} from '../lib/util';
-import {copyCursorRulesToSkeleton} from '../lib/llms';
-import path from 'path';
-import fs from 'fs';
 
 type GenerateArgs = {
   recipe: string;
   onlyFiles: boolean;
   referenceBranch: string;
   recipeManifestFormat: RecipeManifestFormat;
+  filePath?: string;
 };
 
 export const generate: CommandModule<{}, GenerateArgs> = {
@@ -37,23 +35,24 @@ export const generate: CommandModule<{}, GenerateArgs> = {
       description: 'The format of the recipe manifest file',
       default: 'yaml',
     },
+    filePath: {
+      type: 'string',
+      description:
+        'If specified, only generate the diffs for this file (and update any references in the recipe.',
+    },
   },
   handler,
 };
 
 async function handler(args: GenerateArgs) {
-  const skeletonRulesDir = path.join(TEMPLATE_PATH, '.cursor', 'rules');
-  fs.rmSync(skeletonRulesDir, {recursive: true, force: true});
-
   const recipePath = await generateRecipe({
     recipeName: args.recipe,
     filenamesToIgnore: FILES_TO_IGNORE_FOR_GENERATE,
     onlyFiles: args.onlyFiles,
     referenceBranch: args.referenceBranch,
     recipeManifestFormat: args.recipeManifestFormat,
+    filePath: args.filePath,
   });
-
-  copyCursorRulesToSkeleton();
 
   console.log();
   console.log(recipePath);

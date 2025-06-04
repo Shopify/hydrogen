@@ -1,5 +1,24 @@
 # @shopify/hydrogen
 
+## 2025.5.0
+
+### Patch Changes
+
+- Migrating to React Router 7 ([#2866](https://github.com/Shopify/hydrogen/pull/2866)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
+- Major version bumping libraries that now depend on react-router@7 ([#2866](https://github.com/Shopify/hydrogen/pull/2866)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
+## 2025.4.0
+
+### Patch Changes
+
+- Update SFAPI and CAAPI versions to 2025.04 ([#2886](https://github.com/Shopify/hydrogen/pull/2886)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Switch to an evergreen URL for Perfkit. Users will no longer need to update Hydrogen to get the newest features and bugfixes. ([#2895](https://github.com/Shopify/hydrogen/pull/2895)) by [@krzksz](https://github.com/krzksz)
+
+- Updated dependencies [[`af23e710`](https://github.com/Shopify/hydrogen/commit/af23e710dac83bb57498d9c2ef1d8bcf9df55d34)]:
+  - @shopify/hydrogen-react@2025.4.0
+
 ## 2025.1.4
 
 ### Patch Changes

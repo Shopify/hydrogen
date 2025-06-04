@@ -1,6 +1,6 @@
 import type {ParsedMetafields} from '@shopify/hydrogen';
 import {parseSection} from '~/utils/parseSection';
-import {Link} from '@remix-run/react';
+import {Link} from 'react-router';
 import type {SectionHeroFragment} from 'storefrontapi.generated';
 
 export function SectionHero(props: SectionHeroFragment) {

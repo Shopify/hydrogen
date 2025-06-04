@@ -1,4 +1,4 @@
-import {Link, useLoaderData, type MetaFunction} from '@remix-run/react';
+import { Link, useLoaderData, type MetaFunction } from 'react-router';
 import {
   Money,
   getPaginationVariables,

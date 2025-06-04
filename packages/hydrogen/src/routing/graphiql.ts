@@ -1,4 +1,4 @@
-import type {LoaderFunctionArgs} from '@remix-run/server-runtime';
+import type {LoaderFunctionArgs} from 'react-router';
 import type {Storefront} from '../storefront';
 import type {CustomerAccount} from '../customer/types';
 

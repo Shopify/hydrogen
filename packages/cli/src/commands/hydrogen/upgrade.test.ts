@@ -80,6 +80,55 @@ async function createOutdatedSkeletonPackageJson() {
   return packageJson;
 }
 
+async function createOutdatedSkeletonPackageJsonWithReactRouter() {
+  const require = createRequire(import.meta.url);
+  const packageJson: PackageJson = require(
+    joinPath(getSkeletonSourceDir(), 'package.json'),
+  );
+
+  if (!packageJson) throw new Error('Could not parse package.json');
+  if (!packageJson?.dependencies)
+    throw new Error('Could not parse package.json dependencies');
+  if (!packageJson?.devDependencies)
+    throw new Error('Could not parse package.json devDependencies');
+
+  // bump the versions to be outdated
+  packageJson.dependencies['@shopify/hydrogen'] = '^2023.1.6';
+  packageJson.dependencies['react-router'] = '7.0.0';
+  packageJson.dependencies['react-router-dom'] = '7.0.0';
+  packageJson.devDependencies['@shopify/cli-hydrogen'] = '^4.0.8';
+  packageJson.devDependencies['@shopify/remix-oxygen'] = '^1.0.3';
+  packageJson.devDependencies['@react-router/dev'] = '7.0.0';
+  packageJson.devDependencies['typescript'] = '^4.9.5';
+
+  return packageJson;
+}
+
+const REACT_ROUTER_RELEASE = {
+  title: 'React Rotuer 7.5',
+  version: '2025.5.0',
+  hash: '-',
+  commit: 'https://github.com/Shopify/hydrogen/pull/2819',
+  pr: 'https://github.com/Shopify/hydrogen/pull/2819',
+  dependencies: {
+    'react-router': '^7.5.0',
+    '@shopify/hydrogen': '2025.5.0',
+    '@shopify/remix-oxygen': '^2.0.12',
+  },
+  devDependencies: {
+    '@react-router/dev': '^7.5.0',
+    '@shopify/cli': '3.77.1',
+    '@shopify/mini-oxygen': '^3.2.0',
+    '@shopify/hydrogen-codegen': '^0.3.3',
+    '@shopify/oxygen-workers-types': '^4.1.6',
+    vite: '^6.2.4',
+  },
+  dependenciesMeta: {},
+  fixes: [],
+  features: [],
+  date: '2025-04-24',
+} satisfies Release;
+
 /**
  * Creates a temporary directory with a git repo and a package.json
  */
@@ -144,6 +193,9 @@ describe('upgrade', async () => {
   // Create an outdated skeleton package.json for all tests
   const OUTDATED_HYDROGEN_PACKAGE_JSON =
     await createOutdatedSkeletonPackageJson();
+
+  const OUTDATED_HYDROGEN_PACKAGE_JSON_WITH_REACT_ROUTER =
+    await createOutdatedSkeletonPackageJsonWithReactRouter();
 
   describe('checkIsGitRepo', () => {
     it('renders an error message when not in a git repo', async () => {
@@ -686,32 +738,28 @@ describe('upgrade', async () => {
       expect(args).toEqual(expect.arrayContaining(result));
     });
 
-    it('upgrades and syncs up all available Remix deps if they are out-of-date', async () => {
-      const {releases} = await getChangelog();
-
-      const selectedRelease = releases.find(
-        (release) => release.version === '2023.10.0',
-      ) as (typeof releases)[0];
+    it('upgrades and syncs up all available React Router deps if they are out-of-date', async () => {
+      const selectedRelease = REACT_ROUTER_RELEASE;
 
       const currentDependencies = {
-        ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
-        '@remix-run/react': '1.3.0',
-        ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
-        '@remix-run/dev': '1.2.0',
-        '@remix-run/css-bundle': '1.7.0',
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON_WITH_REACT_ROUTER.dependencies,
+        'react-router': '7.0.0',
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON_WITH_REACT_ROUTER.devDependencies,
+        '@react-router/dev': '7.0.0',
       };
 
       const result: string[] = [
-        '@shopify/cli-hydrogen@6.0.0',
-        '@shopify/hydrogen@2023.10.0',
-        '@shopify/remix-oxygen@2.0.0',
-        'typescript@5.2.2',
-        '@remix-run/react@2.1.0',
-        '@remix-run/server-runtime@2.1.0',
-        '@remix-run/dev@2.1.0',
-        '@remix-run/fs-routes@2.1.0',
-        '@remix-run/route-config@2.1.0',
-        '@remix-run/css-bundle@2.1.0',
+        '@shopify/hydrogen@2025.5.0',
+        '@shopify/remix-oxygen@2.0.12',
+        '@shopify/cli@3.77.1',
+        '@shopify/mini-oxygen@3.2.0',
+        '@shopify/hydrogen-codegen@0.3.3',
+        '@shopify/oxygen-workers-types@4.1.6',
+        'vite@6.2.4',
+        'react-router@7.5.0',
+        'react-router-dom@7.5.0',
+        '@react-router/dev@7.5.0',
+        '@react-router/fs-routes@7.5.0',
       ];
 
       const args = buildUpgradeCommandArgs({
@@ -722,32 +770,29 @@ describe('upgrade', async () => {
       expect(args).toEqual(result);
     });
 
-    it('upgrades all available Remix deps if they are out-of-date', async () => {
-      const {releases} = await getChangelog();
-
-      const selectedRelease = releases.find(
-        (release) => release.version === '2023.10.0',
-      ) as (typeof releases)[0];
+    it('upgrades all available React Router deps if they are out-of-date', async () => {
+      const selectedRelease = REACT_ROUTER_RELEASE;
 
       const currentDependencies = {
-        ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
-        '@remix-run/react': '1.8.0',
-        ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
-        '@remix-run/dev': '1.8.0',
-        '@remix-run/css-bundle': '1.8.0',
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON_WITH_REACT_ROUTER.dependencies,
+        'react-router': '7.3.0',
+        'react-router-dom': '7.3.0',
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON_WITH_REACT_ROUTER.devDependencies,
+        '@react-router/dev': '7.3.0',
       };
 
       const result: string[] = [
-        '@shopify/cli-hydrogen@6.0.0',
-        '@shopify/hydrogen@2023.10.0',
-        '@shopify/remix-oxygen@2.0.0',
-        'typescript@5.2.2',
-        '@remix-run/react@2.1.0',
-        '@remix-run/server-runtime@2.1.0',
-        '@remix-run/dev@2.1.0',
-        '@remix-run/fs-routes@2.1.0',
-        '@remix-run/route-config@2.1.0',
-        '@remix-run/css-bundle@2.1.0',
+        '@shopify/hydrogen@2025.5.0',
+        '@shopify/remix-oxygen@2.0.12',
+        '@shopify/cli@3.77.1',
+        '@shopify/mini-oxygen@3.2.0',
+        '@shopify/hydrogen-codegen@0.3.3',
+        '@shopify/oxygen-workers-types@4.1.6',
+        'vite@6.2.4',
+        'react-router@7.5.0',
+        'react-router-dom@7.5.0',
+        '@react-router/dev@7.5.0',
+        '@react-router/fs-routes@7.5.0',
       ];
 
       const args = buildUpgradeCommandArgs({
@@ -758,25 +803,23 @@ describe('upgrade', async () => {
       expect(args).toEqual(result);
     });
 
-    it('does not upgrade Remix deps if they are more up-to-date', async () => {
-      const {releases} = await getChangelog();
-
-      const selectedRelease = releases.find(
-        (release) => release.version === '2023.10.0',
-      ) as (typeof releases)[0];
-
+    it('does not upgrade React Router deps if they are more up-to-date', async () => {
+      const selectedRelease = REACT_ROUTER_RELEASE;
       const currentDependencies = {
-        ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
-        '@remix-run/react': '2.2.0',
-        ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
-        '@remix-run/dev': '2.2.0',
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON_WITH_REACT_ROUTER.dependencies,
+        'react-router': '7.6.0',
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON_WITH_REACT_ROUTER.devDependencies,
+        'react-router-dom': '7.6.0',
       };
 
       const result: string[] = [
-        '@shopify/cli-hydrogen@6.0.0',
-        '@shopify/hydrogen@2023.10.0',
-        '@shopify/remix-oxygen@2.0.0',
-        'typescript@5.2.2',
+        '@shopify/hydrogen@2025.5.0',
+        '@shopify/remix-oxygen@2.0.12',
+        '@shopify/cli@3.77.1',
+        '@shopify/mini-oxygen@3.2.0',
+        '@shopify/hydrogen-codegen@0.3.3',
+        '@shopify/oxygen-workers-types@4.1.6',
+        'vite@6.2.4',
       ];
 
       const args = buildUpgradeCommandArgs({

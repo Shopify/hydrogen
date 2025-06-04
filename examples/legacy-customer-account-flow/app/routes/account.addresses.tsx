@@ -2,17 +2,15 @@ import type {MailingAddressInput} from '@shopify/hydrogen/storefront-api-types';
 import type {AddressFragment, CustomerFragment} from 'storefrontapi.generated';
 import {
   data,
-  redirect,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
-import {
   Form,
+  redirect,
   useActionData,
   useNavigation,
   useOutletContext,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs,
   type MetaFunction,
-} from '@remix-run/react';
+} from 'react-router';
 
 export type ActionResponse = {
   addressId?: string | null;

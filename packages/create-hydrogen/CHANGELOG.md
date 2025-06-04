@@ -1,5 +1,23 @@
 # @shopify/create-hydrogen
 
+## 5.0.24
+
+### Patch Changes
+
+- Bumping the cli to 3.80.4 ([#2956](https://github.com/Shopify/hydrogen/pull/2956)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
+## 5.0.23
+
+### Patch Changes
+
+- Migrating to React Router 7 ([#2866](https://github.com/Shopify/hydrogen/pull/2866)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
+## 5.0.22
+
+### Patch Changes
+
+- Bump skeleton @shopify/cli and @shopify/mini-oxygen ([#2883](https://github.com/Shopify/hydrogen/pull/2883)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 5.0.21
 
 ### Patch Changes

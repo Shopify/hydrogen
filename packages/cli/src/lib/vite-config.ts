@@ -10,10 +10,16 @@ import {importVite} from './import-utils.js';
 // Do not import JS from here, only types
 import type {HydrogenPlugin} from '~/hydrogen/vite/plugin.js';
 import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
-import {hasRemixConfigFile} from './remix-config.js';
+import {
+  hasRemixConfigFile,
+  ResolvedRRConfig,
+  ResolvedRoutes,
+} from './remix-config.js';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
-import type {ResolvedRemixConfig} from '@remix-run/dev';
 import type {ResolvedConfig, UserConfig} from 'vite';
+
+export const REMIX_COMPILER_ERROR_MESSAGE =
+  "Classic Remix Compiler projects are no longer supported, please upgrade to Vite by running 'npx shopify hydrogen setup vite'";
 
 export async function hasViteConfig(root: string) {
   const result = await findFileWithExtension(root, 'vite.config');
@@ -39,7 +45,7 @@ type ViteConfigResult = {
   serverOutFile: string;
   resolvedViteConfig: ResolvedConfig;
   userViteConfig: UserConfig;
-  remixConfig: ResolvedRemixConfig;
+  remixConfig: ResolvedRRConfig;
 };
 
 export async function getViteConfig(
@@ -69,7 +75,7 @@ export async function getViteConfig(
   );
 
   const {appDirectory, serverBuildFile, routes} =
-    getRemixConfigFromVite(resolvedViteConfig);
+    getReactRouterOrRemixConfigFromVite(resolvedViteConfig);
 
   const serverOutDir = resolvedViteConfig.build.outDir;
   const clientOutDir = serverOutDir.replace(/server$/, 'client');
@@ -108,7 +114,36 @@ export async function getViteConfig(
             basename(resolvedSsrEntry),
           )
         ).filepath || resolvedSsrEntry,
-    } as ResolvedRemixConfig,
+    } satisfies ResolvedRRConfig,
+  };
+}
+
+function getReactRouterOrRemixConfigFromVite(viteConfig: any) {
+  try {
+    const reactRouterConfig = getReactRouterConfigFromVite(viteConfig);
+    return reactRouterConfig;
+  } catch (error) {
+    const remixConfig = getRemixConfigFromVite(viteConfig);
+    return remixConfig;
+  }
+}
+
+function getReactRouterConfigFromVite(viteConfig: any): {
+  appDirectory: string;
+  serverBuildFile: string;
+  routes: ResolvedRoutes;
+} {
+  if (!viteConfig.__reactRouterPluginContext) {
+    throw new Error('Could not resolve React Router config');
+  }
+
+  const {appDirectory, serverBuildFile, routes} =
+    viteConfig.__reactRouterPluginContext.reactRouterConfig;
+
+  return {
+    appDirectory,
+    serverBuildFile,
+    routes,
   };
 }
 
@@ -120,7 +155,7 @@ function getRemixConfigFromVite(viteConfig: any) {
     ? {
         appDirectory: remixConfig.appDirectory,
         serverBuildFile: remixConfig.serverBuildFile,
-        routes: remixConfig.routes,
+        routes: remixConfig.routes satisfies ResolvedRoutes,
       }
     : {};
 }
