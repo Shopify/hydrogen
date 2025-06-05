@@ -203,6 +203,14 @@ steps:
     diffs:
       - file: app/routes/sitemap.$type.$page[.xml].tsx
         patchFile: sitemap.$type.$page[.xml].tsx.9700e3.patch
+  - type: PATCH
+    step: 2.7
+    name: Update the useVariantUrl function.
+    description: |
+      Remove the `pathname` parameter from the `useVariantUrl` function, and the logic that prepends the locale to the path.
+    diffs:
+      - file: app/lib/variants.ts
+        patchFile: variants.ts.dd2ccb.patch
 nextSteps: |
   - Test your implementation by going to your store and selecting a different
   market from the country selector.
@@ -226,4 +234,4 @@ llms:
       solution: Make sure you update *all* routes that need localization (not only the
         routes for the home page, the cart page, and the product page). See step
         2.1 for details.
-commit: 2955dea8606effa5a8f288e805257e8994b665c2
+commit: d63f8518186b4487a445a4ed79139ba4d8b15550
