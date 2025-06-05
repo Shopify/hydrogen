@@ -8,7 +8,10 @@ import {
   NoOpLog,
   RequestInit,
   type MiniflareOptions,
+  WorkerOptions,
+  Json,
 } from 'miniflare';
+import {watch as fsWatch} from 'node:fs';
 import sourceMapSupport from 'source-map-support';
 import {createServer, MiniOxygenServerOptions} from './server.js';
 import {isO2Verbose} from '../common/debug.js';
@@ -41,11 +44,11 @@ export class MiniOxygen {
   private currentOptions: MiniOxygenOptions;
   private env: Record<string, unknown>;
   private reloadListeners: Array<() => void> = [];
+  private fileWatcher?: ReturnType<typeof fsWatch>;
+  private reloadDebounceTimer?: NodeJS.Timeout;
 
   constructor(options: MiniOxygenOptions, env: {[key: string]: unknown} = {}) {
-    const {sourceMap, globalFetch, ...restOptions} = options;
-
-    if (sourceMap) {
+    if (options.sourceMap) {
       // Node has the --enable-source-maps flag, but this doesn't work for VM scripts.
       // It also doesn't expose a way of flushing the source map cache, which we need
       // so previous versions of worker code don't end up in stack traces.
@@ -55,6 +58,11 @@ export class MiniOxygen {
     this.currentOptions = options;
     this.env = env;
     this.miniflare = this.createMiniflare();
+
+    // Set up file watching if enabled
+    if (options.watch && options.scriptPath) {
+      this.setupFileWatcher(options.scriptPath);
+    }
   }
 
   private createMiniflare(): Miniflare {
@@ -86,14 +94,15 @@ export class MiniOxygen {
       workerOptions.scriptPath = scriptPath;
     }
 
-    const workers = [workerOptions];
-
     // Add global fetch if provided
-    if (globalFetch) {
-      workers[0].outboundService = async (request: Request) => {
-        return globalFetch(request.url, request);
+    if (globalFetch != null) {
+      // In Miniflare v4, outboundService is configured per worker
+      workerOptions.outboundService = (request: Request) => {
+        return globalFetch(request.url, request as any);
       };
     }
+
+    const workers = [workerOptions];
 
     return new Miniflare({
       cf: false,
@@ -118,6 +127,10 @@ export class MiniOxygen {
   async dispose() {
     if (!this.isDisposed) {
       await this.miniflare.dispose();
+      this.fileWatcher?.close();
+      if (this.reloadDebounceTimer) {
+        clearTimeout(this.reloadDebounceTimer);
+      }
       this.isDisposed = true;
     }
   }
@@ -168,6 +181,22 @@ export class MiniOxygen {
         this.reloadListeners.splice(index, 1);
       }
     }
+  }
+
+  private setupFileWatcher(filePath: string) {
+    this.fileWatcher = fsWatch(filePath, async (eventType) => {
+      if (eventType === 'change') {
+        // Debounce reload events to avoid multiple triggers
+        if (this.reloadDebounceTimer) {
+          clearTimeout(this.reloadDebounceTimer);
+        }
+
+        this.reloadDebounceTimer = setTimeout(() => {
+          // Emit reload event when file changes
+          this.reloadListeners.forEach((listener) => listener());
+        }, 100);
+      }
+    });
   }
 }
 

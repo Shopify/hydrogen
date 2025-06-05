@@ -102,7 +102,11 @@ describe('start()', () => {
     eventStream.addEventListener('message', (event: MessageEvent) => {
       eventsCaught.push(event);
     });
-    fixture.updateWorker();
+
+    // Wait for the connection to be established
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    await fixture.updateWorker();
 
     // we need a short timeout to allow the "reload" event on the MiniOxygen instance to fire
     await new Promise((resolve, _reject) => {
@@ -232,7 +236,9 @@ describe('start()', () => {
     const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
-      script: 'export default { fetch: () => fetch("foo") }',
+      script: `export default { fetch: () => {
+        return fetch("http://example.com/foo/")
+      }}`,
       globalFetch: (url) => {
         return Promise.resolve(new Response(`${url}bar`));
       },
@@ -241,7 +247,7 @@ describe('start()', () => {
     const response = (await sendRequest(miniOxygen.port, '/')) as {
       data: string;
     };
-    expect(response.data).toEqual('foobar');
+    expect(response.data).toEqual('http://example.com/foo/bar');
 
     await miniOxygen.close();
   });

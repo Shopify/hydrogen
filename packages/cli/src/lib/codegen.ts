@@ -161,7 +161,7 @@ export async function codegen(options: CodegenOptions) {
 async function executeReactRouterCodegen(options: {
   rootDirectory: string;
   watch?: boolean;
-}) {
+}): Promise<void> {
   /**
    * I'm not sure if `npx react-router` is the best way to run this.
    * `node node_modules/.bin/react-router/...` is not good enough,

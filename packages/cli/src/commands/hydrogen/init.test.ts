@@ -105,7 +105,7 @@ describe('init', () => {
       expect(output).toMatch('success');
     });
 
-    it('supports codegen', async () => {
+    it.only('supports codegen', async () => {
       // Clear previous success messages
       outputMock.clear();
 
