@@ -3,12 +3,17 @@ import {describe, it, expect, vi, beforeEach, beforeAll} from 'vitest';
 import {runInit} from './init.js';
 import {exec} from '@shopify/cli-kit/node/system';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
-import {fileExists, readFile, removeFile} from '@shopify/cli-kit/node/fs';
-import {temporaryDirectory} from 'tempy';
+import {
+  fileExists,
+  readFile,
+  removeFile,
+  mkdirSync,
+} from '@shopify/cli-kit/node/fs';
 import {checkCurrentCLIVersion} from '../../lib/check-cli-version.js';
 import {runCheckRoutes} from './check.js';
 import {runCodegen} from './codegen.js';
 import {setupTemplate} from '../../lib/onboarding/index.js';
+import path from 'node:path';
 
 vi.mock('../../lib/check-cli-version.js');
 
@@ -71,10 +76,17 @@ describe('init', () => {
   });
 
   describe('project validity', () => {
+    let tmpDirInstance: number = 0;
     let tmpDir: string;
 
     beforeAll(async () => {
-      tmpDir = temporaryDirectory({prefix: 'h2-test-'});
+      // Should be the root of the hydrogen repository.
+      const projectRootDir = path.join(__dirname, '..', '..', '..', '..', '..');
+      tmpDir = path.join(
+        projectRootDir,
+        `test-project-init-${tmpDirInstance++}`,
+      );
+      mkdirSync(tmpDir);
 
       await expect(
         runInit({
@@ -105,11 +117,12 @@ describe('init', () => {
       expect(output).toMatch('success');
     });
 
-    it.only('supports codegen', async () => {
+    it('supports codegen', async () => {
       // Clear previous success messages
       outputMock.clear();
 
       const codegenFile = `${tmpDir}/storefrontapi.generated.d.ts`;
+      console.log('codegenFile', codegenFile);
       const codegenFromTemplate = await readFile(codegenFile);
       expect(codegenFromTemplate).toBeTruthy();
 
