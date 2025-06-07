@@ -1,16 +1,20 @@
 import {execSync} from 'child_process';
-import fs from 'fs';
+import fs, {rmSync} from 'fs';
 import {applyRecipe} from './apply';
 import {TEMPLATE_PATH} from './constants';
 import {makeRandomTempDir} from './util';
+import path from 'path';
 /**
  * Validate a recipe.
  * @param params - The parameters for the validation.
  */
-export function validateRecipe(params: {recipeTitle: string}) {
+export function validateRecipe(params: {
+  recipeTitle: string;
+  hydrogenPackagesVersion?: string;
+}) {
   let start = Date.now();
 
-  const {recipeTitle} = params;
+  const {recipeTitle, hydrogenPackagesVersion} = params;
   const tempDir = makeRandomTempDir({prefix: 'validate-recipe'});
   try {
     console.log(`- 🧑‍🍳 Applying recipe '${recipeTitle}'`);
@@ -25,6 +29,20 @@ export function validateRecipe(params: {recipeTitle: string}) {
         return !src.includes('node_modules');
       },
     });
+
+    if (hydrogenPackagesVersion != null) {
+      console.log(`- 🔼 Applying Hydrogen version ${hydrogenPackagesVersion}…`);
+      rmSync(path.join(tempDir, 'package-lock.json'), {force: true});
+      const packages = [
+        'https://registry.npmjs.org/@shopify/cli-hydrogen/-/cli-hydrogen',
+        'https://registry.npmjs.org/@shopify/hydrogen/-/hydrogen',
+        'https://registry.npmjs.org/@shopify/remix-oxygen/-/remix-oxygen',
+      ];
+      execSync(
+        `npm install ${packages.map((p) => `${p}-${hydrogenPackagesVersion}.tgz`).join(' ')}`,
+        {cwd: tempDir},
+      );
+    }
 
     // run npm install in the template directory
     console.log(`- 📦 Installing dependencies…`);

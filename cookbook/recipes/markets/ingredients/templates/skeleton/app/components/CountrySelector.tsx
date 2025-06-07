@@ -1,4 +1,4 @@
-import {Form} from '@remix-run/react';
+import {Form} from 'react-router';
 import {Locale, SUPPORTED_LOCALES, useSelectedLocale} from '../lib/i18n';
 import {CartForm} from '@shopify/hydrogen';
 
