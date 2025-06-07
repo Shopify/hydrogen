@@ -17,7 +17,10 @@ export async function loader({params, context}: LoaderFunctionArgs) {
   const {data, errors} = await context.customerAccount.query(
     CUSTOMER_ORDER_QUERY,
     {
-      variables: {orderId},
+      variables: {
+        orderId,
+        language: context.storefront.i18n.language,
+      },
     },
   );
 
