@@ -31,7 +31,7 @@ export const CUSTOMER_FRAGMENT = `#graphql
 
 // NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
 export const CUSTOMER_DETAILS_QUERY = `#graphql
-  query CustomerDetails {
+  query CustomerDetails($language: LanguageCode) @inContext(language: $language) {
     customer {
       ...Customer
     }
