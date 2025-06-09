@@ -77,7 +77,8 @@ export const CUSTOMER_ORDER_QUERY = `#graphql
       }
     }
   }
-  query Order($orderId: ID!) {
+  query Order($orderId: ID!, $language: LanguageCode)
+    @inContext(language: $language) {
     order(id: $orderId) {
       ... on Order {
         ...Order
