@@ -15,7 +15,7 @@ import {
   useOutletContext,
   type MetaFunction,
   type Fetcher,
-} from '@remix-run/react';
+} from 'react-router';
 import {
   UPDATE_ADDRESS_MUTATION,
   DELETE_ADDRESS_MUTATION,
@@ -42,7 +42,8 @@ export async function loader({context}: LoaderFunctionArgs) {
 }
 
 export async function action({request, context}: ActionFunctionArgs) {
-  const {customerAccount} = context;
+  const {customerAccount, storefront} = context;
+  const {i18n} = storefront;
 
   try {
     const form = await request.formData();
@@ -96,7 +97,11 @@ export async function action({request, context}: ActionFunctionArgs) {
           const {data, errors} = await customerAccount.mutate(
             CREATE_ADDRESS_MUTATION,
             {
-              variables: {address, defaultAddress},
+              variables: {
+                address,
+                defaultAddress,
+                language: i18n.language,
+              },
             },
           );
 
@@ -145,6 +150,7 @@ export async function action({request, context}: ActionFunctionArgs) {
                 address,
                 addressId: decodeURIComponent(addressId),
                 defaultAddress,
+                language: i18n.language,
               },
             },
           );
@@ -190,7 +196,10 @@ export async function action({request, context}: ActionFunctionArgs) {
           const {data, errors} = await customerAccount.mutate(
             DELETE_ADDRESS_MUTATION,
             {
-              variables: {addressId: decodeURIComponent(addressId)},
+              variables: {
+                addressId: decodeURIComponent(addressId),
+                language: i18n.language,
+              },
             },
           );
 

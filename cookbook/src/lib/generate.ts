@@ -1,5 +1,5 @@
 import {execSync} from 'child_process';
-import {createHash} from 'crypto';
+import {createHash, randomUUID} from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import YAML from 'yaml';
@@ -9,7 +9,7 @@ import {
   TEMPLATE_DIRECTORY,
   TEMPLATE_PATH,
 } from './constants';
-import {Ingredient, loadRecipe, Recipe, Step} from './recipe';
+import {Ingredient, isSubstep, loadRecipe, Recipe, Step} from './recipe';
 import {
   createDirectoryIfNotExists,
   getMainCommitHash,
@@ -21,20 +21,34 @@ import {
 } from './util';
 import {generateLLMsFiles} from './llms';
 
-/**
- * Generate a recipe.
- * @param params - The parameters for the recipe.
- * @returns The path to the recipe.
- */
-export async function generateRecipe(params: {
+type GenerateRecipeParams = {
   recipeName: string;
   filenamesToIgnore: string[];
   onlyFiles: boolean;
   referenceBranch: string;
   recipeManifestFormat: RecipeManifestFormat;
-}): Promise<string> {
-  const {recipeName, filenamesToIgnore, referenceBranch, recipeManifestFormat} =
-    params;
+  filePath?: string;
+};
+
+/**
+ * Generate a recipe.
+ * @param params - The parameters for the recipe.
+ * @returns The path to the recipe.
+ */
+export async function generateRecipe(
+  params: GenerateRecipeParams,
+): Promise<string> {
+  const {
+    recipeName,
+    filenamesToIgnore,
+    referenceBranch,
+    recipeManifestFormat,
+    filePath,
+  } = params;
+
+  if (filePath != null) {
+    return generateForSingleFile(params);
+  }
 
   console.log('📖 Generating recipe');
 
@@ -95,6 +109,7 @@ export async function generateRecipe(params: {
   const troubleshooting = existingRecipe?.llms.troubleshooting ?? [];
 
   const recipe: Recipe = {
+    gid: existingRecipe?.gid ?? randomUUID(),
     title: existingRecipe?.title ?? recipeName,
     summary: existingRecipe?.summary ?? '',
     description: existingRecipe?.description ?? '',
@@ -103,6 +118,7 @@ export async function generateRecipe(params: {
     ingredients,
     deletedFiles,
     steps,
+    nextSteps: existingRecipe?.nextSteps ?? null,
     llms: {userQueries, troubleshooting},
     commit: getMainCommitHash(parseReferenceBranch(referenceBranch)),
   };
@@ -117,7 +133,9 @@ export async function generateRecipe(params: {
     recipeManifestFormat === 'json'
       ? JSON.stringify(recipe, null, 2)
       : `# yaml-language-server: $schema=../../recipe.schema.json\n\n` +
-        YAML.stringify(recipe);
+        YAML.stringify(recipe, {
+          blockQuote: 'literal',
+        });
 
   fs.writeFileSync(recipeManifestPath, data);
 
@@ -136,62 +154,101 @@ async function generateSteps(params: {
   const existingInfoSteps =
     params.existingRecipe?.steps.filter((step) => step.type === 'INFO') ?? [];
 
-  let patchSteps: Step[] = [];
-
-  const modifiedFiles = params.modifiedFiles.filter((file) => {
-    // ignore generated types files
-    return !file.endsWith('.d.ts');
-  });
-
-  let i = 0;
-  for await (const file of modifiedFiles) {
-    i++;
-    const {fullPath, patchFilename} = createPatchFile({
-      file,
-      patchesDirPath: params.patchesDirPath,
+  function processModifiedFiles(): Step[] {
+    let patchSteps: Step[] = [];
+    const modifiedFiles = params.modifiedFiles.filter((file) => {
+      // ignore generated types files
+      return !file.endsWith('.d.ts');
     });
+    let i = 0;
+    for (const file of modifiedFiles) {
+      i++;
+      const {fullPath, patchFilename} = createPatchFile({
+        file,
+        patchesDirPath: params.patchesDirPath,
+      });
 
-    const existingStep = params.existingRecipe?.steps.find(
-      (step) =>
-        step.diffs != null &&
-        step.diffs.length === 1 &&
-        step.diffs[0].file === fullPath.replace(TEMPLATE_PATH, ''),
-    );
+      const existingStep = params.existingRecipe?.steps.find(
+        (step) =>
+          step.diffs != null &&
+          step.diffs.length === 1 &&
+          step.diffs[0].file === fullPath.replace(TEMPLATE_PATH, ''),
+      );
 
-    // Try to find the existing description for the step which has _only_ this file as a diff patch.
-    const existingDescription = existingStep?.description ?? null;
+      // Try to find the existing description for the step which has _only_ this file as a diff patch.
+      const existingDescription = existingStep?.description ?? null;
 
-    const step: Step = {
-      type: 'PATCH',
-      index: existingStep?.index ?? i,
-      name: existingStep?.name ?? file.replace(TEMPLATE_DIRECTORY, ''),
-      description: existingDescription ?? null,
-      diffs: [
-        {
-          file: fullPath.replace(TEMPLATE_PATH, ''),
-          patchFile: patchFilename,
-        },
-      ],
-    };
-    patchSteps.push(step);
+      const step: Step = {
+        type: 'PATCH',
+        step: existingStep?.step ?? `${i}`,
+        name: existingStep?.name ?? file.replace(TEMPLATE_DIRECTORY, ''),
+        description: existingDescription ?? null,
+        diffs: [
+          {
+            file: fullPath.replace(TEMPLATE_PATH, ''),
+            patchFile: patchFilename,
+          },
+        ],
+      };
+      patchSteps.push(step);
+    }
+    return patchSteps;
   }
+  const patchSteps = processModifiedFiles();
 
-  // add the copy ingredients step if there are ingredients
-  const maybeCopyIngredientsStep: Step[] =
-    params.ingredients.length > 0
-      ? [copyIngredientsStep(params.ingredients)]
-      : [];
+  function processNewFiles(): Step[] {
+    let newFileSteps: Step[] = [];
+
+    let i = 0;
+    for (const file of params.ingredients) {
+      i++;
+
+      const existingStep = params.existingRecipe?.steps.find(
+        (step) =>
+          step.type === 'NEW_FILE' &&
+          step.ingredients?.length === 1 &&
+          step.ingredients[0].path === file.path,
+      );
+
+      // Try to find the existing description for the step which has _only_ this file as a diff patch.
+      const existingDescription = existingStep?.description ?? null;
+
+      const step: Step = {
+        type: 'NEW_FILE',
+        step: existingStep?.step ?? `${i}`,
+        name: existingStep?.name ?? file.path.replace(TEMPLATE_DIRECTORY, ''),
+        description: existingDescription ?? file.description ?? null,
+        ingredients: [
+          {
+            path: file.path,
+            renamedFrom: existingStep?.ingredients?.[0]?.renamedFrom,
+          },
+        ],
+      };
+      newFileSteps.push(step);
+    }
+    return newFileSteps;
+  }
+  const newFileSteps = processNewFiles();
 
   const steps = [
     ...existingInfoSteps,
-    ...maybeCopyIngredientsStep,
-    ...patchSteps.sort((a, b) => a.index - b.index),
-  ];
+    ...[...patchSteps, ...newFileSteps],
+  ].sort(compareSteps);
 
-  return steps.map((step, index) => ({
-    ...step,
-    index: index + 1, // normalize the indexes
-  }));
+  return steps;
+}
+
+function compareSteps(a: Step, b: Step): number {
+  function normalize(step: Step): string {
+    const expanded = isSubstep(a) ? `${step.step}` : `${step.step}.0`;
+    return expanded
+      .split('.')
+      .map((v) => parseInt(v, 10).toString().padStart(4, '0'))
+      .join('.');
+  }
+
+  return normalize(a).localeCompare(normalize(b));
 }
 
 function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
@@ -200,17 +257,6 @@ function maybeLoadExistingRecipe(recipePath: string): Recipe | null {
   } catch (error) {
     return null;
   }
-}
-
-function copyIngredientsStep(ingredients: Ingredient[]): Step {
-  return {
-    type: 'COPY_INGREDIENTS',
-    index: 0,
-    name: 'Add ingredients to your project',
-    description:
-      'Copy all the files found in the `ingredients/` directory to the current directory.',
-    ingredients: ingredients.map((ingredient) => ingredient.path),
-  };
 }
 
 function createPatchFile(params: {file: string; patchesDirPath: string}): {
@@ -232,4 +278,65 @@ function createPatchFile(params: {file: string; patchesDirPath: string}): {
   const patchFilePath = path.join(patchesDirPath, patchFilename);
   fs.writeFileSync(patchFilePath, changes);
   return {fullPath, patchFilename};
+}
+
+export async function generateForSingleFile(
+  params: GenerateRecipeParams,
+): Promise<string> {
+  const {recipeName, filePath: rawFilePath, recipeManifestFormat} = params;
+  if (rawFilePath == null) {
+    throw new Error('filePath is required');
+  }
+
+  const absoluteFilePath = path.resolve(rawFilePath);
+  const filePathRelativeToRepo = path.relative(REPO_ROOT, absoluteFilePath);
+  const filePathRelativeToTemplate = path.relative(
+    TEMPLATE_PATH,
+    absoluteFilePath,
+  );
+
+  console.log('📖 Generating for single file');
+
+  const recipeDirPath = path.join(COOKBOOK_PATH, 'recipes', recipeName);
+  if (!fs.existsSync(recipeDirPath)) {
+    throw new Error(`Recipe directory ${recipeDirPath} does not exist`);
+  }
+
+  // load the existing recipe, which MUST exist
+  const existingRecipe = maybeLoadExistingRecipe(recipeDirPath);
+  if (existingRecipe == null) {
+    throw new Error(`Recipe ${recipeName} not found`);
+  }
+
+  const patchesDirPath = path.join(recipeDirPath, 'patches');
+
+  // find the existing step for this file
+  const existingStepIndex = existingRecipe.steps.findIndex((step) =>
+    step.diffs?.some((diff) => diff.file === filePathRelativeToTemplate),
+  );
+  if (existingStepIndex < 0) {
+    throw new Error(`Step for file ${filePathRelativeToRepo} not found`);
+  }
+
+  // generate the single step for this file
+  const steps = await generateSteps({
+    modifiedFiles: [filePathRelativeToRepo],
+    patchesDirPath,
+    existingRecipe: null,
+    ingredients: [],
+  });
+  if (steps.length !== 1) {
+    throw new Error(`Expected 1 step, got ${steps.length}`);
+  }
+
+  // Write the recipe manifest
+  const recipeManifestPath =
+    recipeManifestFormat === 'json'
+      ? path.join(recipeDirPath, 'recipe.json')
+      : path.join(recipeDirPath, 'recipe.yaml');
+
+  console.log('- 📖 Generating LLMs files…');
+  generateLLMsFiles(recipeName);
+
+  return recipeManifestPath;
 }

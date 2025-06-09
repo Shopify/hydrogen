@@ -1,4 +1,4 @@
-import {Link} from '@remix-run/react';
+import {Link} from 'react-router';
 import {CartForm, useOptimisticCart} from '@shopify/hydrogen';
 
 // Root loader returns the cart data

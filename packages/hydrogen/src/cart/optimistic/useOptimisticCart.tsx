@@ -1,4 +1,4 @@
-import {useFetchers} from '@remix-run/react';
+import {useFetchers} from 'react-router';
 import {CartForm} from '../CartForm';
 import type {
   CartLine,

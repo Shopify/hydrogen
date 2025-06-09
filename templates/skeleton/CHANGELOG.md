@@ -1,5 +1,60 @@
 # skeleton
 
+## 2025.5.2
+
+### Patch Changes
+
+- Fixing the skeleton's Vite Config ([#2958](https://github.com/Shopify/hydrogen/pull/2958)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
+## 2025.5.1
+
+### Patch Changes
+
+- Bumping the cli to 3.80.4 ([#2956](https://github.com/Shopify/hydrogen/pull/2956)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
+## 2025.5.0
+
+### Patch Changes
+
+- Migrating to React Router 7 ([#2866](https://github.com/Shopify/hydrogen/pull/2866)) by [@balazsbajorics](https://github.com/balazsbajorics)
+
+- Updated dependencies [[`e9132d88`](https://github.com/Shopify/hydrogen/commit/e9132d8888ad090d3db41fe4d5d63569a30e9d8e), [`e9132d88`](https://github.com/Shopify/hydrogen/commit/e9132d8888ad090d3db41fe4d5d63569a30e9d8e)]:
+  - @shopify/remix-oxygen@3.0.0
+  - @shopify/hydrogen@2025.5.0
+
+## 2025.4.0
+
+### Patch Changes
+
+- Moved the Cursor rules into more generic LLM prompt files. If you were using the Cursor rules, you will find the prompts in the `cookbook/llms` folder and they can be put into your `.cursor/rules` folder manually. LLM prompt files will be maintained moving forward, while previous Cursor rules will not be updated anymore. ([#2936](https://github.com/Shopify/hydrogen/pull/2936)) by [@ruggishop](https://github.com/ruggishop)
+
+- Bump skeleton @shopify/cli and @shopify/mini-oxygen ([#2883](https://github.com/Shopify/hydrogen/pull/2883)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Update SFAPI and CAAPI versions to 2025.04 ([#2886](https://github.com/Shopify/hydrogen/pull/2886)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`af23e710`](https://github.com/Shopify/hydrogen/commit/af23e710dac83bb57498d9c2ef1d8bcf9df55d34), [`9d8a6644`](https://github.com/Shopify/hydrogen/commit/9d8a6644a5b67dca890c6687df390aee78fc85c3)]:
+  - @shopify/hydrogen@2025.4.0
+
+## 2025.1.7
+
+### Patch Changes
+
+- Fix an issue with our starter template where duplicate content can exist on URLs that use internationalized handles. For example, if you have a product handle in english of `the-havoc` and translate it to `das-chaos` in German, duplicate content exists at both: ([#2821](https://github.com/Shopify/hydrogen/pull/2821)) by [@blittle](https://github.com/blittle)
+
+  1. https://hydrogen.shop/de-de/products/das-chaos
+  2. https://hydrogen.shop/de-de/products/the-havoc
+
+  We've changed the starter template to make the second redirect to the first.
+
+- Added the Cursor rule for the subscriptions recipe. ([#2874](https://github.com/Shopify/hydrogen/pull/2874)) by [@ruggishop](https://github.com/ruggishop)
+
+- Fix faulty truthiness check for cart quantity ([#2855](https://github.com/Shopify/hydrogen/pull/2855)) by [@frontsideair](https://github.com/frontsideair)
+
+- Refactor ProductItem into a separate component ([#2872](https://github.com/Shopify/hydrogen/pull/2872)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`f80f3bc7`](https://github.com/Shopify/hydrogen/commit/f80f3bc7239b3ee6641cb468a17e15c77bb7815b), [`61ddf924`](https://github.com/Shopify/hydrogen/commit/61ddf92487524b3c04632ae2cfdaa2869a3ae02c), [`642bde4f`](https://github.com/Shopify/hydrogen/commit/642bde4f3df11511e125b013abd977618da25692)]:
+  - @shopify/hydrogen@2025.1.4
+
 ## 2025.1.6
 
 ### Patch Changes

@@ -5,7 +5,7 @@ on:
     # Add calver branches - Do not add current calver branch
     # Example: If we are currently on 2023-07, do not add 2023-07
     branches:
-      - 2023-10
+      - 2025-01
 
 concurrency:
   group: changeset-${{ github.head_ref }}
@@ -22,13 +22,13 @@ jobs:
       id-token: write
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
         with:
           fetch-depth: 0
 
       - name: ⎔ Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -45,7 +45,7 @@ jobs:
 
       - name: Create Back-fix Release Pull Request or Publish (for back-fix release)
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@06245a4e0a36c064a573d4150030f5ec548e4fcc # v1.4.10
         with:
           version: npm run version
           publish: npm run changeset -- publish --tag ${{ github.ref_name }}

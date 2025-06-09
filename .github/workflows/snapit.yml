@@ -17,11 +17,11 @@ jobs:
     steps:
       # This action can be executed by users with write permission to this repo
       - name: Checkout current branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Force snapshot changeset
         run: |
-          printf -- "---\n'@shopify/hydrogen': patch\n'@shopify/cli-hydrogen': patch\n'@shopify/create-hydrogen': patch\n---\n\nForce snapshot build.\n" > .changeset/force-snapshot-build.md
+          printf -- "---\n'@shopify/hydrogen': patch\n'@shopify/remix-oxygen': patch\n'@shopify/cli-hydrogen': patch\n'@shopify/create-hydrogen': patch\n---\n\nForce snapshot build.\n" > .changeset/force-snapshot-build.md
 
       - name: Create snapshot version
         uses: Shopify/snapit@0c0d2dd62c9b0c94b7d03e1f54e72f18548e7752 # pin to a specific commit

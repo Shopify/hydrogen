@@ -4,10 +4,10 @@ import {
   type Params,
   useLocation,
   useMatches,
-} from '@remix-run/react';
+} from 'react-router';
 import {generateSeoTags, type SeoConfig} from './generate-seo-tags';
 
-import type {LoaderFunction, SerializeFrom} from '@remix-run/server-runtime';
+import type {LoaderFunction} from 'react-router';
 
 const SeoLogger = lazy(() => import('./log-seo-tags'));
 
@@ -15,7 +15,7 @@ export interface SeoHandleFunction<
   Loader extends LoaderFunction | unknown = unknown,
 > {
   (args: {
-    data: Loader extends LoaderFunction ? SerializeFrom<Loader> : unknown;
+    data: Loader extends LoaderFunction ? Awaited<ReturnType<Loader>> : unknown;
     id: string;
     params: Params;
     pathname: Location['pathname'];
@@ -40,7 +40,7 @@ export function Seo({debug}: SeoProps) {
   const location = useLocation();
 
   console.warn(
-    '[h2:warn:Seo] The `<Seo/>` component is deprecated. Use `getSeoMeta` instead.\nSee: https://shopify.dev/docs/api/hydrogen/2025-01/utilities/getseometa',
+    '[h2:warn:Seo] The `<Seo/>` component is deprecated. Use `getSeoMeta` instead.\nSee: https://shopify.dev/docs/api/hydrogen/utilities/getseometa',
   );
 
   // Capture the seo and jsonLd configs from the route matches

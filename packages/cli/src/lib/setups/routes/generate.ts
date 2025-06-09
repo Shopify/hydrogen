@@ -31,7 +31,7 @@ import {
   getTemplateAppFile,
 } from '../../../lib/build.js';
 import {convertRouteToV1} from '../../../lib/remix-version-interop.js';
-import {type RemixConfig, getRemixConfig} from '../../remix-config.js';
+import {getRemixConfig, ResolvedRRConfig} from '../../remix-config.js';
 import {findFileWithExtension} from '../../file.js';
 
 const NO_LOCALE_PATTERNS = [/robots\.txt/];
@@ -48,6 +48,7 @@ const ROUTE_MAP = {
   search: ['search', 'api.predictive-search'],
   robots: '[robots.txt]',
   sitemap: ['[sitemap.xml]', 'sitemap.$type.$page[.xml]'],
+  tokenlessApi: 'api.$version.[graphql.json]',
 };
 
 type RouteKey = keyof typeof ROUTE_MAP;
@@ -110,7 +111,10 @@ type GenerateRoutesOptions = Omit<
   v1RouteConvention?: boolean;
 };
 
-type RemixConfigParam = Pick<RemixConfig, 'rootDirectory' | 'appDirectory'>;
+type RemixConfigParam = Pick<
+  ResolvedRRConfig,
+  'rootDirectory' | 'appDirectory'
+>;
 
 export async function generateRoutes(
   options: GenerateRoutesOptions,

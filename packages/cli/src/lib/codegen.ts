@@ -143,8 +143,10 @@ type CodegenOptions = ProjectDirs & {
   forceSfapiVersion?: string;
 };
 
-export function codegen(options: CodegenOptions) {
-  return generateTypes(options).catch((error: Error) => {
+export async function codegen(options: CodegenOptions) {
+  await executeReactRouterCodegen(options);
+
+  return runGraphQLCodegen(options).catch((error: Error) => {
     if (error instanceof AbortError) throw error;
 
     const {message, details} = normalizeCodegenError(
@@ -156,7 +158,29 @@ export function codegen(options: CodegenOptions) {
   });
 }
 
-async function generateTypes({
+async function executeReactRouterCodegen(options: {
+  rootDirectory: string;
+  watch?: boolean;
+}) {
+  /**
+   * I'm not sure if `npx react-router` is the best way to run this.
+   * `node node_modules/.bin/react-router/...` is not good enough,
+   * because for example in the hydrogen monorepo, react-router is installed at ../../node_modules/.bin
+   */
+  const {execSync, exec} = await import('child_process');
+  if (options.watch) {
+    exec('npx react-router typegen --watch', {
+      cwd: options.rootDirectory,
+    });
+  } else {
+    execSync('npx react-router typegen', {
+      cwd: options.rootDirectory,
+      stdio: 'inherit',
+    });
+  }
+}
+
+async function runGraphQLCodegen({
   watch,
   configFilePath,
   forceSfapiVersion,

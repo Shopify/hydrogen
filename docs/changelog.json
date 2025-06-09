@@ -3,6 +3,158 @@
   "version": "1",
   "releases": [
     {
+      "title": "Cart delivery adddress support, fixes in Vite 6 SSR conditions, Skeleton & Customer Accounts session",
+      "version": "2025.1.4",
+      "hash": "3be68ae72730e6780aa04fcd02ba586816b7f613",
+      "commit": "https://github.com/Shopify/hydrogen/pull/2842/commits/3be68ae72730e6780aa04fcd02ba586816b7f613",
+      "dependencies": {
+        "@remix-run/react": "^2.16.1",
+        "@remix-run/server-runtime": "^2.16.1",
+        "@shopify/hydrogen": "2025.1.4",
+        "@shopify/remix-oxygen": "^2.0.12"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.16.1",
+        "@shopify/cli": "~3.79.0",
+        "@remix-run/route-config": "^2.16.1",
+        "@remix-run/fs-routes": "^2.16.1",
+        "@shopify/mini-oxygen": "^3.2.1",
+        "@shopify/hydrogen-codegen": "^0.3.3",
+        "@shopify/oxygen-workers-types": "^4.1.6",
+        "vite": "^6.2.4"
+      },
+      "dependenciesMeta": {
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/react": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@remix-run/dev": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/remix-oxygen": {
+          "required": true
+        },
+        "@remix-run/fs-routes": {
+          "required": true
+        },
+        "@remix-run/route-config": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Fix Vite 6 SSR resolve conditions",
+          "desc": "Fixes the SSR condition in mini-oxygen Vite causing some packages to import the wrong browser export",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2863",
+          "id": "2863"
+        },
+        {
+          "title": "Fix duplicate urls in localized skeleton starter",
+          "desc": "Fix an issue with our starter template where duplicate content can exist on URLs that use internationalized handles. For example, if you have a product handle in english of `the-havoc` and translate it to `das-chaos` in German, duplicate content exists at both: 1. https://hydrogen.shop/de-de/products/das-chaos 2. https://hydrogen.shop/de-de/products/the-havoc We've changed the starter template to make the second redirect to the first.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2821",
+          "id": "2821"
+        },
+        {
+          "title": "Fix the customer account implementation to clear all session data on logout",
+          "desc": "Previously we would only clear customer account credentials on logout. This change also clears any custom data in the session as well",
+          "steps": [
+            {
+              "title": "You can opt out and keep custom data in the session by passing the `keepSession` option to logout",
+              "code": "YGBganMKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGFjdGlvbih7Y29udGV4dH06IEFjdGlvbkZ1bmN0aW9uQXJncykgewogIHJldHVybiBjb250ZXh0LmN1c3RvbWVyQWNjb3VudC5sb2dvdXQoewogICAga2VlcFNlc3Npb246IHRydWUKICB9KTsKfQpgYGA="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/2843",
+          "id": "2843"
+        },
+        {
+          "title": "Fix faulty truthiness check for cart quantity",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2855",
+          "id": "2855"
+        },
+        {
+          "title": "Deprecate `<VariantSelector />",
+          "desc": "VariantSelector is deprecated because it does not supports 2k variants or combined listing products. Use `getProductOptions` for a streamlined migration to a modern scalable product form.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2837",
+          "id": "2837",
+          "steps": [
+            {
+              "title": "Update the SFAPI product query to request the new required fields encodedVariantExistence and encodedVariantAvailability. This will allow the product form to determine which variants are available for selection.",
+              "code": "YGBgZGlmZgpjb25zdCBQUk9EVUNUX0ZSQUdNRU5UID0gYCNncmFwaHFsCiAgZnJhZ21lbnQgUHJvZHVjdCBvbiBQcm9kdWN0IHsKICAgIGlkCiAgICB0aXRsZQogICAgdmVuZG9yCiAgICBoYW5kbGUKICAgIGRlc2NyaXB0aW9uSHRtbAogICAgZGVzY3JpcHRpb24KKyAgICBlbmNvZGVkVmFyaWFudEV4aXN0ZW5jZQorICAgIGVuY29kZWRWYXJpYW50QXZhaWxhYmlsaXR5CiAgICBvcHRpb25zIHsKICAgICAgbmFtZQogICAgICBvcHRpb25WYWx1ZXMgewogICAgICAgIG5hbWUKKyAgICAgICAgZmlyc3RTZWxlY3RhYmxlVmFyaWFudCB7CisgICAgICAgICAgLi4uUHJvZHVjdFZhcmlhbnQKKyAgICAgICAgfQorICAgICAgICBzd2F0Y2ggeworICAgICAgICAgIGNvbG9yCisgICAgICAgICAgaW1hZ2UgeworICAgICAgICAgICAgcHJldmlld0ltYWdlIHsKKyAgICAgICAgICAgICAgdXJsCisgICAgICAgICAgICB9CisgICAgICAgICAgfQorICAgICAgICB9CiAgICAgIH0KICAgIH0KLSAgICBzZWxlY3RlZFZhcmlhbnQ6IHNlbGVjdGVkT3JGaXJzdEF2YWlsYWJsZVZhcmlhbnQoc2VsZWN0ZWRPcHRpb25zOiAkc2VsZWN0ZWRPcHRpb25zLCBpZ25vcmVVbmtub3duT3B0aW9uczogdHJ1ZSwgY2FzZUluc2Vuc2l0aXZlTWF0Y2g6IHRydWUpIHsKKyAgICBzZWxlY3RlZE9yRmlyc3RBdmFpbGFibGVWYXJpYW50KHNlbGVjdGVkT3B0aW9uczogJHNlbGVjdGVkT3B0aW9ucywgaWdub3JlVW5rbm93bk9wdGlvbnM6IHRydWUsIGNhc2VJbnNlbnNpdGl2ZU1hdGNoOiB0cnVlKSB7CisgICAgICAuLi5Qcm9kdWN0VmFyaWFudAorICAgIH0KKyAgICBhZGphY2VudFZhcmlhbnRzIChzZWxlY3RlZE9wdGlvbnM6ICRzZWxlY3RlZE9wdGlvbnMpIHsKKyAgICAgIC4uLlByb2R1Y3RWYXJpYW50CisgICAgfQotICAgIHZhcmlhbnRzKGZpcnN0OiAxKSB7Ci0gICAgICBub2RlcyB7Ci0gICAgICAgIC4uLlByb2R1Y3RWYXJpYW50Ci0gICAgICB9Ci0gICAgfQogICAgc2VvIHsKICAgICAgZGVzY3JpcHRpb24KICAgICAgdGl0bGUKICAgIH0KICB9CiAgJHtQUk9EVUNUX1ZBUklBTlRfRlJBR01FTlR9CmAgYXMgY29uc3Q7CmBgYA=="
+            },
+            {
+              "title": "Remove the `VARIANTS_QUERY` and related logic from `loadDeferredData`, as querying all variants is no longer necessary. Simplifies the function to return an empty object.",
+              "code": "YGBgZGlmZgpmdW5jdGlvbiBsb2FkRGVmZXJyZWREYXRhKHtjb250ZXh0LCBwYXJhbXN9OiBMb2FkZXJGdW5jdGlvbkFyZ3MpIHsKKyAgLy8gUHV0IGFueSBBUEkgY2FsbHMgdGhhdCBpcyBub3QgY3JpdGljYWwgdG8gYmUgYXZhaWxhYmxlIG9uIGZpcnN0IHBhZ2UgcmVuZGVyCisgIC8vIEZvciBleGFtcGxlOiBwcm9kdWN0IHJldmlld3MsIHByb2R1Y3QgcmVjb21tZW5kYXRpb25zLCBzb2NpYWwgZmVlZHMuCi0gIC8vIEluIG9yZGVyIHRvIHNob3cgd2hpY2ggdmFyaWFudHMgYXJlIGF2YWlsYWJsZSBpbiB0aGUgVUksIHdlIG5lZWQgdG8gcXVlcnkKLSAgLy8gYWxsIG9mIHRoZW0uIEJ1dCB0aGVyZSBtaWdodCBiZSBhICpsb3QqLCBzbyBpbnN0ZWFkIHNlcGFyYXRlIHRoZSB2YXJpYW50cwotICAvLyBpbnRvIGl0J3Mgb3duIHNlcGFyYXRlIHF1ZXJ5IHRoYXQgaXMgZGVmZXJyZWQuIFNvIHRoZXJlJ3MgYSBicmllZiBtb21lbnQKLSAgLy8gd2hlcmUgdmFyaWFudCBvcHRpb25zIG1pZ2h0IHNob3cgYXMgYXZhaWxhYmxlIHdoZW4gdGhleSdyZSBub3QsIGJ1dCBhZnRlcgotICAvLyB0aGlzIGRlZmVycmVkIHF1ZXJ5IHJlc29sdmVzLCB0aGUgVUkgd2lsbCB1cGRhdGUuCi0gIGNvbnN0IHZhcmlhbnRzID0gY29udGV4dC5zdG9yZWZyb250Ci0gICAgLnF1ZXJ5KFZBUklBTlRTX1FVRVJZLCB7Ci0gICAgICB2YXJpYWJsZXM6IHtoYW5kbGU6IHBhcmFtcy5oYW5kbGUhfSwKLSAgICB9KQotICAgIC5jYXRjaCgoZXJyb3IpID0+IHsKLSAgICAgIC8vIExvZyBxdWVyeSBlcnJvcnMsIGJ1dCBkb24ndCB0aHJvdyB0aGVtIHNvIHRoZSBwYWdlIGNhbiBzdGlsbCByZW5kZXIKLSAgICAgIGNvbnNvbGUuZXJyb3IoZXJyb3IpOwotICAgICAgcmV0dXJuIG51bGw7Ci0gICAgfSk7CgorICByZXR1cm4ge30KLSAgcmV0dXJuIHsKLSAgICB2YXJpYW50cywKLSAgfTsKfQpgYGA="
+            },
+            {
+              "title": "Update the `Product` component to use `getAdjacentAndFirstAvailableVariants` for determining the selected variant, improving handling of adjacent and available variants.",
+              "code": "YGBgZGlmZgppbXBvcnQgewogIGdldFNlbGVjdGVkUHJvZHVjdE9wdGlvbnMsCiAgQW5hbHl0aWNzLAogIHVzZU9wdGltaXN0aWNWYXJpYW50LAorICBnZXRBZGphY2VudEFuZEZpcnN0QXZhaWxhYmxlVmFyaWFudHMsCn0gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4nOwoKZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gUHJvZHVjdCgpIHsKKyAgY29uc3Qge3Byb2R1Y3R9ID0gdXNlTG9hZGVyRGF0YTx0eXBlb2YgbG9hZGVyPigpOwotICBjb25zdCB7cHJvZHVjdCwgdmFyaWFudHN9ID0gdXNlTG9hZGVyRGF0YTx0eXBlb2YgbG9hZGVyPigpOwoKKyAgLy8gT3B0aW1pc3RpY2FsbHkgc2VsZWN0cyBhIHZhcmlhbnQgd2l0aCBnaXZlbiBhdmFpbGFibGUgdmFyaWFudCBpbmZvcm1hdGlvbgorICBjb25zdCBzZWxlY3RlZFZhcmlhbnQgPSB1c2VPcHRpbWlzdGljVmFyaWFudCgKKyAgICBwcm9kdWN0LnNlbGVjdGVkT3JGaXJzdEF2YWlsYWJsZVZhcmlhbnQsCisgICAgZ2V0QWRqYWNlbnRBbmRGaXJzdEF2YWlsYWJsZVZhcmlhbnRzKHByb2R1Y3QpLAorICApOwotICBjb25zdCBzZWxlY3RlZFZhcmlhbnQgPSB1c2VPcHRpbWlzdGljVmFyaWFudCgKLSAgICBwcm9kdWN0LnNlbGVjdGVkVmFyaWFudCwKLSAgICB2YXJpYW50cywKLSAgKTsKYGBg"
+            },
+            {
+              "title": "Automatically update the URL with search parameters based on the selected product variant's options when no search parameters are present, ensuring the URL reflects the current selection without triggering navigation.",
+              "code": "YGBgZGlmZgppbXBvcnQgewogIGdldFNlbGVjdGVkUHJvZHVjdE9wdGlvbnMsCiAgQW5hbHl0aWNzLAogIHVzZU9wdGltaXN0aWNWYXJpYW50LAogIGdldEFkamFjZW50QW5kRmlyc3RBdmFpbGFibGVWYXJpYW50cywKKyAgbWFwU2VsZWN0ZWRQcm9kdWN0T3B0aW9uVG9PYmplY3QsCn0gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4nOwoKZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gUHJvZHVjdCgpIHsKICBjb25zdCB7cHJvZHVjdH0gPSB1c2VMb2FkZXJEYXRhPHR5cGVvZiBsb2FkZXI+KCk7CgogIC8vIE9wdGltaXN0aWNhbGx5IHNlbGVjdHMgYSB2YXJpYW50IHdpdGggZ2l2ZW4gYXZhaWxhYmxlIHZhcmlhbnQgaW5mb3JtYXRpb24KICBjb25zdCBzZWxlY3RlZFZhcmlhbnQgPSB1c2VPcHRpbWlzdGljVmFyaWFudCgKICAgIHByb2R1Y3Quc2VsZWN0ZWRPckZpcnN0QXZhaWxhYmxlVmFyaWFudCwKICAgIGdldEFkamFjZW50QW5kRmlyc3RBdmFpbGFibGVWYXJpYW50cyhwcm9kdWN0KSwKICApOwoKKyAgLy8gU2V0cyB0aGUgc2VhcmNoIHBhcmFtIHRvIHRoZSBzZWxlY3RlZCB2YXJpYW50IHdpdGhvdXQgbmF2aWdhdGlvbgorICAvLyBvbmx5IHdoZW4gbm8gc2VhcmNoIHBhcmFtcyBhcmUgc2V0IGluIHRoZSB1cmwKKyAgdXNlRWZmZWN0KCgpID0+IHsKKyAgICBjb25zdCBzZWFyY2hQYXJhbXMgPSBuZXcgVVJMU2VhcmNoUGFyYW1zKAorICAgICAgbWFwU2VsZWN0ZWRQcm9kdWN0T3B0aW9uVG9PYmplY3QoCisgICAgICAgIHNlbGVjdGVkVmFyaWFudC5zZWxlY3RlZE9wdGlvbnMgfHwgW10sCisgICAgICApLAorICAgICk7CgorICAgIGlmICh3aW5kb3cubG9jYXRpb24uc2VhcmNoID09PSAnJyAmJiBzZWFyY2hQYXJhbXMudG9TdHJpbmcoKSAhPT0gJycpIHsKKyAgICAgIHdpbmRvdy5oaXN0b3J5LnJlcGxhY2VTdGF0ZSgKKyAgICAgICAge30sCisgICAgICAgICcnLAorICAgICAgICBgJHtsb2NhdGlvbi5wYXRobmFtZX0/JHtzZWFyY2hQYXJhbXMudG9TdHJpbmcoKX1gLAorICAgICAgKTsKKyAgICB9CisgIH0sIFsKKyAgICBKU09OLnN0cmluZ2lmeShzZWxlY3RlZFZhcmlhbnQuc2VsZWN0ZWRPcHRpb25zKSwKKyAgXSk7CmBgYA=="
+            },
+            {
+              "title": "Retrieve the product options array using `getProductOptions`, enabling efficient handling of product variants and their associated options.",
+              "code": "YGBgZGlmZgppbXBvcnQgewogIGdldFNlbGVjdGVkUHJvZHVjdE9wdGlvbnMsCiAgQW5hbHl0aWNzLAogIHVzZU9wdGltaXN0aWNWYXJpYW50LAorICBnZXRQcm9kdWN0T3B0aW9ucywKICBnZXRBZGphY2VudEFuZEZpcnN0QXZhaWxhYmxlVmFyaWFudHMsCiAgbWFwU2VsZWN0ZWRQcm9kdWN0T3B0aW9uVG9PYmplY3QsCn0gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4nOwoKZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gUHJvZHVjdCgpIHsKICBjb25zdCB7cHJvZHVjdH0gPSB1c2VMb2FkZXJEYXRhPHR5cGVvZiBsb2FkZXI+KCk7CgogIC8vIE9wdGltaXN0aWNhbGx5IHNlbGVjdHMgYSB2YXJpYW50IHdpdGggZ2l2ZW4gYXZhaWxhYmxlIHZhcmlhbnQgaW5mb3JtYXRpb24KICBjb25zdCBzZWxlY3RlZFZhcmlhbnQgPSB1c2VPcHRpbWlzdGljVmFyaWFudCgKICAgIHByb2R1Y3Quc2VsZWN0ZWRPckZpcnN0QXZhaWxhYmxlVmFyaWFudCwKICAgIGdldEFkamFjZW50QW5kRmlyc3RBdmFpbGFibGVWYXJpYW50cyhwcm9kdWN0KSwKICApOwoKICAvLyBTZXRzIHRoZSBzZWFyY2ggcGFyYW0gdG8gdGhlIHNlbGVjdGVkIHZhcmlhbnQgd2l0aG91dCBuYXZpZ2F0aW9uCiAgLy8gb25seSB3aGVuIG5vIHNlYXJjaCBwYXJhbXMgYXJlIHNldCBpbiB0aGUgdXJsCiAgdXNlRWZmZWN0KCgpID0+IHsKICAgIC8vIC4uLgogIH0sIFsKICAgIEpTT04uc3RyaW5naWZ5KHNlbGVjdGVkVmFyaWFudC5zZWxlY3RlZE9wdGlvbnMpLAogIF0pOwoKKyAgLy8gR2V0IHRoZSBwcm9kdWN0IG9wdGlvbnMgYXJyYXkKKyAgY29uc3QgcHJvZHVjdE9wdGlvbnMgPSBnZXRQcm9kdWN0T3B0aW9ucyh7CisgICAgLi4ucHJvZHVjdCwKKyAgICBzZWxlY3RlZE9yRmlyc3RBdmFpbGFibGVWYXJpYW50OiBzZWxlY3RlZFZhcmlhbnQsCisgIH0pOwpgYGA="
+            },
+            {
+              "title": "Remove `Await` and `Suspense` from `ProductForm` as there are no longer any asynchronous queries to wait for, simplifying the component structure.",
+              "code": "YGBgZGlmZgpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBQcm9kdWN0KCkgewogIC4uLgogIHJldHVybiAoCiAgICAuLi4KKyAgICAgICAgPFByb2R1Y3RGb3JtCisgICAgICAgICAgcHJvZHVjdE9wdGlvbnM9e3Byb2R1Y3RPcHRpb25zfQorICAgICAgICAgIHNlbGVjdGVkVmFyaWFudD17c2VsZWN0ZWRWYXJpYW50fQorICAgICAgICAvPgotICAgICAgICA8U3VzcGVuc2UKLSAgICAgICAgICBmYWxsYmFjaz17Ci0gICAgICAgICAgICA8UHJvZHVjdEZvcm0KLSAgICAgICAgICAgICAgcHJvZHVjdD17cHJvZHVjdH0KLSAgICAgICAgICAgICAgc2VsZWN0ZWRWYXJpYW50PXtzZWxlY3RlZFZhcmlhbnR9Ci0gICAgICAgICAgICAgIHZhcmlhbnRzPXtbXX0KLSAgICAgICAgICAgIC8+Ci0gICAgICAgICAgfQotICAgICAgICA+Ci0gICAgICAgICAgPEF3YWl0Ci0gICAgICAgICAgICBlcnJvckVsZW1lbnQ9IlRoZXJlIHdhcyBhIHByb2JsZW0gbG9hZGluZyBwcm9kdWN0IHZhcmlhbnRzIgotICAgICAgICAgICAgcmVzb2x2ZT17dmFyaWFudHN9Ci0gICAgICAgICAgPgotICAgICAgICAgICAgeyhkYXRhKSA9PiAoCi0gICAgICAgICAgICAgIDxQcm9kdWN0Rm9ybQotICAgICAgICAgICAgICAgIHByb2R1Y3Q9e3Byb2R1Y3R9Ci0gICAgICAgICAgICAgICAgc2VsZWN0ZWRWYXJpYW50PXtzZWxlY3RlZFZhcmlhbnR9Ci0gICAgICAgICAgICAgICAgdmFyaWFudHM9e2RhdGE/LnByb2R1Y3Q/LnZhcmlhbnRzLm5vZGVzIHx8IFtdfQotICAgICAgICAgICAgICAvPgotICAgICAgICAgICAgKX0KLSAgICAgICAgICA8L0F3YWl0PgotICAgICAgICA8L1N1c3BlbnNlPgpgYGA="
+            },
+            {
+              "title": "Refactor `ProductForm` to handle combined listing products and variants efficiently. It uses links for different product URLs and buttons for variant updates, improving SEO and user experience.",
+              "code": "YGBgdHN4CmltcG9ydCB7TGluaywgdXNlTmF2aWdhdGV9IGZyb20gJ0ByZW1peC1ydW4vcmVhY3QnOwppbXBvcnQge3R5cGUgTWFwcGVkUHJvZHVjdE9wdGlvbnN9IGZyb20gJ0BzaG9waWZ5L2h5ZHJvZ2VuJzsKaW1wb3J0IHR5cGUgewogIE1heWJlLAogIFByb2R1Y3RPcHRpb25WYWx1ZVN3YXRjaCwKfSBmcm9tICdAc2hvcGlmeS9oeWRyb2dlbi9zdG9yZWZyb250LWFwaS10eXBlcyc7CmltcG9ydCB7QWRkVG9DYXJ0QnV0dG9ufSBmcm9tICcuL0FkZFRvQ2FydEJ1dHRvbic7CmltcG9ydCB7dXNlQXNpZGV9IGZyb20gJy4vQXNpZGUnOwppbXBvcnQgdHlwZSB7UHJvZHVjdEZyYWdtZW50fSBmcm9tICdzdG9yZWZyb250YXBpLmdlbmVyYXRlZCc7CgpleHBvcnQgZnVuY3Rpb24gUHJvZHVjdEZvcm0oewogIHByb2R1Y3RPcHRpb25zLAogIHNlbGVjdGVkVmFyaWFudCwKfTogewogIHByb2R1Y3RPcHRpb25zOiBNYXBwZWRQcm9kdWN0T3B0aW9uc1tdOwogIHNlbGVjdGVkVmFyaWFudDogUHJvZHVjdEZyYWdtZW50WydzZWxlY3RlZE9yRmlyc3RBdmFpbGFibGVWYXJpYW50J107Cn0pIHsKICBjb25zdCBuYXZpZ2F0ZSA9IHVzZU5hdmlnYXRlKCk7CiAgY29uc3Qge29wZW59ID0gdXNlQXNpZGUoKTsKICByZXR1cm4gKAogICAgPGRpdiBjbGFzc05hbWU9InByb2R1Y3QtZm9ybSI+CiAgICAgIHtwcm9kdWN0T3B0aW9ucy5tYXAoKG9wdGlvbikgPT4gKAogICAgICAgIDxkaXYgY2xhc3NOYW1lPSJwcm9kdWN0LW9wdGlvbnMiIGtleT17b3B0aW9uLm5hbWV9PgogICAgICAgICAgPGg1PntvcHRpb24ubmFtZX08L2g1PgogICAgICAgICAgPGRpdiBjbGFzc05hbWU9InByb2R1Y3Qtb3B0aW9ucy1ncmlkIj4KICAgICAgICAgICAge29wdGlvbi5vcHRpb25WYWx1ZXMubWFwKCh2YWx1ZSkgPT4gewogICAgICAgICAgICAgIGNvbnN0IHsKICAgICAgICAgICAgICAgIG5hbWUsCiAgICAgICAgICAgICAgICBoYW5kbGUsCiAgICAgICAgICAgICAgICB2YXJpYW50VXJpUXVlcnksCiAgICAgICAgICAgICAgICBzZWxlY3RlZCwKICAgICAgICAgICAgICAgIGF2YWlsYWJsZSwKICAgICAgICAgICAgICAgIGV4aXN0cywKICAgICAgICAgICAgICAgIGlzRGlmZmVyZW50UHJvZHVjdCwKICAgICAgICAgICAgICAgIHN3YXRjaCwKICAgICAgICAgICAgICB9ID0gdmFsdWU7CgogICAgICAgICAgICAgIGlmIChpc0RpZmZlcmVudFByb2R1Y3QpIHsKICAgICAgICAgICAgICAgIC8vIFNFTwogICAgICAgICAgICAgICAgLy8gV2hlbiB0aGUgdmFyaWFudCBpcyBhIGNvbWJpbmVkIGxpc3RpbmcgY2hpbGQgcHJvZHVjdAogICAgICAgICAgICAgICAgLy8gdGhhdCBsZWFkcyB0byBhIGRpZmZlcmVudCBVUkwsIHdlIG5lZWQgdG8gcmVuZGVyIGl0CiAgICAgICAgICAgICAgICAvLyBhcyBhbiBhbmNob3IgdGFnCiAgICAgICAgICAgICAgICByZXR1cm4gKAogICAgICAgICAgICAgICAgICA8TGluawogICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT0icHJvZHVjdC1vcHRpb25zLWl0ZW0iCiAgICAgICAgICAgICAgICAgICAga2V5PXtvcHRpb24ubmFtZSArIG5hbWV9CiAgICAgICAgICAgICAgICAgICAgcHJlZmV0Y2g9ImludGVudCIKICAgICAgICAgICAgICAgICAgICBwcmV2ZW50U2Nyb2xsUmVzZXQKICAgICAgICAgICAgICAgICAgICByZXBsYWNlCiAgICAgICAgICAgICAgICAgICAgdG89e2AvcHJvZHVjdHMvJHtoYW5kbGV9PyR7dmFyaWFudFVyaVF1ZXJ5fWB9CiAgICAgICAgICAgICAgICAgICAgc3R5bGU9e3sKICAgICAgICAgICAgICAgICAgICAgIGJvcmRlcjogc2VsZWN0ZWQKICAgICAgICAgICAgICAgICAgICAgICAgPyAnMXB4IHNvbGlkIGJsYWNrJwogICAgICAgICAgICAgICAgICAgICAgICA6ICcxcHggc29saWQgdHJhbnNwYXJlbnQnLAogICAgICAgICAgICAgICAgICAgICAgb3BhY2l0eTogYXZhaWxhYmxlID8gMSA6IDAuMywKICAgICAgICAgICAgICAgICAgICB9fQogICAgICAgICAgICAgICAgICA+CiAgICAgICAgICAgICAgICAgICAgPFByb2R1Y3RPcHRpb25Td2F0Y2ggc3dhdGNoPXtzd2F0Y2h9IG5hbWU9e25hbWV9IC8+CiAgICAgICAgICAgICAgICAgIDwvTGluaz4KICAgICAgICAgICAgICAgICk7CiAgICAgICAgICAgICAgfSBlbHNlIHsKICAgICAgICAgICAgICAgIC8vIFNFTwogICAgICAgICAgICAgICAgLy8gV2hlbiB0aGUgdmFyaWFudCBpcyBhbiB1cGRhdGUgdG8gdGhlIHNlYXJjaCBwYXJhbSwKICAgICAgICAgICAgICAgIC8vIHJlbmRlciBpdCBhcyBhIGJ1dHRvbiB3aXRoIEphdmFTY3JpcHQgbmF2aWdhdGluZyB0bwogICAgICAgICAgICAgICAgLy8gdGhlIHZhcmlhbnQgc28gdGhhdCBTRU8gYm90cyBkbyBub3QgaW5kZXggdGhlc2UgYXMKICAgICAgICAgICAgICAgIC8vIGR1cGxpY2F0ZWQgbGlua3MKICAgICAgICAgICAgICAgIHJldHVybiAoCiAgICAgICAgICAgICAgICAgIDxidXR0b24KICAgICAgICAgICAgICAgICAgICB0eXBlPSJidXR0b24iCiAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPXtgcHJvZHVjdC1vcHRpb25zLWl0ZW0kewogICAgICAgICAgICAgICAgICAgICAgZXhpc3RzICYmICFzZWxlY3RlZCA/ICcgbGluaycgOiAnJwogICAgICAgICAgICAgICAgICAgIH1gfQogICAgICAgICAgICAgICAgICAgIGtleT17b3B0aW9uLm5hbWUgKyBuYW1lfQogICAgICAgICAgICAgICAgICAgIHN0eWxlPXt7CiAgICAgICAgICAgICAgICAgICAgICBib3JkZXI6IHNlbGVjdGVkCiAgICAgICAgICAgICAgICAgICAgICAgID8gJzFweCBzb2xpZCBibGFjaycKICAgICAgICAgICAgICAgICAgICAgICAgOiAnMXB4IHNvbGlkIHRyYW5zcGFyZW50JywKICAgICAgICAgICAgICAgICAgICAgIG9wYWNpdHk6IGF2YWlsYWJsZSA/IDEgOiAwLjMsCiAgICAgICAgICAgICAgICAgICAgfX0KICAgICAgICAgICAgICAgICAgICBkaXNhYmxlZD17IWV4aXN0c30KICAgICAgICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiB7CiAgICAgICAgICAgICAgICAgICAgICBpZiAoIXNlbGVjdGVkKSB7CiAgICAgICAgICAgICAgICAgICAgICAgIG5hdmlnYXRlKGA/JHt2YXJpYW50VXJpUXVlcnl9YCwgewogICAgICAgICAgICAgICAgICAgICAgICAgIHJlcGxhY2U6IHRydWUsCiAgICAgICAgICAgICAgICAgICAgICAgIH0pOwogICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIH19CiAgICAgICAgICAgICAgICAgID4KICAgICAgICAgICAgICAgICAgICA8UHJvZHVjdE9wdGlvblN3YXRjaCBzd2F0Y2g9e3N3YXRjaH0gbmFtZT17bmFtZX0gLz4KICAgICAgICAgICAgICAgICAgPC9idXR0b24+CiAgICAgICAgICAgICAgICApOwogICAgICAgICAgICAgIH0KICAgICAgICAgICAgfSl9CiAgICAgICAgICA8L2Rpdj4KICAgICAgICAgIDxiciAvPgogICAgICAgIDwvZGl2PgogICAgICApKX0KICAgICAgPEFkZFRvQ2FydEJ1dHRvbgogICAgICAgIGRpc2FibGVkPXshc2VsZWN0ZWRWYXJpYW50IHx8ICFzZWxlY3RlZFZhcmlhbnQuYXZhaWxhYmxlRm9yU2FsZX0KICAgICAgICBvbkNsaWNrPXsoKSA9PiB7CiAgICAgICAgICBvcGVuKCdjYXJ0Jyk7CiAgICAgICAgfX0KICAgICAgICBsaW5lcz17CiAgICAgICAgICBzZWxlY3RlZFZhcmlhbnQKICAgICAgICAgICAgPyBbCiAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgIG1lcmNoYW5kaXNlSWQ6IHNlbGVjdGVkVmFyaWFudC5pZCwKICAgICAgICAgICAgICAgICAgcXVhbnRpdHk6IDEsCiAgICAgICAgICAgICAgICAgIHNlbGVjdGVkVmFyaWFudCwKICAgICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgXQogICAgICAgICAgICA6IFtdCiAgICAgICAgfQogICAgICA+CiAgICAgICAge3NlbGVjdGVkVmFyaWFudD8uYXZhaWxhYmxlRm9yU2FsZSA/ICdBZGQgdG8gY2FydCcgOiAnU29sZCBvdXQnfQogICAgICA8L0FkZFRvQ2FydEJ1dHRvbj4KICAgIDwvZGl2PgogICk7Cn0KCmZ1bmN0aW9uIFByb2R1Y3RPcHRpb25Td2F0Y2goewogIHN3YXRjaCwKICBuYW1lLAp9OiB7CiAgc3dhdGNoPzogTWF5YmU8UHJvZHVjdE9wdGlvblZhbHVlU3dhdGNoPiB8IHVuZGVmaW5lZDsKICBuYW1lOiBzdHJpbmc7Cn0pIHsKICBjb25zdCBpbWFnZSA9IHN3YXRjaD8uaW1hZ2U/LnByZXZpZXdJbWFnZT8udXJsOwogIGNvbnN0IGNvbG9yID0gc3dhdGNoPy5jb2xvcjsKCiAgaWYgKCFpbWFnZSAmJiAhY29sb3IpIHJldHVybiBuYW1lOwoKICByZXR1cm4gKAogICAgPGRpdgogICAgICBhcmlhLWxhYmVsPXtuYW1lfQogICAgICBjbGFzc05hbWU9InByb2R1Y3Qtb3B0aW9uLWxhYmVsLXN3YXRjaCIKICAgICAgc3R5bGU9e3sKICAgICAgICBiYWNrZ3JvdW5kQ29sb3I6IGNvbG9yIHx8ICd0cmFuc3BhcmVudCcsCiAgICAgIH19CiAgICA+CiAgICAgIHshIWltYWdlICYmIDxpbWcgc3JjPXtpbWFnZX0gYWx0PXtuYW1lfSAvPn0KICAgIDwvZGl2PgogICk7Cn0KYGBg"
+            },
+            {
+              "title": "Make `useVariantUrl` and `getVariantUrl` functions more flexible by allowing `selectedOptions` to be optional. This ensures compatibility with cases where no options are provided.",
+              "code": "YGBgZGlmZgpleHBvcnQgZnVuY3Rpb24gdXNlVmFyaWFudFVybCgKICBoYW5kbGU6IHN0cmluZywKLSAgc2VsZWN0ZWRPcHRpb25zOiBTZWxlY3RlZE9wdGlvbltdLAorICBzZWxlY3RlZE9wdGlvbnM/OiBTZWxlY3RlZE9wdGlvbltdLAopIHsKICBjb25zdCB7cGF0aG5hbWV9ID0gdXNlTG9jYXRpb24oKTsKCiAgcmV0dXJuIHVzZU1lbW8oKCkgPT4gewogICAgcmV0dXJuIGdldFZhcmlhbnRVcmwoewogICAgICBoYW5kbGUsCiAgICAgIHBhdGhuYW1lLAogICAgICBzZWFyY2hQYXJhbXM6IG5ldyBVUkxTZWFyY2hQYXJhbXMoKSwKICAgICAgc2VsZWN0ZWRPcHRpb25zLAogICAgfSk7CiAgfSwgW2hhbmRsZSwgc2VsZWN0ZWRPcHRpb25zLCBwYXRobmFtZV0pOwp9CmV4cG9ydCBmdW5jdGlvbiBnZXRWYXJpYW50VXJsKHsKICBoYW5kbGUsCiAgcGF0aG5hbWUsCiAgc2VhcmNoUGFyYW1zLAogIHNlbGVjdGVkT3B0aW9ucywKfTogewogIGhhbmRsZTogc3RyaW5nOwogIHBhdGhuYW1lOiBzdHJpbmc7CiAgc2VhcmNoUGFyYW1zOiBVUkxTZWFyY2hQYXJhbXM7Ci0gIHNlbGVjdGVkT3B0aW9uczogU2VsZWN0ZWRPcHRpb25bXTsKKyAgc2VsZWN0ZWRPcHRpb25zPzogU2VsZWN0ZWRPcHRpb25bXSwKfSkgewogIGNvbnN0IG1hdGNoID0gLyhcL1thLXpBLVpdezJ9LVthLXpBLVpdezJ9XC8pL2cuZXhlYyhwYXRobmFtZSk7CiAgY29uc3QgaXNMb2NhbGVQYXRobmFtZSA9IG1hdGNoICYmIG1hdGNoLmxlbmd0aCA+IDA7CiAgY29uc3QgcGF0aCA9IGlzTG9jYWxlUGF0aG5hbWUKICAgID8gYCR7bWF0Y2ghWzBdfXByb2R1Y3RzLyR7aGFuZGxlfWAKICAgIDogYC9wcm9kdWN0cy8ke2hhbmRsZX1gOwoKLSAgc2VsZWN0ZWRPcHRpb25zLmZvckVhY2goKG9wdGlvbikgPT4geworICBzZWxlY3RlZE9wdGlvbnM/LmZvckVhY2goKG9wdGlvbikgPT4gewogICAgc2VhcmNoUGFyYW1zLnNldChvcHRpb24ubmFtZSwgb3B0aW9uLnZhbHVlKTsKICB9KTsKYGBg"
+            },
+            {
+              "title": "Remove unnecessary variant queries and references in `routes/collections.$handle.tsx`, simplifying the code by relying on the product route to fetch the first available variant.",
+              "code": "YGBgZGlmZgpjb25zdCBQUk9EVUNUX0lURU1fRlJBR01FTlQgPSBgI2dyYXBocWwKICBmcmFnbWVudCBNb25leVByb2R1Y3RJdGVtIG9uIE1vbmV5VjIgewogICAgYW1vdW50CiAgICBjdXJyZW5jeUNvZGUKICB9CiAgZnJhZ21lbnQgUHJvZHVjdEl0ZW0gb24gUHJvZHVjdCB7CiAgICBpZAogICAgaGFuZGxlCiAgICB0aXRsZQogICAgZmVhdHVyZWRJbWFnZSB7CiAgICAgIGlkCiAgICAgIGFsdFRleHQKICAgICAgdXJsCiAgICAgIHdpZHRoCiAgICAgIGhlaWdodAogICAgfQogICAgcHJpY2VSYW5nZSB7CiAgICAgIG1pblZhcmlhbnRQcmljZSB7CiAgICAgICAgLi4uTW9uZXlQcm9kdWN0SXRlbQogICAgICB9CiAgICAgIG1heFZhcmlhbnRQcmljZSB7CiAgICAgICAgLi4uTW9uZXlQcm9kdWN0SXRlbQogICAgICB9CiAgICB9Ci0gICAgdmFyaWFudHMoZmlyc3Q6IDEpIHsKLSAgICAgIG5vZGVzIHsKLSAgICAgICAgc2VsZWN0ZWRPcHRpb25zIHsKLSAgICAgICAgICBuYW1lCi0gICAgICAgICAgdmFsdWUKLSAgICAgICAgfQotICAgICAgfQotICAgIH0KICB9CmAgYXMgY29uc3Q7CmBgYAoKYW5kIHJlbW92ZSB0aGUgdmFyaWFudCByZWZlcmVuY2UKCmBgYGRpZmYKZnVuY3Rpb24gUHJvZHVjdEl0ZW0oewogIHByb2R1Y3QsCiAgbG9hZGluZywKfTogewogIHByb2R1Y3Q6IFByb2R1Y3RJdGVtRnJhZ21lbnQ7CiAgbG9hZGluZz86ICdlYWdlcicgfCAnbGF6eSc7Cn0pIHsKLSAgY29uc3QgdmFyaWFudCA9IHByb2R1Y3QudmFyaWFudHMubm9kZXNbMF07Ci0gIGNvbnN0IHZhcmlhbnRVcmwgPSB1c2VWYXJpYW50VXJsKHByb2R1Y3QuaGFuZGxlLCB2YXJpYW50LnNlbGVjdGVkT3B0aW9ucyk7CisgIGNvbnN0IHZhcmlhbnRVcmwgPSB1c2VWYXJpYW50VXJsKHByb2R1Y3QuaGFuZGxlKTsKICByZXR1cm4gKApgYGA="
+            },
+            {
+              "title": "Simplify the `ProductItem` component by removing variant-specific queries and logic. The `useVariantUrl` function now generates URLs without relying on variant options, reducing complexity.",
+              "code": "YGBgZGlmZgpjb25zdCBQUk9EVUNUX0lURU1fRlJBR01FTlQgPSBgI2dyYXBocWwKICBmcmFnbWVudCBNb25leVByb2R1Y3RJdGVtIG9uIE1vbmV5VjIgewogICAgYW1vdW50CiAgICBjdXJyZW5jeUNvZGUKICB9CiAgZnJhZ21lbnQgUHJvZHVjdEl0ZW0gb24gUHJvZHVjdCB7CiAgICBpZAogICAgaGFuZGxlCiAgICB0aXRsZQogICAgZmVhdHVyZWRJbWFnZSB7CiAgICAgIGlkCiAgICAgIGFsdFRleHQKICAgICAgdXJsCiAgICAgIHdpZHRoCiAgICAgIGhlaWdodAogICAgfQogICAgcHJpY2VSYW5nZSB7CiAgICAgIG1pblZhcmlhbnRQcmljZSB7CiAgICAgICAgLi4uTW9uZXlQcm9kdWN0SXRlbQogICAgICB9CiAgICAgIG1heFZhcmlhbnRQcmljZSB7CiAgICAgICAgLi4uTW9uZXlQcm9kdWN0SXRlbQogICAgICB9CiAgICB9Ci0gICAgdmFyaWFudHMoZmlyc3Q6IDEpIHsKLSAgICAgIG5vZGVzIHsKLSAgICAgICAgc2VsZWN0ZWRPcHRpb25zIHsKLSAgICAgICAgICBuYW1lCi0gICAgICAgICAgdmFsdWUKLSAgICAgICAgfQotICAgICAgfQotICAgIH0KICB9CmAgYXMgY29uc3Q7CmBgYAoKYW5kIHJlbW92ZSB0aGUgdmFyaWFudCByZWZlcmVuY2UKCmBgYGRpZmYKZnVuY3Rpb24gUHJvZHVjdEl0ZW0oewogIHByb2R1Y3QsCiAgbG9hZGluZywKfTogewogIHByb2R1Y3Q6IFByb2R1Y3RJdGVtRnJhZ21lbnQ7CiAgbG9hZGluZz86ICdlYWdlcicgfCAnbGF6eSc7Cn0pIHsKLSAgY29uc3QgdmFyaWFudCA9IHByb2R1Y3QudmFyaWFudHMubm9kZXNbMF07Ci0gIGNvbnN0IHZhcmlhbnRVcmwgPSB1c2VWYXJpYW50VXJsKHByb2R1Y3QuaGFuZGxlLCB2YXJpYW50LnNlbGVjdGVkT3B0aW9ucyk7CisgIGNvbnN0IHZhcmlhbnRVcmwgPSB1c2VWYXJpYW50VXJsKHByb2R1Y3QuaGFuZGxlKTsKICByZXR1cm4gKApgYGA="
+            },
+            {
+              "title": "Replace `variants(first: 1)` with `selectedOrFirstAvailableVariant` in GraphQL fragments to directly fetch the most relevant variant, improving query efficiency and clarity.",
+              "code": "YGBgZGlmZgpjb25zdCBTRUFSQ0hfUFJPRFVDVF9GUkFHTUVOVCA9IGAjZ3JhcGhxbAogIGZyYWdtZW50IFNlYXJjaFByb2R1Y3Qgb24gUHJvZHVjdCB7CiAgICBfX3R5cGVuYW1lCiAgICBoYW5kbGUKICAgIGlkCiAgICBwdWJsaXNoZWRBdAogICAgdGl0bGUKICAgIHRyYWNraW5nUGFyYW1ldGVycwogICAgdmVuZG9yCi0gICAgdmFyaWFudHMoZmlyc3Q6IDEpIHsKLSAgICAgIG5vZGVzIHsKKyAgICBzZWxlY3RlZE9yRmlyc3RBdmFpbGFibGVWYXJpYW50KAorICAgICAgc2VsZWN0ZWRPcHRpb25zOiBbXQorICAgICAgaWdub3JlVW5rbm93bk9wdGlvbnM6IHRydWUKKyAgICAgIGNhc2VJbnNlbnNpdGl2ZU1hdGNoOiB0cnVlCisgICAgKSB7CiAgICAgICAgaWQKICAgICAgICBpbWFnZSB7CiAgICAgICAgICB1cmwKICAgICAgICAgIGFsdFRleHQKICAgICAgICAgIHdpZHRoCiAgICAgICAgICBoZWlnaHQKICAgICAgICB9CiAgICAgICAgcHJpY2UgewogICAgICAgICAgYW1vdW50CiAgICAgICAgICBjdXJyZW5jeUNvZGUKICAgICAgICB9CiAgICAgICAgY29tcGFyZUF0UHJpY2UgewogICAgICAgICAgYW1vdW50CiAgICAgICAgICBjdXJyZW5jeUNvZGUKICAgICAgICB9CiAgICAgICAgc2VsZWN0ZWRPcHRpb25zIHsKICAgICAgICAgIG5hbWUKICAgICAgICAgIHZhbHVlCiAgICAgICAgfQogICAgICAgIHByb2R1Y3QgewogICAgICAgICAgaGFuZGxlCiAgICAgICAgICB0aXRsZQogICAgICAgIH0KICAgICB9Ci0gICAgfQogIH0KYCBhcyBjb25zdDsKYGBgCgpgYGBkaWZmCmNvbnN0IFBSRURJQ1RJVkVfU0VBUkNIX1BST0RVQ1RfRlJBR01FTlQgPSBgI2dyYXBocWwKICBmcmFnbWVudCBQcmVkaWN0aXZlUHJvZHVjdCBvbiBQcm9kdWN0IHsKICAgIF9fdHlwZW5hbWUKICAgIGlkCiAgICB0aXRsZQogICAgaGFuZGxlCiAgICB0cmFja2luZ1BhcmFtZXRlcnMKLSAgICB2YXJpYW50cyhmaXJzdDogMSkgewotICAgICAgbm9kZXMgeworICAgIHNlbGVjdGVkT3JGaXJzdEF2YWlsYWJsZVZhcmlhbnQoCisgICAgICBzZWxlY3RlZE9wdGlvbnM6IFtdCisgICAgICBpZ25vcmVVbmtub3duT3B0aW9uczogdHJ1ZQorICAgICAgY2FzZUluc2Vuc2l0aXZlTWF0Y2g6IHRydWUKKyAgICApIHsKICAgICAgICBpZAogICAgICAgIGltYWdlIHsKICAgICAgICAgIHVybAogICAgICAgICAgYWx0VGV4dAogICAgICAgICAgd2lkdGgKICAgICAgICAgIGhlaWdodAogICAgICAgIH0KICAgICAgICBwcmljZSB7CiAgICAgICAgICBhbW91bnQKICAgICAgICAgIGN1cnJlbmN5Q29kZQogICAgICAgIH0KICAgICB9Ci0gICAgfQogIH0KYGBg"
+            },
+            {
+              "title": "Refactor `SearchResultsProducts` to use `selectedOrFirstAvailableVariant` for fetching product price and image, simplifying the logic and improving performance.",
+              "code": "YGBgZGlmZgpmdW5jdGlvbiBTZWFyY2hSZXN1bHRzUHJvZHVjdHMoewogIHRlcm0sCiAgcHJvZHVjdHMsCn06IFBhcnRpYWxTZWFyY2hSZXN1bHQ8J3Byb2R1Y3RzJz4pIHsKICBpZiAoIXByb2R1Y3RzPy5ub2Rlcy5sZW5ndGgpIHsKICAgIHJldHVybiBudWxsOwogIH0KCiAgcmV0dXJuICgKICAgIDxkaXYgY2xhc3NOYW1lPSJzZWFyY2gtcmVzdWx0Ij4KICAgICAgPGgyPlByb2R1Y3RzPC9oMj4KICAgICAgPFBhZ2luYXRpb24gY29ubmVjdGlvbj17cHJvZHVjdHN9PgogICAgICAgIHsoe25vZGVzLCBpc0xvYWRpbmcsIE5leHRMaW5rLCBQcmV2aW91c0xpbmt9KSA9PiB7CiAgICAgICAgICBjb25zdCBJdGVtc01hcmt1cCA9IG5vZGVzLm1hcCgocHJvZHVjdCkgPT4gewogICAgICAgICAgICBjb25zdCBwcm9kdWN0VXJsID0gdXJsV2l0aFRyYWNraW5nUGFyYW1zKHsKICAgICAgICAgICAgICBiYXNlVXJsOiBgL3Byb2R1Y3RzLyR7cHJvZHVjdC5oYW5kbGV9YCwKICAgICAgICAgICAgICB0cmFja2luZ1BhcmFtczogcHJvZHVjdC50cmFja2luZ1BhcmFtZXRlcnMsCiAgICAgICAgICAgICAgdGVybSwKICAgICAgICAgICAgfSk7CgorICAgICAgICAgICAgY29uc3QgcHJpY2UgPSBwcm9kdWN0Py5zZWxlY3RlZE9yRmlyc3RBdmFpbGFibGVWYXJpYW50Py5wcmljZTsKKyAgICAgICAgICAgIGNvbnN0IGltYWdlID0gcHJvZHVjdD8uc2VsZWN0ZWRPckZpcnN0QXZhaWxhYmxlVmFyaWFudD8uaW1hZ2U7CgogICAgICAgICAgICByZXR1cm4gKAogICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJzZWFyY2gtcmVzdWx0cy1pdGVtIiBrZXk9e3Byb2R1Y3QuaWR9PgogICAgICAgICAgICAgICAgPExpbmsgcHJlZmV0Y2g9ImludGVudCIgdG89e3Byb2R1Y3RVcmx9PgotICAgICAgICAgICAgICAgICAge3Byb2R1Y3QudmFyaWFudHMubm9kZXNbMF0uaW1hZ2UgJiYgKAorICAgICAgICAgICAgICAgICAge2ltYWdlICYmICgKICAgICAgICAgICAgICAgICAgICA8SW1hZ2UKLSAgICAgICAgICAgICAgICAgICAgICBkYXRhPXtwcm9kdWN0LnZhcmlhbnRzLm5vZGVzWzBdLmltYWdlfQorICAgICAgICAgICAgICAgICAgICAgIGRhdGE9e2ltYWdlfQogICAgICAgICAgICAgICAgICAgICAgYWx0PXtwcm9kdWN0LnRpdGxlfQogICAgICAgICAgICAgICAgICAgICAgd2lkdGg9ezUwfQogICAgICAgICAgICAgICAgICAgIC8+CiAgICAgICAgICAgICAgICAgICl9CiAgICAgICAgICAgICAgICAgIDxkaXY+CiAgICAgICAgICAgICAgICAgICAgPHA+e3Byb2R1Y3QudGl0bGV9PC9wPgogICAgICAgICAgICAgICAgICAgIDxzbWFsbD4KLSAgICAgICAgICAgICAgICAgICAgICA8TW9uZXkgZGF0YT17cHJvZHVjdC52YXJpYW50cy5ub2Rlc1swXS5wcmljZX0gLz4KKyAgICAgICAgICAgICAgICAgICAgICB7cHJpY2UgJiYKKyAgICAgICAgICAgICAgICAgICAgICAgIDxNb25leSBkYXRhPXtwcmljZX0gLz4KKyAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgPC9zbWFsbD4KICAgICAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgICA8L0xpbms+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICk7CiAgICAgICAgICB9KTsKYGBg"
+            },
+            {
+              "title": "Update `SearchResultsPredictive` to use `selectedOrFirstAvailableVariant` for fetching product price and image, ensuring accurate and efficient data retrieval.",
+              "code": "YGBgZGlmZgpmdW5jdGlvbiBTZWFyY2hSZXN1bHRzUHJlZGljdGl2ZVByb2R1Y3RzKHsKICB0ZXJtLAogIHByb2R1Y3RzLAogIGNsb3NlU2VhcmNoLAp9OiBQYXJ0aWFsUHJlZGljdGl2ZVNlYXJjaFJlc3VsdDwncHJvZHVjdHMnPikgewogIGlmICghcHJvZHVjdHMubGVuZ3RoKSByZXR1cm4gbnVsbDsKCiAgcmV0dXJuICgKICAgIDxkaXYgY2xhc3NOYW1lPSJwcmVkaWN0aXZlLXNlYXJjaC1yZXN1bHQiIGtleT0icHJvZHVjdHMiPgogICAgICA8aDU+UHJvZHVjdHM8L2g1PgogICAgICA8dWw+CiAgICAgICAge3Byb2R1Y3RzLm1hcCgocHJvZHVjdCkgPT4gewogICAgICAgICAgY29uc3QgcHJvZHVjdFVybCA9IHVybFdpdGhUcmFja2luZ1BhcmFtcyh7CiAgICAgICAgICAgIGJhc2VVcmw6IGAvcHJvZHVjdHMvJHtwcm9kdWN0LmhhbmRsZX1gLAogICAgICAgICAgICB0cmFja2luZ1BhcmFtczogcHJvZHVjdC50cmFja2luZ1BhcmFtZXRlcnMsCiAgICAgICAgICAgIHRlcm06IHRlcm0uY3VycmVudCwKICAgICAgICAgIH0pOwoKKyAgICAgICAgICBjb25zdCBwcmljZSA9IHByb2R1Y3Q/LnNlbGVjdGVkT3JGaXJzdEF2YWlsYWJsZVZhcmlhbnQ/LnByaWNlOwotICAgICAgICAgIGNvbnN0IGltYWdlID0gcHJvZHVjdD8udmFyaWFudHM/Lm5vZGVzPy5bMF0uaW1hZ2U7CisgICAgICAgICAgY29uc3QgaW1hZ2UgPSBwcm9kdWN0Py5zZWxlY3RlZE9yRmlyc3RBdmFpbGFibGVWYXJpYW50Py5pbWFnZTsKICAgICAgICAgIHJldHVybiAoCiAgICAgICAgICAgIDxsaSBjbGFzc05hbWU9InByZWRpY3RpdmUtc2VhcmNoLXJlc3VsdC1pdGVtIiBrZXk9e3Byb2R1Y3QuaWR9PgogICAgICAgICAgICAgIDxMaW5rIHRvPXtwcm9kdWN0VXJsfSBvbkNsaWNrPXtjbG9zZVNlYXJjaH0+CiAgICAgICAgICAgICAgICB7aW1hZ2UgJiYgKAogICAgICAgICAgICAgICAgICA8SW1hZ2UKICAgICAgICAgICAgICAgICAgICBhbHQ9e2ltYWdlLmFsdFRleHQgPz8gJyd9CiAgICAgICAgICAgICAgICAgICAgc3JjPXtpbWFnZS51cmx9CiAgICAgICAgICAgICAgICAgICAgd2lkdGg9ezUwfQogICAgICAgICAgICAgICAgICAgIGhlaWdodD17NTB9CiAgICAgICAgICAgICAgICAgIC8+CiAgICAgICAgICAgICAgICApfQogICAgICAgICAgICAgICAgPGRpdj4KICAgICAgICAgICAgICAgICAgPHA+e3Byb2R1Y3QudGl0bGV9PC9wPgogICAgICAgICAgICAgICAgICA8c21hbGw+Ci0gICAgICAgICAgICAgICAgICAgIHtwcm9kdWN0Py52YXJpYW50cz8ubm9kZXM/LlswXS5wcmljZSAmJiAoCisgICAgICAgICAgICAgICAgICAgIHtwcmljZSAmJiAoCi0gICAgICAgICAgICAgICAgICAgICAgPE1vbmV5IGRhdGE9e3Byb2R1Y3QudmFyaWFudHMubm9kZXNbMF0ucHJpY2V9IC8+CisgICAgICAgICAgICAgICAgICAgICAgPE1vbmV5IGRhdGE9e3ByaWNlfSAvPgogICAgICAgICAgICAgICAgICAgICl9CiAgICAgICAgICAgICAgICAgIDwvc21hbGw+CiAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICA8L0xpbms+CiAgICAgICAgICAgIDwvbGk+CiAgICAgICAgICApOwogICAgICAgIH0pfQogICAgICA8L3VsPgogICAgPC9kaXY+CiAgKTsKfQpgYGA="
+            }
+          ]
+        },
+        {
+          "title": "Refactor ProductItem into a separate component in Skeleton",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2872",
+          "id": "2872"
+        }
+      ],
+      "features": [
+        {
+          "title": "Add support for CartDeliveryAddresses mutations to CartForm and context.cart",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2850",
+          "id": "2850",
+          "desc": "CartForm and createCartHandler now support `addDeliveryAddresses`, `updateDeliveryAddresses` and `removeDeliveryAddresses`"
+        }
+      ]
+    },
+    {
       "title": "Remix routeConfig support, Remix and Vite updates.",
       "version": "2025.1.3",
       "hash": "d06cdc0442ac382fa37c3c572f0890499daa0c6d",
@@ -86,12 +238,8 @@
               "code": "ImRldkRlcGVuZGVuY2llcyI6IHsKICAuLi4KICAiQHJlbWl4LXJ1bi9mcy1yb3V0ZXMiOiAiXjIuMTYuMSIsCiAgIkByZW1peC1ydW4vcm91dGUtY29uZmlnIjogIl4yLjE2LjEiLA=="
             },
             {
-              "title": "Move the `Layout` component export from `root.tsx` into its own file. Make sure to supply an `<Outlet>` so Remix knows where to inject your route content.",
-              "code": "Ly8gL2FwcC9sYXlvdXQudHN4CmltcG9ydCB7T3V0bGV0fSBmcm9tICdAcmVtaXgtcnVuL3JlYWN0JzsKCmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIExheW91dCgpIHsKIGNvbnN0IG5vbmNlID0gdXNlTm9uY2UoKTsKIGNvbnN0IGRhdGEgPSB1c2VSb3V0ZUxvYWRlckRhdGE8Um9vdExvYWRlcj4oJ3Jvb3QnKTsKCiByZXR1cm4gKAogICA8aHRtbCBsYW5nPSJlbiI+CiAgICAgLi4uCiAgICAgPE91dGxldCAvPgogICAgIC4uLgogICA8L2h0bWw+CiApOwp9CgovLyBSZW1lbWJlciB0byByZW1vdmUgdGhlIExheW91dCBleHBvcnQgZnJvbSB5b3VyIHJvb3QudHN4Cg=="
-            },
-            {
               "title": "Add a `routes.ts` file. This is your new Remix route configuration file.",
-              "code": "aW1wb3J0IHtmbGF0Um91dGVzfSBmcm9tICdAcmVtaXgtcnVuL2ZzLXJvdXRlcyc7CmltcG9ydCB7bGF5b3V0LCB0eXBlIFJvdXRlQ29uZmlnfSBmcm9tICdAcmVtaXgtcnVuL3JvdXRlLWNvbmZpZyc7CmltcG9ydCB7aHlkcm9nZW5Sb3V0ZXN9IGZyb20gJ0BzaG9waWZ5L2h5ZHJvZ2VuJzsKCmV4cG9ydCBkZWZhdWx0IGh5ZHJvZ2VuUm91dGVzKFsKIC8vIFlvdXIgZW50aXJlIGFwcCByZWFkaW5nIGZyb20gcm91dGVzIGZvbGRlciB1c2luZyBMYXlvdXQgZnJvbSBsYXlvdXQudHN4CiBsYXlvdXQoJy4vbGF5b3V0LnRzeCcsIChhd2FpdCBmbGF0Um91dGVzKCkpKSwKXSkgc2F0aXNmaWVzIFJvdXRlQ29uZmlnOw=="
+              "code": "aW1wb3J0IHtmbGF0Um91dGVzfSBmcm9tICdAcmVtaXgtcnVuL2ZzLXJvdXRlcyc7CmltcG9ydCB7dHlwZSBSb3V0ZUNvbmZpZ30gZnJvbSAnQHJlbWl4LXJ1bi9yb3V0ZS1jb25maWcnOwppbXBvcnQge2h5ZHJvZ2VuUm91dGVzfSBmcm9tICdAc2hvcGlmeS9oeWRyb2dlbic7CgpleHBvcnQgZGVmYXVsdCBoeWRyb2dlblJvdXRlcyhbCiAgLi4uKGF3YWl0IGZsYXRSb3V0ZXMoKSksCiAgLy8gTWFudWFsIHJvdXRlIGRlZmluaXRpb25zIGNhbiBiZSBhZGRlZCB0byB0aGlzIGFycmF5LCBpbiBhZGRpdGlvbiB0byBvciBpbnN0ZWFkIG9mIHVzaW5nIHRoZSBgZmxhdFJvdXRlc2AgZmlsZS1iYXNlZCByb3V0aW5nIGNvbnZlbnRpb24uCiAgLy8gU2VlIGh0dHBzOi8vcmVtaXgucnVuL2RvY3MvZW4vbWFpbi9ndWlkZXMvcm91dGluZyBmb3IgbW9yZSBkZXRhaWxzCl0pIHNhdGlzZmllcyBSb3V0ZUNvbmZpZzs="
             }
           ]
         }

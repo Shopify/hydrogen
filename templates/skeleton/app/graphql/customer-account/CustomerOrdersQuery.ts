@@ -1,4 +1,4 @@
-// https://shopify.dev/docs/api/customer/latest/objects/Order
+// NOTE: https://shopify.dev/docs/api/customer/latest/objects/Order
 export const ORDER_ITEM_FRAGMENT = `#graphql
   fragment OrderItem on Order {
     totalPrice {
@@ -18,7 +18,7 @@ export const ORDER_ITEM_FRAGMENT = `#graphql
   }
 ` as const;
 
-// https://shopify.dev/docs/api/customer/latest/objects/Customer
+// NOTE: https://shopify.dev/docs/api/customer/latest/objects/Customer
 export const CUSTOMER_ORDERS_FRAGMENT = `#graphql
   fragment CustomerOrders on Customer {
     orders(
@@ -43,7 +43,7 @@ export const CUSTOMER_ORDERS_FRAGMENT = `#graphql
   ${ORDER_ITEM_FRAGMENT}
 ` as const;
 
-// https://shopify.dev/docs/api/customer/latest/queries/customer
+// NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
 export const CUSTOMER_ORDERS_QUERY = `#graphql
   ${CUSTOMER_ORDERS_FRAGMENT}
   query CustomerOrders(
@@ -51,7 +51,8 @@ export const CUSTOMER_ORDERS_QUERY = `#graphql
     $first: Int
     $last: Int
     $startCursor: String
-  ) {
+    $language: LanguageCode
+  ) @inContext(language: $language) {
     customer {
       ...CustomerOrders
     }

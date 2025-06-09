@@ -7,7 +7,7 @@
     "moduleResolution": "NodeNext",
     "jsx": "react-jsx",
     "noUncheckedIndexedAccess": true,
-    "types": ["node", "@remix-run/dev"],
+    "types": ["node", "react-router"],
     "outDir": "dist",
     "paths": {
       "~/mini-oxygen/*": ["../mini-oxygen/src/*"],

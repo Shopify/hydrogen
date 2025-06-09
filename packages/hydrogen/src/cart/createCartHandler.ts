@@ -61,6 +61,7 @@ import {
   type CartDeliveryAddressesUpdateFunction,
   cartDeliveryAddressesUpdateDefault,
 } from './queries/cartDeliveryAddressesUpdateDefault';
+import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
 
 export type CartHandlerOptions = {
   storefront: Storefront;
@@ -69,6 +70,7 @@ export type CartHandlerOptions = {
   setCartId: (cartId: string) => Headers;
   cartQueryFragment?: string;
   cartMutateFragment?: string;
+  buyerIdentity?: CartBuyerIdentityInput;
 };
 
 export type CustomMethodsBase = Record<string, Function>;
@@ -196,6 +198,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     customerAccount,
     cartQueryFragment,
     cartMutateFragment,
+    buyerIdentity,
   } = options;
 
   let cartId = _getCartId();
@@ -212,6 +215,13 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   const _cartCreate = cartCreateDefault(mutateOptions);
 
   const cartCreate: CartCreateFunction = async function (...args) {
+    // Default buyerIdentity to what is passed into the handler
+    // Only override if buyerIdentity is passed directly to the method
+    args[0].buyerIdentity = {
+      ...buyerIdentity,
+      ...args[0].buyerIdentity,
+    };
+
     const result = await _cartCreate(...args);
     cartId = result?.cart?.id;
     return result;
@@ -239,7 +249,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
 
       return cartId || optionalParams?.cartId
         ? await cartLinesAddDefault(mutateOptions)(lines, optionalParams)
-        : await cartCreate({lines}, optionalParams);
+        : await cartCreate({lines, buyerIdentity}, optionalParams);
     },
     updateLines: cartLinesUpdateDefault(mutateOptions),
     removeLines: cartLinesRemoveDefault(mutateOptions),
@@ -318,24 +328,29 @@ export type CartHandlerOptionsForDocs<
    */
   setCartId: (cartId: string) => Headers;
   /**
-   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/2025-01/utilities/createstorefrontclient).
+   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/utilities/createstorefrontclient).
    */
   storefront: Storefront;
   /**
    * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.
-   * See the [example usage](/docs/api/hydrogen/2025-01/utilities/createcarthandler#example-cart-fragments) in the documentation.
+   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.
    */
   cartMutateFragment?: string;
   /**
    * The cart query fragment used by `cart.get()`.
-   * See the [example usage](/docs/api/hydrogen/2025-01/utilities/createcarthandler#example-cart-fragments) in the documentation.
+   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.
    */
   cartQueryFragment?: string;
   /**
    * Define custom methods or override existing methods for your cart API instance.
-   * See the [example usage](/docs/api/hydrogen/2025-01/utilities/createcarthandler#example-custom-methods) in the documentation.
+   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) in the documentation.
    */
   customMethods?: TCustomMethods;
+
+  /**
+   * Buyer identity. Default buyer identity is passed to cartCreate.
+   */
+  buyerIdentity?: CartBuyerIdentityInput;
 };
 
 export type HydrogenCartForDocs = {

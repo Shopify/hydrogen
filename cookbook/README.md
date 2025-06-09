@@ -2,7 +2,7 @@
 
 - [🧑‍🍳 Hydrogen Cookbook](#-hydrogen-cookbook)
   - [Recipes](#recipes)
-  - [Cursor rules](#cursor-rules)
+  - [LLM prompts](#llm-prompts)
   - [Usage](#usage)
     - [Apply](#apply)
       - [Syntax](#syntax)
@@ -10,6 +10,7 @@
     - [Generate](#generate)
       - [Syntax](#syntax-1)
       - [Example](#example-1)
+      - [Single-file flag (`filePath`)](#single-file-flag-filepath)
     - [Validate](#validate)
       - [Syntax](#syntax-2)
       - [Example](#example-2)
@@ -39,9 +40,9 @@ Each recipe is located in the [cookbook's recipes folder](/cookbook/recipes/) an
 - `patches/`: a folder containing patches to be applied to existing files in the skeleton template. The file ↔ patch mappings are defined in the `recipe.yaml` file under the `ingredients` key.
 - `README.md`: the human-readable Markdown render of the recipe, based off of the `recipe.yaml` file.
 
-## Cursor rules
+## LLM prompts
 
-Recipes come paired with [Cursor](https://www.cursor.com/) rules that can be included in a Hydrogen project to improve the AI-assisted coding experience. The rules are available in [the .cursor folder](/cookbook/.cursor) and can be copied verbatim into the `.cursor` folder at the root of a Hydrogen project repository.
+Recipes come paired with LLM prompts that can be included in a Hydrogen project to improve the AI-assisted coding experience. The prompts are available in [the llms folder](/cookbook/llms).
 
 ## Usage
 
@@ -90,7 +91,7 @@ npm run cookbook -- apply --recipe my-recipe
 
 `generate` will build a recipe folder based on the current changes made to the skeleton template, effectively snapshotting its state into a reproducible recipe.
 
-Additionally, it will also generate the Cursor rule (and related LLM-friendly files) for the recipe.
+Additionally, it will also generate the LLM prompt (and related LLM-friendly files) for the recipe.
 
 The workflow for creating a new recipe is as follows:
 
@@ -107,14 +108,17 @@ cookbook.ts generate
 Generate a recipe from the skeleton's changes
 
 Options:
-  --version          Show version number                   [boolean]
-  --help             Show help                             [boolean]
-  --recipe           The name of the recipe to generate
-                                                 [string] [required]
-  --onlyFiles        Only generate the files for the recipe, not the
-                     recipe.yaml file.                     [boolean]
-  --referenceBranch  The reference branch to use for the recipe
-                                   [string] [default: "origin/main"]
+  --version               Show version number                          [boolean]
+  --help                  Show help                                    [boolean]
+  --recipe                The name of the recipe to generate [string] [required]
+  --onlyFiles             Only generate the files for the recipe, not the
+                          recipe.yaml file.                            [boolean]
+  --referenceBranch       The reference branch to use for the recipe
+                                               [string] [default: "origin/main"]
+  --recipeManifestFormat  The format of the recipe manifest file
+                                                      [string] [default: "yaml"]
+  --filePath              If specified, only generate the diffs for this file
+                          (and update any references in the recipe.     [string]
 ```
 
 #### Example
@@ -122,6 +126,13 @@ Options:
 ```sh
 npm run cookbook -- generate --recipe my-recipe
 ```
+
+
+#### Single-file flag (`filePath`)
+
+If `filePath` is provided, and it points to a file in the skeleton template folder, the command will generate the diff patch **only** for that file, without updating the manifest.
+
+The recipe must exist, as well as a step for that file.
 
 ### Validate
 

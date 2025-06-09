@@ -1,4 +1,4 @@
-import {Link, useLoaderData, type MetaFunction} from '@remix-run/react';
+import { Link, useLoaderData, type MetaFunction } from 'react-router';
 import {
   Money,
   getPaginationVariables,
@@ -26,6 +26,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
     {
       variables: {
         ...paginationVariables,
+        language: context.storefront.i18n.language,
       },
     },
   );

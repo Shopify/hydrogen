@@ -7,6 +7,7 @@ const createRoute = (path: string) => ({
       file: 'a/file',
       id: 'route-id',
       path,
+      parentId: 'root',
     },
   },
 });
@@ -60,16 +61,6 @@ describe('reserved-routes', () => {
     expect(findReservedRoutes(createRoute('collections/:handle'))).toHaveLength(
       0,
     );
-  });
-
-  it('returns an array of reserved routes', async () => {
-    expect(
-      findReservedRoutes(createRoute('api/2025-01/graphql.json')),
-    ).toHaveLength(1);
-
-    expect(
-      findReservedRoutes(createRoute('api/:param/graphql.json')),
-    ).toHaveLength(1);
   });
 
   it('finds reserved routes /cdn/', async () => {

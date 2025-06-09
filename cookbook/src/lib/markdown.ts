@@ -17,12 +17,17 @@ export function mdNote(text: string): MDNote {
 export type MDFrontMatter = {
   type: 'FRONTMATTER';
   data: Record<string, unknown>;
+  comments?: string[];
 };
 
-export function mdFrontMatter(data: Record<string, unknown>): MDFrontMatter {
+export function mdFrontMatter(
+  data: Record<string, unknown>,
+  comments?: string[],
+): MDFrontMatter {
   return {
     type: 'FRONTMATTER',
     data,
+    comments,
   };
 }
 
@@ -144,6 +149,15 @@ export function mdQuote(text: string): MDQuote {
   };
 }
 
+export type RawHTML = {
+  type: 'RAW_HTML';
+  html: string;
+};
+
+export function mdRawHTML(html: string): RawHTML {
+  return {type: 'RAW_HTML', html};
+}
+
 export type MDBlock =
   | MDHeading
   | MDImage
@@ -154,7 +168,8 @@ export type MDBlock =
   | MDTable
   | MDQuote
   | MDFrontMatter
-  | MDNote;
+  | MDNote
+  | RawHTML;
 
 export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
   switch (block.type) {
@@ -172,7 +187,7 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
           case 'shopify.dev':
             return [
               '<details>\n',
-              '{% codeblock markdown %}',
+              '{% codeblock file %}',
               ...code,
               '{% endcodeblock %}',
               '\n</details>',
@@ -218,22 +233,29 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
       })
         .trim()
         // Remove any quotes wrapping the stringified values manually,
-        // as some of them may have been added by the YAML stringifier while Cursor doesn't like them.
+        // as some of them may have been added by the YAML stringifier.
         .split('\n')
         .map((line) => {
           return line.replace(/^([^'"]+): ['"](.+)['"]/, '$1: $2');
         })
         .join('\n');
 
-      return ['---', stringified, '---'].join('\n');
+      return [
+        '---',
+        ...(block.comments ?? []).map((comment) => `# ${comment}`),
+        stringified,
+        '---',
+      ].join('\n');
     case 'NOTE':
       return [
-        '> [!NOTE]',
+        format === 'shopify.dev' ? '> Note' : '> [!NOTE]',
         block.text
           .split('\n')
           .map((line) => `> ${line}`)
           .join('\n'),
       ].join('\n');
+    case 'RAW_HTML':
+      return block.html;
     default:
       assertNever(block);
   }
@@ -262,7 +284,9 @@ export function serializeMDBlocksToFile(
   filePath: string,
   format: RenderFormat,
 ) {
-  let data = blocks.map((block) => renderMDBlock(block, format)).join('\n\n');
+  let data = blocks
+    .map((block) => renderMDBlock(block, format).trim())
+    .join('\n\n');
   if (format === 'shopify.dev') {
     data = data.replace(/\{\{/g, "{{ '{{' }}");
   }
