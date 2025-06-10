@@ -336,6 +336,7 @@ export async function runDev({
   );
 
   const finalHost = tunnel?.host || publicUrl.toString() || publicUrl.origin;
+  console.log('finalHost', finalHost);
 
   // Start the public facing server with the port passed by the user.
   enhanceH2Logs({

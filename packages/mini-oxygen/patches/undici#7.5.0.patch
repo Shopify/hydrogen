@@ -1,0 +1,26 @@
+Index: /undici/index.js
+===================================================================
+--- /undici/index.js
++++ /undici/index.js
+@@ -1,6 +1,6 @@
+-'use strict'
+-
++//'use strict'
++//
+ const Client = require('./lib/dispatcher/client')
+ const Dispatcher = require('./lib/dispatcher/dispatcher')
+ const Pool = require('./lib/dispatcher/pool')
+ const BalancedPool = require('./lib/dispatcher/balanced-pool')
+@@ -49,10 +49,10 @@
+ module.exports.cacheStores = {
+   MemoryCacheStore: require('./lib/cache/memory-cache-store')
+ }
+ 
+-const SqliteCacheStore = require('./lib/cache/sqlite-cache-store')
+-module.exports.cacheStores.SqliteCacheStore = SqliteCacheStore
++//const SqliteCacheStore = require('./lib/cache/sqlite-cache-store')
++//module.exports.cacheStores.SqliteCacheStore = SqliteCacheStore
+ 
+ module.exports.buildConnector = buildConnector
+ module.exports.errors = errors
+ module.exports.util = {

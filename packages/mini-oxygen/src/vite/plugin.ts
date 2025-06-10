@@ -1,159 +1,46 @@
-import {defaultClientConditions} from 'vite';
 import path from 'node:path';
-import type {Plugin, ResolvedConfig} from 'vite';
+import {fileURLToPath} from 'url';
+import type {Plugin} from 'vite';
 import {
-  setupOxygenMiddleware,
-  type InternalMiniOxygenOptions,
-  type MiniOxygenViteOptions,
-} from './server-middleware.js';
+  cloudflare,
+  PluginConfig as CloudflarePluginConfig,
+} from '@cloudflare/vite-plugin';
+import {
+  oxygenExtensions,
+  OxygenPlugin,
+  OxygenPluginOptions,
+} from './oxygen-extensions.js';
 
 export {oxygenExtensions} from './oxygen-extensions.js';
-export type {OxygenExtensionsOptions} from './oxygen-extensions.js';
+export type {OxygenPlugin} from './oxygen-extensions.js';
 
 // Note: Vite resolves extensions like .js or .ts automatically.
 const DEFAULT_SSR_ENTRY = './server';
 
-export type OxygenPluginOptions = Partial<
-  Pick<
-    MiniOxygenViteOptions,
-    'entry' | 'env' | 'inspectorPort' | 'logRequestLine' | 'debug'
-  >
->;
-
-type OxygenApiOptions = OxygenPluginOptions &
-  InternalMiniOxygenOptions & {
-    envPromise?: Promise<Record<string, any>>;
-  };
-
-/**
- * For internal use only.
- * @private
- */
-export type OxygenPlugin = Plugin<{
-  registerPluginOptions(newOptions: OxygenApiOptions): void;
-}>;
+type OxygenAndCloudflarePluginOptions = OxygenPluginOptions & {
+  cloudflare?: CloudflarePluginConfig;
+};
 
 /**
  * Runs backend code in an Oxygen worker instead of Node.js during development.
  * If used with `remix`, place it before it in the Vite plugin list.
  */
-export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
-  let resolvedConfig: ResolvedConfig;
-  let absoluteWorkerEntryFile: string;
-  let apiOptions: OxygenApiOptions = {};
+export function oxygen(
+  pluginOptions: OxygenAndCloudflarePluginOptions = {},
+): Plugin[] {
+  // Provide a default wrangler config file path if one is not provided.
+  const defaultWranglerConfigPath = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    '..',
+    'wrangler.toml',
+  );
+  const defaultedCloudflarePluginConfig: CloudflarePluginConfig = {
+    ...pluginOptions.cloudflare,
+    configPath:
+      pluginOptions.cloudflare?.configPath ?? defaultWranglerConfigPath,
+  };
 
-  return [
-    {
-      name: 'oxygen:main',
-      config(config, env) {
-        return {
-          appType: 'custom',
-          resolve: {
-            conditions: ['worker', 'workerd', ...defaultClientConditions],
-          },
-          ssr: {
-            noExternal: true,
-            target: 'webworker',
-            resolve: {
-              conditions: ['worker', 'workerd', ...defaultClientConditions],
-            },
-          },
-          // When building, the CLI will set the `ssr` option to `true`
-          // if no --entry flag is passed for the default SSR entry file.
-          // Replace it here with a default value.
-          ...(env.isSsrBuild &&
-            config.build?.ssr && {
-              build: {
-                ssr:
-                  config.build?.ssr === true
-                    ? // No --entry flag passed by the user, use the
-                      // option passed to the plugin or the default value
-                      (pluginOptions.entry ?? DEFAULT_SSR_ENTRY)
-                    : // --entry flag passed by the user, keep it
-                      config.build?.ssr,
-              },
-            }),
-        };
-      },
-      api: {
-        registerPluginOptions(newOptions) {
-          apiOptions = {
-            ...apiOptions,
-            ...newOptions,
-            env: {...apiOptions.env, ...newOptions.env},
-            crossBoundarySetup: [
-              ...(apiOptions.crossBoundarySetup || []),
-              ...(newOptions.crossBoundarySetup || []),
-            ],
-          };
-        },
-      },
-      configureServer: {
-        order: 'pre',
-        handler: (viteDevServer) => {
-          const entry =
-            apiOptions.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
+  const oxygenPlugin: OxygenPlugin = oxygenExtensions(pluginOptions);
 
-          // For transform hook:
-          resolvedConfig = viteDevServer.config;
-          absoluteWorkerEntryFile = path.isAbsolute(entry)
-            ? entry
-            : path.resolve(resolvedConfig.root, entry);
-
-          return () => {
-            setupOxygenMiddleware(viteDevServer, async () => {
-              const remoteEnv = await Promise.resolve(apiOptions.envPromise);
-
-              return {
-                entry,
-                viteDevServer,
-                crossBoundarySetup: apiOptions.crossBoundarySetup,
-                env: {...remoteEnv, ...apiOptions.env, ...pluginOptions.env},
-                debug: apiOptions.debug ?? pluginOptions.debug ?? false,
-                inspectorPort:
-                  apiOptions.inspectorPort ?? pluginOptions.inspectorPort,
-                requestHook: apiOptions.requestHook,
-                entryPointErrorHandler: apiOptions.entryPointErrorHandler,
-                compatibilityDate: apiOptions.compatibilityDate,
-                logRequestLine:
-                  // Give priority to the plugin option over the CLI option here,
-                  // since the CLI one is just a default, not a user-provided flag.
-                  pluginOptions?.logRequestLine ?? apiOptions.logRequestLine,
-              };
-            });
-          };
-        },
-      },
-      generateBundle(_, bundle) {
-        if (apiOptions.compatibilityDate) {
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(apiOptions.compatibilityDate)) {
-            throw new Error(
-              `Invalid compatibility date "${apiOptions.compatibilityDate}"`,
-            );
-          }
-
-          const oxygenJsonFile = 'oxygen.json';
-          const oxygenJsonContent = {
-            version: 1,
-            compatibility_date: apiOptions.compatibilityDate,
-          };
-
-          bundle[oxygenJsonFile] = {
-            type: 'asset',
-            fileName: oxygenJsonFile,
-            needsCodeReference: false,
-            source: JSON.stringify(oxygenJsonContent, null, 2),
-            names: [oxygenJsonFile],
-            originalFileNames: [oxygenJsonFile],
-            // name and originalFileName should be deprecated .. but
-            // for some reason, removing them breaks typescript check
-            name: oxygenJsonFile,
-            originalFileName: oxygenJsonFile,
-          };
-        }
-      },
-    } satisfies Plugin<{
-      registerPluginOptions(newOptions: OxygenApiOptions): void;
-    }>,
-  ];
+  return [...cloudflare(defaultedCloudflarePluginConfig), oxygenPlugin];
 }

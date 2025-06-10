@@ -18,8 +18,9 @@
     "directory": "packages/mini-oxygen"
   },
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "prepare": "custompatch",
+    "build": "tsup --publicDir public",
+    "dev": "tsup --watch --publicDir public",
     "typecheck": "tsc --noEmit",
     "prepack": "npm run build",
     "test": "NODE_OPTIONS=--experimental-vm-modules vitest run --test-timeout=60000"
@@ -46,6 +47,7 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
+    "@cloudflare/vite-plugin": "^1.5.0",
     "body-parser": "1.20.3",
     "connect": "^3.7.0",
     "get-port": "^7.1.0",

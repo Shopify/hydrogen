@@ -50,6 +50,7 @@ describe('dev', () => {
       );
 
       const response = await fetch(getUrl());
+      console.log('response', response);
       expect(response.status).toEqual(200);
       expect(response.headers.get('content-type')).toEqual('text/html');
       await expect(response.text()).resolves.toMatch('Mock.shop');

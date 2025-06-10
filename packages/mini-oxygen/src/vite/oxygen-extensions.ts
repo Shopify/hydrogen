@@ -8,8 +8,66 @@ import {
 import {getPort} from '../common/find-port.js';
 import type {RequestHookInfo} from '../worker/handler.js';
 import {OXYGEN_HEADERS_MAP} from '../common/headers.js';
+import {type RequestHook} from '../worker/index.js';
+import {type CustomEntryPointErrorHandler} from './entry-error.js';
 
-export type OxygenExtensionsOptions = {
+export type InternalMiniOxygenOptions = {
+  /**
+   * A compatibility date to choose a version of the Oxygen worker.
+   */
+  compatibilityDate?: string;
+  /**
+   * A function called asynchronously when the worker gets a response.
+   */
+  requestHook?: RequestHook;
+  /**
+   * Allows setting up global state in the worker process
+   * that can optionally run code from the parent process.
+   */
+  crossBoundarySetup?: Array<
+    | {
+        /**
+         * Function that is stringified and runs in the worker.
+         */
+        script: () => void;
+        binding?: never;
+      }
+    | {
+        /**
+         * Function that is stringified and runs in the worker.
+         * It gets the binding function as its first argument.
+         */
+        script: (
+          binding: (...args: unknown[]) => Promise<unknown | void>,
+        ) => void;
+        /**
+         * The binding function that runs in the parent process.
+         */
+        binding: (...args: unknown[]) => unknown | Promise<unknown> | void;
+      }
+  >;
+  /**
+   * Callback that runs when detecting a dependency that can be optimized in Vite.
+   */
+  entryPointErrorHandler?: CustomEntryPointErrorHandler;
+};
+
+export type MiniOxygenViteOptions = InternalMiniOxygenOptions & {
+  viteDevServer: ViteDevServer;
+  entry: string;
+  env?: {[key: string]: string};
+  debug?: boolean;
+  inspectorPort?: number;
+  logRequestLine?: null | RequestHook;
+};
+
+export type OxygenPluginOptions = Partial<
+  Pick<
+    MiniOxygenViteOptions,
+    'entry' | 'env' | 'inspectorPort' | 'logRequestLine' | 'debug'
+  >
+> & {
+  envPromise?: Promise<Record<string, any>>;
   /**
    * Enable Oxygen headers injection
    */
@@ -30,34 +88,48 @@ export type OxygenExtensionsOptions = {
   };
 
   /**
-   * Cross-boundary setup for proxy support
+   * Allows setting up global state in the worker process
+   * that can optionally run code from the parent process.
    */
   crossBoundarySetup?: Array<
     | {
+        /**
+         * Function that is stringified and runs in the worker.
+         */
         script: () => void;
         binding?: never;
       }
     | {
+        /**
+         * Function that is stringified and runs in the worker.
+         * It gets the binding function as its first argument.
+         */
         script: (
           binding: (...args: unknown[]) => Promise<unknown | void>,
         ) => void;
+        /**
+         * The binding function that runs in the parent process.
+         */
         binding: (...args: unknown[]) => unknown | Promise<unknown> | void;
       }
   >;
-
-  /**
-   * Enable debug logging
-   */
-  debug?: boolean;
 };
+
+export type OxygenApiOptions = OxygenPluginOptions & InternalMiniOxygenOptions;
+
+/**
+ * For internal use only.
+ * @private
+ */
+export type OxygenPlugin = Plugin<{
+  registerPluginOptions(newOptions: OxygenApiOptions): void;
+}>;
 
 /**
  * Oxygen extensions plugin for use with @cloudflare/vite-plugin
  * Provides Oxygen-specific features that are not available in the base Cloudflare plugin
  */
-export function oxygenExtensions(
-  options: OxygenExtensionsOptions = {},
-): Plugin {
+export function oxygenExtensions(options: OxygenPluginOptions): Plugin {
   let assetsServer: ReturnType<typeof createAssetsServer> | undefined;
   let assetsPort: number | undefined;
 
@@ -65,6 +137,7 @@ export function oxygenExtensions(
     name: 'oxygen-extensions',
 
     async configureServer(server: ViteDevServer) {
+      console.log('configureServer');
       // Setup static assets server if configured
       if (options.staticAssets) {
         assetsPort = await getPort();
