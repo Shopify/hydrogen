@@ -154,6 +154,10 @@ If no recipe name is provided, all recipes will be validated.
 #### Syntax
 
 ```plain
+cookbook.ts validate
+
+Validate a recipe
+
 Options:
   --version                  Show version number                       [boolean]
   --help                     Show help                                 [boolean]
