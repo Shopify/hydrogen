@@ -46,6 +46,7 @@ export const CUSTOMER_ORDER_QUERY = `#graphql
     id
     name
     statusPageUrl
+    fulfillmentStatus
     processedAt
     fulfillments(first: 1) {
       nodes {
@@ -77,7 +78,8 @@ export const CUSTOMER_ORDER_QUERY = `#graphql
       }
     }
   }
-  query Order($orderId: ID!) {
+  query Order($orderId: ID!, $language: LanguageCode)
+    @inContext(language: $language) {
     order(id: $orderId) {
       ... on Order {
         ...Order

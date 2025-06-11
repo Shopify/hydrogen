@@ -2,7 +2,7 @@
   "name": "skeleton",
   "private": true,
   "sideEffects": false,
-  "version": "2025.5.0",
+  "version": "2025.5.2",
   "type": "module",
   "scripts": {
     "build": "shopify hydrogen build --codegen",
@@ -31,7 +31,7 @@
     "@graphql-codegen/cli": "5.0.2",
     "@react-router/dev": "7.6.0",
     "@react-router/fs-routes": "7.6.0",
-    "@shopify/cli": "~3.79.2",
+    "@shopify/cli": "~3.80.4",
     "@shopify/hydrogen-codegen": "^0.3.3",
     "@shopify/mini-oxygen": "^3.2.1",
     "@shopify/oxygen-workers-types": "^4.1.6",

@@ -1,6 +1,6 @@
 import {renderSuccess, renderWarning} from '@shopify/cli-kit/node/ui';
 
-const RESERVED_ROUTES = ['^api/[^/]+/graphql.json', '^cdn/', '^_t/'];
+const RESERVED_ROUTES = ['^cdn/', '^_t/'];
 
 export function findReservedRoutes(config: {routes: Routes}) {
   const routes = new Set<string>();
@@ -67,8 +67,8 @@ const REQUIRED_ROUTES = [
 type Routes = {
   [key: string]: {
     id: string;
-    path: string;
-    parentId: string;
+    path?: string;
+    parentId?: string;
   };
 };
 
