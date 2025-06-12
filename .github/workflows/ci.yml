@@ -133,7 +133,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+          cache-dependency-path: 'cookbook/package-lock.json'
 
       - name: 📥 Install dependencies
         working-directory: cookbook
