@@ -39,18 +39,18 @@ async function handler(args: ValidateArgs) {
 
   let failed: string[] = [];
   for (const recipe of recipes) {
-    try {
-      console.log(`🧐 Validating recipe '${recipe}'`);
-      validateRecipe({
-        recipeTitle: recipe,
-        hydrogenPackagesVersion: args.hydrogenPackagesVersion,
-      });
-      // clean up the skeleton template directory on success
-      execSync(`git checkout -- ${TEMPLATE_PATH}`);
-      execSync(`git clean -fd ${TEMPLATE_PATH}`);
-    } catch (error) {
+    console.log(`🧐 Validating recipe '${recipe}'`);
+
+    const ok = await validateRecipe({
+      recipeTitle: recipe,
+      hydrogenPackagesVersion: args.hydrogenPackagesVersion,
+    });
+    // clean up the skeleton template directory on success
+    execSync(`git checkout -- ${TEMPLATE_PATH}`);
+    execSync(`git clean -fd ${TEMPLATE_PATH}`);
+
+    if (!ok) {
       console.error(`❌ Recipe '${recipe}' is invalid`);
-      console.error(error);
       failed.push(recipe);
     }
     console.log(separator());
