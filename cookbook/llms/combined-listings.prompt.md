@@ -90,7 +90,7 @@ export const combinedListingsSettings = {
 
 Create a new `combined-listings.ts` file that contains utilities and settings for handling combined listings.
 
-#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
+#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/2e32e77efa32aca00b18552fbdbfcb8af012f4ca/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
 
 ```ts
 // Edit these values to customize combined listings' behavior
@@ -345,7 +345,7 @@ If you want to redirect automatically to the first variant of a combined listing
 ```diff
 @@ -1,13 +1,13 @@
  import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
- import {Await, useLoaderData, Link, type MetaFunction} from '@remix-run/react';
+ import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
  import {Suspense} from 'react';
 -import {Image, Money} from '@shopify/hydrogen';
 +import {Image} from '@shopify/hydrogen';
@@ -486,8 +486,8 @@ Update the `collections.all` route to filter out combined listings from the sear
 #### File: /app/routes/collections.all.tsx
 
 ```diff
-@@ -3,7 +3,10 @@ import {useLoaderData, type MetaFunction} from '@remix-run/react';
- import {getPaginationVariables} from '@shopify/hydrogen';
+@@ -3,7 +3,10 @@ import {useLoaderData, type MetaFunction} from 'react-router';
+ import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
  import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  import {ProductItem} from '~/components/ProductItem';
 -
@@ -545,7 +545,7 @@ Update the `collections.all` route to filter out combined listings from the sear
 @@ -1,4 +1,4 @@
 -import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 +import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
- import {useLoaderData, type MetaFunction} from '@remix-run/react';
+ import { useLoaderData, type MetaFunction } from 'react-router';
  import {
    getSelectedProductOptions,
 @@ -11,7 +11,14 @@ import {

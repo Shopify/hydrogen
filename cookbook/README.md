@@ -159,10 +159,13 @@ cookbook.ts validate
 Validate a recipe
 
 Options:
-  --version  Show version number                           [boolean]
-  --help     Show help                                     [boolean]
-  --recipe   The name of the recipe to validate. If not provided,
-             all recipes will be validated.                 [string]
+  --version                  Show version number                       [boolean]
+  --help                     Show help                                 [boolean]
+  --recipe                   The name of the recipe to validate. If not
+                             provided, all recipes will be validated.   [string]
+  --hydrogenPackagesVersion  The version of Hydrogen to use for the recipe. If
+                             not provided, the latest version will be used.
+                                                                        [string]
 ```
 
 #### Example
