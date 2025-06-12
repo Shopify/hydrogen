@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2025.5.1
+
+### Patch Changes
+
+- Add `@inContext` language support to Customer Account API mutations ([#2881](https://github.com/Shopify/hydrogen/pull/2881)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 2025.4.0
 
 ### Patch Changes
