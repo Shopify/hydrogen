@@ -81,7 +81,7 @@ In this step we'll implement the ability to display subscription options on  pro
 
 Create a new `SellingPlanSelector` component that displays the available subscription options for a product.
 
-##### File: [SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
+##### File: [SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/71cffb0da4cb247948a36ac8adcd4a381cca6df7/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
 
 ```tsx
 import type {
@@ -90,7 +90,7 @@ import type {
   SellingPlanFragment,
 } from 'storefrontapi.generated';
 import {useMemo} from 'react';
-import {useLocation} from '@remix-run/react';
+import {useLocation} from 'react-router';
 
 /* Enriched sellingPlan type including isSelected and url */
 export type SellingPlan = SellingPlanFragment & {
@@ -196,7 +196,7 @@ export function SellingPlanSelector({
 
 Add styles for the `SellingPlanSelector` component.
 
-##### File: [selling-plan.css](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css)
+##### File: [selling-plan.css](https://github.com/Shopify/hydrogen/blob/71cffb0da4cb247948a36ac8adcd4a381cca6df7/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css)
 
 ```css
 .selling-plan-group {
@@ -486,13 +486,15 @@ Add styles for the `SellingPlanSelector` component.
 ##### File: /app/routes/products.$handle.tsx
 
 ```diff
-@@ -1,3 +1,5 @@
+@@ -1,5 +1,6 @@
 +import type {SellingPlanFragment} from 'storefrontapi.generated';
-+import type {LinksFunction} from '@remix-run/node';
  import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
- import {useLoaderData, type MetaFunction} from '@remix-run/react';
+-import { useLoaderData, type MetaFunction } from 'react-router';
++import {LinksFunction, useLoaderData, type MetaFunction} from 'react-router';
  import {
-@@ -13,6 +15,12 @@ import {ProductImage} from '~/components/ProductImage';
+   getSelectedProductOptions,
+   Analytics,
+@@ -13,6 +14,12 @@ import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
  
@@ -505,7 +507,7 @@ Add styles for the `SellingPlanSelector` component.
  export const meta: MetaFunction<typeof loader> = ({data}) => {
    return [
      {title: `Hydrogen | ${data?.product.title ?? ''}`},
-@@ -63,8 +71,34 @@ async function loadCriticalData({
+@@ -63,8 +70,34 @@ async function loadCriticalData({
    // The API handle might be localized, so redirect to the localized handle
    redirectIfHandleIsLocalized(request, {handle, data: product});
  
@@ -540,7 +542,7 @@ Add styles for the `SellingPlanSelector` component.
    };
  }
  
-@@ -81,7 +115,7 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
+@@ -81,7 +114,7 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
  }
  
  export default function Product() {
@@ -549,7 +551,7 @@ Add styles for the `SellingPlanSelector` component.
  
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
-@@ -99,7 +133,7 @@ export default function Product() {
+@@ -99,7 +132,7 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
  
@@ -558,7 +560,7 @@ Add styles for the `SellingPlanSelector` component.
  
    return (
      <div className="product">
-@@ -109,11 +143,15 @@ export default function Product() {
+@@ -109,11 +142,15 @@ export default function Product() {
          <ProductPrice
            price={selectedVariant?.price}
            compareAtPrice={selectedVariant?.compareAtPrice}
@@ -574,7 +576,7 @@ Add styles for the `SellingPlanSelector` component.
          />
          <br />
          <br />
-@@ -177,9 +215,83 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+@@ -177,9 +214,83 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
        amount
        currencyCode
      }
@@ -658,7 +660,7 @@ Add styles for the `SellingPlanSelector` component.
  const PRODUCT_FRAGMENT = `#graphql
    fragment Product on Product {
      id
-@@ -207,6 +319,11 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -207,6 +318,11 @@ const PRODUCT_FRAGMENT = `#graphql
          }
        }
      }
@@ -670,7 +672,7 @@ Add styles for the `SellingPlanSelector` component.
      selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
        ...ProductVariant
      }
-@@ -218,6 +335,7 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -218,6 +334,7 @@ const PRODUCT_FRAGMENT = `#graphql
        title
      }
    }
@@ -727,7 +729,7 @@ Add a `sellingPlanAllocation` field with the plan name to the standard and compo
 @@ -3,8 +3,8 @@ import type {CartLayout} from '~/components/CartMain';
  import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
  import {useVariantUrl} from '~/lib/variants';
- import {Link} from '@remix-run/react';
+ import { Link } from 'react-router';
 -import {ProductPrice} from './ProductPrice';
 -import {useAside} from './Aside';
 +import {ProductPrice} from '~/components/ProductPrice';
@@ -769,7 +771,7 @@ In this step we'll implement support for subscription management through an acco
 
 Create GraphQL queries that retrieve the subscription info from the customer account client.
 
-##### File: [CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
+##### File: [CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/71cffb0da4cb247948a36ac8adcd4a381cca6df7/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
 
 ```ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
@@ -817,7 +819,7 @@ export const SUBSCRIPTIONS_CONTRACTS_QUERY = `#graphql
 
 Create a GraqhQL mutation to cancel an existing subscription.
 
-##### File: [CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
+##### File: [CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/71cffb0da4cb247948a36ac8adcd4a381cca6df7/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
 
 ```ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
@@ -842,7 +844,7 @@ export const SUBSCRIPTION_CANCEL_MUTATION = `#graphql
 
 Create a new account subpage that lets customers manage their existing  subscriptions based on the new GraphQL queries and mutations.
 
-##### File: [account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
+##### File: [account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/71cffb0da4cb247948a36ac8adcd4a381cca6df7/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
 
 ```tsx
 import type {SubscriptionBillingPolicyFragment} from 'customer-accountapi.generated';
@@ -857,7 +859,7 @@ import {
   useFetcher,
   useLoaderData,
   type MetaFunction,
-} from '@remix-run/react';
+} from 'react-router';
 import {SUBSCRIPTIONS_CONTRACTS_QUERY} from '../graphql/customer-account/CustomerSubscriptionsQuery';
 import {SUBSCRIPTION_CANCEL_MUTATION} from '../graphql/customer-account/CustomerSubscriptionsMutations';
 
@@ -1028,14 +1030,25 @@ Add a `Subscriptions` link to the account menu.
 ##### File: /app/routes/account.tsx
 
 ```diff
-@@ -74,6 +74,10 @@ function AccountMenu() {
+@@ -1,6 +1,8 @@
+-
+-import {data as remixData, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+-import { Form, NavLink, Outlet, useLoaderData } from 'react-router';
++import {
++  data as remixData,
++  type LoaderFunctionArgs,
++} from '@shopify/remix-oxygen';
++import {Form, NavLink, Outlet, useLoaderData} from 'react-router';
+ import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
+ 
+ export function shouldRevalidate() {
+@@ -80,6 +82,9 @@ function AccountMenu() {
          &nbsp; Addresses &nbsp;
        </NavLink>
        &nbsp;|&nbsp;
 +      <NavLink to="/account/subscriptions" style={isActiveStyle}>
 +        &nbsp; Subscriptions &nbsp;
 +      </NavLink>
-+      &nbsp;|&nbsp;
        <Logout />
      </nav>
    );
@@ -1045,7 +1058,7 @@ Add a `Subscriptions` link to the account menu.
 
 Add styles for the Subscriptions page.
 
-##### File: [account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/87da752246ad519f744a791cd21fd75546c7273e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
+##### File: [account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/71cffb0da4cb247948a36ac8adcd4a381cca6df7/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
 
 ```css
 .account-subscriptions {

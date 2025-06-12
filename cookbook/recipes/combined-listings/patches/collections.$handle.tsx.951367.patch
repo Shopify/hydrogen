@@ -1,4 +1,4 @@
-index f1d7fa3e..17edfb7d 100644
+index b44bc1ba..fb04d67f 100644
 --- a/templates/skeleton/app/routes/collections.$handle.tsx
 +++ b/templates/skeleton/app/routes/collections.$handle.tsx
 @@ -4,7 +4,10 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';

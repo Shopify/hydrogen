@@ -1,10 +1,10 @@
-index 2dc6bda2..0339d128 100644
+index 4989ca00..0356b373 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,4 +1,4 @@
 -import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 +import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
- import {useLoaderData, type MetaFunction} from '@remix-run/react';
+ import { useLoaderData, type MetaFunction } from 'react-router';
  import {
    getSelectedProductOptions,
 @@ -12,6 +12,8 @@ import {ProductPrice} from '~/components/ProductPrice';
