@@ -138,6 +138,9 @@ jobs:
       - name: 📥 Install dependencies
         run: npm ci
 
+      - name: 📦 Build packages, templates, and examples
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:all
+
       - name: 📥 Install dependencies (cookbook)
         working-directory: cookbook
         run: npm ci
