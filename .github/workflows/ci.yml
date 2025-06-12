@@ -119,3 +119,26 @@ jobs:
 
       - name: 🔬 Test
         run: npm run test
+
+  validate_recipes:
+    name: ⬣ Validate Recipes
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: 📥 Install dependencies
+        working-directory: cookbook
+        run: npm ci
+
+      - name: 🧐 Validate Recipes
+        working-directory: cookbook
+        run: npm run cookbook -- validate
