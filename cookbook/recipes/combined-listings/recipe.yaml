@@ -2,7 +2,7 @@
 
 gid: 6bfa1a39-3a16-4351-b34a-2369c495d5a2
 title: Combined Listings
-summary: Handle combined listings on product pages and in search results.
+BROKENsummary: Handle combined listings on product pages and in search results.
 description: |
   This recipe lets you more precisely display and manage [combined listings](https://help.shopify.com/en/manual/products/combined-listings-app) on product pages and in search results for your Hydrogen storefront. A combined listing groups separate products together into a single product listing using a shared option like color or size.
   Each product appears as a variant but can have its own title, description, URL, and images.
@@ -19,7 +19,8 @@ requirements: |
   - Your store must have the [Combined Listings app](https://admin.shopify.com/apps/combined-listings) installed.
 ingredients:
   - path: templates/skeleton/app/lib/combined-listings.ts
-    description: The `combined-listings.ts` file contains utilities and settings for
+    description:
+      The `combined-listings.ts` file contains utilities and settings for
       handling combined listings.
 deletedFiles: []
 steps:
@@ -54,7 +55,8 @@ steps:
   - type: NEW_FILE
     step: 3
     name: Add combined listings utilities
-    description: Create a new `combined-listings.ts` file that contains utilities
+    description:
+      Create a new `combined-listings.ts` file that contains utilities
       and settings for handling combined listings.
     ingredients:
       - path: templates/skeleton/app/lib/combined-listings.ts
@@ -151,7 +153,8 @@ llms:
       variant price?
   troubleshooting:
     - issue: Combined listings are being displayed in the product list.
-      solution: Make sure to tag combined listing parent products in the Shopify admin
+      solution:
+        Make sure to tag combined listing parent products in the Shopify admin
         and use that tag to filter out combined listings from the product list
         in the GraphQL query.
 commit: 2e32e77efa32aca00b18552fbdbfcb8af012f4ca
