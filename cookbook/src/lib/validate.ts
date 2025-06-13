@@ -37,7 +37,7 @@ export async function validateRecipe(params: {
 
     // run npm install in the template directory
     console.log(`- 📦 Installing dependencies…`);
-    execSync(`npm ci`, {cwd: TEMPLATE_PATH});
+    execSync(`npm install`, {cwd: TEMPLATE_PATH});
 
     console.log(`- 🔄 Running codegen…`);
     execSync(`npm run codegen`, {cwd: TEMPLATE_PATH});
