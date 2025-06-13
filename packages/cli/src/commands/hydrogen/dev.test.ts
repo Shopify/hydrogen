@@ -22,6 +22,7 @@ describe('dev', () => {
   });
 
   it('runs dev in a Vite project', async () => {
+    console.log('tmpDir', tmpDir);
     await setupTemplate({
       path: tmpDir,
       git: true,

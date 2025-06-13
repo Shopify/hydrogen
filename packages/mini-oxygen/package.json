@@ -19,8 +19,8 @@
   },
   "scripts": {
     "prepare": "custompatch",
-    "build": "tsup --publicDir public",
-    "dev": "tsup --watch --publicDir public",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "prepack": "npm run build",
     "test": "NODE_OPTIONS=--experimental-vm-modules vitest run --test-timeout=60000"

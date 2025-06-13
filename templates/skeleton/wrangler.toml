@@ -1,4 +1,4 @@
 name = "cloudflare-oxygen-worker"
 compatibility_flags = [ "nodejs_compat" ]
 compatibility_date = "2024-09-23"
-main = "./worker/index.js"
+main = "./server.ts"

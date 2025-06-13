@@ -1,5 +1,3 @@
-import path from 'node:path';
-import {fileURLToPath} from 'url';
 import type {Plugin} from 'vite';
 import {
   cloudflare,
@@ -29,11 +27,7 @@ export function oxygen(
   pluginOptions: OxygenAndCloudflarePluginOptions = {},
 ): Plugin[] {
   // Provide a default wrangler config file path if one is not provided.
-  const defaultWranglerConfigPath = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    '..',
-    'wrangler.toml',
-  );
+  const defaultWranglerConfigPath = './wrangler.toml';
   const defaultedCloudflarePluginConfig: CloudflarePluginConfig = {
     ...pluginOptions.cloudflare,
     configPath:

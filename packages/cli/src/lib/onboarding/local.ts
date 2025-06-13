@@ -1,8 +1,8 @@
 import {cp as copyWithFilter} from 'node:fs/promises';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
-import {writeFile} from '@shopify/cli-kit/node/fs';
-import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
+import {copyFile, writeFile} from '@shopify/cli-kit/node/fs';
+import {joinPath, relativePath, resolvePath} from '@shopify/cli-kit/node/path';
 import {hyphenate} from '@shopify/cli-kit/common/string';
 import colors from '@shopify/cli-kit/node/colors';
 import {
@@ -87,6 +87,7 @@ export async function setupLocalStarterTemplate(
       .catch(abort);
 
   const templateDir = await getStarterDir();
+  const appDirectory = joinPath(project.directory, 'app');
   let backgroundWorkPromise: Promise<any> = copyWithFilter(
     templateDir,
     project.directory,
@@ -94,17 +95,20 @@ export async function setupLocalStarterTemplate(
     {
       force: true,
       recursive: true,
-      filter: (filepath: string) =>
-        !/^(app\/|dist\/|node_modules\/|server\.ts|\.shopify\/)/i.test(
-          relativePath(templateDir, filepath),
-        ),
+      filter: (filepath: string) => {
+        return (
+          !/^(app\/|dist\/|node_modules\/|server\.ts|\.shopify\/)/i.test(
+            relativePath(templateDir, filepath),
+          ) || filepath.endsWith('wrangler.toml')
+        );
+      },
     },
   )
     .then(() =>
       // Generate project entries and their file dependencies
       generateProjectEntries({
         rootDirectory: project.directory,
-        appDirectory: joinPath(project.directory, 'app'),
+        appDirectory,
         typescript: true, // Will be transpiled later
       }),
     )
