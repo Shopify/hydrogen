@@ -38,8 +38,11 @@ async function handler(args: ValidateArgs) {
   }
 
   let failed: string[] = [];
-  for (const recipe of recipes) {
-    console.log(`🧐 Validating recipe '${recipe}'`);
+  for (let i = 0; i < recipes.length; i++) {
+    const recipe = recipes[i];
+    console.log(
+      `(${i + 1}/${recipes.length}) 🧐 Validating recipe '${recipe}'`,
+    );
 
     const ok = await validateRecipe({
       recipeTitle: recipe,

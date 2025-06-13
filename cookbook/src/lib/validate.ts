@@ -37,11 +37,10 @@ export async function validateRecipe(params: {
 
     // run npm install in the template directory
     console.log(`- 📦 Installing dependencies…`);
-    execSync(`npm install`, {cwd: TEMPLATE_PATH});
+    execSync(`npm ci`, {cwd: TEMPLATE_PATH});
 
     console.log(`- 🔄 Running codegen…`);
     execSync(`npm run codegen`, {cwd: TEMPLATE_PATH});
-    await wait(1000);
 
     // run typecheck in the template directory
     console.log(`- 🔨 Running typecheck…`);
@@ -61,11 +60,5 @@ export async function validateRecipe(params: {
   } finally {
     // rewind the changes to the template directory
     execSync(`git checkout -- .`, {cwd: TEMPLATE_PATH});
-    // wait a bit to make sure the changes are reverted
-    await wait(1000);
   }
-}
-
-async function wait(ms: number) {
-  await new Promise((resolve) => setTimeout(resolve, ms));
 }
