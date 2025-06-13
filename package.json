@@ -30,7 +30,8 @@
     "version:next": "node scripts/changeset-version-next.mjs",
     "changeset": "changeset",
     "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/*/dist && rimraf templates/*/.cache",
-    "check": "npm run build && npm run lint && npm run typecheck && npm run test"
+    "check": "npm run build && npm run lint && npm run typecheck && npm run test",
+    "prepare": "custompatch"
   },
   "workspaces": [
     "docs/preview",

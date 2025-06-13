@@ -53,6 +53,7 @@ interface MiniOxygenPublicInstance {
 export function createMiniOxygen(
   opts: MiniOxygenOptions,
 ): MiniOxygenPublicInstance {
+  console.log('createMiniOxygen', opts);
   const {
     log = (message: string) => console.log(message),
     workerFile,

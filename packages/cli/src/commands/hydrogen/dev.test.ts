@@ -50,8 +50,19 @@ describe('dev', () => {
         {timeout: 5000},
       );
 
+      // Wait a bit for worker to fully initialize
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // First test if worker is running
+      const debugResponse = await fetch(getUrl() + 'debug');
+      console.log('Debug response status:', debugResponse.status);
+      console.log('Debug response:', await debugResponse.text());
+
       const response = await fetch(getUrl());
-      console.log('response', response);
+      if (response.status !== 200) {
+        const text = await response.text();
+        console.log('Error response:', text);
+      }
       expect(response.status).toEqual(200);
       expect(response.headers.get('content-type')).toEqual('text/html');
       await expect(response.text()).resolves.toMatch('Mock.shop');

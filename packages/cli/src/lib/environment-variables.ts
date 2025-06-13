@@ -133,8 +133,10 @@ async function getRemoteVariables(
 
 export async function getLocalVariables(root: string, envFile: string) {
   const dotEnvPath = resolvePath(root, envFile);
+  console.log('dotEnvPath', dotEnvPath);
 
-  return await fileExists(dotEnvPath).then((exists) =>
-    exists ? readAndParseDotEnv(dotEnvPath) : {variables: {} as EnvMap},
-  );
+  return await fileExists(dotEnvPath).then((exists) => {
+    console.log('exists', exists);
+    return exists ? readAndParseDotEnv(dotEnvPath) : {variables: {} as EnvMap};
+  });
 }

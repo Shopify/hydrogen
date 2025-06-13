@@ -3,7 +3,6 @@ import {storefrontRedirect} from '@shopify/hydrogen';
 import {createRequestHandler} from '@shopify/remix-oxygen';
 import {createAppLoadContext} from '~/lib/context';
 
-console.log('server.ts');
 /**
  * Export a fetch handler in module format.
  */
@@ -13,21 +12,72 @@ export default {
     env: Env,
     executionContext: ExecutionContext,
   ): Promise<Response> {
-    try {
-      const appLoadContext = await createAppLoadContext(
-        request,
-        env,
-        executionContext,
+    // Debug: return early to test if worker is running
+    if (new URL(request.url).pathname === '/debug') {
+      return new Response(
+        JSON.stringify({
+          status: 'Worker is running!',
+          envKeys: Object.keys(env),
+          hasSessionSecret: 'SESSION_SECRET' in env,
+          sessionSecretValue: env.SESSION_SECRET ? 'set' : 'not set',
+        }),
+        {
+          status: 200,
+          headers: {'Content-Type': 'application/json'},
+        },
       );
+    }
+
+    try {
+      let debugInfo = {step: 'start'};
+      let appLoadContext;
+
+      try {
+        debugInfo.step = 'createAppLoadContext';
+        appLoadContext = await createAppLoadContext(
+          request,
+          env,
+          executionContext,
+        );
+        debugInfo.contextCreated = true;
+      } catch (e) {
+        return new Response(
+          JSON.stringify({
+            error: 'Failed to create app context',
+            message: e instanceof Error ? e.message : 'Unknown error',
+            debugInfo,
+          }),
+          {status: 500, headers: {'Content-Type': 'application/json'}},
+        );
+      }
 
       /**
        * Create a Remix request handler and pass
        * Hydrogen's Storefront client to the loader context.
        */
-      const handleRequest = createRequestHandler({
+      let build;
+      try {
+        debugInfo.step = 'import virtual module';
         // @ts-expect-error Not a valid import.
-        build: await import('virtual:react-router/server-build'), // eslint-disable-line import/no-unresolved
-        mode: process.env.NODE_ENV,
+        build = await import('virtual:react-router/server-build'); // eslint-disable-line import/no-unresolved
+        debugInfo.moduleImported = true;
+      } catch (importError) {
+        return new Response(
+          JSON.stringify({
+            error: 'Failed to import virtual module',
+            message:
+              importError instanceof Error
+                ? importError.message
+                : 'Unknown error',
+            debugInfo,
+          }),
+          {status: 500, headers: {'Content-Type': 'application/json'}},
+        );
+      }
+
+      const handleRequest = createRequestHandler({
+        build,
+        mode: process.env.NODE_ENV || 'development',
         getLoadContext: () => appLoadContext,
       });
 
@@ -55,7 +105,13 @@ export default {
 
       return response;
     } catch (error) {
-      console.error(error);
+      console.error('Worker error:', error);
+      if (process.env.SHOPIFY_UNIT_TEST) {
+        // Return detailed error in test mode
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        return new Response(errorMessage, {status: 500});
+      }
       return new Response('An unexpected error occurred', {status: 500});
     }
   },

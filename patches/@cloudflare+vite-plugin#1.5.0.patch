@@ -1,0 +1,47 @@
+Index: /@cloudflare/vite-plugin/dist/index.js
+===================================================================
+--- /@cloudflare/vite-plugin/dist/index.js
++++ /@cloudflare/vite-plugin/dist/index.js
+@@ -14153,12 +14153,18 @@
+     root,
+     /* prefixes */
+     ""
+   );
+-  const entryWorkerConfigPath = getValidatedWranglerConfigPath(
+-    root,
+-    pluginConfig.configPath
+-  );
++  let entryWorkerConfigPath
++  if (pluginConfig.config != null) {
++    entryWorkerConfigPath = path8.join(root, 'wrangler-entry-worker-config-generated.json');
++    fs4.writeFileSync(entryWorkerConfigPath, JSON.stringify(pluginConfig.config, null, 2));
++  } else {
++    entryWorkerConfigPath = getValidatedWranglerConfigPath(
++      root,
++      pluginConfig.configPath
++    );
++  }
+   const entryWorkerResolvedConfig = getWorkerConfig(
+     entryWorkerConfigPath,
+     cloudflareEnv,
+     pluginConfig.experimental?.mixedMode ?? false,
+@@ -14166,8 +14172,9 @@
+       visitedConfigPaths: configPaths,
+       isEntryWorker: true
+     }
+   );
++  console.log('entryWorkerResolvedConfig', JSON.stringify(entryWorkerResolvedConfig, null, 2));
+   if (entryWorkerResolvedConfig.type === "assets-only") {
+     return {
+       type: "assets-only",
+       config: entryWorkerResolvedConfig.config,
+@@ -14199,8 +14206,9 @@
+       {
+         visitedConfigPaths: configPaths
+       }
+     );
++    console.log('workerResolvedConfig', JSON.stringify(workerResolvedConfig, null, 2))
+     auxiliaryWorkersResolvedConfigs.push(workerResolvedConfig);
+     assert8(
+       workerResolvedConfig.type === "worker",
+       "Unexpected error: received AssetsOnlyResult with auxiliary workers."
