@@ -7,11 +7,11 @@ import path from 'path';
  * Validate a recipe.
  * @param params - The parameters for the validation.
  */
-export async function validateRecipe(params: {
+export function validateRecipe(params: {
   recipeTitle: string;
   hydrogenPackagesVersion?: string;
-}) {
-  let start = Date.now();
+}): boolean {
+  const start = Date.now();
 
   const {recipeTitle, hydrogenPackagesVersion} = params;
 
@@ -21,6 +21,17 @@ export async function validateRecipe(params: {
       recipeTitle,
     });
 
+    let validationCommands: string[] = [
+      // Install dependencies
+      'npm install',
+      // Codegen
+      'npm run codegen',
+      // Typecheck
+      'npm run typecheck',
+      // Build
+      'npm run build',
+    ];
+
     if (hydrogenPackagesVersion != null) {
       console.log(`- 🔼 Applying Hydrogen version ${hydrogenPackagesVersion}…`);
       rmSync(path.join(TEMPLATE_PATH, 'package-lock.json'), {force: true});
@@ -29,26 +40,17 @@ export async function validateRecipe(params: {
         'https://registry.npmjs.org/@shopify/hydrogen/-/hydrogen',
         'https://registry.npmjs.org/@shopify/remix-oxygen/-/remix-oxygen',
       ];
-      execSync(
+      // If the command is invoked with a specific Hydrogen version, explicitly install the packages.
+      validationCommands = [
         `npm install ${packages.map((p) => `${p}-${hydrogenPackagesVersion}.tgz`).join(' ')}`,
-        {cwd: TEMPLATE_PATH},
-      );
+        ...validationCommands,
+      ];
     }
 
-    // run npm install in the template directory
-    console.log(`- 📦 Installing dependencies…`);
-    execSync(`npm install`, {cwd: TEMPLATE_PATH});
-
-    console.log(`- 🔄 Running codegen…`);
-    execSync(`npm run codegen`, {cwd: TEMPLATE_PATH});
-
-    // run typecheck in the template directory
-    console.log(`- 🔨 Running typecheck…`);
-    execSync(`npm run typecheck`, {cwd: TEMPLATE_PATH});
-
-    // run npm run build in the template directory
-    console.log(`- 🏗️ Building…`);
-    execSync(`npm run build`, {cwd: TEMPLATE_PATH});
+    for (const command of validationCommands) {
+      console.log(`- 🔬 Running ${command}…`);
+      execSync(command, {cwd: TEMPLATE_PATH});
+    }
 
     const duration = Date.now() - start;
     console.log(`✅ Recipe '${recipeTitle}' is valid (${duration}ms)`);
