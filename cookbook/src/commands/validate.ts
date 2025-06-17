@@ -1,6 +1,8 @@
 import {CommandModule} from 'yargs';
 import {listRecipes, separator} from '../lib/util';
 import {validateRecipe} from '../lib/validate';
+import {execSync} from 'child_process';
+import {TEMPLATE_PATH} from '../lib/constants';
 
 type ValidateArgs = {
   recipe?: string;
@@ -46,6 +48,9 @@ async function handler(args: ValidateArgs) {
       recipeTitle: recipe,
       hydrogenPackagesVersion: args.hydrogenPackagesVersion,
     });
+
+    execSync(`git clean -fd ${TEMPLATE_PATH}`);
+
     if (!ok) {
       console.error(`❌ Recipe '${recipe}' is invalid`);
       failed.push(recipe);
