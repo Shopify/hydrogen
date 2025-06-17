@@ -55,15 +55,15 @@ selected.
 
 _New files added to the template by this recipe._
 
-| File | Description |
-| --- | --- |
-| [app/components/CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/4129da578f9d603187bd10945ae60e1934df0e8a/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx) | A component that displays a country selector inside the Header. |
-| [app/components/Link.tsx](https://github.com/Shopify/hydrogen/blob/4129da578f9d603187bd10945ae60e1934df0e8a/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx) | A wrapper around the Link component that uses the selected locale path prefix. |
-| [app/lib/i18n.ts](https://github.com/Shopify/hydrogen/blob/4129da578f9d603187bd10945ae60e1934df0e8a/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts) | A helper function to get locale information from the context, a hook to retrieve the selected locale, and a list of available locales. |
-| [app/routes/($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/4129da578f9d603187bd10945ae60e1934df0e8a/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx) | A route that renders a localized version of the home page. |
-| [app/routes/($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/4129da578f9d603187bd10945ae60e1934df0e8a/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx) | A localized cart route. |
-| [app/routes/($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/4129da578f9d603187bd10945ae60e1934df0e8a/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx) | A route that renders a localized version of the product page. |
-| [app/routes/($locale).tsx](https://github.com/Shopify/hydrogen/blob/4129da578f9d603187bd10945ae60e1934df0e8a/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).tsx) | A utility route that makes sure the locale is valid. |
+| File                                                                                                                                                                                                                             | Description                                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| [app/components/CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/4129da578f9d603187bd10945ae60e1934df0e8a/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)               | A component that displays a country selector inside the Header.                                                                        |
+| [app/components/Link.tsx](https://github.com/Shopify/hydrogen/blob/4129da578f9d603187bd10945ae60e1934df0e8a/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)                                     | A wrapper around the Link component that uses the selected locale path prefix.                                                         |
+| [app/lib/i18n.ts](https://github.com/Shopify/hydrogen/blob/4129da578f9d603187bd10945ae60e1934df0e8a/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)                                                     | A helper function to get locale information from the context, a hook to retrieve the selected locale, and a list of available locales. |
+| [app/routes/($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/4129da578f9d603187bd10945ae60e1934df0e8a/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)                     | A route that renders a localized version of the home page.                                                                             |
+| [app/routes/($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/4129da578f9d603187bd10945ae60e1934df0e8a/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)                         | A localized cart route.                                                                                                                |
+| [app/routes/($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/4129da578f9d603187bd10945ae60e1934df0e8a/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx) | A route that renders a localized version of the product page.                                                                          |
+| [app/routes/($locale).tsx](https://github.com/Shopify/hydrogen/blob/4129da578f9d603187bd10945ae60e1934df0e8a/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).tsx)                                   | A utility route that makes sure the locale is valid.                                                                                   |
 
 ## Steps
 
@@ -198,7 +198,6 @@ import {
   CountryCode as StorefrontCountryCode,
   LanguageCode as StorefrontLanguageCode,
 } from '@shopify/hydrogen/storefront-api-types';
-import {useMatches} from 'react-router';
 
 type LanguageCode = CustomerLanguageCode & StorefrontLanguageCode;
 type CountryCode = CustomerCountryCode & StorefrontCountryCode;
@@ -297,7 +296,7 @@ index 3b0f6913..81ff9ec9 100644
  } from 'storefrontapi.generated';
  import {useVariantUrl} from '~/lib/variants';
 +import {Link} from './Link';
- 
+
  export function ProductItem({
    product,
 ```
@@ -317,13 +316,13 @@ index c424c511..b5d3737a 100644
  import {AppSession} from '~/lib/session';
  import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 +import {getLocaleFromRequest} from './i18n';
- 
+
  /**
   * The context implementation is separate from server.ts
 @@ -24,13 +25,15 @@ export async function createAppLoadContext(
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
- 
+
 +  const i18n = getLocaleFromRequest(request);
 +
    const hydrogenContext = createHydrogenContext({
@@ -354,7 +353,7 @@ index 6adb9472..988de280 100644
  import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
  import {useAside} from '~/components/Aside';
 +import {CountrySelector} from './CountrySelector';
- 
+
  interface HeaderProps {
    header: HeaderQuery;
 @@ -102,6 +103,7 @@ function HeaderCtas({
@@ -1046,7 +1045,7 @@ index 20b39d82..8cf08fc6 100644
  import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
  import {getSitemap} from '@shopify/hydrogen';
 +import {SUPPORTED_LOCALES} from '../lib/i18n';
- 
+
  export async function loader({
    request,
 @@ -10,7 +11,9 @@ export async function loader({
@@ -1076,7 +1075,7 @@ index 4a0898a8..ffa83131 100644
 -import { useLocation } from 'react-router';
  import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
  import {useMemo} from 'react';
- 
+
 @@ -6,35 +5,25 @@ export function useVariantUrl(
    handle: string,
    selectedOptions?: SelectedOption[],
@@ -1093,7 +1092,7 @@ index 4a0898a8..ffa83131 100644
 -  }, [handle, selectedOptions, pathname]);
 +  }, [handle, selectedOptions]);
  }
- 
+
  export function getVariantUrl({
    handle,
 -  pathname,
@@ -1112,7 +1111,7 @@ index 4a0898a8..ffa83131 100644
 -    ? `${match![0]}products/${handle}`
 -    : `/products/${handle}`;
 +  const path = `/products/${handle}`;
- 
+
    selectedOptions?.forEach((option) => {
      searchParams.set(option.name, option.value);
 ```

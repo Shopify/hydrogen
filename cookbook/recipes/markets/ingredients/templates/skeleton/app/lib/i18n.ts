@@ -6,7 +6,6 @@ import {
   CountryCode as StorefrontCountryCode,
   LanguageCode as StorefrontLanguageCode,
 } from '@shopify/hydrogen/storefront-api-types';
-import {useMatches} from 'react-router';
 
 type LanguageCode = CustomerLanguageCode & StorefrontLanguageCode;
 type CountryCode = CustomerCountryCode & StorefrontCountryCode;
