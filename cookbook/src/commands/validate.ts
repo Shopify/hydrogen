@@ -1,6 +1,4 @@
-import {execSync} from 'child_process';
 import {CommandModule} from 'yargs';
-import {TEMPLATE_PATH} from '../lib/constants';
 import {listRecipes, separator} from '../lib/util';
 import {validateRecipe} from '../lib/validate';
 
@@ -48,9 +46,6 @@ async function handler(args: ValidateArgs) {
       recipeTitle: recipe,
       hydrogenPackagesVersion: args.hydrogenPackagesVersion,
     });
-    // clean up the skeleton template directory on success
-    execSync(`git checkout -- ${TEMPLATE_PATH}`);
-    execSync(`git clean -fd ${TEMPLATE_PATH}`);
 
     if (!ok) {
       console.error(`❌ Recipe '${recipe}' is invalid`);
