@@ -1,4 +1,4 @@
-import {execSync} from 'child_process';
+import {execSync, ExecSyncOptionsWithBufferEncoding} from 'child_process';
 import {rmSync} from 'fs';
 import {applyRecipe} from './apply';
 import {TEMPLATE_PATH} from './constants';
@@ -21,35 +21,19 @@ export function validateRecipe(params: {
       recipeTitle,
     });
 
-    let validationCommands: string[] = [
-      // Install dependencies
-      'npm install',
-      // Codegen
-      'npm run codegen',
-      // Typecheck
-      'npm run typecheck',
-      // Build
-      'npm run build',
+    const validationCommands: Command[] = [
+      ...(hydrogenPackagesVersion != null
+        ? [installHydrogenPackages(hydrogenPackagesVersion)]
+        : []),
+      installDependencies(),
+      runCodegen(),
+      runTypecheck(),
+      buildSkeleton(),
     ];
 
-    if (hydrogenPackagesVersion != null) {
-      console.log(`- 🔼 Applying Hydrogen version ${hydrogenPackagesVersion}…`);
-      rmSync(path.join(TEMPLATE_PATH, 'package-lock.json'), {force: true});
-      const packages = [
-        'https://registry.npmjs.org/@shopify/cli-hydrogen/-/cli-hydrogen',
-        'https://registry.npmjs.org/@shopify/hydrogen/-/hydrogen',
-        'https://registry.npmjs.org/@shopify/remix-oxygen/-/remix-oxygen',
-      ];
-      // If the command is invoked with a specific Hydrogen version, explicitly install the packages.
-      validationCommands = [
-        `npm install ${packages.map((p) => `${p}-${hydrogenPackagesVersion}.tgz`).join(' ')}`,
-        ...validationCommands,
-      ];
-    }
-
-    for (const command of validationCommands) {
+    for (const {command, options} of validationCommands) {
       console.log(`- 🔬 Running ${command}…`);
-      execSync(command, {cwd: TEMPLATE_PATH});
+      execSync(command, options);
     }
 
     const duration = Date.now() - start;
@@ -63,4 +47,50 @@ export function validateRecipe(params: {
     // rewind the changes to the template directory
     execSync(`git checkout -- .`, {cwd: TEMPLATE_PATH});
   }
+}
+
+type Command = {
+  command: string;
+  options: ExecSyncOptionsWithBufferEncoding;
+};
+
+function installDependencies(): Command {
+  return {
+    command: 'npm install',
+    options: {cwd: TEMPLATE_PATH},
+  };
+}
+
+function runCodegen(): Command {
+  return {
+    command: 'npm run codegen',
+    options: {cwd: TEMPLATE_PATH},
+  };
+}
+
+function runTypecheck(): Command {
+  return {
+    command: 'npm run typecheck',
+    options: {cwd: TEMPLATE_PATH},
+  };
+}
+
+function buildSkeleton(): Command {
+  return {
+    command: 'npm run build',
+    options: {cwd: TEMPLATE_PATH},
+  };
+}
+
+function installHydrogenPackages(version: string): Command {
+  rmSync(path.join(TEMPLATE_PATH, 'package-lock.json'), {force: true});
+  const packages = [
+    'https://registry.npmjs.org/@shopify/cli-hydrogen/-/cli-hydrogen',
+    'https://registry.npmjs.org/@shopify/hydrogen/-/hydrogen',
+    'https://registry.npmjs.org/@shopify/remix-oxygen/-/remix-oxygen',
+  ];
+  return {
+    command: `npm install ${packages.map((p) => `${p}-${version}.tgz`).join(' ')}`,
+    options: {cwd: TEMPLATE_PATH},
+  };
 }
