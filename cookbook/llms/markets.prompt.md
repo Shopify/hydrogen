@@ -320,7 +320,7 @@ Update the `ProductItem` component to use the `Link` component from the
  } from 'storefrontapi.generated';
  import {useVariantUrl} from '~/lib/variants';
 +import {Link} from './Link';
-
+ 
  export function ProductItem({
    product,
 ```
@@ -337,13 +337,13 @@ Detect the locale from the URL path, and add it to the HydrogenContext.
  import {AppSession} from '~/lib/session';
  import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 +import {getLocaleFromRequest} from './i18n';
-
+ 
  /**
   * The context implementation is separate from server.ts
 @@ -24,13 +25,15 @@ export async function createAppLoadContext(
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
-
+ 
 +  const i18n = getLocaleFromRequest(request);
 +
    const hydrogenContext = createHydrogenContext({
@@ -371,7 +371,7 @@ This adds a country selector component to the navigation.
  import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
  import {useAside} from '~/components/Aside';
 +import {CountrySelector} from './CountrySelector';
-
+ 
  interface HeaderProps {
    header: HeaderQuery;
 @@ -102,6 +103,7 @@ function HeaderCtas({
@@ -1041,7 +1041,7 @@ Update the sitemap route to use the locales included in `SUPPORTED_LOCALES`.
  import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
  import {getSitemap} from '@shopify/hydrogen';
 +import {SUPPORTED_LOCALES} from '../lib/i18n';
-
+ 
  export async function loader({
    request,
 @@ -10,7 +11,9 @@ export async function loader({
@@ -1068,7 +1068,7 @@ Remove the `pathname` parameter from the `useVariantUrl` function, and the logic
 -import { useLocation } from 'react-router';
  import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
  import {useMemo} from 'react';
-
+ 
 @@ -6,35 +5,25 @@ export function useVariantUrl(
    handle: string,
    selectedOptions?: SelectedOption[],
@@ -1085,7 +1085,7 @@ Remove the `pathname` parameter from the `useVariantUrl` function, and the logic
 -  }, [handle, selectedOptions, pathname]);
 +  }, [handle, selectedOptions]);
  }
-
+ 
  export function getVariantUrl({
    handle,
 -  pathname,
@@ -1104,7 +1104,7 @@ Remove the `pathname` parameter from the `useVariantUrl` function, and the logic
 -    ? `${match![0]}products/${handle}`
 -    : `/products/${handle}`;
 +  const path = `/products/${handle}`;
-
+ 
    selectedOptions?.forEach((option) => {
      searchParams.set(option.name, option.value);
 ```
