@@ -60,7 +60,8 @@ ingredients:
   - path: templates/skeleton/app/components/CountrySelector.tsx
     description: A component that displays a country selector inside the Header.
   - path: templates/skeleton/app/components/Link.tsx
-    description: A wrapper around the Link component that uses the selected locale
+    description:
+      A wrapper around the Link component that uses the selected locale
       path prefix.
   - path: templates/skeleton/app/lib/i18n.ts
     description: A helper function to get locale information from the context, a
@@ -81,7 +82,8 @@ steps:
   - type: INFO
     step: 1
     name: Add localization utilities and update core components
-    description: In this section, we'll create utilities to handle localization and
+    description:
+      In this section, we'll create utilities to handle localization and
       country selection, and update the core components to use these utilities.
   - type: NEW_FILE
     step: 1.1
@@ -225,13 +227,15 @@ llms:
     - Help me segment my customers based on their location
   troubleshooting:
     - issue: I'm not seeing the localized content on my storefront.
-      solution: In your Shopify admin, make sure you've set up your store's regions
+      solution:
+        In your Shopify admin, make sure you've set up your store's regions
         and langauges using Shopify Markets, then check that your products are
         appropriately configured for each market. In your Hydrogen app, make
         sure you've added the dynamic segment to the desired routes and that the
         routes are correctly named.
     - issue: Some pages are showing localized content, but others aren't.
-      solution: Make sure you update *all* routes that need localization (not only the
+      solution:
+        Make sure you update *all* routes that need localization (not only the
         routes for the home page, the cart page, and the product page). See step
         2.1 for details.
-commit: 195eefec4c9c752e0ce18de1bc71899389ae4fa0
+commit: 4129da578f9d603187bd10945ae60e1934df0e8a
