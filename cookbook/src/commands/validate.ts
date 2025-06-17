@@ -42,11 +42,10 @@ async function handler(args: ValidateArgs) {
       `(${i + 1}/${recipes.length}) 🧐 Validating recipe '${recipe}'`,
     );
 
-    const ok = await validateRecipe({
+    const ok = validateRecipe({
       recipeTitle: recipe,
       hydrogenPackagesVersion: args.hydrogenPackagesVersion,
     });
-
     if (!ok) {
       console.error(`❌ Recipe '${recipe}' is invalid`);
       failed.push(recipe);
