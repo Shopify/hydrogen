@@ -218,6 +218,7 @@ a hook to retrieve the selected locale.
 ##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/195eefec4c9c752e0ce18de1bc71899389ae4fa0/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
 
 ```ts
+import {useMatches} from 'react-router';
 import {
   CountryCode as CustomerCountryCode,
   LanguageCode as CustomerLanguageCode,

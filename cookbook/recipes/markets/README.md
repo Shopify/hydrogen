@@ -190,6 +190,7 @@ a hook to retrieve the selected locale.
 <details>
 
 ```ts
+import {useMatches} from 'react-router';
 import {
   CountryCode as CustomerCountryCode,
   LanguageCode as CustomerLanguageCode,
