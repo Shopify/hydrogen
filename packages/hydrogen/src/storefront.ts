@@ -312,6 +312,13 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       requestInit.body,
     ];
 
+    const streamConfig = document.includes('@defer')
+      ? {
+          query: document,
+          variables: queryVariables,
+        }
+      : undefined;
+
     const [body, response] = await fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions || CacheDefault(),
@@ -329,6 +336,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         graphql: graphqlData,
         purpose: storefrontHeaders?.purpose,
       },
+      streamConfig,
     });
 
     const errorOptions: GraphQLErrorOptions<T> = {
