@@ -6,6 +6,7 @@ import {
 } from './run-with-cache.js';
 import type {WaitUntil} from '../types.js';
 import {parseJSON} from '../utils/parse-json.js';
+import {createGraphQLClient} from '@shopify/graphql-client';
 
 export type FetchCacheOptions<T = any> = {
   cache?: CachingStrategy;
@@ -14,6 +15,10 @@ export type FetchCacheOptions<T = any> = {
   shouldCacheResponse: (body: T, response: Response) => boolean;
   waitUntil?: WaitUntil;
   debugInfo?: DebugOptions;
+  streamConfig?: {
+    query: string;
+    variables: Record<string, unknown>;
+  };
 };
 
 type SerializableResponse = [any, ResponseInit];
@@ -51,6 +56,7 @@ export async function fetchWithServerCache<T = unknown>(
     shouldCacheResponse,
     waitUntil,
     debugInfo,
+    streamConfig,
   }: FetchCacheOptions,
 ): Promise<readonly [T, Response]> {
   if (!cacheOptions && (!requestInit.method || requestInit.method === 'GET')) {
@@ -60,6 +66,43 @@ export async function fetchWithServerCache<T = unknown>(
   return runWithCache(
     cacheKey,
     async () => {
+      if (streamConfig) {
+        let rawResponse: Response | null = null;
+        const client = createGraphQLClient({
+          url,
+          customFetchApi: async (
+            url: string,
+            options: RequestInit | undefined,
+          ) => {
+            rawResponse = await fetch(url, options);
+            return rawResponse;
+          },
+          headers: requestInit.headers as Record<string, string>,
+        });
+
+        const responseStream = await client.requestStream(streamConfig.query, {
+          variables: streamConfig.variables,
+        });
+
+        let allData: unknown;
+        let allErrors: unknown;
+
+        for await (const response of responseStream) {
+          const {data, errors} = response;
+          allData = data;
+          allErrors = errors?.graphQLErrors ?? errors;
+        }
+
+        if (!rawResponse!?.ok) {
+          // Skip caching and consuming the response body
+          return rawResponse!;
+        }
+
+        return toSerializableResponse(
+          {data: allData, errors: allErrors},
+          rawResponse!,
+        );
+      }
       const response = await fetch(url, requestInit);
       if (!response.ok) {
         // Skip caching and consuming the response body
