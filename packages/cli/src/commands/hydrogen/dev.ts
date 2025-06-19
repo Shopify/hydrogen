@@ -226,9 +226,9 @@ export async function runDev({
     clearScreen: false,
     customLogger: process.env.SHOPIFY_UNIT_TEST
       ? Object.assign(vite.createLogger(), {
-          info: (msg: string) => collectLog('info', msg),
-          warn: (msg: string) => collectLog('warn', msg),
-          error: (msg: string) => collectLog('error', msg),
+          info: (msg: string) => console.log('info', msg),
+          warn: (msg: string) => console.log('warn', msg),
+          error: (msg: string) => console.log('error', msg),
         })
       : undefined,
     server: {
@@ -336,7 +336,6 @@ export async function runDev({
   );
 
   const finalHost = tunnel?.host || publicUrl.toString() || publicUrl.origin;
-  console.log('finalHost', finalHost);
 
   // Start the public facing server with the port passed by the user.
   enhanceH2Logs({
@@ -376,7 +375,7 @@ export async function runDev({
       codegenProcess?.removeAllListeners('close');
       codegenProcess?.kill('SIGINT');
       await Promise.allSettled([viteServer.close(), tunnel?.cleanup?.()]);
-      viteServer.watcher.close();
+      await Promise.allSettled([viteServer.watcher.close()]);
     },
   };
 }

@@ -1,10 +1,11 @@
 import '../../lib/onboarding/setup-template.mocks.js';
 import {mkdirSync, removeFile} from '@shopify/cli-kit/node/fs';
-import {describe, it, expect, vi, beforeAll} from 'vitest';
+import {describe, it, expect, vi, beforeAll, afterAll} from 'vitest';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {runDev} from './dev.js';
 import {setupTemplate} from '../../lib/onboarding/index.js';
 import path from 'node:path';
+import {rmSync, existsSync} from 'node:fs';
 
 describe('dev', () => {
   const outputMock = mockAndCaptureOutput();
@@ -16,9 +17,18 @@ describe('dev', () => {
     // Should be the root of the hydrogen repository.
     const projectRootDir = path.join(__dirname, '..', '..', '..', '..', '..');
     tmpDir = path.join(projectRootDir, `test-project-dev-${tmpDirInstance++}`);
+    if (existsSync(tmpDir)) {
+      rmSync(tmpDir, {recursive: true});
+    }
+    console.log('Creating tmpDir', tmpDir);
     mkdirSync(tmpDir);
+  });
 
-    return () => removeFile(tmpDir);
+  afterAll(async () => {
+    console.log('Removing tmpDir', tmpDir);
+    if (existsSync(tmpDir)) {
+      rmSync(tmpDir, {recursive: true});
+    }
   });
 
   it('runs dev in a Vite project', async () => {
@@ -45,15 +55,13 @@ describe('dev', () => {
     });
 
     try {
-      await vi.waitFor(
-        () => expect(outputMock.output()).toMatch(/View [^:]+? app:/i),
-        {timeout: 5000},
-      );
+      // Wait for server to stabilize after env reload
+      await new Promise((resolve) => setTimeout(resolve, 3000));
 
-      // Wait a bit for worker to fully initialize
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      expect(outputMock.output()).toMatch(/View [^:]+? app:/i);
 
       // First test if worker is running
+      console.log(`Fetching ${getUrl() + 'debug'}`);
       const debugResponse = await fetch(getUrl() + 'debug');
       console.log('Debug response status:', debugResponse.status);
       console.log('Debug response:', await debugResponse.text());

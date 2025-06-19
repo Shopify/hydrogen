@@ -137,7 +137,6 @@ export function oxygenExtensions(options: OxygenPluginOptions): Plugin {
     name: 'oxygen-extensions',
 
     async configureServer(server: ViteDevServer) {
-      console.log('configureServer');
       // Setup static assets server if configured
       if (options.staticAssets) {
         assetsPort = await getPort();

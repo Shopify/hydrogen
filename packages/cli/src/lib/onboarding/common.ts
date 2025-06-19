@@ -28,6 +28,7 @@ import {
   isDirectory,
   writeFile,
   copyFile,
+  fileExistsSync,
 } from '@shopify/cli-kit/node/fs';
 import {
   outputDebug,
@@ -67,6 +68,7 @@ import {
   isHydrogenMonorepo,
 } from '../build.js';
 import {enhanceAuthLogs} from '../log.js';
+import {lstatSync} from 'node:fs';
 
 export type InitOptions = {
   path?: string;
