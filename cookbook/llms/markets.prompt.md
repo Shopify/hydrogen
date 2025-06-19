@@ -220,9 +220,16 @@ a hook to retrieve the selected locale.
 ```ts
 import {useMatches} from 'react-router';
 import {
-  LanguageCode,
-  CountryCode,
-} from '@shopify/hydrogen-react/storefront-api-types';
+  CountryCode as CustomerCountryCode,
+  LanguageCode as CustomerLanguageCode,
+} from '@shopify/hydrogen/customer-account-api-types';
+import {
+  CountryCode as StorefrontCountryCode,
+  LanguageCode as StorefrontLanguageCode,
+} from '@shopify/hydrogen/storefront-api-types';
+
+type LanguageCode = CustomerLanguageCode & StorefrontLanguageCode;
+type CountryCode = CustomerCountryCode & StorefrontCountryCode;
 
 export type Locale = {
   language: LanguageCode;
