@@ -78,9 +78,9 @@ const CART_QUERY = (cartFragment = DEFAULT_CART_FRAGMENT) => `#graphql
     $country: CountryCode = ZZ
     $language: LanguageCode
   ) @inContext(country: $country, language: $language) {
-    cart(id: $cartId) {
-      ...CartApiQuery
-    }
+      cart(id: $cartId) {
+          ...CartApiQuery
+      }
   }
 
   ${cartFragment}
@@ -88,6 +88,7 @@ const CART_QUERY = (cartFragment = DEFAULT_CART_FRAGMENT) => `#graphql
 
 export const DEFAULT_CART_FRAGMENT = `#graphql
   fragment CartApiQuery on Cart {
+    ... @defer {
     updatedAt
     id
     checkoutUrl
@@ -176,9 +177,11 @@ export const DEFAULT_CART_FRAGMENT = `#graphql
       key
       value
     }
+
     discountCodes {
       applicable
       code
+    }
     }
   }
 

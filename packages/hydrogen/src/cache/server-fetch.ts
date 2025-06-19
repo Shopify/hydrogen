@@ -7,7 +7,6 @@ import {
 import type {WaitUntil} from '../types.js';
 import {parseJSON} from '../utils/parse-json.js';
 import {createGraphQLClient} from '@shopify/graphql-client';
-import {STOREFRONT_ACCESS_TOKEN_HEADER} from '../constants.js';
 
 export type FetchCacheOptions<T = any> = {
   cache?: CachingStrategy;
@@ -89,6 +88,7 @@ export async function fetchWithServerCache<T = unknown>(
         let allErrors: unknown;
 
         for await (const response of responseStream) {
+          debugger;
           const {data, errors} = response;
           allData = data;
           allErrors = errors;

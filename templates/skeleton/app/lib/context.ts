@@ -34,6 +34,9 @@ export async function createAppLoadContext(
     cart: {
       queryFragment: CART_QUERY_FRAGMENT,
     },
+    storefront: {
+      apiVersion: 'unstable',
+    },
   });
 
   return {

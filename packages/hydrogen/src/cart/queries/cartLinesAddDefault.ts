@@ -11,6 +11,7 @@ import type {
   CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
+import {DEFAULT_CART_FRAGMENT} from './cartGetDefault';
 
 export type CartLinesAddFunction = (
   lines: Array<CartLineInput>,
@@ -38,17 +39,20 @@ export function cartLinesAddDefault(
 
 //! @see: https://shopify.dev/docs/api/storefront/latest/mutations/cartLinesAdd
 export const CART_LINES_ADD_MUTATION = (
-  cartFragment = MINIMAL_CART_FRAGMENT,
+  cartFragment = DEFAULT_CART_FRAGMENT,
 ) => `#graphql
   mutation cartLinesAdd(
     $cartId: ID!
     $lines: [CartLineInput!]!
     $country: CountryCode = ZZ
     $language: LanguageCode
+    $numCartLines: Int = 100
   ) @inContext(country: $country, language: $language) {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
-      cart {
-        ...CartApiMutation
+      ... @defer {
+        cart {
+          ...CartApiQuery
+        }
       }
       userErrors {
         ...CartApiError

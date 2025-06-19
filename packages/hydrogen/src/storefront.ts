@@ -54,6 +54,7 @@ import {
   type StackInfo,
 } from './utils/callsites';
 import type {WaitUntil, StorefrontHeaders} from './types';
+import {UNSAFE_ErrorResponseImpl} from 'react-router';
 
 export type I18nBase = {
   language: LanguageCode;
@@ -367,7 +368,14 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       throwErrorWithGqlLink({...errorOptions, errors});
     }
 
-    const {data, errors} = body as GraphQLApiResponse<T>;
+    let {data, errors} = body as
+      | GraphQLApiResponse<T>
+      | {
+          data: T;
+          errors: NonNullable<GraphQLApiResponse<T>['errors']>[number];
+        };
+
+    errors = errors ? (Array.isArray(errors) ? errors : [errors]) : undefined;
 
     const gqlErrors = errors?.map(
       ({message, ...rest}) =>
