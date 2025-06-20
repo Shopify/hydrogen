@@ -2401,12 +2401,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {CacheCustom} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const data = await context.storefront.query(\n    `#grahpql\n      {\n        shop {\n          name\n          description\n        }\n      }\n    `,\n    {\n      cache: CacheCustom({\n        maxAge: 1000 * 60 * 60 * 24 * 365,\n        staleWhileRevalidate: 1000 * 60 * 60 * 24 * 7,\n      }),\n    },\n  );\n\n  return data;\n}\n",
+            "code": "import {CacheCustom} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const data = await context.storefront.query(\n    `#grahpql\n      {\n        shop {\n          name\n          description\n        }\n      }\n    `,\n    {\n      cache: CacheCustom({\n        maxAge: 60 * 60 * 24 * 365,\n        staleWhileRevalidate: 60 * 60 * 24 * 7,\n      }),\n    },\n  );\n\n  return data;\n}\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {CacheCustom} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const data = await context.storefront.query(\n    `#grahpql\n      {\n        shop {\n          name\n          description\n        }\n      }\n    `,\n    {\n      cache: CacheCustom({\n        maxAge: 1000 * 60 * 60 * 24 * 365,\n        staleWhileRevalidate: 1000 * 60 * 60 * 24 * 7,\n      }),\n    },\n  );\n\n  return data;\n}\n",
+            "code": "import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';\nimport {CacheCustom} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const data = await context.storefront.query(\n    `#grahpql\n      {\n        shop {\n          name\n          description\n        }\n      }\n    `,\n    {\n      cache: CacheCustom({\n        maxAge: 60 * 60 * 24 * 365,\n        staleWhileRevalidate: 60 * 60 * 24 * 7,\n      }),\n    },\n  );\n\n  return data;\n}\n",
             "language": "ts"
           }
         ],
@@ -4076,9 +4076,17 @@
             "filePath": "src/cart/createCartHandler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartHandlerOptionsForDocs",
-            "value": "{\n  /**\n   * A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.\n   */\n  getCartId: () => string | undefined;\n  /**\n   * A function that sets the cart ID.\n   */\n  setCartId: (cartId: string) => Headers;\n  /**\n   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/utilities/createstorefrontclient).\n   */\n  storefront: Storefront;\n  /**\n   * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartMutateFragment?: string;\n  /**\n   * The cart query fragment used by `cart.get()`.\n   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or override existing methods for your cart API instance.\n   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) in the documentation.\n   */\n  customMethods?: TCustomMethods;\n}",
+            "value": "{\n  /**\n   * A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.\n   */\n  getCartId: () => string | undefined;\n  /**\n   * A function that sets the cart ID.\n   */\n  setCartId: (cartId: string) => Headers;\n  /**\n   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/utilities/createstorefrontclient).\n   */\n  storefront: Storefront;\n  /**\n   * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartMutateFragment?: string;\n  /**\n   * The cart query fragment used by `cart.get()`.\n   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or override existing methods for your cart API instance.\n   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) in the documentation.\n   */\n  customMethods?: TCustomMethods;\n\n  /**\n   * Buyer identity. Default buyer identity is passed to cartCreate.\n   */\n  buyerIdentity?: CartBuyerIdentityInput;\n}",
             "description": "",
             "members": [
+              {
+                "filePath": "src/cart/createCartHandler.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "buyerIdentity",
+                "value": "CartBuyerIdentityInput",
+                "description": "Buyer identity. Default buyer identity is passed to cartCreate.",
+                "isOptional": true
+              },
               {
                 "filePath": "src/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
@@ -4125,6 +4133,13 @@
                 "description": "The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/utilities/createstorefrontclient)."
               }
             ]
+          },
+          "CartBuyerIdentityInput": {
+            "description": "",
+            "name": "CartBuyerIdentityInput",
+            "value": "CartBuyerIdentityInput",
+            "members": [],
+            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2025-04/input-objects/CartBuyerIdentityInput) - Storefront API type"
           },
           "Headers": {
             "description": "",
@@ -5955,7 +5970,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -6769,7 +6784,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -7583,7 +7598,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -8409,7 +8424,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -9228,7 +9243,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -10047,7 +10062,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -10854,7 +10869,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -11668,7 +11683,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -12418,7 +12433,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -13225,7 +13240,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -14039,7 +14054,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -14846,7 +14861,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -15660,7 +15675,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -16467,7 +16482,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -17281,7 +17296,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -18088,7 +18103,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },
@@ -18620,9 +18635,17 @@
             "filePath": "src/createHydrogenContext.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "HydrogenContextOptionsForDocs",
-            "value": "{\n  /* Environment variables from the fetch function */\n  env: TEnv;\n  /* Request object from the fetch function */\n  request: CrossRuntimeRequest;\n  /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */\n  cache?: Cache;\n  /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */\n  waitUntil?: WaitUntil;\n  /** Any cookie implementation. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */\n  session: TSession;\n  /** An object containing a country code and language code */\n  i18n?: TI18n;\n  /** Whether it should print GraphQL errors automatically. Defaults to true */\n  logErrors?: boolean | ((error?: Error) => boolean);\n  /** Storefront client overwrite options. See documentation for createStorefrontClient for more information. */\n  storefront?: {\n    /** Storefront API headers. Default values set from request header.  */\n    headers?: StorefrontHeaders;\n    /** Override the Storefront API version for this query. */\n    apiVersion?: string;\n  };\n  /** Customer Account client overwrite options. See documentation for createCustomerAccountClient for more information. */\n  customerAccount?: {\n    /** Override the version of the API */\n    apiVersion?: string;\n    /** This is the route in your app that authorizes the customer after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */\n    authUrl?: string;\n    /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */\n    customAuthStatusHandler?: () => Response | NonNullable<unknown> | null;\n    /** Deprecated. `unstableB2b` is now stable. Please remove. */\n    unstableB2b?: boolean;\n  };\n  /** Cart handler overwrite options. See documentation for createCartHandler for more information. */\n  cart?: {\n    /** A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`. */\n    getId?: () => string | undefined;\n    /** A function that sets the cart ID. */\n    setId?: (cartId: string) => Headers;\n    /**\n     * The cart query fragment used by `cart.get()`.\n     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n     */\n    queryFragment?: string;\n    /**\n     * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n     */\n    mutateFragment?: string;\n    /**\n     * Define custom methods or override existing methods for your cart API instance.\n     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) in the documentation.\n     */\n    customMethods?: Record<string, Function>;\n  };\n}",
+            "value": "{\n  /* Environment variables from the fetch function */\n  env: TEnv;\n  /* Request object from the fetch function */\n  request: CrossRuntimeRequest;\n  /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */\n  cache?: Cache;\n  /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */\n  waitUntil?: WaitUntil;\n  /** Any cookie implementation. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */\n  session: TSession;\n  /** An object containing a country code and language code */\n  i18n?: TI18n;\n  /** Whether it should print GraphQL errors automatically. Defaults to true */\n  logErrors?: boolean | ((error?: Error) => boolean);\n  /** Storefront client overwrite options. See documentation for createStorefrontClient for more information. */\n  storefront?: {\n    /** Storefront API headers. Default values set from request header.  */\n    headers?: StorefrontHeaders;\n    /** Override the Storefront API version for this query. */\n    apiVersion?: string;\n  };\n  /** Customer Account client overwrite options. See documentation for createCustomerAccountClient for more information. */\n  customerAccount?: {\n    /** Override the version of the API */\n    apiVersion?: string;\n    /** This is the route in your app that authorizes the customer after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */\n    authUrl?: string;\n    /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */\n    customAuthStatusHandler?: () => Response | NonNullable<unknown> | null;\n    /** Deprecated. `unstableB2b` is now stable. Please remove. */\n    unstableB2b?: boolean;\n  };\n  /** Cart handler overwrite options. See documentation for createCartHandler for more information. */\n  cart?: {\n    /** A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`. */\n    getId?: () => string | undefined;\n    /** A function that sets the cart ID. */\n    setId?: (cartId: string) => Headers;\n    /**\n     * The cart query fragment used by `cart.get()`.\n     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n     */\n    queryFragment?: string;\n    /**\n     * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n     */\n    mutateFragment?: string;\n    /**\n     * Define custom methods or override existing methods for your cart API instance.\n     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) in the documentation.\n     */\n    customMethods?: Record<string, Function>;\n  };\n  /**\n   * Buyer identity. Default buyer identity is passed to cartCreate.\n   */\n  buyerIdentity?: CartBuyerIdentityInput;\n}",
             "description": "",
             "members": [
+              {
+                "filePath": "src/createHydrogenContext.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "buyerIdentity",
+                "value": "CartBuyerIdentityInput",
+                "description": "Buyer identity. Default buyer identity is passed to cartCreate.",
+                "isOptional": true
+              },
               {
                 "filePath": "src/createHydrogenContext.ts",
                 "syntaxKind": "PropertySignature",
@@ -18701,6 +18724,13 @@
                 "isOptional": true
               }
             ]
+          },
+          "CartBuyerIdentityInput": {
+            "description": "",
+            "name": "CartBuyerIdentityInput",
+            "value": "CartBuyerIdentityInput",
+            "members": [],
+            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2025-04/input-objects/CartBuyerIdentityInput) - Storefront API type"
           },
           "Headers": {
             "description": "",
@@ -19217,7 +19247,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@685",
+                "name": "__@toStringTag@689",
                 "value": "string",
                 "description": ""
               },

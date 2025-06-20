@@ -12,8 +12,8 @@ export async function loader({context}) {
     `,
     {
       cache: CacheCustom({
-        maxAge: 1000 * 60 * 60 * 24 * 365,
-        staleWhileRevalidate: 1000 * 60 * 60 * 24 * 7,
+        maxAge: 60 * 60 * 24 * 365,
+        staleWhileRevalidate: 60 * 60 * 24 * 7,
       }),
     },
   );
