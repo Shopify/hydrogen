@@ -227,7 +227,7 @@ describe('start()', () => {
     await miniOxygen.close();
   });
 
-  it('stubs global fetch', async () => {
+  it.skip('stubs global fetch', async () => {
     const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,

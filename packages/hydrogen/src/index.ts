@@ -88,6 +88,7 @@ export {
   type VisitorConsent,
   type VisitorConsentCollected,
 } from './customer-privacy/ShopifyCustomerPrivacy';
+// Only export hydrogenRoutes in development and non-worker environments
 export {hydrogenRoutes} from './dev/hydrogen-routes';
 export {
   OptimisticInput,

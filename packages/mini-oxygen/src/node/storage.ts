@@ -1,5 +1,3 @@
-import {MemoryStorage} from '@miniflare/storage-memory';
-
 export class StorageFactory {
   storages: Map<string, any>;
 
@@ -10,7 +8,9 @@ export class StorageFactory {
   storage(namespace: string) {
     let storage = this.storages.get(namespace);
     if (storage) return storage;
-    this.storages.set(namespace, (storage = new MemoryStorage()));
+    // In Miniflare v4, we'll use a simple in-memory storage implementation
+    // or rely on Miniflare's built-in storage handling
+    this.storages.set(namespace, (storage = new Map()));
     return storage;
   }
 }
