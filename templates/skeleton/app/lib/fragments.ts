@@ -106,6 +106,7 @@ export const CART_QUERY_FRAGMENT = `#graphql
     }
   }
   fragment CartApiQuery on Cart {
+    ... @defer {
     updatedAt
     id
     appliedGiftCards {
@@ -160,6 +161,8 @@ export const CART_QUERY_FRAGMENT = `#graphql
       applicable
     }
   }
+  }
+
 ` as const;
 
 const MENU_FRAGMENT = `#graphql
