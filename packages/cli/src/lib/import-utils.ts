@@ -15,10 +15,15 @@ export async function importVite(root: string): Promise<Vite> {
 
   const vitePackageJson = await findUpAndReadPackageJson(vitePath);
 
+  // vite 7
   let viteNodeIndexFile = (vitePackageJson.content as any).exports?.['.']
-    .import;
 
-  // If project still using vite 5
+  // vite 6
+  if (typeof viteNodeIndexFile !== 'string') {
+    viteNodeIndexFile = viteNodeIndexFile?.import
+  }
+  
+  // vite 5
   if (typeof viteNodeIndexFile !== 'string') {
     viteNodeIndexFile = viteNodeIndexFile.default;
   }
