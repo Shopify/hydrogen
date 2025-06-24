@@ -1,4 +1,4 @@
-import {type RouteConfigEntry} from '@react-router/dev/dist/routes';
+import type {RouteConfigEntry} from '@react-router/dev/routes';
 
 // Make this transform the existing routes instead.
 export async function hydrogenRoutes(
