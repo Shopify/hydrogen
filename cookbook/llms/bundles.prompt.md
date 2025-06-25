@@ -81,7 +81,7 @@ In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/sho
 
 Create a new BundleBadge component to be displayed on bundle product listings.
 
-#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/195eefec4c9c752e0ce18de1bc71899389ae4fa0/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
+#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/bd691ec4999735f6455d9e0a01ed7c490998745b/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
 
 ```tsx
 export function BundleBadge() {
@@ -108,7 +108,7 @@ export function BundleBadge() {
 
 Create a new `BundledVariants` component that wraps the variants of a bundle product in a single product listing.
 
-#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/195eefec4c9c752e0ce18de1bc71899389ae4fa0/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
+#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/bd691ec4999735f6455d9e0a01ed7c490998745b/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
 
 ```tsx
 import {Link} from 'react-router';
@@ -177,9 +177,9 @@ export function BundledVariants({
 
 ```
 
-### Step 4: Add maxVariantPrice to the RecommendedProducts query's product fields
+### Step 4: Add maxVariantPrice to the product fields for RecommendedProducts
 
-Add `maxVariantPrice` to the `RecommendedProducts` query's product fields.
+Add `maxVariantPrice` to the product fields for RecommendedProducts.
 
 #### File: /app/routes/_index.tsx
 
