@@ -36,7 +36,7 @@ describe('remix-version-check', () => {
 
     const output = outputMock.warn();
     expect(output).toMatch(`Hydrogen requires Remix @${expectedVersion}`);
-    // The warning should contain at least one @remix-run package
-    expect(output).toMatch(/@remix-run\/\w+@/);
+    expect(output).toMatch(`@remix-run/dev@`);
+    expect(output).toMatch(`@remix-run/react@`);
   });
 });

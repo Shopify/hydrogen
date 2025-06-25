@@ -78,8 +78,6 @@ export class MiniOxygen {
       this.watchedFile = options.scriptPath;
     }
 
-    // Note: globalFetch is handled at the Miniflare level, not worker level
-
     // Store the current configuration
     this.currentWorkerConfig = worker;
 
