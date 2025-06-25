@@ -109,11 +109,10 @@ export class MiniOxygen {
     if (globalFetch) {
       // Store globalFetch for later use
       (this as any).globalFetch = globalFetch;
-      // In Miniflare v4, we need to set up a custom outbound service
-      // Create a simple worker module that handles outbound requests
-      miniflareConfig.outboundService = (request: Request | string) => {
-        const url = typeof request === 'string' ? request : request.url;
-        return globalFetch(url);
+      // In Miniflare v4, outboundService should be configured on the worker
+      // The outboundService receives a Request object, but globalFetch expects a URL string
+      worker.outboundService = async (request: Request) => {
+        return globalFetch(request.url);
       };
     }
 
@@ -196,14 +195,18 @@ export class MiniOxygen {
       ...otherOptions,
     };
 
-    // Update outboundService if globalFetch has changed
+    // Update globalFetch if it has changed
     const currentGlobalFetch = (this as any).globalFetch;
-    if (globalFetch !== undefined || currentGlobalFetch) {
-      const fetchToUse =
-        globalFetch !== undefined ? globalFetch : currentGlobalFetch;
-      setOptionsConfig.outboundService = (request: Request | string) => {
-        const url = typeof request === 'string' ? request : request.url;
-        return fetchToUse(url);
+    if (globalFetch !== undefined) {
+      (this as any).globalFetch = globalFetch;
+    }
+
+    // Update outboundService if globalFetch is provided
+    const fetchToUse =
+      globalFetch !== undefined ? globalFetch : currentGlobalFetch;
+    if (fetchToUse) {
+      worker.outboundService = async (request: Request) => {
+        return fetchToUse(request.url);
       };
     }
 
