@@ -1,13 +1,8 @@
-import {symlink, rm as rmdir, cp, constants} from 'node:fs/promises';
+import {symlink, rm as rmdir} from 'node:fs/promises';
 import {vi} from 'vitest';
 import {writeFile} from '@shopify/cli-kit/node/fs';
 import {dirname, joinPath} from '@shopify/cli-kit/node/path';
-import {
-  getRepoNodeModules,
-  getSkeletonNodeModules,
-  getSkeletonSourceDir,
-} from '../build.js';
-import {existsSync, readdir, readdirSync} from 'node:fs';
+import {getSkeletonNodeModules, getSkeletonSourceDir} from '../build.js';
 
 const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 
