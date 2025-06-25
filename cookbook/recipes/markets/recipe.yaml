@@ -205,7 +205,7 @@ steps:
         patchFile: sitemap.$type.$page[.xml].tsx.9700e3.patch
   - type: PATCH
     step: 2.7
-    name: Update the useVariantUrl function.
+    name: Update the useVariantUrl function
     description: |
       Remove the `pathname` parameter from the `useVariantUrl` function, and the logic that prepends the locale to the path.
     diffs:
@@ -234,4 +234,4 @@ llms:
       solution: Make sure you update *all* routes that need localization (not only the
         routes for the home page, the cart page, and the product page). See step
         2.1 for details.
-commit: 195eefec4c9c752e0ce18de1bc71899389ae4fa0
+commit: bd691ec4999735f6455d9e0a01ed7c490998745b
