@@ -4,6 +4,7 @@ import {
   LanguageCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {useEffect, useMemo, useRef, useState} from 'react';
+import {useAnalytics} from '../analytics-manager/AnalyticsProvider';
 
 export type ConsentStatus = boolean | undefined;
 
@@ -132,6 +133,8 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     onReady,
     ...consentConfig
   } = props;
+  const {register} = useAnalytics();
+  const {ready: customerPrivacyReady} = register('Customer_Privacy');
 
   // Load the Shopify customer privacy API with or without the privacy banner
   // NOTE: We no longer use the status because we need `ready` to be not when the script is loaded
@@ -144,7 +147,10 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
 
   const {observing, setLoaded} = useApisLoaded({
     withPrivacyBanner,
-    onLoaded: onReady,
+    onLoaded: () => {
+      onReady?.();
+      customerPrivacyReady();
+    },
   });
 
   const config = useMemo(() => {
@@ -198,6 +204,30 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     };
   }, [onVisitorConsentCollected]);
 
+  // Load the privacy banner if configured when the privacy banner API is loaded
+  useEffect(() => {
+    if (!withPrivacyBanner) return;
+
+    function loadBanner() {
+      if (!window?.privacyBanner) {
+        console.error(
+          '[h2:error:useCustomerPrivacy] - Privacy Banner API is not loaded in time.',
+        );
+      } else {
+        window.privacyBanner.loadBanner(config);
+      }
+    }
+
+    document.addEventListener('shopifyCustomerPrivacyApiLoaded', loadBanner);
+
+    return () => {
+      document.removeEventListener(
+        'shopifyCustomerPrivacyApiLoaded',
+        loadBanner,
+      );
+    };
+  }, [withPrivacyBanner, config, window, window?.privacyBanner]);
+
   // monitor when the `privacyBanner` is in the window and override it's methods with config
   // pre-applied versions
   useEffect(() => {
@@ -221,18 +251,13 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
         ) {
           const privacyBanner = value as PrivacyBanner;
 
-          // auto load the banner if applicable
-          privacyBanner.loadBanner(config);
-
           // overwrite the privacyBanner methods
           customPrivacyBanner = overridePrivacyBannerMethods({
             privacyBanner,
             config,
           });
 
-          // set the loaded state for the privacyBanner
-          setLoaded.privacyBanner();
-          emitCustomerPrivacyApiLoaded();
+          emitPrivacyBannerApiLoaded();
         }
       },
     };
@@ -327,11 +352,30 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
 }
 
 let hasEmitted = false;
+let hasEmittedBanner = false;
+
 function emitCustomerPrivacyApiLoaded() {
   if (hasEmitted) return;
   hasEmitted = true;
-  const event = new CustomEvent('shopifyCustomerPrivacyApiLoaded');
-  document.dispatchEvent(event);
+  setTimeout(() => {
+    const event = new CustomEvent('shopifyCustomerPrivacyApiLoaded', {
+      bubbles: true,
+      cancelable: true,
+    });
+    document.dispatchEvent(event);
+  }, 10);
+}
+
+function emitPrivacyBannerApiLoaded() {
+  if (hasEmittedBanner) return;
+  hasEmittedBanner = true;
+  setTimeout(() => {
+    const event = new CustomEvent('emitPrivacyBannerApiLoaded', {
+      bubbles: true,
+      cancelable: true,
+    });
+    document.dispatchEvent(event);
+  }, 10);
 }
 
 function useApisLoaded({
