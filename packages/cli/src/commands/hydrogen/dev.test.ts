@@ -21,19 +21,16 @@ describe('dev', () => {
     if (existsSync(tmpDir)) {
       rmSync(tmpDir, {recursive: true});
     }
-    console.log('Creating tmpDir', tmpDir);
     mkdirSync(tmpDir);
   });
 
   afterAll(async () => {
-    console.log('Removing tmpDir', tmpDir);
     if (existsSync(tmpDir)) {
       rmSync(tmpDir, {recursive: true});
     }
   });
 
   it('runs dev in a Vite project', async () => {
-    console.log('tmpDir', tmpDir);
     await setupTemplate({
       path: tmpDir,
       git: true,
