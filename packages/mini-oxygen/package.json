@@ -68,7 +68,6 @@
     "@types/ws": "^8.5.14",
     "devtools-protocol": "^0.0.1412693",
     "eventsource": "^3.0.5",
-    "eventsource-parser": "^3.0.0",
     "tempy": "3.1.0",
     "vitest": "^1.0.4"
   },

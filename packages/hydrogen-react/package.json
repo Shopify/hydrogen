@@ -178,7 +178,6 @@
     "@xstate/fsm": "2.0.0",
     "@xstate/react": "3.2.1",
     "graphql": "^16.10.0",
-    "nested-error-stacks": "^2.1.1",
     "type-fest": "^4.33.0",
     "worktop": "^0.7.3"
   },
