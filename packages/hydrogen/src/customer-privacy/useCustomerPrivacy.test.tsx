@@ -164,10 +164,9 @@ describe(`useCustomerPrivacy`, () => {
   it('triggers the onReady callback when both APIs are ready', async () => {
     const onReady = vi.fn();
 
-    let cp;
     const {rerender} = renderHook(
       (props) => {
-        cp = useCustomerPrivacy(props);
+        useCustomerPrivacy(props);
       },
       {initialProps: {...CUSTOMER_PRIVACY_PROPS, onReady}},
     );
@@ -192,6 +191,6 @@ describe(`useCustomerPrivacy`, () => {
 
     rerender({...CUSTOMER_PRIVACY_PROPS, onReady});
 
-    expect(onReady).toHaveBeenCalled();
+    expect(onReady).toHaveBeenCalledOnce();
   });
 });

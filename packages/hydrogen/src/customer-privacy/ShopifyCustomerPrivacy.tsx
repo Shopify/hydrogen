@@ -257,6 +257,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
             config,
           });
 
+          setLoaded.privacyBanner();
           emitPrivacyBannerApiLoaded();
         }
       },
