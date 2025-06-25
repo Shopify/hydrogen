@@ -1,5 +1,16 @@
 # skeleton
 
+## 2025.5.3
+
+### Patch Changes
+
+- Add `fulfillmentStatus` to CAAPI order query and route ([#2887](https://github.com/Shopify/hydrogen/pull/2887)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Add `@inContext` language support to Customer Account API mutations ([#2881](https://github.com/Shopify/hydrogen/pull/2881)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies []:
+  - @shopify/hydrogen@2025.5.1
+
 ## 2025.5.2
 
 ### Patch Changes
