@@ -50,8 +50,10 @@ export const CART_DISCOUNT_CODE_UPDATE_MUTATION = (
     $country: CountryCode
   ) @inContext(country: $country, language: $language) {
     cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
-      cart {
-        ...CartApiMutation
+      ... @defer {
+        cart {
+          ...CartApiMutation
+        }
       }
       userErrors {
         ...CartApiError
