@@ -149,7 +149,7 @@ export function BundledVariants({
 
 ### Step 4: Add maxVariantPrice to the product fields for RecommendedProducts
 
-Add `maxVariantPrice` to the product fields for RecommendedProducts.
+Add `maxVariantPrice` to the `RecommendedProducts` query's product fields.
 
 #### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/bd691ec4999735f6455d9e0a01ed7c490998745b/templates/skeleton/app/routes/_index.tsx)
 

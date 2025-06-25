@@ -57,7 +57,7 @@ steps:
     step: 4
     name: Add maxVariantPrice to the product fields for RecommendedProducts
     description: |
-      Add `maxVariantPrice` to the product fields for RecommendedProducts.
+      Add `maxVariantPrice` to the `RecommendedProducts` query's product fields.
     diffs:
       - file: app/routes/_index.tsx
         patchFile: _index.tsx.8041d5.patch
