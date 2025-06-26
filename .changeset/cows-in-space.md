@@ -8,7 +8,7 @@
 
 Upgrade Miniflare from v2 to v4 in mini-oxygen package.
 
-- **Breaking**: Internal MiniOxygen API has been refactored to work with Miniflare v4's new architecture.
+- Internal MiniOxygen API has been refactored to work with Miniflare v4's new architecture.
 - Simplified MiniOxygen class - no longer extends MiniflareCore.
 - Updated global fetch handling to use Miniflare v4's `outboundService` API.
 - Fixed test infrastructure to use project-relative temporary directories.
