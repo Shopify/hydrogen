@@ -28,9 +28,10 @@ export type MiniOxygenOptions = {
   envPath?: string;
   watch?: boolean;
   logUnhandledRejections?: boolean;
+  // We don't want the user to configure these.
   // Compatibility params from OXYGEN_COMPAT_PARAMS
-  compatibilityDate?: string;
-  compatibilityFlags?: string[];
+  // compatibilityDate?: string;
+  //compatibilityFlags?: string[];
   [key: string]: any; // Allow additional Miniflare options
 };
 
@@ -65,7 +66,7 @@ export class MiniOxygen {
         ...options.bindings,
       },
       // Apply oxygen compatibility params if not already set
-      ...(!options.compatibilityDate && OXYGEN_COMPAT_PARAMS),
+      ...OXYGEN_COMPAT_PARAMS,
     };
 
     // Add script or scriptPath
