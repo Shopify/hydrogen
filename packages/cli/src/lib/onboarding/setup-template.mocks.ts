@@ -2,7 +2,7 @@ import {symlink, rm as rmdir} from 'node:fs/promises';
 import {vi} from 'vitest';
 import {writeFile} from '@shopify/cli-kit/node/fs';
 import {dirname, joinPath} from '@shopify/cli-kit/node/path';
-import {getRepoNodeModules, getSkeletonSourceDir} from '../build.js';
+import {getSkeletonNodeModules, getSkeletonSourceDir} from '../build.js';
 
 const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 
@@ -57,16 +57,15 @@ vi.mock(
           await writeFile(`${directory}/package-lock.json`, '{}');
         });
 
+        const targetNodeModules = joinPath(directory, 'node_modules');
+
         // "Install" dependencies by linking to monorepo's node_modules
-        await rmdir(joinPath(directory, 'node_modules'), {
+        await rmdir(targetNodeModules, {
           force: true,
           recursive: true,
         }).catch(() => {});
 
-        await symlink(
-          await getRepoNodeModules(),
-          joinPath(directory, 'node_modules'),
-        );
+        await symlink(await getSkeletonNodeModules(), targetNodeModules);
       }),
     };
   },

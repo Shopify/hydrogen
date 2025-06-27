@@ -2,6 +2,7 @@ import {vi, afterEach, describe, expect, it} from 'vitest';
 import {renderHook} from '@testing-library/react';
 import {getShopifyCookies} from './cookies-utils.js';
 import {useShopifyCookies} from './useShopifyCookies.js';
+// @ts-ignore - worktop/cookie types not properly exported
 import {parse} from 'worktop/cookie';
 
 type MockCookieJar = Record<
