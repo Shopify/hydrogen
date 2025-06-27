@@ -62,10 +62,17 @@ describe('dev', () => {
         {timeout: 5000},
       );
 
-      const response = await fetch(getUrl());
-      expect(response.status).toEqual(200);
-      expect(response.headers.get('content-type')).toEqual('text/html');
-      await expect(response.text()).resolves.toMatch('Mock.shop');
+      const rootResponse = await fetch(getUrl());
+      expect(rootResponse.status).toEqual(200);
+      expect(rootResponse.headers.get('content-type')).toEqual('text/html');
+      await expect(rootResponse.text()).resolves.toMatch('Mock.shop');
+
+      const faviconResponse = await fetch(getUrl() + 'app/assets/favicon.svg');
+      expect(faviconResponse.status).toEqual(200);
+      expect(faviconResponse.headers.get('content-type')).toEqual(
+        'image/svg+xml',
+      );
+      await expect(faviconResponse.arrayBuffer()).resolves.toBeTruthy();
     } finally {
       await close();
     }
