@@ -148,6 +148,10 @@ jobs:
         working-directory: cookbook
         run: npm ci
 
+      - name: 📝 Validate schema
+        working-directory: cookbook
+        run: npm run cookbook -- schema && git diff --exit-code recipe.schema.json
+
       - name: 🧐 Validate Recipes
         working-directory: cookbook
         run: npm run cookbook -- validate
