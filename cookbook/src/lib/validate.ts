@@ -1,8 +1,7 @@
-import {execSync} from 'child_process';
-import fs, {rmSync} from 'fs';
+import {execSync, ExecSyncOptionsWithBufferEncoding} from 'child_process';
+import {rmSync} from 'fs';
 import {applyRecipe} from './apply';
 import {TEMPLATE_PATH} from './constants';
-import {makeRandomTempDir} from './util';
 import path from 'path';
 /**
  * Validate a recipe.
@@ -11,58 +10,87 @@ import path from 'path';
 export function validateRecipe(params: {
   recipeTitle: string;
   hydrogenPackagesVersion?: string;
-}) {
-  let start = Date.now();
+}): boolean {
+  const start = Date.now();
 
   const {recipeTitle, hydrogenPackagesVersion} = params;
-  const tempDir = makeRandomTempDir({prefix: 'validate-recipe'});
+
   try {
     console.log(`- 🧑‍🍳 Applying recipe '${recipeTitle}'`);
     applyRecipe({
       recipeTitle,
     });
 
-    // copy the skeleton template to a temporary directory, except for the node_modules directory and its contents
-    fs.cpSync(TEMPLATE_PATH, tempDir, {
-      recursive: true,
-      filter: (src) => {
-        return !src.includes('node_modules');
-      },
-    });
+    const validationCommands: Command[] = [
+      ...(hydrogenPackagesVersion != null
+        ? [installHydrogenPackages(hydrogenPackagesVersion)]
+        : []),
+      installDependencies(),
+      runCodegen(),
+      runTypecheck(),
+      buildSkeleton(),
+    ];
 
-    if (hydrogenPackagesVersion != null) {
-      console.log(`- 🔼 Applying Hydrogen version ${hydrogenPackagesVersion}…`);
-      rmSync(path.join(tempDir, 'package-lock.json'), {force: true});
-      const packages = [
-        'https://registry.npmjs.org/@shopify/cli-hydrogen/-/cli-hydrogen',
-        'https://registry.npmjs.org/@shopify/hydrogen/-/hydrogen',
-        'https://registry.npmjs.org/@shopify/remix-oxygen/-/remix-oxygen',
-      ];
-      execSync(
-        `npm install ${packages.map((p) => `${p}-${hydrogenPackagesVersion}.tgz`).join(' ')}`,
-        {cwd: tempDir},
-      );
+    for (const {command, options} of validationCommands) {
+      console.log(`- 🔬 Running ${command}…`);
+      execSync(command, options);
     }
-
-    // run npm install in the template directory
-    console.log(`- 📦 Installing dependencies…`);
-    execSync(`npm install`, {cwd: tempDir});
-
-    console.log(`- 🔄 Running codegen…`);
-    execSync(`npm run codegen`, {cwd: tempDir});
-
-    // run typecheck in the template directory
-    console.log(`- 🔨 Running typecheck…`);
-    execSync(`npm run typecheck`, {cwd: tempDir});
-
-    // run npm run build in the template directory
-    console.log(`- 🏗️ Building…`);
-    execSync(`npm run build`, {cwd: tempDir});
 
     const duration = Date.now() - start;
     console.log(`✅ Recipe '${recipeTitle}' is valid (${duration}ms)`);
+
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
   } finally {
-    // cleanup the temp folder
-    fs.rmSync(tempDir, {recursive: true});
+    // rewind the changes to the template directory
+    execSync(`git checkout -- .`, {cwd: TEMPLATE_PATH});
   }
+}
+
+type Command = {
+  command: string;
+  options: ExecSyncOptionsWithBufferEncoding;
+};
+
+function installDependencies(): Command {
+  return {
+    command: 'npm install',
+    options: {cwd: TEMPLATE_PATH},
+  };
+}
+
+function runCodegen(): Command {
+  return {
+    command: 'npm run codegen',
+    options: {cwd: TEMPLATE_PATH},
+  };
+}
+
+function runTypecheck(): Command {
+  return {
+    command: 'npm run typecheck',
+    options: {cwd: TEMPLATE_PATH},
+  };
+}
+
+function buildSkeleton(): Command {
+  return {
+    command: 'npm run build',
+    options: {cwd: TEMPLATE_PATH},
+  };
+}
+
+function installHydrogenPackages(version: string): Command {
+  rmSync(path.join(TEMPLATE_PATH, 'package-lock.json'), {force: true});
+  const packages = [
+    'https://registry.npmjs.org/@shopify/cli-hydrogen/-/cli-hydrogen',
+    'https://registry.npmjs.org/@shopify/hydrogen/-/hydrogen',
+    'https://registry.npmjs.org/@shopify/remix-oxygen/-/remix-oxygen',
+  ];
+  return {
+    command: `npm install ${packages.map((p) => `${p}-${version}.tgz`).join(' ')}`,
+    options: {cwd: TEMPLATE_PATH},
+  };
 }

@@ -234,4 +234,4 @@ llms:
       solution: Make sure you update *all* routes that need localization (not only the
         routes for the home page, the cart page, and the product page). See step
         2.1 for details.
-commit: bd691ec4999735f6455d9e0a01ed7c490998745b
+commit: 6d5b52d60a3c22dddf133926cdcee1606af46d0e

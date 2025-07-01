@@ -1,8 +1,8 @@
-import {execSync} from 'child_process';
 import {CommandModule} from 'yargs';
-import {TEMPLATE_PATH} from '../lib/constants';
 import {listRecipes, separator} from '../lib/util';
 import {validateRecipe} from '../lib/validate';
+import {execSync} from 'child_process';
+import {TEMPLATE_PATH} from '../lib/constants';
 
 type ValidateArgs = {
   recipe?: string;
@@ -38,19 +38,21 @@ async function handler(args: ValidateArgs) {
   }
 
   let failed: string[] = [];
-  for (const recipe of recipes) {
-    try {
-      console.log(`🧐 Validating recipe '${recipe}'`);
-      validateRecipe({
-        recipeTitle: recipe,
-        hydrogenPackagesVersion: args.hydrogenPackagesVersion,
-      });
-      // clean up the skeleton template directory on success
-      execSync(`git checkout -- ${TEMPLATE_PATH}`);
-      execSync(`git clean -fd ${TEMPLATE_PATH}`);
-    } catch (error) {
+  for (let i = 0; i < recipes.length; i++) {
+    const recipe = recipes[i];
+    console.log(
+      `(${i + 1}/${recipes.length}) 🧐 Validating recipe '${recipe}'`,
+    );
+
+    const ok = validateRecipe({
+      recipeTitle: recipe,
+      hydrogenPackagesVersion: args.hydrogenPackagesVersion,
+    });
+
+    execSync(`git clean -fd ${TEMPLATE_PATH}`);
+
+    if (!ok) {
       console.error(`❌ Recipe '${recipe}' is invalid`);
-      console.error(error);
       failed.push(recipe);
     }
     console.log(separator());
