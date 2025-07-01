@@ -1,8 +1,8 @@
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import type {CartLayout} from '~/components/CartMain';
 import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
-import {useRef} from 'react';
-import { FetcherWithComponents } from 'react-router';
+import {useEffect, useRef} from 'react';
+import {FetcherWithComponents, useFetcher} from 'react-router';
 
 type CartSummaryProps = {
   cart: OptimisticCart<CartApiQueryFragment | null>;
@@ -55,28 +55,48 @@ function CartDiscounts({
       ?.filter((discount) => discount.applicable)
       ?.map(({code}) => code) || [];
 
+  const discountRemoveFetcher = useFetcher({key: 'discount-remove'});
+  const discountAddFetcher = useFetcher({key: 'discount-add'});
+  const discountCodeInput = useRef<HTMLInputElement>(null);
+
+  // Clear the discount code input after the discount is added
+  useEffect(() => {
+    if (discountAddFetcher.data) {
+      discountCodeInput.current!.value = '';
+    }
+  }, [discountAddFetcher.data]);
+
   return (
     <div>
       {/* Have existing discount, display it with a remove option */}
       <dl hidden={!codes.length}>
         <div>
           <dt>Discount(s)</dt>
-          <UpdateDiscountForm>
+          <UpdateDiscountForm fetcherKey="discount-remove">
             <div className="cart-discount">
               <code>{codes?.join(', ')}</code>
               &nbsp;
-              <button>Remove</button>
+              <button disabled={discountRemoveFetcher.state !== 'idle'}>
+                Remove
+              </button>
             </div>
           </UpdateDiscountForm>
         </div>
       </dl>
 
       {/* Show an input to apply a discount */}
-      <UpdateDiscountForm discountCodes={codes}>
+      <UpdateDiscountForm discountCodes={codes} fetcherKey="discount-add">
         <div>
-          <input type="text" name="discountCode" placeholder="Discount code" />
+          <input
+            type="text"
+            name="discountCode"
+            placeholder="Discount code"
+            ref={discountCodeInput}
+          />
           &nbsp;
-          <button type="submit">Apply</button>
+          <button type="submit" disabled={discountAddFetcher.state !== 'idle'}>
+            Apply
+          </button>
         </div>
       </UpdateDiscountForm>
     </div>
@@ -86,12 +106,15 @@ function CartDiscounts({
 function UpdateDiscountForm({
   discountCodes,
   children,
+  fetcherKey,
 }: {
   discountCodes?: string[];
   children: React.ReactNode;
+  fetcherKey?: string;
 }) {
   return (
     <CartForm
+      fetcherKey={fetcherKey}
       route="/cart"
       action={CartForm.ACTIONS.DiscountCodesUpdate}
       inputs={{
