@@ -231,7 +231,8 @@ describe('start()', () => {
     const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
-      script: 'export default { fetch: () => fetch("foo") }',
+      script:
+        'export default { fetch: () => fetch("https://example.com/foo") }',
       globalFetch: (url) => {
         return Promise.resolve(new Response(`${url}bar`));
       },
@@ -240,7 +241,7 @@ describe('start()', () => {
     const response = (await sendRequest(miniOxygen.port, '/')) as {
       data: string;
     };
-    expect(response.data).toEqual('foobar');
+    expect(response.data).toEqual('https://example.com/foobar');
 
     await miniOxygen.close();
   });

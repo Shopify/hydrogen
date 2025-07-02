@@ -1,5 +1,4 @@
-import {getVirtualRoutesV3} from '../vite/get-virtual-routes';
-import {type RouteConfigEntry} from '@react-router/dev/dist/routes';
+import type {RouteConfigEntry} from '@react-router/dev/routes';
 
 // Make this transform the existing routes instead.
 export async function hydrogenRoutes(
@@ -10,6 +9,8 @@ export async function hydrogenRoutes(
     return currentRoutes;
   }
 
+  // Dynamic import to avoid loading Node.js modules in worker environment
+  const {getVirtualRoutesV3} = await import('../vite/get-virtual-routes');
   const {layout, routes: virtualRoutes} = await getVirtualRoutesV3();
 
   const childVirtualRoutes = virtualRoutes.map(({path, file, index, id}) => {
