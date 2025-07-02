@@ -77,6 +77,7 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
       <!DOCTYPE html>
       <html lang="en">
         <head>
+          <meta charset="utf-8" />
           <title>GraphiQL</title>
           <link rel="icon" type="image/x-icon" href="${favicon}" />
           <style>
