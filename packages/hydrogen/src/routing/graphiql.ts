@@ -72,6 +72,7 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
   // Add code highlighting to the HTML template
   const html = String.raw;
 
+  // NOTE: based on https://github.com/graphql/graphiql/blob/main/examples/graphiql-cdn/index.html
   return new Response(
     html`
       <!DOCTYPE html>
@@ -107,54 +108,73 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
             }
           </style>
 
-          <script
-            crossorigin
-            src="https://unpkg.com/react@18/umd/react.development.js"
-          ></script>
-          <script
-            crossorigin
-            src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
-          ></script>
           <link
             rel="stylesheet"
-            href="https://unpkg.com/graphiql@3/graphiql.min.css"
+            href="https://esm.sh/graphiql/dist/style.css"
           />
+
           <link
             rel="stylesheet"
-            href="https://unpkg.com/@graphiql/plugin-explorer/dist/style.css"
+            href="https://esm.sh/@graphiql/plugin-explorer/dist/style.css"
           />
-        </head>
+          <script type="importmap">
+            {
+              "imports": {
+                "react": "https://esm.sh/react@19.1.0",
+                "react/jsx-runtime": "https://esm.sh/react@19.1.0/jsx-runtime",
+                "react-dom": "https://esm.sh/react-dom@19.1.0",
+                "react-dom/client": "https://esm.sh/react-dom@19.1.0/client",
 
-        <body>
-          <div id="graphiql">
-            <div class="placeholder">Loading GraphiQL...</div>
-          </div>
+                "graphql": "https://esm.sh/graphql@16.11.0",
 
-          <script
-            src="https://unpkg.com/graphiql@3/graphiql.min.js"
-            type="application/javascript"
-            crossorigin="anonymous"
-          ></script>
-          <script
-            src="https://unpkg.com/@graphiql/plugin-explorer/dist/index.umd.js"
-            type="application/javascript"
-            crossorigin="anonymous"
-          ></script>
+                "graphiql": "https://esm.sh/graphiql?standalone&external=react,react-dom,@graphiql/react,graphql",
+                "@graphiql/plugin-explorer": "https://esm.sh/@graphiql/plugin-explorer?standalone&external=react,@graphiql/react,graphql",
+                "@graphiql/react": "https://esm.sh/@graphiql/react?standalone&external=react,react-dom,graphql",
+                "@graphiql/toolkit": "https://esm.sh/@graphiql/toolkit?standalone&external=graphql"
+              }
+            }
+          </script>
+          <script type="module">
+            // Import React and ReactDOM
+            import React from 'react';
+            import ReactDOM from 'react-dom/client';
 
-          <script>
+            // Import GraphiQL and the Explorer plugin
+            import {GraphiQL, HISTORY_PLUGIN} from 'graphiql';
+            import {createGraphiQLFetcher} from '@graphiql/toolkit';
+            import {explorerPlugin} from '@graphiql/plugin-explorer';
+            import {ToolbarButton} from '@graphiql/react';
+
+            import createJSONWorker from 'https://esm.sh/monaco-editor/esm/vs/language/json/json.worker.js?worker';
+            import createGraphQLWorker from 'https://esm.sh/monaco-graphql/esm/graphql.worker.js?worker';
+            import createEditorWorker from 'https://esm.sh/monaco-editor/esm/vs/editor/editor.worker.js?worker';
+            import {parse, print} from 'graphql';
+
+            globalThis.MonacoEnvironment = {
+              getWorker(_workerId, label) {
+                switch (label) {
+                  case 'json':
+                    return createJSONWorker();
+                  case 'graphql':
+                    return createGraphQLWorker();
+                }
+                return createEditorWorker();
+              },
+            };
+
             const windowUrl = new URL(document.URL);
             const startingSchemaKey =
               windowUrl.searchParams.get('schema') || 'storefront';
 
-            let query = '{ shop { name } }';
+            let initialQuery = '{ shop { name } }';
             if (windowUrl.searchParams.has('query')) {
-              query = decodeURIComponent(
+              initialQuery = decodeURIComponent(
                 windowUrl.searchParams.get('query') ?? query,
               );
             }
 
             // Prettify query
-            query = GraphiQL.GraphQL.print(GraphiQL.GraphQL.parse(query));
+            initialQuery = print(parse(initialQuery));
 
             let variables;
             if (windowUrl.searchParams.has('variables')) {
@@ -169,14 +189,9 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
             }
 
             const schemas = ${JSON.stringify(schemas)};
+
             let lastActiveTabIndex = -1;
             let lastTabAmount = -1;
-
-            const root = ReactDOM.createRoot(
-              document.getElementById('graphiql'),
-            );
-
-            root.render(React.createElement(RootWrapper));
 
             const TAB_STATE_KEY = 'graphiql:tabState';
             const storage = {
@@ -188,155 +203,197 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
 
             let nextSchemaKey;
 
-            function RootWrapper() {
+            function App() {
               const [activeSchema, setActiveSchema] =
                 React.useState(startingSchemaKey);
 
               const schema = schemas[activeSchema];
+
               if (!schema) {
                 throw new Error('No schema found for ' + activeSchema);
               }
 
+              const fetcher = createGraphiQLFetcher({
+                url: schema.apiUrl,
+                headers: {[schema.authHeader]: schema.accessToken},
+                enableIncrementalDelivery: false,
+              });
+
+              // We create a custom fetcher because createGraphiQLFetcher attempts to introspect the schema
+              // and the Customer Account API does not support introspection.
+              function createJsonFetcher(options, httpFetch) {
+                console.log('createJsonFetcher', {options, httpFetch});
+
+                if (activeSchema === 'storefront') {
+                  return fetcher(options, httpFetch);
+                } else {
+                  // CAAPI requires a custom fetcher
+                  if (options.operationName === 'IntrospectionQuery') {
+                    // return the prefetch schema
+                    return {data: schema.value};
+                  } else {
+                    return fetcher(options, httpFetch);
+                  }
+                }
+              }
+
               const keys = Object.keys(schemas);
 
-              return React.createElement(
-                GraphiQL,
+              function onTabChange(state) {
+                console.log('onTabChange', state);
+                const {activeTabIndex, tabs} = state;
+                const activeTab = tabs[activeTabIndex];
+
+                if (
+                  activeTabIndex === lastActiveTabIndex &&
+                  lastTabAmount === tabs.length
+                ) {
+                  if (
+                    nextSchemaKey &&
+                    activeTab &&
+                    activeTab.schemaKey !== nextSchemaKey
+                  ) {
+                    activeTab.schemaKey = nextSchemaKey;
+                    nextSchemaKey = undefined;
+
+                    // Sync state to localStorage. GraphiQL resets the state
+                    // asynchronously, so we need to do it in a timeout.
+                    storage.setTabState(state);
+                    setTimeout(() => storage.setTabState(state), 500);
+                  }
+
+                  // React rerrendering, skip
+                  return;
+                }
+
+                if (activeTab) {
+                  if (!activeTab.schemaKey) {
+                    // Creating a new tab
+                    if (lastTabAmount < tabs.length) {
+                      activeTab.schemaKey = activeSchema;
+                      storage.setTabState(state);
+                    }
+                  }
+
+                  const nextSchema = activeTab.schemaKey || 'storefront';
+
+                  if (nextSchema !== activeSchema) {
+                    setActiveSchema(nextSchema);
+                  }
+                }
+
+                lastActiveTabIndex = activeTabIndex;
+                lastTabAmount = tabs.length;
+              }
+
+              const plugins = [HISTORY_PLUGIN, explorerPlugin()];
+
+              const props = {
+                fetcher: createJsonFetcher,
+                defaultEditorToolsVisibility: true,
+                initialQuery,
+                variables,
+                schema: schema.value,
+                plugins,
+                onTabChange,
+              };
+
+              function toggleSelectedApi() {
+                const activeKeyIndex = keys.indexOf(activeSchema);
+                nextSchemaKey = keys[(activeKeyIndex + 1) % keys.length];
+
+                // This triggers onTabChange
+                if (nextSchemaKey) setActiveSchema(nextSchemaKey);
+              }
+
+              const CustomToolbar = React.createElement(
+                GraphiQL.Toolbar,
                 {
-                  fetcher: GraphiQL.createFetcher({
-                    url: schema.apiUrl,
-                    headers: {[schema.authHeader]: schema.accessToken},
-                  }),
-                  defaultEditorToolsVisibility: true,
-                  query,
-                  variables,
-                  schema: schema.value,
-                  plugins: [GraphiQLPluginExplorer.explorerPlugin()],
-                  onTabChange: (state) => {
-                    const {activeTabIndex, tabs} = state;
-                    const activeTab = tabs[activeTabIndex];
-
-                    if (
-                      activeTabIndex === lastActiveTabIndex &&
-                      lastTabAmount === tabs.length
-                    ) {
-                      if (
-                        nextSchemaKey &&
-                        activeTab &&
-                        activeTab.schemaKey !== nextSchemaKey
-                      ) {
-                        activeTab.schemaKey = nextSchemaKey;
-                        nextSchemaKey = undefined;
-
-                        // Sync state to localStorage. GraphiQL resets the state
-                        // asynchronously, so we need to do it in a timeout.
-                        storage.setTabState(state);
-                        setTimeout(() => storage.setTabState(state), 500);
-                      }
-
-                      // React rerrendering, skip
-                      return;
-                    }
-
-                    if (activeTab) {
-                      if (!activeTab.schemaKey) {
-                        // Creating a new tab
-                        if (lastTabAmount < tabs.length) {
-                          activeTab.schemaKey = activeSchema;
-                          storage.setTabState(state);
-                        }
-                      }
-
-                      const nextSchema = activeTab.schemaKey || 'storefront';
-
-                      if (nextSchema !== activeSchema) {
-                        setActiveSchema(nextSchema);
-                      }
-                    }
-
-                    lastActiveTabIndex = activeTabIndex;
-                    lastTabAmount = tabs.length;
-                  },
-                  toolbar: {
-                    additionalComponent: function () {
-                      const schema = schemas[activeSchema];
-
-                      return React.createElement(
-                        GraphiQL.React.ToolbarButton,
-                        {
-                          onClick: () => {
-                            const activeKeyIndex = keys.indexOf(activeSchema);
-                            nextSchemaKey =
-                              keys[(activeKeyIndex + 1) % keys.length];
-
-                            // This triggers onTabChange
-                            if (nextSchemaKey) setActiveSchema(nextSchemaKey);
-                          },
-                          label: 'Toggle between different API schemas',
-                        },
-                        React.createElement(
-                          'div',
-                          {
-                            key: 'api-wrapper',
-                            className: 'graphiql-toolbar-icon',
-                            style: {position: 'relative', fontWeight: 'bolder'},
-                          },
-                          [
-                            React.createElement(
-                              'div',
-                              {key: 'icon', style: {textAlign: 'center'}},
-                              [
-                                schema.icon,
-                                React.createElement(
-                                  'div',
-                                  {
-                                    key: 'icon-label',
-                                    className: 'graphiql-api-toolbar-label',
-                                  },
-                                  'API',
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  },
+                  key: 'Custom Toolbar',
                 },
                 [
                   React.createElement(
-                    GraphiQL.Logo,
+                    ToolbarButton,
                     {
-                      key: 'Logo replacement',
+                      key: 'api-wrapper',
+                      onClick: toggleSelectedApi,
+                      label: 'Toggle between different API schemas',
                     },
                     [
                       React.createElement(
                         'div',
                         {
-                          key: 'Logo wrapper',
-                          style: {display: 'flex', alignItems: 'center'},
+                          key: 'icon',
+                          style: {
+                            textAlign: 'center',
+                            // color: 'hsl(var(--color-base))',
+                          },
                         },
                         [
+                          schema.icon,
                           React.createElement(
                             'div',
                             {
-                              key: 'api',
-                              className: 'graphiql-logo',
-                              style: {
-                                paddingRight: 0,
-                                whiteSpace: 'nowrap',
-                              },
+                              key: 'icon-label',
+                              className: 'graphiql-api-toolbar-label',
                             },
-                            [schema.name],
+                            'API',
                           ),
-                          React.createElement(GraphiQL.Logo, {key: 'logo'}),
                         ],
                       ),
                     ],
                   ),
                 ],
               );
+
+              const CustomLogo = React.createElement(
+                GraphiQL.Logo,
+                {
+                  key: 'Logo replacement',
+                },
+                [
+                  React.createElement(
+                    'div',
+                    {
+                      key: 'Logo wrapper',
+                      style: {display: 'flex', alignItems: 'center'},
+                    },
+                    [
+                      React.createElement(
+                        'div',
+                        {
+                          key: 'api',
+                          className: 'graphiql-logo',
+                          style: {
+                            paddingRight: 0,
+                            whiteSpace: 'nowrap',
+                          },
+                        },
+                        [schema.name],
+                      ),
+                      React.createElement(GraphiQL.Logo, {key: 'logo'}),
+                    ],
+                  ),
+                ],
+              );
+
+              const children = [CustomToolbar, CustomLogo];
+
+              return React.createElement(GraphiQL, props, children);
             }
+
+            const container = document.getElementById('graphiql');
+
+            const root = ReactDOM.createRoot(container);
+
+            root.render(React.createElement(App));
           </script>
+        </head>
+
+        <body>
+          <div id="graphiql">
+            <div class="placeholder">Loading GraphiQL...</div>
+          </div>
         </body>
       </html>
     `,
