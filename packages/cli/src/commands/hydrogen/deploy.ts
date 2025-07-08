@@ -10,7 +10,7 @@ import {
 } from '@shopify/cli-kit/node/output';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {readFile, writeFile} from '@shopify/cli-kit/node/fs';
+import {writeFile} from '@shopify/cli-kit/node/fs';
 import {
   ensureIsClean,
   getLatestGitCommit,
@@ -614,10 +614,6 @@ Continue?`.value,
         entry: ssrEntry,
       });
     };
-  }
-
-  if (true) {
-    throw new Error('test done');
   }
 
   const uploadStart = async () => {
