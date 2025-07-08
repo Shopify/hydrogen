@@ -66,11 +66,12 @@ vi.mock('@shopify/cli-kit/node/git', async () => {
 
 async function createHydrogenDependencyPackageJson(version?: string) {
   const require = createRequire(import.meta.url);
-  const packageJson: PackageJson = require(
-    require.resolve('@shopify/hydrogen/package.json', {
+  const packageJson: PackageJson = require(require.resolve(
+    '@shopify/hydrogen/package.json',
+    {
       paths: [getSkeletonSourceDir()],
-    }),
-  );
+    },
+  ));
 
   packageJson.version = version;
 
@@ -627,6 +628,34 @@ describe('deploy', async () => {
       directory: params.path,
       lockfileCheck: false,
       sourcemap: true,
+      forceClientSourcemap: false,
+      useCodegen: false,
+    });
+  });
+
+  it('passes the forceClientSourcemap flag to the build command', async () => {
+    const params = {
+      ...deployParams,
+      lockfileCheck: false,
+      forceClientSourcemap: true,
+    };
+
+    vi.mocked(createDeploy).mockImplementationOnce((options) => {
+      options.hooks?.buildFunction?.('some-cool-asset-path');
+
+      return new Promise((resolve, _reject) => {
+        resolve({url: 'https://a-lovely-deployment.com'});
+      }) as Promise<CompletedDeployment | undefined>;
+    });
+
+    await runDeploy(params);
+
+    expect(vi.mocked(runBuild)).toHaveBeenCalledWith({
+      assetPath: 'some-cool-asset-path',
+      directory: params.path,
+      lockfileCheck: false,
+      sourcemap: true,
+      forceClientSourcemap: true,
       useCodegen: false,
     });
   });
