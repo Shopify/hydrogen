@@ -45,6 +45,8 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
     };
   }
 
+  // In order to authenticate the CAAPI requests the user must be logged in via the CAAPI.
+  // The graphiql request will then use the correct
   if (customerAccount) {
     // CustomerAccount API does not support introspection to the same URL.
     // Read it from a file using the asset server:
@@ -221,15 +223,13 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
 
               // We create a custom fetcher because createGraphiQLFetcher attempts to introspect the schema
               // and the Customer Account API does not support introspection.
+              // We  override the fetcher to return the schema directly only for the CAAPI introspection query.
               function createJsonFetcher(options, httpFetch) {
-                console.log('createJsonFetcher', {options, httpFetch});
-
                 if (activeSchema === 'storefront') {
                   return fetcher(options, httpFetch);
                 } else {
                   // CAAPI requires a custom fetcher
                   if (options.operationName === 'IntrospectionQuery') {
-                    // return the prefetch schema
                     return {data: schema.value};
                   } else {
                     return fetcher(options, httpFetch);
@@ -240,7 +240,6 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
               const keys = Object.keys(schemas);
 
               function onTabChange(state) {
-                console.log('onTabChange', state);
                 const {activeTabIndex, tabs} = state;
                 const activeTab = tabs[activeTabIndex];
 
@@ -326,7 +325,6 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
                           key: 'icon',
                           style: {
                             textAlign: 'center',
-                            // color: 'hsl(var(--color-base))',
                           },
                         },
                         [
@@ -377,7 +375,8 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
                 ],
               );
 
-              const children = [CustomToolbar, CustomLogo];
+              // const children = [CustomToolbar, CustomLogo];
+              const children = [CustomToolbar];
 
               return React.createElement(GraphiQL, props, children);
             }
