@@ -161,6 +161,11 @@ export default class Deploy extends Command {
       hidden: true,
     }),
     ...commonFlags.diff,
+    'force-client-sourcemap': Flags.boolean({
+      description:
+        'Client sourcemapping is avoided by default because it makes backend code visible in the browser. Use this flag to force enabling it.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_FORCE_CLIENT_SOURCEMAP',
+    }),
   };
 
   async run() {
@@ -203,6 +208,7 @@ interface OxygenDeploymentOptions {
   envBranch?: string;
   environmentFile?: string;
   force: boolean;
+  forceClientSourcemap?: boolean;
   noVerify: boolean;
   lockfileCheck: boolean;
   jsonOutput: boolean;
@@ -252,6 +258,7 @@ export async function runDeploy(
     envBranch,
     environmentFile,
     force: forceOnUncommitedChanges,
+    forceClientSourcemap = false,
     noVerify,
     lockfileCheck,
     jsonOutput,
@@ -602,10 +609,15 @@ Continue?`.value,
         assetPath,
         lockfileCheck,
         sourcemap: true,
+        forceClientSourcemap,
         useCodegen: false,
         entry: ssrEntry,
       });
     };
+  }
+
+  if (true) {
+    throw new Error('test done');
   }
 
   const uploadStart = async () => {
@@ -692,11 +704,9 @@ export async function getHydrogenVersion({appPath}: {appPath: string}) {
   const {root} = getProjectPaths(appPath);
 
   const require = createRequire(import.meta.url);
-  const {version} = require(
-    require.resolve('@shopify/hydrogen/package.json', {
-      paths: [root],
-    }),
-  );
+  const {version} = require(require.resolve('@shopify/hydrogen/package.json', {
+    paths: [root],
+  }));
 
   return version;
 }
