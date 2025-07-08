@@ -375,8 +375,7 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
                 ],
               );
 
-              // const children = [CustomToolbar, CustomLogo];
-              const children = [CustomToolbar];
+              const children = [CustomToolbar, CustomLogo];
 
               return React.createElement(GraphiQL, props, children);
             }
