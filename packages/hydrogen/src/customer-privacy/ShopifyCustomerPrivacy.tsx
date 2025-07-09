@@ -226,7 +226,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
         loadBanner,
       );
     };
-  }, [withPrivacyBanner, config, window, window?.privacyBanner]);
+  }, [withPrivacyBanner, config, Boolean(window.privacyBanner)]);
 
   // monitor when the `privacyBanner` is in the window and override it's methods with config
   // pre-applied versions
