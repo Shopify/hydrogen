@@ -16,13 +16,13 @@ export async function importVite(root: string): Promise<Vite> {
   const vitePackageJson = await findUpAndReadPackageJson(vitePath);
 
   // vite 7
-  let viteNodeIndexFile = (vitePackageJson.content as any).exports?.['.']
+  let viteNodeIndexFile = (vitePackageJson.content as any).exports?.['.'];
 
   // vite 6
   if (typeof viteNodeIndexFile !== 'string') {
-    viteNodeIndexFile = viteNodeIndexFile?.import
+    viteNodeIndexFile = viteNodeIndexFile?.import;
   }
-  
+
   // vite 5
   if (typeof viteNodeIndexFile !== 'string') {
     viteNodeIndexFile = viteNodeIndexFile.default;
