@@ -503,6 +503,13 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "force-client-sourcemap": {
+          "description": "Client sourcemapping is avoided by default because it makes backend code visible in the browser. Use this flag to force enabling it.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_FORCE_CLIENT_SOURCEMAP",
+          "name": "force-client-sourcemap",
+          "allowNo": false,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
