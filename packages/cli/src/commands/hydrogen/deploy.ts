@@ -10,7 +10,7 @@ import {
 } from '@shopify/cli-kit/node/output';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {readFile, writeFile} from '@shopify/cli-kit/node/fs';
+import {writeFile} from '@shopify/cli-kit/node/fs';
 import {
   ensureIsClean,
   getLatestGitCommit,
@@ -19,6 +19,7 @@ import {
 import {joinPath, relativePath, resolvePath} from '@shopify/cli-kit/node/path';
 import {
   renderConfirmationPrompt,
+  renderInfo,
   renderSelectPrompt,
   renderSuccess,
   renderTasks,
@@ -161,6 +162,11 @@ export default class Deploy extends Command {
       hidden: true,
     }),
     ...commonFlags.diff,
+    'force-client-sourcemap': Flags.boolean({
+      description:
+        'Client sourcemapping is avoided by default because it makes backend code visible in the browser. Use this flag to force enabling it.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_FORCE_CLIENT_SOURCEMAP',
+    }),
   };
 
   async run() {
@@ -203,6 +209,7 @@ interface OxygenDeploymentOptions {
   envBranch?: string;
   environmentFile?: string;
   force: boolean;
+  forceClientSourcemap?: boolean;
   noVerify: boolean;
   lockfileCheck: boolean;
   jsonOutput: boolean;
@@ -252,6 +259,7 @@ export async function runDeploy(
     envBranch,
     environmentFile,
     force: forceOnUncommitedChanges,
+    forceClientSourcemap = false,
     noVerify,
     lockfileCheck,
     jsonOutput,
@@ -584,6 +592,14 @@ Continue?`.value,
   };
 
   if (buildCommand) {
+    if (forceClientSourcemap) {
+      console.log('');
+      renderInfo({
+        headline:
+          'The `--force-client-sourcemap` flag is not supported with a custom build command',
+        body: 'Client sourcemaps will not be generated.',
+      });
+    }
     config.buildCommand = buildCommand;
   } else {
     hooks.buildFunction = async (
@@ -602,6 +618,7 @@ Continue?`.value,
         assetPath,
         lockfileCheck,
         sourcemap: true,
+        forceClientSourcemap,
         useCodegen: false,
         entry: ssrEntry,
       });
