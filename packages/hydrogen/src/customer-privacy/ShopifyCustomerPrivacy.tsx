@@ -371,7 +371,7 @@ function emitPrivacyBannerApiLoaded() {
   if (hasEmittedBanner) return;
   hasEmittedBanner = true;
   setTimeout(() => {
-    const event = new CustomEvent('emitPrivacyBannerApiLoaded', {
+    const event = new CustomEvent('shopifyCustomerPrivacyApiLoaded', {
       bubbles: true,
       cancelable: true,
     });
