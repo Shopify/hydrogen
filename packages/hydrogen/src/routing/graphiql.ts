@@ -82,6 +82,7 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
         <head>
           <title>GraphiQL</title>
           <link rel="icon" type="image/x-icon" href="${favicon}" />
+          <meta charset="utf-8" />
           <style>
             body {
               height: 100%;
