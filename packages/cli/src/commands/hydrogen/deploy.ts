@@ -19,6 +19,7 @@ import {
 import {joinPath, relativePath, resolvePath} from '@shopify/cli-kit/node/path';
 import {
   renderConfirmationPrompt,
+  renderInfo,
   renderSelectPrompt,
   renderSuccess,
   renderTasks,
@@ -591,6 +592,14 @@ Continue?`.value,
   };
 
   if (buildCommand) {
+    if (forceClientSourcemap) {
+      console.log('');
+      renderInfo({
+        headline:
+          'The `--force-client-sourcemap` flag is not supported with a custom build command',
+        body: 'Client sourcemaps will not be generated.',
+      });
+    }
     config.buildCommand = buildCommand;
   } else {
     hooks.buildFunction = async (
@@ -700,11 +709,9 @@ export async function getHydrogenVersion({appPath}: {appPath: string}) {
   const {root} = getProjectPaths(appPath);
 
   const require = createRequire(import.meta.url);
-  const {version} = require(
-    require.resolve('@shopify/hydrogen/package.json', {
-      paths: [root],
-    }),
-  );
+  const {version} = require(require.resolve('@shopify/hydrogen/package.json', {
+    paths: [root],
+  }));
 
   return version;
 }
