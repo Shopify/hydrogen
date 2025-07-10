@@ -1,4 +1,12 @@
-# Hydrogen example: Subscriptions / Selling Plans
+# ⚠️ DEPRECATED: see the Cookbook Recipe for Subscriptions
+
+> **This example is deprecated.**
+>
+> This example is no longer maintained and may be outdated.
+>
+> For the latest guidance and implementation details on Subscriptions / Selling Plans in Hydrogen, please refer to the Subscriptions recipe [in this repository](../../cookbook/recipes/subscriptions/README.md) or on [Shopify.dev](https://shopify.dev/docs/storefronts/headless/hydrogen/cookbook/subscriptions).
+
+---
 
 This folder contains an example implementation of [subscriptions](https://shopify.dev/docs/apps/selling-strategies/subscriptions) for Hydrogen. It shows how to display selling plans on a product page.
 
@@ -25,13 +33,13 @@ npm create @shopify/hydrogen@latest -- --template subscriptions
 
 This folder contains the minimal set of files needed to showcase the implementation.
 
-| File                                                                                  | Description                                                                                                                                           |
-| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`.env.example`](.env)                                                                | Environment variable file. This project is connected to the `hydrogen-preview` storefront which has one example subscription product (`shopify-wax`). |
-| [`server.ts`](server.ts)                                                              | Application entry point modified to fetch selected selling plans from cart lines.                                                                     |
+| File                                                                                 | Description                                                                                                                                           |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`.env.example`](.env)                                                               | Environment variable file. This project is connected to the `hydrogen-preview` storefront which has one example subscription product (`shopify-wax`). |
+| [`server.ts`](server.ts)                                                             | Application entry point modified to fetch selected selling plans from cart lines.                                                                     |
 | 🆕 [`app/components/SellingPlanSelector.tsx`](app/components/SellingPlanSelector.tsx) | A component that simplifies selecting sellingPlans subscription options                                                                               |
-| [`app/routes/product.$handle.tsx`](app/routes/product.$handle.tsx)                    | Product page modified to display subscription options.                                                                                                |
-| [`app/components/Cart.tsx`](app/components/Cart.tsx)                                  | Cart component modified to display selected subscription.                                                                                             |
+| [`app/routes/product.$handle.tsx`](app/routes/product.$handle.tsx)                   | Product page modified to display subscription options.                                                                                                |
+| [`app/components/Cart.tsx`](app/components/Cart.tsx)                                 | Cart component modified to display selected subscription.                                                                                             |
 
 ## Instructions
 
