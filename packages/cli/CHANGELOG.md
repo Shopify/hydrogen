@@ -1,5 +1,19 @@
 # @shopify/cli-hydrogen
 
+## 11.1.1
+
+### Patch Changes
+
+- Add `fulfillmentStatus` to CAAPI order query and route ([#2887](https://github.com/Shopify/hydrogen/pull/2887)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Add `--force-client-sourcemap` flag support to the `deploy` command ([#3008](https://github.com/Shopify/hydrogen/pull/3008)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Unpin react-router and react-router-dom versions in the skeleton template ([#2983](https://github.com/Shopify/hydrogen/pull/2983)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Add support for Vite v7 [.] exports ([#2998](https://github.com/Shopify/hydrogen/pull/2998)) by [@tomfuertes](https://github.com/tomfuertes)
+
+- Add `@inContext` language support to Customer Account API mutations ([#2881](https://github.com/Shopify/hydrogen/pull/2881)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 11.1.0
 
 ### Minor Changes
