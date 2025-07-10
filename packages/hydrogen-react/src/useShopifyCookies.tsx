@@ -1,4 +1,5 @@
 import {useEffect} from 'react';
+// @ts-ignore - worktop/cookie types not properly exported
 import {stringify} from 'worktop/cookie';
 import {SHOPIFY_Y, SHOPIFY_S} from './cart-constants.js';
 import {buildUUID, getShopifyCookies} from './cookies-utils.js';
