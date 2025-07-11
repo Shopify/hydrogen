@@ -142,27 +142,6 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
   };
 }
 
-// Client-only wrapper for Analytics to prevent SSR hydration issues
-function ClientAnalytics({children, ...props}: {children: React.ReactNode} & React.ComponentProps<typeof Analytics.Provider>) {
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  if (!hasMounted) {
-    // During SSR and initial hydration, render children without Analytics
-    return <>{children}</>;
-  }
-
-  // After hydration, render with Analytics
-  return (
-    <Analytics.Provider {...props}>
-      {children}
-    </Analytics.Provider>
-  );
-}
-
 export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
   const data = useRouteLoaderData<RootLoader>('root');
@@ -179,13 +158,13 @@ export function Layout({children}: {children?: React.ReactNode}) {
       </head>
       <body>
         {data ? (
-          <ClientAnalytics
+          <Analytics.Provider
             cart={data.cart}
             shop={data.shop}
             consent={data.consent}
           >
             <PageLayout {...data}>{children}</PageLayout>
-          </ClientAnalytics>
+          </Analytics.Provider>
         ) : (
           children
         )}
