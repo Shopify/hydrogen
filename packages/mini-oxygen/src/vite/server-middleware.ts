@@ -7,6 +7,7 @@ import {
   type RequestHook,
   defaultLogRequestLine,
 } from '../worker/index.js';
+import {Request as MiniflareRequest} from 'miniflare';
 import type {OnlyBindings, OnlyServices} from '../worker/utils.js';
 import {pipeFromWeb, toURL, toWeb} from './utils.js';
 import {
@@ -228,7 +229,7 @@ export function setupOxygenMiddleware(
 
     ready.then(() =>
       miniOxygen
-        .dispatchFetch(toWeb(req))
+        .dispatchFetch(toMiniflareRequest(toWeb(req)))
         .then(async (webResponse) => {
           if (isEntrypointError(webResponse)) {
             await handleEntrypointError(
@@ -238,7 +239,7 @@ export function setupOxygenMiddleware(
               miniOxygenOptions.entryPointErrorHandler,
             );
           } else {
-            pipeFromWeb(webResponse, res);
+            await pipeFromWeb(webResponse, res);
           }
         })
         .catch((error) => {
@@ -278,4 +279,18 @@ function getViteUrl(viteDevServer: ViteDevServer) {
   }
 
   return viteUrl;
+}
+
+function toMiniflareRequest(request: Request): MiniflareRequest {
+  // Set the X-Forwarded-Host header to the original host as the `Host` header inside a Worker will contain the workerd host
+  const host = request.headers.get('Host');
+  if (host) {
+    request.headers.set('X-Forwarded-Host', host);
+  }
+  return new MiniflareRequest(request.url, {
+    method: request.method,
+    headers: [['accept-encoding', 'identity'], ...request.headers],
+    body: request.body,
+    duplex: 'half',
+  });
 }

@@ -11,6 +11,7 @@ import {
   ScrollRestoration,
   useRouteLoaderData,
 } from 'react-router';
+import {useEffect, useState} from 'react';
 import favicon from '~/assets/favicon.svg';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 import resetStyles from '~/styles/reset.css?url';
@@ -141,6 +142,27 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
   };
 }
 
+// Client-only wrapper for Analytics to prevent SSR hydration issues
+function ClientAnalytics({children, ...props}: {children: React.ReactNode} & React.ComponentProps<typeof Analytics.Provider>) {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted) {
+    // During SSR and initial hydration, render children without Analytics
+    return <>{children}</>;
+  }
+
+  // After hydration, render with Analytics
+  return (
+    <Analytics.Provider {...props}>
+      {children}
+    </Analytics.Provider>
+  );
+}
+
 export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
   const data = useRouteLoaderData<RootLoader>('root');
@@ -157,13 +179,13 @@ export function Layout({children}: {children?: React.ReactNode}) {
       </head>
       <body>
         {data ? (
-          <Analytics.Provider
+          <ClientAnalytics
             cart={data.cart}
             shop={data.shop}
             consent={data.consent}
           >
             <PageLayout {...data}>{children}</PageLayout>
-          </Analytics.Provider>
+          </ClientAnalytics>
         ) : (
           children
         )}

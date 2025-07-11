@@ -53,6 +53,7 @@
     "@miniflare/shared": "^2.14.4",
     "@miniflare/storage-memory": "^2.14.4",
     "@miniflare/web-sockets": "^2.14.4",
+    "@mjackson/node-fetch-server": "^0.7.0",
     "body-parser": "1.20.3",
     "connect": "^3.7.0",
     "get-port": "^7.1.0",
