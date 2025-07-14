@@ -1,8 +1,12 @@
 {
   "include": [
-    "./**/*.d.ts",
-    "./**/*.ts",
-    "./**/*.tsx",
+    "env.d.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "app/**/*.d.ts",
+    "*.ts",
+    "*.tsx",
+    "*.d.ts",
     ".react-router/types/**/*"
   ],
   "compilerOptions": {
