@@ -11,7 +11,15 @@ import {generateNonce} from './nonce';
 export const NonceContext = createContext<string | undefined>(undefined);
 export const NonceProvider = NonceContext.Provider;
 
-export const useNonce = () => useContext(NonceContext);
+export const useNonce = () => {
+  // In client-side hydration, the NonceContext might not be available
+  // Return undefined in that case since nonce is only needed for SSR
+  try {
+    return useContext(NonceContext);
+  } catch {
+    return undefined;
+  }
+};
 
 type ContentSecurityPolicy = {
   /** A randomly generated nonce string that should be passed to any custom `script` element */

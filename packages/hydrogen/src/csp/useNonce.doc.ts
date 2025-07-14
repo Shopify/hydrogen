@@ -16,7 +16,9 @@ const data: ReferenceEntityTemplateSchema = {
       url: '/docs/api/hydrogen/components/script',
     },
   ],
-  description: `The \`useNonce\` hook returns the [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy) nonce. Use the hook to manually add a nonce to third party scripts. The \`Script\` component automatically does this for you. Note, the nonce should never be available in the client, and should always return undefined in the browser.`,
+  description: `The \`useNonce\` hook returns the [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy) nonce. Use the hook to manually add a nonce to third party scripts. The \`Script\` component automatically does this for you. 
+
+The nonce is only available during server-side rendering when used within a \`NonceProvider\` context. During client-side hydration or when called outside of a \`NonceProvider\`, it returns \`undefined\`. This is expected behavior as the nonce is only needed for server-rendered inline scripts.`,
   type: 'hook',
   defaultExample: {
     description: 'I am the default example',
