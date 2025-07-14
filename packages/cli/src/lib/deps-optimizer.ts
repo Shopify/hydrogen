@@ -95,27 +95,27 @@ const ssrOptimizeDepsIncludeRule = {
     pattern: '[$$$]',
     inside: {
       kind: 'pair',
-      stopBy: 'end',
+      stopBy: 'end' as const,
       has: {
         field: 'key',
         regex: 'include',
-        stopBy: 'end',
+        stopBy: 'end' as const,
       },
       inside: {
         kind: 'pair',
-        stopBy: 'end',
+        stopBy: 'end' as const,
         has: {
           field: 'key',
           regex: 'optimizeDeps',
-          stopBy: 'end',
+          stopBy: 'end' as const,
         },
         inside: {
           kind: 'pair',
-          stopBy: 'end',
+          stopBy: 'end' as const,
           has: {
             field: 'key',
             regex: 'ssr',
-            stopBy: 'end',
+            stopBy: 'end' as const,
           },
         },
       },
