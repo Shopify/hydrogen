@@ -5,7 +5,7 @@ import {
   inTemporaryDirectory,
   removeFile,
 } from '@shopify/cli-kit/node/fs';
-import {describe, it, expect, vi, beforeAll} from 'vitest';
+import {describe, it, expect, vi, beforeAll, afterAll} from 'vitest';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {runBuild} from './build.js';
@@ -28,8 +28,10 @@ describe('build', () => {
       `test-project-build-${tmpDirInstance++}`,
     );
     mkdirSync(tmpDir);
+  });
 
-    return () => removeFile(tmpDir);
+  afterAll(async () => {
+    await removeFile(tmpDir);
   });
 
   it('builds a Vite project', async () => {
