@@ -265,7 +265,7 @@ export class MiniOxygen {
             // Retry reading the file a few times in case of race conditions
             let retries = 3;
             let newScript: string | null = null;
-            
+
             while (retries > 0 && !newScript) {
               if (fs.existsSync(this.watchedFile!)) {
                 try {
@@ -275,20 +275,23 @@ export class MiniOxygen {
                   // File might be locked, wait a bit and retry
                   retries--;
                   if (retries > 0) {
-                    await new Promise(resolve => setTimeout(resolve, 50));
+                    await new Promise((resolve) => setTimeout(resolve, 50));
                   }
                 }
               } else {
                 // File doesn't exist yet, wait a bit and retry
                 retries--;
                 if (retries > 0) {
-                  await new Promise(resolve => setTimeout(resolve, 50));
+                  await new Promise((resolve) => setTimeout(resolve, 50));
                 }
               }
             }
-            
+
             if (!newScript) {
-              console.error('Worker file not found or could not be read:', this.watchedFile);
+              console.error(
+                'Worker file not found or could not be read:',
+                this.watchedFile,
+              );
               return;
             }
 

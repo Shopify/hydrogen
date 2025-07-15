@@ -98,7 +98,7 @@ describe('start()', () => {
       `http://localhost:${miniOxygen.port}/__minioxygen_events`,
     );
     const eventsCaught: MessageEvent[] = [];
-    
+
     // Wait for the EventSource to connect and receive the first message
     await new Promise<void>((resolve) => {
       eventStream.addEventListener('message', (event: MessageEvent) => {
@@ -108,7 +108,7 @@ describe('start()', () => {
         }
       });
     });
-    
+
     // Now that we're connected, update the worker
     await fixture.updateWorker();
 
@@ -120,7 +120,7 @@ describe('start()', () => {
     expect(eventsCaught.length).toBe(2);
     expect(eventsCaught[0].data).toBe('connected');
     expect(eventsCaught[1].data).toBe('reload');
-    
+
     eventStream.close();
     await miniOxygen.close();
   });
