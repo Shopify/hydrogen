@@ -1,5 +1,13 @@
 import '../../lib/onboarding/setup-template.mocks.js';
-import {describe, it, expect, vi, beforeEach, beforeAll, afterAll} from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  beforeAll,
+  afterAll,
+} from 'vitest';
 import {runInit} from './init.js';
 import {exec} from '@shopify/cli-kit/node/system';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
