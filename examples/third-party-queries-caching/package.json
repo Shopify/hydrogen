@@ -7,7 +7,7 @@
     "dev": "shopify hydrogen dev --codegen --diff",
     "preview": "shopify hydrogen preview --build --diff",
     "lint": "eslint --no-error-on-unmatched-pattern .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "react-router typegen && tsc --noEmit",
     "codegen": "shopify hydrogen codegen"
   }
 }
