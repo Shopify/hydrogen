@@ -108,7 +108,7 @@ export function createMiniOxygen(
     },
     dispatchFetch: (request) => mf.dispatchFetch(request),
     async reload({env, ...nextOptions} = {}) {
-      await mf.setOptions({...nextOptions, ...(env && {bindings: env})});
+      await mf.reload({...nextOptions, ...(env && {bindings: env})});
     },
     async dispose() {
       await mf.dispose();

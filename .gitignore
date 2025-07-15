@@ -142,3 +142,5 @@ admin.schema.json
 business-platform.schema.json
 
 examples/**/*.generated.d.ts
+
+examples/express/build

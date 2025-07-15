@@ -1,5 +1,4 @@
 import {createRequire} from 'node:module';
-import {execa} from 'execa';
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {
   inTemporaryDirectory,
@@ -14,6 +13,7 @@ import {
 } from '@shopify/cli-kit/node/ui';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {type PackageJson} from '@shopify/cli-kit/node/node-package-manager';
+import {exec} from '@shopify/cli-kit/node/system';
 import {
   buildUpgradeCommandArgs,
   displayConfirmation,
@@ -144,7 +144,7 @@ async function inTemporaryHydrogenRepo(
 ) {
   return inTemporaryDirectory(async (tmpDir) => {
     // init the git repo
-    await execa('git', ['init'], {cwd: tmpDir});
+    await exec('git', ['init'], {cwd: tmpDir});
 
     if (packageJson) {
       const packageJsonPath = joinPath(tmpDir, 'package.json');
@@ -156,17 +156,17 @@ async function inTemporaryHydrogenRepo(
     expect(await fileExists(joinPath(tmpDir, '/.git/config'))).toBeTruthy();
 
     if (cleanGitRepo) {
-      await execa('git', ['add', 'package.json'], {cwd: tmpDir});
+      await exec('git', ['add', 'package.json'], {cwd: tmpDir});
 
       if (process.env.NODE_ENV === 'test' && process.env.CI) {
-        await execa('git', ['config', 'user.email', 'test@hydrogen.shop'], {
+        await exec('git', ['config', 'user.email', 'test@hydrogen.shop'], {
           cwd: tmpDir,
         });
-        await execa('git', ['config', 'user.name', 'Hydrogen Test'], {
+        await exec('git', ['config', 'user.name', 'Hydrogen Test'], {
           cwd: tmpDir,
         });
       }
-      await execa('git', ['commit', '-m', 'initial commit'], {cwd: tmpDir});
+      await exec('git', ['commit', '-m', 'initial commit'], {cwd: tmpDir});
     }
 
     await cb(tmpDir);
