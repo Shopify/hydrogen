@@ -267,7 +267,7 @@ export class MiniOxygen {
               console.error('Worker file not found:', this.watchedFile);
               return;
             }
-            
+
             const newScript = fs.readFileSync(this.watchedFile!, 'utf-8');
             await this.setOptions({script: newScript});
             // Trigger reload listeners
