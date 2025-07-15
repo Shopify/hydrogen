@@ -55,11 +55,9 @@ describe('dev', () => {
     });
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 10000));
-
       await vi.waitFor(
         () => expect(outputMock.output()).toMatch(/View [^:]+? app:/i),
-        {timeout: 5000},
+        {timeout: 15000}, // Increased timeout to account for readiness
       );
 
       const rootResponse = await fetch(getUrl());
