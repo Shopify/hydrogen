@@ -88,6 +88,10 @@ export function getSkeletonSourceDir() {
   return joinPath(dirname(monorepoPackagesPath), 'templates', 'skeleton');
 }
 
+export function getSkeletonNodeModules(): string {
+  return joinPath(getSkeletonSourceDir(), 'node_modules');
+}
+
 export async function getRepoNodeModules() {
   const {stdout} = await execAsync('npm root');
   let nodeModulesPath = stdout.trim();

@@ -78,6 +78,7 @@ export async function prepareDiffDirectory(
               '**/package.json',
               '**/tsconfig.json',
               '**/.shopify',
+              '**/.gitignore',
             ],
           })
           .on('all', async (eventName, eventFilePath) => {
@@ -231,7 +232,7 @@ export async function applyTemplateDiff(
     force: true,
     recursive: true,
     filter: createFilter(
-      /(^|\/|\\)(dist|node_modules|\.cache|.turbo|package\.json|tsconfig\.json)(\/|\\|$)/i,
+      /(^|\/|\\)(dist|node_modules|\.cache|\.turbo|package\.json|tsconfig\.json|\.gitignore)(\/|\\|$)/i,
     ),
   });
 

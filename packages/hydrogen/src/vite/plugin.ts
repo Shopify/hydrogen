@@ -1,5 +1,5 @@
 import type {Plugin, ConfigEnv} from 'vite';
-import type {Preset as RemixPreset} from '@remix-run/dev';
+import type {Preset as RemixPreset} from '@react-router/dev/config';
 import {
   setupHydrogenMiddleware,
   type HydrogenMiddlewareOptions,
@@ -18,8 +18,8 @@ type HydrogenSharedOptions = Partial<
   Pick<HydrogenPluginOptions, 'disableVirtualRoutes'> &
     Pick<ConfigEnv, 'command'> & {
       remixConfig?: Parameters<
-        NonNullable<RemixPreset['remixConfigResolved']>
-      >[0]['remixConfig'];
+        NonNullable<RemixPreset['reactRouterConfigResolved']>
+      >[0]['reactRouterConfig'];
     }
 >;
 
