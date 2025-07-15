@@ -5,6 +5,12 @@
     "./**/*.tsx",
     ".react-router/types/**/*"
   ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "packages/**/dist/**/*"
+  ],
   "compilerOptions": {
     "lib": [
       "DOM",

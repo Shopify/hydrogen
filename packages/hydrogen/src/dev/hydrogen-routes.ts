@@ -4,8 +4,9 @@ import type {RouteConfigEntry} from '@react-router/dev/routes';
 export async function hydrogenRoutes(
   currentRoutes: Array<RouteConfigEntry>,
 ): Promise<Array<RouteConfigEntry>> {
-  // Only run this in development.
-  if (process.env.NODE_ENV !== 'development') {
+  // Only run this in development and test environments.
+  const env = process.env.NODE_ENV;
+  if (env === 'production') {
     return currentRoutes;
   }
 
