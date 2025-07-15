@@ -122,9 +122,21 @@ describe('remote templates', () => {
 
       expect(resultPkgJson.name).toMatch(exampleName);
 
-      expect(resultPkgJson.scripts).toEqual(
-        expect.objectContaining(templatePkgJson.scripts),
-      );
+      // The example's scripts should override the template's scripts
+      // but the --diff flag is removed by applyTemplateDiff
+      const expectedScripts = {
+        ...templatePkgJson.scripts,
+        ...examplePkgJson.scripts,
+      };
+      
+      // Remove --diff flag from build, dev, and preview scripts as applyTemplateDiff does
+      for (const key of ['build', 'dev', 'preview']) {
+        if (expectedScripts[key] && typeof expectedScripts[key] === 'string') {
+          expectedScripts[key] = expectedScripts[key].replace(/\s+--diff/, '');
+        }
+      }
+
+      expect(resultPkgJson.scripts).toEqual(expectedScripts);
 
       const expectedDeps = {
         ...templatePkgJson.dependencies,
