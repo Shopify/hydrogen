@@ -128,7 +128,7 @@ describe('remote templates', () => {
         ...templatePkgJson.scripts,
         ...examplePkgJson.scripts,
       };
-      
+
       // Remove --diff flag from build, dev, and preview scripts as applyTemplateDiff does
       for (const key of ['build', 'dev', 'preview']) {
         if (expectedScripts[key] && typeof expectedScripts[key] === 'string') {
