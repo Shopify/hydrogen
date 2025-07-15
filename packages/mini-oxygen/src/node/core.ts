@@ -262,6 +262,12 @@ export class MiniOxygen {
 
         debounceTimer = setTimeout(async () => {
           try {
+            // Check if file exists before reading
+            if (!fs.existsSync(this.watchedFile!)) {
+              console.error('Worker file not found:', this.watchedFile);
+              return;
+            }
+            
             const newScript = fs.readFileSync(this.watchedFile!, 'utf-8');
             await this.setOptions({script: newScript});
             // Trigger reload listeners
