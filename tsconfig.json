@@ -6,7 +6,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "types": ["node"],
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "declaration": true,
