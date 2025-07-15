@@ -262,22 +262,42 @@ export class MiniOxygen {
 
         debounceTimer = setTimeout(async () => {
           try {
-            // Check if file exists before reading
-            if (!fs.existsSync(this.watchedFile!)) {
-              console.error('Worker file not found:', this.watchedFile);
+            // Retry reading the file a few times in case of race conditions
+            let retries = 3;
+            let newScript: string | null = null;
+            
+            while (retries > 0 && !newScript) {
+              if (fs.existsSync(this.watchedFile!)) {
+                try {
+                  newScript = fs.readFileSync(this.watchedFile!, 'utf-8');
+                  break;
+                } catch (readErr) {
+                  // File might be locked, wait a bit and retry
+                  retries--;
+                  if (retries > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                  }
+                }
+              } else {
+                // File doesn't exist yet, wait a bit and retry
+                retries--;
+                if (retries > 0) {
+                  await new Promise(resolve => setTimeout(resolve, 50));
+                }
+              }
+            }
+            
+            if (!newScript) {
+              console.error('Worker file not found or could not be read:', this.watchedFile);
               return;
             }
 
-            const newScript = fs.readFileSync(this.watchedFile!, 'utf-8');
-            await this.setOptions({script: newScript});
-            // Trigger reload listeners
-            for (const listener of this.reloadListeners) {
-              listener();
-            }
+            // Call reload with the new script instead of setOptions
+            await this.reload({script: newScript});
           } catch (err) {
             console.error('Error reloading worker:', err);
           }
-        }, 100);
+        }, 200); // Increased from 100ms to 200ms for CI environments
       }
     });
   }

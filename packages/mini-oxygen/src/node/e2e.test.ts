@@ -98,19 +98,30 @@ describe('start()', () => {
       `http://localhost:${miniOxygen.port}/__minioxygen_events`,
     );
     const eventsCaught: MessageEvent[] = [];
-    eventStream.addEventListener('message', (event: MessageEvent) =>
-      eventsCaught.push(event),
-    );
-    fixture.updateWorker();
+    
+    // Wait for the EventSource to connect and receive the first message
+    await new Promise<void>((resolve) => {
+      eventStream.addEventListener('message', (event: MessageEvent) => {
+        eventsCaught.push(event);
+        if (event.data === 'connected') {
+          resolve();
+        }
+      });
+    });
+    
+    // Now that we're connected, update the worker
+    await fixture.updateWorker();
 
-    // we need a short timeout to allow the "reload" event on the MiniOxygen instance to fire
+    // Wait for the reload event
     await new Promise((resolve, _reject) => {
-      setTimeout(() => resolve(null), 500);
+      setTimeout(() => resolve(null), 1000); // Increased from 500ms to 1000ms for CI
     });
 
     expect(eventsCaught.length).toBe(2);
     expect(eventsCaught[0].data).toBe('connected');
     expect(eventsCaught[1].data).toBe('reload');
+    
+    eventStream.close();
     await miniOxygen.close();
   });
 
