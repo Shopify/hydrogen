@@ -15,6 +15,7 @@ import type {
   ShopifyPageViewPayload,
 } from './analytics-types.js';
 import {version} from '../package.json';
+import {getProductsValue, getProductValue} from './analytics-utils.js';
 
 describe(`analytics schema - custom storefront customer tracking`, () => {
   describe('page view', () => {
@@ -141,7 +142,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
         const pageViewPayload = {
           ...BASE_PAYLOAD,
           pageType: 'product',
-          totalValue: 100,
+          totalValue: getProductsValue(BASE_PAYLOAD.products),
         };
         const events = pageView(pageViewPayload);
 
@@ -169,7 +170,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           ...BASE_PAYLOAD,
           pageType: 'product',
           products: [productPayload],
-          totalValue: 100,
+          totalValue: getProductValue(productPayload),
         };
         const events = pageView(pageViewPayload);
 
@@ -184,7 +185,6 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
         expect(events[1]).toEqual(
           getExpectedPayload(pageViewPayload, {
             event_name: 'product_page_rendered',
-            total_value: pageViewPayload.totalValue,
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             products: expect.anything(),
             canonical_url: pageViewPayload.url,
@@ -217,7 +217,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           ...BASE_PAYLOAD,
           pageType: 'product',
           products: [productPayload],
-          totalValue: 100,
+          totalValue: getProductValue(productPayload),
         };
         const events = pageView(pageViewPayload);
 
@@ -293,7 +293,45 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
         ...BASE_PAYLOAD,
         cartId: 'gid://shopify/Cart/abc123',
         products: [productPayload],
-        totalValue: 100,
+        totalValue: getProductValue(productPayload),
+      };
+      const events = addToCart(addToCartPayload);
+
+      expectType<ShopifyMonorailPayload[]>(events);
+      expect(events.length).toBe(1);
+      expect(events[0]).toEqual(
+        getExpectedPayload(addToCartPayload, {
+          event_name: 'product_added_to_cart',
+          cart_token: 'abc123',
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          products: expect.anything(),
+        }),
+      );
+      const productEventPayload = events[0].payload;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const product = JSON.parse(
+        (productEventPayload.products && productEventPayload.products[0]) ||
+          '{}',
+      );
+      expect(product).toEqual({
+        ...getForwardedProductPayload(productPayload),
+        variant: '',
+        quantity: 0,
+        product_id: 1,
+        price: parseFloat(productPayload.price),
+      });
+    });
+
+    it(`with base product payload quantity 1`, () => {
+      const productPayload = {
+        ...BASE_PRODUCT_PAYLOAD,
+        quantity: 1,
+      };
+      const addToCartPayload = {
+        ...BASE_PAYLOAD,
+        cartId: 'gid://shopify/Cart/abc123',
+        products: [productPayload],
+        totalValue: getProductValue(productPayload),
       };
       const events = addToCart(addToCartPayload);
 
@@ -317,7 +355,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
       expect(product).toEqual({
         ...getForwardedProductPayload(productPayload),
         variant: '',
-        quantity: 0,
+        quantity: 1,
         product_id: 1,
         price: parseFloat(productPayload.price),
       });
