@@ -5,6 +5,7 @@ import {
   useCallback,
   createContext,
   useContext,
+  type JSX,
 } from 'react';
 import type {
   SelectedOption as SelectedOptionType,

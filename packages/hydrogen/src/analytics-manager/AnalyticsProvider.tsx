@@ -6,6 +6,7 @@ import {
   createContext,
   useContext,
   useRef,
+  type JSX,
 } from 'react';
 import {type CartReturn} from '../cart/queries/cart-types';
 import {

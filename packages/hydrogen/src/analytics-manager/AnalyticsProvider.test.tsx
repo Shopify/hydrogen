@@ -9,7 +9,7 @@ import {
   CurrencyCode,
   LanguageCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {ReactNode, useEffect} from 'react';
+import {ReactNode, useEffect, type JSX} from 'react';
 import {CartReturn} from '../cart/queries/cart-types';
 
 const SHOP_DATA = {
@@ -131,7 +131,7 @@ describe('<Analytics.Provider />', () => {
   it('renders its children', async () => {
     render(
       <Analytics.Provider cart={null} shop={SHOP_DATA} consent={CONSENT_DATA}>
-        <div>child</div>;
+        <div>child</div>
       </Analytics.Provider>,
     );
 
