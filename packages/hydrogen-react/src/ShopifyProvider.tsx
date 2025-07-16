@@ -1,4 +1,4 @@
-import {createContext, useContext, useMemo, type ReactNode} from 'react';
+import { createContext, useContext, useMemo, type ReactNode, type JSX } from 'react';
 import type {LanguageCode, CountryCode} from './storefront-api-types.js';
 import {SFAPI_VERSION} from './storefront-api-constants.js';
 import {getPublicTokenHeadersRaw} from './storefront-client.js';

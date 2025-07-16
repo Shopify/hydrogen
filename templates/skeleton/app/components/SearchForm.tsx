@@ -3,7 +3,7 @@ import { Form, type FormProps } from 'react-router';
 
 type SearchFormProps = Omit<FormProps, 'children'> & {
   children: (args: {
-    inputRef: React.RefObject<HTMLInputElement>;
+    inputRef: React.RefObject<HTMLInputElement | null>;
   }) => React.ReactNode;
 };
 
@@ -45,7 +45,7 @@ export function SearchForm({children, ...props}: SearchFormProps) {
 /**
  * Focuses the input when cmd+k is pressed
  */
-function useFocusOnCmdK(inputRef: React.RefObject<HTMLInputElement>) {
+function useFocusOnCmdK(inputRef: React.RefObject<HTMLInputElement | null>) {
   // focus the input when cmd+k is pressed
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {

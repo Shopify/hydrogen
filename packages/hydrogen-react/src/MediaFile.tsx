@@ -6,6 +6,8 @@ import type {MediaEdge as MediaEdgeType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 import type {ModelViewerElement} from '@google/model-viewer/lib/model-viewer.js';
 
+import type { JSX } from "react";
+
 type BaseProps = React.HTMLAttributes<
   HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | ModelViewerElement
 >;

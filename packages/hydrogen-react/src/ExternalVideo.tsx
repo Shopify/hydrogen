@@ -1,6 +1,6 @@
 import type {ExternalVideo as ExternalVideoType} from './storefront-api-types.js';
 import type {Entries, PartialDeep} from 'type-fest';
-import {forwardRef, IframeHTMLAttributes} from 'react';
+import { forwardRef, IframeHTMLAttributes, type JSX } from 'react';
 
 export interface ExternalVideoBaseProps {
   /**

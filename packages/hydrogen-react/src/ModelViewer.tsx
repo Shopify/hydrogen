@@ -1,11 +1,10 @@
-import {useState, useEffect, useCallback} from 'react';
+import { useState, useEffect, useCallback, type JSX } from 'react';
 import {useLoadScript} from './load-script.js';
 import type {Model3d} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 import type {ModelViewerElement} from '@google/model-viewer/lib/model-viewer.js';
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+declare module "react" {
   namespace JSX {
     interface IntrinsicElements {
       'model-viewer': PartialDeep<

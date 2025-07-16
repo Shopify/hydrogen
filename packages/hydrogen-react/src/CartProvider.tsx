@@ -7,6 +7,7 @@ import {
   useTransition,
   createContext,
   useContext,
+  type JSX,
 } from 'react';
 import {
   AttributeInput,
