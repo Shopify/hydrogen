@@ -37,7 +37,7 @@
     "vitest": "^1.0.4"
   },
   "dependencies": {
-    "@ast-grep/napi": "0.11.0",
+    "@ast-grep/napi": "0.34.1",
     "@oclif/core": "3.26.5",
     "@shopify/cli-kit": "^3.80.4",
     "@shopify/oxygen-cli": "4.6.18",

@@ -32,7 +32,9 @@ async function miniOxygenHandler(
     const wellKnown = pathname.startsWith('/.well-known');
     const extension = pathname.split('.').at(-1) ?? '';
     const isAsset =
-      wellKnown || !!staticAssetExtensions.has(extension.toUpperCase());
+      wellKnown ||
+      !!staticAssetExtensions.has(extension.toUpperCase()) ||
+      pathname.startsWith('/assets/'); // Add this to handle /assets/ paths
 
     if (isAsset) {
       const response = await env.assets.fetch(
