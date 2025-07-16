@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState, type JSX } from 'react';
+import {ReactNode, useEffect, useState, type JSX} from 'react';
 import {useCart} from './CartProvider.js';
 import {
   BaseButton,

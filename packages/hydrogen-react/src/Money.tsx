@@ -1,4 +1,4 @@
-import { type ReactNode, type JSX } from 'react';
+import {type ReactNode, type JSX} from 'react';
 import {useMoney} from './useMoney.js';
 import type {MoneyV2, UnitPriceMeasurement} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';

@@ -2,7 +2,7 @@ import {defaultShopifyContext, useShop} from './ShopifyProvider.js';
 import {useLoadScript} from './load-script.js';
 import {parseGid} from './analytics-utils.js';
 
-import type { JSX } from "react";
+import type {JSX} from 'react';
 
 // By using 'never' in the "or" cases below, it makes these props "exclusive" and means that you cannot pass both of them; you must pass either one OR the other.
 type ShopPayButtonProps = ShopPayButtonStyleProps &
@@ -44,7 +44,7 @@ type ShopPayChannelAttribution = {
   channel?: 'headless' | 'hydrogen';
 };
 
-declare module "react" {
+declare module 'react' {
   namespace JSX {
     interface IntrinsicElements {
       'shop-pay-button': {

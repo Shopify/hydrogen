@@ -7,7 +7,7 @@ import {Money, type MoneyProps, type MoneyPropsBase} from './Money.js';
 import type {PartialDeep} from 'type-fest';
 import {flattenConnection} from './flatten-connection.js';
 
-import type { JSX } from "react";
+import type {JSX} from 'react';
 
 export interface ProductPriceProps {
   /** A Storefront API [Product object](https://shopify.dev/api/storefront/reference/products/product). */

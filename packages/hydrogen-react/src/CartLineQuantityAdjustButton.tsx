@@ -1,4 +1,4 @@
-import { useCallback, type JSX } from 'react';
+import {useCallback, type JSX} from 'react';
 import {useCart} from './CartProvider.js';
 import {useCartLine} from './CartLineProvider.js';
 import {BaseButton, type BaseButtonProps} from './BaseButton.js';

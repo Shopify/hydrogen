@@ -1,4 +1,10 @@
-import { createElement, Fragment, type ReactNode, useMemo, type JSX } from 'react';
+import {
+  createElement,
+  Fragment,
+  type ReactNode,
+  useMemo,
+  type JSX,
+} from 'react';
 import type {RichTextASTNode} from './RichText.types.js';
 import {
   type CustomComponents,

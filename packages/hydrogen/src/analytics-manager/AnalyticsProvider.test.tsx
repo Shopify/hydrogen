@@ -9,7 +9,7 @@ import {
   CurrencyCode,
   LanguageCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import { ReactNode, useEffect, type JSX } from 'react';
+import {ReactNode, useEffect, type JSX} from 'react';
 import {CartReturn} from '../cart/queries/cart-types';
 
 const SHOP_DATA = {

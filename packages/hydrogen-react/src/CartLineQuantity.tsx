@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ElementType, JSX } from 'react';
+import type {ComponentPropsWithoutRef, ElementType, JSX} from 'react';
 import {useCartLine} from './CartLineProvider.js';
 
 interface CartLineQuantityBaseProps<

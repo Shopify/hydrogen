@@ -1,4 +1,9 @@
-import { forwardRef, ScriptHTMLAttributes, HTMLAttributes, type JSX } from 'react';
+import {
+  forwardRef,
+  ScriptHTMLAttributes,
+  HTMLAttributes,
+  type JSX,
+} from 'react';
 import {useNonce} from './csp';
 import {useLoadScript} from '@shopify/hydrogen-react';
 

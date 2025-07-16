@@ -2,7 +2,7 @@ import {describe, expect, expectTypeOf, it, vi} from 'vitest';
 import {render} from '@testing-library/react';
 import {CartForm, OptimisticCartLineInput} from './CartForm';
 
-import type { JSX } from "react";
+import type {JSX} from 'react';
 
 function MockForm({
   children,
