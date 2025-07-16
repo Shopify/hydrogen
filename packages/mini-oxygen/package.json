@@ -46,6 +46,7 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
+    "@mjackson/node-fetch-server": "^0.7.0",
     "body-parser": "1.20.3",
     "connect": "^3.7.0",
     "get-port": "^7.1.0",

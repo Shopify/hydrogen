@@ -154,16 +154,16 @@ const vitePluginListRule = {
     inside: {
       // directly in the value part of a `plugins` key
       kind: 'pair',
-      stopBy: 'neighbor',
+      stopBy: 'neighbor' as const,
       has: {
         field: 'key',
         regex: '^plugins$',
-        stopBy: 'neighbor',
+        stopBy: 'neighbor' as const,
       },
       inside: {
         // directly inside an object (the Vite config object)
         kind: 'object',
-        stopBy: 'neighbor',
+        stopBy: 'neighbor' as const,
         // that is exported but is not inside another object
         // e.g. `export default {something:{plugins:[]}}`
         // doesn't match, but `export default {plugins:[]}` does.
@@ -173,14 +173,14 @@ const vitePluginListRule = {
             inside: {
               kind: 'export_statement',
               regex: 'export default',
-              stopBy: 'end',
+              stopBy: 'end' as const,
             },
           },
           {
             not: {
               inside: {
                 kind: 'object',
-                stopBy: 'end',
+                stopBy: 'end' as const,
               },
             },
           },

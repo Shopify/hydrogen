@@ -1,6 +1,7 @@
 import type {ServerResponse, IncomingMessage} from 'node:http';
 import path from 'node:path';
 import {Readable} from 'node:stream';
+import {sendResponse} from '@mjackson/node-fetch-server';
 import {Request, type Response} from '../worker/index.js';
 import type {ViteDevServer} from 'vite';
 
@@ -38,22 +39,10 @@ export function toWeb(req: IncomingMessage, headers?: Record<string, string>) {
 
 /**
  * Reads from a Web response and writes to a Node response
- * using native Node APIs.
+ * using @mjackson/node-fetch-server for proper streaming support.
  */
 export function pipeFromWeb(webResponse: Response, res: ServerResponse) {
-  const headers = Object.fromEntries(webResponse.headers.entries());
-
-  const setCookieHeader = 'set-cookie';
-  if (headers[setCookieHeader]) {
-    delete headers[setCookieHeader];
-    res.setHeader(setCookieHeader, webResponse.headers.getSetCookie());
-  }
-
-  res.writeHead(webResponse.status, webResponse.statusText, headers);
-
-  if (webResponse.body) {
-    Readable.fromWeb(webResponse.body).pipe(res);
-  } else {
-    res.end();
-  }
+  // The sendResponse function from @mjackson/node-fetch-server properly handles
+  // streaming responses, including turbo-stream responses from React Router
+  return sendResponse(res, webResponse as unknown as globalThis.Response);
 }

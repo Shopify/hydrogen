@@ -21,7 +21,9 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
 
       - name: 📥 Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm rebuild
 
       - name: 🔬 Lint
         run: npm run lint
@@ -45,7 +47,9 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
 
       - name: 📥 Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm rebuild
 
       - name: 🔬 Check Formatting
         run: npm run format:check
@@ -69,7 +73,9 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
 
       - name: 📥 Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm rebuild
 
       # Enabling the turbo cache causes deployments to fail intermittently.
       # The build step fails with dependency issues. More investigation needed.
@@ -112,7 +118,9 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
 
       - name: 📥 Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm rebuild
 
       - name: 📦 Build packages, templates, and examples
         run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:all
@@ -139,14 +147,18 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
 
       - name: 📥 Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm rebuild
 
       - name: 📦 Build packages
         run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:pkg
 
       - name: 📥 Install dependencies (cookbook)
         working-directory: cookbook
-        run: npm ci
+        run: |
+          npm ci
+          npm rebuild
 
       - name: 📝 Validate schema
         working-directory: cookbook
