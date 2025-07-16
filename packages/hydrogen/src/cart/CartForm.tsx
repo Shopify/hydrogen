@@ -1,6 +1,7 @@
 import {type FetcherWithComponents, useFetcher} from 'react-router';
 import {type MetafieldWithoutOwnerId} from './queries/cart-types';
-import type { ReactNode, JSX } from 'react';
+import type { JSX } from 'react';
+import type {ReactNode} from 'react';
 import type {
   AttributeInput,
   CartBuyerIdentityInput,
