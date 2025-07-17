@@ -16,6 +16,8 @@ import {
   CountryCode,
   Cart as CartType,
   LanguageCode,
+  CartLineUpdateInput,
+  CartLineInput,
 } from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 
@@ -389,6 +391,12 @@ function createCartMachine(
         entry: [
           assign({
             lastValidCart: ({ context }) => context?.cart,
+            cart: ({ context, event }) => {
+              if (event.type === 'CARTLINE_REMOVE') {
+                return applyOptimisticLineRemove(context.cart, event.payload.lines);
+              }
+              return context.cart;
+            },
           }),
           'onCartActionEntry',
           'cartLineRemoveAction',
@@ -425,6 +433,12 @@ function createCartMachine(
         entry: [
           assign({
             lastValidCart: ({ context }) => context?.cart,
+            cart: ({ context, event }) => {
+              if (event.type === 'CARTLINE_UPDATE') {
+                return applyOptimisticLineUpdate(context.cart, event.payload.lines);
+              }
+              return context.cart;
+            },
           }),
           'onCartActionEntry',
           'cartLineUpdateAction',
@@ -461,6 +475,12 @@ function createCartMachine(
         entry: [
           assign({
             lastValidCart: ({ context }) => context?.cart,
+            cart: ({ context, event }) => {
+              if (event.type === 'CARTLINE_ADD') {
+                return applyOptimisticLineAdd(context.cart, event.payload.lines);
+              }
+              return context.cart;
+            },
           }),
           'onCartActionEntry',
           'cartLineAddAction',
@@ -687,6 +707,62 @@ function createAsyncState(
         target: 'cartCompleted',
       },
     },
+  };
+}
+
+// Helper functions for optimistic cart updates
+function applyOptimisticLineRemove(cart: Cart | undefined, lineIds: string[]): Cart | undefined {
+  if (!cart || !cart.lines) return cart;
+  
+  return {
+    ...cart,
+    lines: cart.lines.filter(line => line?.id && !lineIds.includes(line.id)),
+    totalQuantity: Math.max(0, (cart.totalQuantity ?? 0) - 
+      cart.lines
+        .filter(line => line?.id && lineIds.includes(line.id))
+        .reduce((sum, line) => sum + (line?.quantity ?? 0), 0)
+    ),
+  };
+}
+
+function applyOptimisticLineUpdate(cart: Cart | undefined, updates: CartLineUpdateInput[]): Cart | undefined {
+  if (!cart || !cart.lines) return cart;
+  
+  const updateMap = new Map(updates.map(u => [u.id, u]));
+  let quantityDiff = 0;
+  
+  const updatedLines = cart.lines.map(line => {
+    if (!line?.id) return line;
+    const update = updateMap.get(line.id);
+    if (update && update.quantity !== undefined && update.quantity !== null) {
+      const newQuantity = update.quantity;
+      const oldQuantity = line.quantity ?? 0;
+      quantityDiff += newQuantity - oldQuantity;
+      return {
+        ...line,
+        quantity: newQuantity,
+      } as typeof line;
+    }
+    return line;
+  });
+  
+  return {
+    ...cart,
+    lines: updatedLines,
+    totalQuantity: Math.max(0, (cart.totalQuantity ?? 0) + quantityDiff),
+  };
+}
+
+function applyOptimisticLineAdd(cart: Cart | undefined, lines: CartLineInput[]): Cart | undefined {
+  if (!cart) return cart;
+  
+  // For line add, we can't create full line objects optimistically since we don't have all the data
+  // But we can update the total quantity
+  const addedQuantity = lines.reduce((sum, line) => sum + (line.quantity ?? 0), 0);
+  
+  return {
+    ...cart,
+    totalQuantity: (cart.totalQuantity ?? 0) + addedQuantity,
   };
 }
 
