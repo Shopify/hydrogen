@@ -58,7 +58,11 @@ export function useCartAPIStateMachine({
 }) {
   const initialCart = useMemo(() => {
     if (cart) return cartFromGraphQL(cart);
-    if (cartId) return cartFromGraphQL({id: cartId} as PartialDeep<CartType, {recurseIntoArrays: true}>);
+    if (cartId)
+      return cartFromGraphQL({id: cartId} as PartialDeep<
+        CartType,
+        {recurseIntoArrays: true}
+      >);
     return undefined;
   }, [cart, cartId]);
 
@@ -73,15 +77,17 @@ export function useCartAPIStateMachine({
     return createCartMachine(initialCart).provide({
       actions: {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        cartFetchAction: async ({ self, event }) => {
+        cartFetchAction: async ({self, event}) => {
           if (event.type !== 'CART_FETCH') return;
 
-          const {data, errors} = await cartActions.cartFetch(event?.payload?.cartId);
+          const {data, errors} = await cartActions.cartFetch(
+            event?.payload?.cartId,
+          );
           const resultEvent = eventFromFetchResult(event, data?.cart, errors);
           self.send(resultEvent);
         },
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        cartCreateAction: async ({ self, event }) => {
+        cartCreateAction: async ({self, event}) => {
           if (event.type !== 'CART_CREATE') return;
 
           const {data, errors} = await cartActions.cartCreate(event?.payload);
@@ -93,7 +99,7 @@ export function useCartAPIStateMachine({
           self.send(resultEvent);
         },
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        cartLineRemoveAction: async ({ self, event, context }) => {
+        cartLineRemoveAction: async ({self, event, context}) => {
           if (event.type !== 'CARTLINE_REMOVE' || !context?.cart?.id) return;
 
           const {data, errors} = await cartActions.cartLineRemove(
@@ -108,7 +114,7 @@ export function useCartAPIStateMachine({
           self.send(resultEvent);
         },
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        cartLineUpdateAction: async ({ self, event, context }) => {
+        cartLineUpdateAction: async ({self, event, context}) => {
           if (event.type !== 'CARTLINE_UPDATE' || !context?.cart?.id) return;
 
           const {data, errors} = await cartActions.cartLineUpdate(
@@ -123,7 +129,7 @@ export function useCartAPIStateMachine({
           self.send(resultEvent);
         },
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        cartLineAddAction: async ({ self, event, context }) => {
+        cartLineAddAction: async ({self, event, context}) => {
           if (event.type !== 'CARTLINE_ADD' || !context?.cart?.id) return;
 
           const {data, errors} = await cartActions.cartLineAdd(
@@ -138,7 +144,7 @@ export function useCartAPIStateMachine({
           self.send(resultEvent);
         },
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        noteUpdateAction: async ({ self, event, context }) => {
+        noteUpdateAction: async ({self, event, context}) => {
           if (event.type !== 'NOTE_UPDATE' || !context?.cart?.id) return;
 
           const {data, errors} = await cartActions.noteUpdate(
@@ -153,8 +159,9 @@ export function useCartAPIStateMachine({
           self.send(resultEvent);
         },
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        buyerIdentityUpdateAction: async ({ self, event, context }) => {
-          if (event.type !== 'BUYER_IDENTITY_UPDATE' || !context?.cart?.id) return;
+        buyerIdentityUpdateAction: async ({self, event, context}) => {
+          if (event.type !== 'BUYER_IDENTITY_UPDATE' || !context?.cart?.id)
+            return;
 
           const {data, errors} = await cartActions.buyerIdentityUpdate(
             context.cart.id,
@@ -168,8 +175,9 @@ export function useCartAPIStateMachine({
           self.send(resultEvent);
         },
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        cartAttributesUpdateAction: async ({ self, event, context }) => {
-          if (event.type !== 'CART_ATTRIBUTES_UPDATE' || !context?.cart?.id) return;
+        cartAttributesUpdateAction: async ({self, event, context}) => {
+          if (event.type !== 'CART_ATTRIBUTES_UPDATE' || !context?.cart?.id)
+            return;
 
           const {data, errors} = await cartActions.cartAttributesUpdate(
             context.cart.id,
@@ -183,8 +191,9 @@ export function useCartAPIStateMachine({
           self.send(resultEvent);
         },
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        discountCodesUpdateAction: async ({ self, event, context }) => {
-          if (event.type !== 'DISCOUNT_CODES_UPDATE' || !context?.cart?.id) return;
+        discountCodesUpdateAction: async ({self, event, context}) => {
+          if (event.type !== 'DISCOUNT_CODES_UPDATE' || !context?.cart?.id)
+            return;
 
           const {data, errors} = await cartActions.discountCodesUpdate(
             context.cart.id,
@@ -198,33 +207,33 @@ export function useCartAPIStateMachine({
           self.send(resultEvent);
         },
         onCartActionEntry: onCartActionEntry
-          ? ({ context, event }) => {
+          ? ({context, event}) => {
               onCartActionEntry(context, event);
             }
           : () => {},
         onCartActionComplete: onCartActionComplete
-          ? ({ context, event }) => {
-              if (event.type === 'RESOLVE' || event.type === 'ERROR' || event.type === 'CART_COMPLETED') {
-                onCartActionComplete(context, event as CartMachineFetchResultEvent);
+          ? ({context, event}) => {
+              if (
+                event.type === 'RESOLVE' ||
+                event.type === 'ERROR' ||
+                event.type === 'CART_COMPLETED'
+              ) {
+                onCartActionComplete(
+                  context,
+                  event as CartMachineFetchResultEvent,
+                );
               }
             }
           : () => {},
       },
     });
-  }, [
-    initialCart,
-    cartActions,
-    onCartActionEntry,
-    onCartActionComplete,
-  ]);
+  }, [initialCart, cartActions, onCartActionEntry, onCartActionComplete]);
 
   const result = useMachine(cartMachine);
   return result;
 }
 
-function createCartMachine(
-  initialCart?: Cart,
-) {
+function createCartMachine(initialCart?: Cart) {
   return createMachine({
     id: 'Cart',
     initial: initialCart ? 'idle' : 'uninitialized',
@@ -243,8 +252,18 @@ function createCartMachine(
           CART_SET: {
             target: 'idle',
             actions: assign({
-              rawCartResult: ({ event }) => (event as any).payload.cart,
-              cart: ({ event }) => cartFromGraphQL((event as any).payload.cart),
+              rawCartResult: ({event}) => {
+                if (event.type === 'CART_SET') {
+                  return event.payload.cart;
+                }
+                return undefined;
+              },
+              cart: ({event}) => {
+                if (event.type === 'CART_SET') {
+                  return cartFromGraphQL(event.payload.cart);
+                }
+                return undefined;
+              },
             }),
           },
         },
@@ -256,8 +275,18 @@ function createCartMachine(
           CART_SET: {
             target: 'idle',
             actions: assign({
-              rawCartResult: ({ event }) => (event as any).payload.cart,
-              cart: ({ event }) => cartFromGraphQL((event as any).payload.cart),
+              rawCartResult: ({event}) => {
+                if (event.type === 'CART_SET') {
+                  return event.payload.cart;
+                }
+                return undefined;
+              },
+              cart: ({event}) => {
+                if (event.type === 'CART_SET') {
+                  return cartFromGraphQL(event.payload.cart);
+                }
+                return undefined;
+              },
             }),
           },
         },
@@ -269,8 +298,18 @@ function createCartMachine(
           CART_SET: {
             target: 'idle',
             actions: assign({
-              rawCartResult: ({ event }) => (event as any).payload.cart,
-              cart: ({ event }) => cartFromGraphQL((event as any).payload.cart),
+              rawCartResult: ({event}) => {
+                if (event.type === 'CART_SET') {
+                  return event.payload.cart;
+                }
+                return undefined;
+              },
+              cart: ({event}) => {
+                if (event.type === 'CART_SET') {
+                  return cartFromGraphQL(event.payload.cart);
+                }
+                return undefined;
+              },
             }),
           },
         },
@@ -282,8 +321,18 @@ function createCartMachine(
           CART_SET: {
             target: 'idle',
             actions: assign({
-              rawCartResult: ({ event }) => (event as any).payload.cart,
-              cart: ({ event }) => cartFromGraphQL((event as any).payload.cart),
+              rawCartResult: ({event}) => {
+                if (event.type === 'CART_SET') {
+                  return event.payload.cart;
+                }
+                return undefined;
+              },
+              cart: ({event}) => {
+                if (event.type === 'CART_SET') {
+                  return cartFromGraphQL(event.payload.cart);
+                }
+                return undefined;
+              },
             }),
           },
           CARTLINE_ADD: 'cartLineAdding',
@@ -302,8 +351,18 @@ function createCartMachine(
           CART_SET: {
             target: 'idle',
             actions: assign({
-              rawCartResult: ({ event }) => (event as any).payload.cart,
-              cart: ({ event }) => cartFromGraphQL((event as any).payload.cart),
+              rawCartResult: ({event}) => {
+                if (event.type === 'CART_SET') {
+                  return event.payload.cart;
+                }
+                return undefined;
+              },
+              cart: ({event}) => {
+                if (event.type === 'CART_SET') {
+                  return cartFromGraphQL(event.payload.cart);
+                }
+                return undefined;
+              },
             }),
           },
           CARTLINE_ADD: 'cartLineAdding',
@@ -318,7 +377,7 @@ function createCartMachine(
       cartFetching: {
         entry: [
           assign({
-            lastValidCart: ({ context }) => context?.cart,
+            lastValidCart: ({context}) => context?.cart,
           }),
           'onCartActionEntry',
           'cartFetchAction',
@@ -328,9 +387,19 @@ function createCartMachine(
             target: 'idle',
             actions: [
               assign({
-                prevCart: ({ context }) => context?.lastValidCart,
-                cart: ({ event }) => (event as any)?.payload?.cart,
-                rawCartResult: ({ event }) => (event as any)?.payload?.cart,
+                prevCart: ({context}) => context?.lastValidCart,
+                cart: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.cart;
+                  }
+                  return undefined;
+                },
+                rawCartResult: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.rawCartResult;
+                  }
+                  return undefined;
+                },
               }),
               'onCartActionComplete',
             ],
@@ -338,8 +407,13 @@ function createCartMachine(
           ERROR: {
             target: 'initializationError',
             actions: assign({
-              cart: ({ context }) => context?.lastValidCart,
-              errors: ({ event }) => (event as any)?.payload?.errors,
+              cart: ({context}) => context?.lastValidCart,
+              errors: ({event}) => {
+                if (event.type === 'ERROR') {
+                  return event.payload.errors;
+                }
+                return undefined;
+              },
             }),
           },
           CART_COMPLETED: {
@@ -354,7 +428,7 @@ function createCartMachine(
       cartCreating: {
         entry: [
           assign({
-            lastValidCart: ({ context }) => context?.cart,
+            lastValidCart: ({context}) => context?.cart,
           }),
           'onCartActionEntry',
           'cartCreateAction',
@@ -364,9 +438,19 @@ function createCartMachine(
             target: 'idle',
             actions: [
               assign({
-                prevCart: ({ context }) => context?.lastValidCart,
-                cart: ({ event }) => (event as any)?.payload?.cart,
-                rawCartResult: ({ event }) => (event as any)?.payload?.cart,
+                prevCart: ({context}) => context?.lastValidCart,
+                cart: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.cart;
+                  }
+                  return undefined;
+                },
+                rawCartResult: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.rawCartResult;
+                  }
+                  return undefined;
+                },
               }),
               'onCartActionComplete',
             ],
@@ -374,8 +458,13 @@ function createCartMachine(
           ERROR: {
             target: 'initializationError',
             actions: assign({
-              cart: ({ context }) => context?.lastValidCart,
-              errors: ({ event }) => (event as any)?.payload?.errors,
+              cart: ({context}) => context?.lastValidCart,
+              errors: ({event}) => {
+                if (event.type === 'ERROR') {
+                  return event.payload.errors;
+                }
+                return undefined;
+              },
             }),
           },
           CART_COMPLETED: {
@@ -390,10 +479,13 @@ function createCartMachine(
       cartLineRemoving: {
         entry: [
           assign({
-            lastValidCart: ({ context }) => context?.cart,
-            cart: ({ context, event }) => {
+            lastValidCart: ({context}) => context?.cart,
+            cart: ({context, event}) => {
               if (event.type === 'CARTLINE_REMOVE') {
-                return applyOptimisticLineRemove(context.cart, event.payload.lines);
+                return applyOptimisticLineRemove(
+                  context.cart,
+                  event.payload.lines,
+                );
               }
               return context.cart;
             },
@@ -406,9 +498,19 @@ function createCartMachine(
             target: 'idle',
             actions: [
               assign({
-                prevCart: ({ context }) => context?.lastValidCart,
-                cart: ({ event }) => (event as any)?.payload?.cart,
-                rawCartResult: ({ event }) => (event as any)?.payload?.cart,
+                prevCart: ({context}) => context?.lastValidCart,
+                cart: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.cart;
+                  }
+                  return undefined;
+                },
+                rawCartResult: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.rawCartResult;
+                  }
+                  return undefined;
+                },
               }),
               'onCartActionComplete',
             ],
@@ -416,8 +518,13 @@ function createCartMachine(
           ERROR: {
             target: 'error',
             actions: assign({
-              cart: ({ context }) => context?.lastValidCart,
-              errors: ({ event }) => (event as any)?.payload?.errors,
+              cart: ({context}) => context?.lastValidCart,
+              errors: ({event}) => {
+                if (event.type === 'ERROR') {
+                  return event.payload.errors;
+                }
+                return undefined;
+              },
             }),
           },
           CART_COMPLETED: {
@@ -432,10 +539,13 @@ function createCartMachine(
       cartLineUpdating: {
         entry: [
           assign({
-            lastValidCart: ({ context }) => context?.cart,
-            cart: ({ context, event }) => {
+            lastValidCart: ({context}) => context?.cart,
+            cart: ({context, event}) => {
               if (event.type === 'CARTLINE_UPDATE') {
-                return applyOptimisticLineUpdate(context.cart, event.payload.lines);
+                return applyOptimisticLineUpdate(
+                  context.cart,
+                  event.payload.lines,
+                );
               }
               return context.cart;
             },
@@ -448,9 +558,19 @@ function createCartMachine(
             target: 'idle',
             actions: [
               assign({
-                prevCart: ({ context }) => context?.lastValidCart,
-                cart: ({ event }) => (event as any)?.payload?.cart,
-                rawCartResult: ({ event }) => (event as any)?.payload?.cart,
+                prevCart: ({context}) => context?.lastValidCart,
+                cart: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.cart;
+                  }
+                  return undefined;
+                },
+                rawCartResult: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.rawCartResult;
+                  }
+                  return undefined;
+                },
               }),
               'onCartActionComplete',
             ],
@@ -458,8 +578,13 @@ function createCartMachine(
           ERROR: {
             target: 'error',
             actions: assign({
-              cart: ({ context }) => context?.lastValidCart,
-              errors: ({ event }) => (event as any)?.payload?.errors,
+              cart: ({context}) => context?.lastValidCart,
+              errors: ({event}) => {
+                if (event.type === 'ERROR') {
+                  return event.payload.errors;
+                }
+                return undefined;
+              },
             }),
           },
           CART_COMPLETED: {
@@ -474,10 +599,13 @@ function createCartMachine(
       cartLineAdding: {
         entry: [
           assign({
-            lastValidCart: ({ context }) => context?.cart,
-            cart: ({ context, event }) => {
+            lastValidCart: ({context}) => context?.cart,
+            cart: ({context, event}) => {
               if (event.type === 'CARTLINE_ADD') {
-                return applyOptimisticLineAdd(context.cart, event.payload.lines);
+                return applyOptimisticLineAdd(
+                  context.cart,
+                  event.payload.lines,
+                );
               }
               return context.cart;
             },
@@ -490,9 +618,19 @@ function createCartMachine(
             target: 'idle',
             actions: [
               assign({
-                prevCart: ({ context }) => context?.lastValidCart,
-                cart: ({ event }) => (event as any)?.payload?.cart,
-                rawCartResult: ({ event }) => (event as any)?.payload?.cart,
+                prevCart: ({context}) => context?.lastValidCart,
+                cart: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.cart;
+                  }
+                  return undefined;
+                },
+                rawCartResult: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.rawCartResult;
+                  }
+                  return undefined;
+                },
               }),
               'onCartActionComplete',
             ],
@@ -500,8 +638,13 @@ function createCartMachine(
           ERROR: {
             target: 'error',
             actions: assign({
-              cart: ({ context }) => context?.lastValidCart,
-              errors: ({ event }) => (event as any)?.payload?.errors,
+              cart: ({context}) => context?.lastValidCart,
+              errors: ({event}) => {
+                if (event.type === 'ERROR') {
+                  return event.payload.errors;
+                }
+                return undefined;
+              },
             }),
           },
           CART_COMPLETED: {
@@ -516,7 +659,7 @@ function createCartMachine(
       noteUpdating: {
         entry: [
           assign({
-            lastValidCart: ({ context }) => context?.cart,
+            lastValidCart: ({context}) => context?.cart,
           }),
           'onCartActionEntry',
           'noteUpdateAction',
@@ -526,9 +669,19 @@ function createCartMachine(
             target: 'idle',
             actions: [
               assign({
-                prevCart: ({ context }) => context?.lastValidCart,
-                cart: ({ event }) => (event as any)?.payload?.cart,
-                rawCartResult: ({ event }) => (event as any)?.payload?.cart,
+                prevCart: ({context}) => context?.lastValidCart,
+                cart: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.cart;
+                  }
+                  return undefined;
+                },
+                rawCartResult: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.rawCartResult;
+                  }
+                  return undefined;
+                },
               }),
               'onCartActionComplete',
             ],
@@ -536,8 +689,13 @@ function createCartMachine(
           ERROR: {
             target: 'error',
             actions: assign({
-              cart: ({ context }) => context?.lastValidCart,
-              errors: ({ event }) => (event as any)?.payload?.errors,
+              cart: ({context}) => context?.lastValidCart,
+              errors: ({event}) => {
+                if (event.type === 'ERROR') {
+                  return event.payload.errors;
+                }
+                return undefined;
+              },
             }),
           },
           CART_COMPLETED: {
@@ -552,7 +710,7 @@ function createCartMachine(
       buyerIdentityUpdating: {
         entry: [
           assign({
-            lastValidCart: ({ context }) => context?.cart,
+            lastValidCart: ({context}) => context?.cart,
           }),
           'onCartActionEntry',
           'buyerIdentityUpdateAction',
@@ -562,9 +720,19 @@ function createCartMachine(
             target: 'idle',
             actions: [
               assign({
-                prevCart: ({ context }) => context?.lastValidCart,
-                cart: ({ event }) => (event as any)?.payload?.cart,
-                rawCartResult: ({ event }) => (event as any)?.payload?.cart,
+                prevCart: ({context}) => context?.lastValidCart,
+                cart: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.cart;
+                  }
+                  return undefined;
+                },
+                rawCartResult: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.rawCartResult;
+                  }
+                  return undefined;
+                },
               }),
               'onCartActionComplete',
             ],
@@ -572,8 +740,13 @@ function createCartMachine(
           ERROR: {
             target: 'error',
             actions: assign({
-              cart: ({ context }) => context?.lastValidCart,
-              errors: ({ event }) => (event as any)?.payload?.errors,
+              cart: ({context}) => context?.lastValidCart,
+              errors: ({event}) => {
+                if (event.type === 'ERROR') {
+                  return event.payload.errors;
+                }
+                return undefined;
+              },
             }),
           },
           CART_COMPLETED: {
@@ -588,7 +761,7 @@ function createCartMachine(
       cartAttributesUpdating: {
         entry: [
           assign({
-            lastValidCart: ({ context }) => context?.cart,
+            lastValidCart: ({context}) => context?.cart,
           }),
           'onCartActionEntry',
           'cartAttributesUpdateAction',
@@ -598,9 +771,19 @@ function createCartMachine(
             target: 'idle',
             actions: [
               assign({
-                prevCart: ({ context }) => context?.lastValidCart,
-                cart: ({ event }) => (event as any)?.payload?.cart,
-                rawCartResult: ({ event }) => (event as any)?.payload?.cart,
+                prevCart: ({context}) => context?.lastValidCart,
+                cart: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.cart;
+                  }
+                  return undefined;
+                },
+                rawCartResult: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.rawCartResult;
+                  }
+                  return undefined;
+                },
               }),
               'onCartActionComplete',
             ],
@@ -608,8 +791,13 @@ function createCartMachine(
           ERROR: {
             target: 'error',
             actions: assign({
-              cart: ({ context }) => context?.lastValidCart,
-              errors: ({ event }) => (event as any)?.payload?.errors,
+              cart: ({context}) => context?.lastValidCart,
+              errors: ({event}) => {
+                if (event.type === 'ERROR') {
+                  return event.payload.errors;
+                }
+                return undefined;
+              },
             }),
           },
           CART_COMPLETED: {
@@ -624,7 +812,7 @@ function createCartMachine(
       discountCodesUpdating: {
         entry: [
           assign({
-            lastValidCart: ({ context }) => context?.cart,
+            lastValidCart: ({context}) => context?.cart,
           }),
           'onCartActionEntry',
           'discountCodesUpdateAction',
@@ -634,9 +822,19 @@ function createCartMachine(
             target: 'idle',
             actions: [
               assign({
-                prevCart: ({ context }) => context?.lastValidCart,
-                cart: ({ event }) => (event as any)?.payload?.cart,
-                rawCartResult: ({ event }) => (event as any)?.payload?.cart,
+                prevCart: ({context}) => context?.lastValidCart,
+                cart: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.cart;
+                  }
+                  return undefined;
+                },
+                rawCartResult: ({event}) => {
+                  if (event.type === 'RESOLVE') {
+                    return event.payload.rawCartResult;
+                  }
+                  return undefined;
+                },
               }),
               'onCartActionComplete',
             ],
@@ -644,8 +842,13 @@ function createCartMachine(
           ERROR: {
             target: 'error',
             actions: assign({
-              cart: ({ context }) => context?.lastValidCart,
-              errors: ({ event }) => (event as any)?.payload?.errors,
+              cart: ({context}) => context?.lastValidCart,
+              errors: ({event}) => {
+                if (event.type === 'ERROR') {
+                  return event.payload.errors;
+                }
+                return undefined;
+              },
             }),
           },
           CART_COMPLETED: {
@@ -661,77 +864,36 @@ function createCartMachine(
   });
 }
 
-function createAsyncState(
-  action: keyof CartMachineActions,
-  options?: {
-    entryActions?: Array<keyof CartMachineActions>;
-    resolveTarget?: CartMachineTypeState['value'];
-    errorTarget?: CartMachineTypeState['value'];
-    exitActions?: Array<keyof CartMachineActions>;
-  },
-) {
-  return {
-    entry: [
-      ...(options?.entryActions || []),
-      assign({
-        lastValidCart: ({ context }) => context?.cart,
-      }),
-      'onCartActionEntry',
-      action,
-    ] as const,
-    on: {
-      RESOLVE: {
-        target: options?.resolveTarget || 'idle',
-        actions: [
-          assign({
-            prevCart: ({ context }) => context?.lastValidCart,
-            cart: ({ event }) => (event as any)?.payload?.cart,
-            rawCartResult: ({ event }) => (event as any)?.payload?.rawCartResult,
-            errors: undefined,
-          }),
-          ...(options?.exitActions || []),
-          'onCartActionComplete',
-        ],
-      },
-      ERROR: {
-        target: options?.errorTarget || 'error',
-        actions: [
-          assign({
-            cart: ({ context }) => context?.lastValidCart,
-            errors: ({ event }) => (event as any)?.payload?.errors,
-          }),
-          ...(options?.exitActions || []),
-        ],
-      },
-      CART_COMPLETED: {
-        target: 'cartCompleted',
-      },
-    },
-  };
-}
-
 // Helper functions for optimistic cart updates
-function applyOptimisticLineRemove(cart: Cart | undefined, lineIds: string[]): Cart | undefined {
+function applyOptimisticLineRemove(
+  cart: Cart | undefined,
+  lineIds: string[],
+): Cart | undefined {
   if (!cart || !cart.lines) return cart;
-  
+
   return {
     ...cart,
-    lines: cart.lines.filter(line => line?.id && !lineIds.includes(line.id)),
-    totalQuantity: Math.max(0, (cart.totalQuantity ?? 0) - 
-      cart.lines
-        .filter(line => line?.id && lineIds.includes(line.id))
-        .reduce((sum, line) => sum + (line?.quantity ?? 0), 0)
+    lines: cart.lines.filter((line) => line?.id && !lineIds.includes(line.id)),
+    totalQuantity: Math.max(
+      0,
+      (cart.totalQuantity ?? 0) -
+        cart.lines
+          .filter((line) => line?.id && lineIds.includes(line.id))
+          .reduce((sum, line) => sum + (line?.quantity ?? 0), 0),
     ),
   };
 }
 
-function applyOptimisticLineUpdate(cart: Cart | undefined, updates: CartLineUpdateInput[]): Cart | undefined {
+function applyOptimisticLineUpdate(
+  cart: Cart | undefined,
+  updates: CartLineUpdateInput[],
+): Cart | undefined {
   if (!cart || !cart.lines) return cart;
-  
-  const updateMap = new Map(updates.map(u => [u.id, u]));
+
+  const updateMap = new Map(updates.map((u) => [u.id, u]));
   let quantityDiff = 0;
-  
-  const updatedLines = cart.lines.map(line => {
+
+  const updatedLines = cart.lines.map((line) => {
     if (!line?.id) return line;
     const update = updateMap.get(line.id);
     if (update && update.quantity !== undefined && update.quantity !== null) {
@@ -745,7 +907,7 @@ function applyOptimisticLineUpdate(cart: Cart | undefined, updates: CartLineUpda
     }
     return line;
   });
-  
+
   return {
     ...cart,
     lines: updatedLines,
@@ -753,13 +915,19 @@ function applyOptimisticLineUpdate(cart: Cart | undefined, updates: CartLineUpda
   };
 }
 
-function applyOptimisticLineAdd(cart: Cart | undefined, lines: CartLineInput[]): Cart | undefined {
+function applyOptimisticLineAdd(
+  cart: Cart | undefined,
+  lines: CartLineInput[],
+): Cart | undefined {
   if (!cart) return cart;
-  
+
   // For line add, we can't create full line objects optimistically since we don't have all the data
   // But we can update the total quantity
-  const addedQuantity = lines.reduce((sum, line) => sum + (line.quantity ?? 0), 0);
-  
+  const addedQuantity = lines.reduce(
+    (sum, line) => sum + (line.quantity ?? 0),
+    0,
+  );
+
   return {
     ...cart,
     totalQuantity: (cart.totalQuantity ?? 0) + addedQuantity,
@@ -810,27 +978,3 @@ function eventFromFetchResult(
     },
   };
 }
-
-const UPDATING_CART_EVENTS = {
-  CARTLINE_ADD: {
-    target: 'cartLineAdding' as const,
-  },
-  CARTLINE_UPDATE: {
-    target: 'cartLineUpdating' as const,
-  },
-  CARTLINE_REMOVE: {
-    target: 'cartLineRemoving' as const,
-  },
-  NOTE_UPDATE: {
-    target: 'noteUpdating' as const,
-  },
-  BUYER_IDENTITY_UPDATE: {
-    target: 'buyerIdentityUpdating' as const,
-  },
-  CART_ATTRIBUTES_UPDATE: {
-    target: 'cartAttributesUpdating' as const,
-  },
-  DISCOUNT_CODES_UPDATE: {
-    target: 'discountCodesUpdating' as const,
-  },
-};

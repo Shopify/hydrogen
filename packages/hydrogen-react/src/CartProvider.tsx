@@ -391,7 +391,9 @@ export function CartProvider({
   const cartContextValue = useMemo<CartWithActions>(() => {
     return {
       ...(cartDisplayState?.context?.cart ?? {lines: [], attributes: []}),
-      status: transposeStatus(cartDisplayState.value as CartMachineTypeState['value']),
+      status: transposeStatus(
+        cartDisplayState.value as CartMachineTypeState['value'],
+      ),
       error: cartDisplayState?.context?.errors,
       totalQuantity: cartDisplayState?.context?.cart?.totalQuantity ?? 0,
       cartCreate,
