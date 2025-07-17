@@ -1,13 +1,32 @@
 import {
-  useCallback,
-  useEffect,
-  useMemo,
   useRef,
-  useState,
-  useTransition,
+  useEffect,
+  useCallback,
+  ReactNode,
   createContext,
   useContext,
+  useMemo,
+  useReducer,
+  useState,
+  useTransition,
 } from 'react';
+import {
+  Cart,
+  CartState,
+  CartWithActions,
+  CartWithActionsDocs,
+  CartAction,
+  CartMachineEvent,
+  CartMachineTypeState,
+  CartMachineContext,
+  BuyerIdentityUpdateEvent,
+  CartMachineFetchResultEvent,
+} from './cart-types.js';
+import {useCartAPIStateMachine} from './useCartAPIStateMachine.js';
+import {CART_ID_STORAGE_KEY} from './cart-constants.js';
+import type {PartialDeep} from 'type-fest';
+import {Cart as CartType} from './storefront-api-types.js';
+import {SnapshotFrom} from 'xstate';
 import {
   AttributeInput,
   CartBuyerIdentityInput,
@@ -16,20 +35,8 @@ import {
   CartLineUpdateInput,
   CountryCode,
   LanguageCode,
-  Cart as CartType,
   MutationCartNoteUpdateArgs,
 } from './storefront-api-types.js';
-import {
-  BuyerIdentityUpdateEvent,
-  CartMachineContext,
-  CartMachineEvent,
-  CartMachineTypeState,
-  CartWithActions,
-  CartWithActionsDocs,
-} from './cart-types.js';
-import {useCartAPIStateMachine} from './useCartAPIStateMachine.js';
-import {CART_ID_STORAGE_KEY} from './cart-constants.js';
-import {PartialDeep} from 'type-fest';
 import {defaultCartFragment} from './cart-queries.js';
 import {useShop} from './ShopifyProvider.js';
 
@@ -156,27 +163,23 @@ export function CartProvider({
 
   if (countryCode) countryCode = countryCode.toUpperCase() as CountryCode;
 
-  const [prevCountryCode, setPrevCountryCode] = useState(countryCode);
-  const [prevCustomerAccessToken, setPrevCustomerAccessToken] =
-    useState(customerAccessToken);
+  const prevCountryCodeRef = useRef(countryCode);
+  const prevCustomerAccessTokenRef = useRef(customerAccessToken);
   const customerOverridesCountryCode = useRef(false);
 
-  if (
-    prevCountryCode !== countryCode ||
-    prevCustomerAccessToken !== customerAccessToken
-  ) {
-    setPrevCountryCode(countryCode);
-    setPrevCustomerAccessToken(customerAccessToken);
-    customerOverridesCountryCode.current = false;
-  }
+  useEffect(() => {
+    if (
+      prevCountryCodeRef.current !== countryCode ||
+      prevCustomerAccessTokenRef.current !== customerAccessToken
+    ) {
+      prevCountryCodeRef.current = countryCode;
+      prevCustomerAccessTokenRef.current = customerAccessToken;
+      customerOverridesCountryCode.current = false;
+    }
+  }, [countryCode, customerAccessToken]);
 
-  const [cartState, cartSend] = useCartAPIStateMachine({
-    numCartLines,
-    data: cart,
-    cartFragment,
-    countryCode,
-    languageCode,
-    onCartActionEntry(_, event) {
+  const onCartActionEntry = useCallback(
+    (_: CartMachineContext, event: CartMachineEvent) => {
       try {
         switch (event.type) {
           case 'CART_CREATE':
@@ -200,44 +203,20 @@ export function CartProvider({
         console.error('Cart entry action failed', error);
       }
     },
-    onCartActionOptimisticUI(context, event) {
-      if (!context.cart) return {...context};
-      switch (event.type) {
-        case 'CARTLINE_REMOVE':
-          return {
-            ...context,
-            cart: {
-              ...context.cart,
-              lines: context?.cart?.lines?.filter(
-                (line) => line?.id && !event.payload.lines.includes(line?.id),
-              ),
-            },
-          };
-        case 'CARTLINE_UPDATE':
-          return {
-            ...context,
-            cart: {
-              ...context.cart,
-              lines: context?.cart?.lines?.map((line) => {
-                const updatedLine = event.payload.lines.find(
-                  ({id}) => id === line?.id,
-                );
+    [
+      onCreate,
+      onLineAdd,
+      onLineRemove,
+      onLineUpdate,
+      onNoteUpdate,
+      onBuyerIdentityUpdate,
+      onAttributesUpdate,
+      onDiscountCodesUpdate,
+    ],
+  );
 
-                if (updatedLine && updatedLine.quantity) {
-                  return {
-                    ...line,
-                    quantity: updatedLine.quantity,
-                  };
-                }
-
-                return line;
-              }),
-            },
-          };
-      }
-      return {...context};
-    },
-    onCartActionComplete(context, event) {
+  const onCartActionCompleteHandler = useCallback(
+    (context: CartMachineContext, event: CartMachineFetchResultEvent) => {
       const cartActionEvent = event.payload.cartActionEvent;
       try {
         switch (event.type) {
@@ -268,6 +247,26 @@ export function CartProvider({
         console.error('onCartActionComplete failed', error);
       }
     },
+    [
+      onCreateComplete,
+      onLineAddComplete,
+      onLineRemoveComplete,
+      onLineUpdateComplete,
+      onNoteUpdateComplete,
+      onBuyerIdentityUpdateComplete,
+      onAttributesUpdateComplete,
+      onDiscountCodesUpdateComplete,
+    ],
+  );
+
+  const [cartState, cartSend] = useCartAPIStateMachine({
+    numCartLines,
+    data: cart,
+    cartFragment,
+    countryCode,
+    languageCode,
+    onCartActionEntry,
+    onCartActionComplete: onCartActionCompleteHandler,
   });
 
   const cartReady = useRef(false);
@@ -392,7 +391,7 @@ export function CartProvider({
   const cartContextValue = useMemo<CartWithActions>(() => {
     return {
       ...(cartDisplayState?.context?.cart ?? {lines: [], attributes: []}),
-      status: transposeStatus(cartDisplayState.value),
+      status: transposeStatus(cartDisplayState.value as CartMachineTypeState['value']),
       error: cartDisplayState?.context?.errors,
       totalQuantity: cartDisplayState?.context?.cart?.totalQuantity ?? 0,
       cartCreate,

@@ -9,7 +9,13 @@ import {
   MutationCartAttributesUpdateArgs,
   ComponentizableCartLine,
 } from './storefront-api-types.js';
-import {StateMachine} from '@xstate/fsm';
+import {
+  ActorLogicFrom,
+  EventFromLogic,
+  SnapshotFrom,
+  StateValue,
+  AnyActorLogic,
+} from 'xstate';
 import type {PartialDeep} from 'type-fest';
 
 export type CartStatus = CartState['status'];
@@ -268,10 +274,10 @@ export type CartMachineTypeState =
   | {value: 'cartAttributesUpdating'; context: CartMachineContext}
   | {value: 'discountCodesUpdating'; context: CartMachineContext};
 
-export type CartMachineAction = StateMachine.ActionFunction<
-  CartMachineContext,
-  CartMachineEvent
->;
+export type CartMachineAction = (
+  context: CartMachineContext,
+  event: CartMachineEvent,
+) => void | Promise<void>;
 
 export type CartMachineActions = {
   cartFetchAction: CartMachineAction;
@@ -284,9 +290,9 @@ export type CartMachineActions = {
   cartAttributesUpdateAction: CartMachineAction;
   discountCodesUpdateAction: CartMachineAction;
   onCartActionEntry?: CartMachineAction;
-  onCartActionOptimisticUI?: StateMachine.AssignActionObject<
-    CartMachineContext,
-    CartMachineEvent
-  >;
+  onCartActionOptimisticUI?: (
+    context: CartMachineContext,
+    event: CartMachineEvent,
+  ) => Partial<CartMachineContext>;
   onCartActionComplete?: CartMachineAction;
 };

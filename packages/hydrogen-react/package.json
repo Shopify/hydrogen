@@ -175,11 +175,11 @@
   },
   "dependencies": {
     "@google/model-viewer": "^4.0.0",
-    "@xstate/fsm": "2.0.0",
-    "@xstate/react": "3.2.1",
+    "@xstate/react": "4.1.2",
     "graphql": "^16.10.0",
     "type-fest": "^4.33.0",
-    "worktop": "^0.7.3"
+    "worktop": "^0.7.3",
+    "xstate": "5.20.1"
   },
   "repository": {
     "type": "git",
