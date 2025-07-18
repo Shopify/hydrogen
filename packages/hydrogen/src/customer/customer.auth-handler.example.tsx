@@ -146,16 +146,14 @@ import {
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 
 export async function loader({context}: LoaderFunctionArgs) {
-  const {data} = await context.customerAccount.query<{
-    customer: {firstName: string; lastName: string};
-  }>(`#graphql
+  const {data} = await context.customerAccount.query(`#graphql
     query getCustomer {
       customer {
         firstName
         lastName
       }
     }
-    `);
+    `) as {data: {customer: {firstName: string; lastName: string}}};
 
   return {customer: data.customer};
 }

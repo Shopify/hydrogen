@@ -9,12 +9,12 @@ export async function loader({
 }: LoaderFunctionArgs) {
   const variables = getPaginationVariables(request, {pageBy: 8});
 
-  const data = await storefront.query<{products: ProductConnection}>(
+  const data = await storefront.query(
     ALL_PRODUCTS_QUERY,
     {
       variables,
     },
-  );
+  ) as {products: ProductConnection};
 
   return {products: data.products};
 }
@@ -29,8 +29,8 @@ export default function List() {
           <PreviousLink>Previous</PreviousLink>
           <div>
             {nodes.map((product) => (
-              <Link key={product.id} to={`/products/${product.handle}`}>
-                {product.title}
+              <Link key={product.id} to={`/products/${(product as {handle: string}).handle}`}>
+                {(product as {title: string}).title}
               </Link>
             ))}
           </div>

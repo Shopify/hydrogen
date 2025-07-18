@@ -17,12 +17,12 @@ export async function loader({
   });
 
   const [womensProducts, mensProducts] = await Promise.all([
-    storefront.query<{collection: Collection}>(COLLECTION_PRODUCTS_QUERY, {
+    storefront.query(COLLECTION_PRODUCTS_QUERY, {
       variables: {...womensPaginationVariables, handle: 'women'},
-    }),
-    storefront.query<{collection: Collection}>(COLLECTION_PRODUCTS_QUERY, {
+    }) as Promise<{collection: Collection}>,
+    storefront.query(COLLECTION_PRODUCTS_QUERY, {
       variables: {...mensPaginationVariables, handle: 'men'},
-    }),
+    }) as Promise<{collection: Collection}>,
   ]);
 
   return {womensProducts, mensProducts};
@@ -48,8 +48,8 @@ export default function Collection() {
               <div>
                 {nodes.map((product) => (
                   <div key={product.id}>
-                    <Link to={`/products/${product.handle}`}>
-                      {product.title}
+                    <Link to={`/products/${(product as {handle: string}).handle}`}>
+                      {(product as {title: string}).title}
                     </Link>
                   </div>
                 ))}
@@ -77,8 +77,8 @@ export default function Collection() {
               <div>
                 {nodes.map((product) => (
                   <div key={product.id}>
-                    <Link to={`/products/${product.handle}`}>
-                      {product.title}
+                    <Link to={`/products/${(product as {handle: string}).handle}`}>
+                      {(product as {title: string}).title}
                     </Link>
                   </div>
                 ))}

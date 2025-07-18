@@ -1,4 +1,4 @@
-import {forwardRef, ScriptHTMLAttributes, HTMLAttributes} from 'react';
+import {forwardRef, ScriptHTMLAttributes} from 'react';
 import {useNonce} from './csp';
 import {useLoadScript} from '@shopify/hydrogen-react';
 
@@ -36,7 +36,7 @@ function LazyScript({
   options,
 }: {
   src?: string;
-  options: JSX.IntrinsicElements['script'];
+  options: ScriptHTMLAttributes<HTMLScriptElement>;
 }) {
   if (!src)
     throw new Error(
