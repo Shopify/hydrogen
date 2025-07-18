@@ -146,14 +146,25 @@ import {
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 
 export async function loader({context}: LoaderFunctionArgs) {
-  const {data} = await context.customerAccount.query(`#graphql
+  interface CustomerQueryResponse {
+    data: {
+      customer: {
+        firstName: string;
+        lastName: string;
+      };
+    };
+  }
+
+  const response = await context.customerAccount.query(`#graphql
     query getCustomer {
       customer {
         firstName
         lastName
       }
     }
-    `) as {data: {customer: {firstName: string; lastName: string}}};
+    `);
+
+  const {data} = response as CustomerQueryResponse;
 
   return {customer: data.customer};
 }

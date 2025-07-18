@@ -3,6 +3,28 @@ import {useLoaderData, Link} from 'react-router';
 import {getPaginationVariables, Pagination} from '@shopify/hydrogen';
 import {type Collection} from '@shopify/hydrogen-react/storefront-api-types';
 
+interface Product {
+  id: string;
+  title: string;
+  handle: string;
+}
+
+interface CollectionWithProducts extends Omit<Collection, 'products'> {
+  products: {
+    nodes: Product[];
+    pageInfo: {
+      hasPreviousPage: boolean;
+      hasNextPage: boolean;
+      startCursor: string | null;
+      endCursor: string | null;
+    };
+  };
+}
+
+interface CollectionQuery {
+  collection: CollectionWithProducts;
+}
+
 export async function loader({
   request,
   context: {storefront},
@@ -19,10 +41,10 @@ export async function loader({
   const [womensProducts, mensProducts] = await Promise.all([
     storefront.query(COLLECTION_PRODUCTS_QUERY, {
       variables: {...womensPaginationVariables, handle: 'women'},
-    }) as Promise<{collection: Collection}>,
+    }) as Promise<CollectionQuery>,
     storefront.query(COLLECTION_PRODUCTS_QUERY, {
       variables: {...mensPaginationVariables, handle: 'men'},
-    }) as Promise<{collection: Collection}>,
+    }) as Promise<CollectionQuery>,
   ]);
 
   return {womensProducts, mensProducts};
@@ -48,8 +70,8 @@ export default function Collection() {
               <div>
                 {nodes.map((product) => (
                   <div key={product.id}>
-                    <Link to={`/products/${(product as {handle: string}).handle}`}>
-                      {(product as {title: string}).title}
+                    <Link to={`/products/${product.handle}`}>
+                      {product.title}
                     </Link>
                   </div>
                 ))}
@@ -77,8 +99,8 @@ export default function Collection() {
               <div>
                 {nodes.map((product) => (
                   <div key={product.id}>
-                    <Link to={`/products/${(product as {handle: string}).handle}`}>
-                      {(product as {title: string}).title}
+                    <Link to={`/products/${product.handle}`}>
+                      {product.title}
                     </Link>
                   </div>
                 ))}

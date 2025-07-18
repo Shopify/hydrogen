@@ -3,6 +3,18 @@ import {Pagination, getPaginationVariables} from '@shopify/hydrogen';
 import {useLoaderData, Link} from 'react-router';
 import {ProductConnection} from '@shopify/hydrogen/storefront-api-types';
 
+interface Product {
+  id: string;
+  title: string;
+  handle: string;
+}
+
+interface ProductsQuery {
+  products: ProductConnection & {
+    nodes: Product[];
+  };
+}
+
 export async function loader({
   request,
   context: {storefront},
@@ -14,7 +26,7 @@ export async function loader({
     {
       variables,
     },
-  ) as {products: ProductConnection};
+  ) as ProductsQuery;
 
   return {products: data.products};
 }
@@ -29,8 +41,8 @@ export default function List() {
           <PreviousLink>Previous</PreviousLink>
           <div>
             {nodes.map((product) => (
-              <Link key={product.id} to={`/products/${(product as {handle: string}).handle}`}>
-                {(product as {title: string}).title}
+              <Link key={product.id} to={`/products/${product.handle}`}>
+                {product.title}
               </Link>
             ))}
           </div>
