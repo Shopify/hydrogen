@@ -1,28 +1,17 @@
 import {
-  type LinksFunction,
-  type LoaderFunctionArgs,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
   useRouteLoaderData,
+  type LoaderFunctionArgs,
 } from 'react-router';
 import type {Cart, Shop} from '@shopify/hydrogen/storefront-api-types';
 import styles from './styles/app.css?url';
 import {useNonce} from '@shopify/hydrogen';
 
-/**
- * The main and reset stylesheets are added in the Layout component
- * to prevent a bug in development HMR updates.
- *
- * This avoids the "failed to execute 'insertBefore' on 'Node'" error
- * that occurs after editing and navigating to another page.
- *
- * It's a temporary fix until the issue is resolved.
- * https://github.com/remix-run/remix/issues/9242
- */
-export const links: LinksFunction = () => {
+export const links = () => {
   return [
     {
       rel: 'preconnect',
@@ -33,6 +22,7 @@ export const links: LinksFunction = () => {
       href: 'https://shop.app',
     },
     {rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg'},
+    {rel: 'stylesheet', href: styles},
   ];
 };
 
@@ -48,11 +38,6 @@ export async function loader({context}: LoaderFunctionArgs) {
           await context.storefront.query<{cart: Cart}>(CART_QUERY, {
             variables: {
               cartId,
-              /**
-              Country and language properties are automatically injected
-              into all queries. Passing them is unnecessary unless you
-              want to override them from the following default:
-              */
               country: context.storefront.i18n?.country,
               language: context.storefront.i18n?.language,
             },
@@ -70,31 +55,19 @@ export async function loader({context}: LoaderFunctionArgs) {
   };
 }
 
-export function Layout({children}: {children?: React.ReactNode}) {
-  const data = useRouteLoaderData<typeof loader>('root');
+export function Layout({ children }: { children: React.ReactNode }) {
   const nonce = useNonce();
-
-  const shop = data?.layout.shop;
-
+  
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <link rel="stylesheet" href={styles}></link>
         <Meta />
         <Links />
       </head>
       <body>
-        {data ? (
-          <div className="PageLayout">
-            <h1>{shop?.name} (skeleton)</h1>
-            <h2>{shop?.description}</h2>
-            {children}
-          </div>
-        ) : (
-          children
-        )}
+        {children}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
@@ -103,7 +76,18 @@ export function Layout({children}: {children?: React.ReactNode}) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const data = useRouteLoaderData<typeof loader>('root');
+  const shop = data?.layout.shop;
+
+  return data ? (
+    <div className="PageLayout">
+      <h1>{shop?.name} (skeleton)</h1>
+      <h2>{shop?.description}</h2>
+      <Outlet />
+    </div>
+  ) : (
+    <Outlet />
+  );
 }
 
 const CART_QUERY = `#graphql

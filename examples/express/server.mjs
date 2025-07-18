@@ -1,12 +1,10 @@
 import {createRequestHandler} from '@react-router/express';
-import {installGlobals, createCookieSessionStorage} from '@react-router/node';
+import {createCookieSessionStorage} from 'react-router';
 import compression from 'compression';
 import express from 'express';
 import morgan from 'morgan';
 import {createStorefrontClient, InMemoryCache} from '@shopify/hydrogen';
 import crypto from 'node:crypto';
-
-installGlobals();
 
 const env = process.env;
 

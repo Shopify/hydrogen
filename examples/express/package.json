@@ -7,7 +7,7 @@
     "build": "react-router build",
     "dev": "cross-env NODE_ENV=development nodemon --require dotenv/config ./server.mjs --watch ./server.mjs",
     "start": "cross-env NODE_ENV=production node ./server.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "react-router typegen && tsc --noEmit"
   },
   "dependencies": {
     "@react-router/express": "7.7.0",

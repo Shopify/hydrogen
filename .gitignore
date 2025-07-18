@@ -143,4 +143,5 @@ business-platform.schema.json
 
 examples/**/*.generated.d.ts
 
-examples/express/build
+examples/express/build# React Router generated files
+.react-router/
