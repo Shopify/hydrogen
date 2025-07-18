@@ -2,6 +2,7 @@ import {createRequire} from 'node:module';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 
 export const REQUIRED_REMIX_VERSION = '^2.16.1';
+export const REQUIRED_REACT_ROUTER_VERSION = '^7.7.0';
 
 export function checkRemixVersions(
   projectPath: string,
@@ -14,47 +15,81 @@ export function checkRemixVersions(
   const satisfiesSemver =
     require('semver/functions/satisfies.js') as typeof import('semver/functions/satisfies.js');
 
-  const pkgs = [
-    'dev',
-    'react',
-    'server-runtime',
-    'css-bundle',
-    'node',
-    'express',
-    'eslint-config',
-  ].map((name) => getRemixPackageVersion(require, name, projectPath));
+  // First check for React Router v7 packages
+  const reactRouterPkgs = [
+    {prefix: '', name: 'react-router'},
+    {prefix: '@react-router/', name: 'dev'},
+    {prefix: '@react-router/', name: 'node'},
+    {prefix: '@react-router/', name: 'express'},
+  ].map(({prefix, name}) => getPackageVersion(require, prefix + name, projectPath));
 
-  const outOfSyncPkgs = pkgs.filter(
-    (pkg) =>
-      pkg.version && !satisfiesSemver(pkg.version, requiredVersionInHydrogen),
-  );
+  const hasReactRouter = reactRouterPkgs.some(pkg => pkg.version);
 
-  if (outOfSyncPkgs.length === 0) return;
+  if (hasReactRouter) {
+    // Check React Router versions
+    const outOfSyncPkgs = reactRouterPkgs.filter(
+      (pkg) =>
+        pkg.version && !satisfiesSemver(pkg.version, REQUIRED_REACT_ROUTER_VERSION),
+    );
 
-  const items = outOfSyncPkgs.reduce((acc, item) => {
-    if (item.version) {
-      acc.push(`${item.name}@${item.version}`);
+    if (outOfSyncPkgs.length > 0) {
+      const items = outOfSyncPkgs.reduce((acc, item) => {
+        if (item.version) {
+          acc.push(`${item.name}@${item.version}`);
+        }
+        return acc;
+      }, [] as string[]);
+
+      renderWarning({
+        headline: `The current version of Hydrogen requires React Router @${REQUIRED_REACT_ROUTER_VERSION}. The following packages are out of sync:`,
+        body: [
+          {list: {items}},
+          '\nPlease ensure your React Router packages have the same version and are in sync with Hydrogen.',
+        ],
+      });
     }
+  } else {
+    // Fall back to checking legacy Remix packages
+    const pkgs = [
+      'dev',
+      'react',
+      'server-runtime',
+      'css-bundle',
+      'node',
+      'express',
+      'eslint-config',
+    ].map((name) => getPackageVersion(require, '@remix-run/' + name, projectPath));
 
-    return acc;
-  }, [] as string[]);
+    const outOfSyncPkgs = pkgs.filter(
+      (pkg) =>
+        pkg.version && !satisfiesSemver(pkg.version, requiredVersionInHydrogen),
+    );
 
-  renderWarning({
-    headline: `The current version of Hydrogen requires Remix @${requiredVersionInHydrogen}. The following packages are out of sync:`,
-    body: [
-      {list: {items}},
-      '\nPlease ensure your Remix packages have the same version and are in sync with Hydrogen.',
-    ],
-  });
+    if (outOfSyncPkgs.length > 0) {
+      const items = outOfSyncPkgs.reduce((acc, item) => {
+        if (item.version) {
+          acc.push(`${item.name}@${item.version}`);
+        }
+        return acc;
+      }, [] as string[]);
+
+      renderWarning({
+        headline: `The current version of Hydrogen requires Remix @${requiredVersionInHydrogen}. The following packages are out of sync:`,
+        body: [
+          {list: {items}},
+          '\nPlease ensure your Remix packages have the same version and are in sync with Hydrogen.',
+        ],
+      });
+    }
+  }
 }
 
-// When using the global CLI, remix packages are loaded from the project root.
-function getRemixPackageVersion(
+// Generic function to get package version
+function getPackageVersion(
   require: NodeRequire,
-  name: string,
+  pkgName: string,
   root: string,
 ) {
-  const pkgName = '@remix-run/' + name;
   const result = {name: pkgName, version: ''};
 
   try {
