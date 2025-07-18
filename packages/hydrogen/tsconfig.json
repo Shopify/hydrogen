@@ -1,6 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src", "dev.env.d.ts"],
+  "include": [
+    "src", 
+    "dev.env.d.ts", 
+    // TODO: Remove react-router-patches.d.ts when React Router adds React 19 support
+    "react-router-patches.d.ts"
+  ],
   "compilerOptions": {
     "jsx": "react-jsx",
     "types": ["node", "vite/client", "jest", "@testing-library/jest-dom"],

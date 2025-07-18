@@ -1,6 +1,8 @@
 import {type FetcherWithComponents, useFetcher} from 'react-router';
 import {type MetafieldWithoutOwnerId} from './queries/cart-types';
 import type {ReactNode} from 'react';
+import React from 'react';
+import {createFormWrapper} from './CartFormWrapper'; // TODO: Remove when React Router adds React 19 support
 import type {
   AttributeInput,
   CartBuyerIdentityInput,
@@ -306,9 +308,16 @@ export function CartForm({
   fetcherKey,
 }: CartFormProps) {
   const fetcher = useFetcher({key: fetcherKey});
+  
+  // TODO: Remove this wrapper when React Router adds React 19 support
+  // TEMPORARY: React Router v7 components return ReactElement but React 19 expects ReactNode
+  const FormWrapper = React.useMemo(
+    () => createFormWrapper(fetcher.Form),
+    [fetcher.Form]
+  );
 
   return (
-    <fetcher.Form action={route || ''} method="post">
+    <FormWrapper action={route || ''} method="post">
       {(action || inputs) && (
         <input
           type="hidden"
@@ -316,8 +325,10 @@ export function CartForm({
           value={JSON.stringify({action, inputs})}
         />
       )}
-      {typeof children === 'function' ? children(fetcher) : children}
-    </fetcher.Form>
+      {typeof children === 'function' 
+        ? children(fetcher as FetcherWithComponents<any>)
+        : children}
+    </FormWrapper>
   );
 }
 

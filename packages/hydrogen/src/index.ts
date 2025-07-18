@@ -131,6 +131,10 @@ export type {
   StorefrontApiResponseOkPartial,
   StorefrontApiResponsePartial,
 } from '@shopify/hydrogen-react';
+// TODO: Remove this export when React Router adds React 19 support
+// Export the type patches so templates can use them without duplication
+export type {} from '../react-router-patches';
+
 export {
   AnalyticsEventName,
   AnalyticsPageType,

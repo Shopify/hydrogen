@@ -233,13 +233,18 @@ async function regularSearch({
     throw new Error('No search data returned from Shopify API');
   }
 
-  const total = Object.values(items).reduce(
-    (acc, {nodes}) => acc + nodes.length,
+  const total = Object.values(items).reduce<number>(
+    (acc, itemGroup) => {
+      if (itemGroup && 'nodes' in itemGroup && Array.isArray(itemGroup.nodes)) {
+        return acc + itemGroup.nodes.length;
+      }
+      return acc;
+    },
     0,
   );
 
   const error = errors
-    ? errors.map(({message}) => message).join(', ')
+    ? errors.map((err: {message: string}) => err.message).join(', ')
     : undefined;
 
   return {type: 'regular', term, error, result: {total, items}};
@@ -403,7 +408,7 @@ async function predictiveSearch({
 
   if (errors) {
     throw new Error(
-      `Shopify API errors: ${errors.map(({message}) => message).join(', ')}`,
+      `Shopify API errors: ${errors.map((err: {message: string}) => err.message).join(', ')}`,
     );
   }
 
@@ -411,8 +416,13 @@ async function predictiveSearch({
     throw new Error('No predictive search data returned from Shopify API');
   }
 
-  const total = Object.values(items).reduce(
-    (acc, item) => acc + item.length,
+  const total = Object.values(items).reduce<number>(
+    (acc, item) => {
+      if (Array.isArray(item)) {
+        return acc + item.length;
+      }
+      return acc;
+    },
     0,
   );
 
