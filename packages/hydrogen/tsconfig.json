@@ -1,9 +1,10 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "include": ["src", "dev.env.d.ts"],
   "compilerOptions": {
     "jsx": "react-jsx",
     "types": ["node", "vite/client", "jest", "@testing-library/jest-dom"],
+    "baseUrl": ".",
     "paths": {
       "@shopify/hydrogen": ["./src"],
       "~/mini-oxygen/*": ["../mini-oxygen/src/*"]
