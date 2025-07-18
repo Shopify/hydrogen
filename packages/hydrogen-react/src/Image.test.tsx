@@ -133,7 +133,9 @@ describe('<Image />', () => {
 
       render(<Image {...defaultProps} sizes="100vw" data={data} />);
 
-      expect(screen.getByRole('img').style.aspectRatio).toBe('400 / 300');
+      expect(screen.getByTestId('test-element').style.aspectRatio).toBe(
+        '400 / 300',
+      );
     });
 
     it('infers the aspect-ratio from the storefront data for fixed-width images when no height prop is provided', () => {
@@ -141,7 +143,9 @@ describe('<Image />', () => {
 
       render(<Image {...defaultProps} sizes="100vw" data={data} width={600} />);
 
-      expect(screen.getByRole('img').style.aspectRatio).toBe('400 / 300');
+      expect(screen.getByTestId('test-element').style.aspectRatio).toBe(
+        '400 / 300',
+      );
     });
 
     it('infers the aspect-ratio from the storefront data for fixed-width images the height and width are different units', () => {
@@ -157,7 +161,9 @@ describe('<Image />', () => {
         />,
       );
 
-      expect(screen.getByRole('img').style.aspectRatio).toBe('400 / 300');
+      expect(screen.getByTestId('test-element').style.aspectRatio).toBe(
+        '400 / 300',
+      );
     });
 
     it('infers the aspect-ratio from the height and width props for fixed-width images', () => {
@@ -173,7 +179,9 @@ describe('<Image />', () => {
         />,
       );
 
-      expect(screen.getByRole('img').style.aspectRatio).toBe('600 / 400');
+      expect(screen.getByTestId('test-element').style.aspectRatio).toBe(
+        '600 / 400',
+      );
     });
 
     it('does not create srcset with greater dimensions than source image', () => {

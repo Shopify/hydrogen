@@ -6,14 +6,18 @@ import type {MediaEdge as MediaEdgeType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 import type {ModelViewerElement} from '@google/model-viewer/lib/model-viewer.js';
 
-type BaseProps = React.HTMLAttributes<
-  HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | ModelViewerElement
+type BaseProps = Omit<
+  React.HTMLAttributes<
+    HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | ModelViewerElement
+  >,
+  'children'
 >;
 export interface MediaFileProps extends BaseProps {
   /** An object with fields that correspond to the Storefront API's [Media object](https://shopify.dev/api/storefront/reference/products/media). */
   data: PartialDeep<MediaEdgeType['node'], {recurseIntoArrays: true}>;
   /** The options for the `Image`, `Video`, `ExternalVideo`, or `ModelViewer` components. */
   mediaOptions?: MediaOptions;
+  children?: React.ReactNode;
 }
 
 type MediaOptions = {
@@ -38,8 +42,9 @@ type MediaOptions = {
 export function MediaFile({
   data,
   mediaOptions,
+  children,
   ...passthroughProps
-}: MediaFileProps): JSX.Element | null {
+}: MediaFileProps) {
   switch (data.__typename) {
     case 'MediaImage': {
       if (!data.image) {

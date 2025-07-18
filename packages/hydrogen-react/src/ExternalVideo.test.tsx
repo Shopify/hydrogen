@@ -86,9 +86,13 @@ describe('<ExternalVideo />', () => {
   it(`throws when 'data.embedUrl' isn't passed`, () => {
     // to silence the test runner's console.error from being called
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-    expect(() => render(<ExternalVideo data={{id: 'hi'}} />)).toThrow();
-    expect(console.error).toHaveBeenCalled();
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(() => render(<ExternalVideo data={{id: 'hi'}} />)).toThrow(
+      `<ExternalVideo/> requires the 'embedUrl' property`,
+    );
+    // In React 19, console.error might not be called for errors thrown during render
+    // So we'll just restore the mock without checking if it was called
+    errorSpy.mockRestore();
   });
 
   it(`handles when the embedUrl has search params already`, () => {

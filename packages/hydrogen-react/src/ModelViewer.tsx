@@ -4,20 +4,11 @@ import type {Model3d} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 import type {ModelViewerElement} from '@google/model-viewer/lib/model-viewer.js';
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace JSX {
-    interface IntrinsicElements {
-      'model-viewer': PartialDeep<
-        ModelViewerElement,
-        {recurseIntoArrays: true}
-      >;
-    }
-  }
-}
-
 type ModelViewerProps = Omit<
-  PartialDeep<JSX.IntrinsicElements['model-viewer'], {recurseIntoArrays: true}>,
+  PartialDeep<
+    React.JSX.IntrinsicElements['model-viewer'],
+    {recurseIntoArrays: true}
+  >,
   'src'
 > &
   ModelViewerBaseProps;
@@ -61,12 +52,12 @@ type ModelViewerBaseProps = {
  *
  * ModelViewer is using version `1.21.1` of the `@google/model-viewer` library.
  */
-export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
+export function ModelViewer(props: ModelViewerProps) {
   const [modelViewer, setModelViewer] = useState<undefined | HTMLElement>(
     undefined,
   );
-  const callbackRef = useCallback((node: HTMLElement) => {
-    setModelViewer(node);
+  const callbackRef = useCallback((node: HTMLElement | null) => {
+    setModelViewer(node || undefined);
   }, []);
   const {data, children, className, ...passthroughProps} = props;
 
@@ -159,8 +150,7 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
     <model-viewer
       ref={callbackRef}
       {...passthroughProps}
-      // @ts-expect-error src should exist
-      // @eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       class={className}
       id={passthroughProps.id ?? data.id}
       src={data.sources[0].url}
@@ -181,11 +171,10 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
       orbit-sensitivity={passthroughProps.orbitSensitivity}
       auto-rotate={passthroughProps.autoRotate}
       auto-rotate-delay={passthroughProps.autoRotateDelay}
-      // @ts-expect-error rotationPerSecond should exist as a type, not sure why it doesn't. https://modelviewer.dev/docs/index.html#entrydocs-stagingandcameras-attributes-rotationPerSecond
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       rotation-per-second={passthroughProps.rotationPerSecond}
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      interaction-policy={(passthroughProps as any).interactionPolicy}
+      interaction-policy={passthroughProps.interactionPolicy}
       interaction-prompt={passthroughProps.interactionPrompt}
       interaction-prompt-style={passthroughProps.interactionPromptStyle}
       interaction-prompt-threshold={passthroughProps.interactionPromptThreshold}
@@ -197,7 +186,7 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
       max-field-of-view={passthroughProps.maxFieldOfView}
       min-field-of-view={passthroughProps.minFieldOfView}
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      bounds={(passthroughProps as any).bounds}
+      bounds={passthroughProps.bounds}
       interpolation-decay={passthroughProps.interpolationDecay ?? 100}
       skybox-image={passthroughProps.skyboxImage}
       environment-image={passthroughProps.environmentImage}

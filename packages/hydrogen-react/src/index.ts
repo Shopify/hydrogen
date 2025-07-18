@@ -1,3 +1,5 @@
+/// <reference path="../jsx-runtime.d.ts" />
+
 export {AddToCartButton} from './AddToCartButton.js';
 export {getClientBrowserParameters, sendShopifyAnalytics} from './analytics.js';
 export {

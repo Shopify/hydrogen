@@ -29,7 +29,7 @@ type BuyNowButtonProps<AsType extends React.ElementType = 'button'> =
  */
 export function BuyNowButton<AsType extends React.ElementType = 'button'>(
   props: BuyNowButtonProps<AsType>,
-): JSX.Element {
+) {
   const {cartCreate, checkoutUrl} = useCart();
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -66,7 +66,7 @@ export function BuyNowButton<AsType extends React.ElementType = 'button'>(
   return (
     <BaseButton
       // Only certain 'as' types such as 'button' contain `disabled`
-      disabled={loading ?? (passthroughProps as {disabled?: boolean}).disabled}
+      disabled={loading ?? ('disabled' in passthroughProps && passthroughProps.disabled)}
       {...passthroughProps}
       onClick={onClick}
       defaultOnClick={handleBuyNow}

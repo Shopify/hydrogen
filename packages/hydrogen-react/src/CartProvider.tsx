@@ -141,7 +141,7 @@ export function CartProvider({
   customerAccessToken,
   countryCode,
   languageCode,
-}: CartProviderProps): JSX.Element {
+}: CartProviderProps) {
   const shop = useShop();
 
   if (!shop)

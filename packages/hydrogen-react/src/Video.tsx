@@ -1,4 +1,4 @@
-import {forwardRef, type HTMLAttributes} from 'react';
+import {forwardRef, type HTMLAttributes, type VideoHTMLAttributes} from 'react';
 import {shopifyLoader} from './Image.js';
 import type {Video as VideoType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
@@ -19,8 +19,8 @@ export interface VideoProps {
  */
 export const Video = forwardRef<
   HTMLVideoElement,
-  JSX.IntrinsicElements['video'] & VideoProps
->((props, ref): JSX.Element => {
+  VideoHTMLAttributes<HTMLVideoElement> & VideoProps
+>((props, ref) => {
   const {
     data,
     previewImageOptions,

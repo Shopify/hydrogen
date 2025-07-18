@@ -69,7 +69,7 @@ export function Money<ComponentGeneric extends React.ElementType = 'div'>({
   measurement,
   measurementSeparator = '/',
   ...passthroughProps
-}: MoneyProps<ComponentGeneric>): JSX.Element {
+}: MoneyProps<ComponentGeneric>) {
   if (!isMoney(data)) {
     throw new Error(
       `<Money/> needs a valid 'data' prop that has 'amount' and 'currencyCode'`,

@@ -27,7 +27,7 @@ export function ProductPrice<
 >(
   props: ProductPriceProps &
     Omit<MoneyProps<ComponentGeneric>, 'data' | 'measurement'>,
-): JSX.Element | null {
+) {
   const {
     priceType = 'regular',
     variantId,

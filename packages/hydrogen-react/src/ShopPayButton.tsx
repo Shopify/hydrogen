@@ -42,19 +42,6 @@ type ShopPayChannelAttribution = {
   channel?: 'headless' | 'hydrogen';
 };
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace JSX {
-    interface IntrinsicElements {
-      'shop-pay-button': {
-        channel?: string;
-        variants: string;
-        'store-url': string;
-      };
-    }
-  }
-}
-
 const SHOPJS_URL =
   'https://cdn.shopify.com/shopifycloud/shop-js/v1.0/client.js';
 
@@ -76,7 +63,7 @@ export function ShopPayButton({
   variantIdsAndQuantities,
   width,
   storeDomain: _storeDomain,
-}: ShopPayButtonProps): JSX.Element {
+}: ShopPayButtonProps) {
   const shop = useShop();
   const storeDomain = _storeDomain || shop?.storeDomain;
   const shopPayLoadedStatus = useLoadScript(SHOPJS_URL);

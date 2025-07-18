@@ -22,7 +22,7 @@ export type CartLineQuantityProps<ComponentGeneric extends ElementType> =
  */
 export function CartLineQuantity<ComponentGeneric extends ElementType = 'span'>(
   props: CartLineQuantityProps<ComponentGeneric>,
-): JSX.Element {
+) {
   const cartLine = useCartLine();
   const {as, ...passthroughProps} = props;
 

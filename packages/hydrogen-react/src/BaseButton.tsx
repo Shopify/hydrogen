@@ -28,7 +28,7 @@ export type BaseButtonProps<AsType extends React.ElementType> =
 
 export function BaseButton<AsType extends React.ElementType = 'button'>(
   props: BaseButtonProps<AsType>,
-): JSX.Element {
+) {
   const {
     as,
     onClick,

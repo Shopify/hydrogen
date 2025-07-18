@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src/**/*", "globals.d.ts"],
+  "include": ["src/**/*", "globals.d.ts", "jsx-runtime.d.ts"],
   "exclude": [
     // when generating types for the library, only include these files instead of the tests/stories/examples
     "src/**/*.test.tsx",
