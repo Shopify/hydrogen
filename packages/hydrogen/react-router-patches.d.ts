@@ -96,3 +96,11 @@ declare module '@react-router/react' {
 declare module 'react-router/dom' {
   export const HydratedRouter: React.FC<{ nonce?: string }>;
 }
+
+declare module '@shopify/hydrogen' {
+  import type {ForwardRefExoticComponent, RefAttributes} from 'react';
+  import type {HydrogenImageProps} from '@shopify/hydrogen-react';
+  
+  export const Image: React.FC<HydrogenImageProps>;
+  export const VariantSelector: React.FC<any>;
+}
