@@ -304,7 +304,7 @@ export function CartForm({
   inputs,
   route,
   fetcherKey,
-}: CartFormProps): JSX.Element {
+}: CartFormProps) {
   const fetcher = useFetcher({key: fetcherKey});
 
   return (

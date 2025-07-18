@@ -50,53 +50,49 @@ describe(`useCustomerPrivacy`, () => {
         storefrontAccessToken: '3b580e70970c4528da70c98e097c2fa0',
       }),
     );
-    const script = html.querySelector('body script');
-    expect(script).toContainHTML(`src="${CONSENT_API}"`);
-    expect(script).toContainHTML('type="text/javascript"');
+    const script = head.querySelector('script') || body.querySelector('script');
+    expect(script).toBeTruthy();
+    expect(script?.getAttribute('src')).toContain(CONSENT_API);
+    expect(script?.getAttribute('type')).toBe('text/javascript');
   });
 
   it('loads the customerPrivacy with privacyBanner script', () => {
     renderHook(() => useCustomerPrivacy(CUSTOMER_PRIVACY_PROPS));
-    const script = html.querySelector('body script');
-    expect(script).toContainHTML(`src="${CONSENT_API_WITH_BANNER}"`);
-    expect(script).toContainHTML('type="text/javascript"');
+    const script = head.querySelector('script') || body.querySelector('script');
+    expect(script).toBeTruthy();
+    expect(script?.getAttribute('src')).toContain(CONSENT_API_WITH_BANNER);
+    expect(script?.getAttribute('type')).toBe('text/javascript');
   });
 
   it('returns just customerPrivacy initiallly as null', () => {
-    let cp;
-    renderHook(() => {
-      cp = useCustomerPrivacy({
+    const {result} = renderHook(() => {
+      return useCustomerPrivacy({
         ...CUSTOMER_PRIVACY_PROPS,
         withPrivacyBanner: false,
       });
     });
-    expect(cp).toEqual({customerPrivacy: null});
+    expect(result.current).toEqual({customerPrivacy: null});
   });
 
   it('returns both customerPrivacy and privacyBanner initially as null', async () => {
-    let cp;
-    renderHook(() => {
-      cp = useCustomerPrivacy(CUSTOMER_PRIVACY_PROPS);
+    const {result} = renderHook(() => {
+      return useCustomerPrivacy(CUSTOMER_PRIVACY_PROPS);
     });
 
     // Wait until idle
     await act(async () => {});
 
-    expect(cp).toEqual({customerPrivacy: null, privacyBanner: null});
+    expect(result.current).toEqual({customerPrivacy: null, privacyBanner: null});
   });
 
   it('returns only customerPrivacy', async () => {
-    let cp;
-
     const initialProps = {
       ...CUSTOMER_PRIVACY_PROPS,
       withPrivacyBanner: false,
     };
 
-    const {rerender} = renderHook(
-      (props) => {
-        cp = useCustomerPrivacy(props);
-      },
+    const {result, rerender} = renderHook(
+      (props) => useCustomerPrivacy(props),
       {initialProps},
     );
 
@@ -112,7 +108,7 @@ describe(`useCustomerPrivacy`, () => {
     // mock the original privacyBanner script injected APIs
     rerender(initialProps);
 
-    expect(cp).toEqual({
+    expect(result.current).toEqual({
       customerPrivacy: expect.objectContaining({
         setTrackingConsent: expect.any(Function),
       }),
@@ -120,12 +116,8 @@ describe(`useCustomerPrivacy`, () => {
   });
 
   it('returns both customerPrivacy and privaceBanner', async () => {
-    let cp;
-
-    const {rerender} = renderHook(
-      (props) => {
-        cp = useCustomerPrivacy(props);
-      },
+    const {result, rerender} = renderHook(
+      (props) => useCustomerPrivacy(props),
       {initialProps: CUSTOMER_PRIVACY_PROPS},
     );
 
@@ -150,7 +142,7 @@ describe(`useCustomerPrivacy`, () => {
     // mock the original privacyBanner script injected APIs
     rerender(CUSTOMER_PRIVACY_PROPS);
 
-    expect(cp).toEqual({
+    expect(result.current).toEqual({
       customerPrivacy: expect.objectContaining({
         setTrackingConsent: expect.any(Function),
       }),
@@ -164,11 +156,8 @@ describe(`useCustomerPrivacy`, () => {
   it('triggers the onReady callback when both APIs are ready', async () => {
     const onReady = vi.fn();
 
-    let cp;
     const {rerender} = renderHook(
-      (props) => {
-        cp = useCustomerPrivacy(props);
-      },
+      (props) => useCustomerPrivacy(props),
       {initialProps: {...CUSTOMER_PRIVACY_PROPS, onReady}},
     );
 

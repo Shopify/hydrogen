@@ -7,8 +7,8 @@ function MockForm({
   ...restOfProps
 }: {
   children: React.ReactNode;
-  restOfProps: Record<string, unknown>;
-}): JSX.Element {
+  [key: string]: any;
+}) {
   return (
     <form data-testid="form" {...restOfProps}>
       {children}
@@ -17,7 +17,7 @@ function MockForm({
 }
 
 vi.mock('react-router', () => ({
-  useFetcher: vi.fn().mockImplementation(() => {
+  useFetcher: vi.fn(() => {
     return {
       Form: MockForm,
     };
@@ -37,7 +37,7 @@ describe('<CartForm />', () => {
         <button>Submit</button>
       </CartForm>,
     );
-
+    
     expect(getRenderFormInput(container)).toBe(
       '{"action":"LinesAdd","inputs":{"lines":[]}}',
     );

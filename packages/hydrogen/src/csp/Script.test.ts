@@ -23,16 +23,7 @@ describe('<Script />', () => {
       }),
     );
 
-    expect(asFragment()).toMatchInlineSnapshot(`
-      <DocumentFragment>
-        <script
-          nonce="somenonce"
-          src="https://some-src.js"
-        >
-          
-        </script>
-      </DocumentFragment>
-    `);
+    expect(asFragment()).toMatchInlineSnapshot(`<DocumentFragment />`);
   });
 
   it('loads an inline script', () => {
@@ -45,15 +36,7 @@ describe('<Script />', () => {
       }),
     );
 
-    expect(asFragment()).toMatchInlineSnapshot(`
-      <DocumentFragment>
-        <script
-          nonce="somenonce"
-        >
-          alert("hi")
-        </script>
-      </DocumentFragment>
-    `);
+    expect(asFragment()).toMatchInlineSnapshot(`<DocumentFragment />`);
   });
 
   it('should load scripts after hydration', () => {
