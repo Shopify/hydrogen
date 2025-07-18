@@ -1,22 +1,19 @@
 import {
   useLoaderData,
-  useNavigate,
   Link,
   redirect,
   type LoaderFunctionArgs,
   type MetaFunction,
 } from 'react-router';
 import {
-  Pagination,
   getPaginationVariables,
-  Image,
   Money,
   Analytics,
+  Image,
 } from '@shopify/hydrogen';
-import type {ProductItemFragment} from 'storefrontapi.generated';
-import {useEffect} from 'react';
+import type {ProductItemFragment, CollectionQuery} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/lib/variants';
-import {useInView} from 'react-intersection-observer';
+import {InfiniteScrollPagination} from '~/components/InfiniteScrollPagination';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
@@ -74,42 +71,23 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
 
 export default function Collection() {
   const {collection} = useLoaderData<typeof loader>();
-  const {ref, inView} = useInView();
 
   return (
     <div className="collection">
-      <h1>{collection.title}</h1>
-      <p className="collection-description">{collection.description}</p>
-      <Pagination connection={collection.products}>
-        {({
-          nodes,
-          isLoading,
-          PreviousLink,
-          NextLink,
-          state,
-          nextPageUrl,
-          hasNextPage,
-        }) => (
-          <>
-            <PreviousLink>
-              {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
-            </PreviousLink>
-            <ProductsGrid
-              products={nodes}
-              inView={inView}
-              hasNextPage={hasNextPage}
-              nextPageUrl={nextPageUrl}
-              state={state}
-            />
-            <br />
-            <NextLink ref={ref}>
-              <span ref={ref}>
-                {isLoading ? 'Loading...' : <span>Load more ↓</span>}
-              </span>
-            </NextLink>
-          </>
+      <h1>{collection!.title}</h1>
+      <p className="collection-description">{collection!.description}</p>
+      <InfiniteScrollPagination<NonNullable<CollectionQuery['collection']>['products']['nodes'][number]>
+        connection={collection!.products}
+        resourcesClassName="products-grid"
+      >
+        {({node: product, index}) => (
+          <ProductItem
+            key={product.id}
+            product={product}
+            loading={index < 8 ? 'eager' : undefined}
+          />
         )}
-      </Pagination>
+      </InfiniteScrollPagination>
       <Analytics.CollectionView
         data={{
           collection: {
@@ -118,46 +96,6 @@ export default function Collection() {
           },
         }}
       />
-    </div>
-  );
-}
-
-function ProductsGrid({
-  products,
-  inView,
-  hasNextPage,
-  nextPageUrl,
-  state,
-}: {
-  products: ProductItemFragment[];
-  inView: boolean;
-  hasNextPage: boolean;
-  nextPageUrl: string;
-  state: any;
-}) {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (inView && hasNextPage) {
-      navigate(nextPageUrl, {
-        replace: true,
-        preventScrollReset: true,
-        state,
-      });
-    }
-  }, [inView, navigate, state, nextPageUrl, hasNextPage]);
-
-  return (
-    <div className="products-grid">
-      {products.map((product, index) => {
-        return (
-          <ProductItem
-            key={product.id}
-            product={product}
-            loading={index < 8 ? 'eager' : undefined}
-          />
-        );
-      })}
     </div>
   );
 }
