@@ -56,19 +56,19 @@ describe('build', () => {
 
     const runBuildResult = await runBuildResultPromise;
 
-    const expectedBundlePath = 'build/server/index.js';
+    const expectedBundlePath = 'dist/server/index.js';
 
     const output = outputMock.output();
     expect(output).toMatch(expectedBundlePath);
     expect(output).toMatch('building for productio');
-    expect(output).toMatch('build/client/assets/root-');
+    expect(output).toMatch('dist/client/assets/root-');
     expect(output).toMatch('building SSR bundle for productio');
     expect(
       fileExists(joinPath(tmpDir, expectedBundlePath)),
     ).resolves.toBeTruthy();
 
     const kB = Number(
-      output.match(/build\/server\/index\.js\s+([\d.]+)\s+kB/)?.[1] || '',
+      output.match(/dist\/server\/index\.js\s+([\d.]+)\s+kB/)?.[1] || '',
     );
 
     // Bundle size within 1 MB
@@ -79,7 +79,7 @@ describe('build', () => {
     expect(output).toMatch('Complete analysis: file://');
 
     await expect(
-      readFile(joinPath(tmpDir, 'build', 'server', BUNDLE_ANALYZER_HTML_FILE)),
+      readFile(joinPath(tmpDir, 'dist', 'server', BUNDLE_ANALYZER_HTML_FILE)),
     ).resolves.toMatch(/globalThis\.METAFILE = '.+';/g);
 
     // Close build result resources.
