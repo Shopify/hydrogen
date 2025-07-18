@@ -1,5 +1,4 @@
 /// <reference types="vite/client" />
-/// <reference types="@remix-run/node" />
 
 // Enhance TypeScript's built-in typings.
 import '@total-typescript/ts-reset';

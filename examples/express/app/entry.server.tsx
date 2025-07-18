@@ -7,7 +7,6 @@
 import {PassThrough} from 'node:stream';
 
 import type {AppLoadContext, EntryContext} from 'react-router';
-import {Response} from '@remix-run/web-fetch';
 import {ServerRouter} from 'react-router';
 import {isbot} from 'isbot';
 import {renderToPipeableStream} from 'react-dom/server';

@@ -49,8 +49,3 @@ declare module 'react-router' {
   }
 }
 
-declare module '@remix-run/server-runtime' {
-  interface Future {
-    v3_singleFetch: true;
-  }
-}

@@ -2,8 +2,8 @@ import type {
   SessionStorage,
   Session,
   SessionData,
-  FlashSessionData,
-} from '@remix-run/server-runtime';
+} from 'react-router';
+type FlashSessionData = SessionData;
 import type {RequestEventPayload} from './vite/request-events';
 import {
   CUSTOMER_ACCOUNT_SESSION_KEY,
