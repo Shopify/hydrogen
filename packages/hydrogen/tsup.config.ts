@@ -11,6 +11,15 @@ const commonConfig = defineConfig({
   format: ['esm', 'cjs'],
   treeshake: true,
   sourcemap: true,
+  // Suppress sourcemap warnings from external dependencies
+  esbuildOptions(options) {
+    // Ignore sourcemap warnings from @shopify/graphql-client
+    options.logOverride = {
+      ...options.logOverride,
+      'ignored-bare-import': 'silent',
+      'missing-source-map': 'silent',
+    };
+  },
 });
 
 export default defineConfig([

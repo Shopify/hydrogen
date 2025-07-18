@@ -10,6 +10,17 @@ export default defineConfig({
     // Allow a strict Content-Security-Policy
     // withtout inlining assets as base64:
     assetsInlineLimit: 0,
+    // Suppress sourcemap warnings from external dependencies
+    rollupOptions: {
+      onwarn(warning, warn) {
+        // Suppress sourcemap warnings from @shopify/graphql-client
+        if (warning.code === 'SOURCEMAP_ERROR' && 
+            warning.message.includes('@shopify/graphql-client')) {
+          return;
+        }
+        warn(warning);
+      },
+    },
   },
   ssr: {
     optimizeDeps: {
