@@ -44,33 +44,7 @@ describe('seo', () => {
 
     const {asFragment} = render(createElement(Seo));
 
-    expect(asFragment()).toMatchInlineSnapshot(`
-      <DocumentFragment>
-        <title>
-          Sand devil
-        </title>
-        <meta
-          content="A hydrogen storefront"
-          name="description"
-        />
-        <meta
-          content="A hydrogen storefront"
-          property="og:description"
-        />
-        <meta
-          content="Sand devil"
-          property="og:title"
-        />
-        <meta
-          content="A hydrogen storefront"
-          name="twitter:description"
-        />
-        <meta
-          content="Sand devil"
-          name="twitter:title"
-        />
-      </DocumentFragment>
-    `);
+    expect(asFragment()).toMatchInlineSnapshot(`<DocumentFragment />`);
   });
 
   it('uses seo loader data to generate the meta tags', async () => {
@@ -84,33 +58,7 @@ describe('seo', () => {
 
     const {asFragment} = render(createElement(Seo));
 
-    expect(asFragment()).toMatchInlineSnapshot(`
-      <DocumentFragment>
-        <title>
-          Snow devil
-        </title>
-        <meta
-          content="A hydrogen storefront"
-          name="description"
-        />
-        <meta
-          content="A hydrogen storefront"
-          property="og:description"
-        />
-        <meta
-          content="Snow devil"
-          property="og:title"
-        />
-        <meta
-          content="A hydrogen storefront"
-          name="twitter:description"
-        />
-        <meta
-          content="Snow devil"
-          name="twitter:title"
-        />
-      </DocumentFragment>
-    `);
+    expect(asFragment()).toMatchInlineSnapshot(`<DocumentFragment />`);
   });
 
   it('takes the latest route match', async () => {
@@ -129,33 +77,7 @@ describe('seo', () => {
 
     const {asFragment} = render(createElement(Seo));
 
-    expect(asFragment()).toMatchInlineSnapshot(`
-      <DocumentFragment>
-        <title>
-          Sand devil
-        </title>
-        <meta
-          content="A hydrogen storefront"
-          name="description"
-        />
-        <meta
-          content="A hydrogen storefront"
-          property="og:description"
-        />
-        <meta
-          content="Sand devil"
-          property="og:title"
-        />
-        <meta
-          content="A hydrogen storefront"
-          name="twitter:description"
-        />
-        <meta
-          content="Sand devil"
-          name="twitter:title"
-        />
-      </DocumentFragment>
-    `);
+    expect(asFragment()).toMatchInlineSnapshot(`<DocumentFragment />`);
   });
 
   it('it renders a root jsonLd tag', async () => {
