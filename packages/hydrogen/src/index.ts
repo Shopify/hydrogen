@@ -108,8 +108,6 @@ export {graphiqlLoader} from './routing/graphiql';
 export {storefrontRedirect} from './routing/redirect';
 export {type SeoConfig} from './seo/generate-seo-tags';
 export {getSeoMeta} from './seo/getSeoMeta';
-export type {SeoHandleFunction} from './seo/seo';
-export {Seo} from './seo/seo';
 export {ShopPayButton} from './shop/ShopPayButton';
 export {getSitemap, getSitemapIndex} from './sitemap/sitemap';
 export * from './storefront';
