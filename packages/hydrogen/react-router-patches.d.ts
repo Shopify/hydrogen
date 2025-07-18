@@ -92,3 +92,7 @@ declare module '@react-router/react' {
   export const ServerRouter: React.FC<{ context: any; url: string | URL; nonce?: string }>;
   export const Await: React.FC<{ resolve: any; errorElement?: React.ReactNode; children: (data: any) => React.ReactNode }>;
 }
+
+declare module 'react-router/dom' {
+  export const HydratedRouter: React.FC<{ nonce?: string }>;
+}

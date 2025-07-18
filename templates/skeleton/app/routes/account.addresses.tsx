@@ -8,6 +8,7 @@ import {
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
 } from '@shopify/remix-oxygen';
+import type {ReactNode} from 'react';
 import {
   Form,
   useActionData,
@@ -375,7 +376,7 @@ export function AddressForm({
   defaultAddress: CustomerFragment['defaultAddress'];
   children: (props: {
     stateForMethod: (method: 'PUT' | 'POST' | 'DELETE') => Fetcher['state'];
-  }) => React.ReactNode;
+  }) => ReactNode;
 }) {
   const {state, formMethod} = useNavigation();
   const action = useActionData<ActionResponse>();

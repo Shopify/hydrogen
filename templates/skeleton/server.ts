@@ -25,7 +25,8 @@ export default {
        */
       const handleRequest = createRequestHandler({
         // eslint-disable-next-line import/no-unresolved
-        build: await import('virtual:react-router/server-build'),
+        // TODO: Remove type assertion when React Router versions are aligned
+        build: await import('virtual:react-router/server-build') as unknown as Parameters<typeof createRequestHandler>[0]['build'],
         mode: process.env.NODE_ENV,
         getLoadContext: () => appLoadContext,
       });

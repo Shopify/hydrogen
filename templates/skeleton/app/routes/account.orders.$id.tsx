@@ -28,22 +28,23 @@ export async function loader({params, context}: LoaderFunctionArgs) {
     throw new Error('Order not found');
   }
 
-  const {order} = data;
+  const order = data.order!;
 
-  const lineItems = flattenConnection(order.lineItems);
+  // TODO: Remove type assertions once flattenConnection type inference is improved in hydrogen-react
+  const lineItems = flattenConnection(order.lineItems) as OrderLineItemFullFragment[];
   const discountApplications = flattenConnection(order.discountApplications);
-
-  const fulfillmentStatus =
-    flattenConnection(order.fulfillments)[0]?.status ?? 'N/A';
-
-  const firstDiscount = discountApplications[0]?.value;
+  const fulfillments = flattenConnection(order.fulfillments);
+  
+  const fulfillmentStatus = fulfillments?.[0]?.status ?? 'N/A';
+  const firstDiscount = discountApplications?.[0];
 
   const discountValue =
-    firstDiscount?.__typename === 'MoneyV2' && firstDiscount;
+    firstDiscount?.value && 'amount' in firstDiscount.value ? firstDiscount.value : null;
 
   const discountPercentage =
-    firstDiscount?.__typename === 'PricingPercentageValue' &&
-    firstDiscount?.percentage;
+    firstDiscount?.value && 'percentage' in firstDiscount.value
+      ? firstDiscount.value.percentage
+      : null;
 
   return {
     order,

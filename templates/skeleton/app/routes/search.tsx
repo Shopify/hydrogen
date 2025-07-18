@@ -235,7 +235,7 @@ async function regularSearch({
 
   const total = Object.values(items).reduce<number>(
     (acc, itemGroup) => {
-      if (itemGroup && 'nodes' in itemGroup && Array.isArray(itemGroup.nodes)) {
+      if (itemGroup && typeof itemGroup === 'object' && 'nodes' in itemGroup && Array.isArray(itemGroup.nodes)) {
         return acc + itemGroup.nodes.length;
       }
       return acc;

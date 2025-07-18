@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 import {ProductPrice} from './ProductPrice';
 import {useAside} from './Aside';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
+import type {ReactNode} from 'react';
 
 type CartLine = OptimisticCartLine<CartApiQueryFragment>;
 
@@ -139,7 +140,7 @@ function CartLineUpdateButton({
   children,
   lines,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   lines: CartLineUpdateInput[];
 }) {
   const lineIds = lines.map((line) => line.id);

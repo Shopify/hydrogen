@@ -1,5 +1,6 @@
 import { Await, Link } from 'react-router';
 import {Suspense, useId} from 'react';
+import type {ReactNode} from 'react';
 import type {
   CartApiQueryFragment,
   FooterQuery,
@@ -21,7 +22,7 @@ interface PageLayoutProps {
   header: HeaderQuery;
   isLoggedIn: Promise<boolean>;
   publicStoreDomain: string;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
 export function PageLayout({

@@ -7,7 +7,8 @@
     "*.ts",
     "*.tsx",
     "*.d.ts",
-    ".react-router/types/**/*"
+    ".react-router/types/**/*",
+    "../../packages/hydrogen/react-router-patches.d.ts"
   ],
   "exclude": [
     "node_modules",
@@ -41,19 +42,7 @@
     "paths": {
       "~/*": [
         "app/*"
-      ],
-      "react": ["../../node_modules/react"],
-      "react/*": ["../../node_modules/react/*"],
-      "react-dom": ["../../node_modules/react-dom"],
-      "react-dom/*": ["../../node_modules/react-dom/*"],
-      "@types/react": ["../../node_modules/@types/react"],
-      "@types/react/*": ["../../node_modules/@types/react/*"],
-      "@types/react-dom": ["../../node_modules/@types/react-dom"],
-      "@types/react-dom/*": ["../../node_modules/@types/react-dom/*"],
-      "react-router": ["../../node_modules/react-router"],
-      "react-router/*": ["../../node_modules/react-router/*"],
-      "react-router-dom": ["../../node_modules/react-router-dom"],
-      "react-router-dom/*": ["../../node_modules/react-router-dom/*"]
+      ]
     },
     "noEmit": true,
     "rootDirs": [".", "./.react-router/types"]

@@ -1,5 +1,6 @@
 import { type FetcherWithComponents } from 'react-router';
 import {CartForm, type OptimisticCartLineInput} from '@shopify/hydrogen';
+import type {ReactNode} from 'react';
 
 export function AddToCartButton({
   analytics,
@@ -9,7 +10,7 @@ export function AddToCartButton({
   onClick,
 }: {
   analytics?: unknown;
-  children: React.ReactNode;
+  children: ReactNode;
   disabled?: boolean;
   lines: Array<OptimisticCartLineInput>;
   onClick?: () => void;
