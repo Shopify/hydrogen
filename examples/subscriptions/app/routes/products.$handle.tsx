@@ -1,6 +1,4 @@
-import {Suspense} from 'react';
 import {
-  Await,
   Link,
   useLoaderData,
   redirect,
@@ -8,6 +6,7 @@ import {
   type LoaderFunctionArgs,
   type MetaFunction,
   type FetcherWithComponents,
+  useNavigate,
 } from 'react-router';
 import type {
   ProductFragment,
@@ -22,14 +21,17 @@ import type {
 import {
   Image,
   Money,
-  VariantSelector,
-  type VariantOption,
   getSelectedProductOptions,
   CartForm,
   Analytics,
   type CartViewPayload,
   useAnalytics,
   type OptimisticCartLineInput,
+  useOptimisticVariant,
+  getProductOptions,
+  getAdjacentAndFirstAvailableVariants,
+  useSelectedOptionInUrlParam,
+  type MappedProductOptions,
 } from '@shopify/hydrogen';
 import type {
   SelectedOption,
@@ -103,6 +105,10 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   /**********   EXAMPLE UPDATE END   ************/
   /***********************************************/
 
+  // Get first or selected variant
+  const selectedOrFirstAvailableVariant =
+    product.selectedOrFirstAvailableVariant ?? product.variants.nodes[0];
+
   const firstVariant = product.variants.nodes[0];
   const firstVariantIsDefault = Boolean(
     firstVariant.selectedOptions.find(
@@ -112,27 +118,17 @@ export async function loader({params, request, context}: LoaderFunctionArgs) {
   );
 
   if (firstVariantIsDefault) {
-    product.selectedVariant = firstVariant;
+    product.selectedOrFirstAvailableVariant = firstVariant;
   } else {
     // if no selected variant was returned from the selected options,
     // we redirect to the first variant's url with it's selected options applied
-    if (!product.selectedVariant) {
+    if (!selectedOrFirstAvailableVariant) {
       throw redirectToFirstVariant({product, request});
     }
   }
 
-  // In order to show which variants are available in the UI, we need to query
-  // all of them. But there might be a *lot*, so instead separate the variants
-  // into it's own separate query that is deferred. So there's a brief moment
-  // where variant options might show as available when they're not, but after
-  // this deffered query resolves, the UI will update.
-  const variants = storefront.query(VARIANTS_QUERY, {
-    variables: {handle},
-  });
-
   return {
     product,
-    variants,
     /***********************************************/
     /**********  EXAMPLE UPDATE STARTS  ************/
     // 5. Pass the selectedSellingPlan to the client
@@ -168,21 +164,36 @@ function redirectToFirstVariant({
 export default function Product() {
   const {
     product,
-    variants,
     /***********************************************/
     /**********  EXAMPLE UPDATE STARTS  ************/
     selectedSellingPlan,
     /**********   EXAMPLE UPDATE END   ************/
     /***********************************************/
   } = useLoaderData<typeof loader>();
-  const {selectedVariant} = product;
+  
+  // Optimistically selects a variant with given available variant information
+  const selectedVariant = useOptimisticVariant(
+    product.selectedOrFirstAvailableVariant,
+    getAdjacentAndFirstAvailableVariants(product),
+  );
+
+  // Sets the search param to the selected variant without navigation
+  // only when no search params are set in the url
+  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
+
+  // Get the product options array
+  const productOptions = getProductOptions({
+    ...product,
+    selectedOrFirstAvailableVariant: selectedVariant,
+  });
+
   return (
     <div className="product">
       <ProductImage image={selectedVariant?.image} />
       <ProductMain
         selectedVariant={selectedVariant}
         product={product}
-        variants={variants}
+        productOptions={productOptions}
         /***********************************************/
         /**********  EXAMPLE UPDATE STARTS  ************/
         selectedSellingPlan={selectedSellingPlan}
@@ -228,12 +239,12 @@ function ProductImage({image}: {image: ProductVariantFragment['image']}) {
 function ProductMain({
   selectedVariant,
   product,
-  variants,
+  productOptions,
   selectedSellingPlan,
 }: {
   product: ProductFragment;
-  selectedVariant: ProductFragment['selectedVariant'];
-  variants: Promise<ProductVariantsQuery>;
+  selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
+  productOptions: MappedProductOptions[];
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
   selectedSellingPlan: SellingPlanFragment | null;
@@ -262,40 +273,17 @@ function ProductMain({
         /***********************************************/
       />
       <br />
-      <Suspense
-        fallback={
-          <ProductForm
-            product={product}
-            selectedVariant={selectedVariant}
-            variants={[]}
-            /***********************************************/
-            /**********  EXAMPLE UPDATE STARTS  ************/
-            selectedSellingPlan={selectedSellingPlan}
-            sellingPlanGroups={sellingPlanGroups}
-            /**********   EXAMPLE UPDATE END   ************/
-            /***********************************************/
-          />
-        }
-      >
-        <Await
-          errorElement="There was a problem loading product variants"
-          resolve={variants}
-        >
-          {(data) => (
-            <ProductForm
-              product={product}
-              selectedVariant={selectedVariant}
-              variants={data.product?.variants.nodes || []}
-              /***********************************************/
-              /**********  EXAMPLE UPDATE STARTS  ************/
-              selectedSellingPlan={selectedSellingPlan}
-              sellingPlanGroups={sellingPlanGroups}
-              /**********   EXAMPLE UPDATE END   ************/
-              /***********************************************/
-            />
-          )}
-        </Await>
-      </Suspense>
+      <ProductForm
+        product={product}
+        selectedVariant={selectedVariant}
+        productOptions={productOptions}
+        /***********************************************/
+        /**********  EXAMPLE UPDATE STARTS  ************/
+        selectedSellingPlan={selectedSellingPlan}
+        sellingPlanGroups={sellingPlanGroups}
+        /**********   EXAMPLE UPDATE END   ************/
+        /***********************************************/
+      />
       <br />
       <br />
       <p>
@@ -465,13 +453,13 @@ function SellingPlanGroup({
 function ProductForm({
   product,
   selectedVariant,
-  variants,
+  productOptions,
   selectedSellingPlan,
   sellingPlanGroups,
 }: {
   product: ProductFragment;
-  selectedVariant: ProductFragment['selectedVariant'];
-  variants: Array<ProductVariantFragment>;
+  selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
+  productOptions: MappedProductOptions[];
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
   selectedSellingPlan: SellingPlanFragment | null;
@@ -503,13 +491,11 @@ function ProductForm({
           </SellingPlanSelector>
         </>
       ) : (
-        <VariantSelector
-          handle={product.handle}
-          options={product.options}
-          variants={variants}
-        >
-          {({option}) => <ProductOptions key={option.name} option={option} />}
-        </VariantSelector>
+        productOptions.map((option) => {
+          // Skip options with only one value
+          if (option.optionValues.length === 1) return null;
+          return <ProductOptions key={option.name} option={option} />;
+        })
       )}
       {/**********   EXAMPLE UPDATE END   ************/
       /***********************************************/}
@@ -566,28 +552,66 @@ function ProductForm({
   );
 }
 
-function ProductOptions({option}: {option: VariantOption}) {
+function ProductOptions({option}: {option: MappedProductOptions}) {
+  const navigate = useNavigate();
   return (
     <div className="product-options" key={option.name}>
       <h5>{option.name}</h5>
       <div className="product-options-grid">
-        {option.values.map(({value, isAvailable, isActive, to}) => {
-          return (
-            <Link
-              className="product-options-item"
-              key={option.name + value}
-              prefetch="intent"
-              preventScrollReset
-              replace
-              to={to}
-              style={{
-                border: isActive ? '1px solid black' : '1px solid transparent',
-                opacity: isAvailable ? 1 : 0.3,
-              }}
-            >
-              {value}
-            </Link>
-          );
+        {option.optionValues.map((value) => {
+          const {
+            name,
+            handle,
+            variantUriQuery,
+            selected,
+            available,
+            exists,
+            isDifferentProduct,
+          } = value;
+
+          if (isDifferentProduct) {
+            return (
+              <Link
+                className="product-options-item"
+                key={option.name + name}
+                prefetch="intent"
+                preventScrollReset
+                replace
+                to={`/products/${handle}?${variantUriQuery}`}
+                style={{
+                  border: selected ? '1px solid black' : '1px solid transparent',
+                  opacity: available ? 1 : 0.3,
+                }}
+              >
+                {name}
+              </Link>
+            );
+          } else {
+            return (
+              <button
+                type="button"
+                className={`product-options-item${
+                  exists && !selected ? ' link' : ''
+                }`}
+                key={option.name + name}
+                style={{
+                  border: selected ? '1px solid black' : '1px solid transparent',
+                  opacity: available ? 1 : 0.3,
+                }}
+                disabled={!exists}
+                onClick={() => {
+                  if (!selected) {
+                    navigate(`?${variantUriQuery}`, {
+                      replace: true,
+                      preventScrollReset: true,
+                    });
+                  }
+                }}
+              >
+                {name}
+              </button>
+            );
+          }
         })}
       </div>
       <br />
@@ -748,14 +772,32 @@ const PRODUCT_FRAGMENT = `#graphql
     handle
     descriptionHtml
     description
+    encodedVariantExistence
+    encodedVariantAvailability
     options {
       name
-      values
+      optionValues {
+        name
+        firstSelectableVariant {
+          ...ProductVariant
+        }
+        swatch {
+          color
+          image {
+            previewImage {
+              url
+            }
+          }
+        }
+      }
     }
-    selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
+    selectedOrFirstAvailableVariant: variantBySelectedOptions(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
       ...ProductVariant
     }
-    variants(first: 1) {
+    adjacentVariants (selectedOptions: $selectedOptions) {
+      ...ProductVariant
+    }
+    variants(first: 250) {
       nodes {
         ...ProductVariant
       }
@@ -797,26 +839,3 @@ const PRODUCT_QUERY = `#graphql
   ${PRODUCT_FRAGMENT}
 ` as const;
 
-const PRODUCT_VARIANTS_FRAGMENT = `#graphql
-  fragment ProductVariants on Product {
-    variants(first: 250) {
-      nodes {
-        ...ProductVariant
-      }
-    }
-  }
-  ${PRODUCT_VARIANT_FRAGMENT}
-` as const;
-
-const VARIANTS_QUERY = `#graphql
-  ${PRODUCT_VARIANTS_FRAGMENT}
-  query ProductVariants(
-    $country: CountryCode
-    $language: LanguageCode
-    $handle: String!
-  ) @inContext(country: $country, language: $language) {
-    product(handle: $handle) {
-      ...ProductVariants
-    }
-  }
-` as const;

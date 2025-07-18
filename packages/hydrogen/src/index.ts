@@ -94,15 +94,8 @@ export {
   useOptimisticData,
 } from './optimistic-ui/optimistic-ui';
 export {getPaginationVariables, Pagination} from './pagination/Pagination';
+export {getSelectedProductOptions, type GetSelectedProductOptions} from './product/getSelectedProductOptions';
 export {useOptimisticVariant} from './product/useOptimisticVariant';
-export type {
-  VariantOption,
-  VariantOptionValue,
-} from './product/VariantSelector';
-export {
-  getSelectedProductOptions,
-  VariantSelector,
-} from './product/VariantSelector';
 export {RichText} from './RichText';
 export {graphiqlLoader} from './routing/graphiql';
 export {storefrontRedirect} from './routing/redirect';
