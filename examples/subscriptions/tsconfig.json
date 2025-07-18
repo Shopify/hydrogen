@@ -5,7 +5,8 @@
     "./**/*.ts",
     "./**/*.tsx",
     "../../templates/skeleton/*.d.ts",
-    "../../templates/skeleton/vite.config.ts"
+    "../../templates/skeleton/vite.config.ts",
+    "../../packages/hydrogen/react-router-patches.d.ts"
   ],
   "compilerOptions": {
     "baseUrl": ".",
