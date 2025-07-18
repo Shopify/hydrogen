@@ -699,7 +699,7 @@ export async function upgradeNodeModules({
 }
 
 /**
- * Appends the current @remix-run dependencies to the upgrade command
+ * Appends the current @remix-run or react-router dependencies to the upgrade command
  */
 function appendRemixDependencies({
   currentDependencies,
