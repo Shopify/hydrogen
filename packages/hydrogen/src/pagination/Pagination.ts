@@ -171,7 +171,6 @@ export function Pagination<NodesType>({
                 to: nextPageUrl,
                 state,
                 replace: true,
-                ref,
                 onClick: () => setIsLoading(true),
               })
             : null;
@@ -191,7 +190,6 @@ export function Pagination<NodesType>({
                 to: previousPageUrl,
                 state,
                 replace: true,
-                ref,
                 onClick: () => setIsLoading(true),
               })
             : null;

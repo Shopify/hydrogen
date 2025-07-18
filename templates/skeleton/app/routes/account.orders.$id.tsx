@@ -1,7 +1,7 @@
 import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import { useLoaderData, type MetaFunction } from 'react-router';
 import {Money, Image, flattenConnection} from '@shopify/hydrogen';
-import type {OrderLineItemFullFragment} from 'customer-accountapi.generated';
+import type {OrderLineItemFullFragment, OrderMoneyFragment} from 'customer-accountapi.generated';
 import {CUSTOMER_ORDER_QUERY} from '~/graphql/customer-account/CustomerOrderQuery';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
@@ -32,14 +32,20 @@ export async function loader({params, context}: LoaderFunctionArgs) {
 
   // TODO: Remove type assertions once flattenConnection type inference is improved in hydrogen-react
   const lineItems = flattenConnection(order.lineItems) as OrderLineItemFullFragment[];
-  const discountApplications = flattenConnection(order.discountApplications);
-  const fulfillments = flattenConnection(order.fulfillments);
+  const discountApplications = flattenConnection(order.discountApplications) as Array<{
+    value:
+      | ({__typename: 'MoneyV2'} & OrderMoneyFragment)
+      | ({__typename: 'PricingPercentageValue'} & {percentage: number});
+  }>;
+  const fulfillments = flattenConnection(order.fulfillments) as Array<{status: string}>;
   
   const fulfillmentStatus = fulfillments?.[0]?.status ?? 'N/A';
   const firstDiscount = discountApplications?.[0];
 
   const discountValue =
-    firstDiscount?.value && 'amount' in firstDiscount.value ? firstDiscount.value : null;
+    firstDiscount?.value && 'amount' in firstDiscount.value
+      ? (firstDiscount.value as OrderMoneyFragment)
+      : null;
 
   const discountPercentage =
     firstDiscount?.value && 'percentage' in firstDiscount.value
