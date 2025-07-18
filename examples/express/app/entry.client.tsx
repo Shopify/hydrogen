@@ -7,15 +7,12 @@
 import {HydratedRouter} from 'react-router/dom';
 import {startTransition, StrictMode} from 'react';
 import {hydrateRoot} from 'react-dom/client';
-import {wrapReactRouterComponent} from '~/components/ReactRouterCompat';
-
-const CompatibleHydratedRouter = wrapReactRouterComponent(HydratedRouter);
 
 startTransition(() => {
   hydrateRoot(
     document,
     <StrictMode>
-      <CompatibleHydratedRouter />
+      <HydratedRouter />
     </StrictMode>,
   );
 });

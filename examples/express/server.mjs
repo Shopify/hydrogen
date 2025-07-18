@@ -1,5 +1,5 @@
 import {createRequestHandler} from '@react-router/express';
-import {installGlobals, createCookieSessionStorage} from 'react-router';
+import {installGlobals, createCookieSessionStorage} from '@react-router/node';
 import compression from 'compression';
 import express from 'express';
 import morgan from 'morgan';

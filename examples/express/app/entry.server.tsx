@@ -1,144 +1,50 @@
-/**
- * By default, Remix will handle generating the HTTP Response for you.
- * You are free to delete this file if you'd like to, but if you ever want it revealed again, you can run `npx remix reveal` ✨
- * For more information, see https://remix.run/file-conventions/entry.server
- */
-
-import {PassThrough} from 'node:stream';
-
-import type {AppLoadContext, EntryContext} from 'react-router';
 import {ServerRouter} from 'react-router';
 import {isbot} from 'isbot';
-import {renderToPipeableStream} from 'react-dom/server';
+import {renderToReadableStream} from 'react-dom/server';
 import {createContentSecurityPolicy} from '@shopify/hydrogen';
+import type {EntryContext, AppLoadContext} from 'react-router';
 
-const ABORT_DELAY = 5_000;
-
-export default function handleRequest(
-  request: Request,
-  responseStatusCode: number,
-  responseHeaders: Headers,
-  reactRouterContext: EntryContext,
-  loadContext: AppLoadContext,
-) {
-  return isbot(request.headers.get('user-agent'))
-    ? handleBotRequest(
-        request,
-        responseStatusCode,
-        responseHeaders,
-        reactRouterContext,
-        loadContext,
-      )
-    : handleBrowserRequest(
-        request,
-        responseStatusCode,
-        responseHeaders,
-        reactRouterContext,
-      );
-}
-
-function handleBotRequest(
+export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
   reactRouterContext: EntryContext,
   context: AppLoadContext,
 ) {
-  return new Promise((resolve, reject) => {
-    const {nonce, header, NonceProvider} = createContentSecurityPolicy({
-      shop: {
-        checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
-        storeDomain: context.env.PUBLIC_STORE_DOMAIN,
-      },
-    });
-
-    const {pipe, abort} = renderToPipeableStream(
-      <NonceProvider>
-        <ServerRouter
-          context={reactRouterContext}
-          url={request.url}
-          nonce={nonce}
-        />
-      </NonceProvider>,
-      {
-        nonce,
-        onAllReady() {
-          const body = new PassThrough();
-
-          responseHeaders.set('Content-Type', 'text/html');
-          responseHeaders.set('Content-Security-Policy', header);
-
-          resolve(
-            new Response(body, {
-              headers: responseHeaders,
-              status: responseStatusCode,
-            }),
-          );
-
-          pipe(body);
-        },
-        onShellError(error: unknown) {
-          reject(error);
-        },
-        onError(error: unknown) {
-          responseStatusCode = 500;
-          console.error(
-            (error as Error)?.stack ? (error as Error).stack : error,
-          );
-        },
-      },
-    );
-
-    setTimeout(abort, ABORT_DELAY);
+  const {nonce, header, NonceProvider} = createContentSecurityPolicy({
+    shop: {
+      checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
+      storeDomain: context.env.PUBLIC_STORE_DOMAIN,
+    },
   });
-}
 
-function handleBrowserRequest(
-  request: Request,
-  responseStatusCode: number,
-  responseHeaders: Headers,
-  reactRouterContext: EntryContext,
-) {
-  const {nonce, header, NonceProvider} = createContentSecurityPolicy();
-
-  return new Promise((resolve, reject) => {
-    const {pipe, abort} = renderToPipeableStream(
-      <NonceProvider>
-        <ServerRouter
-          context={reactRouterContext}
-          url={request.url}
-          nonce={nonce}
-        />
-      </NonceProvider>,
-      {
-        nonce,
-        onShellReady() {
-          const body = new PassThrough();
-
-          responseHeaders.set('Content-Type', 'text/html');
-          responseHeaders.set('Content-Security-Policy', header);
-
-          resolve(
-            new Response(body, {
-              headers: responseHeaders,
-              status: responseStatusCode,
-            }),
-          );
-
-          pipe(body);
-        },
-        onShellError(error: unknown) {
-          reject(error);
-        },
-        onError(error: unknown) {
-          console.error(
-            (error as Error)?.stack ? (error as Error).stack : error,
-          );
-          responseStatusCode = 500;
-        },
+  const body = await renderToReadableStream(
+    <NonceProvider>
+      <ServerRouter
+        context={reactRouterContext}
+        url={request.url}
+        nonce={nonce}
+      />
+    </NonceProvider>,
+    {
+      nonce,
+      signal: request.signal,
+      onError(error) {
+        console.error(error);
+        responseStatusCode = 500;
       },
-    );
+    },
+  );
 
-    setTimeout(abort, ABORT_DELAY);
+  if (isbot(request.headers.get('user-agent'))) {
+    await body.allReady;
+  }
+
+  responseHeaders.set('Content-Type', 'text/html');
+  responseHeaders.set('Content-Security-Policy', header);
+
+  return new Response(body, {
+    headers: responseHeaders,
+    status: responseStatusCode,
   });
 }
