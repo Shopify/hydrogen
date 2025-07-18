@@ -74,7 +74,7 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
 
 export default function Collection() {
   const {collection} = useLoaderData<typeof loader>();
-  const {ref, inView, entry} = useInView();
+  const {ref, inView} = useInView();
 
   return (
     <div className="collection">
@@ -104,7 +104,7 @@ export default function Collection() {
             <br />
             <NextLink ref={ref}>
               <span ref={ref}>
-                {isLoading ? 'Loading...' : <span>Load more yeah ↓</span>}
+                {isLoading ? 'Loading...' : <span>Load more ↓</span>}
               </span>
             </NextLink>
           </>
