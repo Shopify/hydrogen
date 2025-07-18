@@ -1,5 +1,10 @@
 {
-  "include": ["./**/*.d.ts", "./**/*.ts", "./**/*.tsx"],
+  "include": [
+    "./**/*.d.ts",
+    "./**/*.ts",
+    "./**/*.tsx",
+    "../../packages/hydrogen/react-router-patches.d.ts"
+  ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "isolatedModules": true,
@@ -15,19 +20,7 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "~/*": ["app/*"],
-      "react": ["../../node_modules/react"],
-      "react/*": ["../../node_modules/react/*"],
-      "react-dom": ["../../node_modules/react-dom"],
-      "react-dom/*": ["../../node_modules/react-dom/*"],
-      "@types/react": ["../../node_modules/@types/react"],
-      "@types/react/*": ["../../node_modules/@types/react/*"],
-      "@types/react-dom": ["../../node_modules/@types/react-dom"],
-      "@types/react-dom/*": ["../../node_modules/@types/react-dom/*"],
-      "react-router": ["../../node_modules/react-router"],
-      "react-router/*": ["../../node_modules/react-router/*"],
-      "react-router-dom": ["../../node_modules/react-router-dom"],
-      "react-router-dom/*": ["../../node_modules/react-router-dom/*"]
+      "~/*": ["app/*"]
     },
     "noEmit": true
   }
