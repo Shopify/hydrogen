@@ -8,6 +8,8 @@ import {findPort} from '../common/find-port.js';
 import {OXYGEN_COMPAT_PARAMS} from '../common/compat.js';
 
 export {Request, Response, fetch} from './server.js';
+export type {ResponseInit} from './server.js';
+export type {RequestHookInfo} from '../worker/handler.js';
 
 class WorkerNotFoundError extends Error {
   name = 'WorkerNotFoundError';

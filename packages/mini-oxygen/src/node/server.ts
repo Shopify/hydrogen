@@ -14,6 +14,7 @@ import type {MiniOxygen} from './core.js';
 import {OXYGEN_HEADERS_MAP} from '../common/headers.js';
 
 export {Request, Response, fetch} from 'miniflare';
+export type {ResponseInit} from 'miniflare';
 
 export type DispatchFetch = (request: Request) => Promise<Response>;
 
