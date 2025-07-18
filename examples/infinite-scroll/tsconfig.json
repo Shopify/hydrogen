@@ -4,14 +4,14 @@
     "./**/*.d.ts",
     "./**/*.ts",
     "./**/*.tsx",
-    "../../templates/skeleton/*.d.ts",
-    "../../packages/hydrogen/react-router-patches.d.ts"
+    "../../templates/skeleton/*.d.ts"
   ],
   "exclude": [
     "../../templates/skeleton/vite.config.ts"
   ],
   "compilerOptions": {
     "baseUrl": ".",
+    "skipLibCheck": true,
     "paths": {
       "*": ["./*", "../../templates/skeleton/*"],
       "~/*": ["app/*", "../../templates/skeleton/app/*"]

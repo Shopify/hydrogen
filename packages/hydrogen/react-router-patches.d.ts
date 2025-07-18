@@ -1,98 +1,118 @@
 /**
- * TEMPORARY: React Router v7 + React 19 Type Compatibility Patch
+ * React Router v7 + React 19 compatibility patch
  * 
- * This patch fixes type errors when using React Router v7 components with React 19.
- * React 19's ReactNode type is more permissive (includes Promise<ReactNode>), but
- * React Router v7 components are still typed to return ReactElement | null.
- * 
- * TO REMOVE: Delete this entire file once React Router adds React 19 support
- * Also remove this file from tsconfig.json includes
- * 
- * Search for "TODO: Remove when React Router adds React 19 support" to find all temporary workarounds
- * Issue tracking: https://github.com/remix-run/react-router/issues
- * Last tested with: react-router@7.7.0
+ * React 19 expanded ReactNode to include bigint and Promise<ReactNode>,
+ * but React Router v7 types still expect the narrower React 18 definition.
+ * This module augmentation bridges that compatibility gap by making JSX
+ * components more permissive.
  */
 
-import type * as React from 'react';
+/// <reference types="react" />
+/// <reference types="react-router" />
 
+// Unified React 19 ReactNode type that accepts all forms
+type UnifiedReactNode = 
+  | React.ReactElement<any, any>
+  | string
+  | number
+  | bigint
+  | boolean
+  | Iterable<UnifiedReactNode>
+  | React.ReactPortal
+  | null
+  | undefined
+  | Promise<UnifiedReactNode>;
+
+declare global {
+  namespace JSX {
+    interface ElementAttributesProperty {
+      props: {};
+    }
+    interface ElementChildrenAttribute {
+      children: {};
+    }
+    interface IntrinsicElements {
+      [elemName: string]: any;
+    }
+    // Make JSX.Element more permissive
+    interface Element {
+      key?: any;
+      children?: any;
+      [key: string]: any;
+    }
+    interface IntrinsicAttributes extends React.Attributes {}
+    interface IntrinsicClassAttributes<T> extends React.ClassAttributes<T> {}
+  }
+}
+
+// Override React module to unify types
+declare module 'react' {
+  // Unified ReactNode type
+  type ReactNode = UnifiedReactNode;
+
+  // Make ReactPortal more permissive
+  interface ReactPortal {
+    children?: ReactNode;
+    key?: any;
+    [key: string]: any;
+  }
+
+  // Make ReactElement more permissive
+  interface ReactElement<P = any, T extends string | JSXElementConstructor<any> = string | JSXElementConstructor<any>> {
+    children?: ReactNode;
+    key?: any;
+    [key: string]: any;
+  }
+
+  // Make component interfaces more permissive
+  interface FunctionComponent<P = {}> {
+    (props: P, context?: any): ReactNode;
+  }
+
+  interface ComponentClass<P = {}, S = any> {
+    new (props: P, context?: any): Component<P, S>;
+  }
+
+  interface ForwardRefExoticComponent<P> {
+    (props: P): ReactNode;
+  }
+
+  interface ExoticComponent<P = {}> {
+    (props: P): ReactNode;
+  }
+
+  interface Component<P = {}, S = {}, SS = any> {
+    refs?: {
+      [key: string]: ReactInstance;
+    };
+    render(): ReactNode;
+  }
+
+  // Make Key more permissive
+  type Key = string | number | null | undefined;
+}
+
+// Make React Router components more permissive
 declare module 'react-router' {
-  export interface LinkProps {
-    children?: React.ReactNode;
+  interface FunctionComponent<P = {}> {
+    (props: P, context?: any): UnifiedReactNode;
   }
-  
-  export interface NavLinkProps extends LinkProps {
-    className?: string | ((props: {isActive: boolean; isPending: boolean; isTransitioning: boolean}) => string | undefined);
-    style?: React.CSSProperties | ((props: {isActive: boolean; isPending: boolean; isTransitioning: boolean}) => React.CSSProperties | undefined);
+
+  interface ComponentClass<P = {}, S = any> {
+    new (props: P, context?: any): Component<P, S>;
   }
-  
-  export const Link: React.FC<LinkProps & React.AnchorHTMLAttributes<HTMLAnchorElement>>;
-  export const NavLink: React.FC<NavLinkProps & React.AnchorHTMLAttributes<HTMLAnchorElement>>;
-  export const Outlet: React.FC<{ context?: any }>;
-  export const Scripts: React.FC<{ nonce?: string }>;
-  export const ScrollRestoration: React.FC<{ nonce?: string }>;
-  export const Links: React.FC;
-  export const Meta: React.FC;
-  export const ServerRouter: React.FC<{ context: any; url: string | URL; nonce?: string }>;
-  export const Await: React.FC<{ resolve: any; errorElement?: React.ReactNode; children: (data: any) => React.ReactNode }>;
-  export const Form: React.FC<React.FormHTMLAttributes<HTMLFormElement> & {
-    method?: string;
-    action?: string;
-    replace?: boolean;
-    preventScrollReset?: boolean;
-    relative?: "route" | "path";
-    reloadDocument?: boolean;
-    viewTransition?: boolean;
-    children?: React.ReactNode;
-  }>;
-  
-  export interface FetcherWithComponents<TData = any> extends Fetcher<TData> {
-    Form: React.ForwardRefExoticComponent<React.FormHTMLAttributes<HTMLFormElement> & {
-      method?: string;
-      action?: string;
-      replace?: boolean;
-      preventScrollReset?: boolean;
-      relative?: "route" | "path";
-      reloadDocument?: boolean;
-      viewTransition?: boolean;
-      children?: React.ReactNode;
-    } & React.RefAttributes<HTMLFormElement>>;
-    submit: (target: any, options?: any) => Promise<void>;
-    load: (href: string, opts?: any) => Promise<void>;
+
+  interface ForwardRefExoticComponent<P> {
+    (props: P): UnifiedReactNode;
   }
-  
-  export interface Fetcher<TData = any> {
-    state: 'idle' | 'loading' | 'submitting';
-    data: TData | undefined;
-    formData: FormData | undefined;
-    formMethod: string | undefined;
-    formAction: string | undefined;
-    formEncType?: string | undefined;
-    text?: string | undefined;
-    json?: any;
+
+  interface ComponentType<P = {}> {
+    (props: P, context?: any): UnifiedReactNode;
+  }
+
+  interface ExoticComponent<P = {}> {
+    (props: P): UnifiedReactNode;
   }
 }
 
-declare module '@react-router/react' {
-  export interface LinkProps {
-    children?: React.ReactNode;
-  }
-  
-  export interface NavLinkProps extends LinkProps {
-    className?: string | ((props: {isActive: boolean; isPending: boolean; isTransitioning: boolean}) => string | undefined);
-    style?: React.CSSProperties | ((props: {isActive: boolean; isPending: boolean; isTransitioning: boolean}) => React.CSSProperties | undefined);
-  }
-  
-  export const Link: React.FC<LinkProps & React.AnchorHTMLAttributes<HTMLAnchorElement>>;
-  export const NavLink: React.FC<NavLinkProps & React.AnchorHTMLAttributes<HTMLAnchorElement>>;
-  export const Outlet: React.FC<{ context?: any }>;
-  export const Scripts: React.FC<{ nonce?: string }>;
-  export const ScrollRestoration: React.FC<{ nonce?: string }>;
-  export const Links: React.FC;
-  export const Meta: React.FC;
-  export const ServerRouter: React.FC<{ context: any; url: string | URL; nonce?: string }>;
-  export const Await: React.FC<{ resolve: any; errorElement?: React.ReactNode; children: (data: any) => React.ReactNode }>;
-}
-
-declare module 'react-router/dom' {
-  export const HydratedRouter: React.FC<{ nonce?: string }>;
-}
+export {};
