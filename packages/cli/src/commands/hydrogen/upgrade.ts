@@ -673,10 +673,12 @@ export function buildUpgradeCommandArgs({
   if (selectedReactRouter) {
     // If upgrading to a version with React Router dependencies, add them
     // This handles both upgrades and migrations (e.g., from Remix to React Router)
-    const shouldUpgradeReactRouter = !currentReactRouter || semver.lt(
-      getAbsoluteVersion(currentReactRouter[1]),
-      getAbsoluteVersion(selectedReactRouter[1]),
-    );
+    const shouldUpgradeReactRouter =
+      !currentReactRouter ||
+      semver.lt(
+        getAbsoluteVersion(currentReactRouter[1]),
+        getAbsoluteVersion(selectedReactRouter[1]),
+      );
 
     if (shouldUpgradeReactRouter) {
       args.push(
@@ -709,7 +711,7 @@ export async function upgradeNodeModules({
   const depsToRemove = [
     ...(selectedRelease.removeDependencies || []),
     ...(selectedRelease.removeDevDependencies || []),
-  ].filter(dep => dep in currentDependencies);
+  ].filter((dep) => dep in currentDependencies);
 
   if (depsToRemove.length > 0) {
     tasks.push({
@@ -762,14 +764,20 @@ async function uninstallNodeModules({
 }) {
   if (args.length === 0) return;
 
-  const command = packageManager === 'npm' ? 'uninstall' : 
-                 packageManager === 'yarn' ? 'remove' : 
-                 packageManager === 'pnpm' ? 'remove' :
-                 packageManager === 'bun' ? 'remove' :
-                 'uninstall'; // fallback to npm for 'unknown'
+  const command =
+    packageManager === 'npm'
+      ? 'uninstall'
+      : packageManager === 'yarn'
+        ? 'remove'
+        : packageManager === 'pnpm'
+          ? 'remove'
+          : packageManager === 'bun'
+            ? 'remove'
+            : 'uninstall'; // fallback to npm for 'unknown'
 
-  const actualPackageManager = packageManager === 'unknown' ? 'npm' : packageManager;
-  
+  const actualPackageManager =
+    packageManager === 'unknown' ? 'npm' : packageManager;
+
   await exec(actualPackageManager, [command, ...args], {cwd: directory});
 }
 
@@ -806,20 +814,20 @@ function appendReactRouterDependencies({
 }) {
   const command: string[] = [];
   const targetVersion = getAbsoluteVersion(selectedReactRouter[1]);
-  
+
   // Check if there are any React Router packages in current dependencies
-  const hasReactRouter = Object.keys(currentDependencies).some(pkg => 
-    isReactRouterDependency([pkg, currentDependencies[pkg]])
+  const hasReactRouter = Object.keys(currentDependencies).some((pkg) =>
+    isReactRouterDependency([pkg, currentDependencies[pkg]]),
   );
-  
+
   // Standard React Router packages that should be kept in sync
   const reactRouterPackages = [
     'react-router',
-    'react-router-dom', 
+    'react-router-dom',
     '@react-router/dev',
-    '@react-router/fs-routes'
+    '@react-router/fs-routes',
   ];
-  
+
   if (hasReactRouter) {
     // If already using React Router, only upgrade existing packages
     for (const packageName of reactRouterPackages) {
@@ -833,7 +841,7 @@ function appendReactRouterDependencies({
       command.push(`${packageName}@${targetVersion}`);
     }
   }
-  
+
   return command;
 }
 

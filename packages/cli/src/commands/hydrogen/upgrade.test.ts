@@ -1157,10 +1157,7 @@ describe('dependency removal', () => {
         '@remix-run/server-runtime',
         '@shopify/hydrogen',
       ],
-      removeDevDependencies: [
-        '@remix-run/dev',
-        '@remix-run/fs-routes',
-      ],
+      removeDevDependencies: ['@remix-run/dev', '@remix-run/fs-routes'],
       dependenciesMeta: {},
       fixes: [],
       features: [],
@@ -1172,7 +1169,7 @@ describe('dependency removal', () => {
       '@remix-run/server-runtime': '2.16.1',
       '@remix-run/dev': '2.16.1',
       '@remix-run/fs-routes': '2.16.1',
-      'react': '^18.2.0',
+      react: '^18.2.0',
     };
 
     const args = buildUpgradeCommandArgs({
@@ -1183,7 +1180,7 @@ describe('dependency removal', () => {
     // Should include new packages to install but not removed packages
     expect(args).toEqual([
       '@shopify/hydrogen@2025.5.0',
-      'react-router@7.6.0', 
+      'react-router@7.6.0',
       'react-router-dom@7.6.0',
       '@react-router/dev@7.6.0',
       '@react-router/fs-routes@7.6.0',
@@ -1211,7 +1208,7 @@ describe('dependency removal', () => {
 
     const currentDependencies = {
       '@shopify/hydrogen': '2025.4.0',
-      'react': '^18.2.0',
+      react: '^18.2.0',
     };
 
     const args = buildUpgradeCommandArgs({
@@ -1225,7 +1222,7 @@ describe('dependency removal', () => {
   it('handles migration with React Router dependency detection', async () => {
     const selectedRelease: Release = {
       title: 'React Router 7 migration with removal',
-      version: '2025.5.0', 
+      version: '2025.5.0',
       hash: 'ghi789',
       commit: 'https://github.com/Shopify/hydrogen/pull/2961',
       pr: 'https://github.com/Shopify/hydrogen/pull/2961',
@@ -1239,13 +1236,8 @@ describe('dependency removal', () => {
         '@react-router/dev': '7.6.0',
         '@react-router/fs-routes': '7.6.0',
       },
-      removeDependencies: [
-        '@remix-run/react',
-        '@shopify/hydrogen',
-      ],
-      removeDevDependencies: [
-        '@remix-run/dev',
-      ],
+      removeDependencies: ['@remix-run/react', '@shopify/hydrogen'],
+      removeDevDependencies: ['@remix-run/dev'],
       dependenciesMeta: {},
       fixes: [],
       features: [],
@@ -1256,7 +1248,7 @@ describe('dependency removal', () => {
       '@shopify/hydrogen': '2025.4.0',
       '@remix-run/react': '2.16.1',
       '@remix-run/dev': '2.16.1',
-      'react': '^18.2.0',
+      react: '^18.2.0',
     };
 
     const args = buildUpgradeCommandArgs({
@@ -1268,7 +1260,7 @@ describe('dependency removal', () => {
     expect(args).toEqual([
       '@shopify/hydrogen@2025.5.0',
       'react-router@7.6.0',
-      'react-router-dom@7.6.0', 
+      'react-router-dom@7.6.0',
       '@react-router/dev@7.6.0',
       '@react-router/fs-routes@7.6.0',
     ]);
