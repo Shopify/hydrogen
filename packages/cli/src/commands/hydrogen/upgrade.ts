@@ -27,6 +27,7 @@ import {
   getPackageManager,
   type PackageJson,
 } from '@shopify/cli-kit/node/node-package-manager';
+import {exec} from '@shopify/cli-kit/node/system';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {dirname, joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {getCliCommand} from '../../lib/shell.js';
@@ -57,6 +58,8 @@ export type Release = {
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
   dependenciesMeta?: Record<string, {required: boolean}>;
+  removeDependencies?: string[];
+  removeDevDependencies?: string[];
   features: Array<ReleaseItem>;
   fixes: Array<ReleaseItem>;
   hash: string;
@@ -667,8 +670,10 @@ export function buildUpgradeCommandArgs({
     isReactRouterDependency,
   );
 
-  if (currentReactRouter && selectedReactRouter) {
-    const shouldUpgradeReactRouter = semver.lt(
+  if (selectedReactRouter) {
+    // If upgrading to a version with React Router dependencies, add them
+    // This handles both upgrades and migrations (e.g., from Remix to React Router)
+    const shouldUpgradeReactRouter = !currentReactRouter || semver.lt(
       getAbsoluteVersion(currentReactRouter[1]),
       getAbsoluteVersion(selectedReactRouter[1]),
     );
@@ -677,7 +682,7 @@ export function buildUpgradeCommandArgs({
       args.push(
         ...appendReactRouterDependencies({
           currentDependencies,
-          selectedReactRouter,
+          selectedRelease,
         }),
       );
     }
@@ -698,24 +703,74 @@ export async function upgradeNodeModules({
   selectedRelease: Release;
   currentDependencies: Record<string, string>;
 }) {
-  await renderTasks(
-    [
-      {
-        title: `Upgrading dependencies`,
-        task: async () => {
-          await installNodeModules({
-            directory: appPath,
-            packageManager: await getPackageManager(appPath),
-            args: buildUpgradeCommandArgs({
-              selectedRelease,
-              currentDependencies,
-            }),
-          });
-        },
+  const tasks: Array<{title: string; task: () => Promise<void>}> = [];
+
+  // Remove deprecated dependencies first if specified
+  const depsToRemove = [
+    ...(selectedRelease.removeDependencies || []),
+    ...(selectedRelease.removeDevDependencies || []),
+  ].filter(dep => dep in currentDependencies);
+
+  if (depsToRemove.length > 0) {
+    tasks.push({
+      title: `Removing deprecated dependencies`,
+      task: async () => {
+        await uninstallNodeModules({
+          directory: appPath,
+          packageManager: await getPackageManager(appPath),
+          args: depsToRemove,
+        });
       },
-    ],
-    {},
-  );
+    });
+  }
+
+  // Then install/upgrade dependencies
+  const upgradeArgs = buildUpgradeCommandArgs({
+    selectedRelease,
+    currentDependencies,
+  });
+
+  if (upgradeArgs.length > 0) {
+    tasks.push({
+      title: `Upgrading dependencies`,
+      task: async () => {
+        await installNodeModules({
+          directory: appPath,
+          packageManager: await getPackageManager(appPath),
+          args: upgradeArgs,
+        });
+      },
+    });
+  }
+
+  if (tasks.length > 0) {
+    await renderTasks(tasks, {});
+  }
+}
+
+/**
+ * Uninstalls the specified dependencies
+ */
+async function uninstallNodeModules({
+  directory,
+  packageManager,
+  args,
+}: {
+  directory: string;
+  packageManager: 'npm' | 'yarn' | 'pnpm' | 'unknown' | 'bun';
+  args: string[];
+}) {
+  if (args.length === 0) return;
+
+  const command = packageManager === 'npm' ? 'uninstall' : 
+                 packageManager === 'yarn' ? 'remove' : 
+                 packageManager === 'pnpm' ? 'remove' :
+                 packageManager === 'bun' ? 'remove' :
+                 'uninstall'; // fallback to npm for 'unknown'
+
+  const actualPackageManager = packageManager === 'unknown' ? 'npm' : packageManager;
+  
+  await exec(actualPackageManager, [command, ...args], {cwd: directory});
 }
 
 /**
@@ -744,18 +799,25 @@ function appendRemixDependencies({
  */
 function appendReactRouterDependencies({
   currentDependencies,
-  selectedReactRouter,
+  selectedRelease,
 }: {
   currentDependencies: Record<string, string>;
-  selectedReactRouter: [string, string];
+  selectedRelease: Release;
 }) {
   const command: string[] = [];
-  for (const [name, version] of Object.entries(currentDependencies)) {
+  
+  // Add all React Router dependencies and devDependencies from the selected release
+  const allSelectedDeps = {
+    ...selectedRelease.dependencies,
+    ...selectedRelease.devDependencies,
+  };
+  
+  for (const [name, version] of Object.entries(allSelectedDeps)) {
     const isReactRouterPackage = isReactRouterDependency([name, version]);
     if (!isReactRouterPackage) {
       continue;
     }
-    command.push(`${name}@${getAbsoluteVersion(selectedReactRouter[1])}`);
+    command.push(`${name}@${getAbsoluteVersion(version)}`);
   }
   return command;
 }
