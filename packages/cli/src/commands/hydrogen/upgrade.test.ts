@@ -1134,3 +1134,143 @@ const CUMMLATIVE_RELEASE = {
     },
   ],
 } as CumulativeRelease;
+
+describe('dependency removal', () => {
+  it('removes specified dependencies before upgrading', async () => {
+    const selectedRelease: Release = {
+      title: 'Remix to React Router migration',
+      version: '2025.5.0',
+      hash: 'abc123',
+      commit: 'https://github.com/Shopify/hydrogen/pull/2961',
+      pr: 'https://github.com/Shopify/hydrogen/pull/2961',
+      date: '2025-01-21',
+      dependencies: {
+        '@shopify/hydrogen': '2025.5.0',
+        'react-router': '7.6.0',
+        'react-router-dom': '7.6.0',
+      },
+      devDependencies: {
+        '@react-router/dev': '7.6.0',
+      },
+      removeDependencies: [
+        '@remix-run/react',
+        '@remix-run/server-runtime',
+        '@shopify/hydrogen',
+      ],
+      removeDevDependencies: [
+        '@remix-run/dev',
+        '@remix-run/fs-routes',
+      ],
+      dependenciesMeta: {},
+      fixes: [],
+      features: [],
+    };
+
+    const currentDependencies = {
+      '@shopify/hydrogen': '2025.4.0',
+      '@remix-run/react': '2.16.1',
+      '@remix-run/server-runtime': '2.16.1',
+      '@remix-run/dev': '2.16.1',
+      '@remix-run/fs-routes': '2.16.1',
+      'react': '^18.2.0',
+    };
+
+    const args = buildUpgradeCommandArgs({
+      selectedRelease,
+      currentDependencies,
+    });
+
+    // Should include new packages to install but not removed packages
+    expect(args).toEqual([
+      '@shopify/hydrogen@2025.5.0',
+      'react-router@7.6.0', 
+      'react-router-dom@7.6.0',
+      '@react-router/dev@7.6.0',
+      '@react-router/fs-routes@7.6.0',
+    ]);
+  });
+
+  it('handles empty remove dependencies arrays', async () => {
+    const selectedRelease: Release = {
+      title: 'Normal upgrade',
+      version: '2025.4.1',
+      hash: 'def456',
+      commit: 'https://github.com/Shopify/hydrogen/pull/2950',
+      pr: 'https://github.com/Shopify/hydrogen/pull/2950',
+      date: '2025-01-15',
+      dependencies: {
+        '@shopify/hydrogen': '2025.4.1',
+      },
+      devDependencies: {},
+      removeDependencies: [],
+      removeDevDependencies: [],
+      dependenciesMeta: {},
+      fixes: [],
+      features: [],
+    };
+
+    const currentDependencies = {
+      '@shopify/hydrogen': '2025.4.0',
+      'react': '^18.2.0',
+    };
+
+    const args = buildUpgradeCommandArgs({
+      selectedRelease,
+      currentDependencies,
+    });
+
+    expect(args).toEqual(['@shopify/hydrogen@2025.4.1']);
+  });
+
+  it('handles migration with React Router dependency detection', async () => {
+    const selectedRelease: Release = {
+      title: 'React Router 7 migration with removal',
+      version: '2025.5.0', 
+      hash: 'ghi789',
+      commit: 'https://github.com/Shopify/hydrogen/pull/2961',
+      pr: 'https://github.com/Shopify/hydrogen/pull/2961',
+      date: '2025-01-21',
+      dependencies: {
+        '@shopify/hydrogen': '2025.5.0',
+        'react-router': '7.6.0',
+        'react-router-dom': '7.6.0',
+      },
+      devDependencies: {
+        '@react-router/dev': '7.6.0',
+        '@react-router/fs-routes': '7.6.0',
+      },
+      removeDependencies: [
+        '@remix-run/react',
+        '@shopify/hydrogen',
+      ],
+      removeDevDependencies: [
+        '@remix-run/dev',
+      ],
+      dependenciesMeta: {},
+      fixes: [],
+      features: [],
+    };
+
+    // Current project has Remix dependencies but no React Router
+    const currentDependencies = {
+      '@shopify/hydrogen': '2025.4.0',
+      '@remix-run/react': '2.16.1',
+      '@remix-run/dev': '2.16.1',
+      'react': '^18.2.0',
+    };
+
+    const args = buildUpgradeCommandArgs({
+      selectedRelease,
+      currentDependencies,
+    });
+
+    // Should install new React Router packages since we're migrating
+    expect(args).toEqual([
+      '@shopify/hydrogen@2025.5.0',
+      'react-router@7.6.0',
+      'react-router-dom@7.6.0', 
+      '@react-router/dev@7.6.0',
+      '@react-router/fs-routes@7.6.0',
+    ]);
+  });
+});
