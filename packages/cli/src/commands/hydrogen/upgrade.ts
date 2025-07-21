@@ -816,9 +816,10 @@ function appendReactRouterDependencies({
   const targetVersion = getAbsoluteVersion(selectedReactRouter[1]);
 
   // Check if there are any React Router packages in current dependencies
-  const hasReactRouter = Object.keys(currentDependencies).some((pkg) =>
-    isReactRouterDependency([pkg, currentDependencies[pkg]]),
-  );
+  const hasReactRouter = Object.keys(currentDependencies).some((pkg) => {
+    const version = currentDependencies[pkg];
+    return version && isReactRouterDependency([pkg, version]);
+  });
 
   // Standard React Router packages that should be kept in sync
   const reactRouterPackages = [
