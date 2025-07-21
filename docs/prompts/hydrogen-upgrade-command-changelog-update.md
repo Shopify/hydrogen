@@ -157,10 +157,66 @@ git show COMMIT_HASH --name-only | grep templates/skeleton | grep -v "CHANGELOG.
 4. Complex changes should be broken into `steps` array
 5. Encode all code snippets as base64
 
-**Base64 encoding format:**
-- Use git diff format with `+` and `-` prefixes
-- Include sufficient context lines
-- Focus on user-facing changes, not internal implementation
+**CRITICAL: Steps vs Single Code Property**
+- Use `steps` array for multi-step migration processes (like React Router 7 migration)
+- Use single `code` property for simple code examples or fixes
+- **Steps generate upgrade instruction files** - these create `.hydrogen/upgrade-X-to-Y.md` files
+- **Without steps, no upgrade instructions are generated** - users get "No upgrade instructions generated" message
+
+**Steps Array Structure:**
+```json
+"steps": [
+  {
+    "title": "Step description",
+    "info": "Additional context about this step", 
+    "code": "base64EncodedDiffCode"
+  }
+]
+```
+
+**Base64 Encoding Requirements (CRITICAL):**
+- **ALWAYS** wrap code with ```diff ``` markers before encoding
+- **Format**: `echo '```diff\n[actual code]\n```' | base64 -w 0`
+- **Example valid encoding**:
+  ```bash
+  echo '```diff
+  npx codemod remix/2/react-router/upgrade
+  ```' | base64 -w 0
+  ```
+- **Use git diff format** with `+` and `-` prefixes for changes
+- **Include sufficient context lines**
+- **Focus on user-facing changes**, not internal implementation
+
+**Real-World Steps Example (React Router 7):**
+```json
+"steps": [
+  {
+    "title": "Run the automated migration codemod",
+    "info": "Use the community-created codemod to automatically update imports and package references",
+    "code": "YGBgZGlmZgpucHggY29kZW1vZCByZW1peC8yL3JlYWN0LXJvdXRlci91cGdyYWRlCmBgYA=="
+  },
+  {
+    "title": "Update remaining import statements manually", 
+    "info": "Some imports may need manual updates. Change @remix-run/* imports to react-router or @react-router/*",
+    "code": "YGBgZGlmZgotIGltcG9ydCB7IHJlZGlyZWN0LCBMb2FkZXJGdW5jdGlvbiB9IGZyb20gJ0ByZW1peC1ydW4vbm9kZSc7CisgaW1wb3J0IHsgcmVkaXJlY3QsIExvYWRlckZ1bmN0aW9uIH0gZnJvbSAncmVhY3Qtcm91dGVyJzsKYGBgCg=="
+  },
+  {
+    "title": "Add .react-router to .gitignore",
+    "info": "React Router 7 generates type files that should not be committed to version control", 
+    "code": "YGBgZGlmZgplY2hvICIKLnJlYWN0LXJvdXRlciIgPj4gLmdpdGlnbm9yZQpgYGAK"
+  },
+  {
+    "title": "Update dev script for React Router type generation",
+    "info": "Enable automatic type generation during development for better TypeScript support",
+    "code": "YGBgZGlmZgotICJkZXYiOiAic2hvcGlmeSBoeWRyb2dlbiBkZXYgLS1jb2RlZ2VuIiwKKyAiZGV2IjogInJlYWN0LXJvdXRlciB0eXBlZ2VuIC0td2F0Y2ggJiYgc2hvcGlmeSBoeWRyb2dlbiBkZXYgLS1jb2RlZ2VuIiwKYGBgCg=="
+  },
+  {
+    "title": "Verify your app starts and builds correctly",
+    "info": "Test that your application runs without errors after the migration",
+    "code": "YGBgZGlmZgpucG0gcnVuIGRldgpucG0gcnVuIGJ1aWxkCmBgYA=="
+  }
+]
+```
 
 ## STEP 3: DEPENDENCY MANAGEMENT
 
@@ -179,7 +235,25 @@ git show COMMIT_HASH --name-only | grep templates/skeleton | grep -v "CHANGELOG.
 #### Include dependency ONLY if:
 - **NEW**: Package newly added to skeleton
 - **VERSION CHANGED**: Package version updated in skeleton
-- **REMOVED**: Package removed from skeleton (remove from changelog too)
+- **REMOVED**: Package removed from skeleton (use removeDependencies/removeDevDependencies)
+
+#### Dependency Removal Support:
+For packages that need to be removed during migration (like Remix → React Router 7):
+```json
+{
+  "removeDependencies": [
+    "@remix-run/react",
+    "@remix-run/server-runtime",
+    "@shopify/hydrogen"
+  ],
+  "removeDevDependencies": [
+    "@remix-run/dev", 
+    "@remix-run/fs-routes",
+    "@remix-run/route-config"
+  ]
+}
+```
+**Note**: Include `@shopify/hydrogen` in removeDependencies to resolve peer dependency conflicts during major migrations.
 
 #### Framework Package Types (include only if changed in skeleton):
 - `@shopify/hydrogen` (usually changes with every major release)
@@ -235,22 +309,30 @@ Generate a JSON changelog entry:
 {
   "title": "[User-approved title covering major changes from all PRs]",
   "version": "[hydrogen version from LATEST PR's templates/skeleton/package.json]", 
+  "date": "[YYYY-MM-DD format]",
   "hash": "[LATEST PR merge commit hash]",
   "commit": "https://github.com/Shopify/hydrogen/pull/[LATEST_PR_NUMBER]/commits/[hash]",
+  "pr": "https://github.com/Shopify/hydrogen/pull/[LATEST_PR_NUMBER]",
   "dependencies": {
     // ONLY framework packages that changed in skeleton diff
   },
   "devDependencies": {
     // ONLY framework devDependencies that changed in skeleton diff
   },
+  "removeDependencies": [
+    // Packages to be removed during upgrade (for major migrations)
+  ],
+  "removeDevDependencies": [
+    // DevDependencies to be removed during upgrade
+  ],
   "dependenciesMeta": {
-    // Only for packages included above
+    // Only for packages included above with required: true
   },
   "fixes": [
     {
       "title": "[User-friendly fix description]",
-      "desc": "[Optional detailed description]",
-      "code": "[base64 encoded diff if migration needed]",
+      "info": "[Optional detailed description - use 'info' not 'desc']",
+      "code": "[base64 encoded ```diff code``` if migration needed]",
       "pr": "https://github.com/Shopify/hydrogen/pull/[PR_NUMBER]",
       "id": "[PR_NUMBER]"
     }
@@ -258,12 +340,14 @@ Generate a JSON changelog entry:
   "features": [
     {
       "title": "[User-friendly feature description]",
-      "desc": "[Optional detailed description]", 
-      "code": "[base64 encoded diff if migration needed]",
+      "info": "[Optional detailed description - use 'info' not 'desc']", 
+      "breaking": true, // Only for breaking changes
+      "code": "[base64 encoded ```diff code``` if simple migration needed]",
       "steps": [
         {
           "title": "[Step description]",
-          "code": "[base64 encoded diff for this step]"
+          "info": "[Additional context about this step]",
+          "code": "[base64 encoded ```diff code``` for this step]"
         }
       ],
       "pr": "https://github.com/Shopify/hydrogen/pull/[PR_NUMBER]",
@@ -375,6 +459,24 @@ Execute this systematic validation before finalizing any changelog entry:
 ✅ **Required Fields Present**: Ensured all mandatory fields (title, version, hash, commit, etc.) included?
 ✅ **URL Format Consistency**: Used correct GitHub URL patterns for PR links?
 ✅ **ID Consistency**: Matched PR IDs between commit URLs and individual change entries?
+
+### Phase 6: Code and Steps Validation
+✅ **Base64 Encoding Verification**: All code snippets properly base64 encoded with ```diff ``` wrappers?
+✅ **Steps vs Code Logic**: Complex migrations use `steps` array, simple changes use single `code` property?
+✅ **Instruction Generation Requirements**: Confirmed that features/fixes with `steps` will generate upgrade instructions?
+✅ **Dependency Removal Logic**: Properly used `removeDependencies`/`removeDevDependencies` for migration scenarios?
+
+**JSON Validation Commands:**
+```bash
+# Validate JSON syntax
+node -e "JSON.parse(require('fs').readFileSync('docs/changelog.json', 'utf8'))"
+
+# Verify base64 decoding  
+echo "BASE64_STRING" | base64 -d
+
+# Check steps presence
+node -e "console.log(JSON.parse(require('fs').readFileSync('docs/changelog.json', 'utf8')).releases[0].features[0].steps ? 'Has steps' : 'No steps')"
+```
 
 ### Final Quality Gate
 - **Cross-reference**: Verify generated entry consistency with similar entries in existing changelog.json
