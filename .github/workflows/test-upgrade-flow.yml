@@ -1,0 +1,43 @@
+name: Test Upgrade Flow
+
+on:
+  push:
+    paths:
+      - 'docs/changelog.json'
+  pull_request:
+    paths:
+      - 'docs/changelog.json'
+  workflow_dispatch:
+
+jobs:
+  test-upgrade-flow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build packages
+        run: npm run build:pkg
+
+      - name: Run upgrade flow tests
+        run: |
+          cd packages/cli
+          npm test upgrade-flow.test.ts
+        env:
+          FORCE_CHANGELOG_SOURCE: local
+          SHOPIFY_HYDROGEN_FLAG_FORCE: 1
+
+      - name: Report test results
+        if: always()
+        run: |
+          echo "✅ Upgrade flow tests completed"
+          echo "These tests verify dynamic version detection from changelog.json"

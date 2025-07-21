@@ -274,16 +274,36 @@ export async function getHydrogenVersion({appPath}: {appPath: string}) {
 export async function getChangelog(): Promise<ChangeLog> {
   if (CACHED_CHANGELOG) return CACHED_CHANGELOG;
 
-  // For local testing
+  // For local testing - force local changelog usage
   if (
-    isHydrogenMonorepo &&
-    hydrogenPackagesPath &&
-    process.env.FORCE_CHANGELOG_SOURCE !== 'remote'
+    process.env.FORCE_CHANGELOG_SOURCE === 'local' ||
+    (isHydrogenMonorepo &&
+      hydrogenPackagesPath &&
+      process.env.FORCE_CHANGELOG_SOURCE !== 'remote')
   ) {
     const require = createRequire(import.meta.url);
-    return require(
-      joinPath(dirname(hydrogenPackagesPath), 'docs', 'changelog.json'),
-    ) as ChangeLog;
+    const localChangelogPath =
+      isHydrogenMonorepo && hydrogenPackagesPath
+        ? joinPath(dirname(hydrogenPackagesPath), 'docs', 'changelog.json')
+        : joinPath(process.cwd(), 'docs', 'changelog.json');
+
+    try {
+      const changelog = require(localChangelogPath) as ChangeLog;
+      CACHED_CHANGELOG = changelog;
+      return changelog;
+    } catch (error) {
+      console.warn(
+        `Failed to load local changelog from ${localChangelogPath}:`,
+        (error as Error).message,
+      );
+      // Fall through to remote fetch if local fails and not explicitly forced
+      if (process.env.FORCE_CHANGELOG_SOURCE === 'local') {
+        throw new AbortError(
+          'Failed to load local changelog',
+          `Could not read changelog from ${localChangelogPath}`,
+        );
+      }
+    }
   }
 
   try {
