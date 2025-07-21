@@ -382,3 +382,55 @@ Execute this systematic validation before finalizing any changelog entry:
 - **Breaking Change Clarity**: Ensure breaking changes have adequate migration guidance
 
 **CRITICAL REMINDER**: This changelog entry becomes part of the Hydrogen CLI upgrade command that thousands of developers rely on. A single error can break upgrade paths and cause widespread issues. Exercise extreme care and precision.
+
+## STEP 5: CHANGELOG UPDATE (Final Step)
+
+After generating and validating the changelog entry, present it to the user and ask for final confirmation:
+
+### Present the Generated Entry
+Show the complete JSON changelog entry you generated and provide a summary:
+
+```
+## Generated Changelog Entry Complete
+
+**Summary:**
+- Title: [Generated title]
+- Version: [Version number]  
+- Dependencies: [Count] framework dependencies updated
+- Fixes: [Count] individual fix entries
+- Features: [Count] individual feature entries
+
+**Entry Details:**
+[Show the complete JSON entry]
+```
+
+### Request Final Confirmation
+Ask the user explicitly:
+
+```
+**Final Confirmation Required:**
+
+I've generated the changelog entry following all validation steps. 
+
+Would you like me to add this entry to the top of `docs/changelog.json`?
+
+This will:
+1. Insert the entry as the first item in the "releases" array
+2. Maintain existing JSON formatting and structure  
+3. Keep all other entries intact
+
+Please confirm: Should I proceed with updating the changelog? (y/n)
+```
+
+### If User Confirms (y/yes):
+1. **Read the current changelog.json file**
+2. **Parse the JSON structure** 
+3. **Insert the new entry** at the top of the "releases" array
+4. **Write the updated file** with proper formatting
+5. **Confirm completion**: "✅ Changelog successfully updated with new entry for version [X.Y.Z]"
+
+### If User Declines (n/no):
+- **Acknowledge**: "Understood. The changelog entry has been generated but not added to the file."
+- **Preserve**: "You can copy the generated JSON entry if you want to add it manually later."
+
+**IMPORTANT**: Only modify the changelog.json file if the user explicitly confirms. Never assume or proceed without clear permission.
