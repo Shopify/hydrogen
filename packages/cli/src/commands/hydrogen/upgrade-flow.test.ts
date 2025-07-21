@@ -73,8 +73,8 @@ describe('upgrade flow integration', () => {
       const toVersion = testVersions.latest?.version;
       if (!toVersion) throw new Error('Latest version not found');
 
-      // Use a specific commit we know exists - f03112d65
-      const commit = 'f03112d65';
+      // Use a recent commit that should exist in CI
+      const commit = 'a1185faa9';
       const actualFromVersion = await getVersionFromCommit(commit);
 
       const projectDir = await scaffoldHistoricalProject(
