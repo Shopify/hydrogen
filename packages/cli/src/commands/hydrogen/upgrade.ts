@@ -682,7 +682,7 @@ export function buildUpgradeCommandArgs({
       args.push(
         ...appendReactRouterDependencies({
           currentDependencies,
-          selectedRelease,
+          selectedReactRouter,
         }),
       );
     }
@@ -799,26 +799,41 @@ function appendRemixDependencies({
  */
 function appendReactRouterDependencies({
   currentDependencies,
-  selectedRelease,
+  selectedReactRouter,
 }: {
   currentDependencies: Record<string, string>;
-  selectedRelease: Release;
+  selectedReactRouter: [string, string];
 }) {
   const command: string[] = [];
+  const targetVersion = getAbsoluteVersion(selectedReactRouter[1]);
   
-  // Add all React Router dependencies and devDependencies from the selected release
-  const allSelectedDeps = {
-    ...selectedRelease.dependencies,
-    ...selectedRelease.devDependencies,
-  };
+  // Check if there are any React Router packages in current dependencies
+  const hasReactRouter = Object.keys(currentDependencies).some(pkg => 
+    isReactRouterDependency([pkg, currentDependencies[pkg]])
+  );
   
-  for (const [name, version] of Object.entries(allSelectedDeps)) {
-    const isReactRouterPackage = isReactRouterDependency([name, version]);
-    if (!isReactRouterPackage) {
-      continue;
+  // Standard React Router packages that should be kept in sync
+  const reactRouterPackages = [
+    'react-router',
+    'react-router-dom', 
+    '@react-router/dev',
+    '@react-router/fs-routes'
+  ];
+  
+  if (hasReactRouter) {
+    // If already using React Router, only upgrade existing packages
+    for (const packageName of reactRouterPackages) {
+      if (packageName in currentDependencies) {
+        command.push(`${packageName}@${targetVersion}`);
+      }
     }
-    command.push(`${name}@${getAbsoluteVersion(version)}`);
+  } else {
+    // If migrating to React Router (e.g., from Remix), add all standard packages
+    for (const packageName of reactRouterPackages) {
+      command.push(`${packageName}@${targetVersion}`);
+    }
   }
+  
   return command;
 }
 
