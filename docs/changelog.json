@@ -94,6 +94,11 @@
               "code": "YGBgZGlmZgotICJkZXYiOiAic2hvcGlmeSBoeWRyb2dlbiBkZXYgLS1jb2RlZ2VuIiwKKyAiZGV2IjogInJlYWN0LXJvdXRlciB0eXBlZ2VuIC0td2F0Y2ggJiYgc2hvcGlmeSBoeWRyb2dlbiBkZXYgLS1jb2RlZ2VuIiwKYGBgCg=="
             },
             {
+              "title": "Configure React Router build output directory",
+              "info": "Create react-router.config.ts to specify 'dist' as build directory (required by Hydrogen preview)",
+              "code": "YGBgZGlmZgovLyByZWFjdC1yb3V0ZXIuY29uZmlnLnRzCitpbXBvcnQgdHlwZSB7Q29uZmlnfSBmcm9tICJAcmVhY3Qtcm91dGVyL2Rldi9jb25maWciOworCitleHBvcnQgZGVmYXVsdCB7CisgIGFwcERpcmVjdG9yeTogImFwcCIsCisgIGJ1aWxkRGlyZWN0b3J5OiAiZGlzdCIsCisgIHNzcjogdHJ1ZSwKK30gc2F0aXNmaWVzIENvbmZpZzsKYGBg"
+            },
+            {
               "title": "Verify your app starts and builds correctly",
               "info": "Test that your application runs without errors after the migration",
               "code": "YGBgZGlmZgpucG0gcnVuIGRldgpucG0gcnVuIGJ1aWxkCmBgYA=="
