@@ -1,10 +1,12 @@
 import {describe, it, expect} from 'vitest';
-import {mkdtemp, readFile} from 'node:fs/promises';
+import {mkdtemp, readFile, writeFile, mkdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {exec} from '@shopify/cli-kit/node/system';
 import {execAsync} from '../../lib/process.js';
 import {getChangelog, type Release} from './upgrade.js';
+import {spawn, ChildProcess} from 'node:child_process';
+import getPort from 'get-port';
 
 describe('upgrade flow integration', () => {
   async function getTestVersions() {
@@ -446,34 +448,154 @@ async function validateProjectHealth(projectDir: string, phase: string) {
     }
   }
 
-  // Test dev server startup (with timeout)
+  // Enhanced dev server test with actual HTTP validation
   if (packageJson.scripts?.dev) {
-    try {
-      const devProcess = exec('npm', ['run', 'dev'], {cwd: projectDir});
+    console.log(`Testing dev server in ${phase}...`);
 
-      await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          // Note: devProcess is a Promise<void>, not a process with kill method
-          // For testing purposes, we'll just resolve after timeout
-          resolve();
-        }, 15000); // Increased timeout for dev server
+    // Add a test route before starting the server
+    await addTestRoute(projectDir);
 
-        devProcess
-          .then(() => {
-            clearTimeout(timeout);
-            reject(new Error('Dev server exited unexpectedly'));
-          })
-          .catch(() => {
-            clearTimeout(timeout);
-            resolve();
-          });
-      });
-    } catch (error) {
+    // Test the dev server with actual HTTP requests
+    await testDevServer(projectDir, phase);
+  }
+}
+
+async function addTestRoute(projectDir: string) {
+  // Create a test route that we can check
+  const testRouteContent = `
+export default function TestRoute() {
+  return (
+    <div>
+      <h1 data-testid="upgrade-test-route">Upgrade Test Route</h1>
+      <p>If you can see this, the server is running without import errors!</p>
+      <div id="hydrogen-version">{process.env.npm_package_dependencies__shopify_hydrogen || 'unknown'}</div>
+    </div>
+  );
+}
+`;
+
+  const routesDir = join(projectDir, 'app', 'routes');
+  await writeFile(join(routesDir, 'test-upgrade.tsx'), testRouteContent);
+}
+
+async function testDevServer(projectDir: string, phase: string) {
+  const port = await getPort({port: [3000, 3001, 3002, 3003]});
+  let devProcess: ChildProcess | null = null;
+
+  try {
+    // Start the dev server with a specific port
+    devProcess = spawn('npm', ['run', 'dev', '--', '--port', port.toString()], {
+      cwd: projectDir,
+      env: {...process.env, PORT: port.toString()},
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+
+    let serverOutput = '';
+    let serverErrors = '';
+
+    // Capture output to detect errors
+    devProcess.stdout?.on('data', (data) => {
+      serverOutput += data.toString();
+      console.log(`[${phase} dev server stdout]:`, data.toString());
+    });
+
+    devProcess.stderr?.on('data', (data) => {
+      serverErrors += data.toString();
+      console.error(`[${phase} dev server stderr]:`, data.toString());
+    });
+
+    // Wait for server to be ready
+    const serverReady = await waitForServer(
+      `http://localhost:${port}`,
+      30000, // 30 second timeout
+      () => {
+        // Check if process has critical errors
+        if (
+          serverErrors.includes('Cannot find module') ||
+          serverErrors.includes('Module not found') ||
+          serverErrors.includes('Failed to resolve import')
+        ) {
+          throw new Error(`Import/dependency errors detected: ${serverErrors}`);
+        }
+      },
+    );
+
+    if (!serverReady) {
       throw new Error(
-        `Dev server validation failed in ${phase}: ${(error as Error).message}`,
+        `Dev server failed to start. Output: ${serverOutput}\nErrors: ${serverErrors}`,
       );
     }
+
+    // Test the root route
+    console.log(`Testing root route at http://localhost:${port}/`);
+    const rootResponse = await fetch(`http://localhost:${port}/`);
+    const rootHtml = await rootResponse.text();
+
+    // Check for basic HTML structure and no error messages
+    expect(rootResponse.status).toBe(200);
+    expect(rootHtml).toContain('<!DOCTYPE html>');
+    expect(rootHtml).toContain('<html');
+    expect(rootHtml).not.toContain('Error:');
+    expect(rootHtml).not.toContain('Cannot find module');
+    expect(rootHtml).not.toContain('Failed to resolve import');
+
+    // Test our specific test route
+    console.log(
+      `Testing upgrade test route at http://localhost:${port}/test-upgrade`,
+    );
+    const testResponse = await fetch(`http://localhost:${port}/test-upgrade`);
+    const testHtml = await testResponse.text();
+
+    expect(testResponse.status).toBe(200);
+    expect(testHtml).toContain('Upgrade Test Route');
+    expect(testHtml).toContain('server is running without import errors');
+
+    console.log(`✅ Dev server validation passed for ${phase}`);
+  } catch (error) {
+    throw new Error(
+      `Dev server validation failed in ${phase}: ${(error as Error).message}`,
+    );
+  } finally {
+    // Clean up: kill the dev server
+    if (devProcess) {
+      devProcess.kill('SIGTERM');
+      // Give it a moment to clean up
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (!devProcess.killed) {
+        devProcess.kill('SIGKILL');
+      }
+    }
   }
+}
+
+async function waitForServer(
+  url: string,
+  timeout: number,
+  errorCheck?: () => void,
+): Promise<boolean> {
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < timeout) {
+    try {
+      // Run error check if provided
+      if (errorCheck) {
+        errorCheck();
+      }
+
+      const response = await fetch(url);
+      if (response.status < 500) {
+        // Server is responding (even 404 is fine, server is up)
+        return true;
+      }
+    } catch (error) {
+      // Server not ready yet, continue waiting
+    }
+
+    // Wait a bit before trying again
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  return false;
 }
 
 async function runUpgradeCommand(projectDir: string, toVersion: string) {
@@ -483,16 +605,160 @@ async function runUpgradeCommand(projectDir: string, toVersion: string) {
     SHOPIFY_HYDROGEN_FLAG_FORCE: '1',
   };
 
+  console.log(`Running upgrade command to version ${toVersion}...`);
+
   try {
-    const result = await execAsync(
-      `npx shopify hydrogen upgrade --version ${toVersion} --force`,
+    // Use spawn to capture all output
+    const upgradeProcess = spawn(
+      'npx',
+      ['shopify', 'hydrogen', 'upgrade', '--version', toVersion, '--force'],
       {
         cwd: projectDir,
         env: upgradeEnv,
+        stdio: ['pipe', 'pipe', 'pipe'],
+        shell: true,
       },
+    );
+
+    let stdout = '';
+    let stderr = '';
+    let hasNpmConflicts = false;
+    let conflictDetails: string[] = [];
+
+    // Capture stdout
+    upgradeProcess.stdout?.on('data', (data) => {
+      const output = data.toString();
+      stdout += output;
+      console.log('[upgrade stdout]:', output);
+
+      // Check for npm conflict indicators
+      if (
+        output.includes('npm ERR!') ||
+        output.includes('peer dep missing') ||
+        output.includes('ERESOLVE') ||
+        output.includes('unable to resolve dependency tree') ||
+        output.includes('Could not resolve dependency') ||
+        output.includes('conflicting peer dependency')
+      ) {
+        hasNpmConflicts = true;
+        conflictDetails.push(output);
+      }
+    });
+
+    // Capture stderr
+    upgradeProcess.stderr?.on('data', (data) => {
+      const error = data.toString();
+      stderr += error;
+      console.error('[upgrade stderr]:', error);
+
+      // Check for npm errors in stderr as well
+      if (
+        error.includes('npm ERR!') ||
+        error.includes('ERESOLVE') ||
+        error.includes('peer dep missing') ||
+        error.includes('unable to resolve dependency tree')
+      ) {
+        hasNpmConflicts = true;
+        conflictDetails.push(error);
+      }
+    });
+
+    // Wait for the process to complete
+    const exitCode = await new Promise<number>((resolve) => {
+      upgradeProcess.on('close', (code) => {
+        resolve(code || 0);
+      });
+    });
+
+    // Check if upgrade completed successfully
+    if (exitCode !== 0) {
+      throw new Error(
+        `Upgrade command exited with code ${exitCode}\nStdout: ${stdout}\nStderr: ${stderr}`,
+      );
+    }
+
+    // Check for npm conflicts even if exit code is 0
+    if (hasNpmConflicts) {
+      throw new Error(
+        `NPM dependency conflicts detected during upgrade:\n${conflictDetails.join('\n')}\n\nFull output:\n${stdout}\n${stderr}`,
+      );
+    }
+
+    // Validate that the upgrade actually made changes
+    if (!stdout.includes('Upgrading') && !stdout.includes('Updated')) {
+      console.warn('Warning: Upgrade command may not have made any changes');
+    }
+
+    // Additional validation: Check npm install works after upgrade
+    console.log('Validating npm install after upgrade...');
+    await validateNpmInstall(projectDir);
+
+    console.log(
+      '✅ Upgrade command completed successfully without npm conflicts',
     );
   } catch (error) {
     throw new Error(`Upgrade command failed: ${(error as Error).message}`);
+  }
+}
+
+async function validateNpmInstall(projectDir: string) {
+  console.log('Running npm install to check for dependency conflicts...');
+
+  try {
+    const installProcess = spawn('npm', ['install'], {
+      cwd: projectDir,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      shell: true,
+    });
+
+    let stdout = '';
+    let stderr = '';
+    let hasErrors = false;
+    let errorDetails: string[] = [];
+
+    installProcess.stdout?.on('data', (data) => {
+      const output = data.toString();
+      stdout += output;
+
+      // Check for resolution errors
+      if (
+        output.includes('npm ERR!') ||
+        output.includes('ERESOLVE') ||
+        output.includes('unable to resolve dependency tree') ||
+        output.includes('peer dep missing')
+      ) {
+        hasErrors = true;
+        errorDetails.push(output);
+      }
+    });
+
+    installProcess.stderr?.on('data', (data) => {
+      const error = data.toString();
+      stderr += error;
+
+      if (error.includes('npm ERR!') || error.includes('ERESOLVE')) {
+        hasErrors = true;
+        errorDetails.push(error);
+      }
+    });
+
+    const exitCode = await new Promise<number>((resolve) => {
+      installProcess.on('close', (code) => {
+        resolve(code || 0);
+      });
+    });
+
+    if (exitCode !== 0 || hasErrors) {
+      throw new Error(
+        `npm install failed after upgrade with dependency conflicts:\n${errorDetails.join('\n')}\n\nExit code: ${exitCode}\nStdout: ${stdout}\nStderr: ${stderr}`,
+      );
+    }
+
+    console.log('✅ npm install completed successfully after upgrade');
+  } catch (error) {
+    throw new Error(
+      `Post-upgrade npm install validation failed: ${(error as Error).message}`,
+    );
   }
 }
 
