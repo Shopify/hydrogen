@@ -3,7 +3,7 @@
   "version": "1",
   "releases": [
     {
-      "title": "React Router 7 migration, remove legacy Remix compiler support",
+      "title": "⚠️ CHECK GUIDE FIRST: React Router 7 migration",
       "version": "2025.5.0",
       "date": "2025-01-21",
       "hash": "3dbbb1ee554d96261a2249d8126c8afd11e7ad47",
@@ -24,25 +24,17 @@
         "@shopify/oxygen-workers-types": "^4.1.6",
         "vite": "^6.2.4"
       },
-      "removeDependencies": [
-        "@remix-run/react",
-        "@remix-run/server-runtime",
-        "@shopify/hydrogen"
-      ],
-      "removeDevDependencies": [
-        "@remix-run/dev",
-        "@remix-run/fs-routes",
-        "@remix-run/route-config"
-      ],
+      "removeDependencies": [],
+      "removeDevDependencies": [],
       "dependenciesMeta": {
-        "@shopify/hydrogen": { "required": true },
-        "@shopify/remix-oxygen": { "required": true },
-        "react-router": { "required": true },
-        "react-router-dom": { "required": true },
-        "@react-router/dev": { "required": true },
-        "@react-router/fs-routes": { "required": true },
-        "@shopify/cli": { "required": true },
-        "@shopify/mini-oxygen": { "required": true }
+        "@shopify/hydrogen": {"required": true},
+        "@shopify/remix-oxygen": {"required": true},
+        "react-router": {"required": true},
+        "react-router-dom": {"required": true},
+        "@react-router/dev": {"required": true},
+        "@react-router/fs-routes": {"required": true},
+        "@shopify/cli": {"required": true},
+        "@shopify/mini-oxygen": {"required": true}
       },
       "fixes": [
         {
@@ -69,10 +61,15 @@
       "features": [
         {
           "title": "Migrate to React Router 7",
-          "info": "Major framework migration from Remix to React Router 7 with updated routing, build system, and development tools",
+          "info": "IMPORTANT: You must first remove Remix dependencies before upgrading to avoid npm conflicts. See the first step in the upgrade guide.",
           "pr": "https://github.com/Shopify/hydrogen/pull/2866",
           "id": "2866",
           "steps": [
+            {
+              "title": "IMPORTANT: Remove Remix dependencies and complete the upgrade",
+              "info": "Due to dependency conflicts, you must remove Remix packages then rerun the upgrade command with --force flag. Run this complete command:",
+              "code": "YGBgYmFzaApucG0gdW5pbnN0YWxsIEByZW1peC1ydW4vcmVhY3QgQHJlbWl4LXJ1bi9kZXYgQHJlbWl4LXJ1bi9zZXJ2ZXItcnVudGltZSBAcmVtaXgtcnVuL2ZzLXJvdXRlcyBAcmVtaXgtcnVuL3JvdXRlLWNvbmZpZyAmJiBoMiB1cGdyYWRlIC0tdmVyc2lvbj0yMDI1LjUuMCAtLWZvcmNlCmBgYAo="
+            },
             {
               "title": "Run the automated migration codemod",
               "info": "Use the community-created codemod to automatically update imports and package references",
