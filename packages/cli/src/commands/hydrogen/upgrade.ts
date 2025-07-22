@@ -675,10 +675,11 @@ export function buildUpgradeCommandArgs({
     // This handles both upgrades and migrations (e.g., from Remix to React Router)
     const shouldUpgradeReactRouter =
       !currentReactRouter ||
-      semver.lt(
-        getAbsoluteVersion(currentReactRouter[1]),
-        getAbsoluteVersion(selectedReactRouter[1]),
-      );
+      (Array.isArray(currentReactRouter) &&
+        semver.lt(
+          getAbsoluteVersion(currentReactRouter[1]),
+          getAbsoluteVersion(selectedReactRouter[1]),
+        ));
 
     if (shouldUpgradeReactRouter) {
       args.push(
