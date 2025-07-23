@@ -187,3 +187,211 @@ Developer's Project (e.g., skeleton template)
 2. This executes `shopify hydrogen dev --codegen`
 3. `@shopify/cli` receives the command and delegates to `@shopify/cli-hydrogen`
 4. The hydrogen plugin executes the dev server with MiniOxygen
+
+## Essential Commands
+
+### Monorepo Commands
+```bash
+npm run dev              # Run dev in all packages (Turborepo parallel)
+npm run build           # Build all packages
+npm run test            # Run all tests in parallel
+npm run typecheck       # TypeScript check all packages
+npm run lint            # ESLint all packages
+npm run format          # Prettier format
+npm run changeset add   # Add a changeset for releases
+```
+
+### Package-Specific Development
+```bash
+# Run dev for specific package
+cd packages/hydrogen && npm run dev
+
+# Test specific package
+cd packages/hydrogen && npm run test
+
+# Run tests in watch mode
+cd packages/hydrogen && npm run test:watch
+
+# Build docs for a package
+cd packages/hydrogen && npm run build-docs
+```
+
+### Template Development
+```bash
+# Primary development flow
+npm run dev:app  # Runs skeleton template in dev mode
+
+# Apply cookbook recipe
+cd cookbook && npm run cookbook -- apply --recipe [recipe-name]
+
+# Generate new recipe from changes
+cd cookbook && npm run cookbook -- generate --recipe [recipe-name]
+```
+
+### Testing Individual Files
+```bash
+# Vitest is used for testing - run specific test files
+cd packages/hydrogen && npx vitest run path/to/test.test.ts
+```
+
+## Architecture Overview
+
+### Technology Stack
+- **Framework**: React Router 7 (migrated from Remix, but package names still contain "remix")
+- **Runtime**: Oxygen (Shopify's edge runtime)
+- **Build**: Turborepo for monorepo orchestration
+- **Testing**: Vitest for unit tests
+- **Bundling**: Various (tsup for packages, Vite for templates)
+
+### Package Dependency Graph
+```
+@shopify/hydrogen-react (base components)
+    ↓
+@shopify/hydrogen (framework)
+    ↓
+@shopify/remix-oxygen (React Router adapter for Oxygen)
+    ↓
+@shopify/mini-oxygen (local dev server)
+    ↓
+@shopify/hydrogen-codegen (GraphQL codegen)
+    ↓
+@shopify/cli-hydrogen (CLI plugin)
+    ↓
+@shopify/create-hydrogen (project generator)
+```
+
+### Key Directories
+- `packages/` - Published npm packages
+- `templates/skeleton/` - Main development template
+- `examples/` - Feature-specific examples
+- `cookbook/recipes/` - Reproducible feature implementations
+
+## Vite Build Architecture
+
+### Under the Hood
+Vite uses different tools for different parts of the build process:
+
+**Development Server**
+- Uses native ES modules in the browser
+- ESBuild for fast TypeScript/JSX transformation
+- No bundling required - modules served on demand
+
+**Production Build**
+- **Rollup** as the primary bundler
+- Configured via `rollupOptions` in vite.config.ts
+- ESBuild for minification and transformations
+
+### Evidence in Hydrogen Codebase
+```typescript
+// packages/hydrogen-react/vite.config.ts:23
+rollupOptions: {
+  external: [...],
+  output: {
+    preserveModules: true,
+    preserveModulesRoot: 'src',
+  },
+}
+
+// packages/cli/src/commands/hydrogen/build.ts:281
+vite.transformWithEsbuild(code, filepath, {
+  minify: true,
+  minifyWhitespace: true,
+  minifySyntax: true,
+  // ...
+})
+```
+
+### Why Rollup for Production?
+- Tree-shaking capabilities
+- ES module output support
+- Plugin ecosystem compatibility
+- Efficient code splitting
+
+### Vite's Dual-Engine Approach
+1. **Development**: ESBuild (speed-optimized)
+   - Transpiles TypeScript/JSX 10-100x faster than traditional bundlers
+   - No bundling overhead
+
+2. **Production**: Rollup (optimization-focused)
+   - Better tree-shaking than ESBuild
+   - More mature plugin ecosystem
+   - Finer control over output format
+
+### React Router 7 Context
+- Configuration in `react-router.config.ts` (not `remix.config.js`)
+- Uses `@react-router/dev` for build tooling
+- Some package names still reference "remix"
+- Routes follow React Router 7 file conventions
+- **Build folder**: React Router defaults to `build` for assets, but Hydrogen and Oxygen expect `dist` (legacy from Remix)
+
+## Oxygen and MiniOxygen Runtime
+
+### Oxygen Hosting Platform
+- **Oxygen** is Shopify's global edge hosting platform for Hydrogen storefronts
+- Currently built on Cloudflare Workers infrastructure
+- Future flexibility: May expand to additional hosting providers alongside or instead of Cloudflare
+- Provides production runtime environment specifically optimized for commerce workloads
+- Automatic global distribution across edge locations
+
+### MiniOxygen - Local Development Runtime
+**MiniOxygen** simulates the Oxygen production environment locally during development.
+
+**Key Features:**
+- Built on Cloudflare's `workerd` (the same runtime that powers Cloudflare Workers)
+- Uses Miniflare v4 to provide local Worker environment
+- Ensures development/production parity - if it works locally, it works in production
+- Supports full Worker APIs including KV, Durable Objects, and other bindings
+- Provides request logging, debugging, and inspector support
+
+**Architecture:**
+```
+MiniOxygen
+    ├── Worker Runtime (workerd via Miniflare)
+    │   ├── Main Hydrogen Worker
+    │   └── Middleware Worker (for routing/debugging)
+    ├── Assets Server (serves static files)
+    └── Debug/Inspector Server
+```
+
+### Development Commands
+
+**`shopify hydrogen dev`**
+- Starts MiniOxygen in development mode
+- Enables hot module replacement (HMR)
+- Provides detailed logging and debugging
+- Runs on `http://localhost:3000` by default
+- Includes GraphiQL explorer and network profiler
+
+**`shopify hydrogen preview`**
+- Runs production build in MiniOxygen
+- Simulates **exact** production behavior
+- No HMR or development features
+- Used for final testing before deployment
+- Key principle: **If it works with `h2 preview`, it will work in production**
+
+**Preview Command Options:**
+```bash
+# Run existing build
+shopify hydrogen preview
+
+# Build and preview
+shopify hydrogen preview --build
+
+# Build, preview, and watch for changes
+shopify hydrogen preview --build --watch
+```
+
+### Worker Configuration
+MiniOxygen creates multiple workers:
+1. **Middleware Worker** - Handles routing, profiling, and special endpoints
+2. **Main Hydrogen Worker** - Runs your application code
+3. **Service Bindings** - Connects workers for debugging and asset serving
+
+### Production Parity Guarantees
+- Same V8 isolate environment as production
+- Identical request/response handling
+- Same security sandbox and limitations
+- Matching performance characteristics
+- Consistent global object availability
+
+**Important**: Always test with `shopify hydrogen preview` before deploying to ensure production compatibility.
