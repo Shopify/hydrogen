@@ -3,7 +3,7 @@
   "version": "1",
   "releases": [
     {
-      "title": "⚠️ CHECK GUIDE FIRST: React Router 7 migration",
+      "title": "React Router 7 migration",
       "version": "2025.5.0",
       "date": "2025-01-21",
       "hash": "3dbbb1ee554d96261a2249d8126c8afd11e7ad47",
