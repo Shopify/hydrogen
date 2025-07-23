@@ -463,6 +463,8 @@ describe('upgrade flow integration', () => {
         releaseIndex++
       ) {
         const release = changelog.releases[releaseIndex];
+        if (!release) continue; // Skip if undefined (shouldn't happen in practice)
+
         // Check for rogue fields in release using Set for O(1) lookup
         const releaseKeys = Object.keys(release);
         const rogueReleaseFields = releaseKeys.filter(
@@ -503,6 +505,8 @@ describe('upgrade flow integration', () => {
             featureIndex++
           ) {
             const feature = release.features[featureIndex];
+            if (!feature) continue; // Skip if undefined
+
             const featureKeys = Object.keys(feature);
             const rogueFeatureFields = featureKeys.filter(
               (key) => !allowedItemFields.has(key),
@@ -526,6 +530,8 @@ describe('upgrade flow integration', () => {
                 stepIndex++
               ) {
                 const step = feature.steps[stepIndex];
+                if (!step) continue; // Skip if undefined
+
                 const stepKeys = Object.keys(step);
                 const rogueStepFields = stepKeys.filter(
                   (key) => !allowedStepFields.has(key),
@@ -550,6 +556,8 @@ describe('upgrade flow integration', () => {
         if (release.fixes) {
           for (let fixIndex = 0; fixIndex < release.fixes.length; fixIndex++) {
             const fix = release.fixes[fixIndex];
+            if (!fix) continue; // Skip if undefined
+
             const fixKeys = Object.keys(fix);
             const rogueFixFields = fixKeys.filter(
               (key) => !allowedItemFields.has(key),
@@ -573,6 +581,8 @@ describe('upgrade flow integration', () => {
                 stepIndex++
               ) {
                 const step = fix.steps[stepIndex];
+                if (!step) continue; // Skip if undefined
+
                 const stepKeys = Object.keys(step);
                 const rogueStepFields = stepKeys.filter(
                   (key) => !allowedStepFields.has(key),
