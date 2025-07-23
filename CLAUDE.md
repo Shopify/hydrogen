@@ -187,3 +187,55 @@ Developer's Project (e.g., skeleton template)
 2. This executes `shopify hydrogen dev --codegen`
 3. `@shopify/cli` receives the command and delegates to `@shopify/cli-hydrogen`
 4. The hydrogen plugin executes the dev server with MiniOxygen
+
+## Skeleton Template and Project Scaffolding
+
+### Skeleton Template Location
+The skeleton template is the default starter template for new Hydrogen projects:
+- Located at `templates/skeleton/` in the Hydrogen repo
+- Serves as the foundation for `npm create @shopify/hydrogen@latest`
+- Includes both TypeScript configuration (default) and can be transpiled to JavaScript
+
+### How Project Scaffolding Works
+
+When developers run `npm create @shopify/hydrogen@latest`:
+
+1. **Package Resolution**
+   - npm resolves `@shopify/create-hydrogen` package
+   - This package calls the `hydrogen init` command from `@shopify/cli-hydrogen`
+
+2. **Template Fetching**
+   - Downloads the latest Hydrogen release tarball from GitHub
+   - Uses GitHub API: `https://api.github.com/repos/shopify/hydrogen/releases/latest`
+   - Extracts the skeleton template from the tarball
+   - Falls back to local template if running within Hydrogen monorepo
+
+3. **Template Compilation** (during release)
+   - On production releases, templates are compiled to the `dist` branch
+   - Creates both TypeScript (`skeleton-ts`) and JavaScript (`skeleton-js`) versions
+   - The `dist` branch serves as a stable source for templates
+
+### CLI Version Coordination
+
+**Critical Dependency Chain**:
+```
+@shopify/cli-hydrogen (in Hydrogen repo)
+    ↓ used by
+@shopify/cli (main Shopify CLI)
+    ↓ installed in
+skeleton template's devDependencies
+```
+
+**Version Update Process**:
+1. When updating `@shopify/cli-hydrogen` with new features
+2. Must coordinate a minor version release of `@shopify/cli`
+3. Then update `skeleton/package.json` to use the new `@shopify/cli` version
+4. This ensures new projects get CLI features that match their Hydrogen version
+
+**Example**:
+- Update hydrogen CLI with new command → Release `@shopify/cli-hydrogen` v11.1.0
+- Shopify releases `@shopify/cli` v3.80.4 with updated hydrogen plugin
+- Update skeleton template to use `"@shopify/cli": "~3.80.4"`
+- New projects scaffolded will have access to the new command
+
+**Important**: When releasing new Hydrogen CLI features, the skeleton template must be updated to use a version of `@shopify/cli` that includes those features. Otherwise, newly scaffolded projects won't have access to CLI commands that should be available for their Hydrogen version.
