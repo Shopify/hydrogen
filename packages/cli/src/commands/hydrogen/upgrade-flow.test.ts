@@ -380,6 +380,250 @@ describe('upgrade flow integration', () => {
       // Skip npm install check as upgrade command should have handled it
     }, 180000);
   });
+
+  describe('Changelog validation', () => {
+    it('validates changelog.json follows correct structure and has no rogue fields', async () => {
+      // First validate that the changelog is valid JSON by reading it directly
+      const changelogPath = join(process.cwd(), '../../docs/changelog.json');
+      const changelogContent = await readFile(changelogPath, 'utf8');
+      
+      // Validate JSON syntax
+      let parsedChangelog;
+      try {
+        parsedChangelog = JSON.parse(changelogContent);
+      } catch (error) {
+        throw new Error(`Invalid JSON in changelog.json: ${(error as Error).message}`);
+      }
+      
+      // Also get changelog through the module for consistency
+      const changelog = await upgradeModule.getChangelog();
+      
+      // Ensure both are the same
+      expect(changelog).toEqual(parsedChangelog);
+
+      // Validate top-level changelog structure
+      const allowedChangelogFields = ['url', 'version', 'releases'];
+      const changelogKeys = Object.keys(changelog);
+      const rogueChangelogFields = changelogKeys.filter(
+        (key) => !allowedChangelogFields.includes(key),
+      );
+      expect(rogueChangelogFields).toEqual([]);
+
+      // Pre-compile field sets for efficient lookups
+      const allowedReleaseFields = new Set([
+        'title',
+        'version',
+        'date',
+        'hash',
+        'commit',
+        'pr',
+        'dependencies',
+        'devDependencies',
+        'dependenciesMeta',
+        'removeDependencies',
+        'removeDevDependencies',
+        'features',
+        'fixes',
+      ]);
+
+      const allowedItemFields = new Set([
+        'title',
+        'info',
+        'pr',
+        'id',
+        'breaking',
+        'docs',
+        'steps',
+        'desc',
+        'code',
+        'description',
+      ]);
+      
+      const allowedStepFields = new Set([
+        'title',
+        'info',
+        'code',
+        'file',
+        'reel',
+        'desc',
+        'docs',
+      ]);
+
+      // Pre-compile regular expressions for better performance
+      const urlRegex = /^https:\/\/.+/;
+      const versionRegex = /^\d{4}\.\d+\.\d+$/;
+      const semverRegex = /^[\^~]?\d+\.\d+\.\d+.*$/;
+
+      // Validate each release efficiently
+      for (let releaseIndex = 0; releaseIndex < changelog.releases.length; releaseIndex++) {
+        const release = changelog.releases[releaseIndex];
+        // Check for rogue fields in release using Set for O(1) lookup
+        const releaseKeys = Object.keys(release);
+        const rogueReleaseFields = releaseKeys.filter(
+          (key) => !allowedReleaseFields.has(key),
+        );
+        expect(rogueReleaseFields).toEqual([]);
+
+        // Validate required fields
+        expect(release.title).toBeDefined();
+        expect(release.version).toBeDefined();
+        expect(release.hash).toBeDefined();
+        expect(release.commit).toBeDefined();
+        expect(release.dependencies).toBeDefined();
+        expect(release.devDependencies).toBeDefined();
+        expect(release.features).toBeDefined();
+        expect(release.fixes).toBeDefined();
+
+        // Validate URL formats using pre-compiled regex
+        if (release.pr) {
+          expect(typeof release.pr).toBe('string');
+        }
+        expect(release.commit).toMatch(urlRegex);
+
+        // Validate version format using pre-compiled regex
+        expect(release.version).toMatch(versionRegex);
+
+        // Validate date format (flexible format)
+        if (release.date) {
+          expect(typeof release.date).toBe('string');
+          expect(release.date.length).toBeGreaterThan(0);
+        }
+
+        // Validate features efficiently
+        if (release.features) {
+          for (let featureIndex = 0; featureIndex < release.features.length; featureIndex++) {
+            const feature = release.features[featureIndex];
+            const featureKeys = Object.keys(feature);
+            const rogueFeatureFields = featureKeys.filter(
+              (key) => !allowedItemFields.has(key),
+            );
+            expect(rogueFeatureFields).toEqual([]);
+
+            // Validate required fields
+            expect(feature.title).toBeDefined();
+
+            // Validate pr field format (can be URL or text)
+            if (feature.pr) {
+              expect(typeof feature.pr).toBe('string');
+            }
+
+            // Validate steps if present
+            if (feature.steps) {
+              expect(Array.isArray(feature.steps)).toBe(true);
+              for (let stepIndex = 0; stepIndex < feature.steps.length; stepIndex++) {
+                const step = feature.steps[stepIndex];
+                const stepKeys = Object.keys(step);
+                const rogueStepFields = stepKeys.filter(
+                  (key) => !allowedStepFields.has(key),
+                );
+                expect(rogueStepFields).toEqual([]);
+
+                // Validate required step fields
+                expect(step.title).toBeDefined();
+
+                // Validate base64 encoded code
+                if (step.code) {
+                  expect(() =>
+                    Buffer.from(step.code, 'base64').toString(),
+                  ).not.toThrow();
+                }
+              }
+            }
+          }
+        }
+
+        // Validate fixes efficiently
+        if (release.fixes) {
+          for (let fixIndex = 0; fixIndex < release.fixes.length; fixIndex++) {
+            const fix = release.fixes[fixIndex];
+            const fixKeys = Object.keys(fix);
+            const rogueFixFields = fixKeys.filter(
+              (key) => !allowedItemFields.has(key),
+            );
+            expect(rogueFixFields).toEqual([]);
+
+            // Validate required fields
+            expect(fix.title).toBeDefined();
+
+            // Validate pr field format (can be URL or text)
+            if (fix.pr) {
+              expect(typeof fix.pr).toBe('string');
+            }
+
+            // Validate steps if present
+            if (fix.steps) {
+              expect(Array.isArray(fix.steps)).toBe(true);
+              for (let stepIndex = 0; stepIndex < fix.steps.length; stepIndex++) {
+                const step = fix.steps[stepIndex];
+                const stepKeys = Object.keys(step);
+                const rogueStepFields = stepKeys.filter(
+                  (key) => !allowedStepFields.has(key),
+                );
+                expect(rogueStepFields).toEqual([]);
+
+                // Validate required step fields
+                expect(step.title).toBeDefined();
+
+                // Validate base64 encoded code
+                if (step.code) {
+                  expect(() =>
+                    Buffer.from(step.code, 'base64').toString(),
+                  ).not.toThrow();
+                }
+              }
+            }
+          }
+        }
+
+        // Validate dependencies are in correct format using pre-compiled regex
+        if (release.dependencies) {
+          for (const [pkg, version] of Object.entries(release.dependencies)) {
+            expect(typeof pkg).toBe('string');
+            expect(typeof version).toBe('string');
+            expect(version).toMatch(semverRegex);
+          }
+        }
+
+        if (release.devDependencies) {
+          for (const [pkg, version] of Object.entries(release.devDependencies)) {
+            expect(typeof pkg).toBe('string');
+            expect(typeof version).toBe('string');
+            expect(version).toMatch(semverRegex);
+          }
+        }
+
+        // Validate dependenciesMeta structure
+        if (release.dependenciesMeta) {
+          for (const [pkg, meta] of Object.entries(release.dependenciesMeta)) {
+            expect(typeof pkg).toBe('string');
+            expect(typeof meta).toBe('object');
+            expect(typeof meta.required).toBe('boolean');
+            // Check for rogue fields in meta (only 'required' is allowed)
+            const metaKeys = Object.keys(meta);
+            const rogueMetaFields = metaKeys.filter(
+              (key) => key !== 'required',
+            );
+            expect(rogueMetaFields).toEqual([]);
+          }
+        }
+
+        // Validate removeDependencies and removeDevDependencies are string arrays
+        if (release.removeDependencies) {
+          expect(Array.isArray(release.removeDependencies)).toBe(true);
+          for (const dep of release.removeDependencies) {
+            expect(typeof dep).toBe('string');
+          }
+        }
+
+        if (release.removeDevDependencies) {
+          expect(Array.isArray(release.removeDevDependencies)).toBe(true);
+          for (const dep of release.removeDevDependencies) {
+            expect(typeof dep).toBe('string');
+          }
+        }
+      }
+    });
+  });
 });
 
 // Helper function to find commit for a specific version
