@@ -386,18 +386,20 @@ describe('upgrade flow integration', () => {
       // First validate that the changelog is valid JSON by reading it directly
       const changelogPath = join(process.cwd(), '../../docs/changelog.json');
       const changelogContent = await readFile(changelogPath, 'utf8');
-      
+
       // Validate JSON syntax
       let parsedChangelog;
       try {
         parsedChangelog = JSON.parse(changelogContent);
       } catch (error) {
-        throw new Error(`Invalid JSON in changelog.json: ${(error as Error).message}`);
+        throw new Error(
+          `Invalid JSON in changelog.json: ${(error as Error).message}`,
+        );
       }
-      
+
       // Also get changelog through the module for consistency
       const changelog = await upgradeModule.getChangelog();
-      
+
       // Ensure both are the same
       expect(changelog).toEqual(parsedChangelog);
 
@@ -438,7 +440,7 @@ describe('upgrade flow integration', () => {
         'code',
         'description',
       ]);
-      
+
       const allowedStepFields = new Set([
         'title',
         'info',
@@ -455,7 +457,11 @@ describe('upgrade flow integration', () => {
       const semverRegex = /^[\^~]?\d+\.\d+\.\d+.*$/;
 
       // Validate each release efficiently
-      for (let releaseIndex = 0; releaseIndex < changelog.releases.length; releaseIndex++) {
+      for (
+        let releaseIndex = 0;
+        releaseIndex < changelog.releases.length;
+        releaseIndex++
+      ) {
         const release = changelog.releases[releaseIndex];
         // Check for rogue fields in release using Set for O(1) lookup
         const releaseKeys = Object.keys(release);
@@ -491,7 +497,11 @@ describe('upgrade flow integration', () => {
 
         // Validate features efficiently
         if (release.features) {
-          for (let featureIndex = 0; featureIndex < release.features.length; featureIndex++) {
+          for (
+            let featureIndex = 0;
+            featureIndex < release.features.length;
+            featureIndex++
+          ) {
             const feature = release.features[featureIndex];
             const featureKeys = Object.keys(feature);
             const rogueFeatureFields = featureKeys.filter(
@@ -510,7 +520,11 @@ describe('upgrade flow integration', () => {
             // Validate steps if present
             if (feature.steps) {
               expect(Array.isArray(feature.steps)).toBe(true);
-              for (let stepIndex = 0; stepIndex < feature.steps.length; stepIndex++) {
+              for (
+                let stepIndex = 0;
+                stepIndex < feature.steps.length;
+                stepIndex++
+              ) {
                 const step = feature.steps[stepIndex];
                 const stepKeys = Object.keys(step);
                 const rogueStepFields = stepKeys.filter(
@@ -553,7 +567,11 @@ describe('upgrade flow integration', () => {
             // Validate steps if present
             if (fix.steps) {
               expect(Array.isArray(fix.steps)).toBe(true);
-              for (let stepIndex = 0; stepIndex < fix.steps.length; stepIndex++) {
+              for (
+                let stepIndex = 0;
+                stepIndex < fix.steps.length;
+                stepIndex++
+              ) {
                 const step = fix.steps[stepIndex];
                 const stepKeys = Object.keys(step);
                 const rogueStepFields = stepKeys.filter(
@@ -585,7 +603,9 @@ describe('upgrade flow integration', () => {
         }
 
         if (release.devDependencies) {
-          for (const [pkg, version] of Object.entries(release.devDependencies)) {
+          for (const [pkg, version] of Object.entries(
+            release.devDependencies,
+          )) {
             expect(typeof pkg).toBe('string');
             expect(typeof version).toBe('string');
             expect(version).toMatch(semverRegex);
