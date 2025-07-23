@@ -830,6 +830,40 @@ describe('upgrade', async () => {
       expect(args).toEqual(result);
     });
 
+    it('installs all React Router packages even if only a subset exists', async () => {
+      const selectedRelease = REACT_ROUTER_RELEASE;
+
+      // Project has only react-router but missing other packages
+      const currentDependencies = {
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
+        'react-router': '7.0.0',
+        // Missing: react-router-dom, @react-router/dev, @react-router/fs-routes
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
+      };
+
+      const result: string[] = [
+        '@shopify/hydrogen@2025.5.0',
+        '@shopify/remix-oxygen@2.0.12',
+        '@shopify/cli@3.77.1',
+        '@shopify/mini-oxygen@3.2.0',
+        '@shopify/hydrogen-codegen@0.3.3',
+        '@shopify/oxygen-workers-types@4.1.6',
+        'vite@6.2.4',
+        'react-router@7.5.0',
+        'react-router-dom@7.5.0',
+        '@react-router/dev@7.5.0',
+        '@react-router/fs-routes@7.5.0',
+      ];
+
+      const args = buildUpgradeCommandArgs({
+        selectedRelease,
+        currentDependencies,
+      });
+
+      // Should install ALL React Router packages, not just upgrade the existing one
+      expect(args).toEqual(result);
+    });
+
     it('does not install an optional dependency that was not installed', async () => {
       const {releases} = await getChangelog();
 

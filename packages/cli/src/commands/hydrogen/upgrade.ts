@@ -815,12 +815,6 @@ function appendReactRouterDependencies({
   const command: string[] = [];
   const targetVersion = getAbsoluteVersion(selectedReactRouter[1]);
 
-  // Check if there are any React Router packages in current dependencies
-  const hasReactRouter = Object.keys(currentDependencies).some((pkg) => {
-    const version = currentDependencies[pkg];
-    return version && isReactRouterDependency([pkg, version]);
-  });
-
   // Standard React Router packages that should be kept in sync
   const reactRouterPackages = [
     'react-router',
@@ -829,18 +823,9 @@ function appendReactRouterDependencies({
     '@react-router/fs-routes',
   ];
 
-  if (hasReactRouter) {
-    // If already using React Router, only upgrade existing packages
-    for (const packageName of reactRouterPackages) {
-      if (packageName in currentDependencies) {
-        command.push(`${packageName}@${targetVersion}`);
-      }
-    }
-  } else {
-    // If migrating to React Router (e.g., from Remix), add all standard packages
-    for (const packageName of reactRouterPackages) {
-      command.push(`${packageName}@${targetVersion}`);
-    }
+  // Always install/upgrade all React Router packages to ensure consistency
+  for (const packageName of reactRouterPackages) {
+    command.push(`${packageName}@${targetVersion}`);
   }
 
   return command;
