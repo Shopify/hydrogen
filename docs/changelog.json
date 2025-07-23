@@ -24,8 +24,12 @@
         "@shopify/oxygen-workers-types": "^4.1.6",
         "vite": "^6.2.4"
       },
-      "removeDependencies": [],
-      "removeDevDependencies": [],
+      "removeDependencies": ["@remix-run/react", "@remix-run/server-runtime"],
+      "removeDevDependencies": [
+        "@remix-run/dev",
+        "@remix-run/fs-routes",
+        "@remix-run/route-config"
+      ],
       "dependenciesMeta": {
         "@shopify/hydrogen": {"required": true},
         "@shopify/remix-oxygen": {"required": true},
@@ -61,22 +65,17 @@
       "features": [
         {
           "title": "Migrate to React Router 7",
-          "info": "IMPORTANT: You must first remove Remix dependencies before upgrading to avoid npm conflicts. See the first step in the upgrade guide.",
+          "info": "See generated upgrade guide for more info",
           "pr": "https://github.com/Shopify/hydrogen/pull/2866",
           "id": "2866",
           "steps": [
-            {
-              "title": "IMPORTANT: Remove Remix dependencies and complete the upgrade",
-              "info": "Due to dependency conflicts, you must remove Remix packages then rerun the upgrade command with --force flag. Run this complete command:",
-              "code": "YGBgYmFzaApucG0gdW5pbnN0YWxsIEByZW1peC1ydW4vcmVhY3QgQHJlbWl4LXJ1bi9kZXYgQHJlbWl4LXJ1bi9zZXJ2ZXItcnVudGltZSBAcmVtaXgtcnVuL2ZzLXJvdXRlcyBAcmVtaXgtcnVuL3JvdXRlLWNvbmZpZyAmJiBoMiB1cGdyYWRlIC0tdmVyc2lvbj0yMDI1LjUuMCAtLWZvcmNlCmBgYAo="
-            },
             {
               "title": "Run the automated migration codemod",
               "info": "Use the community-created codemod to automatically update imports and package references",
               "code": "YGBgZGlmZgpucHggY29kZW1vZCByZW1peC8yL3JlYWN0LXJvdXRlci91cGdyYWRlCmBgYA=="
             },
             {
-              "title": "Update remaining import statements manually",
+              "title": "Update remaining import statements manually (optional)",
               "info": "Some imports may need manual updates. Change @remix-run/* imports to react-router or @react-router/*",
               "code": "YGBgZGlmZgotIGltcG9ydCB7IHJlZGlyZWN0LCBMb2FkZXJGdW5jdGlvbiB9IGZyb20gJ0ByZW1peC1ydW4vbm9kZSc7Ci0gaW1wb3J0IHsgdXNlTG9hZGVyRGF0YSB9IGZyb20gJ0ByZW1peC1ydW4vcmVhY3QnOworIGltcG9ydCB7IHJlZGlyZWN0LCBMb2FkZXJGdW5jdGlvbiB9IGZyb20gJ3JlYWN0LXJvdXRlcic7CisgaW1wb3J0IHsgdXNlTG9hZGVyRGF0YSB9IGZyb20gJ3JlYWN0LXJvdXRlcic7CmBgYAo="
             },
