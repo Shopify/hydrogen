@@ -25,7 +25,7 @@
         "vite": "^6.2.4"
       },
       "removeDependencies": [
-        "@remix-run/react", 
+        "@remix-run/react",
         "@remix-run/server-runtime",
         "@remix-run/node",
         "@remix-run/cloudflare",
