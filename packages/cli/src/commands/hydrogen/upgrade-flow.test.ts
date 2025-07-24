@@ -63,7 +63,8 @@ describe('upgrade flow integration', () => {
       const beforePackageJson = JSON.parse(
         await readFile(join(projectDir, 'package.json'), 'utf8'),
       );
-      const initialHydrogenVersion = beforePackageJson.dependencies?.['@shopify/hydrogen'];
+      const initialHydrogenVersion =
+        beforePackageJson.dependencies?.['@shopify/hydrogen'];
       expect(initialHydrogenVersion).toBe(fromVersion);
 
       // Run upgrade (this should handle npm install internally)
@@ -73,11 +74,13 @@ describe('upgrade flow integration', () => {
       const afterPackageJson = JSON.parse(
         await readFile(join(projectDir, 'package.json'), 'utf8'),
       );
-      const finalHydrogenVersion = afterPackageJson.dependencies?.['@shopify/hydrogen'];
+      const finalHydrogenVersion =
+        afterPackageJson.dependencies?.['@shopify/hydrogen'];
       expect(
-        finalHydrogenVersion === toVersion || finalHydrogenVersion === `^${toVersion}`,
+        finalHydrogenVersion === toVersion ||
+          finalHydrogenVersion === `^${toVersion}`,
       ).toBe(true);
-      
+
       // Ensure it actually changed from the initial version
       expect(finalHydrogenVersion).not.toBe(initialHydrogenVersion);
 
