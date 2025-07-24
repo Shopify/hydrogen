@@ -362,7 +362,7 @@ Generate a JSON changelog entry:
   "fixes": [
     {
       "title": "[User-friendly fix description]",
-      "info": "[Optional detailed description - use 'info' not 'desc']",
+      "info": "[Optional detailed description]",
       "code": "[base64 encoded ```diff code``` if migration needed]",
       "pr": "https://github.com/Shopify/hydrogen/pull/[PR_NUMBER]",
       "id": "[PR_NUMBER]"
