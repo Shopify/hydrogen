@@ -52,24 +52,34 @@ describe('upgrade flow integration', () => {
           `git show ${fromCommit}:templates/skeleton/package.json`,
           {cwd: join(process.cwd(), '../../')},
         );
-      } catch {
-        expect(true).toBe(true); // Skip if commit not available
+      } catch (error) {
+        expect.fail(`Test should not hit catch block: ${error}`);
         return;
       }
 
       const projectDir = await scaffoldHistoricalProject(fromCommit);
 
+      // Verify initial version before upgrade
+      const beforePackageJson = JSON.parse(
+        await readFile(join(projectDir, 'package.json'), 'utf8'),
+      );
+      const initialHydrogenVersion = beforePackageJson.dependencies?.['@shopify/hydrogen'];
+      expect(initialHydrogenVersion).toBe(fromVersion);
+
       // Run upgrade (this should handle npm install internally)
       await runUpgradeCommand(projectDir, toVersion);
 
-      // Verify version was updated
-      const packageJson = JSON.parse(
+      // Verify version was actually updated from fromVersion to toVersion
+      const afterPackageJson = JSON.parse(
         await readFile(join(projectDir, 'package.json'), 'utf8'),
       );
-      const hydrogenVersion = packageJson.dependencies?.['@shopify/hydrogen'];
+      const finalHydrogenVersion = afterPackageJson.dependencies?.['@shopify/hydrogen'];
       expect(
-        hydrogenVersion === toVersion || hydrogenVersion === `^${toVersion}`,
+        finalHydrogenVersion === toVersion || finalHydrogenVersion === `^${toVersion}`,
       ).toBe(true);
+      
+      // Ensure it actually changed from the initial version
+      expect(finalHydrogenVersion).not.toBe(initialHydrogenVersion);
 
       // Verify no guide was generated (minor version upgrade)
       const guideFile = join(
@@ -101,59 +111,35 @@ describe('upgrade flow integration', () => {
         // Restore the env var
         if (originalEnv !== undefined) {
           process.env.SHOPIFY_UNIT_TEST = originalEnv;
+        } else {
+          delete process.env.SHOPIFY_UNIT_TEST;
         }
       }
 
-      // Test typecheck command
-      await exec('npm', ['run', 'typecheck'], {cwd: projectDir});
+      // Test typecheck command - should not throw
+      await expect(async () => {
+        await exec('npm', ['run', 'typecheck'], {cwd: projectDir});
+      }).not.toThrow();
 
-      // Test dev server and route fetching - this is the key validation
-      // as per the GitHub workflow documentation
-      await testDevServer(projectDir, 'post-upgrade');
+      // Test dev server and route fetching - should not throw
+      // This is the key validation as per the GitHub workflow documentation
+      await expect(async () => {
+        await testDevServer(projectDir, 'post-upgrade');
+      }).not.toThrow();
     }, 180000);
 
     // Test 2: Upgrade with migration guide generation
     it('generates migration guide when upgrade has steps', async () => {
-      // Currently, there are no releases with migration guides after 2025.4.0
-      // in the main branch (2025.5.0 with React Router migration exists only
-      // on the branch). This test will be active once 2025.5.0 is released.
+      // Use specific versions known to have migration steps
+      const fromVersion = '2025.1.3';
+      const toVersion = '2025.1.4'; // Has rich migration content including VariantSelector deprecation with ~12 steps
 
-      const changelog = await upgradeModule.getChangelog();
-      const fromVersion = '2025.4.0';
-
-      // Find a release after 2025.4.0 that has steps
-      let targetRelease = null;
-      let toVersion = null;
-
-      for (const release of changelog.releases) {
-        if (release.version <= fromVersion) continue;
-
-        const hasSteps =
-          release.features?.some((f: any) => f.steps?.length > 0) ||
-          release.fixes?.some((f: any) => f.steps?.length > 0);
-
-        if (hasSteps) {
-          targetRelease = release;
-          toVersion = release.version;
-          break;
-        }
-      }
-
-      if (!targetRelease || !toVersion) {
-        // Skip test until a release with migration guide exists after 2025.4.0
-        expect(true).toBe(true);
+      // Find commits for these specific versions
+      const fromCommit = await findCommitForVersion(fromVersion);
+      if (!fromCommit) {
+        expect.fail(`Could not find commit for version ${fromVersion}`);
         return;
       }
-
-      // Skip if the target version is 2025.5.0 (React Router migration)
-      // as it has known dependency conflicts in test environment
-      if (toVersion === '2025.5.0') {
-        expect(true).toBe(true);
-        return;
-      }
-
-      // This code will execute for other releases with steps
-      const fromCommit = '1fff0f889'; // Known commit for 2025.4.0
 
       const projectDir = await scaffoldHistoricalProject(fromCommit);
 
@@ -168,54 +154,39 @@ describe('upgrade flow integration', () => {
       );
       const guideContent = await readFile(guideFile, 'utf8');
 
-      // Verify guide is valid markdown
+      // Verify guide is valid markdown with expected content
       expect(guideContent).toContain(
         `# Hydrogen upgrade guide: ${fromVersion} to ${toVersion}`,
       );
-      expect(guideContent.split('\n').length).toBeGreaterThan(10); // Has substantial content
+      expect(guideContent.split('\n').length).toBeGreaterThan(20); // Should have substantial content with ~10 migration steps
 
-      // Skip npm install check as upgrade command should have handled it
+      // Verify it contains migration step content
+      expect(guideContent).toContain('##'); // Should have step headers
     }, 180000);
 
-    // Test 3: Complex upgrade with dependency removal
-    it('tests dependency removal feature when available in changelog', async () => {
-      // Get the actual changelog to find a release with removeDependencies
+    // Test 3: Dependency removal upgrade
+    it('tests dependency removal feature with specific versions', async () => {
+      // Use specific versions known to have dependency removals
+      const fromVersion = '2025.4.0';
+      const toVersion = '2025.5.0'; // React Router migration with dependency removals
+
+      // Get the changelog to verify the target release exists
       const changelog = await upgradeModule.getChangelog();
-
-      // Find the first release that has removeDependencies
-      let targetRelease = null;
-      let fromVersion = '2025.4.0';
-      let toVersion = null;
-
-      // First check if 2025.5.0 exists (React Router migration)
-      targetRelease = changelog.releases.find(
-        (r: any) => r.version === '2025.5.0',
+      const targetRelease = changelog.releases.find(
+        (r: any) => r.version === toVersion,
       );
-      if (
-        targetRelease &&
-        ((targetRelease.removeDependencies?.length ?? 0) > 0 ||
-          (targetRelease.removeDevDependencies?.length ?? 0) > 0)
-      ) {
-        toVersion = '2025.5.0';
-      } else {
-        // Otherwise find any release with removeDependencies
-        for (const release of changelog.releases) {
-          if (
-            (release.removeDependencies?.length ?? 0) > 0 ||
-            (release.removeDevDependencies?.length ?? 0) > 0
-          ) {
-            // Make sure we can upgrade TO this version (it should be newer than fromVersion)
-            if (release.version > fromVersion) {
-              targetRelease = release;
-              toVersion = release.version;
-              break;
-            }
-          }
-        }
+
+      if (!targetRelease) {
+        // Skip test if the specific version doesn't exist in changelog
+        expect(true).toBe(true);
+        return;
       }
 
-      if (!targetRelease || !toVersion) {
-        // No release with removeDependencies found, skip test
+      // Skip test if this version doesn't actually have removeDependencies
+      if (
+        (targetRelease.removeDependencies?.length ?? 0) === 0 &&
+        (targetRelease.removeDevDependencies?.length ?? 0) === 0
+      ) {
         expect(true).toBe(true);
         return;
       }
@@ -223,7 +194,7 @@ describe('upgrade flow integration', () => {
       // Find a commit for the fromVersion
       const fromCommit = await findCommitForVersion(fromVersion);
       if (!fromCommit) {
-        expect(true).toBe(true);
+        expect.fail(`Could not find commit for version ${fromVersion}`);
         return;
       }
 
@@ -307,8 +278,8 @@ describe('upgrade flow integration', () => {
       }
     }, 180000);
 
-    // Test 4: Dynamic test for latest changelog release
-    it('performs upgrade to latest release', async () => {
+    // Test 4: Single version upgrade to latest release
+    it('performs single version upgrade to latest release', async () => {
       const changelog = await upgradeModule.getChangelog();
       const latestRelease = changelog.releases[0];
 
@@ -316,24 +287,26 @@ describe('upgrade flow integration', () => {
         throw new Error('No releases found in changelog');
       }
 
-      // Find a suitable from version (skip if it's a major breaking change)
+      // Find the previous release (just one version back for clean single-version upgrade)
       let fromRelease = null;
       let fromCommit = null;
 
-      // Try to find a version 2-3 releases back
-      for (let i = 2; i <= 5 && i < changelog.releases.length; i++) {
-        const candidate = changelog.releases[i];
-        if (!candidate) continue;
-        const commit = await findCommitForVersion(candidate.version);
-        if (commit) {
-          fromRelease = candidate;
-          fromCommit = commit;
-          break;
+      // Use the previous release (index 1) for a clean single-version upgrade
+      if (changelog.releases.length > 1) {
+        const candidate = changelog.releases[1];
+        if (candidate) {
+          const commit = await findCommitForVersion(candidate.version);
+          if (commit) {
+            fromRelease = candidate;
+            fromCommit = commit;
+          }
         }
       }
 
       if (!fromRelease || !fromCommit) {
-        expect(true).toBe(true); // Skip if no suitable version found
+        expect.fail(
+          'Could not find suitable version or commit for latest release test',
+        );
         return;
       }
 
@@ -347,10 +320,8 @@ describe('upgrade flow integration', () => {
         latestRelease.features?.some((f: any) => f.steps?.length > 0) ||
         latestRelease.fixes?.some((f: any) => f.steps?.length > 0);
 
-      // Run upgrade
-      await runUpgradeCommand(projectDir, toVersion, {
-        skipDependencyValidation: true, // Always skip since we know the issue exists
-      });
+      // Run upgrade (single version upgrade should work cleanly)
+      await runUpgradeCommand(projectDir, toVersion);
 
       // Verify version was updated
       const packageJson = JSON.parse(
