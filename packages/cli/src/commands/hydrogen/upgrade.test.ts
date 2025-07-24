@@ -310,6 +310,11 @@ describe('upgrade', async () => {
         // Verify first release has required fields
         const latestRelease = changelog.releases[0];
         expect(latestRelease).toBeDefined();
+
+        if (!latestRelease) {
+          throw new Error('Latest release is undefined');
+        }
+
         expect(latestRelease).toHaveProperty('title');
         expect(latestRelease).toHaveProperty('version');
         expect(latestRelease).toHaveProperty('hash');
@@ -355,6 +360,12 @@ describe('upgrade', async () => {
 
       // Test that releases have the expected structure
       const sampleRelease = changelog.releases[0];
+      expect(sampleRelease).toBeDefined();
+
+      if (!sampleRelease) {
+        throw new Error('Sample release is undefined');
+      }
+
       expect(sampleRelease.version).toBeDefined();
       expect(sampleRelease.dependencies).toBeDefined();
       expect(sampleRelease.devDependencies).toBeDefined();
