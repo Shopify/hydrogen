@@ -198,9 +198,9 @@ git show COMMIT_HASH --name-only | grep templates/skeleton | grep -v "CHANGELOG.
 - **Example valid encoding**:
 
   ````bash
-  echo '```diff
+  echo <<EOF | base64 -w 0
+  ```diff
   npx codemod remix/2/react-router/upgrade
-  ```' | base64 -w 0
   ````
 
 - **Use git diff format** with `+` and `-` prefixes for changes
