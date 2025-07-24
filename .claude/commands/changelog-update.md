@@ -156,7 +156,7 @@ C) Something else you'd prefer?
 Check if skeleton has code changes beyond metadata:
 
 ```bash
-git show COMMIT_HASH --name-only | grep templates/skeleton | grep -v "CHANGELOG.md\\|package.json"
+git show COMMIT_HASH --name-only | grep templates/skeleton | grep -v "CHANGELOG.md\|package.json"
 ```
 
 - **If output exists** = Usually Feature
