@@ -3,6 +3,76 @@
   "version": "1",
   "releases": [
     {
+      "title": "GraphQL @defer support, Customer Account API enhancements, and dev tooling fixes",
+      "version": "2025.5.1",
+      "date": "2025-07-15",
+      "hash": "f03112d65d353965308aecb98dbfe6d5ec6168fa",
+      "commit": "https://github.com/Shopify/hydrogen/pull/2982/commits/f03112d65d353965308aecb98dbfe6d5ec6168fa",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2982",
+      "dependencies": {
+        "@shopify/hydrogen": "2025.5.1"
+      },
+      "devDependencies": {
+        "@shopify/mini-oxygen": "^3.3.0"
+      },
+      "fixes": [
+        {
+          "title": "Upgrade Miniflare from v2 to v4",
+          "info": "Internal MiniOxygen API refactored to work with Miniflare v4's new architecture. Simplified MiniOxygen class, updated global fetch handling, and added support for Oxygen compatibility parameters.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2997",
+          "id": "2997"
+        },
+        {
+          "title": "Fix and upgrade /graphiql route to latest version",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3007",
+          "id": "3007"
+        },
+        {
+          "title": "Allow flexible React Router versions in skeleton template",
+          "info": "Unpinned react-router and react-router-dom versions to allow more flexible version management.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2983",
+          "id": "2983"
+        },
+        {
+          "title": "Fix defer/streaming in development and preview",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3012",
+          "id": "3012"
+        }
+      ],
+      "features": [
+        {
+          "title": "Add GraphQL @defer directive support to storefront client",
+          "info": "Enables deferred loading of GraphQL query fields for improved performance.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2993",
+          "id": "2993"
+        },
+        {
+          "title": "Add @inContext language support to Customer Account API mutations",
+          "info": "Enhanced Customer Account API with language context support for better internationalization.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2881",
+          "id": "2881"
+        },
+        {
+          "title": "Add fulfillmentStatus to CAAPI order query and route",
+          "info": "Extended Customer Account API order queries with fulfillment status information.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2887",
+          "id": "2887"
+        },
+        {
+          "title": "Add --force-client-sourcemap flag support to deploy command",
+          "info": "New CLI flag to force client-side sourcemap generation during deployment.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3008",
+          "id": "3008"
+        },
+        {
+          "title": "Add support for Vite v7 [.] exports",
+          "info": "Enhanced compatibility with Vite v7's new export syntax.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2998",
+          "id": "2998"
+        }
+      ]
+    },
+    {
       "title": "New tokenless Storefront API route, add buyerIdentity to create handlers",
       "version": "2025.4.1",
       "hash": "fc2ad21f92c0125b29b0f51dc1c52353f42228dd",
