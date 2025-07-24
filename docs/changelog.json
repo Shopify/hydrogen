@@ -3,6 +3,120 @@
   "version": "1",
   "releases": [
     {
+      "title": "React Router 7 migration",
+      "version": "2025.5.0",
+      "date": "2025-01-21",
+      "hash": "3dbbb1ee554d96261a2249d8126c8afd11e7ad47",
+      "commit": "https://github.com/Shopify/hydrogen/pull/2961/commits/3dbbb1ee554d96261a2249d8126c8afd11e7ad47",
+      "pr": "https://github.com/Shopify/hydrogen/pull/2961",
+      "dependencies": {
+        "@shopify/hydrogen": "2025.5.0",
+        "@shopify/remix-oxygen": "^3.0.0",
+        "react-router": "7.6.0",
+        "react-router-dom": "7.6.0"
+      },
+      "devDependencies": {
+        "@react-router/dev": "7.6.0",
+        "@react-router/fs-routes": "7.6.0",
+        "@shopify/cli": "~3.80.4",
+        "@shopify/mini-oxygen": "^3.2.1",
+        "@shopify/hydrogen-codegen": "^0.3.3",
+        "@shopify/oxygen-workers-types": "^4.1.6",
+        "vite": "^6.2.4"
+      },
+      "removeDependencies": ["@remix-run/react", "@remix-run/server-runtime"],
+      "removeDevDependencies": [
+        "@remix-run/dev",
+        "@remix-run/fs-routes",
+        "@remix-run/route-config"
+      ],
+      "dependenciesMeta": {
+        "@shopify/hydrogen": {"required": true},
+        "@shopify/remix-oxygen": {"required": true},
+        "react-router": {"required": true},
+        "react-router-dom": {"required": true},
+        "@react-router/dev": {"required": true},
+        "@react-router/fs-routes": {"required": true},
+        "@shopify/cli": {"required": true},
+        "@shopify/mini-oxygen": {"required": true}
+      },
+      "fixes": [
+        {
+          "title": "Bump CLI to version 3.80.4",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2957",
+          "id": "2957"
+        },
+        {
+          "title": "Fix CLI compatibility issues with Remix-based Hydrogen projects",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2958",
+          "id": "2958"
+        },
+        {
+          "title": "Fix skeleton Vite configuration",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2958",
+          "id": "2958"
+        },
+        {
+          "title": "Add .react-router to CLI-generated .gitignore",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2941",
+          "id": "2941"
+        }
+      ],
+      "features": [
+        {
+          "title": "Migrate to React Router 7",
+          "info": "See generated upgrade guide for more info",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2866",
+          "id": "2866",
+          "steps": [
+            {
+              "title": "Run the automated migration codemod",
+              "info": "Use the community-created codemod to automatically update imports and package references",
+              "code": "YGBgZGlmZgpucHggY29kZW1vZCByZW1peC8yL3JlYWN0LXJvdXRlci91cGdyYWRlCmBgYA=="
+            },
+            {
+              "title": "Update remaining import statements manually (optional)",
+              "info": "Some imports may need manual updates. Change @remix-run/* imports to react-router or @react-router/*",
+              "code": "YGBgZGlmZgotIGltcG9ydCB7IHJlZGlyZWN0LCBMb2FkZXJGdW5jdGlvbiB9IGZyb20gJ0ByZW1peC1ydW4vbm9kZSc7Ci0gaW1wb3J0IHsgdXNlTG9hZGVyRGF0YSB9IGZyb20gJ0ByZW1peC1ydW4vcmVhY3QnOworIGltcG9ydCB7IHJlZGlyZWN0LCBMb2FkZXJGdW5jdGlvbiB9IGZyb20gJ3JlYWN0LXJvdXRlcic7CisgaW1wb3J0IHsgdXNlTG9hZGVyRGF0YSB9IGZyb20gJ3JlYWN0LXJvdXRlcic7CmBgYAo="
+            },
+            {
+              "title": "Add .react-router to .gitignore",
+              "info": "React Router 7 generates type files that should not be committed to version control",
+              "code": "YGBgZGlmZgplY2hvICIKLnJlYWN0LXJvdXRlciIgPj4gLmdpdGlnbm9yZQpgYGAK"
+            },
+            {
+              "title": "Update dev script for React Router type generation",
+              "info": "Enable automatic type generation during development for better TypeScript support",
+              "code": "YGBgZGlmZgotICJkZXYiOiAic2hvcGlmeSBoeWRyb2dlbiBkZXYgLS1jb2RlZ2VuIiwKKyAiZGV2IjogInJlYWN0LXJvdXRlciB0eXBlZ2VuIC0td2F0Y2ggJiYgc2hvcGlmeSBoeWRyb2dlbiBkZXYgLS1jb2RlZ2VuIiwKYGBgCg=="
+            },
+            {
+              "title": "Configure React Router build output directory",
+              "info": "Create react-router.config.ts to specify 'dist' as build directory (required by Hydrogen preview)",
+              "code": "YGBgZGlmZgovLyByZWFjdC1yb3V0ZXIuY29uZmlnLnRzCitpbXBvcnQgdHlwZSB7Q29uZmlnfSBmcm9tICJAcmVhY3Qtcm91dGVyL2Rldi9jb25maWciOworCitleHBvcnQgZGVmYXVsdCB7CisgIGFwcERpcmVjdG9yeTogImFwcCIsCisgIGJ1aWxkRGlyZWN0b3J5OiAiZGlzdCIsCisgIHNzcjogdHJ1ZSwKK30gc2F0aXNmaWVzIENvbmZpZzsKYGBg"
+            },
+            {
+              "title": "Verify your app starts and builds correctly",
+              "info": "Test that your application runs without errors after the migration",
+              "code": "YGBgZGlmZgpucG0gcnVuIGRldgpucG0gcnVuIGJ1aWxkCmBgYA=="
+            }
+          ]
+        },
+        {
+          "title": "Remove legacy Remix Compiler support",
+          "breaking": true,
+          "info": "Breaking change removing support for legacy Remix compiler. Users must migrate to Vite using 'npx shopify hydrogen setup vite'",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2941",
+          "id": "2941"
+        },
+        {
+          "title": "Update framework dependencies for React Router 7",
+          "info": "Major version updates to @shopify/remix-oxygen and related packages to support React Router 7 architecture",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2866",
+          "id": "2866"
+        }
+      ]
+    },
+    {
       "title": "New tokenless Storefront API route, add buyerIdentity to create handlers",
       "version": "2025.4.1",
       "hash": "fc2ad21f92c0125b29b0f51dc1c52353f42228dd",
