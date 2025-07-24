@@ -93,23 +93,44 @@ describe('upgrade flow integration', () => {
         hydrogenVersion === toVersion || hydrogenVersion === `^${toVersion}`,
       ).toBe(true);
 
-      // Check guide generation
+      // Check guide generation and analyze breaking changes
       const guideFile = join(
         projectDir,
         '.hydrogen',
         `upgrade-${fromVersion}-to-${toVersion}.md`,
       );
+      let guideContent = '';
+      let hasBreakingChanges = false;
+
       if (hasGuide) {
-        const guideContent = await readFile(guideFile, 'utf8');
+        guideContent = await readFile(guideFile, 'utf8');
         expect(guideContent).toContain(
           `# Hydrogen upgrade guide: ${fromVersion} to ${toVersion}`,
         );
         expect(guideContent.length).toBeGreaterThan(100);
+
+        // If guide has steps, expect potential build/dev/typecheck failures
+        hasBreakingChanges =
+          latestRelease.features?.some((f: any) => f.steps?.length > 0) ||
+          latestRelease.fixes?.some((f: any) => f.steps?.length > 0);
       } else {
         await expect(readFile(guideFile, 'utf8')).rejects.toThrow();
       }
 
-      // Skip npm install check as upgrade command should have handled it
+      // Test dependency management - validate removals and additions
+      await validateDependencyChanges(projectDir, fromRelease, latestRelease);
+
+      // Test build functionality - strict if no guide steps, graceful if guide has steps
+      await validateProjectBuilds(projectDir, hasBreakingChanges);
+
+      // Test typecheck functionality - strict if no guide steps, graceful if guide has steps
+      await validateTypeCheck(projectDir, hasBreakingChanges);
+
+      // Test dev server functionality - strict if no guide steps, graceful if guide has steps
+      await validateDevServer(projectDir, hasBreakingChanges);
+
+      // Validate critical file integrity (always strict)
+      await validateFileIntegrity(projectDir);
     }, 180000);
   });
 
@@ -687,4 +708,155 @@ async function waitForServer(
   }
 
   return false;
+}
+
+async function validateDependencyChanges(
+  projectDir: string,
+  fromRelease: any,
+  toRelease: any,
+) {
+  const packageJsonPath = join(projectDir, 'package.json');
+  const packageContent = await readFile(packageJsonPath, 'utf8');
+  const packageJson = JSON.parse(packageContent);
+
+  // Check dependency removals if specified
+  if (toRelease.removeDependencies) {
+    for (const dep of toRelease.removeDependencies) {
+      expect(packageJson.dependencies?.[dep]).toBeUndefined();
+    }
+  }
+
+  if (toRelease.removeDevDependencies) {
+    for (const dep of toRelease.removeDevDependencies) {
+      expect(packageJson.devDependencies?.[dep]).toBeUndefined();
+    }
+  }
+
+  // Check dependency additions if specified (only validate if they're present)
+  if (toRelease.dependencies) {
+    for (const [dep, version] of Object.entries(toRelease.dependencies)) {
+      if (dep !== '@shopify/hydrogen') {
+        const actualVersion = packageJson.dependencies?.[dep];
+        // Only validate if the dependency is present (upgrade might not add all deps)
+        if (actualVersion) {
+          expect(
+            actualVersion === version ||
+              actualVersion === `^${version}` ||
+              actualVersion === `~${version}` ||
+              actualVersion.includes(version.toString()),
+          ).toBe(true);
+        }
+      }
+    }
+  }
+
+  if (toRelease.devDependencies) {
+    for (const [dep, version] of Object.entries(toRelease.devDependencies)) {
+      const actualVersion = packageJson.devDependencies?.[dep];
+      // Only validate if the dependency is present (upgrade might not add all deps)
+      if (actualVersion) {
+        if (dep === '@shopify/cli') {
+          expect(actualVersion).toBeDefined();
+        } else {
+          expect(
+            actualVersion === version ||
+              actualVersion === `^${version}` ||
+              actualVersion === `~${version}` ||
+              actualVersion.includes(version.toString()),
+          ).toBe(true);
+        }
+      }
+    }
+  }
+}
+
+async function validateProjectBuilds(
+  projectDir: string,
+  hasGuideSteps: boolean = false,
+) {
+  const originalEnv = process.env.SHOPIFY_UNIT_TEST;
+  delete process.env.SHOPIFY_UNIT_TEST;
+
+  try {
+    await exec('npm', ['run', 'build'], {
+      cwd: projectDir,
+      env: {...process.env, NODE_ENV: 'production'},
+    });
+  } catch (error) {
+    if (hasGuideSteps) {
+      // Build failures are expected when migration guide has steps
+      console.warn(
+        `Build validation failed (expected - migration guide has steps): ${(error as Error).message}`,
+      );
+    } else {
+      // Build should succeed when no guide steps are present
+      throw new Error(
+        `Build failed unexpectedly (no migration steps documented): ${(error as Error).message}`,
+      );
+    }
+  } finally {
+    if (originalEnv !== undefined) {
+      process.env.SHOPIFY_UNIT_TEST = originalEnv;
+    } else {
+      delete process.env.SHOPIFY_UNIT_TEST;
+    }
+  }
+}
+
+async function validateTypeCheck(
+  projectDir: string,
+  hasGuideSteps: boolean = false,
+) {
+  try {
+    await exec('npm', ['run', 'typecheck'], {cwd: projectDir});
+  } catch (error) {
+    if (hasGuideSteps) {
+      // TypeScript errors are expected when migration guide has steps
+      console.warn(
+        `TypeScript validation failed (expected - migration guide has steps): ${(error as Error).message}`,
+      );
+    } else {
+      // TypeScript should pass when no guide steps are present
+      throw new Error(
+        `TypeScript validation failed unexpectedly (no migration steps documented): ${(error as Error).message}`,
+      );
+    }
+  }
+}
+
+async function validateDevServer(
+  projectDir: string,
+  hasGuideSteps: boolean = false,
+) {
+  try {
+    await testDevServer(projectDir, 'post-upgrade-validation');
+  } catch (error) {
+    if (hasGuideSteps) {
+      // Dev server failures are expected when migration guide has steps
+      console.warn(
+        `Dev server validation failed (expected - migration guide has steps): ${(error as Error).message}`,
+      );
+    } else {
+      // Dev server should work when no guide steps are present
+      throw new Error(
+        `Dev server validation failed unexpectedly (no migration steps documented): ${(error as Error).message}`,
+      );
+    }
+  }
+}
+
+async function validateFileIntegrity(projectDir: string) {
+  const criticalFiles = [
+    'app/lib/redirect.ts',
+    'package.json',
+    'tsconfig.json',
+  ];
+
+  for (const file of criticalFiles) {
+    const filePath = join(projectDir, file);
+    const hasFile = await fileExists(filePath);
+    if (!hasFile) {
+      throw new Error(`Missing critical file after upgrade: ${file}`);
+    }
+  }
 }
