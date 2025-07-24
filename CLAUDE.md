@@ -24,7 +24,7 @@ Hydrogen uses a sophisticated automated release system built on Changesets, GitH
 
    b) **Version PR Creation (if changesets exist)** **(AUTOMATIC)**
       - `changesets.yml` workflow runs
-      - If changesets are found, creates OR updates "Version Packages" PR
+      - If changesets are found, creates OR updates open CI release PR
       - PR title: `[ci] release 2025-05` (current latest branch)
       - **Important**: This PR accumulates ALL changesets from merged PRs
       - Multiple PRs can be merged before a release (e.g., 10 PRs = 10 changesets in one Version PR)
@@ -63,7 +63,7 @@ Hydrogen uses a sophisticated automated release system built on Changesets, GitH
 **Key Point**: Not every merged PR triggers a release!
 
 - When you merge a PR with a changeset, it does NOT immediately release to npm
-- Instead, your changeset is added to the "Version Packages" PR
+- Instead, your changeset is added to the open CI release PR
 - This PR accumulates changesets from ALL merged PRs since the last release
 - Maintainers decide when to merge this PR to trigger an actual release
 - This allows batching multiple features/fixes into a single release
@@ -100,15 +100,23 @@ Hydrogen uses a sophisticated automated release system built on Changesets, GitH
 
 1. **Developer Actions**
    - **Create changesets**: Run `npm run changeset add` for any PR with code changes
+   - **Skeleton changes**: MUST include `@shopify/cli-hydrogen` in the changeset
+     - This ensures the CLI bundles the latest skeleton template
+     - Without this, new projects will scaffold with outdated templates
    - **Write PR descriptions**: Include clear explanations of changes
    - **Request snapshot builds**: Comment `/snapit` on PR to test changes
 
 2. **Maintainer Actions - Regular Releases**
-   - **Merge Version PR**: Review and merge the auto-generated "Version Packages" PR to trigger npm publication
+   - **Merge Version PR**: Review and merge the auto-generated open CI release PR to trigger npm publication
    - **Update changelog.json**: After npm release, manually update this file to enable `h2 upgrade` command
    - **Monitor releases**: Verify packages published correctly and Slack notifications sent
 
-3. **Maintainer Actions - Major Version Changes**
+3. **Maintainer Actions - CLI Releases**
+   - When cli-hydrogen has updates, create a PR in the Shopify CLI repo and coordinate with Shopify CLI team to request patch release
+   - **Update skeleton after CLI release**: Once @shopify/cli releases, update skeleton's package.json
+   - **Second cli-hydrogen release**: Often required to bundle the updated skeleton
+
+4. **Maintainer Actions - Major Version Changes**
    - **Update latestBranch**: Edit `.github/workflows/changesets.yml` line 32 when moving to new major version
      - Example: Change `echo "latestBranch=2025-01"` to `echo "latestBranch=2025-05"`
      - Required quarterly with new Storefront API versions
@@ -215,27 +223,52 @@ When developers run `npm create @shopify/hydrogen@latest`:
    - Creates both TypeScript (`skeleton-ts`) and JavaScript (`skeleton-js`) versions
    - The `dist` branch serves as a stable source for templates
 
-### CLI Version Coordination
+### Critical: Skeleton Changes Require CLI Updates
 
-**Critical Dependency Chain**:
+**When modifying the skeleton template, you MUST**:
+1. Create a changeset that includes BOTH:
+   - The skeleton template changes
+   - A version bump for `@shopify/cli-hydrogen`
+2. This ensures the CLI contains a snapshot of the latest skeleton in its `dist/assets/templates` directory
+3. Without this, newly scaffolded projects will use an outdated skeleton template
+
+**Why this matters**: The `@shopify/cli-hydrogen` package bundles the skeleton template. If you don't bump its version when changing the skeleton, the CLI will continue distributing the old template version.
+
+### CLI Release Coordination (Circular Dependency)
+
+The CLI system has an inherent circular dependency that requires careful coordination:
+
+**The Circular Dependency Problem**:
 ```
-@shopify/cli-hydrogen (in Hydrogen repo)
-    ↓ used by
+@shopify/cli-hydrogen (bundles skeleton)
+    ↓ is included in
 @shopify/cli (main Shopify CLI)
-    ↓ installed in
+    ↓ is used by
 skeleton template's devDependencies
+    ↓ which is bundled in
+@shopify/cli-hydrogen (circular!)
 ```
 
-**Version Update Process**:
-1. When updating `@shopify/cli-hydrogen` with new features
-2. Must coordinate a minor version release of `@shopify/cli`
-3. Then update `skeleton/package.json` to use the new `@shopify/cli` version
-4. This ensures new projects get CLI features that match their Hydrogen version
+**Release Process to Handle This**:
 
-**Example**:
-- Update hydrogen CLI with new command → Release `@shopify/cli-hydrogen` v11.1.0
-- Shopify releases `@shopify/cli` v3.80.4 with updated hydrogen plugin
-- Update skeleton template to use `"@shopify/cli": "~3.80.4"`
-- New projects scaffolded will have access to the new command
+1. **First Release**:
+   - Release `@shopify/cli-hydrogen` with new features/fixes
+   - Trigger `@shopify/cli` release to include updated `cli-hydrogen`
+   - Problem: The skeleton bundled in `cli-hydrogen` still references the OLD `@shopify/cli` version
 
-**Important**: When releasing new Hydrogen CLI features, the skeleton template must be updated to use a version of `@shopify/cli` that includes those features. Otherwise, newly scaffolded projects won't have access to CLI commands that should be available for their Hydrogen version.
+2. **Second Release Required**:
+   - Update skeleton's `package.json` to use new `@shopify/cli` version
+   - Create another changeset bumping `@shopify/cli-hydrogen`
+   - Release again so future `cli-hydrogen` bundles the updated skeleton
+
+**Example Timeline**:
+- Day 1: Release `@shopify/cli-hydrogen@8.1.0` with new command
+- Day 2: `@shopify/cli@3.80.0` released with updated hydrogen plugin
+- Day 3: Update skeleton to use `@shopify/cli@~3.80.0`
+- Day 4: Release `@shopify/cli-hydrogen@8.1.1` with updated skeleton
+- Result: New projects now have access to the new command
+
+**Key Takeaways**:
+- This process often requires TWO cli-hydrogen releases for complete updates
+- The circular dependency makes the process complex but is currently unavoidable
+- Always check that skeleton's CLI version matches the features available in cli-hydrogen
