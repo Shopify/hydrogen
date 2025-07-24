@@ -31,7 +31,7 @@ This changelog.json file contains structured upgrade information that the Hydrog
 
 ### 3. Extract Consumed Changesets from ALL Related PRs
 
-- Use: `git show COMMIT_HASH --name-only | grep -E "\\.changeset/.*\\.md$"`
+- Use: `git show COMMIT_HASH --name-only | grep -E "\.changeset/.*\.md$"`
 - Get changeset content: `git show COMMIT_HASH^:.changeset/CHANGESET_NAME.md`
 - **IMPORTANT**: Only analyze changesets that were REMOVED (deleted) in the commit
 - Ignore current files in `.changeset/` directory as these are for unreleased changes
