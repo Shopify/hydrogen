@@ -629,4 +629,3 @@ Please confirm: Should I proceed with updating the changelog? (y/n)
 - **Preserve**: "You can copy the generated JSON entry if you want to add it manually later."
 
 **IMPORTANT**: Only modify the changelog.json file if the user explicitly confirms. Never assume or proceed without clear permission.
-\*IMPORTANT\*\*: Only modify the changelog.json file if the user explicitly confirms. Never assume or proceed without clear permission.
