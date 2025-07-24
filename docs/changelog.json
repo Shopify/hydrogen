@@ -24,11 +24,26 @@
         "@shopify/oxygen-workers-types": "^4.1.6",
         "vite": "^6.2.4"
       },
-      "removeDependencies": ["@remix-run/react", "@remix-run/server-runtime"],
+      "removeDependencies": [
+        "@remix-run/react", 
+        "@remix-run/server-runtime",
+        "@remix-run/node",
+        "@remix-run/cloudflare",
+        "@remix-run/cloudflare-pages",
+        "@remix-run/cloudflare-workers",
+        "@remix-run/serve",
+        "@remix-run/express",
+        "@remix-run/architect",
+        "@remix-run/netlify",
+        "@remix-run/vercel",
+        "@remix-run/router",
+        "remix"
+      ],
       "removeDevDependencies": [
         "@remix-run/dev",
         "@remix-run/fs-routes",
-        "@remix-run/route-config"
+        "@remix-run/route-config",
+        "@remix-run/v1-meta"
       ],
       "dependenciesMeta": {
         "@shopify/hydrogen": {"required": true},
