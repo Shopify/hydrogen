@@ -285,11 +285,86 @@ describe('upgrade', async () => {
     });
   });
 
-  // TODO: finish this test once merged and published so that package.json is accessible
-  describe.skip('fetchChangelog', () => {
-    it('fetches the latest changelog from the hydrogen repo', async () => {});
+  describe('fetchChangelog', () => {
+    it('fetches the latest changelog from the hydrogen repo', async () => {
+      // Force remote changelog usage by clearing local environment
+      const originalForceLocal = process.env.FORCE_CHANGELOG_SOURCE;
+      process.env.FORCE_CHANGELOG_SOURCE = 'remote';
 
-    it('renders an error message if the changelog could not be fetched', async () => {});
+      try {
+        const changelog = await getChangelog();
+
+        // Verify changelog structure
+        expect(changelog).toBeDefined();
+        expect(changelog).toHaveProperty('url');
+        expect(changelog).toHaveProperty('version');
+        expect(changelog).toHaveProperty('releases');
+
+        // Verify URL points to GitHub pulls
+        expect(changelog.url).toMatch(/github\.com\/Shopify\/hydrogen/);
+
+        // Verify releases array structure
+        expect(Array.isArray(changelog.releases)).toBe(true);
+        expect(changelog.releases.length).toBeGreaterThan(0);
+
+        // Verify first release has required fields
+        const latestRelease = changelog.releases[0];
+        expect(latestRelease).toBeDefined();
+        expect(latestRelease).toHaveProperty('title');
+        expect(latestRelease).toHaveProperty('version');
+        expect(latestRelease).toHaveProperty('hash');
+        expect(latestRelease).toHaveProperty('commit');
+        expect(latestRelease).toHaveProperty('dependencies');
+        expect(latestRelease).toHaveProperty('devDependencies');
+        expect(latestRelease).toHaveProperty('features');
+        expect(latestRelease).toHaveProperty('fixes');
+
+        // Verify version format (YYYY.M.P)
+        expect(latestRelease.version).toMatch(/^\d{4}\.\d+\.\d+$/);
+
+        // Verify commit URL format
+        expect(latestRelease.commit).toMatch(
+          /^https:\/\/github\.com\/Shopify\/hydrogen/,
+        );
+
+        // Verify dependencies are objects
+        expect(typeof latestRelease.dependencies).toBe('object');
+        expect(typeof latestRelease.devDependencies).toBe('object');
+
+        // Verify features and fixes are arrays
+        expect(Array.isArray(latestRelease.features)).toBe(true);
+        expect(Array.isArray(latestRelease.fixes)).toBe(true);
+      } finally {
+        // Restore original environment
+        if (originalForceLocal !== undefined) {
+          process.env.FORCE_CHANGELOG_SOURCE = originalForceLocal;
+        } else {
+          delete process.env.FORCE_CHANGELOG_SOURCE;
+        }
+      }
+    }, 10000); // 10 second timeout for network call
+
+    it('successfully loads changelog when network is available', async () => {
+      // This test validates that the changelog function works as expected
+      // Both local and remote sources should provide valid changelog data
+      const changelog = await getChangelog();
+
+      // Test core functionality
+      expect(changelog.releases).toBeDefined();
+      expect(changelog.releases.length).toBeGreaterThan(0);
+
+      // Test that releases have the expected structure
+      const sampleRelease = changelog.releases[0];
+      expect(sampleRelease.version).toBeDefined();
+      expect(sampleRelease.dependencies).toBeDefined();
+      expect(sampleRelease.devDependencies).toBeDefined();
+
+      // Test that the structure matches what upgrade functions expect
+      expect(typeof sampleRelease.dependencies).toBe('object');
+      expect(typeof sampleRelease.devDependencies).toBe('object');
+      expect(Array.isArray(sampleRelease.features)).toBe(true);
+      expect(Array.isArray(sampleRelease.fixes)).toBe(true);
+    });
   });
 
   describe('getAvailableUpgrades', async () => {
