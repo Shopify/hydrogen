@@ -44,7 +44,13 @@
           "title": "Add GraphQL @defer directive support to storefront client",
           "info": "Enables deferred loading of GraphQL query fields for improved performance.",
           "pr": "https://github.com/Shopify/hydrogen/pull/2993",
-          "id": "2993"
+          "id": "2993",
+          "steps": [
+            {
+              "title": "Add @shopify/graphql-client to vite config optimizeDeps",
+              "code": "YGBgZGlmZgovLyAuL3ZpdGUuY29uZmlnLnRzCmV4cG9ydCBkZWZhdWx0IGRlZmluZUNvbmZpZyh7CiAgICBzc3I6IHsKICAgICAgb3B0aW1pemVEZXBzOiB7Ci0gICAgICAgaW5jbHVkZTogWydzZXQtY29va2llLXBhcnNlcicsICdjb29raWUnLCAncmVhY3Qtcm91dGVyJ10sCisgICAgICBpbmNsdWRlOiBbCisgICAgICAgICdzZXQtY29va2llLXBhcnNlcicsCisgICAgICAgICdjb29raWUnLAorICAgICAgICAncmVhY3Qtcm91dGVyJywKKyAgICAgICAgJ0BzaG9waWZ5L2dyYXBocWwtY2xpZW50JywKKyAgICAgIF0KICAgICAgfQogICB9Cn0KYGBg"
+            }
+          ]
         },
         {
           "title": "Add @inContext language support to Customer Account API mutations",
