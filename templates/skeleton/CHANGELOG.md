@@ -1,5 +1,31 @@
 # skeleton
 
+## 2025.5.3
+
+### Patch Changes
+
+- Fix defer/streaming in development & preview ([#3012](https://github.com/Shopify/hydrogen/pull/3012)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Upgrade Miniflare from v2 to v4 in mini-oxygen package. ([#2997](https://github.com/Shopify/hydrogen/pull/2997)) by [@seanparsons](https://github.com/seanparsons)
+
+  - Internal MiniOxygen API has been refactored to work with Miniflare v4's new architecture.
+  - Simplified MiniOxygen class - no longer extends MiniflareCore.
+  - Updated global fetch handling to use Miniflare v4's `outboundService` API.
+  - Fixed test infrastructure to use project-relative temporary directories.
+  - Added support for Oxygen compatibility parameters (`compatibilityDate`, `compatibilityFlags`).
+  - Removed dependency on multiple `@miniflare/*` packages in favor of the consolidated `miniflare` package.
+
+- Add `fulfillmentStatus` to CAAPI order query and route ([#2887](https://github.com/Shopify/hydrogen/pull/2887)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Add GraphQL @defer directive support to storefront client ([#2993](https://github.com/Shopify/hydrogen/pull/2993)) by [@blittle](https://github.com/blittle)
+
+- Unpin react-router and react-router-dom versions in the skeleton template ([#2983](https://github.com/Shopify/hydrogen/pull/2983)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Add `@inContext` language support to Customer Account API mutations ([#2881](https://github.com/Shopify/hydrogen/pull/2881)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`d92381b7`](https://github.com/Shopify/hydrogen/commit/d92381b71c2116d90af86093b2be73750026e325), [`e38273fc`](https://github.com/Shopify/hydrogen/commit/e38273fc2b756d7372439d5ee29793ed6e558cfa)]:
+  - @shopify/hydrogen@2025.5.1
+
 ## 2025.5.2
 
 ### Patch Changes
