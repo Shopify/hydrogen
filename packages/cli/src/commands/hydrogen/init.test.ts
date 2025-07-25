@@ -111,6 +111,11 @@ describe('init', () => {
     });
 
     it('typechecks the project', async () => {
+      // Run codegen first to generate TypeScript definitions
+      await expect(
+        exec('npm', ['run', 'codegen'], {cwd: tmpDir}),
+      ).resolves.not.toThrow();
+
       // This will throw if TSC fails
       await expect(
         exec('npm', ['run', 'typecheck'], {cwd: tmpDir}),
