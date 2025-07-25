@@ -26,7 +26,12 @@ export default defineConfig({
        * Include 'example-dep' in the array below.
        * @see https://vitejs.dev/config/dep-optimization-options
        */
-      include: ['set-cookie-parser', 'cookie', 'react-router'],
+      include: [
+        'set-cookie-parser',
+        'cookie',
+        'react-router',
+        '@shopify/graphql-client',
+      ],
     },
   },
 });
