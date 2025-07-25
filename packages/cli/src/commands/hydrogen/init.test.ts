@@ -36,6 +36,48 @@ vi.mock('../../lib/onboarding/index.js', async () => {
   };
 });
 
+async function validateProjectReady(projectDir: string): Promise<void> {
+  const requiredFiles = [
+    'package.json',
+    'app/entry.server.tsx',
+    'app/routes/_index.tsx',
+    'node_modules',
+  ];
+
+  const maxWaitTime = 30000; // 30 seconds max
+  const pollInterval = 500; // Check every 500ms
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < maxWaitTime) {
+    let allFilesExist = true;
+
+    for (const file of requiredFiles) {
+      const filePath = path.join(projectDir, file);
+      if (!(await fileExists(filePath))) {
+        allFilesExist = false;
+        break;
+      }
+    }
+
+    if (allFilesExist) {
+      // Additional check: ensure package.json has the codegen script
+      const packageJsonPath = path.join(projectDir, 'package.json');
+      const packageJson = JSON.parse(await readFile(packageJsonPath));
+
+      if (packageJson.scripts?.codegen) {
+        return; // Project is ready
+      }
+    }
+
+    // Wait before next check
+    await new Promise((resolve) => setTimeout(resolve, pollInterval));
+  }
+
+  throw new Error(
+    `Project setup validation failed after ${maxWaitTime}ms. Required files or scripts not found.`,
+  );
+}
+
 describe('init', () => {
   const outputMock = mockAndCaptureOutput();
 
@@ -111,6 +153,9 @@ describe('init', () => {
     });
 
     it('typechecks the project', async () => {
+      // Validate that the project is ready for codegen
+      await validateProjectReady(tmpDir);
+
       // Run codegen first to generate TypeScript definitions
       await expect(
         exec('npm', ['run', 'codegen'], {cwd: tmpDir}),
