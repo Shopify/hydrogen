@@ -123,9 +123,16 @@ export async function mergePackageJson(
     targetPkgJson[key] = newValue as any;
   }
 
-  const remixVersion = Object.entries(targetPkgJson.dependencies || {}).find(
-    ([dep]) => dep.startsWith('@remix-run/'),
+  // Check for React Router v7 packages first, then fall back to legacy Remix packages
+  const reactRouterVersion = Object.entries(targetPkgJson.dependencies || {}).find(
+    ([dep]) => dep === 'react-router' || dep.startsWith('@react-router/'),
   )?.[1];
+  
+  const remixVersion = !reactRouterVersion 
+    ? Object.entries(targetPkgJson.dependencies || {}).find(
+        ([dep]) => dep.startsWith('@remix-run/'),
+      )?.[1]
+    : undefined;
 
   for (const key of MANAGED_PACKAGE_JSON_KEYS) {
     if (ignoredKeys.has(key)) continue;
@@ -143,7 +150,12 @@ export async function mergePackageJson(
             let version = (sourcePkgJson[key]?.[dep] ??
               targetPkgJson[key]?.[dep])!;
 
-            if (dep.startsWith('@remix-run/') && remixVersion) {
+            // Handle React Router v7 packages
+            if ((dep === 'react-router' || dep.startsWith('@react-router/')) && reactRouterVersion) {
+              version = reactRouterVersion;
+            }
+            // Handle legacy Remix packages
+            else if (dep.startsWith('@remix-run/') && remixVersion) {
               version = remixVersion;
             }
 

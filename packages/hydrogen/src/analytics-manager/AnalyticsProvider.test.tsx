@@ -395,7 +395,7 @@ function LoopAnalytics({
     ready: () => void,
   ) => void;
   mockCanTrack?: boolean;
-}): JSX.Element {
+}) {
   const analytics = useAnalytics();
   const {ready} = analytics.register('loopAnalytics');
   const {ready: customerPrivacyReady} = analytics.register(

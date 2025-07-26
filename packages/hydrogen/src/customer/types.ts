@@ -130,10 +130,6 @@ export type CustomerAccount = {
   setBuyer: (buyer: Buyer) => void;
   /** Get buyer token and company location id from session.*/
   getBuyer: () => Promise<Buyer>;
-  /** Deprecated. Please use setBuyer. Set buyer information into session.*/
-  UNSTABLE_setBuyer: (buyer: Buyer) => void;
-  /** Deprecated. Please use getBuyer. Get buyer token and company location id from session.*/
-  UNSTABLE_getBuyer: () => Promise<Buyer>;
 };
 
 export type CustomerAccountOptions = {

@@ -295,7 +295,7 @@ function AnalyticsProvider({
   customData = {},
   shop: shopProp = null,
   cookieDomain,
-}: AnalyticsProviderProps): JSX.Element {
+}: AnalyticsProviderProps) {
   const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
   const [analyticsLoaded, setAnalyticsLoaded] = useState(

@@ -45,7 +45,7 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
 function loadDeferredData({context}: LoaderFunctionArgs) {
   const recommendedProducts = context.storefront
     .query(RECOMMENDED_PRODUCTS_QUERY)
-    .catch((error) => {
+    .catch((error: Error) => {
       // Log query errors, but don't throw them so the page can still render
       console.error(error);
       return null;
@@ -98,7 +98,7 @@ function RecommendedProducts({
       <h2>Recommended Products</h2>
       <Suspense fallback={<div>Loading...</div>}>
         <Await resolve={products}>
-          {(response) => (
+          {(response: RecommendedProductsQuery | null) => (
             <div className="recommended-products-grid">
               {response
                 ? response.products.nodes.map((product) => (

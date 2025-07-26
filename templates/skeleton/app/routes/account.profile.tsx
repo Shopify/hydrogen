@@ -35,12 +35,14 @@ export async function action({request, context}: ActionFunctionArgs) {
   try {
     const customer: CustomerUpdateInput = {};
     const validInputKeys = ['firstName', 'lastName'] as const;
+    type ValidInputKey = (typeof validInputKeys)[number];
+    
     for (const [key, value] of form.entries()) {
-      if (!validInputKeys.includes(key as any)) {
+      if (!validInputKeys.some(validKey => validKey === key)) {
         continue;
       }
       if (typeof value === 'string' && value.length) {
-        customer[key as (typeof validInputKeys)[number]] = value;
+        customer[key as ValidInputKey] = value;
       }
     }
 

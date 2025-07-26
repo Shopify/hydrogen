@@ -30,7 +30,7 @@ const ShopifyContext = createContext<ShopifyContextValue>(
 export function ShopifyProvider({
   children,
   ...shopifyConfig
-}: ShopifyProviderProps): JSX.Element {
+}: ShopifyProviderProps) {
   if (
     !shopifyConfig.countryIsoCode ||
     !shopifyConfig.languageIsoCode ||
