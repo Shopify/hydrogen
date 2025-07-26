@@ -85,9 +85,26 @@ describe('useNonce', () => {
       </DocumentFragment>
     `);
   });
+
+  it('returns undefined when called outside NonceProvider', () => {
+    const {asFragment} = render(createElement(SomeComponentWithOptionalNonce));
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <div>
+          No nonce available
+        </div>
+      </DocumentFragment>
+    `);
+  });
 });
 
 function SomeComponent() {
   const nonce = useNonce();
   return createElement('div', null, nonce);
+}
+
+function SomeComponentWithOptionalNonce() {
+  const nonce = useNonce();
+  return createElement('div', null, nonce ? nonce : 'No nonce available');
 }
