@@ -676,7 +676,7 @@ export function buildUpgradeCommandArgs({
     const shouldUpgradeReactRouter =
       !currentReactRouter ||
       semver.lt(
-        getAbsoluteVersion(currentReactRouter?.[1]),
+        getAbsoluteVersion(currentReactRouter[1]),
         getAbsoluteVersion(selectedReactRouter[1]),
       );
 
