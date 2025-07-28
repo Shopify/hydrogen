@@ -65,30 +65,19 @@ describe('upgrade flow integration', () => {
       }
 
       if (!fromRelease || !fromCommit) {
-        // Try searching through more releases as fallback
-        for (let i = 1; i < Math.min(5, changelog.releases.length); i++) {
-          const candidate = changelog.releases[i];
-          if (candidate) {
-            const commit = await findCommitForVersion(candidate.version);
-            if (commit) {
-              fromRelease = candidate;
-              fromCommit = commit;
-              break;
-            }
-          }
-        }
-      }
-
-      if (!fromRelease || !fromCommit) {
         const availableVersions = changelog.releases
           .slice(0, 5)
           .map((r) => r.version)
           .join(', ');
         const gitInfo = await getGitDiagnostics();
-        expect.fail(
-          `Could not find suitable version or commit for latest release test. Tried versions: ${availableVersions}. Latest version: ${latestRelease.version}. Git info: ${gitInfo}`,
+        
+        throw new Error(
+          `Could not find commit for latest release version. This indicates a problem with the changelog or Git history. ` +
+          `Tried version: ${changelog.releases[1]?.version}. ` +
+          `Available versions: ${availableVersions}. ` +
+          `Latest version: ${latestRelease.version}. ` +
+          `Git info: ${gitInfo}`
         );
-        return;
       }
 
       const fromVersion = fromRelease.version;
