@@ -3,7 +3,7 @@
   "version": "1",
   "releases": [
     {
-      "title": "Add support for React Router 7 upgrade",
+      "title": "[COMPLETE BEFORE ATTEMPTING 2025.5 UPGRADE] Bump Shopify CLI",
       "version": "2025.4.2",
       "hash": "PLACEHOLDER_HASH",
       "commit": "PLACEHOLDER_COMMIT_URL",
