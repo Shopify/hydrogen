@@ -1411,7 +1411,7 @@ describe('dependency removal', () => {
     // Current project has only basic dependencies - missing packages listed in removeDependencies
     const currentDependencies = {
       '@shopify/hydrogen': '2025.4.0',
-      'react': '^18.2.0',
+      react: '^18.2.0',
       '@shopify/cli': '~3.79.0',
     };
 
@@ -1422,9 +1422,6 @@ describe('dependency removal', () => {
     });
 
     // Should upgrade existing packages, ignore missing ones in removeDependencies
-    expect(args).toEqual([
-      '@shopify/hydrogen@2025.5.0',
-      '@shopify/cli@3.80.0',
-    ]);
+    expect(args).toEqual(['@shopify/hydrogen@2025.5.0', '@shopify/cli@3.80.0']);
   });
 });

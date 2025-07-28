@@ -69,12 +69,12 @@ describe('upgrade flow integration', () => {
           .slice(0, 5)
           .map((r) => r.version)
           .join(', ');
-        
+
         throw new Error(
           `Could not find commit for latest release version. This indicates a problem with the changelog or Git history. ` +
-          `Tried version: ${changelog.releases[1]?.version}. ` +
-          `Available versions: ${availableVersions}. ` +
-          `Latest version: ${latestRelease.version}.`
+            `Tried version: ${changelog.releases[1]?.version}. ` +
+            `Available versions: ${availableVersions}. ` +
+            `Latest version: ${latestRelease.version}.`,
         );
       }
 
@@ -87,9 +87,11 @@ describe('upgrade flow integration', () => {
       const initialPackageJson = JSON.parse(
         await readFile(join(projectDir, 'package.json'), 'utf8'),
       );
-      const initialHydrogenVersion = initialPackageJson.dependencies?.['@shopify/hydrogen'];
+      const initialHydrogenVersion =
+        initialPackageJson.dependencies?.['@shopify/hydrogen'];
       expect(
-        initialHydrogenVersion === toVersion || initialHydrogenVersion === `^${toVersion}`,
+        initialHydrogenVersion === toVersion ||
+          initialHydrogenVersion === `^${toVersion}`,
       ).toBe(false);
 
       // Check what scenarios apply to this upgrade
@@ -424,7 +426,6 @@ describe('upgrade flow integration', () => {
     });
   });
 });
-
 
 // Helper function to find commit for a specific version
 async function findCommitForVersion(version: string): Promise<string | null> {
