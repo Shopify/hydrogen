@@ -69,14 +69,12 @@ describe('upgrade flow integration', () => {
           .slice(0, 5)
           .map((r) => r.version)
           .join(', ');
-        const gitInfo = await getGitDiagnostics();
         
         throw new Error(
           `Could not find commit for latest release version. This indicates a problem with the changelog or Git history. ` +
           `Tried version: ${changelog.releases[1]?.version}. ` +
           `Available versions: ${availableVersions}. ` +
-          `Latest version: ${latestRelease.version}. ` +
-          `Git info: ${gitInfo}`
+          `Latest version: ${latestRelease.version}.`
         );
       }
 
@@ -84,6 +82,15 @@ describe('upgrade flow integration', () => {
       const toVersion = latestRelease.version;
 
       const projectDir = await scaffoldHistoricalProject(fromCommit);
+
+      // Verify we started with the historical version (not the target version)
+      const initialPackageJson = JSON.parse(
+        await readFile(join(projectDir, 'package.json'), 'utf8'),
+      );
+      const initialHydrogenVersion = initialPackageJson.dependencies?.['@shopify/hydrogen'];
+      expect(
+        initialHydrogenVersion === toVersion || initialHydrogenVersion === `^${toVersion}`,
+      ).toBe(false);
 
       // Check what scenarios apply to this upgrade
       const hasGuide =
@@ -418,29 +425,6 @@ describe('upgrade flow integration', () => {
   });
 });
 
-// Helper function to get git diagnostics for debugging
-async function getGitDiagnostics(): Promise<string> {
-  try {
-    const cwd = process.cwd();
-    const repoRoot = join(cwd, '../../');
-
-    const [logCount, isShallow, currentBranch] = await Promise.all([
-      execAsync('git log --oneline | wc -l', {cwd: repoRoot})
-        .then((r) => r.stdout.trim())
-        .catch(() => 'unknown'),
-      execAsync('git rev-parse --is-shallow-repository', {cwd: repoRoot})
-        .then((r) => r.stdout.trim())
-        .catch(() => 'unknown'),
-      execAsync('git branch --show-current', {cwd: repoRoot})
-        .then((r) => r.stdout.trim())
-        .catch(() => 'unknown'),
-    ]);
-
-    return `commits=${logCount}, shallow=${isShallow}, branch=${currentBranch}, cwd=${cwd}`;
-  } catch {
-    return 'git-diagnostics-failed';
-  }
-}
 
 // Helper function to find commit for a specific version
 async function findCommitForVersion(version: string): Promise<string | null> {
@@ -859,18 +843,16 @@ async function validateDependencyChanges(
   // Check dependency additions if specified (only validate if they're present)
   if (toRelease.dependencies) {
     for (const [dep, version] of Object.entries(toRelease.dependencies)) {
-      if (dep !== '@shopify/hydrogen') {
-        const actualVersion = packageJson.dependencies?.[dep];
-        // Only validate if the dependency is present (upgrade might not add all deps)
-        if (actualVersion) {
-          const versionStr = String(version);
-          expect(
-            actualVersion === versionStr ||
-              actualVersion === `^${versionStr}` ||
-              actualVersion === `~${versionStr}` ||
-              actualVersion.includes(versionStr),
-          ).toBe(true);
-        }
+      const actualVersion = packageJson.dependencies?.[dep];
+      // Only validate if the dependency is present (upgrade might not add all deps)
+      if (actualVersion) {
+        const versionStr = String(version);
+        expect(
+          actualVersion === versionStr ||
+            actualVersion === `^${versionStr}` ||
+            actualVersion === `~${versionStr}` ||
+            actualVersion.includes(versionStr),
+        ).toBe(true);
       }
     }
   }
@@ -881,7 +863,12 @@ async function validateDependencyChanges(
       // Only validate if the dependency is present (upgrade might not add all deps)
       if (actualVersion) {
         if (dep === '@shopify/cli') {
+          // CLI releases happen after Hydrogen releases, so exact version matching isn't reliable.
+          // However, we should still validate the version is reasonable (major.minor should be close)
           expect(actualVersion).toBeDefined();
+          expect(typeof actualVersion).toBe('string');
+          // Ensure it's a valid semver-like version
+          expect(actualVersion).toMatch(/^[~^]?\d+\.\d+\.\d+/);
         } else {
           const versionStr = String(version);
           expect(

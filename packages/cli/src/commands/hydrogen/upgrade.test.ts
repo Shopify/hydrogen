@@ -1385,4 +1385,46 @@ describe('dependency removal', () => {
       '@react-router/fs-routes@7.6.0',
     ]);
   });
+
+  it('handles missing dependencies in removeDependencies gracefully', async () => {
+    const selectedRelease: Release = {
+      title: 'Release with missing dependencies to remove',
+      version: '2025.5.0',
+      hash: 'xyz123',
+      commit: 'https://github.com/Shopify/hydrogen/pull/2962',
+      pr: 'https://github.com/Shopify/hydrogen/pull/2962',
+      date: '2025-01-21',
+      dependencies: {
+        '@shopify/hydrogen': '2025.5.0',
+      },
+      devDependencies: {
+        '@shopify/cli': '~3.80.0',
+      },
+      // Try to remove dependencies that don't exist in the current project
+      removeDependencies: ['@some/missing-package', '@another/nonexistent-dep'],
+      removeDevDependencies: ['@dev/missing-package'],
+      dependenciesMeta: {},
+      fixes: [],
+      features: [],
+    };
+
+    // Current project has only basic dependencies - missing packages listed in removeDependencies
+    const currentDependencies = {
+      '@shopify/hydrogen': '2025.4.0',
+      'react': '^18.2.0',
+      '@shopify/cli': '~3.79.0',
+    };
+
+    // Should not crash and should only include packages that need upgrading
+    const args = buildUpgradeCommandArgs({
+      selectedRelease,
+      currentDependencies,
+    });
+
+    // Should upgrade existing packages, ignore missing ones in removeDependencies
+    expect(args).toEqual([
+      '@shopify/hydrogen@2025.5.0',
+      '@shopify/cli@3.80.0',
+    ]);
+  });
 });
