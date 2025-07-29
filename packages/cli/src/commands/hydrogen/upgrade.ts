@@ -27,6 +27,7 @@ import {
   getPackageManager,
   type PackageJson,
 } from '@shopify/cli-kit/node/node-package-manager';
+import {exec} from '@shopify/cli-kit/node/system';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {dirname, joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {getCliCommand} from '../../lib/shell.js';
@@ -57,6 +58,8 @@ export type Release = {
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
   dependenciesMeta?: Record<string, {required: boolean}>;
+  removeDependencies?: string[];
+  removeDevDependencies?: string[];
   features: Array<ReleaseItem>;
   fixes: Array<ReleaseItem>;
   hash: string;
@@ -274,16 +277,36 @@ export async function getHydrogenVersion({appPath}: {appPath: string}) {
 export async function getChangelog(): Promise<ChangeLog> {
   if (CACHED_CHANGELOG) return CACHED_CHANGELOG;
 
-  // For local testing
+  // For local testing - force local changelog usage
   if (
-    isHydrogenMonorepo &&
-    hydrogenPackagesPath &&
-    process.env.FORCE_CHANGELOG_SOURCE !== 'remote'
+    process.env.FORCE_CHANGELOG_SOURCE === 'local' ||
+    (isHydrogenMonorepo &&
+      hydrogenPackagesPath &&
+      process.env.FORCE_CHANGELOG_SOURCE !== 'remote')
   ) {
     const require = createRequire(import.meta.url);
-    return require(
-      joinPath(dirname(hydrogenPackagesPath), 'docs', 'changelog.json'),
-    ) as ChangeLog;
+    const localChangelogPath =
+      isHydrogenMonorepo && hydrogenPackagesPath
+        ? joinPath(dirname(hydrogenPackagesPath), 'docs', 'changelog.json')
+        : joinPath(process.cwd(), 'docs', 'changelog.json');
+
+    try {
+      const changelog = require(localChangelogPath) as ChangeLog;
+      CACHED_CHANGELOG = changelog;
+      return changelog;
+    } catch (error) {
+      console.warn(
+        `Failed to load local changelog from ${localChangelogPath}:`,
+        (error as Error).message,
+      );
+      // Fall through to remote fetch if local fails and not explicitly forced
+      if (process.env.FORCE_CHANGELOG_SOURCE === 'local') {
+        throw new AbortError(
+          'Failed to load local changelog',
+          `Could not read changelog from ${localChangelogPath}`,
+        );
+      }
+    }
   }
 
   try {
@@ -526,6 +549,13 @@ function isRemixDependency([name]: [string, string]) {
   return false;
 }
 
+function isReactRouterDependency([name]: [string, string]) {
+  if (name.includes('react-router')) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Checks if a dependency should be included in the upgrade command
  */
@@ -544,6 +574,11 @@ function maybeIncludeDependency({
 
   // Remix dependencies are handled later
   if (isRemixPackage) return false;
+
+  const isReactRouterPackage = isReactRouterDependency([name, version]);
+
+  // React Router dependencies are handled later
+  if (isReactRouterPackage) return false;
 
   const isNextVersion = existingDependencyVersion === 'next';
 
@@ -627,6 +662,34 @@ export function buildUpgradeCommandArgs({
     }
   }
 
+  // Maybe upgrade React Router dependencies
+  const currentReactRouter = Object.entries(currentDependencies).find(
+    isReactRouterDependency,
+  );
+  const selectedReactRouter = Object.entries(selectedRelease.dependencies).find(
+    isReactRouterDependency,
+  );
+
+  if (selectedReactRouter) {
+    // If upgrading to a version with React Router dependencies, add them
+    // This handles both upgrades and migrations (e.g., from Remix to React Router)
+    const shouldUpgradeReactRouter =
+      !currentReactRouter ||
+      semver.lt(
+        getAbsoluteVersion(currentReactRouter[1]),
+        getAbsoluteVersion(selectedReactRouter[1]),
+      );
+
+    if (shouldUpgradeReactRouter) {
+      args.push(
+        ...appendReactRouterDependencies({
+          currentDependencies,
+          selectedReactRouter,
+        }),
+      );
+    }
+  }
+
   return args;
 }
 
@@ -642,24 +705,80 @@ export async function upgradeNodeModules({
   selectedRelease: Release;
   currentDependencies: Record<string, string>;
 }) {
-  await renderTasks(
-    [
-      {
-        title: `Upgrading dependencies`,
-        task: async () => {
-          await installNodeModules({
-            directory: appPath,
-            packageManager: await getPackageManager(appPath),
-            args: buildUpgradeCommandArgs({
-              selectedRelease,
-              currentDependencies,
-            }),
-          });
-        },
+  const tasks: Array<{title: string; task: () => Promise<void>}> = [];
+
+  // Remove deprecated dependencies first if specified
+  const depsToRemove = [
+    ...(selectedRelease.removeDependencies || []),
+    ...(selectedRelease.removeDevDependencies || []),
+  ].filter((dep) => dep in currentDependencies);
+
+  if (depsToRemove.length > 0) {
+    tasks.push({
+      title: `Removing deprecated dependencies`,
+      task: async () => {
+        await uninstallNodeModules({
+          directory: appPath,
+          packageManager: await getPackageManager(appPath),
+          args: depsToRemove,
+        });
       },
-    ],
-    {},
-  );
+    });
+  }
+
+  // Then install/upgrade dependencies
+  const upgradeArgs = buildUpgradeCommandArgs({
+    selectedRelease,
+    currentDependencies,
+  });
+
+  if (upgradeArgs.length > 0) {
+    tasks.push({
+      title: `Upgrading dependencies`,
+      task: async () => {
+        await installNodeModules({
+          directory: appPath,
+          packageManager: await getPackageManager(appPath),
+          args: upgradeArgs,
+        });
+      },
+    });
+  }
+
+  if (tasks.length > 0) {
+    await renderTasks(tasks, {});
+  }
+}
+
+/**
+ * Uninstalls the specified dependencies
+ */
+async function uninstallNodeModules({
+  directory,
+  packageManager,
+  args,
+}: {
+  directory: string;
+  packageManager: 'npm' | 'yarn' | 'pnpm' | 'unknown' | 'bun';
+  args: string[];
+}) {
+  if (args.length === 0) return;
+
+  const command =
+    packageManager === 'npm'
+      ? 'uninstall'
+      : packageManager === 'yarn'
+        ? 'remove'
+        : packageManager === 'pnpm'
+          ? 'remove'
+          : packageManager === 'bun'
+            ? 'remove'
+            : 'uninstall'; // fallback to npm for 'unknown'
+
+  const actualPackageManager =
+    packageManager === 'unknown' ? 'npm' : packageManager;
+
+  await exec(actualPackageManager, [command, ...args], {cwd: directory});
 }
 
 /**
@@ -680,6 +799,35 @@ function appendRemixDependencies({
     }
     command.push(`${name}@${getAbsoluteVersion(selectedRemix[1])}`);
   }
+  return command;
+}
+
+/**
+ * Appends the current react-router dependencies to the upgrade command
+ */
+function appendReactRouterDependencies({
+  currentDependencies,
+  selectedReactRouter,
+}: {
+  currentDependencies: Record<string, string>;
+  selectedReactRouter: [string, string];
+}) {
+  const command: string[] = [];
+  const targetVersion = getAbsoluteVersion(selectedReactRouter[1]);
+
+  // Standard React Router packages that should be kept in sync
+  const reactRouterPackages = [
+    'react-router',
+    'react-router-dom',
+    '@react-router/dev',
+    '@react-router/fs-routes',
+  ];
+
+  // Always install/upgrade all React Router packages to ensure consistency
+  for (const packageName of reactRouterPackages) {
+    command.push(`${packageName}@${targetVersion}`);
+  }
+
   return command;
 }
 
