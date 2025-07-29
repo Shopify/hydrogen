@@ -3,7 +3,7 @@ name: Changesets
 on:
   push:
     branches:
-      - main
+      - kd-main-2025-5-0
 
 concurrency:
   group: changeset-${{ github.head_ref }}
@@ -30,7 +30,7 @@ jobs:
         run: |
           # IMPORTANT: Update this latestBranch whenever we move to a new major version:
           echo "latestBranch=2025-05" >> $GITHUB_ENV
-          echo "latest=${{ github.ref_name == 'main' }}" >> $GITHUB_ENV
+          echo "latest=${{ github.ref_name == 'kd-main-2025-5-0' }}" >> $GITHUB_ENV
 
       - name: Checkout the code
         uses: actions/checkout@v4
@@ -60,7 +60,7 @@ jobs:
           publish: npm run changeset publish
           # we use the commit message in next release workflow file. This avoid a next release when an actual release is happening
           commit: '[ci] release ${{ env.latestBranch }}'
-          title: '[ci] release ${{ env.latestBranch }}'
+          title: '[ci] CLI patch'
         env:
           GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
