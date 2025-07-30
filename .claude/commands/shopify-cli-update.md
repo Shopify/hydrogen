@@ -1,4 +1,4 @@
-# Shopify CLI Update After Hydrogen CLI Release
+# Create Shopify CLI PRs after releasing new version of @shopify/cli-hydrogen
 
 ## Context
 You need to update the Shopify CLI to use a new version of @shopify/cli-hydrogen that was just released from the Hydrogen repository. This requires creating TWO pull requests in the Shopify CLI repository - one for the main branch and one for the stable branch.
@@ -100,7 +100,7 @@ When creating PRs, keep descriptions concise and factual:
      --body "[AUTO-GENERATED WITH RELEASE NOTES]" \
      --base main
    ```
-   
+
    **Good PR Description Example**: https://github.com/Shopify/cli/pull/6188
    - Keep it concise: version update info + release notes
    - Avoid redundant explanations about why updates are needed
@@ -127,7 +127,7 @@ When creating PRs, keep descriptions concise and factual:
      --body "[AUTO-GENERATED WITH RELEASE NOTES]" \
      --base [STABLE_BRANCH]
    ```
-   
+
    **Note**: Use the same concise format as the main branch PR - no need for urgency explanations or justifications
 
 ### Phase 4: Post-PR Steps
