@@ -467,7 +467,7 @@ describe('pullVariables', () => {
           'BACKSLASH_INJECTION="value\\\\\\"; rm -rf /"',
         );
         expect(content).toContain('CONTROL_CHARS="value\u0000\u001B[31mevil"');
-        expect(content).toContain('NEWLINE_INJECTION=\'"value\necho hacked"\'');
+        expect(content).toContain('NEWLINE_INJECTION="value\necho hacked"');
       });
     });
   });
