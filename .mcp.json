@@ -20,10 +20,14 @@
       "command": "npx",
       "args": ["mcp-remote", "https://gitmcp.io/facebook/react"]
     },
-    "docs-remix-run": {
+    "docs-react-router": {
       "command": "npx",
-      "args": ["mcp-remote", "https://gitmcp.io/mjackson/remix-the-web"]
+      "args": ["mcp-remote", "https://gitmcp.io/remix-run/react-router"]
     },
+    "docs-remix": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://gitmcp.io/remix-run/remix"]
+    }
     "docs-hydrogen": {
       "command": "npx",
       "args": ["mcp-remote", "https://gitmcp.io/Shopify/hydrogen"]
@@ -31,10 +35,6 @@
     "docs-xstate": {
       "command": "npx",
       "args": ["mcp-remote", "https://gitmcp.io/statelyai/xstate"]
-    },
-    "docs-react-router": {
-      "command": "npx",
-      "args": ["mcp-remote", "https://gitmcp.io/remix-run/react-router"]
     },
     "shopify-dev-mcp": {
       "command": "npx",
