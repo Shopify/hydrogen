@@ -27,7 +27,7 @@
     "docs-remix": {
       "command": "npx",
       "args": ["mcp-remote", "https://gitmcp.io/remix-run/remix"]
-    }
+    },
     "docs-hydrogen": {
       "command": "npx",
       "args": ["mcp-remote", "https://gitmcp.io/Shopify/hydrogen"]
