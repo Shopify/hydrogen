@@ -1,5 +1,4 @@
 import {diffLines} from 'diff';
-import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
 import {
   renderConfirmationPrompt,
@@ -28,6 +27,36 @@ import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environ
 import {getStorefrontEnvVariables} from '../../../lib/graphql/admin/pull-variables.js';
 import {verifyLinkedStorefront} from '../../../lib/verify-linked-storefront.js';
 
+function needsQuoting(value: string): boolean {
+  // Check for shell metacharacters that require quoting to prevent parsing errors
+  // {} - Brace expansion
+  // @ # - Special characters that can break parsing
+  // \s - Whitespace (spaces, tabs, newlines)  
+  // " ' - Quote characters that need escaping
+  // \\ - Backslash escape character
+  // $ - Variable expansion
+  // ` - Command substitution
+  // | ; & - Command operators
+  // < > - Redirection operators
+  // () - Subshell grouping
+  // ! ? * - Glob patterns and history expansion
+  // [] - Character classes in glob patterns
+  // Also check for control characters (0x00-0x1F) and DEL (0x7F)
+  return /[{}@#\s"'\\$`|;&<>()!?*\[\]]/.test(value) || 
+         /[\x00-\x1F\x7F]/.test(value);
+}
+
+function quoteEnvValue(value: string): string {
+  if (!needsQuoting(value)) return value;
+  
+  // Escape backslashes first, then quotes to prevent command injection
+  // This prevents: value=\"; evil command\" from becoming "value=\\"; evil command\""
+  const escaped = value
+    .replaceAll('\\', '\\\\')  // Escape backslashes first
+    .replaceAll('"', '\\"');   // Then escape quotes
+  return `"${escaped}"`;
+}
+
 export default class EnvPull extends Command {
   static descriptionWithMarkdown =
     'Pulls environment variables from the linked Hydrogen storefront and writes them to an `.env` file.';
@@ -36,7 +65,6 @@ export default class EnvPull extends Command {
 
   static flags = {
     ...commonFlags.env,
-    ...commonFlags.envBranch,
     ...commonFlags.envFile,
     ...commonFlags.path,
     ...commonFlags.force,
@@ -124,7 +152,7 @@ export async function runEnvPull({
   variables.forEach(({isSecret, key, value}) => {
     // We need to force an empty string for secret variables, otherwise
     // patchEnvFile will treat them as new values even if they already exist.
-    fetchedEnv[key] = isSecret ? `""` : value;
+    fetchedEnv[key] = isSecret ? `""` : quoteEnvValue(value);
   });
 
   if ((await fileExists(dotEnvPath)) && !force) {
