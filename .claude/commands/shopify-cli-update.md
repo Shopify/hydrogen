@@ -133,7 +133,7 @@ When creating PRs, keep descriptions concise and factual:
 ### Phase 4: Post-PR Steps
 
 1. **Ping for review**
-   - Message `#develop-team-app-inner-loop` channel
+   - Message `#app-development-app-inner-loop` channel
    - Request patch release for stable branch
 
 2. **Monitor for cli-kit version**
