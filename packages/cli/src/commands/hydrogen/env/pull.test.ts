@@ -309,7 +309,7 @@ describe('pullVariables', () => {
         await runEnvPull({path: tmpDir, envFile});
 
         expect(await readFile(filePath)).toContain(
-          'ORDERGROOVE_HASH="IirR{L3T#udhJ@gqKPN}Ne@sLuez73X)"'
+          'ORDERGROOVE_HASH="IirR{L3T#udhJ@gqKPN}Ne@sLuez73X)"',
         );
       });
     });
@@ -358,7 +358,7 @@ describe('pullVariables', () => {
         await runEnvPull({path: tmpDir, envFile});
 
         expect(await readFile(filePath)).toContain(
-          'QUOTED_VALUE="value\\"with\\"quotes"'
+          'QUOTED_VALUE="value\\"with\\"quotes"',
         );
       });
     });
@@ -439,7 +439,7 @@ describe('pullVariables', () => {
             isSecret: false,
           },
           {
-            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/2', 
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/2',
             key: 'CONTROL_CHARS',
             value: 'value\u0000\u001B[31mevil',
             readOnly: false,
@@ -447,7 +447,7 @@ describe('pullVariables', () => {
           },
           {
             id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/3',
-            key: 'NEWLINE_INJECTION', 
+            key: 'NEWLINE_INJECTION',
             value: 'value\necho hacked',
             readOnly: false,
             isSecret: false,
@@ -461,9 +461,11 @@ describe('pullVariables', () => {
         await runEnvPull({path: tmpDir, envFile});
 
         const content = await readFile(filePath);
-        
+
         // Verify malicious values are properly quoted and escaped to prevent injection
-        expect(content).toContain('BACKSLASH_INJECTION="value\\\\\\"; rm -rf /"');
+        expect(content).toContain(
+          'BACKSLASH_INJECTION="value\\\\\\"; rm -rf /"',
+        );
         expect(content).toContain('CONTROL_CHARS="value\u0000\u001B[31mevil"');
         expect(content).toContain('NEWLINE_INJECTION=\'"value\necho hacked"\'');
       });
