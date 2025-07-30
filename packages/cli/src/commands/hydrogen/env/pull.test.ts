@@ -467,7 +467,46 @@ describe('pullVariables', () => {
           'BACKSLASH_INJECTION="value\\\\\\"; rm -rf /"',
         );
         expect(content).toContain('CONTROL_CHARS="value\u0000\u001B[31mevil"');
-        expect(content).toContain('NEWLINE_INJECTION="value\necho hacked"');
+        expect(content).toContain('NEWLINE_INJECTION="value\\necho hacked"');
+      });
+    });
+
+    it('escapes special characters following dotenv standards', async () => {
+      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+        id: SHOPIFY_CONFIG.storefront.id,
+        environmentVariables: [
+          {
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
+            key: 'MULTILINE_KEY',
+            value:
+              '-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA04up8hoqzS1...\n-----END RSA PRIVATE KEY-----',
+            readOnly: false,
+            isSecret: false,
+          },
+          {
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/2',
+            key: 'TABS_AND_RETURNS',
+            value: 'line1\tcolumn2\rreturn\nline2',
+            readOnly: false,
+            isSecret: false,
+          },
+        ],
+      });
+
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, envFile);
+
+        await runEnvPull({path: tmpDir, envFile});
+
+        const content = await readFile(filePath);
+
+        // Verify dotenv-compatible escaping
+        expect(content).toContain(
+          'MULTILINE_KEY="-----BEGIN RSA PRIVATE KEY-----\\nMIIEpAIBAAKCAQEA04up8hoqzS1...\\n-----END RSA PRIVATE KEY-----"',
+        );
+        expect(content).toContain(
+          'TABS_AND_RETURNS="line1\\tcolumn2\\rreturn\\nline2"',
+        );
       });
     });
   });

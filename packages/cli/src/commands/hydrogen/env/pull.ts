@@ -50,11 +50,14 @@ function needsQuoting(value: string): boolean {
 function quoteEnvValue(value: string): string {
   if (!needsQuoting(value)) return value;
 
-  // Escape backslashes first, then quotes to prevent command injection
+  // Escape backslashes first, then quotes, then newlines for dotenv compatibility
   // This prevents: value=\"; evil command\" from becoming "value=\\"; evil command\""
   const escaped = value
     .replaceAll('\\', '\\\\') // Escape backslashes first
-    .replaceAll('"', '\\"'); // Then escape quotes
+    .replaceAll('"', '\\"') // Then escape quotes
+    .replaceAll('\n', '\\n') // Then escape newlines for dotenv compatibility
+    .replaceAll('\r', '\\r') // Also escape carriage returns
+    .replaceAll('\t', '\\t'); // And tabs for completeness
   return `"${escaped}"`;
 }
 
