@@ -1,5 +1,10 @@
 # @shopify/cli-hydrogen
 
+## 11.1.1
+
+### Deprecated release
+This release contained breaking changes and was immediately deprecated. Do not use.
+
 ## 11.1.0
 
 ### Minor Changes
