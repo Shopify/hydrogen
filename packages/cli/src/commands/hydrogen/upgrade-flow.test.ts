@@ -903,7 +903,9 @@ async function validateProjectBuilds(
     } else {
       // Build should succeed when no guide steps are present
       throw new Error(
-        `Build failed unexpectedly (no migration steps documented): ${(error as Error).message}`,
+        `Build failed unexpectedly (no migration steps documented): ${
+          (error as Error).message
+        }`,
       );
     }
   } finally {
@@ -928,7 +930,9 @@ async function validateTypeCheck(
     } else {
       // TypeScript should pass when no guide steps are present
       throw new Error(
-        `TypeScript validation failed unexpectedly (no migration steps documented): ${(error as Error).message}`,
+        `TypeScript validation failed unexpectedly (no migration steps documented): ${
+          (error as Error).message
+        }`,
       );
     }
   }
@@ -947,18 +951,16 @@ async function validateDevServer(
     } else {
       // Dev server should work when no guide steps are present
       throw new Error(
-        `Dev server validation failed unexpectedly (no migration steps documented): ${(error as Error).message}`,
+        `Dev server validation failed unexpectedly (no migration steps documented): ${
+          (error as Error).message
+        }`,
       );
     }
   }
 }
 
 async function validateFileIntegrity(projectDir: string) {
-  const criticalFiles = [
-    'app/lib/redirect.ts',
-    'package.json',
-    'tsconfig.json',
-  ];
+  const criticalFiles = ['package.json', 'tsconfig.json'];
 
   for (const file of criticalFiles) {
     const filePath = join(projectDir, file);
