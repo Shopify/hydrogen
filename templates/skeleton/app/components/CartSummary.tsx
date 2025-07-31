@@ -2,6 +2,7 @@ import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import type {CartLayout} from '~/components/CartMain';
 import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
 import {useEffect, useRef} from 'react';
+import type {ReactNode} from 'react';
 import {FetcherWithComponents, useFetcher} from 'react-router';
 
 type CartSummaryProps = {
@@ -109,7 +110,7 @@ function UpdateDiscountForm({
   fetcherKey,
 }: {
   discountCodes?: string[];
-  children: React.ReactNode;
+  children: ReactNode;
   fetcherKey?: string;
 }) {
   return (
@@ -192,7 +193,7 @@ function UpdateGiftCardForm({
   giftCardCodes?: string[];
   saveAppliedCode?: (code: string) => void;
   removeAppliedCode?: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <CartForm

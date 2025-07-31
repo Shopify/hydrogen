@@ -50,7 +50,7 @@ export function ProductProvider({
   children,
   data: product,
   initialVariantId: explicitVariantId,
-}: ProductProviderProps): JSX.Element {
+}: ProductProviderProps) {
   // The flattened variants
   const variants = useMemo(
     () => flattenConnection(product.variants ?? {}),

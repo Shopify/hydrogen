@@ -4,6 +4,7 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {ProductItem} from '~/components/ProductItem';
+import type {CollectionQuery} from 'storefrontapi.generated';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
@@ -73,10 +74,10 @@ export default function Collection() {
 
   return (
     <div className="collection">
-      <h1>{collection.title}</h1>
-      <p className="collection-description">{collection.description}</p>
-      <PaginatedResourceSection
-        connection={collection.products}
+      <h1>{collection!.title}</h1>
+      <p className="collection-description">{collection!.description}</p>
+      <PaginatedResourceSection<NonNullable<CollectionQuery['collection']>['products']['nodes'][number]>
+        connection={collection!.products}
         resourcesClassName="products-grid"
       >
         {({node: product, index}) => (

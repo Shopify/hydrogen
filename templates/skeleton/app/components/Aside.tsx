@@ -28,9 +28,9 @@ export function Aside({
   heading,
   type,
 }: {
-  children?: React.ReactNode;
+  children?: ReactNode;
   type: AsideType;
-  heading: React.ReactNode;
+  heading: ReactNode;
 }) {
   const {type: activeType, close} = useAside();
   const expanded = type === activeType;

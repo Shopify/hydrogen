@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {render} from '@testing-library/react';
+import {render, act} from '@testing-library/react';
 import {OptimisticInput} from './optimistic-ui';
 
 function getOptimisticIdentifier(container: HTMLElement) {
