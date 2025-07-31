@@ -1,5 +1,18 @@
 import {describe, it, expect} from 'vitest';
-import {parseGid, addDataIf, schemaWrapper} from './analytics-utils.js';
+import {
+  parseGid,
+  addDataIf,
+  schemaWrapper,
+  getProductsValue,
+  randomNatural,
+  getProductValue,
+} from './analytics-utils.js';
+import {ShopifyAnalyticsProduct} from './analytics-types.js';
+import {expectType} from 'ts-expect';
+import {
+  BASE_PAYLOAD,
+  BASE_PRODUCT_PAYLOAD,
+} from './analytics-schema.test.helpers.js';
 
 describe('analytic-utils', () => {
   describe('parseGid', () => {
@@ -149,6 +162,93 @@ describe('analytic-utils', () => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         metadata: {event_created_at_ms: expect.any(Number)},
       });
+    });
+  });
+
+  describe(`getProductValue`, () => {
+    it(`gets single quantity product value`, () => {
+      const productPayload = {
+        ...BASE_PRODUCT_PAYLOAD,
+        quantity: 1,
+      };
+      const calculatedValue = getProductValue(productPayload);
+
+      expectType<ShopifyAnalyticsProduct>(productPayload);
+      expect(calculatedValue).toEqual(parseFloat(productPayload.price));
+    });
+
+    it(`gets arbitrary quantity product value`, () => {
+      const productPayload = {
+        ...BASE_PRODUCT_PAYLOAD,
+        quantity: randomNatural(),
+      };
+      const calculatedValue = getProductValue(productPayload);
+
+      expectType<ShopifyAnalyticsProduct>(productPayload);
+      expect(calculatedValue).toBeCloseTo(
+        parseFloat(productPayload.price) * productPayload.quantity,
+      );
+    });
+  });
+
+  describe(`getProductsValue`, () => {
+    it(`gets singleton products value`, () => {
+      const productPayload = {
+        ...BASE_PRODUCT_PAYLOAD,
+        quantity: randomNatural(),
+      };
+      const productsPayload = [productPayload];
+      const addToCartPayload = {
+        ...BASE_PAYLOAD,
+        cartId: 'gid://shopify/Cart/abc123',
+        products: productsPayload,
+        totalValue: getProductsValue(productsPayload),
+      };
+
+      expectType<ShopifyAnalyticsProduct>(productPayload);
+      expect(addToCartPayload.totalValue).toBeCloseTo(
+        parseFloat(productPayload.price) * productPayload.quantity,
+      );
+    });
+
+    it(`gets tuple products value`, () => {
+      const productPayload = {
+        ...BASE_PRODUCT_PAYLOAD,
+        quantity: randomNatural(),
+      };
+      const productsPayload = [productPayload, productPayload];
+      const addToCartPayload = {
+        ...BASE_PAYLOAD,
+        cartId: 'gid://shopify/Cart/abc123',
+        products: productsPayload,
+        totalValue: getProductsValue(productsPayload),
+      };
+
+      expectType<ShopifyAnalyticsProduct>(productPayload);
+      expect(addToCartPayload.totalValue).toBeCloseTo(
+        parseFloat(productPayload.price) * productPayload.quantity * 2,
+      );
+    });
+
+    it(`gets N products value`, () => {
+      const productPayload = {
+        ...BASE_PRODUCT_PAYLOAD,
+        quantity: randomNatural(),
+      };
+      const productsPayload = new Array(randomNatural()).fill(productPayload);
+      const addToCartPayload = {
+        ...BASE_PAYLOAD,
+        cartId: 'gid://shopify/Cart/abc123',
+        products: productsPayload,
+        totalValue: getProductsValue(productsPayload),
+      };
+
+      expectType<ShopifyAnalyticsProduct>(productPayload);
+      expect(addToCartPayload.totalValue).toBeCloseTo(
+        parseFloat(productPayload.price) *
+          productPayload.quantity *
+          productsPayload.length,
+      );
     });
   });
 });
