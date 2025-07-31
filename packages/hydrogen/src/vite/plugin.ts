@@ -170,7 +170,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
         });
       },
       configureServer: {
-        order: 'pre',
+        order: 'pre' as const,
         handler: (viteDevServer) => {
           return () => {
             setupHydrogenMiddleware(
