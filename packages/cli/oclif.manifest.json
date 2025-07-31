@@ -741,6 +741,18 @@
           "multiple": false,
           "type": "option"
         },
+        "env-branch": {
+          "deprecated": {
+            "to": "env",
+            "message": "--env-branch is deprecated. Use --env instead."
+          },
+          "description": "Specifies the environment to perform the operation using its Git branch name.",
+          "env": "SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH",
+          "name": "env-branch",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "env-file": {
           "description": "Path to an environment file to override existing environment variables. Defaults to the '.env' located in your project path `--path`.",
           "name": "env-file",
