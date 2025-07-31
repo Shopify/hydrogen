@@ -283,4 +283,231 @@ describe('pullVariables', () => {
       });
     });
   });
+
+  describe('environment variable quoting', () => {
+    beforeEach(() => {
+      vi.mocked(renderConfirmationPrompt).mockResolvedValue(true);
+    });
+
+    it('quotes environment variables with shell metacharacters', async () => {
+      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+        id: SHOPIFY_CONFIG.storefront.id,
+        environmentVariables: [
+          {
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
+            key: 'ORDERGROOVE_HASH',
+            value: 'IirR{L3T#udhJ@gqKPN}Ne@sLuez73X)',
+            readOnly: false,
+            isSecret: false,
+          },
+        ],
+      });
+
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, envFile);
+
+        await runEnvPull({path: tmpDir, envFile});
+
+        expect(await readFile(filePath)).toContain(
+          'ORDERGROOVE_HASH="IirR{L3T#udhJ@gqKPN}Ne@sLuez73X)"',
+        );
+      });
+    });
+
+    it('does not quote simple alphanumeric values for backward compatibility', async () => {
+      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+        id: SHOPIFY_CONFIG.storefront.id,
+        environmentVariables: [
+          {
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
+            key: 'SIMPLE_VALUE',
+            value: 'abc123',
+            readOnly: false,
+            isSecret: false,
+          },
+        ],
+      });
+
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, envFile);
+
+        await runEnvPull({path: tmpDir, envFile});
+
+        expect(await readFile(filePath)).toContain('SIMPLE_VALUE=abc123');
+        expect(await readFile(filePath)).not.toContain('SIMPLE_VALUE="abc123"');
+      });
+    });
+
+    it('escapes internal quotes in values', async () => {
+      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+        id: SHOPIFY_CONFIG.storefront.id,
+        environmentVariables: [
+          {
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
+            key: 'QUOTED_VALUE',
+            value: 'value"with"quotes',
+            readOnly: false,
+            isSecret: false,
+          },
+        ],
+      });
+
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, envFile);
+
+        await runEnvPull({path: tmpDir, envFile});
+
+        expect(await readFile(filePath)).toContain(
+          'QUOTED_VALUE="value\\"with\\"quotes"',
+        );
+      });
+    });
+
+    it('maintains secret variable behavior with quoting logic', async () => {
+      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+        id: SHOPIFY_CONFIG.storefront.id,
+        environmentVariables: [
+          {
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
+            key: 'SECRET_WITH_SPECIAL',
+            value: 'secret{value}@test',
+            readOnly: false,
+            isSecret: true,
+          },
+        ],
+      });
+
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, envFile);
+
+        await runEnvPull({path: tmpDir, envFile});
+
+        expect(await readFile(filePath)).toContain('SECRET_WITH_SPECIAL=""');
+        expect(await readFile(filePath)).not.toContain('secret{value}@test');
+      });
+    });
+
+    it('handles mixed simple and complex values correctly', async () => {
+      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+        id: SHOPIFY_CONFIG.storefront.id,
+        environmentVariables: [
+          {
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
+            key: 'SIMPLE',
+            value: 'abc123',
+            readOnly: false,
+            isSecret: false,
+          },
+          {
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/2',
+            key: 'COMPLEX',
+            value: 'val{ue}@test',
+            readOnly: false,
+            isSecret: false,
+          },
+          {
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/3',
+            key: 'SECRET',
+            value: 'anything',
+            readOnly: false,
+            isSecret: true,
+          },
+        ],
+      });
+
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, envFile);
+
+        await runEnvPull({path: tmpDir, envFile});
+
+        const content = await readFile(filePath);
+        expect(content).toContain('SIMPLE=abc123');
+        expect(content).toContain('COMPLEX="val{ue}@test"');
+        expect(content).toContain('SECRET=""');
+      });
+    });
+
+    it('handles potentially malicious values safely', async () => {
+      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+        id: SHOPIFY_CONFIG.storefront.id,
+        environmentVariables: [
+          {
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
+            key: 'BACKSLASH_INJECTION',
+            value: 'value\\"; rm -rf /',
+            readOnly: false,
+            isSecret: false,
+          },
+          {
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/2',
+            key: 'CONTROL_CHARS',
+            value: 'value\u0000\u001B[31mevil',
+            readOnly: false,
+            isSecret: false,
+          },
+          {
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/3',
+            key: 'NEWLINE_INJECTION',
+            value: 'value\necho hacked',
+            readOnly: false,
+            isSecret: false,
+          },
+        ],
+      });
+
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, envFile);
+
+        await runEnvPull({path: tmpDir, envFile});
+
+        const content = await readFile(filePath);
+
+        // Verify malicious values are properly quoted and escaped to prevent injection
+        expect(content).toContain(
+          'BACKSLASH_INJECTION="value\\\\\\"; rm -rf /"',
+        );
+        expect(content).toContain('CONTROL_CHARS="value\u0000\u001B[31mevil"');
+        expect(content).toContain('NEWLINE_INJECTION="value\\necho hacked"');
+      });
+    });
+
+    it('escapes special characters following dotenv standards', async () => {
+      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+        id: SHOPIFY_CONFIG.storefront.id,
+        environmentVariables: [
+          {
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
+            key: 'MULTILINE_KEY',
+            value:
+              '-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA04up8hoqzS1...\n-----END RSA PRIVATE KEY-----',
+            readOnly: false,
+            isSecret: false,
+          },
+          {
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/2',
+            key: 'TABS_AND_RETURNS',
+            value: 'line1\tcolumn2\rreturn\nline2',
+            readOnly: false,
+            isSecret: false,
+          },
+        ],
+      });
+
+      await inTemporaryDirectory(async (tmpDir) => {
+        const filePath = joinPath(tmpDir, envFile);
+
+        await runEnvPull({path: tmpDir, envFile});
+
+        const content = await readFile(filePath);
+
+        // Verify dotenv-compatible escaping
+        expect(content).toContain(
+          'MULTILINE_KEY="-----BEGIN RSA PRIVATE KEY-----\\nMIIEpAIBAAKCAQEA04up8hoqzS1...\\n-----END RSA PRIVATE KEY-----"',
+        );
+        expect(content).toContain(
+          'TABS_AND_RETURNS="line1\\tcolumn2\\rreturn\\nline2"',
+        );
+      });
+    });
+  });
 });

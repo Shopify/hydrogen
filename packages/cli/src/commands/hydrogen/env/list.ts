@@ -1,4 +1,3 @@
-import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
 import {pluralize} from '@shopify/cli-kit/common/string';
 import {
