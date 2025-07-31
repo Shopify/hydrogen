@@ -69,6 +69,7 @@ export default class EnvPull extends Command {
 
   static flags = {
     ...commonFlags.env,
+    ...commonFlags.envBranch,
     ...commonFlags.envFile,
     ...commonFlags.path,
     ...commonFlags.force,
