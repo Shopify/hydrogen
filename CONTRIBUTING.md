@@ -156,14 +156,11 @@ Consider how to provide the best developer experience when using this component 
 
 ## Secrets
 
-We use the ejson file `secrets.ejson` to store all our secrets. If a new secret needs to be added:
+We use the ejson file `secrets.ejson` to store all our secrets. You can add new secrets to this file and they will be automatically encrypted when you commit the changes. Secrets can also be manually encrypted by running `npm run encrypt`. The public key (which is inside the `secrets.ejson` file) is used to encrypt secrets.
 
-- If you are new to the Shopify Hydrogen team:
-    - Ask one of the other team members to send you a hush link with the private key so that you will be able to add new keys yourself in the future.
-    - Once you have the hush link, paste this command in your terminal **WITHOUT running it yet**, then copy the private key value (from the hush link) to your clipboard and run the command:
-    ```
-    ./scripts/setup-ejson-private-key.sh
-    ```
-- Else:
-    - Ask a Hydrogen team member to add the new secret for you
+Secrets can only be decrypted if you have the private key. If you are new to the Shopify Hydrogen team, ask one of the other team members to send you a hush link with the private key.
 
+Once you have the hush link, paste this command in your terminal **WITHOUT running it yet**, then copy the private key value (from the hush link) to your clipboard and run the command:
+```
+./scripts/setup-ejson-private-key.sh
+```
