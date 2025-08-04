@@ -87,12 +87,65 @@ describe('upgrade flow integration', () => {
       const initialPackageJson = JSON.parse(
         await readFile(join(projectDir, 'package.json'), 'utf8'),
       );
+
       const initialHydrogenVersion =
         initialPackageJson.dependencies?.['@shopify/hydrogen'];
-      expect(
-        initialHydrogenVersion === toVersion ||
-          initialHydrogenVersion === `^${toVersion}`,
-      ).toBe(false);
+
+      // Check if this is a same-version dependency upgrade
+      const isSameVersionUpgrade = fromVersion === toVersion;
+
+      if (!isSameVersionUpgrade) {
+        // For different version upgrades, ensure we're not already on the target version
+        expect(
+          initialHydrogenVersion === toVersion ||
+            initialHydrogenVersion === `^${toVersion}`,
+        ).toBe(false);
+      } else {
+        // For same-version upgrades, we need to check if it's actually upgradeable
+        // The upgrade.ts logic uses hasOutdatedDependencies which excludes @shopify/cli
+        const hasOutdatedDeps = Object.entries({
+          ...latestRelease.dependencies,
+          ...latestRelease.devDependencies,
+        }).some(([name, version]) => {
+          if (name === '@shopify/cli') return false; // Skip CLI as it's excluded in upgrade.ts
+          const currentVersion =
+            initialPackageJson.dependencies?.[name] ||
+            initialPackageJson.devDependencies?.[name];
+          if (!currentVersion) return false;
+
+          try {
+            // Use semver to compare versions like upgrade.ts does
+            const semver = require('semver');
+            return semver.gt(
+              semver.minVersion(version).version,
+              semver.minVersion(currentVersion).version,
+            );
+          } catch {
+            // Fallback to string comparison if semver fails
+            const versionPattern = /^[\^~]?([\d.]+)/;
+            const currentMatch = currentVersion.match(versionPattern);
+            const targetMatch = version.match(versionPattern);
+
+            if (currentMatch && targetMatch) {
+              return currentMatch[1] !== targetMatch[1];
+            }
+            return false;
+          }
+        });
+
+        if (!hasOutdatedDeps) {
+          // If there are no outdated dependencies (besides CLI), this isn't an upgradeable release
+          throw new Error(
+            `No upgradeable dependencies found for same-version upgrade from ${fromVersion} to ${toVersion}`,
+          );
+        }
+
+        // Verify we're on the same Hydrogen version
+        expect(
+          initialHydrogenVersion === toVersion ||
+            initialHydrogenVersion === `^${toVersion}`,
+        ).toBe(true);
+      }
 
       // Check what scenarios apply to this upgrade
       const hasGuide =
@@ -102,14 +155,63 @@ describe('upgrade flow integration', () => {
       // Run upgrade (single version upgrade should work cleanly)
       await runUpgradeCommand(projectDir, toVersion);
 
-      // Verify version was updated
+      // Verify upgrade completed successfully
       const packageJson = JSON.parse(
         await readFile(join(projectDir, 'package.json'), 'utf8'),
       );
       const hydrogenVersion = packageJson.dependencies?.['@shopify/hydrogen'];
+
+      // Hydrogen version should match the target version
       expect(
         hydrogenVersion === toVersion || hydrogenVersion === `^${toVersion}`,
       ).toBe(true);
+
+      // For same-version upgrades, verify dependencies were actually updated
+      if (isSameVersionUpgrade) {
+        // Check that at least one dependency (other than @shopify/cli) was updated
+        const dependenciesUpdated = Object.entries({
+          ...latestRelease.dependencies,
+          ...latestRelease.devDependencies,
+        }).some(([name, version]) => {
+          if (name === '@shopify/cli') return false; // CLI is excluded from upgrade checks
+          if (name === '@shopify/hydrogen') return false; // Hydrogen version stays the same
+
+          const initialVersion =
+            initialPackageJson.dependencies?.[name] ||
+            initialPackageJson.devDependencies?.[name];
+          const currentVersion =
+            packageJson.dependencies?.[name] ||
+            packageJson.devDependencies?.[name];
+
+          // Check if this dependency was outdated and is now updated
+          if (initialVersion && currentVersion) {
+            try {
+              const semver = require('semver');
+              const wasOutdated = semver.gt(
+                semver.minVersion(version).version,
+                semver.minVersion(initialVersion).version,
+              );
+              const isUpdated = semver.gte(
+                semver.minVersion(currentVersion).version,
+                semver.minVersion(version).version,
+              );
+              return wasOutdated && isUpdated;
+            } catch {
+              // Fallback comparison
+              const versionPattern = /^[\^~]?([\d.]+)/;
+              const currentMatch = currentVersion.match(versionPattern);
+              const targetMatch = version.match(versionPattern);
+
+              if (currentMatch && targetMatch) {
+                return currentMatch[1] === targetMatch[1];
+              }
+            }
+          }
+          return false;
+        });
+
+        expect(dependenciesUpdated).toBe(true);
+      }
 
       // Check guide generation and analyze breaking changes
       const guideFile = join(
@@ -138,14 +240,40 @@ describe('upgrade flow integration', () => {
       // Test dependency management - validate removals and additions
       await validateDependencyChanges(projectDir, fromRelease, latestRelease);
 
-      // Test build functionality - strict if no guide steps, graceful if guide has steps
-      await validateProjectBuilds(projectDir, hasBreakingChanges);
+      // Test build functionality - always try it first
+      let buildFailed = false;
+      let buildError: Error | undefined;
+      try {
+        await validateProjectBuilds(projectDir, hasBreakingChanges);
+      } catch (error) {
+        buildFailed = true;
+        buildError = error as Error;
+      }
 
-      // Test typecheck functionality - strict if no guide steps, graceful if guide has steps
-      await validateTypeCheck(projectDir, hasBreakingChanges);
+      // Test typecheck functionality - always try it
+      let typecheckFailed = false;
+      let typecheckError: Error | undefined;
+      try {
+        await validateTypeCheck(projectDir, hasBreakingChanges);
+      } catch (error) {
+        typecheckFailed = true;
+        typecheckError = error as Error;
+      }
 
-      // Test dev server functionality - strict if no guide steps, graceful if guide has steps
-      await validateDevServer(projectDir, hasBreakingChanges);
+      // Test dev server functionality - always try it
+      let devFailed = false;
+      let devError: Error | undefined;
+      try {
+        await validateDevServer(projectDir, hasBreakingChanges);
+      } catch (error) {
+        devFailed = true;
+        devError = error as Error;
+      }
+
+      // With the renderInfo fix, all failures are now unexpected
+      if (buildFailed) throw buildError;
+      if (typecheckFailed) throw typecheckError;
+      if (devFailed) throw devError;
 
       // Validate critical file integrity (always strict)
       await validateFileIntegrity(projectDir);
@@ -701,15 +829,26 @@ async function testDevServer(projectDir: string, phase: string) {
     await addTestRoute(projectDir);
 
     // Start the dev server
-    devProcess = spawn('npm', ['run', 'dev', '--', '--port', port.toString()], {
-      cwd: projectDir,
-      env: {
-        ...process.env,
-        PORT: port.toString(),
-        SESSION_SECRET: 'test-session-secret-for-upgrade-test',
+    devProcess = spawn(
+      'npm',
+      [
+        'run',
+        'dev',
+        '--',
+        '--port',
+        port.toString(),
+        '--disable-version-check',
+      ],
+      {
+        cwd: projectDir,
+        env: {
+          ...process.env,
+          PORT: port.toString(),
+          SESSION_SECRET: 'test-session-secret-for-upgrade-test',
+        },
+        stdio: ['pipe', 'pipe', 'pipe'],
       },
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
+    );
 
     let serverOutput = '';
     let serverErrors = '';
