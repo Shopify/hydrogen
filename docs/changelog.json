@@ -7,7 +7,9 @@
       "version": "2025.4.1",
       "hash": "e4f44954a5dc53e6dfccd1b7e96de593bbb0887a",
       "commit": "https://github.com/Shopify/hydrogen/commit/e4f44954a5dc53e6dfccd1b7e96de593bbb0887a",
-      "dependencies": {},
+      "dependencies": {
+        "@shopify/hydrogen": "2025.4.1"
+      },
       "devDependencies": {
         "@shopify/cli": "~3.83.2",
         "vite": "^6.2.5"
