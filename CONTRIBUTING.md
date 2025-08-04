@@ -153,3 +153,14 @@ Consider what a sensible default would be for the component or abstraction. Look
 ### Prioritize developer experience
 
 Consider how to provide the best developer experience when using this component or abstraction. Hydrogen must be fun and easy to use, with good ergonomics, types and tooling. Developers should be **delighted** when they use Hydrogen. To quote Tobi Lütke: “Delight works by taking your experience minus your expectation, and if the end result is a positive number, you are delighted by that margin.”
+
+## Secrets
+
+We use the ejson file `secrets.ejson` to store all our secrets. You can add new secrets to this file and they will be automatically encrypted when you commit the changes. Secrets can also be manually encrypted by running `npm run encrypt`. The public key (which is inside the `secrets.ejson` file) is used to encrypt secrets.
+
+Secrets can only be decrypted if you have the private key. If you are new to the Shopify Hydrogen team, ask one of the other team members to send you a hush link with the private key.
+
+Once you have the hush link, paste this command in your terminal **WITHOUT running it yet**, then copy the private key value (from the hush link) to your clipboard and run the command:
+```
+./scripts/setup-ejson-private-key.sh
+```

@@ -10,11 +10,13 @@
     "build:templates": "turbo build --parallel --filter=./templates/*",
     "build:all": "npm run build:pkg && npm run build:templates && npm run build:examples",
     "ci:checks": "turbo run lint test format:check typecheck",
+    "decrypt": "ejson decrypt secrets.ejson",
     "dev": "npm run dev:pkg",
     "dev:pkg": "turbo dev --parallel --filter=./packages/*",
     "dev:app": "cd templates/skeleton && npm run dev --",
     "docs:build": "turbo run build-docs",
     "docs:preview": "turbo run preview-docs",
+    "encrypt": "ejson encrypt secrets.ejson",
     "lint": "eslint --no-error-on-unmatched-pattern ./packages",
     "lint-staged": "eslint --no-error-on-unmatched-pattern",
     "format": "prettier --write --ignore-unknown ./packages",
@@ -30,7 +32,8 @@
     "version:next": "node scripts/changeset-version-next.mjs",
     "changeset": "changeset",
     "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/*/dist && rimraf templates/*/.cache",
-    "check": "npm run build && npm run lint && npm run typecheck && npm run test"
+    "check": "npm run build && npm run lint && npm run typecheck && npm run test",
+    "pre-commit:encrypt": "bash -c 'git diff --cached --name-only | grep -q \"^secrets.ejson$\" && ejson encrypt secrets.ejson && git add secrets.ejson || true'"
   },
   "workspaces": [
     "docs/preview",
@@ -101,7 +104,7 @@
     "node": ">=18.0.0"
   },
   "gitHooks": {
-    "pre-commit": "lint-staged"
+    "pre-commit": "lint-staged && npm run pre-commit:encrypt"
   },
   "lint-staged": {
     "*.{js,jsx}": [

@@ -285,11 +285,97 @@ describe('upgrade', async () => {
     });
   });
 
-  // TODO: finish this test once merged and published so that package.json is accessible
-  describe.skip('fetchChangelog', () => {
-    it('fetches the latest changelog from the hydrogen repo', async () => {});
+  describe('fetchChangelog', () => {
+    it('fetches the latest changelog from the hydrogen repo', async () => {
+      // Force remote changelog usage by clearing local environment
+      const originalForceLocal = process.env.FORCE_CHANGELOG_SOURCE;
+      process.env.FORCE_CHANGELOG_SOURCE = 'remote';
 
-    it('renders an error message if the changelog could not be fetched', async () => {});
+      try {
+        const changelog = await getChangelog();
+
+        // Verify changelog structure
+        expect(changelog).toBeDefined();
+        expect(changelog).toHaveProperty('url');
+        expect(changelog).toHaveProperty('version');
+        expect(changelog).toHaveProperty('releases');
+
+        // Verify URL points to GitHub pulls
+        expect(changelog.url).toMatch(/github\.com\/Shopify\/hydrogen/);
+
+        // Verify releases array structure
+        expect(Array.isArray(changelog.releases)).toBe(true);
+        expect(changelog.releases.length).toBeGreaterThan(0);
+
+        // Verify first release has required fields
+        const latestRelease = changelog.releases[0];
+        expect(latestRelease).toBeDefined();
+
+        if (!latestRelease) {
+          throw new Error('Latest release is undefined');
+        }
+
+        expect(latestRelease).toHaveProperty('title');
+        expect(latestRelease).toHaveProperty('version');
+        expect(latestRelease).toHaveProperty('hash');
+        expect(latestRelease).toHaveProperty('commit');
+        expect(latestRelease).toHaveProperty('dependencies');
+        expect(latestRelease).toHaveProperty('devDependencies');
+        expect(latestRelease).toHaveProperty('features');
+        expect(latestRelease).toHaveProperty('fixes');
+
+        // Verify version format (YYYY.M.P)
+        expect(latestRelease.version).toMatch(/^\d{4}\.\d+\.\d+$/);
+
+        // Verify commit URL format
+        expect(latestRelease.commit).toMatch(
+          /^https:\/\/github\.com\/Shopify\/hydrogen/,
+        );
+
+        // Verify dependencies are objects
+        expect(typeof latestRelease.dependencies).toBe('object');
+        expect(typeof latestRelease.devDependencies).toBe('object');
+
+        // Verify features and fixes are arrays
+        expect(Array.isArray(latestRelease.features)).toBe(true);
+        expect(Array.isArray(latestRelease.fixes)).toBe(true);
+      } finally {
+        // Restore original environment
+        if (originalForceLocal !== undefined) {
+          process.env.FORCE_CHANGELOG_SOURCE = originalForceLocal;
+        } else {
+          delete process.env.FORCE_CHANGELOG_SOURCE;
+        }
+      }
+    }, 10000); // 10 second timeout for network call
+
+    it('successfully loads changelog when network is available', async () => {
+      // This test validates that the changelog function works as expected
+      // Both local and remote sources should provide valid changelog data
+      const changelog = await getChangelog();
+
+      // Test core functionality
+      expect(changelog.releases).toBeDefined();
+      expect(changelog.releases.length).toBeGreaterThan(0);
+
+      // Test that releases have the expected structure
+      const sampleRelease = changelog.releases[0];
+      expect(sampleRelease).toBeDefined();
+
+      if (!sampleRelease) {
+        throw new Error('Sample release is undefined');
+      }
+
+      expect(sampleRelease.version).toBeDefined();
+      expect(sampleRelease.dependencies).toBeDefined();
+      expect(sampleRelease.devDependencies).toBeDefined();
+
+      // Test that the structure matches what upgrade functions expect
+      expect(typeof sampleRelease.dependencies).toBe('object');
+      expect(typeof sampleRelease.devDependencies).toBe('object');
+      expect(Array.isArray(sampleRelease.features)).toBe(true);
+      expect(Array.isArray(sampleRelease.fixes)).toBe(true);
+    });
   });
 
   describe('getAvailableUpgrades', async () => {
@@ -830,6 +916,40 @@ describe('upgrade', async () => {
       expect(args).toEqual(result);
     });
 
+    it('installs all React Router packages even if only a subset exists', async () => {
+      const selectedRelease = REACT_ROUTER_RELEASE;
+
+      // Project has only react-router but missing other packages
+      const currentDependencies = {
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
+        'react-router': '7.0.0',
+        // Missing: react-router-dom, @react-router/dev, @react-router/fs-routes
+        ...OUTDATED_HYDROGEN_PACKAGE_JSON.devDependencies,
+      };
+
+      const result: string[] = [
+        '@shopify/hydrogen@2025.5.0',
+        '@shopify/remix-oxygen@2.0.12',
+        '@shopify/cli@3.77.1',
+        '@shopify/mini-oxygen@3.2.0',
+        '@shopify/hydrogen-codegen@0.3.3',
+        '@shopify/oxygen-workers-types@4.1.6',
+        'vite@6.2.4',
+        'react-router@7.5.0',
+        'react-router-dom@7.5.0',
+        '@react-router/dev@7.5.0',
+        '@react-router/fs-routes@7.5.0',
+      ];
+
+      const args = buildUpgradeCommandArgs({
+        selectedRelease,
+        currentDependencies,
+      });
+
+      // Should install ALL React Router packages, not just upgrade the existing one
+      expect(args).toEqual(result);
+    });
+
     it('does not install an optional dependency that was not installed', async () => {
       const {releases} = await getChangelog();
 
@@ -1134,3 +1254,174 @@ const CUMMLATIVE_RELEASE = {
     },
   ],
 } as CumulativeRelease;
+
+describe('dependency removal', () => {
+  it('removes specified dependencies before upgrading', async () => {
+    const selectedRelease: Release = {
+      title: 'Remix to React Router migration',
+      version: '2025.5.0',
+      hash: 'abc123',
+      commit: 'https://github.com/Shopify/hydrogen/pull/2961',
+      pr: 'https://github.com/Shopify/hydrogen/pull/2961',
+      date: '2025-01-21',
+      dependencies: {
+        '@shopify/hydrogen': '2025.5.0',
+        'react-router': '7.6.0',
+        'react-router-dom': '7.6.0',
+      },
+      devDependencies: {
+        '@react-router/dev': '7.6.0',
+      },
+      removeDependencies: [
+        '@remix-run/react',
+        '@remix-run/server-runtime',
+        '@shopify/hydrogen',
+      ],
+      removeDevDependencies: ['@remix-run/dev', '@remix-run/fs-routes'],
+      dependenciesMeta: {},
+      fixes: [],
+      features: [],
+    };
+
+    const currentDependencies = {
+      '@shopify/hydrogen': '2025.4.0',
+      '@remix-run/react': '2.16.1',
+      '@remix-run/server-runtime': '2.16.1',
+      '@remix-run/dev': '2.16.1',
+      '@remix-run/fs-routes': '2.16.1',
+      react: '^18.2.0',
+    };
+
+    const args = buildUpgradeCommandArgs({
+      selectedRelease,
+      currentDependencies,
+    });
+
+    // Should include new packages to install but not removed packages
+    expect(args).toEqual([
+      '@shopify/hydrogen@2025.5.0',
+      'react-router@7.6.0',
+      'react-router-dom@7.6.0',
+      '@react-router/dev@7.6.0',
+      '@react-router/fs-routes@7.6.0',
+    ]);
+  });
+
+  it('handles empty remove dependencies arrays', async () => {
+    const selectedRelease: Release = {
+      title: 'Normal upgrade',
+      version: '2025.4.1',
+      hash: 'def456',
+      commit: 'https://github.com/Shopify/hydrogen/pull/2950',
+      pr: 'https://github.com/Shopify/hydrogen/pull/2950',
+      date: '2025-01-15',
+      dependencies: {
+        '@shopify/hydrogen': '2025.4.1',
+      },
+      devDependencies: {},
+      removeDependencies: [],
+      removeDevDependencies: [],
+      dependenciesMeta: {},
+      fixes: [],
+      features: [],
+    };
+
+    const currentDependencies = {
+      '@shopify/hydrogen': '2025.4.0',
+      react: '^18.2.0',
+    };
+
+    const args = buildUpgradeCommandArgs({
+      selectedRelease,
+      currentDependencies,
+    });
+
+    expect(args).toEqual(['@shopify/hydrogen@2025.4.1']);
+  });
+
+  it('handles migration with React Router dependency detection', async () => {
+    const selectedRelease: Release = {
+      title: 'React Router 7 migration with removal',
+      version: '2025.5.0',
+      hash: 'ghi789',
+      commit: 'https://github.com/Shopify/hydrogen/pull/2961',
+      pr: 'https://github.com/Shopify/hydrogen/pull/2961',
+      date: '2025-01-21',
+      dependencies: {
+        '@shopify/hydrogen': '2025.5.0',
+        'react-router': '7.6.0',
+        'react-router-dom': '7.6.0',
+      },
+      devDependencies: {
+        '@react-router/dev': '7.6.0',
+        '@react-router/fs-routes': '7.6.0',
+      },
+      removeDependencies: ['@remix-run/react', '@shopify/hydrogen'],
+      removeDevDependencies: ['@remix-run/dev'],
+      dependenciesMeta: {},
+      fixes: [],
+      features: [],
+    };
+
+    // Current project has Remix dependencies but no React Router
+    const currentDependencies = {
+      '@shopify/hydrogen': '2025.4.0',
+      '@remix-run/react': '2.16.1',
+      '@remix-run/dev': '2.16.1',
+      react: '^18.2.0',
+    };
+
+    const args = buildUpgradeCommandArgs({
+      selectedRelease,
+      currentDependencies,
+    });
+
+    // Should install new React Router packages since we're migrating
+    expect(args).toEqual([
+      '@shopify/hydrogen@2025.5.0',
+      'react-router@7.6.0',
+      'react-router-dom@7.6.0',
+      '@react-router/dev@7.6.0',
+      '@react-router/fs-routes@7.6.0',
+    ]);
+  });
+
+  it('handles missing dependencies in removeDependencies gracefully', async () => {
+    const selectedRelease: Release = {
+      title: 'Release with missing dependencies to remove',
+      version: '2025.5.0',
+      hash: 'xyz123',
+      commit: 'https://github.com/Shopify/hydrogen/pull/2962',
+      pr: 'https://github.com/Shopify/hydrogen/pull/2962',
+      date: '2025-01-21',
+      dependencies: {
+        '@shopify/hydrogen': '2025.5.0',
+      },
+      devDependencies: {
+        '@shopify/cli': '~3.80.0',
+      },
+      // Try to remove dependencies that don't exist in the current project
+      removeDependencies: ['@some/missing-package', '@another/nonexistent-dep'],
+      removeDevDependencies: ['@dev/missing-package'],
+      dependenciesMeta: {},
+      fixes: [],
+      features: [],
+    };
+
+    // Current project has only basic dependencies - missing packages listed in removeDependencies
+    const currentDependencies = {
+      '@shopify/hydrogen': '2025.4.0',
+      react: '^18.2.0',
+      '@shopify/cli': '~3.79.0',
+    };
+
+    // Should not crash and should only include packages that need upgrading
+    const args = buildUpgradeCommandArgs({
+      selectedRelease,
+      currentDependencies,
+    });
+
+    // Should upgrade existing packages, ignore missing ones in removeDependencies
+    expect(args).toEqual(['@shopify/hydrogen@2025.5.0', '@shopify/cli@3.80.0']);
+  });
+});

@@ -1,5 +1,17 @@
 # @shopify/cli-hydrogen
 
+## 11.1.2
+
+### Patch Changes
+
+- Improve upgrade command to handle removal of dependencies. This feature is necessary to aid in upgrading from Remix to React Router 7 by [@juanpprieto](https://github.com/juanpprieto)
+
+## 11.1.1
+
+### Deprecated release
+
+This release contained breaking changes and was immediately deprecated. Do not use.
+
 ## 11.1.0
 
 ### Minor Changes
