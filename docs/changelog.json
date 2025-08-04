@@ -41,7 +41,7 @@
       "fixes": [
         {
           "title": "Improve upgrade command to handle removal of dependencies",
-          "desc": "Enhanced the CLI upgrade command to properly handle the removal of dependencies during upgrades. This improvement is essential for migrating from Remix to React Router 7, where certain dependencies need to be removed as part of the upgrade process.",
+          "desc": "Enhanced the CLI upgrade command to properly handle the removal of dependencies during upgrades. This improvement is essential for the next Hydrogen upgrade (from Remix to React Router 7) where certain dependencies need to be removed as part of the upgrade process.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3023",
           "id": "3023"
         }
