@@ -3,25 +3,14 @@
   "version": "1",
   "releases": [
     {
-      "title": "[COMPLETE BEFORE ATTEMPTING 2025.5 UPGRADE] Bump Shopify CLI",
-      "version": "2025.4.2",
-      "hash": "PLACEHOLDER_HASH",
-      "commit": "PLACEHOLDER_COMMIT_URL",
-      "dependencies": {
-        "@remix-run/react": "^2.16.1",
-        "@remix-run/server-runtime": "^2.16.1",
-        "@shopify/hydrogen": "2025.4.1",
-        "@shopify/remix-oxygen": "^2.0.12"
-      },
+      "title": "[COMPLETE BEFORE ATTEMPTING 2025.5 UPGRADE] Bump Shopify CLI version",
+      "version": "2025.4.1",
+      "hash": "e4f44954a5dc53e6dfccd1b7e96de593bbb0887a",
+      "commit": "https://github.com/Shopify/hydrogen/commit/e4f44954a5dc53e6dfccd1b7e96de593bbb0887a",
+      "dependencies": {},
       "devDependencies": {
-        "@remix-run/dev": "^2.16.1",
-        "@shopify/cli": "~3.83.0",
-        "@remix-run/route-config": "^2.16.1",
-        "@remix-run/fs-routes": "^2.16.1",
-        "@shopify/mini-oxygen": "^3.2.1",
-        "@shopify/hydrogen-codegen": "^0.3.3",
-        "@shopify/oxygen-workers-types": "^4.1.6",
-        "vite": "^6.2.4"
+        "@shopify/cli": "~3.83.2",
+        "vite": "^6.2.5"
       },
       "dependenciesMeta": {
         "@shopify/cli": {
@@ -53,8 +42,8 @@
         {
           "title": "Improve upgrade command to handle removal of dependencies",
           "desc": "Enhanced the CLI upgrade command to properly handle the removal of dependencies during upgrades. This improvement is essential for migrating from Remix to React Router 7, where certain dependencies need to be removed as part of the upgrade process.",
-          "pr": "PLACEHOLDER_PR_URL",
-          "id": "PLACEHOLDER_PR_ID"
+          "pr": "https://github.com/Shopify/hydrogen/pull/3023",
+          "id": "3023"
         }
       ],
       "features": []
