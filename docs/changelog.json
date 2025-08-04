@@ -11,7 +11,7 @@
       "pr": "https://github.com/Shopify/hydrogen/pull/2961",
       "dependencies": {
         "@shopify/hydrogen": "2025.5.0",
-        "@shopify/remix-oxygen": "^3.0.0",
+        "@shopify/remix-oxygen": "^2.0.12",
         "react-router": "7.6.0",
         "react-router-dom": "7.6.0"
       },
