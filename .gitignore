@@ -10,6 +10,10 @@ node_modules
 /playwright-report/
 /playwright/.cache/
 **/dist
+
+# Mitmproxy temporary files
+.mitmproxy-redirect-temp.py
+*.mitmproxy-temp.py
 # Logs
 logs
 *.log
