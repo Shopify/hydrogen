@@ -25,6 +25,7 @@
         "vite": "^6.2.5"
       },
       "removeDependencies": [
+        "@shopify/hydrogen".
         "@shopify/remix-oxygen",
         "@remix-run/react",
         "@remix-run/server-runtime",
