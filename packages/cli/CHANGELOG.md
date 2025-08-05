@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 11.1.3
+
+### Patch Changes
+
+- Fix issue so that Hydrogen build command will work with Remix ([#3056](https://github.com/Shopify/hydrogen/pull/3056)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 11.1.2
 
 ### Patch Changes
