@@ -134,11 +134,9 @@ describe('upgrade flow integration', () => {
 
         if (!hasOutdatedDeps) {
           // If there are no outdated dependencies (besides CLI), this isn't an upgradeable release
-          // Skip this test scenario
-          console.log(
-            `Skipping test: No upgradeable dependencies found for same-version upgrade from ${fromVersion} to ${toVersion}`,
+          throw new Error(
+            `No upgradeable dependencies found for same-version upgrade from ${fromVersion} to ${toVersion}`,
           );
-          return;
         }
 
         // Verify we're on the same Hydrogen version
@@ -252,22 +250,75 @@ describe('upgrade flow integration', () => {
       // Test dependency management - validate removals and additions
       await validateDependencyChanges(projectDir, fromRelease, latestRelease);
 
-      // Test build functionality - strict if no guide steps, graceful if guide has steps
-      // Skip if there's a known CLI/React Router incompatibility
-      if (!isCliReactRouterIncompatibility) {
+      // Test build functionality - always try it first
+      let buildFailed = false;
+      let buildError: Error | undefined;
+      try {
         await validateProjectBuilds(projectDir, hasBreakingChanges);
+      } catch (error) {
+        buildFailed = true;
+        buildError = error as Error;
       }
 
-      // Test typecheck functionality - strict if no guide steps, graceful if guide has steps
-      // Skip if there's a known CLI/React Router incompatibility
-      if (!isCliReactRouterIncompatibility) {
+      // Test typecheck functionality - always try it
+      let typecheckFailed = false;
+      let typecheckError: Error | undefined;
+      try {
         await validateTypeCheck(projectDir, hasBreakingChanges);
+      } catch (error) {
+        typecheckFailed = true;
+        typecheckError = error as Error;
       }
 
-      // Test dev server functionality - strict if no guide steps, graceful if guide has steps
-      // Skip if there's a known CLI/React Router incompatibility
-      if (!isCliReactRouterIncompatibility) {
+      // Test dev server functionality - always try it
+      let devFailed = false;
+      let devError: Error | undefined;
+      try {
         await validateDevServer(projectDir, hasBreakingChanges);
+      } catch (error) {
+        devFailed = true;
+        devError = error as Error;
+      }
+
+      // If we detected a CLI/React Router incompatibility, check if failures are expected
+      if (isCliReactRouterIncompatibility) {
+        // We expect build and dev to fail due to missing react-router
+        if (!buildFailed && !devFailed) {
+          throw new Error(
+            'Expected build/dev to fail due to CLI/React Router incompatibility, but they succeeded',
+          );
+        }
+
+        // Log the failures for debugging
+        console.log(
+          'Expected failures due to CLI/React Router incompatibility:',
+        );
+        if (buildFailed) console.log('  - Build:', buildError?.message);
+        if (devFailed) console.log('  - Dev:', devError?.message);
+
+        // If failures are due to the expected reason (missing react-router), continue
+        // Otherwise, re-throw the errors
+        const isExpectedError = (error: Error | undefined) => {
+          if (!error) return false;
+          const msg = error.message.toLowerCase();
+          return (
+            msg.includes('react-router') ||
+            msg.includes('cannot find module') ||
+            msg.includes('command failed')
+          );
+        };
+
+        if (buildFailed && !isExpectedError(buildError)) {
+          throw buildError;
+        }
+        if (devFailed && !isExpectedError(devError)) {
+          throw devError;
+        }
+      } else {
+        // No incompatibility detected - any failures are unexpected
+        if (buildFailed) throw buildError;
+        if (typecheckFailed) throw typecheckError;
+        if (devFailed) throw devError;
       }
 
       // Validate critical file integrity (always strict)
@@ -824,15 +875,26 @@ async function testDevServer(projectDir: string, phase: string) {
     await addTestRoute(projectDir);
 
     // Start the dev server
-    devProcess = spawn('npm', ['run', 'dev', '--', '--port', port.toString()], {
-      cwd: projectDir,
-      env: {
-        ...process.env,
-        PORT: port.toString(),
-        SESSION_SECRET: 'test-session-secret-for-upgrade-test',
+    devProcess = spawn(
+      'npm',
+      [
+        'run',
+        'dev',
+        '--',
+        '--port',
+        port.toString(),
+        '--disable-version-check',
+      ],
+      {
+        cwd: projectDir,
+        env: {
+          ...process.env,
+          PORT: port.toString(),
+          SESSION_SECRET: 'test-session-secret-for-upgrade-test',
+        },
+        stdio: ['pipe', 'pipe', 'pipe'],
       },
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
+    );
 
     let serverOutput = '';
     let serverErrors = '';

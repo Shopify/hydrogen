@@ -1,5 +1,5 @@
-import {describe, it, expect} from 'vitest';
-import {generateDefaultConfig} from './codegen.js';
+import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
+import {generateDefaultConfig, executeReactRouterCodegen} from './codegen.js';
 import {inTemporaryDirectory, writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 
@@ -176,5 +176,122 @@ describe('Codegen', () => {
         });
       });
     });
+  });
+});
+
+describe('executeReactRouterCodegen', () => {
+  let execSyncMock: any;
+  let execMock: any;
+  let consoleLogSpy: any;
+
+  beforeEach(() => {
+    vi.mock('child_process', () => ({
+      execSync: vi.fn(),
+      exec: vi.fn(),
+    }));
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+    vi.resetModules();
+    vi.restoreAllMocks();
+  });
+
+  it('should skip React Router codegen when react-router is not available', async () => {
+    const cp = await import('child_process');
+    execSyncMock = vi.mocked(cp.execSync);
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    // Mock react-router --version to fail (not installed)
+    execSyncMock.mockImplementation(() => {
+      throw new Error('Command not found: react-router');
+    });
+
+    // The function should not throw
+    await expect(
+      executeReactRouterCodegen({rootDirectory: '/test/path'}),
+    ).resolves.toBeUndefined();
+
+    // Verify react-router --version was attempted
+    expect(execSyncMock).toHaveBeenCalledWith('npx react-router --version', {
+      cwd: '/test/path',
+      stdio: 'ignore',
+    });
+
+    // Verify console.log was called with the skip message
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      'React Router not found, skipping typegen',
+    );
+
+    // Verify typegen was NOT called
+    expect(execSyncMock).toHaveBeenCalledTimes(1); // Only the version check
+
+    consoleLogSpy.mockRestore();
+  });
+
+  it('should run React Router codegen when react-router is available (non-watch mode)', async () => {
+    const cp = await import('child_process');
+    execSyncMock = vi.mocked(cp.execSync);
+    execMock = vi.mocked(cp.exec);
+
+    // Mock react-router --version to succeed
+    execSyncMock.mockImplementation((cmd: string) => {
+      if (cmd.includes('react-router --version')) {
+        return Buffer.from('7.0.0');
+      }
+      if (cmd.includes('react-router typegen')) {
+        return Buffer.from('Types generated successfully');
+      }
+      throw new Error(`Unexpected command: ${cmd}`);
+    });
+
+    await executeReactRouterCodegen({rootDirectory: '/test/path'});
+
+    // Verify both commands were called
+    expect(execSyncMock).toHaveBeenCalledWith('npx react-router --version', {
+      cwd: '/test/path',
+      stdio: 'ignore',
+    });
+
+    expect(execSyncMock).toHaveBeenCalledWith('npx react-router typegen', {
+      cwd: '/test/path',
+      stdio: 'inherit',
+    });
+
+    // exec should not be called in non-watch mode
+    expect(execMock).not.toHaveBeenCalled();
+  });
+
+  it('should run React Router codegen in watch mode when react-router is available', async () => {
+    const cp = await import('child_process');
+    execSyncMock = vi.mocked(cp.execSync);
+    execMock = vi.mocked(cp.exec);
+
+    // Mock react-router --version to succeed
+    execSyncMock.mockImplementation((cmd: string) => {
+      if (cmd.includes('react-router --version')) {
+        return Buffer.from('7.0.0');
+      }
+      throw new Error(`Unexpected command: ${cmd}`);
+    });
+
+    await executeReactRouterCodegen({
+      rootDirectory: '/test/path',
+      watch: true,
+    });
+
+    // Verify version check was called
+    expect(execSyncMock).toHaveBeenCalledWith('npx react-router --version', {
+      cwd: '/test/path',
+      stdio: 'ignore',
+    });
+
+    // In watch mode, should use exec instead of execSync
+    expect(execMock).toHaveBeenCalledWith('npx react-router typegen --watch', {
+      cwd: '/test/path',
+    });
+
+    // execSync should NOT be called for typegen in watch mode
+    expect(execSyncMock).toHaveBeenCalledTimes(1); // Only version check
   });
 });
