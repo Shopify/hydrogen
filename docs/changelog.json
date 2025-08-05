@@ -3,6 +3,159 @@
   "version": "1",
   "releases": [
     {
+      "title": "New tokenless Storefront API route, add buyerIdentity to create handlers",
+      "version": "2025.4.1",
+      "hash": "fc2ad21f92c0125b29b0f51dc1c52353f42228dd",
+      "commit": "https://github.com/Shopify/hydrogen/pull/2950/commits/fc2ad21f92c0125b29b0f51dc1c52353f42228dd",
+      "dependencies": {
+        "@remix-run/react": "^2.16.1",
+        "@remix-run/server-runtime": "^2.16.1",
+        "@shopify/hydrogen": "2025.4.1",
+        "@shopify/remix-oxygen": "^2.0.12"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.16.1",
+        "@shopify/cli": "~3.79.2",
+        "@remix-run/route-config": "^2.16.1",
+        "@remix-run/fs-routes": "^2.16.1",
+        "@shopify/mini-oxygen": "^3.2.1",
+        "@shopify/hydrogen-codegen": "^0.3.3",
+        "@shopify/oxygen-workers-types": "^4.1.6",
+        "vite": "^6.2.4"
+      },
+      "dependenciesMeta": {
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/react": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@remix-run/dev": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/remix-oxygen": {
+          "required": true
+        },
+        "@remix-run/fs-routes": {
+          "required": true
+        },
+        "@remix-run/route-config": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Add a `buyerIdentity` parameter to `createHydrogenContext` and `createCartHandler`.",
+          "desc": "This buyer identity will be used as the default buyer identity for all new cart creations. This allows you to create carts without needing a token, which is useful for anonymous users or when you want to create a cart without authentication.",
+          "code": "YGBgZGlmZgogIGNvbnN0IGh5ZHJvZ2VuQ29udGV4dCA9IGNyZWF0ZUh5ZHJvZ2VuQ29udGV4dCh7CiAgICAvLyAuLi4KKyAgICBidXllcklkZW50aXR5OiB7CisgICAgIGNvbXBhbnlMb2NhdGlvbklkOiAnLi4uJywKKyAgICB9LAogIH0pOwpgYGA=",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2927",
+          "id": "2927"
+        },
+        {
+          "title": "Bump skeleton @shopify/cli and @shopify/mini-oxygen versions",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2883",
+          "id": "2883"
+        }
+      ],
+      "features": [
+        {
+          "title": "Add a new tokenless Storefront API route to the starter template",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2948",
+          "id": "2948"
+        }
+      ]
+    },
+    {
+      "title": "Update Storefront and Customer Account API to 2025.4, new recipes and fixes",
+      "version": "2025.4.0",
+      "hash": "7eec679161a925538c7f905a090d756cb9ffbd7f",
+      "commit": "https://github.com/Shopify/hydrogen/pull/2898/commits/7eec679161a925538c7f905a090d756cb9ffbd7f",
+      "dependencies": {
+        "@remix-run/react": "^2.16.1",
+        "@remix-run/server-runtime": "^2.16.1",
+        "@shopify/hydrogen": "2025.4.0",
+        "@shopify/remix-oxygen": "^2.0.12"
+      },
+      "devDependencies": {
+        "@remix-run/dev": "^2.16.1",
+        "@shopify/cli": "~3.79.2",
+        "@remix-run/route-config": "^2.16.1",
+        "@remix-run/fs-routes": "^2.16.1",
+        "@shopify/mini-oxygen": "^3.2.1",
+        "@shopify/hydrogen-codegen": "^0.3.3",
+        "@shopify/oxygen-workers-types": "^4.1.6",
+        "vite": "^6.2.4"
+      },
+      "dependenciesMeta": {
+        "@shopify/cli": {
+          "required": true
+        },
+        "@remix-run/react": {
+          "required": true
+        },
+        "@remix-run/server-runtime": {
+          "required": true
+        },
+        "@remix-run/dev": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/remix-oxygen": {
+          "required": true
+        },
+        "@remix-run/fs-routes": {
+          "required": true
+        },
+        "@remix-run/route-config": {
+          "required": true
+        }
+      },
+      "fixes": [
+        {
+          "title": "Moved the Cursor rules into more generic LLM prompt files.",
+          "desc": "If you were using the Cursor rules, you will find the prompts in the cookbook/llms folder and they can be put into your .cursor/rules folder manually. LLM prompt files will be maintained moving forward, while previous Cursor rules will not be updated anymore",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2936",
+          "id": "2936"
+        },
+        {
+          "title": "Bump skeleton @shopify/cli and @shopify/mini-oxygen versions",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2883",
+          "id": "2883"
+        }
+      ],
+      "features": [
+        {
+          "title": "Added bundles recipe",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2915",
+          "id": "2915",
+          "desc": "CartForm and createCartHandler now support `addDeliveryAddresses`, `updateDeliveryAddresses` and `removeDeliveryAddresses`"
+        },
+        {
+          "title": "Add markets recipe",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2930",
+          "id": "2930"
+        },
+        {
+          "title": "Add combined-listings recipe",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2876",
+          "id": "2876"
+        },
+        {
+          "title": "Update SFAPI and CAAPI versions to 2025.04",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2886",
+          "id": "2886"
+        }
+      ]
+    },
+    {
       "title": "Cart delivery adddress support, fixes in Vite 6 SSR conditions, Skeleton & Customer Accounts session",
       "version": "2025.1.4",
       "hash": "3be68ae72730e6780aa04fcd02ba586816b7f613",
