@@ -3,54 +3,6 @@
   "version": "1",
   "releases": [
     {
-      "title": "[COMPLETE BEFORE ATTEMPTING 2025.5 UPGRADE] Bump Shopify CLI version",
-      "version": "2025.4.1",
-      "hash": "e4f44954a5dc53e6dfccd1b7e96de593bbb0887a",
-      "commit": "https://github.com/Shopify/hydrogen/commit/e4f44954a5dc53e6dfccd1b7e96de593bbb0887a",
-      "dependencies": {
-        "@shopify/hydrogen": "2025.4.1"
-      },
-      "devDependencies": {
-        "@shopify/cli": "~3.83.2",
-        "vite": "^6.2.5"
-      },
-      "dependenciesMeta": {
-        "@shopify/cli": {
-          "required": true
-        },
-        "@remix-run/react": {
-          "required": true
-        },
-        "@remix-run/server-runtime": {
-          "required": true
-        },
-        "@remix-run/dev": {
-          "required": true
-        },
-        "@shopify/mini-oxygen": {
-          "required": true
-        },
-        "@shopify/remix-oxygen": {
-          "required": true
-        },
-        "@remix-run/fs-routes": {
-          "required": true
-        },
-        "@remix-run/route-config": {
-          "required": true
-        }
-      },
-      "fixes": [
-        {
-          "title": "Improve upgrade command to handle removal of dependencies",
-          "desc": "Enhanced the CLI upgrade command to properly handle the removal of dependencies during upgrades. This improvement is essential for the next Hydrogen upgrade (from Remix to React Router 7) where certain dependencies need to be removed as part of the upgrade process.",
-          "pr": "https://github.com/Shopify/hydrogen/pull/3023",
-          "id": "3023"
-        }
-      ],
-      "features": []
-    },
-    {
       "title": "New tokenless Storefront API route, add buyerIdentity to create handlers",
       "version": "2025.4.1",
       "hash": "fc2ad21f92c0125b29b0f51dc1c52353f42228dd",
