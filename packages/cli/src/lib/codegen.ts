@@ -1,7 +1,7 @@
 import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
-import {renderWarning} from '@shopify/cli-kit/node/ui';
+import {renderWarning, renderInfo} from '@shopify/cli-kit/node/ui';
 import {
   joinPath,
   relativePath,
@@ -116,7 +116,7 @@ export function spawnCodegenProcess({
     // Skip banners output by ourselves:
     if (/─ (warning|info|success) ───/.test(message)) return;
 
-    console.log('');
+    renderInfo({body: ''});
     renderWarning({headline: message, body: details});
   });
 
@@ -158,16 +158,29 @@ export async function codegen(options: CodegenOptions) {
   });
 }
 
-async function executeReactRouterCodegen(options: {
+export async function executeReactRouterCodegen(options: {
   rootDirectory: string;
   watch?: boolean;
 }) {
   /**
-   * I'm not sure if `npx react-router` is the best way to run this.
-   * `node node_modules/.bin/react-router/...` is not good enough,
-   * because for example in the hydrogen monorepo, react-router is installed at ../../node_modules/.bin
+   * NOTE: We should have never enforced running React Router typegen at build time, as this would have broken build on projects still on Remix.
+   * Check if react-router is available before trying to run typegen
    */
   const {execSync, exec} = await import('child_process');
+
+  try {
+    // Check if react-router CLI is available
+    execSync('npx react-router --version', {
+      cwd: options.rootDirectory,
+      stdio: 'ignore',
+    });
+  } catch {
+    // React Router not found, skip typegen
+    renderInfo({body: 'React Router not found, skipping typegen'});
+    return;
+  }
+
+  // React Router is available, run typegen
   if (options.watch) {
     exec('npx react-router typegen --watch', {
       cwd: options.rootDirectory,
