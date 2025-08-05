@@ -150,7 +150,7 @@ describe('upgrade flow integration', () => {
       const hasGuide =
         latestRelease.features?.some((f: any) => f.steps?.length > 0) ||
         latestRelease.fixes?.some((f: any) => f.steps?.length > 0);
-
+     
       // Check for known CLI compatibility issues
       const isCliReactRouterIncompatibility =
         // Project is on Remix (has @remix-run dependencies)
@@ -170,7 +170,7 @@ describe('upgrade flow integration', () => {
         await readFile(join(projectDir, 'package.json'), 'utf8'),
       );
       const hydrogenVersion = packageJson.dependencies?.['@shopify/hydrogen'];
-
+      
       // Hydrogen version should match the target version
       expect(
         hydrogenVersion === toVersion || hydrogenVersion === `^${toVersion}`,
