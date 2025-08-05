@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "checkJs": false,
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "paths": {
+      "~/*": [
+        "app/*"
+      ]
+    }
+  },
+  "include": [
+    "./**/*.d.ts",
+    "./**/*.js",
+    "./**/*.jsx",
+    ".react-router/types/**/*"
+  ]
+}
