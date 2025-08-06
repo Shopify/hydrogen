@@ -87,6 +87,7 @@ describe('upgrade flow integration', () => {
       const initialPackageJson = JSON.parse(
         await readFile(join(projectDir, 'package.json'), 'utf8'),
       );
+
       const initialHydrogenVersion =
         initialPackageJson.dependencies?.['@shopify/hydrogen'];
 
@@ -134,11 +135,9 @@ describe('upgrade flow integration', () => {
 
         if (!hasOutdatedDeps) {
           // If there are no outdated dependencies (besides CLI), this isn't an upgradeable release
-          // Skip this test scenario
-          console.log(
-            `Skipping test: No upgradeable dependencies found for same-version upgrade from ${fromVersion} to ${toVersion}`,
+          throw new Error(
+            `No upgradeable dependencies found for same-version upgrade from ${fromVersion} to ${toVersion}`,
           );
-          return;
         }
 
         // Verify we're on the same Hydrogen version
@@ -152,17 +151,6 @@ describe('upgrade flow integration', () => {
       const hasGuide =
         latestRelease.features?.some((f: any) => f.steps?.length > 0) ||
         latestRelease.fixes?.some((f: any) => f.steps?.length > 0);
-
-      // Check for known CLI compatibility issues
-      const isCliReactRouterIncompatibility =
-        // Project is on Remix (has @remix-run dependencies)
-        (initialPackageJson.dependencies?.['@remix-run/react'] ||
-          initialPackageJson.devDependencies?.['@remix-run/dev']) &&
-        // Upgrading to CLI 3.83+ which expects React Router
-        latestRelease.devDependencies?.['@shopify/cli'] &&
-        latestRelease.devDependencies['@shopify/cli'].includes('3.83');
-
-      // Note: We'll skip build/dev tests if CLI/React Router incompatibility is detected
 
       // Run upgrade (single version upgrade should work cleanly)
       await runUpgradeCommand(projectDir, toVersion);
@@ -252,23 +240,40 @@ describe('upgrade flow integration', () => {
       // Test dependency management - validate removals and additions
       await validateDependencyChanges(projectDir, fromRelease, latestRelease);
 
-      // Test build functionality - strict if no guide steps, graceful if guide has steps
-      // Skip if there's a known CLI/React Router incompatibility
-      if (!isCliReactRouterIncompatibility) {
+      // Test build functionality - always try it first
+      let buildFailed = false;
+      let buildError: Error | undefined;
+      try {
         await validateProjectBuilds(projectDir, hasBreakingChanges);
+      } catch (error) {
+        buildFailed = true;
+        buildError = error as Error;
       }
 
-      // Test typecheck functionality - strict if no guide steps, graceful if guide has steps
-      // Skip if there's a known CLI/React Router incompatibility
-      if (!isCliReactRouterIncompatibility) {
+      // Test typecheck functionality - always try it
+      let typecheckFailed = false;
+      let typecheckError: Error | undefined;
+      try {
         await validateTypeCheck(projectDir, hasBreakingChanges);
+      } catch (error) {
+        typecheckFailed = true;
+        typecheckError = error as Error;
       }
 
-      // Test dev server functionality - strict if no guide steps, graceful if guide has steps
-      // Skip if there's a known CLI/React Router incompatibility
-      if (!isCliReactRouterIncompatibility) {
+      // Test dev server functionality - always try it
+      let devFailed = false;
+      let devError: Error | undefined;
+      try {
         await validateDevServer(projectDir, hasBreakingChanges);
+      } catch (error) {
+        devFailed = true;
+        devError = error as Error;
       }
+
+      // With the renderInfo fix, all failures are now unexpected
+      if (buildFailed) throw buildError;
+      if (typecheckFailed) throw typecheckError;
+      if (devFailed) throw devError;
 
       // Validate critical file integrity (always strict)
       await validateFileIntegrity(projectDir);
@@ -824,15 +829,26 @@ async function testDevServer(projectDir: string, phase: string) {
     await addTestRoute(projectDir);
 
     // Start the dev server
-    devProcess = spawn('npm', ['run', 'dev', '--', '--port', port.toString()], {
-      cwd: projectDir,
-      env: {
-        ...process.env,
-        PORT: port.toString(),
-        SESSION_SECRET: 'test-session-secret-for-upgrade-test',
+    devProcess = spawn(
+      'npm',
+      [
+        'run',
+        'dev',
+        '--',
+        '--port',
+        port.toString(),
+        '--disable-version-check',
+      ],
+      {
+        cwd: projectDir,
+        env: {
+          ...process.env,
+          PORT: port.toString(),
+          SESSION_SECRET: 'test-session-secret-for-upgrade-test',
+        },
+        stdio: ['pipe', 'pipe', 'pipe'],
       },
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
+    );
 
     let serverOutput = '';
     let serverErrors = '';
