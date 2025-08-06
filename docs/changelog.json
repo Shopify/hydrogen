@@ -12,7 +12,7 @@
       },
       "devDependencies": {
         "@shopify/cli": "~3.83.3",
-        "vite": "^6.2.5"
+        "vite": "^6.2.7"
       },
       "dependenciesMeta": {
         "@shopify/cli": {
