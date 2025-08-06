@@ -11,7 +11,7 @@
         "@shopify/hydrogen": "2025.4.1"
       },
       "devDependencies": {
-        "@shopify/cli": "~3.83.2",
+        "@shopify/cli": "~3.83.3",
         "vite": "^6.2.5"
       },
       "dependenciesMeta": {
