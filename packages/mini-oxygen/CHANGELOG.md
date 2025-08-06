@@ -1,5 +1,22 @@
 # @shopify/mini-oxygen
 
+## 3.3.0
+
+### Minor Changes
+
+- Upgrade Miniflare from v2 to v4 in mini-oxygen package. ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  - Internal MiniOxygen API has been refactored to work with Miniflare v4's new architecture.
+  - Simplified MiniOxygen class - no longer extends MiniflareCore.
+  - Updated global fetch handling to use Miniflare v4's `outboundService` API.
+  - Fixed test infrastructure to use project-relative temporary directories.
+  - Added support for Oxygen compatibility parameters (`compatibilityDate`, `compatibilityFlags`).
+  - Removed dependency on multiple `@miniflare/*` packages in favor of the consolidated `miniflare` package.
+
+### Patch Changes
+
+- Fix defer/streaming in development & preview ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
 ## 3.2.1
 
 ### Patch Changes
