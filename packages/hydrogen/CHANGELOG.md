@@ -1,5 +1,16 @@
 # @shopify/hydrogen
 
+## 2025.5.1
+
+### Patch Changes
+
+- Fix and upgrade /graphiql route ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Add GraphQL @defer directive support to storefront client ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Updated dependencies [[`ae7bedc8`](https://github.com/Shopify/hydrogen/commit/ae7bedc89c1968b4a035f421b5ee6908f6376b1b), [`ae7bedc8`](https://github.com/Shopify/hydrogen/commit/ae7bedc89c1968b4a035f421b5ee6908f6376b1b)]:
+  - @shopify/hydrogen-react@2025.5.1
+
 ## 2025.5.0
 
 ### Patch Changes
