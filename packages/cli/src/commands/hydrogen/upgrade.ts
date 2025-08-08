@@ -36,20 +36,23 @@ import {getProjectPaths} from '../../lib/remix-config.js';
 import {hydrogenPackagesPath, isHydrogenMonorepo} from '../../lib/build.js';
 import {fetch} from '@shopify/cli-kit/node/http';
 
-type ReleaseItem = {
+export type Step = {
+  code: string;
+  file?: string;
+  info?: string;
+  reel?: string;
+  title: string;
+};
+
+export type ReleaseItem = {
   breaking?: boolean;
   docs?: string;
   id: string | null;
   info?: string;
   pr: `https://${string}` | null;
   title: string;
-  steps?: Array<{
-    code: string;
-    file?: string;
-    info?: string;
-    reel?: string;
-    title: string;
-  }>;
+  steps?: Array<Step>;
+  version?: string;
 };
 
 export type Release = {
@@ -68,7 +71,7 @@ export type Release = {
   version: string;
 };
 
-type ChangeLog = {
+export type ChangeLog = {
   url: string;
   releases: Array<Release>;
   version: string;
@@ -411,14 +414,11 @@ export function getAvailableUpgrades({
     return false;
   }) as Array<Release>;
 
-  const uniqueAvailableUpgrades = availableUpgrades.reduce(
-    (acc, release) => {
-      if (acc[release.version]) return acc;
-      acc[release.version] = release;
-      return acc;
-    },
-    {} as Record<string, Release>,
-  );
+  const uniqueAvailableUpgrades = availableUpgrades.reduce((acc, release) => {
+    if (acc[release.version]) return acc;
+    acc[release.version] = release;
+    return acc;
+  }, {} as Record<string, Release>);
 
   return {availableUpgrades, uniqueAvailableUpgrades};
 }
@@ -768,12 +768,12 @@ async function uninstallNodeModules({
     packageManager === 'npm'
       ? 'uninstall'
       : packageManager === 'yarn'
-        ? 'remove'
-        : packageManager === 'pnpm'
-          ? 'remove'
-          : packageManager === 'bun'
-            ? 'remove'
-            : 'uninstall'; // fallback to npm for 'unknown'
+      ? 'remove'
+      : packageManager === 'pnpm'
+      ? 'remove'
+      : packageManager === 'bun'
+      ? 'remove'
+      : 'uninstall'; // fallback to npm for 'unknown'
 
   const actualPackageManager =
     packageManager === 'unknown' ? 'npm' : packageManager;
@@ -861,10 +861,10 @@ async function promptUpgradeOptions(
       index === 0
         ? '(latest)'
         : semver.patch(version) === 0
-          ? '(major)'
-          : getAbsoluteVersion(currentVersion) === getAbsoluteVersion(version)
-            ? '(outdated)'
-            : '';
+        ? '(major)'
+        : getAbsoluteVersion(currentVersion) === getAbsoluteVersion(version)
+        ? '(outdated)'
+        : '';
 
     // TODO: add group sorting function to cli-kit select prompt
     // so that we can group by major version
@@ -1182,13 +1182,10 @@ export async function displayDevUpgradeNotice({
     // for the same version. Older releases (the first one of a version) probably
     // have more information than a newer release that only changes dependencies.
     const nextReleases = Object.values(
-      [...relevantReleases].reverse().reduce(
-        (acc, release) => {
-          acc[release.version] ??= `${release.version} - ${release.title}`;
-          return acc;
-        },
-        {} as Record<string, string>,
-      ),
+      [...relevantReleases].reverse().reduce((acc, release) => {
+        acc[release.version] ??= `${release.version} - ${release.title}`;
+        return acc;
+      }, {} as Record<string, string>),
     ).slice(0, 5);
 
     let headline =

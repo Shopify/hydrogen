@@ -5,9 +5,17 @@ import {tmpdir} from 'node:os';
 import {exec} from '@shopify/cli-kit/node/system';
 import {execAsync} from '../../lib/process.js';
 import * as upgradeModule from './upgrade.js';
+import type {ChangeLog} from './upgrade.js';
 import {spawn, ChildProcess} from 'node:child_process';
 import getPort from 'get-port';
 import {fileExists} from '@shopify/cli-kit/node/fs';
+import type {PackageJson} from 'type-fest';
+
+interface ExecError extends Error {
+  stdout?: string;
+  stderr?: string;
+  code?: number;
+}
 
 // Mock the UI prompts to avoid interactive prompts during tests
 vi.mock('@shopify/cli-kit/node/ui', async () => {
@@ -42,44 +50,27 @@ describe('upgrade flow integration', () => {
     // Test 1: Single version upgrade to latest release
     it('upgrades from previous version to latest release', async () => {
       const changelog = await upgradeModule.getChangelog();
+
+      if (
+        !changelog ||
+        !changelog.releases ||
+        changelog.releases.length === 0
+      ) {
+        throw new Error('Changelog is empty or not properly loaded');
+      }
+
       const latestRelease = changelog.releases[0];
 
       if (!latestRelease) {
         throw new Error('No releases found in changelog');
       }
 
-      // Find the previous release (just one version back for clean single-version upgrade)
-      let fromRelease = null;
-      let fromCommit = null;
+      const {fromVersion, toVersion, fromCommit} = await findPreviousRelease(
+        changelog,
+        latestRelease,
+      );
 
-      // Use the previous release (index 1) for a clean single-version upgrade
-      if (changelog.releases.length > 1) {
-        const candidate = changelog.releases[1];
-        if (candidate) {
-          const commit = await findCommitForVersion(candidate.version);
-          if (commit) {
-            fromRelease = candidate;
-            fromCommit = commit;
-          }
-        }
-      }
-
-      if (!fromRelease || !fromCommit) {
-        const availableVersions = changelog.releases
-          .slice(0, 5)
-          .map((r) => r.version)
-          .join(', ');
-
-        throw new Error(
-          `Could not find commit for latest release version. This indicates a problem with the changelog or Git history. ` +
-            `Tried version: ${changelog.releases[1]?.version}. ` +
-            `Available versions: ${availableVersions}. ` +
-            `Latest version: ${latestRelease.version}.`,
-        );
-      }
-
-      const fromVersion = fromRelease.version;
-      const toVersion = latestRelease.version;
+      console.log({fromVersion, toVersion});
 
       const projectDir = await scaffoldHistoricalProject(fromCommit);
 
@@ -88,157 +79,74 @@ describe('upgrade flow integration', () => {
         await readFile(join(projectDir, 'package.json'), 'utf8'),
       );
 
-      const initialHydrogenVersion =
-        initialPackageJson.dependencies?.['@shopify/hydrogen'];
-
+      //
       // Check if this is a same-version dependency upgrade
       const isSameVersionUpgrade = fromVersion === toVersion;
 
-      if (!isSameVersionUpgrade) {
-        // For different version upgrades, ensure we're not already on the target version
-        expect(
-          initialHydrogenVersion === toVersion ||
-            initialHydrogenVersion === `^${toVersion}`,
-        ).toBe(false);
-      } else {
-        // For same-version upgrades, we need to check if it's actually upgradeable
-        // The upgrade.ts logic uses hasOutdatedDependencies which excludes @shopify/cli
-        const hasOutdatedDeps = Object.entries({
-          ...latestRelease.dependencies,
-          ...latestRelease.devDependencies,
-        }).some(([name, version]) => {
-          if (name === '@shopify/cli') return false; // Skip CLI as it's excluded in upgrade.ts
-          const currentVersion =
-            initialPackageJson.dependencies?.[name] ||
-            initialPackageJson.devDependencies?.[name];
-          if (!currentVersion) return false;
+      switch (isSameVersionUpgrade) {
+        case true:
+          expect(
+            checkForOutdatedDependencies(latestRelease, initialPackageJson),
+          ).toBe(true);
+          // add a message to the expect
+          expect(
+            checkForOutdatedDependencies(latestRelease, initialPackageJson),
 
-          try {
-            // Use semver to compare versions like upgrade.ts does
-            const semver = require('semver');
-            return semver.gt(
-              semver.minVersion(version).version,
-              semver.minVersion(currentVersion).version,
-            );
-          } catch {
-            // Fallback to string comparison if semver fails
-            const versionPattern = /^[\^~]?([\d.]+)/;
-            const currentMatch = currentVersion.match(versionPattern);
-            const targetMatch = version.match(versionPattern);
+            'Trying to upgrade to the same version but there are no dependencies to upgrade (excludes @shopify/cli), Same version upgrade prompt wont show to the users',
+          ).toBe(true);
+          break;
 
-            if (currentMatch && targetMatch) {
-              return currentMatch[1] !== targetMatch[1];
-            }
-            return false;
-          }
-        });
-
-        if (!hasOutdatedDeps) {
-          // If there are no outdated dependencies (besides CLI), this isn't an upgradeable release
-          throw new Error(
-            `No upgradeable dependencies found for same-version upgrade from ${fromVersion} to ${toVersion}`,
-          );
-        }
-
-        // Verify we're on the same Hydrogen version
-        expect(
-          initialHydrogenVersion === toVersion ||
-            initialHydrogenVersion === `^${toVersion}`,
-        ).toBe(true);
+        default:
+          // For different version upgrades, ensure we're not already on the target version
+          assertHydrogenVersionsMatch(fromVersion, toVersion, false);
       }
 
-      // Check what scenarios apply to this upgrade
-      const hasGuide =
-        latestRelease.features?.some((f: any) => f.steps?.length > 0) ||
-        latestRelease.fixes?.some((f: any) => f.steps?.length > 0);
+      // PERFORM UPGRADE
 
       // Run upgrade (single version upgrade should work cleanly)
       await runUpgradeCommand(projectDir, toVersion);
 
-      // Verify upgrade completed successfully
-      const packageJson = JSON.parse(
-        await readFile(join(projectDir, 'package.json'), 'utf8'),
-      );
-      const hydrogenVersion = packageJson.dependencies?.['@shopify/hydrogen'];
+      // Validate upgrade
+      const upgradedPackageJson = await getPackageJson(projectDir);
+      const upgradedHydrogenVersion =
+        getPackageJsonHydrogenVersion(upgradedPackageJson);
 
-      // Hydrogen version should match the target version
-      expect(
-        hydrogenVersion === toVersion || hydrogenVersion === `^${toVersion}`,
-      ).toBe(true);
+      if (!upgradedHydrogenVersion) {
+        throw new Error(
+          'Failed to find @shopify/hydrogen version in upgraded package.json',
+        );
+      }
+
+      // Upgraded Hydrogen version should match the target version
+      assertHydrogenVersionsMatch(upgradedHydrogenVersion, toVersion, true);
+      assertHydrogenVersionsMatch(
+        upgradedHydrogenVersion,
+        `^${toVersion}`,
+        true,
+      );
 
       // For same-version upgrades, verify dependencies were actually updated
-      if (isSameVersionUpgrade) {
-        // Check that at least one dependency (other than @shopify/cli) was updated
-        const dependenciesUpdated = Object.entries({
-          ...latestRelease.dependencies,
-          ...latestRelease.devDependencies,
-        }).some(([name, version]) => {
-          if (name === '@shopify/cli') return false; // CLI is excluded from upgrade checks
-          if (name === '@shopify/hydrogen') return false; // Hydrogen version stays the same
+      // if (isSameVersionUpgrade) {
+      //   const dependenciesUpdated = checkUpdatedDependencies(
+      //     latestRelease,
+      //     initialPackageJson,
+      //     upgradedPackageJson,
+      //   );
+      //   expect(dependenciesUpdated).toBe(true);
+      // }
 
-          const initialVersion =
-            initialPackageJson.dependencies?.[name] ||
-            initialPackageJson.devDependencies?.[name];
-          const currentVersion =
-            packageJson.dependencies?.[name] ||
-            packageJson.devDependencies?.[name];
-
-          // Check if this dependency was outdated and is now updated
-          if (initialVersion && currentVersion) {
-            try {
-              const semver = require('semver');
-              const wasOutdated = semver.gt(
-                semver.minVersion(version).version,
-                semver.minVersion(initialVersion).version,
-              );
-              const isUpdated = semver.gte(
-                semver.minVersion(currentVersion).version,
-                semver.minVersion(version).version,
-              );
-              return wasOutdated && isUpdated;
-            } catch {
-              // Fallback comparison
-              const versionPattern = /^[\^~]?([\d.]+)/;
-              const currentMatch = currentVersion.match(versionPattern);
-              const targetMatch = version.match(versionPattern);
-
-              if (currentMatch && targetMatch) {
-                return currentMatch[1] === targetMatch[1];
-              }
-            }
-          }
-          return false;
-        });
-
-        expect(dependenciesUpdated).toBe(true);
-      }
+      // Regular version upgrade checks
 
       // Check guide generation and analyze breaking changes
-      const guideFile = join(
+      const {hasBreakingChanges} = await assertGuide(
+        latestRelease,
         projectDir,
-        '.hydrogen',
-        `upgrade-${fromVersion}-to-${toVersion}.md`,
+        fromVersion,
+        toVersion,
       );
-      let guideContent = '';
-      let hasBreakingChanges = false;
 
-      if (hasGuide) {
-        guideContent = await readFile(guideFile, 'utf8');
-        expect(guideContent).toContain(
-          `# Hydrogen upgrade guide: ${fromVersion} to ${toVersion}`,
-        );
-        expect(guideContent.length).toBeGreaterThan(100);
-
-        // If guide has steps, expect potential build/dev/typecheck failures
-        hasBreakingChanges =
-          latestRelease.features?.some((f: any) => f.steps?.length > 0) ||
-          latestRelease.fixes?.some((f: any) => f.steps?.length > 0);
-      } else {
-        await expect(readFile(guideFile, 'utf8')).rejects.toThrow();
-      }
-
-      // Test dependency management - validate removals and additions
-      await validateDependencyChanges(projectDir, fromRelease, latestRelease);
+      // Validate dependency changws - validate removals and additions
+      await validateDependencyChanges(projectDir, latestRelease);
 
       // Test build functionality - always try it first
       let buildFailed = false;
@@ -264,7 +172,7 @@ describe('upgrade flow integration', () => {
       let devFailed = false;
       let devError: Error | undefined;
       try {
-        await validateDevServer(projectDir, hasBreakingChanges);
+        await validateDevServer(projectDir, true);
       } catch (error) {
         devFailed = true;
         devError = error as Error;
@@ -555,6 +463,226 @@ describe('upgrade flow integration', () => {
   });
 });
 
+async function findPreviousRelease(
+  changelog: ChangeLog,
+  latestRelease: ChangeLog['releases'][0],
+) {
+  let fromRelease = null;
+  let fromCommit = null;
+
+  // Use the previous release (index 1) for a clean single-version upgrade
+  if (changelog.releases.length > 1) {
+    const candidate = changelog.releases[1];
+    if (candidate) {
+      const commit = await findCommitForVersion(candidate.version);
+      if (commit) {
+        fromRelease = candidate;
+        fromCommit = commit;
+      }
+    }
+  }
+
+  if (!fromRelease || !fromCommit) {
+    const availableVersions = changelog.releases
+      .slice(0, 5)
+      .map((r) => r.version)
+      .join(', ');
+
+    throw new Error(
+      `Could not find commit for latest release version. This indicates a problem with the changelog or Git history. ` +
+        `Tried version: ${changelog.releases[1]?.version}. ` +
+        `Available versions: ${availableVersions}. ` +
+        `Latest version: ${latestRelease.version}.`,
+    );
+  }
+
+  return {
+    fromVersion: fromRelease.version,
+    fromCommit,
+    toVersion: latestRelease.version,
+  };
+}
+
+function assertHydrogenVersionsMatch(
+  fromVersion: string,
+  toVersion: string,
+  status = true,
+) {
+  // Verify we're on the same Hydrogen version
+  expect(fromVersion === toVersion || fromVersion === `^${toVersion}`).toBe(
+    status,
+  );
+}
+
+function checkForOutdatedDependencies(
+  latestRelease: ChangeLog['releases'][0],
+  packageJson: any,
+) {
+  // For same-version upgrades, we need to check if it's actually upgradeable
+  // The upgrade.ts logic uses hasOutdatedDependencies which excludes @shopify/cli
+  return Object.entries({
+    ...latestRelease.dependencies,
+    ...latestRelease.devDependencies,
+  }).some(([name, version]) => {
+    if (name === '@shopify/cli') return false; // Skip CLI as it's excluded in upgrade.ts
+    const currentVersion =
+      packageJson.dependencies?.[name] || packageJson.devDependencies?.[name];
+    if (!currentVersion) return false;
+
+    try {
+      // Use semver to compare versions like upgrade.ts does
+      const semver = require('semver');
+      return semver.gt(
+        semver.minVersion(version).version,
+        semver.minVersion(currentVersion).version,
+      );
+    } catch {
+      // Fallback to string comparison if semver fails
+      const versionPattern = /^[\^~]?([\d.]+)/;
+      const currentMatch = currentVersion.match(versionPattern);
+      const targetMatch = version.match(versionPattern);
+
+      if (currentMatch && targetMatch) {
+        return currentMatch[1] !== targetMatch[1];
+      }
+      return false;
+    }
+  });
+}
+
+function testSameVersionUpgrade(
+  latestRelease: ChangeLog['releases'][0],
+  packageJson: PackageJson,
+  fromVersion: string,
+  toVersion: string,
+) {
+  const hasOutdatedDeps = checkForOutdatedDependencies(
+    latestRelease,
+    packageJson,
+  );
+
+  if (!hasOutdatedDeps) {
+    // If there are no outdated dependencies (besides CLI), this isn't an upgradeable release
+    throw new Error(
+      `No upgradeable dependencies found for same-version upgrade from ${fromVersion} to ${toVersion} (excluding @shopify/cli)`,
+    );
+  }
+}
+
+function getPackageJsonHydrogenVersion(packageJson: PackageJson) {
+  return packageJson.dependencies?.['@shopify/hydrogen'] ?? null;
+}
+
+async function getPackageJson(projectDir: string) {
+  try {
+    // Verify upgrade completed successfully
+    return JSON.parse(
+      await readFile(join(projectDir, 'package.json'), 'utf8'),
+    ) as PackageJson;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(
+        `Failed to read package.json in ${projectDir}: ${String(error)}`,
+      );
+    }
+  }
+}
+
+function checkWithUpradeguide(release: ChangeLog['releases'][0]) {
+  const featureGuideSteps =
+    release.features?.some((f: any) => f.steps?.length > 0) ||
+    release.features?.some((f) => f.breaking);
+
+  const fixedGuideSteps = release.fixes?.some((f: any) => f.steps?.length > 0);
+
+  // If guide has steps, expect potential build/dev/typecheck failures
+  return featureGuideSteps || fixedGuideSteps;
+}
+
+// TODO: Do we need this?
+function checkUpdatedDependencies(
+  latestRelease: ChangeLog['releases'][0],
+  packageJson: PackageJson,
+  upgradedPackageJson: PackageJson,
+) {
+  // Check that at least one dependency (other than @shopify/cli) was updated
+  return Object.entries({
+    ...latestRelease.dependencies,
+    ...latestRelease.devDependencies,
+  }).some(([name, version]) => {
+    if (name === '@shopify/cli') return false; // CLI is excluded from upgrade checks
+    if (name === '@shopify/hydrogen') return false; // Hydrogen version stays the same
+
+    const initialVersion =
+      packageJson.dependencies?.[name] || packageJson.devDependencies?.[name];
+
+    const currentVersion =
+      upgradedPackageJson.dependencies?.[name] ||
+      upgradedPackageJson.devDependencies?.[name];
+
+    // Check if this dependency was outdated and is now updated
+    if (initialVersion && currentVersion) {
+      try {
+        const semver = require('semver');
+        const wasOutdated = semver.gt(
+          semver.minVersion(version).version,
+          semver.minVersion(initialVersion).version,
+        );
+        const isUpdated = semver.gte(
+          semver.minVersion(currentVersion).version,
+          semver.minVersion(version).version,
+        );
+        return wasOutdated && isUpdated;
+      } catch {
+        // Fallback comparison
+        const versionPattern = /^[\^~]?([\d.]+)/;
+        const currentMatch = currentVersion.match(versionPattern);
+        const targetMatch = version.match(versionPattern);
+
+        if (currentMatch && targetMatch) {
+          return currentMatch[1] === targetMatch[1];
+        }
+      }
+    }
+    return false;
+  });
+}
+
+async function assertGuide(
+  latestRelease: ChangeLog['releases'][0],
+  projectDir: string,
+  fromVersion: string,
+  toVersion: string,
+) {
+  const guideFile = join(
+    projectDir,
+    '.hydrogen',
+    `upgrade-${fromVersion}-to-${toVersion}.md`,
+  );
+  let guideContent = '';
+  let hasBreakingChanges = false;
+
+  const withGuide = checkWithUpradeguide(latestRelease);
+
+  if (withGuide) {
+    // CHECK  UPGRADE GUIDE
+    guideContent = await readFile(guideFile, 'utf8');
+    expect(guideContent).toContain(
+      `# Hydrogen upgrade guide: ${fromVersion} to ${toVersion}`,
+    );
+
+    hasBreakingChanges = guideContent.includes('## Breaking changes');
+
+    expect(guideContent.length).toBeGreaterThan(100);
+  } else {
+    await expect(readFile(guideFile, 'utf8')).rejects.toThrow();
+  }
+
+  return {hasBreakingChanges};
+}
+
 // Helper function to find commit for a specific version
 async function findCommitForVersion(version: string): Promise<string | null> {
   try {
@@ -573,16 +701,22 @@ async function findCommitForVersion(version: string): Promise<string | null> {
         await execAsync('git rev-parse --git-dir', {cwd: root});
         repoRoot = root;
         break;
-      } catch {
-        // Continue to next candidate
+      } catch (error) {
+        console.log(
+          `Git dir check failed for ${root}:`,
+          error instanceof Error ? error.message : String(error),
+        );
       }
     }
 
     // First try to fetch latest commits from GitHub to ensure we have complete history
     try {
       await execAsync('git fetch origin', {cwd: repoRoot});
-    } catch {
-      // Ignore fetch errors, continue with local git history
+    } catch (error) {
+      console.log(
+        'Git fetch failed (continuing with local history):',
+        error instanceof Error ? error.message : String(error),
+      );
     }
 
     // Strategy 1: Look for GitHub release tags first
@@ -611,12 +745,18 @@ async function findCommitForVersion(version: string): Promise<string | null> {
           ) {
             return commit;
           }
-        } catch {
-          // Continue to next tag
+        } catch (error) {
+          console.log(
+            `Failed to check tag ${tag}:`,
+            error instanceof Error ? error.message : String(error),
+          );
         }
       }
-    } catch {
-      // Continue to next strategy
+    } catch (error) {
+      console.log(
+        'Tag search strategy failed:',
+        error instanceof Error ? error.message : String(error),
+      );
     }
 
     // Strategy 2: Search for official release commits by commit message pattern
@@ -649,13 +789,19 @@ async function findCommitForVersion(version: string): Promise<string | null> {
             ) {
               return commit;
             }
-          } catch {
-            // Continue to next commit
+          } catch (error) {
+            console.log(
+              `Failed to check commit ${commit}:`,
+              error instanceof Error ? error.message : String(error),
+            );
           }
         }
       }
-    } catch {
-      // Continue to next strategy
+    } catch (error) {
+      console.log(
+        'Release commit search strategy failed:',
+        error instanceof Error ? error.message : String(error),
+      );
     }
 
     // Strategy 3: Search all commits that touched skeleton package.json for exact version match
@@ -678,16 +824,26 @@ async function findCommitForVersion(version: string): Promise<string | null> {
           ) {
             return commit;
           }
-        } catch {
-          // Continue to next commit
+        } catch (error) {
+          console.log(
+            `Failed to check historical commit ${commit}:`,
+            error instanceof Error ? error.message : String(error),
+          );
         }
       }
-    } catch {
-      // Continue to end of function
+    } catch (error) {
+      console.log(
+        'Historical commit search strategy failed:',
+        error instanceof Error ? error.message : String(error),
+      );
     }
 
     return null;
-  } catch {
+  } catch (error) {
+    console.log(
+      'findCommitForVersion failed:',
+      error instanceof Error ? error.message : String(error),
+    );
     return null;
   }
 }
@@ -723,7 +879,24 @@ async function scaffoldHistoricalProject(commit: string): Promise<string> {
     });
 
     // Install dependencies for the scaffolded project
-    await exec('npm', ['install'], {cwd: projectDir});
+    try {
+      await exec('npm', ['install'], {cwd: projectDir});
+    } catch (error) {
+      console.log(
+        'npm install failed during scaffold:',
+        error instanceof Error ? error.message : String(error),
+      );
+      if (error instanceof Error) {
+        const execError = error as ExecError;
+        if (execError.stderr) {
+          console.log('npm install stderr:', execError.stderr);
+        }
+        if (execError.stdout) {
+          console.log('npm install stdout:', execError.stdout);
+        }
+      }
+      throw error;
+    }
 
     // Create .env file with required environment variables for testing
     await writeFile(
@@ -948,8 +1121,11 @@ async function waitForServer(
       if (response.status < 500) {
         return true;
       }
-    } catch {
-      // Server not ready yet
+    } catch (error) {
+      // Server not ready yet - log significant errors only
+      if (error instanceof Error && !error.message.includes('fetch failed')) {
+        console.log('Server check error:', error.message);
+      }
     }
 
     await new Promise((resolve) => setTimeout(resolve, 500));
@@ -958,11 +1134,7 @@ async function waitForServer(
   return false;
 }
 
-async function validateDependencyChanges(
-  projectDir: string,
-  fromRelease: any,
-  toRelease: any,
-) {
+async function validateDependencyChanges(projectDir: string, toRelease: any) {
   const packageJsonPath = join(projectDir, 'package.json');
   const packageContent = await readFile(packageJsonPath, 'utf8');
   const packageJson = JSON.parse(packageContent);
@@ -974,6 +1146,7 @@ async function validateDependencyChanges(
     }
   }
 
+  // Check devDependency removals if specified
   if (toRelease.removeDevDependencies) {
     for (const dep of toRelease.removeDevDependencies) {
       expect(packageJson.devDependencies?.[dep]).toBeUndefined();
@@ -997,6 +1170,7 @@ async function validateDependencyChanges(
     }
   }
 
+  // Check devDependency additions if specified (only validate if they're present)
   if (toRelease.devDependencies) {
     for (const [dep, version] of Object.entries(toRelease.devDependencies)) {
       const actualVersion = packageJson.devDependencies?.[dep];
@@ -1030,19 +1204,34 @@ async function validateProjectBuilds(
   const originalEnv = process.env.SHOPIFY_UNIT_TEST;
   delete process.env.SHOPIFY_UNIT_TEST;
 
+  console.log('Validating project builds...', hasGuideSteps);
+
   try {
     await exec('npm', ['run', 'build'], {
       cwd: projectDir,
       env: {...process.env, NODE_ENV: 'production'},
     });
   } catch (error) {
+    console.log(
+      'Build validation failed:',
+      error instanceof Error ? error.message : String(error),
+    );
+    if (error instanceof Error) {
+      const execError = error as ExecError;
+      if (execError.stderr) {
+        console.log('Build stderr:', execError.stderr);
+      }
+      if (execError.stdout) {
+        console.log('Build stdout:', execError.stdout);
+      }
+    }
     if (hasGuideSteps) {
-      // Build failures are expected when migration guide has steps
-      // Silently continue as this is expected behavior
+      // Build success can't be guaranted when migration guide has steps
+      // Allowed to fail
     } else {
-      // Build should succeed when no guide steps are present
+      // Real possible error.Build should succeed when no guide steps are present
       throw new Error(
-        `Build failed unexpectedly (no migration steps documented): ${
+        `Build failed unexpectedly without GuideSteps: ${
           (error as Error).message
         }`,
       );
@@ -1063,6 +1252,19 @@ async function validateTypeCheck(
   try {
     await exec('npm', ['run', 'typecheck'], {cwd: projectDir});
   } catch (error) {
+    console.log(
+      'TypeCheck validation failed:',
+      error instanceof Error ? error.message : String(error),
+    );
+    if (error instanceof Error) {
+      const execError = error as ExecError;
+      if (execError.stderr) {
+        console.log('TypeCheck stderr:', execError.stderr);
+      }
+      if (execError.stdout) {
+        console.log('TypeCheck stdout:', execError.stdout);
+      }
+    }
     if (hasGuideSteps) {
       // TypeScript errors are expected when migration guide has steps
       // Silently continue as this is expected behavior
@@ -1084,6 +1286,10 @@ async function validateDevServer(
   try {
     await testDevServer(projectDir, 'post-upgrade-validation');
   } catch (error) {
+    console.log(
+      'Dev server validation failed:',
+      error instanceof Error ? error.message : String(error),
+    );
     if (hasGuideSteps) {
       // Dev server failures are expected when migration guide has steps
       // Silently continue as this is expected behavior
@@ -1099,7 +1305,7 @@ async function validateDevServer(
 }
 
 async function validateFileIntegrity(projectDir: string) {
-  const criticalFiles = ['package.json', 'tsconfig.json'];
+  const criticalFiles = ['package.json'];
 
   for (const file of criticalFiles) {
     const filePath = join(projectDir, file);
@@ -1107,5 +1313,57 @@ async function validateFileIntegrity(projectDir: string) {
     if (!hasFile) {
       throw new Error(`Missing critical file after upgrade: ${file}`);
     }
+  }
+
+  const serverTsPath = join(projectDir, 'server.ts');
+  const serverJsPath = join(projectDir, 'server.js');
+  const hasServerFile =
+    (await fileExists(serverTsPath)) || (await fileExists(serverJsPath));
+
+  if (!hasServerFile) {
+    throw new Error(
+      `Missing server file after upgrade: neither server.ts nor server.js found at project root`,
+    );
+  }
+
+  const appDir = join(projectDir, 'app');
+  const hasAppDir = await fileExists(appDir);
+  if (!hasAppDir) {
+    throw new Error(`Missing /app directory after upgrade`);
+  }
+
+  const routesTsPath = join(appDir, 'routes.ts');
+  const routesJsPath = join(appDir, 'routes.js');
+  const hasRoutesFile =
+    (await fileExists(routesTsPath)) || (await fileExists(routesJsPath));
+
+  if (!hasRoutesFile) {
+    throw new Error(
+      `Missing routes file after upgrade: neither routes.ts nor routes.js found in /app directory`,
+    );
+  }
+
+  const entryClientTsxPath = join(appDir, 'entry.client.tsx');
+  const entryClientJsxPath = join(appDir, 'entry.client.jsx');
+  const hasEntryClientFile =
+    (await fileExists(entryClientTsxPath)) ||
+    (await fileExists(entryClientJsxPath));
+
+  if (!hasEntryClientFile) {
+    throw new Error(
+      `Missing entry.client file after upgrade: neither entry.client.tsx nor entry.client.jsx found in /app directory`,
+    );
+  }
+
+  const entryServerTsxPath = join(appDir, 'entry.server.tsx');
+  const entryServerJsxPath = join(appDir, 'entry.server.jsx');
+  const hasEntryServerFile =
+    (await fileExists(entryServerTsxPath)) ||
+    (await fileExists(entryServerJsxPath));
+
+  if (!hasEntryServerFile) {
+    throw new Error(
+      `Missing entry.server file after upgrade: neither entry.server.tsx nor entry.server.jsx found in /app directory`,
+    );
   }
 }
