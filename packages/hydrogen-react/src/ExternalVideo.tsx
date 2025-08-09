@@ -25,7 +25,7 @@ export type ExternalVideoProps = Omit<
  * API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).
  */
 export const ExternalVideo = forwardRef<HTMLIFrameElement, ExternalVideoProps>(
-  (props, ref): JSX.Element => {
+  (props, ref) => {
     const {
       data,
       options,

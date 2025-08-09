@@ -35,10 +35,7 @@ type CartLineProviderProps = {
 /**
  * The `CartLineProvider` component creates a context for using a cart line.
  */
-export function CartLineProvider({
-  children,
-  line,
-}: CartLineProviderProps): JSX.Element {
+export function CartLineProvider({children, line}: CartLineProviderProps) {
   return (
     <CartLineContext.Provider value={line}>{children}</CartLineContext.Provider>
   );

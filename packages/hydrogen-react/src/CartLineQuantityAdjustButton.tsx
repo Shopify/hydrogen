@@ -20,7 +20,7 @@ type CartLineQuantityAdjustButtonProps<
  */
 export function CartLineQuantityAdjustButton<
   AsType extends React.ElementType = 'button',
->(props: CartLineQuantityAdjustButtonProps<AsType>): JSX.Element {
+>(props: CartLineQuantityAdjustButtonProps<AsType>) {
   const {status, linesRemove, linesUpdate} = useCart();
   const cartLine = useCartLine();
   const {children, adjust, onClick, ...passthroughProps} = props;
@@ -59,7 +59,7 @@ export function CartLineQuantityAdjustButton<
   ]);
 
   // Only certain 'as' types such as 'button' contain `disabled`
-  const disabledAttr = (passthroughProps as {disabled?: boolean}).disabled;
+  const disabledAttr = 'disabled' in passthroughProps && passthroughProps.disabled;
 
   return (
     <BaseButton

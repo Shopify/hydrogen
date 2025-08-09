@@ -1,14 +1,16 @@
 import { useFetcher, useNavigate, type FormProps, type Fetcher } from 'react-router';
 import React, {useRef, useEffect} from 'react';
+import type {ChangeEvent, MutableRefObject, ReactNode} from 'react';
 import type {PredictiveSearchReturn} from '~/lib/search';
 import {useAside} from './Aside';
+import {wrapReactRouterForm} from './ReactRouterCompat';
 
 type SearchFormPredictiveChildren = (args: {
-  fetchResults: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  fetchResults: (event: ChangeEvent<HTMLInputElement>) => void;
   goToSearch: () => void;
-  inputRef: React.MutableRefObject<HTMLInputElement | null>;
+  inputRef: MutableRefObject<HTMLInputElement>;
   fetcher: Fetcher<PredictiveSearchReturn>;
-}) => React.ReactNode;
+}) => ReactNode;
 
 type SearchFormPredictiveProps = Omit<FormProps, 'children'> & {
   children: SearchFormPredictiveChildren | null;
@@ -25,7 +27,7 @@ export function SearchFormPredictive({
   ...props
 }: SearchFormPredictiveProps) {
   const fetcher = useFetcher<PredictiveSearchReturn>({key: 'search'});
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null!);
   const navigate = useNavigate();
   const aside = useAside();
 
@@ -63,9 +65,12 @@ export function SearchFormPredictive({
     return null;
   }
 
+  // TODO: Remove when React Router adds React 19 support
+  const FetcherForm = wrapReactRouterForm(fetcher.Form);
+  
   return (
-    <fetcher.Form {...props} className={className} onSubmit={resetInput}>
+    <FetcherForm {...props} className={className} onSubmit={resetInput}>
       {children({inputRef, fetcher, fetchResults, goToSearch})}
-    </fetcher.Form>
+    </FetcherForm>
   );
 }

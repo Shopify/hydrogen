@@ -163,7 +163,7 @@ function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
   return (
     <Suspense fallback={<CartBadge count={null} />}>
       <Await resolve={cart}>
-        <CartBanner />
+        {() => <CartBanner />}
       </Await>
     </Suspense>
   );
