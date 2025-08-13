@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Storefront API 2025-07
+ * Based on Storefront API 2025-10
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -780,6 +780,17 @@ export type CartCardSource =
    */
   'SAVED_CREDIT_CARD';
 
+/** Return type for `cartClone` mutation. */
+export type CartClonePayload = {
+  __typename?: 'CartClonePayload';
+  /** The newly created cart without PII. This is a different cart from the source. */
+  cart?: Maybe<Cart>;
+  /** The list of errors that occurred from executing the mutation. */
+  userErrors: Array<CartUserError>;
+  /** A list of warnings that occurred during the mutation. */
+  warnings: Array<CartWarning>;
+};
+
 /** The discount that has been applied to the cart line using a discount code. */
 export type CartCodeDiscountAllocation = CartDiscountAllocation & {
   __typename?: 'CartCodeDiscountAllocation';
@@ -1051,6 +1062,17 @@ export type CartDeliveryAddressesAddPayload = {
 /** Return type for `cartDeliveryAddressesRemove` mutation. */
 export type CartDeliveryAddressesRemovePayload = {
   __typename?: 'CartDeliveryAddressesRemovePayload';
+  /** The updated cart. */
+  cart?: Maybe<Cart>;
+  /** The list of errors that occurred from executing the mutation. */
+  userErrors: Array<CartUserError>;
+  /** A list of warnings that occurred during the mutation. */
+  warnings: Array<CartWarning>;
+};
+
+/** Return type for `cartDeliveryAddressesReplace` mutation. */
+export type CartDeliveryAddressesReplacePayload = {
+  __typename?: 'CartDeliveryAddressesReplacePayload';
   /** The updated cart. */
   cart?: Maybe<Cart>;
   /** The list of errors that occurred from executing the mutation. */
@@ -1978,6 +2000,8 @@ export type CartWarningCode =
   | 'MERCHANDISE_NOT_ENOUGH_STOCK'
   /** The merchandise is out of stock. */
   | 'MERCHANDISE_OUT_OF_STOCK'
+  /** Only one-time purchase is available for B2B orders. */
+  | 'MERCHANDISE_SELLING_PLAN_NOT_APPLICABLE_ON_COMPANY_LOCATION'
   /** Gift cards are not available as a payment method. */
   | 'PAYMENTS_GIFT_CARDS_UNAVAILABLE';
 
@@ -5331,12 +5355,16 @@ export type Mutation = {
    *
    */
   cartBuyerIdentityUpdate?: Maybe<CartBuyerIdentityUpdatePayload>;
+  /** Creates a clone of the specified cart with all personally identifiable information removed. */
+  cartClone?: Maybe<CartClonePayload>;
   /** Creates a new cart. */
   cartCreate?: Maybe<CartCreatePayload>;
   /** Adds delivery addresses to the cart. */
   cartDeliveryAddressesAdd?: Maybe<CartDeliveryAddressesAddPayload>;
   /** Removes delivery addresses from the cart. */
   cartDeliveryAddressesRemove?: Maybe<CartDeliveryAddressesRemovePayload>;
+  /** Replaces delivery addresses on the cart. */
+  cartDeliveryAddressesReplace?: Maybe<CartDeliveryAddressesReplacePayload>;
   /** Updates one or more delivery addresses on a cart. */
   cartDeliveryAddressesUpdate?: Maybe<CartDeliveryAddressesUpdatePayload>;
   /** Updates the discount codes applied to the cart. */
@@ -5463,6 +5491,11 @@ export type MutationCartBuyerIdentityUpdateArgs = {
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
+export type MutationCartCloneArgs = {
+  cartId: Scalars['ID']['input'];
+};
+
+/** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartCreateArgs = {
   input?: InputMaybe<CartInput>;
 };
@@ -5476,6 +5509,12 @@ export type MutationCartDeliveryAddressesAddArgs = {
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartDeliveryAddressesRemoveArgs = {
   addressIds: Array<Scalars['ID']['input']>;
+  cartId: Scalars['ID']['input'];
+};
+
+/** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
+export type MutationCartDeliveryAddressesReplaceArgs = {
+  addresses: Array<CartSelectableAddressInput>;
   cartId: Scalars['ID']['input'];
 };
 

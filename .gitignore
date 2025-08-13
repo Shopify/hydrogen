@@ -143,4 +143,5 @@ business-platform.schema.json
 
 examples/**/*.generated.d.ts
 
-examples/express/build
+examples/express/build.tmp_api_update_issues.txt
+PR_DESCRIPTION.md

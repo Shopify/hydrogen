@@ -37,16 +37,25 @@ Before starting, verify:
 ## Critical Files to Update
 
 ### 1. Version Constants (MUST UPDATE)
-- `packages/hydrogen-react/src/storefront-api-constants.ts`
-  - Update: `export const SFAPI_VERSION = 'YYYY-MM';`
-  
-- `packages/hydrogen/src/customer/constants.ts`
-  - Update: `export const DEFAULT_CUSTOMER_API_VERSION = 'YYYY-MM';`
 
-- `packages/hydrogen-react/codegen.ts`
-  - Update both:
-    - `const SF_API_VERSION = 'YYYY-MM';`
-    - `const CA_API_VERSION = 'YYYY-MM';`
+**IMPORTANT**: Read each file first before editing to ensure proper context.
+
+1. **File**: `packages/hydrogen-react/src/storefront-api-constants.ts`
+   - Read the file first
+   - Update: `export const SFAPI_VERSION = 'YYYY-MM';`
+   - Example: Change from `'2025-07'` to `'2025-10'`
+  
+2. **File**: `packages/hydrogen/src/customer/constants.ts`
+   - Read the file first
+   - Update: `export const DEFAULT_CUSTOMER_API_VERSION = 'YYYY-MM';`
+   - Example: Change from `'2025-07'` to `'2025-10'`
+
+3. **File**: `packages/hydrogen-react/codegen.ts`
+   - Read the file first
+   - Update both constants on consecutive lines:
+     - `const SF_API_VERSION = 'YYYY-MM';`
+     - `const CA_API_VERSION = 'YYYY-MM';`
+   - Example: Change both from `'2025-07'` to `'2025-10'`
 
 **✅ CHECKPOINT**: Pause and ask the user to confirm before moving to the next task.
 **Summary**: Updated all version constants in 3 files to the new API version (both SFAPI and CAAPI).
@@ -172,19 +181,25 @@ Update API version references to ensure tests work with new API versions:
 **✅ CHECKPOINT**: Pause and ask the user to confirm before moving to the next task.
 **Summary**: Updated all test files with new API version references to ensure tests pass.
 
-### 8. Package Versions (MAJOR UPDATE - REQUIRED)
-Create a changeset file that includes major version bumps for:
-- `@shopify/hydrogen` - major (components depend on new API schemas)
-- `@shopify/hydrogen-react` - major (direct API integration)
-- `@shopify/cli-hydrogen` - major (bundles skeleton with new versions)
-- `skeleton` - major (uses new Hydrogen version)
+### 8. Package Versions (CHANGESET - REQUIRED)
+Create a changeset file that includes version bumps for:
+- `@shopify/hydrogen` - **major** (components depend on new API schemas)
+- `@shopify/hydrogen-react` - **major** (direct API integration)
+- `@shopify/cli-hydrogen` - **patch** (bundles updated skeleton, but CLI commands unchanged)
+- `skeleton` - **major** (uses new Hydrogen version)
+
+**Why cli-hydrogen only needs patch:**
+- The CLI's public API (commands, flags, behavior) remains unchanged
+- It only bundles an updated skeleton template with new dependencies
+- This is similar to a data update rather than a functionality change
+- Users creating new projects expect to get the latest template versions
 
 Example changeset:
 ```
 ---
 '@shopify/hydrogen': major
 '@shopify/hydrogen-react': major
-'@shopify/cli-hydrogen': major
+'@shopify/cli-hydrogen': patch
 'skeleton': major
 ---
 
@@ -604,57 +619,422 @@ After analyzing all issues, create:
    Which API changes would you like me to investigate in detail?"
    ```
 3. Create a prioritized task list based on investigation
-4. This comprehensive report should be added to the PR description when pushing to GitHub
+4. Save the API Changes Report as `API_CHANGES_REPORT_YYYY-MM.md` in the root directory
 
-### PR Description Template
+## GitHub Issue Creation
+
+### Create GitHub Issues for Actionable Changes
+
+After generating the API Changes Report, create GitHub issues for each P0 and P1 change that requires implementation:
+
+#### Issue Creation Process
+
+1. **Identify Actionable Items**: From the API Changes Report, select all items marked as:
+   - P0 (Blockers) - Must create issues
+   - P1 (Recommended) - Should create issues
+   - P2 (Future) - Optional, ask user if they want issues created
+
+**When to Create Sub-Issues:**
+- **Complex Breaking Changes**: Affects 3+ components
+- **Cross-cutting Features**: Needs work in multiple packages
+- **Large Implementations**: Would take >1 day for single developer
+- **Parallel Work Needed**: Multiple developers can work simultaneously
+
+**Keep as Single Issue:**
+- **Simple Updates**: Affects 1-2 files
+- **Quick Fixes**: Can be done in <2 hours
+- **Isolated Changes**: No dependencies on other work
+
+2. **Issue Title Format**:
+   ```
+   [YYYY-MM API UPDATE] <Brief description of the change>
+   ```
+   Example: `[2025-07 API UPDATE] Add support for subscription discount data in Customer Account API`
+
+3. **Issue Body Template**:
+   ```markdown
+   ## Overview
+   [One paragraph summary from the API Changes Report]
+   
+   ## API Version
+   - **Version**: YYYY-MM
+   - **API**: Storefront/Customer Account
+   - **Type**: New Feature/Breaking Change/Update
+   - **Changelog**: [Link to official changelog]
+   
+   ## Technical Details
+   [Copy the Technical Impact section from the API Changes Report]
+   
+   ## Implementation Plan
+   [Copy the Implementation Opportunities/Required Updates from the report]
+   
+   ## 📋 Implementation Sub-Tasks
+   <!-- For complex issues, break down into sub-tasks -->
+   <!-- GitHub can convert these to real issues via UI -->
+   - [ ] **[Component/Area 1]**
+     - Specific changes needed
+     - File: `path/to/file.ts`
+   - [ ] **[Component/Area 2]**  
+     - Specific changes needed
+     - File: `path/to/file.tsx`
+   - [ ] **[Test Coverage]**
+     - Test scenarios to cover
+   - [ ] **[Documentation]**
+     - Docs to update
+   
+   ## Acceptance Criteria
+   - [ ] [Specific measurable outcome]
+   - [ ] [Another measurable outcome]
+   - [ ] Tests added/updated
+   - [ ] Documentation updated if needed
+   
+   ## Example Usage
+   ```graphql
+   [Copy any GraphQL examples from the report]
+   ```
+   
+   ## Files to Update
+   - `path/to/file1.ts` - [What needs changing]
+   - `path/to/file2.tsx` - [What needs changing]
+   
+   ## Testing Instructions
+   1. [Step to verify the implementation]
+   2. [Another verification step]
+   
+   ## Priority
+   P0/P1/P2 - [Justification]
+   
+   ## Related to API Update PR
+   This issue is part of the YYYY-MM API version update.
+   PR: #[PR_NUMBER]
+   
+   ---
+   *Note: For complex changes, consider converting sub-tasks to separate issues for better tracking.*
+   ```
+
+4. **Create Issues Using GitHub CLI**:
+   ```bash
+   # For each identified change, create an issue
+   gh issue create \
+     --title "[YYYY-MM API UPDATE] <Title>" \
+     --body "$(cat <<'EOF'
+   [Issue body content]
+   EOF
+   )"
+   
+   # Note: Only add --label flag if labels exist in the repo
+   # Common labels: enhancement, bug, breaking-change
+   # To check available labels: gh label list
+   
+   # Optional: Add assignee if needed
+   # --assignee @me
+   ```
+
+5. **Track Created Issues (Temporary)**:
+   ```bash
+   # Create temporary tracking file (NOT for commit)
+   ISSUE_TRACKING_FILE=".tmp_api_update_issues.txt"
+   echo "# Temporary issue tracking - DO NOT COMMIT" > $ISSUE_TRACKING_FILE
+   
+   # After each issue creation, capture the URL
+   ISSUE_URL=$(gh issue create --title "..." --body "..." | tail -1)
+   echo "Issue Title|P0|Breaking Change|$ISSUE_URL" >> $ISSUE_TRACKING_FILE
+   ```
+   
+   **Important**: This file is temporary and will be deleted after PR creation
+
+**✅ CHECKPOINT**: Pause and confirm with user before creating issues.
+**Summary**: Created GitHub issues for all actionable API changes requiring implementation.
+
+## Create Comprehensive Pull Request
+
+### Generate PR Summary with Issue Tracking Table
+
+After creating all necessary GitHub issues, create a comprehensive PR:
+
+### Enhanced PR Description Template
 
 ```markdown
-# API Version Update: YYYY-MM
+# 🚀 API Version Update: YYYY-MM
 
-## Summary
-Updated Storefront API and Customer Account API from version XXXX-XX to YYYY-MM.
+## Executive Summary
+Updated Storefront API and Customer Account API from version **XXXX-XX** to **YYYY-MM**, introducing X new features, Y improvements, and Z breaking changes.
 
-## Changes Made
+## 📋 Changes Made
 - ✅ Updated version constants in all packages
-- ✅ Regenerated GraphQL types and schemas
+- ✅ Regenerated GraphQL types and schemas  
 - ✅ Updated documentation and examples
 - ✅ Updated test fixtures
+- ✅ Created tracking issues for all actionable items
+- ✅ Generated comprehensive API Changes Report
 
-## Issues Identified & Resolution Plan
+## 📊 API Changes Overview
 
-### P0 - Blockers
-[List issues that must be resolved]
+| Change | Type | API | Priority | Issue | Status |
+|--------|------|-----|----------|-------|--------|
+| [Change Title 1] | New Feature | Customer Account | P0 | #[ISSUE_NUM] | 🔴 Not Started |
+| [Change Title 2] | Breaking Change | Storefront | P0 | #[ISSUE_NUM] | 🟡 In Progress |
+| [Change Title 3] | Update | Customer Account | P1 | #[ISSUE_NUM] | 🟢 Complete |
+| [Change Title 4] | New Feature | Storefront | P1 | #[ISSUE_NUM] | 🔴 Not Started |
+| [Change Title 5] | Enhancement | Both | P2 | #[ISSUE_NUM] | ⏸️ Future |
 
-### P1 - Required for this PR
-[List issues being addressed in this PR]
+### Legend
+- 🔴 **Not Started**: Issue created, work pending
+- 🟡 **In Progress**: Active development
+- 🟢 **Complete**: Implemented and tested
+- ⏸️ **Future**: Planned for follow-up PR
 
-### P2 - Follow-up Required
-[List issues for separate PRs]
+## 🔧 Breaking Changes
 
-## Testing
+### ⚠️ [Breaking Change Title]
+**Impact**: [What breaks and why]
+**Migration**: [How to fix]
+**Issue**: #[ISSUE_NUM]
+
+## 📝 Full API Changes Report
+See [`API_CHANGES_REPORT_YYYY-MM.md`](./API_CHANGES_REPORT_YYYY-MM.md) for complete details including:
+- Technical impact analysis
+- Implementation opportunities
+- Code examples
+- Migration guides
+
+## ✅ Validation Checklist
+
+### Type Safety & Build
+- [ ] `npm run typecheck` passes
+- [ ] `npm run build:pkg` completes successfully
+- [ ] Skeleton template builds without errors
+- [ ] No unresolved type imports
+
+### Testing
 - [ ] All unit tests pass
-- [ ] TypeScript compilation successful
-- [ ] Linting passes
-- [ ] Skeleton template builds
-- [ ] Manual testing completed
+- [ ] Integration tests updated for new API
+- [ ] Manual testing completed for critical paths
+- [ ] B2B flows tested (if applicable)
 
-## Next Steps
-[List any follow-up PRs or tasks needed]
+### Documentation
+- [ ] API version references updated
+- [ ] Examples use new API version
+- [ ] JSDoc comments updated
+- [ ] README reflects changes
+
+## 🎯 Implementation Status
+
+### P0 - Blockers (Must Fix)
+- [ ] #[ISSUE_NUM]: [Issue title and brief description]
+- [ ] #[ISSUE_NUM]: [Issue title and brief description]
+
+### P1 - This PR (Recommended)
+- [ ] #[ISSUE_NUM]: [Issue title and brief description]
+- [ ] #[ISSUE_NUM]: [Issue title and brief description]
+
+### P2 - Follow-up PRs
+- [ ] #[ISSUE_NUM]: [Issue title and brief description]
+- [ ] #[ISSUE_NUM]: [Issue title and brief description]
+
+## 📈 Metrics
+- **Files Changed**: X files
+- **Lines Modified**: +Y / -Z
+- **New API Features Exposed**: A
+- **Breaking Changes Handled**: B
+- **Test Coverage**: C%
+
+## 🔗 Related Links
+- [Shopify API Changelog for YYYY-MM](https://shopify.dev/changelog/YYYY-MM)
+- [API Changes Report](./API_CHANGES_REPORT_YYYY-MM.md)
+- [Migration Guide](link-if-exists)
+
+## 👥 Review Focus Areas
+Please pay special attention to:
+1. [Specific area needing review]
+2. [Another critical review point]
+3. [Performance implications if any]
+
+## 🚦 Merge Criteria
+This PR is ready to merge when:
+- [ ] All P0 issues resolved
+- [ ] Type checking passes
+- [ ] Tests are green
+- [ ] At least 2 approvals from maintainers
+- [ ] Changeset file reviewed
+
+## 📅 Next Steps
+After merging this PR:
+1. Monitor CI for version PR creation
+2. Create follow-up PRs for P2 items
+3. Update changelog.json after npm release
+4. Coordinate CLI release if needed
+
+---
+*Generated with API Update Guide v2.0*
+```
+
+### Pre-PR Cleanup & Commit
+
+```bash
+# CRITICAL: Clean up ALL temporary files before committing
+echo "🧹 Cleaning up temporary files before commit..."
+
+# Remove all test/temporary markdown files (but NOT the guide!)
+rm -f TEST_*.md
+rm -f PR_DESCRIPTION.md
+rm -f .tmp_api_update_issues.txt
+rm -f created_issues.txt
+rm -f TEST_ISSUE_*.md
+rm -f API_CHANGES_REPORT_*.md
+rm -f api_changes_*.json
+
+# Remove any other temporary files created during the process
+find . -name "*.tmp" -type f -delete
+find . -name ".tmp_*" -type f -delete
+
+# Verify no temporary files remain
+echo "Checking for remaining temp files..."
+git status --short | grep -E "(TEST_|\.tmp|PR_DESCRIPTION|API_CHANGES|api_changes)" && echo "⚠️ Warning: Temporary files still exist!" || echo "✅ All temp files cleaned"
+
+# Stage all changes for commit
+git add -A
+
+# Final check - ensure we're not committing temp files
+git status --short | grep -E "(TEST_|\.tmp|PR_DESCRIPTION\.md)" && {
+  echo "❌ ERROR: Temporary files staged for commit! Unstaging..."
+  git reset HEAD TEST_*.md PR_DESCRIPTION.md .tmp_*
+} || echo "✅ Ready to commit"
+
+# Commit the changes
+git commit -m "[YYYY-MM] Update Storefront API and Customer Account API"
+```
+
+### Create PR Using GitHub CLI
+
+```bash
+# Generate fresh PR description for GitHub
+cat > PR_DESCRIPTION.md << 'EOF'
+[Your PR description content here]
+EOF
+
+# Create the PR with the comprehensive description
+gh pr create \
+  --title "Update Storefront API and Customer Account API to YYYY-MM" \
+  --body "$(cat PR_DESCRIPTION.md)" \
+  --base main \
+  --draft  # Consider starting as draft if P0 issues exist
+
+# Capture the PR URL
+PR_URL=$(gh pr view --json url -q .url)
+echo "✅ PR created: $PR_URL"
+
+# Final cleanup of PR description file
+rm -f PR_DESCRIPTION.md
+echo "🧹 Cleaned up PR description file"
+
+# Optional: Keep the API Changes Report for reference
+# It can be committed or deleted based on team preference
+echo "📋 API_CHANGES_REPORT_YYYY-MM.md kept for reference (decide if committing)"
+```
+
+## Automation Helper Scripts
+
+### Script: Create Issues from API Changes Report
+```bash
+#!/bin/bash
+# create-api-issues.sh
+# Parse API_CHANGES_REPORT_YYYY-MM.md and create GitHub issues
+
+API_VERSION="YYYY-MM"
+REPORT_FILE="API_CHANGES_REPORT_${API_VERSION}.md"
+ISSUES_FILE="created_issues.txt"
+
+# Function to create an issue
+create_issue() {
+  local title="$1"
+  local body="$2"
+  local priority="$3"
+  
+  echo "Creating issue: $title"
+  
+  issue_url=$(gh issue create \
+    --title "[${API_VERSION} API UPDATE] ${title}" \
+    --body "${body}" \
+    --label "api-update,${priority}" \
+    --assignee @me \
+    2>&1 | grep -oE 'https://[^ ]+')
+  
+  echo "${title}|${issue_url}" >> $ISSUES_FILE
+  echo "Created: ${issue_url}"
+}
+
+# Parse report and create issues
+# (Implementation would parse the markdown and extract sections)
+```
+
+### Script: Generate PR Description with Issue Table
+```bash
+#!/bin/bash
+# generate-pr-description.sh
+# Generate comprehensive PR description with issue tracking table
+
+API_VERSION="YYYY-MM"
+OLD_VERSION="YYYY-MM"
+ISSUES_FILE="created_issues.txt"
+OUTPUT_FILE="PR_DESCRIPTION.md"
+
+# Read created issues and format as table
+generate_issue_table() {
+  echo "| Change | Type | API | Priority | Issue | Status |"
+  echo "|--------|------|-----|----------|-------|--------|"
+  
+  while IFS='|' read -r title url; do
+    issue_num=$(echo $url | grep -oE '[0-9]+$')
+    # Parse details from title/report
+    echo "| $title | Type | API | Priority | #$issue_num | 🔴 Not Started |"
+  done < $ISSUES_FILE
+}
+
+# Generate full PR description
+cat > $OUTPUT_FILE << EOF
+# 🚀 API Version Update: ${API_VERSION}
+
+## Executive Summary
+Updated Storefront API and Customer Account API from version **${OLD_VERSION}** to **${API_VERSION}**.
+
+## 📊 API Changes Overview
+
+$(generate_issue_table)
+
+[Rest of template...]
+EOF
+
+echo "PR description generated: $OUTPUT_FILE"
 ```
 
 ## Verification Checklist
 
+### Phase 1: Code Updates
 - [ ] Analyzed API changelog for new features/changes
 - [ ] All version constants updated (SFAPI and CAAPI matching)
 - [ ] Asked user about Cloudflare Workers compat date
 - [ ] Type generation completed successfully
+- [ ] hydrogen-react built successfully (critical for type resolution)
 - [ ] Documentation built with `npm run build-docs --workspace=@shopify/hydrogen-react`
 - [ ] No references to old API versions remain
 - [ ] All tests pass with new API versions
 - [ ] Build completes successfully
 - [ ] Changeset created with major version bumps
-- [ ] Validated all new API features are either implemented or documented as gaps
-- [ ] All issues documented and presented for review
+
+### Phase 2: Documentation & Tracking
+- [ ] API Changes Report generated and saved as `API_CHANGES_REPORT_YYYY-MM.md`
+- [ ] All P0 and P1 changes identified from report
+- [ ] GitHub issues created for all actionable items
+- [ ] Issue numbers/URLs tracked for PR description
+
+### Phase 3: Pull Request
+- [ ] PR description generated with issue tracking table
+- [ ] All breaking changes clearly documented
+- [ ] Migration paths provided
+- [ ] Test results included
+- [ ] PR created with appropriate labels
+- [ ] Ready for review
 
 ## Command Summary (CRITICAL ORDER)
 ```bash
@@ -716,6 +1096,19 @@ npm run changeset add
 # 13. Commit changes
 git add -A
 git commit -m "[YYYY-MM] Update Storefront API and Customer Account API"
+
+# 14. Generate API Changes Report
+# Save comprehensive report as API_CHANGES_REPORT_YYYY-MM.md
+
+# 15. Create GitHub Issues for actionable items
+# Use gh CLI to create issues for P0 and P1 items
+
+# 16. Create comprehensive PR
+gh pr create \
+  --title "Update Storefront API and Customer Account API to YYYY-MM" \
+  --body "$(cat PR_DESCRIPTION.md)" \
+  --base main \
+  --label "api-update,major-version"
 ```
 
 ## Decision Points for AI/User
