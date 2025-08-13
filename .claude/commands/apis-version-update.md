@@ -3,9 +3,22 @@
 ## Task Overview
 Update the Storefront API (SFAPI) and Customer Account API (CAAPI) versions across the Hydrogen repository to match the latest Shopify API release cycle. This guide is specifically for MAJOR version updates (e.g., 2025.1.0, 2025.4.0, 2025.7.0, 2025.10.0) that occur quarterly.
 
+## Quick Summary: 10 Required Steps
+1. **Determine Target Version** - Identify the new API version
+2. **Create Feature Branch** - Set up working branch
+3. **Update Version Constants** - Update API version in 3 files
+4. **Generate Types & Build** - Generate new GraphQL types and build packages
+5. **Update Documentation** - Build docs and update skeleton types
+6. **Fix Hardcoded References** - Search and update old version strings
+7. **Update Test Files** - Fix test file references
+8. **Create Changeset** - Add version bump changeset
+9. **Create GitHub Issues** - Create tracking issues for API changes (MUST DO)
+10. **Clean Up & Commit** - Remove temp files and commit changes
+
 ## Step 0: Initial Setup
 
 ### 1. Determine Target Version
+**TODO TRACKING**: Add task "Step 1: Determine target API version" and mark as in_progress.
 **ASK USER**: "What major version is this PR for?"
 - Check current version in `packages/hydrogen-react/codegen.ts` for `const SF_API_VERSION`
 - Verify latest available version: `curl -s https://shopify.dev/docs/api/storefront/changelog.json | jq -r '.versions[0]'`
@@ -17,6 +30,7 @@ Update the Storefront API (SFAPI) and Customer Account API (CAAPI) versions acro
 **Summary**: Identified current API version and confirmed target version for update.
 
 ### 2. Create Feature Branch
+**TODO TRACKING**: Mark Step 1 complete, add and mark Step 2 as in_progress.
 **CONFIRM WITH USER**: "I will create a new branch named `{TARGET_VERSION}-sfapi-caapi-update` where TARGET_VERSION is the new API version (e.g., 2025-07). Is this correct?"
 - **For new API versions**: Create branch from main: `git checkout -b {TARGET_VERSION}-sfapi-caapi-update`
 - **For fixes to existing version**: Use existing calver branch: `git checkout {TARGET_VERSION}`
@@ -46,9 +60,7 @@ Before starting, verify:
 2. Both SFAPI and CAAPI will use the SAME version
 3. You have network access to fetch schemas from Shopify's GraphQL endpoints
 
-## Critical Files to Update
-
-### 1. Version Constants (MUST UPDATE)
+### 3. Update Version Constants (MUST UPDATE)
 
 **IMPORTANT**: Read each file first before editing to ensure proper context.
 
@@ -72,7 +84,7 @@ Before starting, verify:
 **✅ CHECKPOINT**: Pause and ask the user to confirm before moving to the next task.
 **Summary**: Updated all version constants in 3 files to the new API version (both SFAPI and CAAPI).
 
-### 2. Compatibility Date (CONDITIONAL)
+### 3b. Compatibility Date (CONDITIONAL - Ask User)
 - `packages/hydrogen/src/vite/compat-date.ts`
   - **ASK USER**: "Do you want to update the Cloudflare Workers compatibility date? If yes, what date should it be?"
   - This refers to Cloudflare Workers compatibility_date and may not always need updating
@@ -81,7 +93,8 @@ Before starting, verify:
 **✅ CHECKPOINT**: Pause and ask the user to confirm before moving to the next task.
 **Summary**: Confirmed whether Cloudflare Workers compatibility date needs updating (often not required).
 
-### 3. Type Generation and Build (CRITICAL SEQUENCE - REQUIRED)
+### 4. Generate Types & Build (CRITICAL SEQUENCE - REQUIRED)
+**TODO TRACKING**: Mark Step 3 complete, add and mark Step 4 as in_progress.
 
 **⚠️ CRITICAL**: The following steps MUST be done in exact order to ensure proper type resolution:
 
@@ -139,7 +152,8 @@ npm run build:pkg
 **✅ CHECKPOINT**: Pause and ask the user to confirm before moving to the next task.
 **Summary**: Generated new API types, built hydrogen-react package (critical for type resolution), and built all packages.
 
-### 4. Documentation Generation
+### 5a. Documentation Generation
+**TODO TRACKING**: Mark Step 4 complete, add and mark Step 5 as in_progress.
 Run the documentation build to update any auto-generated docs:
 ```bash
 npm run build-docs --workspace=@shopify/hydrogen-react
@@ -152,7 +166,7 @@ This will update generated documentation based on component changes.
 **✅ CHECKPOINT**: Pause and ask the user to confirm before moving to the next task.
 **Summary**: Built documentation to update auto-generated docs with new API version information.
 
-### 5. Regenerate Skeleton Generated Types
+### 5b. Regenerate Skeleton Generated Types
 After building packages, regenerate the skeleton template's GraphQL types:
 ```bash
 cd templates/skeleton
@@ -172,7 +186,8 @@ cd ../..
 **✅ CHECKPOINT**: Pause and ask the user to confirm before moving to the next task.
 **Summary**: Regenerated skeleton template's GraphQL types. Note any codegen errors that may indicate breaking API changes.
 
-### 6. Documentation Files (Manual Updates)
+### 6. Fix Hardcoded References (Manual Updates)
+**TODO TRACKING**: Mark Step 5 complete, add and mark Step 6 as in_progress.
 Search and update API version references in:
 - `**/*.doc.ts` files - Update example code blocks to use new API version
 - `**/*.stories.tsx` files - Update Storybook examples
@@ -217,6 +232,7 @@ npm run lint 2>&1 | tee lint_issues.log
 **Summary**: Updated all hardcoded API version references in documentation, examples, and stories. Noted any type/lint/test errors for final review.
 
 ### 7. Test Files
+**TODO TRACKING**: Mark Step 6 complete, add and mark Step 7 as in_progress.
 Update API version references to ensure tests work with new API versions:
 - `packages/hydrogen-react/src/storefront-client.test.ts`
 - `packages/hydrogen-react/src/ShopifyProvider.test.tsx`
@@ -227,6 +243,7 @@ Update API version references to ensure tests work with new API versions:
 **Summary**: Updated all test files with new API version references to ensure tests pass.
 
 ### 8. Package Versions (CHANGESET - REQUIRED)
+**TODO TRACKING**: Mark Step 7 complete, add and mark Step 8 as in_progress.
 Create a changeset file that includes version bumps for:
 - `@shopify/hydrogen` - **major** (components depend on new API schemas)
 - `@shopify/hydrogen-react` - **major** (direct API integration)
@@ -260,6 +277,114 @@ Update Storefront API and Customer Account API to version YYYY-MM
 
 **✅ CHECKPOINT**: Pause and ask the user to confirm before moving to the next task.
 **Summary**: Created changeset file with major version bumps for all affected packages.
+
+### 9. Create GitHub Issues for API Changes (REQUIRED)
+**TODO TRACKING**: Mark Step 8 complete, add and mark Step 9 as in_progress.
+
+**IMPORTANT**: This step creates tracking issues for all actionable API changes. DO NOT SKIP.
+
+#### Step 9a: Analyze API Changes
+First, fetch and analyze the API changelog to identify changes that need implementation:
+
+```bash
+# Fetch API changelog data and save to JSON for processing
+API_VERSION="YYYY-MM"  # Replace with actual version like 2025-07
+curl --silent --request POST \
+  --url https://changelog.shopify.com/graphql \
+  --header 'content-type: application/json' \
+  --data '{
+  "query": "query GetStorefrontCustomerUpdates($apiVersion: String!) { developer { posts(first: 50, apiTypeFilter: \"storefront-graphql,customer-account-graphql\", apiVersionFilter: $apiVersion, scopeFilter: PUBLISHED) { pageInfo { hasNextPage hasPreviousPage startCursor endCursor } nodes { slug title excerpt content permalink postedAt effectiveAt effectiveApiVersion indicatesActionRequired primaryTag { handle displayName } secondaryTag { handle displayName } affectedApi { handle displayName } } } } }",
+  "variables": {
+    "apiVersion": "'$API_VERSION'"
+  }
+}' > api_changes_$API_VERSION.json
+```
+
+#### Step 9b: Create Issues from Changelog Data
+For each significant change in the API, create a GitHub issue:
+
+```bash
+# Parse the changelog and create issues for each change
+cat api_changes_$API_VERSION.json | jq -r '.data.developer.posts.nodes[] | @json' | while IFS= read -r json; do
+  # Extract all fields with proper escaping
+  TITLE=$(echo "$json" | jq -r '"[" + (.effectiveApiVersion // "'$API_VERSION'") + " API UPDATE] " + .title')
+  # Permalink is already a full URL like: https://developers.shopify.com/api-changelog/...
+  PERMALINK=$(echo "$json" | jq -r '.permalink // ""')
+  API=$(echo "$json" | jq -r '.affectedApi[0].displayName // "Unknown"')
+  TYPE=$(echo "$json" | jq -r '.secondaryTag.displayName // "Update"')
+  ACTION_REQUIRED=$(echo "$json" | jq -r 'if .indicatesActionRequired then "Yes" else "No" end')
+  EXCERPT=$(echo "$json" | jq -r '.excerpt // "No description available"')
+  
+  # Validate permalink exists (it's already a full URL from the API)
+  if [ -z "$PERMALINK" ]; then
+    echo "Warning: No permalink found for $TITLE"
+    # Fallback to general changelog page
+    PERMALINK="https://developers.shopify.com/api-changelog"
+  else
+    # Permalink is already a full URL like: https://developers.shopify.com/api-changelog/...
+    echo "Using permalink: $PERMALINK"
+  fi
+  
+  # Create issue body with actual permalink from API
+  BODY="## Overview
+$EXCERPT
+
+## API Version
+- **Version**: $API_VERSION
+- **API**: $API
+- **Type**: $TYPE
+- **Action Required**: $ACTION_REQUIRED
+- **Changelog**: [View in Shopify Changelog]($PERMALINK)
+
+## Technical Details
+- Affected areas to be determined after investigation
+- Implementation required: TBD
+
+## Implementation Tasks
+- [ ] Investigate impact on existing code
+- [ ] Update affected components
+- [ ] Add tests for new functionality
+- [ ] Update documentation
+
+## Priority
+$(if [ "$ACTION_REQUIRED" = "Yes" ]; then echo "P0 - Breaking change, must fix"; else echo "P1 - New feature to implement"; fi)
+
+## Related to API Update PR
+This issue is part of the $API_VERSION API version update."
+
+  # Create the issue and capture the URL
+  echo "Creating issue: $TITLE"
+  ISSUE_URL=$(gh issue create --title "$TITLE" --body "$BODY" 2>&1 | grep -oE 'https://[^ ]+')
+  
+  # Track created issues for PR description
+  echo "$TITLE|$TYPE|$API|$ISSUE_URL" >> .tmp_created_issues.txt
+done
+```
+
+#### Step 9c: Create Summary Report
+Generate a summary of all created issues:
+
+```bash
+# Generate issue tracking table for PR
+echo "## GitHub Issues Created" > GITHUB_ISSUES_SUMMARY.md
+echo "" >> GITHUB_ISSUES_SUMMARY.md
+echo "| Title | Type | API | Issue |" >> GITHUB_ISSUES_SUMMARY.md
+echo "|-------|------|-----|-------|" >> GITHUB_ISSUES_SUMMARY.md
+
+while IFS='|' read -r title type api url; do
+  issue_num=$(echo "$url" | grep -oE '[0-9]+$')
+  echo "| $title | $type | $api | #$issue_num |" >> GITHUB_ISSUES_SUMMARY.md
+done < .tmp_created_issues.txt
+```
+
+**Validation**: Verify issues were created:
+```bash
+# Check that issues were created with the api-update label
+gh issue list --label "$API_VERSION-api-update" --limit 20
+```
+
+**✅ CHECKPOINT**: Pause and confirm all necessary GitHub issues have been created.
+**Summary**: Created GitHub issues for all actionable API changes with proper changelog links.
 
 ## Critical Step: Analyze API Changes
 
@@ -328,7 +453,7 @@ Create a comprehensive report with the following format:
 **Type**: New Feature / Breaking Change / Update
 **Effective Date**: YYYY-MM-DD
 **Action Required**: Yes/No
-**Changelog**: [Link to changelog entry]
+**Changelog**: [View in Changelog](Use actual .permalink field from API response)
 
 **Description**: 
 [Full description from API changelog]
@@ -897,7 +1022,7 @@ After generating the API Changes Report, create GitHub issues for each P0 and P1
    - **Version**: YYYY-MM
    - **API**: Storefront/Customer Account
    - **Type**: New Feature/Breaking Change/Update
-   - **Changelog**: [Link to official changelog]
+   - **Changelog**: [View in Changelog]($PERMALINK from API response)
    
    ## Technical Details
    [Copy the Technical Impact section from the API Changes Report]
@@ -1160,7 +1285,8 @@ After merging this PR:
 *Generated with API Update Guide v2.0*
 ```
 
-### Pre-PR Cleanup & Commit
+### 10. Clean Up & Commit (REQUIRED)
+**TODO TRACKING**: Mark Step 9 complete, add and mark Step 10 as in_progress.
 
 ```bash
 # CRITICAL: Clean up ALL temporary files before committing
@@ -1170,28 +1296,76 @@ echo "Cleaning up temporary files before commit..."
 rm -f TEST_*.md                    # Test markdown files
 rm -f PR_DESCRIPTION.md            # Temporary PR description
 rm -f .tmp_api_update_issues.txt   # Issue tracking file
+rm -f .tmp_created_issues.txt      # GitHub issue tracking
 rm -f created_issues.txt           # Issue creation log
 rm -f TEST_ISSUE_*.md             # Test issue files
 rm -f api_changes_*.json          # Temporary JSON data
+rm -f API_CHANGES_REPORT_*.md      # API changes report (DO NOT COMMIT)
+rm -f GITHUB_ISSUES_TO_CREATE.md   # Issue creation file (DO NOT COMMIT)
+rm -f GITHUB_ISSUES_SUMMARY.md     # Issue summary file (DO NOT COMMIT)
 rm -f typecheck_errors.log        # TypeScript error log
 rm -f test_failures.log           # Test failure log
 rm -f lint_issues.log             # Lint issue log
 rm -f *.tmp                       # Any .tmp files
 rm -f .tmp_*                      # Any hidden temp files
 
-# Files to KEEP (important for PR):
-# ✓ API_CHANGES_REPORT_YYYY-MM.md - Comprehensive report (commit or reference in PR)
+# Files to KEEP (important for commit):
 # ✓ .changeset/*.md - Version bump changeset (required for release)
 # ✓ All code changes, type updates, documentation updates
+# ❌ NO GENERATED REPORTS - they are ALL temporary
 
 # Verify no temporary files remain
 echo "Checking for remaining temp files..."
-git status --short | grep -E "(TEST_|\.tmp|PR_DESCRIPTION\.md|\.log$)" && echo "Warning: Temporary files still exist!" || echo "All temp files cleaned"
+git status --short | grep -E "(TEST_|\.tmp|PR_DESCRIPTION\.md|API_CHANGES_REPORT|GITHUB_ISSUES|\.log$)" && echo "Warning: Temporary files still exist!" || echo "All temp files cleaned"
+
+### Pre-Commit Verification (REQUIRED)
+echo "Running pre-commit verification..."
+
+# Verify GitHub issues were created
+echo "Checking for created issues..."
+ISSUE_COUNT=$(gh issue list --search "in:title $API_VERSION API UPDATE" --limit 50 --json number --jq '. | length')
+if [ "$ISSUE_COUNT" -eq 0 ]; then
+  echo "❌ ERROR: No GitHub issues found! You must create issues in Step 9"
+  echo "Run: gh issue list --search 'in:title $API_VERSION API UPDATE'"
+  exit 1
+else
+  echo "✅ Found $ISSUE_COUNT GitHub issues for this API update"
+fi
+
+# Verify no temporary files are staged
+echo "Checking for temporary files..."
+TEMP_FILES=$(git status --short | grep -E "(API_CHANGES_REPORT|GITHUB_ISSUES.*\.md|\.tmp|\.log$|api_changes.*\.json)")
+if [ -n "$TEMP_FILES" ]; then
+  echo "❌ ERROR: Temporary files detected:"
+  echo "$TEMP_FILES"
+  echo "These files must be deleted before committing!"
+  echo "Run the cleanup commands again"
+  exit 1
+else
+  echo "✅ No temporary files in staging"
+fi
+
+# Verify changeset exists
+if [ ! -f .changeset/*.md ]; then
+  echo "❌ ERROR: No changeset file found! Create one in Step 8"
+  exit 1
+else
+  echo "✅ Changeset file exists"
+fi
+
+# Final confirmation
+echo ""
+echo "=== PRE-COMMIT CHECKLIST ==="
+echo "✅ GitHub issues created: $ISSUE_COUNT issues"
+echo "✅ Temporary files cleaned: None staged"
+echo "✅ Changeset created: Found"
+echo "✅ Ready to commit!"
+echo ""
 
 # Stage all changes for commit
 git add -A
 
-# Final check - ensure we're not committing temp files
+# Final safety check - ensure we're not committing temp files
 git status --short | grep -E "(TEST_|\.tmp|PR_DESCRIPTION\.md|\.log$)" && {
   echo "ERROR: Temporary files staged for commit! Unstaging..."
   git reset HEAD TEST_*.md PR_DESCRIPTION.md .tmp_* *.log
