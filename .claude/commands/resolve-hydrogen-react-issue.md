@@ -540,28 +540,44 @@ npm run ci:checks
 
 ```
 🔴 CRITICAL: NEVER CREATE CHANGESET WITHOUT EXPLICIT USER INPUT 🔴
+🔴 NEVER ASSUME PACKAGE OR VERSION BUMP TYPE 🔴
 
 1. Create changeset:
-   MANDATORY USER QUESTIONS:
+   MANDATORY USER QUESTIONS (ALL REQUIRED - NO ASSUMPTIONS):
+   
    a. ASK: "Which packages should be included in the changeset?"
       - Show: @shopify/hydrogen-react (modified)
+      - Show any other affected packages
+      - DO NOT ASSUME: User must explicitly specify
       - AWAIT: User confirms or specifies packages
+      - VERIFY: "You selected: [packages]. Correct?"
    
-   b. ASK: "What type of version bump?"
+   b. ASK: "What type of version bump for EACH package?"
+      For @shopify/hydrogen-react:
       - patch: backwards compatible bug fixes
       - minor: backwards compatible features
       - major: breaking changes
+      - DO NOT ASSUME: Even for obvious bug fixes
       - AWAIT: User specifies version bump type
+      - VERIFY: "Version bumps: [summary]. Correct?"
    
    c. ASK: "Here's my proposed changeset description. Should I modify it?"
-      - Show proposed description
+      - Show proposed description with issue context
+      - Include what was fixed and why
       - AWAIT: User approval or modifications
+      - If modified: Show updated version for approval
    
-   ONLY AFTER ALL APPROVALS:
-   - Run: npm run changeset add
+   ONLY AFTER ALL THREE APPROVALS:
+   - Run: npm run changeset add (from repository root)
    - Select the user-specified packages
    - Choose the user-specified version bump type
    - Enter the approved description
+   
+   ALTERNATIVE: Manual changeset creation
+   If `npm run changeset add` unavailable:
+   - Create file: .changeset/[descriptive-name].md
+   - Content must match user specifications exactly
+   - Show file content for final approval
 
 ```
 
@@ -678,16 +694,48 @@ COMMON PROBLEMS:
 - Missing type support
 
 INVESTIGATION CHECKLIST:
-□ Check actual Storefront API response format
-□ Verify existing tests use correct API format
-□ Search for similar parsing in other metafield types:
-  - dimension, volume, weight (measurement types)
-  - rating (object types)
-  - All might have similar snake_case issues
-□ Use WebSearch if API format unclear:
-  "Shopify Storefront API money metafield format"
-□ Verify type definitions match runtime
-□ Test with real metafield data
+□ Verify actual external data format (not what tests assume)
+□ Compare test fixtures to real data - document differences
+□ Search for similar data transformation patterns:
+  - Other functions that parse external data
+  - Other type conversions at system boundaries
+  - Related data structures that might have same issue
+□ When documentation unclear, verify with real system:
+  - Make actual API call
+  - Check recent GitHub issues for real examples
+  - Use WebSearch for community experiences
+□ Ensure TypeScript types match runtime reality
+□ Create validation script with production data
+
+MENTAL MODEL: External Systems Don't Follow Your Conventions
+- PRINCIPLE: APIs use their own naming conventions (often snake_case)
+- PRINCIPLE: TypeScript/JavaScript prefers different conventions (camelCase)
+- SOLUTION PATTERN: Transform at the boundary
+  * Accept multiple input formats (defensive)
+  * Transform to canonical internal format
+  * Maintain backward compatibility
+- TESTING PRINCIPLE: Test the actual external format, not your preferred format
+
+VALIDATION APPROACH:
+```javascript
+// Principle: Test with REAL external data format
+import {yourFunction} from './path/to/function';
+
+// Step 1: Capture actual data from the external system
+// Don't create idealized data - use what you actually receive
+const externalData = {
+  // This should be copy-pasted from actual API response
+  // or database query result, not handwritten
+};
+
+// Step 2: Test the transformation
+const result = yourFunction(externalData);
+
+// Step 3: Verify it matches your internal format
+console.assert(result.internalField, 'Transformation failed');
+console.log('External format:', externalData);
+console.log('Internal format:', result);
+```
 ```
 
 ### Money Component Issues
@@ -872,16 +920,34 @@ And share the output. This helps us determine if this is version-specific or alr
 ## TRIAL LOG
 <!-- Track learnings from each issue -->
 
-### Issue #3071: parseMetafield money type
-- **Learning**: Storefront API returns `currency_code` but MoneyV2 type expects `currencyCode`
-- **Pattern**: API field naming inconsistencies need transformation
-- **Test Gap**: Test used camelCase, not actual API format
-- **Missed Context**: TODO comment indicated bigger refactor planned
-- **Improvement**: Added test data verification step
-- **Improvement**: Added WebSearch for API verification
-- **Improvement**: Added pattern checking for similar issues
-- **Improvement**: Added TODO/FIXME investigation requirement
-- **Improvement**: Added git history deep dive requirement
+### Example: Issue #3071 - Naming Convention Mismatch
+
+**MENTAL MODEL DEMONSTRATED**: External systems don't follow your conventions
+
+**KEY INSIGHTS**:
+1. **Assumption Gap**: Tests assumed API used camelCase (wrong)
+2. **Reality Check**: API actually used snake_case
+3. **Type Safety Principle**: Using `as any` hid the problem
+
+**UNIVERSAL FIX PATTERN**:
+1. **Identify the boundary**: Where external data enters your system
+2. **Document both formats**: What you receive vs what you need
+3. **Transform explicitly**: Convert at the boundary, not throughout code
+4. **Support gracefully**: Handle both old and new formats
+5. **Test reality**: Use actual external data in tests
+
+**TRANSFERABLE LESSONS**:
+- When types don't match, investigate the data source
+- When tests pass but production fails, tests have wrong assumptions
+- When tempted to use `as any`, you're missing understanding
+- When fixing one parser, check all similar parsers
+
+**SYSTEMATIC INVESTIGATION PATTERN**:
+1. Capture real data from the external system
+2. Compare to test data - note differences
+3. Check if transformation logic handles real format
+4. Search for similar transformations that might have same issue
+5. Update tests to use real format, not idealized format
 
 ### Example: Why Git History Matters
 ```

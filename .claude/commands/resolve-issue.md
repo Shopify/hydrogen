@@ -45,6 +45,17 @@ CRITICAL: Git History Commands (USE THESE!):
 - git log --grep="[keyword]" --all - Find related changes
 - gh pr list --search "[file]" - Find PR discussions
 - git log -S "[code]" --all - When was this code introduced?
+
+🔴 CRITICAL: Verify Assumptions Against Reality:
+- MENTAL MODEL: Tests show intent, not truth
+- Tests often contain idealized data that doesn't match production
+- Always validate against the actual data source (API, database, etc.)
+- Create independent verification scripts outside the test framework
+- Common assumption gaps:
+  * Naming convention differences (snake_case vs camelCase)
+  * Data structure differences (nested vs flattened)
+  * Type mismatches (strings vs numbers)
+  * Missing or extra fields
 ```
 
 ### Code Change Presentation
@@ -287,25 +298,29 @@ AWAIT: Operator acknowledgment
 
 ### Step 3.1: Generate Multiple Solutions
 ```
-ACTION: Generate 3-5 distinct approaches
+MENTAL MODEL: Every Problem Has Three Solutions
 
-For each solution provide:
+PRINCIPLE: Generate solutions at different abstraction levels:
+1. MINIMAL FIX: Solve just the reported issue
+2. PATTERN FIX: Solve this and similar issues
+3. ARCHITECTURAL FIX: Prevent this class of issues
+
+For each solution evaluate:
 1. Technical approach
-2. Files requiring modification (with paths)
-3. Packages affected
-4. Complexity (1-5)
-5. Estimated time
-6. Risk assessment
+2. Scope of changes (files, packages)
+3. Complexity vs benefit trade-off
+4. Future maintenance burden
+5. Risk of unintended consequences
+6. Alignment with codebase direction
 
-Example format:
-Solution A: [Name]
-- Approach: [Description]
-- Files: 
-  * packages/hydrogen/src/[file].tsx
-  * packages/hydrogen/src/[file].test.tsx
-- Complexity: 3/5
-- Time: ~2 hours
-- Risk: Low - isolated change
+SOLUTION EVALUATION FRAMEWORK:
+Solution A: [Minimal/Pattern/Architectural]
+- Approach: [What you'll do]
+- Scope: [How much code changes]
+- Benefits: [What it fixes]
+- Risks: [What might break]
+- Maintenance: [Future burden]
+- Recommendation: [When to use this]
 ```
 
 ### Step 3.2: Side Effects Analysis
@@ -478,26 +493,75 @@ ACTION:
 3. Run full CI checks:
    npm run ci:checks
    
-CHECKPOINT: All tests passing?
+4. Create independent validation script:
+   ```javascript
+   // validation.js - Test against production data format
+   import { [functionToTest] } from './packages/[package]/src/[file]';
+   
+   // PRINCIPLE: Use EXACT format from production system
+   // Don't copy from tests - get fresh data from the source
+   const realData = {
+     // Capture this from actual API/database/system
+     // Not from test fixtures!
+   };
+   
+   const result = [functionToTest](realData);
+   console.log('Result:', result);
+   
+   // Validate the transformation worked
+   console.assert(result.expectedField !== undefined, 'Missing expected field');
+   console.assert(typeof result.field === 'expectedType', 'Wrong type');
+   ```
+   
+5. Create TypeScript compilation test:
+   ```typescript
+   // type-verification.ts - Ensure types align with reality
+   import { [functionToTest], type [ExpectedType] } from './packages/[package]';
+   
+   // PRINCIPLE: Let TypeScript catch type mismatches
+   const realData = { /* real data structure */ };
+   const result = [functionToTest](realData);
+   
+   // This line will fail compilation if types don't match
+   const typeChecked: [ExpectedType] = result;
+   
+   // Also verify the runtime matches the types
+   if (result && typeof result === 'object') {
+     Object.keys(result).forEach(key => {
+       console.log(`${key}: ${typeof result[key]}`);
+     });
+   }
+   ```
+   
+CHECKPOINT: All tests passing + manual validation successful?
 AWAIT: Confirmation to proceed
 ```
 
 ### Step 6.4: Changeset Creation
 ```
 🔴 CRITICAL: NEVER CREATE CHANGESET WITHOUT EXPLICIT USER INPUT 🔴
+🔴 NEVER ASSUME PACKAGE OR VERSION BUMP TYPE 🔴
 
 CHECKPOINT: Ready to create changeset
 
-MANDATORY USER QUESTIONS:
+MANDATORY USER QUESTIONS (ALL REQUIRED - NO ASSUMPTIONS):
+
 1. ASK: "Which packages should be included in the changeset?"
-   - Show list of modified packages
+   - Show list of ALL modified packages:
+     * [package-name]: [files changed]
+   - DO NOT ASSUME: User must explicitly specify
    - AWAIT: User specifies packages
+   - VERIFY: "You selected: [packages]. Correct?"
    
 2. ASK: "What type of version bump for each package?"
-   - patch: backwards compatible bug fixes
-   - minor: backwards compatible features  
-   - major: breaking changes
+   For EACH package the user selected:
+   - [package-name]: 
+     * patch: backwards compatible bug fixes
+     * minor: backwards compatible features  
+     * major: breaking changes
+   - DO NOT ASSUME: Even for obvious bug fixes
    - AWAIT: User specifies version bump type for EACH package
+   - VERIFY: "Version bumps: [summary]. Correct?"
 
 3. ASK: "Here's my proposed changeset description. Should I modify it?"
    ```
@@ -509,12 +573,19 @@ MANDATORY USER QUESTIONS:
    Fixes #[issue-number]
    ```
    - AWAIT: User approval or modifications
+   - If modified: Show updated version for approval
 
-ONLY AFTER ALL APPROVALS:
-- Run: npm run changeset add
+ONLY AFTER ALL THREE APPROVALS:
+- Run: npm run changeset add (from repository root)
 - Select the user-specified packages
 - Choose the user-specified version bump types
 - Enter the approved description
+
+ALTERNATIVE: Manual changeset creation
+If `npm run changeset add` unavailable:
+- Create file: .changeset/[descriptive-name].md
+- Content must match user specifications exactly
+- Show file content for final approval
 
 CHECKPOINT: Show created changeset file content
 AWAIT: Final approval of changeset
@@ -524,41 +595,55 @@ AWAIT: Final approval of changeset
 ```
 📊 MANDATORY BEFORE/AFTER REPORT
 
+MENTAL MODEL: Prove Your Fix Works in Three Ways
+
 CREATE AND PRESENT:
 
 ## Fix Validation Report
 
-### What Changed
-| Aspect | BEFORE Fix | AFTER Fix |
-|--------|------------|-----------|  
-| Behavior | [How it failed] | [How it works] |
-| Error | [Error message] | [No error] |
-| Output | [Wrong output] | [Correct output] |
-| Types | [Type issues] | [Type safe] |
+### 1. BEHAVIOR COMPARISON
+| Aspect | BEFORE Fix | AFTER Fix | How Verified |
+|--------|------------|-----------|--------------|  
+| Behavior | [Failed how] | [Works how] | [Test/script] |
+| Data Flow | [Wrong format] | [Correct format] | [Validation] |
+| Types | [Type errors] | [Type safe] | [TS compilation] |
+| Edge Cases | [Not handled] | [Handled] | [Test coverage] |
 
-### How to Validate This Fix
+### 2. REPRODUCTION PROOF
+
+PRINCIPLE: Anyone should be able to verify your fix
 
 #### See the problem (BEFORE):
 ```bash
 git checkout main
-[exact commands to reproduce]
+# Exact steps that show the bug
+[commands that demonstrate issue]
 ```
-EXPECTED ERROR: [what you'll see]
+EXPECTED: [The broken behavior they'll see]
 
 #### Verify the fix (AFTER):
 ```bash  
 git checkout [fix-branch]
+# Same steps now work
 [same commands]
 ```
-EXPECTED SUCCESS: [correct behavior]
+EXPECTED: [The working behavior they'll see]
 
-#### Run Tests:
+### 3. AUTOMATED VERIFICATION
 ```bash
-npm test -- [specific test]
-```
-EXPECTED: All tests pass
+# Tests pass
+npm test -- [affected tests]
 
-CHECKPOINT: Satisfied with this fix?
+# Types check
+npm run typecheck -- [package]
+
+# No regressions
+npm run ci:checks
+```
+
+MENTAL MODEL: If you can't prove it's fixed, it's not fixed
+
+CHECKPOINT: Can someone else verify this fix using these instructions?
 AWAIT: Approval to proceed with PR
 ```
 
@@ -804,36 +889,89 @@ AFTER posting information request:
 
 ### IMPORTANT INVESTIGATION PRINCIPLES
 
-1. **Never Trust Test Data Without Verification**
-   - Tests often use idealized/incorrect mock data
-   - Always compare to actual API responses
-   - Update tests when they don't match reality
+1. **Mental Model: Tests Show Intent, Not Reality**
+   - PRINCIPLE: Test data often reflects what developers WISH the data looked like
+   - ACTION: Always verify against the actual data source
+   - TECHNIQUE: Create standalone validation scripts that:
+     * Use real production data formats
+     * Run outside the test framework
+     * Compare expected vs actual behavior
+   - RED FLAGS that tests might be wrong:
+     * Data looks "too clean" or simplified
+     * Field names don't match external system conventions
+     * Types seem inconsistent with the domain
+     * No integration tests exist
 
-2. **Look for Patterns, Not Just Point Fixes**
-   - If one function has an issue, similar functions might too
-   - Check related code for the same problem
-   - Think systemically, not just about the reported issue
+2. **Mental Model: Bugs Have Siblings**
+   - PRINCIPLE: Code patterns repeat, so bugs repeat
+   - INSIGHT: If you find one bug, its family is likely nearby
+   - SEARCH STRATEGY:
+     * Find the abstraction level: Is this a data transform issue? A type issue? A timing issue?
+     * Search for similar patterns at that abstraction level
+     * Look for code that was written at the same time (git log)
+     * Check for copy-pasted code (similar structure, different names)
+   - SYSTEMIC THINKING:
+     * What category of problem is this?
+     * Where else might this category appear?
+     * What's the root cause, not just the symptom?
 
-3. **Use WebSearch for API Verification**
-   - When Storefront API behavior is unclear
-   - When documentation is missing or ambiguous
-   - To verify field formats and response structures
+3. **Mental Model: Documentation Lies, Running Code Tells Truth**
+   - PRINCIPLE: When docs and reality conflict, reality wins
+   - VERIFICATION HIERARCHY:
+     1. Actual API/system responses (highest truth)
+     2. Integration tests that hit real systems
+     3. Recent GitHub issues/discussions
+     4. Official documentation
+     5. Unit tests with mocks (lowest truth)
+   - USE EXTERNAL VERIFICATION WHEN:
+     * Documentation seems ambiguous
+     * Behavior doesn't match expectations
+     * You see conflicting information
 
-4. **Always Check TODO/FIXME Comments**
-   - Read ±20 lines around affected code
-   - TODO comments reveal planned improvements
-   - FIXME indicates known issues
-   - Your solution might conflict with maintainer plans
-   - Consider if a minimal fix is better than comprehensive change
+4. **Mental Model: TODOs Are Your Future Conflicts**
+   - PRINCIPLE: Comments reveal maintainer intentions
+   - INVESTIGATION RADIUS: Always read ±20 lines around target code
+   - COMMENT HIERARCHY:
+     * FIXME: Known broken, needs fixing
+     * TODO: Planned improvement (your fix might conflict)
+     * NOTE/WARNING: Explains why code is weird
+     * HACK/WORKAROUND: Temporary solution with constraints
+   - DECISION FRAMEWORK:
+     * If TODO exists: Consider minimal fix over comprehensive change
+     * If FIXME exists: Your fix might be welcome
+     * If HACK exists: Understand the constraint before changing
+   - MENTAL MODEL: The maintainer left breadcrumbs - follow them
 
-5. **Deep Dive into Git History** 🔍
-   - NEVER modify code without understanding its history
-   - Read commit messages going back YEARS if needed
-   - Look for reverted changes - they indicate tricky areas
-   - PR discussions have more context than commits
-   - Architectural decisions are hidden in old commits
-   - Search for: "because", "due to", "reverts", "performance"
-   - Check if similar fixes were tried and failed
+6. **Mental Model: Type Assertions Hide Bugs**
+   - PRINCIPLE: `as any` is a bug waiting to happen
+   - BETTER APPROACHES:
+     * Import and use the actual type definitions
+     * Use type guards and narrowing
+     * Create explicit type transformation functions
+     * If types don't match reality, fix the types
+   - TYPE VERIFICATION TECHNIQUE:
+     * Create a separate .ts file that only does type checking
+     * Try to assign your data to the expected types
+     * TypeScript errors reveal the mismatches
+   - RED FLAG: If you need `as any`, you don't understand the data flow
+
+5. **Mental Model: Code Archaeology Reveals Hidden Constraints** 🔍
+   - PRINCIPLE: Every "weird" piece of code has a story
+   - INVESTIGATION TECHNIQUE:
+     * Read git history going back YEARS if needed
+     * Look for reverted changes - they're red flags
+     * PR discussions contain unwritten requirements
+     * Commit messages reveal the "why" behind decisions
+   - SEARCH PATTERNS:
+     * "because" - reveals reasoning
+     * "revert" - shows what didn't work
+     * "performance" - indicates optimization trade-offs
+     * "compatibility" - shows constraints you might not know
+   - WARNING SIGNS:
+     * Multiple attempts at the same fix
+     * Code that looks "wrong" but has been there for years
+     * Comments explaining non-obvious approaches
+   - MENTAL MODEL: If it looks wrong but works, there's a reason
 
 ### Route to package-specific prompt based on affected package:
 - If issue affects @shopify/hydrogen → Use resolve-hydrogen-issue.md
