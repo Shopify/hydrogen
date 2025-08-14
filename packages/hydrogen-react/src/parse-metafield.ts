@@ -1,5 +1,6 @@
 import type {
   Collection,
+  CurrencyCode,
   GenericFile,
   Metafield as MetafieldBaseType,
   MoneyV2,
@@ -63,8 +64,43 @@ export function parseMetafield<ReturnGeneric>(
       } as ReturnGeneric;
 
     // TODO: 'money' should probably be parsed even further to like `useMoney()`, but that logic needs to be extracted first so it's not a hook
+    case 'money': {
+      let parsedValue: MoneyV2 | null = null;
+      try {
+        const parsed = parseJSON(metafield.value ?? '');
+        // Transform currency_code from Storefront API to currencyCode to match MoneyV2 type
+        if (parsed && typeof parsed === 'object' && 'currency_code' in parsed) {
+          const moneyData = parsed as {amount: string; currency_code: string};
+          parsedValue = {
+            amount: moneyData.amount,
+            currencyCode: moneyData.currency_code as CurrencyCode,
+          };
+        } else if (
+          parsed &&
+          typeof parsed === 'object' &&
+          'currencyCode' in parsed
+        ) {
+          // Already in correct format (for backward compatibility)
+          parsedValue = parsed as MoneyV2;
+        } else {
+          parsedValue = parsed as MoneyV2 | null;
+        }
+      } catch (err) {
+        const parseError = `parseMetafield(): attempted to JSON.parse the 'metafield.value' property, but failed.`;
+        if (__HYDROGEN_DEV__) {
+          throw new Error(parseError);
+        } else {
+          console.error(`${parseError} Returning 'null' for 'parsedValue'`);
+        }
+        parsedValue = null;
+      }
+      return {
+        ...metafield,
+        parsedValue,
+      } as ReturnGeneric;
+    }
+
     case 'dimension':
-    case 'money':
     case 'json':
     case 'rating':
     case 'volume':
