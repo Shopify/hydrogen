@@ -563,7 +563,14 @@ npm run ci:checks
    - Choose the user-specified version bump type
    - Enter the approved description
 
-2. Stage and Review (NO AUTO-COMMIT!):
+```
+
+### PHASE 8: Commit and Push (SEPARATE FROM PR)
+
+```
+🔴 CRITICAL: COMMIT AND PUSH ARE SEPARATE FROM PR CREATION 🔴
+
+1. Stage and Review (NO AUTO-COMMIT!):
    git add -A
    git status
    
@@ -576,27 +583,88 @@ npm run ci:checks
    CHECKPOINT 2: "Review the changes. Proceed with commit?"
    AWAIT: EXPLICIT approval
 
-3. Commit (WITH APPROVAL):
-   SHOW: Proposed commit message
-   CHECKPOINT: "Approve this commit message?"
-   AWAIT: Approval
-   THEN: git commit -m "[message]"
+2. Commit (WITH APPROVAL):
+   SHOW: "Proposed commit message:
+   Fix: #[number] - [description]
    
-4. Push (WITH APPROVAL):
-   CHECKPOINT 1: "Ready to push to remote?"
-   SHOW: Branch name and remote
-   AWAIT: Approval
-   CHECKPOINT 2: "FINAL CHECK: Push these changes?"
-   AWAIT: FINAL approval
+   - [Change detail 1]
+   - [Change detail 2]"
+   
+   CHECKPOINT: "Approve this commit message?"
+   AWAIT: Approval or modification request
+   THEN: git commit -m "[approved message]"
+   
+3. Push to Remote (SEPARATE APPROVAL):
+   CHECKPOINT: "Ready to push to remote?"
+   SHOW: 
+      Branch: [branch-name]
+      Remote: origin
+      Command: git push -u origin [branch]
+   
+   AWAIT: Explicit "yes" to push
    THEN: git push -u origin [branch]
+   CONFIRM: Branch pushed successfully
+```
 
-5. Create PR (WITH APPROVAL):
-   SHOW: Complete PR template filled out
-   CHECKPOINT 1: "Review PR content"
-   AWAIT: Approval
-   CHECKPOINT 2: "FINAL: Create this PR?"
-   AWAIT: FINAL approval
-   THEN: gh pr create
+### PHASE 9: Pull Request Creation (COMPLETELY SEPARATE)
+
+```
+🔴 CRITICAL: THIS IS A SEPARATE PHASE - NEVER AUTO-CREATE PR 🔴
+
+1. PR Preparation:
+   CHECKPOINT: "Ready to create Pull Request?"
+   AWAIT: User confirmation to proceed with PR phase
+
+2. Draft PR Content:
+   SHOW: Complete PR preview
+   
+   TITLE: Fix: #[number] - [issue title]
+   
+   BODY:
+   ----------------------------------------
+   ### WHY are these changes introduced?
+   
+   Fixes #[number]
+   
+   [Detailed problem description]
+   
+   ### WHAT is this pull request doing?
+   
+   [Detailed changes]
+   - Modified `[file]`: [what changed]
+   - Added tests: [what tests]
+   - Updated types: [what types]
+   
+   ### HOW to test your changes?
+   
+   1. [Specific step]
+   2. [Specific step]
+   3. Expected: [result]
+   
+   ### Verification
+   - Before: [broken behavior]
+   - After: [working behavior]
+   
+   #### Checklist
+   - [x] I've read the Contributing Guidelines
+   - [x] I've considered possible cross-platform impacts
+   - [x] I've added a changeset
+   - [x] I've added tests to cover my changes
+   - [ ] I've added or updated the documentation
+   ----------------------------------------
+   
+   CHECKPOINT: "Review this PR description. Any changes?"
+   AWAIT: Approval or modifications
+
+3. Create PR:
+   ONLY AFTER PR CONTENT APPROVED:
+   
+   CHECKPOINT: "Create this PR now?"
+   AWAIT: Final explicit "yes"
+   
+   THEN: gh pr create --title "[title]" --body "[body]"
+   CONFIRM: PR created successfully
+   SHOW: PR URL
 ```
 
 ## SPECIFIC EXPERTISE AREAS

@@ -562,9 +562,9 @@ CHECKPOINT: Satisfied with this fix?
 AWAIT: Approval to proceed with PR
 ```
 
-## PHASE 7: Pull Request Creation
+## PHASE 7: Commit and Push
 
-### Step 7.1: Pre-PR Checklist
+### Step 7.1: Pre-Commit Checklist
 ```
 VERIFY all items checked:
 - [ ] All tests passing
@@ -574,15 +574,15 @@ VERIFY all items checked:
 - [ ] Changeset created
 - [ ] No unintended changes (git diff)
 
-CHECKPOINT: Ready to commit and push?
-AWAIT: Final approval
+CHECKPOINT: Ready to commit?
+AWAIT: Approval to proceed
 ```
 
-### Step 7.2: Commit and Push (DOUBLE APPROVAL REQUIRED)
+### Step 7.2: Commit (TRIPLE APPROVAL REQUIRED)
 ```
-🔴 CRITICAL: NO AUTO-COMMIT/PUSH 🔴
+🔴 CRITICAL: NO AUTO-COMMIT 🔴
 
-DOUBLE CHECK SYSTEM:
+TRIPLE CHECK SYSTEM:
 
 1. STAGE & REVIEW:
    git add .
@@ -598,42 +598,82 @@ DOUBLE CHECK SYSTEM:
    AWAIT: Approval
 
 3. COMMIT (with approval):
-   SHOW: "Commit message: Fix: #[number] - [description]"
-   CHECKPOINT 3: "Use this message?"
-   AWAIT: Explicit "yes"
-   THEN: git commit -m "[message]"
+   SHOW: "Proposed commit message:
+   Fix: #[number] - [brief description]
+   
+   - [Detail 1]
+   - [Detail 2]"
+   
+   CHECKPOINT 3: "Use this commit message?"
+   AWAIT: Explicit "yes" or modification request
+   THEN: git commit -m "[approved message]"
 
-4. PUSH (final approval):
-   SHOW: "Push to: origin/fix/[number]-[description]"
-   CHECKPOINT 4: "FINAL: Push to remote?"
-   AWAIT: Explicit "yes"
-   THEN: git push -u origin [branch]
+CONFIRM: Changes committed locally
+SHOW: git log --oneline -1
+```
 
+### Step 7.3: Push to Remote
+```
+🔴 CRITICAL: SEPARATE PUSH APPROVAL REQUIRED 🔴
+
+CHECKPOINT: "Ready to push to remote?"
+SHOW: 
+   Branch: fix/[number]-[description]
+   Remote: origin
+   Command: git push -u origin [branch]
+
+AWAIT: Explicit "yes" to push
+
+THEN: git push -u origin [branch]
 CONFIRM: Branch pushed successfully
+SHOW: Remote branch URL
 ```
 
-### Step 7.3: Create Pull Request
-```
-ACTION: Create PR using GitHub template
+## PHASE 8: Pull Request Creation (SEPARATE PHASE)
 
-gh pr create --title "Fix: #[number] - [issue title]" --body "
+### Step 8.1: PR Preparation
+```
+🔴 CRITICAL: THIS IS A SEPARATE PHASE - DO NOT AUTO-CREATE PR 🔴
+
+CHECKPOINT: "Ready to create Pull Request?"
+AWAIT: User confirmation to proceed with PR phase
+
+PRESENT: "I will now prepare the Pull Request. This involves:"
+- Drafting PR title
+- Creating PR description with our template
+- Reviewing all changes one more time
+```
+
+### Step 8.2: Draft PR Content
+```
+SHOW: Complete PR preview
+
+TITLE: Fix: #[number] - [issue title]
+
+BODY:
+----------------------------------------
 ### WHY are these changes introduced?
 
 Fixes #[number]
 
-[Explain the problem this PR solves]
+[Explain the problem this PR solves - be specific]
 
 ### WHAT is this pull request doing?
 
-[Summary of changes]
-- [Change 1]
-- [Change 2]
+[Detailed summary of changes]
+- [Specific change 1 with file]
+- [Specific change 2 with file]
+- [Test additions/modifications]
 
 ### HOW to test your changes?
 
-1. [Step 1]
-2. [Step 2]
-3. [Verify expected behavior]
+1. [Specific step 1]
+2. [Specific step 2]
+3. Expected result: [what should happen]
+
+### Verification
+- Before fix: [describe broken behavior]
+- After fix: [describe working behavior]
 
 #### Checklist
 
@@ -642,15 +682,31 @@ Fixes #[number]
 - [x] I've added a changeset
 - [x] I've added tests to cover my changes
 - [ ] I've added or updated the documentation
-"
+----------------------------------------
 
-CHECKPOINT: Review PR before submitting
-AWAIT: Approval to create PR
+CHECKPOINT: "Review this PR description. Any changes needed?"
+AWAIT: Approval or modification requests
 ```
 
-## PHASE 8: Success Verification
+### Step 8.3: Create Pull Request
+```
+ONLY AFTER PR CONTENT APPROVED:
 
-### Step 8.1: Final Confirmation
+ACTION: Create PR using gh CLI
+gh pr create --title "[approved title]" --body "[approved body]"
+
+CHECKPOINT: "Create this PR now?"
+AWAIT: Final explicit "yes"
+
+THEN: Execute gh pr create command
+
+CONFIRM: PR created successfully
+SHOW: PR URL
+```
+
+## PHASE 9: Success Verification
+
+### Step 9.1: Final Confirmation
 ```
 ACTION:
 - Provide PR URL

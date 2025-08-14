@@ -150,6 +150,67 @@ ONLY AFTER ALL APPROVALS:
 - Enter the approved description
 ```
 
+### Phase 7: Commit and Push (SEPARATE FROM PR)
+
+```
+🔴 CRITICAL: COMMIT AND PUSH ARE SEPARATE FROM PR CREATION 🔴
+
+1. Stage and Review:
+   git add .
+   git status
+   SHOW: List of staged files
+   CHECKPOINT: "These files correct?"
+   AWAIT: Approval
+
+2. Review Diff:
+   git diff --staged
+   SHOW: Complete diff
+   CHECKPOINT: "Changes look good?"
+   AWAIT: Approval
+
+3. Commit:
+   SHOW: "Proposed commit message:
+   Fix: #[number] - [description]
+   
+   - [Change detail]"
+   CHECKPOINT: "Use this commit message?"
+   AWAIT: Explicit "yes" or modification
+   THEN: git commit -m "[approved message]"
+
+4. Push to Remote (SEPARATE APPROVAL):
+   CHECKPOINT: "Ready to push to remote?"
+   SHOW: Branch and remote details
+   AWAIT: Explicit "yes"
+   THEN: git push -u origin [branch]
+   CONFIRM: Pushed successfully
+```
+
+### Phase 8: Pull Request Creation (COMPLETELY SEPARATE)
+
+```
+🔴 CRITICAL: THIS IS A SEPARATE PHASE - NEVER AUTO-CREATE PR 🔴
+
+1. PR Preparation:
+   CHECKPOINT: "Ready to create Pull Request?"
+   AWAIT: User confirmation to proceed
+
+2. Draft PR Content:
+   SHOW: Complete PR preview with CLI-specific template
+   
+   TITLE: Fix: #[number] - [issue title]
+   
+   BODY: [Full PR description following template]
+   
+   CHECKPOINT: "Review this PR description. Any changes?"
+   AWAIT: Approval or modifications
+
+3. Create PR:
+   CHECKPOINT: "Create this PR now?"
+   AWAIT: Final explicit "yes"
+   THEN: gh pr create
+   SHOW: PR URL
+```
+
 ## COMMON GOTCHAS
 <!-- To be populated during trials -->
 - oclif requires specific class structure
