@@ -87,6 +87,29 @@ ACTION:
    gh issue list --repo Shopify/hydrogen --search "[keywords from issue]"
 ```
 
+### PHASE 1.2: Version-Specific Testing 🔴 CRITICAL 🔴
+
+```
+🔴 MANDATORY: REPRODUCE AT REPORTED VERSION 🔴
+
+ACTION:
+1. Extract version from issue (e.g., "@shopify/hydrogen-react@2025.4.1")
+2. Create investigation branch:
+   git checkout -b investigate-issue-[number]-v[version] @shopify/hydrogen-react@[version]
+3. Test EXACTLY what user reported at that version
+4. Only after confirming issue exists, check if fixed in main
+
+CRITICAL: hydrogen-react types are generated from API schemas
+- If types look wrong, check the schema file first
+- Compare customer-account.schema.json with API docs
+- Types might be correct in code but wrong in API
+
+EXAMPLE: OrderFulfillmentStatus bug in 2025.4.1
+- Types had shipping statuses instead of order statuses  
+- Bug was in Shopify's API schema, not our code
+- Required API fix and version upgrade
+```
+
 ### PHASE 1.5: Information Sufficiency Check
 
 ```
@@ -206,6 +229,36 @@ IF no response after significant time:
      * Performance/compatibility reasons
      * Trade-offs mentioned in commits
    - Go back YEARS if needed - architectural decisions hide deep
+```
+
+### PHASE 2.3: API Schema Bug Detection 🔍
+
+```
+SPECIFIC TO hydrogen-react: Check if it's an API bug, not a code bug
+
+1. For Type Issues:
+   - Check generated file: src/customer-account-api-types.d.ts
+   - Check schema: customer-account.schema.json
+   - Compare with docs: shopify.dev/docs/api/customer/latest
+   - If mismatch: It's likely an API bug
+
+2. Run Schema Verification:
+   # Check what the schema actually contains
+   jq '.__schema.types[] | select(.name == "[TypeName]")' customer-account.schema.json
+   
+   # Compare enum values
+   grep -A 20 "export type [EnumName] =" src/customer-account-api-types.d.ts
+
+3. Test Regeneration:
+   cd packages/hydrogen-react
+   npm run graphql-types
+   git diff  # See if types changed
+
+4. If API Bug Confirmed:
+   - Document the API issue clearly
+   - Check if fixed in newer API versions
+   - Provide upgrade path for users
+   - Don't try to "fix" in code - it's external
 ```
 
 ### PHASE 2.5: Historical Context Deep Dive

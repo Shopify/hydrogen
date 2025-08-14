@@ -115,6 +115,42 @@ CHECK ISSUE STATE:
 - No recent activity? → May be new issue or stale
 ```
 
+### Step 1.1.5: Version-Specific Testing Requirement 🔴 CRITICAL 🔴
+```
+🔴 MANDATORY: TEST AT THE REPORTED VERSION 🔴
+
+WHEN: Issue reports a specific version (e.g., "2025.4.1")
+ACTION: 
+1. IMMEDIATELY create a branch at that version:
+   - Find the version tag: git tag -l "*[version]*"
+   - Example: git tag -l "*2025.4.1*"
+   - Create investigation branch: 
+     git checkout -b investigate-issue-[number]-v[version] @shopify/hydrogen@[version]
+   - Example: git checkout -b investigate-issue-3005-v2025.4.1 @shopify/hydrogen@2025.4.1
+
+2. REPRODUCE the issue in that version:
+   - Don't assume the issue exists in main
+   - Don't assume the issue is fixed in main
+   - Test EXACTLY what the user reported
+
+3. CHECK if already fixed:
+   - After confirming issue exists in reported version
+   - Then check main branch to see if it's fixed
+   - If fixed, identify which version introduced the fix
+
+CRITICAL: Testing at HEAD/main when user reports an older version 
+will lead to incorrect conclusions. The issue might:
+- Only exist in that specific version
+- Be caused by an API bug that was later fixed
+- Have different behavior due to dependency versions
+
+EXAMPLE FAILURE:
+- User reports issue in 2025.4.1
+- You test in main (2025.5.0)
+- You conclude "cannot reproduce"
+- Reality: Issue was real but already fixed
+```
+
 ### Step 1.2: Determine Affected Package(s)
 ```
 ACTION: Analyze issue to identify which package(s) are affected
@@ -972,6 +1008,27 @@ AFTER posting information request:
      * Code that looks "wrong" but has been there for years
      * Comments explaining non-obvious approaches
    - MENTAL MODEL: If it looks wrong but works, there's a reason
+
+7. **Mental Model: API Schema Bugs Are Not Code Bugs** 🔍
+   - PRINCIPLE: Sometimes the bug is in the external API, not your code
+   - DETECTION SIGNALS:
+     * Generated types don't match documentation
+     * Enum values look wrong for the context
+     * Types work in one version but not another
+     * No code changes between versions but behavior changed
+   - INVESTIGATION STEPS:
+     1. Check the generated schema file directly
+     2. Compare with official API documentation
+     3. Test API directly with curl/Postman
+     4. Check if it's version-specific
+   - RESOLUTION PATHS:
+     * If API bug: Wait for API fix, document workaround
+     * If outdated schema: Regenerate types
+     * If version mismatch: Upgrade to fixed version
+   - EXAMPLE: OrderFulfillmentStatus in CAAPI 2025.4.1
+     * Had shipping tracking statuses instead of order statuses
+     * Was a Shopify API bug, not Hydrogen code bug
+     * Fixed in API, users needed to upgrade
 
 ### Route to package-specific prompt based on affected package:
 - If issue affects @shopify/hydrogen → Use resolve-hydrogen-issue.md
