@@ -283,6 +283,13 @@ Update Storefront API and Customer Account API to version YYYY-MM
 
 **IMPORTANT**: This step creates tracking issues for all actionable API changes. DO NOT SKIP.
 
+**⚠️ CRITICAL PROCESS CHANGE**: 
+- DO NOT create issues automatically from the API response
+- ALWAYS investigate each change thoroughly first
+- Present ALL issue previews to the user for review
+- Only create issues after user confirmation
+- Include specific file paths and implementation details
+
 #### Step 9a: Analyze API Changes
 First, fetch and analyze the API changelog to identify changes that need implementation:
 
@@ -300,66 +307,118 @@ curl --silent --request POST \
 }' > api_changes_$API_VERSION.json
 ```
 
-#### Step 9b: Create Issues from Changelog Data
-For each significant change in the API, create a GitHub issue:
+#### Step 9b: Create Issues from Changelog Data (IMPROVED PROCESS)
+
+**IMPORTANT**: This step requires careful investigation and analysis of each API change BEFORE creating issues.
+
+**Process Overview**:
+1. First, analyze and understand each API change
+2. Investigate the impact on the Hydrogen codebase
+3. Provide a preview of each issue for user confirmation
+4. Only create issues after user approval
+5. Track issue URLs for PR description
 
 ```bash
-# Parse the changelog and create issues for each change
-cat api_changes_$API_VERSION.json | jq -r '.data.developer.posts.nodes[] | @json' | while IFS= read -r json; do
-  # Extract all fields with proper escaping
-  TITLE=$(echo "$json" | jq -r '"[" + (.effectiveApiVersion // "'$API_VERSION'") + " API UPDATE] " + .title')
-  # Permalink is already a full URL like: https://developers.shopify.com/api-changelog/...
-  PERMALINK=$(echo "$json" | jq -r '.permalink // ""')
-  API=$(echo "$json" | jq -r '.affectedApi[0].displayName // "Unknown"')
-  TYPE=$(echo "$json" | jq -r '.secondaryTag.displayName // "Update"')
-  ACTION_REQUIRED=$(echo "$json" | jq -r 'if .indicatesActionRequired then "Yes" else "No" end')
-  EXCERPT=$(echo "$json" | jq -r '.excerpt // "No description available"')
-  
-  # Validate permalink exists (it's already a full URL from the API)
-  if [ -z "$PERMALINK" ]; then
-    echo "Warning: No permalink found for $TITLE"
-    # Fallback to general changelog page
-    PERMALINK="https://developers.shopify.com/api-changelog"
-  else
-    # Permalink is already a full URL like: https://developers.shopify.com/api-changelog/...
-    echo "Using permalink: $PERMALINK"
-  fi
-  
-  # Create issue body with actual permalink from API
-  BODY="## Overview
-$EXCERPT
-
-## API Version
-- **Version**: $API_VERSION
-- **API**: $API
-- **Type**: $TYPE
-- **Action Required**: $ACTION_REQUIRED
-- **Changelog**: [View in Shopify Changelog]($PERMALINK)
-
-## Technical Details
-- Affected areas to be determined after investigation
-- Implementation required: TBD
-
-## Implementation Tasks
-- [ ] Investigate impact on existing code
-- [ ] Update affected components
-- [ ] Add tests for new functionality
-- [ ] Update documentation
-
-## Priority
-$(if [ "$ACTION_REQUIRED" = "Yes" ]; then echo "P0 - Breaking change, must fix"; else echo "P1 - New feature to implement"; fi)
-
-## Related to API Update PR
-This issue is part of the $API_VERSION API version update."
-
-  # Create the issue and capture the URL
-  echo "Creating issue: $TITLE"
-  ISSUE_URL=$(gh issue create --title "$TITLE" --body "$BODY" 2>&1 | grep -oE 'https://[^ ]+')
-  
-  # Track created issues for PR description
-  echo "$TITLE|$TYPE|$API|$ISSUE_URL" >> .tmp_created_issues.txt
-done
+# Parse the changelog and save for analysis
+cat api_changes_$API_VERSION.json | jq -r '.data.developer.posts.nodes[]' > api_changes_parsed.json
 ```
+
+**For each API change, follow this investigation process**:
+
+1. **Extract Change Information**:
+   - Title, excerpt, content from the changelog
+   - Affected API (Storefront or Customer Account)
+   - Type (New Feature, Breaking Change, Update)
+   - Action required flag
+
+2. **Investigate Codebase Impact**:
+   - Search for related GraphQL queries and fragments
+   - Identify components that could use new features
+   - Find type definitions that need updating
+   - Check for deprecated field usage
+
+3. **Create Issue Preview**:
+   ```markdown
+   ## Issue Preview: [Title]
+   
+   ### Context
+   [Detailed explanation from API changelog]
+   
+   ### Required Changes
+   - [ ] Specific implementation tasks identified
+   - [ ] Components to update with file paths
+   - [ ] Tests to add or modify
+   - [ ] Documentation updates needed
+   
+   ### Technical Details
+   [Specific technical analysis of the change]
+   
+   ### Key Files to Update
+   - `path/to/file1.ts` - Why this file needs updating
+   - `path/to/file2.tsx` - Specific changes needed
+   - `path/to/tests.test.ts` - Test coverage required
+   
+   ### Implementation Suggestions
+   [Code examples showing how to implement]
+   
+   ### References
+   - Documentation: [API docs link]
+   - Changelog: https://shopify.dev/changelog/[slug-from-api]
+   ```
+
+4. **Get User Confirmation**:
+   ```
+   "I've analyzed this API change and prepared an issue. 
+   Please review the preview above and confirm if I should create it."
+   ```
+
+5. **Create Issue After Approval**:
+   ```bash
+   # IMPORTANT: Fix the changelog URL format
+   # The API returns: https://developers.shopify.com/api-changelog/[slug]
+   # But we need: https://shopify.dev/changelog/[slug]
+   
+   # Extract the slug from the permalink
+   SLUG=$(echo "$PERMALINK" | sed 's|.*/api-changelog/||')
+   CORRECT_CHANGELOG_URL="https://shopify.dev/changelog/$SLUG"
+   
+   # Create issue with corrected URL
+   gh issue create --title "[2025-07] $TITLE" --body "$BODY_WITH_INVESTIGATION"
+   ```
+
+**Critical URL Format Fix**:
+The API returns permalinks like: `https://developers.shopify.com/api-changelog/subscription-discounts-are-now-available-in-the-customer-api`
+But the correct format should be: `https://shopify.dev/changelog/subscription-discounts-are-now-available-in-the-customer-api`
+
+Always transform the URL before including it in issues.
+
+**Best Practices for Issue Creation**:
+
+1. **NEVER create issues blindly** - Always investigate first
+2. **Include specific file paths** - Show exactly what needs updating
+3. **Provide implementation examples** - Include code snippets
+4. **Fix changelog URLs** - Transform developers.shopify.com to shopify.dev
+5. **Wait for user confirmation** - Present previews before creating
+6. **Track issue URLs** - Save to `.tmp_api_update_issues.txt` for PR description
+
+**Example Investigation for Each Change Type**:
+
+**For New Features (e.g., subscription discounts)**:
+- Search: `grep -r "SubscriptionContract" packages/hydrogen/src/customer/`
+- Check if queries already exist that could include new fields
+- Identify components that display subscription data
+- Find where new types need to be added
+
+**For Breaking Changes (e.g., removed types)**:
+- Search: `grep -r "LanguageCode" packages/ templates/`
+- Find all usage of the deprecated/removed type
+- Determine migration path
+- Identify test files that need updating
+
+**For Cart/Checkout Changes**:
+- Check: `packages/hydrogen/src/cart/queries/`
+- Review: `packages/hydrogen/src/cart/CartProvider.tsx`
+- Examine: `templates/skeleton/app/components/Cart.tsx`
 
 #### Step 9c: Create Summary Report
 Generate a summary of all created issues:
@@ -385,6 +444,59 @@ gh issue list --label "$API_VERSION-api-update" --limit 20
 
 **✅ CHECKPOINT**: Pause and confirm all necessary GitHub issues have been created.
 **Summary**: Created GitHub issues for all actionable API changes with proper changelog links.
+
+#### Step 9d: Complete Issue Creation Template
+
+**For AI Assistant - Use this exact process**:
+
+```markdown
+## Phase 1: Fetch and Parse API Changes
+1. Fetch API changelog for the target version
+2. Parse the JSON response and identify all changes
+3. Count total changes: X changes found
+
+## Phase 2: Investigation (For Each Change)
+For change #1: [Title]
+- Searching for related code...
+  - Found X files using [related feature]
+  - Identified Y components that could benefit
+  - Located Z GraphQL queries to update
+- Analysis complete
+
+## Phase 3: Issue Preview Creation
+Present ALL issue previews at once:
+
+### Issue Preview 1 of X: [Title]
+**Context**: [From API changelog]
+**Required Changes**: [Specific tasks]
+**Key Files to Update**: [With reasons]
+**Implementation Suggestions**: [Code examples]
+**References**: 
+- Docs: [Link]
+- Changelog: https://shopify.dev/changelog/[slug]
+
+[Repeat for all issues]
+
+## Phase 4: User Confirmation
+"I've analyzed all X API changes and prepared issue previews above.
+Please review and confirm if I should create these GitHub issues.
+Note: The changelog URLs have been corrected to use shopify.dev format."
+
+## Phase 5: Issue Creation (After Approval)
+Creating issue 1 of X...
+URL: https://github.com/Shopify/hydrogen/issues/XXXX
+[Track in .tmp_api_update_issues.txt]
+
+[Repeat for all approved issues]
+
+## Phase 6: Summary
+Successfully created X issues:
+1. #XXXX - [Title]
+2. #XXXX - [Title]
+...
+
+Issues tracked in .tmp_api_update_issues.txt for PR description.
+```
 
 ## Critical Step: Analyze API Changes
 
