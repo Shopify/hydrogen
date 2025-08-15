@@ -1,10 +1,12 @@
 {
   "$schema": "https://turborepo.org/schema.json",
+  "globalEnv": ["SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["src/**/*.ts"],
-      "outputs": ["dist/**", "build/**"]
+      "outputs": ["dist/**", "build/**"],
+      "env": ["SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK"]
     },
     "dev": {
       "dependsOn": ["^dev"],
@@ -54,7 +56,8 @@
         "@shopify/cli-hydrogen#build",
         "@shopify/remix-oxygen#build"
       ],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**"],
+      "env": ["SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK"]
     }
   }
 }

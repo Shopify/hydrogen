@@ -74,24 +74,9 @@ export async function checkLockfileStatus(
   directory: string,
   shouldExit = false,
 ) {
-  // Debug logging for CI
-  if (process.env.CI) {
-    console.log('[Lockfile Check Debug]');
-    console.log('  Directory:', directory);
-    console.log(
-      '  SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK:',
-      process.env.SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK,
-    );
-    console.log('  SHOPIFY_UNIT_TEST:', process.env.SHOPIFY_UNIT_TEST);
-    console.log('  isHydrogenMonorepo:', isHydrogenMonorepo);
-    console.log('  CI:', process.env.CI);
-  }
-
   // Check if SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK is explicitly false
   // This environment variable is set in CI to skip lockfile checks
   if (process.env.SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK === 'false') {
-    if (process.env.CI)
-      console.log('  Skipping: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK is false');
     return;
   }
 
@@ -106,8 +91,6 @@ export async function checkLockfileStatus(
       normalizedPath.includes('/templates/') ||
       normalizedPath.includes('/packages/')
     ) {
-      if (process.env.CI)
-        console.log('  Skipping: In monorepo templates/packages directory');
       return;
     }
   }
@@ -120,13 +103,9 @@ export async function checkLockfileStatus(
     // Verify this is actually the monorepo by checking for turbo.json
     const turboPath = resolvePath(directory, '../../turbo.json');
     if (await fileExists(turboPath)) {
-      if (process.env.CI)
-        console.log('  Skipping: In hydrogen/templates with turbo.json');
       return;
     }
   }
-
-  if (process.env.CI) console.log('  Proceeding with lockfile check');
 
   const foundPackageManagers: PackageManager[] = [];
   for (const packageManager of packageManagers) {
