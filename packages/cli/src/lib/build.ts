@@ -14,7 +14,11 @@ const monorepoPackagesPath = new URL('../../..', import.meta.url).pathname;
 // 2. Users can clone the repo as 'hydrogen-fork', 'hydrogen-test', etc. and it will still work
 // 3. The skeleton template is a required part of the monorepo structure, making it a reliable indicator
 // 4. This prevents CI failures when the repo is cloned with non-standard names
-const skeletonPath = joinPath(dirname(monorepoPackagesPath), 'templates', 'skeleton');
+const skeletonPath = joinPath(
+  dirname(monorepoPackagesPath),
+  'templates',
+  'skeleton',
+);
 export const isHydrogenMonorepo = existsSync(skeletonPath);
 export const hydrogenPackagesPath = isHydrogenMonorepo
   ? monorepoPackagesPath

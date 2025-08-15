@@ -415,19 +415,19 @@ describe('upgrade', async () => {
           // The getAvailableUpgrades function should:
           // 1. Return all releases newer than the current version
           // 2. Filter out duplicate versions (keeping only the first/newest)
-          // 
+          //
           // To make this test resilient to both duplicate and unique versions,
           // we need to find the first set of unique versions that are newer
           // than what's installed (releases[2].version)
-          
+
           // Find up to 2 unique versions that are newer than releases[2]
           const newerReleases = [];
           const seenVersions = new Set();
-          
+
           for (const release of releases) {
             // Stop when we reach the installed version
             if (release.version === releases[2].version) break;
-            
+
             // Only add if we haven't seen this version
             if (!seenVersions.has(release.version)) {
               newerReleases.push(release);
@@ -438,17 +438,22 @@ describe('upgrade', async () => {
           }
 
           // Build expected uniqueAvailableUpgrades
-          const expectedUniqueUpgrades = newerReleases.reduce((acc, release) => {
-            return {
-              ...acc,
-              [release.version]: release,
-            };
-          }, {});
+          const expectedUniqueUpgrades = newerReleases.reduce(
+            (acc, release) => {
+              return {
+                ...acc,
+                [release.version]: release,
+              };
+            },
+            {},
+          );
 
           // Verify the results
           expect(result.availableUpgrades).toHaveLength(newerReleases.length);
           expect(result.availableUpgrades).toEqual(newerReleases);
-          expect(result.uniqueAvailableUpgrades).toEqual(expectedUniqueUpgrades);
+          expect(result.uniqueAvailableUpgrades).toEqual(
+            expectedUniqueUpgrades,
+          );
         },
         {
           cleanGitRepo: true,
@@ -492,7 +497,7 @@ describe('upgrade', async () => {
       // Test with a unique version number to ensure the upgrade is detected
       // This ensures the test works regardless of whether the changelog has duplicates
       const testVersion = '9999.99.99'; // Use a version that definitely doesn't exist
-      
+
       // Copy of latest release but with increased patch version of a dependency
       // and a unique version number to avoid duplicate filtering
       const upgradedRelease = {
@@ -503,7 +508,7 @@ describe('upgrade', async () => {
           ...increasePatchVersion(depName, latestRelease.dependencies),
         },
       };
-      
+
       expect(
         getAvailableUpgrades({
           currentVersion: latestRelease.version,
@@ -521,13 +526,10 @@ describe('upgrade', async () => {
         version: testVersion,
         devDependencies: {
           ...latestRelease.devDependencies,
-          ...increasePatchVersion(
-            devDepName,
-            latestRelease.devDependencies,
-          ),
+          ...increasePatchVersion(devDepName, latestRelease.devDependencies),
         },
       };
-      
+
       expect(
         getAvailableUpgrades({
           currentVersion: latestRelease.version,
