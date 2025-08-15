@@ -1,4 +1,5 @@
 import {fileURLToPath} from 'node:url';
+import {existsSync} from 'node:fs';
 import {findPathUp} from '@shopify/cli-kit/node/fs';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {dirname, joinPath} from '@shopify/cli-kit/node/path';
@@ -6,9 +7,14 @@ import {execAsync} from './process.js';
 
 // Avoid using fileURLToPath here to prevent backslashes nightmare on Windows
 const monorepoPackagesPath = new URL('../../..', import.meta.url).pathname;
-export const isHydrogenMonorepo = monorepoPackagesPath.endsWith(
-  '/hydrogen/packages/',
+// Check if we're in the Hydrogen monorepo by looking for the skeleton template
+// relative to the packages directory
+const skeletonPath = joinPath(
+  dirname(monorepoPackagesPath),
+  'templates',
+  'skeleton',
 );
+export const isHydrogenMonorepo = existsSync(skeletonPath);
 export const hydrogenPackagesPath = isHydrogenMonorepo
   ? monorepoPackagesPath
   : undefined;
