@@ -7,7 +7,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'Creates a function that accepts an object of [CartInput](/docs/api/storefront/2025-04/input-objects/CartInput) and returns a new cart',
+    'Creates a function that accepts an object of [CartInput](/docs/api/storefront/2025-07/input-objects/CartInput) and returns a new cart',
   type: 'utility',
   defaultExample: {
     description: 'This is the default example',
