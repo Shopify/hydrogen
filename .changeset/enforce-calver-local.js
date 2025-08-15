@@ -5,6 +5,7 @@
  *
  * For testing CalVer transformations locally with dry-run and other options.
  * Production releases should use enforce-calver-ci.js
+ * For detailed documentation, see docs/CALVER.md
  */
 
 const fs = require('fs');
@@ -26,7 +27,7 @@ function parseArgs() {
     console.log(`
 Hydrogen CalVer Local Testing Script
 
-Usage: node scripts/enforce-calver-local.js [options]
+Usage: node .changeset/enforce-calver-local.js [options]
 
 Options:
   --dry-run         Preview changes without modifying files (default)

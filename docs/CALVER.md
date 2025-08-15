@@ -13,7 +13,7 @@ Two scripts handle CalVer enforcement:
 The CI script is part of the `npm run version` command in the root package.json:
 
 ```json
-"version": "npm run version:changeset && node scripts/enforce-calver-ci.js && npm run version:post && npm run format"
+"version": "npm run version:changeset && node .changeset/enforce-calver-ci.js && npm run version:post && npm run format"
 ```
 
 ### Execution Order
@@ -49,7 +49,6 @@ We leverage changesets for its powerful features:
 - Dependency resolution and bumping
 - CHANGELOG generation with proper grouping
 - GitHub integration and release notes
-- Linked package coordination (major bumps only)
 
 But changesets doesn't natively support CalVer, so we:
 
@@ -82,20 +81,22 @@ These packages use standard semver (X.Y.Z):
 - `@shopify/mini-oxygen`
 - Other non-CalVer packages
 
-## Coordination with Changesets
+## How CalVer Packages Are Coordinated
 
-In `.changeset/config.json`, we use "linked" packages:
+The CalVer script handles coordination WITHOUT using changesets linked packages configuration.
+
+The `.changeset/config.json` has empty linked array:
 
 ```json
 {
-  "linked": [["@shopify/hydrogen", "@shopify/hydrogen-react", "skeleton"]]
+  "linked": []
 }
 ```
 
-This means:
+Instead, the CalVer script post-processes versions:
 
-- **Major bumps**: ALL linked packages get the same major version
-  → Then we transform to the same quarter (e.g., all become 2025.7.0)
+- **Major bumps**: CalVer script ensures all CalVer packages advance to the same quarter
+  → e.g., all become 2025.7.0 when a major bump is detected
 - **Minor/patch bumps**: Each package can bump independently
   → Each gets its own minor/patch increment
 
@@ -126,7 +127,7 @@ The `enforce-calver-ci.js` script runs automatically as part of the version proc
 
 ```bash
 # Runs as part of npm version script in CI
-node scripts/enforce-calver-ci.js
+node .changeset/enforce-calver-ci.js
 ```
 
 ### Local Development
@@ -135,16 +136,16 @@ Use `enforce-calver-local.js` for testing. It defaults to dry-run mode:
 
 ```bash
 # Preview changes without modifying files (default)
-node scripts/enforce-calver-local.js
+node .changeset/enforce-calver-local.js
 
 # Actually apply changes to files
-node scripts/enforce-calver-local.js --apply
+node .changeset/enforce-calver-local.js --apply
 
 # Skip running changesets (use existing versions)
-node scripts/enforce-calver-local.js --skip-changesets
+node .changeset/enforce-calver-local.js --skip-changesets
 
 # Show help
-node scripts/enforce-calver-local.js --help
+node .changeset/enforce-calver-local.js --help
 ```
 
 ## Testing

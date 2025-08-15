@@ -7,6 +7,7 @@
  * This script runs in CI as part of the release process.
  *
  * For local testing, use enforce-calver-local.js
+ * For detailed documentation, see docs/CALVER.md
  */
 
 const fs = require('fs');

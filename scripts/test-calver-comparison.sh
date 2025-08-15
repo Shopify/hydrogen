@@ -283,9 +283,9 @@ cp package.json package.json.backup
 
 # Replace the version script to use raw changeset instead of CalVer script
 if command -v perl >/dev/null 2>&1; then
-    perl -i -pe 's/"version": "npm run version:changeset && node scripts\/enforce-calver-ci\.js && npm run version:post && npm run format"/"version": "changeset version"/' package.json
+    perl -i -pe 's/"version": "npm run version:changeset && node \.changeset\/enforce-calver-ci\.js && npm run version:post && npm run format"/"version": "changeset version"/' package.json
 else
-    sed -i.tmp 's/"version": "npm run version:changeset && node scripts\/enforce-calver-ci\.js && npm run version:post && npm run format"/"version": "changeset version"/' package.json
+    sed -i.tmp 's/"version": "npm run version:changeset && node \.changeset\/enforce-calver-ci\.js && npm run version:post && npm run format"/"version": "changeset version"/' package.json
     rm -f package.json.tmp 2>/dev/null || true
 fi
 
@@ -348,7 +348,7 @@ EOF
 fi
 
 # Run CalVer script (using local version with apply flag)
-node scripts/enforce-calver-local.js --apply > /dev/null 2>&1
+node .changeset/enforce-calver-local.js --apply > /dev/null 2>&1
 
 # Capture CalVer versions
 CALVER_HYDROGEN=$(grep '"version"' packages/hydrogen/package.json | cut -d'"' -f4)
