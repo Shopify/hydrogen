@@ -1,9 +1,6 @@
 name: 🚀 CI
 on: [pull_request]
 
-env:
-  SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK: false
-
 jobs:
   lint:
     name: ⬣ ESLint
@@ -95,6 +92,8 @@ jobs:
 
       - name: 📦 Build packages, templates, and examples
         run: npm run build:all
+        env:
+          SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK: false
 
       - name: ✅ Typecheck
         run: npm run typecheck
@@ -127,6 +126,8 @@ jobs:
 
       - name: 📦 Build packages, templates, and examples
         run: npm run build:all
+        env:
+          SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK: false
 
       - name: 🔬 Test
         run: npm run test
@@ -156,6 +157,8 @@ jobs:
 
       - name: 📦 Build packages
         run: npm run build:pkg
+        env:
+          SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK: false
 
       - name: 📥 Install dependencies (cookbook)
         working-directory: cookbook
