@@ -75,16 +75,16 @@ export async function checkLockfileStatus(
   shouldExit = false,
 ) {
   if (isHydrogenMonorepo && !process.env.SHOPIFY_UNIT_TEST) return;
-  
+
   // Also skip lockfile check if we're in a template directory within the monorepo
   // This handles the case where skeleton is being built in CI
   // Check if SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK is explicitly false
   if (process.env.SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK === 'false') {
     return;
   }
-  
+
   const turboPath = resolvePath(directory, '../../turbo.json');
-  if (directory.includes('/templates/') && await fileExists(turboPath)) {
+  if (directory.includes('/templates/') && (await fileExists(turboPath))) {
     return;
   }
 
