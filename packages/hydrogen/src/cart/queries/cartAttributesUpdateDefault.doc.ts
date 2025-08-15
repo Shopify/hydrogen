@@ -7,7 +7,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'Creates a function that accepts an array of [AttributeInput](/docs/api/storefront/2025-04/input-objects/AttributeInput) and updates attributes to a cart',
+    'Creates a function that accepts an array of [AttributeInput](/docs/api/storefront/2025-07/input-objects/AttributeInput) and updates attributes to a cart',
   type: 'utility',
   defaultExample: {
     description: 'This is the default example',
