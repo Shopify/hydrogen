@@ -1,4 +1,5 @@
 import {fileURLToPath} from 'node:url';
+import {existsSync} from 'node:fs';
 import {findPathUp} from '@shopify/cli-kit/node/fs';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {dirname, joinPath} from '@shopify/cli-kit/node/path';
@@ -6,9 +7,15 @@ import {execAsync} from './process.js';
 
 // Avoid using fileURLToPath here to prevent backslashes nightmare on Windows
 const monorepoPackagesPath = new URL('../../..', import.meta.url).pathname;
-export const isHydrogenMonorepo = monorepoPackagesPath.endsWith(
-  '/hydrogen/packages/',
-);
+// Check if we're in the Hydrogen monorepo by looking for the skeleton template.
+// This approach is more robust than the previous implementation which checked if
+// the path ends with '/hydrogen/packages/' because:
+// 1. It doesn't depend on the repository being cloned with a specific directory name
+// 2. Users can clone the repo as 'hydrogen-fork', 'hydrogen-test', etc. and it will still work
+// 3. The skeleton template is a required part of the monorepo structure, making it a reliable indicator
+// 4. This prevents CI failures when the repo is cloned with non-standard names
+const skeletonPath = joinPath(dirname(monorepoPackagesPath), 'templates', 'skeleton');
+export const isHydrogenMonorepo = existsSync(skeletonPath);
 export const hydrogenPackagesPath = isHydrogenMonorepo
   ? monorepoPackagesPath
   : undefined;
