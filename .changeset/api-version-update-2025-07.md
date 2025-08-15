@@ -12,5 +12,6 @@ This update includes:
 - Regenerated GraphQL types for both Storefront and Customer Account APIs
 - Updated all hardcoded API version references in documentation and tests
 - Regenerated skeleton template types
+- Updated skeleton's @shopify/cli dependency to ~3.83.3
 
 Breaking changes may occur due to API schema changes between versions.
