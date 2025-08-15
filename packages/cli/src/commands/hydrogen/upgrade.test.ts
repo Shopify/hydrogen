@@ -31,6 +31,10 @@ import {
 } from './upgrade.js';
 import {getSkeletonSourceDir} from '../../lib/build.js';
 
+// Test version numbers used to avoid conflicts with duplicate changelog versions
+const TEST_VERSION_DEPENDENCY_UPGRADE = '9999.99.99';
+const TEST_VERSION_DEV_DEPENDENCY_UPGRADE = '9999.99.98';
+
 vi.mock('@shopify/cli-kit/node/session');
 
 vi.mock('../../lib/shell.js', () => ({getCliCommand: vi.fn(() => 'h2')}));
@@ -496,13 +500,12 @@ describe('upgrade', async () => {
 
       // Test with a unique version number to ensure the upgrade is detected
       // This ensures the test works regardless of whether the changelog has duplicates
-      const testVersion = '9999.99.99'; // Use a version that definitely doesn't exist
 
       // Copy of latest release but with increased patch version of a dependency
       // and a unique version number to avoid duplicate filtering
       const upgradedRelease = {
         ...latestRelease,
-        version: testVersion,
+        version: TEST_VERSION_DEPENDENCY_UPGRADE,
         dependencies: {
           ...latestRelease.dependencies,
           ...increasePatchVersion(depName, latestRelease.dependencies),
