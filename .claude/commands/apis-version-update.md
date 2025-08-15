@@ -1487,6 +1487,74 @@ git status --short | grep -E "(TEST_|\.tmp|PR_DESCRIPTION\.md|\.log$)" && {
 git commit -m "[YYYY-MM] Update Storefront API and Customer Account API"
 ```
 
+### Professional PR Description Guidelines
+
+**IMPORTANT**: Keep PR descriptions professional and focused on technical content.
+
+#### Writing Style Guidelines:
+1. **NO EMOJIS** - Avoid all emojis in PR descriptions
+2. **Minimize visual noise** - Use simple formatting
+3. **Professional tone** - Technical and direct communication
+4. **No exclamation marks** - Avoid unnecessary excitement
+5. **Clean status indicators** - Use text like "Not Started" instead of colored dots/emojis
+
+#### PR Description Structure:
+1. **Title**: `[YYYY-MM] Storefront & Customer Account API Version Update`
+2. **Executive Summary**: Brief, factual summary of changes
+3. **Changes Made**: Bulleted list of completed work
+4. **API Changes Overview**: Table with issue tracking
+5. **Validation Status**: Clear pass/fail status
+6. **Package Version Bumps**: List with justifications
+7. **Implementation Opportunities**: Numbered list of new features
+8. **Breaking Changes**: Highlight any breaking changes
+9. **Files Changed Summary**: Statistics
+10. **Related Links**: API documentation links
+11. **Review Focus Areas**: Specific areas needing attention
+12. **Merge Criteria**: Checklist with clear requirements
+13. **Next Steps**: Post-merge actions
+
+#### Example Professional PR Description:
+```markdown
+# [2025-07] Storefront & Customer Account API Version Update
+
+## Executive Summary
+Updated Storefront API and Customer Account API from version 2025-04 to 2025-07, introducing 6 new features and improvements that enhance subscription management, cart error handling, B2B functionality, and unit pricing capabilities.
+
+## Changes Made
+- Updated version constants in all packages
+- Regenerated GraphQL types and schemas for both APIs
+- Updated all hardcoded API version references in documentation and tests
+- Created tracking issues for all actionable API changes
+
+## API Changes Overview
+
+| Change | Type | API | Priority | Issue | Status |
+|--------|------|-----|----------|-------|--------|
+| Subscription discount data | New Feature | Customer Account | P1 | #3076 | Not Started |
+| Cart warnings for discount codes | New Feature | Storefront | P1 | #3077 | Not Started |
+
+## Validation Status
+All validation checks passing:
+- TypeScript: No errors
+- Tests: All passing
+- Lint: 2 warnings (non-blocking)
+- Build: Successful
+```
+
+**What to Avoid:**
+- ❌ "🚀 Success! API Version Update Complete!"
+- ❌ "✅ All validation passing! 🎉"
+- ❌ Status indicators like "🔴 Not Started" or "🟢 Complete"
+- ❌ Informal language like "Bonus!" or "What We Accomplished!"
+- ❌ Footer notes about guide versions
+
+**What to Include:**
+- ✓ Clear, factual statements
+- ✓ Technical details and justifications
+- ✓ Issue numbers with proper GitHub linking (#XXXX)
+- ✓ Specific file counts and change statistics
+- ✓ Direct links to relevant documentation
+
 ### Create PR Using GitHub CLI
 
 ```bash
@@ -1502,7 +1570,7 @@ git commit -m "[YYYY-MM] Update Storefront API and Customer Account API"
 # - Implementation status for each priority level
 # Example format:
 cat > PR_DESCRIPTION.md << 'EOF'
-# API Version Update: YYYY-MM
+# [YYYY-MM] Storefront & Customer Account API Version Update
 
 ## API Changes Tracking
 
