@@ -426,7 +426,7 @@ describe('upgrade', async () => {
 
           for (const release of releases) {
             // Stop when we reach the installed version
-            if (release.version === releases[2].version) break;
+            if (release.version === releases[2]?.version) break;
 
             // Only add if we haven't seen this version
             if (!seenVersions.has(release.version)) {
