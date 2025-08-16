@@ -86,7 +86,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         },
       },
       configureServer: {
-        order: 'pre',
+        order: 'pre' as const,
         handler: (viteDevServer) => {
           const entry =
             apiOptions.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
