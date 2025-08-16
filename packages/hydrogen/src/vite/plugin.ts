@@ -70,7 +70,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                 'react/jsx-dev-runtime',
                 'react-dom',
                 'react-dom/server',
-                '@remix-run/server-runtime',
+                'react-router',
               ],
             },
           },

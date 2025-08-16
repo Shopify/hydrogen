@@ -84,7 +84,9 @@ export async function runSetupVite({directory}: {directory: string}) {
           resolvePath(directory, 'env.d.ts'),
           false,
           (content) =>
-            content.replace('types="@remix-run/dev"', 'types="vite/client"'),
+            content
+              .replace('types="@remix-run/dev"', 'types="vite/client"')
+              .replace('types="@react-router/dev"', 'types="vite/client"'),
         ),
       )
       .catch(handlePartialIssue),
@@ -236,10 +238,15 @@ export async function runSetupVite({directory}: {directory: string}) {
       false,
       (content) =>
         (isTS ? '// @ts-ignore\n' : '') +
-        content.replace(
-          '@remix-run/dev/server-build',
-          'virtual:remix/server-build',
-        ),
+        content
+          .replace(
+            '@remix-run/dev/server-build',
+            'virtual:remix/server-build',
+          )
+          .replace(
+            '@react-router/dev/server-build',
+            'virtual:react-router/server-build',
+          ),
     ),
 
     // Adjust CSS imports in the project routes:

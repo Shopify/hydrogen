@@ -1152,7 +1152,7 @@ describe('customer', () => {
       );
     });
 
-    it('returns undefined when not logged in', async () => {
+    it('returns empty object when not logged in', async () => {
       const customer = createCustomerAccountClient({
         session,
         customerAccountId: 'customerAccountId',
@@ -1165,7 +1165,7 @@ describe('customer', () => {
 
       const buyer = await customer.getBuyer();
 
-      expect(buyer).toBeUndefined();
+      expect(buyer).toEqual({});
     });
   });
 });

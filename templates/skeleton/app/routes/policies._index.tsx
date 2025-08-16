@@ -3,7 +3,19 @@ import { useLoaderData, Link } from 'react-router';
 
 export async function loader({context}: LoaderFunctionArgs) {
   const data = await context.storefront.query(POLICIES_QUERY);
-  const policies = Object.values(data.shop || {});
+  const shop = data.shop;
+  
+  if (!shop) {
+    throw new Response('No policies found', {status: 404});
+  }
+
+  const policies = [
+    shop.privacyPolicy,
+    shop.shippingPolicy,
+    shop.termsOfService,
+    shop.refundPolicy,
+    shop.subscriptionPolicy,
+  ].filter(Boolean);
 
   if (!policies.length) {
     throw new Response('No policies found', {status: 404});

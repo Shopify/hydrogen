@@ -3,18 +3,30 @@ import {Pagination, getPaginationVariables} from '@shopify/hydrogen';
 import {useLoaderData, Link} from 'react-router';
 import {ProductConnection} from '@shopify/hydrogen/storefront-api-types';
 
+interface Product {
+  id: string;
+  title: string;
+  handle: string;
+}
+
+interface ProductsQuery {
+  products: ProductConnection & {
+    nodes: Product[];
+  };
+}
+
 export async function loader({
   request,
   context: {storefront},
 }: LoaderFunctionArgs) {
   const variables = getPaginationVariables(request, {pageBy: 8});
 
-  const data = await storefront.query<{products: ProductConnection}>(
+  const data = await storefront.query(
     ALL_PRODUCTS_QUERY,
     {
       variables,
     },
-  );
+  ) as ProductsQuery;
 
   return {products: data.products};
 }

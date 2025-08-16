@@ -7,7 +7,8 @@
     "*.ts",
     "*.tsx",
     "*.d.ts",
-    ".react-router/types/**/*"
+    ".react-router/types/**/*",
+    "../../packages/hydrogen/react-router-patches.d.ts"
   ],
   "exclude": [
     "node_modules",

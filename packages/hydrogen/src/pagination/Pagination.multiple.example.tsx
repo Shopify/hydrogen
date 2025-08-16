@@ -3,6 +3,28 @@ import {useLoaderData, Link} from 'react-router';
 import {getPaginationVariables, Pagination} from '@shopify/hydrogen';
 import {type Collection} from '@shopify/hydrogen-react/storefront-api-types';
 
+interface Product {
+  id: string;
+  title: string;
+  handle: string;
+}
+
+interface CollectionWithProducts extends Omit<Collection, 'products'> {
+  products: {
+    nodes: Product[];
+    pageInfo: {
+      hasPreviousPage: boolean;
+      hasNextPage: boolean;
+      startCursor: string | null;
+      endCursor: string | null;
+    };
+  };
+}
+
+interface CollectionQuery {
+  collection: CollectionWithProducts;
+}
+
 export async function loader({
   request,
   context: {storefront},
@@ -17,12 +39,12 @@ export async function loader({
   });
 
   const [womensProducts, mensProducts] = await Promise.all([
-    storefront.query<{collection: Collection}>(COLLECTION_PRODUCTS_QUERY, {
+    storefront.query(COLLECTION_PRODUCTS_QUERY, {
       variables: {...womensPaginationVariables, handle: 'women'},
-    }),
-    storefront.query<{collection: Collection}>(COLLECTION_PRODUCTS_QUERY, {
+    }) as Promise<CollectionQuery>,
+    storefront.query(COLLECTION_PRODUCTS_QUERY, {
       variables: {...mensPaginationVariables, handle: 'men'},
-    }),
+    }) as Promise<CollectionQuery>,
   ]);
 
   return {womensProducts, mensProducts};

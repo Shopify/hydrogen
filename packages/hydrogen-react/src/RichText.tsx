@@ -22,7 +22,7 @@ export function RichText<ComponentGeneric extends React.ElementType = 'div'>({
   plain,
   components,
   ...passthroughProps
-}: RichTextProps<ComponentGeneric>): JSX.Element {
+}: RichTextProps<ComponentGeneric>) {
   try {
     const Wrapper = as ?? 'div';
     const parsedData = useMemo(
