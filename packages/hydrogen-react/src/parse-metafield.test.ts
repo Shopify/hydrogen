@@ -134,12 +134,22 @@ describe(`parseMetafield`, () => {
       expectType<null | MyJson>(parsedOtherType.parsedValue);
     });
 
-    it(`money`, () => {
+    it(`money with currencyCode (backward compatibility)`, () => {
       const parsed = parseMetafield<ParsedMetafields['money']>({
         type: 'money',
         value: JSON.stringify({amount: '12', currencyCode: 'USD'}),
       });
       expect(parsed?.parsedValue?.amount === '12').toBe(true);
+      expect(parsed?.parsedValue?.currencyCode === 'USD').toBe(true);
+      expectType<null | MoneyV2>(parsed?.parsedValue);
+    });
+
+    it(`money with currency_code (Storefront API format)`, () => {
+      const parsed = parseMetafield<ParsedMetafields['money']>({
+        type: 'money',
+        value: JSON.stringify({amount: '30.0', currency_code: 'USD'}),
+      });
+      expect(parsed?.parsedValue?.amount === '30.0').toBe(true);
       expect(parsed?.parsedValue?.currencyCode === 'USD').toBe(true);
       expectType<null | MoneyV2>(parsed?.parsedValue);
     });
