@@ -1,12 +1,21 @@
 import {useMemo} from 'react';
 import {useShop} from './ShopifyProvider.js';
 import {CurrencyCode, MoneyV2} from './storefront-api-types.js';
+import type {
+  MoneyV2 as CustomerMoneyV2,
+  CurrencyCode as CustomerCurrencyCode,
+} from './customer-account-api-types.js';
+
+// Support MoneyV2 from both Storefront API and Customer Account API
+// The APIs may have different CurrencyCode enums
+type AnyMoneyV2 = MoneyV2 | CustomerMoneyV2;
+type AnyCurrencyCode = CurrencyCode | CustomerCurrencyCode;
 
 export type UseMoneyValue = {
   /**
    * The currency code from the `MoneyV2` object.
    */
-  currencyCode: CurrencyCode;
+  currencyCode: AnyCurrencyCode;
   /**
    * The name for the currency code, returned by `Intl.NumberFormat`.
    */
@@ -35,7 +44,7 @@ export type UseMoneyValue = {
   /**
    * The `MoneyV2` object provided as an argument to the hook.
    */
-  original: MoneyV2;
+  original: AnyMoneyV2;
   /**
    * A string with trailing zeros removed from the fractional part, if any exist. If there are no trailing zeros, then the fractional part remains.
    * For example, `$640.00` turns into `$640`.
@@ -101,7 +110,7 @@ export type UseMoneyValue = {
  * money.withoutTrailingZerosAndCurrency
  * ```
  */
-export function useMoney(money: MoneyV2): UseMoneyValue {
+export function useMoney(money: AnyMoneyV2): UseMoneyValue {
   const {countryIsoCode, languageIsoCode} = useShop();
   const locale = languageIsoCode.includes('_')
     ? languageIsoCode.replace('_', '-')
@@ -115,6 +124,19 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
 
   const amount = parseFloat(money.amount);
 
+  // Check if the currency code is supported by Intl.NumberFormat
+  let isCurrencySupported = true;
+  try {
+    new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: money.currencyCode,
+    });
+  } catch (e) {
+    if (e instanceof RangeError && e.message.includes('currency')) {
+      isCurrencySupported = false;
+    }
+  }
+
   const {
     defaultFormatter,
     nameFormatter,
@@ -123,10 +145,18 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
     withoutCurrencyFormatter,
     withoutTrailingZerosOrCurrencyFormatter,
   } = useMemo(() => {
-    const options = {
-      style: 'currency' as const,
-      currency: money.currencyCode,
-    };
+    // For unsupported currencies (like USDC cryptocurrency), use decimal formatting with 2 decimal places
+    // We default to 2 decimal places based on research showing USDC displays like USD to reinforce its 1:1 peg
+    const options = isCurrencySupported
+      ? {
+          style: 'currency' as const,
+          currency: money.currencyCode,
+        }
+      : {
+          style: 'decimal' as const,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        };
 
     return {
       defaultFormatter: getLazyFormatter(locale, options),
@@ -143,13 +173,16 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       }),
-      withoutCurrencyFormatter: getLazyFormatter(locale),
+      withoutCurrencyFormatter: getLazyFormatter(locale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
       withoutTrailingZerosOrCurrencyFormatter: getLazyFormatter(locale, {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       }),
     };
-  }, [money.currencyCode, locale]);
+  }, [money.currencyCode, locale, isCurrencySupported]);
 
   const isPartCurrency = (part: Intl.NumberFormatPart): boolean =>
     part.type === 'currency';
@@ -158,18 +191,39 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
   // create formatters if they are going to be used.
   const lazyFormatters = useMemo(
     () => ({
-      original: (): MoneyV2 => money,
-      currencyCode: (): CurrencyCode => money.currencyCode,
+      original: (): AnyMoneyV2 => money,
+      currencyCode: (): AnyCurrencyCode => money.currencyCode,
 
-      localizedString: (): string => defaultFormatter().format(amount),
+      localizedString: (): string => {
+        const formatted = defaultFormatter().format(amount);
+        // For unsupported currencies, append the currency code
+        return isCurrencySupported
+          ? formatted
+          : `${formatted} ${money.currencyCode}`;
+      },
 
-      parts: (): Intl.NumberFormatPart[] =>
-        defaultFormatter().formatToParts(amount),
+      parts: (): Intl.NumberFormatPart[] => {
+        const parts = defaultFormatter().formatToParts(amount);
+        // For unsupported currencies, add currency code as a currency part
+        if (!isCurrencySupported) {
+          parts.push(
+            {type: 'literal', value: ' '},
+            {type: 'currency', value: money.currencyCode},
+          );
+        }
+        return parts;
+      },
 
-      withoutTrailingZeros: (): string =>
-        amount % 1 === 0
-          ? withoutTrailingZerosFormatter().format(amount)
-          : defaultFormatter().format(amount),
+      withoutTrailingZeros: (): string => {
+        const formatted =
+          amount % 1 === 0
+            ? withoutTrailingZerosFormatter().format(amount)
+            : defaultFormatter().format(amount);
+        // For unsupported currencies, append the currency code
+        return isCurrencySupported
+          ? formatted
+          : `${formatted} ${money.currencyCode}`;
+      },
 
       withoutTrailingZerosAndCurrency: (): string =>
         amount % 1 === 0
@@ -202,6 +256,7 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
     [
       money,
       amount,
+      isCurrencySupported,
       nameFormatter,
       defaultFormatter,
       narrowSymbolFormatter,
@@ -234,7 +289,21 @@ function getLazyFormatter(
   return function (): Intl.NumberFormat {
     let formatter = formatterCache.get(key);
     if (!formatter) {
-      formatter = new Intl.NumberFormat(locale, options);
+      try {
+        formatter = new Intl.NumberFormat(locale, options);
+      } catch (error) {
+        // Handle unsupported currency codes (e.g., USDC from Customer Account API)
+        // Fall back to formatting without currency
+        if (error instanceof RangeError && error.message.includes('currency')) {
+          const fallbackOptions = {...options};
+          delete fallbackOptions.currency;
+          delete fallbackOptions.currencyDisplay;
+          delete fallbackOptions.currencySign;
+          formatter = new Intl.NumberFormat(locale, fallbackOptions);
+        } else {
+          throw error;
+        }
+      }
       formatterCache.set(key, formatter);
     }
     return formatter;
