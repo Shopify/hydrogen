@@ -25,7 +25,7 @@
     "typecheck:examples": "turbo typecheck --parallel --filter=./examples/*",
     "test": "turbo run test --parallel",
     "test:watch": "turbo run test:watch",
-    "version": "changeset version && npm run version:post && npm run format",
+    "version": "node scripts/apply-calver-versioning.js && npm run version:post && npm run format",
     "version:post": "npm run version:hydrogen && npm run version:cli",
     "version:hydrogen": "node -p \"'export const LIB_VERSION = \\'' + require('./packages/hydrogen/package.json').version + '\\';'\" > packages/hydrogen/src/version.ts",
     "version:cli": "cd packages/cli && npm run generate:manifest",
