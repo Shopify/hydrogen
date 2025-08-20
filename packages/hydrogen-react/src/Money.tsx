@@ -1,13 +1,19 @@
 import {type ReactNode} from 'react';
 import {useMoney} from './useMoney.js';
 import type {MoneyV2, UnitPriceMeasurement} from './storefront-api-types.js';
+import type {MoneyV2 as CustomerMoneyV2} from './customer-account-api-types.js';
 import type {PartialDeep} from 'type-fest';
+
+// Support MoneyV2 from both Storefront API and Customer Account API
+// The APIs may have different CurrencyCode enums (e.g., Customer Account API added USDC in 2025-07)
+// This union type ensures Money component works with data from either API
+type AnyMoneyV2 = MoneyV2 | CustomerMoneyV2;
 
 export interface MoneyPropsBase<ComponentGeneric extends React.ElementType> {
   /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */
   as?: ComponentGeneric;
-  /** An object with fields that correspond to the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2). */
-  data: PartialDeep<MoneyV2, {recurseIntoArrays: true}>;
+  /** An object with fields that correspond to the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) or Customer Account API's MoneyV2 object. */
+  data: PartialDeep<AnyMoneyV2, {recurseIntoArrays: true}>;
   /** Whether to remove the currency symbol from the output. */
   withoutCurrency?: boolean;
   /** Whether to remove trailing zeros (fractional money) from the output. */
@@ -106,8 +112,8 @@ export function Money<ComponentGeneric extends React.ElementType = 'div'>({
 
 // required in order to narrow the money object down and make TS happy
 function isMoney(
-  maybeMoney: PartialDeep<MoneyV2, {recurseIntoArrays: true}>,
-): maybeMoney is MoneyV2 {
+  maybeMoney: PartialDeep<AnyMoneyV2, {recurseIntoArrays: true}>,
+): maybeMoney is AnyMoneyV2 {
   return (
     typeof maybeMoney.amount === 'string' &&
     !!maybeMoney.amount &&
