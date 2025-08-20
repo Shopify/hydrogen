@@ -1111,7 +1111,11 @@ Add a `Subscriptions` link to the account menu.
 
 Add styles for the Subscriptions page.
 
+<<<<<<< HEAD
 ##### File: [account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/ea5f3bf445d4d87c9bdc172202041d37e7efd96e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
+=======
+##### File: [account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
+>>>>>>> 74e250bb (chore: regenerate cookbook recipes with updated patch hashes)
 
 ```css
 .account-subscriptions {
