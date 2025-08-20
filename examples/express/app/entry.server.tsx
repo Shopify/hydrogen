@@ -5,9 +5,9 @@
  */
 
 import {PassThrough} from 'node:stream';
+import {createReadableStreamFromReadable} from '@react-router/node';
 
 import type {AppLoadContext, EntryContext} from 'react-router';
-import {Response} from '@remix-run/web-fetch';
 import {ServerRouter} from 'react-router';
 import {isbot} from 'isbot';
 import {renderToPipeableStream} from 'react-dom/server';
@@ -65,12 +65,13 @@ function handleBotRequest(
         nonce,
         onAllReady() {
           const body = new PassThrough();
+          const stream = createReadableStreamFromReadable(body);
 
           responseHeaders.set('Content-Type', 'text/html');
           responseHeaders.set('Content-Security-Policy', header);
 
           resolve(
-            new Response(body, {
+            new Response(stream, {
               headers: responseHeaders,
               status: responseStatusCode,
             }),
@@ -115,12 +116,13 @@ function handleBrowserRequest(
         nonce,
         onShellReady() {
           const body = new PassThrough();
+          const stream = createReadableStreamFromReadable(body);
 
           responseHeaders.set('Content-Type', 'text/html');
           responseHeaders.set('Content-Security-Policy', header);
 
           resolve(
-            new Response(body, {
+            new Response(stream, {
               headers: responseHeaders,
               status: responseStatusCode,
             }),
