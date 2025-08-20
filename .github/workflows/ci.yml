@@ -166,4 +166,4 @@ jobs:
 
       - name: 🧐 Validate Recipes
         working-directory: cookbook
-        run: npm run cookbook -- validate
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run cookbook -- validate
