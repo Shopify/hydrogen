@@ -1,21 +1,34 @@
 import {useMemo} from 'react';
 import {useShop} from './ShopifyProvider.js';
-import {CurrencyCode, MoneyV2} from './storefront-api-types.js';
+import {
+  CurrencyCode as StorefrontApiCurrencyCode,
+  MoneyV2 as StorefrontApiMoneyV2,
+} from './storefront-api-types.js';
 import type {
-  MoneyV2 as CustomerMoneyV2,
-  CurrencyCode as CustomerCurrencyCode,
+  MoneyV2 as CustomerAccountApiMoneyV2,
+  CurrencyCode as CustomerAccountApiCurrencyCode,
 } from './customer-account-api-types.js';
 
 // Support MoneyV2 from both Storefront API and Customer Account API
 // The APIs may have different CurrencyCode enums
-type AnyMoneyV2 = MoneyV2 | CustomerMoneyV2;
-type AnyCurrencyCode = CurrencyCode | CustomerCurrencyCode;
+/**
+ * Supports MoneyV2 from both Storefront API and Customer Account API.
+ * The APIs may have different CurrencyCode enums (e.g., Customer Account API added USDC in 2025-07, but Storefront API doesn't support USDC in 2025-07).
+ * This union type ensures useMoney works with data from either API.
+ */
+type MoneyV2 = StorefrontApiMoneyV2 | CustomerAccountApiMoneyV2;
+
+/**
+ * Supports CurrencyCode from both Storefront API and Customer Account API. The APIs may have different CurrencyCode enums (e.g., Customer Account API added USDC in 2025-07, but Storefront API doesn't support USDC in 2025-07).
+ * This union type ensures useMoney works with data from either API.
+ */
+type CurrencyCode = StorefrontApiCurrencyCode | CustomerAccountApiCurrencyCode;
 
 export type UseMoneyValue = {
   /**
    * The currency code from the `MoneyV2` object.
    */
-  currencyCode: AnyCurrencyCode;
+  currencyCode: CurrencyCode;
   /**
    * The name for the currency code, returned by `Intl.NumberFormat`.
    */
@@ -44,7 +57,7 @@ export type UseMoneyValue = {
   /**
    * The `MoneyV2` object provided as an argument to the hook.
    */
-  original: AnyMoneyV2;
+  original: MoneyV2;
   /**
    * A string with trailing zeros removed from the fractional part, if any exist. If there are no trailing zeros, then the fractional part remains.
    * For example, `$640.00` turns into `$640`.
@@ -60,7 +73,8 @@ export type UseMoneyValue = {
 };
 
 /**
- * The `useMoney` hook takes a [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) and returns a
+ * The `useMoney` hook takes a [MoneyV2 object from the Storefront API](https://shopify.dev/docs/api/storefront/2025-07/objects/MoneyV2)
+ * or a [MoneyV2 object from the Customer Account API](https://shopify.dev/docs/api/customer/2025-07/objects/moneyv2) and returns a
  * default-formatted string of the amount with the correct currency indicator, along with some of the parts provided by
  * [Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat).
  * Uses `locale` from `ShopifyProvider`
@@ -110,7 +124,7 @@ export type UseMoneyValue = {
  * money.withoutTrailingZerosAndCurrency
  * ```
  */
-export function useMoney(money: AnyMoneyV2): UseMoneyValue {
+export function useMoney(money: MoneyV2): UseMoneyValue {
   const {countryIsoCode, languageIsoCode} = useShop();
   const locale = languageIsoCode.includes('_')
     ? languageIsoCode.replace('_', '-')
@@ -191,8 +205,8 @@ export function useMoney(money: AnyMoneyV2): UseMoneyValue {
   // create formatters if they are going to be used.
   const lazyFormatters = useMemo(
     () => ({
-      original: (): AnyMoneyV2 => money,
-      currencyCode: (): AnyCurrencyCode => money.currencyCode,
+      original: (): MoneyV2 => money,
+      currencyCode: (): CurrencyCode => money.currencyCode,
 
       localizedString: (): string => {
         const formatted = defaultFormatter().format(amount);
