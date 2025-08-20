@@ -41,16 +41,16 @@ export type HydrogenPlugin = Plugin<{
 export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
   let middlewareOptions: HydrogenMiddlewareOptions = {};
 
+  const isHydrogenMonorepo = new URL(
+    '../../..',
+    import.meta.url,
+  ).pathname.endsWith('/hydrogen/packages/');
+
   return [
     {
       name: 'hydrogen:main',
       config(_, env) {
         sharedOptions.command = env.command;
-
-        const isHydrogenMonorepo = new URL(
-          '../../..',
-          import.meta.url,
-        ).pathname.endsWith('/hydrogen/packages/');
 
         return {
           build: {
@@ -58,6 +58,10 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           },
           server: {
             watch: null,
+          },
+          resolve: {
+            // Deduplicate React to ensure single instance for context sharing
+            dedupe: ['react', 'react-dom', '@shopify/hydrogen'],
           },
           ssr: {
             optimizeDeps: {
@@ -77,11 +81,14 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           // Vite performs an initial reload after optimizing these dependencies.
           // Do it early to avoid the initial reload:
           optimizeDeps: {
-            // Avoid optimizing Hydrogen itself in the monorepo
-            // to prevent caching source code changes:
-            include: isHydrogenMonorepo
-              ? ['content-security-policy-builder', 'worktop/cookie']
-              : ['@shopify/hydrogen'],
+            include: [
+              // Always optimize these CJS dependencies
+              'content-security-policy-builder',
+              'worktop/cookie',
+              // For regular projects, optimize @shopify/hydrogen to prevent useContext errors.
+              // In monorepo, skip to allow live reload of source changes.
+              ...(!isHydrogenMonorepo ? ['@shopify/hydrogen'] : []),
+            ],
           },
         };
       },
