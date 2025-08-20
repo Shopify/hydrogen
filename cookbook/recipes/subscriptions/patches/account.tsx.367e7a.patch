@@ -1,4 +1,4 @@
-index 29e641f4..9ee30fd4 100644
+index 29e641f48..9ee30fd4e 100644
 --- a/templates/skeleton/app/routes/account.tsx
 +++ b/templates/skeleton/app/routes/account.tsx
 @@ -1,6 +1,8 @@

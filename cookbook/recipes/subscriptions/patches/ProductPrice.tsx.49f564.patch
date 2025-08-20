@@ -1,4 +1,4 @@
-index 32460ae2..59eed1d8 100644
+index 32460ae28..59eed1d83 100644
 --- a/templates/skeleton/app/components/ProductPrice.tsx
 +++ b/templates/skeleton/app/components/ProductPrice.tsx
 @@ -1,13 +1,31 @@

@@ -1,4 +1,4 @@
-index 20b39d82..8cf08fc6 100644
+index 20b39d82a..8cf08fc6f 100644
 --- a/templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx
 +++ b/templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx
 @@ -1,5 +1,6 @@

@@ -1,4 +1,4 @@
-index 3b0f6913..1b6cb130 100644
+index 3b0f69133..1b6cb130a 100644
 --- a/templates/skeleton/app/components/ProductItem.tsx
 +++ b/templates/skeleton/app/components/ProductItem.tsx
 @@ -1,24 +1,19 @@

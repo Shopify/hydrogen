@@ -1,4 +1,4 @@
-index ce1feb5a..29fe2ecc 100644
+index ce1feb5a3..29fe2ecc1 100644
 --- a/templates/skeleton/app/lib/redirect.ts
 +++ b/templates/skeleton/app/lib/redirect.ts
 @@ -1,4 +1,6 @@

@@ -1,4 +1,4 @@
-index 4989ca00..af30bc92 100644
+index 4989ca006..af30bc92d 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,5 +1,6 @@
