@@ -3,11 +3,22 @@ import {
   UnitPriceMeasurement,
   UnitPriceMeasurementMeasuredUnit,
 } from './storefront-api-types.js';
+import {MoneyV2 as CustomerMoneyV2} from './customer-account-api-types.js';
 import {faker} from '@faker-js/faker';
 
 export function getPrice(price: Partial<MoneyV2> = {}): MoneyV2 {
   return {
     currencyCode: price.currencyCode ?? 'CAD',
+    amount: price.amount ?? faker.finance.amount(),
+  };
+}
+
+// Helper for Customer Account API MoneyV2 which may have different currency codes
+export function getCustomerPrice(
+  price: Partial<CustomerMoneyV2> = {},
+): CustomerMoneyV2 {
+  return {
+    currencyCode: price.currencyCode ?? 'USDC', // Use USDC as example of Customer-only currency
     amount: price.amount ?? faker.finance.amount(),
   };
 }
