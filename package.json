@@ -36,7 +36,6 @@
     "pre-commit:encrypt": "bash -c 'git diff --cached --name-only | grep -q \"^secrets.ejson$\" && ejson encrypt secrets.ejson && git add secrets.ejson || true'"
   },
   "workspaces": [
-    "docs/preview",
     "examples/b2b",
     "examples/custom-cart-method",
     "examples/express",
