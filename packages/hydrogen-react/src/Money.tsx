@@ -117,8 +117,8 @@ export function Money<ComponentGeneric extends React.ElementType = 'div'>({
 
 // required in order to narrow the money object down and make TS happy
 function isMoney(
-  maybeMoney: PartialDeep<AnyMoneyV2, {recurseIntoArrays: true}>,
-): maybeMoney is AnyMoneyV2 {
+  maybeMoney: PartialDeep<MoneyV2, {recurseIntoArrays: true}>,
+): maybeMoney is MoneyV2 {
   return (
     typeof maybeMoney.amount === 'string' &&
     !!maybeMoney.amount &&
