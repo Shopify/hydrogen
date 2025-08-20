@@ -1,4 +1,4 @@
-index c96b3d83..61e7c2e3 100644
+index c96b3d833..61e7c2e35 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
 @@ -6,6 +6,7 @@ import { Link } from 'react-router';

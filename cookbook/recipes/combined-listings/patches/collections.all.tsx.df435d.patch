@@ -1,4 +1,4 @@
-index b9d0f33f..d1688772 100644
+index b9d0f33f1..d1688772e 100644
 --- a/templates/skeleton/app/routes/collections.all.tsx
 +++ b/templates/skeleton/app/routes/collections.all.tsx
 @@ -3,7 +3,10 @@ import {useLoaderData, type MetaFunction} from 'react-router';

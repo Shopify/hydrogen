@@ -1,4 +1,4 @@
-index 5f3ac1cc..c16b947b 100644
+index 5f3ac1cce..c16b947b0 100644
 --- a/templates/skeleton/app/components/ProductImage.tsx
 +++ b/templates/skeleton/app/components/ProductImage.tsx
 @@ -1,10 +1,13 @@

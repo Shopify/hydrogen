@@ -1,4 +1,4 @@
-index 543e76be..1e75522b 100644
+index 543e76be9..1e75522b1 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
 @@ -1,13 +1,13 @@
