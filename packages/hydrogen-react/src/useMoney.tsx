@@ -28,7 +28,7 @@ export type UseMoneyValue = {
   /**
    * The currency code from the `MoneyV2` object.
    */
-  currencyCode: CurrencyCode;
+  currencyCode: AnyCurrencyCode;
   /**
    * The name for the currency code, returned by `Intl.NumberFormat`.
    */
@@ -57,7 +57,7 @@ export type UseMoneyValue = {
   /**
    * The `MoneyV2` object provided as an argument to the hook.
    */
-  original: MoneyV2;
+  original: AnyMoneyV2;
   /**
    * A string with trailing zeros removed from the fractional part, if any exist. If there are no trailing zeros, then the fractional part remains.
    * For example, `$640.00` turns into `$640`.
@@ -124,7 +124,7 @@ export type UseMoneyValue = {
  * money.withoutTrailingZerosAndCurrency
  * ```
  */
-export function useMoney(money: MoneyV2): UseMoneyValue {
+export function useMoney(money: AnyMoneyV2): UseMoneyValue {
   const {countryIsoCode, languageIsoCode} = useShop();
   const locale = languageIsoCode.includes('_')
     ? languageIsoCode.replace('_', '-')
@@ -205,8 +205,8 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
   // create formatters if they are going to be used.
   const lazyFormatters = useMemo(
     () => ({
-      original: (): MoneyV2 => money,
-      currencyCode: (): CurrencyCode => money.currencyCode,
+      original: (): AnyMoneyV2 => money,
+      currencyCode: (): AnyCurrencyCode => money.currencyCode,
 
       localizedString: (): string => {
         const formatted = defaultFormatter().format(amount);
