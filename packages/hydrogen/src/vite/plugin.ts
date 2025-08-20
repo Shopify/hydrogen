@@ -61,7 +61,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           },
           resolve: {
             // Deduplicate React to ensure single instance for context sharing
-            dedupe: ['react', 'react-dom', '@shopify/hydrogen'],
+            dedupe: ['react', 'react-dom'],
           },
           ssr: {
             optimizeDeps: {
@@ -82,12 +82,9 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           // Do it early to avoid the initial reload:
           optimizeDeps: {
             include: [
-              // Always optimize these CJS dependencies
+              // Optimize CJS dependencies that would otherwise cause issues
               'content-security-policy-builder',
               'worktop/cookie',
-              // For regular projects, optimize @shopify/hydrogen to prevent useContext errors.
-              // In monorepo, skip to allow live reload of source changes.
-              ...(!isHydrogenMonorepo ? ['@shopify/hydrogen'] : []),
             ],
           },
         };
