@@ -1,4 +1,4 @@
-import type {Plugin, ConfigEnv} from 'vite';
+import {createLogger, type Plugin, type ConfigEnv} from 'vite';
 import type {Preset as RemixPreset} from '@react-router/dev/config';
 import {
   setupHydrogenMiddleware,
@@ -52,9 +52,59 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           import.meta.url,
         ).pathname.endsWith('/hydrogen/packages/');
 
+        // Create a custom logger that filters out source map warnings from @shopify/graphql-client
+        // The graphql-client package publishes source maps that reference TypeScript source files
+        // not included in the npm distribution, causing warnings during development.
+        // This was previously fixed in commit ac8d9163e but was accidentally removed during
+        // the React Router 7 migration. These warnings are not actionable for users.
+        const baseLogger = createLogger();
+        const customLogger = {
+          ...baseLogger,
+          warn(msg: string, options?: any) {
+            // Filter out source map warnings for external dependencies
+            if (
+              typeof msg === 'string' &&
+              msg.includes('Sourcemap for') &&
+              msg.includes('points to missing source files') &&
+              msg.includes('node_modules')
+            ) {
+              return;
+            }
+            baseLogger.warn(msg, options);
+          },
+          warnOnce(msg: string, options?: any) {
+            // Filter out source map warnings for external dependencies
+            if (
+              typeof msg === 'string' &&
+              msg.includes('Sourcemap for') &&
+              msg.includes('points to missing source files') &&
+              msg.includes('node_modules')
+            ) {
+              return;
+            }
+            baseLogger.warnOnce(msg, options);
+          },
+        };
+
         return {
+          customLogger,
           build: {
             outDir: 'dist',
+            rollupOptions: {
+              // Suppress source map warnings during build for external dependencies
+              // that ship with invalid source maps (e.g., @shopify/graphql-client)
+              onwarn(warning, warn) {
+                // Ignore source map warnings from @shopify/graphql-client
+                // which has source maps pointing to missing source files
+                if (
+                  warning.code === 'SOURCEMAP_ERROR' &&
+                  warning.message?.includes('@shopify/graphql-client')
+                ) {
+                  return;
+                }
+                warn(warning);
+              },
+            },
           },
           server: {
             watch: null,
