@@ -70,8 +70,7 @@ Format explanation:
 
 - **YYYY**: Current year
 - **MAJOR**: Quarter-aligned (1, 4, 7, 10) for Q1, Q2, Q3, Q4
-- **MINOR**: Feature releases within a quarter
-- **PATCH**: Bug fixes (adds 4th segment: YYYY.MAJOR.MINOR.PATCH)
+- **MINOR**: Incremental releases within a quarter (both features and fixes)
 
 ### Semver Packages
 
@@ -97,8 +96,8 @@ Instead, the CalVer script post-processes versions:
 
 - **Major bumps**: CalVer script ensures all CalVer packages advance to the same quarter
   → e.g., all become 2025.7.0 when a major bump is detected
-- **Minor/patch bumps**: Each package can bump independently
-  → Each gets its own minor/patch increment
+- **Minor bumps**: Each package can bump independently
+  → Each gets its own minor increment
 
 ## Quarterly Release Alignment
 

@@ -93,11 +93,9 @@ CALVER_PACKAGES.forEach((pkgName) => {
   console.log(`  ${pkgName}: ${originalVersions[pkgName]}`);
 });
 
-// 2. Run changesets (this modifies package.json files)
-console.log('\n🦋 Running changeset version...');
-execSync('npx changeset version', {stdio: 'inherit'});
-
-// 3. Transform to CalVer and apply
+// 2. Transform semver to CalVer
+// Flow: Changesets already ran (via npm script) and updated versions/CHANGELOGs with semver.
+// Now we read those semver versions, transform to CalVer, and update both package.json and CHANGELOG.
 console.log('\n✏️  Applying CalVer transformations...');
 const updates = {};
 
@@ -108,7 +106,8 @@ CALVER_PACKAGES.forEach((pkgName) => {
   // Skip if version unchanged
   if (pkg.version === originalVersions[pkgName]) return;
 
-  const bumpType = getBumpType(originalVersions[pkgName], pkg.version);
+  const changesetVersion = pkg.version; // Version that changesets just wrote
+  const bumpType = getBumpType(originalVersions[pkgName], changesetVersion);
   const calverVersion = getNextVersion(originalVersions[pkgName], bumpType);
 
   // Apply CalVer version
@@ -117,6 +116,7 @@ CALVER_PACKAGES.forEach((pkgName) => {
 
   updates[pkgName] = {
     from: originalVersions[pkgName],
+    changesetVersion: changesetVersion, // Store what changesets wrote
     to: calverVersion,
     type: bumpType,
   };
@@ -172,10 +172,10 @@ Object.entries(updates).forEach(([pkgName, update]) => {
 
   if (fs.existsSync(changelogPath)) {
     let changelog = fs.readFileSync(changelogPath, 'utf-8');
-    // Replace the changeset version with CalVer version in headers
-    const changesetVersion = update.from.replace(/\./g, '\\.');
+    // Replace the version header that changesets just created with CalVer version
+    const changesetVersionEscaped = update.changesetVersion.replace(/\./g, '\\.');
     changelog = changelog.replace(
-      new RegExp(`## ${changesetVersion}\\b`, 'g'),
+      new RegExp(`^## ${changesetVersionEscaped}$`, 'm'),
       `## ${update.to}`,
     );
     fs.writeFileSync(changelogPath, changelog);
