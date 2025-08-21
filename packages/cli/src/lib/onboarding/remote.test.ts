@@ -30,7 +30,7 @@ describe('remote templates', () => {
           language: 'ts',
           template: 'missing-template',
         }),
-      ).resolves.ok;
+      ).resolves.toBeUndefined();
     });
 
     // The error message is printed asynchronously
@@ -62,7 +62,7 @@ describe('remote templates', () => {
             language: 'ts',
             template: `nonexistent-template-${i}`,
           }),
-        ).resolves.ok;
+        ).resolves.toBeUndefined();
       });
 
       // Verify proper error handling occurred
