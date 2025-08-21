@@ -2,8 +2,6 @@ import {
   CartForm,
   Image,
   Money,
-  VariantSelector,
-  type VariantOption,
 } from '@shopify/hydrogen';
 import type {
   CartLineUpdateInput,
@@ -368,23 +366,18 @@ function CartLineUpdateByOptionsForm({line}: {line: CartLine}) {
     >
       {(fetcher) => (
         <>
-          <VariantSelector
-            handle={product.handle}
-            options={product.options}
-            variants={[]}
-          >
-            {({option}) => (
-              <LineItemOptions
-                option={option}
-                selectedOptions={selectedOptions}
-                onChange={(event) =>
-                  fetcher.submit(event.currentTarget.form, {
-                    method: 'POST',
-                  })
-                }
-              />
-            )}
-          </VariantSelector>
+          {product.options.map((option) => (
+            <LineItemOption
+              key={option.name}
+              option={option}
+              selectedOptions={selectedOptions}
+              onChange={(event) =>
+                fetcher.submit(event.currentTarget.form, {
+                  method: 'POST',
+                })
+              }
+            />
+          ))}
           <noscript>
             <button type="submit">Update</button>
           </noscript>
@@ -394,12 +387,12 @@ function CartLineUpdateByOptionsForm({line}: {line: CartLine}) {
   );
 }
 
-function LineItemOptions({
+function LineItemOption({
   option,
   selectedOptions,
   onChange,
 }: {
-  option: VariantOption;
+  option: CartApiQueryFragment['lines']['nodes'][0]['merchandise']['product']['options'][0];
   selectedOptions: SelectedOption[];
   onChange: React.ChangeEventHandler<HTMLSelectElement>;
 }) {
@@ -416,13 +409,12 @@ function LineItemOptions({
           value={defaultOption?.value}
           onChange={onChange}
         >
-          {option.values.map(({value, isAvailable}) => (
+          {option.optionValues.map((optionValue) => (
             <option
-              key={`optionValue-${value}`}
-              value={value}
-              disabled={!isAvailable}
+              key={`optionValue-${optionValue.name}`}
+              value={optionValue.name}
             >
-              {value}
+              {optionValue.name}
             </option>
           ))}
         </select>

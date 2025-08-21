@@ -94,22 +94,13 @@ export {
   useOptimisticData,
 } from './optimistic-ui/optimistic-ui';
 export {getPaginationVariables, Pagination} from './pagination/Pagination';
+export {getSelectedProductOptions, type GetSelectedProductOptions} from './product/getSelectedProductOptions';
 export {useOptimisticVariant} from './product/useOptimisticVariant';
-export type {
-  VariantOption,
-  VariantOptionValue,
-} from './product/VariantSelector';
-export {
-  getSelectedProductOptions,
-  VariantSelector,
-} from './product/VariantSelector';
 export {RichText} from './RichText';
 export {graphiqlLoader} from './routing/graphiql';
 export {storefrontRedirect} from './routing/redirect';
 export {type SeoConfig} from './seo/generate-seo-tags';
 export {getSeoMeta} from './seo/getSeoMeta';
-export type {SeoHandleFunction} from './seo/seo';
-export {Seo} from './seo/seo';
 export {ShopPayButton} from './shop/ShopPayButton';
 export {getSitemap, getSitemapIndex} from './sitemap/sitemap';
 export * from './storefront';
@@ -133,6 +124,10 @@ export type {
   StorefrontApiResponseOkPartial,
   StorefrontApiResponsePartial,
 } from '@shopify/hydrogen-react';
+// TODO: Remove this export when React Router adds React 19 support
+// Export the type patches so templates can use them without duplication
+export type {} from '../react-router-patches';
+
 export {
   AnalyticsEventName,
   AnalyticsPageType,

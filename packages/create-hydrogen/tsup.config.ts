@@ -25,7 +25,13 @@ export default defineConfig({
   },
   async onSuccess() {
     // Copy assets to the dist folder
-    await fs.cp('../cli/dist/assets', './dist/assets', {recursive: true});
+    try {
+      await fs.cp('../cli/dist/assets', './dist/assets', {recursive: true});
+    } catch (error) {
+      // In dev mode, CLI might not have built yet. Create empty assets dir.
+      await fs.mkdir('./dist/assets', {recursive: true});
+      console.warn('CLI assets not found, creating empty assets directory');
+    }
 
     // This WASM file is used in a dependency, copy it over:
     await fs.copyFile(
