@@ -24,7 +24,9 @@ import {v5 as uuidv5} from 'uuid';
  */
 export async function loader({request, context}: LoaderFunctionArgs) {
   // Get the project root from the environment variable passed by the Hydrogen plugin
-  let root = (context?.env as {HYDROGEN_PROJECT_ROOT?: string} | undefined)?.HYDROGEN_PROJECT_ROOT || '/workspace/hydrogen-dev';
+  let root =
+    (context?.env as {HYDROGEN_PROJECT_ROOT?: string} | undefined)
+      ?.HYDROGEN_PROJECT_ROOT || '/workspace/hydrogen-dev';
 
   // Normalize Windows paths to Unix style for Chrome DevTools
   root = root.replace(/\\/g, '/');
