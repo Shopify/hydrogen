@@ -41,6 +41,39 @@ describe('remote templates', () => {
     processExit.mockRestore();
   });
 
+  it('handles unknown templates without ENOENT race condition', async () => {
+    // This test verifies the fix for a race condition in template setup.
+    // The race condition occurred when template download started before
+    // handleProjectLocation completed, causing ENOENT errors when the abort
+    // handler tried to clean up a directory still being accessed.
+    
+    const processExit = vi
+      .spyOn(process, 'exit')
+      .mockImplementation((() => {}) as any);
+
+    // Run multiple iterations - should never throw unhandled ENOENT
+    // If the race condition occurs, Vitest will catch the unhandled rejection
+    for (let i = 0; i < 3; i++) {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await expect(
+          setupTemplate({
+            path: tmpDir,
+            git: false,
+            language: 'ts',
+            template: `nonexistent-template-${i}`,
+          }),
+        ).resolves.ok;
+      });
+
+      // Verify proper error handling occurred
+      await vi.waitFor(() => expect(outputMock.error()).toMatch('--template'));
+      outputMock.clear();
+    }
+
+    expect(processExit).toHaveBeenCalled();
+    processExit.mockRestore();
+  });
+
   it('creates basic projects', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       await setupTemplate({
