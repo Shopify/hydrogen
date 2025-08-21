@@ -285,16 +285,30 @@ cp package.json package.json.backup
 if command -v perl >/dev/null 2>&1; then
     perl -i -pe 's/"version": "npm run version:changeset && node \.changeset\/enforce-calver-ci\.js && npm run version:post && npm run format"/"version": "changeset version"/' package.json
 else
-    sed -i.tmp 's/"version": "npm run version:changeset && node \.changeset\/enforce-calver-ci\.js && npm run version:post && npm run format"/"version": "changeset version"/' package.json
-    rm -f package.json.tmp 2>/dev/null || true
+    # Use portable sed syntax that works on both macOS and Linux
+    if sed --version 2>/dev/null | grep -q GNU; then
+        # GNU sed (Linux)
+        sed -i 's/"version": "npm run version:changeset && node \.changeset\/enforce-calver-ci\.js && npm run version:post && npm run format"/"version": "changeset version"/' package.json
+    else
+        # BSD sed (macOS)
+        sed -i.tmp 's/"version": "npm run version:changeset && node \.changeset\/enforce-calver-ci\.js && npm run version:post && npm run format"/"version": "changeset version"/' package.json
+        rm -f package.json.tmp 2>/dev/null || true
+    fi
 fi
 
 # Disable changelog to avoid GitHub token requirement
 if command -v perl >/dev/null 2>&1; then
     perl -i -pe 's/"changelog": \[.*\]/"changelog": false/' .changeset/config.json
 else
-    sed -i.tmp 's/"changelog": \[.*\]/"changelog": false/' .changeset/config.json
-    rm -f .changeset/config.json.tmp 2>/dev/null || true
+    # Use portable sed syntax that works on both macOS and Linux
+    if sed --version 2>/dev/null | grep -q GNU; then
+        # GNU sed (Linux)
+        sed -i 's/"changelog": \[.*\]/"changelog": false/' .changeset/config.json
+    else
+        # BSD sed (macOS)  
+        sed -i.tmp 's/"changelog": \[.*\]/"changelog": false/' .changeset/config.json
+        rm -f .changeset/config.json.tmp 2>/dev/null || true
+    fi
 fi
 
 # Run standard changeset (now using raw changeset without CalVer)
