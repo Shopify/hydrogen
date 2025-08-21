@@ -66,7 +66,7 @@ async function waitForPath(
 
   while (Date.now() - startTime < maxWaitMs) {
     if (existsSync(path)) {
-      // Found  asset path
+      // Found asset path
       return true;
     }
 
