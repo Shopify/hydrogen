@@ -1,4 +1,10 @@
 {
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(gh run view:*)"
+    ]
+  },
   "enabledMcpjsonServers": [
     "docs-shopify-cli",
     "docs-cloudflare-workers-sdk",
@@ -10,10 +16,5 @@
     "docs-hydrogen",
     "docs-xstate",
     "shopify-dev-mcp"
-  ],
-  "permissions": {
-    "allow": [
-      "WebFetch(domain:github.com)"
-    ]
-  }
+  ]
 }

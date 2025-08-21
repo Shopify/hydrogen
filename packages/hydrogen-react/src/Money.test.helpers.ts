@@ -31,17 +31,17 @@ export function getUnitPriceMeasurement(
     VOLUME: UnitPriceMeasurementMeasuredUnit[];
     LENGTH: UnitPriceMeasurementMeasuredUnit[];
     AREA: UnitPriceMeasurementMeasuredUnit[];
-    DIMENSION: UnitPriceMeasurementMeasuredUnit[];
+    COUNT: UnitPriceMeasurementMeasuredUnit[];
   } = {
     WEIGHT: ['MG', 'G', 'KG', 'LB', 'OZ'],
     VOLUME: ['ML', 'CL', 'L', 'M3', 'FLOZ', 'PT', 'QT', 'GAL'],
     LENGTH: ['MM', 'CM', 'M', 'IN', 'FT', 'YD'],
     AREA: ['M2', 'FT2'],
-    DIMENSION: ['ITEM'],
+    COUNT: ['ITEM'],
   };
   const measuredType = faker.helpers.arrayElement<
     keyof typeof measuredTypeToUnitMap
-  >(['WEIGHT', 'VOLUME', 'AREA', 'LENGTH', 'DIMENSION']);
+  >(['WEIGHT', 'VOLUME', 'AREA', 'LENGTH', 'COUNT']);
   const quantityUnit = faker.helpers.arrayElement(
     measuredTypeToUnitMap[measuredType],
   );
