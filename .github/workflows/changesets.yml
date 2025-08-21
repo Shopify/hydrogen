@@ -25,13 +25,6 @@ jobs:
       latest: ${{ env.latest }}
       latestBranch: ${{ env.latestBranch }}
     steps:
-      - name: Flags
-        id: flags
-        run: |
-          # IMPORTANT: Update this latestBranch whenever we move to a new major version:
-          echo "latestBranch=2025-05" >> $GITHUB_ENV
-          echo "latest=${{ github.ref_name == 'main' }}" >> $GITHUB_ENV
-
       - name: Checkout the code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
@@ -47,6 +40,14 @@ jobs:
 
       - name: Install the packages
         run: npm ci --legacy-peer-deps
+
+      - name: Detect latest branch
+        id: flags
+        run: |
+          # Automatically detect the latest branch based on current version and changesets
+          echo "latestBranch=$(node .changeset/get-calver-version-branch.js)" >> $GITHUB_ENV
+          echo "latest=${{ github.ref_name == 'main' }}" >> $GITHUB_ENV
+          echo "Detected latestBranch: $(node .changeset/get-calver-version-branch.js)"
 
       - name: Build the dist code
         run: npm run build

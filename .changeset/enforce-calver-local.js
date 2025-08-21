@@ -159,9 +159,9 @@ CALVER_PACKAGES.forEach((pkgName) => {
 if (!opts.skipChangesets) {
   console.log('\n🦋 Running changeset version...');
   if (opts.dryRun) {
-    console.log('  [DRY RUN] Would run: npx changeset version');
+    console.log('  [DRY RUN] Would run: npx @changesets/cli version');
   } else {
-    execSync('npx changeset version', {stdio: 'inherit'});
+    execSync('npx @changesets/cli version', {stdio: 'inherit'});
   }
 } else {
   console.log('\n⏭️  Skipping changeset version');
@@ -177,11 +177,47 @@ CALVER_PACKAGES.forEach((pkgName) => {
     ? JSON.parse(originalPackages[pkgPath])
     : JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
 
-  // Simulate changeset bump for dry-run
+  // In dry-run mode, simulate what changesets would do based on actual changesets
   if (opts.dryRun && !opts.skipChangesets) {
-    // In dry-run, simulate a minor bump for demo
-    const v = parseVersion(pkg.version);
-    pkg.version = `${v.year}.${v.major}.${v.minor + 1}`;
+    // Analyze changesets to determine the actual bump type
+    const changesetDir = path.join(process.cwd(), '.changeset');
+    let bumpType = null;
+    
+    try {
+      const files = fs.readdirSync(changesetDir);
+      for (const file of files) {
+        if (!file.endsWith('.md') || file === 'README.md') continue;
+        const filePath = path.join(changesetDir, file);
+        const content = fs.readFileSync(filePath, 'utf-8');
+        
+        // Check for this package in changesets
+        if (content.includes(`"${pkgName}": major`)) {
+          bumpType = 'major';
+          break;
+        } else if (content.includes(`"${pkgName}": minor`)) {
+          bumpType = bumpType !== 'major' ? 'minor' : bumpType;
+        } else if (content.includes(`"${pkgName}": patch`)) {
+          bumpType = bumpType || 'patch';
+        }
+      }
+    } catch (error) {
+      console.error(`Warning: Could not read changesets: ${error.message}`);
+    }
+    
+    // Apply the detected bump type
+    if (bumpType) {
+      const v = parseVersion(pkg.version);
+      if (bumpType === 'major') {
+        // For major, changesets would bump to next major version
+        pkg.version = `${v.year}.${v.major + 1}.0`;
+      } else if (bumpType === 'minor') {
+        pkg.version = `${v.year}.${v.major}.${v.minor + 1}`;
+      } else {
+        // patch
+        const nextPatch = v.patch !== undefined ? v.patch + 1 : 1;
+        pkg.version = `${v.year}.${v.major}.${v.minor}.${nextPatch}`;
+      }
+    }
   }
 
   if (pkg.version === originalVersions[pkgName]) return;

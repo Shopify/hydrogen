@@ -22,6 +22,8 @@ on:
   pull_request:
     paths:
       - '.changeset/enforce-calver-*.js'
+      - '.changeset/calver-shared.js'
+      - '.changeset/get-calver-version-branch.js'
       - 'scripts/test-calver-comparison.sh'
       - 'docs/CALVER.md'
       - '.github/workflows/test-calver.yml'
@@ -50,11 +52,20 @@ jobs:
       - name: Test 1 - Validate Script Syntax
         run: |
           echo "::group::Test 1 - JavaScript Syntax Validation"
-          echo "Expected: CI script should have valid JavaScript syntax"
+          echo "Expected: All scripts should have valid JavaScript syntax"
           echo ""
           
           node -c .changeset/enforce-calver-ci.js
           echo "✅ enforce-calver-ci.js - Valid syntax"
+          
+          node -c .changeset/enforce-calver-local.js
+          echo "✅ enforce-calver-local.js - Valid syntax"
+          
+          node -c .changeset/calver-shared.js
+          echo "✅ calver-shared.js - Valid syntax"
+          
+          node -c .changeset/get-calver-version-branch.js
+          echo "✅ get-calver-version-branch.js - Valid syntax"
           
           echo "::endgroup::"
 
@@ -202,9 +213,86 @@ jobs:
           rm .changeset/test-major.md test-output.log
           echo "::endgroup::"
 
-      - name: Test 5 - Mixed Package Types
+      - name: Test 5 - Branch Detection
         run: |
-          echo "::group::Test 5 - Mixed CalVer and Semver Packages"
+          echo "::group::Test 5 - Latest Branch Detection"
+          echo "Expected: Correctly detect current and next release branches"
+          echo ""
+          
+          # Test without major changesets
+          echo "Testing branch detection without major changesets:"
+          BRANCH=$(node .changeset/get-calver-version-branch.js)
+          echo "Current branch detected: $BRANCH"
+          if [ "$BRANCH" = "2025-05" ]; then
+            echo "✅ Correctly detected current branch (2025-05)"
+          else
+            echo "❌ Branch detection failed, expected 2025-05, got $BRANCH"
+            exit 1
+          fi
+          
+          # Test with major changeset
+          echo ""
+          echo "Testing branch detection with major changeset:"
+          cat > .changeset/test-major-branch.md << 'EOF'
+          ---
+          "@shopify/hydrogen": major
+          ---
+          Test major for branch detection
+          EOF
+          
+          BRANCH=$(node .changeset/get-calver-version-branch.js)
+          echo "Next branch detected: $BRANCH"
+          if [ "$BRANCH" = "2025-07" ]; then
+            echo "✅ Correctly detected next quarter branch (2025-07)"
+          else
+            echo "❌ Branch detection failed, expected 2025-07, got $BRANCH"
+            exit 1
+          fi
+          
+          rm .changeset/test-major-branch.md
+          echo "::endgroup::"
+
+      - name: Test 6 - Shared Utilities CLI
+        run: |
+          echo "::group::Test 6 - CalVer Shared Utilities CLI"
+          echo "Expected: CLI commands should work correctly"
+          echo ""
+          
+          # Test get-next command
+          NEXT=$(node .changeset/calver-shared.js get-next "2025.5.0" "major")
+          echo "get-next 2025.5.0 major: $NEXT"
+          if [ "$NEXT" = "2025.7.0" ]; then
+            echo "✅ get-next command works"
+          else
+            echo "❌ get-next failed, expected 2025.7.0, got $NEXT"
+            exit 1
+          fi
+          
+          # Test detect-bump command
+          BUMP=$(node .changeset/calver-shared.js detect-bump "2025.5.0" "2025.7.0")
+          echo "detect-bump 2025.5.0 → 2025.7.0: $BUMP"
+          if [ "$BUMP" = "major" ]; then
+            echo "✅ detect-bump command works"
+          else
+            echo "❌ detect-bump failed, expected major, got $BUMP"
+            exit 1
+          fi
+          
+          # Test list-calver-packages command
+          PACKAGES=$(node .changeset/calver-shared.js list-calver-packages)
+          echo "CalVer packages: $PACKAGES"
+          if echo "$PACKAGES" | grep -q "@shopify/hydrogen"; then
+            echo "✅ list-calver-packages command works"
+          else
+            echo "❌ list-calver-packages failed"
+            exit 1
+          fi
+          
+          echo "::endgroup::"
+
+      - name: Test 7 - Mixed Package Types
+        run: |
+          echo "::group::Test 7 - Mixed CalVer and Semver Packages"
           echo "Expected: CalVer packages use YYYY.M.P format, semver packages use X.Y.Z format"
           echo ""
           
