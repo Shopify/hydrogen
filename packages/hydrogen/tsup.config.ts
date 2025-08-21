@@ -106,6 +106,12 @@ export default defineConfig([
         {recursive: true},
       );
 
+      // Copy the Chrome DevTools route TypeScript file for React Router
+      await fs.cp(
+        'src/vite/virtual-routes/routes/[.]well-known.appspecific.com[.]chrome[.]devtools[.]json.tsx',
+        `${outDir}/vite/virtual-routes/routes/[.]well-known.appspecific.com[.]chrome[.]devtools[.]json.tsx`,
+      );
+
       console.log('\n', 'Copied virtual route assets to build directory', '\n');
     },
   },
