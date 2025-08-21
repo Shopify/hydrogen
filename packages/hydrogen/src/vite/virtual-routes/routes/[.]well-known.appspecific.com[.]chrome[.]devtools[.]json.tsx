@@ -1,5 +1,5 @@
 import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {v4 as uuidv4, v5 as uuidv5} from 'uuid';
+import {v5 as uuidv5} from 'uuid';
 
 /**
  * Chrome DevTools Automatic Workspace Configuration
@@ -24,14 +24,16 @@ import {v4 as uuidv4, v5 as uuidv5} from 'uuid';
  */
 export async function loader({request, context}: LoaderFunctionArgs) {
   // Get the project root from the environment variable passed by the Hydrogen plugin
-  // @ts-ignore - env is injected by MiniOxygen in development
-  let root = context?.env?.HYDROGEN_PROJECT_ROOT || '/workspace/hydrogen-dev';
+  let root = (context?.env as {HYDROGEN_PROJECT_ROOT?: string} | undefined)?.HYDROGEN_PROJECT_ROOT || '/workspace/hydrogen-dev';
 
   // Normalize Windows paths to Unix style for Chrome DevTools
   root = root.replace(/\\/g, '/');
 
   // Generate a deterministic UUID v5 based on the project path
   // This ensures the same UUID for the same project path
+  // The namespace UUID is a randomly generated UUID v4 that serves as a constant
+  // namespace for all Hydrogen projects. This allows different projects to have
+  // different UUIDs while the same project always generates the same UUID.
   const HYDROGEN_NAMESPACE = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
   const uuid = uuidv5(root, HYDROGEN_NAMESPACE);
 

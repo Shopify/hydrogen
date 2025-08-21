@@ -54,7 +54,7 @@ export async function getVirtualRoutesV3() {
         path: '.well-known/appspecific/com.chrome.devtools.json',
         file: getVirtualRoutesPath(
           VIRTUAL_ROUTES_ROUTES_DIR_PARTS,
-          '[.]well-known.appspecific.com[.]chrome[.]devtools[.]json.jsx',
+          '[.]well-known.appspecific.com[.]chrome[.]devtools[.]json.tsx',
         ),
         index: false,
       },
