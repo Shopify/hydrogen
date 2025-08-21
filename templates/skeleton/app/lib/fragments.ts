@@ -4,10 +4,6 @@ export const CART_QUERY_FRAGMENT = `#graphql
     currencyCode
     amount
   }
-  fragment CartWarning on CartWarning {
-    code
-    message
-  }
   fragment CartLine on CartLine {
     id
     quantity
