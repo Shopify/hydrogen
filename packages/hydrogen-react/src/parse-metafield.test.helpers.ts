@@ -73,7 +73,7 @@ export function getMetafieldValue(type: MetafieldTypeTypes) {
     case 'boolean':
       return faker.datatype.boolean().toString();
     case 'color':
-      return faker.internet.color();
+      return faker.color.rgb();
     case 'weight':
       return JSON.stringify({
         value: faker.number.int(),
