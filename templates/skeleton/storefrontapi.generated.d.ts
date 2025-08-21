@@ -8,6 +8,11 @@ export type MoneyFragment = Pick<
   'currencyCode' | 'amount'
 >;
 
+export type CartWarningFragment = Pick<
+  StorefrontAPI.CartWarning,
+  'code' | 'message'
+>;
+
 export type CartLineFragment = Pick<
   StorefrontAPI.CartLine,
   'id' | 'quantity'
