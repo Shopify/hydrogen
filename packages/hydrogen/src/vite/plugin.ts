@@ -107,6 +107,10 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
 
         oxygenPlugin?.api?.registerPluginOptions?.({
           compatibilityDate: getCompatDate(),
+          env: {
+            // Pass the project root to the worker for Chrome DevTools workspace configuration
+            HYDROGEN_PROJECT_ROOT: resolvedConfig.root,
+          },
           requestHook: ({request, response, meta}) => {
             // Emit events for requests
             emitRequestEvent(

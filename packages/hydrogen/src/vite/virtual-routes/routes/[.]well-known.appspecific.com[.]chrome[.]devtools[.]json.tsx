@@ -12,15 +12,18 @@ import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
  *
  * @see https://chromium.googlesource.com/devtools/devtools-frontend/+/main/docs/ecosystem/automatic_workspace_folders.md
  */
-export async function loader({request}: LoaderFunctionArgs) {
-  // Use the request URL as a deterministic seed for the UUID
-  const url = new URL(request.url);
-  const origin = url.origin;
+export async function loader({request, context}: LoaderFunctionArgs) {
+  // Get the project root from the environment variable passed by the Hydrogen plugin
+  // @ts-ignore - env is injected by MiniOxygen in development
+  let root = context?.env?.HYDROGEN_PROJECT_ROOT || '/workspace/hydrogen-dev';
+  
+  // Normalize Windows paths to Unix style for Chrome DevTools
+  root = root.replace(/\\/g, '/');
 
-  // Simple hash function for generating a deterministic UUID from the origin
+  // Generate a deterministic UUID based on the project path
   let hash = 0;
-  for (let i = 0; i < origin.length; i++) {
-    const char = origin.charCodeAt(i);
+  for (let i = 0; i < root.length; i++) {
+    const char = root.charCodeAt(i);
     hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32bit integer
   }
@@ -36,9 +39,6 @@ export async function loader({request}: LoaderFunctionArgs) {
     '8' + hexHash.substring(17, 20), // Variant bits
     hexHash.substring(20, 32),
   ].join('-');
-
-  // For development, use a placeholder path that indicates this is a virtual workspace
-  const root = '/workspace/hydrogen-dev';
 
   const responseData = {
     workspace: {root, uuid},
