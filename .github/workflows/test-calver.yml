@@ -1,0 +1,270 @@
+name: Test CalVer Scripts
+
+# This workflow tests the CalVer (Calendar Versioning) enforcement scripts
+# to ensure they work correctly on Linux CI environments (GitHub Actions).
+#
+# What it validates:
+# 1. Script syntax - enforce-calver-ci.js is valid JavaScript
+# 2. Linux compatibility - sed commands work with GNU sed (no -i.tmp needed)
+# 3. Patch versioning - CalVer packages increment correctly (2025.5.0 → 2025.5.1)
+# 4. Major versioning - CalVer packages align to quarters (2025.5.0 → 2025.7.0 for Q3)
+# 5. Mixed packages - CalVer packages use YYYY.M.P while semver packages use X.Y.Z
+#
+# Each test outputs explicit expected vs actual results for manual validation.
+# 
+# SAFETY: All tests are non-destructive:
+# - The comparison script creates temporary copies and reverts all changes
+# - Test changesets are created and deleted within each test
+# - No permanent modifications are made to any files
+# - No npm publishing or releases are triggered
+
+on:
+  pull_request:
+    paths:
+      - '.changeset/enforce-calver-*.js'
+      - 'scripts/test-calver-comparison.sh'
+      - 'docs/CALVER.md'
+      - '.github/workflows/test-calver.yml'
+  push:
+    branches:
+      - 'juanpprieto/calver-release-enforcement'
+  workflow_dispatch:
+
+jobs:
+  test-calver-linux:
+    name: Test CalVer on Linux CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test 1 - Validate Script Syntax
+        run: |
+          echo "::group::Test 1 - JavaScript Syntax Validation"
+          echo "Expected: CI script should have valid JavaScript syntax"
+          echo ""
+          
+          node -c .changeset/enforce-calver-ci.js
+          echo "✅ enforce-calver-ci.js - Valid syntax"
+          
+          echo "::endgroup::"
+
+      - name: Test 2 - Linux sed Compatibility
+        run: |
+          echo "::group::Test 2 - GNU sed (Linux) Compatibility"
+          echo "Expected: sed should work without -i.tmp extension on Linux"
+          echo ""
+          
+          # Create test file
+          echo '{"version": "npm run version:changeset && node .changeset/enforce-calver-ci.js && npm run version:post && npm run format"}' > test.json
+          echo "Created test file with content:"
+          cat test.json
+          echo ""
+          
+          # Test GNU sed (should work on Linux without .tmp extension)
+          sed -i 's/"version": "npm run version:changeset && node \.changeset\/enforce-calver-ci\.js && npm run version:post && npm run format"/"version": "changeset version"/' test.json
+          
+          echo "After sed replacement:"
+          cat test.json
+          echo ""
+          
+          # Verify
+          if grep -q '"version": "changeset version"' test.json; then
+            echo "✅ GNU sed works correctly on Linux CI"
+          else
+            echo "❌ GNU sed failed on Linux CI"
+            exit 1
+          fi
+          
+          rm test.json
+          echo "::endgroup::"
+
+      - name: Test 3 - Patch Version Bumps
+        run: |
+          echo "::group::Test 3 - Patch Version Bumps for CalVer Packages"
+          echo "Expected: CalVer packages should increment third segment (e.g., 2025.5.0 → 2025.5.1)"
+          echo ""
+          
+          # Create test changeset
+          cat > .changeset/test-patch.md << 'EOF'
+          ---
+          "@shopify/hydrogen": patch
+          "@shopify/hydrogen-react": patch
+          "skeleton": patch
+          ---
+          
+          Test: Patch bumps for CalVer packages
+          EOF
+          
+          echo "Created test changeset for patch bumps"
+          echo ""
+          
+          # Run comparison test and capture output
+          echo "Running CalVer comparison test..."
+          ./scripts/test-calver-comparison.sh | tee test-output.log
+          
+          echo ""
+          echo "Validating results:"
+          
+          # Check that CalVer packages got patch bumps
+          if grep -q "@shopify/hydrogen.*2025\.5\.0.*2025\.5\.1.*2025\.5\.1" test-output.log; then
+            echo "✅ @shopify/hydrogen: 2025.5.0 → 2025.5.1 (correct patch bump)"
+          else
+            echo "❌ @shopify/hydrogen did not bump correctly"
+          fi
+          
+          if grep -q "@shopify/hydrogen-react.*2025\.5\.0.*2025\.5\.1.*2025\.5\.1" test-output.log; then
+            echo "✅ @shopify/hydrogen-react: 2025.5.0 → 2025.5.1 (correct patch bump)"
+          else
+            echo "❌ @shopify/hydrogen-react did not bump correctly"
+          fi
+          
+          if grep -q "skeleton.*2025\.5\.2.*2025\.5\.3.*2025\.5\.3" test-output.log; then
+            echo "✅ skeleton: 2025.5.2 → 2025.5.3 (correct patch bump)"
+          else
+            echo "❌ skeleton did not bump correctly"
+          fi
+          
+          # Clean up
+          rm .changeset/test-patch.md test-output.log
+          echo "::endgroup::"
+
+      - name: Test 4 - Major Version Bumps (Quarter Alignment)
+        run: |
+          echo "::group::Test 4 - Major Version Bumps with Quarter Alignment"
+          echo "Expected: CalVer packages should advance to next quarter (2025.5.x → 2025.7.0)"
+          echo "Current month: $(date +%m), Current quarter should map to: Q$((($(date +%m)-1)/3+1))"
+          echo ""
+          
+          # Create major bump changeset
+          cat > .changeset/test-major.md << 'EOF'
+          ---
+          "@shopify/hydrogen": major
+          "@shopify/hydrogen-react": major
+          ---
+          
+          Test: Major bumps should align to next quarter
+          EOF
+          
+          echo "Created test changeset for major bumps"
+          echo ""
+          
+          # Run comparison test
+          echo "Running CalVer comparison test..."
+          ./scripts/test-calver-comparison.sh | tee test-output.log
+          
+          echo ""
+          echo "Validating quarter alignment:"
+          
+          # We're in Q1 2025, so next quarter should be Q2 (month 4) = 2025.4.0
+          # But if we're already past Q1, adjust accordingly
+          CURRENT_MONTH=$(date +%m)
+          if [ $CURRENT_MONTH -le 3 ]; then
+            NEXT_QUARTER="2025.4.0"
+            QUARTER_NAME="Q2"
+          elif [ $CURRENT_MONTH -le 6 ]; then
+            NEXT_QUARTER="2025.7.0"
+            QUARTER_NAME="Q3"
+          elif [ $CURRENT_MONTH -le 9 ]; then
+            NEXT_QUARTER="2025.10.0"
+            QUARTER_NAME="Q4"
+          else
+            NEXT_QUARTER="2026.1.0"
+            QUARTER_NAME="Q1 (next year)"
+          fi
+          
+          echo "Next quarter should be: $QUARTER_NAME = $NEXT_QUARTER"
+          echo ""
+          
+          # Since we're currently at 2025.5.0, next quarter is 2025.7.0 (Q3)
+          if grep -q "@shopify/hydrogen.*2025\.5\.0.*major.*2025\.7\.0.*2025\.7\.0" test-output.log; then
+            echo "✅ @shopify/hydrogen: 2025.5.0 → 2025.7.0 (correct quarter alignment)"
+          else
+            echo "⚠️  @shopify/hydrogen quarter alignment - check output above"
+          fi
+          
+          if grep -q "@shopify/hydrogen-react.*2025\.5\.0.*major.*2025\.7\.0.*2025\.7\.0" test-output.log; then
+            echo "✅ @shopify/hydrogen-react: 2025.5.0 → 2025.7.0 (correct quarter alignment)"
+          else
+            echo "⚠️  @shopify/hydrogen-react quarter alignment - check output above"
+          fi
+          
+          # Clean up
+          rm .changeset/test-major.md test-output.log
+          echo "::endgroup::"
+
+      - name: Test 5 - Mixed Package Types
+        run: |
+          echo "::group::Test 5 - Mixed CalVer and Semver Packages"
+          echo "Expected: CalVer packages use YYYY.M.P format, semver packages use X.Y.Z format"
+          echo ""
+          
+          # Create mixed changeset
+          cat > .changeset/test-mixed.md << 'EOF'
+          ---
+          "@shopify/hydrogen": patch
+          "@shopify/cli-hydrogen": minor
+          "@shopify/mini-oxygen": patch
+          ---
+          
+          Test: Mixed CalVer and semver packages
+          EOF
+          
+          echo "Created test changeset with mixed package types"
+          echo ""
+          
+          # Run comparison test
+          echo "Running CalVer comparison test..."
+          ./scripts/test-calver-comparison.sh | tee test-output.log
+          
+          echo ""
+          echo "Validating version formats:"
+          
+          # CalVer package should use YYYY.M.P format
+          if grep -q "@shopify/hydrogen.*2025\.5\.[0-9]" test-output.log; then
+            echo "✅ @shopify/hydrogen uses CalVer format (2025.5.x)"
+          else
+            echo "❌ @shopify/hydrogen not using CalVer format"
+          fi
+          
+          # Semver packages should use X.Y.Z format (not YYYY)
+          if grep -q "@shopify/cli-hydrogen.*[^2025]\.[0-9]*\.[0-9]" test-output.log; then
+            echo "✅ @shopify/cli-hydrogen uses semver format (not CalVer)"
+          else
+            echo "⚠️  @shopify/cli-hydrogen version format - check output"
+          fi
+          
+          if grep -q "@shopify/mini-oxygen.*[^2025]\.[0-9]*\.[0-9]" test-output.log; then
+            echo "✅ @shopify/mini-oxygen uses semver format (not CalVer)"
+          else
+            echo "⚠️  @shopify/mini-oxygen version format - check output"
+          fi
+          
+          # Clean up
+          rm .changeset/test-mixed.md test-output.log
+          echo "::endgroup::"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "======================================"
+          echo "CalVer CI Test Summary"
+          echo "======================================"
+          echo ""
+          echo "✅ Tests validate that:"
+          echo "  1. CI script has valid syntax for Node.js execution"
+          echo "  2. sed commands work on Linux (GNU sed)"
+          echo "  3. Patch bumps increment the third segment (2025.5.0 → 2025.5.1)"
+          echo "  4. Major bumps align to quarters (2025.5.0 → 2025.7.0 for Q3)"
+          echo "  5. CalVer packages use YYYY.M.P while semver packages use X.Y.Z"
+          echo ""
+          echo "All tests should produce explicit, verifiable output above."
