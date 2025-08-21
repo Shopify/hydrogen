@@ -78,8 +78,7 @@ describe('init', () => {
       shortcut: true,
       quickstart: true,
       git: true,
-      // TODO: enable Tailwind once v4 is stable
-      styling: 'none',
+      styling: 'tailwind',
     });
   });
 
