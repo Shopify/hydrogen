@@ -56,7 +56,7 @@ async function waitForPath(
   initialDelayMs = INITIAL_DELAY_MS,
 ) {
   if (!path) {
-    console.warn('No cliAssetsPath provided to waitForPath');
+    console.warn('No path provided to waitForPath');
     return;
   }
 
