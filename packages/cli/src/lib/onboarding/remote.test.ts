@@ -46,7 +46,7 @@ describe('remote templates', () => {
     // The race condition occurred when template download started before
     // handleProjectLocation completed, causing ENOENT errors when the abort
     // handler tried to clean up a directory still being accessed.
-    
+
     const processExit = vi
       .spyOn(process, 'exit')
       .mockImplementation((() => {}) as any);
