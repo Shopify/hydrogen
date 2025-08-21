@@ -1,0 +1,19 @@
+{
+  "enabledMcpjsonServers": [
+    "docs-shopify-cli",
+    "docs-cloudflare-workers-sdk",
+    "docs-cloudflare-workerd",
+    "docs-vite",
+    "docs-react",
+    "docs-react-router",
+    "docs-remix",
+    "docs-hydrogen",
+    "docs-xstate",
+    "shopify-dev-mcp"
+  ],
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}
