@@ -65,8 +65,8 @@
   "prettier": "@shopify/prettier-config",
   "dependencies": {
     "@shopify/cli-hydrogen": "*",
-    "react-router": "^7.5.1",
-    "react-router-dom": "^7.5.1",
+    "react-router": "~7.8.1",
+    "react-router-dom": "~7.8.1",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
@@ -109,7 +109,7 @@
     "node": ">=18.0.0"
   },
   "gitHooks": {
-    "pre-commit": "lint-staged && npm run pre-commit:encrypt"
+    "pre-commit": "lint-staged && npm run pre-commit:encrypt && node scripts/validate-react-router-versions.mjs"
   },
   "lint-staged": {
     "*.{js,jsx}": [
