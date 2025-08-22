@@ -13,174 +13,191 @@
 const fs = require('fs');
 const path = require('path');
 const {execSync} = require('child_process');
+const {
+  QUARTERS,
+  CALVER_PACKAGES,
+  parseVersion,
+  getNextVersion,
+  getBumpType,
+  getPackagePath,
+  readPackage,
+  writePackage
+} = require('./calver-shared.js');
 
-const QUARTERS = [1, 4, 7, 10];
-const CALVER_PACKAGES = [
-  '@shopify/hydrogen',
-  '@shopify/hydrogen-react',
-  'skeleton',
-];
-
-// Parse version string into components
-function parseVersion(version) {
-  const match = version.match(/^(\d{4})\.(\d+)\.(\d+)(?:\.(\d+))?/);
-  if (!match) throw new Error(`Invalid version: ${version}`);
-  return {
-    year: +match[1],
-    major: +match[2],
-    minor: +match[3],
-    patch: match[4] ? +match[4] : undefined,
-  };
+// Read all package.json files for CalVer packages
+function readPackageVersions() {
+  const versions = {};
+  for (const pkgName of CALVER_PACKAGES) {
+    const pkgPath = getPackagePath(pkgName);
+    const pkg = readPackage(pkgPath);
+    versions[pkgName] = {
+      path: pkgPath,
+      oldVersion: pkg.version,
+      pkg,
+    };
+  }
+  return versions;
 }
 
-// Get next CalVer version based on bump type
-function getNextVersion(currentVersion, bumpType) {
-  const v = parseVersion(currentVersion);
+// Calculate new CalVer versions based on changeset bumps
+function calculateNewVersions(versions) {
+  const updates = [];
+  let hasAnyMajor = false;
 
-  if (bumpType === 'major') {
-    // Advance to next quarter
-    const nextQ = QUARTERS.find((q) => q > v.major) || QUARTERS[0];
-    const nextY = nextQ === QUARTERS[0] ? v.year + 1 : v.year;
-    return `${nextY}.${nextQ}.0`;
+  // First pass: determine if any package needs major bump
+  for (const [pkgName, data] of Object.entries(versions)) {
+    const bumpType = getBumpType(data.oldVersion, data.pkg.version);
+    if (bumpType === 'major') {
+      hasAnyMajor = true;
+      break;
+    }
   }
 
-  if (bumpType === 'minor') {
-    return `${v.year}.${v.major}.${v.minor + 1}`;
+  // Second pass: calculate new versions
+  for (const [pkgName, data] of Object.entries(versions)) {
+    const bumpType = getBumpType(data.oldVersion, data.pkg.version);
+
+    // For major bumps, ensure all CalVer packages advance to same quarter
+    const effectiveBumpType = hasAnyMajor ? 'major' : bumpType;
+    const newVersion = getNextVersion(data.oldVersion, effectiveBumpType);
+
+    updates.push({
+      name: pkgName,
+      path: data.path,
+      pkg: data.pkg,
+      oldVersion: data.oldVersion,
+      bumpType,
+      newVersion,
+    });
   }
 
-  // Patch
-  const nextPatch = v.patch !== undefined ? v.patch + 1 : 1;
-  return `${v.year}.${v.major}.${v.minor}.${nextPatch}`;
+  return updates;
 }
 
-// Determine bump type by comparing versions
-function getBumpType(oldVersion, newVersion) {
-  const oldV = parseVersion(oldVersion);
-  const newV = parseVersion(newVersion);
-
-  if (oldV.year !== newV.year || oldV.major !== newV.major) return 'major';
-  if (oldV.minor !== newV.minor) return 'minor';
-  return 'patch';
-}
-
-// Get package.json path for a package
-function getPackagePath(pkgName) {
-  if (pkgName === 'skeleton') {
-    return path.join(process.cwd(), 'templates/skeleton/package.json');
+// Apply version updates
+function applyUpdates(updates) {
+  for (const update of updates) {
+    update.pkg.version = update.newVersion;
+    writePackage(update.path, update.pkg);
+    console.log(`${update.name}: ${update.oldVersion} → ${update.newVersion}`);
   }
-  const shortName = pkgName.replace('@shopify/', '');
-  return path.join(process.cwd(), `packages/${shortName}/package.json`);
 }
 
-// Read package.json
-function readPackage(pkgPath) {
-  return JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+// Update CHANGELOG headers
+function updateChangelogs(updates) {
+  for (const update of updates) {
+    const dir = path.dirname(update.path);
+    const changelogPath = path.join(dir, 'CHANGELOG.md');
+
+    if (!fs.existsSync(changelogPath)) continue;
+
+    let content = fs.readFileSync(changelogPath, 'utf-8');
+
+    // Replace the version that changesets generated with our CalVer version
+    const regex = new RegExp(
+      `^## \\d+\\.\\d+\\.\\d+`,
+      'gm'
+    );
+    content = content.replace(regex, (match) => {
+      // Only replace if it's a recent addition (first occurrence)
+      return content.indexOf(match) === content.search(regex)
+        ? `## ${update.newVersion}`
+        : match;
+    });
+
+    fs.writeFileSync(changelogPath, content);
+  }
 }
 
-// Write package.json
-function writePackage(pkgPath, data) {
-  fs.writeFileSync(pkgPath, JSON.stringify(data, null, 2) + '\n');
-}
+// Update internal dependencies
+function updateInternalDependencies(updates) {
+  const versionMap = {};
+  for (const update of updates) {
+    versionMap[update.name] = update.newVersion;
+  }
 
-// Main execution
-console.log('📅 Starting CalVer versioning for CI release...');
+  // Update all package.json files that might depend on CalVer packages
+  const packagesDir = path.join(process.cwd(), 'packages');
+  const dirs = fs.readdirSync(packagesDir);
 
-// 1. Save original versions
-const originalVersions = {};
-CALVER_PACKAGES.forEach((pkgName) => {
-  const pkgPath = getPackagePath(pkgName);
-  originalVersions[pkgName] = readPackage(pkgPath).version;
-  console.log(`  ${pkgName}: ${originalVersions[pkgName]}`);
-});
+  for (const dir of dirs) {
+    const pkgPath = path.join(packagesDir, dir, 'package.json');
+    if (!fs.existsSync(pkgPath)) continue;
 
-// 2. Transform semver to CalVer
-// Flow: Changesets already ran (via npm script) and updated versions/CHANGELOGs with semver.
-// Now we read those semver versions, transform to CalVer, and update both package.json and CHANGELOG.
-console.log('\n✏️  Applying CalVer transformations...');
-const updates = {};
-
-CALVER_PACKAGES.forEach((pkgName) => {
-  const pkgPath = getPackagePath(pkgName);
-  const pkg = readPackage(pkgPath);
-
-  // Skip if version unchanged
-  if (pkg.version === originalVersions[pkgName]) return;
-
-  const changesetVersion = pkg.version; // Version that changesets just wrote
-  const bumpType = getBumpType(originalVersions[pkgName], changesetVersion);
-  const calverVersion = getNextVersion(originalVersions[pkgName], bumpType);
-
-  // Apply CalVer version
-  pkg.version = calverVersion;
-  writePackage(pkgPath, pkg);
-
-  updates[pkgName] = {
-    from: originalVersions[pkgName],
-    changesetVersion: changesetVersion, // Store what changesets wrote
-    to: calverVersion,
-    type: bumpType,
-  };
-
-  console.log(
-    `  ${pkgName}: ${originalVersions[pkgName]} → ${calverVersion} (${bumpType})`,
-  );
-});
-
-// 4. Update internal dependencies
-if (Object.keys(updates).length > 0) {
-  console.log('\n🔗 Updating internal dependencies...');
-
-  const allPackages = fs
-    .readdirSync(path.join(process.cwd(), 'packages'))
-    .map((dir) => path.join(process.cwd(), 'packages', dir, 'package.json'))
-    .concat(path.join(process.cwd(), 'templates/skeleton/package.json'))
-    .filter((p) => fs.existsSync(p));
-
-  allPackages.forEach((pkgPath) => {
     const pkg = readPackage(pkgPath);
     let modified = false;
 
-    ['dependencies', 'devDependencies', 'peerDependencies'].forEach(
-      (depType) => {
-        if (!pkg[depType]) return;
+    // Check all dependency types
+    for (const depType of ['dependencies', 'devDependencies', 'peerDependencies']) {
+      if (!pkg[depType]) continue;
 
-        Object.keys(updates).forEach((updatedPkg) => {
-          if (pkg[depType][updatedPkg]) {
-            const oldRange = pkg[depType][updatedPkg];
-            const operator = oldRange.match(/^([^\d]*)/)?.[1] || '';
-            pkg[depType][updatedPkg] = `${operator}${updates[updatedPkg].to}`;
-            modified = true;
-            console.log(
-              `  Updated ${updatedPkg} in ${path.basename(path.dirname(pkgPath))}`,
-            );
-          }
-        });
-      },
-    );
+      for (const [depName, depVersion] of Object.entries(pkg[depType])) {
+        if (versionMap[depName]) {
+          // Update to new version (preserve any prefix like ^, ~, or workspace:)
+          const prefix = depVersion.match(/^([^\d]*)/)[1];
+          pkg[depType][depName] = prefix + versionMap[depName];
+          modified = true;
+        }
+      }
+    }
 
     if (modified) {
       writePackage(pkgPath, pkg);
     }
-  });
+  }
 }
 
-// 5. Update CHANGELOG headers
-console.log('\n📝 Updating CHANGELOG headers...');
-Object.entries(updates).forEach(([pkgName, update]) => {
-  const pkgDir = path.dirname(getPackagePath(pkgName));
-  const changelogPath = path.join(pkgDir, 'CHANGELOG.md');
+// Validate CalVer format and rules
+function validateCalVer(version) {
+  const v = parseVersion(version);
 
-  if (fs.existsSync(changelogPath)) {
-    let changelog = fs.readFileSync(changelogPath, 'utf-8');
-    // Replace the version header that changesets just created with CalVer version
-    const changesetVersionEscaped = update.changesetVersion.replace(/\./g, '\\.');
-    changelog = changelog.replace(
-      new RegExp(`^## ${changesetVersionEscaped}$`, 'm'),
-      `## ${update.to}`,
-    );
-    fs.writeFileSync(changelogPath, changelog);
-    console.log(`  Updated CHANGELOG for ${pkgName}`);
+  // Check year is reasonable
+  const currentYear = new Date().getFullYear();
+  if (v.year < 2024 || v.year > currentYear + 1) {
+    throw new Error(`Invalid year in version ${version}`);
   }
-});
 
-console.log('\n✅ CalVer versioning complete!');
+  // Check major is a valid quarter
+  if (!QUARTERS.includes(v.major)) {
+    throw new Error(`Invalid quarter in version ${version}: ${v.major} not in [${QUARTERS}]`);
+  }
+
+  return true;
+}
+
+// Main execution
+function main() {
+  console.log('Starting CalVer enforcement...\n');
+
+  // Read current versions (after changesets has run)
+  const versions = readPackageVersions();
+
+  // Calculate new CalVer versions
+  const updates = calculateNewVersions(versions);
+
+  // Validate all new versions
+  for (const update of updates) {
+    validateCalVer(update.newVersion);
+  }
+
+  // Apply updates
+  applyUpdates(updates);
+
+  // Update changelogs
+  updateChangelogs(updates);
+
+  // Update internal dependencies
+  updateInternalDependencies(updates);
+
+  console.log('\nCalVer enforcement complete ✅');
+}
+
+// Run if executed directly
+if (require.main === module) {
+  try {
+    main();
+  } catch (error) {
+    console.error('Error:', error.message);
+    process.exit(1);
+  }
+}
