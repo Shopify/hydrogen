@@ -51,6 +51,27 @@ jobs:
       - name: Build the dist code
         run: npm run build
 
+      - name: Check for major protection bypass
+        if: env.latest == 'true'
+        run: |
+          echo "Checking for active major version bypass..."
+          # If bypass is active, ensure old release PR is closed
+          BYPASS_PRS=$(gh pr list --state open --label "major-bypass-active" --json number -q '.[].number' || echo "")
+          if [ -n "$BYPASS_PRS" ]; then
+            echo "Major bypass active on PR(s): $BYPASS_PRS"
+            echo "Checking for existing release PR to close..."
+            # Close any existing release PR to prevent conflicts
+            RELEASE_PR=$(gh pr list --state open --head changeset-release/main --json number -q '.[].number' || echo "")
+            if [ -n "$RELEASE_PR" ]; then
+              echo "Closing release PR #$RELEASE_PR due to active major bypass"
+              gh pr close $RELEASE_PR -c "Automatically closed: Major version bypass is active on PR #$BYPASS_PRS"
+            fi
+          else
+            echo "No active major bypass found"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create Release Pull Request or Publish (for latest release)
         if: env.latest == 'true'
         id: changesets
