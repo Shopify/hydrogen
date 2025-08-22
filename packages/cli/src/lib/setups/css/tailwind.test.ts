@@ -13,7 +13,7 @@
  * WHAT these tests validate:
  * 1. Complete Tailwind setup with all required optimizations (fetchPriority, viteEnvironmentApi)
  * 2. Proper file creation (tailwind.css with @import 'tailwindcss')
- * 3. Package.json updates with correct Tailwind v4.1.12 versions
+ * 3. Package.json updates with correct Tailwind versions
  * 4. Skipping setup when files exist (unless --force is used)
  * 5. Correct path resolution for nested app directories
  * 6. TypeScript vs JavaScript project handling
@@ -30,6 +30,7 @@ import * as formatUtils from '../../format-code';
 import * as assetUtils from './assets';
 import * as replacerUtils from './replacers';
 import * as buildUtils from '../../build';
+import {TAILWIND_VERSION, TAILWIND_VITE_VERSION} from './versions.js';
 
 vi.mock('../../file');
 vi.mock('../../format-code');
@@ -244,7 +245,7 @@ describe('setupTailwind integration scenarios', () => {
     expect(vi.mocked(replacerUtils.replaceRootLinks)).toHaveBeenCalled();
   });
 
-  it('should ensure Tailwind v4.1.12 is installed', async () => {
+  it('should ensure latest Tailwind version is installed', async () => {
     vi.mocked(assetUtils.canWriteFiles).mockResolvedValue(true);
     vi.mocked(assetUtils.copyAssets).mockResolvedValue(undefined);
     vi.mocked(replacerUtils.replaceRootLinks).mockResolvedValue(undefined);
@@ -252,7 +253,7 @@ describe('setupTailwind integration scenarios', () => {
     
     vi.mocked(fileUtils.mergePackageJson).mockImplementation(async (assetDir, rootDir) => {
       expect(assetDir).toBe('/assets/tailwind');
-      // This should merge the package.json with tailwindcss: ^4.1.12
+      // This should merge the package.json with latest tailwindcss version
     });
 
     const result = await setupTailwind({

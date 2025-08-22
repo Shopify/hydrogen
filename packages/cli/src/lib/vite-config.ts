@@ -77,8 +77,20 @@ export async function getViteConfig(
   const {appDirectory, serverBuildFile, routes} =
     getReactRouterOrRemixConfigFromVite(resolvedViteConfig);
 
-  const serverOutDir = resolvedViteConfig.build.outDir;
-  const clientOutDir = serverOutDir.replace(/server$/, 'client');
+  // Check if React Router viteEnvironmentApi is enabled
+  const reactRouterConfig = resolvedViteConfig.__reactRouterPluginContext?.reactRouterConfig;
+  const hasViteEnvironmentApi = reactRouterConfig?.future?.unstable_viteEnvironmentApi === true;
+
+  const baseOutDir = resolvedViteConfig.build.outDir;
+  
+  // When viteEnvironmentApi is enabled, React Router creates separate client/server directories
+  const serverOutDir = hasViteEnvironmentApi 
+    ? joinPath(baseOutDir, 'server')
+    : baseOutDir;
+  
+  const clientOutDir = hasViteEnvironmentApi
+    ? joinPath(baseOutDir, 'client') 
+    : serverOutDir.replace(/server$/, 'client');
 
   const rollupOutput = resolvedViteConfig.build.rollupOptions.output;
   const {entryFileNames} =

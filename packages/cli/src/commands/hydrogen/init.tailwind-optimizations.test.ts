@@ -14,7 +14,7 @@
  * 2. viteEnvironmentApi flag is enabled in React Router config (enables critical CSS)
  * 3. cssCodeSplit: false is set in Vite config (prevents route-based CSS splitting)
  * 4. appStyles is replaced with tailwindStyles (correct import naming)
- * 5. Tailwind CSS v4.1.12 (latest stable) is installed, not beta versions
+ * 5. Latest stable Tailwind CSS version is installed, not beta versions
  * 
  * These optimizations are the result of extensive FOUC investigation and must be
  * maintained to ensure production-ready Hydrogen stores.

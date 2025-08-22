@@ -1063,7 +1063,7 @@
           "type": "boolean"
         },
         "quickstart": {
-          "description": "Scaffolds a new Hydrogen project with a set of sensible defaults. Equivalent to `shopify hydrogen init --path hydrogen-quickstart --mock-shop --language js --shortcut --routes --markets none`",
+          "description": "Scaffolds a new Hydrogen project with a set of sensible defaults. Equivalent to `shopify hydrogen init --path hydrogen-quickstart --mock-shop --language js --shortcut --routes --markets none --styling tailwind`",
           "env": "SHOPIFY_HYDROGEN_FLAG_QUICKSTART",
           "name": "quickstart",
           "allowNo": false,

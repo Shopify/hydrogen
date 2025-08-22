@@ -17,6 +17,8 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from './components/PageLayout';
 
+const CSS_FETCH_PRIORITY = 'high' as const;
+
 export type RootLoader = typeof loader;
 
 /**
@@ -57,13 +59,13 @@ export function links() {
       rel: 'preload',
       as: 'style',
       href: resetStyles,
-      fetchPriority: 'high',
+      fetchPriority: CSS_FETCH_PRIORITY,
     },
     {
       rel: 'preload',
       as: 'style',
       href: appStyles,
-      fetchPriority: 'high',
+      fetchPriority: CSS_FETCH_PRIORITY,
     },
     {
       rel: 'preconnect',

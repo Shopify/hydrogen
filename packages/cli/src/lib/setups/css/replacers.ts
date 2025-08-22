@@ -81,19 +81,17 @@ export async function replaceRootLinks(
                                        !content.includes(`import ${importer.name}`);
     
     if (importer.name === 'tailwindStyles' && content.includes('appStyles')) {
-      // Replace appStyles import with tailwindStyles
-      updatedContent = updatedContent.replace(
-        /import appStyles from ['"]~?\/styles\/app\.css\?url['"];?\n?/,
-        ''
-      );
+      // Replace appStyles import with tailwindStyles directly
+      const importRegex = /import appStyles from ['"]~?\/styles\/app\.css\?url['"];?/;
+      const originalContent = updatedContent;
+      updatedContent = updatedContent.replace(importRegex, importStatement);
       
-      // Add the new Tailwind import after the last import
-      updatedContent = updatedContent.replace(
-        lastImportContent,
-        lastImportContent + '\n' + importStatement
-      );
+      if (updatedContent === originalContent) {
+        throw new AbortError('Failed to replace appStyles import with tailwindStyles');
+      }
       
       // Replace appStyles in preload hints
+      const preloadOriginal = updatedContent;
       updatedContent = updatedContent.replace(
         'href: appStyles,',
         `href: ${importer.name},`
