@@ -1,3 +1,25 @@
+/**
+ * Test Suite: Tailwind CSS Optimizations in Init Command
+ * 
+ * WHY these tests exist:
+ * The init command with Tailwind CSS must apply specific optimizations to prevent FOUC
+ * (Flash of Unstyled Content) in production. Without these optimizations, users experience:
+ * - CSS loading after JavaScript execution
+ * - Visible layout shifts on page navigation
+ * - Poor Core Web Vitals scores (CLS - Cumulative Layout Shift)
+ * - Degraded user experience, especially on slower connections
+ * 
+ * WHAT these tests validate:
+ * 1. fetchPriority: 'high' is added to CSS preload hints (prioritizes CSS in network queue)
+ * 2. viteEnvironmentApi flag is enabled in React Router config (enables critical CSS)
+ * 3. cssCodeSplit: false is set in Vite config (prevents route-based CSS splitting)
+ * 4. appStyles is replaced with tailwindStyles (correct import naming)
+ * 5. Tailwind CSS v4.1.12 (latest stable) is installed, not beta versions
+ * 
+ * These optimizations are the result of extensive FOUC investigation and must be
+ * maintained to ensure production-ready Hydrogen stores.
+ */
+
 import {
   describe,
   it,

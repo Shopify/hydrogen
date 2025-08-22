@@ -1,3 +1,29 @@
+/**
+ * Test Suite: End-to-End Testing for Init Command with Tailwind CSS
+ * 
+ * WHY these tests exist:
+ * E2E tests are crucial for validating the complete user journey from project scaffolding
+ * to production-ready setup. These tests catch integration issues that unit tests miss:
+ * - File generation and placement
+ * - Package.json dependency resolution
+ * - Template processing and variable replacement
+ * - Cross-file dependencies and imports
+ * - Quickstart mode behavior with Tailwind as default
+ * 
+ * WHAT these tests validate:
+ * 1. Complete project scaffolding with Tailwind CSS v4.1.12
+ * 2. All FOUC optimizations are applied (fetchPriority, viteEnvironmentApi, cssCodeSplit)
+ * 3. Correct file structure and imports (tailwindStyles replacing appStyles)
+ * 4. Quickstart mode enables Tailwind by default
+ * 5. TypeScript and JavaScript project generation
+ * 6. Package.json has correct dependencies and versions
+ * 7. Vite config includes Tailwind plugin
+ * 8. React Router config has unstable_viteEnvironmentApi flag
+ * 
+ * These tests simulate real user workflows and ensure the entire init process works
+ * end-to-end, preventing broken scaffolding that would affect all new Hydrogen users.
+ */
+
 import {
   describe,
   it,
