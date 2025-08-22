@@ -1,5 +1,30 @@
 # @shopify/hydrogen
 
+## 2025.5.1
+
+### Patch Changes
+
+- Fix GraphQL client development warnings ([#3108](https://github.com/Shopify/hydrogen/pull/3108)) by [@juanpprieto](https://github.com/juanpprieto)
+
+  Updates `@shopify/graphql-client` from v1.4.0 to v1.4.1 to resolve sourcemap warnings and pre-optimizes the dependency in Vite configuration to prevent unexpected page reloads during development.
+
+  **What's fixed:**
+
+  - Eliminates sourcemap warnings: "Sourcemap for '/node_modules/@shopify/graphql-client/dist/graphql-client/graphql-client.mjs' points to missing source files"
+  - Prevents "new dependencies optimized" messages and automatic page reloads during development
+
+  **Technical changes:**
+
+  - Updated `@shopify/graphql-client` dependency to v1.4.1 which includes proper sourcemap generation
+  - Added `@shopify/graphql-client` to Vite's `optimizeDeps.include` array for pre-optimization
+
+- Fix and upgrade /graphiql route ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Add GraphQL @defer directive support to storefront client ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Updated dependencies [[`ae7bedc89c1968b4a035f421b5ee6908f6376b1b`](https://github.com/Shopify/hydrogen/commit/ae7bedc89c1968b4a035f421b5ee6908f6376b1b), [`1bff1dac122eed09583dce54fc83a19ababddfca`](https://github.com/Shopify/hydrogen/commit/1bff1dac122eed09583dce54fc83a19ababddfca), [`b79e92f775cadecf6ab21de536f86c4f34bf1bde`](https://github.com/Shopify/hydrogen/commit/b79e92f775cadecf6ab21de536f86c4f34bf1bde), [`ae7bedc89c1968b4a035f421b5ee6908f6376b1b`](https://github.com/Shopify/hydrogen/commit/ae7bedc89c1968b4a035f421b5ee6908f6376b1b)]:
+  - @shopify/hydrogen-react@2025.5.1
+
 ## 2025.5.0
 
 ### Patch Changes

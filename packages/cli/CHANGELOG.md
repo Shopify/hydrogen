@@ -1,5 +1,35 @@
 # @shopify/cli-hydrogen
 
+## 12.0.0
+
+### Patch Changes
+
+- Fix defer/streaming in development & preview ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Upgrade Miniflare from v2 to v4 in mini-oxygen package. ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  - Internal MiniOxygen API has been refactored to work with Miniflare v4's new architecture.
+  - Simplified MiniOxygen class - no longer extends MiniflareCore.
+  - Updated global fetch handling to use Miniflare v4's `outboundService` API.
+  - Fixed test infrastructure to use project-relative temporary directories.
+  - Added support for Oxygen compatibility parameters (`compatibilityDate`, `compatibilityFlags`).
+  - Removed dependency on multiple `@miniflare/*` packages in favor of the consolidated `miniflare` package.
+
+- Add `fulfillmentStatus` to CAAPI order query and route ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Add `--force-client-sourcemap` flag support to the `deploy` command ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Unpin react-router and react-router-dom versions in the skeleton template ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Implement proper environment variable quoting for shell metacharacters in `env pull` command ([#3050](https://github.com/Shopify/hydrogen/pull/3050)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Add support for Vite v7 [.] exports ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Add `@inContext` language support to Customer Account API mutations ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Updated dependencies [[`ae7bedc89c1968b4a035f421b5ee6908f6376b1b`](https://github.com/Shopify/hydrogen/commit/ae7bedc89c1968b4a035f421b5ee6908f6376b1b), [`ae7bedc89c1968b4a035f421b5ee6908f6376b1b`](https://github.com/Shopify/hydrogen/commit/ae7bedc89c1968b4a035f421b5ee6908f6376b1b)]:
+  - @shopify/mini-oxygen@3.3.0
+
 ## 11.1.3
 
 ### Patch Changes
