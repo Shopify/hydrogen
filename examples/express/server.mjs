@@ -1,25 +1,24 @@
 import {createRequestHandler} from '@react-router/express';
-import {installGlobals, createCookieSessionStorage} from 'react-router';
+import {createCookieSessionStorage} from 'react-router';
 import compression from 'compression';
 import express from 'express';
 import morgan from 'morgan';
 import {createStorefrontClient, InMemoryCache} from '@shopify/hydrogen';
 import crypto from 'node:crypto';
 
-installGlobals();
+// Don't capture process.env too early - it needs to be accessed after dotenv loads
+const getEnv = () => process.env;
 
-const env = process.env;
-
-const vite =
-  process.env.NODE_ENV === 'production'
-    ? undefined
-    : await import('vite').then(({createServer}) =>
-        createServer({
-          server: {
-            middlewareMode: true,
-          },
-        }),
-      );
+let vite;
+if (process.env.NODE_ENV !== 'production') {
+  const {createServer} = await import('vite');
+  vite = await createServer({
+    server: {
+      middlewareMode: true,
+    },
+    configFile: 'vite.config.ts',
+  });
+}
 
 const app = express();
 
@@ -42,32 +41,23 @@ if (vite) {
 }
 app.use(express.static('build/client', {maxAge: '1h'}));
 
-app.all(
-  '*',
-  process.env.NODE_ENV === 'development'
-    ? async (req, res, next) => {
-        const context = await getContext(req);
+// Create the request handler
+app.all('*', async (req, res, next) => {
+  // Create context with Express req object
+  const context = await getContext(req);
 
-        return createRequestHandler({
-          build: vite
-            ? () => vite.ssrLoadModule('virtual:react-router/server-build')
-            : await import('./build/server/index.js'),
-          mode: process.env.NODE_ENV,
-          getLoadContext: () => context,
-        })(req, res, next);
-      }
-    : async (req) => {
-        const context = await getContext(req);
+  // Create handler with the context
+  const handler = createRequestHandler({
+    build: vite
+      ? () => vite.ssrLoadModule('virtual:react-router/server-build')
+      : await import('./build/server/index.js'),
+    mode: process.env.NODE_ENV,
+    getLoadContext: () => context,
+  });
 
-        return createRequestHandler({
-          build: vite
-            ? () => vite.ssrLoadModule('virtual:react-router/server-build')
-            : await import('./build/server/index.js'),
-          mode: process.env.NODE_ENV,
-          getLoadContext: () => context,
-        });
-      },
-);
+  return handler(req, res, next);
+});
+
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
@@ -75,6 +65,7 @@ app.listen(port, () => {
 });
 
 async function getContext(req) {
+  const env = getEnv();
   const session = await AppSession.init(req, [env.SESSION_SECRET]);
 
   const {storefront} = createStorefrontClient({

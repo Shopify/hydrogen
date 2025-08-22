@@ -118,7 +118,7 @@ steps:
       `app/components/Link.tsx` file.
     diffs:
       - file: app/components/ProductItem.tsx
-        patchFile: ProductItem.tsx.8ddc67.patch
+        patchFile: ProductItem.tsx.f84e8c.patch
   - type: PATCH
     step: 1.5
     name: Add the selected locale to the context
@@ -126,7 +126,7 @@ steps:
       Detect the locale from the URL path, and add it to the HydrogenContext.
     diffs:
       - file: app/lib/context.ts
-        patchFile: context.ts.12ce79.patch
+        patchFile: context.ts.cfd9da.patch
   - type: PATCH
     step: 1.6
     name: Add the CountrySelector component to the Header
@@ -134,7 +134,7 @@ steps:
       This adds a country selector component to the navigation.
     diffs:
       - file: app/components/Header.tsx
-        patchFile: Header.tsx.05d0c2.patch
+        patchFile: Header.tsx.82c1ce.patch
   - type: PATCH
     step: 1.7
     name: Add the selected locale to the root route
@@ -145,7 +145,7 @@ steps:
       when the locale changes.
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.53a6d3.patch
+        patchFile: root.tsx.8c182c.patch
   - type: INFO
     step: 2
     name: Localizing the individual routes
@@ -202,7 +202,7 @@ steps:
       Update the sitemap route to use the locales included in `SUPPORTED_LOCALES`.
     diffs:
       - file: app/routes/sitemap.$type.$page[.xml].tsx
-        patchFile: sitemap.$type.$page[.xml].tsx.9700e3.patch
+        patchFile: sitemap.$type.$page[.xml].tsx.f1a911.patch
   - type: PATCH
     step: 2.7
     name: Update the useVariantUrl function
@@ -210,7 +210,7 @@ steps:
       Remove the `pathname` parameter from the `useVariantUrl` function, and the logic that prepends the locale to the path.
     diffs:
       - file: app/lib/variants.ts
-        patchFile: variants.ts.dd2ccb.patch
+        patchFile: variants.ts.15c990.patch
 nextSteps: |
   - Test your implementation by going to your store and selecting a different
   market from the country selector.
@@ -234,4 +234,4 @@ llms:
       solution: Make sure you update *all* routes that need localization (not only the
         routes for the home page, the cart page, and the product page). See step
         2.1 for details.
-commit: 6d5b52d60a3c22dddf133926cdcee1606af46d0e
+commit: 1bff1dac122eed09583dce54fc83a19ababddfca

@@ -1,0 +1,72 @@
+index 543e76be9..1e75522b1 100644
+--- a/templates/skeleton/app/routes/_index.tsx
++++ b/templates/skeleton/app/routes/_index.tsx
+@@ -1,13 +1,13 @@
+ import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
+ import {Suspense} from 'react';
+-import {Image, Money} from '@shopify/hydrogen';
++import {Image} from '@shopify/hydrogen';
+ import type {
+   FeaturedCollectionFragment,
+   RecommendedProductsQuery,
+ } from 'storefrontapi.generated';
+ import {ProductItem} from '~/components/ProductItem';
+-
++import {maybeFilterOutCombinedListingsQuery} from '~/lib/combined-listings';
+ export const meta: MetaFunction = () => {
+   return [{title: 'Hydrogen | Home'}];
+ };
+@@ -44,7 +44,11 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
+  */
+ function loadDeferredData({context}: LoaderFunctionArgs) {
+   const recommendedProducts = context.storefront
+-    .query(RECOMMENDED_PRODUCTS_QUERY)
++    .query(RECOMMENDED_PRODUCTS_QUERY, {
++      variables: {
++        query: maybeFilterOutCombinedListingsQuery,
++      },
++    })
+     .catch((error) => {
+       // Log query errors, but don't throw them so the page can still render
+       console.error(error);
+@@ -100,11 +104,9 @@ function RecommendedProducts({
+         <Await resolve={products}>
+           {(response) => (
+             <div className="recommended-products-grid">
+-              {response
+-                ? response.products.nodes.map((product) => (
+-                    <ProductItem key={product.id} product={product} />
+-                  ))
+-                : null}
++              {response?.products.nodes.map((product) => (
++                <ProductItem key={product.id} product={product} />
++              ))}
+             </div>
+           )}
+         </Await>
+@@ -147,7 +149,12 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+         amount
+         currencyCode
+       }
++      maxVariantPrice {
++        amount
++        currencyCode
++      }
+     }
++    tags
+     featuredImage {
+       id
+       url
+@@ -156,9 +163,9 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+       height
+     }
+   }
+-  query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
++  query RecommendedProducts ($country: CountryCode, $language: LanguageCode, $query: String)
+     @inContext(country: $country, language: $language) {
+-    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
++    products(first: 4, sortKey: UPDATED_AT, reverse: true, query: $query) {
+       nodes {
+         ...RecommendedProduct
+       }

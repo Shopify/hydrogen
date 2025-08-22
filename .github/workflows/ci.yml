@@ -94,7 +94,7 @@ jobs:
         run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:all
 
       - name: ✅ Typecheck
-        run: npm run typecheck
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run typecheck
 
       - name: 🧑‍💻 CLI manifest check
         run: 'test -z "$(git status --porcelain "packages/cli/oclif.manifest.json" )" || { echo -e "Run npm generate:manifest in packages/cli before pushing new commands or flags. Diff here:\n\n$(git diff)" ; exit 1; }'
@@ -166,4 +166,4 @@ jobs:
 
       - name: 🧐 Validate Recipes
         working-directory: cookbook
-        run: npm run cookbook -- validate
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run cookbook -- validate

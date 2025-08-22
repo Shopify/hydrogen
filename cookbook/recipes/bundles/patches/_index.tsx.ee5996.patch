@@ -1,0 +1,21 @@
+index 543e76be9..0e600164b 100644
+--- a/templates/skeleton/app/routes/_index.tsx
++++ b/templates/skeleton/app/routes/_index.tsx
+@@ -1,5 +1,5 @@
+ import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+-import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
++import {Await, useLoaderData, Link, type MetaFunction} from 'react-router';
+ import {Suspense} from 'react';
+ import {Image, Money} from '@shopify/hydrogen';
+ import type {
+@@ -147,6 +147,10 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+         amount
+         currencyCode
+       }
++      maxVariantPrice {
++        amount
++        currencyCode
++      }
+     }
+     featuredImage {
+       id

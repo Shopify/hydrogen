@@ -7,14 +7,25 @@ import {execAsync} from './process.js';
 
 // Avoid using fileURLToPath here to prevent backslashes nightmare on Windows
 const monorepoPackagesPath = new URL('../../..', import.meta.url).pathname;
-// Check if we're in the Hydrogen monorepo by looking for the skeleton template
-// relative to the packages directory
-const skeletonPath = joinPath(
-  dirname(monorepoPackagesPath),
-  'templates',
-  'skeleton',
-);
-export const isHydrogenMonorepo = existsSync(skeletonPath);
+
+// Check if we're in the Hydrogen monorepo by checking the path structure
+// This was the original logic before PR #3074 that worked for over a year
+// Check if we're in the monorepo by looking for the templates/skeleton directory
+// This works both in development and when built as npm package
+export const isHydrogenMonorepo = (() => {
+  try {
+    const skeletonPath = joinPath(
+      dirname(monorepoPackagesPath),
+      'templates',
+      'skeleton',
+    );
+    // In npm package, the skeleton is bundled in assets, not in templates
+    // So we check for the monorepo structure
+    return existsSync(skeletonPath);
+  } catch {
+    return false;
+  }
+})();
 export const hydrogenPackagesPath = isHydrogenMonorepo
   ? monorepoPackagesPath
   : undefined;

@@ -68,7 +68,7 @@ describe(`useMoney`, () => {
     const SHOPIFY_CONFIG: ShopifyProviderProps = {
       storeDomain: 'https://notashop.myshopify.com',
       storefrontToken: 'abc123',
-      storefrontApiVersion: '2025-04',
+      storefrontApiVersion: '2025-07',
       countryIsoCode: 'BR',
       languageIsoCode: 'PT_PT',
     };
@@ -127,5 +127,53 @@ describe(`useMoney`, () => {
       withoutTrailingZeros: '19 US$',
       withoutTrailingZerosAndCurrency: '19',
     });
+  });
+
+  it('handles Customer Account API MoneyV2 with USDC currency', () => {
+    // Test that useMoney works with Customer Account API's MoneyV2
+    // which may have currency codes not in Storefront API (e.g., USDC)
+    const customerMoney = {
+      amount: '100.00',
+      currencyCode: 'USDC' as const,
+    };
+    const {result} = renderHook(() => useMoney(customerMoney));
+
+    expect(result.current).toMatchObject({
+      amount: '100.00',
+      currencyCode: 'USDC',
+      currencyName: 'USDC',
+      currencySymbol: 'USDC',
+      localizedString: '100.00 USDC',
+      original: {
+        amount: '100.00',
+        currencyCode: 'USDC',
+      },
+      withoutTrailingZeros: '100 USDC',
+      withoutTrailingZerosAndCurrency: '100',
+    });
+  });
+
+  it('handles both Storefront and Customer Account MoneyV2 types', () => {
+    // Test with a standard Storefront API currency
+    const {result: storefrontResult} = renderHook(() =>
+      useMoney({
+        amount: '50.00',
+        currencyCode: 'USD',
+      }),
+    );
+
+    expect(storefrontResult.current.currencyCode).toBe('USD');
+    expect(storefrontResult.current.amount).toBe('50.00');
+
+    // Test with a Customer Account API specific currency
+    const {result: customerResult} = renderHook(() =>
+      useMoney({
+        amount: '75.00',
+        currencyCode: 'EUR',
+      }),
+    );
+
+    expect(customerResult.current.currencyCode).toBe('EUR');
+    expect(customerResult.current.amount).toBe('75.00');
   });
 });

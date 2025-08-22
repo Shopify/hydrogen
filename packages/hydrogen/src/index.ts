@@ -68,7 +68,7 @@ export {
   createHydrogenContext,
   type HydrogenContext,
 } from './createHydrogenContext';
-export {createContentSecurityPolicy, useNonce} from './csp/csp';
+export {createContentSecurityPolicy, NonceProvider, useNonce} from './csp/csp';
 export {Script} from './csp/Script';
 export {createCustomerAccountClient} from './customer/customer';
 export type {
