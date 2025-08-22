@@ -60,6 +60,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
         return {
           build: {
             outDir: 'dist',
+            cssCodeSplit: false,
           },
           server: {
             watch: null,

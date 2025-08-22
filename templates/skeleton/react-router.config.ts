@@ -10,4 +10,7 @@ import {hydrogenPreset} from '@shopify/hydrogen/react-router-preset';
  */
 export default {
   presets: [hydrogenPreset()],
+  future: {
+    unstable_viteEnvironmentApi: true,
+  },
 } satisfies Config;

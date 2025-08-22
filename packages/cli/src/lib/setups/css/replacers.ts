@@ -72,12 +72,45 @@ export async function replaceRootLinks(
       ? `{${importer.name} && <link rel="stylesheet" href={${importer.name}}></link>}`
       : `<link rel="stylesheet" href={${importer.name}}></link>`;
 
-    return content
-      .replace(lastImportContent, lastImportContent + '\n' + importStatement)
-      .replace(
-        layoutStyleNodeContent,
-        newLinkNode + '\n' + layoutStyleNodeContent,
+    // For Tailwind, we want to replace appStyles instead of adding alongside it
+    let updatedContent = content;
+    
+    if (importer.name === 'tailwindStyles' && content.includes('appStyles')) {
+      // Replace appStyles import with tailwindStyles
+      updatedContent = updatedContent.replace(
+        /import appStyles from ['"]~?\/styles\/app\.css\?url['"];?\n?/,
+        ''
       );
+      
+      // Add the new Tailwind import after the last import
+      updatedContent = updatedContent.replace(
+        lastImportContent,
+        lastImportContent + '\n' + importStatement
+      );
+      
+      // Replace appStyles in preload hints
+      updatedContent = updatedContent.replace(
+        'href: appStyles,',
+        `href: ${importer.name},`
+      );
+      
+      // Replace appStyles in link tags
+      const appStylesLinkRegex = /<link\s+rel="stylesheet"\s+href=\{appStyles\}><\/link>/g;
+      updatedContent = updatedContent.replace(
+        appStylesLinkRegex,
+        `<link rel="stylesheet" href={${importer.name}}></link>`
+      );
+    } else {
+      // Default behavior: add new import and link
+      updatedContent = content
+        .replace(lastImportContent, lastImportContent + '\n' + importStatement)
+        .replace(
+          layoutStyleNodeContent,
+          newLinkNode + '\n' + layoutStyleNodeContent,
+        );
+    }
+
+    return updatedContent;
   });
 }
 
