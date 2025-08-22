@@ -15,16 +15,49 @@ As of 2025, Hydrogen's release system features **fully automated branch detectio
 
 ### What Changed
 
-**Before**: Maintainers had to manually update `latestBranch` in `.github/workflows/changesets.yml` every quarter
-```yaml
-# Old manual approach (deprecated)
-echo "latestBranch=2025-05" >> $GITHUB_ENV  # Had to update quarterly
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      BEFORE (Manual)                           │
+├─────────────────────────────────────────────────────────────────┤
+│ Every Quarter:                                                 │
+│ • Edit .github/workflows/changesets.yml line 32                │
+│ • Update: echo "latestBranch=2025-05" → "2025-07"              │
+│ • Commit & Push                                                │
+│                                                                 │
+│ Problems:                                                       │
+│ • Easy to forget (4x/year)                                     │
+│ • Blocks releases                                              │
+│ • Wrong PR titles                                              │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                       NOW (Automated)                          │
+├─────────────────────────────────────────────────────────────────┤
+│ Every Push to Main:                                            │
+│ • Detects current version                                      │
+│ • Checks for major changesets                                  │
+│ • Checks for open release PRs                                  │
+│ • Sets branch automatically                                    │
+│                                                                 │
+│ Benefits:                                                       │
+│ • Zero manual intervention                                     │
+│ • Never blocks releases                                        │
+│ • Always correct PR titles                                     │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**Now**: Branch detection is fully automated based on package versions and changesets
+### Code Changes
+
+**Before** (changesets.yml line 32):
 ```yaml
-# New automated approach
-echo "latestBranch=$(node scripts/get-latest-branch.js)" >> $GITHUB_ENV
+# IMPORTANT: Update this latestBranch whenever we move to a new major version:
+echo "latestBranch=2025-05" >> $GITHUB_ENV  # ← Manual update required
+```
+
+**Now** (automated):
+```yaml
+# Automatically detect the latest branch based on current version and changesets
+echo "latestBranch=$(node .changeset/get-calver-version-branch.js)" >> $GITHUB_ENV
 ```
 
 ### How It Works
@@ -65,16 +98,40 @@ node scripts/get-latest-branch.js  // → "2025-07"
 
 The release workflow now operates with zero manual intervention:
 
-```mermaid
-graph TD
-    A[Push to main] --> B[Checkout & Install]
-    B --> C[Detect Latest Branch]
-    C --> D{Major Changesets?}
-    D -->|Yes| E[Use Next Quarter Branch]
-    D -->|No| F[Use Current Branch]
-    E --> G[Create/Update Version PR]
-    F --> G
-    G --> H[Title: '[ci] release YYYY-MM']
+```
+┌─────────────────┐
+│  Push to main   │
+└────────┬────────┘
+         │
+         ↓
+┌─────────────────────────────────┐
+│  Checkout code & Install deps   │
+└────────┬────────────────────────┘
+         │
+         ↓
+┌──────────────────────────────────────────────┐
+│  Run: get-calver-version-branch.js          │
+│  • Check for open release PRs               │
+│  • Read current package version             │
+│  • Analyze changesets                       │
+└────────┬─────────────────────────────────────┘
+         │
+         ↓
+    ┌────────────────────────────────────┐
+    │  Decision Logic                    │
+    ├────────────────────────────────────┤
+    │  Open PR exists?      ──Yes──→ Stay│
+    │         ↓ No                       │
+    │  Major changesets?    ──Yes──→ Next│
+    │         ↓ No                       │
+    │  Use current branch                │
+    └────────┬───────────────────────────┘
+             │
+             ↓
+┌──────────────────────────────────┐
+│  Create/Update Version PR        │
+│  Title: [ci] release YYYY-MM     │
+└──────────────────────────────────┘
 ```
 
 ## CalVer vs Semver Packages
@@ -190,25 +247,137 @@ node scripts/get-latest-branch.js
 - **npm tag**: `next`
 - **Purpose**: Immediate testing of latest changes
 
+## Major Version Protection
+
+### Overview
+The Major Version Protection system prevents major changesets from being merged when there's a pending patch/minor release. This ensures users can get critical bug fixes without being forced to upgrade to a new major version with potential breaking changes.
+
+### How It Works
+
+The protection is enforced by `.github/workflows/major-protection.yml`:
+
+1. **On every PR**: Checks if major changesets exist for protected packages
+2. **Protected packages**: `@shopify/hydrogen`, `@shopify/hydrogen-react`, `skeleton`
+3. **Blocks merge if**: Release PR exists with only patch/minor changes AND current PR has major changes
+4. **Bypass mechanism**: Maintainers can comment `/bypass-major-safeguard` in exceptional cases
+
+### Protection Flow
+
+```
+┌─────────────────────────┐
+│      PR Created         │
+└────────┬────────────────┘
+         │
+         ↓
+┌─────────────────────────┐
+│  Check bypass label?    │──Yes──→ Allow
+└────────┬────────────────┘
+         │ No
+         ↓
+┌─────────────────────────┐
+│  Release PR exists?     │──No───→ Allow
+└────────┬────────────────┘
+         │ Yes
+         ↓
+┌─────────────────────────┐
+│  Release has majors?    │──Yes──→ Allow
+└────────┬────────────────┘
+         │ No
+         ↓
+┌─────────────────────────┐
+│  Current PR has majors? │──No───→ Allow
+└────────┬────────────────┘
+         │ Yes
+         ↓
+┌─────────────────────────┐
+│       🚫 BLOCK PR       │
+└─────────────────────────┘
+```
+
+### Bypass Command
+
+In exceptional circumstances (e.g., correcting version issues), maintainers can bypass:
+
+1. **Comment**: `/bypass-major-safeguard` on the PR
+2. **System verifies**: Maintainer permissions (admin/maintain only)
+3. **Actions taken**:
+   - Closes pending release PR
+   - Adds `major-bypass-active` label
+   - Allows PR to merge with major changes
+
+### Example Scenarios
+
+```
+Scenario A: Normal Protection
+┌────────────────────────────────────────────────────────────┐
+│ State:    Release PR #100 with bug fixes → 2025.5.1       │
+│ Action:   PR #101 tries to merge major API changes        │
+│ Result:   ❌ BLOCKED - Bug fixes must release first        │
+│ Solution: Merge #100 first, then #101 → 2025.7.0          │
+└────────────────────────────────────────────────────────────┘
+
+Scenario B: With Bypass
+┌────────────────────────────────────────────────────────────┐
+│ State:    Version 2025.5.0 exists (invalid quarter)       │
+│ Action:   Need to skip to 2025.7.0                        │
+│ Command:  /bypass-major-safeguard                         │
+│ Result:   ✅ Closes patch PR, allows merge → 2025.7.0     │
+└────────────────────────────────────────────────────────────┘
+```
+
 ## Common Scenarios
 
+### Visual Timeline
+
+```
+2025 Timeline:
+├─ Q1 (Jan)──────┬─ Q2 (Apr)──────┬─ Q3 (Jul)──────┬─ Q4 (Oct)──────┤
+│   2025.1.x     │   2025.4.x     │   2025.7.x     │   2025.10.x    │
+└────────────────┴────────────────┴────────────────┴────────────────┘
+                      ↑                   ↑
+                 We are here      Major bump goes here
+```
+
 ### Scenario 1: Regular Minor Release
-1. Developer merges PR with `minor` changeset
-2. CI detects no major changesets → uses current branch `2025-05`
-3. Version PR created: `[ci] release 2025-05`
-4. Hydrogen bumps: `2025.5.0` → `2025.5.1`
+
+```
+┌──────────────┐       ┌──────────────┐       ┌──────────────┐
+│ Version:     │       │ Merge PR     │       │ Version PR:  │
+│ 2025.5.0     │  +    │ with minor   │  →    │ [ci] release │
+│              │       │ changeset    │       │ 2025-05      │
+│ Branch:      │       └──────────────┘       │              │
+│ 2025-05      │                              │ New version: │
+└──────────────┘                              │ 2025.5.1     │
+                                              └──────────────┘
+```
 
 ### Scenario 2: Quarterly Major Release
-1. Developer merges PR with `major` changeset
-2. CI detects major changeset → uses next quarter `2025-07`
-3. Version PR created: `[ci] release 2025-07`
-4. Hydrogen bumps: `2025.5.0` → `2025.7.0` (Q3 alignment)
+
+```
+┌──────────────┐       ┌──────────────┐       ┌──────────────┐
+│ Version:     │       │ Merge PR     │       │ Version PR:  │
+│ 2025.5.0     │  +    │ with MAJOR   │  →    │ [ci] release │
+│              │       │ changeset    │       │ 2025-07      │
+│ Quarter: Q2  │       └──────────────┘       │              │
+└──────────────┘                              │ New version: │
+                                              │ 2025.7.0     │
+                                              │ (Q3 aligned) │
+                                              └──────────────┘
+```
 
 ### Scenario 3: Year Transition
-1. In Q4 2025, major changeset detected
-2. Next quarter is Q1 2026 → branch `2026-01`
-3. Version PR created: `[ci] release 2026-01`
-4. Hydrogen bumps: `2025.10.5` → `2026.1.0`
+
+```
+┌──────────────┐       ┌──────────────┐       ┌──────────────┐
+│ Version:     │       │ Merge PR     │       │ Version PR:  │
+│ 2025.10.5    │  +    │ with MAJOR   │  →    │ [ci] release │
+│              │       │ changeset    │       │ 2026-01      │
+│ Quarter: Q4  │       └──────────────┘       │              │
+│ Year: 2025   │                              │ New version: │
+└──────────────┘                              │ 2026.1.0     │
+                                              │ (New Year!)  │
+                                              └──────────────┘
+```
 
 ## Safety Features
 
@@ -221,6 +390,10 @@ node scripts/get-latest-branch.js
    - Checks for existing `changeset-release/main` PRs before advancing quarters
    - Prevents mixing changesets from different quarters in same PR
    - Ensures clean quarter boundaries for major releases
+7. **Major Version Protection**: Prevents major changes from contaminating patch releases
+   - Blocks PRs with major changesets when patch/minor release is pending
+   - Ensures users can get bug fixes without forced major upgrades
+   - Maintainer bypass available for exceptional cases
 
 ## Troubleshooting
 
@@ -267,6 +440,6 @@ Potential enhancements being considered:
 ## Related Documentation
 
 - [Hydrogen Release Process](../CLAUDE.md#hydrogen-release-process) - Complete release workflow
-- [RECOMMENDATION.md](../RECOMMENDATION.md) - Automation implementation plan
-- [AUTOMATION-COMPARISON.md](../AUTOMATION-COMPARISON.md) - Before/after comparison
+- [Major Protection Workflow](../.github/workflows/major-protection.yml) - Protection implementation
+- [Protection Utilities](../.github/scripts/changeset-protection-utils.js) - Shared utilities
 - [.changeset/README.md](../.changeset/README.md) - Changesets documentation
