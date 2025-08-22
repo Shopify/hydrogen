@@ -1,20 +1,24 @@
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import type {CartLayout} from '~/components/CartMain';
+import type {CartWarning} from '@shopify/hydrogen-react/storefront-api-types';
 import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
 import {useEffect, useRef} from 'react';
 import {FetcherWithComponents, useFetcher} from 'react-router';
+import {CartWarnings} from '~/components/CartWarnings';
 
 type CartSummaryProps = {
   cart: OptimisticCart<CartApiQueryFragment | null>;
   layout: CartLayout;
+  warnings?: CartWarning[];
 };
 
-export function CartSummary({cart, layout}: CartSummaryProps) {
+export function CartSummary({cart, layout, warnings}: CartSummaryProps) {
   const className =
     layout === 'page' ? 'cart-summary-page' : 'cart-summary-aside';
 
   return (
     <div aria-labelledby="cart-summary" className={className}>
+      <CartWarnings warnings={warnings} />
       <h4>Totals</h4>
       <dl className="cart-subtotal">
         <dt>Subtotal</dt>
