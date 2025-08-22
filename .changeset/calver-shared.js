@@ -39,12 +39,17 @@ function getNextVersion(currentVersion, bumpType) {
     return `${nextY}.${nextQ}.0`;
   }
 
-  if (bumpType === 'minor') {
+  if (bumpType === 'minor' || bumpType === 'patch') {
+    // Check if current quarter is invalid - if so, upgrade to next valid quarter
+    if (!QUARTERS.includes(v.major)) {
+      console.warn(`Invalid quarter ${v.major} detected in ${currentVersion}, upgrading to next valid quarter`);
+      const nextQ = QUARTERS.find((q) => q > v.major) || QUARTERS[0];
+      const nextY = nextQ === QUARTERS[0] ? v.year + 1 : v.year;
+      return `${nextY}.${nextQ}.0`;
+    }
+    // Valid quarter - proceed with normal increment
     return `${v.year}.${v.major}.${v.minor + 1}`;
   }
-
-  // Patch - increment the third segment (minor)
-  return `${v.year}.${v.major}.${v.minor + 1}`;
 }
 
 // Determine bump type by comparing versions

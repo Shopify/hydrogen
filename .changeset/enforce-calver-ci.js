@@ -25,14 +25,21 @@ const {
 } = require('./calver-shared.js');
 
 // Read all package.json files for CalVer packages
+// Uses hydrogen as source of truth for version baseline consistency
 function readPackageVersions() {
   const versions = {};
+  
+  // Read hydrogen as the single source of truth for CalVer baseline
+  const hydrogenPath = getPackagePath('@shopify/hydrogen');
+  const hydrogenPkg = readPackage(hydrogenPath);
+  const sourceOfTruthVersion = hydrogenPkg.version;
+  
   for (const pkgName of CALVER_PACKAGES) {
     const pkgPath = getPackagePath(pkgName);
     const pkg = readPackage(pkgPath);
     versions[pkgName] = {
       path: pkgPath,
-      oldVersion: pkg.version,
+      oldVersion: sourceOfTruthVersion, // Use hydrogen version as baseline for all packages
       pkg,
     };
   }
