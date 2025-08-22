@@ -11,13 +11,17 @@
 const fs = require('fs');
 const path = require('path');
 const {execSync} = require('child_process');
-
-const QUARTERS = [1, 4, 7, 10];
-const CALVER_PACKAGES = [
-  '@shopify/hydrogen',
-  '@shopify/hydrogen-react',
-  'skeleton',
-];
+const {
+  QUARTERS,
+  CALVER_PACKAGES,
+  parseVersion,
+  getNextVersion,
+  getBumpType,
+  getPackagePath,
+  readPackage,
+  writePackage,
+  hasMajorChangesets
+} = require('./calver-shared.js');
 
 // Parse CLI arguments
 function parseArgs() {
@@ -44,55 +48,6 @@ For production releases, use enforce-calver-ci.js
     dryRun: !args.includes('--apply'),
     skipChangesets: args.includes('--skip-changesets'),
   };
-}
-
-// Parse version string into components
-function parseVersion(version) {
-  const match = version.match(/^(\d{4})\.(\d+)\.(\d+)(?:\.(\d+))?/);
-  if (!match) throw new Error(`Invalid version: ${version}`);
-  return {
-    year: +match[1],
-    major: +match[2],
-    minor: +match[3],
-    patch: match[4] ? +match[4] : undefined,
-  };
-}
-
-// Get next CalVer version based on bump type
-function getNextVersion(currentVersion, bumpType) {
-  const v = parseVersion(currentVersion);
-
-  if (bumpType === 'major') {
-    const nextQ = QUARTERS.find((q) => q > v.major) || QUARTERS[0];
-    const nextY = nextQ === QUARTERS[0] ? v.year + 1 : v.year;
-    return `${nextY}.${nextQ}.0`;
-  }
-
-  if (bumpType === 'minor') {
-    return `${v.year}.${v.major}.${v.minor + 1}`;
-  }
-
-  const nextPatch = v.patch !== undefined ? v.patch + 1 : 1;
-  return `${v.year}.${v.major}.${v.minor}.${nextPatch}`;
-}
-
-// Determine bump type by comparing versions
-function getBumpType(oldVersion, newVersion) {
-  const oldV = parseVersion(oldVersion);
-  const newV = parseVersion(newVersion);
-
-  if (oldV.year !== newV.year || oldV.major !== newV.major) return 'major';
-  if (oldV.minor !== newV.minor) return 'minor';
-  return 'patch';
-}
-
-// Get package.json path for a package
-function getPackagePath(pkgName) {
-  if (pkgName === 'skeleton') {
-    return path.join(process.cwd(), 'templates/skeleton/package.json');
-  }
-  const shortName = pkgName.replace('@shopify/', '');
-  return path.join(process.cwd(), `packages/${shortName}/package.json`);
 }
 
 // Validate CalVer format and checks
@@ -132,6 +87,35 @@ function validateUpdates(updates, originalVersions) {
   return errors;
 }
 
+// Analyze changesets to determine bump type for a package
+function getBumpTypeFromChangesets(pkgName) {
+  const changesetDir = path.join(process.cwd(), '.changeset');
+  let bumpType = null;
+  
+  try {
+    const files = fs.readdirSync(changesetDir);
+    for (const file of files) {
+      if (!file.endsWith('.md') || file === 'README.md') continue;
+      const filePath = path.join(changesetDir, file);
+      const content = fs.readFileSync(filePath, 'utf-8');
+      
+      // Check for this package in changesets
+      if (content.includes(`"${pkgName}": major`)) {
+        bumpType = 'major';
+        break;
+      } else if (content.includes(`"${pkgName}": minor`)) {
+        bumpType = bumpType !== 'major' ? 'minor' : bumpType;
+      } else if (content.includes(`"${pkgName}": patch`)) {
+        bumpType = bumpType || 'patch';
+      }
+    }
+  } catch (error) {
+    console.error(`Error reading changesets: ${error.message}`);
+  }
+  
+  return bumpType;
+}
+
 // Main execution
 const opts = parseArgs();
 
@@ -149,7 +133,7 @@ const originalPackages = {};
 console.log('📦 Current versions:');
 CALVER_PACKAGES.forEach((pkgName) => {
   const pkgPath = getPackagePath(pkgName);
-  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+  const pkg = readPackage(pkgPath);
   originalVersions[pkgName] = pkg.version;
   originalPackages[pkgPath] = JSON.stringify(pkg, null, 2) + '\n';
   console.log(`  ${pkgName}: ${pkg.version}`);
@@ -159,9 +143,9 @@ CALVER_PACKAGES.forEach((pkgName) => {
 if (!opts.skipChangesets) {
   console.log('\n🦋 Running changeset version...');
   if (opts.dryRun) {
-    console.log('  [DRY RUN] Would run: npx changeset version');
+    console.log('  [DRY RUN] Would run: npx @changesets/cli version');
   } else {
-    execSync('npx changeset version', {stdio: 'inherit'});
+    execSync('npx @changesets/cli version', {stdio: 'inherit'});
   }
 } else {
   console.log('\n⏭️  Skipping changeset version');
@@ -171,103 +155,131 @@ if (!opts.skipChangesets) {
 console.log('\n🔄 Calculating CalVer transformations...');
 const updates = {};
 
+// Check if any package has major changesets
+const hasAnyMajor = hasMajorChangesets();
+
 CALVER_PACKAGES.forEach((pkgName) => {
   const pkgPath = getPackagePath(pkgName);
   const pkg = opts.dryRun
     ? JSON.parse(originalPackages[pkgPath])
-    : JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+    : readPackage(pkgPath);
 
-  // Simulate changeset bump for dry-run
+  // In dry-run mode, simulate what changesets would do based on actual changesets
   if (opts.dryRun && !opts.skipChangesets) {
-    // In dry-run, simulate a minor bump for demo
-    const v = parseVersion(pkg.version);
-    pkg.version = `${v.year}.${v.major}.${v.minor + 1}`;
+    const bumpType = getBumpTypeFromChangesets(pkgName);
+    
+    if (bumpType) {
+      // Simulate the changeset bump
+      const simVersion = getNextVersion(originalVersions[pkgName], bumpType);
+      // Replace pkg.version with simulated version
+      pkg.version = simVersion;
+    }
   }
 
-  if (pkg.version === originalVersions[pkgName]) return;
-
-  const bumpType = getBumpType(originalVersions[pkgName], pkg.version);
-  const calverVersion = getNextVersion(originalVersions[pkgName], bumpType);
+  const originalVersion = originalVersions[pkgName];
+  const changesetVersion = pkg.version;
+  const bumpType = getBumpType(originalVersion, changesetVersion);
+  
+  // For major bumps, ensure all CalVer packages advance to same quarter
+  const effectiveBumpType = hasAnyMajor ? 'major' : bumpType;
+  const calverVersion = getNextVersion(originalVersion, effectiveBumpType);
 
   updates[pkgName] = {
-    from: originalVersions[pkgName],
-    changeset: pkg.version,
+    from: originalVersion,
+    changeset: changesetVersion,
     to: calverVersion,
     type: bumpType,
   };
-
-  console.log(`  ${pkgName}:`);
-  console.log(
-    `    Changeset: ${originalVersions[pkgName]} → ${pkg.version} (${bumpType})`,
-  );
-  console.log(`    CalVer:    ${originalVersions[pkgName]} → ${calverVersion}`);
 });
 
-if (Object.keys(updates).length === 0) {
-  console.log('  No version changes detected.');
-  process.exit(0);
+// Print updates
+console.log('\n📊 Version transformations:');
+Object.entries(updates).forEach(([pkgName, update]) => {
+  const arrow = update.from === update.to ? '=' : '→';
+  const changesetInfo =
+    update.from !== update.changeset
+      ? ` (changeset: ${update.changeset})`
+      : '';
+  console.log(
+    `  ${pkgName}: ${update.from} ${arrow} ${update.to}${changesetInfo}`,
+  );
+});
+
+// Check for major version coordination
+if (hasAnyMajor) {
+  console.log('\n🔗 Major version coordination:');
+  console.log('  All CalVer packages advance to same quarter due to major bump');
 }
 
-// Validate
-console.log('\n🛡️  Running validation...');
+// Validate transformations
 const errors = validateUpdates(updates, originalVersions);
 if (errors.length > 0) {
-  console.error('\n❌ Validation failed:');
-  errors.forEach((err) => console.error(`  • ${err}`));
+  console.error('\n❌ Validation errors:');
+  errors.forEach((error) => console.error(`  - ${error}`));
   process.exit(1);
 }
-console.log('  ✅ All checks passed');
 
 // Apply changes if not dry-run
 if (!opts.dryRun) {
-  console.log('\n✏️  Applying CalVer versions...');
-
-  // Update package versions
+  console.log('\n✏️  Applying CalVer transformations...');
+  
+  // Apply version updates
   Object.entries(updates).forEach(([pkgName, update]) => {
     const pkgPath = getPackagePath(pkgName);
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+    const pkg = readPackage(pkgPath);
     pkg.version = update.to;
-    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
-    console.log(`  Updated ${pkgName} to ${update.to}`);
+    writePackage(pkgPath, pkg);
+    console.log(`  ${pkgName}: Updated to ${update.to}`);
   });
-
-  // Update dependencies
-  console.log('\n🔗 Updating internal dependencies...');
-  const allPackages = fs
-    .readdirSync(path.join(process.cwd(), 'packages'))
-    .map((dir) => path.join(process.cwd(), 'packages', dir, 'package.json'))
-    .concat(path.join(process.cwd(), 'templates/skeleton/package.json'))
-    .filter((p) => fs.existsSync(p));
-
-  allPackages.forEach((pkgPath) => {
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+  
+  // Update internal dependencies
+  console.log('\n📝 Updating internal dependencies...');
+  const versionMap = {};
+  Object.entries(updates).forEach(([pkgName, update]) => {
+    versionMap[pkgName] = update.to;
+  });
+  
+  // Update all package.json files that might depend on CalVer packages
+  const packagesDir = path.join(process.cwd(), 'packages');
+  const dirs = fs.readdirSync(packagesDir);
+  
+  for (const dir of dirs) {
+    const pkgPath = path.join(packagesDir, dir, 'package.json');
+    if (!fs.existsSync(pkgPath)) continue;
+    
+    const pkg = readPackage(pkgPath);
     let modified = false;
-
-    ['dependencies', 'devDependencies', 'peerDependencies'].forEach(
-      (depType) => {
-        if (!pkg[depType]) return;
-
-        Object.keys(updates).forEach((updatedPkg) => {
-          if (pkg[depType][updatedPkg]) {
-            const oldRange = pkg[depType][updatedPkg];
-            const operator = oldRange.match(/^([^\d]*)/)?.[1] || '';
-            pkg[depType][updatedPkg] = `${operator}${updates[updatedPkg].to}`;
-            modified = true;
-          }
-        });
-      },
-    );
-
+    
+    // Check all dependency types
+    for (const depType of ['dependencies', 'devDependencies', 'peerDependencies']) {
+      if (!pkg[depType]) continue;
+      
+      for (const [depName, depVersion] of Object.entries(pkg[depType])) {
+        if (versionMap[depName]) {
+          // Update to new version (preserve any prefix like ^, ~, or workspace:)
+          const prefix = depVersion.match(/^([^\d]*)/)[1];
+          pkg[depType][depName] = prefix + versionMap[depName];
+          modified = true;
+        }
+      }
+    }
+    
     if (modified) {
-      fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
-      console.log(
-        `  Updated dependencies in ${path.basename(path.dirname(pkgPath))}`,
-      );
+      writePackage(pkgPath, pkg);
+    }
+  }
+  
+  console.log('\n✅ CalVer transformations applied successfully!');
+} else {
+  console.log('\n✅ CalVer simulation complete (no files modified)');
+}
+
+// Restore files if dry-run and changesets was not skipped
+if (opts.dryRun && !opts.skipChangesets) {
+  console.log('\n🔄 Restoring original versions (dry-run cleanup)...');
+  Object.entries(originalPackages).forEach(([pkgPath, content]) => {
+    if (!opts.dryRun) {
+      fs.writeFileSync(pkgPath, content);
     }
   });
-
-  console.log('\n✅ CalVer versioning complete!');
-} else {
-  console.log('\n🧪 DRY RUN COMPLETE - No files were modified');
-  console.log('\nTo apply changes, run with --apply flag');
 }

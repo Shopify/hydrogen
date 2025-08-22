@@ -25,13 +25,6 @@ jobs:
       latest: ${{ env.latest }}
       latestBranch: ${{ env.latestBranch }}
     steps:
-      - name: Flags
-        id: flags
-        run: |
-          # IMPORTANT: Update this latestBranch whenever we move to a new major version:
-          echo "latestBranch=2025-05" >> $GITHUB_ENV
-          echo "latest=${{ github.ref_name == 'main' }}" >> $GITHUB_ENV
-
       - name: Checkout the code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
@@ -48,8 +41,37 @@ jobs:
       - name: Install the packages
         run: npm ci --legacy-peer-deps
 
+      - name: Detect latest branch
+        id: flags
+        run: |
+          # Automatically detect the latest branch based on current version and changesets
+          echo "latestBranch=$(node .changeset/get-calver-version-branch.js)" >> $GITHUB_ENV
+          echo "latest=${{ github.ref_name == 'main' }}" >> $GITHUB_ENV
+          echo "Detected latestBranch: $(node .changeset/get-calver-version-branch.js)"
+
       - name: Build the dist code
         run: npm run build
+
+      - name: Check for major protection bypass
+        if: env.latest == 'true'
+        run: |
+          echo "Checking for active major version bypass..."
+          # If bypass is active, ensure old release PR is closed
+          BYPASS_PRS=$(gh pr list --state open --label "major-bypass-active" --json number -q '.[].number' || echo "")
+          if [ -n "$BYPASS_PRS" ]; then
+            echo "Major bypass active on PR(s): $BYPASS_PRS"
+            echo "Checking for existing release PR to close..."
+            # Close any existing release PR to prevent conflicts
+            RELEASE_PR=$(gh pr list --state open --head changeset-release/main --json number -q '.[].number' || echo "")
+            if [ -n "$RELEASE_PR" ]; then
+              echo "Closing release PR #$RELEASE_PR due to active major bypass"
+              gh pr close $RELEASE_PR -c "Automatically closed: Major version bypass is active on PR #$BYPASS_PRS"
+            fi
+          else
+            echo "No active major bypass found"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release Pull Request or Publish (for latest release)
         if: env.latest == 'true'
