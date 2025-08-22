@@ -18,7 +18,8 @@
     "typecheck": "tsc --noEmit",
     "generate:manifest": "node scripts/generate-manifest.mjs",
     "test": "cross-env SHOPIFY_UNIT_TEST=1 LANG=en-US.UTF-8 vitest run --test-timeout=60000",
-    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 LANG=en-US.UTF-8 vitest --test-timeout=60000"
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 LANG=en-US.UTF-8 vitest --test-timeout=60000",
+    "test:e2e": "cross-env SHOPIFY_UNIT_TEST=1 LANG=en-US.UTF-8 vitest run src/commands/hydrogen/init.e2e.test.ts --test-timeout=180000"
   },
   "devDependencies": {
     "@react-router/dev": "7.6.0",
