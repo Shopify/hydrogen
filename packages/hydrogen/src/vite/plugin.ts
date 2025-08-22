@@ -80,8 +80,12 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
             // Avoid optimizing Hydrogen itself in the monorepo
             // to prevent caching source code changes:
             include: isHydrogenMonorepo
-              ? ['content-security-policy-builder', 'worktop/cookie']
-              : ['@shopify/hydrogen'],
+              ? [
+                  'content-security-policy-builder',
+                  'worktop/cookie',
+                  '@shopify/graphql-client',
+                ]
+              : ['@shopify/hydrogen', '@shopify/graphql-client'],
           },
         };
       },
