@@ -75,7 +75,7 @@
     "type-fest": "^4.33.0",
     "use-resize-observer": "^9.1.0",
     "worktop": "^0.7.3",
-    "@shopify/graphql-client": "1.4.0"
+    "@shopify/graphql-client": "1.4.1"
   },
   "devDependencies": {
     "react-router": "7.6.0",
