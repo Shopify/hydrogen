@@ -92,10 +92,25 @@ describe('init - E2E Tailwind v4 Integration', () => {
     // Step 2: Verify all optimization files are created correctly
     console.log('Step 2: Verifying file creation...');
     
+    // First, let's diagnose what actually got created
+    const tailwindCssPath = joinPath(projectPath, 'app', 'styles', 'tailwind.css');
+    const hasTailwindCss = await fileExists(tailwindCssPath);
+    console.log('✓ Tailwind CSS file exists:', hasTailwindCss);
+    
+    const packageJsonPath = joinPath(projectPath, 'package.json');
+    const packageJsonContent = await readFile(packageJsonPath);
+    const packageJson = JSON.parse(packageJsonContent);
+    console.log('✓ Tailwind in dependencies:', packageJson.dependencies?.tailwindcss || 'NOT FOUND');
+    console.log('✓ @tailwindcss/vite in devDependencies:', packageJson.devDependencies?.['@tailwindcss/vite'] || 'NOT FOUND');
+    
     // Check root.tsx has CSS preload hints with fetchPriority
     const rootPath = joinPath(projectPath, 'app', 'root.tsx');
     expect(await fileExists(rootPath)).toBe(true);
     const rootContent = await readFile(rootPath);
+    
+    // Debug: Show actual imports
+    const imports = rootContent.split('\n').filter(line => line.includes('import') && line.includes('styles'));
+    console.log('✓ Style imports found:', imports.join('\n  '));
     
     // Should have Tailwind import instead of appStyles
     expect(rootContent).toContain('tailwindStyles');

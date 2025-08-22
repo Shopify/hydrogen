@@ -14,6 +14,7 @@ import {
   commitAll,
   createAbortHandler,
   createInitialCommit,
+  handleCssStrategy,
   handleDependencies,
   handleLanguage,
   handleProjectLocation,
@@ -21,6 +22,7 @@ import {
   SetupSummary,
   type InitOptions,
 } from './common.js';
+import {CSS_STRATEGY_NAME_MAP} from '../setups/css/index.js';
 
 const DEMO_STORE_REPO = 'shopify/hydrogen-demo-store';
 
@@ -83,6 +85,26 @@ export async function setupRemoteTemplate(
       options.git ? createInitialCommit(project.directory) : undefined,
     );
 
+  // Handle CSS strategy (Tailwind, etc.)
+  const {setupCss, cssStrategy} = await handleCssStrategy(
+    project.directory,
+    controller,
+    options.styling,
+  );
+
+  if (cssStrategy) {
+    backgroundWorkPromise = backgroundWorkPromise
+      .then(() => setupCss().catch(abort))
+      .then(() =>
+        options.git
+          ? commitAll(
+              project.directory,
+              'Setup ' + CSS_STRATEGY_NAME_MAP[cssStrategy],
+            )
+          : undefined,
+      );
+  }
+
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(
       project.directory,
@@ -94,6 +116,7 @@ export async function setupRemoteTemplate(
   const setupSummary: SetupSummary = {
     language,
     packageManager,
+    cssStrategy,
     depsInstalled: false,
     cliCommand: await getCliCommand('', packageManager),
   };

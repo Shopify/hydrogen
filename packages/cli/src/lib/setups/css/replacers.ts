@@ -29,7 +29,8 @@ export async function replaceRootLinks(
   await replaceFileContent(filepath, formatConfig, async (content) => {
     const importStatement = `import ${
       importer.isDefault ? importer.name : `{${importer.name}}`
-    } from '${(importer.isAbsolute ? '' : './') + importer.path}';`;
+    } from '${importer.path.startsWith('~') || importer.isAbsolute ? '' : './'
+    }${importer.path}';`;
 
     if (content.includes(importStatement.split('from')[0]!)) {
       return; // Already installed
@@ -75,6 +76,10 @@ export async function replaceRootLinks(
     // For Tailwind, we want to replace appStyles instead of adding alongside it
     let updatedContent = content;
     
+    // Check if the variable is already being used but not imported (common scaffolding bug)
+    const variableUsedButNotImported = content.includes(`href: ${importer.name}`) && 
+                                       !content.includes(`import ${importer.name}`);
+    
     if (importer.name === 'tailwindStyles' && content.includes('appStyles')) {
       // Replace appStyles import with tailwindStyles
       updatedContent = updatedContent.replace(
@@ -100,7 +105,14 @@ export async function replaceRootLinks(
         appStylesLinkRegex,
         `<link rel="stylesheet" href={${importer.name}}></link>`
       );
-    } else {
+    } else if (variableUsedButNotImported) {
+      // Fix the case where the variable is used but not imported
+      // Just add the import, don't add another link
+      updatedContent = content.replace(
+        lastImportContent,
+        lastImportContent + '\n' + importStatement
+      );
+    } else if (!content.includes(`import ${importer.name}`)) {
       // Default behavior: add new import and link
       updatedContent = content
         .replace(lastImportContent, lastImportContent + '\n' + importStatement)
