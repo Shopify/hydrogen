@@ -43,9 +43,8 @@ function getNextVersion(currentVersion, bumpType) {
     return `${v.year}.${v.major}.${v.minor + 1}`;
   }
 
-  // Patch
-  const nextPatch = v.patch !== undefined ? v.patch + 1 : 1;
-  return `${v.year}.${v.major}.${v.minor}.${nextPatch}`;
+  // Patch - increment the third segment (minor)
+  return `${v.year}.${v.major}.${v.minor + 1}`;
 }
 
 // Determine bump type by comparing versions

@@ -24,7 +24,7 @@ on:
       - '.changeset/enforce-calver-*.js'
       - '.changeset/calver-shared.js'
       - '.changeset/get-calver-version-branch.js'
-      - 'scripts/test-calver-comparison.sh'
+      - '.changeset/test-calver-comparison.sh'
       - 'docs/CALVER.md'
       - '.github/workflows/test-calver.yml'
   push:
@@ -121,7 +121,7 @@ jobs:
           
           # Run comparison test and capture output
           echo "Running CalVer comparison test..."
-          ./scripts/test-calver-comparison.sh | tee test-output.log
+          ./.changeset/test-calver-comparison.sh | tee test-output.log
           
           echo ""
           echo "Validating results:"
@@ -171,7 +171,7 @@ jobs:
           
           # Run comparison test
           echo "Running CalVer comparison test..."
-          ./scripts/test-calver-comparison.sh | tee test-output.log
+          ./.changeset/test-calver-comparison.sh | tee test-output.log
           
           echo ""
           echo "Validating quarter alignment:"
@@ -312,7 +312,7 @@ jobs:
           
           # Run comparison test
           echo "Running CalVer comparison test..."
-          ./scripts/test-calver-comparison.sh | tee test-output.log
+          ./.changeset/test-calver-comparison.sh | tee test-output.log
           
           echo ""
           echo "Validating version formats:"

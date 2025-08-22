@@ -23,7 +23,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
       - run: npm ci --legacy-peer-deps
-      - run: node .github/scripts/check-major-protection.js
+      - run: node .changeset/check-major-protection.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -57,7 +57,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-      - run: node .github/scripts/process-bypass.js
+      - run: node .changeset/process-major-version-bypass.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.issue.number }}

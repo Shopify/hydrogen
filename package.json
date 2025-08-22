@@ -25,7 +25,7 @@
     "typecheck:examples": "turbo typecheck --parallel --filter=./examples/*",
     "test": "turbo run test --parallel",
     "test:watch": "turbo run test:watch",
-    "test:calver": "./scripts/test-calver-comparison.sh",
+    "test:calver": "./.changeset/test-calver-comparison.sh",
     "test:calver:dry": "node .changeset/enforce-calver-local.js --dry-run",
     "test:calver:branch": "node .changeset/get-calver-version-branch.js",
     "version": "npm run version:changeset && node .changeset/enforce-calver-ci.js && npm run version:post && npm run format",
