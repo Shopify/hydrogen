@@ -3,9 +3,9 @@
     "defaults"
   ],
   "dependencies": {
-    "tailwindcss": "^4.1.6"
+    "tailwindcss": "^4.1.12"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.6"
+    "@tailwindcss/vite": "^4.1.12"
   }
 }
