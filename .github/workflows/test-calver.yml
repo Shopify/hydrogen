@@ -288,6 +288,45 @@ jobs:
             exit 1
           fi
           
+          # Test has-calver-changesets command (should return false with no changesets)
+          HAS_CALVER=$(node .changeset/calver-shared.js has-calver-changesets)
+          echo "has-calver-changesets (no changesets): $HAS_CALVER"
+          if [ "$HAS_CALVER" = "false" ]; then
+            echo "✅ has-calver-changesets command works (no changesets)"
+          else
+            echo "❌ has-calver-changesets failed, expected false, got $HAS_CALVER"
+            exit 1
+          fi
+          
+          # Test has-major-changesets command (should return false with no changesets)  
+          HAS_MAJOR=$(node .changeset/calver-shared.js has-major-changesets)
+          echo "has-major-changesets (no changesets): $HAS_MAJOR"
+          if [ "$HAS_MAJOR" = "false" ]; then
+            echo "✅ has-major-changesets command works (no changesets)"
+          else
+            echo "❌ has-major-changesets failed, expected false, got $HAS_MAJOR"
+            exit 1
+          fi
+          
+          # Test with actual changeset
+          cat > .changeset/test-changeset-detection.md << 'EOF'
+          ---
+          "@shopify/hydrogen": patch
+          ---
+          Test changeset detection
+          EOF
+          
+          HAS_CALVER=$(node .changeset/calver-shared.js has-calver-changesets)
+          echo "has-calver-changesets (with hydrogen changeset): $HAS_CALVER"
+          if [ "$HAS_CALVER" = "true" ]; then
+            echo "✅ has-calver-changesets detects CalVer packages correctly"
+          else
+            echo "❌ has-calver-changesets failed to detect CalVer changeset"
+            exit 1
+          fi
+          
+          rm .changeset/test-changeset-detection.md
+          
           echo "::endgroup::"
 
       - name: Test 7 - Mixed Package Types
