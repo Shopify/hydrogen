@@ -24,6 +24,7 @@ jobs:
       publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
       latest: ${{ env.latest }}
       latestBranch: ${{ env.latestBranch }}
+      latestVersion: ${{ env.latestVersion }}
     steps:
       - name: Checkout the code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -41,13 +42,40 @@ jobs:
       - name: Install the packages
         run: npm ci --legacy-peer-deps
 
-      - name: Detect latest branch
+      - name: Detect latest branch and version
         id: flags
         run: |
-          # Automatically detect the latest branch based on current version and changesets
-          echo "latestBranch=$(node .changeset/get-calver-version-branch.js)" >> $GITHUB_ENV
-          echo "latest=${{ github.ref_name == 'main' }}" >> $GITHUB_ENV
-          echo "Detected latestBranch: $(node .changeset/get-calver-version-branch.js)"
+          # Check if any CalVer packages have changesets (CalVer precedence logic)
+          HAS_CALVER=$(node .changeset/calver-shared.js has-calver-changesets)
+          echo "Has CalVer changesets: $HAS_CALVER"
+          
+          if [ "$HAS_CALVER" = "true" ]; then
+            # CalVer packages have changesets - use CalVer version format
+            BRANCH=$(node .changeset/get-calver-version-branch.js)
+            echo "latestBranch=$BRANCH" >> $GITHUB_ENV
+            echo "latest=${{ github.ref_name == 'main' }}" >> $GITHUB_ENV
+            echo "Detected latestBranch: $BRANCH"
+            
+            # Calculate next CalVer version using existing calver utilities
+            HYDROGEN_VERSION=$(node -p "require('./packages/hydrogen/package.json').version")
+            HAS_MAJOR=$(node .changeset/calver-shared.js has-major-changesets)
+            
+            if [ "$HAS_MAJOR" = "true" ]; then
+              NEXT_VERSION=$(node .changeset/calver-shared.js get-next "$HYDROGEN_VERSION" "major")
+              echo "latestVersion=$NEXT_VERSION" >> $GITHUB_ENV
+              echo "Detected next version (major): $NEXT_VERSION"
+            else
+              NEXT_VERSION=$(node .changeset/calver-shared.js get-next "$HYDROGEN_VERSION" "patch")
+              echo "latestVersion=$NEXT_VERSION" >> $GITHUB_ENV
+              echo "Detected next version (patch): $NEXT_VERSION"
+            fi
+          else
+            # Only semver packages have changesets - use semver release format
+            echo "latestBranch=semver" >> $GITHUB_ENV
+            echo "latest=${{ github.ref_name == 'main' }}" >> $GITHUB_ENV
+            echo "latestVersion=semver" >> $GITHUB_ENV
+            echo "Detected semver-only release"
+          fi
 
       - name: Build the dist code
         run: npm run build
@@ -81,8 +109,8 @@ jobs:
           version: npm run version
           publish: npm run changeset publish
           # we use the commit message in next release workflow file. This avoid a next release when an actual release is happening
-          commit: '[ci] release ${{ env.latestBranch }}'
-          title: '[ci] release ${{ env.latestBranch }}'
+          commit: '[ci] release ${{ env.latestVersion }}'
+          title: '[ci] release ${{ env.latestVersion }}'
         env:
           GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

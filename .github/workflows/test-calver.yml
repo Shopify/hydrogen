@@ -1,22 +1,30 @@
 name: Test CalVer Scripts
 
-# This workflow tests the CalVer (Calendar Versioning) enforcement scripts
-# to ensure they work correctly on Linux CI environments (GitHub Actions).
+# This workflow validates the automated CalVer (Calendar Versioning) release system
+# that powers Hydrogen's quarterly release cycle aligned with Shopify Storefront API versions.
+#
+# CRITICAL: These scripts run in production changesets.yml workflow during every release.
+# Failures here indicate potential version corruption, release blocking, or incorrect
+# quarterly alignment that affects millions of Hydrogen developers.
 #
 # What it validates:
-# 1. Script syntax - enforce-calver-ci.js is valid JavaScript
-# 2. Linux compatibility - sed commands work with GNU sed (no -i.tmp needed)
+# 1. Script syntax - enforce-calver-ci.js is valid JavaScript (prevents runtime failures)
+# 2. Linux compatibility - sed commands work with GNU sed (GitHub Actions environment)
 # 3. Patch versioning - CalVer packages increment correctly (2025.5.0 → 2025.5.1)
 # 4. Major versioning - CalVer packages align to quarters (2025.5.0 → 2025.7.0 for Q3)
-# 5. Mixed packages - CalVer packages use YYYY.M.P while semver packages use X.Y.Z
+# 5. Branch detection - Automated quarter advancement logic (2025-05 → 2025-07)
+# 6. CLI utilities - Shared functions used by changesets.yml workflow
+# 7. Mixed packages - CalVer vs semver package type handling and precedence logic
 #
-# Each test outputs explicit expected vs actual results for manual validation.
+# Each test validates against actual package.json versions and changeset files,
+# outputting explicit expected vs actual results for debugging failures.
 # 
 # SAFETY: All tests are non-destructive:
-# - The comparison script creates temporary copies and reverts all changes
+# - Creates temporary copies and reverts all changes automatically
 # - Test changesets are created and deleted within each test
-# - No permanent modifications are made to any files
-# - No npm publishing or releases are triggered
+# - No permanent modifications to any files
+# - No npm publishing or actual releases triggered
+# - Tests validate current repository state without assumptions about changeset presence
 
 on:
   pull_request:
@@ -287,6 +295,45 @@ jobs:
             echo "❌ list-calver-packages failed"
             exit 1
           fi
+          
+          # Test has-calver-changesets command (check current repository state)
+          HAS_CALVER=$(node .changeset/calver-shared.js has-calver-changesets)
+          echo "has-calver-changesets (current state): $HAS_CALVER"
+          if [ "$HAS_CALVER" = "true" ] || [ "$HAS_CALVER" = "false" ]; then
+            echo "✅ has-calver-changesets command works (returns boolean)"
+          else
+            echo "❌ has-calver-changesets failed, expected true/false, got $HAS_CALVER"
+            exit 1
+          fi
+          
+          # Test has-major-changesets command (check current repository state)
+          HAS_MAJOR=$(node .changeset/calver-shared.js has-major-changesets)
+          echo "has-major-changesets (current state): $HAS_MAJOR"
+          if [ "$HAS_MAJOR" = "true" ] || [ "$HAS_MAJOR" = "false" ]; then
+            echo "✅ has-major-changesets command works (returns boolean)"
+          else
+            echo "❌ has-major-changesets failed, expected true/false, got $HAS_MAJOR"
+            exit 1
+          fi
+          
+          # Test with actual changeset
+          cat > .changeset/test-changeset-detection.md << 'EOF'
+          ---
+          "@shopify/hydrogen": patch
+          ---
+          Test changeset detection
+          EOF
+          
+          HAS_CALVER=$(node .changeset/calver-shared.js has-calver-changesets)
+          echo "has-calver-changesets (with hydrogen changeset): $HAS_CALVER"
+          if [ "$HAS_CALVER" = "true" ]; then
+            echo "✅ has-calver-changesets detects CalVer packages correctly"
+          else
+            echo "❌ has-calver-changesets failed to detect CalVer changeset"
+            exit 1
+          fi
+          
+          rm .changeset/test-changeset-detection.md
           
           echo "::endgroup::"
 
