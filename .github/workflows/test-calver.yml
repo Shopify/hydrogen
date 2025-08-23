@@ -1,22 +1,30 @@
 name: Test CalVer Scripts
 
-# This workflow tests the CalVer (Calendar Versioning) enforcement scripts
-# to ensure they work correctly on Linux CI environments (GitHub Actions).
+# This workflow validates the automated CalVer (Calendar Versioning) release system
+# that powers Hydrogen's quarterly release cycle aligned with Shopify Storefront API versions.
+#
+# CRITICAL: These scripts run in production changesets.yml workflow during every release.
+# Failures here indicate potential version corruption, release blocking, or incorrect
+# quarterly alignment that affects millions of Hydrogen developers.
 #
 # What it validates:
-# 1. Script syntax - enforce-calver-ci.js is valid JavaScript
-# 2. Linux compatibility - sed commands work with GNU sed (no -i.tmp needed)
+# 1. Script syntax - enforce-calver-ci.js is valid JavaScript (prevents runtime failures)
+# 2. Linux compatibility - sed commands work with GNU sed (GitHub Actions environment)
 # 3. Patch versioning - CalVer packages increment correctly (2025.5.0 → 2025.5.1)
 # 4. Major versioning - CalVer packages align to quarters (2025.5.0 → 2025.7.0 for Q3)
-# 5. Mixed packages - CalVer packages use YYYY.M.P while semver packages use X.Y.Z
+# 5. Branch detection - Automated quarter advancement logic (2025-05 → 2025-07)
+# 6. CLI utilities - Shared functions used by changesets.yml workflow
+# 7. Mixed packages - CalVer vs semver package type handling and precedence logic
 #
-# Each test outputs explicit expected vs actual results for manual validation.
+# Each test validates against actual package.json versions and changeset files,
+# outputting explicit expected vs actual results for debugging failures.
 # 
 # SAFETY: All tests are non-destructive:
-# - The comparison script creates temporary copies and reverts all changes
+# - Creates temporary copies and reverts all changes automatically
 # - Test changesets are created and deleted within each test
-# - No permanent modifications are made to any files
-# - No npm publishing or releases are triggered
+# - No permanent modifications to any files
+# - No npm publishing or actual releases triggered
+# - Tests validate current repository state without assumptions about changeset presence
 
 on:
   pull_request:
