@@ -1,8 +1,9 @@
 import {
   type LoaderFunctionArgs,
   type ActionFunctionArgs,
+  useLoaderData,
+  type MetaFunction,
 } from 'react-router';
-import { useLoaderData, type MetaFunction } from 'react-router';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {SearchForm} from '~/components/SearchForm';
 import {SearchResults} from '~/components/SearchResults';

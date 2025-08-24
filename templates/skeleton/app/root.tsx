@@ -1,6 +1,6 @@
 import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
-import {type LoaderFunctionArgs} from 'react-router';
 import {
+  type LoaderFunctionArgs,
   Outlet,
   useRouteError,
   isRouteErrorResponse,

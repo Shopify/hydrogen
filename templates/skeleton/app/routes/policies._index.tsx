@@ -1,5 +1,5 @@
 import {type LoaderFunctionArgs} from 'react-router';
-import { useLoaderData, Link } from 'react-router';
+import {useLoaderData, Link} from 'react-router';
 
 export async function loader({context}: LoaderFunctionArgs) {
   const data = await context.storefront.query(POLICIES_QUERY);

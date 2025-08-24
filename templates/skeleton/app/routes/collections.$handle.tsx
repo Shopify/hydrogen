@@ -1,5 +1,9 @@
-import {redirect, type LoaderFunctionArgs} from 'react-router';
-import {useLoaderData, type MetaFunction} from 'react-router';
+import {
+  redirect,
+  type LoaderFunctionArgs,
+  useLoaderData,
+  type MetaFunction,
+} from 'react-router';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';

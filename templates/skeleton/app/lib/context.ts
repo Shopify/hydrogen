@@ -3,10 +3,10 @@ import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 
 /**
- * The context implementation is separate from server.ts
- * so that type can be extracted for AppLoadContext
+ * Creates Hydrogen context for React Router 7.8.x
+ * Returns HydrogenRouterContextProvider with hybrid access patterns
  * */
-export async function createAppLoadContext(
+export async function createHydrogenRouterContext(
   request: Request,
   env: Env,
   executionContext: ExecutionContext,

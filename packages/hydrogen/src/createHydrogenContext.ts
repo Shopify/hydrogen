@@ -244,7 +244,7 @@ export function createHydrogenContext<
     customerAccount,
   });
 
-  // Create hybrid context provider - combines React Router context with direct properties
+  // Create React Router context provider
   const routerProvider = new unstable_RouterContextProvider();
   
   // Set React Router context keys (enables context.get(storefrontContext))
@@ -257,24 +257,47 @@ export function createHydrogenContext<
     routerProvider.set(waitUntilContext, waitUntil);
   }
 
-  // Create hybrid provider object with both React Router methods AND direct properties
-  const hybridProvider = Object.create(routerProvider);
-  
-  // Copy React Router methods
-  hybridProvider.get = routerProvider.get.bind(routerProvider);
-  hybridProvider.set = routerProvider.set.bind(routerProvider);
-  
-  // Add direct properties for backward compatibility
-  hybridProvider.storefront = storefront;
-  hybridProvider.cart = cart as TCustomMethods extends CustomMethodsBase
-    ? HydrogenCartCustom<TCustomMethods>
-    : HydrogenCart;
-  hybridProvider.customerAccount = customerAccount;
-  hybridProvider.env = env;
-  hybridProvider.session = session;
-  if (waitUntil) {
-    hybridProvider.waitUntil = waitUntil;
-  }
+  // Create Hydrogen services map for direct property access
+  const services = {
+    storefront,
+    cart: cart as TCustomMethods extends CustomMethodsBase
+      ? HydrogenCartCustom<TCustomMethods>
+      : HydrogenCart,
+    customerAccount,
+    env,
+    session,
+    waitUntil,
+  };
+
+  // Create Proxy for hybrid access pattern - cleanest approach
+  const hybridProvider = new Proxy(routerProvider, {
+    get(target, prop, receiver) {
+      // If it's a React Router method or property, use the target
+      if (prop in target) {
+        const value = target[prop as keyof typeof target];
+        // Bind methods to preserve 'this' context
+        return typeof value === 'function' ? value.bind(target) : value;
+      }
+      
+      // If it's a Hydrogen service property, return from services
+      if (prop in services) {
+        return services[prop as keyof typeof services];
+      }
+      
+      // Default behavior for other properties
+      return Reflect.get(target, prop, receiver);
+    },
+    
+    has(target, prop) {
+      // Property exists if it's in target OR services
+      return prop in target || prop in services;
+    },
+    
+    ownKeys(target) {
+      // Return all keys from both target and services
+      return [...Reflect.ownKeys(target), ...Object.keys(services)];
+    }
+  });
 
   return hybridProvider as HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv>;
 }

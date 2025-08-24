@@ -1,5 +1,8 @@
-import {type LoaderFunctionArgs} from 'react-router';
-import { useLoaderData, type MetaFunction } from 'react-router';
+import {
+  type LoaderFunctionArgs,
+  useLoaderData,
+  type MetaFunction,
+} from 'react-router';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
