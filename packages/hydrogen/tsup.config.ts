@@ -63,10 +63,16 @@ export default defineConfig([
 
       console.log('\n', 'Customer API types copied from hydrogen-react', '\n');
 
-      // Copy React Router augmentation types
-      await fs.copyFile(
-        'react-router.d.ts',
+      // Copy React Router augmentation types with corrected import path
+      const reactRouterSource = await fs.readFile('react-router.d.ts', 'utf-8');
+      const reactRouterDist = reactRouterSource.replace(
+        './src/index',
+        './production/index'
+      );
+      await fs.writeFile(
         path.resolve(outDir, 'react-router.d.ts'),
+        reactRouterDist,
+        'utf-8'
       );
 
       console.log('\n', 'React Router augmentation types copied', '\n');

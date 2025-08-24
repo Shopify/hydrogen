@@ -146,18 +146,22 @@ export function createHydrogenContext<
   TCustomMethods extends CustomMethodsBase | undefined = {},
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
+  TAdditionalContext extends Record<string, any> = {},
 >(
   options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
-): HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv>;
+  additionalContext?: TAdditionalContext,
+): HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> & TAdditionalContext;
 
 export function createHydrogenContext<
   TSession extends HydrogenSession,
   TCustomMethods extends CustomMethodsBase,
   TI18n extends I18nBase,
   TEnv extends HydrogenEnv = Env,
+  TAdditionalContext extends Record<string, any> = {},
 >(
   options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
-): HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> {
+  additionalContext?: TAdditionalContext,
+): HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> & TAdditionalContext {
   const {
     env,
     request,
@@ -267,6 +271,8 @@ export function createHydrogenContext<
     env,
     session,
     waitUntil,
+    // Merge additional context properties (CMS clients, 3P SDKs, etc.)
+    ...(additionalContext || {}),
   };
 
   // Create Proxy for hybrid access pattern - cleanest approach
@@ -299,7 +305,7 @@ export function createHydrogenContext<
     }
   });
 
-  return hybridProvider as HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv>;
+  return hybridProvider as HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> & TAdditionalContext;
 }
 
 function getStorefrontHeaders(request: CrossRuntimeRequest): StorefrontHeaders {

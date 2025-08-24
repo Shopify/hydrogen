@@ -52,7 +52,7 @@
     "./storefront.schema.json": "./dist/storefront.schema.json",
     "./customer-account-api-types": "./dist/customer-account-api-types.d.ts",
     "./customer-account.schema.json": "./dist/customer-account.schema.json",
-    "./react-router": {
+    "./react-router-types": {
       "types": "./dist/react-router.d.ts"
     },
     "./package.json": "./package.json"
