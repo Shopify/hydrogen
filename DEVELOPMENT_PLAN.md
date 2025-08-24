@@ -575,6 +575,90 @@ Update all API documentation to reflect:
 
 ---
 
+# Phase 6: React Router Configuration Validation & Future Compatibility
+
+**Goal**: Ensure comprehensive React Router configuration support and validate all current and future flags.
+
+**Reference**: [REACT_ROUTER_UNSTABLE_FLAGS.md](./REACT_ROUTER_UNSTABLE_FLAGS.md) - Complete unstable flags implementation guide
+
+## 6.1 Enhanced Skeleton Configuration
+
+**File**: `/templates/skeleton/react-router.config.ts` (Updated)
+
+**Objectives**:
+- Include ALL possible React Router configuration options for validation
+- Enable optimal unstable flags for Hydrogen performance
+- Document decision rationale for each flag
+- Prepare for future React Router configuration additions
+
+**Current Implementation**:
+```typescript
+export default {
+  // Core configuration
+  appDirectory: 'app',
+  buildDirectory: 'dist',
+  ssr: true,
+  
+  // React Router 7 unstable flags - configured for optimal Hydrogen experience
+  future: {
+    unstable_middleware: true,        // Required for Hydrogen context
+    unstable_optimizeDeps: true,      // Performance enhancement
+    unstable_splitRouteModules: "enforce", // Ecommerce optimization
+    unstable_subResourceIntegrity: false,   // Security evaluation needed
+    unstable_viteEnvironmentApi: false,     // Too experimental
+  },
+  
+  // Additional validation properties
+  basename: undefined,
+  ignoredRouteFiles: undefined,
+  serverBuildFile: undefined,
+  publicPath: undefined,
+  assetsBuildDirectory: undefined,
+  routes: undefined,
+} satisfies Config;
+```
+
+## 6.2 CLI Configuration Generation
+
+**New File**: `/packages/cli/src/lib/react-router-config.ts`
+
+**Features**:
+- Generate optimized react-router.config.ts for new projects
+- Validate existing configurations against supported features
+- Warning system for unsupported/deprecated flags
+- Migration helpers for React Router updates
+
+```typescript
+export function validateReactRouterConfig(config: unknown): ValidationResult {
+  // Validate all configuration options
+  // Check for unsupported flags
+  // Provide migration recommendations
+  // Return compatibility report
+}
+```
+
+## 6.3 Future Compatibility Testing
+
+**Test Framework**:
+- Automated testing against React Router releases
+- Configuration compatibility matrix
+- Performance regression detection
+- Breaking change identification
+
+**Files**:
+- `/packages/hydrogen/src/react-router/__tests__/config-validation.test.ts`
+- `/packages/cli/src/commands/check-react-router-compatibility.ts`
+
+## Phase 6 Success Criteria
+- [ ] All React Router Config properties explicitly handled
+- [ ] Skeleton template includes comprehensive configuration
+- [ ] CLI validates and generates optimal configurations
+- [ ] Future React Router flags can be added systematically
+- [ ] Performance benchmarks for each enabled flag
+- [ ] Documentation for configuration decisions
+
+---
+
 # Risk Assessment and Mitigation
 
 ## High Risk

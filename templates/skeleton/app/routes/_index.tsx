@@ -1,5 +1,5 @@
 import {type LoaderFunctionArgs} from 'react-router';
-import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
+import {Await, useLoaderData, Link, type MetaFunction} from 'react-router';
 import {Suspense} from 'react';
 import {Image, Money} from '@shopify/hydrogen';
 import type {

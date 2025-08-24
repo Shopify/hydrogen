@@ -147,3 +147,49 @@ examples/express/build
 
 # React Router generated types
 .react-router
+
+# TSup generated files in docs and examples
+docs/**/*.d.ts
+docs/**/*.js
+!docs/**/*.config.js
+!docs/**/*.mjs
+examples/**/*.d.ts
+examples/**/*.js
+!examples/**/*.config.js
+!examples/**/*.mjs
+templates/**/*.d.ts
+templates/**/*.js
+!templates/**/*.config.js
+!templates/**/*.mjs
+
+# TSup generated files in packages
+packages/**/assets/**/*.d.ts
+packages/**/assets/**/*.js
+packages/**/src/**/*.d.ts
+packages/**/src/**/*.js
+!packages/**/src/**/*.config.js
+!packages/**/src/**/*.mjs
+
+# TSup transpiled config and test files
+packages/*/tsup.config.d.ts
+packages/*/tsup.config.js
+packages/*/vite.config.d.ts  
+packages/*/vite.config.js
+packages/*/vitest.config.d.ts
+packages/*/vitest.config.js
+packages/*/vitest.setup.d.ts
+packages/*/vitest.setup.js
+packages/*/codegen.d.ts
+packages/*/codegen.js
+packages/*/integration.test.d.ts
+packages/*/integration.test.js
+packages/*/tests/**/*.d.ts
+packages/*/tests/**/*.js
+packages/*/docs/**/*.d.ts
+packages/*/docs/**/*.js
+examples/*/vite.config.d.ts
+examples/*/vite.config.js
+
+# Important: Keep React Router augmentation files
+!packages/hydrogen/react-router.d.ts
+!packages/hydrogen/react-router-augmentation.d.ts
