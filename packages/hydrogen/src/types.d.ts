@@ -10,6 +10,13 @@ import {
   BUYER_SESSION_KEY,
 } from './customer/constants';
 import type {BuyerInput} from '@shopify/hydrogen-react/storefront-api-types';
+
+// React Router integration types
+import type { unstable_RouterContextProvider } from 'react-router';
+import type { StorefrontClient, I18nBase } from './storefront';
+import type { CustomerAccount } from './customer/types';
+import type { HydrogenCart, HydrogenCartCustom, CustomMethodsBase } from './cart/createCartHandler';
+
 export interface HydrogenSessionData {
   [CUSTOMER_ACCOUNT_SESSION_KEY]: {
     accessToken?: string;
@@ -65,6 +72,28 @@ export type StorefrontHeaders = {
   /** The purpose header value for debugging */
   purpose: string | null;
 };
+
+export interface HydrogenRouterContextProvider<
+  TSession extends HydrogenSession = HydrogenSession,
+  TCustomMethods extends CustomMethodsBase | undefined = {},
+  TI18n extends I18nBase = I18nBase,
+  TEnv extends HydrogenEnv = Env,
+> extends unstable_RouterContextProvider {
+  /** A GraphQL client for querying the Storefront API */
+  storefront: StorefrontClient<TI18n>['storefront'];
+  /** A GraphQL client for querying the Customer Account API */
+  customerAccount: CustomerAccount;
+  /** A collection of utilities used to interact with the cart */
+  cart: TCustomMethods extends CustomMethodsBase
+    ? HydrogenCartCustom<TCustomMethods>
+    : HydrogenCart;
+  /** Environment variables from the fetch function */
+  env: TEnv;
+  /** The waitUntil function for keeping requests alive */
+  waitUntil?: WaitUntil;
+  /** Session implementation */
+  session: TSession;
+}
 
 declare global {
   interface Window {

@@ -7,7 +7,7 @@ import {
   data,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
+} from 'react-router';
 import {
   Form,
   useActionData,

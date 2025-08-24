@@ -5,7 +5,7 @@ import {
   data,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
+} from 'react-router';
 import { Form, useActionData, useNavigation, useOutletContext, type MetaFunction } from 'react-router';
 
 export type ActionResponse = {
