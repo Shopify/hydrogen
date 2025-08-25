@@ -4,7 +4,7 @@ import {oxygen} from '@shopify/mini-oxygen/vite';
 import {vitePlugin as remix} from '@remix-run/dev';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-declare module "@remix-run/server-runtime" {
+declare module '@remix-run/server-runtime' {
   interface Future {
     v3_singleFetch: true;
   }
@@ -46,5 +46,8 @@ export default defineConfig({
        */
       include: [],
     },
+  },
+  server: {
+    allowedHosts: ['.tryhydrogen.dev'],
   },
 });
