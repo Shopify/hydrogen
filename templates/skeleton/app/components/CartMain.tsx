@@ -1,7 +1,12 @@
 import {useOptimisticCart} from '@shopify/hydrogen';
-import { Link } from 'react-router';
+import {Link} from 'react-router';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
-import type {CartWarning} from '@shopify/hydrogen-react/storefront-api-types';
+import type {
+  CartWarning,
+  CartUserError,
+  MetafieldsSetUserError,
+  MetafieldDeleteUserError,
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {useAside} from '~/components/Aside';
 import {CartLineItem} from '~/components/CartLineItem';
 import {CartSummary} from './CartSummary';
@@ -12,13 +17,22 @@ export type CartMainProps = {
   cart: CartApiQueryFragment | null;
   layout: CartLayout;
   warnings?: CartWarning[];
+  userErrors?:
+    | CartUserError[]
+    | MetafieldsSetUserError[]
+    | MetafieldDeleteUserError[];
 };
 
 /**
  * The main cart component that displays the cart items and summary.
  * It is used by both the /cart route and the cart aside dialog.
  */
-export function CartMain({layout, cart: originalCart, warnings}: CartMainProps) {
+export function CartMain({
+  layout,
+  cart: originalCart,
+  warnings,
+  userErrors,
+}: CartMainProps) {
   // The useOptimisticCart hook applies pending actions to the cart
   // so the user immediately sees feedback when they modify the cart.
   const cart = useOptimisticCart(originalCart);
@@ -41,7 +55,14 @@ export function CartMain({layout, cart: originalCart, warnings}: CartMainProps) 
             ))}
           </ul>
         </div>
-        {cartHasItems && <CartSummary cart={cart} layout={layout} warnings={warnings} />}
+        {cartHasItems && (
+          <CartSummary
+            cart={cart}
+            layout={layout}
+            warnings={warnings}
+            userErrors={userErrors}
+          />
+        )}
       </div>
     </div>
   );
