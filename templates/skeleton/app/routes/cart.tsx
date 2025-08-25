@@ -79,7 +79,7 @@ export async function action({request, context}: ActionFunctionArgs) {
 
   const cartId = result?.cart?.id;
   const headers = cartId ? cart.setCartId(result.cart.id) : new Headers();
-  const {cart: cartResult, errors, warnings} = result;
+  const {cart: cartResult, errors, warnings, userErrors} = result;
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string') {
@@ -91,6 +91,7 @@ export async function action({request, context}: ActionFunctionArgs) {
     {
       cart: cartResult,
       errors,
+      userErrors,
       warnings,
       analytics: {
         cartId,
@@ -112,7 +113,12 @@ export default function Cart() {
   return (
     <div className="cart">
       <h1>Cart</h1>
-      <CartMain layout="page" cart={cart} warnings={actionData?.warnings} />
+      <CartMain
+        layout="page"
+        cart={cart}
+        warnings={actionData?.warnings}
+        userErrors={actionData?.userErrors}
+      />
     </div>
   );
 }
