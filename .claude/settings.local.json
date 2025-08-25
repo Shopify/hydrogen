@@ -5,7 +5,25 @@
       "Bash(gh run view:*)",
       "WebSearch",
       "Bash(find:*)",
-      "Bash(npm run typecheck:*)"
+      "Bash(npm run typecheck:*)",
+      "Bash(pkill:*)",
+      "Bash(curl:*)",
+      "Bash(npm run build:pkg:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "mcp__docs-react-router__fetch_react_router_documentation",
+      "mcp__docs-react-router__search_react_router_documentation",
+      "mcp__docs-react-router__search_react_router_code",
+      "mcp__docs-react-router__fetch_generic_url_content",
+      "WebFetch(domain:api.reactrouter.com)",
+      "Bash(timeout 15 npm run preview)",
+      "Bash(npm run dev:*)",
+      "WebFetch(domain:vite.dev)",
+      "mcp__docs-vite__fetch_vite_documentation",
+      "mcp__docs-vite__search_vite_documentation",
+      "Bash(npm run preview:*)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   },
   "enabledMcpjsonServers": [
