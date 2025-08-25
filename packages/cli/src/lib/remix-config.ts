@@ -49,16 +49,24 @@ export async function isClassicProject(root: string) {
 
 const BUILD_DIR = 'dist'; // Hardcoded in Oxygen
 const CLIENT_SUBDIR = 'client';
-const WORKER_SUBDIR = 'worker'; // Hardcoded in Oxygen
+const WORKER_SUBDIR = 'worker'; // Hardcoded in Oxygen (Legacy Remix)
+const SERVER_SUBDIR = 'server'; // React Router 7.8.x+ structure
 
 const oxygenServerMainFields = ['browser', 'module', 'main'];
 
-export function getProjectPaths(appPath?: string) {
+export async function getProjectPaths(appPath?: string) {
   const root = appPath ?? process.cwd();
   const publicPath = path.join(root, 'public');
   const buildPath = path.join(root, BUILD_DIR);
   const buildPathClient = path.join(buildPath, CLIENT_SUBDIR);
-  const buildPathWorkerFile = path.join(buildPath, WORKER_SUBDIR, 'index.js');
+  
+  // React Router 7.8.x compatibility: Support unstable_viteEnvironmentApi flag
+  // With vite.config.ts environments.ssr.build.outDir, this enables custom build paths  
+  // Check for React Router 7.8.x structure first (dist/server/), fallback to legacy (dist/worker/)
+  const serverPath = path.join(buildPath, SERVER_SUBDIR, 'index.js');
+  const workerPath = path.join(buildPath, WORKER_SUBDIR, 'index.js');
+  
+  const buildPathWorkerFile = (await fileExists(serverPath)) ? serverPath : workerPath;
 
   return {
     root,

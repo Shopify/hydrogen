@@ -9,13 +9,6 @@ const additionalContext = {
   // Example of complex objects that could be added:
   // cms: await createCMSClient(env),
   // reviews: await createReviewsClient(env),
-  test: {
-    name: 'juan',
-    surname: 'prieto',
-    display() {
-      return `${this.name} ${this.surname}`;
-    },
-  },
 } as const;
 
 // Automatically augment HydrogenAdditionalContext with the additional context type
@@ -54,6 +47,7 @@ export async function createHydrogenRouterContext(
       cache,
       waitUntil,
       session,
+      // Or detect from URL path based on locale subpath, cookies, or any other strategy
       i18n: {language: 'EN', country: 'US'},
       cart: {
         queryFragment: CART_QUERY_FRAGMENT,

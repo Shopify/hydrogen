@@ -240,7 +240,7 @@ async function checkDirtyGitBranch(appPath: string) {
  * Gets the current @shopify/hydrogen version from the app's package.json
  */
 export async function getHydrogenVersion({appPath}: {appPath: string}) {
-  const {root} = getProjectPaths(appPath);
+  const {root} = await getProjectPaths(appPath);
   const packageJsonPath = joinPath(root, 'package.json');
 
   let packageJson: PackageJson | undefined;

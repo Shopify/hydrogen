@@ -55,6 +55,14 @@
     "./react-router-types": {
       "types": "./dist/react-router.d.ts"
     },
+    "./react-router-preset": {
+      "types": "./dist/production/react-router-preset.d.ts",
+      "import": {
+        "development": "./dist/development/react-router-preset.js",
+        "default": "./dist/production/react-router-preset.js"
+      },
+      "default": "./dist/production/react-router-preset.js"
+    },
     "./package.json": "./package.json"
   },
   "typesVersions": {

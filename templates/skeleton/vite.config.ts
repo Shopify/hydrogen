@@ -11,6 +11,9 @@ export default defineConfig({
     // withtout inlining assets as base64:
     assetsInlineLimit: 0,
   },
+  
+  // Default React Router 7.8.x structure (no custom environment config)
+  
   ssr: {
     optimizeDeps: {
       /**
