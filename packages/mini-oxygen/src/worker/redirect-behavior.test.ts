@@ -2,12 +2,17 @@ import {join} from 'node:path';
 import {writeFile, rm as remove, readFile} from 'node:fs/promises';
 import {temporaryDirectory} from 'tempy';
 import {it, vi, describe, beforeEach, expect, afterEach} from 'vitest';
-import {createMiniOxygen, Request, Response, type MiniOxygenOptions} from './index.js';
+import {
+  createMiniOxygen,
+  Request,
+  Response,
+  type MiniOxygenOptions,
+} from './index.js';
 
 /**
  * Tests that MiniOxygen Worker runtime correctly handles redirects without following them,
  * ensuring React Router's redirect() and redirectDocument() work as expected.
- * 
+ *
  * This tests the worker environment specifically, without the Node.js HTTP server layer.
  */
 describe('MiniOxygen Worker redirect behavior', () => {
@@ -23,87 +28,99 @@ describe('MiniOxygen Worker redirect behavior', () => {
 
   it('should NOT follow 302 redirects in worker runtime', async () => {
     const miniOxygen = createMiniOxygen({
-      workers: [{
-        name: 'test-worker',
-        modules: true,
-        script: await fixture.getScript(),
-      }],
+      workers: [
+        {
+          name: 'test-worker',
+          modules: true,
+          script: await fixture.getScript(),
+        },
+      ],
     });
 
     await miniOxygen.ready;
-    
+
     const request = new Request('http://localhost/external-redirect');
     const response = await miniOxygen.dispatchFetch(request);
-    
+
     // Worker should return the redirect response, not follow it
     expect(response.status).toBe(302);
     expect(response.headers.get('location')).toBe('https://example.com/oauth');
-    
+
     // Verify body is empty for redirects
     const text = await response.text();
     expect(text).toBe('');
-    
+
     await miniOxygen.dispose();
   });
 
   it('should handle redirectDocument in worker runtime', async () => {
     const miniOxygen = createMiniOxygen({
-      workers: [{
-        name: 'test-worker',
-        modules: true,
-        script: await fixture.getScript(),
-      }],
+      workers: [
+        {
+          name: 'test-worker',
+          modules: true,
+          script: await fixture.getScript(),
+        },
+      ],
     });
 
     await miniOxygen.ready;
-    
+
     const request = new Request('http://localhost/redirect-document');
     const response = await miniOxygen.dispatchFetch(request);
-    
+
     expect(response.status).toBe(302);
     expect(response.headers.get('location')).toBe('https://external.com');
     expect(response.headers.get('X-Remix-Reload-Document')).toBe('true');
-    
+
     await miniOxygen.dispose();
   });
 
   it('should preserve query parameters in worker runtime', async () => {
     const miniOxygen = createMiniOxygen({
-      workers: [{
-        name: 'test-worker',
-        modules: true,
-        script: await fixture.getScript(),
-      }],
+      workers: [
+        {
+          name: 'test-worker',
+          modules: true,
+          script: await fixture.getScript(),
+        },
+      ],
     });
 
     await miniOxygen.ready;
-    
+
     const request = new Request('http://localhost/redirect-with-query');
     const response = await miniOxygen.dispatchFetch(request);
-    
+
     expect(response.status).toBe(302);
-    expect(response.headers.get('location')).toBe('https://example.com/oauth?client_id=abc123&return_url=%2Fdashboard&state=xyz789');
-    
+    expect(response.headers.get('location')).toBe(
+      'https://example.com/oauth?client_id=abc123&return_url=%2Fdashboard&state=xyz789',
+    );
+
     await miniOxygen.dispose();
   });
 
   it('should handle multiple Set-Cookie headers in worker runtime', async () => {
     const miniOxygen = createMiniOxygen({
-      workers: [{
-        name: 'test-worker',
-        modules: true,
-        script: await fixture.getScript(),
-      }],
+      workers: [
+        {
+          name: 'test-worker',
+          modules: true,
+          script: await fixture.getScript(),
+        },
+      ],
     });
 
     await miniOxygen.ready;
-    
+
     const request = new Request('http://localhost/redirect-multiple-cookies');
     const response = await miniOxygen.dispatchFetch(request);
-    
+
     expect(response.status).toBe(302);
-    expect(response.headers.get('location')).toBe('https://example.com/dashboard');
-    
+    expect(response.headers.get('location')).toBe(
+      'https://example.com/dashboard',
+    );
+
     // In worker environment, check getSetCookie method
     const cookies = response.headers.getSetCookie();
     expect(cookies).toHaveLength(3);
@@ -112,58 +129,62 @@ describe('MiniOxygen Worker redirect behavior', () => {
         expect.stringContaining('session_token='),
         expect.stringContaining('refresh_token='),
         expect.stringContaining('user_id='),
-      ])
+      ]),
     );
-    
+
     await miniOxygen.dispose();
   });
 
   it('should preserve security headers in worker runtime', async () => {
     const miniOxygen = createMiniOxygen({
-      workers: [{
-        name: 'test-worker',
-        modules: true,
-        script: await fixture.getScript(),
-      }],
+      workers: [
+        {
+          name: 'test-worker',
+          modules: true,
+          script: await fixture.getScript(),
+        },
+      ],
     });
 
     await miniOxygen.ready;
-    
+
     const request = new Request('http://localhost/redirect-with-csp');
     const response = await miniOxygen.dispatchFetch(request);
-    
+
     expect(response.status).toBe(302);
     expect(response.headers.get('location')).toBe('https://secure.example.com');
     expect(response.headers.get('content-security-policy')).toBe(
-      "default-src 'self'; script-src 'self' 'nonce-abc123'; style-src 'self' 'unsafe-inline'"
+      "default-src 'self'; script-src 'self' 'nonce-abc123'; style-src 'self' 'unsafe-inline'",
     );
     expect(response.headers.get('x-frame-options')).toBe('DENY');
     expect(response.headers.get('x-content-type-options')).toBe('nosniff');
-    
+
     await miniOxygen.dispose();
   });
 
   it('should handle various redirect status codes in worker runtime', async () => {
     const miniOxygen = createMiniOxygen({
-      workers: [{
-        name: 'test-worker',
-        modules: true,
-        script: await fixture.getScript(),
-      }],
+      workers: [
+        {
+          name: 'test-worker',
+          modules: true,
+          script: await fixture.getScript(),
+        },
+      ],
     });
 
     await miniOxygen.ready;
-    
+
     const statuses = [301, 302, 303, 307, 308];
-    
+
     for (const status of statuses) {
       const request = new Request(`http://localhost/redirect/${status}`);
       const response = await miniOxygen.dispatchFetch(request);
-      
+
       expect(response.status).toBe(status);
       expect(response.headers.get('location')).toBeTruthy();
     }
-    
+
     await miniOxygen.dispose();
   });
 });
@@ -186,11 +207,15 @@ async function createRedirectFixture(name: string): Promise<RedirectFixture> {
 
   await writeFile(
     join(directory, 'package.json'),
-    JSON.stringify({
-      name: 'worker-redirect-test',
-      version: '1.0.0',
-      type: 'module',
-    }, null, 2),
+    JSON.stringify(
+      {
+        name: 'worker-redirect-test',
+        version: '1.0.0',
+        type: 'module',
+      },
+      null,
+      2,
+    ),
   );
 
   // Same worker code as node tests to ensure consistency

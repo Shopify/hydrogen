@@ -7,7 +7,7 @@ import {startServer, type MiniOxygenOptions} from './index.js';
 /**
  * Tests that MiniOxygen correctly handles redirects without following them,
  * ensuring React Router's redirect() and redirectDocument() work as expected.
- * 
+ *
  * The key issue: Miniflare v4 by default follows redirects, which breaks
  * external redirects (like OAuth) that need to be handled by the browser.
  */
@@ -31,15 +31,18 @@ describe('MiniOxygen redirect behavior', () => {
       workerFile: fixture.paths.workerFile,
     });
 
-    const response = await fetch(`http://localhost:${miniOxygen.port}/external-redirect`, {
-      redirect: 'manual',
-    });
-    
+    const response = await fetch(
+      `http://localhost:${miniOxygen.port}/external-redirect`,
+      {
+        redirect: 'manual',
+      },
+    );
+
     // MiniOxygen should return the redirect response, not follow it
     expect(response.status).toBe(302);
     expect(response.redirected).toBe(false);
     expect(response.headers.get('location')).toBe('https://example.com/oauth');
-    
+
     await miniOxygen.close();
   });
 
@@ -49,14 +52,17 @@ describe('MiniOxygen redirect behavior', () => {
       workerFile: fixture.paths.workerFile,
     });
 
-    const response = await fetch(`http://localhost:${miniOxygen.port}/permanent-redirect`, {
-      redirect: 'manual',
-    });
-    
+    const response = await fetch(
+      `http://localhost:${miniOxygen.port}/permanent-redirect`,
+      {
+        redirect: 'manual',
+      },
+    );
+
     expect(response.status).toBe(301);
     expect(response.redirected).toBe(false);
     expect(response.headers.get('location')).toBe('https://example.com/moved');
-    
+
     await miniOxygen.close();
   });
 
@@ -68,22 +74,30 @@ describe('MiniOxygen redirect behavior', () => {
 
     // Use a raw HTTP request to bypass any fetch quirks
     const http = await import('node:http');
-    const response = await new Promise<{status: number, headers: Record<string, string>}>((resolve) => {
-      http.get(`http://localhost:${miniOxygen.port}/redirect-with-headers`, (res) => {
-        const headers: Record<string, string> = {};
-        for (const [key, value] of Object.entries(res.headers)) {
-          headers[key] = Array.isArray(value) ? value.join(', ') : value as string;
-        }
-        resolve({ status: res.statusCode!, headers });
-        res.resume(); // Consume the response body
-      });
+    const response = await new Promise<{
+      status: number;
+      headers: Record<string, string>;
+    }>((resolve) => {
+      http.get(
+        `http://localhost:${miniOxygen.port}/redirect-with-headers`,
+        (res) => {
+          const headers: Record<string, string> = {};
+          for (const [key, value] of Object.entries(res.headers)) {
+            headers[key] = Array.isArray(value)
+              ? value.join(', ')
+              : (value as string);
+          }
+          resolve({status: res.statusCode!, headers});
+          res.resume(); // Consume the response body
+        },
+      );
     });
-    
+
     expect(response.status).toBe(302);
     expect(response.headers.location).toBe('https://example.com');
     expect(response.headers['x-custom-header']).toBe('preserved');
     expect(response.headers['set-cookie']).toBe('session=abc123');
-    
+
     await miniOxygen.close();
   });
 
@@ -93,15 +107,18 @@ describe('MiniOxygen redirect behavior', () => {
       workerFile: fixture.paths.workerFile,
     });
 
-    const response = await fetch(`http://localhost:${miniOxygen.port}/redirect-document`, {
-      redirect: 'manual',
-    });
-    
+    const response = await fetch(
+      `http://localhost:${miniOxygen.port}/redirect-document`,
+      {
+        redirect: 'manual',
+      },
+    );
+
     expect(response.status).toBe(302);
     expect(response.redirected).toBe(false);
     expect(response.headers.get('location')).toBe('https://external.com');
     expect(response.headers.get('X-Remix-Reload-Document')).toBe('true');
-    
+
     await miniOxygen.close();
   });
 
@@ -112,17 +129,20 @@ describe('MiniOxygen redirect behavior', () => {
     });
 
     const statuses = [301, 302, 303, 307, 308];
-    
+
     for (const status of statuses) {
-      const response = await fetch(`http://localhost:${miniOxygen.port}/redirect/${status}`, {
-        redirect: 'manual',
-      });
-      
+      const response = await fetch(
+        `http://localhost:${miniOxygen.port}/redirect/${status}`,
+        {
+          redirect: 'manual',
+        },
+      );
+
       expect(response.status).toBe(status);
       expect(response.redirected).toBe(false);
       expect(response.headers.get('location')).toBeTruthy();
     }
-    
+
     await miniOxygen.close();
   });
 
@@ -132,13 +152,15 @@ describe('MiniOxygen redirect behavior', () => {
       workerFile: fixture.paths.workerFile,
       onRequest: async (request, dispatchFetch) => {
         const response = await dispatchFetch(request);
-        
+
         // Verify that dispatchFetch doesn't follow redirects
         if (request.url.includes('/external-redirect')) {
           expect(response.status).toBe(302);
-          expect(response.headers.get('location')).toBe('https://example.com/oauth');
+          expect(response.headers.get('location')).toBe(
+            'https://example.com/oauth',
+          );
         }
-        
+
         return response;
       },
     });
@@ -146,7 +168,7 @@ describe('MiniOxygen redirect behavior', () => {
     await fetch(`http://localhost:${miniOxygen.port}/external-redirect`, {
       redirect: 'manual',
     });
-    
+
     await miniOxygen.close();
   });
 
@@ -156,17 +178,20 @@ describe('MiniOxygen redirect behavior', () => {
       workerFile: fixture.paths.workerFile,
     });
 
-    const response = await fetch(`http://localhost:${miniOxygen.port}/external-redirect`, {
-      redirect: 'manual',
-    });
-    
+    const response = await fetch(
+      `http://localhost:${miniOxygen.port}/external-redirect`,
+      {
+        redirect: 'manual',
+      },
+    );
+
     expect(response.status).toBe(302);
     expect(response.headers.get('location')).toBe('https://example.com/oauth');
-    
+
     // React Router expects redirect responses to have no body
     const text = await response.text();
     expect(text).toBe('');
-    
+
     await miniOxygen.close();
   });
 
@@ -176,13 +201,18 @@ describe('MiniOxygen redirect behavior', () => {
       workerFile: fixture.paths.workerFile,
     });
 
-    const response = await fetch(`http://localhost:${miniOxygen.port}/redirect-with-query`, {
-      redirect: 'manual',
-    });
-    
+    const response = await fetch(
+      `http://localhost:${miniOxygen.port}/redirect-with-query`,
+      {
+        redirect: 'manual',
+      },
+    );
+
     expect(response.status).toBe(302);
-    expect(response.headers.get('location')).toBe('https://example.com/oauth?client_id=abc123&return_url=%2Fdashboard&state=xyz789');
-    
+    expect(response.headers.get('location')).toBe(
+      'https://example.com/oauth?client_id=abc123&return_url=%2Fdashboard&state=xyz789',
+    );
+
     await miniOxygen.close();
   });
 
@@ -192,36 +222,49 @@ describe('MiniOxygen redirect behavior', () => {
       workerFile: fixture.paths.workerFile,
     });
 
-    const response = await fetch(`http://localhost:${miniOxygen.port}/redirect-multiple-cookies`, {
-      redirect: 'manual',
-    });
-    
+    const response = await fetch(
+      `http://localhost:${miniOxygen.port}/redirect-multiple-cookies`,
+      {
+        redirect: 'manual',
+      },
+    );
+
     expect(response.status).toBe(302);
-    expect(response.headers.get('location')).toBe('https://example.com/dashboard');
-    
+    expect(response.headers.get('location')).toBe(
+      'https://example.com/dashboard',
+    );
+
     // Check raw headers using Node.js http to see multiple cookies
     const http = await import('node:http');
-    const rawResponse = await new Promise<{status: number, headers: Record<string, string | string[]>}>((resolve) => {
-      http.get(`http://localhost:${miniOxygen.port}/redirect-multiple-cookies`, (res) => {
-        const headers: Record<string, string | string[]> = {};
-        for (const [key, value] of Object.entries(res.headers)) {
-          headers[key] = value!;
-        }
-        resolve({ status: res.statusCode!, headers });
-        res.resume();
-      });
+    const rawResponse = await new Promise<{
+      status: number;
+      headers: Record<string, string | string[]>;
+    }>((resolve) => {
+      http.get(
+        `http://localhost:${miniOxygen.port}/redirect-multiple-cookies`,
+        (res) => {
+          const headers: Record<string, string | string[]> = {};
+          for (const [key, value] of Object.entries(res.headers)) {
+            headers[key] = value!;
+          }
+          resolve({status: res.statusCode!, headers});
+          res.resume();
+        },
+      );
     });
-    
+
     // Multiple Set-Cookie headers should be preserved
     const setCookieHeader = rawResponse.headers['set-cookie'];
-    expect(Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader]).toEqual(
+    expect(
+      Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader],
+    ).toEqual(
       expect.arrayContaining([
         expect.stringContaining('session_token='),
         expect.stringContaining('refresh_token='),
         expect.stringContaining('user_id='),
-      ])
+      ]),
     );
-    
+
     await miniOxygen.close();
   });
 
@@ -231,18 +274,21 @@ describe('MiniOxygen redirect behavior', () => {
       workerFile: fixture.paths.workerFile,
     });
 
-    const response = await fetch(`http://localhost:${miniOxygen.port}/redirect-with-csp`, {
-      redirect: 'manual',
-    });
-    
+    const response = await fetch(
+      `http://localhost:${miniOxygen.port}/redirect-with-csp`,
+      {
+        redirect: 'manual',
+      },
+    );
+
     expect(response.status).toBe(302);
     expect(response.headers.get('location')).toBe('https://secure.example.com');
     expect(response.headers.get('content-security-policy')).toBe(
-      "default-src 'self'; script-src 'self' 'nonce-abc123'; style-src 'self' 'unsafe-inline'"
+      "default-src 'self'; script-src 'self' 'nonce-abc123'; style-src 'self' 'unsafe-inline'",
     );
     expect(response.headers.get('x-frame-options')).toBe('DENY');
     expect(response.headers.get('x-content-type-options')).toBe('nosniff');
-    
+
     await miniOxygen.close();
   });
 });
@@ -264,11 +310,15 @@ async function createRedirectFixture(name: string): Promise<RedirectFixture> {
 
   await writeFile(
     join(directory, 'package.json'),
-    JSON.stringify({
-      name: 'redirect-test-worker',
-      version: '1.0.0',
-      type: 'module',
-    }, null, 2),
+    JSON.stringify(
+      {
+        name: 'redirect-test-worker',
+        version: '1.0.0',
+        type: 'module',
+      },
+      null,
+      2,
+    ),
   );
 
   // Simple worker that tests various redirect scenarios
