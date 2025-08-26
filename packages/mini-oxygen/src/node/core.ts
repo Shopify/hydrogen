@@ -128,8 +128,10 @@ export class MiniOxygen {
   }
 
   async dispatchFetch(request: Request): Promise<Response> {
-    const fn = this.miniflare.dispatchFetch;
-    return fn.call(this.miniflare, request, {redirect: 'manual'});
+    // Miniflare's dispatchFetch accepts (input: RequestInfo, init?: RequestInit)
+    // We need to pass redirect: 'manual' as part of the init parameter
+    const response = await this.miniflare.dispatchFetch(request, {redirect: 'manual'});
+    return response;
   }
 
   async setOptions(
