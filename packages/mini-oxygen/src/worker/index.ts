@@ -184,7 +184,10 @@ export function createMiniOxygen({
 
   return {
     ready,
-    dispatchFetch: mf.dispatchFetch,
+    dispatchFetch: (request: Request) => {
+      const fn = mf.dispatchFetch;
+      return fn.call(mf, request, {redirect: 'manual'});
+    },
     getBindings: mf.getBindings,
     getCaches: mf.getCaches,
     getWorker: mf.getWorker,

@@ -106,7 +106,9 @@ export function createMiniOxygen(
       // which means that it has loaded the initial worker code.
       await mf.getPlugins();
     },
-    dispatchFetch: (request) => mf.dispatchFetch(request),
+    dispatchFetch: (request) => {
+      return mf.dispatchFetch(request);
+    },
     async reload({env, ...nextOptions} = {}) {
       await mf.reload({...nextOptions, ...(env && {bindings: env})});
     },
