@@ -70,7 +70,7 @@ export async function runCodegen({
   forceSfapiVersion?: string;
   watch?: boolean;
 }) {
-  const {root} = await getProjectPaths(directory);
+  const {root} = getProjectPaths(directory);
   const remixConfig = await getRemixConfig(root);
 
   console.log(''); // New line

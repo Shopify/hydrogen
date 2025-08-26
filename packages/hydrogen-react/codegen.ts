@@ -91,9 +91,9 @@ const config: CodegenConfig = {
             enumValues: {
               // Use Storefront API's LanguageCode enum for Customer Account API to ensure type compatibility.
               // Both APIs use the same 2025-04 schema version and share 95%+ of LanguageCode values.
-              // The Storefront API has a few additional codes (LA, MO, SH) that Customer Account API 
-              // doesn't define, but using the superset is safe - Customer Account will accept all 
-              // values it supports. This allows storefront.i18n.language to be directly used in 
+              // The Storefront API has a few additional codes (LA, MO, SH) that Customer Account API
+              // doesn't define, but using the superset is safe - Customer Account will accept all
+              // values it supports. This allows storefront.i18n.language to be directly used in
               // Customer Account mutations without type casting while maintaining GraphQL schema validity.
               LanguageCode: './storefront-api-types#LanguageCode',
               // Use Storefront API's CurrencyCode enum for the same type compatibility reasons.

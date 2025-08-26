@@ -67,12 +67,12 @@ export default defineConfig([
       const reactRouterSource = await fs.readFile('react-router.d.ts', 'utf-8');
       const reactRouterDist = reactRouterSource.replace(
         './src/index',
-        './production/index'
+        './production/index',
       );
       await fs.writeFile(
         path.resolve(outDir, 'react-router.d.ts'),
         reactRouterDist,
-        'utf-8'
+        'utf-8',
       );
 
       console.log('\n', 'React Router augmentation types copied', '\n');

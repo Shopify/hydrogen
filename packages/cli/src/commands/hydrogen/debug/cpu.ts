@@ -71,7 +71,7 @@ async function runDebugCpu({directory, entry, output}: RunDebugCpuOptions) {
 
   muteDevLogs({workerReload: false});
 
-  let {buildPath, buildPathWorkerFile} = await getProjectPaths(directory);
+  let {buildPath, buildPathWorkerFile} = getProjectPaths(directory);
 
   outputInfo(
     '⏳️ Starting profiler for CPU startup... Profile will be written to:\n' +

@@ -22,7 +22,7 @@ const REACT_ROUTER_PACKAGES: ReactRouterPackage[] = [
   '@react-router/fs-routes',
 ];
 
-const EXPECTED_VERSION = '~7.8.1';
+const EXPECTED_VERSION = '7.8.2';
 
 /**
  * Checks if the installed React Router packages are compatible with Hydrogen's requirements

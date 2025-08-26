@@ -706,7 +706,7 @@ Continue?`.value,
  * Gets the current @shopify/hydrogen version from the package's package.json
  */
 export async function getHydrogenVersion({appPath}: {appPath: string}) {
-  const {root} = await getProjectPaths(appPath);
+  const {root} = getProjectPaths(appPath);
 
   const require = createRequire(import.meta.url);
   const {version} = require(

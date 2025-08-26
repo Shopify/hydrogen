@@ -1,7 +1,11 @@
 // React Router 7 type augmentation for Hydrogen
 // Eliminates the need for AppLoadContext - routes get HydrogenRouterContextProvider directly
 
-import type { HydrogenRouterContextProvider, HydrogenSessionData, HydrogenEnv } from './src/index';
+import type {
+  HydrogenRouterContextProvider,
+  HydrogenSessionData,
+  HydrogenEnv,
+} from './src/index';
 
 // Extensible interface for additional context properties (CMS clients, 3P SDKs, etc.)
 // Users can augment this interface in their own code to add custom properties

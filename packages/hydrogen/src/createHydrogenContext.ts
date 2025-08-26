@@ -28,14 +28,14 @@ import type {
 import {type CrossRuntimeRequest, getHeader} from './utils/request';
 import {warnOnce} from './utils/warning';
 import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
-import { unstable_RouterContextProvider } from 'react-router';
-import { 
+import {unstable_RouterContextProvider} from 'react-router';
+import {
   storefrontContext,
-  cartContext, 
+  cartContext,
   customerAccountContext,
   envContext,
   sessionContext,
-  waitUntilContext
+  waitUntilContext,
 } from './context-keys';
 
 export type HydrogenContextOptions<
@@ -150,7 +150,8 @@ export function createHydrogenContext<
 >(
   options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
   additionalContext?: TAdditionalContext,
-): HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> & TAdditionalContext;
+): HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> &
+  TAdditionalContext;
 
 export function createHydrogenContext<
   TSession extends HydrogenSession,
@@ -161,7 +162,8 @@ export function createHydrogenContext<
 >(
   options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
   additionalContext?: TAdditionalContext,
-): HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> & TAdditionalContext {
+): HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> &
+  TAdditionalContext {
   const {
     env,
     request,
@@ -250,7 +252,7 @@ export function createHydrogenContext<
 
   // Create React Router context provider
   const routerProvider = new unstable_RouterContextProvider();
-  
+
   // Set React Router context keys (enables context.get(storefrontContext))
   routerProvider.set(storefrontContext, storefront);
   routerProvider.set(cartContext, cart);
@@ -284,28 +286,34 @@ export function createHydrogenContext<
         // Bind methods to preserve 'this' context
         return typeof value === 'function' ? value.bind(target) : value;
       }
-      
+
       // If it's a Hydrogen service property, return from services
       if (prop in services) {
         return services[prop as keyof typeof services];
       }
-      
+
       // Default behavior for other properties
       return Reflect.get(target, prop, receiver);
     },
-    
+
     has(target, prop) {
       // Property exists if it's in target OR services
       return prop in target || prop in services;
     },
-    
+
     ownKeys(target) {
       // Return all keys from both target and services
       return [...Reflect.ownKeys(target), ...Object.keys(services)];
-    }
+    },
   });
 
-  return hybridProvider as HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> & TAdditionalContext;
+  return hybridProvider as HydrogenRouterContextProvider<
+    TSession,
+    TCustomMethods,
+    TI18n,
+    TEnv
+  > &
+    TAdditionalContext;
 }
 
 function getStorefrontHeaders(request: CrossRuntimeRequest): StorefrontHeaders {

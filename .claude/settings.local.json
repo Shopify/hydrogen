@@ -23,7 +23,14 @@
       "mcp__docs-vite__search_vite_documentation",
       "Bash(npm run preview:*)",
       "WebFetch(domain:api.github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npm view:*)",
+      "Bash(grep:*)",
+      "Bash(node:*)",
+      "Bash(timeout 10 npm run preview)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npm run build)",
+      "Bash(npm run format:*)",
+      "Bash(npm run lint)"
     ]
   },
   "enabledMcpjsonServers": [
@@ -36,6 +43,8 @@
     "docs-remix",
     "docs-hydrogen",
     "docs-xstate",
-    "shopify-dev-mcp"
-  ]
+    "shopify-dev-mcp",
+    "browsermcp"
+  ],
+  "enableAllProjectMcpServers": true
 }

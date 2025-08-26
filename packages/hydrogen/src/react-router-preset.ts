@@ -7,7 +7,7 @@ import type {Preset} from '@react-router/dev/config';
  * Enables validated performance optimizations while ensuring CLI compatibility.
  *
  * React Router 7.8.x Feature Support Matrix for Hydrogen 2025.7.0
- * 
+ *
  * +----------------------------------+----------+----------------------------------+
  * | Feature                          | Status   | Notes                            |
  * +----------------------------------+----------+----------------------------------+

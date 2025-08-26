@@ -12,10 +12,14 @@ import {
 import type {BuyerInput} from '@shopify/hydrogen-react/storefront-api-types';
 
 // React Router integration types
-import type { unstable_RouterContextProvider } from 'react-router';
-import type { StorefrontClient, I18nBase } from './storefront';
-import type { CustomerAccount } from './customer/types';
-import type { HydrogenCart, HydrogenCartCustom, CustomMethodsBase } from './cart/createCartHandler';
+import type {unstable_RouterContextProvider} from 'react-router';
+import type {StorefrontClient, I18nBase} from './storefront';
+import type {CustomerAccount} from './customer/types';
+import type {
+  HydrogenCart,
+  HydrogenCartCustom,
+  CustomMethodsBase,
+} from './cart/createCartHandler';
 
 export interface HydrogenSessionData {
   [CUSTOMER_ACCOUNT_SESSION_KEY]: {

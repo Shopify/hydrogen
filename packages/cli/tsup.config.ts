@@ -27,10 +27,9 @@ const outDir = 'dist';
 export default defineConfig([
   {
     ...commonConfig,
-    entry: ['src/**/*.ts', '!src/**/*.test.ts'],
+    entry: ['src/**/*.ts', '!src/**/*.test.ts', '!src/**/*.d.ts'],
     outDir,
-    // Generate types only for the exposed entry points
-    dts: {entry: ['src/index.ts', 'src/commands/hydrogen/init.ts']},
+    dts: false,
     async onSuccess() {
       // Copy assets templates
       await copy(path.resolve('assets'), path.join(outDir, ASSETS_DIR_PREFIX), {

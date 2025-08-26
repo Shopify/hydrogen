@@ -132,7 +132,7 @@ export async function runPreview({
   if (!isH2Verbose()) muteDevLogs();
 
   let {root, buildPath, buildPathWorkerFile, buildPathClient} =
-    await getProjectPaths(directory);
+    getProjectPaths(directory);
 
   const useClassicCompiler = await isClassicProject(root);
 
