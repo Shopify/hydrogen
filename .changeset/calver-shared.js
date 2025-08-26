@@ -39,12 +39,11 @@ function getNextVersion(currentVersion, bumpType) {
     return `${nextY}.${nextQ}.0`;
   }
 
-  if (bumpType === 'minor') {
+  if (bumpType === 'minor' || bumpType === 'patch') {
+    // For patch/minor bumps, always increment within same quarter
+    // Invalid quarters are only corrected during major bumps
     return `${v.year}.${v.major}.${v.minor + 1}`;
   }
-
-  // Patch - increment the third segment (minor)
-  return `${v.year}.${v.major}.${v.minor + 1}`;
 }
 
 // Determine bump type by comparing versions
@@ -108,6 +107,36 @@ function hasMajorChangesets() {
     }
   } catch (error) {
     // If we can't read changesets, assume no major bump
+    return false;
+  }
+  
+  return false;
+}
+
+// Check if there are any changesets for CalVer packages (any bump type)
+function hasCalVerChangesets() {
+  const changesetDir = path.join(process.cwd(), '.changeset');
+  
+  try {
+    const files = fs.readdirSync(changesetDir);
+    
+    for (const file of files) {
+      if (!file.endsWith('.md') || file === 'README.md') continue;
+      
+      const filePath = path.join(changesetDir, file);
+      const content = fs.readFileSync(filePath, 'utf-8');
+      
+      // Check for any bumps (patch, minor, major) in CalVer packages
+      for (const pkg of CALVER_PACKAGES) {
+        if (content.includes(`"${pkg}": patch`) || 
+            content.includes(`"${pkg}": minor`) || 
+            content.includes(`"${pkg}": major`)) {
+          return true;
+        }
+      }
+    }
+  } catch (error) {
+    // If we can't read changesets, assume no CalVer changesets
     return false;
   }
   
@@ -241,12 +270,20 @@ if (require.main === module) {
       case 'list-calver-packages':
         console.log(CALVER_PACKAGES.join(' '));
         break;
+      case 'has-calver-changesets':
+        console.log(hasCalVerChangesets());
+        break;
+      case 'has-major-changesets':
+        console.log(hasMajorChangesets());
+        break;
       default:
         console.error(`Usage: node calver-shared.js <command> [args]
 Commands:
   get-next <version> <bump-type>
   detect-bump <old> <new>
-  list-calver-packages`);
+  list-calver-packages
+  has-calver-changesets
+  has-major-changesets`);
         process.exit(1);
     }
   } catch (error) {
@@ -267,6 +304,7 @@ module.exports = {
   getNextQuarter,
   versionToBranchName,
   hasMajorChangesets,
+  hasCalVerChangesets,
   validateUpdates,
   getAllPackagePaths,
   updateInternalDependencies,

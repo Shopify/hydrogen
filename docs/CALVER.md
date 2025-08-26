@@ -11,7 +11,7 @@ This versioning aligns with Shopify's quarterly Storefront API releases, ensurin
 
 ## Automated Branch Detection System
 
-As of 2025, Hydrogen's release system features **fully automated branch detection**, eliminating manual quarterly updates that were previously required.
+As of 2025, Hydrogen's release system features **fully automated branch detection and CalVer precedence logic**, eliminating manual quarterly updates and fixing semver-only release issues that were previously problematic.
 
 ### What Changed
 
@@ -24,10 +24,16 @@ As of 2025, Hydrogen's release system features **fully automated branch detectio
 │ • Update: echo "latestBranch=2025-05" → "2025-07"              │
 │ • Commit & Push                                                │
 │                                                                 │
+│ CLI-Only Releases:                                             │
+│ • Created misleading "[ci] release 2025.5.1" PRs              │
+│ • Only CLI package actually updated                            │
+│ • Manual changeset manipulation required                       │
+│                                                                 │
 │ Problems:                                                       │
 │ • Easy to forget (4x/year)                                     │
 │ • Blocks releases                                              │
-│ • Wrong PR titles                                              │
+│ • Wrong/misleading PR titles                                   │
+│ • Complex manual intervention for CLI releases                 │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
@@ -35,14 +41,16 @@ As of 2025, Hydrogen's release system features **fully automated branch detectio
 ├─────────────────────────────────────────────────────────────────┤
 │ Every Push to Main:                                            │
 │ • Detects current version                                      │
-│ • Checks for major changesets                                  │
-│ • Checks for open release PRs                                  │
+│ • Checks for CalVer vs Semver changesets (PRECEDENCE)         │
+│ • CalVer packages → [ci] release 2025.5.1                     │
+│ • Semver-only → [ci] release semver                            │
 │ • Sets branch automatically                                    │
 │                                                                 │
 │ Benefits:                                                       │
 │ • Zero manual intervention                                     │
 │ • Never blocks releases                                        │
-│ • Always correct PR titles                                     │
+│ • Always accurate PR titles                                    │
+│ • Eliminates CLI-only release confusion                        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -54,31 +62,86 @@ As of 2025, Hydrogen's release system features **fully automated branch detectio
 echo "latestBranch=2025-05" >> $GITHUB_ENV  # ← Manual update required
 ```
 
-**Now** (automated):
+**Now** (automated with dynamic version calculation):
 ```yaml
-# Automatically detect the latest branch based on current version and changesets
-echo "latestBranch=$(node .changeset/get-calver-version-branch.js)" >> $GITHUB_ENV
+# Automatically detect the latest branch and version based on current version and changesets
+BRANCH=$(node .changeset/get-calver-version-branch.js)
+echo "latestBranch=$BRANCH" >> $GITHUB_ENV
+
+# Calculate next version using existing calver utilities
+HYDROGEN_VERSION=$(node -p "require('./packages/hydrogen/package.json').version")
+HAS_MAJOR=$(node -e "console.log(require('./.changeset/calver-shared.js').hasMajorChangesets())")
+
+if [ "$HAS_MAJOR" = "true" ]; then
+  NEXT_VERSION=$(node .changeset/calver-shared.js get-next "$HYDROGEN_VERSION" "major")
+  echo "latestVersion=$NEXT_VERSION" >> $GITHUB_ENV
+else
+  NEXT_VERSION=$(node .changeset/calver-shared.js get-next "$HYDROGEN_VERSION" "patch")
+  echo "latestVersion=$NEXT_VERSION" >> $GITHUB_ENV
+fi
 ```
+
+### CalVer Precedence Logic
+
+The system now implements **CalVer precedence** to determine the correct release type and PR title:
+
+```javascript
+// Check if any CalVer packages have changesets
+HAS_CALVER=$(node .changeset/calver-shared.js has-calver-changesets)
+
+if [ "$HAS_CALVER" = "true" ]; then
+  // CalVer packages present → Use CalVer versioning
+  echo "latestVersion=2025.5.1" >> $GITHUB_ENV
+  // PR Title: "[ci] release 2025.5.1"
+else
+  // Only semver packages → Use semver release format  
+  echo "latestVersion=semver" >> $GITHUB_ENV
+  // PR Title: "[ci] release semver"
+fi
+```
+
+**Examples**:
+- **Mixed changesets** (CLI + Hydrogen) → `[ci] release 2025.5.1`
+- **CalVer-only** (Hydrogen only) → `[ci] release 2025.5.1`  
+- **Semver-only** (CLI only) → `[ci] release semver`
 
 ### How It Works
 
-The `scripts/get-latest-branch.js` script:
-1. Reads the current Hydrogen package version
+The enhanced automation system now calculates both branch and version formats:
+
+**Branch Detection (`get-calver-version-branch.js`)**:
+1. Reads the current Hydrogen package version (source of truth)
 2. Checks for major changesets in `.changeset/` directory
-3. If major changesets exist → returns next quarter branch (e.g., `2025-07`)
-4. If no major changesets → returns current branch (e.g., `2025-05`)
+3. Checks for existing open release PRs (safeguard)
+4. Returns appropriate branch: current (e.g., `2025-05`) or next quarter (e.g., `2025-07`)
+
+**Version Calculation (using `calver-shared.js` utilities)**:
+1. Uses Hydrogen version as source of truth for all CalVer packages
+2. For **patch/minor**: Stays within current quarter (e.g., `2025.5.0` → `2025.5.1`)
+3. For **major**: Advances to next valid quarter (e.g., `2025.5.0` → `2025.7.0`)
+4. **Invalid quarter handling**: Only corrected during major bumps, not patch/minor
 
 ## Architecture
 
 ### Core Scripts
 
-#### 1. Shared Utilities (`scripts/calver-shared.js`)
+#### 1. Shared Utilities (`.changeset/calver-shared.js`)
 Central module providing reusable CalVer logic:
 - `parseVersion()` - Parse CalVer version strings
 - `getNextVersion()` - Calculate next CalVer version
 - `getBumpType()` - Detect bump type between versions
-- `hasMajorChangesets()` - Check for major changesets
+- `hasMajorChangesets()` - Check for major changesets in CalVer packages
+- `hasCalVerChangesets()` - **NEW**: Check for any changesets in CalVer packages  
 - CLI interface for bash script integration
+
+**New CLI Commands**:
+```bash
+# Check if CalVer packages have any changesets (precedence logic)
+node .changeset/calver-shared.js has-calver-changesets  # true/false
+
+# Check if CalVer packages have major changesets  
+node .changeset/calver-shared.js has-major-changesets   # true/false
+```
 
 #### 2. Branch Detection (`scripts/get-latest-branch.js`)
 Automatic branch detection for CI/CD:
@@ -112,25 +175,33 @@ The release workflow now operates with zero manual intervention:
 ┌──────────────────────────────────────────────┐
 │  Run: get-calver-version-branch.js          │
 │  • Check for open release PRs               │
-│  • Read current package version             │
+│  • Read current hydrogen version            │
 │  • Analyze changesets                       │
 └────────┬─────────────────────────────────────┘
          │
          ↓
-    ┌────────────────────────────────────┐
-    │  Decision Logic                    │
-    ├────────────────────────────────────┤
-    │  Open PR exists?      ──Yes──→ Stay│
-    │         ↓ No                       │
-    │  Major changesets?    ──Yes──→ Next│
-    │         ↓ No                       │
-    │  Use current branch                │
-    └────────┬───────────────────────────┘
-             │
-             ↓
+┌──────────────────────────────────────────────┐
+│  Calculate Version (calver-shared.js)       │
+│  • Use hydrogen as source of truth          │
+│  • Major → next valid quarter               │
+│  • Patch/minor → increment within quarter   │
+└────────┬─────────────────────────────────────┘
+         │
+         ↓
+┌────────────────────────────────────┐
+│  Decision Logic                    │
+├────────────────────────────────────┤
+│  Open PR exists?      ──Yes──→ Stay│
+│         ↓ No                       │
+│  Major changesets?    ──Yes──→ Next│
+│         ↓ No                       │
+│  Use current branch                │
+└────────┬───────────────────────────┘
+         │
+         ↓
 ┌──────────────────────────────────┐
 │  Create/Update Version PR        │
-│  Title: [ci] release YYYY-MM     │
+│  Title: [ci] release YYYY.Q.P    │
 └──────────────────────────────────┘
 ```
 
@@ -230,7 +301,8 @@ node scripts/get-latest-branch.js
 - **Trigger**: Merge to main with changesets
 - **Workflow**: `.github/workflows/changesets.yml`
 - **Branch Detection**: Automatic via `get-latest-branch.js`
-- **Version PR Title**: `[ci] release YYYY-MM` (automated)
+- **Version Calculation**: Automatic via `calver-shared.js` utilities
+- **Version PR Title**: `[ci] release YYYY.Q.P` (CalVer format)
 - **npm tag**: `latest`
 
 ### 2. Back-fix Release (CalVer branches)
@@ -344,7 +416,7 @@ Scenario B: With Bypass
 ┌──────────────┐       ┌──────────────┐       ┌──────────────┐
 │ Version:     │       │ Merge PR     │       │ Version PR:  │
 │ 2025.5.0     │  +    │ with minor   │  →    │ [ci] release │
-│              │       │ changeset    │       │ 2025-05      │
+│              │       │ changeset    │       │ 2025.5.1     │
 │ Branch:      │       └──────────────┘       │              │
 │ 2025-05      │                              │ New version: │
 └──────────────┘                              │ 2025.5.1     │
@@ -357,7 +429,7 @@ Scenario B: With Bypass
 ┌──────────────┐       ┌──────────────┐       ┌──────────────┐
 │ Version:     │       │ Merge PR     │       │ Version PR:  │
 │ 2025.5.0     │  +    │ with MAJOR   │  →    │ [ci] release │
-│              │       │ changeset    │       │ 2025-07      │
+│              │       │ changeset    │       │ 2025.7.0     │
 │ Quarter: Q2  │       └──────────────┘       │              │
 └──────────────┘                              │ New version: │
                                               │ 2025.7.0     │
@@ -371,7 +443,7 @@ Scenario B: With Bypass
 ┌──────────────┐       ┌──────────────┐       ┌──────────────┐
 │ Version:     │       │ Merge PR     │       │ Version PR:  │
 │ 2025.10.5    │  +    │ with MAJOR   │  →    │ [ci] release │
-│              │       │ changeset    │       │ 2026-01      │
+│              │       │ changeset    │       │ 2026.1.0     │
 │ Quarter: Q4  │       └──────────────┘       │              │
 │ Year: 2025   │                              │ New version: │
 └──────────────┘                              │ 2026.1.0     │
@@ -381,21 +453,41 @@ Scenario B: With Bypass
 
 ## Safety Features
 
-1. **Version Regression Protection**: Prevents versions from going backwards
-2. **Quarter Alignment Validation**: Ensures majors use quarters (1,4,7,10)
-3. **Format Validation**: Verifies CalVer format (YYYY.M.P)
-4. **Dry-run by Default**: Local script requires `--apply` flag
-5. **Changeset Analysis**: Reads actual changeset files, not assumptions
-6. **Release PR Conflict Prevention**: Blocks quarter advancement if release PR is open
+1. **Hydrogen as Source of Truth**: All CalVer packages use hydrogen's version as baseline
+   - Prevents version inconsistencies across packages
+   - Resolves "Invalid quarter" errors caused by package drift
+   - Ensures consistent CalVer enforcement across the monorepo
+2. **Version Regression Protection**: Prevents versions from going backwards
+3. **Quarter Alignment Validation**: Ensures majors use quarters (1,4,7,10)
+4. **Smart Invalid Quarter Handling**: 
+   - Patch/minor bumps stay within current quarter (even if invalid)
+   - Major bumps automatically advance to next valid quarter
+   - Preserves historical version continuity while ensuring future compliance
+5. **Format Validation**: Verifies CalVer format (YYYY.M.P)
+6. **Dry-run by Default**: Local script requires `--apply` flag
+7. **Changeset Analysis**: Reads actual changeset files, not assumptions
+8. **Release PR Conflict Prevention**: Blocks quarter advancement if release PR is open
    - Checks for existing `changeset-release/main` PRs before advancing quarters
    - Prevents mixing changesets from different quarters in same PR
    - Ensures clean quarter boundaries for major releases
-7. **Major Version Protection**: Prevents major changes from contaminating patch releases
+9. **Major Version Protection**: Prevents major changes from contaminating patch releases
    - Blocks PRs with major changesets when patch/minor release is pending
    - Ensures users can get bug fixes without forced major upgrades
    - Maintainer bypass available for exceptional cases
 
 ## Troubleshooting
+
+### Issue: "Invalid quarter in version X.Y.Z: Y not in [1,4,7,10]"
+**Solution**: CalVer packages have version inconsistencies. The fix-calver system resolves this:
+```bash
+# Check current versions across packages
+echo "Hydrogen: $(cat packages/hydrogen/package.json | jq -r .version)"
+echo "Hydrogen-React: $(cat packages/hydrogen-react/package.json | jq -r .version)"
+echo "Skeleton: $(cat templates/skeleton/package.json | jq -r .version)"
+
+# The system now uses hydrogen as source of truth for all packages
+node .changeset/calver-shared.js get-next "$(cat packages/hydrogen/package.json | jq -r .version)" "patch"
+```
 
 ### Issue: Branch detection shows wrong quarter
 **Solution**: Check for stray major changesets in `.changeset/` directory
@@ -416,6 +508,26 @@ npm run version:changeset && node .changeset/enforce-calver-ci.js
 # Check current versions
 cat packages/hydrogen/package.json | grep version
 cat packages/hydrogen-react/package.json | grep version
+```
+
+### Issue: PR titles still show branch format (YYYY-MM) instead of version format (YYYY.Q.P)
+**Solution**: Ensure the workflow has been updated with dynamic version calculation
+```bash
+# Check if latestVersion is being calculated in changesets.yml
+grep -A 10 "latestVersion" .github/workflows/changesets.yml
+```
+
+### Issue: CLI-only releases create misleading CalVer PR titles
+**Root Cause**: Old workflow calculated CalVer versions regardless of changeset content
+**Solution**: The CalVer precedence logic now detects package types automatically
+```bash
+# Test the precedence logic
+node .changeset/calver-shared.js has-calver-changesets
+
+# Expected results:
+# - CLI-only changesets → false → "[ci] release semver"
+# - Mixed changesets → true → "[ci] release 2025.5.1"
+# - CalVer-only → true → "[ci] release 2025.5.1"
 ```
 
 ## Migration Notes
