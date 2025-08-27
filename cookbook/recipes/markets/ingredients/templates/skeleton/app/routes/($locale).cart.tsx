@@ -6,7 +6,7 @@ import {
   type LoaderFunctionArgs,
   type ActionFunctionArgs,
   type HeadersFunction,
-} from '@shopify/remix-oxygen';
+} from 'react-router';
 import {CartMain} from '~/components/CartMain';
 
 export const meta: MetaFunction = () => {

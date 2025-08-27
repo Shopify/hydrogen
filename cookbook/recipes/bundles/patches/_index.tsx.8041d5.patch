@@ -2,7 +2,7 @@ index 543e76be..0e600164 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
 @@ -1,5 +1,5 @@
- import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import {type LoaderFunctionArgs} from 'react-router';
 -import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
 +import {Await, useLoaderData, Link, type MetaFunction} from 'react-router';
  import {Suspense} from 'react';

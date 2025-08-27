@@ -1,11 +1,11 @@
 import {
-  useNonce
+  useNonce,
   // [START import]
   getShopAnalytics,
   Analytics,
   // [END import]
 } from '@shopify/hydrogen';
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs} from 'react-router';
 import {
   Links,
   Meta,
@@ -175,20 +175,22 @@ export function Layout({children}: {children?: React.ReactNode}) {
       </head>
       <body>
         {data ? (
-          {/* [START provider] */}
-          <Analytics.Provider
-            cart={data.cart}
-            shop={data.shop}
-            consent={data.consent}
-          >
-          {/* [END provider] */}
-            <PageLayout {...data}>{children}</PageLayout>
-            {/* [START custom-component] */}
-            <ThirdPartyAnalyticsIntegration />
-            {/* [END custom-component] */}
-          {/* [START provider] */}
-          </Analytics.Provider>
-          {/* [END provider] */}
+          <>
+            {/* [START provider] */}
+            <Analytics.Provider
+              cart={data.cart}
+              shop={data.shop}
+              consent={data.consent}
+            >
+              {/* [END provider] */}
+              <PageLayout {...data}>{children}</PageLayout>
+              {/* [START custom-component] */}
+              <ThirdPartyAnalyticsIntegration />
+              {/* [END custom-component] */}
+              {/* [START provider] */}
+            </Analytics.Provider>
+            {/* [END provider] */}
+          </>
         ) : (
           children
         )}

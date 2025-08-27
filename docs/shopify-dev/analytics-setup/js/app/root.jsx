@@ -1,5 +1,5 @@
 import {
-  useNonce
+  useNonce,
   // [START import]
   getShopAnalytics,
   Analytics,
@@ -179,21 +179,23 @@ export function Layout({children}) {
       </head>
       <body>
         {data ? (
-          {/* [START provider] */}
-          <Analytics.Provider
-            cart={data.cart}
-            shop={data.shop}
-            consent={data.consent}
-            customData={{foo: 'bar'}}
-          >
-          {/* [END provider] */}
-            <PageLayout {...data}>{children}</PageLayout>
-            {/* [START custom-component] */}
-            <ThirdPartyAnalyticsIntegration />
-            {/* [END custom-component] */}
-          {/* [START provider] */}
-          </Analytics.Provider>
-          {/* [END provider] */}
+          <>
+            {/* [START provider] */}
+            <Analytics.Provider
+              cart={data.cart}
+              shop={data.shop}
+              consent={data.consent}
+              customData={{foo: 'bar'}}
+            >
+              {/* [END provider] */}
+              <PageLayout {...data}>{children}</PageLayout>
+              {/* [START custom-component] */}
+              <ThirdPartyAnalyticsIntegration />
+              {/* [END custom-component] */}
+              {/* [START provider] */}
+            </Analytics.Provider>
+            {/* [END provider] */}
+          </>
         ) : (
           children
         )}
@@ -235,6 +237,6 @@ export function ErrorBoundary() {
 
 /** @typedef {LoaderReturnData} RootLoader */
 
-/** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
+/** @typedef {import('react-router').LoaderFunctionArgs} LoaderFunctionArgs */
 /** @typedef {import('@remix-run/react').ShouldRevalidateFunction} ShouldRevalidateFunction */
-/** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */
+/** @typedef {import('react-router').SerializeFrom<typeof loader>} LoaderReturnData */

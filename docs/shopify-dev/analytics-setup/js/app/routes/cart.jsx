@@ -1,6 +1,6 @@
 import {useLoaderData} from '@remix-run/react';
 import {CartForm, Analytics} from '@shopify/hydrogen';
-import {data} from '@shopify/remix-oxygen';
+import {data} from 'react-router';
 import {CartMain} from '~/components/CartMain';
 
 /**
