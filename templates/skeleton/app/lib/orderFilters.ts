@@ -1,4 +1,12 @@
 /**
+ * Field name constants for order filtering
+ */
+export const ORDER_FILTER_FIELDS = {
+  NAME: 'name',
+  CONFIRMATION_NUMBER: 'confirmation_number',
+} as const;
+
+/**
  * Parameters for filtering customer orders
  */
 export interface OrderFilterParams {
@@ -6,6 +14,18 @@ export interface OrderFilterParams {
   name?: string;
   /** Order confirmation number */
   confirmationNumber?: string;
+}
+
+/**
+ * Sanitizes a filter value to prevent injection attacks or malformed queries.
+ * Allows only alphanumeric characters, underscore, and dash.
+ * @param value - The input string to sanitize
+ * @returns The sanitized string
+ */
+function sanitizeFilterValue(value: string): string {
+  // Only allow alphanumeric, underscore, and dash
+  // Remove anything else to prevent injection
+  return value.replace(/[^a-zA-Z0-9_\-]/g, '');
 }
 
 /**
@@ -22,15 +42,17 @@ export function buildOrderSearchQuery(filters: OrderFilterParams): string | unde
   if (filters.name) {
     // Remove # if present and trim
     const cleanName = filters.name.replace(/^#/, '').trim();
-    if (cleanName) {
-      queryParts.push(`name:${cleanName}`);
+    const sanitizedName = sanitizeFilterValue(cleanName);
+    if (sanitizedName) {
+      queryParts.push(`name:${sanitizedName}`);
     }
   }
 
   if (filters.confirmationNumber) {
     const cleanConfirmation = filters.confirmationNumber.trim();
-    if (cleanConfirmation) {
-      queryParts.push(`confirmation_number:${cleanConfirmation}`);
+    const sanitizedConfirmation = sanitizeFilterValue(cleanConfirmation);
+    if (sanitizedConfirmation) {
+      queryParts.push(`confirmation_number:${sanitizedConfirmation}`);
     }
   }
 
@@ -48,12 +70,12 @@ export function buildOrderSearchQuery(filters: OrderFilterParams): string | unde
 export function parseOrderFilters(searchParams: URLSearchParams): OrderFilterParams {
   const filters: OrderFilterParams = {};
 
-  const name = searchParams.get('name');
+  const name = searchParams.get(ORDER_FILTER_FIELDS.NAME);
   if (name) {
     filters.name = name;
   }
 
-  const confirmationNumber = searchParams.get('confirmation_number');
+  const confirmationNumber = searchParams.get(ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER);
   if (confirmationNumber) {
     filters.confirmationNumber = confirmationNumber;
   }
