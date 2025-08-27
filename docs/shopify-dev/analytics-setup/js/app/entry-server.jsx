@@ -56,5 +56,5 @@ export default async function handleRequest(
   });
 }
 
-/** @typedef {import('@shopify/remix-oxygen').EntryContext} EntryContext */
-/** @typedef {import('@shopify/remix-oxygen').AppLoadContext} AppLoadContext */
+/** @typedef {import('react-router').EntryContext} EntryContext */
+/** @typedef {import('react-router').AppLoadContext} AppLoadContext */

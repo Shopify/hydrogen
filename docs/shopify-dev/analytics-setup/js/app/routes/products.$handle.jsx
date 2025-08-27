@@ -1,4 +1,4 @@
-import {defer} from '@shopify/remix-oxygen';
+import {defer} from 'react-router';
 import {useLoaderData} from '@remix-run/react';
 import {
   getSelectedProductOptions,

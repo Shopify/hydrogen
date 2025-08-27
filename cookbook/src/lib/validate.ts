@@ -87,7 +87,6 @@ function installHydrogenPackages(version: string): Command {
   const packages = [
     'https://registry.npmjs.org/@shopify/cli-hydrogen/-/cli-hydrogen',
     'https://registry.npmjs.org/@shopify/hydrogen/-/hydrogen',
-    'https://registry.npmjs.org/@shopify/remix-oxygen/-/remix-oxygen',
   ];
   return {
     command: `npm install ${packages.map((p) => `${p}-${version}.tgz`).join(' ')}`,

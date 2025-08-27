@@ -42,19 +42,53 @@
     "@shopify/create-hydrogen#test": {
       "dependsOn": ["@shopify/create-hydrogen#build"]
     },
-    "@shopify/remix-oxygen#build": {
-      "dependsOn": ["@shopify/hydrogen#build"]
-    },
     "@shopify/hydrogen#build": {
       "dependsOn": ["@shopify/hydrogen-react#build"]
     },
     "skeleton#build": {
       "dependsOn": [
         "@shopify/hydrogen#build",
-        "@shopify/cli-hydrogen#build",
-        "@shopify/remix-oxygen#build"
+        "@shopify/cli-hydrogen#build"
       ],
       "outputs": ["dist/**"]
+    },
+    "example-hydrogen-express#build": {
+      "dependsOn": [
+        "@shopify/hydrogen#build"
+      ]
+    },
+    "example-legacy-customer-account-flow#build": {
+      "dependsOn": [
+        "@shopify/hydrogen#build",
+        "@shopify/cli-hydrogen#build"
+      ]
+    },
+    "example-b2b#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build"]
+    },
+    "example-custom-cart-method#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build"]
+    },
+    "example-gtm#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build"]
+    },
+    "example-infinite-scroll#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build"]
+    },
+    "example-metaobjects#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build"]
+    },
+    "example-multipass#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build"]
+    },
+    "example-partytown#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build"]
+    },
+    "example-subscriptions#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build"]
+    },
+    "example-third-party-queries-caching#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build"]
     }
   }
 }
