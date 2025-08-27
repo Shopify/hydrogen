@@ -22,7 +22,7 @@
     "format": "prettier --write --ignore-unknown ./packages",
     "format:check": "prettier --check --ignore-unknown ./packages",
     "typecheck": "turbo typecheck --parallel",
-    "typecheck:examples": "turbo typecheck --parallel --filter=./examples/*",
+    "typecheck:examples": "node scripts/typecheck-examples.mjs",
     "test": "turbo run test --parallel",
     "test:watch": "turbo run test:watch",
     "test:calver": "./.changeset/test-calver-comparison.sh",
