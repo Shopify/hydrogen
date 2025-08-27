@@ -132,57 +132,62 @@ function OrderSearchForm({
     setSearchParams(params);
   };
 
-  const clearFilters = () => {
-    setSearchParams(new URLSearchParams());
-  };
-
   const hasFilters = currentFilters.name || currentFilters.confirmationNumber;
 
   return (
-    <div className="order-search">
-      <form onSubmit={handleSubmit}>
-        <div
-          style={{
-            display: 'flex',
-            gap: '1rem',
-            flexWrap: 'wrap',
-            alignItems: 'flex-end',
-          }}
-        >
-          <div>
-            <label htmlFor="order-name">
-              Order Number
-              <input
-                id="order-name"
-                type="text"
-                name="name"
-                placeholder="e.g., 1001"
-                defaultValue={currentFilters.name || ''}
-              />
-            </label>
-          </div>
-          <div>
-            <label htmlFor="confirmation-number">
-              Confirmation Number
-              <input
-                id="confirmation-number"
-                type="text"
-                name="confirmation_number"
-                placeholder="e.g., ABC123"
-                defaultValue={currentFilters.confirmationNumber || ''}
-              />
-            </label>
-          </div>
-          <button type="submit">Search Orders</button>
+    <form
+      onSubmit={handleSubmit}
+      className="order-search-form"
+      aria-label="Search orders"
+    >
+      <fieldset className="order-search-fieldset">
+        <legend className="order-search-legend">
+          Filter Orders
           {hasFilters && (
-            <button type="button" onClick={clearFilters}>
-              Clear Filters
+            <small className="order-search-active">
+              (
+              {
+                [currentFilters.name, currentFilters.confirmationNumber].filter(
+                  Boolean,
+                ).length
+              }{' '}
+              active)
+            </small>
+          )}
+        </legend>
+
+        <div className="order-search-inputs">
+          <input
+            type="search"
+            name="name"
+            placeholder="Order #"
+            aria-label="Order number"
+            defaultValue={currentFilters.name || ''}
+            className="order-search-input"
+          />
+          <input
+            type="search"
+            name="confirmation_number"
+            placeholder="Confirmation #"
+            aria-label="Confirmation number"
+            defaultValue={currentFilters.confirmationNumber || ''}
+            className="order-search-input"
+          />
+        </div>
+
+        <div className="order-search-buttons">
+          <button type="submit">Search</button>
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={() => setSearchParams(new URLSearchParams())}
+            >
+              Clear
             </button>
           )}
         </div>
-      </form>
-      <br />
-    </div>
+      </fieldset>
+    </form>
   );
 }
 
