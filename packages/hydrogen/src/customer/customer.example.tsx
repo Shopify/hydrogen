@@ -4,12 +4,12 @@ import {
 } from '@shopify/hydrogen';
 // @ts-expect-error
 import * as reactRouterBuild from 'virtual:react-router/server-build';
+import {createRequestHandler} from '@shopify/hydrogen/oxygen';
 import {
-  createRequestHandler,
   createCookieSessionStorage,
   type SessionStorage,
   type Session,
-} from '@shopify/remix-oxygen';
+} from 'react-router';
 
 export default {
   async fetch(
