@@ -1,8 +1,6 @@
 import {createStorefrontClient} from '@shopify/hydrogen';
-import {
-  createRequestHandler,
-  getStorefrontHeaders,
-} from '@shopify/remix-oxygen';
+import {createRequestHandler} from '@shopify/hydrogen/oxygen';
+import {getStorefrontHeaders} from '@shopify/hydrogen/oxygen';
 export default {
   async fetch(request, env, executionContext) {
     /* Create a Storefront client with your credentials and options */
