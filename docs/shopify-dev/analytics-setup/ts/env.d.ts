@@ -1,5 +1,4 @@
 /// <reference types="vite/client" />
-/// <reference types="@shopify/remix-oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
 // Enhance TypeScript's built-in typings.
@@ -23,12 +22,12 @@ declare global {
   }
 }
 
-declare module '@shopify/remix-oxygen' {
+declare module 'react-router' {
   interface AppLoadContext extends HydrogenContext<AppSession> {
-    // declare additional Remix loader context here
+    // declare additional loader context here
   }
 
   interface SessionData extends HydrogenSessionData {
-    // declare local additions to the Remix session data here
+    // declare local additions to the session data here
   }
 }

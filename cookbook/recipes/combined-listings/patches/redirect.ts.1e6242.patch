@@ -2,7 +2,7 @@ index ce1feb5a..29fe2ecc 100644
 --- a/templates/skeleton/app/lib/redirect.ts
 +++ b/templates/skeleton/app/lib/redirect.ts
 @@ -1,4 +1,6 @@
- import {redirect} from '@shopify/remix-oxygen';
+ import {redirect} from 'react-router';
 +import {ProductFragment} from 'storefrontapi.generated';
 +import {isCombinedListing} from './combined-listings';
  

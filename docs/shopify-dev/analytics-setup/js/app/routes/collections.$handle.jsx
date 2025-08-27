@@ -1,4 +1,4 @@
-import {defer, redirect} from '@shopify/remix-oxygen';
+import {defer, redirect} from 'react-router';
 import {useLoaderData, Link} from '@remix-run/react';
 import {
   getPaginationVariables,

@@ -2,7 +2,7 @@ index 20b39d82..8cf08fc6 100644
 --- a/templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx
 +++ b/templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx
 @@ -1,5 +1,6 @@
- import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import type {LoaderFunctionArgs} from 'react-router';
  import {getSitemap} from '@shopify/hydrogen';
 +import {SUPPORTED_LOCALES} from '../lib/i18n';
  
