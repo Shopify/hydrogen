@@ -16,7 +16,7 @@ vi.mock('./cache/server-fetch.ts', async () => {
     ...original,
     fetchWithServerCache: vi.fn(() =>
       Promise.resolve(['' as any, new Response('ok')]),
-    ),
+    ) as any,
   } satisfies typeof original;
 });
 
