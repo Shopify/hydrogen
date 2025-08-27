@@ -2,7 +2,35 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:github.com)",
-      "Bash(gh run view:*)"
+      "Bash(gh run view:*)",
+      "WebSearch",
+      "Bash(find:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(pkill:*)",
+      "Bash(curl:*)",
+      "Bash(npm run build:pkg:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "mcp__docs-react-router__fetch_react_router_documentation",
+      "mcp__docs-react-router__search_react_router_documentation",
+      "mcp__docs-react-router__search_react_router_code",
+      "mcp__docs-react-router__fetch_generic_url_content",
+      "WebFetch(domain:api.reactrouter.com)",
+      "Bash(timeout 15 npm run preview)",
+      "Bash(npm run dev:*)",
+      "WebFetch(domain:vite.dev)",
+      "mcp__docs-vite__fetch_vite_documentation",
+      "mcp__docs-vite__search_vite_documentation",
+      "Bash(npm run preview:*)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npm view:*)",
+      "Bash(grep:*)",
+      "Bash(node:*)",
+      "Bash(timeout 10 npm run preview)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npm run build)",
+      "Bash(npm run format:*)",
+      "Bash(npm run lint)"
     ]
   },
   "enabledMcpjsonServers": [
@@ -15,6 +43,8 @@
     "docs-remix",
     "docs-hydrogen",
     "docs-xstate",
-    "shopify-dev-mcp"
-  ]
+    "shopify-dev-mcp",
+    "browsermcp"
+  ],
+  "enableAllProjectMcpServers": true
 }

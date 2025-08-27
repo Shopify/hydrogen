@@ -113,7 +113,20 @@ export {Seo} from './seo/seo';
 export {ShopPayButton} from './shop/ShopPayButton';
 export {getSitemap, getSitemapIndex} from './sitemap/sitemap';
 export * from './storefront';
-export type {HydrogenEnv, HydrogenSession, HydrogenSessionData} from './types';
+export {
+  storefrontContext,
+  cartContext,
+  customerAccountContext,
+  envContext,
+  sessionContext,
+  waitUntilContext,
+} from './context-keys';
+export type {
+  HydrogenEnv,
+  HydrogenSession,
+  HydrogenSessionData,
+  HydrogenRouterContextProvider,
+} from './types';
 export type {
   ClientBrowserParameters,
   MappedProductOptions,

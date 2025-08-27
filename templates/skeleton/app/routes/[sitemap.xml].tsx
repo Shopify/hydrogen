@@ -1,4 +1,4 @@
-import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import type {LoaderFunctionArgs} from 'react-router';
 import {getSitemapIndex} from '@shopify/hydrogen';
 
 export async function loader({
@@ -14,4 +14,3 @@ export async function loader({
 
   return response;
 }
-

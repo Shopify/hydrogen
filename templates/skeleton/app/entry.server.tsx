@@ -1,8 +1,10 @@
-import type {AppLoadContext} from '@shopify/remix-oxygen';
 import {ServerRouter} from 'react-router';
 import {isbot} from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
-import {createContentSecurityPolicy} from '@shopify/hydrogen';
+import {
+  createContentSecurityPolicy,
+  type HydrogenRouterContextProvider,
+} from '@shopify/hydrogen';
 import type {EntryContext} from 'react-router';
 
 export default async function handleRequest(
@@ -10,7 +12,7 @@ export default async function handleRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   reactRouterContext: EntryContext,
-  context: AppLoadContext,
+  context: HydrogenRouterContextProvider,
 ) {
   const {nonce, header, NonceProvider} = createContentSecurityPolicy({
     shop: {

@@ -3,7 +3,6 @@ import path from 'node:path';
 import {readdir} from 'node:fs/promises';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputWarn} from '@shopify/cli-kit/node/output';
-import {fileExists} from '@shopify/cli-kit/node/fs';
 import {muteRemixLogs} from './log.js';
 import {REQUIRED_REMIX_VERSION} from './remix-version-check.js';
 import {findFileWithExtension} from './file.js';
@@ -49,7 +48,7 @@ export async function isClassicProject(root: string) {
 
 const BUILD_DIR = 'dist'; // Hardcoded in Oxygen
 const CLIENT_SUBDIR = 'client';
-const WORKER_SUBDIR = 'worker'; // Hardcoded in Oxygen
+const SERVER_SUBDIR = 'server'; // React Router 7.8.x+ structure
 
 const oxygenServerMainFields = ['browser', 'module', 'main'];
 
@@ -58,7 +57,10 @@ export function getProjectPaths(appPath?: string) {
   const publicPath = path.join(root, 'public');
   const buildPath = path.join(root, BUILD_DIR);
   const buildPathClient = path.join(buildPath, CLIENT_SUBDIR);
-  const buildPathWorkerFile = path.join(buildPath, WORKER_SUBDIR, 'index.js');
+
+  // React Router 7.8.x compatibility: Default to new server structure
+  // Runtime fallback will be handled by MiniOxygen if file doesn't exist
+  const buildPathWorkerFile = path.join(buildPath, SERVER_SUBDIR, 'index.js');
 
   return {
     root,
@@ -93,26 +95,4 @@ export async function getRemixConfig(
     throw new AbortError(REMIX_COMPILER_ERROR_MESSAGE);
   }
   return (await getViteConfig(root)).remixConfig;
-}
-
-async function assertEntryFileExists(root: string, fileRelative: string) {
-  const fileAbsolute = path.resolve(root, fileRelative);
-  const exists = await fileExists(fileAbsolute);
-
-  if (!exists) {
-    if (!path.extname(fileAbsolute)) {
-      const files = await readdir(path.dirname(fileAbsolute));
-      const exists = files.some((file) => {
-        const {name, ext} = path.parse(file);
-        return name === path.basename(fileAbsolute) && /^\.[jt]s$/.test(ext);
-      });
-
-      if (exists) return;
-    }
-
-    throw new AbortError(
-      `Entry file "${fileRelative}" not found.`,
-      'Please ensure the file exists and that the path is correctly added to the `server` property in remix.config.js.',
-    );
-  }
 }

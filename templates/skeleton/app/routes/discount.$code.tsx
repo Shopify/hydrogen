@@ -1,4 +1,4 @@
-import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {redirect, type LoaderFunctionArgs} from 'react-router';
 
 /**
  * Automatically applies a discount found on the url

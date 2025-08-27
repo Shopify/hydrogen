@@ -1,4 +1,4 @@
-import {redirect, type ActionFunctionArgs} from '@shopify/remix-oxygen';
+import {redirect, type ActionFunctionArgs} from 'react-router';
 
 // if we don't implement this, /account/logout will get caught by account.$.tsx to do login
 export async function loader() {

@@ -1,8 +1,9 @@
 import {
   type LoaderFunctionArgs,
   type ActionFunctionArgs,
-} from '@shopify/remix-oxygen';
-import { useLoaderData, type MetaFunction } from 'react-router';
+  useLoaderData,
+  type MetaFunction,
+} from 'react-router';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {SearchForm} from '~/components/SearchForm';
 import {SearchResults} from '~/components/SearchResults';
