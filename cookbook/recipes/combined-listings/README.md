@@ -288,7 +288,7 @@ index ce1feb5a..29fe2ecc 100644
 --- a/templates/skeleton/app/lib/redirect.ts
 +++ b/templates/skeleton/app/lib/redirect.ts
 @@ -1,4 +1,6 @@
- import {redirect} from '@shopify/remix-oxygen';
+ import {redirect} from 'react-router';
 +import {ProductFragment} from 'storefrontapi.generated';
 +import {isCombinedListing} from './combined-listings';
  
@@ -334,7 +334,7 @@ index 543e76be..1e75522b 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
 @@ -1,13 +1,13 @@
- import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import {type LoaderFunctionArgs} from 'react-router';
  import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
  import {Suspense} from 'react';
 -import {Image, Money} from '@shopify/hydrogen';
@@ -550,8 +550,8 @@ index 4989ca00..e087fb10 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,4 +1,4 @@
--import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+-import {redirect, type LoaderFunctionArgs} from 'react-router';
++import {type LoaderFunctionArgs} from 'react-router';
  import { useLoaderData, type MetaFunction } from 'react-router';
  import {
    getSelectedProductOptions,

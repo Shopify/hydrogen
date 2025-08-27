@@ -8,7 +8,7 @@ First of all, it's necessary to create and inject the Hydrogen `storefront` clie
 
 ```ts
 import {createStorefrontClient} from '@shopify/hydrogen';
-import {createRequestHandler} from '@shopify/remix-oxygen';
+import {createRequestHandler} from '@shopify/hydrogen/oxygen';
 
 export default {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
@@ -41,7 +41,7 @@ To load data into your Hydrogen app, use a Remix `loader` and write a GraphQL qu
 
 ```ts
 import type {ProductType} from '@shopify/hydrogen/storefront-api-types';
-import {json, useLoaderData, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, useLoaderData, type LoaderArgs} from 'react-router';
 
 export async function loader({params, context: {storefront}}: LoaderArgs) {
   const productQuery = storefront.query<ProductType>(
@@ -82,7 +82,7 @@ export default function Product() {
 Sometimes, you will want to prioritize critical data, like product information, while deferring comments or reviews.
 
 ```ts
-import {defer, useLoaderData, type LoaderArgs} from '@shopify/remix-oxygen';
+import {defer, useLoaderData, type LoaderArgs} from 'react-router';
 
 export async function loader({params, context: {storefront}}: LoaderArgs) {
   const productQuery = storefront.query(

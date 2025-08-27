@@ -158,7 +158,7 @@ index 543e76be..0e600164 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
 @@ -1,5 +1,5 @@
- import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import {type LoaderFunctionArgs} from 'react-router';
 -import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
 +import {Await, useLoaderData, Link, type MetaFunction} from 'react-router';
  import {Suspense} from 'react';
@@ -192,8 +192,8 @@ index 4989ca00..0356b373 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,4 +1,4 @@
--import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+-import {redirect, type LoaderFunctionArgs} from 'react-router';
++import {type LoaderFunctionArgs} from 'react-router';
  import { useLoaderData, type MetaFunction } from 'react-router';
  import {
    getSelectedProductOptions,
