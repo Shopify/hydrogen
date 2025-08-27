@@ -2,7 +2,13 @@ import {join} from 'node:path';
 import {writeFile, rm as remove} from 'node:fs/promises';
 import {temporaryDirectory} from 'tempy';
 import {it, vi, describe, beforeEach, expect, afterEach} from 'vitest';
-import {startServer, type MiniOxygenOptions} from './index.js';
+import {
+  startServer,
+  type MiniOxygenPreviewOptions,
+  Request,
+  Response,
+} from './index.js';
+import type {DispatchFetch} from './server.js';
 
 /**
  * Tests that MiniOxygen correctly handles redirects without following them,
@@ -14,7 +20,7 @@ import {startServer, type MiniOxygenOptions} from './index.js';
 describe('MiniOxygen redirect behavior', () => {
   let fixture: RedirectFixture;
   let servers: Array<{close: () => Promise<void>}> = [];
-  const defaultOptions: MiniOxygenOptions = {
+  const defaultOptions: MiniOxygenPreviewOptions = {
     log: vi.fn(),
     port: 0, // Use port 0 to let OS assign a random available port
   };
@@ -32,7 +38,7 @@ describe('MiniOxygen redirect behavior', () => {
   });
 
   // Helper function to start server and track it for cleanup
-  async function startTrackedServer(options: MiniOxygenOptions) {
+  async function startTrackedServer(options: MiniOxygenPreviewOptions) {
     const server = await startServer(options);
     servers.push(server);
     return server;
@@ -163,7 +169,7 @@ describe('MiniOxygen redirect behavior', () => {
     const miniOxygen = await startTrackedServer({
       ...defaultOptions,
       workerFile: fixture.paths.workerFile,
-      onRequest: async (request, dispatchFetch) => {
+      onRequest: async (request: Request, dispatchFetch: DispatchFetch) => {
         const response = await dispatchFetch(request);
 
         // Verify that dispatchFetch doesn't follow redirects

@@ -6,11 +6,11 @@ import {temporaryDirectory} from 'tempy';
 import {it, vi, describe, beforeEach, expect, afterEach} from 'vitest';
 import {EventSource} from 'eventsource';
 
-import {startServer, Response, type MiniOxygenOptions} from './index.js';
+import {startServer, Response, type MiniOxygenPreviewOptions} from './index.js';
 
 describe('start()', () => {
   let fixture: Fixture;
-  const defaultOptions: MiniOxygenOptions = {
+  const defaultOptions: MiniOxygenPreviewOptions = {
     log: vi.fn(),
     port: 0, // Use port 0 to let OS assign a random available port
   };
