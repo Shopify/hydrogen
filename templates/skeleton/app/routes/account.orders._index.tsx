@@ -7,6 +7,7 @@ import {
 import {
   buildOrderSearchQuery,
   parseOrderFilters,
+  ORDER_FILTER_FIELDS,
   type OrderFilterParams,
 } from '~/lib/orderFilters';
 import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
@@ -60,16 +61,14 @@ export default function Orders() {
   return (
     <div className="orders">
       <OrderSearchForm currentFilters={filters} />
-      {orders.nodes.length ? (
-        <OrdersTable orders={orders} />
-      ) : (
-        <EmptyOrders hasFilters={!!(filters.name || filters.confirmationNumber)} />
-      )}
+      <OrdersTable orders={orders} filters={filters} />
     </div>
   );
 }
 
-function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
+function OrdersTable({orders, filters}: {orders: CustomerOrdersFragment['orders']; filters: OrderFilterParams}) {
+  const hasFilters = !!(filters.name || filters.confirmationNumber);
+  
   return (
     <div className="acccount-orders">
       {orders?.nodes.length ? (
@@ -77,7 +76,7 @@ function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
           {({node: order}) => <OrderItem key={order.id} order={order} />}
         </PaginatedResourceSection>
       ) : (
-        <EmptyOrders />
+        <EmptyOrders hasFilters={hasFilters} />
       )}
     </div>
   );
@@ -119,11 +118,11 @@ function OrderSearchForm({
     const formData = new FormData(event.currentTarget);
     const params = new URLSearchParams();
     
-    const name = formData.get('name')?.toString().trim();
-    const confirmationNumber = formData.get('confirmation_number')?.toString().trim();
+    const name = formData.get(ORDER_FILTER_FIELDS.NAME)?.toString().trim();
+    const confirmationNumber = formData.get(ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER)?.toString().trim();
     
-    if (name) params.set('name', name);
-    if (confirmationNumber) params.set('confirmation_number', confirmationNumber);
+    if (name) params.set(ORDER_FILTER_FIELDS.NAME, name);
+    if (confirmationNumber) params.set(ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER, confirmationNumber);
     
     setSearchParams(params);
   };
@@ -145,7 +144,7 @@ function OrderSearchForm({
         <div className="order-search-inputs">
           <input
             type="search"
-            name="name"
+            name={ORDER_FILTER_FIELDS.NAME}
             placeholder="Order #"
             aria-label="Order number"
             defaultValue={currentFilters.name || ''}
@@ -153,7 +152,7 @@ function OrderSearchForm({
           />
           <input
             type="search"
-            name="confirmation_number"
+            name={ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER}
             placeholder="Confirmation #"
             aria-label="Confirmation number"
             defaultValue={currentFilters.confirmationNumber || ''}
