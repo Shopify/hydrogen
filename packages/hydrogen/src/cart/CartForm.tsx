@@ -87,6 +87,20 @@ type CartGiftCardCodesUpdateRequire = {
   } & OtherFormData;
 };
 
+type CartGiftCardCodesRemoveProps = {
+  action: 'GiftCardCodesRemove';
+  inputs?: {
+    giftCardCodes: string[];
+  } & OtherFormData;
+};
+
+type CartGiftCardCodesRemoveRequire = {
+  action: 'GiftCardCodesRemove';
+  inputs: {
+    giftCardCodes: string[];
+  } & OtherFormData;
+};
+
 export type OptimisticCartLineInput = CartLineInput & {
   selectedVariant?: unknown;
 };
@@ -264,6 +278,7 @@ type CartActionInputProps =
   | CartCreateProps
   | CartDiscountCodesUpdateProps
   | CartGiftCardCodesUpdateProps
+  | CartGiftCardCodesRemoveProps
   | CartLinesAddProps
   | CartLinesUpdateProps
   | CartLinesRemoveProps
@@ -282,6 +297,7 @@ export type CartActionInput =
   | CartCreateRequire
   | CartDiscountCodesUpdateRequire
   | CartGiftCardCodesUpdateRequire
+  | CartGiftCardCodesRemoveRequire
   | CartLinesAddRequire
   | CartLinesUpdateRequire
   | CartLinesRemoveRequire
@@ -329,6 +345,7 @@ CartForm.ACTIONS = {
   Create: 'Create',
   DiscountCodesUpdate: 'DiscountCodesUpdate',
   GiftCardCodesUpdate: 'GiftCardCodesUpdate',
+  GiftCardCodesRemove: 'GiftCardCodesRemove',
   LinesAdd: 'LinesAdd',
   LinesRemove: 'LinesRemove',
   LinesUpdate: 'LinesUpdate',
