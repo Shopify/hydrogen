@@ -303,7 +303,7 @@ If you want to redirect automatically to the first variant of a combined listing
 
 ```diff
 @@ -1,4 +1,6 @@
- import {redirect} from '@shopify/remix-oxygen';
+ import {redirect} from 'react-router';
 +import {ProductFragment} from 'storefrontapi.generated';
 +import {isCombinedListing} from './combined-listings';
  
@@ -344,7 +344,7 @@ If you want to redirect automatically to the first variant of a combined listing
 
 ```diff
 @@ -1,13 +1,13 @@
- import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import {type LoaderFunctionArgs} from 'react-router';
  import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
  import {Suspense} from 'react';
 -import {Image, Money} from '@shopify/hydrogen';
@@ -543,8 +543,8 @@ Update the `collections.all` route to filter out combined listings from the sear
 
 ```diff
 @@ -1,4 +1,4 @@
--import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+-import {redirect, type LoaderFunctionArgs} from 'react-router';
++import {type LoaderFunctionArgs} from 'react-router';
  import { useLoaderData, type MetaFunction } from 'react-router';
  import {
    getSelectedProductOptions,

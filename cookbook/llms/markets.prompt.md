@@ -441,7 +441,7 @@ For brevity, we'll focus on the home page, the cart page, and the product page i
 ##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
 
 ```tsx
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs} from 'react-router';
 import {Await, useLoaderData, type MetaFunction} from 'react-router';
 import {Suspense} from 'react';
 import {Image, Money} from '@shopify/hydrogen';
@@ -630,7 +630,7 @@ import {
   type LoaderFunctionArgs,
   type ActionFunctionArgs,
   type HeadersFunction,
-} from '@shopify/remix-oxygen';
+} from 'react-router';
 import {CartMain} from '~/components/CartMain';
 
 export const meta: MetaFunction = () => {
@@ -754,7 +754,7 @@ localized prefix.
 ##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
 
 ```tsx
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs} from 'react-router';
 import {useLoaderData, type MetaFunction} from 'react-router';
 import {
   getSelectedProductOptions,
@@ -1017,7 +1017,7 @@ the route will throw a 404 error.
 ##### File: [($locale).tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).tsx)
 
 ```tsx
-import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import type {LoaderFunctionArgs} from 'react-router';
 import {localeMatchesPrefix} from '~/lib/i18n';
 
 export async function loader({params}: LoaderFunctionArgs) {
@@ -1038,7 +1038,7 @@ Update the sitemap route to use the locales included in `SUPPORTED_LOCALES`.
 
 ```diff
 @@ -1,5 +1,6 @@
- import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import type {LoaderFunctionArgs} from 'react-router';
  import {getSitemap} from '@shopify/hydrogen';
 +import {SUPPORTED_LOCALES} from '../lib/i18n';
  

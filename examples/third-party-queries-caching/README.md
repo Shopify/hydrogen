@@ -91,9 +91,9 @@ import {createRickAndMortyClient} from './app/lib/createRickAndMortyClient.serve
 
 // ...other code
 
-declare module '@shopify/remix-oxygen' {
+declare module 'react-router' {
   /**
-   * Declare local additions to the Remix loader context.
+   * Declare local additions to the loader context.
    */
   export interface AppLoadContext {
     // ...other code
