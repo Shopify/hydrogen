@@ -185,7 +185,7 @@ Add `maxVariantPrice` to the `RecommendedProducts` query's product fields.
 
 ```diff
 @@ -1,5 +1,5 @@
- import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import {type LoaderFunctionArgs} from 'react-router';
 -import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
 +import {Await, useLoaderData, Link, type MetaFunction} from 'react-router';
  import {Suspense} from 'react';
@@ -214,8 +214,8 @@ used to identify bundled products.
 
 ```diff
 @@ -1,4 +1,4 @@
--import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+-import {redirect, type LoaderFunctionArgs} from 'react-router';
++import {type LoaderFunctionArgs} from 'react-router';
  import { useLoaderData, type MetaFunction } from 'react-router';
  import {
    getSelectedProductOptions,
