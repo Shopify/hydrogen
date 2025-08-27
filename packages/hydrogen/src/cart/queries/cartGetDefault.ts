@@ -180,6 +180,13 @@ export const DEFAULT_CART_FRAGMENT = `#graphql
       applicable
       code
     }
+    appliedGiftCards {
+      id
+      lastCharacters
+      amountUsed {
+        ...CartApiMoney
+      }
+    }
   }
 
   fragment CartApiMoney on MoneyV2 {
