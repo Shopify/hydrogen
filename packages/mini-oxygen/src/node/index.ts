@@ -154,7 +154,7 @@ export function createMiniOxygen(
         onResponseError,
       });
 
-      const actualPort = port ?? (await findPort(3000));
+      const actualPort = port === 0 ? 0 : (port ?? (await findPort(3000)));
 
       const sockets = new Set<Socket>();
       app.on('connection', (socket) => {
@@ -164,12 +164,19 @@ export function createMiniOxygen(
 
       return new Promise((res) => {
         app.listen(actualPort, () => {
+          // Get the actual port the server is listening on (important when port is 0)
+          const serverAddress = app.address();
+          const assignedPort =
+            serverAddress && typeof serverAddress === 'object'
+              ? serverAddress.port
+              : actualPort;
+
           log(
-            `\nStarted miniOxygen server. Listening at http://localhost:${actualPort}\n`,
+            `\nStarted miniOxygen server. Listening at http://localhost:${assignedPort}\n`,
           );
 
           res({
-            port: actualPort,
+            port: assignedPort,
             close: () =>
               new Promise((resolve) => {
                 sockets.forEach((socket) => socket.destroy());

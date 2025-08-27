@@ -13,20 +13,33 @@ import {startServer, type MiniOxygenOptions} from './index.js';
  */
 describe('MiniOxygen redirect behavior', () => {
   let fixture: RedirectFixture;
+  let servers: Array<{close: () => Promise<void>}> = [];
   const defaultOptions: MiniOxygenOptions = {
     log: vi.fn(),
+    port: 0, // Use port 0 to let OS assign a random available port
   };
 
   beforeEach(async () => {
     fixture = await createRedirectFixture('redirect-fixture');
+    servers = [];
   });
 
   afterEach(async () => {
+    // Clean up all servers that were created during the test
+    await Promise.all(servers.map((s) => s.close().catch(() => {})));
+    servers = [];
     await fixture.destroy();
   });
 
+  // Helper function to start server and track it for cleanup
+  async function startTrackedServer(options: MiniOxygenOptions) {
+    const server = await startServer(options);
+    servers.push(server);
+    return server;
+  }
+
   it('should NOT follow 302 redirects (external URLs)', async () => {
-    const miniOxygen = await startServer({
+    const miniOxygen = await startTrackedServer({
       ...defaultOptions,
       workerFile: fixture.paths.workerFile,
     });
@@ -47,7 +60,7 @@ describe('MiniOxygen redirect behavior', () => {
   });
 
   it('should NOT follow 301 redirects', async () => {
-    const miniOxygen = await startServer({
+    const miniOxygen = await startTrackedServer({
       ...defaultOptions,
       workerFile: fixture.paths.workerFile,
     });
@@ -67,7 +80,7 @@ describe('MiniOxygen redirect behavior', () => {
   });
 
   it('should preserve all redirect headers (including custom ones)', async () => {
-    const miniOxygen = await startServer({
+    const miniOxygen = await startTrackedServer({
       ...defaultOptions,
       workerFile: fixture.paths.workerFile,
     });
@@ -102,7 +115,7 @@ describe('MiniOxygen redirect behavior', () => {
   });
 
   it('should handle redirectDocument (with X-Remix-Reload-Document)', async () => {
-    const miniOxygen = await startServer({
+    const miniOxygen = await startTrackedServer({
       ...defaultOptions,
       workerFile: fixture.paths.workerFile,
     });
@@ -123,7 +136,7 @@ describe('MiniOxygen redirect behavior', () => {
   });
 
   it('should handle various redirect status codes', async () => {
-    const miniOxygen = await startServer({
+    const miniOxygen = await startTrackedServer({
       ...defaultOptions,
       workerFile: fixture.paths.workerFile,
     });
@@ -147,7 +160,7 @@ describe('MiniOxygen redirect behavior', () => {
   });
 
   it('should pass redirect: manual through onRequest callback', async () => {
-    const miniOxygen = await startServer({
+    const miniOxygen = await startTrackedServer({
       ...defaultOptions,
       workerFile: fixture.paths.workerFile,
       onRequest: async (request, dispatchFetch) => {
@@ -173,7 +186,7 @@ describe('MiniOxygen redirect behavior', () => {
   });
 
   it('should return null body for redirect responses', async () => {
-    const miniOxygen = await startServer({
+    const miniOxygen = await startTrackedServer({
       ...defaultOptions,
       workerFile: fixture.paths.workerFile,
     });
@@ -196,7 +209,7 @@ describe('MiniOxygen redirect behavior', () => {
   });
 
   it('should preserve query parameters in redirect Location header', async () => {
-    const miniOxygen = await startServer({
+    const miniOxygen = await startTrackedServer({
       ...defaultOptions,
       workerFile: fixture.paths.workerFile,
     });
@@ -217,7 +230,7 @@ describe('MiniOxygen redirect behavior', () => {
   });
 
   it('should handle multiple Set-Cookie headers in redirects', async () => {
-    const miniOxygen = await startServer({
+    const miniOxygen = await startTrackedServer({
       ...defaultOptions,
       workerFile: fixture.paths.workerFile,
     });
@@ -269,7 +282,7 @@ describe('MiniOxygen redirect behavior', () => {
   });
 
   it('should preserve Content-Security-Policy headers in redirects', async () => {
-    const miniOxygen = await startServer({
+    const miniOxygen = await startTrackedServer({
       ...defaultOptions,
       workerFile: fixture.paths.workerFile,
     });

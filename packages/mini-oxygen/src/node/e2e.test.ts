@@ -12,6 +12,7 @@ describe('start()', () => {
   let fixture: Fixture;
   const defaultOptions: MiniOxygenOptions = {
     log: vi.fn(),
+    port: 0, // Use port 0 to let OS assign a random available port
   };
 
   beforeEach(async () => {
@@ -175,8 +176,17 @@ describe('start()', () => {
 
   it('proxies requests to a proxy server', async () => {
     const mockLogger = vi.fn();
-    const proxyPort = 1338;
-    const proxyServer = createMockProxyServer(proxyPort);
+    const proxyServer = createMockProxyServer(0); // Use dynamic port
+
+    // Get the actual port after server starts
+    const proxyPort = await new Promise<number>((resolve) => {
+      proxyServer.on('listening', () => {
+        const addr = proxyServer.address();
+        if (addr && typeof addr === 'object') {
+          resolve(addr.port);
+        }
+      });
+    });
 
     proxyServer.on('connection', () => {
       mockLogger('Proxy request received');
