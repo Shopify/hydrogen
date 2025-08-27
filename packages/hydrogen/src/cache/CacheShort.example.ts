@@ -1,4 +1,4 @@
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs} from 'react-router';
 import {CacheShort} from '@shopify/hydrogen';
 
 export async function loader({context}: LoaderFunctionArgs) {

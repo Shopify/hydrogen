@@ -1,4 +1,4 @@
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs} from 'react-router';
 import {parseGid} from '@shopify/hydrogen';
 
 export async function loader({request, context}: LoaderFunctionArgs) {
