@@ -101,6 +101,15 @@ export default defineConfig([
     dts: true,
   },
   {
+    entry: ['src/oxygen/**/*.ts', '!src/oxygen/**/*.test.ts'],
+    outDir: 'dist/oxygen',
+    format: 'esm',
+    minify: false,
+    bundle: true,
+    sourcemap: false,
+    dts: true,
+  },
+  {
     entry: ['src/vite/virtual-routes/**/*.tsx'],
     outDir: `${outDir}/vite/virtual-routes`,
     outExtension: () => ({js: '.jsx'}),
