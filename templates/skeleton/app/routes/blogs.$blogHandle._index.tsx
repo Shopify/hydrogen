@@ -1,5 +1,5 @@
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import { Link, useLoaderData, type MetaFunction } from 'react-router';
+import {type LoaderFunctionArgs} from 'react-router';
+import {Link, useLoaderData, type MetaFunction} from 'react-router';
 import {Image, getPaginationVariables} from '@shopify/hydrogen';
 import type {ArticleItemFragment} from 'storefrontapi.generated';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';

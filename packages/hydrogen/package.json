@@ -48,6 +48,10 @@
       "types": "./dist/vite/plugin.d.ts",
       "default": "./dist/vite/plugin.js"
     },
+    "./oxygen": {
+      "types": "./dist/oxygen/index.d.ts",
+      "default": "./dist/oxygen/index.js"
+    },
     "./storefront-api-types": "./dist/storefront-api-types.d.ts",
     "./storefront.schema.json": "./dist/storefront.schema.json",
     "./customer-account-api-types": "./dist/customer-account-api-types.d.ts",

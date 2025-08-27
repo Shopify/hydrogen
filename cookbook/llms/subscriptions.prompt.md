@@ -488,7 +488,7 @@ Add styles for the `SellingPlanSelector` component.
 ```diff
 @@ -1,5 +1,6 @@
 +import type {SellingPlanFragment} from 'storefrontapi.generated';
- import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import {redirect, type LoaderFunctionArgs} from 'react-router';
 -import { useLoaderData, type MetaFunction } from 'react-router';
 +import {LinksFunction, useLoaderData, type MetaFunction} from 'react-router';
  import {
@@ -853,7 +853,7 @@ import {
   LinksFunction,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
+} from 'react-router';
 import {
   useActionData,
   useFetcher,
@@ -1032,12 +1032,12 @@ Add a `Subscriptions` link to the account menu.
 ```diff
 @@ -1,6 +1,8 @@
 -
--import {data as remixData, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+-import {data as remixData, type LoaderFunctionArgs} from 'react-router';
 -import { Form, NavLink, Outlet, useLoaderData } from 'react-router';
 +import {
 +  data as remixData,
 +  type LoaderFunctionArgs,
-+} from '@shopify/remix-oxygen';
++} from 'react-router';
 +import {Form, NavLink, Outlet, useLoaderData} from 'react-router';
  import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
  
