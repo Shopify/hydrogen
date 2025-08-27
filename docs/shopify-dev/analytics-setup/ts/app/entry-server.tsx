@@ -3,7 +3,7 @@ import type {
   // [START csp]
   AppLoadContext,
   // [END csp]
-} from '@shopify/remix-oxygen';
+} from 'react-router';
 import {RemixServer} from '@remix-run/react';
 import {isbot} from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
