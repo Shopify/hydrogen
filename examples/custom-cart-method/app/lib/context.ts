@@ -10,11 +10,23 @@ import type {
   CartLineUpdateInput,
 } from '@shopify/hydrogen/storefront-api-types';
 
+// Define the additional context object
+const additionalContext = {
+  // Additional context for custom properties
+} as const;
+
+// Automatically augment HydrogenAdditionalContext with the additional context type
+type AdditionalContextType = typeof additionalContext;
+
+declare global {
+  interface HydrogenAdditionalContext extends AdditionalContextType {}
+}
+
 /**
- * The context implementation is separate from server.ts
- * so that type can be extracted for AppLoadContext
+ * Creates Hydrogen context for React Router 7.8.x with custom cart methods
+ * Returns HydrogenRouterContextProvider with hybrid access patterns
  * */
-export async function createAppLoadContext(
+export async function createHydrogenRouterContext(
   request: Request,
   env: Env,
   executionContext: ExecutionContext,
@@ -32,53 +44,56 @@ export async function createAppLoadContext(
     AppSession.init(request, [env.SESSION_SECRET]),
   ]);
 
-  const hydrogenContext = createHydrogenContext({
-    env,
-    request,
-    cache,
-    waitUntil,
-    session,
-    i18n: {language: 'EN', country: 'US'},
-    cart: {
-      queryFragment: CART_QUERY_FRAGMENT,
-      /***********************************************/
-      /**********  EXAMPLE UPDATE STARTS  ************/
-      // Avoid using method definition in customMethods ie. methodDefinition() {}
-      // as TypeScript is unable to correctly infer the type
-      // if method definition is necessary, declaring customMethods separately
-      customMethods: {
-        updateLineByOptions: async (
-          productId: string,
-          selectedOptions: SelectedOptionInput[],
-          line: CartLineUpdateInput,
-        ) => {
-          const {product} = await hydrogenContext.storefront.query(
-            PRODUCT_VARIANT_QUERY,
-            {
-              variables: {
-                productId,
-                selectedOptions,
+  // Create a placeholder context first to reference in customMethods
+  let hydrogenContext: any;
+  
+  hydrogenContext = createHydrogenContext(
+    {
+      env,
+      request,
+      cache,
+      waitUntil,
+      session,
+      i18n: {language: 'EN', country: 'US'},
+      cart: {
+        queryFragment: CART_QUERY_FRAGMENT,
+        /***********************************************/
+        /**********  EXAMPLE UPDATE STARTS  ************/
+        // Avoid using method definition in customMethods ie. methodDefinition() {}
+        // as TypeScript is unable to correctly infer the type
+        // if method definition is necessary, declaring customMethods separately
+        customMethods: {
+          updateLineByOptions: async (
+            productId: string,
+            selectedOptions: SelectedOptionInput[],
+            line: CartLineUpdateInput,
+          ) => {
+            const {product} = await hydrogenContext.storefront.query(
+              PRODUCT_VARIANT_QUERY,
+              {
+                variables: {
+                  productId,
+                  selectedOptions,
+                },
               },
-            },
-          );
+            );
 
-          const lines = [
-            {...line, merchandiseId: product?.selectedVariant?.id},
-          ];
+            const lines = [
+              {...line, merchandiseId: product?.selectedVariant?.id},
+            ];
 
-          return await cartLinesUpdateDefault({
-            storefront: hydrogenContext.storefront,
-            getCartId: cartGetIdDefault(request.headers),
-          })(lines);
+            return await cartLinesUpdateDefault({
+              storefront: hydrogenContext.storefront,
+              getCartId: cartGetIdDefault(request.headers),
+            })(lines);
+          },
         },
+        /**********   EXAMPLE UPDATE END   ************/
+        /***********************************************/
       },
-      /**********   EXAMPLE UPDATE END   ************/
-      /***********************************************/
     },
-  });
+    additionalContext,
+  );
 
-  return {
-    ...hydrogenContext,
-    // declare additional Remix loader context
-  };
+  return hydrogenContext;
 }
