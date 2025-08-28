@@ -9,7 +9,7 @@
     "preview": "shopify hydrogen preview --build --diff",
     "lint": "eslint --no-error-on-unmatched-pattern .",
     "typecheck": "tsc --noEmit",
-    "codegen": "shopify hydrogen codegen"
+    "codegen": "shopify hydrogen codegen --diff"
   },
   "devDependencies": {
     "@react-router/fs-routes": "^7.8.2"
