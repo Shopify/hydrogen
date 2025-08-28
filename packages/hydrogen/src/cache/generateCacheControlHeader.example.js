@@ -1,4 +1,4 @@
-import {data} from '@shopify/remix-oxygen';
+import {data} from 'react-router';
 import {generateCacheControlHeader, CacheShort} from '@shopify/hydrogen';
 
 export async function loader() {

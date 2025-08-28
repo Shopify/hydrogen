@@ -149,6 +149,15 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                 );
               },
             },
+            {
+              // Improve stack traces in Oxygen by showing full error stack
+              script: () => {
+                const originalErrorToString = Error.prototype.toString;
+                Error.prototype.toString = function () {
+                  return this.stack || originalErrorToString.call(this);
+                };
+              },
+            },
             /**
              * To avoid initial CSS flash during development,
              * most frameworks implement a way to gather critical CSS.

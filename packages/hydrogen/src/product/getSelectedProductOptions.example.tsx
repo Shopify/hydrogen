@@ -1,5 +1,5 @@
 import {getSelectedProductOptions} from '@shopify/hydrogen';
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs} from 'react-router';
 
 export async function loader({request, params, context}: LoaderFunctionArgs) {
   const selectedOptions = getSelectedProductOptions(request);

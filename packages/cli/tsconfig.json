@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src", "dev.env.d.ts", "assets"],
-  "exclude": ["dist", "__tests__", "node_modules", ".turbo"],
+  "include": ["src", "dev.env.d.ts"],
+  "exclude": ["dist", "__tests__", "node_modules", ".turbo", "assets"],
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",

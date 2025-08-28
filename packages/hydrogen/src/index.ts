@@ -68,7 +68,7 @@ export {
   createHydrogenContext,
   type HydrogenContext,
 } from './createHydrogenContext';
-export {createContentSecurityPolicy, useNonce} from './csp/csp';
+export {createContentSecurityPolicy, NonceProvider, useNonce} from './csp/csp';
 export {Script} from './csp/Script';
 export {createCustomerAccountClient} from './customer/customer';
 export type {
@@ -113,7 +113,20 @@ export {Seo} from './seo/seo';
 export {ShopPayButton} from './shop/ShopPayButton';
 export {getSitemap, getSitemapIndex} from './sitemap/sitemap';
 export * from './storefront';
-export type {HydrogenEnv, HydrogenSession, HydrogenSessionData} from './types';
+export {
+  storefrontContext,
+  cartContext,
+  customerAccountContext,
+  envContext,
+  sessionContext,
+  waitUntilContext,
+} from './context-keys';
+export type {
+  HydrogenEnv,
+  HydrogenSession,
+  HydrogenSessionData,
+  HydrogenRouterContextProvider,
+} from './types';
 export type {
   ClientBrowserParameters,
   MappedProductOptions,

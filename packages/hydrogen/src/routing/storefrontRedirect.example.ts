@@ -1,10 +1,8 @@
 import {storefrontRedirect, createStorefrontClient} from '@shopify/hydrogen';
 // @ts-expect-error
 import * as reactRouterBuild from 'virtual:react-router/server-build';
-import {
-  createRequestHandler,
-  getStorefrontHeaders,
-} from '@shopify/remix-oxygen';
+import {createRequestHandler} from '@shopify/hydrogen/oxygen';
+import {getStorefrontHeaders} from '@shopify/hydrogen/oxygen';
 
 export default {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext) {

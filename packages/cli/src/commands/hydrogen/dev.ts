@@ -28,6 +28,7 @@ import {
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
+import {checkReactRouterVersions} from '../../lib/react-router-version-check.js';
 import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {
   getDebugBannerLine,
@@ -353,6 +354,12 @@ export async function runDev({
   console.log('\n');
 
   const storefrontTitle = (await backgroundPromise).storefrontTitle;
+
+  // Check React Router versions before showing success banner
+  if (!disableVersionCheck) {
+    await checkReactRouterVersions(root);
+  }
+
   showSuccessBanner({
     disableVirtualRoutes,
     debug,

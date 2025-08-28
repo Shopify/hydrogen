@@ -478,7 +478,7 @@ index 4989ca00..af30bc92 100644
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,5 +1,6 @@
 +import type {SellingPlanFragment} from 'storefrontapi.generated';
- import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import {redirect, type LoaderFunctionArgs} from 'react-router';
 -import { useLoaderData, type MetaFunction } from 'react-router';
 +import {LinksFunction, useLoaderData, type MetaFunction} from 'react-router';
  import {
@@ -861,7 +861,7 @@ import {
   LinksFunction,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
+} from 'react-router';
 import {
   useActionData,
   useFetcher,
@@ -1045,12 +1045,12 @@ index 29e641f4..9ee30fd4 100644
 +++ b/templates/skeleton/app/routes/account.tsx
 @@ -1,6 +1,8 @@
 -
--import {data as remixData, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+-import {data as remixData, type LoaderFunctionArgs} from 'react-router';
 -import { Form, NavLink, Outlet, useLoaderData } from 'react-router';
 +import {
 +  data as remixData,
 +  type LoaderFunctionArgs,
-+} from '@shopify/remix-oxygen';
++} from 'react-router';
 +import {Form, NavLink, Outlet, useLoaderData} from 'react-router';
  import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
  

@@ -4,7 +4,7 @@ import {
   LinksFunction,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
+} from 'react-router';
 import {
   useActionData,
   useFetcher,

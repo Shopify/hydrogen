@@ -429,7 +429,7 @@ For brevity, we'll focus on the home page, the cart page, and the product page i
 <details>
 
 ```tsx
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs} from 'react-router';
 import {Await, useLoaderData, type MetaFunction} from 'react-router';
 import {Suspense} from 'react';
 import {Image, Money} from '@shopify/hydrogen';
@@ -622,7 +622,7 @@ import {
   type LoaderFunctionArgs,
   type ActionFunctionArgs,
   type HeadersFunction,
-} from '@shopify/remix-oxygen';
+} from 'react-router';
 import {CartMain} from '~/components/CartMain';
 
 export const meta: MetaFunction = () => {
@@ -750,7 +750,7 @@ localized prefix.
 <details>
 
 ```tsx
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs} from 'react-router';
 import {useLoaderData, type MetaFunction} from 'react-router';
 import {
   getSelectedProductOptions,
@@ -1017,7 +1017,7 @@ the route will throw a 404 error.
 <details>
 
 ```tsx
-import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import type {LoaderFunctionArgs} from 'react-router';
 import {localeMatchesPrefix} from '~/lib/i18n';
 
 export async function loader({params}: LoaderFunctionArgs) {
@@ -1043,7 +1043,7 @@ index 20b39d82..8cf08fc6 100644
 --- a/templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx
 +++ b/templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx
 @@ -1,5 +1,6 @@
- import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import type {LoaderFunctionArgs} from 'react-router';
  import {getSitemap} from '@shopify/hydrogen';
 +import {SUPPORTED_LOCALES} from '../lib/i18n';
  

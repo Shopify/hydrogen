@@ -23,10 +23,20 @@ import type {
   WaitUntil,
   HydrogenSession,
   StorefrontHeaders,
+  HydrogenRouterContextProvider,
 } from './types';
 import {type CrossRuntimeRequest, getHeader} from './utils/request';
 import {warnOnce} from './utils/warning';
 import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
+import {unstable_RouterContextProvider} from 'react-router';
+import {
+  storefrontContext,
+  cartContext,
+  customerAccountContext,
+  envContext,
+  sessionContext,
+  waitUntilContext,
+} from './context-keys';
 
 export type HydrogenContextOptions<
   TSession extends HydrogenSession = HydrogenSession,
@@ -136,18 +146,24 @@ export function createHydrogenContext<
   TCustomMethods extends CustomMethodsBase | undefined = {},
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
+  TAdditionalContext extends Record<string, any> = {},
 >(
   options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
-): HydrogenContext<TSession, TCustomMethods, TI18n, TEnv>;
+  additionalContext?: TAdditionalContext,
+): HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> &
+  TAdditionalContext;
 
 export function createHydrogenContext<
   TSession extends HydrogenSession,
   TCustomMethods extends CustomMethodsBase,
   TI18n extends I18nBase,
   TEnv extends HydrogenEnv = Env,
+  TAdditionalContext extends Record<string, any> = {},
 >(
   options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
-): HydrogenContextOverloads<TSession, TCustomMethods, TI18n, TEnv> {
+  additionalContext?: TAdditionalContext,
+): HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> &
+  TAdditionalContext {
   const {
     env,
     request,
@@ -234,14 +250,70 @@ export function createHydrogenContext<
     customerAccount,
   });
 
-  return {
+  // Create React Router context provider
+  const routerProvider = new unstable_RouterContextProvider();
+
+  // Set React Router context keys (enables context.get(storefrontContext))
+  routerProvider.set(storefrontContext, storefront);
+  routerProvider.set(cartContext, cart);
+  routerProvider.set(customerAccountContext, customerAccount);
+  routerProvider.set(envContext, env);
+  routerProvider.set(sessionContext, session);
+  if (waitUntil) {
+    routerProvider.set(waitUntilContext, waitUntil);
+  }
+
+  // Create Hydrogen services map for direct property access
+  const services = {
     storefront,
+    cart: cart as TCustomMethods extends CustomMethodsBase
+      ? HydrogenCartCustom<TCustomMethods>
+      : HydrogenCart,
     customerAccount,
-    cart,
     env,
-    waitUntil,
     session,
+    waitUntil,
+    // Merge additional context properties (CMS clients, 3P SDKs, etc.)
+    ...(additionalContext || {}),
   };
+
+  // Create Proxy for hybrid access pattern - cleanest approach
+  const hybridProvider = new Proxy(routerProvider, {
+    get(target, prop, receiver) {
+      // If it's a React Router method or property, use the target
+      if (prop in target) {
+        const value = target[prop as keyof typeof target];
+        // Bind methods to preserve 'this' context
+        return typeof value === 'function' ? value.bind(target) : value;
+      }
+
+      // If it's a Hydrogen service property, return from services
+      if (prop in services) {
+        return services[prop as keyof typeof services];
+      }
+
+      // Default behavior for other properties
+      return Reflect.get(target, prop, receiver);
+    },
+
+    has(target, prop) {
+      // Property exists if it's in target OR services
+      return prop in target || prop in services;
+    },
+
+    ownKeys(target) {
+      // Return all keys from both target and services
+      return [...Reflect.ownKeys(target), ...Object.keys(services)];
+    },
+  });
+
+  return hybridProvider as HydrogenRouterContextProvider<
+    TSession,
+    TCustomMethods,
+    TI18n,
+    TEnv
+  > &
+    TAdditionalContext;
 }
 
 function getStorefrontHeaders(request: CrossRuntimeRequest): StorefrontHeaders {
