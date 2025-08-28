@@ -1,14 +1,7 @@
-index 543e76be..1e75522b 100644
+index b0eb47df2..a1614b199 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
-@@ -1,13 +1,13 @@
- import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
- import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
- import {Suspense} from 'react';
--import {Image, Money} from '@shopify/hydrogen';
-+import {Image} from '@shopify/hydrogen';
- import type {
-   FeaturedCollectionFragment,
+@@ -12,7 +12,7 @@ import type {
    RecommendedProductsQuery,
  } from 'storefrontapi.generated';
  import {ProductItem} from '~/components/ProductItem';
@@ -17,7 +10,7 @@ index 543e76be..1e75522b 100644
  export const meta: MetaFunction = () => {
    return [{title: 'Hydrogen | Home'}];
  };
-@@ -44,7 +44,11 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
+@@ -49,7 +49,11 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
   */
  function loadDeferredData({context}: LoaderFunctionArgs) {
    const recommendedProducts = context.storefront
@@ -30,7 +23,7 @@ index 543e76be..1e75522b 100644
      .catch((error) => {
        // Log query errors, but don't throw them so the page can still render
        console.error(error);
-@@ -100,11 +104,9 @@ function RecommendedProducts({
+@@ -105,11 +109,9 @@ function RecommendedProducts({
          <Await resolve={products}>
            {(response) => (
              <div className="recommended-products-grid">
@@ -45,7 +38,7 @@ index 543e76be..1e75522b 100644
              </div>
            )}
          </Await>
-@@ -147,7 +149,12 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+@@ -152,7 +154,12 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
          amount
          currencyCode
        }
@@ -58,7 +51,7 @@ index 543e76be..1e75522b 100644
      featuredImage {
        id
        url
-@@ -156,9 +163,9 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+@@ -161,9 +168,9 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
        height
      }
    }

@@ -90,7 +90,7 @@ export const combinedListingsSettings = {
 
 Create a new `combined-listings.ts` file that contains utilities and settings for handling combined listings.
 
-#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
+#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/ea5f3bf445d4d87c9bdc172202041d37e7efd96e/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
 
 ```ts
 // Edit these values to customize combined listings' behavior
@@ -303,7 +303,7 @@ If you want to redirect automatically to the first variant of a combined listing
 
 ```diff
 @@ -1,4 +1,6 @@
- import {redirect} from '@shopify/remix-oxygen';
+ import {redirect} from 'react-router';
 +import {ProductFragment} from 'storefrontapi.generated';
 +import {isCombinedListing} from './combined-listings';
  
@@ -343,14 +343,7 @@ If you want to redirect automatically to the first variant of a combined listing
 #### File: /app/routes/_index.tsx
 
 ```diff
-@@ -1,13 +1,13 @@
- import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
- import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
- import {Suspense} from 'react';
--import {Image, Money} from '@shopify/hydrogen';
-+import {Image} from '@shopify/hydrogen';
- import type {
-   FeaturedCollectionFragment,
+@@ -12,7 +12,7 @@ import type {
    RecommendedProductsQuery,
  } from 'storefrontapi.generated';
  import {ProductItem} from '~/components/ProductItem';
@@ -359,7 +352,7 @@ If you want to redirect automatically to the first variant of a combined listing
  export const meta: MetaFunction = () => {
    return [{title: 'Hydrogen | Home'}];
  };
-@@ -44,7 +44,11 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
+@@ -49,7 +49,11 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
   */
  function loadDeferredData({context}: LoaderFunctionArgs) {
    const recommendedProducts = context.storefront
@@ -372,7 +365,7 @@ If you want to redirect automatically to the first variant of a combined listing
      .catch((error) => {
        // Log query errors, but don't throw them so the page can still render
        console.error(error);
-@@ -100,11 +104,9 @@ function RecommendedProducts({
+@@ -105,11 +109,9 @@ function RecommendedProducts({
          <Await resolve={products}>
            {(response) => (
              <div className="recommended-products-grid">
@@ -387,7 +380,7 @@ If you want to redirect automatically to the first variant of a combined listing
              </div>
            )}
          </Await>
-@@ -147,7 +149,12 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+@@ -152,7 +154,12 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
          amount
          currencyCode
        }
@@ -400,7 +393,7 @@ If you want to redirect automatically to the first variant of a combined listing
      featuredImage {
        id
        url
-@@ -156,9 +163,9 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+@@ -161,9 +168,9 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
        height
      }
    }
@@ -421,7 +414,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
 #### File: /app/routes/collections.$handle.tsx
 
 ```diff
-@@ -4,7 +4,10 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
+@@ -8,7 +8,10 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
  import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
  import {ProductItem} from '~/components/ProductItem';
@@ -433,7 +426,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
  export const meta: MetaFunction<typeof loader> = ({data}) => {
    return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
  };
-@@ -71,12 +74,25 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
+@@ -75,12 +78,25 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
  export default function Collection() {
    const {collection} = useLoaderData<typeof loader>();
  
@@ -460,7 +453,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
          resourcesClassName="products-grid"
        >
          {({node: product, index}) => (
-@@ -108,6 +124,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
+@@ -112,6 +128,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
      id
      handle
      title
@@ -468,7 +461,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
      featuredImage {
        id
        altText
-@@ -147,7 +164,7 @@ const COLLECTION_QUERY = `#graphql
+@@ -151,7 +168,7 @@ const COLLECTION_QUERY = `#graphql
          first: $first,
          last: $last,
          before: $startCursor,
@@ -486,7 +479,7 @@ Update the `collections.all` route to filter out combined listings from the sear
 #### File: /app/routes/collections.all.tsx
 
 ```diff
-@@ -3,7 +3,10 @@ import {useLoaderData, type MetaFunction} from 'react-router';
+@@ -6,7 +6,10 @@ import {
  import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
  import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  import {ProductItem} from '~/components/ProductItem';
@@ -498,7 +491,7 @@ Update the `collections.all` route to filter out combined listings from the sear
  export const meta: MetaFunction<typeof loader> = () => {
    return [{title: `Hydrogen | Products`}];
  };
-@@ -30,7 +33,12 @@ async function loadCriticalData({context, request}: LoaderFunctionArgs) {
+@@ -33,7 +36,12 @@ async function loadCriticalData({context, request}: LoaderFunctionArgs) {
  
    const [{products}] = await Promise.all([
      storefront.query(CATALOG_QUERY, {
@@ -512,7 +505,7 @@ Update the `collections.all` route to filter out combined listings from the sear
      }),
      // Add other queries here, so that they are loaded in parallel
    ]);
-@@ -77,6 +85,7 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
+@@ -80,6 +88,7 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
      id
      handle
      title
@@ -520,7 +513,7 @@ Update the `collections.all` route to filter out combined listings from the sear
      featuredImage {
        id
        altText
-@@ -104,8 +113,9 @@ const CATALOG_QUERY = `#graphql
+@@ -107,8 +116,9 @@ const CATALOG_QUERY = `#graphql
      $last: Int
      $startCursor: String
      $endCursor: String
@@ -542,13 +535,13 @@ Update the `collections.all` route to filter out combined listings from the sear
 #### File: /app/routes/products.$handle.tsx
 
 ```diff
-@@ -1,4 +1,4 @@
--import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
- import { useLoaderData, type MetaFunction } from 'react-router';
+@@ -1,5 +1,4 @@
  import {
-   getSelectedProductOptions,
-@@ -11,7 +11,14 @@ import {
+-  redirect,
+   type LoaderFunctionArgs,
+   useLoaderData,
+   type MetaFunction,
+@@ -15,7 +14,14 @@ import {
  import {ProductPrice} from '~/components/ProductPrice';
  import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
@@ -564,7 +557,7 @@ Update the `collections.all` route to filter out combined listings from the sear
  
  export const meta: MetaFunction<typeof loader> = ({data}) => {
    return [
-@@ -63,6 +70,10 @@ async function loadCriticalData({
+@@ -67,6 +73,10 @@ async function loadCriticalData({
    // The API handle might be localized, so redirect to the localized handle
    redirectIfHandleIsLocalized(request, {handle, data: product});
  
@@ -575,7 +568,7 @@ Update the `collections.all` route to filter out combined listings from the sear
    return {
      product,
    };
-@@ -82,6 +93,7 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
+@@ -86,6 +96,7 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
  
  export default function Product() {
    const {product} = useLoaderData<typeof loader>();
@@ -583,7 +576,7 @@ Update the `collections.all` route to filter out combined listings from the sear
  
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
-@@ -91,7 +103,9 @@ export default function Product() {
+@@ -95,7 +106,9 @@ export default function Product() {
  
    // Sets the search param to the selected variant without navigation
    // only when no search params are set in the url
@@ -594,7 +587,7 @@ Update the `collections.all` route to filter out combined listings from the sear
  
    // Get the product options array
    const productOptions = getProductOptions({
-@@ -99,21 +113,41 @@ export default function Product() {
+@@ -103,21 +116,41 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
  
@@ -643,7 +636,7 @@ Update the `collections.all` route to filter out combined listings from the sear
          />
          <br />
          <br />
-@@ -190,6 +224,22 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -194,6 +227,22 @@ const PRODUCT_FRAGMENT = `#graphql
      description
      encodedVariantExistence
      encodedVariantAvailability

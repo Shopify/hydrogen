@@ -1,7 +1,7 @@
-index b44bc1ba..fb04d67f 100644
+index c832408f8..e80b7a478 100644
 --- a/templates/skeleton/app/routes/collections.$handle.tsx
 +++ b/templates/skeleton/app/routes/collections.$handle.tsx
-@@ -4,7 +4,10 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
+@@ -8,7 +8,10 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
  import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
  import {ProductItem} from '~/components/ProductItem';
@@ -13,7 +13,7 @@ index b44bc1ba..fb04d67f 100644
  export const meta: MetaFunction<typeof loader> = ({data}) => {
    return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
  };
-@@ -71,12 +74,25 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
+@@ -75,12 +78,25 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
  export default function Collection() {
    const {collection} = useLoaderData<typeof loader>();
  
@@ -40,7 +40,7 @@ index b44bc1ba..fb04d67f 100644
          resourcesClassName="products-grid"
        >
          {({node: product, index}) => (
-@@ -108,6 +124,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
+@@ -112,6 +128,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
      id
      handle
      title
@@ -48,7 +48,7 @@ index b44bc1ba..fb04d67f 100644
      featuredImage {
        id
        altText
-@@ -147,7 +164,7 @@ const COLLECTION_QUERY = `#graphql
+@@ -151,7 +168,7 @@ const COLLECTION_QUERY = `#graphql
          first: $first,
          last: $last,
          before: $startCursor,
