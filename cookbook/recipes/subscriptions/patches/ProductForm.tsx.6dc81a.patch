@@ -1,4 +1,4 @@
-index 61290120..234b151a 100644
+index ee52ab688..bfdd748d7 100644
 --- a/templates/skeleton/app/components/ProductForm.tsx
 +++ b/templates/skeleton/app/components/ProductForm.tsx
 @@ -6,14 +6,25 @@ import type {
