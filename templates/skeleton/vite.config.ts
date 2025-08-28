@@ -11,6 +11,9 @@ export default defineConfig({
     // withtout inlining assets as base64:
     assetsInlineLimit: 0,
   },
+  server: {
+    allowedHosts: ['.tryhydrogen.dev'],
+  },
   ssr: {
     optimizeDeps: {
       /**
