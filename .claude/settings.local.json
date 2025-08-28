@@ -43,7 +43,9 @@
       "Bash(sed:*)",
       "Bash(fi)",
       "Bash(done)",
-      "Bash(gh pr checks:*)"
+      "Bash(gh pr checks:*)",
+      "Bash(git stash show:*)",
+      "Bash(npx shopify plugins inspect:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
