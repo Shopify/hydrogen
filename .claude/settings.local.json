@@ -30,9 +30,22 @@
       "Bash(timeout 10 npm run preview)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npm run build)",
       "Bash(npm run format:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(gh run list:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run ci:checks:*)",
+      "Bash(for:*)",
+      "Bash(do)",
+      "Bash(if [ -f \"$file\" ])",
+      "Bash(then)",
+      "Bash(echo \"Updating $file\")",
+      "Bash(sed:*)",
+      "Bash(fi)",
+      "Bash(done)"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "docs-shopify-cli",
     "docs-cloudflare-workers-sdk",
@@ -45,6 +58,5 @@
     "docs-xstate",
     "shopify-dev-mcp",
     "browsermcp"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }
