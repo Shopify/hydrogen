@@ -65,6 +65,14 @@ export {cartNoteUpdateDefault} from './cart/queries/cartNoteUpdateDefault';
 export {cartSelectedDeliveryOptionsUpdateDefault} from './cart/queries/cartSelectedDeliveryOptionsUpdateDefault';
 export {changelogHandler} from './changelogHandler';
 export {
+  cartContext,
+  customerAccountContext,
+  envContext,
+  sessionContext,
+  storefrontContext,
+  waitUntilContext,
+} from './context-keys';
+export {
   createHydrogenContext,
   type HydrogenContext,
 } from './createHydrogenContext';
@@ -113,19 +121,11 @@ export {Seo} from './seo/seo';
 export {ShopPayButton} from './shop/ShopPayButton';
 export {getSitemap, getSitemapIndex} from './sitemap/sitemap';
 export * from './storefront';
-export {
-  storefrontContext,
-  cartContext,
-  customerAccountContext,
-  envContext,
-  sessionContext,
-  waitUntilContext,
-} from './context-keys';
 export type {
   HydrogenEnv,
+  HydrogenRouterContextProvider,
   HydrogenSession,
   HydrogenSessionData,
-  HydrogenRouterContextProvider,
 } from './types';
 export type {
   ClientBrowserParameters,
