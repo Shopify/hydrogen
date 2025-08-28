@@ -192,4 +192,7 @@ examples/*/vite.config.js
 
 # Important: Keep React Router augmentation files
 !packages/hydrogen/react-router.d.ts
-!packages/hydrogen/react-router-augmentation.d.tstest-project-*
+!packages/hydrogen/react-router-augmentation.d.ts
+
+# Test projects created during testing
+test-project-*
