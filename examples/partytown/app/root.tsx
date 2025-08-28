@@ -19,7 +19,7 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
 import {PartytownGoogleTagManager} from '~/components/PartytownGoogleTagManager';
-import {Partytown} from '@builder.io/partytown/react';
+import {Partytown} from '@qwik.dev/partytown/react';
 import {maybeProxyRequest} from '~/utils/partytown/maybeProxyRequest';
 import {partytownAtomicHeaders} from '~/utils/partytown/partytownAtomicHeaders';
 /**********   EXAMPLE UPDATE END   ************/
@@ -46,6 +46,8 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
   }
 
   return false;
+  // Improve performance by reducing unnecessary re-renders and re-fetches:
+  // return false unless there are specific reasons to revalidate
 };
 
 /**
@@ -99,7 +101,7 @@ export async function loader(args: LoaderFunctionArgs) {
     },
     /***********************************************/
     /**********  EXAMPLE UPDATE STARTS  ************/
-    gtmContainerId: args.context.env.GTM_CONTAINER_ID,
+    gtmContainerId: args.context.env.GTM_ID || args.context.env.GTM_CONTAINER_ID,
     /**********   EXAMPLE UPDATE END   ************/
     /***********************************************/
   };
@@ -143,7 +145,7 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
         footerMenuHandle: 'footer', // Adjust to your footer menu handle
       },
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       // Log query errors, but don't throw them so the page can still render
       console.error(error);
       return null;
