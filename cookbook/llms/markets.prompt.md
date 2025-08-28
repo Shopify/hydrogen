@@ -116,7 +116,7 @@ Create a new `CountrySelector` component that allows users to select the locale 
 To handle redirects, use a `Form` that updates the cart buyer identity,
 which eventually redirects to the localized root of the app.
 
-##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
+##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/ea5f3bf445d4d87c9bdc172202041d37e7efd96e/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
 
 ```tsx
 import {Form} from 'react-router';
@@ -191,7 +191,7 @@ const LocaleLink = ({locale}: {locale: Locale}) => {
 
 Create a wrapper component around the `Link` component that prepends the selected locale path prefix (if any) to the actual links.
 
-##### File: [Link.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
+##### File: [Link.tsx](https://github.com/Shopify/hydrogen/blob/ea5f3bf445d4d87c9bdc172202041d37e7efd96e/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
 
 ```tsx
 import {LinkProps, Link as ReactLink} from 'react-router';
@@ -215,7 +215,7 @@ a hook to retrieve the selected locale.
 2. Define a set of supported locales for the app.
 3. Add a utility function to validate the locale from the route param against the supported locales.
 
-##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
+##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/ea5f3bf445d4d87c9bdc172202041d37e7efd96e/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
 
 ```ts
 import {useMatches} from 'react-router';
@@ -338,25 +338,27 @@ Detect the locale from the URL path, and add it to the HydrogenContext.
  import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 +import {getLocaleFromRequest} from './i18n';
  
- /**
-  * The context implementation is separate from server.ts
-@@ -24,13 +25,15 @@ export async function createAppLoadContext(
+ // Define the additional context object
+ const additionalContext = {
+@@ -40,6 +41,8 @@ export async function createHydrogenRouterContext(
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
  
 +  const i18n = getLocaleFromRequest(request);
 +
-   const hydrogenContext = createHydrogenContext({
-     env,
-     request,
-     cache,
-     waitUntil,
-     session,
--    i18n: {language: 'EN', country: 'US'},
-+    i18n,
-     cart: {
-       queryFragment: CART_QUERY_FRAGMENT,
-     },
+   const hydrogenContext = createHydrogenContext(
+     {
+       env,
+@@ -47,8 +50,7 @@ export async function createHydrogenRouterContext(
+       cache,
+       waitUntil,
+       session,
+-      // Or detect from URL path based on locale subpath, cookies, or any other strategy
+-      i18n: {language: 'EN', country: 'US'},
++      i18n,
+       cart: {
+         queryFragment: CART_QUERY_FRAGMENT,
+       },
 ```
 
 #### Step 1.6: Add the CountrySelector component to the Header
@@ -438,13 +440,17 @@ For brevity, we'll focus on the home page, the cart page, and the product page i
 > [!NOTE]
 > Rename `app/routes/_index.tsx` to `app/routes/($locale)._index.tsx`.
 
-##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
+##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/ea5f3bf445d4d87c9bdc172202041d37e7efd96e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
 
 ```tsx
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {Await, useLoaderData, type MetaFunction} from 'react-router';
+import {
+  type LoaderFunctionArgs,
+  Await,
+  useLoaderData,
+  type MetaFunction,
+} from 'react-router';
 import {Suspense} from 'react';
-import {Image, Money} from '@shopify/hydrogen';
+import {Image} from '@shopify/hydrogen';
 import type {
   FeaturedCollectionFragment,
   RecommendedProductsQuery,
@@ -619,18 +625,19 @@ Add the dynamic segment to the cart page route.
 > [!NOTE]
 > Rename `app/routes/cart.tsx` to `app/routes/($locale).cart.tsx`.
 
-##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
+##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/ea5f3bf445d4d87c9bdc172202041d37e7efd96e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
 
 ```tsx
-import {type MetaFunction, useLoaderData} from 'react-router';
-import type {CartQueryDataReturn} from '@shopify/hydrogen';
-import {CartForm} from '@shopify/hydrogen';
 import {
+  type MetaFunction,
+  useLoaderData,
   data,
   type LoaderFunctionArgs,
   type ActionFunctionArgs,
   type HeadersFunction,
-} from '@shopify/remix-oxygen';
+} from 'react-router';
+import type {CartQueryDataReturn} from '@shopify/hydrogen';
+import {CartForm} from '@shopify/hydrogen';
 import {CartMain} from '~/components/CartMain';
 
 export const meta: MetaFunction = () => {
@@ -751,11 +758,15 @@ localized prefix.
 > [!NOTE]
 > Rename `app/routes/products.$handle.tsx` to `app/routes/($locale).products.$handle.tsx`.
 
-##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
+##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/ea5f3bf445d4d87c9bdc172202041d37e7efd96e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
 
 ```tsx
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, type MetaFunction} from 'react-router';
+import {
+  redirect,
+  type LoaderFunctionArgs,
+  useLoaderData,
+  type MetaFunction,
+} from 'react-router';
 import {
   getSelectedProductOptions,
   Analytics,
@@ -1014,7 +1025,7 @@ Add a utility route in `$(locale).tsx` that will use `localeMatchesPrefix`
 to validate the locale from the URL params. If the locale is invalid,
 the route will throw a 404 error.
 
-##### File: [($locale).tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).tsx)
+##### File: [($locale).tsx](https://github.com/Shopify/hydrogen/blob/ea5f3bf445d4d87c9bdc172202041d37e7efd96e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).tsx)
 
 ```tsx
 import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
@@ -1038,7 +1049,7 @@ Update the sitemap route to use the locales included in `SUPPORTED_LOCALES`.
 
 ```diff
 @@ -1,5 +1,6 @@
- import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
+ import type {LoaderFunctionArgs} from 'react-router';
  import {getSitemap} from '@shopify/hydrogen';
 +import {SUPPORTED_LOCALES} from '../lib/i18n';
  
@@ -1064,12 +1075,7 @@ Remove the `pathname` parameter from the `useVariantUrl` function, and the logic
 ##### File: /app/lib/variants.ts
 
 ```diff
-@@ -1,4 +1,3 @@
--import { useLocation } from 'react-router';
- import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
- import {useMemo} from 'react';
- 
-@@ -6,35 +5,25 @@ export function useVariantUrl(
+@@ -6,35 +6,25 @@ export function useVariantUrl(
    handle: string,
    selectedOptions?: SelectedOption[],
  ) {
