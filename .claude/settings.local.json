@@ -42,7 +42,8 @@
       "Bash(echo \"Updating $file\")",
       "Bash(sed:*)",
       "Bash(fi)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(gh pr checks:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
