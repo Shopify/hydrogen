@@ -494,7 +494,7 @@ describe('createHydrogenContext', () => {
     it('supports property enumeration via Object.keys', async () => {
       const hydrogenContext = createHydrogenContext(defaultOptions);
       const keys = Object.keys(hydrogenContext);
-      
+
       expect(keys).toContain('storefront');
       expect(keys).toContain('cart');
       expect(keys).toContain('customerAccount');
@@ -505,7 +505,7 @@ describe('createHydrogenContext', () => {
     it('supports property enumeration via Object.entries', async () => {
       const hydrogenContext = createHydrogenContext(defaultOptions);
       const entries = Object.entries(hydrogenContext);
-      
+
       expect(entries.length).toBeGreaterThan(0);
       expect(entries.some(([key]) => key === 'storefront')).toBe(true);
       expect(entries.some(([key]) => key === 'cart')).toBe(true);
@@ -515,7 +515,7 @@ describe('createHydrogenContext', () => {
     it('supports spread operator', async () => {
       const hydrogenContext = createHydrogenContext(defaultOptions);
       const spread = {...hydrogenContext};
-      
+
       expect(spread).toHaveProperty('storefront');
       expect(spread).toHaveProperty('cart');
       expect(spread).toHaveProperty('env');
@@ -526,7 +526,7 @@ describe('createHydrogenContext', () => {
     it('supports destructuring assignment', async () => {
       const hydrogenContext = createHydrogenContext(defaultOptions);
       const {storefront, cart, env, session} = hydrogenContext;
-      
+
       expect(storefront).toBeDefined();
       expect(cart).toBeDefined();
       expect(env).toBe(mockEnv);
@@ -535,8 +535,11 @@ describe('createHydrogenContext', () => {
 
     it('provides proper property descriptors', async () => {
       const hydrogenContext = createHydrogenContext(defaultOptions);
-      
-      const storefrontDesc = Object.getOwnPropertyDescriptor(hydrogenContext, 'storefront');
+
+      const storefrontDesc = Object.getOwnPropertyDescriptor(
+        hydrogenContext,
+        'storefront',
+      );
       expect(storefrontDesc).toEqual({
         enumerable: true,
         configurable: true,
@@ -555,18 +558,18 @@ describe('createHydrogenContext', () => {
 
     it('supports JSON serialization', async () => {
       const hydrogenContext = createHydrogenContext(defaultOptions);
-      
+
       expect(() => JSON.stringify(hydrogenContext)).not.toThrow();
       const serialized = JSON.stringify(hydrogenContext);
       const parsed = JSON.parse(serialized);
-      
+
       expect(parsed).toHaveProperty('env');
       expect(parsed).toHaveProperty('session');
     });
 
     it('maintains React Router context provider functionality', async () => {
       const hydrogenContext = createHydrogenContext(defaultOptions);
-      
+
       expect(typeof hydrogenContext.get).toBe('function');
       expect(typeof hydrogenContext.set).toBe('function');
     });
