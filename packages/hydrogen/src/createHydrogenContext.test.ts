@@ -489,4 +489,86 @@ describe('createHydrogenContext', () => {
       );
     });
   });
+
+  describe('proxy behavior', () => {
+    it('supports property enumeration via Object.keys', async () => {
+      const hydrogenContext = createHydrogenContext(defaultOptions);
+      const keys = Object.keys(hydrogenContext);
+      
+      expect(keys).toContain('storefront');
+      expect(keys).toContain('cart');
+      expect(keys).toContain('customerAccount');
+      expect(keys).toContain('env');
+      expect(keys).toContain('session');
+    });
+
+    it('supports property enumeration via Object.entries', async () => {
+      const hydrogenContext = createHydrogenContext(defaultOptions);
+      const entries = Object.entries(hydrogenContext);
+      
+      expect(entries.length).toBeGreaterThan(0);
+      expect(entries.some(([key]) => key === 'storefront')).toBe(true);
+      expect(entries.some(([key]) => key === 'cart')).toBe(true);
+      expect(entries.some(([key]) => key === 'env')).toBe(true);
+    });
+
+    it('supports spread operator', async () => {
+      const hydrogenContext = createHydrogenContext(defaultOptions);
+      const spread = {...hydrogenContext};
+      
+      expect(spread).toHaveProperty('storefront');
+      expect(spread).toHaveProperty('cart');
+      expect(spread).toHaveProperty('env');
+      expect(spread).toHaveProperty('session');
+      expect(spread).toHaveProperty('customerAccount');
+    });
+
+    it('supports destructuring assignment', async () => {
+      const hydrogenContext = createHydrogenContext(defaultOptions);
+      const {storefront, cart, env, session} = hydrogenContext;
+      
+      expect(storefront).toBeDefined();
+      expect(cart).toBeDefined();
+      expect(env).toBe(mockEnv);
+      expect(session).toBe(defaultOptions.session);
+    });
+
+    it('provides proper property descriptors', async () => {
+      const hydrogenContext = createHydrogenContext(defaultOptions);
+      
+      const storefrontDesc = Object.getOwnPropertyDescriptor(hydrogenContext, 'storefront');
+      expect(storefrontDesc).toEqual({
+        enumerable: true,
+        configurable: true,
+        writable: false,
+        value: expect.any(Object),
+      });
+
+      const envDesc = Object.getOwnPropertyDescriptor(hydrogenContext, 'env');
+      expect(envDesc).toEqual({
+        enumerable: true,
+        configurable: true,
+        writable: false,
+        value: mockEnv,
+      });
+    });
+
+    it('supports JSON serialization', async () => {
+      const hydrogenContext = createHydrogenContext(defaultOptions);
+      
+      expect(() => JSON.stringify(hydrogenContext)).not.toThrow();
+      const serialized = JSON.stringify(hydrogenContext);
+      const parsed = JSON.parse(serialized);
+      
+      expect(parsed).toHaveProperty('env');
+      expect(parsed).toHaveProperty('session');
+    });
+
+    it('maintains React Router context provider functionality', async () => {
+      const hydrogenContext = createHydrogenContext(defaultOptions);
+      
+      expect(typeof hydrogenContext.get).toBe('function');
+      expect(typeof hydrogenContext.set).toBe('function');
+    });
+  });
 });

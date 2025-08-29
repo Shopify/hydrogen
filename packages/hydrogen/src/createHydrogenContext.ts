@@ -305,6 +305,26 @@ export function createHydrogenContext<
       // Return all keys from both target and services
       return [...Reflect.ownKeys(target), ...Object.keys(services)];
     },
+
+    getOwnPropertyDescriptor(target, prop) {
+      // If property exists on target, return its descriptor
+      if (prop in target) {
+        return Reflect.getOwnPropertyDescriptor(target, prop);
+      }
+
+      // If property exists in services, return a descriptor that makes it enumerable
+      if (prop in services) {
+        return {
+          enumerable: true,
+          configurable: true,
+          writable: false,
+          value: services[prop as keyof typeof services],
+        };
+      }
+
+      // Property doesn't exist
+      return undefined;
+    },
   });
 
   return hybridProvider as HydrogenRouterContextProvider<
