@@ -6,6 +6,9 @@ import {
 } from 'react-router';
 import {getPaginationVariables} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+import type {BlogsQuery} from 'storefrontapi.generated';
+
+type BlogNode = BlogsQuery['blogs']['nodes'][0];
 
 export const meta: MetaFunction = () => {
   return [{title: `Hydrogen | Blogs`}];
@@ -58,7 +61,7 @@ export default function Blogs() {
     <div className="blogs">
       <h1>Blogs</h1>
       <div className="blogs-grid">
-        <PaginatedResourceSection connection={blogs}>
+        <PaginatedResourceSection<BlogNode> connection={blogs}>
           {({node: blog}) => (
             <Link
               className="blog"

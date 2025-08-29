@@ -4,8 +4,13 @@ import {
   useLoaderData,
   type MetaFunction,
 } from 'react-router';
-import {Money, Image, flattenConnection} from '@shopify/hydrogen';
-import type {OrderLineItemFullFragment} from 'customer-accountapi.generated';
+import {Money, Image} from '@shopify/hydrogen';
+import type {
+  OrderLineItemFullFragment,
+  OrderQuery,
+  OrderFragment,
+  DiscountApplicationFragment,
+} from 'customer-accountapi.generated';
 import {CUSTOMER_ORDER_QUERY} from '~/graphql/customer-account/CustomerOrderQuery';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
@@ -18,7 +23,7 @@ export async function loader({params, context}: LoaderFunctionArgs) {
   }
 
   const orderId = atob(params.id);
-  const {data, errors} = await context.customerAccount.query(
+  const {data, errors}: {data: OrderQuery; errors?: Array<{message: string}>} = await context.customerAccount.query(
     CUSTOMER_ORDER_QUERY,
     {
       variables: {
@@ -34,20 +39,27 @@ export async function loader({params, context}: LoaderFunctionArgs) {
 
   const {order} = data;
 
-  const lineItems = flattenConnection(order.lineItems);
-  const discountApplications = flattenConnection(order.discountApplications);
+  // Extract line items directly from nodes array
+  const lineItems = order.lineItems.nodes;
 
-  const fulfillmentStatus =
-    flattenConnection(order.fulfillments)[0]?.status ?? 'N/A';
+  // Extract discount applications directly from nodes array
+  const discountApplications = order.discountApplications.nodes;
 
+  // Get fulfillment status from first fulfillment node
+  const fulfillmentStatus = order.fulfillments.nodes[0]?.status ?? 'N/A';
+
+  // Get first discount value with proper type checking
   const firstDiscount = discountApplications[0]?.value;
 
-  const discountValue =
-    firstDiscount?.__typename === 'MoneyV2' && firstDiscount;
+  // Type guard for MoneyV2 discount
+  const discountValue = firstDiscount?.__typename === 'MoneyV2' 
+    ? firstDiscount as Extract<typeof firstDiscount, {__typename: 'MoneyV2'}>
+    : null;
 
-  const discountPercentage =
-    firstDiscount?.__typename === 'PricingPercentageValue' &&
-    firstDiscount?.percentage;
+  // Type guard for percentage discount
+  const discountPercentage = firstDiscount?.__typename === 'PricingPercentageValue'
+    ? (firstDiscount as Extract<typeof firstDiscount, {__typename: 'PricingPercentageValue'}>).percentage
+    : null;
 
   return {
     order,
@@ -82,7 +94,7 @@ export default function OrderRoute() {
             </tr>
           </thead>
           <tbody>
-            {lineItems.map((lineItem, lineItemIndex) => (
+            {lineItems.map((lineItem: OrderLineItemFullFragment, lineItemIndex: number) => (
               // eslint-disable-next-line react/no-array-index-key
               <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
             ))}

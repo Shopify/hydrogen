@@ -12,6 +12,7 @@ import {
   type PredictiveSearchReturn,
   getEmptyPredictiveSearchResult,
 } from '~/lib/search';
+import type {RegularSearchQuery, PredictiveSearchQuery} from 'storefrontapi.generated';
 
 export const meta: MetaFunction = () => {
   return [{title: `Hydrogen | Search`}];
@@ -226,7 +227,7 @@ async function regularSearch({
   const term = String(url.searchParams.get('q') || '');
 
   // Search articles, pages, and products for the `q` term
-  const {errors, ...items} = await storefront.query(SEARCH_QUERY, {
+  const {errors, ...items}: {errors?: Array<{message: string}>} & RegularSearchQuery = await storefront.query(SEARCH_QUERY, {
     variables: {...variables, term},
   });
 
@@ -235,12 +236,12 @@ async function regularSearch({
   }
 
   const total = Object.values(items).reduce(
-    (acc, {nodes}) => acc + nodes.length,
+    (acc: number, {nodes}: {nodes: Array<unknown>}) => acc + nodes.length,
     0,
   );
 
   const error = errors
-    ? errors.map(({message}) => message).join(', ')
+    ? errors.map(({message}: {message: string}) => message).join(', ')
     : undefined;
 
   return {type: 'regular', term, error, result: {total, items}};
@@ -390,7 +391,7 @@ async function predictiveSearch({
   if (!term) return {type, term, result: getEmptyPredictiveSearchResult()};
 
   // Predictively search articles, collections, pages, products, and queries (suggestions)
-  const {predictiveSearch: items, errors} = await storefront.query(
+  const {predictiveSearch: items, errors}: PredictiveSearchQuery & {errors?: Array<{message: string}>} = await storefront.query(
     PREDICTIVE_SEARCH_QUERY,
     {
       variables: {
@@ -404,7 +405,7 @@ async function predictiveSearch({
 
   if (errors) {
     throw new Error(
-      `Shopify API errors: ${errors.map(({message}) => message).join(', ')}`,
+      `Shopify API errors: ${errors.map(({message}: {message: string}) => message).join(', ')}`,
     );
   }
 
@@ -413,7 +414,7 @@ async function predictiveSearch({
   }
 
   const total = Object.values(items).reduce(
-    (acc, item) => acc + item.length,
+    (acc: number, item: Array<unknown>) => acc + item.length,
     0,
   );
 
