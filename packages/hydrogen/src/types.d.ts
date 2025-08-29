@@ -84,13 +84,13 @@ export interface HydrogenRouterContextProvider<
   TEnv extends HydrogenEnv = Env,
 > extends unstable_RouterContextProvider {
   /** A GraphQL client for querying the Storefront API */
-  storefront: StorefrontClient<TI18n>['storefront'];
+  storefront: import('./storefront').Storefront<TI18n>;
   /** A GraphQL client for querying the Customer Account API */
-  customerAccount: CustomerAccount;
+  customerAccount: import('./customer/types').CustomerAccount;
   /** A collection of utilities used to interact with the cart */
   cart: TCustomMethods extends CustomMethodsBase
-    ? HydrogenCartCustom<TCustomMethods>
-    : HydrogenCart;
+    ? import('./cart/createCartHandler').HydrogenCartCustom<TCustomMethods>
+    : import('./cart/createCartHandler').HydrogenCart;
   /** Environment variables from the fetch function */
   env: TEnv;
   /** The waitUntil function for keeping requests alive */
