@@ -141,17 +141,17 @@ export interface HydrogenContextOverloads<
 }
 
 // type for createHydrogenContext methods
-export function createHydrogenContext<
-  TSession extends HydrogenSession = HydrogenSession,
-  TCustomMethods extends CustomMethodsBase | undefined = {},
-  TI18n extends I18nBase = I18nBase,
-  TEnv extends HydrogenEnv = Env,
-  TAdditionalContext extends Record<string, any> = {},
->(
-  options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
-  additionalContext?: TAdditionalContext,
-): HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> &
-  TAdditionalContext;
+// export function createHydrogenContext<
+//   TSession extends HydrogenSession = HydrogenSession,
+//   TCustomMethods extends CustomMethodsBase | undefined = {},
+//   TI18n extends I18nBase = I18nBase,
+//   TEnv extends HydrogenEnv = Env,
+//   TAdditionalContext extends Record<string, any> = {},
+// >(
+//   options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
+//   additionalContext?: TAdditionalContext,
+// ): HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> &
+//   TAdditionalContext;
 
 export function createHydrogenContext<
   TSession extends HydrogenSession,

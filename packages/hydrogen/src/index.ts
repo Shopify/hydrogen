@@ -1,3 +1,6 @@
+// Import React Router type augmentations to ensure they're loaded
+/// <reference path="../react-router.d.ts" />
+
 export {
   Analytics,
   getShopAnalytics,
