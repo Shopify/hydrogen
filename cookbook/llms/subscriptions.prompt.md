@@ -81,7 +81,7 @@ In this step we'll implement the ability to display subscription options on  pro
 
 Create a new `SellingPlanSelector` component that displays the available subscription options for a product.
 
-##### File: [SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
+##### File: [SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/ea5f3bf445d4d87c9bdc172202041d37e7efd96e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
 
 ```tsx
 import type {
@@ -196,7 +196,7 @@ export function SellingPlanSelector({
 
 Add styles for the `SellingPlanSelector` component.
 
-##### File: [selling-plan.css](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css)
+##### File: [selling-plan.css](https://github.com/Shopify/hydrogen/blob/ea5f3bf445d4d87c9bdc172202041d37e7efd96e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css)
 
 ```css
 .selling-plan-group {
@@ -771,7 +771,7 @@ In this step we'll implement support for subscription management through an acco
 
 Create GraphQL queries that retrieve the subscription info from the customer account client.
 
-##### File: [CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
+##### File: [CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/ea5f3bf445d4d87c9bdc172202041d37e7efd96e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
 
 ```ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
@@ -784,12 +784,33 @@ const SUBSCRIPTION_CONTRACT_FRAGMENT = `#graphql
     billingPolicy {
       ...SubscriptionBillingPolicy
     }
+    discounts(first: 20) {
+      nodes {
+        ...SubscriptionDiscountFragment
+      }
+    }
   }
   fragment SubscriptionBillingPolicy on SubscriptionBillingPolicy {
     interval
     intervalCount {
       count
       precision
+    }
+  }
+  fragment SubscriptionDiscountFragment on SubscriptionDiscount {
+    id
+    title
+    recurringCycleLimit
+    value {
+      __typename
+      ... on SubscriptionDiscountFixedAmountValue {
+        amount {
+          amount
+        }
+      }
+      ... on SubscriptionDiscountPercentageValue {
+        percentage
+      }
     }
   }
 ` as const;
@@ -819,7 +840,7 @@ export const SUBSCRIPTIONS_CONTRACTS_QUERY = `#graphql
 
 Create a GraqhQL mutation to cancel an existing subscription.
 
-##### File: [CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
+##### File: [CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/ea5f3bf445d4d87c9bdc172202041d37e7efd96e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
 
 ```ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
@@ -844,10 +865,13 @@ export const SUBSCRIPTION_CANCEL_MUTATION = `#graphql
 
 Create a new account subpage that lets customers manage their existing  subscriptions based on the new GraphQL queries and mutations.
 
-##### File: [account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
+##### File: [account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/ea5f3bf445d4d87c9bdc172202041d37e7efd96e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
 
 ```tsx
-import type {SubscriptionBillingPolicyFragment} from 'customer-accountapi.generated';
+import type {
+  SubscriptionBillingPolicyFragment,
+  SubscriptionDiscountFragmentFragment,
+} from 'customer-accountapi.generated';
 import {
   data,
   LinksFunction,
@@ -942,8 +966,11 @@ export default function AccountProfile() {
         </p>
       ) : null}
       <div className="account-subscriptions">
-        {subscriptions?.customer?.subscriptionContracts.nodes.map(
-          (subscription) => {
+        {subscriptions?.customer?.subscriptionContracts.nodes.length === 0 ? (
+          <p>No active subscriptions</p>
+        ) : (
+          subscriptions?.customer?.subscriptionContracts.nodes.map(
+            (subscription) => {
             const isBeingCancelled =
               fetcher.state !== 'idle' &&
               fetcher.formData?.get('subId') === subscription.id;
@@ -961,6 +988,15 @@ export default function AccountProfile() {
                       billingPolicy={subscription.billingPolicy}
                     />
                   </div>
+                  {subscription.discounts?.nodes && subscription.discounts.nodes.length > 0 && (
+                    <div className="subscription-discounts">
+                      {subscription.discounts.nodes.map((discount, index) => (
+                        <div key={index} className="subscription-discount">
+                          {formatDiscountValue(discount)}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="subscription-row-actions">
                   <div
@@ -989,7 +1025,7 @@ export default function AccountProfile() {
               </div>
             );
           },
-        )}
+        ))}
       </div>
     </div>
   );
@@ -1021,6 +1057,22 @@ function SubscriptionInterval({
   );
 }
 
+function formatDiscountValue(
+  discount: SubscriptionDiscountFragmentFragment,
+): string {
+  const value = discount.value;
+  
+  if (value?.__typename === 'SubscriptionDiscountPercentageValue') {
+    return `${value.percentage}% off`;
+  } else if (value?.__typename === 'SubscriptionDiscountFixedAmountValue') {
+    return `$${value.amount.amount} off`;
+  } else if (discount.title) {
+    return discount.title;
+  }
+  
+  return 'Discount applied';
+}
+
 ```
 
 #### Step 4.4: Add a link to the Subscriptions page in the account menu
@@ -1042,23 +1094,24 @@ Add a `Subscriptions` link to the account menu.
  import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
  
  export function shouldRevalidate() {
-@@ -80,6 +82,9 @@ function AccountMenu() {
-         &nbsp; Addresses &nbsp;
+@@ -72,6 +74,10 @@ function AccountMenu() {
+         Orders &nbsp;
        </NavLink>
        &nbsp;|&nbsp;
 +      <NavLink to="/account/subscriptions" style={isActiveStyle}>
 +        &nbsp; Subscriptions &nbsp;
 +      </NavLink>
-       <Logout />
-     </nav>
-   );
++      &nbsp;|&nbsp;
+       <NavLink to="/account/profile" style={isActiveStyle}>
+         &nbsp; Profile &nbsp;
+       </NavLink>
 ```
 
 #### Step 4.5: Add styles for the Subscriptions page
 
 Add styles for the Subscriptions page.
 
-##### File: [account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
+##### File: [account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/ea5f3bf445d4d87c9bdc172202041d37e7efd96e/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
 
 ```css
 .account-subscriptions {
@@ -1088,11 +1141,39 @@ Add styles for the Subscriptions page.
 }
 
 .account-subscriptions .subscription-row .subscription-status-active {
-  color: green;
+  background-color: #008060; /* Shopify Polaris green */
+  color: white;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 .account-subscriptions .subscription-row .subscription-status-inactive {
-  color: gray;
+  background-color: #E94F2E; /* Shopify Polaris red/critical */
+  color: white;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.subscription-discounts {
+  margin-top: 0.5rem;
+}
+
+.subscription-discount {
+  display: inline-block;
+  background-color: #f0f0f0;
+  color: #333;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  margin-right: 0.5rem;
 }
 
 ```
