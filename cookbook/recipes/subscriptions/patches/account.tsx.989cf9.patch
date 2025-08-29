@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:cookbook/recipes/subscriptions/patches/account.tsx.989cf9.patch
 index 29e641f48..57ade2a02 100644
-========
-index 29e641f48..9ee30fd4e 100644
->>>>>>>> 74e250bb (chore: regenerate cookbook recipes with updated patch hashes):cookbook/recipes/subscriptions/patches/account.tsx.367e7a.patch
 --- a/templates/skeleton/app/routes/account.tsx
 +++ b/templates/skeleton/app/routes/account.tsx
 @@ -1,6 +1,8 @@
