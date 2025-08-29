@@ -26,15 +26,15 @@ export const hydrogenPackagesPath = isHydrogenMonorepo
 export function isInsideHydrogenMonorepo(directory?: string): boolean {
   // First check from the CLI's perspective (build-time)
   if (isHydrogenMonorepo) return true;
-  
+
   // Then check from the given directory's perspective (runtime)
   if (!directory) return false;
-  
+
   // Look for monorepo markers by traversing up from the directory
   let currentDir = directory;
   const maxLevels = 10; // Prevent infinite loops
   let levels = 0;
-  
+
   while (currentDir && levels < maxLevels) {
     // Check if templates/skeleton exists relative to current directory
     const templatesPath = joinPath(currentDir, 'templates', 'skeleton');
@@ -45,13 +45,13 @@ export function isInsideHydrogenMonorepo(directory?: string): boolean {
         return true;
       }
     }
-    
+
     const parentDir = dirname(currentDir);
     if (parentDir === currentDir) break; // Reached root
     currentDir = parentDir;
     levels++;
   }
-  
+
   return false;
 }
 
@@ -60,25 +60,25 @@ export function isInsideHydrogenMonorepo(directory?: string): boolean {
  */
 export function getMonorepoRoot(directory?: string): string | undefined {
   if (!directory) return undefined;
-  
+
   let currentDir = directory;
   const maxLevels = 10;
   let levels = 0;
-  
+
   while (currentDir && levels < maxLevels) {
     const templatesPath = joinPath(currentDir, 'templates', 'skeleton');
     const packagesPath = joinPath(currentDir, 'packages', 'cli');
-    
+
     if (existsSync(templatesPath) && existsSync(packagesPath)) {
       return currentDir;
     }
-    
+
     const parentDir = dirname(currentDir);
     if (parentDir === currentDir) break;
     currentDir = parentDir;
     levels++;
   }
-  
+
   return undefined;
 }
 
@@ -143,7 +143,7 @@ export async function getTemplateAppFile(filepath: string, root?: string) {
 export async function getStarterDir(workingDirectory?: string) {
   // Check if we're in the monorepo based on the working directory
   const monorepoRoot = getMonorepoRoot(workingDirectory);
-  
+
   if (monorepoRoot) {
     // Use the skeleton source from the monorepo
     const sourceDir = joinPath(monorepoRoot, 'templates', 'skeleton');
@@ -151,12 +151,12 @@ export async function getStarterDir(workingDirectory?: string) {
       return sourceDir;
     }
   }
-  
+
   // Fall back to the build-time check for backward compatibility
   if (isHydrogenMonorepo) {
     return getSkeletonSourceDir();
   }
-  
+
   // Use bundled assets as last resort
   const assetsDir = await getAssetsDir(ASSETS_STARTER_DIR);
   return assetsDir;

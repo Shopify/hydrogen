@@ -70,6 +70,7 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@builder.io/partytown": "^0.10.3",
     "@changesets/changelog-github": "^0.4.8",
     "@changesets/cli": "^2.29.6",
     "@eslint/compat": "^1.2.5",
