@@ -2,6 +2,101 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Dependency Management
+
+### CRITICAL: Check Existing Dependencies First
+
+**Before adding ANY new dependencies to package.json, ALWAYS check if existing transitive dependencies can be used instead.** The Hydrogen monorepo has many packages with their own dependencies that are already available for use.
+
+#### How to Check for Existing Dependencies
+
+1. **Check what's already available:**
+   ```bash
+   # Check if a package is already available as a transitive dependency
+   npm ls <package-name>
+
+   # Check what's in node_modules
+   ls node_modules | grep <pattern>
+   ```
+
+2. **Use existing alternatives when possible:**
+   ```javascript
+   // ❌ BAD: Adding unnecessary dependencies
+   // package.json
+   "devDependencies": {
+     "glob": "^11.0.3",  // Don't add this!
+     "graphql": "^16.11.0",  // Already available transitively!
+   }
+
+   // ✅ GOOD: Use existing transitive dependencies
+   // fast-glob is already available from @shopify/cli-kit
+   import fastGlob from 'fast-glob';
+
+   // graphql is already available from @graphql-codegen/cli
+   import {validate} from 'graphql';
+   ```
+
+3. **Real Example - glob vs fast-glob:**
+   - ❌ **Wrong approach**: Adding `glob` to package.json when we need file globbing
+   - ✅ **Right approach**: Using `fast-glob` which is already available as a transitive dependency from `@shopify/cli-kit`
+   - Note: `fast-glob` is a CommonJS module, so use default import: `import fastGlob from 'fast-glob'`
+
+4. **Common packages already available (check before adding):**
+   - `graphql` - Available from `@graphql-codegen/cli`
+   - `graphql-tag` - Available from skeleton template and hydrogen-react
+   - `fast-glob` - Available from `@shopify/cli-kit`
+   - Many ESLint, TypeScript, and build tools
+
+#### Why This Matters
+- Reduces dependency bloat and potential version conflicts
+- Keeps the dependency tree cleaner and more maintainable
+- Prevents duplicate packages with different versions
+- Reduces installation time and node_modules size
+
+**Always prefer using existing transitive dependencies over adding new direct dependencies.**
+
+## GraphQL Development Requirements
+
+### CRITICAL: GraphQL Fragment Rules
+
+**All GraphQL fragments MUST be used in at least one query or mutation.** Unused fragments will cause runtime errors when executing GraphQL operations. This is enforced by CI checks.
+
+### Code Generation Rules
+
+1. **Never manually edit generated files** (files matching `*.generated.*`)
+   - These files are automatically generated from GraphQL operations
+   - Any manual changes will be lost on next generation
+   - If you need to change types, modify the source GraphQL operations instead
+
+2. **Always run codegen after modifying GraphQL operations**
+   ```bash
+   # For skeleton template
+   cd templates/skeleton && npm run codegen
+
+   # For other packages, check their package.json for codegen script
+   ```
+
+3. **Commit generated files**
+   - Generated files must be committed to the repository
+   - CI will fail if generated files don't match their source
+
+### CI Validation
+
+The CI pipeline validates:
+- **No unused fragments**: All defined fragments must be used
+- **Generated files match source**: Codegen output must be committed
+- **No manual edits to generated files**: Generated files must be pristine
+- **Type validity**: Referenced types must exist in the schema
+
+To validate locally before pushing:
+```bash
+# Validate GraphQL operations
+npm run graphql:validate
+
+# Validate code generation
+npm run codegen:check
+```
+
 ## Hydrogen Release Process
 
 ### Overview
