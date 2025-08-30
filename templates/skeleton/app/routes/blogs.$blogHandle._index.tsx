@@ -1,5 +1,9 @@
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import { Link, useLoaderData, type MetaFunction } from 'react-router';
+import {
+  type LoaderFunctionArgs,
+  Link,
+  useLoaderData,
+  type MetaFunction,
+} from 'react-router';
 import {Image, getPaginationVariables} from '@shopify/hydrogen';
 import type {ArticleItemFragment} from 'storefrontapi.generated';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
@@ -72,7 +76,7 @@ export default function Blog() {
     <div className="blog">
       <h1>{blog.title}</h1>
       <div className="blog-grid">
-        <PaginatedResourceSection connection={articles}>
+        <PaginatedResourceSection<ArticleItemFragment> connection={articles}>
           {({node: article, index}) => (
             <ArticleItem
               article={article}

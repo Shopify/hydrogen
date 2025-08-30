@@ -1,5 +1,5 @@
-import { useLoaderData, Link } from 'react-router';
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {useLoaderData, Link} from 'react-router';
+import {type LoaderFunctionArgs} from 'react-router';
 import {getPaginationVariables, Image} from '@shopify/hydrogen';
 import type {CollectionFragment} from 'storefrontapi.generated';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
@@ -48,7 +48,7 @@ export default function Collections() {
   return (
     <div className="collections">
       <h1>Collections</h1>
-      <PaginatedResourceSection
+      <PaginatedResourceSection<CollectionFragment>
         connection={collections}
         resourcesClassName="collections-grid"
       >

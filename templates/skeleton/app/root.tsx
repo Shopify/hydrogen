@@ -1,6 +1,6 @@
 import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {
+  type LoaderFunctionArgs,
   Outlet,
   useRouteError,
   isRouteErrorResponse,
@@ -129,7 +129,7 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
         footerMenuHandle: 'footer', // Adjust to your footer menu handle
       },
     })
-    .catch((error) => {
+    .catch((error: Error) => {
       // Log query errors, but don't throw them so the page can still render
       console.error(error);
       return null;

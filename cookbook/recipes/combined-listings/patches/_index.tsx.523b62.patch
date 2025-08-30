@@ -1,0 +1,65 @@
+index b0eb47df2..a1614b199 100644
+--- a/templates/skeleton/app/routes/_index.tsx
++++ b/templates/skeleton/app/routes/_index.tsx
+@@ -12,7 +12,7 @@ import type {
+   RecommendedProductsQuery,
+ } from 'storefrontapi.generated';
+ import {ProductItem} from '~/components/ProductItem';
+-
++import {maybeFilterOutCombinedListingsQuery} from '~/lib/combined-listings';
+ export const meta: MetaFunction = () => {
+   return [{title: 'Hydrogen | Home'}];
+ };
+@@ -49,7 +49,11 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
+  */
+ function loadDeferredData({context}: LoaderFunctionArgs) {
+   const recommendedProducts = context.storefront
+-    .query(RECOMMENDED_PRODUCTS_QUERY)
++    .query(RECOMMENDED_PRODUCTS_QUERY, {
++      variables: {
++        query: maybeFilterOutCombinedListingsQuery,
++      },
++    })
+     .catch((error) => {
+       // Log query errors, but don't throw them so the page can still render
+       console.error(error);
+@@ -105,11 +109,9 @@ function RecommendedProducts({
+         <Await resolve={products}>
+           {(response) => (
+             <div className="recommended-products-grid">
+-              {response
+-                ? response.products.nodes.map((product) => (
+-                    <ProductItem key={product.id} product={product} />
+-                  ))
+-                : null}
++              {response?.products.nodes.map((product) => (
++                <ProductItem key={product.id} product={product} />
++              ))}
+             </div>
+           )}
+         </Await>
+@@ -152,7 +154,12 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+         amount
+         currencyCode
+       }
++      maxVariantPrice {
++        amount
++        currencyCode
++      }
+     }
++    tags
+     featuredImage {
+       id
+       url
+@@ -161,9 +168,9 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+       height
+     }
+   }
+-  query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
++  query RecommendedProducts ($country: CountryCode, $language: LanguageCode, $query: String)
+     @inContext(country: $country, language: $language) {
+-    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
++    products(first: 4, sortKey: UPDATED_AT, reverse: true, query: $query) {
+       nodes {
+         ...RecommendedProduct
+       }

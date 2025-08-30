@@ -14,7 +14,7 @@ import {importLangAstGrep} from '../../ast.js';
 import {transpileFile} from '../../transpile/index.js';
 
 /**
- * Adds the `getLocaleFromRequest` function to createAppLoadContext method and calls it.
+ * Adds the `getLocaleFromRequest` function to createHydrogenRouterContext method and calls it.
  */
 export async function replaceContextI18n(
   {
@@ -24,7 +24,7 @@ export async function replaceContextI18n(
   formatConfig: FormatOptions,
   i18nStrategyFilePath: string,
 ) {
-  const createContextMethodName = 'createAppLoadContext';
+  const createContextMethodName = 'createHydrogenRouterContext';
   const {filepath, astType} = await findContextCreateFile({
     rootDirectory,
     contextCreate,
@@ -44,7 +44,7 @@ export async function replaceContextI18n(
 
     // -- Find all the places that need replacement in the context create file
 
-    // Build i18n function call using request name (1st parameter of the `createAppLoadContext` function)
+    // Build i18n function call using request name (1st parameter of the `createHydrogenRouterContext` function)
     // and i18n function name from i18nStrategyFilePath file content
     const requestIdentifier = root.find({
       rule: {

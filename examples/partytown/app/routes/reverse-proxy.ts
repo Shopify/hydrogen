@@ -21,11 +21,13 @@ const ALLOWED_PROXY_DOMAINS = new Set([
   'https://cdn.jsdelivr.net',
   'https://unpkg.com',
   'https://google-analytics.com',
+  'https://www.googletagmanager.com',
+  'https://www.google-analytics.com',
   // other domains you may want to allow to proxy to
 ]);
 
 // Handle CORS preflight for POST requests
-export async function actions({request}: ActionFunctionArgs) {
+export async function action({request}: ActionFunctionArgs) {
   const url = new URL(request.url);
   const isProxyReq = url.pathname.startsWith('/reverse-proxy');
 

@@ -1,7 +1,12 @@
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
+import {
+  type LoaderFunctionArgs,
+  Await,
+  useLoaderData,
+  Link,
+  type MetaFunction,
+} from 'react-router';
 import {Suspense} from 'react';
-import {Image, Money} from '@shopify/hydrogen';
+import {Image} from '@shopify/hydrogen';
 import type {
   FeaturedCollectionFragment,
   RecommendedProductsQuery,
@@ -45,7 +50,7 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
 function loadDeferredData({context}: LoaderFunctionArgs) {
   const recommendedProducts = context.storefront
     .query(RECOMMENDED_PRODUCTS_QUERY)
-    .catch((error) => {
+    .catch((error: Error) => {
       // Log query errors, but don't throw them so the page can still render
       console.error(error);
       return null;

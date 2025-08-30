@@ -1,22 +1,20 @@
 import {
-  useLoaderData,
-  useNavigate,
-  Link,
   redirect,
   type LoaderFunctionArgs,
+  useLoaderData,
   type MetaFunction,
+  useNavigate,
 } from 'react-router';
 import {
-  Pagination,
   getPaginationVariables,
-  Image,
-  Money,
   Analytics,
+  Pagination,
 } from '@shopify/hydrogen';
-import type {ProductItemFragment} from 'storefrontapi.generated';
+import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {ProductItem} from '~/components/ProductItem';
 import {useEffect} from 'react';
-import {useVariantUrl} from '~/lib/variants';
 import {useInView} from 'react-intersection-observer';
+import type {ProductItemFragment} from 'storefrontapi.generated';
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
@@ -51,16 +49,25 @@ async function loadCriticalData({
     throw redirect('/collections');
   }
 
-  const {collection} = await storefront.query(COLLECTION_QUERY, {
-    variables: {handle, ...paginationVariables},
-  });
+  const [{collection}] = await Promise.all([
+    storefront.query(COLLECTION_QUERY, {
+      variables: {handle, ...paginationVariables},
+      // Add other queries here, so that they are loaded in parallel
+    }),
+  ]);
 
   if (!collection) {
     throw new Response(`Collection ${handle} not found`, {
       status: 404,
     });
   }
-  return {collection};
+
+  // The API handle might be localized, so redirect to the localized handle
+  redirectIfHandleIsLocalized(request, {handle, data: collection});
+
+  return {
+    collection,
+  };
 }
 
 /**
@@ -74,13 +81,13 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
 
 export default function Collection() {
   const {collection} = useLoaderData<typeof loader>();
-  const {ref, inView, entry} = useInView();
+  const {ref, inView} = useInView();
 
   return (
     <div className="collection">
       <h1>{collection.title}</h1>
       <p className="collection-description">{collection.description}</p>
-      <Pagination connection={collection.products}>
+      <Pagination<ProductItemFragment> connection={collection.products}>
         {({
           nodes,
           isLoading,
@@ -102,11 +109,13 @@ export default function Collection() {
               state={state}
             />
             <br />
+            {/***********************************************/
+            /**********  EXAMPLE UPDATE STARTS  ************/}
             <NextLink ref={ref}>
-              <span ref={ref}>
-                {isLoading ? 'Loading...' : <span>Load more yeah ↓</span>}
-              </span>
+              {isLoading ? 'Loading...' : <span>Load more ↓</span>}
             </NextLink>
+            {/**********   EXAMPLE UPDATE END   ************/
+            /***********************************************/}
           </>
         )}
       </Pagination>
@@ -122,6 +131,8 @@ export default function Collection() {
   );
 }
 
+/***********************************************/
+/**********  EXAMPLE UPDATE STARTS  ************/
 function ProductsGrid({
   products,
   inView,
@@ -161,38 +172,8 @@ function ProductsGrid({
     </div>
   );
 }
-
-function ProductItem({
-  product,
-  loading,
-}: {
-  product: ProductItemFragment;
-  loading?: 'eager' | 'lazy';
-}) {
-  const variantUrl = useVariantUrl(product.handle);
-  return (
-    <Link
-      className="product-item"
-      key={product.id}
-      prefetch="intent"
-      to={variantUrl}
-    >
-      {product.featuredImage && (
-        <Image
-          alt={product.featuredImage.altText || product.title}
-          aspectRatio="1/1"
-          data={product.featuredImage}
-          loading={loading}
-          sizes="(min-width: 45em) 400px, 100vw"
-        />
-      )}
-      <h4>{product.title}</h4>
-      <small>
-        <Money data={product.priceRange.minVariantPrice} />
-      </small>
-    </Link>
-  );
-}
+/**********   EXAMPLE UPDATE END   ************/
+/***********************************************/
 
 const PRODUCT_ITEM_FRAGMENT = `#graphql
   fragment MoneyProductItem on MoneyV2 {

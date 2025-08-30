@@ -304,6 +304,7 @@ function fillMatch(partial: Partial<UIMatch<any>> = {}) {
     },
     handle: {},
     data: {},
+    loaderData: {},
     ...partial,
   };
 }

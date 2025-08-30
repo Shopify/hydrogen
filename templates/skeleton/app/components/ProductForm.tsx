@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router';
+import {Link, useNavigate} from 'react-router';
 import {type MappedProductOptions} from '@shopify/hydrogen';
 import type {
   Maybe,
