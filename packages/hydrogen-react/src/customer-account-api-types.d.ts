@@ -4499,7 +4499,7 @@ export type OrderFinancialStatus =
 export type OrderFulfillmentStatus =
   /** Displayed as **Fulfilled**. All of the items in the order have been fulfilled. */
   | 'FULFILLED'
-  /** Displayed as **In progress**. Some of the items in the order have been fulfilled, or a request for fulfillment has been sent to the fulfillment service. */
+  /** Displayed as **In progress**. All of the items in the order have had a request for fulfillment sent to the fulfillment service or all of the items have been marked as in progress. */
   | 'IN_PROGRESS'
   /** Displayed as **On hold**. All of the unfulfilled items in this order are on hold. */
   | 'ON_HOLD'
