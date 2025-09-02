@@ -2,6 +2,24 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## CRITICAL: Git Commit Security
+
+**NEVER use `git commit --no-verify` or any flags that bypass pre-commit hooks!**
+
+Pre-commit hooks in this repository are CRITICAL for:
+- Preventing secrets and sensitive data from being committed
+- Ensuring code quality and formatting standards
+- Running security checks
+- Validating that tests pass
+
+If a pre-commit hook fails:
+1. Fix the issues identified by the hook (syntax errors, formatting, etc.)
+2. Stage the fixes with `git add`
+3. Try committing again WITHOUT --no-verify
+4. If you cannot fix the issues, ask for help - DO NOT bypass the hooks
+
+**Security is paramount. Bypassing pre-commit hooks could lead to leaked credentials, API keys, or other sensitive information being exposed in the repository history.**
+
 ## Hydrogen Release Process
 
 ### Overview
@@ -272,3 +290,96 @@ skeleton template's devDependencies
 - This process often requires TWO cli-hydrogen releases for complete updates
 - The circular dependency makes the process complex but is currently unavoidable
 - Always check that skeleton's CLI version matches the features available in cli-hydrogen
+
+## Code Review and Debugging Checklist
+
+**IMPORTANT**: When reviewing PRs, examining code, or debugging issues, ALWAYS systematically check the following areas for potential problems. These checks have caught critical issues in production code.
+
+### Dependency Version Resolution Issues
+
+**CRITICAL**: NPM version range operators (^, ~, >=, etc.) have undefined behavior with non-semver versioning schemes!
+
+When reviewing dependencies, ALWAYS:
+
+1. **Check package.json vs package-lock.json resolution**:
+   - Compare the version specified in `package.json` with what's actually resolved in `package-lock.json`
+   - Pay special attention to packages that don't follow standard semver (e.g., date-based versions like `4.20250617.1`)
+   - Example of a CRITICAL BUG we've encountered:
+     ```json
+     // package.json shows:
+     "miniflare": "^4.20250617.1"
+
+     // But package-lock.json resolved to:
+     "miniflare": "3.20250310.1"  // WRONG MAJOR VERSION!
+     ```
+   - This happens because `^` with non-semver versions can resolve unpredictably
+
+2. **For non-semver packages, use exact versions**:
+   - ❌ WRONG: `"miniflare": "^4.20250617.1"`
+   - ✅ CORRECT: `"miniflare": "4.20250617.1"` (no ^ or ~)
+
+3. **Verify resolution commands to run**:
+   ```bash
+   # Check what version is actually installed
+   npm ls [package-name]
+
+   # Compare package.json spec with lock file
+   grep -A 2 '"[package-name]"' package.json
+   grep -A 5 '"node_modules/[package-name]"' package-lock.json
+
+   # For workspace packages, check all occurrences
+   find . -name package.json -exec grep -l '[package-name]' {} \;
+   ```
+
+### Workspace Dependency Consistency
+
+When working in a monorepo with workspaces:
+
+1. **Check for version mismatches across packages**:
+   - Same dependency should generally use the same version across all workspace packages
+   - Exception: When there's a documented reason for version differences
+
+2. **Verify internal package references**:
+   - Workspace packages referencing each other should use `workspace:*` protocol or exact versions
+   - Check that internal references match the actual package versions
+
+### Common Dependency Red Flags to Check
+
+1. **Mixed version range operators**: If most deps use `^` but some use `~` or exact, investigate why
+2. **Outdated lock files**: Check if package-lock.json is in sync with package.json changes
+3. **Duplicate packages**: Multiple versions of the same package can cause subtle bugs
+4. **Peer dependency conflicts**: Ensure peer deps are satisfied and consistent
+5. **Security vulnerabilities**: Run `npm audit` to check for known vulnerabilities
+
+### Debugging Process When Issues Arise
+
+If you encounter unexpected behavior during debugging:
+
+1. **IMMEDIATELY check dependencies**:
+   - Verify the actual installed versions match expectations
+   - Check for version resolution issues as described above
+   - Look for recent dependency updates that might have introduced the issue
+
+2. **Document your findings**:
+   - When you find a dependency issue, clearly state:
+     - What version was expected
+     - What version was actually resolved
+     - Why the mismatch occurred
+     - The fix applied
+
+### Example Code Review Checklist Usage
+
+When asked to review a PR or debug an issue, follow this systematic approach:
+
+```
+1. Check all modified package.json files
+2. For each dependency change:
+   - Verify the version in package-lock.json matches intent
+   - Check if the package follows semver
+   - If non-semver, ensure exact version is used
+3. Run npm ls to verify actual installed versions
+4. Check for any npm audit warnings
+5. Verify peer dependencies are satisfied
+```
+
+**Remember**: A mismatch between package.json and package-lock.json is often the root cause of "works on my machine" bugs!
