@@ -633,22 +633,3 @@ button.reset:hover:not(:has(> *)) {
   gap: 0.75rem;
   flex-wrap: wrap;
 }
-
-.order-search-buttons button {
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.order-search-buttons button[type="submit"] {
-  background: var(--color-dark);
-  color: var(--color-light);
-  border: 1px solid var(--color-dark);
-}
-
-.order-search-buttons button[type="button"] {
-  background: transparent;
-  color: var(--color-dark);
-  border: 1px solid #d1d5db;
-}

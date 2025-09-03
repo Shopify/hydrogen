@@ -1,4 +1,11 @@
-import { Link, useLoaderData, useSearchParams, type MetaFunction } from 'react-router';
+import {
+  Link,
+  useLoaderData,
+  useNavigation,
+  useSearchParams,
+  type MetaFunction,
+} from 'react-router';
+import {useRef} from 'react';
 import {
   Money,
   getPaginationVariables,
@@ -57,7 +64,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
 export default function Orders() {
   const {customer, filters} = useLoaderData<OrdersLoaderData>();
   const {orders} = customer;
-  
+
   return (
     <div className="orders">
       <OrderSearchForm currentFilters={filters} />
@@ -66,9 +73,15 @@ export default function Orders() {
   );
 }
 
-function OrdersTable({orders, filters}: {orders: CustomerOrdersFragment['orders']; filters: OrderFilterParams}) {
+function OrdersTable({
+  orders,
+  filters,
+}: {
+  orders: CustomerOrdersFragment['orders'];
+  filters: OrderFilterParams;
+}) {
   const hasFilters = !!(filters.name || filters.confirmationNumber);
-  
+
   return (
     <div className="acccount-orders">
       {orders?.nodes.length ? (
@@ -112,35 +125,42 @@ function OrderSearchForm({
   currentFilters: OrderFilterParams;
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  
+  const navigation = useNavigation();
+  const isSearching =
+    navigation.state !== 'idle' &&
+    navigation.location?.pathname?.includes('orders');
+  const formRef = useRef<HTMLFormElement>(null);
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const params = new URLSearchParams();
-    
+
     const name = formData.get(ORDER_FILTER_FIELDS.NAME)?.toString().trim();
-    const confirmationNumber = formData.get(ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER)?.toString().trim();
-    
+    const confirmationNumber = formData
+      .get(ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER)
+      ?.toString()
+      .trim();
+
     if (name) params.set(ORDER_FILTER_FIELDS.NAME, name);
-    if (confirmationNumber) params.set(ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER, confirmationNumber);
-    
+    if (confirmationNumber)
+      params.set(ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER, confirmationNumber);
+
     setSearchParams(params);
   };
-  
+
   const hasFilters = currentFilters.name || currentFilters.confirmationNumber;
-  
+
   return (
-    <form onSubmit={handleSubmit} className="order-search-form" aria-label="Search orders">
+    <form
+      ref={formRef}
+      onSubmit={handleSubmit}
+      className="order-search-form"
+      aria-label="Search orders"
+    >
       <fieldset className="order-search-fieldset">
-        <legend className="order-search-legend">
-          Filter Orders
-          {hasFilters && (
-            <small className="order-search-active">
-              ({[currentFilters.name, currentFilters.confirmationNumber].filter(Boolean).length} active)
-            </small>
-          )}
-        </legend>
-        
+        <legend className="order-search-legend">Filter Orders</legend>
+
         <div className="order-search-inputs">
           <input
             type="search"
@@ -159,13 +179,19 @@ function OrderSearchForm({
             className="order-search-input"
           />
         </div>
-        
+
         <div className="order-search-buttons">
-          <button type="submit">Search</button>
+          <button type="submit" disabled={isSearching}>
+            {isSearching ? 'Searching' : 'Search'}
+          </button>
           {hasFilters && (
-            <button 
-              type="button" 
-              onClick={() => setSearchParams(new URLSearchParams())}
+            <button
+              type="button"
+              disabled={isSearching}
+              onClick={() => {
+                setSearchParams(new URLSearchParams());
+                formRef.current?.reset();
+              }}
             >
               Clear
             </button>
@@ -185,6 +211,9 @@ function OrderItem({order}: {order: OrderItemFragment}) {
           <strong>#{order.number}</strong>
         </Link>
         <p>{new Date(order.processedAt).toDateString()}</p>
+        {order.confirmationNumber && (
+          <p>Confirmation: {order.confirmationNumber}</p>
+        )}
         <p>{order.financialStatus}</p>
         {fulfillmentStatus && <p>{fulfillmentStatus}</p>}
         <Money data={order.totalPrice} />
