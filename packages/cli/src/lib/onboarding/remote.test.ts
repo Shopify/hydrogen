@@ -176,7 +176,12 @@ describe('remote templates', () => {
 
       const templateFiles = await glob('**/*', {
         cwd: templatePath,
-        ignore: ['**/node_modules/**', '**/dist/**', 'CHANGELOG.md', 'env.d.ts'],
+        ignore: [
+          '**/node_modules/**',
+          '**/dist/**',
+          'CHANGELOG.md',
+          'env.d.ts',
+        ],
       });
       const resultFiles = await glob('**/*', {cwd: tmpDir});
 
