@@ -9,9 +9,9 @@ An example project should provide the minimal functionality necessary to illustr
 ### Baseline functionality
 
 - Always use Hydrogen's [Skeleton template](/templates/skeleton) as the baseline for examples.
-- Only include the files that are required to illustrate the example.
-  - For instance, if your example requires editing the product detail page, keep the `app/routes/products.$handle.tsx` file to show your updates, but delete all other route files.
-  - The goal is to maintain focus on the relevant example code, and reduce the burden of maintaining examples.
+- Examples should be complete, standalone applications that can run independently.
+- Focus on the files that demonstrate the specific feature or pattern, but include all necessary files for a working application.
+- The goal is to provide working examples that developers can run and learn from immediately.
 
 ### Example folder naming
 
