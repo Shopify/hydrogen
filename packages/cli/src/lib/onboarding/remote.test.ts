@@ -112,7 +112,7 @@ describe('remote templates', () => {
     });
   });
 
-  it('applies diff for examples', async () => {
+  it('copies example templates directly', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const exampleName = 'third-party-queries-caching';
 
@@ -128,24 +128,15 @@ describe('remote templates', () => {
         .replace('templates', 'examples')
         .replace('skeleton', exampleName);
 
-      // --- Test file diff
+      // --- Test that example files are copied directly
       const ignore = ['**/node_modules/**', '**/dist/**'];
       const resultFiles = await glob('**/*', {ignore, cwd: tmpDir});
       const exampleFiles = await glob('**/*', {ignore, cwd: examplePath});
-      const templateFiles = (
-        await glob('**/*', {ignore, cwd: templatePath})
-      ).filter((item) => !item.endsWith('CHANGELOG.md'));
 
-      expect(resultFiles).toEqual(
-        expect.arrayContaining([
-          ...new Set([...templateFiles, ...exampleFiles]),
-        ]),
-      );
+      // Since we copy the example directly, result files should match example files
+      expect(resultFiles).toEqual(expect.arrayContaining(exampleFiles));
 
-      // --- Test package.json merge
-      const templatePkgJson = await readAndParsePackageJson(
-        `${templatePath}/package.json`,
-      );
+      // --- Test package.json is from the example
       const examplePkgJson = await readAndParsePackageJson(
         `${examplePath}/package.json`,
       );
@@ -155,10 +146,8 @@ describe('remote templates', () => {
 
       expect(resultPkgJson.name).toMatch(exampleName);
 
-      // Since we now copy the entire example, scripts should match exactly
+      // Since we copy the entire example, everything should match exactly
       expect(resultPkgJson.scripts).toEqual(examplePkgJson.scripts);
-
-      // Dependencies should match the example exactly now
       expect(resultPkgJson.dependencies).toEqual(examplePkgJson.dependencies);
       expect(resultPkgJson.devDependencies).toEqual(
         examplePkgJson.devDependencies,
@@ -167,8 +156,8 @@ describe('remote templates', () => {
         examplePkgJson.peerDependencies,
       );
 
-      // --- Keeps original tsconfig.json
-      expect(await readFile(joinPath(templatePath, 'tsconfig.json'))).toEqual(
+      // --- Example should have its own tsconfig.json
+      expect(await readFile(joinPath(examplePath, 'tsconfig.json'))).toEqual(
         await readFile(joinPath(tmpDir, 'tsconfig.json')),
       );
     });
@@ -187,7 +176,7 @@ describe('remote templates', () => {
 
       const templateFiles = await glob('**/*', {
         cwd: templatePath,
-        ignore: ['**/node_modules/**', '**/dist/**', 'CHANGELOG.md'],
+        ignore: ['**/node_modules/**', '**/dist/**', 'CHANGELOG.md', 'env.d.ts'],
       });
       const resultFiles = await glob('**/*', {cwd: tmpDir});
 
