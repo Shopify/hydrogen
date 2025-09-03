@@ -7,5 +7,5 @@ node_modules
 /.mf
 .env
 .shopify
-.react-router
 public/~partytown
+.react-router
