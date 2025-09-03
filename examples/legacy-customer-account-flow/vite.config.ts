@@ -1,5 +1,4 @@
 import {defineConfig} from 'vite';
-// eslint-disable-next-line import/no-unresolved
 import {hydrogen} from '@shopify/hydrogen/vite';
 import {oxygen} from '@shopify/mini-oxygen/vite';
 import {reactRouter} from '@react-router/dev/vite';
@@ -12,6 +11,9 @@ export default defineConfig({
     // withtout inlining assets as base64:
     assetsInlineLimit: 0,
   },
+
+  // Default React Router 7.8.x structure (no custom environment config)
+
   ssr: {
     optimizeDeps: {
       /**
@@ -24,7 +26,10 @@ export default defineConfig({
        * Include 'example-dep' in the array below.
        * @see https://vitejs.dev/config/dep-optimization-options
        */
-      include: ['crypto-js', 'snakecase-keys'],
+      include: ['set-cookie-parser', 'cookie', 'react-router'],
     },
+  },
+  server: {
+    allowedHosts: ['.tryhydrogen.dev'],
   },
 });
