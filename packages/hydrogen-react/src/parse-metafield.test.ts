@@ -559,8 +559,8 @@ describe(`parseMetafield`, () => {
     });
   });
 
-  describe.only(`types`, () => {
-    it.only(`TS tests`, () => {
+  describe(`types`, () => {
+    it.skip(`TS tests`, () => {
       // This test is to ensure that ParsedMetafields has a key for every item in 'allMetafieldsTypesArray'
       expectType<TypeEqual<keyof ParsedMetafields, MetafieldTypeTypes>>(true);
     });
