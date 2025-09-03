@@ -397,7 +397,7 @@ describe('plugin-autolinker', () => {
       const {isRunningViaNodeModules} = await import('./plugin-autolinker.js');
       expect(isRunningViaNodeModules()).toBe(true);
 
-      process.argv[1] = originalArgv;
+      process.argv[1] = originalArgv!;
     });
 
     it('should detect npm lifecycle event', async () => {
@@ -416,7 +416,7 @@ describe('plugin-autolinker', () => {
       const {isRunningViaNodeModules} = await import('./plugin-autolinker.js');
       expect(isRunningViaNodeModules()).toBe(false);
 
-      process.argv[1] = originalArgv;
+      process.argv[1] = originalArgv!;
     });
   });
 

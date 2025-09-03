@@ -37,6 +37,8 @@
     "vitest": "^1.0.4"
   },
   "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "@ast-grep/napi": "0.34.1",
     "@oclif/core": "3.26.5",
     "@shopify/cli-kit": "^3.80.4",

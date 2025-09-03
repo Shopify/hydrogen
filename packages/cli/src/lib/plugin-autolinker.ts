@@ -181,7 +181,7 @@ export async function isPluginLinked(): Promise<PluginStatus> {
     if (isLinked) {
       // Extract the location path if available
       const locationMatch = result.stdout.match(/location\s+(.+)/);
-      const linkedPath = locationMatch ? locationMatch[1].trim() : undefined;
+      const linkedPath = locationMatch?.[1]?.trim() ?? undefined;
 
       return {
         isLinked: true,
@@ -229,7 +229,6 @@ export async function linkPlugin(pluginPath: string): Promise<LinkResult> {
     const result = await execAsync(command, {
       cwd: process.cwd(),
       // Silent mode - we don't want to show output to users
-      stdio: 'pipe',
     });
 
     // Check if the command was successful

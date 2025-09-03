@@ -155,41 +155,16 @@ describe('remote templates', () => {
 
       expect(resultPkgJson.name).toMatch(exampleName);
 
-      // The example's scripts should override the template's scripts
-      // but the --diff flag is removed by applyTemplateDiff
-      const expectedScripts = {
-        ...templatePkgJson.scripts,
-        ...examplePkgJson.scripts,
-      };
+      // Since we now copy the entire example, scripts should match exactly
+      expect(resultPkgJson.scripts).toEqual(examplePkgJson.scripts);
 
-      // Remove --diff flag from build, dev, and preview scripts as applyTemplateDiff does
-      for (const key of ['build', 'dev', 'preview']) {
-        if (expectedScripts[key] && typeof expectedScripts[key] === 'string') {
-          expectedScripts[key] = expectedScripts[key].replace(/\s+--diff/, '');
-        }
-      }
-
-      expect(resultPkgJson.scripts).toEqual(expectedScripts);
-
-      const expectedDeps = {
-        ...templatePkgJson.dependencies,
-        ...examplePkgJson.dependencies,
-      };
-
-      expect(resultPkgJson.dependencies).toEqual(
-        expect.objectContaining(expectedDeps),
-      );
+      // Dependencies should match the example exactly now
+      expect(resultPkgJson.dependencies).toEqual(examplePkgJson.dependencies);
       expect(resultPkgJson.devDependencies).toEqual(
-        expect.objectContaining({
-          ...templatePkgJson.devDependencies,
-          ...examplePkgJson.devDependencies,
-        }),
+        examplePkgJson.devDependencies,
       );
       expect(resultPkgJson.peerDependencies).toEqual(
-        expect.objectContaining({
-          ...templatePkgJson.peerDependencies,
-          ...examplePkgJson.peerDependencies,
-        }),
+        examplePkgJson.peerDependencies,
       );
 
       // --- Keeps original tsconfig.json

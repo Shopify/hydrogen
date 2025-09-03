@@ -138,6 +138,15 @@ export async function transpileProject(projectDir: string, keepTypes = true) {
     );
 
     delete pkgJson.scripts['typecheck'];
+
+    // Remove React Router typegen from any scripts when transpiling to JS
+    const typegenPattern = /react-router typegen\s*&&\s*/g;
+    for (const [key, value] of Object.entries(pkgJson.scripts || {})) {
+      if (typeof value === 'string' && value.includes('react-router typegen')) {
+        pkgJson.scripts[key] = value.replace(typegenPattern, '');
+      }
+    }
+
     if (!keepTypes) {
       delete pkgJson.devDependencies['typescript'];
       delete pkgJson.devDependencies['@shopify/oxygen-workers-types'];
