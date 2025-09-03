@@ -32,7 +32,7 @@ When creating PRs, keep descriptions concise and factual:
    - Extract the "Creating a new patch version" section from vault-pages
    - Compare it with the expected content below
    - If ANY content has changed, show the differences and ask how to proceed
-   
+
    **Expected "Creating a new patch version" content:**
    ```
    ### Creating a new patch version
@@ -51,7 +51,7 @@ When creating PRs, keep descriptions concise and factual:
       - [To update the docs](https://github.com/Shopify/shopify-dev/pulls?q=is%3Apr+is%3Aopen+"%5BCLI%5D+Update+docs").
       - Approve and merge both PRs when they pass CI. When in doubt about a change in the docs, ask in `#app-development-app-inner-loop`.
    ```
-   
+
    - Also extract release schedule table for later use
 
 2. **Navigate to CLI repo and verify clean state**
@@ -87,16 +87,16 @@ When creating PRs, keep descriptions concise and factual:
    cd [CLI_REPO_PATH]
    mkdir -p .tmp-test
    cd .tmp-test
-   
+
    # Create minimal package.json for testing
    echo '{"name": "test-install"}' > package.json
-   
+
    # Test installing the new cli-hydrogen version
    shadowenv exec -- pnpm add @shopify/cli-hydrogen@[VERSION] 2>&1 | head -30
-   
+
    # Look for successful installation (should see dependencies added)
    # Expected output includes: "+ @shopify/cli-hydrogen [VERSION]"
-   
+
    # Clean up test directory
    cd ..
    rm -rf .tmp-test
@@ -108,7 +108,8 @@ When creating PRs, keep descriptions concise and factual:
    ```
 
 8. **Update base dependencies if needed**
-   - Check if `@shopify/cli-kit`, `@shopify/plugin-cloudflare`, or `@shopify/cli` need updates
+   - Check if `@shopify/cli-kit`, `@shopify/plugin-cloudflare`, or `@shopify/cli` need updates by running the command `shadowenv exec -- pnpm view @shopify/cli-hydrogen@[VERSION] dependencies peerDependencies | grep -A1 -E "@shopify/(cli-kit|plugin-cloudflare|cli)"`
+   - If versions differ, update them in package.json
 
 ### Phase 2: Version-Based Branching Logic
 
@@ -159,15 +160,13 @@ When creating PRs, keep descriptions concise and factual:
 4. **Create changeset** ⚠️ CRITICAL: ONLY if NOT doing stable branch PR
    **IMPORTANT**: If you are creating both main and stable PRs, SKIP THIS STEP ENTIRELY for the main PR!
    ```bash
-   # Create .changeset/update-hydrogen-cli-[VERSION].md
-   ```
-   Content:
-   ```markdown
-   ---
-   '@shopify/cli': patch
-   ---
+   cat > .changeset/update-hydrogen-cli-[VERSION].md << 'EOF'
+---
+'@shopify/cli': patch
+---
 
-   Update cli-hydrogen [VERSION]
+Update cli-hydrogen [VERSION]
+EOF
    ```
 
 5. **Commit and push (with consent)**
@@ -251,7 +250,7 @@ When creating PRs, keep descriptions concise and factual:
       - Read the decrypted `slack_cli_release_request_webhook_url` from `secrets.json`
       - POST the approved message using pure Node.js to avoid bash escaping:
       - **CRITICAL**: Must use Node.js exactly as shown below. Do NOT use bash, Python, or other methods as they will cause extra backslashes to appear in the posted message
-      
+
       **Message Version 1: Main PR Only**
       Use when: Timely release that will wait for scheduled CLI release
       ```bash
@@ -311,7 +310,7 @@ When creating PRs, keep descriptions concise and factual:
       req.end();
       "
       ```
-      
+
       - **Important**: The webhook expects a JSON object with a `"message"` field (not `"text"`)
       - Message must be hardcoded in the Node.js script to avoid bash escaping of special characters
       - Replace `[MAIN_PR_URL]`, `[STABLE_PR_URL]` (version 2 only), `[URGENCY_WITH_EXPLANATION]`, and `[WEBHOOK_URL]` directly in the script
@@ -394,15 +393,15 @@ When the stable branch PR has been merged and you need to create the patch relea
    ```bash
    # Navigate to CLI repo
    cd ~/src/github.com/Shopify/cli
-   
+
    # Find the "Changeset Release" workflow that will create the Version Packages PR
    # This workflow is triggered after the stable branch PR merge
    # The display title will be "Merge pull request #XXXX from Shopify/stable-update-cli-hydrogen-..."
    gh run list --workflow=release.yml --repo Shopify/cli --branch stable/3.x --limit 1 --json databaseId,status,conclusion,displayTitle,name
-   
+
    # Watch the workflow (this runs the changeset action)
    gh run watch [RUN_ID] --repo Shopify/cli --exit-status
-   
+
    # Once workflow completes successfully, the Version Packages PR will be created
    # Find the Version Packages PR
    gh pr list --base stable/3.x --search "Version Packages" --state open
@@ -415,23 +414,23 @@ When the stable branch PR has been merged and you need to create the patch relea
    ```bash
    # View the PR to verify version bumps
    gh pr view [PR_NUMBER] --repo Shopify/cli
-   
+
    # Check the changed files
    gh pr diff [PR_NUMBER] --repo Shopify/cli --name-only
-   
+
    # Verify ONLY patch bumps (no major/minor)
    gh pr diff [PR_NUMBER] --repo Shopify/cli | grep -E '"version":|"@shopify/cli-hydrogen":'
-   
+
    # Check current approvals
    gh pr view [PR_NUMBER] --repo Shopify/cli --json reviews
    ```
-   
+
    **I'll provide you with:**
    - PR URL: `https://github.com/Shopify/cli/pull/[PR_NUMBER]`
    - My analysis of version changes (confirming patch-only bumps)
    - List of changed packages and their version bumps
    - Current approval status
-   
+
    **What to look for when reviewing:**
    - ✅ All version bumps are patch level (e.g., 3.80.4 → 3.80.5)
    - ✅ The cli-hydrogen dependency is updated to your new version
@@ -442,11 +441,11 @@ When the stable branch PR has been merged and you need to create the patch relea
    ```bash
    # Check CI status
    gh pr checks [PR_NUMBER] --repo Shopify/cli
-   
+
    # Verify PR has approvals
    gh pr view [PR_NUMBER] --repo Shopify/cli --json reviews,reviewDecision
    ```
-   
+
    **Once you've approved and CI passes:**
    - I'll verify the PR has at least 1 approval
    - If approved, I'll merge it: `gh pr merge [PR_NUMBER] --repo Shopify/cli --merge`
@@ -456,7 +455,7 @@ When the stable branch PR has been merged and you need to create the patch relea
    ```bash
    # Get the workflow run ID from the merge
    gh run list --workflow=release.yml --repo Shopify/cli --limit 1 --json databaseId,status
-   
+
    # Watch the release progress
    gh run watch [RUN_ID] --repo Shopify/cli
    ```
@@ -468,10 +467,10 @@ When the stable branch PR has been merged and you need to create the patch relea
    # Checkout stable branch and pull latest
    git checkout stable/3.x
    git pull origin stable/3.x
-   
+
    # Get the new version from package.json
    NEW_VERSION=$(jq -r '.version' packages/cli/package.json)
-   
+
    # Create and push the tag
    git tag "$NEW_VERSION"
    git push origin "$NEW_VERSION"
@@ -480,7 +479,7 @@ When the stable branch PR has been merged and you need to create the patch relea
 ### What You Need to Do Manually:
 
 6. **Create the GitHub Release** (MANUAL STEP)
-   
+
    I'll provide you with:
    - Direct link: `https://github.com/Shopify/cli/releases/new`
    - Pre-filled information:
@@ -489,17 +488,17 @@ When the stable branch PR has been merged and you need to create the patch relea
      - **Release description**: I'll generate this from the Version Packages PR, formatted as:
        ```
        ## What's Changed
-       
+
        ### @shopify/cli-hydrogen
        - Updated to version [VERSION]
        - [Summary of changes from Hydrogen release notes]
-       
+
        ### Other Updates
        - [Any other package updates from the changeset]
-       
+
        Full changelog: [Link to Version Packages PR]
        ```
-   
+
    You'll need to:
    1. Click the provided link
    2. Select the tag I created
@@ -513,7 +512,7 @@ When the stable branch PR has been merged and you need to create the patch relea
    # Ensure we're on stable branch
    git checkout stable/3.x
    git pull origin stable/3.x
-   
+
    # Run post-release to create homebrew and docs PRs
    shadowenv exec -- pnpm post-release
    ```
@@ -522,17 +521,17 @@ When the stable branch PR has been merged and you need to create the patch relea
      - Documentation update
 
 8. **Review and help merge the post-release PRs** ⚠️ **CRITICAL - DO NOT SKIP**
-   
+
    **Note**: The post-release script creates these PRs with the user as the author, so they cannot approve their own PRs on GitHub.
-   
+
    **⚠️ MANDATORY ACTIONS I MUST COMPLETE IN ORDER:**
-   
+
    **Step 8a: Initial Review & Request User Action**
    ```bash
    # Find and review the homebrew PR
    gh pr list --repo Shopify/homebrew-shopify --search "Shopify CLI" --state open
    gh pr view [HOMEBREW_PR] --repo Shopify/homebrew-shopify --json reviews,statusCheckRollup,url,state,files
-   
+
    # Find and review the docs PR
    gh pr list --repo Shopify/shopify-dev --search "[CLI] Update docs" --state open
    gh pr view [DOCS_PR] --repo Shopify/shopify-dev --json reviews,statusCheckRollup,url,state
@@ -545,12 +544,12 @@ When the stable branch PR has been merged and you need to create the patch relea
    - **MUST SAY for Homebrew PR**: "Please review the homebrew PR. Since you created it, you can't formally approve it on GitHub, but please confirm it looks correct and I'll merge it for you."
    - **MUST SAY for Docs PR**: "Please get a team member to approve the docs PR (you can't approve your own PR). Once approved, you can comment /shipit to deploy."
    - **MUST WAIT** for user confirmation
-   
+
    **Step 8b: Verify Ready State** (only after user confirms)
    ```bash
    # For Homebrew PR - check if user confirmed it looks good
    gh pr view [HOMEBREW_PR] --repo Shopify/homebrew-shopify --json mergeable,state
-   
+
    # For Docs PR - check for external approval
    gh pr view [DOCS_PR] --repo Shopify/shopify-dev --json reviews,reviewDecision,mergeable
    ```
@@ -560,15 +559,15 @@ When the stable branch PR has been merged and you need to create the patch relea
    - Both PRs are mergeable: "MERGEABLE"
    - CI has passed (no failing checks)
    - If docs PR not approved: remind user to get external approval and WAIT
-   
+
    **Step 8c: Merge/Deploy the PRs** (only after ALL checks pass)
    ```bash
    # Merge homebrew PR (after user confirms it looks good)
    gh pr merge [HOMEBREW_PR] --repo Shopify/homebrew-shopify --merge
-   
+
    # Confirm homebrew merge
    gh pr view [HOMEBREW_PR] --repo Shopify/homebrew-shopify --json state
-   
+
    # For docs PR: Remind user to post /shipit (they must do this themselves)
    # The user will comment /shipit after external approval is received
    ```
@@ -579,7 +578,7 @@ When the stable branch PR has been merged and you need to create the patch relea
    - Wait for user to confirm they've posted /shipit
    - Monitor docs PR for deployment status after user posts /shipit
    - Provide final summary of both PRs processed
-   
+
    **❌ DO NOT mark this step complete until:**
    - Both PRs URLs provided to user
    - User has reviewed homebrew PR and confirmed it looks correct
@@ -588,7 +587,7 @@ When the stable branch PR has been merged and you need to create the patch relea
    - User has posted /shipit on docs PR themselves
    - Docs PR deployment confirmed (or merged via /shipit)
    - Final success confirmation provided to user
-   
+
    **If I skip ANY part of this step, I have FAILED the task**
 
 ### Summary:
