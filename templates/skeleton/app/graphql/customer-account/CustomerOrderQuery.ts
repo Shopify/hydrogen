@@ -45,6 +45,7 @@ export const CUSTOMER_ORDER_QUERY = `#graphql
   fragment Order on Order {
     id
     name
+    confirmationNumber
     statusPageUrl
     fulfillmentStatus
     processedAt
