@@ -37,7 +37,13 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
   );
 }
 
-function CartDetails({layout, cart}: {layout: CartMainProps['layout']; cart: any}) {
+function CartDetails({
+  layout,
+  cart,
+}: {
+  layout: CartMainProps['layout'];
+  cart: any;
+}) {
   const cartHasItems = !!cart && cart.totalQuantity && cart.totalQuantity > 0;
 
   return (
@@ -81,11 +87,20 @@ function CartLineItem({
   line: CartLine;
 }) {
   const {id, merchandise} = line;
+  
+  const lineItemUrl = useVariantUrl(
+    merchandise?.product?.handle || '',
+    merchandise?.selectedOptions
+  );
+  
+  if (!merchandise) {
+    return null;
+  }
+  
   const {product, title, image, selectedOptions} = merchandise;
-  const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
 
   return (
-    <li key={id} className="cart-line">
+    <li className="cart-line">
       {image && (
         <Image
           alt={title}
@@ -356,43 +371,46 @@ function CartLineUpdateByOptionsForm({line}: {line: CartLine}) {
   } = line;
 
   return (
-    <CartForm
-      route="/cart"
-      action="CustomUpdateLineByOptions"
-      inputs={{
-        productId: product.id,
-        line: {
-          id: line.id,
-          quantity: line.quantity,
-          attributes: line.attributes,
-        },
-      }}
-    >
-      {(fetcher) => (
-        <>
-          <VariantSelector
-            handle={product.handle}
-            options={product.options}
-            variants={[]}
-          >
-            {({option}) => (
-              <LineItemOptions
-                option={option}
-                selectedOptions={selectedOptions}
-                onChange={(event) =>
-                  fetcher.submit(event.currentTarget.form, {
-                    method: 'POST',
-                  })
-                }
-              />
-            )}
-          </VariantSelector>
-          <noscript>
-            <button type="submit">Update</button>
-          </noscript>
-        </>
-      )}
-    </CartForm>
+    <>
+      <p>Here</p>
+      <CartForm
+        route="/cart"
+        action="CustomUpdateLineByOptions"
+        inputs={{
+          productId: product.id,
+          line: {
+            id: line.id,
+            quantity: line.quantity,
+            attributes: line.attributes,
+          },
+        }}
+      >
+        {(fetcher) => (
+          <>
+            <VariantSelector
+              handle={product.handle}
+              options={product.options}
+              variants={[]}
+            >
+              {({option}) => (
+                <LineItemOptions
+                  option={option}
+                  selectedOptions={selectedOptions}
+                  onChange={(event) =>
+                    fetcher.submit(event.currentTarget.form, {
+                      method: 'POST',
+                    })
+                  }
+                />
+              )}
+            </VariantSelector>
+            <noscript>
+              <button type="submit">Update</button>
+            </noscript>
+          </>
+        )}
+      </CartForm>
+    </>
   );
 }
 

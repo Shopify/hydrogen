@@ -9,10 +9,9 @@ import {
   ScrollRestoration,
   isRouteErrorResponse,
   data,
-  type HeadersFunction,
-  type LoaderFunctionArgs,
   type ShouldRevalidateFunction,
 } from 'react-router';
+import type {Route} from './+types/root';
 import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
 import favicon from '~/assets/favicon.svg';
 import resetStyles from '~/styles/reset.css?url';
@@ -70,11 +69,11 @@ export function links() {
 
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
-export const headers: HeadersFunction = ({loaderHeaders}) => loaderHeaders;
+export const headers: Route.HeadersFunction = ({loaderHeaders}) => loaderHeaders;
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
 
-export async function loader(args: LoaderFunctionArgs) {
+export async function loader(args: Route.LoaderArgs) {
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
@@ -130,7 +129,7 @@ export async function loader(args: LoaderFunctionArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({context}: LoaderFunctionArgs) {
+async function loadCriticalData({context}: Route.LoaderArgs) {
   const {storefront} = context;
 
   const [header] = await Promise.all([
@@ -151,7 +150,7 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-function loadDeferredData({context}: LoaderFunctionArgs) {
+function loadDeferredData({context}: Route.LoaderArgs) {
   const {storefront, cart} = context;
 
   // defer the footer query (below the fold)
@@ -193,7 +192,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
             shop={data.shop}
             consent={data.consent}
           >
-            <PageLayout {...data}>{children}</PageLayout>
+            <PageLayout {...data as Parameters<typeof PageLayout>[0]}>{children}</PageLayout>
           </Analytics.Provider>
         ) : (
           children
@@ -249,7 +248,7 @@ export function ErrorBoundary() {
  * ```
  */
 async function validateCustomerAccessToken(
-  session: LoaderFunctionArgs['context']['session'],
+  session: Route.LoaderArgs['context']['session'],
   customerAccessToken?: CustomerAccessToken,
 ) {
   let isLoggedIn = false;

@@ -1,7 +1,8 @@
-import {useLoaderData, type LoaderFunctionArgs} from 'react-router';
+import {useLoaderData} from 'react-router';
+import type {Route} from './+types/_index';
 import {CacheShort} from '@shopify/hydrogen';
 
-export async function loader(args: LoaderFunctionArgs) {
+export async function loader(args: Route.LoaderArgs) {
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
@@ -15,7 +16,7 @@ export async function loader(args: LoaderFunctionArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({context}: LoaderFunctionArgs) {
+async function loadCriticalData({context}: Route.LoaderArgs) {
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
   // 1. Fetch characters from the Rick & Morty GraphQL API
@@ -39,7 +40,7 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-function loadDeferredData({context}: LoaderFunctionArgs) {
+function loadDeferredData({context}: Route.LoaderArgs) {
   // No deferred data for this example
   return {};
 }

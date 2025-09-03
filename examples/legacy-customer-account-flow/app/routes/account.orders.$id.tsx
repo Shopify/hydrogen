@@ -1,21 +1,16 @@
-import {
-  Link,
-  useLoaderData,
-  redirect,
-  type LoaderFunctionArgs,
-  type MetaFunction,
-} from 'react-router';
+import {Link, useLoaderData, redirect} from 'react-router';
+import type {Route} from './+types/account.orders.$id';
 import {Money, Image, flattenConnection} from '@shopify/hydrogen';
 import type {
   OrderLineItemFullFragment,
   DiscountApplicationFragment,
 } from 'storefrontapi.generated';
 
-export const meta: MetaFunction<typeof loader> = ({data}) => {
+export const meta: Route.MetaFunction = ({data}) => {
   return [{title: `Order ${data?.order?.name}`}];
 };
 
-export async function loader({params, context}: LoaderFunctionArgs) {
+export async function loader({params, context}: Route.LoaderArgs) {
   const {session, storefront} = context;
 
   if (!params.id) {

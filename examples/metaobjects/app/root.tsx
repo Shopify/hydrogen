@@ -8,9 +8,9 @@ import {
   useRouteLoaderData,
   ScrollRestoration,
   isRouteErrorResponse,
-  type LoaderFunctionArgs,
   type ShouldRevalidateFunction,
 } from 'react-router';
+import type {Route} from './+types/root';
 import favicon from '~/assets/favicon.svg';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
@@ -65,7 +65,7 @@ export function links() {
   ];
 }
 
-export async function loader(args: LoaderFunctionArgs) {
+export async function loader(args: Route.LoaderArgs) {
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
@@ -92,7 +92,7 @@ export async function loader(args: LoaderFunctionArgs) {
     },
     /***********************************************/
     /**********  EXAMPLE UPDATE STARTS  ************/
-    publictoreSubdomain: args.context.env.PUBLIC_SHOPIFY_STORE_DOMAIN,
+    publictoreSubdomain: args.context.env.PUBLIC_STORE_DOMAIN,
     /**********   EXAMPLE UPDATE END   ************/
     /***********************************************/
   };
@@ -102,7 +102,7 @@ export async function loader(args: LoaderFunctionArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({context}: LoaderFunctionArgs) {
+async function loadCriticalData({context}: Route.LoaderArgs) {
   const {storefront} = context;
 
   const [header] = await Promise.all([
@@ -123,7 +123,7 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-function loadDeferredData({context}: LoaderFunctionArgs) {
+function loadDeferredData({context}: Route.LoaderArgs) {
   const {storefront, customerAccount, cart} = context;
 
   // defer the footer query (below the fold)

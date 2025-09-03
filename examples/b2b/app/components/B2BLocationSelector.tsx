@@ -16,7 +16,8 @@ export function B2BLocationSelector() {
       )
     : [];
 
-  if (!company || !modalOpen) return null;
+  if (!company || !modalOpen)
+    return <p>No company found for logged in user.</p>;
 
   return (
     <div className="modal">
@@ -37,8 +38,9 @@ export function B2BLocationSelector() {
                 }}
               >
                 {(fetcher) => (
-                  <label>
+                  <div>
                     <button
+                      aria-label={`Select location ${location.name}`}
                       onClick={(event) => {
                         setModalOpen(false);
                         fetcher.submit(event.currentTarget.form, {
@@ -56,7 +58,7 @@ export function B2BLocationSelector() {
                         ))}
                       </div>
                     </button>
-                  </label>
+                  </div>
                 )}
               </CartForm>
             );

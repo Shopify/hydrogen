@@ -2,6 +2,7 @@ import {
   createHydrogenContext,
   cartLinesUpdateDefault,
   cartGetIdDefault,
+  type CartQueryDataReturn,
 } from '@shopify/hydrogen';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT, PRODUCT_VARIANT_QUERY} from '~/lib/fragments';
@@ -20,6 +21,15 @@ type AdditionalContextType = typeof additionalContext;
 
 declare global {
   interface HydrogenAdditionalContext extends AdditionalContextType {}
+  
+  // Augment the cart with custom methods for this example
+  interface HydrogenCustomCartMethods {
+    updateLineByOptions: (
+      productId: string,
+      selectedOptions: SelectedOptionInput[],
+      line: CartLineUpdateInput,
+    ) => Promise<CartQueryDataReturn>;
+  }
 }
 
 /**
@@ -45,9 +55,7 @@ export async function createHydrogenRouterContext(
   ]);
 
   // Create a placeholder context first to reference in customMethods
-  let hydrogenContext: any;
-  
-  hydrogenContext = createHydrogenContext(
+  const hydrogenContext: ReturnType<typeof createHydrogenContext> = createHydrogenContext(
     {
       env,
       request,

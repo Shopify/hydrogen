@@ -17,11 +17,10 @@ export function parseSection<InputType, ReturnType>(_section: InputType) {
   for (const key in section) {
     const node = section[key];
     if (typeof node === 'object') {
-      // @ts-ignore
+      // @ts-expect-error node might not have type and value properties
       const isMetafield = node?.type && node?.value;
       const isArray = Array.isArray(node);
       if (isArray) {
-        // @ts-ignore
         parsed[key] = node.map((item) => parseSection(item));
       } else if (isMetafield) {
         parsed[key] = parseMetafieldValue(node);

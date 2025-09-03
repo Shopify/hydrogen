@@ -7,21 +7,19 @@ import {
   useOutletContext,
   data,
   redirect,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
-  type MetaFunction,
 } from 'react-router';
+import type {Route} from './+types/account.profile';
 
 export type ActionResponse = {
   error: string | null;
   customer: CustomerFragment | null;
 };
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: 'Profile'}];
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
   if (!customerAccessToken) {
     return redirect('/account/login');
@@ -29,7 +27,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   return {};
 }
 
-export async function action({request, context}: ActionFunctionArgs) {
+export async function action({request, context}: Route.ActionArgs) {
   const {session, storefront} = context;
 
   if (request.method !== 'PUT') {
