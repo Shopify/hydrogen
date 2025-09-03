@@ -424,6 +424,8 @@ describe('plugin-autolinker', () => {
     beforeEach(() => {
       delete process.env.HYDROGEN_CLI_AUTOLINKED;
       delete process.env.HYDROGEN_DISABLE_AUTOLINK;
+      delete process.env.CI;
+      delete process.env.GITHUB_ACTIONS;
       vi.spyOn(console, 'log').mockImplementation(() => {});
     });
 
