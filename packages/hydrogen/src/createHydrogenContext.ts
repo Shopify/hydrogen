@@ -128,13 +128,15 @@ export interface HydrogenContext<
 // HydrogenContextOverloads is use to restore type assertions so we don't need to do type casting
 export interface HydrogenContextOverloads<
   TSession extends HydrogenSession,
-  TCustomMethods extends CustomMethodsBase,
+  TCustomMethods extends CustomMethodsBase | undefined = {},
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
 > {
   storefront: StorefrontClient<TI18n>['storefront'];
   customerAccount: CustomerAccount;
-  cart: HydrogenCart | HydrogenCartCustom<TCustomMethods>;
+  cart: TCustomMethods extends CustomMethodsBase
+    ? HydrogenCartCustom<TCustomMethods>
+    : HydrogenCart;
   env: TEnv;
   waitUntil?: WaitUntil;
   session: TSession;
@@ -155,8 +157,8 @@ export interface HydrogenContextOverloads<
 
 export function createHydrogenContext<
   TSession extends HydrogenSession,
-  TCustomMethods extends CustomMethodsBase,
-  TI18n extends I18nBase,
+  TCustomMethods extends CustomMethodsBase | undefined = {},
+  TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
   TAdditionalContext extends Record<string, any> = {},
 >(
@@ -266,9 +268,7 @@ export function createHydrogenContext<
   // Create Hydrogen services map for direct property access
   const services = {
     storefront,
-    cart: cart as TCustomMethods extends CustomMethodsBase
-      ? HydrogenCartCustom<TCustomMethods>
-      : HydrogenCart,
+    cart,
     customerAccount,
     env,
     session,

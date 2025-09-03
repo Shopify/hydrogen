@@ -45,7 +45,8 @@
       "Bash(done)",
       "Bash(gh pr checks:*)",
       "Bash(git stash show:*)",
-      "Bash(npx shopify plugins inspect:*)"
+      "Bash(npx shopify plugins inspect:*)",
+      "Bash(npm run test:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

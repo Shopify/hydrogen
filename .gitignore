@@ -145,8 +145,7 @@ examples/**/*.generated.d.ts
 
 examples/express/build
 
-# React Router generated types
-.react-router
+# React Router generated types - now tracked in git for examples
 
 # TSup generated files in docs and examples
 docs/**/*.d.ts

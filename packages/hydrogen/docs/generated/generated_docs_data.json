@@ -5970,7 +5970,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -6784,7 +6784,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -7598,7 +7598,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -8424,7 +8424,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -9243,7 +9243,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -10062,7 +10062,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -10869,7 +10869,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -11683,7 +11683,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -12433,7 +12433,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -13240,7 +13240,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -14054,7 +14054,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -14861,7 +14861,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -15675,7 +15675,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -16482,7 +16482,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -17296,7 +17296,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -18103,7 +18103,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -19247,7 +19247,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@689",
+                "name": "__@toStringTag@686",
                 "value": "string",
                 "description": ""
               },
@@ -23347,7 +23347,7 @@
                   },
                   {
                     "title": "TypeScript",
-                    "code": "import {\n  createCustomerAccountClient,\n  type HydrogenSession,\n} from '@shopify/hydrogen';\n// @ts-expect-error\nimport * as reactRouterBuild from 'virtual:react-router/server-build';\nimport {\n  createRequestHandler,\n  createCookieSessionStorage,\n  type SessionStorage,\n  type Session,\n} from '@shopify/remix-oxygen';\n\n// In server.ts\nexport default {\n  async fetch(\n    request: Request,\n    env: Record&lt;string, string&gt;,\n    executionContext: ExecutionContext,\n  ) {\n    const session = await AppSession.init(request, [env.SESSION_SECRET]);\n\n    function customAuthStatusHandler() {\n      return new Response('Customer is not login', {\n        status: 401,\n      });\n    }\n\n    /* Create a Customer API client with your credentials and options */\n    const customerAccount = createCustomerAccountClient({\n      /* Runtime utility in serverless environments */\n      waitUntil: (p) =&gt; executionContext.waitUntil(p),\n      /* Public Customer Account API client ID for your store */\n      customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,\n      /* Shop Id */\n      shopId: env.SHOP_ID,\n      request,\n      session,\n      customAuthStatusHandler,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: reactRouterBuild,\n      mode: process.env.NODE_ENV,\n      /* Inject the customer account client in the Remix context */\n      getLoadContext: () =&gt; ({session, customerAccount}),\n    });\n\n    const response = await handleRequest(request);\n\n    if (session.isPending) {\n      response.headers.set('Set-Cookie', await session.commit());\n    }\n\n    return response;\n  },\n};\n\nclass AppSession implements HydrogenSession {\n  public isPending = false;\n\n  constructor(\n    private sessionStorage: SessionStorage,\n    private session: Session,\n  ) {}\n\n  static async init(request: Request, secrets: string[]) {\n    const storage = createCookieSessionStorage({\n      cookie: {\n        name: 'session',\n        httpOnly: true,\n        path: '/',\n        sameSite: 'lax',\n        secrets,\n      },\n    });\n\n    const session = await storage.getSession(request.headers.get('Cookie'));\n\n    return new this(storage, session);\n  }\n\n  get(key: string) {\n    return this.session.get(key);\n  }\n\n  destroy() {\n    return this.sessionStorage.destroySession(this.session);\n  }\n\n  flash(key: string, value: any) {\n    this.session.flash(key, value);\n  }\n\n  unset(key: string) {\n    this.isPending = true;\n    this.session.unset(key);\n  }\n\n  set(key: string, value: any) {\n    this.isPending = true;\n    this.session.set(key, value);\n  }\n\n  commit() {\n    this.isPending = false;\n    return this.sessionStorage.commitSession(this.session);\n  }\n}\n\n// In env.d.ts\nimport type {CustomerAccount, HydrogenSessionData} from '@shopify/hydrogen';\ndeclare module 'react-router' {\n  /**\n   * Declare local additions to the Remix loader context.\n   */\n  interface AppLoadContext {\n    customerAccount: CustomerAccount;\n    session: AppSession;\n  }\n\n  // TODO: remove this once we've migrated to `Route.LoaderArgs` instead for our loaders\n  interface LoaderFunctionArgs {\n    context: AppLoadContext;\n  }\n\n  // TODO: remove this once we've migrated to `Route.ActionArgs` instead for our actions\n  interface ActionFunctionArgs {\n    context: AppLoadContext;\n  }\n\n  /**\n   * Declare local additions to the Remix session data.\n   */\n  interface SessionData extends HydrogenSessionData {}\n}\n\n/////////////////////////////////\n// In a route\nimport {\n  useLoaderData,\n  useRouteError,\n  isRouteErrorResponse,\n  useLocation,\n} from 'react-router';\nimport {type LoaderFunctionArgs} from '@shopify/remix-oxygen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {data} = await context.customerAccount.query&lt;{\n    customer: {firstName: string; lastName: string};\n  }&gt;(`#graphql\n    query getCustomer {\n      customer {\n        firstName\n        lastName\n      }\n    }\n    `);\n\n  return {customer: data.customer};\n}\n\nexport function ErrorBoundary() {\n  const error = useRouteError();\n  const location = useLocation();\n\n  if (isRouteErrorResponse(error)) {\n    if (error.status == 401) {\n      return (\n        &lt;a\n          href={`/account/login?${new URLSearchParams({\n            return_to: location.pathname,\n          }).toString()}`}\n        &gt;\n          Login\n        &lt;/a&gt;\n      );\n    }\n  }\n}\n\n// this should be an default export\nexport function Route() {\n  const {customer} = useLoaderData&lt;typeof loader&gt;();\n\n  return (\n    &lt;div style={{marginTop: 24}}&gt;\n      {customer ? (\n        &lt;&gt;\n          &lt;div style={{marginBottom: 24}}&gt;\n            &lt;b&gt;\n              Welcome {customer.firstName} {customer.lastName}\n            &lt;/b&gt;\n          &lt;/div&gt;\n        &lt;/&gt;\n      ) : null}\n    &lt;/div&gt;\n  );\n}\n",
+                    "code": "// Example: Custom session implementation in server.ts\n// This shows how to use a custom session class with Hydrogen\nimport {createHydrogenContext, type HydrogenSession} from '@shopify/hydrogen';\nimport {createRequestHandler} from '@shopify/remix-oxygen';\nimport {\n  createCookieSessionStorage,\n  type SessionStorage,\n  type Session,\n} from '@shopify/remix-oxygen';\n\n// In server.ts\nexport default {\n  async fetch(request: Request, env: Env, executionContext: ExecutionContext) {\n    // Example of using a custom session implementation\n    const session = await AppSession.init(request, [env.SESSION_SECRET]);\n\n    // Create the Hydrogen context with all the standard services\n    const hydrogenContext = createHydrogenContext({\n      env,\n      request,\n      cache: {} as Cache, // Use your cache implementation\n      waitUntil: (p) =&gt; executionContext.waitUntil(p),\n      session, // Your custom session implementation must satisfy HydrogenSession interface\n      // Add other options as needed\n    });\n\n    const handleRequest = createRequestHandler({\n      // @ts-expect-error\n      build: await import('virtual:react-router/server-build'),\n      mode: process.env.NODE_ENV,\n      getLoadContext: () =&gt; hydrogenContext,\n    });\n\n    const response = await handleRequest(request);\n\n    if (hydrogenContext.session.isPending) {\n      response.headers.set(\n        'Set-Cookie',\n        await hydrogenContext.session.commit(),\n      );\n    }\n\n    return response;\n  },\n};\n\nclass AppSession implements HydrogenSession {\n  public isPending = false;\n\n  constructor(\n    private sessionStorage: SessionStorage,\n    private session: Session,\n  ) {}\n\n  static async init(request: Request, secrets: string[]) {\n    const storage = createCookieSessionStorage({\n      cookie: {\n        name: 'session',\n        httpOnly: true,\n        path: '/',\n        sameSite: 'lax',\n        secrets,\n      },\n    });\n\n    const session = await storage.getSession(request.headers.get('Cookie'));\n\n    return new this(storage, session);\n  }\n\n  get(key: string) {\n    return this.session.get(key);\n  }\n\n  destroy() {\n    return this.sessionStorage.destroySession(this.session);\n  }\n\n  flash(key: string, value: any) {\n    this.session.flash(key, value);\n  }\n\n  unset(key: string) {\n    this.isPending = true;\n    this.session.unset(key);\n  }\n\n  set(key: string, value: any) {\n    this.isPending = true;\n    this.session.set(key, value);\n  }\n\n  commit() {\n    this.isPending = false;\n    return this.sessionStorage.commitSession(this.session);\n  }\n}\n\n// In env.d.ts\n// Note: Hydrogen now provides default AppLoadContext augmentation\n// If you need to extend it with additional properties, you can do:\n// declare module 'react-router' {\n//   interface AppLoadContext {\n//     // Add your custom properties here\n//   }\n// }\n\n/////////////////////////////////\n// In a route (e.g., app/routes/account.tsx)\nimport {\n  useLoaderData,\n  useRouteError,\n  isRouteErrorResponse,\n  useLocation,\n} from 'react-router';\n// Import the Route namespace from the generated types\n// Note: Replace 'account' with your actual route name\n// import type {Route} from './+types/account';\n\n// Using the Route.LoaderArgs type from generated types\n// export async function loader({context}: Route.LoaderArgs) {\n// For this example, we'll show the pattern with proper typing\nimport type {LoaderFunctionArgs} from 'react-router';\nimport type {CustomerAccount} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderFunctionArgs) {\n  const {data} = await context.customerAccount.query&lt;{\n    customer: {firstName: string; lastName: string};\n  }&gt;(`#graphql\n    query getCustomer {\n      customer {\n        firstName\n        lastName\n      }\n    }\n    `);\n\n  return {customer: data.customer};\n}\n\nexport function ErrorBoundary() {\n  const error = useRouteError();\n  const location = useLocation();\n\n  if (isRouteErrorResponse(error)) {\n    if (error.status == 401) {\n      return (\n        &lt;a\n          href={`/account/login?${new URLSearchParams({\n            return_to: location.pathname,\n          }).toString()}`}\n        &gt;\n          Login\n        &lt;/a&gt;\n      );\n    }\n  }\n}\n\n// this should be an default export\nexport function Route() {\n  const {customer} = useLoaderData&lt;typeof loader&gt;();\n\n  return (\n    &lt;div style={{marginTop: 24}}&gt;\n      {customer ? (\n        &lt;&gt;\n          &lt;div style={{marginBottom: 24}}&gt;\n            &lt;b&gt;\n              Welcome {customer.firstName} {customer.lastName}\n            &lt;/b&gt;\n          &lt;/div&gt;\n        &lt;/&gt;\n      ) : null}\n    &lt;/div&gt;\n  );\n}\n",
                     "language": "tsx"
                   }
                 ]
@@ -30015,7 +30015,7 @@
       {
         "name": "isOptionValueCombinationInEncodedVariant",
         "type": "utility",
-        "url": "/docs/api/hydrogen/2025-04/utilities/isOptionValueCombinationInEncodedVariant"
+        "url": "/docs/api/hydrogen//utilities/isOptionValueCombinationInEncodedVariant"
       }
     ],
     "description": "Decodes an encoded option value string into an array of option value combinations.",
@@ -30511,7 +30511,7 @@
       {
         "name": "decodeEncodedVariant",
         "type": "utility",
-        "url": "/docs/api/hydrogen/2025-04/utilities/decodeEncodedVariant"
+        "url": "/docs/api/hydrogen/utilities/decodeEncodedVariant"
       }
     ],
     "description": "\n    Determines whether an option value combination is present in an encoded option value string.\n\n`targetOptionValueCombination` - Indices of option values to look up in the encoded option value string. A partial set of indices may be passed to determine whether a node or any children is present. For example, if a product has 3 options, passing `[0]` will return true if any option value combination for the first option's option value is present in the encoded string.\n  ",
@@ -30721,7 +30721,7 @@
               "name": "ReturnGeneric",
               "value": "ReturnGeneric"
             },
-            "value": "export function parseMetafield<ReturnGeneric>(\n  metafield: PartialDeep<MetafieldBaseType, {recurseIntoArrays: true}>,\n): ReturnGeneric {\n  if (!metafield.type) {\n    const noTypeError = `parseMetafield(): The 'type' field is required in order to parse the Metafield.`;\n    if (__HYDROGEN_DEV__) {\n      throw new Error(noTypeError);\n    } else {\n      console.error(`${noTypeError} Returning 'parsedValue' of 'null'`);\n      return {\n        ...metafield,\n        parsedValue: null,\n      } as ReturnGeneric;\n    }\n  }\n\n  switch (metafield.type) {\n    case 'boolean':\n      return {\n        ...metafield,\n        parsedValue: metafield.value === 'true',\n      } as ReturnGeneric;\n\n    case 'collection_reference':\n    case 'file_reference':\n    case 'page_reference':\n    case 'product_reference':\n    case 'variant_reference':\n      return {\n        ...metafield,\n        parsedValue: metafield.reference,\n      } as ReturnGeneric;\n\n    case 'color':\n    case 'multi_line_text_field':\n    case 'single_line_text_field':\n    case 'url':\n      return {\n        ...metafield,\n        parsedValue: metafield.value,\n      } as ReturnGeneric;\n\n    // TODO: 'money' should probably be parsed even further to like `useMoney()`, but that logic needs to be extracted first so it's not a hook\n    case 'dimension':\n    case 'money':\n    case 'json':\n    case 'rating':\n    case 'volume':\n    case 'weight':\n    case 'rich_text_field':\n    case 'list.color':\n    case 'list.dimension':\n    case 'list.number_integer':\n    case 'list.number_decimal':\n    case 'list.rating':\n    case 'list.single_line_text_field':\n    case 'list.url':\n    case 'list.volume':\n    case 'list.weight': {\n      let parsedValue = null;\n      try {\n        parsedValue = parseJSON(metafield.value ?? '');\n      } catch (err) {\n        const parseError = `parseMetafield(): attempted to JSON.parse the 'metafield.value' property, but failed.`;\n        if (__HYDROGEN_DEV__) {\n          throw new Error(parseError);\n        } else {\n          console.error(`${parseError} Returning 'null' for 'parsedValue'`);\n        }\n        parsedValue = null;\n      }\n      return {\n        ...metafield,\n        parsedValue,\n      } as ReturnGeneric;\n    }\n\n    case 'date':\n    case 'date_time':\n      return {\n        ...metafield,\n        parsedValue: new Date(metafield.value ?? ''),\n      } as ReturnGeneric;\n\n    case 'list.date':\n    case 'list.date_time': {\n      const jsonParseValue = parseJSON(metafield?.value ?? '') as string[];\n      return {\n        ...metafield,\n        parsedValue: jsonParseValue.map((dateString) => new Date(dateString)),\n      } as ReturnGeneric;\n    }\n\n    case 'number_decimal':\n    case 'number_integer':\n      return {\n        ...metafield,\n        parsedValue: Number(metafield.value),\n      } as ReturnGeneric;\n\n    case 'list.collection_reference':\n    case 'list.file_reference':\n    case 'list.page_reference':\n    case 'list.product_reference':\n    case 'list.variant_reference':\n      return {\n        ...metafield,\n        parsedValue: flattenConnection(metafield.references ?? undefined),\n      } as ReturnGeneric;\n\n    default: {\n      const typeNotFoundError = `parseMetafield(): the 'metafield.type' you passed in is not supported. Your type: \"${metafield.type}\". If you believe this is an error, please open an issue on GitHub.`;\n      if (__HYDROGEN_DEV__) {\n        throw new Error(typeNotFoundError);\n      } else {\n        console.error(\n          `${typeNotFoundError}  Returning 'parsedValue' of 'null'`,\n        );\n        return {\n          ...metafield,\n          parsedValue: null,\n        } as ReturnGeneric;\n      }\n    }\n  }\n}"
+            "value": "export function parseMetafield<ReturnGeneric>(\n  metafield: PartialDeep<MetafieldBaseType, {recurseIntoArrays: true}>,\n): ReturnGeneric {\n  if (!metafield.type) {\n    const noTypeError = `parseMetafield(): The 'type' field is required in order to parse the Metafield.`;\n    if (__HYDROGEN_DEV__) {\n      throw new Error(noTypeError);\n    } else {\n      console.error(`${noTypeError} Returning 'parsedValue' of 'null'`);\n      return {\n        ...metafield,\n        parsedValue: null,\n      } as ReturnGeneric;\n    }\n  }\n\n  switch (metafield.type) {\n    case 'boolean':\n      return {\n        ...metafield,\n        parsedValue: metafield.value === 'true',\n      } as ReturnGeneric;\n\n    case 'collection_reference':\n    case 'file_reference':\n    case 'page_reference':\n    case 'product_reference':\n    case 'variant_reference':\n      return {\n        ...metafield,\n        parsedValue: metafield.reference,\n      } as ReturnGeneric;\n\n    case 'color':\n    case 'multi_line_text_field':\n    case 'single_line_text_field':\n    case 'url':\n      return {\n        ...metafield,\n        parsedValue: metafield.value,\n      } as ReturnGeneric;\n\n    // TODO: 'money' should probably be parsed even further to like `useMoney()`, but that logic needs to be extracted first so it's not a hook\n    case 'money': {\n      let parsedValue: MoneyV2 | null = null;\n      try {\n        const parsed = parseJSON(metafield.value ?? '');\n        // Transform currency_code from Storefront API to currencyCode to match MoneyV2 type\n        if (parsed && typeof parsed === 'object' && 'currency_code' in parsed) {\n          const moneyData = parsed as {amount: string; currency_code: string};\n          parsedValue = {\n            amount: moneyData.amount,\n            currencyCode: moneyData.currency_code as CurrencyCode,\n          };\n        } else if (\n          parsed &&\n          typeof parsed === 'object' &&\n          'currencyCode' in parsed\n        ) {\n          // Already in correct format (for backward compatibility)\n          parsedValue = parsed as MoneyV2;\n        } else {\n          parsedValue = parsed as MoneyV2 | null;\n        }\n      } catch (err) {\n        const parseError = `parseMetafield(): attempted to JSON.parse the 'metafield.value' property, but failed.`;\n        if (__HYDROGEN_DEV__) {\n          throw new Error(parseError);\n        } else {\n          console.error(`${parseError} Returning 'null' for 'parsedValue'`);\n        }\n        parsedValue = null;\n      }\n      return {\n        ...metafield,\n        parsedValue,\n      } as ReturnGeneric;\n    }\n\n    case 'dimension':\n    case 'json':\n    case 'rating':\n    case 'volume':\n    case 'weight':\n    case 'rich_text_field':\n    case 'list.color':\n    case 'list.dimension':\n    case 'list.number_integer':\n    case 'list.number_decimal':\n    case 'list.rating':\n    case 'list.single_line_text_field':\n    case 'list.url':\n    case 'list.volume':\n    case 'list.weight': {\n      let parsedValue = null;\n      try {\n        parsedValue = parseJSON(metafield.value ?? '');\n      } catch (err) {\n        const parseError = `parseMetafield(): attempted to JSON.parse the 'metafield.value' property, but failed.`;\n        if (__HYDROGEN_DEV__) {\n          throw new Error(parseError);\n        } else {\n          console.error(`${parseError} Returning 'null' for 'parsedValue'`);\n        }\n        parsedValue = null;\n      }\n      return {\n        ...metafield,\n        parsedValue,\n      } as ReturnGeneric;\n    }\n\n    case 'date':\n    case 'date_time':\n      return {\n        ...metafield,\n        parsedValue: new Date(metafield.value ?? ''),\n      } as ReturnGeneric;\n\n    case 'list.date':\n    case 'list.date_time': {\n      const jsonParseValue = parseJSON(metafield?.value ?? '') as string[];\n      return {\n        ...metafield,\n        parsedValue: jsonParseValue.map((dateString) => new Date(dateString)),\n      } as ReturnGeneric;\n    }\n\n    case 'number_decimal':\n    case 'number_integer':\n      return {\n        ...metafield,\n        parsedValue: Number(metafield.value),\n      } as ReturnGeneric;\n\n    case 'list.collection_reference':\n    case 'list.file_reference':\n    case 'list.page_reference':\n    case 'list.product_reference':\n    case 'list.variant_reference':\n      return {\n        ...metafield,\n        parsedValue: flattenConnection(metafield.references ?? undefined),\n      } as ReturnGeneric;\n\n    default: {\n      const typeNotFoundError = `parseMetafield(): the 'metafield.type' you passed in is not supported. Your type: \"${metafield.type}\". If you believe this is an error, please open an issue on GitHub.`;\n      if (__HYDROGEN_DEV__) {\n        throw new Error(typeNotFoundError);\n      } else {\n        console.error(\n          `${typeNotFoundError}  Returning 'parsedValue' of 'null'`,\n        );\n        return {\n          ...metafield,\n          parsedValue: null,\n        } as ReturnGeneric;\n      }\n    }\n  }\n}"
           }
         }
       }

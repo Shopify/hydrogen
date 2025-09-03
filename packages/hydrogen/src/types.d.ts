@@ -3,16 +3,14 @@ import type {
   Session,
   SessionData,
   FlashSessionData,
-} from '@remix-run/server-runtime';
+  unstable_RouterContextProvider,
+} from 'react-router';
 import type {RequestEventPayload} from './vite/request-events';
 import {
   CUSTOMER_ACCOUNT_SESSION_KEY,
   BUYER_SESSION_KEY,
 } from './customer/constants';
 import type {BuyerInput} from '@shopify/hydrogen-react/storefront-api-types';
-
-// React Router integration types
-import type {unstable_RouterContextProvider} from 'react-router';
 import type {StorefrontClient, I18nBase} from './storefront';
 import type {CustomerAccount} from './customer/types';
 import type {

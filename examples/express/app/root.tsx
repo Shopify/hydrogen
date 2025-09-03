@@ -1,6 +1,5 @@
 import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
 import {
-  type LoaderFunctionArgs,
   Outlet,
   useRouteError,
   isRouteErrorResponse,
@@ -11,6 +10,7 @@ import {
   ScrollRestoration,
   useRouteLoaderData,
 } from 'react-router';
+import type {Route} from './+types/root';
 import styles from './styles/app.css?url';
 
 export type RootLoader = typeof loader;
@@ -39,7 +39,7 @@ export function links() {
   ];
 }
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   const [customerAccessToken, cartId] = await Promise.all([
     context.session.get('customerAccessToken'),
     context.session.get('cartId'),
@@ -69,7 +69,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   };
 }
 
-async function loadCriticalData({context}: Pick<LoaderFunctionArgs, 'context'>) {
+async function loadCriticalData({context}: Pick<Route.LoaderArgs, 'context'>) {
   const {storefront} = context;
 
   const layout = await storefront.query(LAYOUT_QUERY, {
@@ -82,7 +82,7 @@ async function loadCriticalData({context}: Pick<LoaderFunctionArgs, 'context'>) 
 function loadDeferredData({
   context,
   cartId,
-}: Pick<LoaderFunctionArgs, 'context'> & {cartId?: string}) {
+}: Pick<Route.LoaderArgs, 'context'> & {cartId?: string}) {
   const {storefront} = context;
 
   const cart = cartId

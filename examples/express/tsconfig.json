@@ -10,12 +10,9 @@
     "*.d.ts",
     ".react-router/types/**/*"
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build"
-  ],
+  "exclude": ["node_modules", "dist", "build"],
   "compilerOptions": {
+    "verbatimModuleSyntax": true,
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "isolatedModules": true,
     "esModuleInterop": true,
@@ -30,10 +27,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "baseUrl": ".",
-    "types": [
-      "@shopify/hydrogen/react-router-types",
-      "vite/client"
-    ],
+    "types": ["@shopify/hydrogen/react-router-types", "vite/client"],
     "paths": {
       "~/*": ["app/*"]
     },
