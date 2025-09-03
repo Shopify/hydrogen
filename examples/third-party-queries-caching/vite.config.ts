@@ -1,4 +1,5 @@
 import {defineConfig} from 'vite';
+// eslint-disable-next-line import/no-unresolved
 import {hydrogen} from '@shopify/hydrogen/vite';
 import {oxygen} from '@shopify/mini-oxygen/vite';
 import {reactRouter} from '@react-router/dev/vite';

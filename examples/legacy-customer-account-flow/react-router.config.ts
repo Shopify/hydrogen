@@ -1,4 +1,5 @@
 import type {Config} from '@react-router/dev/config';
+// eslint-disable-next-line import/no-unresolved
 import {hydrogenPreset} from '@shopify/hydrogen/react-router-preset';
 
 /**
