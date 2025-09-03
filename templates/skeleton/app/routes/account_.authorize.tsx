@@ -1,5 +1,5 @@
-import type {LoaderFunctionArgs} from 'react-router';
+import type {Route} from './+types/account_.authorize';
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   return context.customerAccount.authorize();
 }

@@ -5,15 +5,13 @@ import type {
 } from 'customer-accountapi.generated';
 import {
   data,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
   Form,
   useActionData,
   useNavigation,
   useOutletContext,
-  type MetaFunction,
   type Fetcher,
 } from 'react-router';
+import type {Route} from './+types/account.addresses';
 import {
   UPDATE_ADDRESS_MUTATION,
   DELETE_ADDRESS_MUTATION,
@@ -29,17 +27,17 @@ export type ActionResponse = {
   updatedAddress?: AddressFragment;
 };
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: 'Addresses'}];
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
-  await context.customerAccount.handleAuthStatus();
+export async function loader({context}: Route.LoaderArgs) {
+  context.customerAccount.handleAuthStatus();
 
   return {};
 }
 
-export async function action({request, context}: ActionFunctionArgs) {
+export async function action({request, context}: Route.ActionArgs) {
   const {customerAccount, storefront} = context;
   const {i18n} = storefront;
 

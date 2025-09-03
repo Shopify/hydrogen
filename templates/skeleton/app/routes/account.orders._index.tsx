@@ -1,9 +1,8 @@
 import {
   Link,
   useLoaderData,
-  type MetaFunction,
-  type LoaderFunctionArgs,
 } from 'react-router';
+import type {Route} from './+types/account.orders._index';
 import {
   Money,
   getPaginationVariables,
@@ -16,11 +15,11 @@ import type {
 } from 'customer-accountapi.generated';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: 'Orders'}];
 };
 
-export async function loader({request, context}: LoaderFunctionArgs) {
+export async function loader({request, context}: Route.LoaderArgs) {
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 20,
   });

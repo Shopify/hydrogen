@@ -1,7 +1,7 @@
-import {type LoaderFunctionArgs} from 'react-router';
+import type {Route} from './+types/[robots.txt]';
 import {parseGid} from '@shopify/hydrogen';
 
-export async function loader({request, context}: LoaderFunctionArgs) {
+export async function loader({request, context}: Route.LoaderArgs) {
   const url = new URL(request.url);
 
   const {shop} = await context.storefront.query(ROBOTS_QUERY);

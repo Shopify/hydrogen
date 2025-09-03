@@ -1,15 +1,14 @@
 import {
-  type LoaderFunctionArgs,
   useLoaderData,
-  type MetaFunction,
 } from 'react-router';
+import type {Route} from './+types/pages.$handle';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
-export const meta: MetaFunction<typeof loader> = ({data}) => {
+export const meta: Route.MetaFunction = ({data}) => {
   return [{title: `Hydrogen | ${data?.page.title ?? ''}`}];
 };
 
-export async function loader(args: LoaderFunctionArgs) {
+export async function loader(args: Route.LoaderArgs) {
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
@@ -27,7 +26,7 @@ async function loadCriticalData({
   context,
   request,
   params,
-}: LoaderFunctionArgs) {
+}: Route.LoaderArgs) {
   if (!params.handle) {
     throw new Error('Missing page handle');
   }
@@ -57,7 +56,7 @@ async function loadCriticalData({
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-function loadDeferredData({context}: LoaderFunctionArgs) {
+function loadDeferredData({context}: Route.LoaderArgs) {
   return {};
 }
 

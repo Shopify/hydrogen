@@ -1,9 +1,8 @@
 import {
   redirect,
-  type LoaderFunctionArgs,
   useLoaderData,
-  type MetaFunction,
 } from 'react-router';
+import type {Route} from './+types/products.$handle';
 import {
   getSelectedProductOptions,
   Analytics,
@@ -17,7 +16,7 @@ import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
-export const meta: MetaFunction<typeof loader> = ({data}) => {
+export const meta: Route.MetaFunction = ({data}) => {
   return [
     {title: `Hydrogen | ${data?.product.title ?? ''}`},
     {
@@ -27,7 +26,7 @@ export const meta: MetaFunction<typeof loader> = ({data}) => {
   ];
 };
 
-export async function loader(args: LoaderFunctionArgs) {
+export async function loader(args: Route.LoaderArgs) {
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
@@ -45,7 +44,7 @@ async function loadCriticalData({
   context,
   params,
   request,
-}: LoaderFunctionArgs) {
+}: Route.LoaderArgs) {
   const {handle} = params;
   const {storefront} = context;
 
@@ -77,7 +76,7 @@ async function loadCriticalData({
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-function loadDeferredData({context, params}: LoaderFunctionArgs) {
+function loadDeferredData({context, params}: Route.LoaderArgs) {
   // Put any API calls that is not critical to be available on first page render
   // For example: product reviews, product recommendations, social feeds.
 

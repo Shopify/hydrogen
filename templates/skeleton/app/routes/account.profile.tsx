@@ -3,31 +3,29 @@ import type {CustomerUpdateInput} from '@shopify/hydrogen/customer-account-api-t
 import {CUSTOMER_UPDATE_MUTATION} from '~/graphql/customer-account/CustomerUpdateMutation';
 import {
   data,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
   Form,
   useActionData,
   useNavigation,
   useOutletContext,
-  type MetaFunction,
 } from 'react-router';
+import type {Route} from './+types/account.profile';
 
 export type ActionResponse = {
   error: string | null;
   customer: CustomerFragment | null;
 };
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: 'Profile'}];
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
-  await context.customerAccount.handleAuthStatus();
+export async function loader({context}: Route.LoaderArgs) {
+  context.customerAccount.handleAuthStatus();
 
   return {};
 }
 
-export async function action({request, context}: ActionFunctionArgs) {
+export async function action({request, context}: Route.ActionArgs) {
   const {customerAccount} = context;
 
   if (request.method !== 'PUT') {

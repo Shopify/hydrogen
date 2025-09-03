@@ -2,25 +2,16 @@
   "include": [
     "env.d.ts",
     "app/**/*.ts",
-    "app/**/*.tsx", 
+    "app/**/*.tsx",
     "app/**/*.d.ts",
     "*.ts",
     "*.tsx",
     "*.d.ts",
     ".react-router/types/**/*"
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "packages/**/dist/**/*"
-  ],
+  "exclude": ["node_modules", "dist", "build", "packages/**/dist/**/*"],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ES2022"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "isolatedModules": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
@@ -40,13 +31,12 @@
       "vite/client"
     ],
     "paths": {
-      "~/*": [
-        "app/*"
-      ]
+      "~/*": ["app/*"]
     },
     "noEmit": true,
     "rootDirs": [".", "./.react-router/types"],
     "incremental": true,
-    "composite": false
+    "composite": false,
+    "verbatimModuleSyntax": true
   }
 }

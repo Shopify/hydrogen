@@ -1,9 +1,7 @@
 import {
-  type LoaderFunctionArgs,
-  type ActionFunctionArgs,
   useLoaderData,
-  type MetaFunction,
 } from 'react-router';
+import type {Route} from './+types/search';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {SearchForm} from '~/components/SearchForm';
 import {SearchResults} from '~/components/SearchResults';
@@ -14,11 +12,11 @@ import {
 } from '~/lib/search';
 import type {RegularSearchQuery, PredictiveSearchQuery} from 'storefrontapi.generated';
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: `Hydrogen | Search`}];
 };
 
-export async function loader({request, context}: LoaderFunctionArgs) {
+export async function loader({request, context}: Route.LoaderArgs) {
   const url = new URL(request.url);
   const isPredictive = url.searchParams.has('predictive');
   const searchPromise: Promise<PredictiveSearchReturn | RegularSearchReturn> =
@@ -218,7 +216,7 @@ async function regularSearch({
   request,
   context,
 }: Pick<
-  LoaderFunctionArgs,
+  Route.LoaderArgs,
   'request' | 'context'
 >): Promise<RegularSearchReturn> {
   const {storefront} = context;
@@ -379,7 +377,7 @@ async function predictiveSearch({
   request,
   context,
 }: Pick<
-  ActionFunctionArgs,
+  Route.ActionArgs,
   'request' | 'context'
 >): Promise<PredictiveSearchReturn> {
   const {storefront} = context;

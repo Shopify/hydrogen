@@ -1,8 +1,8 @@
-import {type LoaderFunctionArgs} from 'react-router';
 import {useLoaderData, Link} from 'react-router';
+import type {Route} from './+types/policies._index';
 import type {PoliciesQuery, PolicyItemFragment} from 'storefrontapi.generated';
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   const data: PoliciesQuery = await context.storefront.query(POLICIES_QUERY);
   
   const shopPolicies = data.shop;
