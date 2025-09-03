@@ -2,9 +2,28 @@
 // Note: This is not a public API in Remix and may change at any time.
 
 import http from 'node:http';
-import type {AssetsManifest} from '@remix-run/dev';
-import type {Result as RemixBuildResult} from '@remix-run/dev/dist/result.js';
-import type {Context as RemixContext} from '@remix-run/dev/dist/compiler/context.js';
+// TODO: Import from @react-router/dev when available
+type AssetsManifest = {
+  version: string;
+  url?: string;
+  entry: {
+    module: string;
+    imports: string[];
+  };
+  routes: Record<
+    string,
+    {
+      id: string;
+      path?: string;
+      file: string;
+      imports?: string[];
+    }
+  >;
+};
+// @ts-ignore - internal API
+import type {Result as RemixBuildResult} from '@react-router/dev/dist/result.js';
+// @ts-ignore - internal API
+import type {Context as RemixContext} from '@react-router/dev/dist/compiler/context.js';
 import {handleRemixImportFail} from './remix-config.js';
 import {importLocal} from './import-utils.js';
 
@@ -18,28 +37,32 @@ type LiveReloadState = {
 export async function setupLiveReload(devServerPort: number, root: string) {
   try {
     type RemixHmr =
-      typeof import('@remix-run/dev/dist/devServer_unstable/hmr.js');
+      // @ts-ignore - internal API
+      typeof import('@react-router/dev/dist/devServer_unstable/hmr.js');
     type RemixSocket =
-      typeof import('@remix-run/dev/dist/devServer_unstable/socket.js');
+      // @ts-ignore - internal API
+      typeof import('@react-router/dev/dist/devServer_unstable/socket.js');
     type RemixHdr =
-      typeof import('@remix-run/dev/dist/devServer_unstable/hdr.js');
-    type RemixResult = typeof import('@remix-run/dev/dist/result.js');
+      // @ts-ignore - internal API
+      typeof import('@react-router/dev/dist/devServer_unstable/hdr.js');
+    // @ts-ignore - internal API
+    type RemixResult = typeof import('@react-router/dev/dist/result.js');
 
     const [{updates: hmrUpdates}, {serve}, {detectLoaderChanges}, {ok, err}] =
       await Promise.all([
         importLocal<RemixHmr>(
-          '@remix-run/dev/dist/devServer_unstable/hmr.js',
+          '@react-router/dev/dist/devServer_unstable/hmr.js',
           root,
         ),
         importLocal<RemixSocket>(
-          '@remix-run/dev/dist/devServer_unstable/socket.js',
+          '@react-router/dev/dist/devServer_unstable/socket.js',
           root,
         ),
         importLocal<RemixHdr>(
-          '@remix-run/dev/dist/devServer_unstable/hdr.js',
+          '@react-router/dev/dist/devServer_unstable/hdr.js',
           root,
         ),
-        importLocal<RemixResult>('@remix-run/dev/dist/result.js', root),
+        importLocal<RemixResult>('@react-router/dev/dist/result.js', root),
       ]).catch(handleRemixImportFail);
 
     const state: LiveReloadState = {};

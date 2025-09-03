@@ -28,7 +28,7 @@ import {
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {displayDevUpgradeNotice} from './upgrade.js';
-import {prepareDiffDirectory} from '../../lib/template-diff.js';
+import {checkReactRouterVersions} from '../../lib/react-router-version-check.js';
 import {
   getDebugBannerLine,
   startTunnelAndPushConfig,
@@ -84,7 +84,6 @@ export default class Dev extends Command {
       default: false,
       required: false,
     }),
-    ...commonFlags.diff,
     ...commonFlags.customerAccountPush,
     ...commonFlags.verbose,
     host: Flags.boolean({
@@ -102,15 +101,7 @@ export default class Dev extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Dev);
-    const originalDirectory = flags.path
-      ? resolvePath(flags.path)
-      : process.cwd();
-
-    const diff = flags.diff
-      ? await prepareDiffDirectory(originalDirectory, true)
-      : undefined;
-
-    const directory = diff?.targetDirectory ?? originalDirectory;
+    const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
     const devParams = {
       ...flagsToCamelObject(flags),
@@ -128,11 +119,6 @@ export default class Dev extends Command {
 
     setupResourceCleanup(async () => {
       await close();
-
-      if (diff) {
-        await diff.copyShopifyConfig();
-        await diff.cleanup();
-      }
     });
   }
 }
