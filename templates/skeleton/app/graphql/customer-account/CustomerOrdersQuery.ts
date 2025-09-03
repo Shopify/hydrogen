@@ -14,6 +14,7 @@ export const ORDER_ITEM_FRAGMENT = `#graphql
     }
     id
     number
+    confirmationNumber
     processedAt
   }
 ` as const;

@@ -1,5 +1,11 @@
-import {Link, useLoaderData, useSearchParams} from 'react-router';
+import {
+  Link,
+  useLoaderData,
+  useNavigation,
+  useSearchParams,
+} from 'react-router';
 import type {Route} from './+types/account.orders._index';
+import {useRef} from 'react';
 import {
   Money,
   getPaginationVariables,
@@ -116,6 +122,11 @@ function OrderSearchForm({
   currentFilters: OrderFilterParams;
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigation = useNavigation();
+  const isSearching =
+    navigation.state !== 'idle' &&
+    navigation.location?.pathname?.includes('orders');
+  const formRef = useRef<HTMLFormElement>(null);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -139,25 +150,13 @@ function OrderSearchForm({
 
   return (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
       className="order-search-form"
       aria-label="Search orders"
     >
       <fieldset className="order-search-fieldset">
-        <legend className="order-search-legend">
-          Filter Orders
-          {hasFilters && (
-            <small className="order-search-active">
-              (
-              {
-                [currentFilters.name, currentFilters.confirmationNumber].filter(
-                  Boolean,
-                ).length
-              }{' '}
-              active)
-            </small>
-          )}
-        </legend>
+        <legend className="order-search-legend">Filter Orders</legend>
 
         <div className="order-search-inputs">
           <input
@@ -179,11 +178,17 @@ function OrderSearchForm({
         </div>
 
         <div className="order-search-buttons">
-          <button type="submit">Search</button>
+          <button type="submit" disabled={isSearching}>
+            {isSearching ? 'Searching' : 'Search'}
+          </button>
           {hasFilters && (
             <button
               type="button"
-              onClick={() => setSearchParams(new URLSearchParams())}
+              disabled={isSearching}
+              onClick={() => {
+                setSearchParams(new URLSearchParams());
+                formRef.current?.reset();
+              }}
             >
               Clear
             </button>
@@ -203,6 +208,9 @@ function OrderItem({order}: {order: OrderItemFragment}) {
           <strong>#{order.number}</strong>
         </Link>
         <p>{new Date(order.processedAt).toDateString()}</p>
+        {order.confirmationNumber && (
+          <p>Confirmation: {order.confirmationNumber}</p>
+        )}
         <p>{order.financialStatus}</p>
         {fulfillmentStatus && <p>{fulfillmentStatus}</p>}
         <Money data={order.totalPrice} />
