@@ -6,7 +6,6 @@ import {Flags} from '@oclif/core';
 import {getProjectPaths, getRemixConfig} from '../../lib/remix-config.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {codegen} from '../../lib/codegen.js';
-import {prepareDiffDirectory} from '../../lib/template-diff.js';
 
 export default class Codegen extends Command {
   static descriptionWithMarkdown =
@@ -32,30 +31,16 @@ export default class Codegen extends Command {
       required: false,
       default: false,
     }),
-    ...commonFlags.diff,
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Codegen);
-    const originalDirectory = flags.path
-      ? resolvePath(flags.path)
-      : process.cwd();
-
-    const diff = flags.diff
-      ? await prepareDiffDirectory(originalDirectory, flags.watch)
-      : undefined;
-
-    const directory = diff?.targetDirectory ?? originalDirectory;
+    const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
     await runCodegen({
       ...flagsToCamelObject(flags),
       directory,
     });
-
-    if (diff) {
-      await diff.copyDiffCodegen();
-      await diff.cleanup();
-    }
   }
 }
 

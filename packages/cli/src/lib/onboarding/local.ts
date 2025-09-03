@@ -35,6 +35,8 @@ import {replaceFileContent} from '../file.js';
 import {setStorefront, setUserAccount} from '../shopify-config.js';
 import {ALIAS_NAME, getCliCommand} from '../shell.js';
 import {CSS_STRATEGY_NAME_MAP} from '../setups/css/index.js';
+import {execAsync} from '../process.js';
+import {outputWarn} from '@shopify/cli-kit/node/output';
 
 /**
  * Flow for setting up a project from the locally bundled starter template (skeleton).
@@ -255,6 +257,20 @@ export async function setupLocalStarterTemplate(
       try {
         await installDeps();
         setupSummary.depsInstalled = true;
+
+        // Run React Router typegen for TypeScript projects
+        if (language === 'ts') {
+          try {
+            await execAsync('npx react-router typegen', {
+              cwd: project.directory,
+            });
+          } catch (error) {
+            // Typegen is not critical for project setup, so we don't fail the whole process
+            outputWarn(
+              'Failed to generate React Router types. You may need to run `npx react-router typegen` manually.',
+            );
+          }
+        }
       } catch (error) {
         setupSummary.depsError = error as AbortError;
       }
@@ -347,8 +363,23 @@ export async function setupLocalStarterTemplate(
         // E.g. CSS imports might have been added to the root.
         overwriteFileDeps: false,
       })
-        .then((routes) => {
+        .then(async (routes) => {
           setupSummary.routes = routes;
+
+          // Run React Router typegen after routes are generated for TypeScript projects
+          // (only if dependencies were already installed)
+          if (language === 'ts' && setupSummary.depsInstalled) {
+            try {
+              await execAsync('npx react-router typegen', {
+                cwd: project.directory,
+              });
+            } catch (error) {
+              // Typegen is not critical for project setup, so we don't fail the whole process
+              outputWarn(
+                'Failed to generate React Router types after route generation. You may need to run `npx react-router typegen` manually.',
+              );
+            }
+          }
 
           if (options.git && routes) {
             return commitAll(

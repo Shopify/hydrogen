@@ -55,7 +55,6 @@ import {
   getViteConfig,
   REMIX_COMPILER_ERROR_MESSAGE,
 } from '../../lib/vite-config.js';
-import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {getProjectPaths, isClassicProject} from '../../lib/remix-config.js';
 import {packageManagers} from '../../lib/package-managers.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
@@ -161,7 +160,6 @@ export default class Deploy extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_VERSION',
       hidden: true,
     }),
-    ...commonFlags.diff,
     'force-client-sourcemap': Flags.boolean({
       description:
         'Client sourcemapping is avoided by default because it makes backend code visible in the browser. Use this flag to force enabling it.',
@@ -172,12 +170,6 @@ export default class Deploy extends Command {
   async run() {
     const {flags} = await this.parse(Deploy);
     const deploymentOptions = this.flagsToOxygenDeploymentOptions(flags);
-
-    if (flags.diff) {
-      const diff = await prepareDiffDirectory(deploymentOptions.path, false);
-      deploymentOptions.path = diff.targetDirectory;
-      setupResourceCleanup(diff.cleanup);
-    }
 
     await runDeploy(deploymentOptions);
 
