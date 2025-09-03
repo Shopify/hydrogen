@@ -3,8 +3,8 @@ import type {CartLayout} from '~/components/CartMain';
 import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
 import {Link} from 'react-router';
-import {ProductPrice} from '~/components/ProductPrice';
-import {useAside} from '~/components/Aside';
+import {ProductPrice} from './ProductPrice';
+import {useAside} from './Aside';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 
 type CartLine = OptimisticCartLine<CartApiQueryFragment>;
@@ -85,17 +85,8 @@ export function CartLineItem({
 function CartLineQuantity({line}: {line: CartLine}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity, isOptimistic} = line;
-
-  /***********************************************/
-  /**********  EXAMPLE UPDATE STARTS  ************/
-  const {increment, minimum, maximum} = line.merchandise.quantityRule;
-  const nextIncrement = increment - (quantity % increment);
-  const prevIncrement =
-    quantity % increment === 0 ? increment : quantity % increment;
-  const prevQuantity = Number(Math.max(0, quantity - prevIncrement).toFixed(0));
-  const nextQuantity = Number((quantity + nextIncrement).toFixed(0));
-  /**********   EXAMPLE UPDATE END   ************/
-  /***********************************************/
+  const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
+  const nextQuantity = Number((quantity + 1).toFixed(0));
 
   return (
     <div className="cart-line-quantity">
@@ -103,11 +94,7 @@ function CartLineQuantity({line}: {line: CartLine}) {
       <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
         <button
           aria-label="Decrease quantity"
-          /***********************************************/
-          /**********  EXAMPLE UPDATE STARTS  ************/
-          disabled={prevQuantity < minimum || !!isOptimistic}
-          /**********   EXAMPLE UPDATE END   ************/
-          /***********************************************/
+          disabled={quantity <= 1 || !!isOptimistic}
           name="decrease-quantity"
           value={prevQuantity}
         >
@@ -120,13 +107,7 @@ function CartLineQuantity({line}: {line: CartLine}) {
           aria-label="Increase quantity"
           name="increase-quantity"
           value={nextQuantity}
-          /***********************************************/
-          /**********  EXAMPLE UPDATE STARTS  ************/
-          disabled={Boolean(
-            (maximum && nextQuantity > maximum) || !!isOptimistic,
-          )}
-          /**********   EXAMPLE UPDATE END   ************/
-          /***********************************************/
+          disabled={!!isOptimistic}
         >
           <span>&#43;</span>
         </button>
@@ -151,6 +132,7 @@ function CartLineRemoveButton({
 }) {
   return (
     <CartForm
+      fetcherKey={getUpdateKey(lineIds)}
       route="/cart"
       action={CartForm.ACTIONS.LinesRemove}
       inputs={{lineIds}}
@@ -169,8 +151,11 @@ function CartLineUpdateButton({
   children: React.ReactNode;
   lines: CartLineUpdateInput[];
 }) {
+  const lineIds = lines.map((line) => line.id);
+
   return (
     <CartForm
+      fetcherKey={getUpdateKey(lineIds)}
       route="/cart"
       action={CartForm.ACTIONS.LinesUpdate}
       inputs={{lines}}
@@ -178,4 +163,15 @@ function CartLineUpdateButton({
       {children}
     </CartForm>
   );
+}
+
+/**
+ * Returns a unique key for the update action. This is used to make sure actions modifying the same line
+ * items are not run concurrently, but cancel each other. For example, if the user clicks "Increase quantity"
+ * and "Decrease quantity" in rapid succession, the actions will cancel each other and only the last one will run.
+ * @param lineIds - line ids affected by the update
+ * @returns
+ */
+function getUpdateKey(lineIds: string[]) {
+  return [CartForm.ACTIONS.LinesUpdate, ...lineIds].join('-');
 }
