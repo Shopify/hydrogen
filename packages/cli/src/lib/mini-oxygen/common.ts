@@ -24,9 +24,13 @@ export function logRequestLine({
   request,
   response,
   meta,
-}: RequestHookInfo): void {
+}: RequestHookInfo): void | Promise<void> {
   try {
     const url = new URL(request.url);
+    // Calculate durationMs if not provided
+    if (!meta.durationMs && meta.startTimeMs && meta.endTimeMs) {
+      meta.durationMs = meta.endTimeMs - meta.startTimeMs;
+    }
     if (DEV_ROUTES.has(url.pathname) || url.pathname === '/favicon.ico') return;
 
     const isDataRequest = url.searchParams.has('_data');
@@ -52,10 +56,12 @@ export function logRequestLine({
       outputContent`${request.method.padStart(6)}  ${colorizeStatus(
         String(response.status),
       )}  ${outputToken.italic(type.padEnd(7, ' '))} ${route} ${
-        meta.durationMs > 0 ? colors.dim(` ${meta.durationMs}ms`) : ''
+        meta.durationMs && meta.durationMs > 0
+          ? colors.dim(` ${meta.durationMs}ms`)
+          : ''
       }${info ? '  ' + colors.dim(info) : ''}${
-        request.headers['purpose'] === 'prefetch'
-          ? outputToken.italic(colors.dim('  prefetch'))
+        request.headers.purpose === 'prefetch'
+          ? colors.italic(colors.dim('  prefetch'))
           : ''
       }`,
     );

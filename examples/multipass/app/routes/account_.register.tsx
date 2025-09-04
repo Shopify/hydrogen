@@ -1,13 +1,5 @@
-import {
-  Form,
-  Link,
-  useActionData,
-  data,
-  HeadersFunction,
-  redirect,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
-} from 'react-router';
+import {Form, Link, useActionData, data, redirect} from 'react-router';
+import type {Route} from './+types/account_.register';
 import type {CustomerCreateMutation} from 'storefrontapi.generated';
 
 type ActionResponse = {
@@ -17,9 +9,9 @@ type ActionResponse = {
     | null;
 };
 
-export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
+export const headers: Route.HeadersFunction = ({actionHeaders}) => actionHeaders;
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
   if (customerAccessToken) {
     return redirect('/account');
@@ -28,7 +20,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   return {};
 }
 
-export async function action({request, context}: ActionFunctionArgs) {
+export async function action({request, context}: Route.ActionArgs) {
   if (request.method !== 'POST') {
     return data({error: 'Method not allowed'}, {status: 405});
   }

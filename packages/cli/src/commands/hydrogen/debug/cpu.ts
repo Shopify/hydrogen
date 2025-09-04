@@ -8,7 +8,6 @@ import ansiEscapes from 'ansi-escapes';
 import {getProjectPaths, isClassicProject} from '../../../lib/remix-config.js';
 import {muteDevLogs} from '../../../lib/log.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
-import {prepareDiffDirectory} from '../../../lib/template-diff.js';
 import {setupResourceCleanup} from '../../../lib/resource-cleanup.js';
 import {createCpuStartupProfiler} from '../../../lib/cpu-profiler.js';
 import {runBuild} from '../build.js';
@@ -28,7 +27,6 @@ export default class DebugCpu extends Command {
   static description = 'Builds and profiles the server startup time the app.';
   static flags = {
     ...commonFlags.path,
-    ...commonFlags.diff,
     ...commonFlags.entry,
     output: Flags.string({
       description: `Specify a path to generate the profile file. Defaults to "${DEFAULT_OUTPUT_PATH}".`,
@@ -39,23 +37,16 @@ export default class DebugCpu extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(DebugCpu);
-    const originalDirectory = flags.path
-      ? resolvePath(flags.path)
-      : process.cwd();
-
-    const diff = flags.diff
-      ? await prepareDiffDirectory(originalDirectory, true)
-      : undefined;
+    const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
     const {close} = await runDebugCpu({
       ...flagsToCamelObject(flags),
-      directory: diff?.targetDirectory ?? originalDirectory,
-      output: resolvePath(originalDirectory, flags.output),
+      directory,
+      output: resolvePath(directory, flags.output),
     });
 
     setupResourceCleanup(async () => {
       await close();
-      await diff?.cleanup();
     });
   }
 }

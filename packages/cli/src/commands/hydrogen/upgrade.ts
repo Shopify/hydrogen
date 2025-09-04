@@ -1136,6 +1136,14 @@ export async function displayDevUpgradeNotice({
       appPath,
     });
 
+    // Skip file: dependencies or other non-semver versions
+    if (
+      currentVersion.startsWith('file:') ||
+      currentVersion.startsWith('link:')
+    ) {
+      return;
+    }
+
     const isPrerelease = semver.prerelease(currentVersion);
 
     if (isPrerelease || /^[a-z]+$/i.test(currentVersion)) {

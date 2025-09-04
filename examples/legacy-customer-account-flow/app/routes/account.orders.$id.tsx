@@ -1,18 +1,16 @@
-import {
-  Link,
-  useLoaderData,
-  redirect,
-  type LoaderFunctionArgs,
-  type MetaFunction,
-} from 'react-router';
+import {Link, useLoaderData, redirect} from 'react-router';
+import type {Route} from './+types/account.orders.$id';
 import {Money, Image, flattenConnection} from '@shopify/hydrogen';
-import type {OrderLineItemFullFragment} from 'storefrontapi.generated';
+import type {
+  OrderLineItemFullFragment,
+  DiscountApplicationFragment,
+} from 'storefrontapi.generated';
 
-export const meta: MetaFunction<typeof loader> = ({data}) => {
+export const meta: Route.MetaFunction = ({data}) => {
   return [{title: `Order ${data?.order?.name}`}];
 };
 
-export async function loader({params, context}: LoaderFunctionArgs) {
+export async function loader({params, context}: Route.LoaderArgs) {
   const {session, storefront} = context;
 
   if (!params.id) {
@@ -34,17 +32,20 @@ export async function loader({params, context}: LoaderFunctionArgs) {
     throw new Response('Order not found', {status: 404});
   }
 
-  const lineItems = flattenConnection(order.lineItems);
-  const discountApplications = flattenConnection(order.discountApplications);
+  const lineItems = flattenConnection(order.lineItems) as OrderLineItemFullFragment[];
+  const discountApplications = flattenConnection(order.discountApplications) as DiscountApplicationFragment[];
 
-  const firstDiscount = discountApplications[0]?.value;
-
+  const firstDiscount = discountApplications[0];
+  
   const discountValue =
-    firstDiscount?.__typename === 'MoneyV2' && firstDiscount;
+    firstDiscount?.value?.__typename === 'MoneyV2' 
+      ? firstDiscount.value 
+      : null;
 
   const discountPercentage =
-    firstDiscount?.__typename === 'PricingPercentageValue' &&
-    firstDiscount?.percentage;
+    firstDiscount?.value?.__typename === 'PricingPercentageValue'
+      ? firstDiscount.value.percentage
+      : null;
 
   return {
     order,

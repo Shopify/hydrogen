@@ -165,6 +165,7 @@ export function getPublicTokenHeadersRaw(
   'X-SDK-Variant-Source': string;
   'X-SDK-Version': string;
   'X-Shopify-Storefront-Access-Token': string;
+  [key: string]: string; // Allow additional string properties
 } {
   return {
     // default to json

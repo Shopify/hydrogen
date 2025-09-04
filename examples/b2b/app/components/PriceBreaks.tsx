@@ -1,5 +1,5 @@
 import {Money} from '@shopify/hydrogen';
-import {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
+import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
 
 type PriceBreak = {
   minimumQuantity: number;
@@ -24,7 +24,7 @@ export function PriceBreaks({priceBreaks}: PriceBreaksProps) {
         <tbody>
           {priceBreaks.map((priceBreak, index) => {
             return (
-              <tr key={index}>
+              <tr key={`price-break-${priceBreak.minimumQuantity}`}>
                 <th className="table-item">{priceBreak.minimumQuantity}</th>
                 <th className="table-item">
                   <Money data={priceBreak.price} />

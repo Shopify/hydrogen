@@ -50,7 +50,7 @@
     "body-parser": "1.20.3",
     "connect": "^3.7.0",
     "get-port": "^7.1.0",
-    "miniflare": "^4.20250617.1",
+    "miniflare": "3.20250310.1",
     "mrmime": "2.0.0",
     "source-map": "^0.7.4",
     "source-map-support": "^0.5.21",

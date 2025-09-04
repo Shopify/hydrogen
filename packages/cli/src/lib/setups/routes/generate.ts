@@ -393,6 +393,12 @@ async function findRouteDependencies(
         relativePath(dirname(filePath), appDirectory) || '.',
       );
 
+      // Skip attempting to resolve React Router 7.8.x generated type imports
+      // These are virtual imports that will be generated post-scaffolding
+      if (match.includes('/+types/')) {
+        continue;
+      }
+
       // Resolve extensionless imports to their JS/TS extension
       const resolvedMatchPath = resolvePath(dirname(filePath), match);
       const absoluteFilepath =

@@ -28,8 +28,8 @@ npm create @shopify/hydrogen@latest -- --template metaobjects
 
 ## Key files
 
-This folder contains the minimal set of files needed to showcase the implementation.
-Files that aren’t included by default with Hydrogen and that you’ll need to
+This example demonstrates how to use metaobjects as a CMS for Hydrogen.
+Files that aren't included by default with Hydrogen and that you'll need to
 create are labeled with 🆕.
 
 | File                                                                                      | Description                                                                                                                              |

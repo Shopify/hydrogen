@@ -60,14 +60,6 @@
           "multiple": false,
           "type": "option"
         },
-        "diff": {
-          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
-          "hidden": true,
-          "name": "diff",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
-        },
         "watch": {
           "description": "Watches for changes and rebuilds the project writing output to disk.",
           "env": "SHOPIFY_HYDROGEN_FLAG_WATCH",
@@ -181,14 +173,6 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
-        },
-        "diff": {
-          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
-          "hidden": true,
-          "name": "diff",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
@@ -280,14 +264,6 @@
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
-        },
-        "diff": {
-          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
-          "hidden": true,
-          "name": "diff",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
         },
         "entry": {
           "description": "Entry file for the worker. Defaults to `./server`.",
@@ -496,14 +472,6 @@
           "multiple": false,
           "type": "option"
         },
-        "diff": {
-          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
-          "hidden": true,
-          "name": "diff",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
-        },
         "force-client-sourcemap": {
           "description": "Client sourcemapping is avoided by default because it makes backend code visible in the browser. Use this flag to force enabling it.",
           "env": "SHOPIFY_HYDROGEN_FLAG_FORCE_CLIENT_SOURCEMAP",
@@ -633,14 +601,6 @@
         "disable-version-check": {
           "description": "Skip the version check when running `hydrogen dev`",
           "name": "disable-version-check",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
-        },
-        "diff": {
-          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
-          "hidden": true,
-          "name": "diff",
           "required": false,
           "allowNo": false,
           "type": "boolean"
@@ -1412,17 +1372,6 @@
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
-        },
-        "diff": {
-          "dependsOn": [
-            "build"
-          ],
-          "description": "Applies the current files on top of Hydrogen's starter template in a temporary directory.",
-          "hidden": true,
-          "name": "diff",
-          "required": false,
-          "allowNo": false,
-          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,

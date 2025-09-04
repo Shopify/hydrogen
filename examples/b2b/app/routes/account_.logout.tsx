@@ -1,11 +1,12 @@
-import {redirect, type ActionFunctionArgs} from '@shopify/remix-oxygen';
+import {redirect} from '@shopify/remix-oxygen';
+import type {Route} from './+types/account_.logout';
 
 // if we don't implement this, /account/logout will get caught by account.$.tsx to do login
 export async function loader() {
   return redirect('/');
 }
 
-export async function action({context}: ActionFunctionArgs) {
+export async function action({context}: Route.ActionArgs) {
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
   await context.cart.updateBuyerIdentity({

@@ -629,11 +629,11 @@
           K = (e) => d.createTextNode(e),
           rt = (e) => {
             let t = d.createElement('code');
-            return (t.textContent = e), t;
+            return ((t.textContent = e), t);
           },
           Me = (e, t) => {
             let r = d.createElement('span');
-            return (r.className = e), (r.textContent = t), r;
+            return ((r.className = e), (r.textContent = t), r);
           },
           Ue = (e, t) => {
             let r = e.split('/');
@@ -663,9 +663,9 @@
             let r = e.split('/'),
               s = t === '.' ? [] : t.split('/'),
               n = 0;
-            for (; n < s.length && r[0] === s[n]; ) r.shift(), n++;
+            for (; n < s.length && r[0] === s[n]; ) (r.shift(), n++);
             if (n === s.length) r.unshift('.');
-            else for (; n < s.length; ) r.unshift('..'), n++;
+            else for (; n < s.length; ) (r.unshift('..'), n++);
             return r.join('/');
           },
           Nt = (e) => {
@@ -711,34 +711,34 @@
           Ot = (e) => {
             if (e.length === 1) {
               let t = new FileReader();
-              (t.onload = () => De(t.result)), t.readAsText(e[0]);
+              ((t.onload = () => De(t.result)), t.readAsText(e[0]));
             }
           };
         d.ondragover = (e) => {
           e.preventDefault();
         };
         d.ondragenter = (e) => {
-          e.preventDefault(), It(e) && ((it.style.display = 'block'), ot++);
+          (e.preventDefault(), It(e) && ((it.style.display = 'block'), ot++));
         };
         d.ondragleave = (e) => {
-          e.preventDefault(),
-            It(e) && --ot === 0 && (it.style.display = 'none');
+          (e.preventDefault(),
+            It(e) && --ot === 0 && (it.style.display = 'none'));
         };
         d.ondrop = (e) => {
-          e.preventDefault(),
+          (e.preventDefault(),
             (it.style.display = 'none'),
             (ot = 0),
-            e.dataTransfer && e.dataTransfer.files && Ot(e.dataTransfer.files);
+            e.dataTransfer && e.dataTransfer.files && Ot(e.dataTransfer.files));
         };
         qt.onclick = function () {
           nt && d.body.removeChild(nt);
           let e = d.createElement('input');
-          (e.type = 'file'),
+          ((e.type = 'file'),
             (e.style.display = 'none'),
             d.body.appendChild(e),
             (nt = e),
             e.click(),
-            (e.onchange = () => e.files && Ot(e.files));
+            (e.onchange = () => e.files && Ot(e.files)));
         };
         d.body.addEventListener('paste', (e) => {
           e.clipboardData &&
@@ -761,10 +761,10 @@
                 o = i.o,
                 m = o[l],
                 p = l + (a + 1 < n ? '/' : '');
-              (u += p),
+              ((u += p),
                 be.call(o, l) || ((m = {n: p, e: u, t: 0, o: {}}), (o[l] = m)),
                 (m.t += r),
-                (i = m);
+                (i = m));
             }
             return n;
           };
@@ -790,7 +790,7 @@
                   l,
                   o,
                   m;
-                (Q = n),
+                ((Q = n),
                   (Q = c.log2(Q)),
                   (Q -= c.floor(Q)),
                   (l = Q),
@@ -809,18 +809,18 @@
                   j.fillRect(0, 0, 64, 64),
                   (j.globalAlpha = 0.67),
                   (j.strokeStyle = i[1]),
-                  j.beginPath();
+                  j.beginPath());
                 for (let p = 0; p <= 64; p += 16)
-                  j.moveTo(p - 32, p + 32), j.lineTo(p + 32, p - 32);
+                  (j.moveTo(p - 32, p + 32), j.lineTo(p + 32, p - 32));
                 if (
                   ((j.lineWidth = m * (1 - (o - l) / 2)), j.stroke(), o + l > 0)
                 ) {
                   j.beginPath();
                   for (let p = 8; p < 64; p += 16)
-                    j.moveTo(p - 32, p + 32), j.lineTo(p + 32, p - 32);
-                  (j.lineWidth = (m * (o + l)) / 2), j.stroke();
+                    (j.moveTo(p - 32, p + 32), j.lineTo(p + 32, p - 32));
+                  ((j.lineWidth = (m * (o + l)) / 2), j.stroke());
                 }
-                (at = e.createPattern(Xe, 'repeat')), (Q /= a);
+                ((at = e.createPattern(Xe, 'repeat')), (Q /= a));
               }
               return (
                 (r /= 64 * Q * u),
@@ -841,7 +841,7 @@
           Ht = (e, t) => {
             if (dt !== e) {
               let r = e.outputs;
-              (dt = e), (st = 0), (Je = {n: '', e: '', t: 0, o: {}});
+              ((dt = e), (st = 0), (Je = {n: '', e: '', t: 0, o: {}}));
               for (let s in r) {
                 if (ye(s)) continue;
                 let i = r[s].inputs;
@@ -865,7 +865,7 @@
             for (let a in i) u.push(i[a]);
             for (let a of u.sort(Ne)) {
               let l = (a.t / n) * s;
-              wt(e, a, r, l), (r += l);
+              (wt(e, a, r, l), (r += l));
             }
           },
           He = Be(3.5),
@@ -885,13 +885,13 @@
             let r = t.o,
               s = 0,
               n = !1;
-            for (let i in r) (s |= Ft(e, r[i])), (n = !0);
+            for (let i in r) ((s |= Ft(e, r[i])), (n = !0));
             if (!n) {
               let i = dt.inputs[t.e],
                 u = i && i.format;
               s = u === 'esm' ? 2 : u === 'cjs' ? 1 : 0;
             }
-            return (e[t.e] = $t(s)), s;
+            return ((e[t.e] = $t(s)), s);
           },
           Oe = d.createElement('div'),
           Zt =
@@ -921,16 +921,16 @@
             for (let g in r) {
               let O = r[g],
                 x = O.format;
-              x === 'esm'
+              (x === 'esm'
                 ? (l += O.bytes)
                 : x === 'cjs'
                   ? (o += O.bytes)
                   : (m += O.bytes),
                 n++,
-                (u += O.bytes);
+                (u += O.bytes));
             }
             for (let g in s) ye(g) || (i++, (a += s[g].bytes));
-            (p = c.round((200 * l) / u)),
+            ((p = c.round((200 * l) / u)),
               (I = c.round((200 * o) / u)),
               (kt.innerHTML =
                 '<table><tr><td><h2>' +
@@ -964,7 +964,7 @@
                     '% ESM</span></a>'
                   : '')),
               (P = kt.querySelector('.formatBreakdown')),
-              P && (P.onclick = t);
+              P && (P.onclick = t));
           };
         var ve = d.createElement('div'),
           _t,
@@ -972,7 +972,7 @@
           qe = null,
           Wt = () => ve.parentElement !== null,
           We = () => {
-            ve.remove(), qe && (qe.focus(), (qe = null));
+            (ve.remove(), qe && (qe.focus(), (qe = null)));
           },
           Qt = (e) => {
             let t = e.inputs,
@@ -985,7 +985,7 @@
               let o = r[l],
                 m = o.entryPoint;
               if (m) {
-                (s[m] = l), i.push(l);
+                ((s[m] = l), i.push(l));
                 for (let p of o.imports)
                   !p.external && !be.call(u, p.path) && (u[p.path] = !0);
               }
@@ -999,7 +999,7 @@
             if (!a.length)
               for (let l of i) {
                 let o = r[l].entryPoint;
-                (n[o] = {e: o, d: void 0, i: 'entry-point'}), a.push(o);
+                ((n[o] = {e: o, d: void 0, i: 'entry-point'}), a.push(o));
               }
             for (; a.length > 0; ) {
               let l = [];
@@ -1019,10 +1019,10 @@
             let s = e.inputs[t],
               n = d.activeElement;
             if (!s) return;
-            (!pt || _t !== e) && ((_t = e), (pt = Qt(e))),
-              Ee && n && n.focus && n.tagName === 'A' && (qe = n);
+            ((!pt || _t !== e) && ((_t = e), (pt = Qt(e))),
+              Ee && n && n.focus && n.tagName === 'A' && (qe = n));
             let i = d.createElement('div');
-            (i.className = 'dialog'),
+            ((i.className = 'dialog'),
               (i.innerHTML =
                 '<h2>' +
                 H(t) +
@@ -1038,9 +1038,9 @@
                     ? '<br>Module format: <b>CommonJS</b>'
                     : '') +
                 '</p>'),
-              el(i, pt, t);
+              el(i, pt, t));
             let u = d.createElement('a');
-            (u.className = 'closeButton'),
+            ((u.className = 'closeButton'),
               (u.href = 'javascript:void 0'),
               (u.onclick = We),
               (u.innerHTML = '&times;'),
@@ -1061,7 +1061,7 @@
                   !a.ctrlKey &&
                   !a.altKey &&
                   (a.preventDefault(), We());
-              });
+              }));
           },
           el = (e, t, r) => {
             let s = t.g,
@@ -1071,7 +1071,7 @@
               let o = s[n];
               if (!o) return;
               if (n === o.e) break;
-              i.push({e: o.e, c: {e: n, d: o.d, i: o.i}}), (n = o.e);
+              (i.push({e: o.e, c: {e: n, d: o.d, i: o.i}}), (n = o.e));
             }
             i.reverse();
             let u = t.h,
@@ -1081,25 +1081,25 @@
             for (let o of i) {
               if (be.call(u, o.e)) {
                 let P = d.createElement('div');
-                (a = d.createElement('div')),
+                ((a = d.createElement('div')),
                   (a.className = 'outputFile'),
                   (P.className = 'outputPath'),
                   (P.textContent = 'Output file '),
                   P.appendChild(rt(u[o.e])),
                   a.appendChild(P),
-                  e.appendChild(a);
+                  e.appendChild(a));
               } else if (!a) return;
               let m = K(l + ' '),
                 p = K(` is included in the bundle.
   `);
-              a.firstChild &&
+              (a.firstChild &&
                 a.appendChild(
                   K(`
   `),
                 ),
                 a.appendChild(m),
                 a.appendChild(rt(o.e)),
-                a.appendChild(p);
+                a.appendChild(p));
               let I = o.c;
               if (I) {
                 let P = I.d || Nt(I.e) || Mt(I.e, xt(o.e)),
@@ -1109,39 +1109,39 @@
                   ((O.className = be.call(u, I.e) ? 'longArrow' : 'arrow'),
                   I.i === 'import-statement')
                 )
-                  g.appendChild(Me('keyword', 'import ')),
+                  (g.appendChild(Me('keyword', 'import ')),
                     g.appendChild(Me('string', JSON.stringify(P))),
                     g.appendChild(K(';')),
-                    (l = 'Imported file');
+                    (l = 'Imported file'));
                 else if (I.i === 'require-call')
-                  g.appendChild(K('require(')),
+                  (g.appendChild(K('require(')),
                     g.appendChild(Me('string', JSON.stringify(P))),
                     g.appendChild(K(');')),
-                    (l = 'Required file');
+                    (l = 'Required file'));
                 else if (I.i === 'dynamic-import')
-                  g.appendChild(K('import(')),
+                  (g.appendChild(K('import(')),
                     g.appendChild(Me('string', JSON.stringify(P))),
                     g.appendChild(K(');')),
-                    (l = 'Dynamically-imported file');
+                    (l = 'Dynamically-imported file'));
                 else if (I.i === 'import-rule')
-                  g.appendChild(K('@import ')),
+                  (g.appendChild(K('@import ')),
                     g.appendChild(Me('string', JSON.stringify(P))),
                     g.appendChild(K(';')),
-                    (l = 'Imported stylesheet');
+                    (l = 'Imported stylesheet'));
                 else if (I.i === 'url-token')
-                  g.appendChild(K('url(')),
+                  (g.appendChild(K('url(')),
                     g.appendChild(Me('string', JSON.stringify(P))),
                     g.appendChild(K(')')),
-                    (l = 'URL reference');
+                    (l = 'URL reference'));
                 else return;
-                (p.textContent = ` contains:
+                ((p.textContent = ` contains:
   `),
                   g.appendChild(O),
                   g.appendChild(
                     K(`
   `),
                   ),
-                  a.appendChild(g);
+                  a.appendChild(g));
               } else m.textContent = 'So ' + m.textContent.toLowerCase();
             }
           };
@@ -1166,7 +1166,7 @@
                 let o = 0;
                 for (let m of a.l) {
                   let p = i(m, l + 1);
-                  (m.r = a), p > o && (o = p);
+                  ((m.r = a), p > o && (o = p));
                 }
                 return o + 1;
               };
@@ -1188,7 +1188,7 @@
             ft(e, s, r);
             for (let u of s.l) {
               if (u === t) {
-                (r.u += (r.s * i) / n), (r.s = (u.t / n) * r.s);
+                ((r.u += (r.s * i) / n), (r.s = (u.t / n) * r.s));
                 break;
               }
               i += u.t;
@@ -1215,7 +1215,7 @@
                   U = () => {
                     let f = 2 * c.ceil(ke(s.f)),
                       C = B.devicePixelRatio || 1;
-                    (w = c.min(c.round(innerWidth * 0.4), f)),
+                    ((w = c.min(c.round(innerWidth * 0.4), f)),
                       (z = w),
                       (W = w >> 1),
                       (A = z >> 1),
@@ -1224,7 +1224,7 @@
                       (O.width = c.round(w * C)),
                       (O.height = c.round(z * C)),
                       x.scale(C, C),
-                      pe();
+                      pe());
                   },
                   he = (f, C, N, L, se, $, D) => {
                     let q = ke(C + 1);
@@ -1235,7 +1235,7 @@
                     if (te - D < 1.5 / de) return D;
                     let X = 2 / de;
                     if ((se > X && (X = se), $ & 2))
-                      (x.fillStyle = Ve(x, f.e, W, A, 1)),
+                      ((x.fillStyle = Ve(x, f.e, W, A, 1)),
                         x.beginPath(),
                         x.arc(W, A, N, L, L + X, !1),
                         x.arc(W, A, q, L + X, L, !0),
@@ -1243,22 +1243,22 @@
                         i &&
                           ($ & 8 || f.r === i) &&
                           ((x.fillStyle = 'rgba(255, 255, 255, 0.3)'),
-                          x.fill());
+                          x.fill()));
                     else {
                       let ce = X === c.PI * 2,
                         Tt = $ & 4 || ce ? q : N;
-                      $ & 1 && N > 0 && x.arc(W, A, N, L + X, L, !0),
+                      ($ & 1 && N > 0 && x.arc(W, A, N, L + X, L, !0),
                         x.moveTo(W + Tt * c.cos(L), A + Tt * c.sin(L)),
                         x.arc(W, A, q, L, L + X, !1),
                         ce ||
-                          x.lineTo(W + N * c.cos(L + X), A + N * c.sin(L + X));
+                          x.lineTo(W + N * c.cos(L + X), A + N * c.sin(L + X)));
                     }
                     let me = f.t,
                       ge = $ & 10,
                       Te = 0,
                       ne = -1 / 0;
                     for (let ce of f.l)
-                      (ne = he(
+                      ((ne = he(
                         ce,
                         C + 1,
                         q,
@@ -1268,11 +1268,11 @@
                         ne,
                       )),
                         (Te += ce.t),
-                        (ge |= 4);
+                        (ge |= 4));
                     return te;
                   },
                   pe = () => {
-                    x.clearRect(0, 0, w, z),
+                    (x.clearRect(0, 0, w, z),
                       he(F, G, ke(G), J, re, 3, -1 / 0),
                       (x.strokeStyle = '#222'),
                       x.beginPath(),
@@ -1283,7 +1283,7 @@
                         (x.font = 'bold 16px sans-serif'),
                         (x.textAlign = 'center'),
                         (x.textBaseline = 'middle'),
-                        x.fillText(le(S.t), W, A));
+                        x.fillText(le(S.t), W, A)));
                   },
                   ee = -c.PI / 2,
                   w = 0,
@@ -1335,15 +1335,15 @@
                       N = f.pageX,
                       L = f.pageY;
                     for (let D = O; D; D = D.offsetParent)
-                      (N -= D.offsetLeft), (L -= D.offsetTop);
-                    (N -= W), (L -= A);
+                      ((N -= D.offsetLeft), (L -= D.offsetTop));
+                    ((N -= W), (L -= A));
                     let se = c.sqrt(N * N + L * L),
                       $ = c.atan2(L, N);
                     return C(F, G, ke(G), J, re);
                   },
                   b = () => {
                     let f = (et() - ie) / 350;
-                    f < 0 || f > 1
+                    (f < 0 || f > 1
                       ? ((f = 1),
                         (V = null),
                         (F = S),
@@ -1357,14 +1357,14 @@
                       (G = T + (fe - T) * f),
                       (J = R + (oe - R) * f),
                       (re = _ + (ae - _) * f),
-                      pe();
+                      pe());
                   },
                   y = d.createElement('div'),
                   E = (f, C, N) => {
-                    (y.style.display = 'block'),
+                    ((y.style.display = 'block'),
                       (y.style.left = f + 'px'),
                       (y.style.top = C + 'px'),
-                      (y.innerHTML = N);
+                      (y.innerHTML = N));
                   },
                   v = () => {
                     y.style.display = 'none';
@@ -1384,27 +1384,27 @@
                         let L = C.r.e.length;
                         N = H(N.slice(0, L)) + '<b>' + H(N.slice(L)) + '</b>';
                       } else N = '<b>' + H(N) + '</b>';
-                      ue === 2
+                      (ue === 2
                         ? (N += H(Fe(_e(C.e), ' \u2013 ')))
                         : (N += ' \u2013 ' + H(le(C.t))),
                         E(f.pageX, f.pageY + 20, N),
-                        (O.style.cursor = 'pointer');
+                        (O.style.cursor = 'pointer'));
                     } else v();
                   }),
                   (O.onmouseout = () => {
-                    a(null), v();
+                    (a(null), v());
                   }),
                   (O.onclick = (f) => {
                     let C = h(f);
                     if (!C) return;
                     v();
                     let N = [];
-                    C !== F.r
+                    (C !== F.r
                       ? (N = M.concat(n))
                       : M.length > 0 && ((C = M.pop()), (N = M.slice())),
                       C.l.length > 0
                         ? (u(C), (M = N))
-                        : (f.preventDefault(), Le(e, C.e, C.t));
+                        : (f.preventDefault(), Le(e, C.e, C.t)));
                   }),
                   (g.className = 'left'),
                   g.appendChild(O),
@@ -1429,19 +1429,19 @@
                           Bt(F, n))
                         ) {
                           let f = {p: G, u: J, s: re};
-                          ft(F, n, f),
+                          (ft(F, n, f),
                             (G = f.p),
                             (J = f.u),
                             (re = f.s),
                             (fe = 0),
                             (oe = ee),
                             (ae = c.PI * 2),
-                            (F = n);
+                            (F = n));
                         } else if (Bt(n, F)) {
                           let f = {p: 0, u: ee, s: c.PI * 2};
-                          ft(n, F, f), (fe = f.p), (oe = f.u), (ae = f.s);
-                        } else (ie = -1 / 0), (F = n);
-                        (T = G), (R = J), (_ = re), (S = n);
+                          (ft(n, F, f), (fe = f.p), (oe = f.u), (ae = f.s));
+                        } else ((ie = -1 / 0), (F = n));
+                        ((T = G), (R = J), (_ = re), (S = n));
                       }
                     },
                   ]
@@ -1461,80 +1461,84 @@
                     }
                     if (((x.length = 0), (U.length = 0), w)) {
                       let T = d.createElement('a');
-                      (T.className = 'row'), (T.tabIndex = 0), W.appendChild(T);
+                      ((T.className = 'row'),
+                        (T.tabIndex = 0),
+                        W.appendChild(T));
                       let R = d.createElement('div');
-                      (R.className = 'name'), T.appendChild(R);
+                      ((R.className = 'name'), T.appendChild(R));
                       let _ = d.createElement('div');
-                      (_.className = 'size'),
+                      ((_.className = 'size'),
                         T.appendChild(_),
                         (T.href = 'javascript:void 0'),
                         (R.textContent = '../'),
                         (T.onclick = () => {
-                          u(w), Ee && U.length > 0 && U[0].focus();
+                          (u(w), Ee && U.length > 0 && U[0].focus());
                         }),
                         (T.onfocus = T.onmouseover = () => a(w)),
                         (T.onblur = T.onmouseout = () => a(null)),
                         x.push(w),
-                        U.push(T);
+                        U.push(T));
                     }
                     for (let T of z) {
                       let R = T.e.slice(n.e.length),
                         _ = le(T.t),
                         S = d.createElement('a');
-                      (S.className = 'row'), (S.tabIndex = 0), W.appendChild(S);
+                      ((S.className = 'row'),
+                        (S.tabIndex = 0),
+                        W.appendChild(S));
                       let fe = /^[^/]*\/?/.exec(R)[0],
                         oe = d.createElement('div');
-                      (oe.className = 'name'),
+                      ((oe.className = 'name'),
                         (oe.innerHTML =
                           H(fe) + '<span>' + R.slice(fe.length) + '</span>'),
-                        S.appendChild(oe);
+                        S.appendChild(oe));
                       let ae = d.createElement('div');
-                      (ae.className = 'size'), S.appendChild(ae);
+                      ((ae.className = 'size'), S.appendChild(ae));
                       let F = d.createElement('div'),
                         G = _e(T.e);
-                      (F.className = T.t ? 'bar' : 'bar empty'),
+                      ((F.className = T.t ? 'bar' : 'bar empty'),
                         (F.style.background = G),
                         (F.style.width = (100 * T.t) / A + '%'),
-                        ae.appendChild(F);
+                        ae.appendChild(F));
                       let J = d.createElement('div');
-                      (J.className = 'last'),
+                      ((J.className = 'last'),
                         (J.textContent = ue === 2 ? Fe(G, '') : _),
                         F.appendChild(J),
                         (S.href = 'javascript:void 0'),
                         (S.onclick = (re) => {
-                          re.preventDefault(),
+                          (re.preventDefault(),
                             T.l.length > 0
                               ? (u(T), Ee && U.length > 0 && U[0].focus())
-                              : Le(e, T.e, T.t);
+                              : Le(e, T.e, T.t));
                         }),
                         (S.onfocus = S.onmouseover = () => a(T)),
                         (S.onblur = S.onmouseout = () => a(null)),
                         x.push(T),
-                        U.push(S);
+                        U.push(S));
                     }
                     let V = d.createElement('div');
-                    (V.className = 'dir'), (V.textContent = 'Directory: ');
+                    ((V.className = 'dir'), (V.textContent = 'Directory: '));
                     let ie = d.createElement('div');
-                    (ie.className = 'segments'), V.appendChild(ie);
+                    ((ie.className = 'segments'), V.appendChild(ie));
                     for (let T = n; T; T = T.r) {
                       let R = T.e || '/',
                         _ = d.createElement('a');
-                      T.r && (R = R.slice(T.r.e.length)),
+                      (T.r && (R = R.slice(T.r.e.length)),
                         (_.textContent = R),
                         T !== n &&
                           ((_.href = 'javascript:void 0'),
                           (_.onclick = (S) => {
-                            S.preventDefault(),
+                            (S.preventDefault(),
                               u(T),
                               Ee &&
                                 U.length > 0 &&
-                                U[!x[0] && U.length > 1 ? 1 : 0].focus();
+                                U[!x[0] && U.length > 1 ? 1 : 0].focus());
                           })),
                         ie.insertBefore(_, ie.firstChild),
                         n == s.a &&
-                          ((_.tabIndex = -1), x.unshift(n), U.unshift(_));
+                          ((_.tabIndex = -1), x.unshift(n), U.unshift(_)));
                     }
-                    (g.innerHTML = ''), g.appendChild(V), g.appendChild(W);
+                    ((g.innerHTML = ''), g.appendChild(V), g.appendChild(W));
                   },
                   x = [],
                   U = [],
@@ -1549,12 +1553,12 @@
                     O,
                     () => {
                       if ((he !== n && ((he = n), O()), pe !== i)) {
-                        (pe = i),
-                          ee && (ee.classList.remove('hover'), (ee = null));
+                        ((pe = i),
+                          ee && (ee.classList.remove('hover'), (ee = null)));
                         for (let w = i; w; w = w.r) {
                           let z = x.indexOf(w);
                           if (z >= 0) {
-                            (ee = U[z]), ee.classList.add('hover');
+                            ((ee = U[z]), ee.classList.add('hover'));
                             break;
                           }
                         }
@@ -1567,7 +1571,7 @@
               [I, P] = o();
             return (
               Ye(() => {
-                m(), I();
+                (m(), I());
               }),
               (t.id = 'sunburstPanel'),
               (t.innerHTML =
@@ -1591,7 +1595,7 @@
               };
             for (let l in t) {
               let o = l.split('/');
-              o.pop(), (i = Ue(o.join('/'), i));
+              (o.pop(), (i = Ue(o.join('/'), i)));
             }
             for (let l in t) {
               if (ye(l)) continue;
@@ -1608,7 +1612,7 @@
                 let O = Ie(m, Ce(g), I[g].bytesInOutput);
                 O > s && (s = O);
               }
-              (m.t = P), (r += P), n.push(a(m));
+              ((m.t = P), (r += P), n.push(a(m)));
             }
             e: for (;;) {
               let l;
@@ -1643,7 +1647,10 @@
                   l: [],
                 });
             }
-            return n.sort(Ne), {a: {n: '', e: '', m: '', t: r, l: n}, f: s + 1};
+            return (
+              n.sort(Ne),
+              {a: {n: '', e: '', m: '', t: r, l: n}, f: s + 1}
+            );
           },
           zt = (e) => {
             let t = ll(e),
@@ -1686,7 +1693,7 @@
               },
               V = () => {
                 let h = B.devicePixelRatio || 1;
-                (o = i.clientWidth + 2 * 50),
+                ((o = i.clientWidth + 2 * 50),
                   (m = t.f * 24 + 1),
                   (p = (o - 1e3) >> 1),
                   (I = p + 1e3),
@@ -1700,7 +1707,7 @@
                   (a.width = c.round(o * h)),
                   (a.height = c.round(m * h)),
                   l.scale(h, h),
-                  R();
+                  R());
               },
               ie = (h, b) => {
                 let y = w,
@@ -1727,7 +1734,7 @@
                   X = h.e ? Ve(l, h.e, p - s * k, 24, k * P) : Se,
                   me = 'black',
                   ge = -1 / 0;
-                v & 1
+                (v & 1
                   ? ((me = x), (l.font = pe), (z = he), (w = 3 * A(z, 46)))
                   : ((l.fillStyle = X),
                     l.fillRect(M, b, N, 24),
@@ -1748,9 +1755,9 @@
                     de + q > te && (D = ie(D, te - de)),
                     (l.globalAlpha = 0.5),
                     l.fillText(D, L + de, se),
-                    (l.globalAlpha = 1));
+                    (l.globalAlpha = 1)));
                 for (let Te of h.l)
-                  (ge = T(Te, b + 24, y, ge, v & -2)), (y += Te.t);
+                  ((ge = T(Te, b + 24, y, ge, v & -2)), (y += Te.t));
                 return (
                   v & 1 ||
                     ((l.strokeStyle = '#222'), l.strokeRect(M, b, N, 24)),
@@ -1761,21 +1768,21 @@
                 let h = getComputedStyle(d.body),
                   b = 0,
                   y = -1 / 0;
-                (g = null),
+                ((g = null),
                   (x = h.getPropertyValue('--fg-on')),
                   l.clearRect(0, 0, o, m),
-                  (l.textBaseline = 'middle');
-                for (let E of t.a.l) (y = T(E, 0, b, y, 1)), (b += E.t);
+                  (l.textBaseline = 'middle'));
+                for (let E of t.a.l) ((y = T(E, 0, b, y, 1)), (b += E.t));
               },
               _ = () => {
                 g === null && (g = Y(R));
               },
               S = d.createElement('div'),
               fe = (h, b, y) => {
-                (S.style.display = 'block'),
+                ((S.style.display = 'block'),
                   (S.style.left = h + 'px'),
                   (S.style.top = b + 'px'),
-                  (S.innerHTML = y);
+                  (S.innerHTML = y));
                 let E = S.offsetWidth;
                 for (let v = S; v; v = v.offsetParent) E += v.offsetLeft;
                 E > o && (S.style.left = h + o - E + 'px');
@@ -1799,7 +1806,7 @@
                   y = h.pageX,
                   E = h.pageY;
                 for (let M = a; M; M = M.offsetParent)
-                  (y -= M.offsetLeft), (E -= M.offsetTop);
+                  ((y -= M.offsetLeft), (E -= M.offsetTop));
                 let v = s + ((n - s) / I) * (y - p),
                   k = 0;
                 for (let M of t.a.l) {
@@ -1816,29 +1823,29 @@
                 if (y !== null) {
                   let M = E + ((v - E) / I) * (y - p),
                     f = c.pow(1.01, b);
-                  (E = M + (E - M) * f), (v = M + (v - M) * f);
+                  ((E = M + (E - M) * f), (v = M + (v - M) * f));
                 } else k = (h * (v - E)) / I;
-                E + k < 0 ? (k = -E) : v + k > r && (k = r - v),
+                (E + k < 0 ? (k = -E) : v + k > r && (k = r - v),
                   (E += k),
                   (v += k),
                   E < 0 && (E = 0),
                   v > r && (v = r),
-                  (s !== E || n !== v) && ((s = E), (n = v), _());
+                  (s !== E || n !== v) && ((s = E), (n = v), _()));
               },
               G = (h) => {
                 let b = ae(h);
                 if ((W(b), b)) {
                   let y = b.e,
                     E = y.length - b.n.length;
-                  (y = H(y.slice(0, E)) + '<b>' + H(y.slice(E)) + '</b>'),
+                  ((y = H(y.slice(0, E)) + '<b>' + H(y.slice(E)) + '</b>'),
                     ue === 2
                       ? (y += H(Fe(_e(b.e), ' \u2013 ')))
                       : (y += ' \u2013 ' + H(le(b.t))),
-                    fe(h.pageX, h.pageY + 20, y);
+                    fe(h.pageX, h.pageY + 20, y));
                 } else oe();
               },
               J = !1;
-            (a.onmousedown = (h) => {
+            ((a.onmousedown = (h) => {
               if (((J = !1), h.button !== 2)) {
                 let b = h.pageX,
                   y = (v) => {
@@ -1847,12 +1854,12 @@
                       ((J = !0), F(-k, 0, null), (b = v.pageX));
                   },
                   E = () => {
-                    d.removeEventListener('mousemove', y),
-                      d.removeEventListener('mouseup', E);
+                    (d.removeEventListener('mousemove', y),
+                      d.removeEventListener('mouseup', E));
                   };
-                h.preventDefault(),
+                (h.preventDefault(),
                   d.addEventListener('mousemove', y),
-                  d.addEventListener('mouseup', E);
+                  d.addEventListener('mouseup', E));
               }
             }),
               (a.onmousemove = (h) => {
@@ -1864,16 +1871,16 @@
               (a.onclick = (h) => {
                 if (J) return;
                 let b = ae(h);
-                W(b), b && !b.l.length && Le(e, b.e, b.t);
+                (W(b), b && !b.l.length && Le(e, b.e, b.t));
               }),
               je((h) => {
                 if (Wt()) return;
                 let b = h.deltaX,
                   y = h.deltaY,
                   E = h.ctrlKey || h.metaKey;
-                (E || c.abs(b) >= c.abs(y)) && h.preventDefault(),
+                ((E || c.abs(b) >= c.abs(y)) && h.preventDefault(),
                   F(b, y, E ? h.pageX : null),
-                  G(h);
+                  G(h));
               }),
               V(),
               Promise.resolve().then(V),
@@ -1888,9 +1895,9 @@
               (S.className = 'tooltip'),
               u.appendChild(a),
               i.appendChild(u),
-              i.appendChild(S);
+              i.appendChild(S));
             let re = d.createElement('section');
-            return re.appendChild(Oe), i.appendChild(re), i;
+            return (re.appendChild(Oe), i.appendChild(re), i);
           };
         var Gt,
           rl = (e) => {
@@ -1912,22 +1919,22 @@
                   a = d.createElement('ul'),
                   l,
                   o;
-                (u.className = 'warning'),
+                ((u.className = 'warning'),
                   (u.innerHTML =
                     'The import path <code>' +
                     H(n) +
-                    '</code> resolves to multiple files in the bundle:');
+                    '</code> resolves to multiple files in the bundle:'));
                 for (let m of i) l = Ue(m, l);
                 for (let m of i) {
                   let p = m.split('/');
-                  l && (p = p.slice(l.length)), (o = Ct(p.join('/'), o));
+                  (l && (p = p.slice(l.length)), (o = Ct(p.join('/'), o)));
                 }
                 for (let m of i.sort()) {
                   let p = m.split('/').map(H),
                     I = d.createElement('li'),
                     P = '<pre><a href="javascript:void 0">',
                     g = '';
-                  l &&
+                  (l &&
                     l.length &&
                     ((P +=
                       '<span class="dim">' +
@@ -1947,9 +1954,9 @@
                     a.appendChild(I),
                     (I.querySelector('a').onclick = () => {
                       Le(e, m, null);
-                    });
+                    }));
                 }
-                u.appendChild(a), s.push(u);
+                (u.appendChild(a), s.push(u));
               }
             }
             return s;
@@ -1971,12 +1978,12 @@
                 i = d.createElement('div');
               i.className = 'content';
               for (let u of r) i.appendChild(u);
-              t.appendChild(i),
+              (t.appendChild(i),
                 (t.querySelector('a').onclick = () => {
                   i.style.display === 'block'
                     ? ((n.textContent = '.'), (i.style.display = 'none'))
                     : ((n.textContent = ':'), (i.style.display = 'block'));
-                });
+                }));
             } else t.innerHTML = '';
           };
         var nl = d.getElementById('startPanel'),
@@ -2012,7 +2019,7 @@
               };
             if (!gt(t) || !gt(t.inputs) || !gt(t.outputs))
               throw new Error('Invalid metafile format');
-            (nl.style.display = 'none'),
+            ((nl.style.display = 'none'),
               (il.style.display = 'block'),
               (ct.onclick = () => s(1)),
               (ht.onclick = () => s(2)),
@@ -2022,11 +2029,11 @@
               Jt(t),
               We(),
               s(tt('chart') === 'flame' ? 2 : 1),
-              n(1);
+              n(1));
           },
           ol = d.documentElement.dataset,
           Xt = () => {
-            (ol.theme = tt('theme') + ''), Re && Re();
+            ((ol.theme = tt('theme') + ''), Re && Re());
           };
         Xt();
         B.addEventListener('storage', Xt);

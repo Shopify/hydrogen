@@ -5,18 +5,17 @@ import {
   Outlet,
   redirect,
   useLoaderData,
-  type HeadersFunction,
-  type LoaderFunctionArgs,
 } from 'react-router';
+import type {Route} from './+types/account';
 import type {CustomerFragment} from 'storefrontapi.generated';
 
 export function shouldRevalidate() {
   return true;
 }
 
-export const headers: HeadersFunction = ({loaderHeaders}) => loaderHeaders;
+export const headers: Route.HeadersFunction = ({loaderHeaders}) => loaderHeaders;
 
-export async function loader({request, context}: LoaderFunctionArgs) {
+export async function loader({request, context}: Route.LoaderArgs) {
   const {session, storefront} = context;
   const {pathname} = new URL(request.url);
   const customerAccessToken = await session.get('customerAccessToken');

@@ -1,0 +1,22 @@
+index bb1606722..3bf5f36bc 100644
+--- a/templates/skeleton/app/routes/account.tsx
++++ b/templates/skeleton/app/routes/account.tsx
+@@ -1,4 +1,7 @@
+-import {data as remixData, type LoaderFunctionArgs} from 'react-router';
++import {
++  data as remixData,
++  type LoaderFunctionArgs,
++} from 'react-router';
+ import {Form, NavLink, Outlet, useLoaderData} from 'react-router';
+ import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
+ 
+@@ -79,6 +82,9 @@ function AccountMenu() {
+         &nbsp; Addresses &nbsp;
+       </NavLink>
+       &nbsp;|&nbsp;
++      <NavLink to="/account/subscriptions" style={isActiveStyle}>
++        &nbsp; Subscriptions &nbsp;
++      </NavLink>
+       <Logout />
+     </nav>
+   );

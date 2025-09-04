@@ -11,7 +11,6 @@ import {
 import {fileSize, removeFile} from '@shopify/cli-kit/node/fs';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
-import {prepareDiffDirectory} from '../../lib/template-diff.js';
 import {
   getViteConfig,
   isViteProject,
@@ -46,7 +45,6 @@ export default class Build extends Command {
     ...commonFlags.lockfileCheck,
     ...commonFlags.disableRouteWarning,
     ...commonFlags.codegen,
-    ...commonFlags.diff,
     watch: Flags.boolean({
       description:
         'Watches for changes and rebuilds the project writing output to disk.',
@@ -66,15 +64,7 @@ export default class Build extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Build);
-    const originalDirectory = flags.path
-      ? resolvePath(flags.path)
-      : process.cwd();
-
-    const diff = flags.diff
-      ? await prepareDiffDirectory(originalDirectory, flags.watch)
-      : undefined;
-
-    const directory = diff?.targetDirectory ?? originalDirectory;
+    const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
     const buildParams = {
       ...flagsToCamelObject(flags),
@@ -90,24 +80,12 @@ export default class Build extends Command {
     const result = await runBuild(buildParams);
 
     if (buildParams.watch) {
-      if (diff || result?.close) {
+      if (result?.close) {
         setupResourceCleanup(async () => {
           await result?.close();
-
-          if (diff) {
-            await diff.copyDiffBuild();
-            if (flags.codegen) await diff.copyDiffCodegen();
-            await diff.cleanup();
-          }
         });
       }
     } else {
-      if (diff) {
-        await diff.copyDiffBuild();
-        if (flags.codegen) await diff.copyDiffCodegen();
-        await diff.cleanup();
-      }
-
       // The Remix compiler hangs due to a bug in ESBuild:
       // https://github.com/evanw/esbuild/issues/2727
       // The actual build has already finished so we can kill the process.
