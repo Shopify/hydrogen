@@ -6,7 +6,7 @@ import type {Navigation, Location} from 'react-router';
  */
 export function createMockNavigation(
   state: Navigation['state'],
-  search: string = ''
+  search: string = '',
 ): Navigation {
   if (state === 'idle') {
     return {
@@ -20,7 +20,7 @@ export function createMockNavigation(
       text: undefined,
     };
   }
-  
+
   const location: Location = {
     search,
     pathname: '',
@@ -28,7 +28,7 @@ export function createMockNavigation(
     state: null,
     key: 'default',
   };
-  
+
   if (state === 'loading') {
     return {
       state: 'loading',

@@ -49,12 +49,12 @@ export function SellingPlanSelector({
   }) => React.ReactNode;
 }) {
   const {search, pathname} = useLocation();
-  const params = new URLSearchParams(search);
 
   return useMemo(
-    () =>
+    () => {
+      const params = new URLSearchParams(search);
       // @ts-ignore
-      sellingPlanGroups.nodes.map((sellingPlanGroup: SellingPlanGroup) => {
+      return sellingPlanGroups.nodes.map((sellingPlanGroup: SellingPlanGroup) => {
         // Augmnet each sellingPlan node with isSelected and url
         const sellingPlans = sellingPlanGroup.sellingPlans.nodes
           .map((sellingPlan) => {
@@ -74,7 +74,8 @@ export function SellingPlanSelector({
           .filter(Boolean) as SellingPlan[];
         sellingPlanGroup.sellingPlans.nodes = sellingPlans;
         return children({sellingPlanGroup, selectedSellingPlan});
-      }),
-    [sellingPlanGroups, children, paramKey, params, pathname, selectedSellingPlan],
+      });
+    },
+    [sellingPlanGroups, children, paramKey, search, pathname, selectedSellingPlan],
   );
 }

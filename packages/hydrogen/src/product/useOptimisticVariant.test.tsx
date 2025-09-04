@@ -38,8 +38,11 @@ describe('useOptimisticVariant', () => {
   });
 
   it('returns the original product if no variants provided', async () => {
-    vi.mocked(useNavigation).mockImplementation(() => 
-      createMockNavigation('loading', new URLSearchParams('?variant=123').toString())
+    vi.mocked(useNavigation).mockImplementation(() =>
+      createMockNavigation(
+        'loading',
+        new URLSearchParams('?variant=123').toString(),
+      ),
     );
 
     const selectedVariant = {title: 'Product'};
@@ -55,13 +58,13 @@ describe('useOptimisticVariant', () => {
   });
 
   it('returns an optimistic product', async () => {
-    vi.mocked(useNavigation).mockImplementation(() => 
+    vi.mocked(useNavigation).mockImplementation(() =>
       createMockNavigation(
         'loading',
         new URLSearchParams(
           '?Size=158cm&Color=Sea+Green+%2F+Desert',
-        ).toString()
-      )
+        ).toString(),
+      ),
     );
 
     const selectedVariant = {title: 'Product'};
@@ -100,13 +103,13 @@ describe('useOptimisticVariant', () => {
   });
 
   it('returns an optimistic product when using a direct variant array', async () => {
-    vi.mocked(useNavigation).mockImplementation(() => 
+    vi.mocked(useNavigation).mockImplementation(() =>
       createMockNavigation(
         'loading',
         new URLSearchParams(
           '?Size=158cm&Color=Sea+Green+%2F+Desert',
-        ).toString()
-      )
+        ).toString(),
+      ),
     );
 
     const selectedVariant = {title: 'Product'};
@@ -139,13 +142,13 @@ describe('useOptimisticVariant', () => {
   });
 
   it('returns an optimistic product when URL has unknown search params', async () => {
-    vi.mocked(useNavigation).mockImplementation(() => 
+    vi.mocked(useNavigation).mockImplementation(() =>
       createMockNavigation(
         'loading',
         new URLSearchParams(
           '?Size=158cm&Color=Sea+Green+%2F+Desert&unknown=param',
-        ).toString()
-      )
+        ).toString(),
+      ),
     );
 
     const selectedVariant = {title: 'Product'};
@@ -184,13 +187,13 @@ describe('useOptimisticVariant', () => {
   });
 
   it('errors when selectedOptions is not included in variants', async () => {
-    vi.mocked(useNavigation).mockImplementation(() => 
+    vi.mocked(useNavigation).mockImplementation(() =>
       createMockNavigation(
         'loading',
         new URLSearchParams(
           '?Size=158cm&Color=Sea+Green+%2F+Desert',
-        ).toString()
-      )
+        ).toString(),
+      ),
     );
 
     const selectedVariant = {title: 'Product'};
