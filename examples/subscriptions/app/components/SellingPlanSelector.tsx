@@ -75,6 +75,6 @@ export function SellingPlanSelector({
         sellingPlanGroup.sellingPlans.nodes = sellingPlans;
         return children({sellingPlanGroup, selectedSellingPlan});
       }),
-    [sellingPlanGroups],
+    [sellingPlanGroups, children, paramKey, params, pathname, selectedSellingPlan],
   );
 }
