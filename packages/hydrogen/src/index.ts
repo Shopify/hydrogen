@@ -67,14 +67,7 @@ export {cartMetafieldsSetDefault} from './cart/queries/cartMetafieldsSetDefault'
 export {cartNoteUpdateDefault} from './cart/queries/cartNoteUpdateDefault';
 export {cartSelectedDeliveryOptionsUpdateDefault} from './cart/queries/cartSelectedDeliveryOptionsUpdateDefault';
 export {changelogHandler} from './changelogHandler';
-export {
-  cartContext,
-  customerAccountContext,
-  envContext,
-  sessionContext,
-  storefrontContext,
-  waitUntilContext,
-} from './context-keys';
+export {hydrogenContext} from './context-keys';
 export {
   createHydrogenContext,
   type HydrogenContext,
