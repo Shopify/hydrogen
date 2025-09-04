@@ -1,0 +1,7 @@
+npm error Lifecycle script `ci:checks` failed with error:
+npm error workspace example-custom-cart-method
+npm error location /Users/juanp.prieto/github.com/Shopify/hydrogen-react-router-7.8.x/examples/custom-cart-method
+npm error Missing script: "ci:checks"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run --workspace=example-custom-cart-method
