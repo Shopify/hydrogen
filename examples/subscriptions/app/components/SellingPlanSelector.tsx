@@ -53,13 +53,12 @@ export function SellingPlanSelector({
   return useMemo(
     () => {
       const params = new URLSearchParams(search);
-      // @ts-ignore
+      // @ts-expect-error SellingPlanGroup type not fully defined
       return sellingPlanGroups.nodes.map((sellingPlanGroup: SellingPlanGroup) => {
         // Augmnet each sellingPlan node with isSelected and url
         const sellingPlans = sellingPlanGroup.sellingPlans.nodes
           .map((sellingPlan) => {
             if (!sellingPlan?.id) {
-              // @ts-ignore
               console.warn(
                 'SellingPlanSelector: sellingPlan.id is missing in the product query',
               );
