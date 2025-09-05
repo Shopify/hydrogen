@@ -1,6 +1,6 @@
-import {LoaderFunctionArgs} from 'react-router';
+import type {Route} from './+types/api.$version.[graphql.json]';
 
-export async function action({params, context, request}: LoaderFunctionArgs) {
+export async function action({params, context, request}: Route.ActionArgs) {
   const response = await fetch(
     `https://${context.env.PUBLIC_CHECKOUT_DOMAIN}/api/${params.version}/graphql.json`,
     {
