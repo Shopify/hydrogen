@@ -72,7 +72,6 @@ export {
   createHydrogenContext,
   type HydrogenContext,
 } from './createHydrogenContext';
-export {hydrogenPreset} from './react-router-preset';
 export {createContentSecurityPolicy, NonceProvider, useNonce} from './csp/csp';
 export {Script} from './csp/Script';
 export {createCustomerAccountClient} from './customer/customer';
@@ -108,6 +107,7 @@ export {
   getSelectedProductOptions,
   VariantSelector,
 } from './product/VariantSelector';
+export {hydrogenPreset} from './react-router-preset';
 export {RichText} from './RichText';
 export {graphiqlLoader} from './routing/graphiql';
 export {storefrontRedirect} from './routing/redirect';
