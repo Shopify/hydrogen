@@ -48,9 +48,3 @@ declare module 'react-router' {
     // declare local additions to the Remix session data here
   }
 }
-
-declare module '@remix-run/server-runtime' {
-  interface Future {
-    v3_singleFetch: true;
-  }
-}

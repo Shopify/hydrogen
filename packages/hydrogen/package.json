@@ -48,10 +48,25 @@
       "types": "./dist/vite/plugin.d.ts",
       "default": "./dist/vite/plugin.js"
     },
+    "./oxygen": {
+      "types": "./dist/oxygen/index.d.ts",
+      "default": "./dist/oxygen/index.js"
+    },
     "./storefront-api-types": "./dist/storefront-api-types.d.ts",
     "./storefront.schema.json": "./dist/storefront.schema.json",
     "./customer-account-api-types": "./dist/customer-account-api-types.d.ts",
     "./customer-account.schema.json": "./dist/customer-account.schema.json",
+    "./react-router-types": {
+      "types": "./dist/react-router.d.ts"
+    },
+    "./react-router-preset": {
+      "types": "./dist/production/react-router-preset.d.ts",
+      "import": {
+        "development": "./dist/development/react-router-preset.js",
+        "default": "./dist/production/react-router-preset.js"
+      },
+      "default": "./dist/production/react-router-preset.js"
+    },
     "./package.json": "./package.json"
   },
   "typesVersions": {

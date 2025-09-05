@@ -1,11 +1,8 @@
+// Example: Custom session implementation in server.ts
+// This shows how to use a custom session class with Hydrogen
+import {createHydrogenContext, type HydrogenSession} from '@shopify/hydrogen';
+import {createRequestHandler} from '@shopify/remix-oxygen';
 import {
-  createCustomerAccountClient,
-  type HydrogenSession,
-} from '@shopify/hydrogen';
-// @ts-expect-error
-import * as reactRouterBuild from 'virtual:react-router/server-build';
-import {
-  createRequestHandler,
   createCookieSessionStorage,
   type SessionStorage,
   type Session,
@@ -13,43 +10,34 @@ import {
 
 // In server.ts
 export default {
-  async fetch(
-    request: Request,
-    env: Record<string, string>,
-    executionContext: ExecutionContext,
-  ) {
+  async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
+    // Example of using a custom session implementation
     const session = await AppSession.init(request, [env.SESSION_SECRET]);
 
-    function customAuthStatusHandler() {
-      return new Response('Customer is not login', {
-        status: 401,
-      });
-    }
-
-    /* Create a Customer API client with your credentials and options */
-    const customerAccount = createCustomerAccountClient({
-      /* Runtime utility in serverless environments */
-      waitUntil: (p) => executionContext.waitUntil(p),
-      /* Public Customer Account API client ID for your store */
-      customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,
-      /* Shop Id */
-      shopId: env.SHOP_ID,
+    // Create the Hydrogen context with all the standard services
+    const hydrogenContext = createHydrogenContext({
+      env,
       request,
-      session,
-      customAuthStatusHandler,
+      cache: {} as Cache, // Use your cache implementation
+      waitUntil: (p) => executionContext.waitUntil(p),
+      session, // Your custom session implementation must satisfy HydrogenSession interface
+      // Add other options as needed
     });
 
     const handleRequest = createRequestHandler({
-      build: reactRouterBuild,
+      // @ts-expect-error
+      build: await import('virtual:react-router/server-build'),
       mode: process.env.NODE_ENV,
-      /* Inject the customer account client in the Remix context */
-      getLoadContext: () => ({session, customerAccount}),
+      getLoadContext: () => hydrogenContext,
     });
 
     const response = await handleRequest(request);
 
-    if (session.isPending) {
-      response.headers.set('Set-Cookie', await session.commit());
+    if (hydrogenContext.session.isPending) {
+      response.headers.set(
+        'Set-Cookie',
+        await hydrogenContext.session.commit(),
+      );
     }
 
     return response;
@@ -109,41 +97,31 @@ class AppSession implements HydrogenSession {
 }
 
 // In env.d.ts
-import type {CustomerAccount, HydrogenSessionData} from '@shopify/hydrogen';
-declare module 'react-router' {
-  /**
-   * Declare local additions to the Remix loader context.
-   */
-  interface AppLoadContext {
-    customerAccount: CustomerAccount;
-    session: AppSession;
-  }
-
-  // TODO: remove this once we've migrated to `Route.LoaderArgs` instead for our loaders
-  interface LoaderFunctionArgs {
-    context: AppLoadContext;
-  }
-
-  // TODO: remove this once we've migrated to `Route.ActionArgs` instead for our actions
-  interface ActionFunctionArgs {
-    context: AppLoadContext;
-  }
-
-  /**
-   * Declare local additions to the Remix session data.
-   */
-  interface SessionData extends HydrogenSessionData {}
-}
+// Note: Hydrogen now provides default AppLoadContext augmentation
+// If you need to extend it with additional properties, you can do:
+// declare module 'react-router' {
+//   interface AppLoadContext {
+//     // Add your custom properties here
+//   }
+// }
 
 /////////////////////////////////
-// In a route
+// In a route (e.g., app/routes/account.tsx)
 import {
   useLoaderData,
   useRouteError,
   isRouteErrorResponse,
   useLocation,
 } from 'react-router';
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+// Import the Route namespace from the generated types
+// Note: Replace 'account' with your actual route name
+// import type {Route} from './+types/account';
+
+// Using the Route.LoaderArgs type from generated types
+// export async function loader({context}: Route.LoaderArgs) {
+// For this example, we'll show the pattern with proper typing
+import type {LoaderFunctionArgs} from 'react-router';
+import type {CustomerAccount} from '@shopify/hydrogen';
 
 export async function loader({context}: LoaderFunctionArgs) {
   const {data} = await context.customerAccount.query<{

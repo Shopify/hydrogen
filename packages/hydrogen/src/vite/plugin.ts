@@ -70,7 +70,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                 'react/jsx-dev-runtime',
                 'react-dom',
                 'react-dom/server',
-                '@remix-run/server-runtime',
+                'react-router',
               ],
             },
           },
@@ -85,7 +85,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                   'worktop/cookie',
                   '@shopify/graphql-client',
                 ]
-              : ['@shopify/hydrogen', '@shopify/graphql-client'],
+              : ['@shopify/hydrogen'],
           },
         };
       },
@@ -147,6 +147,15 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
                   data as RequestEventPayload,
                   resolvedConfig.root,
                 );
+              },
+            },
+            {
+              // Improve stack traces in Oxygen by showing full error stack
+              script: () => {
+                const originalErrorToString = Error.prototype.toString;
+                Error.prototype.toString = function () {
+                  return this.stack || originalErrorToString.call(this);
+                };
               },
             },
             /**
