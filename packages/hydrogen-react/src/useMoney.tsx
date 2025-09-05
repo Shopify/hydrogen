@@ -1,6 +1,28 @@
 import {useMemo} from 'react';
 import {useShop} from './ShopifyProvider.js';
-import {CurrencyCode, MoneyV2} from './storefront-api-types.js';
+import {
+  CurrencyCode as StorefrontApiCurrencyCode,
+  MoneyV2 as StorefrontApiMoneyV2,
+} from './storefront-api-types.js';
+import type {
+  MoneyV2 as CustomerAccountApiMoneyV2,
+  CurrencyCode as CustomerAccountApiCurrencyCode,
+} from './customer-account-api-types.js';
+
+// Support MoneyV2 from both Storefront API and Customer Account API
+// The APIs may have different CurrencyCode enums
+/**
+ * Supports MoneyV2 from both Storefront API and Customer Account API.
+ * The APIs may have different CurrencyCode enums (e.g., Customer Account API added USDC in 2025-07, but Storefront API doesn't support USDC in 2025-07).
+ * This union type ensures useMoney works with data from either API.
+ */
+type MoneyV2 = StorefrontApiMoneyV2 | CustomerAccountApiMoneyV2;
+
+/**
+ * Supports CurrencyCode from both Storefront API and Customer Account API. The APIs may have different CurrencyCode enums (e.g., Customer Account API added USDC in 2025-07, but Storefront API doesn't support USDC in 2025-07).
+ * This union type ensures useMoney works with data from either API.
+ */
+type CurrencyCode = StorefrontApiCurrencyCode | CustomerAccountApiCurrencyCode;
 
 export type UseMoneyValue = {
   /**
@@ -51,7 +73,8 @@ export type UseMoneyValue = {
 };
 
 /**
- * The `useMoney` hook takes a [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) and returns a
+ * The `useMoney` hook takes a [MoneyV2 object from the Storefront API](https://shopify.dev/docs/api/storefront/2025-07/objects/MoneyV2)
+ * or a [MoneyV2 object from the Customer Account API](https://shopify.dev/docs/api/customer/2025-07/objects/moneyv2) and returns a
  * default-formatted string of the amount with the correct currency indicator, along with some of the parts provided by
  * [Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat).
  * Uses `locale` from `ShopifyProvider`
@@ -115,6 +138,19 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
 
   const amount = parseFloat(money.amount);
 
+  // Check if the currency code is supported by Intl.NumberFormat
+  let isCurrencySupported = true;
+  try {
+    new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: money.currencyCode,
+    });
+  } catch (e) {
+    if (e instanceof RangeError && e.message.includes('currency')) {
+      isCurrencySupported = false;
+    }
+  }
+
   const {
     defaultFormatter,
     nameFormatter,
@@ -123,10 +159,18 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
     withoutCurrencyFormatter,
     withoutTrailingZerosOrCurrencyFormatter,
   } = useMemo(() => {
-    const options = {
-      style: 'currency' as const,
-      currency: money.currencyCode,
-    };
+    // For unsupported currencies (like USDC cryptocurrency), use decimal formatting with 2 decimal places
+    // We default to 2 decimal places based on research showing USDC displays like USD to reinforce its 1:1 peg
+    const options = isCurrencySupported
+      ? {
+          style: 'currency' as const,
+          currency: money.currencyCode,
+        }
+      : {
+          style: 'decimal' as const,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        };
 
     return {
       defaultFormatter: getLazyFormatter(locale, options),
@@ -143,13 +187,16 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       }),
-      withoutCurrencyFormatter: getLazyFormatter(locale),
+      withoutCurrencyFormatter: getLazyFormatter(locale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
       withoutTrailingZerosOrCurrencyFormatter: getLazyFormatter(locale, {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       }),
     };
-  }, [money.currencyCode, locale]);
+  }, [money.currencyCode, locale, isCurrencySupported]);
 
   const isPartCurrency = (part: Intl.NumberFormatPart): boolean =>
     part.type === 'currency';
@@ -161,15 +208,36 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
       original: (): MoneyV2 => money,
       currencyCode: (): CurrencyCode => money.currencyCode,
 
-      localizedString: (): string => defaultFormatter().format(amount),
+      localizedString: (): string => {
+        const formatted = defaultFormatter().format(amount);
+        // For unsupported currencies, append the currency code
+        return isCurrencySupported
+          ? formatted
+          : `${formatted} ${money.currencyCode}`;
+      },
 
-      parts: (): Intl.NumberFormatPart[] =>
-        defaultFormatter().formatToParts(amount),
+      parts: (): Intl.NumberFormatPart[] => {
+        const parts = defaultFormatter().formatToParts(amount);
+        // For unsupported currencies, add currency code as a currency part
+        if (!isCurrencySupported) {
+          parts.push(
+            {type: 'literal', value: ' '},
+            {type: 'currency', value: money.currencyCode},
+          );
+        }
+        return parts;
+      },
 
-      withoutTrailingZeros: (): string =>
-        amount % 1 === 0
-          ? withoutTrailingZerosFormatter().format(amount)
-          : defaultFormatter().format(amount),
+      withoutTrailingZeros: (): string => {
+        const formatted =
+          amount % 1 === 0
+            ? withoutTrailingZerosFormatter().format(amount)
+            : defaultFormatter().format(amount);
+        // For unsupported currencies, append the currency code
+        return isCurrencySupported
+          ? formatted
+          : `${formatted} ${money.currencyCode}`;
+      },
 
       withoutTrailingZerosAndCurrency: (): string =>
         amount % 1 === 0
@@ -202,6 +270,7 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
     [
       money,
       amount,
+      isCurrencySupported,
       nameFormatter,
       defaultFormatter,
       narrowSymbolFormatter,
@@ -234,7 +303,21 @@ function getLazyFormatter(
   return function (): Intl.NumberFormat {
     let formatter = formatterCache.get(key);
     if (!formatter) {
-      formatter = new Intl.NumberFormat(locale, options);
+      try {
+        formatter = new Intl.NumberFormat(locale, options);
+      } catch (error) {
+        // Handle unsupported currency codes (e.g., USDC from Customer Account API)
+        // Fall back to formatting without currency
+        if (error instanceof RangeError && error.message.includes('currency')) {
+          const fallbackOptions = {...options};
+          delete fallbackOptions.currency;
+          delete fallbackOptions.currencyDisplay;
+          delete fallbackOptions.currencySign;
+          formatter = new Intl.NumberFormat(locale, fallbackOptions);
+        } else {
+          throw error;
+        }
+      }
       formatterCache.set(key, formatter);
     }
     return formatter;

@@ -10,6 +10,8 @@ permissions:
 
 jobs:
   deploy:
+    # TEMPORARILY SKIP FOR SKELETON REACT ROUTER 7.8.x MIGRATION
+    if: false
     name: Deploy to Oxygen
     timeout-minutes: 30
     runs-on: ubuntu-latest

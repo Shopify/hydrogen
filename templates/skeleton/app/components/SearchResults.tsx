@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import {Link} from 'react-router';
 import {Image, Money, Pagination} from '@shopify/hydrogen';
 import {urlWithTrackingParams, type RegularSearchReturn} from '~/lib/search';
 
@@ -120,19 +120,11 @@ function SearchResultsProducts({
               <div className="search-results-item" key={product.id}>
                 <Link prefetch="intent" to={productUrl}>
                   {image && (
-                    <Image
-                      data={image}
-                      alt={product.title}
-                      width={50}
-                    />
+                    <Image data={image} alt={product.title} width={50} />
                   )}
                   <div>
                     <p>{product.title}</p>
-                    <small>
-                      {price &&
-                        <Money data={price} />
-                      }
-                    </small>
+                    <small>{price && <Money data={price} />}</small>
                   </div>
                 </Link>
               </div>
