@@ -11,6 +11,14 @@ import {cartGetIdDefault} from './cart/cartGetIdDefault';
 import {cartSetIdDefault} from './cart/cartSetIdDefault';
 import type {CustomerAccount} from './customer/types';
 import type {HydrogenSession} from './types';
+import {
+  storefrontContext,
+  cartContext,
+  customerAccountContext,
+  envContext,
+  sessionContext,
+  waitUntilContext,
+} from './context-keys';
 
 vi.mock('./storefront', async () => ({
   createStorefrontClient: vi.fn(() => ({
@@ -487,6 +495,94 @@ describe('createHydrogenContext', () => {
       expect(hydrogenContext).toStrictEqual(
         expect.objectContaining({session: mockSession}),
       );
+    });
+  });
+
+  describe('React Router proxy behavior', () => {
+    it('should support both get() and set() methods from RouterContextProvider', () => {
+      const hydrogenContext = createHydrogenContext(defaultOptions);
+
+      // Check that RouterContextProvider methods exist
+      expect(typeof hydrogenContext.get).toBe('function');
+      expect(typeof hydrogenContext.set).toBe('function');
+    });
+
+    it('should allow setting and getting custom context values', () => {
+      const hydrogenContext = createHydrogenContext(defaultOptions);
+
+      const customKey = Symbol('customKey');
+      const customValue = {test: 'value', data: [1, 2, 3]};
+
+      // Set custom value
+      hydrogenContext.set(customKey, customValue);
+
+      // Get custom value
+      const retrieved = hydrogenContext.get(customKey);
+      expect(retrieved).toEqual(customValue);
+    });
+
+    it('should support both direct access and get() method for Hydrogen services', () => {
+      const hydrogenContext = createHydrogenContext(defaultOptions);
+
+      // Direct access should work
+      expect(hydrogenContext.storefront).toBeDefined();
+      expect(hydrogenContext.cart).toBeDefined();
+      expect(hydrogenContext.customerAccount).toBeDefined();
+      expect(hydrogenContext.env).toBeDefined();
+      expect(hydrogenContext.session).toBeDefined();
+
+      // context.get() should return the same instances
+      expect(hydrogenContext.get(storefrontContext)).toBe(
+        hydrogenContext.storefront,
+      );
+      expect(hydrogenContext.get(cartContext)).toBe(hydrogenContext.cart);
+      expect(hydrogenContext.get(customerAccountContext)).toBe(
+        hydrogenContext.customerAccount,
+      );
+      expect(hydrogenContext.get(envContext)).toBe(hydrogenContext.env);
+      expect(hydrogenContext.get(sessionContext)).toBe(hydrogenContext.session);
+    });
+
+    it('should properly enumerate both RouterContextProvider and Hydrogen properties', () => {
+      const hydrogenContext = createHydrogenContext(defaultOptions);
+
+      const keys = Object.keys(hydrogenContext);
+
+      // Should include Hydrogen service properties
+      expect(keys).toContain('storefront');
+      expect(keys).toContain('cart');
+      expect(keys).toContain('customerAccount');
+      expect(keys).toContain('env');
+      expect(keys).toContain('session');
+
+      // Should also include RouterContextProvider methods
+      expect('get' in hydrogenContext).toBe(true);
+      expect('set' in hydrogenContext).toBe(true);
+    });
+
+    it('should support optional waitUntil in context', () => {
+      const mockWaitUntil = vi.fn();
+      const hydrogenContext = createHydrogenContext({
+        ...defaultOptions,
+        waitUntil: mockWaitUntil,
+      });
+
+      // Direct access
+      expect(hydrogenContext.waitUntil).toBe(mockWaitUntil);
+
+      // context.get()
+      expect(hydrogenContext.get(waitUntilContext)).toBe(mockWaitUntil);
+    });
+
+    it('should handle undefined waitUntil correctly', () => {
+      const hydrogenContext = createHydrogenContext(defaultOptions);
+
+      // Direct access returns undefined
+      expect(hydrogenContext.waitUntil).toBeUndefined();
+
+      // context.get() throws when waitUntil was not provided (React Router behavior)
+      // This is expected: if a context key is not set, React Router throws
+      expect(() => hydrogenContext.get(waitUntilContext)).toThrow();
     });
   });
 });

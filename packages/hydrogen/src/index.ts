@@ -72,6 +72,7 @@ export {
   createHydrogenContext,
   type HydrogenContext,
 } from './createHydrogenContext';
+export {hydrogenPreset} from './react-router-preset';
 export {createContentSecurityPolicy, NonceProvider, useNonce} from './csp/csp';
 export {Script} from './csp/Script';
 export {createCustomerAccountClient} from './customer/customer';
