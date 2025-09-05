@@ -92,7 +92,7 @@ export class InMemoryCache implements Cache {
     headers.set('cache', isStale ? 'STALE' : 'HIT');
     headers.set('date', new Date(timestamp).toUTCString());
 
-    return new Response(body, {
+    return new Response(body as BodyInit, {
       status: metadata.status ?? 200,
       headers,
     });

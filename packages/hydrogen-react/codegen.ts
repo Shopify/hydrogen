@@ -88,6 +88,13 @@ const config: CodegenConfig = {
             useImplementingTypes: true,
             enumsAsTypes: true,
             scalars: customerAccountApiCustomScalars,
+            // TypeScript 5.9+ requires Customer Account API to reference Storefront API enum types
+            // to avoid type conflicts when using both APIs together (e.g., CurrencyCode mismatch)
+            enumValues: {
+              LanguageCode: '#LanguageCode',
+              CurrencyCode: '#CurrencyCode',
+              CountryCode: '#CountryCode',
+            },
           },
         },
       ],

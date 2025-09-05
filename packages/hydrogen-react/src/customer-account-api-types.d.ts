@@ -217,10 +217,18 @@ export type AppliedGiftCard = Node & {
   presentmentAmountUsed: MoneyV2;
 };
 
-/** Represents a generic custom attribute, such as whether an order is a customer's first. */
+/**
+ * A custom property. Attributes are used to store additional information about a Shopify resource, such as
+ * products, customers, or orders. Attributes are stored as key-value pairs.
+ *
+ * For example, a list of attributes might include whether a customer is a first-time buyer (`"customer_first_order": "true"`),
+ * whether an order is gift-wrapped (`"gift_wrapped": "true"`), a preferred delivery date
+ * (`"preferred_delivery_date": "2025-10-01"`), the discount applied (`"loyalty_discount_applied": "10%"`), and any
+ * notes provided by the customer (`"customer_notes": "Please leave at the front door"`).
+ */
 export type Attribute = {
   __typename?: 'Attribute';
-  /** The key or name of the attribute. For example, `"customersFirstOrder"`. */
+  /** The key or name of the attribute. For example, `"customer_first_order"`. */
   key: Scalars['String']['output'];
   /** The value of the attribute. For example, `"true"`. */
   value?: Maybe<Scalars['String']['output']>;
@@ -1643,8 +1651,9 @@ export type CropRegion =
   | 'TOP';
 
 /**
- * The three-letter currency codes that represent the world currencies used in stores. These include standard ISO 4217 codes, legacy codes,
- * and non-standard codes.
+ * The currency codes that represent the world currencies throughout the Admin API. Currency codes include
+ * [standard ISO 4217 codes](https://en.wikipedia.org/wiki/ISO_4217), legacy codes, non-standard codes,
+ * digital currency codes.
  */
 export type CurrencyCode =
   /** United Arab Emirates Dirham (AED). */
@@ -1937,6 +1946,8 @@ export type CurrencyCode =
   | 'UGX'
   /** United States Dollars (USD). */
   | 'USD'
+  /** United States Dollars Coin (USDC). */
+  | 'USDC'
   /** Uruguayan Pesos (UYU). */
   | 'UYU'
   /** Uzbekistan som (UZS). */
@@ -4204,6 +4215,8 @@ export type MetafieldsSetUserErrorCode =
   | 'DISALLOWED_OWNER_TYPE'
   /** The input value isn't included in the list. */
   | 'INCLUSION'
+  /** The input value is invalid. */
+  | 'INVALID'
   /** The compareDigest is invalid. */
   | 'INVALID_COMPARE_DIGEST'
   /** The type is invalid. */
@@ -4235,12 +4248,19 @@ export type MoneyBag = {
   shopMoney: MoneyV2;
 };
 
-/** A monetary value with currency. */
+/** A precise monetary value and its associated currency. For example, 12.99 USD. */
 export type MoneyV2 = {
   __typename?: 'MoneyV2';
-  /** Decimal money amount. */
+  /**
+   * A monetary value in decimal format, allowing for precise representation of cents or fractional
+   * currency. For example, 12.99.
+   */
   amount: Scalars['Decimal']['output'];
-  /** Currency of the money. */
+  /**
+   * The three-letter currency code that represents a world currency used in a store. Currency codes
+   * include standard [standard ISO 4217 codes](https://en.wikipedia.org/wiki/ISO_4217), legacy codes,
+   * and non-standard codes. For example, USD.
+   */
   currencyCode: CurrencyCode;
 };
 
@@ -5088,7 +5108,7 @@ export type OrderFinancialStatus =
 export type OrderFulfillmentStatus =
   /** Displayed as **Fulfilled**. All of the items in the order have been fulfilled. */
   | 'FULFILLED'
-  /** Displayed as **In progress**. Some of the items in the order have been fulfilled, or a request for fulfillment has been sent to the fulfillment service. */
+  /** Displayed as **In progress**. All of the items in the order have had a request for fulfillment sent to the fulfillment service or all of the items have been marked as in progress. */
   | 'IN_PROGRESS'
   /** Displayed as **On hold**. All of the unfulfilled items in this order are on hold. */
   | 'ON_HOLD'

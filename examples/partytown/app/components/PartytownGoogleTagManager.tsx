@@ -58,6 +58,7 @@ export function PartytownGoogleTagManager(props: {
     <noscript>
       {/* GOOGLE TAG MANAGER NO-JS FALLBACK */}
       <iframe
+        title="Google Tag Manager"
         src={`https://www.googletagmanager.com/ns.html?id=${gtmContainerId}`}
         height="0"
         width="0"

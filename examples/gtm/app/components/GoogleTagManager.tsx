@@ -18,7 +18,7 @@ export function GoogleTagManager() {
     });
 
     ready();
-  }, []);
+  }, [ready, subscribe]);
 
   return null;
 }
