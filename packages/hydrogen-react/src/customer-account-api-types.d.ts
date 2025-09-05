@@ -1,3 +1,6 @@
+import type {LanguageCode} from './storefront-api-types';
+import type {CurrencyCode} from './storefront-api-types';
+
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
  * Based on Customer Account API 2025-04
@@ -217,10 +220,18 @@ export type AppliedGiftCard = Node & {
   presentmentAmountUsed: MoneyV2;
 };
 
-/** Represents a generic custom attribute, such as whether an order is a customer's first. */
+/**
+ * A custom property. Attributes are used to store additional information about a Shopify resource, such as
+ * products, customers, or orders. Attributes are stored as key-value pairs.
+ *
+ * For example, a list of attributes might include whether a customer is a first-time buyer (`"customer_first_order": "true"`),
+ * whether an order is gift-wrapped (`"gift_wrapped": "true"`), a preferred delivery date
+ * (`"preferred_delivery_date": "2025-10-01"`), the discount applied (`"loyalty_discount_applied": "10%"`), and any
+ * notes provided by the customer (`"customer_notes": "Please leave at the front door"`).
+ */
 export type Attribute = {
   __typename?: 'Attribute';
-  /** The key or name of the attribute. For example, `"customersFirstOrder"`. */
+  /** The key or name of the attribute. For example, `"customer_first_order"`. */
   key: Scalars['String']['output'];
   /** The value of the attribute. For example, `"true"`. */
   value?: Maybe<Scalars['String']['output']>;
@@ -1642,333 +1653,7 @@ export type CropRegion =
   /** Keep the top of the image. */
   | 'TOP';
 
-/**
- * The three-letter currency codes that represent the world currencies used in stores. These include standard ISO 4217 codes, legacy codes,
- * and non-standard codes.
- */
-export type CurrencyCode =
-  /** United Arab Emirates Dirham (AED). */
-  | 'AED'
-  /** Afghan Afghani (AFN). */
-  | 'AFN'
-  /** Albanian Lek (ALL). */
-  | 'ALL'
-  /** Armenian Dram (AMD). */
-  | 'AMD'
-  /** Netherlands Antillean Guilder. */
-  | 'ANG'
-  /** Angolan Kwanza (AOA). */
-  | 'AOA'
-  /** Argentine Pesos (ARS). */
-  | 'ARS'
-  /** Australian Dollars (AUD). */
-  | 'AUD'
-  /** Aruban Florin (AWG). */
-  | 'AWG'
-  /** Azerbaijani Manat (AZN). */
-  | 'AZN'
-  /** Bosnia and Herzegovina Convertible Mark (BAM). */
-  | 'BAM'
-  /** Barbadian Dollar (BBD). */
-  | 'BBD'
-  /** Bangladesh Taka (BDT). */
-  | 'BDT'
-  /** Bulgarian Lev (BGN). */
-  | 'BGN'
-  /** Bahraini Dinar (BHD). */
-  | 'BHD'
-  /** Burundian Franc (BIF). */
-  | 'BIF'
-  /** Bermudian Dollar (BMD). */
-  | 'BMD'
-  /** Brunei Dollar (BND). */
-  | 'BND'
-  /** Bolivian Boliviano (BOB). */
-  | 'BOB'
-  /** Brazilian Real (BRL). */
-  | 'BRL'
-  /** Bahamian Dollar (BSD). */
-  | 'BSD'
-  /** Bhutanese Ngultrum (BTN). */
-  | 'BTN'
-  /** Botswana Pula (BWP). */
-  | 'BWP'
-  /** Belarusian Ruble (BYN). */
-  | 'BYN'
-  /** Belarusian Ruble (BYR). */
-  | 'BYR'
-  /** Belize Dollar (BZD). */
-  | 'BZD'
-  /** Canadian Dollars (CAD). */
-  | 'CAD'
-  /** Congolese franc (CDF). */
-  | 'CDF'
-  /** Swiss Francs (CHF). */
-  | 'CHF'
-  /** Chilean Peso (CLP). */
-  | 'CLP'
-  /** Chinese Yuan Renminbi (CNY). */
-  | 'CNY'
-  /** Colombian Peso (COP). */
-  | 'COP'
-  /** Costa Rican Colones (CRC). */
-  | 'CRC'
-  /** Cape Verdean escudo (CVE). */
-  | 'CVE'
-  /** Czech Koruny (CZK). */
-  | 'CZK'
-  /** Djiboutian Franc (DJF). */
-  | 'DJF'
-  /** Danish Kroner (DKK). */
-  | 'DKK'
-  /** Dominican Peso (DOP). */
-  | 'DOP'
-  /** Algerian Dinar (DZD). */
-  | 'DZD'
-  /** Egyptian Pound (EGP). */
-  | 'EGP'
-  /** Eritrean Nakfa (ERN). */
-  | 'ERN'
-  /** Ethiopian Birr (ETB). */
-  | 'ETB'
-  /** Euro (EUR). */
-  | 'EUR'
-  /** Fijian Dollars (FJD). */
-  | 'FJD'
-  /** Falkland Islands Pounds (FKP). */
-  | 'FKP'
-  /** United Kingdom Pounds (GBP). */
-  | 'GBP'
-  /** Georgian Lari (GEL). */
-  | 'GEL'
-  /** Ghanaian Cedi (GHS). */
-  | 'GHS'
-  /** Gibraltar Pounds (GIP). */
-  | 'GIP'
-  /** Gambian Dalasi (GMD). */
-  | 'GMD'
-  /** Guinean Franc (GNF). */
-  | 'GNF'
-  /** Guatemalan Quetzal (GTQ). */
-  | 'GTQ'
-  /** Guyanese Dollar (GYD). */
-  | 'GYD'
-  /** Hong Kong Dollars (HKD). */
-  | 'HKD'
-  /** Honduran Lempira (HNL). */
-  | 'HNL'
-  /** Croatian Kuna (HRK). */
-  | 'HRK'
-  /** Haitian Gourde (HTG). */
-  | 'HTG'
-  /** Hungarian Forint (HUF). */
-  | 'HUF'
-  /** Indonesian Rupiah (IDR). */
-  | 'IDR'
-  /** Israeli New Shekel (NIS). */
-  | 'ILS'
-  /** Indian Rupees (INR). */
-  | 'INR'
-  /** Iraqi Dinar (IQD). */
-  | 'IQD'
-  /** Iranian Rial (IRR). */
-  | 'IRR'
-  /** Icelandic Kronur (ISK). */
-  | 'ISK'
-  /** Jersey Pound. */
-  | 'JEP'
-  /** Jamaican Dollars (JMD). */
-  | 'JMD'
-  /** Jordanian Dinar (JOD). */
-  | 'JOD'
-  /** Japanese Yen (JPY). */
-  | 'JPY'
-  /** Kenyan Shilling (KES). */
-  | 'KES'
-  /** Kyrgyzstani Som (KGS). */
-  | 'KGS'
-  /** Cambodian Riel. */
-  | 'KHR'
-  /** Kiribati Dollar (KID). */
-  | 'KID'
-  /** Comorian Franc (KMF). */
-  | 'KMF'
-  /** South Korean Won (KRW). */
-  | 'KRW'
-  /** Kuwaiti Dinar (KWD). */
-  | 'KWD'
-  /** Cayman Dollars (KYD). */
-  | 'KYD'
-  /** Kazakhstani Tenge (KZT). */
-  | 'KZT'
-  /** Laotian Kip (LAK). */
-  | 'LAK'
-  /** Lebanese Pounds (LBP). */
-  | 'LBP'
-  /** Sri Lankan Rupees (LKR). */
-  | 'LKR'
-  /** Liberian Dollar (LRD). */
-  | 'LRD'
-  /** Lesotho Loti (LSL). */
-  | 'LSL'
-  /** Lithuanian Litai (LTL). */
-  | 'LTL'
-  /** Latvian Lati (LVL). */
-  | 'LVL'
-  /** Libyan Dinar (LYD). */
-  | 'LYD'
-  /** Moroccan Dirham. */
-  | 'MAD'
-  /** Moldovan Leu (MDL). */
-  | 'MDL'
-  /** Malagasy Ariary (MGA). */
-  | 'MGA'
-  /** Macedonia Denar (MKD). */
-  | 'MKD'
-  /** Burmese Kyat (MMK). */
-  | 'MMK'
-  /** Mongolian Tugrik. */
-  | 'MNT'
-  /** Macanese Pataca (MOP). */
-  | 'MOP'
-  /** Mauritanian Ouguiya (MRU). */
-  | 'MRU'
-  /** Mauritian Rupee (MUR). */
-  | 'MUR'
-  /** Maldivian Rufiyaa (MVR). */
-  | 'MVR'
-  /** Malawian Kwacha (MWK). */
-  | 'MWK'
-  /** Mexican Pesos (MXN). */
-  | 'MXN'
-  /** Malaysian Ringgits (MYR). */
-  | 'MYR'
-  /** Mozambican Metical. */
-  | 'MZN'
-  /** Namibian Dollar. */
-  | 'NAD'
-  /** Nigerian Naira (NGN). */
-  | 'NGN'
-  /** Nicaraguan Córdoba (NIO). */
-  | 'NIO'
-  /** Norwegian Kroner (NOK). */
-  | 'NOK'
-  /** Nepalese Rupee (NPR). */
-  | 'NPR'
-  /** New Zealand Dollars (NZD). */
-  | 'NZD'
-  /** Omani Rial (OMR). */
-  | 'OMR'
-  /** Panamian Balboa (PAB). */
-  | 'PAB'
-  /** Peruvian Nuevo Sol (PEN). */
-  | 'PEN'
-  /** Papua New Guinean Kina (PGK). */
-  | 'PGK'
-  /** Philippine Peso (PHP). */
-  | 'PHP'
-  /** Pakistani Rupee (PKR). */
-  | 'PKR'
-  /** Polish Zlotych (PLN). */
-  | 'PLN'
-  /** Paraguayan Guarani (PYG). */
-  | 'PYG'
-  /** Qatari Rial (QAR). */
-  | 'QAR'
-  /** Romanian Lei (RON). */
-  | 'RON'
-  /** Serbian dinar (RSD). */
-  | 'RSD'
-  /** Russian Rubles (RUB). */
-  | 'RUB'
-  /** Rwandan Franc (RWF). */
-  | 'RWF'
-  /** Saudi Riyal (SAR). */
-  | 'SAR'
-  /** Solomon Islands Dollar (SBD). */
-  | 'SBD'
-  /** Seychellois Rupee (SCR). */
-  | 'SCR'
-  /** Sudanese Pound (SDG). */
-  | 'SDG'
-  /** Swedish Kronor (SEK). */
-  | 'SEK'
-  /** Singapore Dollars (SGD). */
-  | 'SGD'
-  /** Saint Helena Pounds (SHP). */
-  | 'SHP'
-  /** Sierra Leonean Leone (SLL). */
-  | 'SLL'
-  /** Somali Shilling (SOS). */
-  | 'SOS'
-  /** Surinamese Dollar (SRD). */
-  | 'SRD'
-  /** South Sudanese Pound (SSP). */
-  | 'SSP'
-  /** Sao Tome And Principe Dobra (STD). */
-  | 'STD'
-  /** Sao Tome And Principe Dobra (STN). */
-  | 'STN'
-  /** Syrian Pound (SYP). */
-  | 'SYP'
-  /** Swazi Lilangeni (SZL). */
-  | 'SZL'
-  /** Thai baht (THB). */
-  | 'THB'
-  /** Tajikistani Somoni (TJS). */
-  | 'TJS'
-  /** Turkmenistani Manat (TMT). */
-  | 'TMT'
-  /** Tunisian Dinar (TND). */
-  | 'TND'
-  /** Tongan Pa'anga (TOP). */
-  | 'TOP'
-  /** Turkish Lira (TRY). */
-  | 'TRY'
-  /** Trinidad and Tobago Dollars (TTD). */
-  | 'TTD'
-  /** Taiwan Dollars (TWD). */
-  | 'TWD'
-  /** Tanzanian Shilling (TZS). */
-  | 'TZS'
-  /** Ukrainian Hryvnia (UAH). */
-  | 'UAH'
-  /** Ugandan Shilling (UGX). */
-  | 'UGX'
-  /** United States Dollars (USD). */
-  | 'USD'
-  /** Uruguayan Pesos (UYU). */
-  | 'UYU'
-  /** Uzbekistan som (UZS). */
-  | 'UZS'
-  /** Venezuelan Bolivares (VED). */
-  | 'VED'
-  /** Venezuelan Bolivares (VEF). */
-  | 'VEF'
-  /** Venezuelan Bolivares Soberanos (VES). */
-  | 'VES'
-  /** Vietnamese đồng (VND). */
-  | 'VND'
-  /** Vanuatu Vatu (VUV). */
-  | 'VUV'
-  /** Samoan Tala (WST). */
-  | 'WST'
-  /** Central African CFA Franc (XAF). */
-  | 'XAF'
-  /** East Caribbean Dollar (XCD). */
-  | 'XCD'
-  /** West African CFA franc (XOF). */
-  | 'XOF'
-  /** CFP Franc (XPF). */
-  | 'XPF'
-  /** Unrecognized currency. */
-  | 'XXX'
-  /** Yemeni Rial (YER). */
-  | 'YER'
-  /** South African Rand (ZAR). */
-  | 'ZAR'
-  /** Zambian Kwacha (ZMW). */
-  | 'ZMW';
+export {CurrencyCode};
 
 /** Represents the personal information of a customer. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type Customer = HasMetafields &
@@ -3481,290 +3166,7 @@ export type ImageTransformInput = {
   scale?: InputMaybe<Scalars['Int']['input']>;
 };
 
-/** Language codes supported by Shopify. */
-export type LanguageCode =
-  /** Afrikaans. */
-  | 'AF'
-  /** Akan. */
-  | 'AK'
-  /** Amharic. */
-  | 'AM'
-  /** Arabic. */
-  | 'AR'
-  /** Assamese. */
-  | 'AS'
-  /** Azerbaijani. */
-  | 'AZ'
-  /** Belarusian. */
-  | 'BE'
-  /** Bulgarian. */
-  | 'BG'
-  /** Bambara. */
-  | 'BM'
-  /** Bangla. */
-  | 'BN'
-  /** Tibetan. */
-  | 'BO'
-  /** Breton. */
-  | 'BR'
-  /** Bosnian. */
-  | 'BS'
-  /** Catalan. */
-  | 'CA'
-  /** Chechen. */
-  | 'CE'
-  /** Central Kurdish. */
-  | 'CKB'
-  /** Czech. */
-  | 'CS'
-  /** Church Slavic. */
-  | 'CU'
-  /** Welsh. */
-  | 'CY'
-  /** Danish. */
-  | 'DA'
-  /** German. */
-  | 'DE'
-  /** Dzongkha. */
-  | 'DZ'
-  /** Ewe. */
-  | 'EE'
-  /** Greek. */
-  | 'EL'
-  /** English. */
-  | 'EN'
-  /** Esperanto. */
-  | 'EO'
-  /** Spanish. */
-  | 'ES'
-  /** Estonian. */
-  | 'ET'
-  /** Basque. */
-  | 'EU'
-  /** Persian. */
-  | 'FA'
-  /** Fulah. */
-  | 'FF'
-  /** Finnish. */
-  | 'FI'
-  /** Filipino. */
-  | 'FIL'
-  /** Faroese. */
-  | 'FO'
-  /** French. */
-  | 'FR'
-  /** Western Frisian. */
-  | 'FY'
-  /** Irish. */
-  | 'GA'
-  /** Scottish Gaelic. */
-  | 'GD'
-  /** Galician. */
-  | 'GL'
-  /** Gujarati. */
-  | 'GU'
-  /** Manx. */
-  | 'GV'
-  /** Hausa. */
-  | 'HA'
-  /** Hebrew. */
-  | 'HE'
-  /** Hindi. */
-  | 'HI'
-  /** Croatian. */
-  | 'HR'
-  /** Hungarian. */
-  | 'HU'
-  /** Armenian. */
-  | 'HY'
-  /** Interlingua. */
-  | 'IA'
-  /** Indonesian. */
-  | 'ID'
-  /** Igbo. */
-  | 'IG'
-  /** Sichuan Yi. */
-  | 'II'
-  /** Icelandic. */
-  | 'IS'
-  /** Italian. */
-  | 'IT'
-  /** Japanese. */
-  | 'JA'
-  /** Javanese. */
-  | 'JV'
-  /** Georgian. */
-  | 'KA'
-  /** Kikuyu. */
-  | 'KI'
-  /** Kazakh. */
-  | 'KK'
-  /** Kalaallisut. */
-  | 'KL'
-  /** Khmer. */
-  | 'KM'
-  /** Kannada. */
-  | 'KN'
-  /** Korean. */
-  | 'KO'
-  /** Kashmiri. */
-  | 'KS'
-  /** Kurdish. */
-  | 'KU'
-  /** Cornish. */
-  | 'KW'
-  /** Kyrgyz. */
-  | 'KY'
-  /** Luxembourgish. */
-  | 'LB'
-  /** Ganda. */
-  | 'LG'
-  /** Lingala. */
-  | 'LN'
-  /** Lao. */
-  | 'LO'
-  /** Lithuanian. */
-  | 'LT'
-  /** Luba-Katanga. */
-  | 'LU'
-  /** Latvian. */
-  | 'LV'
-  /** Malagasy. */
-  | 'MG'
-  /** Māori. */
-  | 'MI'
-  /** Macedonian. */
-  | 'MK'
-  /** Malayalam. */
-  | 'ML'
-  /** Mongolian. */
-  | 'MN'
-  /** Marathi. */
-  | 'MR'
-  /** Malay. */
-  | 'MS'
-  /** Maltese. */
-  | 'MT'
-  /** Burmese. */
-  | 'MY'
-  /** Norwegian (Bokmål). */
-  | 'NB'
-  /** North Ndebele. */
-  | 'ND'
-  /** Nepali. */
-  | 'NE'
-  /** Dutch. */
-  | 'NL'
-  /** Norwegian Nynorsk. */
-  | 'NN'
-  /** Norwegian. */
-  | 'NO'
-  /** Oromo. */
-  | 'OM'
-  /** Odia. */
-  | 'OR'
-  /** Ossetic. */
-  | 'OS'
-  /** Punjabi. */
-  | 'PA'
-  /** Polish. */
-  | 'PL'
-  /** Pashto. */
-  | 'PS'
-  /** Portuguese. */
-  | 'PT'
-  /** Portuguese (Brazil). */
-  | 'PT_BR'
-  /** Portuguese (Portugal). */
-  | 'PT_PT'
-  /** Quechua. */
-  | 'QU'
-  /** Romansh. */
-  | 'RM'
-  /** Rundi. */
-  | 'RN'
-  /** Romanian. */
-  | 'RO'
-  /** Russian. */
-  | 'RU'
-  /** Kinyarwanda. */
-  | 'RW'
-  /** Sanskrit. */
-  | 'SA'
-  /** Sardinian. */
-  | 'SC'
-  /** Sindhi. */
-  | 'SD'
-  /** Northern Sami. */
-  | 'SE'
-  /** Sango. */
-  | 'SG'
-  /** Sinhala. */
-  | 'SI'
-  /** Slovak. */
-  | 'SK'
-  /** Slovenian. */
-  | 'SL'
-  /** Shona. */
-  | 'SN'
-  /** Somali. */
-  | 'SO'
-  /** Albanian. */
-  | 'SQ'
-  /** Serbian. */
-  | 'SR'
-  /** Sundanese. */
-  | 'SU'
-  /** Swedish. */
-  | 'SV'
-  /** Swahili. */
-  | 'SW'
-  /** Tamil. */
-  | 'TA'
-  /** Telugu. */
-  | 'TE'
-  /** Tajik. */
-  | 'TG'
-  /** Thai. */
-  | 'TH'
-  /** Tigrinya. */
-  | 'TI'
-  /** Turkmen. */
-  | 'TK'
-  /** Tongan. */
-  | 'TO'
-  /** Turkish. */
-  | 'TR'
-  /** Tatar. */
-  | 'TT'
-  /** Uyghur. */
-  | 'UG'
-  /** Ukrainian. */
-  | 'UK'
-  /** Urdu. */
-  | 'UR'
-  /** Uzbek. */
-  | 'UZ'
-  /** Vietnamese. */
-  | 'VI'
-  /** Volapük. */
-  | 'VO'
-  /** Wolof. */
-  | 'WO'
-  /** Xhosa. */
-  | 'XH'
-  /** Yiddish. */
-  | 'YI'
-  /** Yoruba. */
-  | 'YO'
-  /** Chinese. */
-  | 'ZH'
-  /** Chinese (Simplified). */
-  | 'ZH_CN'
-  /** Chinese (Traditional). */
-  | 'ZH_TW'
-  /** Zulu. */
-  | 'ZU';
+export {LanguageCode};
 
 /** An object representing a product marked as a fee, aggregated by title. */
 export type LegacyAggregatedMerchandiseTermsAsFees = Node & {
@@ -4204,6 +3606,8 @@ export type MetafieldsSetUserErrorCode =
   | 'DISALLOWED_OWNER_TYPE'
   /** The input value isn't included in the list. */
   | 'INCLUSION'
+  /** The input value is invalid. */
+  | 'INVALID'
   /** The compareDigest is invalid. */
   | 'INVALID_COMPARE_DIGEST'
   /** The type is invalid. */
@@ -4235,12 +3639,19 @@ export type MoneyBag = {
   shopMoney: MoneyV2;
 };
 
-/** A monetary value with currency. */
+/** A precise monetary value and its associated currency. For example, 12.99 USD. */
 export type MoneyV2 = {
   __typename?: 'MoneyV2';
-  /** Decimal money amount. */
+  /**
+   * A monetary value in decimal format, allowing for precise representation of cents or fractional
+   * currency. For example, 12.99.
+   */
   amount: Scalars['Decimal']['output'];
-  /** Currency of the money. */
+  /**
+   * The three-letter currency code that represents a world currency used in a store. Currency codes
+   * include standard [standard ISO 4217 codes](https://en.wikipedia.org/wiki/ISO_4217), legacy codes,
+   * and non-standard codes. For example, USD.
+   */
   currencyCode: CurrencyCode;
 };
 
@@ -5088,7 +4499,7 @@ export type OrderFinancialStatus =
 export type OrderFulfillmentStatus =
   /** Displayed as **Fulfilled**. All of the items in the order have been fulfilled. */
   | 'FULFILLED'
-  /** Displayed as **In progress**. Some of the items in the order have been fulfilled, or a request for fulfillment has been sent to the fulfillment service. */
+  /** Displayed as **In progress**. All of the items in the order have had a request for fulfillment sent to the fulfillment service or all of the items have been marked as in progress. */
   | 'IN_PROGRESS'
   /** Displayed as **On hold**. All of the unfulfilled items in this order are on hold. */
   | 'ON_HOLD'
