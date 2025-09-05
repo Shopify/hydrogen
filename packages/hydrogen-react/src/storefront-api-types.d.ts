@@ -708,7 +708,7 @@ export type CartBuyerIdentity = {
    * The rank of the preferences is determined by the order of the addresses in the array. Preferences
    * can be used to populate relevant fields in the checkout flow.
    *
-   * As of the `2025-04` release, `buyerIdentity.deliveryAddressPreferences` is deprecated.
+   * As of the `2025-01` release, `buyerIdentity.deliveryAddressPreferences` is deprecated.
    * Delivery addresses are now part of the `CartDelivery` object and managed with three new mutations:
    * - `cartDeliveryAddressAdd`
    * - `cartDeliveryAddressUpdate`
@@ -4974,6 +4974,8 @@ export type MetafieldReferencesArgs = {
 
 /** Possible error codes that can be returned by `MetafieldDeleteUserError`. */
 export type MetafieldDeleteErrorCode =
+  /** The current app is not authorized to perform this action. */
+  | 'APP_NOT_AUTHORIZED'
   /** The owner ID is invalid. */
   | 'INVALID_OWNER'
   /** Metafield not found. */
@@ -5083,6 +5085,8 @@ export type MetafieldsSetUserError = DisplayableError & {
 
 /** Possible error codes that can be returned by `MetafieldsSetUserError`. */
 export type MetafieldsSetUserErrorCode =
+  /** The current app is not authorized to perform this action. */
+  | 'APP_NOT_AUTHORIZED'
   /** The input value is blank. */
   | 'BLANK'
   /** The input value isn't included in the list. */
