@@ -1,5 +1,3 @@
-import {execa, type ExecaChildProcess} from 'execa';
-import getPort from 'get-port';
 import * as path from 'node:path';
 import * as http from 'node:http';
 
@@ -9,6 +7,10 @@ interface ServerConfig {
 }
 
 export async function startServer(): Promise<ServerConfig> {
+  // Dynamic imports for ESM modules
+  const {execa} = await import('execa');
+  const getPort = (await import('get-port')).default;
+
   // Get an available port
   const port = await getPort();
 
@@ -16,7 +18,7 @@ export async function startServer(): Promise<ServerConfig> {
   const skeletonPath = path.resolve(__dirname, '../../templates/skeleton');
 
   // Start the skeleton dev server
-  const serverProcess: ExecaChildProcess = execa(
+  const serverProcess = execa(
     'npm',
     ['run', 'dev', '--', '--port', String(port)],
     {

@@ -169,6 +169,57 @@
 - Full smoke test suite target: <60 seconds
 - Full E2E suite target: ≤15 minutes
 
+### Session 6 - Playwright E2E Test Implementation Learnings:
+
+**ESM Module Compatibility Critical:**
+- Playwright tests run in a hybrid CommonJS/ESM environment
+- Modern packages like `execa` v9+ and `get-port` v7+ are ESM-only
+- Solution: Use dynamic imports `await import('module')` instead of static imports in helper files
+- This issue manifests as "require() of ES Module not supported" errors
+- Always check package versions - newer versions often switch to ESM-only
+
+**Playwright Test Structure Best Practices:**
+- Use `test.beforeAll`/`test.afterAll` for expensive operations like server startup
+- Starting the dev server for each test would add 10-15 seconds per test - avoid this
+- Set generous timeouts (90+ seconds) for server startup operations
+- The default Playwright timeout is too short for dev server initialization
+
+**Test Verification Strategy:**
+- When following TDD, if a test passes when you expect it to fail, verify it's actually testing the right thing
+- Temporarily break assertions to confirm tests can detect failures
+- Add temporary console.log statements to debug what the test is seeing
+- Remove debug code once test behavior is confirmed
+
+**Server Helper Dynamic Import Pattern:**
+```typescript
+// Instead of: import {execa} from 'execa';
+// Use: const {execa} = await import('execa');
+// Instead of: import getPort from 'get-port';  
+// Use: const getPort = (await import('get-port')).default;
+```
+
+**Playwright Console Monitoring:**
+- Use `page.on('console', callback)` to capture browser console output
+- Check `msg.type()` for 'error', 'warning', 'log', etc.
+- Store messages in arrays for later assertion
+- This is crucial for detecting client-side JavaScript errors
+
+**Next Implementation Considerations:**
+- For selector assertions (3.2), first manually inspect the running app to identify actual selectors
+- Consider using Playwright's codegen tool: `npx playwright codegen http://localhost:3000`
+- The skeleton template likely uses specific class names or data attributes for key elements
+- May need to wait for elements to be visible before asserting their presence
+- Use Playwright's built-in waiting mechanisms rather than arbitrary delays
+
+**General Debugging Patterns for E2E Tests:**
+- HTML reports are automatically generated in `playwright-report/` directory
+- Use `npx playwright show-report` to view detailed test results and screenshots
+- Playwright captures screenshots on failure automatically (configured in playwright.config.ts)
+- When tests hang, check if the server actually started - look for process output
+- Module resolution errors often indicate ESM/CommonJS incompatibility
+- If imports fail, check if the package has switched to ESM-only in recent versions
+- Always verify the test can fail before assuming it works correctly
+
 ## Tasks
 
 - [x] 1. Add Playwright and command scaffolding
@@ -205,11 +256,11 @@
 
 - [ ] 3. Create smoke subset tests
 
-  - [ ] 3.1. Write a failing Playwright test (`e2e/tests/smoke.spec.ts`) that launches the dev server via the helper, navigates to `/`, and asserts no console errors.
-    - **Important**: The file `e2e/tests/smoke.spec.ts` already exists with a placeholder test marked with `@smoke` tag
-    - **Important**: The server helper is in `e2e/helpers/server.ts` and exports `startServer()` function
-    - **Important**: Server startup takes 10-15 seconds, so Playwright test timeout should be generous
-    - **Consider**: Using Playwright's `test.beforeAll` and `test.afterAll` hooks for server lifecycle to avoid starting/stopping for each test
+  - [x] 3.1. Write a failing Playwright test (`e2e/tests/smoke.spec.ts`) that launches the dev server via the helper, navigates to `/`, and asserts no console errors.
+    - **Implementation**: Successfully replaced placeholder test with real test that starts server, navigates to homepage, and verifies no console errors
+    - **ESM Issue Fixed**: Had to update server.ts to use dynamic imports for `execa` and `get-port` since they are ESM-only modules
+    - **Test Structure**: Used `test.beforeAll` and `test.afterAll` hooks for server lifecycle management with 90-second timeout
+    - **Verification**: Test correctly passes when no console errors exist and fails when expecting errors that don't exist
 
   - [ ] 3.2. Add selectors assertions: hero image, “Add to cart” button, login link, cart icon.
 
