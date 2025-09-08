@@ -1,0 +1,137 @@
+## Relevant Files
+
+- `e2e/playwright.config.ts` – Playwright configuration shared by all tests.
+- `e2e/helpers/server.ts` – Utility to start/stop the skeleton dev server programmatically.
+- `e2e/tests/smoke.spec.ts` – Smoke-subset tests (TDD – create first).
+- `e2e/tests/product-flow.spec.ts` – Product journey tests.
+- `e2e/tests/cart-flow.spec.ts` – Cart journey tests.
+- `e2e/tests/collection-flow.spec.ts` – Collection journey tests.
+- `.github/workflows/e2e.yml` – GitHub Actions workflow to run the suite in CI.
+- `package.json` – npm scripts `e2e` and `e2e:smoke`.
+- `docs/tasks/tasks-prd-e2e-playwright-tests.md` – This task list.
+
+### Notes
+
+- Follow outside-in TDD: write each failing Playwright test before implementing supporting helpers or configuration.
+- Safe iteration: one failing test at a time; minimal code to pass.
+- Verification: run `npm run e2e:smoke` for quick feedback, `npm run e2e` for the full suite.
+- CI: the Github Actions workflow must block merges on failures and upload Playwright reports.
+- Flake control: implement retries and trace capture on second failure.
+- Extensibility: keep server URL and auth flags configurable via environment variables.
+
+## Tasks
+
+- [ ] 1. Add Playwright and command scaffolding
+
+  - [ ] 1.1. Write a failing unit test (`e2e/tests/scaffolding.spec.ts`) asserting that the command `npm run e2e:smoke` exits with status 0 and prints the Playwright HTML report path.
+
+  - [ ] 1.2. Add Playwright as a dev dependency (`npm install -D @playwright/test`) and generate the default configuration via `npx playwright install` (expect the test to remain failing).
+
+  - [ ] 1.3. Add npm scripts `e2e` (full) and `e2e:smoke` (subset) in `package.json` that invoke `playwright test` with appropriate tags.
+
+  - [ ] 1.4. Run `npm run vitest e2e/tests/scaffolding.spec.ts` and implement minimal script/config changes until the test passes.
+
+  - [ ] 1.5. Verify by running `npm run e2e:smoke` locally.
+
+- [ ] 2. Implement server management utilities
+
+  - [ ] 2.1. Write a failing unit test (`e2e/helpers/server.test.ts`) specifying that `startServer()` resolves with `{port, stop}` and that `GET /` responds 200 within 30 s.
+
+  - [ ] 2.2. Stub the skeleton template start command with a mock child process; run the test (should still fail).
+
+  - [ ] 2.3. Implement `startServer()` in `e2e/helpers/server.ts` using `get-port` and `execa`, returning an async `stop()` handler.
+
+  - [ ] 2.4. Ensure the helper tears down the process after tests to avoid orphaned ports.
+
+  - [ ] 2.5. Run `npm run vitest e2e/helpers/server.test.ts` until all assertions pass.
+
+  - [ ] 2.6. Verify by importing `startServer()` in a scratch script and confirming the server lifecycle.
+
+- [ ] 3. Create smoke subset tests
+
+  - [ ] 3.1. Write a failing Playwright test (`e2e/tests/smoke.spec.ts`) that launches the dev server via the helper, navigates to `/`, and asserts no console errors.
+
+  - [ ] 3.2. Add selectors assertions: hero image, “Add to cart” button, login link, cart icon.
+
+  - [ ] 3.3. Tag the test with `@smoke` and ensure `npm run e2e:smoke` only executes these.
+
+  - [ ] 3.4. Implement minimal page fixes or selector utilities until the test passes.
+
+  - [ ] 3.5. Verify by running `npm run e2e:smoke` locally (<60 s).
+
+- [ ] 4. Implement full test suite (product, cart, collection flows)
+
+  - [ ] 4.1. Write failing `product-flow.spec.ts` covering navigate to product, assert title/price, add to cart.
+
+  - [ ] 4.2. Implement page object helpers (`e2e/page-objects/storefront.ts`) for common interactions.
+
+  - [ ] 4.3. Write failing `cart-flow.spec.ts` to open cart, update quantity, assert subtotal, remove item.
+
+  - [ ] 4.4. Write failing `collection-flow.spec.ts` to verify grid renders expected products.
+
+  - [ ] 4.5. Implement test helpers and minimal fixes until each spec passes individually.
+
+  - [ ] 4.6. Verify by running `npm run e2e` (≤15 min total).
+
+- [ ] 5. Add retry and flake-control mechanisms
+
+  - [ ] 5.1. Write a failing unit test asserting Playwright config has `retries: 1` for CI runs.
+
+  - [ ] 5.2. Update `playwright.config.ts` to conditionally set retries and enable trace/screenshot on last retry.
+
+  - [ ] 5.3. Implement cookie/localStorage clearing utility and integrate via `globalSetup`.
+
+  - [ ] 5.4. Verify by intentionally failing a test and confirming retries & artifacts.
+
+- [ ] 6. Integrate with GitHub Actions workflow
+
+  - [ ] 6.1. Write a failing expect test (`.github/workflows/e2e.yml.test.ts`) that lints workflow YAML for required steps (`actions/setup-node`, browser install, `npm run e2e`).
+
+  - [ ] 6.2. Add workflow file `.github/workflows/e2e.yml` using Playwright’s recommended template.
+
+  - [ ] 6.3. Commit and push branch to trigger CI; ensure workflow blocks on failures and uploads reports.
+
+  - [ ] 6.4. Verify by pushing a deliberate test failure and ensuring the workflow exits 1.
+
+- [ ] 7. Scaffold extensibility hooks and skipped Customer Account API tests
+
+  - [ ] 7.1. Create config helper to inject `STORE_URL` and other env vars.
+
+  - [ ] 7.2. Add placeholder test `e2e/tests/customer-account.spec.ts` wrapped in `test.skip` gated by `process.env.SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH`.
+
+  - [ ] 7.3. Document how to enable the flag and extend tests for real stores.
+
+  - [ ] 7.4. Verify by running `npm run e2e` and ensuring skipped test counts appear.
+
+- [ ] 8. Write documentation and onboarding instructions
+
+  - [ ] 8.1. Update root `README.md` with E2E setup and troubleshooting section.
+
+  - [ ] 8.2. Create `docs/e2e-playwright.md` detailing commands, environment variables, CI behaviour.
+
+  - [ ] 8.3. Verify by having a new contributor run through the docs and successfully execute `npm run e2e`.
+
+### AI Implementation Guidelines
+
+Follow Outside-In TDD strictly:
+1. Always write the failing test first.
+2. Run the test to confirm it fails.
+3. Write minimal code to pass.
+4. Re-run the test to confirm it passes.
+5. Proceed to the next behaviour.
+
+Safe Iteration Pattern:
+- Ask the human to run tests after each implementation.
+- Debug failing tests before changing code.
+- Commit only when all tests pass.
+
+Verification Step Protocol:
+- Run the verification command at the end of each parent task.
+- If verification fails, fix sub-tasks before marking complete.
+
+External Service Integration:
+- Stub network calls with Playwright’s route interception when needed.
+
+When in Doubt:
+- Prioritise passing tests over new features.
+- Keep implementations simple.
