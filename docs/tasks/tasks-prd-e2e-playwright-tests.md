@@ -19,6 +19,26 @@
 - Flake control: implement retries and trace capture on second failure.
 - Extensibility: keep server URL and auth flags configurable via environment variables.
 
+### Implementation Learnings
+
+**Test Execution Context:**
+- The project uses Vitest as the test runner (not Jest), accessible via `npx vitest run`
+- No dedicated `npm run vitest` script exists; use `npx vitest run` directly for unit tests
+- The main test script `npm test` runs via Turbo across all packages in parallel
+- Pre-commit hooks automatically run prettier on TypeScript files, which may adjust formatting
+
+**Project Structure:**
+- This is a monorepo with packages/, templates/, and examples/ directories
+- The skeleton template is located at templates/skeleton/
+- The e2e/ directory should be created at the repository root level
+- No existing e2e testing infrastructure was found
+
+**Next Steps Considerations:**
+- When installing Playwright, ensure compatibility with the existing Node version (.nvmrc specifies the version)
+- The project uses npm (not yarn/pnpm) as evidenced by package-lock.json
+- Consider how Playwright tests will integrate with the existing Turbo-based test pipeline
+- The skeleton template dev server will need to be started programmatically for tests
+
 ## Tasks
 
 - [ ] 1. Add Playwright and command scaffolding
