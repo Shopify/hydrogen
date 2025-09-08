@@ -23,7 +23,7 @@
 
 - [ ] 1. Add Playwright and command scaffolding
 
-  - [ ] 1.1. Write a failing unit test (`e2e/tests/scaffolding.spec.ts`) asserting that the command `npm run e2e:smoke` exits with status 0 and prints the Playwright HTML report path.
+  - [x] 1.1. Write a failing unit test (`e2e/tests/scaffolding.spec.ts`) asserting that the command `npm run e2e:smoke` exits with status 0 and prints the Playwright HTML report path.
 
   - [ ] 1.2. Add Playwright as a dev dependency (`npm install -D @playwright/test`) and generate the default configuration via `npx playwright install` (expect the test to remain failing).
 
