@@ -584,7 +584,7 @@
   - [x] 3.5. Verify by running `npm run e2e:smoke` locally (<60 s).
     - **Result**: Smoke tests complete in ~7.7 seconds, well under 60-second target
 
-- [ ] 4. Implement full test suite (product, cart, collection flows)
+- [x] 4. Implement full test suite (product, cart, collection flows)
 
   - [x] 4.1. Write failing `product-flow.spec.ts` covering navigate to product, assert title/price, add to cart.
     - **Implementation**: Created test that navigates to first product from recommended products grid
@@ -606,7 +606,8 @@
     - **Fixes**: Removed debug console.log statement from collection-flow.spec.ts
     - **Verification**: All tests pass individually and as a suite (22.6 seconds total)
 
-  - [ ] 4.6. Verify by running `npm run e2e` (≤15 min total).
+  - [x] 4.6. Verify by running `npm run e2e` (≤15 min total).
+    - **Result**: Full suite of 7 tests completes in ~23 seconds, well under the 15-minute target
 
 - [ ] 5. Add retry and flake-control mechanisms
 
