@@ -3,6 +3,7 @@
 - `playwright.config.ts` – Playwright configuration shared by all tests (created).
 - `e2e/tests/smoke.spec.ts` – Smoke-subset tests with placeholder test (created).
 - `test/unit/scaffolding.spec.ts` – Unit test for E2E command scaffolding (moved from e2e/tests/).
+- `test/unit/server.test.ts` – Unit test for server management helper (created).
 - `package.json` – Added npm scripts `e2e` and `e2e:smoke` (modified).
 - `e2e/helpers/server.ts` – Utility to start/stop the skeleton dev server programmatically (to be created).
 - `e2e/tests/product-flow.spec.ts` – Product journey tests (to be created).
@@ -80,7 +81,7 @@
 
 - [ ] 2. Implement server management utilities
 
-  - [ ] 2.1. Write a failing unit test (`e2e/helpers/server.test.ts`) specifying that `startServer()` resolves with `{port, stop}` and that `GET /` responds 200 within 30 s.
+  - [x] 2.1. Write a failing unit test (`e2e/helpers/server.test.ts`) specifying that `startServer()` resolves with `{port, stop}` and that `GET /` responds 200 within 30 s.
     - **Note**: Based on test organization learnings, this unit test should likely go in `test/unit/` not `e2e/helpers/`
 
   - [ ] 2.2. Stub the skeleton template start command with a mock child process; run the test (should still fail).
