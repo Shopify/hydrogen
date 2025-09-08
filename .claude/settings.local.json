@@ -5,7 +5,8 @@
       "Bash(gh run view:*)",
       "Bash(npx vitest run:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npx playwright:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
