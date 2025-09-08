@@ -114,6 +114,61 @@
 - **Process Verification**: After implementing teardown, always verify with `ps aux | grep` that no orphaned processes remain
 - **Test Execution Location**: Run tests from the project root, not from within subdirectories like templates/skeleton/, to ensure proper module resolution
 
+### Session 5 - Additional Implementation Learnings:
+
+**TypeScript Module Verification Challenges:**
+- TypeScript files (`.ts`) cannot be directly required/imported in Node.js without compilation
+- For verification scripts, use Vitest test files instead of standalone scripts - they handle TypeScript natively
+- Alternative runners like `tsx` or `ts-node` may have compatibility issues with the project's module system
+- When verifying TypeScript modules, create temporary test files rather than standalone scripts
+
+**Test File Locations Matter:**
+- Unit tests about E2E infrastructure MUST go in `test/unit/` directory
+- Actual E2E Playwright tests go in `e2e/tests/` directory  
+- Mixing test types causes module resolution errors
+- The test file location was correctly moved from `e2e/helpers/server.test.ts` to `test/unit/server.test.ts`
+
+**Server Lifecycle Verification Best Practices:**
+- Always verify server stops responding after calling `stop()` - not just that the function completes
+- Use `AbortSignal.timeout()` when testing server unavailability to avoid hanging tests
+- Add stability checks (wait a few seconds) to ensure server isn't just slow to start
+- Server tests take significant time (~20-30 seconds each) - plan for longer test execution
+
+**Vitest Command Patterns:**
+- Use `npx vitest run <file>` for specific test files
+- No need for npm scripts - vitest can be invoked directly via npx
+- Test timeouts should be generous for server operations (90-120 seconds)
+- Console output from tests is preserved and visible, helpful for debugging
+
+### Critical Success Patterns for Future Work:
+
+**TDD Workflow That Actually Works:**
+1. Write the failing test first (really, don't skip this)
+2. Run the test to see the exact failure message
+3. Implement just enough to make it pass
+4. Verify the test passes
+5. Only then move to the next subtask
+
+**When Things Don't Work as Expected:**
+- Check file locations first - many issues are path-related
+- Verify dependencies are installed at the correct level (root vs subdirectory)
+- Run commands manually to see actual output before writing tests that check output
+- Use background processes with BashOutput tool to debug long-running commands
+- Always check current working directory with `pwd` when path issues occur
+
+**Integration Points to Remember:**
+- Playwright tests will import the server helper from `e2e/helpers/server.ts`
+- The skeleton template is at `templates/skeleton/` relative to project root
+- The monorepo must be built (`npm run build`) before the skeleton server can start
+- All E2E assets go in `/e2e` directory at repository root
+- Configuration files like `playwright.config.ts` must be at repository root
+
+**Time Expectations:**
+- Server startup: 10-15 seconds
+- Individual server tests: 20-30 seconds
+- Full smoke test suite target: <60 seconds
+- Full E2E suite target: ≤15 minutes
+
 ## Tasks
 
 - [x] 1. Add Playwright and command scaffolding
@@ -128,7 +183,7 @@
 
   - [x] 1.5. Verify by running `npm run e2e:smoke` locally.
 
-- [ ] 2. Implement server management utilities
+- [x] 2. Implement server management utilities
 
   - [x] 2.1. Write a failing unit test (`e2e/helpers/server.test.ts`) specifying that `startServer()` resolves with `{port, stop}` and that `GET /` responds 200 within 30 s.
     - **Note**: Based on test organization learnings, this unit test should likely go in `test/unit/` not `e2e/helpers/`
@@ -142,13 +197,19 @@
   - [x] 2.4. Ensure the helper tears down the process after tests to avoid orphaned ports.
     - **Verification**: The existing implementation already includes proper teardown in the `stop` function that kills the server process with SIGTERM/SIGKILL. Tests have `afterEach` hooks that call `stop()`. Verified no orphaned processes remain after running tests.
 
-  - [ ] 2.5. Run `npm run vitest e2e/helpers/server.test.ts` until all assertions pass.
+  - [x] 2.5. Run `npm run vitest e2e/helpers/server.test.ts` until all assertions pass.
+    - **Completed**: Tests run successfully from `test/unit/server.test.ts` - all 3 tests pass in ~21 seconds
 
-  - [ ] 2.6. Verify by importing `startServer()` in a scratch script and confirming the server lifecycle.
+  - [x] 2.6. Verify by importing `startServer()` in a scratch script and confirming the server lifecycle.
+    - **Completed**: Created and ran verification test confirming full server lifecycle (start, respond, stop, no longer accessible)
 
 - [ ] 3. Create smoke subset tests
 
   - [ ] 3.1. Write a failing Playwright test (`e2e/tests/smoke.spec.ts`) that launches the dev server via the helper, navigates to `/`, and asserts no console errors.
+    - **Important**: The file `e2e/tests/smoke.spec.ts` already exists with a placeholder test marked with `@smoke` tag
+    - **Important**: The server helper is in `e2e/helpers/server.ts` and exports `startServer()` function
+    - **Important**: Server startup takes 10-15 seconds, so Playwright test timeout should be generous
+    - **Consider**: Using Playwright's `test.beforeAll` and `test.afterAll` hooks for server lifecycle to avoid starting/stopping for each test
 
   - [ ] 3.2. Add selectors assertions: hero image, “Add to cart” button, login link, cart icon.
 
