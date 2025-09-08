@@ -87,7 +87,6 @@ test.describe('Collection Flow', () => {
       if (responseCode === 200) {
         // If collection exists, verify it has products
         const productCount = await collection.getProductCount();
-        console.log(`Collection '${handle}' has ${productCount} products`);
 
         // At least one collection should have products
         if (handle === 'all') {

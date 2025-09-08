@@ -11,6 +11,7 @@
 - `e2e/page-objects/storefront.ts` – Page object classes for Storefront, Product, Cart, and Collection pages (created).
 - `e2e/tests/cart-flow.spec.ts` – Cart journey tests (completed - adds item, updates quantity, removes item, verifies empty state).
 - `e2e/tests/collection-flow.spec.ts` – Collection journey tests (completed - navigates to collection, verifies grid, checks products have titles/prices).
+- `e2e/helpers/test-utils.ts` – Test helper utilities for clearing browser state and cart update waits (created).
 - `.github/workflows/e2e.yml` – GitHub Actions workflow to run the suite in CI (to be created).
 - `docs/tasks/tasks-prd-e2e-playwright-tests.md` – This task list.
 
@@ -488,6 +489,44 @@
 - **Collection Navigation**: Collections may have pagination or infinite scroll - account for this in page objects
 - **Variant Selection**: Products have size/color variants - page objects should handle variant selection before add to cart
 
+### Session 12 - Critical Implementation Insights for E2E Test Suite:
+
+**Test Isolation and State Management:**
+- **Browser State Persistence**: Cart state persists via cookies/localStorage between tests within the same file, but Playwright creates fresh contexts between test files
+- **Helper Creation**: Created `e2e/helpers/test-utils.ts` with `clearBrowserState()` and `waitForCartUpdate()` functions for test isolation
+- **Serialization Strategy**: Set `fullyParallel: false` in playwright.config.ts to ensure proper test ordering when tests mutate shared state
+
+**Performance Characteristics:**
+- **Execution Time**: Full suite of 7 tests runs in ~22-25 seconds with 5 parallel workers
+- **Server Startup Overhead**: Most time (~15 seconds) is spent on initial server startup per test file
+- **Individual Test Speed**: Once server is running, individual test actions complete in 1-3 seconds
+- **Parallelization Works**: Despite shared server resources, tests run reliably with multiple workers
+
+**Code Hygiene Patterns:**
+- **Debug Code Removal**: Always remove console.log statements before marking tasks complete
+- **Test Independence**: Each test file has its own server instance via beforeAll/afterAll hooks
+- **Selector Robustness**: Use multiple selector alternatives in page objects for flexibility across different HTML structures
+- **State Verification**: Always verify initial state (e.g., empty cart) at test start to catch state leakage
+
+**Task Completion Verification:**
+- **Individual Test Runs**: Always run each test file individually to ensure they work in isolation
+- **Full Suite Runs**: Run the complete suite to verify no conflicts between test files
+- **Both Commands Work**: Verify both `npm run e2e` and `npm run e2e:smoke` execute correctly
+- **Clean Output**: Ensure no debug output or warnings appear in test results
+
+**Common Pitfalls Avoided:**
+- Don't assume tests will fail when implementing TDD - skeleton template has many features already working
+- Don't forget to remove debug statements like console.log after debugging
+- Don't skip verifying individual test file execution - parallelization can mask issues
+- Don't overlook test helper opportunities - reusable utilities prevent duplication
+
+**Next Steps Preparation:**
+- Task 4.6 is trivial - just needs verification that suite runs under 15 minutes (already confirmed at ~22 seconds)
+- Task 5 (retry/flake control) will need careful consideration of which operations need retries
+- Task 6 (CI integration) will require ensuring all dependencies are installed in GitHub Actions
+- Task 7 (extensibility) should leverage the existing test-utils.ts for configuration management
+- Task 8 (documentation) should emphasize the need for `npm install` in both root and skeleton directories
+
 ## Tasks
 
 - [x] 1. Add Playwright and command scaffolding
@@ -562,7 +601,10 @@
 
   - [x] 4.4. Write failing `collection-flow.spec.ts` to verify grid renders expected products.
 
-  - [ ] 4.5. Implement test helpers and minimal fixes until each spec passes individually.
+  - [x] 4.5. Implement test helpers and minimal fixes until each spec passes individually.
+    - **Implementation**: Created test-utils.ts helper for clearing browser state
+    - **Fixes**: Removed debug console.log statement from collection-flow.spec.ts
+    - **Verification**: All tests pass individually and as a suite (22.6 seconds total)
 
   - [ ] 4.6. Verify by running `npm run e2e` (≤15 min total).
 
