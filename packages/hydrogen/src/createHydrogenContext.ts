@@ -38,6 +38,11 @@ import {
   sessionContext,
   waitUntilContext,
 } from './context-keys';
+import type {AnalyticsTokens} from '@shopify/hydrogen-react';
+import {
+  getBackendApprovedTokens,
+  type AnalyticsTokenOptions,
+} from './analytics-tokens';
 
 export type HydrogenContextOptions<
   TSession extends HydrogenSession = HydrogenSession,
@@ -100,6 +105,8 @@ export type HydrogenContextOptions<
     customMethods?: TCustomMethods;
   };
   buyerIdentity?: CartBuyerIdentityInput;
+  /** Analytics token configuration */
+  analytics?: AnalyticsTokenOptions;
 };
 
 export interface HydrogenContext<
@@ -122,6 +129,8 @@ export interface HydrogenContext<
   waitUntil?: WaitUntil;
   /** Any cookie implementation. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */
   session: TSession;
+  /** Analytics tokens for tracking with HttpOnly cookie support */
+  analyticsTokens?: AnalyticsTokens;
 }
 
 export interface HydrogenContextOverloads<
@@ -138,9 +147,10 @@ export interface HydrogenContextOverloads<
   env: TEnv;
   waitUntil?: WaitUntil;
   session: TSession;
+  analyticsTokens?: AnalyticsTokens;
 }
 
-export function createHydrogenContext<
+export async function createHydrogenContext<
   TSession extends HydrogenSession,
   TCustomMethods extends CustomMethodsBase | undefined = {},
   TI18n extends I18nBase = I18nBase,
@@ -149,8 +159,10 @@ export function createHydrogenContext<
 >(
   options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
   additionalContext?: TAdditionalContext,
-): HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> &
-  TAdditionalContext {
+): Promise<
+  HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> &
+    TAdditionalContext
+> {
   const {
     env,
     request,
@@ -163,6 +175,7 @@ export function createHydrogenContext<
     customerAccount: customerAccountOptions,
     cart: cartOptions = {},
     buyerIdentity,
+    analytics: analyticsOptions,
   } = options;
 
   if (!session) {
@@ -239,6 +252,16 @@ export function createHydrogenContext<
     customerAccount,
   });
 
+  // Fetch analytics tokens if enabled
+  let analyticsTokens: AnalyticsTokens | undefined;
+  if (analyticsOptions?.enabled) {
+    analyticsTokens = await getBackendApprovedTokens(
+      request,
+      storefront,
+      env.PUBLIC_CHECKOUT_DOMAIN,
+    );
+  }
+
   // Create React Router context provider
   const routerProvider = new RouterContextProvider();
 
@@ -260,6 +283,7 @@ export function createHydrogenContext<
     env,
     session,
     waitUntil,
+    analyticsTokens,
     // Merge additional context properties (CMS clients, 3P SDKs, etc.)
     ...(additionalContext || {}),
   };

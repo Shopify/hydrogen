@@ -17,6 +17,10 @@ export {
   type SearchViewPayload,
 } from './analytics-manager/AnalyticsView';
 export {AnalyticsEvent} from './analytics-manager/events';
+export {
+  type AnalyticsTokenOptions,
+  getBackendApprovedTokens,
+} from './analytics-tokens';
 export {createWithCache, type WithCache} from './cache/create-with-cache';
 export {InMemoryCache} from './cache/in-memory';
 export {type CacheKey} from './cache/run-with-cache';
@@ -126,6 +130,9 @@ export type {
   HydrogenSessionData,
 } from './types';
 export type {
+  AnalyticsCookieOptions,
+  AnalyticsTokens,
+  AnalyticsTokenSource,
   ClientBrowserParameters,
   MappedProductOptions,
   ParsedMetafields,
@@ -151,6 +158,8 @@ export {
   decodeEncodedVariant,
   ExternalVideo,
   flattenConnection,
+  createAnalyticsCookieHeaders,
+  createAnalyticsServerTimingHeader,
   getAdjacentAndFirstAvailableVariants,
   getClientBrowserParameters,
   getProductOptions,
