@@ -54,36 +54,31 @@ describe(`useShopifyCookies`, () => {
     vi.restoreAllMocks();
   });
 
-  it('sets _shopify_s and _shopify_y cookies when not found', () => {
+  it('no longer sets cookies (deprecated functionality)', () => {
+    // Frontend cookie writing has been disabled. Cookies are now managed server-side only.
     const cookieJar: MockCookieJar = mockCookie();
-    let cookies = getShopifyCookies(document.cookie);
+    const initialCookies = getShopifyCookies(document.cookie);
 
-    expect(cookies).toEqual({
+    expect(initialCookies).toEqual({
       _shopify_s: '',
       _shopify_y: '',
     });
 
+    // Hook no longer writes cookies
     renderHook(() => useShopifyCookies({hasUserConsent: true}));
 
-    cookies = getShopifyCookies(document.cookie);
+    const afterCookies = getShopifyCookies(document.cookie);
 
-    expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
+    // Cookies remain empty since frontend writing is disabled
+    expect(afterCookies).toEqual({
+      _shopify_s: '',
+      _shopify_y: '',
     });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(cookies['_shopify_y']).not.toBe('');
-
-    expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value,
-    );
-    expect(cookieJar['_shopify_s'].maxage).toBe(1800);
-    expect(cookieJar['_shopify_y'].maxage).toBe(31104000);
+    expect(Object.keys(cookieJar).length).toBe(0);
   });
 
-  it('does not override cookies when it already exists', () => {
+  it('no longer modifies existing cookies (deprecated functionality)', () => {
+    // Frontend cookie writing has been disabled. Existing cookies are preserved.
     const cookieJar: MockCookieJar = mockCookie();
     document.cookie = '_shopify_s=abc123; Max-Age=1800;';
     document.cookie = '_shopify_y=def456; Max-Age=1800;';
@@ -92,6 +87,7 @@ describe(`useShopifyCookies`, () => {
 
     const cookies = getShopifyCookies(document.cookie);
 
+    // Existing cookies remain unchanged since frontend writing is disabled
     expect(cookies).toEqual({
       _shopify_s: 'abc123',
       _shopify_y: 'def456',
@@ -99,7 +95,8 @@ describe(`useShopifyCookies`, () => {
     expect(Object.keys(cookieJar).length).toBe(2);
   });
 
-  it('sets new cookie if either cookie is missing', () => {
+  it('no longer sets missing cookies (deprecated functionality)', () => {
+    // Frontend cookie writing has been disabled. Missing cookies are not created.
     const cookieJar: MockCookieJar = mockCookie();
     document.cookie = '_shopify_s=abc123; Max-Age=1800;';
 
@@ -107,13 +104,12 @@ describe(`useShopifyCookies`, () => {
 
     let cookies = getShopifyCookies(document.cookie);
 
+    // Only existing cookie is preserved, missing _shopify_y is not created
     expect(cookies).toEqual({
       _shopify_s: 'abc123',
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
+      _shopify_y: '',
     });
-    expect(cookies['_shopify_y']).not.toBe('');
-    expect(Object.keys(cookieJar).length).toBe(2);
+    expect(Object.keys(cookieJar).length).toBe(1);
 
     document.cookie = '_shopify_s=1; expires=1 Jan 1970 00:00:00 GMT;';
     document.cookie = '_shopify_y=def456; Max-Age=1800;';
@@ -122,39 +118,32 @@ describe(`useShopifyCookies`, () => {
 
     cookies = getShopifyCookies(document.cookie);
 
+    // Only existing cookie is preserved, missing _shopify_s is not created
     expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
+      _shopify_s: '',
       _shopify_y: 'def456',
     });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(Object.keys(cookieJar).length).toBe(2);
+    expect(Object.keys(cookieJar).length).toBe(1);
   });
 
-  it('sets _shopify_y cookie expiry to 1 year when hasUserConsent is set to true', () => {
+  it('no longer manages cookie expiry (deprecated functionality)', () => {
+    // Frontend cookie writing has been disabled. Cookie expiry is managed server-side.
     const cookieJar: MockCookieJar = mockCookie();
 
     renderHook(() => useShopifyCookies({hasUserConsent: true}));
 
     const cookies = getShopifyCookies(document.cookie);
 
+    // No cookies are created since frontend writing is disabled
     expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
+      _shopify_s: '',
+      _shopify_y: '',
     });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(cookies['_shopify_y']).not.toBe('');
-
-    expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value,
-    );
-    expect(cookieJar['_shopify_s'].maxage).toBe(1800);
-    expect(cookieJar['_shopify_y'].maxage).toBe(31104000);
+    expect(Object.keys(cookieJar).length).toBe(0);
   });
 
-  it('sets domain with leading period when provided without a leading period', () => {
+  it('domain parameter no longer has effect (deprecated functionality)', () => {
+    // Frontend cookie writing has been disabled. Domain parameter is ignored.
     const cookieJar: MockCookieJar = mockCookie();
     const domain = 'myshop.com';
 
@@ -162,29 +151,16 @@ describe(`useShopifyCookies`, () => {
 
     const cookies = getShopifyCookies(document.cookie);
 
+    // No cookies are created regardless of domain parameter
     expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
+      _shopify_s: '',
+      _shopify_y: '',
     });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(cookies['_shopify_y']).not.toBe('');
-
-    expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value,
-    );
-    expect(cookieJar['_shopify_s']).toMatchObject({
-      domain: `.${domain}`,
-      maxage: 1800,
-    });
-    expect(cookieJar['_shopify_y']).toMatchObject({
-      domain: `.${domain}`,
-      maxage: 31104000,
-    });
+    expect(Object.keys(cookieJar).length).toBe(0);
   });
 
-  it('sets domain as is when provided with a leading period', () => {
+  it('domain parameter with leading period no longer has effect (deprecated functionality)', () => {
+    // Frontend cookie writing has been disabled. Domain parameter is ignored.
     const cookieJar: MockCookieJar = mockCookie();
     const domain = '.myshop.com';
 
@@ -192,29 +168,16 @@ describe(`useShopifyCookies`, () => {
 
     const cookies = getShopifyCookies(document.cookie);
 
+    // No cookies are created regardless of domain parameter format
     expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
+      _shopify_s: '',
+      _shopify_y: '',
     });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(cookies['_shopify_y']).not.toBe('');
-
-    expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value,
-    );
-    expect(cookieJar['_shopify_s']).toMatchObject({
-      domain,
-      maxage: 1800,
-    });
-    expect(cookieJar['_shopify_y']).toMatchObject({
-      domain,
-      maxage: 31104000,
-    });
+    expect(Object.keys(cookieJar).length).toBe(0);
   });
 
-  it('removes cookies if hasUserConsent is set to false', () => {
+  it('no longer removes cookies (deprecated functionality)', () => {
+    // Frontend cookie writing has been disabled. Cookie removal is managed server-side.
     const cookieJar: MockCookieJar = mockCookie();
     document.cookie = '_shopify_s=abc123; Max-Age=1800;';
     document.cookie = '_shopify_y=def456; Max-Age=1800;';
@@ -223,6 +186,7 @@ describe(`useShopifyCookies`, () => {
 
     let cookies = getShopifyCookies(document.cookie);
 
+    // Existing cookies remain
     expect(cookies).toEqual({
       _shopify_s: 'abc123',
       _shopify_y: 'def456',
@@ -232,15 +196,17 @@ describe(`useShopifyCookies`, () => {
 
     cookies = getShopifyCookies(document.cookie);
 
+    // Cookies are not removed since frontend manipulation is disabled
     expect(cookies).toEqual({
-      _shopify_s: '',
-      _shopify_y: '',
+      _shopify_s: 'abc123',
+      _shopify_y: 'def456',
     });
 
-    expect(Object.keys(cookieJar).length).toBe(0);
+    expect(Object.keys(cookieJar).length).toBe(2);
   });
 
-  it('sets domain to top level domain when checkoutDomain is supplied', () => {
+  it('checkoutDomain parameter no longer has effect (deprecated functionality)', () => {
+    // Frontend cookie writing has been disabled. CheckoutDomain parameter is ignored.
     const cookieJar: MockCookieJar = mockCookie();
     const domain = 'myshop.com';
     const checkoutDomain = 'checkout.myshop.com';
@@ -251,29 +217,16 @@ describe(`useShopifyCookies`, () => {
 
     const cookies = getShopifyCookies(document.cookie);
 
+    // No cookies are created regardless of checkoutDomain parameter
     expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
+      _shopify_s: '',
+      _shopify_y: '',
     });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(cookies['_shopify_y']).not.toBe('');
-
-    expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value,
-    );
-    expect(cookieJar['_shopify_s']).toMatchObject({
-      domain: `.myshop.com`,
-      maxage: 1800,
-    });
-    expect(cookieJar['_shopify_y']).toMatchObject({
-      domain: `.myshop.com`,
-      maxage: 31104000,
-    });
+    expect(Object.keys(cookieJar).length).toBe(0);
   });
 
-  it('sets domain to top level domain when domain and checkoutDomain are both subdomains', () => {
+  it('subdomain parameters no longer have effect (deprecated functionality)', () => {
+    // Frontend cookie writing has been disabled. Subdomain logic is no longer applied.
     const cookieJar: MockCookieJar = mockCookie();
     const domain = 'ca.myshop.com';
     const checkoutDomain = 'checkout.myshop.com';
@@ -284,29 +237,16 @@ describe(`useShopifyCookies`, () => {
 
     const cookies = getShopifyCookies(document.cookie);
 
+    // No cookies are created regardless of subdomain configuration
     expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
+      _shopify_s: '',
+      _shopify_y: '',
     });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(cookies['_shopify_y']).not.toBe('');
-
-    expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value,
-    );
-    expect(cookieJar['_shopify_s']).toMatchObject({
-      domain: `.myshop.com`,
-      maxage: 1800,
-    });
-    expect(cookieJar['_shopify_y']).toMatchObject({
-      domain: `.myshop.com`,
-      maxage: 31104000,
-    });
+    expect(Object.keys(cookieJar).length).toBe(0);
   });
 
-  it('does not set domain on localhost if checkoutDomain is supplied', () => {
+  it('localhost configuration no longer has effect (deprecated functionality)', () => {
+    // Frontend cookie writing has been disabled. Localhost handling is no longer relevant.
     const cookieJar: MockCookieJar = mockCookie();
     const domain = 'localhost:3000';
     const checkoutDomain = 'checkout.myshop.com';
@@ -317,23 +257,28 @@ describe(`useShopifyCookies`, () => {
 
     const cookies = getShopifyCookies(document.cookie);
 
+    // No cookies are created on localhost since frontend writing is disabled
     expect(cookies).toEqual({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_s: expect.any(String),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      _shopify_y: expect.any(String),
+      _shopify_s: '',
+      _shopify_y: '',
     });
-    expect(cookies['_shopify_s']).not.toBe('');
-    expect(cookies['_shopify_y']).not.toBe('');
+    expect(Object.keys(cookieJar).length).toBe(0);
+  });
 
-    expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value,
+  it('shows deprecation warning in development mode', () => {
+    // Test that deprecation warning is shown to alert developers
+    const originalDev = globalThis.__HYDROGEN_DEV__;
+    globalThis.__HYDROGEN_DEV__ = true;
+
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    renderHook(() => useShopifyCookies({hasUserConsent: true}));
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('useShopifyCookies is deprecated'),
     );
-    expect(cookieJar['_shopify_s']).toMatchObject({
-      maxage: 1800,
-    });
-    expect(cookieJar['_shopify_y']).toMatchObject({
-      maxage: 31104000,
-    });
+
+    consoleSpy.mockRestore();
+    globalThis.__HYDROGEN_DEV__ = originalDev;
   });
 });
