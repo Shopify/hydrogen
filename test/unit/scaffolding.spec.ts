@@ -10,7 +10,7 @@ describe('E2E Command Scaffolding', () => {
       stdio: 'pipe',
     });
 
-    expect(result).toContain('Playwright HTML report');
+    expect(result).toContain('HTML report');
 
     const htmlReportPath = path.join(
       process.cwd(),

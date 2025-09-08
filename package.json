@@ -15,6 +15,8 @@
     "dev:pkg": "turbo dev --parallel --filter=./packages/*",
     "dev:app": "cd templates/skeleton && npm run dev --",
     "docs:build": "turbo run build-docs",
+    "e2e": "playwright test",
+    "e2e:smoke": "playwright test --grep @smoke",
     "docs:preview": "turbo run preview-docs",
     "encrypt": "ejson encrypt secrets.ejson",
     "lint": "eslint --no-error-on-unmatched-pattern ./packages",
