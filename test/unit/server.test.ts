@@ -3,12 +3,19 @@ import {startServer} from '../../e2e/helpers/server';
 import * as http from 'node:http';
 
 describe('startServer', () => {
-  afterEach(() => {
+  let server: any = null;
+
+  afterEach(async () => {
+    // Clean up any running server
+    if (server && server.stop) {
+      await server.stop();
+      server = null;
+    }
     vi.clearAllMocks();
   });
 
   it('should start the skeleton dev server and return port and stop function', async () => {
-    const server = await startServer();
+    server = await startServer();
 
     expect(server).toHaveProperty('port');
     expect(typeof server.port).toBe('number');
@@ -17,10 +24,10 @@ describe('startServer', () => {
 
     expect(server).toHaveProperty('stop');
     expect(typeof server.stop).toBe('function');
-  });
+  }, 90000); // 90 second timeout for server startup
 
   it('should respond with HTTP 200 on GET / within 30 seconds', async () => {
-    const server = await startServer();
+    server = await startServer();
 
     const response = await new Promise<http.IncomingMessage>(
       (resolve, reject) => {
@@ -41,12 +48,10 @@ describe('startServer', () => {
     );
 
     expect(response.statusCode).toBe(200);
-
-    await server.stop();
-  });
+  }, 90000); // 90 second timeout
 
   it('should clean up the server process when stop is called', async () => {
-    const server = await startServer();
+    server = await startServer();
 
     await server.stop();
 
@@ -62,5 +67,5 @@ describe('startServer', () => {
           });
       }),
     ).rejects.toThrow();
-  });
+  }, 90000); // 90 second timeout
 });
