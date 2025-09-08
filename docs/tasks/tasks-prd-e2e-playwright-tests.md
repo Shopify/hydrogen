@@ -1,11 +1,12 @@
 ## Relevant Files
 
 - `playwright.config.ts` – Playwright configuration shared by all tests (created).
-- `e2e/tests/smoke.spec.ts` – Smoke-subset tests with placeholder test (created).
+- `e2e/tests/smoke.spec.ts` – Smoke-subset tests with critical element assertions (completed).
+- `e2e/tests/non-smoke.spec.ts` – Test file to verify @smoke tag filtering (created).
 - `test/unit/scaffolding.spec.ts` – Unit test for E2E command scaffolding (moved from e2e/tests/).
 - `test/unit/server.test.ts` – Unit test for server management helper (created).
 - `package.json` – Added npm scripts `e2e` and `e2e:smoke` (modified).
-- `e2e/helpers/server.ts` – Utility to start/stop the skeleton dev server programmatically (created - stub implementation).
+- `e2e/helpers/server.ts` – Utility to start/stop the skeleton dev server programmatically (completed with real implementation).
 - `e2e/tests/product-flow.spec.ts` – Product journey tests (to be created).
 - `e2e/tests/cart-flow.spec.ts` – Cart journey tests (to be created).
 - `e2e/tests/collection-flow.spec.ts` – Collection journey tests (to be created).
@@ -220,6 +221,51 @@
 - If imports fail, check if the package has switched to ESM-only in recent versions
 - Always verify the test can fail before assuming it works correctly
 
+### Session 7 - Selector Strategy and Test Organization Learnings:
+
+**HTML Inspection Strategy:**
+- Use `curl -s http://localhost:<port>/ | head -200` to quickly inspect page HTML structure
+- Start the dev server manually on a different port to inspect while tests are being written
+- The skeleton template uses semantic HTML with clear class names which makes selector writing easier
+- Key elements found: `.featured-collection-image img`, `a[href="/account"]`, `a[href="/cart"]`
+
+**Playwright Selector Best Practices:**
+- Prefer semantic selectors over fragile ones: `a[href="/account"]` over `nav > a:nth-child(2)`
+- Use `:has-text()` pseudo-selector for buttons with specific text: `button[type="submit"]:has-text("Add to cart")`
+- Always use `.first()` when multiple elements match to avoid ambiguity
+- For dynamic content, navigate to the page first before asserting (e.g., product page for "Add to cart")
+
+**Test Tagging and Organization:**
+- The `@smoke` tag goes directly in the test name string, not as a separate annotation
+- Verify tag filtering works by creating a non-tagged test and using `--list` flag
+- `npm run e2e:smoke -- --list` is invaluable for debugging which tests will run
+- Keep test files focused: smoke tests separate from full feature tests
+
+**Performance Observations:**
+- Smoke tests with server startup complete in ~7-8 seconds total
+- Most time is spent on server initialization (first 5-6 seconds)
+- Actual test execution is very fast (<2 seconds) once server is ready
+- Server startup time is consistent across runs, good for CI predictability
+
+**Debugging Shortcuts:**
+- `npm run e2e:smoke -- --list` to verify which tests match the grep pattern
+- `time npm run e2e:smoke` to measure actual execution time including npm overhead
+- Background process management: Start server with `run_in_background: true`, then use `BashOutput` to monitor
+- Always `KillBash` background processes when done to avoid port conflicts
+
+**Task Completion Patterns:**
+- Sub-tasks 3.3 and 3.4 were essentially already done by earlier work - recognize when work overlaps
+- The @smoke tag was added in 3.1, not 3.3 - implementation often naturally covers multiple requirements
+- When a test passes immediately after adding assertions, double-check they're actually running
+- Create deliberate test variations (like non-smoke.spec.ts) to verify configuration works
+
+**Future Test Implementation Tips:**
+- For product/cart/collection flows (Task 4), consider starting all tests with the server already running
+- Page object pattern will be crucial to avoid selector duplication across test files
+- Consider data-testid attributes if selectors become too fragile
+- Mock the GraphQL responses for faster, more reliable tests in CI
+- Keep an eye on test execution time - parallelize where possible
+
 ## Tasks
 
 - [x] 1. Add Playwright and command scaffolding
@@ -254,7 +300,7 @@
   - [x] 2.6. Verify by importing `startServer()` in a scratch script and confirming the server lifecycle.
     - **Completed**: Created and ran verification test confirming full server lifecycle (start, respond, stop, no longer accessible)
 
-- [ ] 3. Create smoke subset tests
+- [x] 3. Create smoke subset tests
 
   - [x] 3.1. Write a failing Playwright test (`e2e/tests/smoke.spec.ts`) that launches the dev server via the helper, navigates to `/`, and asserts no console errors.
     - **Implementation**: Successfully replaced placeholder test with real test that starts server, navigates to homepage, and verifies no console errors
@@ -262,13 +308,20 @@
     - **Test Structure**: Used `test.beforeAll` and `test.afterAll` hooks for server lifecycle management with 90-second timeout
     - **Verification**: Test correctly passes when no console errors exist and fails when expecting errors that don't exist
 
-  - [ ] 3.2. Add selectors assertions: hero image, “Add to cart” button, login link, cart icon.
+  - [x] 3.2. Add selectors assertions: hero image, "Add to cart" button, login link, cart icon.
+    - **Implementation**: Added assertions for all required elements based on actual HTML structure
+    - **Selectors Used**: `.featured-collection-image img` for hero, `a[href="/account"]` for login, `a[href="/cart"]` for cart, `button[type="submit"]:has-text("Add to cart")` for add to cart
+    - **Note**: Add to cart button requires navigation to a product page first
 
-  - [ ] 3.3. Tag the test with `@smoke` and ensure `npm run e2e:smoke` only executes these.
+  - [x] 3.3. Tag the test with `@smoke` and ensure `npm run e2e:smoke` only executes these.
+    - **Verification**: Test already had `@smoke` tag from 3.1 implementation
+    - **Confirmed**: Created non-smoke test file to verify filtering works - `npm run e2e:smoke` only runs tagged tests
 
-  - [ ] 3.4. Implement minimal page fixes or selector utilities until the test passes.
+  - [x] 3.4. Implement minimal page fixes or selector utilities until the test passes.
+    - **Result**: No fixes needed - all selectors worked correctly on first implementation
 
-  - [ ] 3.5. Verify by running `npm run e2e:smoke` locally (<60 s).
+  - [x] 3.5. Verify by running `npm run e2e:smoke` locally (<60 s).
+    - **Result**: Smoke tests complete in ~7.7 seconds, well under 60-second target
 
 - [ ] 4. Implement full test suite (product, cart, collection flows)
 
