@@ -2,9 +2,13 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:github.com)",
-      "Bash(gh run view:*)"
+      "Bash(gh run view:*)",
+      "Bash(npx vitest run:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "docs-shopify-cli",
     "docs-cloudflare-workers-sdk",
