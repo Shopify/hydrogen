@@ -34,5 +34,28 @@ test.describe('Smoke tests', () => {
     await expect(page).toHaveTitle(/Hydrogen/);
 
     expect(consoleErrors).toHaveLength(0);
+
+    // Check for hero image (featured collection image)
+    const heroImage = page.locator('.featured-collection-image img').first();
+    await expect(heroImage).toBeVisible();
+
+    // Check for login link
+    const loginLink = page.locator('a[href="/account"]').first();
+    await expect(loginLink).toBeVisible();
+    await expect(loginLink).toContainText('Sign in');
+
+    // Check for cart icon
+    const cartLink = page.locator('a[href="/cart"]').first();
+    await expect(cartLink).toBeVisible();
+    await expect(cartLink).toContainText('Cart');
+
+    // Navigate to a product page to check for Add to cart button
+    await page.goto(
+      `http://localhost:${serverConfig!.port}/products/sweatpants`,
+    );
+    const addToCartButton = page.locator(
+      'button[type="submit"]:has-text("Add to cart")',
+    );
+    await expect(addToCartButton).toBeVisible();
   });
 });
