@@ -7,7 +7,7 @@
 - `test/unit/server.test.ts` – Unit test for server management helper (created).
 - `package.json` – Added npm scripts `e2e` and `e2e:smoke` (modified).
 - `e2e/helpers/server.ts` – Utility to start/stop the skeleton dev server programmatically (completed with real implementation).
-- `e2e/tests/product-flow.spec.ts` – Product journey tests (to be created).
+- `e2e/tests/product-flow.spec.ts` – Product journey tests (completed).
 - `e2e/tests/cart-flow.spec.ts` – Cart journey tests (to be created).
 - `e2e/tests/collection-flow.spec.ts` – Collection journey tests (to be created).
 - `.github/workflows/e2e.yml` – GitHub Actions workflow to run the suite in CI (to be created).
@@ -266,6 +266,46 @@
 - Mock the GraphQL responses for faster, more reliable tests in CI
 - Keep an eye on test execution time - parallelize where possible
 
+### Session 8 - Product Flow Implementation Learnings:
+
+**TDD Expectations vs Reality:**
+- Sometimes tests pass immediately when you expect them to fail - this is OK if the functionality already exists
+- Always verify tests can detect failures by temporarily breaking assertions
+- The skeleton template has more functionality implemented than initially expected
+- Product navigation, price display, and cart functionality work out of the box
+
+**HTML Structure Discovery Patterns:**
+- Use `curl -s http://localhost:<port>/ | grep -A 10 -B 10 "keyword"` to quickly inspect HTML structure
+- Start a dev server on a different port for manual inspection while writing tests
+- The skeleton uses semantic HTML which makes selector writing easier
+- Key product elements: `.recommended-products-grid`, `.product-item`, product URLs like `/products/sweatpants`
+
+**Selector Strategy for Product Pages:**
+- Products are in `.recommended-products-grid a.product-item` on homepage
+- Product titles are in `h1` tags on product pages
+- Prices can be in various elements - use flexible selectors like `span:has-text("$")`
+- Add to cart buttons are `button[type="submit"]:has-text("Add to cart")`
+- Cart updates can be detected via drawer visibility or cart link text changes
+
+**Cart Interaction Patterns:**
+- Cart drawer is an `aside` element with "CART" text
+- Cart link shows count like "Cart 0" or "Cart 1"
+- After adding to cart, either drawer opens OR cart count updates
+- Use flexible assertions to handle both behaviors
+- Allow 1-2 seconds for cart state to update after actions
+
+**Test Execution Insights:**
+- Product flow tests take 10-15 seconds (mostly server startup)
+- Once server is running, navigation and assertions are fast (<5 seconds)
+- Network idle is a good wait condition for product page loads
+- The mock shop data is stable and predictable for testing
+
+**Common Pitfalls to Avoid:**
+- Don't assume selector structures - always inspect actual HTML first
+- Cart updates may not be instant - add appropriate waits
+- Some elements may have multiple valid selectors - use the most stable one
+- Test both positive and negative cases to ensure assertions work
+
 ## Tasks
 
 - [x] 1. Add Playwright and command scaffolding
@@ -325,7 +365,10 @@
 
 - [ ] 4. Implement full test suite (product, cart, collection flows)
 
-  - [ ] 4.1. Write failing `product-flow.spec.ts` covering navigate to product, assert title/price, add to cart.
+  - [x] 4.1. Write failing `product-flow.spec.ts` covering navigate to product, assert title/price, add to cart.
+    - **Implementation**: Created test that navigates to first product from recommended products grid
+    - **Assertions**: Verifies product title, price format, and add to cart functionality
+    - **Result**: Test passes, indicating skeleton template already has necessary functionality
 
   - [ ] 4.2. Implement page object helpers (`e2e/page-objects/storefront.ts`) for common interactions.
 
