@@ -7,7 +7,8 @@
 - `test/unit/server.test.ts` – Unit test for server management helper (created).
 - `package.json` – Added npm scripts `e2e` and `e2e:smoke` (modified).
 - `e2e/helpers/server.ts` – Utility to start/stop the skeleton dev server programmatically (completed with real implementation).
-- `e2e/tests/product-flow.spec.ts` – Product journey tests (completed).
+- `e2e/tests/product-flow.spec.ts` – Product journey tests (completed, updated to use page objects).
+- `e2e/page-objects/storefront.ts` – Page object classes for Storefront, Product, Cart, and Collection pages (created).
 - `e2e/tests/cart-flow.spec.ts` – Cart journey tests (to be created).
 - `e2e/tests/collection-flow.spec.ts` – Collection journey tests (to be created).
 - `.github/workflows/e2e.yml` – GitHub Actions workflow to run the suite in CI (to be created).
@@ -306,6 +307,49 @@
 - Some elements may have multiple valid selectors - use the most stable one
 - Test both positive and negative cases to ensure assertions work
 
+### Session 9 - Page Object Implementation Learnings:
+
+**Page Object Pattern Critical Success Factors:**
+- **Base URL Management**: Page objects need a base URL passed in constructor - don't rely on page.url() which may be about:blank initially
+- **Selector Flexibility**: Use multiple selector alternatives in locators (e.g., `.product-price, div:has-text("$"), span:has-text("$")`) because HTML structure varies
+- **Inheritance Structure**: Create a base StorefrontPage class with common elements, then extend it for specific page types
+- **Factory Function**: Use a `createPageObjects()` factory that instantiates all page objects with the same base URL for consistency
+
+**HTML Structure Discovery Process:**
+- **Manual Inspection First**: Always run dev server and use `curl` to inspect HTML before writing selectors
+- **Price Element Gotcha**: Prices might be in `<div>` not `<span>` - the skeleton uses `<div class="product-price"><div>$26.00</div></div>`
+- **Background Process Management**: Use `run_in_background: true` for dev servers during development, but remember to KillBash when done
+- **Port Conflicts**: Always kill background processes to avoid "address already in use" errors
+
+**Playwright Test Timeout Management:**
+- **Long Timeouts Needed**: Server startup operations need 90+ second timeouts, not the default 30 seconds
+- **Test Hanging**: If tests timeout at 2 minutes exactly, it's likely the npm run command timeout, not Playwright's timeout
+- **Error Messages**: "net::ERR_CONNECTION_REFUSED" usually means the server didn't start or wrong URL is being used
+
+**Directory Context Issues:**
+- **Shell Context**: Commands like `cd templates/skeleton && npm run dev` work better than `npm --prefix` when the CLI expects to be in project root
+- **Hydrogen CLI Expectations**: The Shopify Hydrogen CLI checks if you're in a Hydrogen project directory - run from skeleton dir
+- **Background Process Context**: Background processes inherit the shell's working directory at launch time
+
+**Page Object Method Design:**
+- **Async Everything**: All page object methods should be async, even simple getters, for consistency
+- **Wait Helpers**: Include wait methods like `waitForCartUpdate()` with reasonable timeouts built in
+- **Return Types**: Be explicit about return types (Promise<string>, Promise<number>, etc.) for better TypeScript support
+- **Flexible Navigation**: Support both full URLs and paths in goto() methods for versatility
+
+**Testing With Page Objects:**
+- **Import Strategy**: Update existing tests to use page objects incrementally - verify each works before moving on
+- **Locator Access**: Expose locators as readonly properties so tests can still use Playwright's expect() assertions
+- **Method Granularity**: Create both low-level (click button) and high-level (complete purchase) methods
+- **State Verification**: Include helper methods to check state (isCartEmpty, getCartCount, etc.)
+
+**Future Considerations for Cart and Collection Tests:**
+- **Cart State**: Cart may persist between tests - always clear/reset cart state in beforeEach or afterEach hooks
+- **Dynamic Content**: Product grids and cart items are dynamic - use flexible selectors and count-based assertions
+- **GraphQL Timing**: Cart operations involve GraphQL mutations - add appropriate waits after actions
+- **Collection Navigation**: Collections may have pagination or infinite scroll - account for this in page objects
+- **Variant Selection**: Products have size/color variants - page objects should handle variant selection before add to cart
+
 ## Tasks
 
 - [x] 1. Add Playwright and command scaffolding
@@ -370,7 +414,11 @@
     - **Assertions**: Verifies product title, price format, and add to cart functionality
     - **Result**: Test passes, indicating skeleton template already has necessary functionality
 
-  - [ ] 4.2. Implement page object helpers (`e2e/page-objects/storefront.ts`) for common interactions.
+  - [x] 4.2. Implement page object helpers (`e2e/page-objects/storefront.ts`) for common interactions.
+    - **Implementation**: Created comprehensive page object classes for Storefront, Product, Cart, and Collection pages
+    - **Features**: Base URL handling, common locators, reusable methods for navigation and assertions
+    - **Usage**: Updated product-flow.spec.ts to use page objects, making tests more maintainable
+    - **Verification**: Product flow test passes using page objects
 
   - [ ] 4.3. Write failing `cart-flow.spec.ts` to open cart, update quantity, assert subtotal, remove item.
 
