@@ -9,7 +9,7 @@
 - `e2e/helpers/server.ts` – Utility to start/stop the skeleton dev server programmatically (completed with real implementation).
 - `e2e/tests/product-flow.spec.ts` – Product journey tests (completed, updated to use page objects).
 - `e2e/page-objects/storefront.ts` – Page object classes for Storefront, Product, Cart, and Collection pages (created).
-- `e2e/tests/cart-flow.spec.ts` – Cart journey tests (to be created).
+- `e2e/tests/cart-flow.spec.ts` – Cart journey tests (completed - adds item, updates quantity, removes item, verifies empty state).
 - `e2e/tests/collection-flow.spec.ts` – Collection journey tests (to be created).
 - `.github/workflows/e2e.yml` – GitHub Actions workflow to run the suite in CI (to be created).
 - `docs/tasks/tasks-prd-e2e-playwright-tests.md` – This task list.
@@ -343,6 +343,65 @@
 - **Method Granularity**: Create both low-level (click button) and high-level (complete purchase) methods
 - **State Verification**: Include helper methods to check state (isCartEmpty, getCartCount, etc.)
 
+### Session 10 - Cart Flow Implementation Critical Learnings:
+
+**Selector Debugging is 90% of E2E Test Work:**
+- **Product Title Gotcha**: The h1 selector can pick up titles from homepage featured collections instead of product pages - use more specific selectors like `.product-main h1`
+- **Cart Item Count Trap**: Generic selectors like `.cart-details li` will pick up ALL li elements including size/color option lists - use specific class selectors like `li.cart-line`
+- **Dynamic Content Timing**: Always wait for URL changes with `waitForURL(/pattern/)` after navigation to ensure you're on the right page before getting text
+- **Text Content Apostrophes**: Watch out for smart quotes vs regular apostrophes in text assertions - use partial matches to avoid encoding issues
+
+**Cart Drawer Interaction Patterns:**
+- **Modal Overlays Block Clicks**: Cart drawers often intercept clicks - either close them first or navigate directly to `/cart` page
+- **Drawer State Management**: After add-to-cart, the drawer may or may not open automatically - check visibility before trying to interact
+- **Post-Action Waits Essential**: Cart operations (add, update quantity, remove) need 1-2 second waits for server updates to complete
+
+**Quantity and Price Handling:**
+- **Quantity Display Varies**: Cart quantity might be in input fields OR displayed as text like "Quantity: 1" - check actual HTML structure
+- **Subtotal Location**: Subtotal can be in various elements (dd, strong, div) - use multiple selector alternatives
+- **Price Parsing**: Extract numeric values with regex like `parseFloat(price.replace(/[^0-9.]/g, ''))` for mathematical comparisons
+
+**Remove Button Complexity:**
+- **Multiple Remove Buttons**: Page may have remove buttons for discounts, gift cards, AND cart items - be very specific with selectors
+- **Form Submission vs Click**: Remove might be a form submission not just a button click - check actual implementation
+- **Cart Closure After Remove**: Removing last item often closes the cart drawer - may need to reopen to check empty state
+
+**Empty Cart State Detection:**
+- **Message Text Varies**: Empty cart messages differ between implementations - use partial text matches
+- **Hidden vs Removed**: Empty cart UI might be hidden (display:none) rather than removed from DOM - check visibility not just existence
+- **Drawer vs Page**: Empty cart UI might look different in drawer vs full cart page
+
+**Page Object Design Insights:**
+- **Expose Page Instance**: Keep `page` as public property on page objects for direct Playwright access when needed
+- **Wait Helpers**: Build wait methods into page objects (waitForCartUpdate, waitForNavigation) with reasonable timeouts
+- **Flexible Locators**: Use multiple selector alternatives in a single locator for robustness
+- **Method Granularity**: Both low-level (click button) and high-level (complete purchase) methods are useful
+
+**Test Stability Techniques:**
+- **Generous Timeouts**: Server operations need 90+ second timeouts, not default 30 seconds
+- **Explicit Waits Over Sleep**: Use `waitForSelector`, `waitForURL`, `waitForLoadState` instead of arbitrary timeouts where possible
+- **State Cleanup**: Cart state persists between tests - always verify clean state at test start
+- **Debug First**: When tests fail mysteriously, add console.log to see actual values before writing assertions
+
+**Common Pitfalls That Waste Time:**
+- Assuming selector will find the right element without checking actual HTML
+- Not waiting for navigation/updates to complete before assertions
+- Using overly generic selectors that match multiple elements
+- Forgetting that cart operations are async and need wait time
+- Not checking if modal/drawer is blocking interactions
+
+**Critical Playwright Config Settings:**
+- **HTML Report Auto-Open**: Set `open: 'never'` in reporter config to prevent browser tabs opening after every test run
+- **Test Timeout**: Default 30s is too short for server operations - set generous timeouts in beforeAll/afterAll hooks
+- **Screenshot on Failure**: Already configured but remember screenshots are invaluable for debugging E2E failures
+
+**Debugging Workflow That Actually Works:**
+1. Start dev server manually on different port for inspection
+2. Use curl to inspect HTML structure and understand selectors
+3. Add console.log to see actual values before writing assertions
+4. Check screenshots when tests fail to understand page state
+5. Use `npx playwright show-report` only when you need detailed failure analysis
+
 **Future Considerations for Cart and Collection Tests:**
 - **Cart State**: Cart may persist between tests - always clear/reset cart state in beforeEach or afterEach hooks
 - **Dynamic Content**: Product grids and cart items are dynamic - use flexible selectors and count-based assertions
@@ -420,7 +479,7 @@
     - **Usage**: Updated product-flow.spec.ts to use page objects, making tests more maintainable
     - **Verification**: Product flow test passes using page objects
 
-  - [ ] 4.3. Write failing `cart-flow.spec.ts` to open cart, update quantity, assert subtotal, remove item.
+  - [x] 4.3. Write failing `cart-flow.spec.ts` to open cart, update quantity, assert subtotal, remove item.
 
   - [ ] 4.4. Write failing `collection-flow.spec.ts` to verify grid renders expected products.
 

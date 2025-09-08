@@ -71,7 +71,7 @@ export class ProductPage extends StorefrontPage {
   constructor(page: Page, baseUrl?: string) {
     super(page, baseUrl);
 
-    this.productTitle = page.locator('h1');
+    this.productTitle = page.locator('.product-main h1').first();
     this.productPrice = page
       .locator('.product-price, div:has-text("$"), span:has-text("$")')
       .filter({hasText: '$'});
@@ -91,11 +91,15 @@ export class ProductPage extends StorefrontPage {
 
   async navigateToFirstProduct() {
     await this.goto('/');
+    // Wait for recommended products to be visible
+    await this.recommendedProductsGrid.waitFor({state: 'visible'});
     const firstProduct = this.recommendedProductsGrid
       .locator('a.product-item')
       .first();
     await firstProduct.click();
     await this.page.waitForLoadState('networkidle');
+    // Wait for product page to be visible
+    await this.productTitle.waitFor({state: 'visible'});
   }
 
   async addToCart(quantity: number = 1) {
@@ -131,36 +135,40 @@ export class CartPage extends StorefrontPage {
   constructor(page: Page, baseUrl?: string) {
     super(page, baseUrl);
 
-    this.cartItems = page
-      .locator('[data-test="cart-item"], .cart-item, li')
-      .filter({has: page.locator('button')});
+    // More specific selectors for cart items in the drawer or page
+    this.cartItems = page.locator(
+      'li.cart-line, [data-test="cart-item"], .cart-item',
+    );
     this.cartItemTitle = page.locator(
-      '[data-test="cart-item-title"], .cart-item-title, h3, h4',
+      '.cart-line a[href*="/products"] strong, [data-test="cart-item-title"], .cart-item-title',
     );
     this.cartItemPrice = page.locator(
-      '[data-test="cart-item-price"], .cart-item-price',
+      '.cart-details small, [data-test="cart-item-price"], .cart-item-price',
     );
+    // Updated to handle both input fields and displayed quantity values
     this.cartItemQuantity = page.locator(
-      'input[name*="quantity"], [data-test="quantity"]',
+      'input[name*="quantity"], input[type="number"], [data-test="quantity"], .quantity',
     );
     this.removeItemButton = page
-      .locator('button')
-      .filter({hasText: /remove|delete|trash/i});
+      .locator('button, a')
+      .filter({hasText: /remove|delete|trash|×/i});
     this.updateQuantityButton = page
       .locator('button')
       .filter({hasText: /update/i});
-    this.cartSubtotal = page
-      .locator('[data-test="subtotal"], .subtotal, .cart-subtotal')
-      .filter({hasText: '$'});
-    this.emptyCartMessage = page.locator('text=/empty|no items/i');
+    this.cartSubtotal = page.locator(
+      '.cart-subtotal dd, .cart-summary strong, [data-test="subtotal"], .subtotal',
+    );
+    this.emptyCartMessage = page.locator(
+      'p:has-text("Looks like you haven\'t added anything")',
+    );
     this.checkoutButton = page
       .locator('button, a')
-      .filter({hasText: /checkout/i});
+      .filter({hasText: /checkout|continue to checkout/i});
     this.quantityIncreaseButton = page.locator(
-      'button[aria-label*="Increase"], button:has-text("+")',
+      'button[aria-label*="Increase"], button:has-text("+"), .quantity-selector button:last-child',
     );
     this.quantityDecreaseButton = page.locator(
-      'button[aria-label*="Decrease"], button:has-text("-")',
+      'button[aria-label*="Decrease"], button:has-text("-"), .quantity-selector button:first-child',
     );
   }
 
@@ -194,11 +202,12 @@ export class CartPage extends StorefrontPage {
   }
 
   async increaseQuantity(itemIndex: number = 0) {
-    const increaseButtons = await this.quantityIncreaseButton.all();
-    if (increaseButtons[itemIndex]) {
-      await increaseButtons[itemIndex].click();
-      await this.waitForCartUpdate();
-    }
+    // More specific selector for the increase button
+    const increaseButton = this.page
+      .locator('button[aria-label="Increase quantity"], button:has-text("+")')
+      .first();
+    await increaseButton.click();
+    await this.page.waitForTimeout(2000); // Wait for cart to update
   }
 
   async decreaseQuantity(itemIndex: number = 0) {
@@ -210,15 +219,14 @@ export class CartPage extends StorefrontPage {
   }
 
   async removeItem(itemIndex: number = 0) {
-    const removeButtons = await this.removeItemButton.all();
-    if (removeButtons[itemIndex]) {
-      await removeButtons[itemIndex].click();
-      await this.waitForCartUpdate();
-    }
+    // More specific selector for Remove button in cart
+    const removeButton = this.page.locator('button:has-text("Remove")').first();
+    await removeButton.click();
+    await this.page.waitForTimeout(2000); // Wait for cart to update
   }
 
   async getSubtotal(): Promise<string> {
-    const subtotalText = await this.cartSubtotal.textContent();
+    const subtotalText = await this.cartSubtotal.first().textContent();
     return subtotalText || '';
   }
 
