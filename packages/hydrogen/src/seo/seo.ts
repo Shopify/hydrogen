@@ -4,10 +4,9 @@ import {
   type Params,
   useLocation,
   useMatches,
+  LoaderFunction,
 } from 'react-router';
 import {generateSeoTags, type SeoConfig} from './generate-seo-tags';
-
-import type {LoaderFunction} from 'react-router';
 
 const SeoLogger = lazy(() => import('./log-seo-tags'));
 
