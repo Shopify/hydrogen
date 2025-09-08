@@ -2,7 +2,11 @@ import type {AppLoadContext} from '@shopify/remix-oxygen';
 import {ServerRouter} from 'react-router';
 import {isbot} from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
-import {createContentSecurityPolicy} from '@shopify/hydrogen';
+import {
+  createContentSecurityPolicy,
+  createAnalyticsServerTimingHeader,
+  createAnalyticsCookieHeaders,
+} from '@shopify/hydrogen';
 import type {EntryContext} from 'react-router';
 
 export default async function handleRequest(
@@ -43,6 +47,24 @@ export default async function handleRequest(
 
   responseHeaders.set('Content-Type', 'text/html');
   responseHeaders.set('Content-Security-Policy', header);
+
+  if (context.analyticsTokens) {
+    const serverTimingValue = createAnalyticsServerTimingHeader(context.analyticsTokens);
+    if (serverTimingValue) {
+      responseHeaders.set('Server-Timing', serverTimingValue);
+    }
+    
+    const cookieHeaders = createAnalyticsCookieHeaders(
+      context.analyticsTokens,
+      {
+        requestUrl: request.url,
+      },
+    );
+    
+    cookieHeaders.forEach(cookieHeader => {
+      responseHeaders.append('Set-Cookie', cookieHeader);
+    });
+  }
 
   return new Response(body, {
     headers: responseHeaders,
