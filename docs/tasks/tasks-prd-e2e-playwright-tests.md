@@ -21,6 +21,21 @@
 - Flake control: implement retries and trace capture on second failure.
 - Extensibility: keep server URL and auth flags configurable via environment variables.
 
+### Environment Setup Reminders
+
+**Before starting any E2E work:**
+1. Ensure you're in the project root directory (not in templates/skeleton/)
+2. Run `npm install` in both project root AND templates/skeleton/
+3. Verify Playwright browsers are installed with `npx playwright install`
+4. Check that the skeleton server can start manually before automating
+
+**Common Gotchas to Watch For:**
+- The skeleton server needs 10-15 seconds to start - don't assume it's broken if it doesn't respond immediately
+- Use `npm --prefix <path>` to run npm commands in different directories without changing cwd
+- The Shopify CLI hydrogen plugin outputs formatted success messages - parse carefully
+- Vitest runs from the current directory - always check `pwd` before running tests
+- Background processes need explicit cleanup - use KillBash or process.kill()
+
 ### Implementation Learnings
 
 **Test Execution Context:**
@@ -64,19 +79,24 @@
 - **Configuration Location**: `playwright.config.ts` must be at repository root, not in the e2e/ directory
 - **HTML Report Path**: Playwright generates reports in `playwright-report/` directory by default, which the scaffolding test verifies exists
 
-**Server Implementation Insights (Session 2):**
+**Server Implementation Insights (Sessions 2-3):**
 - **Stub Before Real Implementation**: Successfully used a mock HTTP server with child process stub to pass tests before implementing real skeleton server startup
 - **Mock Server Pattern**: Using Node's built-in `http.createServer` for stub implementation provides a lightweight way to test server lifecycle without external dependencies
 - **Port 0 Strategy**: Listening on port 0 lets the OS assign an available port, avoiding conflicts in parallel test runs
 - **Cleanup Critical**: Server stop function must properly close HTTP server AND kill child process to avoid orphaned resources
 - **Test Isolation**: Each test should get its own server instance - no shared state between tests
-- **Next Steps for Real Implementation (2.3)**: Will need to:
-  - Install `get-port` package for robust port selection
-  - Install `execa` for better child process management
-  - Find the actual skeleton template dev command (likely `npm run dev` in templates/skeleton/)
-  - Wait for server readiness (not just process spawn, but actual HTTP availability)
-  - Handle process errors and stdout/stderr for debugging
-- **Current State**: Tasks 1 and 2.1-2.2 complete. Stub server implementation passes all tests. Ready for task 2.3 (real skeleton server implementation).
+
+**Real Server Implementation Learnings (Session 3):**
+- **Working Directory Matters**: Always verify your current working directory with `pwd` before running commands - the skeleton template may be in a different location than expected
+- **Port Passing Method**: Use `npm run dev -- --port <port>` format to pass CLI arguments through npm scripts to the underlying command
+- **Server Startup Time**: Real skeleton dev server takes 10-15 seconds to start - tests need generous timeouts (90+ seconds) to avoid false failures
+- **Dependencies First**: Always ensure `npm install` has been run in the skeleton template directory before attempting to start the server
+- **Process Management**: Use `execa` with `reject: false` to prevent automatic rejection on non-zero exits, allowing graceful error handling
+- **Readiness Check**: Don't just wait for the process to spawn - poll for HTTP 200 response to ensure the server is actually ready to handle requests
+- **Shell Limitations**: The test environment's shell may not support `cd` in eval context - use absolute paths or `npm --prefix` instead
+- **Background Process Testing**: Use the `run_in_background` flag for manual testing, then check output with BashOutput tool to debug server startup issues
+- **Test Cleanup**: Always clean up servers in `afterEach` hooks to prevent port conflicts and orphaned processes between tests
+- **Path Resolution**: Use `path.resolve(__dirname, '../../templates/skeleton')` to reliably find the skeleton template from the helper file location
 
 ## Tasks
 
@@ -100,7 +120,8 @@
   - [x] 2.2. Stub the skeleton template start command with a mock child process; run the test (should still fail).
     - **Implementation**: Created stub server with mock HTTP server and child process in `e2e/helpers/server.ts` that passes all tests
 
-  - [ ] 2.3. Implement `startServer()` in `e2e/helpers/server.ts` using `get-port` and `execa`, returning an async `stop()` handler.
+  - [x] 2.3. Implement `startServer()` in `e2e/helpers/server.ts` using `get-port` and `execa`, returning an async `stop()` handler.
+    - **Implementation**: Successfully replaced stub with real implementation using get-port for port selection and execa for process management. Server starts skeleton template on available port and waits for HTTP 200 readiness.
 
   - [ ] 2.4. Ensure the helper tears down the process after tests to avoid orphaned ports.
 
@@ -186,6 +207,15 @@ Follow Outside-In TDD strictly:
 - Don't assume output format - always verify actual command output first
 - Keep unit tests about the infrastructure separate from actual E2E tests
 - Placeholder implementations are fine for making tests pass initially
+
+**Critical Debugging Patterns:**
+- **Test Timeouts**: If tests timeout, first increase timeout to 90+ seconds, then debug the actual command
+- **Path Issues**: Use absolute paths when relative paths fail, especially with npm commands
+- **Process Debugging**: Run commands in background mode first to see actual output before implementing
+- **Port Conflicts**: Always use dynamic port allocation (get-port) rather than hardcoded ports
+- **Dependency Installation**: Check that `npm install` has been run in all necessary directories
+- **Error Visibility**: Use `stdio: 'pipe'` to capture process output for debugging, not 'inherit'
+- **Cleanup Pattern**: Store server references at test suite level and clean up in afterEach hooks
 
 Safe Iteration Pattern:
 - Ask the human to run tests after each implementation.
