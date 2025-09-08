@@ -10,7 +10,7 @@
 - `e2e/tests/product-flow.spec.ts` – Product journey tests (completed, updated to use page objects).
 - `e2e/page-objects/storefront.ts` – Page object classes for Storefront, Product, Cart, and Collection pages (created).
 - `e2e/tests/cart-flow.spec.ts` – Cart journey tests (completed - adds item, updates quantity, removes item, verifies empty state).
-- `e2e/tests/collection-flow.spec.ts` – Collection journey tests (to be created).
+- `e2e/tests/collection-flow.spec.ts` – Collection journey tests (completed - navigates to collection, verifies grid, checks products have titles/prices).
 - `.github/workflows/e2e.yml` – GitHub Actions workflow to run the suite in CI (to be created).
 - `docs/tasks/tasks-prd-e2e-playwright-tests.md` – This task list.
 
@@ -343,6 +343,85 @@
 - **Method Granularity**: Create both low-level (click button) and high-level (complete purchase) methods
 - **State Verification**: Include helper methods to check state (isCartEmpty, getCartCount, etc.)
 
+### Critical Gotchas to Remember:
+
+**Environment Setup:**
+- **ALWAYS** run `npm run build` at project root before starting E2E tests
+- **ALWAYS** ensure `npm install` has been run in both root AND templates/skeleton
+- The skeleton dev server takes 10-15 seconds to start - don't assume it's broken
+
+**Selector Strategies:**
+- HTML structure varies between pages - always inspect actual HTML before writing selectors
+- Prices might be in div, span, or small elements - use flexible selectors with filters
+- Product titles might be h1, h2, h3, or h4 - check the actual page structure
+- Use `curl -s http://localhost:PORT/path | grep -A 5 -B 5 "keyword"` for quick HTML inspection
+
+**Test Execution:**
+- Server startup in beforeAll hooks needs 90+ second timeout, not default 30
+- Background processes must be killed to avoid port conflicts
+- The Hydrogen CLI expects to run from within the project directory
+- All 7 current tests pass in ~22 seconds with parallel execution
+
+**Page Object Patterns:**
+- Keep the `page` property public for direct Playwright access when needed
+- Use multiple selector alternatives in locators for robustness
+- Always pass baseUrl to page objects - don't rely on page.url()
+- Include both low-level and high-level methods for flexibility
+
+### Future Task Considerations (Tasks 4.5-8):
+
+**For Task 4.5 (Test helpers and fixes):**
+- All individual tests are passing - may just need to verify they work together
+- Consider adding a test helper for clearing cart state between test files
+- May want to add wait utilities for common operations (cart updates, navigation)
+
+**For Task 4.6 (Full suite verification):**
+- Current execution time is ~22 seconds for 7 tests - well under 15-minute target
+- Parallel execution with 5 workers is working without issues
+- May want to add a timer utility to track individual test execution times
+
+**For Task 5 (Retry and flake control):**
+- No flakiness observed yet, but cart operations might benefit from retries
+- Screenshot capture on failure is already configured in playwright.config.ts
+- Cookie/localStorage clearing might be needed between test files (not just tests)
+
+**For Task 6 (GitHub Actions):**
+- Remember to build the monorepo first (`npm run build`) before running E2E tests
+- Playwright browser installation will be needed in CI
+- Consider caching node_modules and Playwright browsers for faster CI runs
+
+**For Task 7 (Extensibility hooks):**
+- Store URL is currently hardcoded in server.ts - make it configurable via env var
+- Customer Account tests will need different auth setup than current mock shop
+
+**For Task 8 (Documentation):**
+- Document the need to run `npm install` in both root and templates/skeleton
+- Explain the server startup time (10-15 seconds) to set expectations
+- Include troubleshooting for common port conflicts
+
+### Session 11 - Collection Flow Implementation Learnings:
+
+**Selector Precision for Collection Pages:**
+- **Price Selector Evolution**: Collection page prices are in `<small><div>$19.00</div></small>` structure, not just in spans
+- **Multiple Selector Alternatives Work**: Using `.locator('[data-test="product-price"], .price, small div, div').filter({hasText: '$'})` provides flexibility
+- **Always Inspect HTML First**: Running a dev server on a separate port for HTML inspection saves debugging time
+- **Product Grid Structure**: The skeleton uses `.products-grid` with `.product-item` links containing h4 titles and small/div prices
+
+**Test Organization Insights:**
+- **TDD Sometimes Shows Tests Pass Immediately**: When functionality already exists (like collection pages), tests may pass on first run - this is OK
+- **Verify Failure Modes**: Even when tests pass, temporarily break assertions to ensure they can detect failures
+- **Multiple Collection Handles**: Testing different handles ('all', 'frontpage', 'automated-collection') reveals which have products in mock data
+
+**Performance Observations:**
+- **All Tests Run Fast**: Full suite of 7 tests completes in ~22 seconds, well under 15-minute target
+- **Parallel Execution Works**: Playwright successfully runs 5 workers in parallel without conflicts
+- **Server Startup Dominates Time**: Most test time is server initialization, actual test execution is very fast
+
+**Background Process Management:**
+- **Shell Context Matters**: Use `cd templates/skeleton && npm run dev` instead of `npm --prefix` when Hydrogen CLI expects to be in project directory
+- **Always Kill Background Processes**: Orphaned dev servers cause port conflicts - always use KillBash after inspection
+- **Background Output Monitoring**: The BashOutput tool helps debug server startup issues without blocking test execution
+
 ### Session 10 - Cart Flow Implementation Critical Learnings:
 
 **Selector Debugging is 90% of E2E Test Work:**
@@ -481,7 +560,7 @@
 
   - [x] 4.3. Write failing `cart-flow.spec.ts` to open cart, update quantity, assert subtotal, remove item.
 
-  - [ ] 4.4. Write failing `collection-flow.spec.ts` to verify grid renders expected products.
+  - [x] 4.4. Write failing `collection-flow.spec.ts` to verify grid renders expected products.
 
   - [ ] 4.5. Implement test helpers and minimal fixes until each spec passes individually.
 

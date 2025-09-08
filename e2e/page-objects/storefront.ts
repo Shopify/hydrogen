@@ -266,7 +266,7 @@ export class CollectionPage extends StorefrontPage {
       'h2, h3, h4, [data-test="product-title"]',
     );
     this.productPrices = this.productItems
-      .locator('[data-test="product-price"], .price, span')
+      .locator('[data-test="product-price"], .price, small div, div')
       .filter({hasText: '$'});
     this.sortDropdown = page.locator(
       'select[name*="sort"], [data-test="sort"]',
