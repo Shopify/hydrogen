@@ -4,6 +4,22 @@
 
 Add React Router 7.8.x support infrastructure with full compatibility for both context access patterns.
 
+## New `createRequestHandler` Export from `/oxygen`
+
+Hydrogen now provides its own `createRequestHandler` that wraps React Router's implementation:
+
+```diff
+// server.ts
+- import {createRequestHandler} from '@shopify/remix-oxygen';
++ import {createRequestHandler} from '@shopify/hydrogen/oxygen';
+```
+
+This new handler:
+- Uses React Router's `createRequestHandler` internally
+- Adds Hydrogen-specific request validation
+- Includes powered-by headers
+- Handles double-slash URL normalization
+
 ## New `react-router-preset` Export
 
 Configure React Router with Hydrogen's optimized settings:
@@ -184,7 +200,8 @@ Then use in server.ts:
 ```diff
 // server.ts
 import {storefrontRedirect} from '@shopify/hydrogen';
-import {createRequestHandler} from '@shopify/remix-oxygen';
+- import {createRequestHandler} from '@shopify/remix-oxygen';
++ import {createRequestHandler} from '@shopify/hydrogen/oxygen';
 + import {createHydrogenRouterContext} from '~/lib/context';
 
 export default {
@@ -203,7 +220,9 @@ export default {
 +   );
 
     const handleRequest = createRequestHandler({
-      build: await import('virtual:react-router/server-build'),
+-     build: remixBuild,
++     // React Router 7.8.x server build
++     build: await import('virtual:react-router/server-build'),
       mode: process.env.NODE_ENV,
 -     getLoadContext: () => context,
 +     getLoadContext: () => hydrogenContext,
@@ -213,4 +232,6 @@ export default {
   },
 };
 ```
+
+The new `createRequestHandler` from `@shopify/hydrogen/oxygen` wraps React Router's handler with additional Hydrogen-specific functionality like powered-by headers and request validation.
 
