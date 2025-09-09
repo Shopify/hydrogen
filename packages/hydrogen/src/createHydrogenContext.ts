@@ -27,6 +27,11 @@ import type {
 import {type CrossRuntimeRequest, getHeader} from './utils/request';
 import {warnOnce} from './utils/warning';
 import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
+import type {AnalyticsTokens} from '@shopify/hydrogen-react';
+import {
+  getBackendApprovedTokens,
+  type AnalyticsTokenOptions,
+} from './analytics-tokens';
 
 export type HydrogenContextOptions<
   TSession extends HydrogenSession = HydrogenSession,
@@ -89,6 +94,8 @@ export type HydrogenContextOptions<
     customMethods?: TCustomMethods;
   };
   buyerIdentity?: CartBuyerIdentityInput;
+  /** Analytics token configuration */
+  analytics?: AnalyticsTokenOptions;
 };
 
 export interface HydrogenContext<
@@ -111,6 +118,8 @@ export interface HydrogenContext<
   waitUntil?: WaitUntil;
   /** Any cookie implementation. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */
   session: TSession;
+  /** Analytics tokens for tracking with HttpOnly cookie support */
+  analyticsTokens?: AnalyticsTokens;
 }
 
 // Since HydrogenContext uses a conditional type with a free type parameter,
@@ -128,26 +137,27 @@ export interface HydrogenContextOverloads<
   env: TEnv;
   waitUntil?: WaitUntil;
   session: TSession;
+  analyticsTokens?: AnalyticsTokens;
 }
 
 // type for createHydrogenContext methods
-export function createHydrogenContext<
+export async function createHydrogenContext<
   TSession extends HydrogenSession = HydrogenSession,
   TCustomMethods extends CustomMethodsBase | undefined = {},
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
 >(
   options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
-): HydrogenContext<TSession, TCustomMethods, TI18n, TEnv>;
+): Promise<HydrogenContext<TSession, TCustomMethods, TI18n, TEnv>>;
 
-export function createHydrogenContext<
+export async function createHydrogenContext<
   TSession extends HydrogenSession,
   TCustomMethods extends CustomMethodsBase,
   TI18n extends I18nBase,
   TEnv extends HydrogenEnv = Env,
 >(
   options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
-): HydrogenContextOverloads<TSession, TCustomMethods, TI18n, TEnv> {
+): Promise<HydrogenContextOverloads<TSession, TCustomMethods, TI18n, TEnv>> {
   const {
     env,
     request,
@@ -160,6 +170,7 @@ export function createHydrogenContext<
     customerAccount: customerAccountOptions,
     cart: cartOptions = {},
     buyerIdentity,
+    analytics: analyticsOptions,
   } = options;
 
   if (!session) {
@@ -234,6 +245,16 @@ export function createHydrogenContext<
     customerAccount,
   });
 
+  // Fetch analytics tokens if enabled
+  let analyticsTokens: AnalyticsTokens | undefined;
+  if (analyticsOptions?.enabled) {
+    analyticsTokens = await getBackendApprovedTokens(
+      request,
+      storefront,
+      env.PUBLIC_CHECKOUT_DOMAIN,
+    );
+  }
+
   return {
     storefront,
     customerAccount,
@@ -241,6 +262,7 @@ export function createHydrogenContext<
     env,
     waitUntil,
     session,
+    analyticsTokens,
   };
 }
 

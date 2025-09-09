@@ -1,104 +1,58 @@
 import {useEffect} from 'react';
-// @ts-ignore - worktop/cookie types not properly exported
-import {stringify} from 'worktop/cookie';
-import {SHOPIFY_Y, SHOPIFY_S} from './cart-constants.js';
-import {buildUUID, getShopifyCookies} from './cookies-utils.js';
-
-const longTermLength = 60 * 60 * 24 * 360 * 1; // ~1 year expiry
-const shortTermLength = 60 * 30; // 30 mins
 
 type UseShopifyCookiesOptions = {
   /**
-   * If set to `false`, Shopify cookies will be removed.
-   * If set to `true`, Shopify unique user token cookie will have cookie expiry of 1 year.
-   * Defaults to false.
+   * @deprecated This parameter no longer has any effect. Cookie writing from frontend is disabled.
+   * @see https://shopify.dev/changelog/shopifyy-and-shopifys-cookies-will-no-longer-be-set
    **/
   hasUserConsent?: boolean;
   /**
-   * The domain scope of the cookie. Defaults to empty string.
+   * @deprecated This parameter no longer has any effect. Cookie writing from frontend is disabled.
    **/
   domain?: string;
   /**
-   * The checkout domain of the shop. Defaults to empty string. If set, the cookie domain will check if it can be set with the checkout domain.
+   * @deprecated This parameter no longer has any effect. Cookie writing from frontend is disabled.
    */
   checkoutDomain?: string;
 };
 
+/**
+ * @deprecated This hook is deprecated and non-functional due to Shopify's
+ * cookie migration. Frontend cookie writing has been disabled to maintain
+ * analytics data integrity and prevent tracking inconsistencies.
+ *
+ * **Migration Guide:**
+ * - For reading cookies: Use `getShopifyCookies()` which handles Server-Timing headers
+ * - For setting cookies: Implement server-side using `createAnalyticsCookieHeaders()`
+ * - For Server-Timing: Use `createAnalyticsServerTimingHeader()` in your server response
+ *
+ * **Why this was deprecated:**
+ * - Shopify analytics cookies are becoming HttpOnly for security
+ * - Frontend cookie manipulation caused tracking inconsistencies
+ * - Server-side is now the single source of truth for analytics
+ *
+ * This hook now only logs a deprecation warning and will be removed in a future version.
+ *
+ * @param options - Deprecated options that no longer have any effect
+ *
+ * @see https://shopify.dev/changelog/shopifyy-and-shopifys-cookies-will-no-longer-be-set
+ * @see getShopifyCookies for reading cookie values
+ * @see createAnalyticsCookieHeaders for server-side cookie creation
+ */
 export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
-  const {
-    hasUserConsent = false,
-    domain = '',
-    checkoutDomain = '',
-  } = options || {};
   useEffect(() => {
-    const cookies = getShopifyCookies(document.cookie);
-
-    /**
-     * Setting cookie with domain
-     *
-     * If no domain is provided, the cookie will be set for the current host.
-     * For Shopify, we need to ensure this domain is set with a leading dot.
-     */
-
-    // Use override domain or current host
-    let currentDomain = domain || window.document.location.host;
-
-    if (checkoutDomain) {
-      const checkoutDomainParts = checkoutDomain.split('.').reverse();
-      const currentDomainParts = currentDomain.split('.').reverse();
-      const sameDomainParts: Array<string> = [];
-      checkoutDomainParts.forEach((part, index) => {
-        if (part === currentDomainParts[index]) {
-          sameDomainParts.push(part);
-        }
-      });
-
-      currentDomain = sameDomainParts.reverse().join('.');
-    }
-
-    // Reset domain if localhost
-    if (/^localhost/.test(currentDomain)) currentDomain = '';
-
-    // Shopify checkout only consumes cookies set with leading dot domain
-    const domainWithLeadingDot = currentDomain
-      ? /^\./.test(currentDomain)
-        ? currentDomain
-        : `.${currentDomain}`
-      : '';
-
-    /**
-     * Set user and session cookies and refresh the expiry time
-     */
-    if (hasUserConsent) {
-      setCookie(
-        SHOPIFY_Y,
-        cookies[SHOPIFY_Y] || buildUUID(),
-        longTermLength,
-        domainWithLeadingDot,
+    if (__HYDROGEN_DEV__ && typeof window !== 'undefined') {
+      console.warn(
+        '[Hydrogen] useShopifyCookies is deprecated and no longer functional.\n' +
+          'Frontend cookie writing has been disabled to prevent tracking inconsistencies.\n' +
+          '_shopify_y and _shopify_s cookies are now managed server-side only.\n' +
+          'To read these values, use getShopifyCookies() which automatically reads from Server-Timing headers.\n' +
+          'This hook will be removed in a future version.\n' +
+          'See: https://shopify.dev/changelog/shopifyy-and-shopifys-cookies-will-no-longer-be-set',
       );
-      setCookie(
-        SHOPIFY_S,
-        cookies[SHOPIFY_S] || buildUUID(),
-        shortTermLength,
-        domainWithLeadingDot,
-      );
-    } else {
-      setCookie(SHOPIFY_Y, '', 0, domainWithLeadingDot);
-      setCookie(SHOPIFY_S, '', 0, domainWithLeadingDot);
     }
-  }, [options, hasUserConsent, domain, checkoutDomain]);
-}
-
-function setCookie(
-  name: string,
-  value: string,
-  maxage: number,
-  domain: string,
-): void {
-  document.cookie = stringify(name, value, {
-    maxage,
-    domain,
-    samesite: 'Lax',
-    path: '/',
-  });
+    // Cookie writing has been intentionally disabled.
+    // The backend is now the single source of truth for these cookies.
+    // Cookies are readable via Server-Timing headers using getShopifyCookies()
+  }, []);
 }
