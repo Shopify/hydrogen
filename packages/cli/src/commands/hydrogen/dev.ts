@@ -339,6 +339,12 @@ export async function runDev({
   console.log('\n');
 
   const storefrontTitle = (await backgroundPromise).storefrontTitle;
+
+  // Check React Router versions before showing success banner
+  if (!disableVersionCheck) {
+    await checkReactRouterVersions(root);
+  }
+
   showSuccessBanner({
     disableVirtualRoutes,
     debug,
