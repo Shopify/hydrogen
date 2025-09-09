@@ -1,5 +1,5 @@
 import type {CompilerOptions} from 'ts-morph';
-import {glob, readFile, writeFile, removeFile} from '@shopify/cli-kit/node/fs';
+import {glob, readFile, writeFile, removeFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {outputDebug} from '@shopify/cli-kit/node/output';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {formatCode, getCodeFormatOptions} from '../format-code.js';
@@ -61,14 +61,16 @@ function convertConfigToJS(
 
 export async function transpileProject(projectDir: string, keepTypes = true) {
   // Change the `routes.ts` file first as that points to a file with a
-  // TypeScript extension.
+  // TypeScript extension. Only do this if the file exists (for skeleton template).
   const routesPath = joinPath(projectDir, 'app/routes.ts');
-  const routesFileContent = await readFile(routesPath);
-  const replacedRoutesFileContent = routesFileContent.replace(
-    './layout.tsx',
-    './layout.jsx',
-  );
-  await writeFile(routesPath, replacedRoutesFileContent);
+  if (await fileExists(routesPath)) {
+    const routesFileContent = await readFile(routesPath);
+    const replacedRoutesFileContent = routesFileContent.replace(
+      './layout.tsx',
+      './layout.jsx',
+    );
+    await writeFile(routesPath, replacedRoutesFileContent);
+  }
 
   const entries = await glob('**/*.+(ts|tsx)', {
     absolute: true,
