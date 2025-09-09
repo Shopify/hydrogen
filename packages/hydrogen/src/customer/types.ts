@@ -7,6 +7,7 @@ import type {CrossRuntimeRequest} from '../utils/request';
 import type {HydrogenSession, WaitUntil} from '../types';
 import type {
   LanguageCode,
+  CountryCode,
   BuyerInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
@@ -51,6 +52,7 @@ export interface CustomerAccountMutations {
 
 export type LoginOptions = {
   uiLocales?: LanguageCode;
+  countryCode?: CountryCode;
 };
 
 export type LogoutOptions = {

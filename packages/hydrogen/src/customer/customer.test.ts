@@ -228,6 +228,88 @@ describe('customer', () => {
           expect(url.searchParams.get('ui_locales')).toBe('fr');
         });
       });
+
+      describe('countryCode', () => {
+        it('Redirects to the customer account api login url with countryCode as param', async () => {
+          const origin = 'https://something-good.com';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+          });
+
+          const response = await customer.login({
+            countryCode: 'US',
+          });
+          const url = new URL(response.headers.get('location')!);
+
+          expect(url.searchParams.get('region_country')).toBe('US');
+        });
+
+        it('Includes both uiLocales and countryCode when both are provided', async () => {
+          const origin = 'https://something-good.com';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+          });
+
+          const response = await customer.login({
+            uiLocales: 'FR',
+            countryCode: 'CA',
+          });
+          const url = new URL(response.headers.get('location')!);
+
+          expect(url.searchParams.get('ui_locales')).toBe('fr');
+          expect(url.searchParams.get('region_country')).toBe('CA');
+        });
+
+        it('Does not include region_country param when countryCode is not provided', async () => {
+          const origin = 'https://something-good.com';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+          });
+
+          const response = await customer.login();
+          const url = new URL(response.headers.get('location')!);
+
+          expect(url.searchParams.get('region_country')).toBeNull();
+        });
+
+        it('Handles different country code formats', async () => {
+          const origin = 'https://something-good.com';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+          });
+
+          // Test with various country codes
+          const countryCodes = ['GB', 'JP', 'AU', 'DE'];
+
+          for (const code of countryCodes) {
+            const response = await customer.login({
+              countryCode: code as any,
+            });
+            const url = new URL(response.headers.get('location')!);
+            expect(url.searchParams.get('region_country')).toBe(code);
+          }
+        });
+      });
     });
 
     describe('logout', () => {
