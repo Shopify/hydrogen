@@ -175,6 +175,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
         /**********  EXAMPLE UPDATE STARTS  ************/}
         <noscript>
           <iframe
+            title="Google Tag Manager"
             src="https://www.googletagmanager.com/ns.html?id=GTM-<YOUR_GTM_ID>"
             height="0"
             width="0"

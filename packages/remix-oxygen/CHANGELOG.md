@@ -121,7 +121,6 @@
 ### Patch Changes
 
 - (Unstable) server-side network request debug virtual route ([#1284](https://github.com/Shopify/hydrogen/pull/1284)) by [@wizardlyhel](https://github.com/wizardlyhel)
-
   1. Update your `server.ts` so that it also passes in the `waitUntil` and `env`.
 
      ```diff
@@ -222,7 +221,6 @@
 - Bump internal Remix dependencies to 1.15.0. ([#728](https://github.com/Shopify/hydrogen/pull/728)) by [@wizardlyhel](https://github.com/wizardlyhel)
 
   Recommendations to follow:
-
   - Upgrade all the Remix packages in your app to 1.15.0.
   - Enable Remix v2 future flags at your earliest convenience following [the official guide](https://remix.run/docs/en/1.15.0/pages/v2).
 
@@ -234,7 +232,6 @@
 
   Introducing `getStorefrontHeaders` that collects the required Shopify headers for making a
   Storefront API call.
-
   - Make cart constants available as exports from `@shopify/hydrogen-react`
   - Deprecating `buyerIp` and `requestGroupId` props from `createStorefrontClient` from `@shopify/hydrogen`
   - Deprecating `getBuyerIp` function from `@shopify/remix-oxygen`

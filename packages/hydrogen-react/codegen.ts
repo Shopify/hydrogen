@@ -88,17 +88,17 @@ const config: CodegenConfig = {
             useImplementingTypes: true,
             enumsAsTypes: true,
             scalars: customerAccountApiCustomScalars,
+            // Use Storefront API's enum types for Customer Account API to ensure type compatibility.
+            // Both APIs use the same 2025-04 schema version and share 95%+ of enum values.
+            // The Storefront API may have additional codes that Customer Account API doesn't define,
+            // but using the superset is safe - Customer Account will accept all values it supports.
+            // This allows storefront.i18n.language and other values to be directly used in
+            // Customer Account mutations without type casting while maintaining GraphQL schema validity.
+            // TypeScript 5.9+ requires this for proper type compatibility when using both APIs together.
             enumValues: {
-              // Use Storefront API's LanguageCode enum for Customer Account API to ensure type compatibility.
-              // Both APIs use the same 2025-04 schema version and share 95%+ of LanguageCode values.
-              // The Storefront API has a few additional codes (LA, MO, SH) that Customer Account API
-              // doesn't define, but using the superset is safe - Customer Account will accept all
-              // values it supports. This allows storefront.i18n.language to be directly used in
-              // Customer Account mutations without type casting while maintaining GraphQL schema validity.
-              LanguageCode: './storefront-api-types#LanguageCode',
-              // Use Storefront API's CurrencyCode enum for the same type compatibility reasons.
-              // Both APIs use identical currency codes from the same 2025-04 schema.
-              CurrencyCode: './storefront-api-types#CurrencyCode',
+              LanguageCode: '#LanguageCode',
+              CurrencyCode: '#CurrencyCode',
+              CountryCode: '#CountryCode',
             },
           },
         },
