@@ -53,7 +53,7 @@ export function SellingPlanSelector({
   return useMemo(
     () => {
       const params = new URLSearchParams(search);
-      // @ts-expect-error SellingPlanGroup type not fully defined
+      // @ts-expect-error - Mutating the sellingPlanGroup to add isSelected and url properties
       return sellingPlanGroups.nodes.map((sellingPlanGroup: SellingPlanGroup) => {
         // Augmnet each sellingPlan node with isSelected and url
         const sellingPlans = sellingPlanGroup.sellingPlans.nodes
