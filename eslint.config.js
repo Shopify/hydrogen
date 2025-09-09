@@ -279,6 +279,8 @@ module.exports = [
       'jsx-a11y/control-has-associated-label': 'off',
       'jsx-a11y/label-has-for': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
     },
   })),
 
