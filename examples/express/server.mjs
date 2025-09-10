@@ -1,12 +1,9 @@
 import {createRequestHandler} from '@react-router/express';
-import {installGlobals, createCookieSessionStorage} from 'react-router';
+import {createCookieSessionStorage} from 'react-router';
 import compression from 'compression';
 import express from 'express';
 import morgan from 'morgan';
-import {createStorefrontClient, InMemoryCache} from '@shopify/hydrogen';
-import crypto from 'node:crypto';
-
-installGlobals();
+import {createHydrogenContext, InMemoryCache} from '@shopify/hydrogen';
 
 const env = process.env;
 
@@ -70,34 +67,53 @@ app.all(
 );
 const port = process.env.PORT || 3000;
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Express server listening on port ${port}`);
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    const newPort = parseInt(port) + 1;
+    console.log(`Port ${port} is in use, trying ${newPort}...`);
+    server.listen(newPort);
+  } else {
+    throw err;
+  }
 });
 
 async function getContext(req) {
   const session = await AppSession.init(req, [env.SESSION_SECRET]);
 
-  const {storefront} = createStorefrontClient({
-    // A [`cache` instance](https://developer.mozilla.org/en-US/docs/Web/API/Cache) is necessary for sub-request caching to work.
-    // We provide only an in-memory implementation
-    cache: new InMemoryCache(),
-    // `waitUntil` is only needed on worker environments. For Express/Node, it isn't applicable
-    waitUntil: null,
-    i18n: {language: 'EN', country: 'US'},
-    publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-    privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
-    storeDomain: env.PUBLIC_STORE_DOMAIN,
-    storefrontId: env.PUBLIC_STOREFRONT_ID,
-    storefrontHeaders: {
-      requestGroupId: crypto.randomUUID(),
-      buyerIp: (req.headers['x-forwarded-for'] || req.connection.remoteAddress)
-        .split(':')
-        .pop(),
-      cookie: req.get('cookie'),
-    },
+  // Create a minimal Request object for Node.js
+  const request = new Request(`http://localhost${req.url}`, {
+    method: req.method,
+    headers: req.headers,
   });
 
-  return {session, storefront, env};
+  // Create Hydrogen context similar to skeleton, adapted for Node.js
+  const hydrogenContext = createHydrogenContext(
+    {
+      env,
+      request,
+      cache: new InMemoryCache(),
+      waitUntil: null, // Not applicable in Node.js
+      session,
+      i18n: {language: 'EN', country: 'US'},
+      cart: {
+        // Add a customt cart fragment if needed
+        queryFragment: `
+          fragment CartApiQuery on Cart {
+            id
+            totalQuantity
+          }
+        `,
+      },
+    },
+    // Additional context can be added here
+    {},
+  );
+
+  return hydrogenContext;
 }
 
 class AppSession {

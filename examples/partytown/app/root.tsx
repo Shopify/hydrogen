@@ -8,9 +8,9 @@ import {
   useRouteLoaderData,
   ScrollRestoration,
   isRouteErrorResponse,
-  type LoaderFunctionArgs,
   type ShouldRevalidateFunction,
 } from 'react-router';
+import type {Route} from './+types/root';
 import favicon from '~/assets/favicon.svg';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
@@ -19,7 +19,7 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
 import {PartytownGoogleTagManager} from '~/components/PartytownGoogleTagManager';
-import {Partytown} from '@builder.io/partytown/react';
+import {Partytown} from '@qwik.dev/partytown/react';
 import {maybeProxyRequest} from '~/utils/partytown/maybeProxyRequest';
 import {partytownAtomicHeaders} from '~/utils/partytown/partytownAtomicHeaders';
 /**********   EXAMPLE UPDATE END   ************/
@@ -46,6 +46,8 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
   }
 
   return false;
+  // Improve performance by reducing unnecessary re-renders and re-fetches:
+  // return false unless there are specific reasons to revalidate
 };
 
 /**
@@ -72,7 +74,7 @@ export function links() {
   ];
 }
 
-export async function loader(args: LoaderFunctionArgs) {
+export async function loader(args: Route.LoaderArgs) {
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
@@ -99,7 +101,7 @@ export async function loader(args: LoaderFunctionArgs) {
     },
     /***********************************************/
     /**********  EXAMPLE UPDATE STARTS  ************/
-    gtmContainerId: args.context.env.GTM_CONTAINER_ID,
+    gtmContainerId: args.context.env.GTM_ID || args.context.env.GTM_CONTAINER_ID,
     /**********   EXAMPLE UPDATE END   ************/
     /***********************************************/
   };
@@ -109,7 +111,7 @@ export async function loader(args: LoaderFunctionArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({context}: LoaderFunctionArgs) {
+async function loadCriticalData({context}: Route.LoaderArgs) {
   const {storefront} = context;
 
   const [header] = await Promise.all([
@@ -132,7 +134,7 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-function loadDeferredData({context}: LoaderFunctionArgs) {
+function loadDeferredData({context}: Route.LoaderArgs) {
   const {storefront, customerAccount, cart} = context;
 
   // defer the footer query (below the fold)
@@ -143,7 +145,7 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
         footerMenuHandle: 'footer', // Adjust to your footer menu handle
       },
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       // Log query errors, but don't throw them so the page can still render
       console.error(error);
       return null;

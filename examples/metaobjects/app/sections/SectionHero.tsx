@@ -53,7 +53,9 @@ export function SectionHero(props: SectionHeroFragment) {
               textDecoration: 'underline',
               marginTop: '1rem',
             }}
-            target={link?.target?.value === 'false' ? '_self' : '_blank'}
+            {...(link?.target?.value !== 'false'
+              ? {target: '_blank', rel: 'noreferrer'}
+              : {})}
           >
             {link?.text?.value}
           </Link>

@@ -1,8 +1,5 @@
-import {
-  useLoaderData,
-  type LoaderFunctionArgs,
-  type MetaFunction,
-} from 'react-router';
+import {useLoaderData} from 'react-router';
+import type {Route} from './+types/products.$handle';
 import {
   getSelectedProductOptions,
   Analytics,
@@ -17,7 +14,7 @@ import {ProductForm} from '~/components/ProductForm';
 import {QuantityRules, hasQuantityRules} from '~/components/QuantityRules';
 import {PriceBreaks} from '~/components/PriceBreaks';
 
-export const meta: MetaFunction<typeof loader> = ({data}) => {
+export const meta: Route.MetaFunction = ({data}) => {
   return [{title: `Hydrogen | ${data?.product.title ?? ''}`}];
 };
 
@@ -34,7 +31,7 @@ type BuyerVariables =
 /**********   EXAMPLE UPDATE END   *************/
 /***********************************************/
 
-export async function loader(args: LoaderFunctionArgs) {
+export async function loader(args: Route.LoaderArgs) {
   /***********************************************/
   /**********  EXAMPLE UPDATE STARTS  ************/
   const buyer = await args.context.customerAccount.getBuyer();
@@ -67,7 +64,7 @@ export async function loader(args: LoaderFunctionArgs) {
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
 async function loadCriticalData(
-  {context, params, request}: LoaderFunctionArgs,
+  {context, params, request}: Route.LoaderArgs,
   buyerVariables: BuyerVariables,
 ) {
   const {handle} = params;
@@ -108,7 +105,7 @@ async function loadCriticalData(
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
 function loadDeferredData(
-  {context, params}: LoaderFunctionArgs,
+  {context, params}: Route.LoaderArgs,
   buyerVariables: BuyerVariables,
 ) {
   // Put any API calls that is not critical to be available on first page render

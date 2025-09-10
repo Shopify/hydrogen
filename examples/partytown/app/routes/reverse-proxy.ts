@@ -1,7 +1,7 @@
 // Reverse proxies partytown libs that require CORS. Used by Partytown resolveUrl
 //@see: https://developers.cloudflare.com/workers/examples/cors-header-proxy/
 
-import {type ActionFunctionArgs, type LoaderFunctionArgs} from 'react-router';
+import type {Route} from './+types/reverse-proxy';
 
 type HandleRequestResponHeaders = {
   'Access-Control-Allow-Origin': string;
@@ -21,11 +21,13 @@ const ALLOWED_PROXY_DOMAINS = new Set([
   'https://cdn.jsdelivr.net',
   'https://unpkg.com',
   'https://google-analytics.com',
+  'https://www.googletagmanager.com',
+  'https://www.google-analytics.com',
   // other domains you may want to allow to proxy to
 ]);
 
 // Handle CORS preflight for POST requests
-export async function actions({request}: ActionFunctionArgs) {
+export async function action({request}: Route.ActionArgs) {
   const url = new URL(request.url);
   const isProxyReq = url.pathname.startsWith('/reverse-proxy');
 
@@ -49,7 +51,7 @@ export async function actions({request}: ActionFunctionArgs) {
 }
 
 // Handle CORS preflight for GET requests
-export function loader({request}: LoaderFunctionArgs) {
+export function loader({request}: Route.LoaderArgs) {
   const url = new URL(request.url);
   const isProxyReq = url.pathname.startsWith('/reverse-proxy');
 
@@ -100,7 +102,7 @@ function handleErrorResponse({
  * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
  * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
  */
-function handleCorsOptions(request: LoaderFunctionArgs['request']) {
+function handleCorsOptions(request: Route.LoaderArgs['request']) {
   // Make sure the necessary headers are present
   // for this to be a valid pre-flight request
   const headers = request.headers;
@@ -149,7 +151,7 @@ function handleCorsOptions(request: LoaderFunctionArgs['request']) {
  * @returns Response
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Response
  */
-async function handleRequest(request: LoaderFunctionArgs['request']) {
+async function handleRequest(request: Route.LoaderArgs['request']) {
   const url = new URL(request.url);
   let apiUrl = url.searchParams.get('apiUrl');
 

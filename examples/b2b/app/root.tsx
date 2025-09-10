@@ -8,9 +8,9 @@ import {
   useRouteLoaderData,
   ScrollRestoration,
   isRouteErrorResponse,
-  type LoaderFunctionArgs,
   type ShouldRevalidateFunction,
 } from 'react-router';
+import type {Route} from './+types/root';
 import favicon from '~/assets/favicon.svg';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
@@ -96,7 +96,7 @@ export type CustomerCompany =
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   const {storefront, customerAccount, cart, env} = context;
   const publicStoreDomain = env.PUBLIC_STORE_DOMAIN;
 

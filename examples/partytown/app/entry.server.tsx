@@ -1,14 +1,18 @@
-import {ServerRouter, EntryContext, AppLoadContext} from 'react-router';
+import {ServerRouter} from 'react-router';
 import {isbot} from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
-import {createContentSecurityPolicy} from '@shopify/hydrogen';
+import {
+  createContentSecurityPolicy,
+  type HydrogenRouterContextProvider,
+} from '@shopify/hydrogen';
+import type {EntryContext} from 'react-router';
 
 export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
   reactRouterContext: EntryContext,
-  context: AppLoadContext,
+  context: HydrogenRouterContextProvider,
 ) {
   const {nonce, header, NonceProvider} = createContentSecurityPolicy({
     shop: {
@@ -17,7 +21,18 @@ export default async function handleRequest(
     },
     /***********************************************/
     /**********  EXAMPLE UPDATE STARTS  ************/
-    scriptSrc: ["'self'", 'cdn.shopify.com', 'www.googletagmanager.com'],
+    scriptSrc: [
+      "'self'",
+      'cdn.shopify.com',
+      'www.googletagmanager.com',
+      'www.google-analytics.com',
+      'localhost:*',
+    ],
+    connectSrc: [
+      "'self'",
+      'www.googletagmanager.com',
+      'www.google-analytics.com',
+    ],
     /**********   EXAMPLE UPDATE END   ************/
     /***********************************************/
   });

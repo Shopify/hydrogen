@@ -1,18 +1,13 @@
-import {
-  Link,
-  useLoaderData,
-  redirect,
-  type LoaderFunctionArgs,
-  type MetaFunction,
-} from 'react-router';
-import {Money, Image, flattenConnection} from '@shopify/hydrogen';
+import {Link, useLoaderData, redirect} from 'react-router';
+import type {Route} from './+types/account.orders.$id';
+import {Money, Image} from '@shopify/hydrogen';
 import type {OrderLineItemFullFragment} from 'storefrontapi.generated';
 
-export const meta: MetaFunction<typeof loader> = ({data}) => {
+export const meta: Route.MetaFunction = ({data}) => {
   return [{title: `Order ${data?.order?.name}`}];
 };
 
-export async function loader({params, context}: LoaderFunctionArgs) {
+export async function loader({params, context}: Route.LoaderArgs) {
   const {session, storefront} = context;
 
   if (!params.id) {
@@ -34,17 +29,24 @@ export async function loader({params, context}: LoaderFunctionArgs) {
     throw new Response('Order not found', {status: 404});
   }
 
-  const lineItems = flattenConnection(order.lineItems);
-  const discountApplications = flattenConnection(order.discountApplications);
+  // Extract line items directly from nodes array
+  const lineItems = order.lineItems.nodes;
 
+  // Extract discount applications directly from nodes array
+  const discountApplications = order.discountApplications.nodes;
+
+  // Get first discount value with proper type checking
   const firstDiscount = discountApplications[0]?.value;
 
-  const discountValue =
-    firstDiscount?.__typename === 'MoneyV2' && firstDiscount;
+  // Type guard for MoneyV2 discount
+  const discountValue = firstDiscount?.__typename === 'MoneyV2' 
+    ? firstDiscount as Extract<typeof firstDiscount, {__typename: 'MoneyV2'}>
+    : null;
 
-  const discountPercentage =
-    firstDiscount?.__typename === 'PricingPercentageValue' &&
-    firstDiscount?.percentage;
+  // Type guard for percentage discount
+  const discountPercentage = firstDiscount?.__typename === 'PricingPercentageValue'
+    ? (firstDiscount as Extract<typeof firstDiscount, {__typename: 'PricingPercentageValue'}>).percentage
+    : null;
 
   return {
     order,
@@ -73,7 +75,7 @@ export default function OrderRoute() {
             </tr>
           </thead>
           <tbody>
-            {lineItems.map((lineItem, lineItemIndex) => (
+            {lineItems.map((lineItem: OrderLineItemFullFragment, lineItemIndex: number) => (
               // eslint-disable-next-line react/no-array-index-key
               <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
             ))}
