@@ -2872,12 +2872,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "// In your app's `server.ts` file:\n// @ts-expect-error\nimport * as reactRouterBuild from 'virtual:react-router/server-build';\nimport {createWithCache, CacheLong} from '@shopify/hydrogen';\n// Use another `createRequestHandler` if deploying off oxygen\nimport {createRequestHandler} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const cache = await caches.open('my-cms');\n    const withCache = createWithCache({\n      cache,\n      waitUntil: executionContext.waitUntil.bind(executionContext),\n      request,\n    });\n\n    // 1. Create a custom utility to query a third-party API:\n    const fetchMyCMS = async (query) =&gt; {\n      const {data, response} = await withCache.fetch(\n        'https://my-cms.com/api',\n        {\n          method: 'POST',\n          body: query,\n          headers: {Authorization: 'Bearer 123'},\n        },\n        {\n          // Optionally, specify a cache strategy.\n          // Default is CacheShort().\n          cacheStrategy: CacheLong(),\n          // Cache if there are no data errors or a specific data that make this result not suited for caching\n          shouldCacheResponse: (result) =&gt;\n            !(result?.errors || result?.isLoggedIn),\n          // Optionally, add extra information to show\n          // in the Subrequest Profiler utility.\n          displayName: 'My CMS query',\n        },\n      );\n\n      // Access the response properties:\n      console.log(data, response.headers);\n\n      return data;\n    };\n\n    // 2. Or Create a more advanced utility to query multiple APIs under the same cache key:\n    const fetchMultipleCMS = (options) =&gt; {\n      // Prefix the cache key and make it unique based on arguments.\n      return withCache.run(\n        {\n          // Define a cache key that is unique to this query\n          cacheKey: ['my-cms-composite', options.id, options.handle],\n          // Optionally, specify a cache strategy.\n          // Default is CacheShort().\n          cacheStrategy: CacheLong(),\n          // Cache if there are no data errors or a specific data that make this result not suited for caching\n          shouldCacheResponse: (result) =&gt;\n            !(result?.errors || result?.isLoggedIn),\n        },\n        async (params) =&gt; {\n          // Run multiple subrequests in parallel, or any other async operations.\n          const [response1, response2] = await Promise.all([\n            fetch('https://my-cms-1.com/api', {\n              method: 'POST',\n              body: JSON.stringify({id: options.id}),\n            }),\n            fetch('https://my-cms-2.com/api', {\n              method: 'POST',\n              body: JSON.stringify({handle: options.handle}),\n            }),\n          ]);\n\n          // Throw if any response is unsuccessful.\n          // This is important to prevent the results from being cached.\n          if (!response1.ok || !response2.ok) {\n            throw new Error('Failed to fetch data');\n          }\n\n          const [data1, data2] = await Promise.all([\n            response1.json(),\n            response2.json(),\n          ]);\n\n          // Validate data and throw to avoid caching errors.\n          if (data1.errors || data2.errors) {\n            throw new Error('API errors');\n          }\n\n          // Optionally, add extra information to show\n          // in the Subrequest Profiler utility.\n          params.addDebugData({displayName: 'My CMS query'});\n\n          // Compose the result as needed.\n          return {\n            ...data1,\n            ...data2,\n            extra1: response1.headers.get('X-Extra'),\n            extra2: response2.headers.get('X-Extra'),\n          };\n        },\n      );\n    };\n\n    const handleRequest = createRequestHandler({\n      build: reactRouterBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () =&gt; ({\n        // Make sure to update env.d.ts to\n        // include these properties in `AppLoadContext`.\n        fetchMyCMS,\n        fetchMultipleCMS,\n      }),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
+            "code": "// In your app's `server.ts` file:\n// @ts-expect-error\nimport * as reactRouterBuild from 'virtual:react-router/server-build';\nimport {createWithCache, CacheLong} from '@shopify/hydrogen';\n// Use another `createRequestHandler` if deploying off oxygen\nimport {createRequestHandler} from '@shopify/hydrogen/oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const cache = await caches.open('my-cms');\n    const withCache = createWithCache({\n      cache,\n      waitUntil: executionContext.waitUntil.bind(executionContext),\n      request,\n    });\n\n    // 1. Create a custom utility to query a third-party API:\n    const fetchMyCMS = async (query) =&gt; {\n      const {data, response} = await withCache.fetch(\n        'https://my-cms.com/api',\n        {\n          method: 'POST',\n          body: query,\n          headers: {Authorization: 'Bearer 123'},\n        },\n        {\n          // Optionally, specify a cache strategy.\n          // Default is CacheShort().\n          cacheStrategy: CacheLong(),\n          // Cache if there are no data errors or a specific data that make this result not suited for caching\n          shouldCacheResponse: (result) =&gt;\n            !(result?.errors || result?.isLoggedIn),\n          // Optionally, add extra information to show\n          // in the Subrequest Profiler utility.\n          displayName: 'My CMS query',\n        },\n      );\n\n      // Access the response properties:\n      console.log(data, response.headers);\n\n      return data;\n    };\n\n    // 2. Or Create a more advanced utility to query multiple APIs under the same cache key:\n    const fetchMultipleCMS = (options) =&gt; {\n      // Prefix the cache key and make it unique based on arguments.\n      return withCache.run(\n        {\n          // Define a cache key that is unique to this query\n          cacheKey: ['my-cms-composite', options.id, options.handle],\n          // Optionally, specify a cache strategy.\n          // Default is CacheShort().\n          cacheStrategy: CacheLong(),\n          // Cache if there are no data errors or a specific data that make this result not suited for caching\n          shouldCacheResponse: (result) =&gt;\n            !(result?.errors || result?.isLoggedIn),\n        },\n        async (params) =&gt; {\n          // Run multiple subrequests in parallel, or any other async operations.\n          const [response1, response2] = await Promise.all([\n            fetch('https://my-cms-1.com/api', {\n              method: 'POST',\n              body: JSON.stringify({id: options.id}),\n            }),\n            fetch('https://my-cms-2.com/api', {\n              method: 'POST',\n              body: JSON.stringify({handle: options.handle}),\n            }),\n          ]);\n\n          // Throw if any response is unsuccessful.\n          // This is important to prevent the results from being cached.\n          if (!response1.ok || !response2.ok) {\n            throw new Error('Failed to fetch data');\n          }\n\n          const [data1, data2] = await Promise.all([\n            response1.json(),\n            response2.json(),\n          ]);\n\n          // Validate data and throw to avoid caching errors.\n          if (data1.errors || data2.errors) {\n            throw new Error('API errors');\n          }\n\n          // Optionally, add extra information to show\n          // in the Subrequest Profiler utility.\n          params.addDebugData({displayName: 'My CMS query'});\n\n          // Compose the result as needed.\n          return {\n            ...data1,\n            ...data2,\n            extra1: response1.headers.get('X-Extra'),\n            extra2: response2.headers.get('X-Extra'),\n          };\n        },\n      );\n    };\n\n    const handleRequest = createRequestHandler({\n      build: reactRouterBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () =&gt; ({\n        // Make sure to update env.d.ts to\n        // include these properties in `AppLoadContext`.\n        fetchMyCMS,\n        fetchMultipleCMS,\n      }),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "// In your app's `server.ts` file:\n// @ts-ignore\nimport * as reactRouterBuild from 'virtual:react-router/server-build';\nimport {createWithCache, CacheLong} from '@shopify/hydrogen';\n// Use another `createRequestHandler` if deploying off oxygen\nimport {createRequestHandler} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record&lt;string, string&gt;,\n    executionContext: ExecutionContext,\n  ) {\n    const cache = await caches.open('my-cms');\n    const withCache = createWithCache({\n      cache,\n      waitUntil: executionContext.waitUntil.bind(executionContext),\n      request,\n    });\n\n    type ExpectedResponse = {\n      content: unknown;\n      isLoggedIn: boolean;\n      errors?: string;\n    };\n\n    type MergedResponse = {\n      content: unknown;\n      isLoggedIn: boolean;\n      errors?: string;\n      extra1: string | null;\n      extra2: string | null;\n    };\n\n    // 1. Create a custom utility to query a third-party API:\n    const fetchMyCMS = async (query: string) =&gt; {\n      const {data, response} = await withCache.fetch&lt;ExpectedResponse&gt;(\n        'https://my-cms.com/api',\n        {\n          method: 'POST',\n          body: query,\n          headers: {Authorization: 'Bearer 123'},\n        },\n        {\n          // Optionally, specify a cache strategy.\n          // Default is CacheShort().\n          cacheStrategy: CacheLong(),\n          // Cache if there are no data errors or a specific data that make this result not suited for caching\n          shouldCacheResponse: (result) =&gt;\n            !(result?.errors || result?.isLoggedIn),\n          // Optionally, add extra information to show\n          // in the Subrequest Profiler utility.\n          displayName: 'My CMS query',\n        },\n      );\n\n      // Access the response properties:\n      console.log(data, response.headers);\n\n      return data;\n    };\n\n    // 2. Or Create a more advanced utility to query multiple APIs under the same cache key:\n    const fetchMultipleCMS = (options: {id: string; handle: string}) =&gt; {\n      // Prefix the cache key and make it unique based on arguments.\n      return withCache.run(\n        {\n          // Define a cache key that is unique to this query\n          cacheKey: ['my-cms-composite', options.id, options.handle],\n          // Optionally, specify a cache strategy.\n          // Default is CacheShort().\n          cacheStrategy: CacheLong(),\n          // Cache if there are no data errors or a specific data that make this result not suited for caching\n          shouldCacheResult: (result: MergedResponse) =&gt;\n            !(result?.errors || result?.isLoggedIn),\n        },\n        async (params) =&gt; {\n          // Run multiple subrequests in parallel, or any other async operations.\n          const [response1, response2] = await Promise.all([\n            fetch('https://my-cms-1.com/api', {\n              method: 'POST',\n              body: JSON.stringify({id: options.id}),\n            }),\n            fetch('https://my-cms-2.com/api', {\n              method: 'POST',\n              body: JSON.stringify({handle: options.handle}),\n            }),\n          ]);\n\n          // Throw if any response is unsuccessful.\n          // This is important to prevent the results from being cached.\n          if (!response1.ok || !response2.ok) {\n            throw new Error('Failed to fetch data');\n          }\n\n          const [data1, data2] = (await Promise.all([\n            response1.json(),\n            response2.json(),\n          ])) as [ExpectedResponse, ExpectedResponse];\n\n          // Validate data and throw to avoid caching errors.\n          if (data1.errors || data2.errors) {\n            throw new Error('API errors');\n          }\n\n          // Optionally, add extra information to show\n          // in the Subrequest Profiler utility.\n          params.addDebugData({displayName: 'My CMS query'});\n\n          // Compose the result as needed.\n          return {\n            ...data1,\n            ...data2,\n            extra1: response1.headers.get('X-Extra'),\n            extra2: response2.headers.get('X-Extra'),\n          } as MergedResponse;\n        },\n      );\n    };\n\n    const handleRequest = createRequestHandler({\n      build: reactRouterBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () =&gt; ({\n        // Make sure to update env.d.ts to\n        // include these properties in `AppLoadContext`.\n        fetchMyCMS,\n        fetchMultipleCMS,\n      }),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
+            "code": "// In your app's `server.ts` file:\n// @ts-ignore\nimport * as reactRouterBuild from 'virtual:react-router/server-build';\nimport {createWithCache, CacheLong} from '@shopify/hydrogen';\n// Use another `createRequestHandler` if deploying off oxygen\nimport {createRequestHandler} from '@shopify/hydrogen/oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record&lt;string, string&gt;,\n    executionContext: ExecutionContext,\n  ) {\n    const cache = await caches.open('my-cms');\n    const withCache = createWithCache({\n      cache,\n      waitUntil: executionContext.waitUntil.bind(executionContext),\n      request,\n    });\n\n    type ExpectedResponse = {\n      content: unknown;\n      isLoggedIn: boolean;\n      errors?: string;\n    };\n\n    type MergedResponse = {\n      content: unknown;\n      isLoggedIn: boolean;\n      errors?: string;\n      extra1: string | null;\n      extra2: string | null;\n    };\n\n    // 1. Create a custom utility to query a third-party API:\n    const fetchMyCMS = async (query: string) =&gt; {\n      const {data, response} = await withCache.fetch&lt;ExpectedResponse&gt;(\n        'https://my-cms.com/api',\n        {\n          method: 'POST',\n          body: query,\n          headers: {Authorization: 'Bearer 123'},\n        },\n        {\n          // Optionally, specify a cache strategy.\n          // Default is CacheShort().\n          cacheStrategy: CacheLong(),\n          // Cache if there are no data errors or a specific data that make this result not suited for caching\n          shouldCacheResponse: (result) =&gt;\n            !(result?.errors || result?.isLoggedIn),\n          // Optionally, add extra information to show\n          // in the Subrequest Profiler utility.\n          displayName: 'My CMS query',\n        },\n      );\n\n      // Access the response properties:\n      console.log(data, response.headers);\n\n      return data;\n    };\n\n    // 2. Or Create a more advanced utility to query multiple APIs under the same cache key:\n    const fetchMultipleCMS = (options: {id: string; handle: string}) =&gt; {\n      // Prefix the cache key and make it unique based on arguments.\n      return withCache.run(\n        {\n          // Define a cache key that is unique to this query\n          cacheKey: ['my-cms-composite', options.id, options.handle],\n          // Optionally, specify a cache strategy.\n          // Default is CacheShort().\n          cacheStrategy: CacheLong(),\n          // Cache if there are no data errors or a specific data that make this result not suited for caching\n          shouldCacheResult: (result: MergedResponse) =&gt;\n            !(result?.errors || result?.isLoggedIn),\n        },\n        async (params) =&gt; {\n          // Run multiple subrequests in parallel, or any other async operations.\n          const [response1, response2] = await Promise.all([\n            fetch('https://my-cms-1.com/api', {\n              method: 'POST',\n              body: JSON.stringify({id: options.id}),\n            }),\n            fetch('https://my-cms-2.com/api', {\n              method: 'POST',\n              body: JSON.stringify({handle: options.handle}),\n            }),\n          ]);\n\n          // Throw if any response is unsuccessful.\n          // This is important to prevent the results from being cached.\n          if (!response1.ok || !response2.ok) {\n            throw new Error('Failed to fetch data');\n          }\n\n          const [data1, data2] = (await Promise.all([\n            response1.json(),\n            response2.json(),\n          ])) as [ExpectedResponse, ExpectedResponse];\n\n          // Validate data and throw to avoid caching errors.\n          if (data1.errors || data2.errors) {\n            throw new Error('API errors');\n          }\n\n          // Optionally, add extra information to show\n          // in the Subrequest Profiler utility.\n          params.addDebugData({displayName: 'My CMS query'});\n\n          // Compose the result as needed.\n          return {\n            ...data1,\n            ...data2,\n            extra1: response1.headers.get('X-Extra'),\n            extra2: response2.headers.get('X-Extra'),\n          } as MergedResponse;\n        },\n      );\n    };\n\n    const handleRequest = createRequestHandler({\n      build: reactRouterBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () =&gt; ({\n        // Make sure to update env.d.ts to\n        // include these properties in `AppLoadContext`.\n        fetchMyCMS,\n        fetchMultipleCMS,\n      }),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
             "language": "ts"
           }
         ],
@@ -5970,7 +5970,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -6784,7 +6784,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -7598,7 +7598,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -8424,7 +8424,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -9243,7 +9243,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -10062,7 +10062,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -10869,7 +10869,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -11683,7 +11683,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -12433,7 +12433,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -13240,7 +13240,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -14054,7 +14054,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -14861,7 +14861,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -15675,7 +15675,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -16482,7 +16482,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -17296,7 +17296,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -18103,7 +18103,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
@@ -18602,7 +18602,7 @@
       {
         "name": "createHydrogenContext",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2025-01/utilities/createhydrogencontext"
+        "url": "/docs/api/hydrogen/2025-07/utilities/createhydrogencontext"
       }
     ],
     "description": "\n    A grouped export of all Hydrogen context keys for use with React Router's `context.get()` pattern. This enables type-safe access to Hydrogen services in loaders, actions, and middleware.\n\n    The proxy-based implementation in `createHydrogenContext` supports both direct property access and the `context.get()` pattern, giving you flexibility in how you access Hydrogen services.\n  ",
@@ -18613,12 +18613,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {hydrogenContext} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  // Access services using the grouped hydrogenContext object\n  const storefront = context.get(hydrogenContext.storefront);\n  const cart = context.get(hydrogenContext.cart);\n  const customerAccount = context.get(hydrogenContext.customerAccount);\n  const env = context.get(hydrogenContext.env);\n  const session = context.get(hydrogenContext.session);\n  const waitUntil = context.get(hydrogenContext.waitUntil);\n\n  // Use the services as needed\n  const {product} = await storefront.query(\n    `#graphql\n      query Product($handle: String!) {\n        product(handle: $handle) {\n          title\n          handle\n        }\n      }\n    `,\n    {\n      variables: {handle: 'example-product'},\n    },\n  );\n\n  return {product};\n}\n\nexport async function action({context, request}) {\n  // Access only the services you need\n  const cart = context.get(hydrogenContext.cart);\n  const session = context.get(hydrogenContext.session);\n\n  const formData = await request.formData();\n  const lines = formData.get('lines');\n\n  // Add items to cart\n  const result = await cart.addLines(lines);\n\n  // Update session if needed\n  session.set('cartId', result.cart.id);\n\n  return {cart: result};\n}",
+            "code": "import {hydrogenContext} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  // Access services using the grouped hydrogenContext object\n  const storefront = context.get(hydrogenContext.storefront);\n  const cart = context.get(hydrogenContext.cart);\n  const customerAccount = context.get(hydrogenContext.customerAccount);\n  const env = context.get(hydrogenContext.env);\n  const session = context.get(hydrogenContext.session);\n  const waitUntil = context.get(hydrogenContext.waitUntil);\n\n  // Use the services as needed\n  const {product} = await storefront.query(\n    `#graphql\n      query Product($handle: String!) {\n        product(handle: $handle) {\n          title\n          handle\n        }\n      }\n    `,\n    {\n      variables: {handle: 'example-product'},\n    },\n  );\n\n  return {product};\n}\n\nexport async function action({context, request}) {\n  // Access only the services you need\n  const cart = context.get(hydrogenContext.cart);\n  const session = context.get(hydrogenContext.session);\n\n  const formData = await request.formData();\n  const lines = formData.get('lines');\n\n  // Add items to cart\n  const result = await cart.addLines(lines);\n\n  // Update session if needed\n  session.set('cartId', result.cart.id);\n\n  return {cart: result};\n}\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "// Import from local files to get proper types\nimport {hydrogenContext} from './context-keys';\nimport type {HydrogenRouterContextProvider} from './types';\n\n// These examples show how to use hydrogenContext with React Router's context.get() pattern\n// In a real app, you would import from '@shopify/hydrogen' and have proper type augmentation\n\n// Example loader using context.get() pattern\nexport async function loader({context}: {context: HydrogenRouterContextProvider}) {\n  // Access services using the grouped hydrogenContext object\n  const storefront = context.get(hydrogenContext.storefront);\n  const cart = context.get(hydrogenContext.cart);\n  const customerAccount = context.get(hydrogenContext.customerAccount);\n  const env = context.get(hydrogenContext.env);\n  const session = context.get(hydrogenContext.session);\n  const waitUntil = context.get(hydrogenContext.waitUntil);\n\n  // Use the services as needed\n  const {product} = await storefront.query(\n    `#graphql\n      query Product($handle: String!) {\n        product(handle: $handle) {\n          title\n          handle\n        }\n      }\n    `,\n    {\n      variables: {handle: 'example-product'},\n    },\n  );\n\n  return {product};\n}\n\n// Example action using context.get() pattern\nexport async function action({\n  context,\n  request,\n}: {\n  context: HydrogenRouterContextProvider;\n  request: Request;\n}) {\n  // Access only the services you need\n  const cart = context.get(hydrogenContext.cart);\n  const session = context.get(hydrogenContext.session);\n\n  const formData = await request.formData();\n  const lines = formData.get('lines');\n\n  // Add items to cart\n  const result = await cart.addLines(lines as any);\n\n  // Update session if needed\n  session.set('cartId', result.cart.id);\n\n  return {cart: result};\n}\n\n// Example showing both patterns work\nexport async function hybridExample({context}: {context: HydrogenRouterContextProvider}) {\n  // Pattern 1: Direct property access (existing pattern)\n  const directStorefront = context.storefront;\n  const directCart = context.cart;\n\n  // Pattern 2: context.get() with hydrogenContext (new pattern)\n  const viaGetStorefront = context.get(hydrogenContext.storefront);\n  const viaGetCart = context.get(hydrogenContext.cart);\n\n  // Both patterns return the same instances\n  console.assert(directStorefront === viaGetStorefront, 'Both patterns access same storefront');\n  console.assert(directCart === viaGetCart, 'Both patterns access same cart');\n\n  return {success: true};\n}",
+            "code": "// Import from local files to get proper types\nimport {hydrogenContext} from './context-keys';\nimport type {HydrogenRouterContextProvider} from './types';\n\n// These examples show how to use hydrogenContext with React Router's context.get() pattern\n// In a real app, you would import from '@shopify/hydrogen' and have proper type augmentation\n\n// Example loader using context.get() pattern\nexport async function loader({\n  context,\n}: {\n  context: HydrogenRouterContextProvider;\n}) {\n  // Access services using the grouped hydrogenContext object\n  const storefront = context.get(hydrogenContext.storefront);\n  const cart = context.get(hydrogenContext.cart);\n  const customerAccount = context.get(hydrogenContext.customerAccount);\n  const env = context.get(hydrogenContext.env);\n  const session = context.get(hydrogenContext.session);\n  const waitUntil = context.get(hydrogenContext.waitUntil);\n\n  // Use the services as needed\n  const {product} = await storefront.query(\n    `#graphql\n      query Product($handle: String!) {\n        product(handle: $handle) {\n          title\n          handle\n        }\n      }\n    `,\n    {\n      variables: {handle: 'example-product'},\n    },\n  );\n\n  return {product};\n}\n\n// Example action using context.get() pattern\nexport async function action({\n  context,\n  request,\n}: {\n  context: HydrogenRouterContextProvider;\n  request: Request;\n}) {\n  // Access only the services you need\n  const cart = context.get(hydrogenContext.cart);\n  const session = context.get(hydrogenContext.session);\n\n  const formData = await request.formData();\n  const lines = formData.get('lines');\n\n  // Add items to cart\n  const result = await cart.addLines(lines as any);\n\n  // Update session if needed\n  session.set('cartId', result.cart.id);\n\n  return {cart: result};\n}\n\n// Example showing both patterns work\nexport async function hybridExample({\n  context,\n}: {\n  context: HydrogenRouterContextProvider;\n}) {\n  // Pattern 1: Direct property access (existing pattern)\n  const directStorefront = context.storefront;\n  const directCart = context.cart;\n\n  // Pattern 2: context.get() with hydrogenContext (new pattern)\n  const viaGetStorefront = context.get(hydrogenContext.storefront);\n  const viaGetCart = context.get(hydrogenContext.cart);\n\n  // Both patterns return the same instances\n  console.assert(\n    directStorefront === viaGetStorefront,\n    'Both patterns access same storefront',\n  );\n  console.assert(directCart === viaGetCart, 'Both patterns access same cart');\n\n  return {success: true};\n}\n",
             "language": "ts"
           }
         ],
@@ -19280,7 +19280,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@684",
+                "name": "__@toStringTag@676",
                 "value": "string",
                 "description": ""
               },
