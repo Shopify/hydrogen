@@ -1,23 +1,46 @@
 import type { FileInfo, API, Options } from 'jscodeshift';
+import { checkPrerequisites, getProjectInfo } from './detectors/prerequisites';
+import { shouldTransformFile, analyzeFile } from './detectors/file-filter';
+import { detectProjectLanguage } from './detectors/language';
+
+export interface TransformOptions extends Options {
+  projectRoot?: string;
+  language?: ReturnType<typeof detectProjectLanguage>;
+}
 
 export default function transformer(
   fileInfo: FileInfo,
   api: API,
-  options: Options
+  options: TransformOptions
 ): string | undefined {
   const j = api.jscodeshift;
   const root = j(fileInfo.source);
   
-  if (shouldSkipFile(fileInfo.path)) {
+  // Get project root (from options or derive from file path)
+  const projectRoot = options.projectRoot || process.cwd();
+  
+  // Detect language if not provided
+  const language = options.language || detectProjectLanguage(projectRoot);
+  
+  // Check if file should be transformed
+  if (!shouldTransformFile(fileInfo.path, language)) {
     return undefined;
   }
+  
+  // Analyze the file
+  const fileAnalysis = analyzeFile(fileInfo.path, language);
   
   let hasChanges = false;
   
   // TODO: Apply transformations in subsequent milestones
-  // hasChanges = transformRouteTypes(j, root, fileInfo.path) || hasChanges;
-  // hasChanges = transformContextAPI(j, root, fileInfo.path) || hasChanges;
-  // hasChanges = transformImports(j, root) || hasChanges;
+  // These will use the language context to determine strategy
+  // if (fileAnalysis.isRoute) {
+  //   hasChanges = transformRouteTypes(j, root, fileInfo.path, language) || hasChanges;
+  // }
+  // if (fileAnalysis.isContext) {
+  //   hasChanges = transformContextAPI(j, root, fileInfo.path, language) || hasChanges;
+  // }
+  // hasChanges = transformImports(j, root, language) || hasChanges;
   
   // For now, just a basic transformation to verify setup
   root.find(j.Identifier, { name: 'createAppLoadContext' })
@@ -35,8 +58,6 @@ export default function transformer(
   return undefined;
 }
 
-function shouldSkipFile(path: string): boolean {
-  return path.includes('node_modules') || 
-         path.includes('.d.ts') ||
-         !path.match(/\.(tsx?|jsx?)$/);
-}
+// Export for CLI usage
+export { checkPrerequisites, getProjectInfo } from './detectors/prerequisites';
+export { detectProjectLanguage } from './detectors/language';

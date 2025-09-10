@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import jscodeshift from 'jscodeshift';
-import transformer from '../src/index';
+import transformer from './index';
 
 function runTransform(source: string, path: string = 'test.tsx'): string | undefined {
   const fileInfo = {

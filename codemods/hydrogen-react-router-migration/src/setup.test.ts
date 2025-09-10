@@ -7,12 +7,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('Codemod Setup', () => {
   test('transformer function is exported from index', async () => {
-    const transformerModule = await import('../src/index');
+    const transformerModule = await import('./index');
     expect(typeof transformerModule.default).toBe('function');
   });
 
   test('transformer has correct signature', async () => {
-    const transformerModule = await import('../src/index');
+    const transformerModule = await import('./index');
     expect(transformerModule.default.length).toBe(3); // fileInfo, api, options
   });
 
@@ -34,8 +34,8 @@ describe('Codemod Setup', () => {
   });
 
   test('directory structure is correct', () => {
-    const srcDir = path.join(__dirname, '../src');
-    const dirs = ['transformations', 'detectors', 'utils'];
+    const srcDir = __dirname;
+    const dirs = ['transformations', 'detectors', 'utils', 'strategies'];
     
     dirs.forEach(dir => {
       const dirPath = path.join(srcDir, dir);
