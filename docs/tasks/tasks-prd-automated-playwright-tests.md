@@ -1,13 +1,14 @@
 ## Relevant Files
 
-- `playwright.config.ts` – Base Playwright configuration shared by all test packs (moved to root for default discovery).
+- `playwright.config.ts` – Base Playwright configuration with support for --smoke flag via environment variables.
 - `e2e/setup/launch.spec.ts` – System test that verifies dev server launches and displays Hydrogen title.
 - `e2e/server.ts` – Helper module for programmatically starting and stopping the dev server.
 - `e2e/smoke/` – Directory for fast smoke tests that run against an existing skeleton template.
 - `e2e/smoke/home.spec.ts` – Smoke test for home page: hero image, product grid, and console errors.
 - `e2e/smoke/cart.spec.ts` – Smoke test for cart functionality: open cart, add product, verify handle.
 - `e2e/matrix/` – Directory for full-matrix tests that scaffold permutations of `npm create @shopify/hydrogen`.
-- `package.json` – Adds `e2e` npm script and optional flags (`--smoke`, `--headed`).
+- `scripts/run-e2e.js` – Custom E2E test runner that handles --smoke, --headed, and --matrix flags.
+- `package.json` – Adds `e2e` npm script with support for `--smoke` flag via custom runner script.
 - `.github/workflows/e2e.yml` – GitHub Actions workflow running smoke and full matrix on PRs
 - `docs/testing/e2e.md` – Contributor guide for running and debugging Playwright tests.
 - `README.md` – Brief section linking to the E2E guide.
@@ -83,9 +84,9 @@
 
 - [ ] 3. Add `npm run e2e` script and integrate Smoke Pack with CI workflow (PR #3)
 
-  - [ ] 3.1. Create branch `e2e_ci-smoke` **based on `e2e_smoke-pack`**.
+  - [x] 3.1. Create branch `e2e_ci-smoke` **based on `e2e_smoke-pack`**.
 
-  - [ ] 3.2. Add `"e2e": "playwright test"` to `package.json` plus `--smoke` flag support.
+  - [x] 3.2. Add `"e2e": "playwright test"` to `package.json` plus `--smoke` flag support.
 
   - [ ] 3.3. Add `.github/workflows/e2e.yml` workflow that runs `npm run e2e -- --smoke` on `pull_request` and `push` (all branches).
 
