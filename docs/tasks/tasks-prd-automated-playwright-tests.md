@@ -46,7 +46,7 @@
 
   - [x] 2.3. Run tests to confirm both fail with clear errors.
 
-  - [ ] 2.4. Implement assertions and helper utilities to make tests pass without changing application code.
+  - [x] 2.4. Implement assertions and helper utilities to make tests pass without changing application code.
 
   - [ ] 2.5. Verify by running `npm run e2e -- --smoke` and ensuring the pack completes in <60 s.
 

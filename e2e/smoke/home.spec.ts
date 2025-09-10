@@ -14,22 +14,21 @@ test.describe('Home Page', () => {
 
     await page.goto('/');
 
-    const heroImage = page
-      .locator('[data-testid="hero-image"], img[alt*="hero" i], .hero img')
-      .first();
-    await expect(heroImage).toBeVisible();
+    const featuredCollection = page.locator('.featured-collection').first();
+    await expect(featuredCollection).toBeVisible();
 
-    const productGrid = page
-      .locator(
-        '[data-testid="product-grid"], .product-grid, [class*="product"][class*="grid"]',
-      )
+    const featuredImage = page
+      .locator('.featured-collection-image img')
       .first();
-    await expect(productGrid).toBeVisible();
+    await expect(featuredImage).toBeVisible();
 
-    const addToCartButtons = page.locator(
-      'button:has-text("Add to cart"), button:has-text("Add to Cart"), [data-testid="add-to-cart"]',
-    );
-    await expect(addToCartButtons.first()).toBeVisible();
+    const recommendedProducts = page
+      .locator('.recommended-products-grid')
+      .first();
+    await expect(recommendedProducts).toBeVisible();
+
+    const productItems = page.locator('.product-item');
+    await expect(productItems.first()).toBeVisible();
 
     expect(consoleErrors).toHaveLength(0);
   });

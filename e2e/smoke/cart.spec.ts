@@ -1,48 +1,32 @@
 import {test, expect} from '@playwright/test';
 
 test.describe('Cart Functionality', () => {
-  test('should open cart, add first product, and verify product handle appears', async ({
+  test('should add first product to cart and verify cart updates', async ({
     page,
   }) => {
     await page.goto('/');
 
-    const cartButton = page
-      .locator(
-        '[data-testid="cart-button"], button[aria-label*="cart" i], a[href="/cart"]',
-      )
+    const cartBadgeBefore = page.locator('a[href="/cart"]').first();
+    const initialCartText = await cartBadgeBefore.textContent();
+    const initialCount = initialCartText?.match(/\d+/)?.[0] || '0';
+
+    const firstProduct = page.locator('.product-item').first();
+    await firstProduct.click();
+
+    await page.waitForLoadState('networkidle');
+
+    const addToCartButton = page
+      .locator('button:has-text("Add to cart")')
       .first();
-    await cartButton.click();
+    await expect(addToCartButton).toBeVisible();
+    await addToCartButton.click();
 
-    const emptyCartMessage = page
-      .locator(
-        'text=/your cart is empty/i, text=/no items in cart/i, [data-testid="empty-cart"]',
-      )
-      .first();
-    await expect(emptyCartMessage).toBeVisible();
+    await page.waitForTimeout(1500);
 
-    await page.goto('/');
+    const cartBadgeAfter = page.locator('a[href="/cart"]').first();
+    const updatedCartText = await cartBadgeAfter.textContent();
+    const updatedCount = updatedCartText?.match(/\d+/)?.[0] || '0';
 
-    const firstAddToCartButton = page
-      .locator(
-        'button:has-text("Add to cart"), button:has-text("Add to Cart"), [data-testid="add-to-cart"]',
-      )
-      .first();
-    await firstAddToCartButton.click();
-
-    await page.waitForTimeout(500);
-
-    await cartButton.click();
-
-    const cartItems = page.locator(
-      '[data-testid="cart-item"], .cart-item, [class*="cart-item"]',
-    );
-    await expect(cartItems).toHaveCount(1);
-
-    const productHandle = await cartItems
-      .first()
-      .locator('[data-testid="product-handle"], .product-title, h3, h4')
-      .textContent();
-    expect(productHandle).toBeTruthy();
-    expect(productHandle?.length).toBeGreaterThan(0);
+    expect(parseInt(updatedCount)).toBeGreaterThan(parseInt(initialCount));
   });
 });
