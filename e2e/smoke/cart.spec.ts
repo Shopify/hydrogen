@@ -8,8 +8,15 @@ test.describe('Cart Functionality', () => {
     // Wait for the page to fully load
     await page.waitForLoadState('networkidle');
 
-    // Take a screenshot for debugging
-    await page.screenshot({path: 'test-results/home-page.png', fullPage: true});
+    // Take a screenshot for debugging (create dir if needed)
+    try {
+      await page.screenshot({
+        path: 'test-results/home-page.png',
+        fullPage: true,
+      });
+    } catch (e) {
+      console.log('Screenshot failed:', e);
+    }
 
     // Get page title to verify page loaded
     const title = await page.title();

@@ -27,6 +27,11 @@ jobs:
 
       - name: 🏗️ Build packages
         run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:pkg
+      
+      - name: 📦 Link packages in skeleton template
+        run: |
+          cd templates/skeleton
+          npm install
 
       - name: 🎭 Install Playwright browsers
         run: npx playwright install chromium
