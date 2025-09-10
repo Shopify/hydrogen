@@ -1,6 +1,6 @@
 ## Relevant Files
 
-- `e2e/playwright.config.ts` – Base Playwright configuration shared by all test packs.
+- `playwright.config.ts` – Base Playwright configuration shared by all test packs (moved to root for default discovery).
 - `e2e/setup/launch.spec.ts` – System test that verifies dev server launches and displays Hydrogen title.
 - `e2e/server.ts` – Helper module for programmatically starting and stopping the dev server.
 - `e2e/smoke/` – Directory for fast smoke tests that run against an existing skeleton template.
@@ -27,9 +27,9 @@
 
   - [x] 1.3. Add `e2e/server.ts` helper that starts and stops the dev server programmatically for tests.
 
-  - [ ] 1.4. Implement the minimal code necessary for the launch test to pass (update config, helper, etc.).
+  - [x] 1.4. Implement the minimal code necessary for the launch test to pass (update config, helper, etc.).
 
-  - [ ] 1.5. Verify by running `npx playwright test e2e/setup/launch.spec.ts` locally—tests must pass and exit 0.
+  - [x] 1.5. Verify by running `npx playwright test e2e/setup/launch.spec.ts` locally—tests must pass and exit 0.
 
   - [ ] 1.6. Push branch `e2e_infra-baseline` to GitHub, and open PR #1 titled “E2E Infra: Baseline Playwright Setup”.
   - [ ] 1.7. Wait for the full CI pipeline on PR #1 to complete successfully; fix issues if it fails.
