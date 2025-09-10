@@ -1,6 +1,8 @@
 ## Relevant Files
 
 - `e2e/playwright.config.ts` – Base Playwright configuration shared by all test packs.
+- `e2e/setup/launch.spec.ts` – System test that verifies dev server launches and displays Hydrogen title.
+- `e2e/server.ts` – Helper module for programmatically starting and stopping the dev server.
 - `e2e/smoke/` – Directory for fast smoke tests that run against an existing skeleton template.
 - `e2e/matrix/` – Directory for full-matrix tests that scaffold permutations of `npm create @shopify/hydrogen`.
 - `package.json` – Adds `e2e` npm script and optional flags (`--smoke`, `--headed`).
@@ -23,7 +25,7 @@
 
   - [x] 1.2. Create `e2e/playwright.config.ts` with a minimal configuration (base URL `http://localhost:3000`, retries 0, reporters = `list`).
 
-  - [ ] 1.3. Add `e2e/server.ts` helper that starts and stops the dev server programmatically for tests.
+  - [x] 1.3. Add `e2e/server.ts` helper that starts and stops the dev server programmatically for tests.
 
   - [ ] 1.4. Implement the minimal code necessary for the launch test to pass (update config, helper, etc.).
 

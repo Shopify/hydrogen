@@ -11,4 +11,12 @@ export default defineConfig({
 
   // Use list reporter for clear output
   reporter: 'list',
+
+  // Automatically start dev server before tests
+  webServer: {
+    command: 'cd templates/skeleton && npm run dev',
+    url: 'http://localhost:3000',
+    timeout: 60 * 1000,
+    reuseExistingServer: !process.env.CI,
+  },
 });
