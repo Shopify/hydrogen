@@ -59,27 +59,11 @@ describe('i18n replacers', () => {
         import { CART_QUERY_FRAGMENT } from "~/lib/fragments";
         import { getLocaleFromRequest } from "~/lib/i18n";
 
-        // Define the additional context object
-        const additionalContext = {
-          // Additional context for custom properties, CMS clients, 3P SDKs, etc.
-          // These will be available as both context.propertyName and context.get(propertyContext)
-          // Example of complex objects that could be added:
-          // cms: await createCMSClient(env),
-          // reviews: await createReviewsClient(env),
-        } as const;
-
-        // Automatically augment HydrogenAdditionalContext with the additional context type
-        type AdditionalContextType = typeof additionalContext;
-
-        declare global {
-          interface HydrogenAdditionalContext extends AdditionalContextType {}
-        }
-
         /**
-         * Creates Hydrogen context for React Router 7.8.x
-         * Returns HydrogenRouterContextProvider with hybrid access patterns
+         * The context implementation is separate from server.ts
+         * so that type can be extracted for AppLoadContext
          * */
-        export async function createHydrogenRouterContext(
+        export async function createAppLoadContext(
           request: Request,
           env: Env,
           executionContext: ExecutionContext
@@ -97,23 +81,22 @@ describe('i18n replacers', () => {
             AppSession.init(request, [env.SESSION_SECRET]),
           ]);
 
-          const hydrogenContext = createHydrogenContext(
-            {
-              env,
-              request,
-              cache,
-              waitUntil,
-              session,
-              // Or detect from URL path based on locale subpath, cookies, or any other strategy
-              i18n: getLocaleFromRequest(request),
-              cart: {
-                queryFragment: CART_QUERY_FRAGMENT,
-              },
+          const hydrogenContext = createHydrogenContext({
+            env,
+            request,
+            cache,
+            waitUntil,
+            session,
+            i18n: getLocaleFromRequest(request),
+            cart: {
+              queryFragment: CART_QUERY_FRAGMENT,
             },
-            additionalContext
-          );
+          });
 
-          return hydrogenContext;
+          return {
+            ...hydrogenContext,
+            // declare additional Remix loader context
+          };
         }
         "
       `);
