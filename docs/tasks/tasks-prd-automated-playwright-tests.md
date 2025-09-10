@@ -90,7 +90,7 @@
 
   - [x] 3.3. Add `.github/workflows/e2e.yml` workflow that runs `npm run e2e -- --smoke` on `pull_request` events only.
 
-  - [ ] 3.4. Verify workflow by pushing a draft PR—CI must pass and upload artifacts on failure.
+  - [x] 3.4. Verify workflow by pushing a draft PR—CI must pass and upload artifacts on failure.
 
   - [ ] 3.5. Push branch and open PR #3 titled “CI: Run Smoke Pack in Pull Requests”, stacked on top of PR #2.
   - [ ] 3.6. Await CI completion on PR #3.
