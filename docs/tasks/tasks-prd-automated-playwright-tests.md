@@ -9,7 +9,7 @@
 - `e2e/matrix/` – Directory for full-matrix tests that scaffold permutations of `npm create @shopify/hydrogen`.
 - `scripts/run-e2e.js` – Custom E2E test runner that handles --smoke, --headed, and --matrix flags.
 - `package.json` – Adds `e2e` npm script with support for `--smoke` flag via custom runner script.
-- `.github/workflows/e2e.yml` – GitHub Actions workflow running smoke and full matrix on pull requests only
+- `.github/workflows/e2e.yml` – GitHub Actions workflow running smoke tests on pull requests only
 - `docs/testing/e2e.md` – Contributor guide for running and debugging Playwright tests.
 - `README.md` – Brief section linking to the E2E guide.
 
@@ -88,7 +88,7 @@
 
   - [x] 3.2. Add `"e2e": "playwright test"` to `package.json` plus `--smoke` flag support.
 
-  - [ ] 3.3. Add `.github/workflows/e2e.yml` workflow that runs `npm run e2e -- --smoke` on `pull_request` events only.
+  - [x] 3.3. Add `.github/workflows/e2e.yml` workflow that runs `npm run e2e -- --smoke` on `pull_request` events only.
 
   - [ ] 3.4. Verify workflow by pushing a draft PR—CI must pass and upload artifacts on failure.
 

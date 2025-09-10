@@ -1,0 +1,42 @@
+name: 🎭 E2E Tests
+on: [pull_request]
+
+jobs:
+  e2e-smoke:
+    name: 🎭 E2E Smoke Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: e2e-smoke-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: 📥 Install dependencies
+        run: |
+          npm ci
+          npm rebuild
+
+      - name: 🎭 Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: 🔬 Run E2E Smoke Tests
+        run: npm run e2e:smoke
+
+      - name: 📸 Upload test artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: e2e-smoke-artifacts-${{ github.sha }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 30
