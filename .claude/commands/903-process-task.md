@@ -1,4 +1,4 @@
-Read @docs/tasks/prd-automated-playwright-tests.md then process the next item in the list @docs/tasks/tasks-prd-automated-playwright-tests.md. Follow these directions:
+Read @docs/tasks/prd-workflow-automation-tool.md then process the next item in the list @docs/tasks/tasks-prd-workflow-automation-tool.md. Follow these directions:
 
 # Task List Management
 
@@ -37,7 +37,7 @@ When working with task lists, the AI must:
 
 ## Other guidelines
 
-For every task the AI think you have completed, ALWAYS run the tests and ensure the test results are as you would expect.
+For every task you think you have completed, ALWAYS run the tests and ensure the test results are as you would expect.
 
 Eg: if the task is to write a failing test for something, ensure you have run the test and it fails in the way you are expecting.
 
