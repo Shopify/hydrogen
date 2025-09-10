@@ -19,6 +19,34 @@
 - After completing every parent task below, open a new PR targeting `main` in the Hydrogen repository and include instructions for reviewers to run `npm run e2e`.
 - All new code must be lint-clean and pass the full test suite in CI.
 
+### Implementation Learnings
+
+#### Test Writing Best Practices
+- **Avoid `waitForTimeout`**: Never use fixed timeouts like `waitForTimeout(1500)`. Instead, use `waitForLoadState('networkidle')` combined with explicit waits for expected DOM changes (e.g., `await expect(element).not.toHaveText(oldText)`).
+- **Selector Strategy**: The skeleton template uses CSS classes like `.featured-collection`, `.product-item`, `.recommended-products-grid` for key elements. These are stable selectors for smoke tests.
+- **Cart Testing**: When testing cart updates, always capture the initial cart count/text first, then wait for it to change after actions rather than assuming a fixed delay.
+
+#### Project Structure Insights
+- **Playwright Config Location**: The `playwright.config.ts` is at the root level, not in `e2e/` directory. This is the default Playwright discovery location.
+- **WebServer Config**: The webServer configuration in playwright.config.ts successfully starts the dev server for the skeleton template at `templates/skeleton/`.
+- **Test Organization**: Tests are organized under `e2e/smoke/` for smoke tests, with `e2e/setup/` for infrastructure verification tests.
+
+#### CI/GitHub Integration
+- **PR Stacking**: Use `gh pr create --base <branch>` to stack PRs properly. For example, PR #2 was stacked on `e2e_infra-baseline` rather than `main`.
+- **CI Timing**: The full CI pipeline takes approximately 5-6 minutes to complete, with unit tests being the longest-running job.
+- **Required Checks**: The Hydrogen repo has multiple required checks including TypeScript, ESLint, Prettier, Unit tests, Recipe validation, and Deploy to Oxygen variations.
+
+#### NPM Scripts Pattern
+- **E2E Scripts Added**: 
+  - `"e2e": "playwright test"` - runs all E2E tests
+  - `"e2e:smoke": "playwright test e2e/smoke"` - runs only smoke tests
+- **Note**: The `--smoke` flag mentioned in the PRD wasn't implemented yet as it requires additional Playwright configuration. The `e2e:smoke` script achieves the same goal by specifying the test directory.
+
+#### Common Pitfalls to Avoid
+- **Don't assume npm scripts exist**: Always check `package.json` before trying to run commands like `npm run e2e`.
+- **Test timing is critical**: The smoke tests complete in ~9-10 seconds, well under the 60-second requirement.
+- **Network idle states**: The skeleton template makes multiple API calls on page load and after cart actions. Always wait for these to complete.
+
 ## Tasks
 
 - [x] 1. Establish Playwright infrastructure and baseline configuration (PR #1)
@@ -36,7 +64,7 @@
   - [x] 1.6. Push branch `e2e_infra-baseline` to GitHub, and open PR #1 titled "E2E Infra: Baseline Playwright Setup".
   - [x] 1.7. Wait for the full CI pipeline on PR #1 to complete successfully; fix issues if it fails.
 
-- [ ] 2. Build Smoke Test Pack for the existing skeleton template (PR #2)
+- [x] 2. Build Smoke Test Pack for the existing skeleton template (PR #2)
 
   - [x] 2.1. Create branch `e2e_smoke-pack` **based on `e2e_infra-baseline`**.
 
@@ -50,8 +78,8 @@
 
   - [x] 2.5. Verify by running `npm run e2e -- --smoke` and ensuring the pack completes in <60 s.
 
-  - [ ] 2.6. Push branch and open PR #2 titled “E2E: Smoke Test Pack for Skeleton Template”. Ensure PR #2 is **stacked on top of PR #1**.
-  - [ ] 2.7. Wait for CI to finish and pass on PR #2.
+  - [x] 2.6. Push branch and open PR #2 titled "E2E: Smoke Test Pack for Skeleton Template". Ensure PR #2 is **stacked on top of PR #1**.
+  - [x] 2.7. Wait for CI to finish and pass on PR #2.
 
 - [ ] 3. Add `npm run e2e` script and integrate Smoke Pack with CI workflow (PR #3)
 
