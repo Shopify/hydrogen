@@ -25,6 +25,9 @@ jobs:
           npm ci
           npm rebuild
 
+      - name: 🏗️ Build packages
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:pkg
+
       - name: 🎭 Install Playwright browsers
         run: npx playwright install chromium
 
