@@ -14,7 +14,8 @@
       "Bash(time npm run e2e -- --smoke)",
       "Read(/Users/karadaviduik/src/github.com/Shopify/hydrogen/.github/workflows/**)",
       "Read(/Users/karadaviduik/src/github.com/Shopify/hydrogen/.github/workflows/**)",
-      "Read(/Users/karadaviduik/src/github.com/Shopify/hydrogen/.github/workflows/**)"
+      "Read(/Users/karadaviduik/src/github.com/Shopify/hydrogen/.github/workflows/**)",
+      "Bash(curl:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

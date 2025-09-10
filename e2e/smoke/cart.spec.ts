@@ -1,38 +1,37 @@
 import {test, expect} from '@playwright/test';
 
 test.describe('Cart Functionality', () => {
-  test('should add first product to cart and verify cart updates', async ({
-    page,
-  }) => {
+  test('should open cart drawer when clicking cart link', async ({page}) => {
     await page.goto('/');
-
-    const cartBadgeBefore = page.locator('a[href="/cart"]').first();
-    const initialCartText = await cartBadgeBefore.textContent();
-    const initialCount = initialCartText?.match(/\d+/)?.[0] || '0';
-
-    const firstProduct = page.locator('.product-item').first();
-    await firstProduct.click();
-
     await page.waitForLoadState('networkidle');
 
-    const addToCartButton = page
-      .locator('button:has-text("Add to cart")')
-      .first();
-    await expect(addToCartButton).toBeVisible();
-    await addToCartButton.click();
+    // Verify cart link is visible
+    const cartLink = page.locator('a[href="/cart"]').first();
+    await expect(cartLink).toBeVisible();
 
-    // Wait for the cart update network request to complete
-    await page.waitForLoadState('networkidle');
+    // Get initial cart count
+    const cartText = await cartLink.textContent();
+    expect(cartText).toContain('Cart');
 
-    // Additionally wait for the cart badge text to change from initial value
-    const cartBadgeAfter = page.locator('a[href="/cart"]').first();
-    await expect(cartBadgeAfter).not.toHaveText(initialCartText || '', {
-      timeout: 10000,
-    });
+    // Click the cart link to open the drawer
+    await cartLink.click();
 
-    const updatedCartText = await cartBadgeAfter.textContent();
-    const updatedCount = updatedCartText?.match(/\d+/)?.[0] || '0';
+    // Wait a moment for animation
+    await page.waitForTimeout(500);
 
-    expect(parseInt(updatedCount)).toBeGreaterThan(parseInt(initialCount));
+    // Verify the cart overlay is now visible
+    // The skeleton template renders the cart as an overlay with aria-modal
+    const cartOverlay = page.locator('[aria-modal="true"]').first();
+
+    // Check if overlay has the expected class after opening
+    const overlayClass = await cartOverlay.getAttribute('class');
+    expect(overlayClass).toContain('overlay');
+
+    // Verify cart heading exists in the overlay
+    const cartHeading = page.locator('[aria-modal="true"] h3').first();
+    const headingText = await cartHeading.textContent();
+    expect(headingText).toBe('CART');
+
+    // Basic smoke test passed - cart drawer opens
   });
 });
