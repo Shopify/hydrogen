@@ -8,7 +8,7 @@
     "build:pkg": "turbo build --parallel --filter=./packages/*",
     "build:examples:disabled": "echo 'Examples build temporarily disabled for React Router 7.8.x migration'",
     "build:templates": "turbo build --parallel --filter=./templates/*",
-    "build:all": "npm run build:pkg && npm run build:templates && npm run build:examples",
+    "build:all": "npm run build:pkg && npm run build:templates && npm run build:examples:disabled",
     "ci:checks": "turbo run lint test format:check typecheck",
     "decrypt": "ejson decrypt secrets.ejson",
     "dev": "npm run dev:pkg",
