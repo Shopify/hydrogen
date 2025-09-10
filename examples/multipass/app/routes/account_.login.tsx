@@ -1,30 +1,22 @@
-import {
-  Form,
-  Link,
-  useActionData,
-  data,
-  redirect,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
-  type MetaFunction,
-} from 'react-router';
+import {Form, Link, useActionData, data, redirect} from 'react-router';
+import type {Route} from './+types/account_.login';
 
 type ActionResponse = {
   error: string | null;
 };
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: 'Login'}];
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   if (await context.session.get('customerAccessToken')) {
     return redirect('/account');
   }
   return {};
 }
 
-export async function action({request, context}: ActionFunctionArgs) {
+export async function action({request, context}: Route.ActionArgs) {
   const {session, storefront} = context;
 
   if (request.method !== 'POST') {

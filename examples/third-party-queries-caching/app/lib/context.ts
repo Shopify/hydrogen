@@ -1,18 +1,13 @@
 import {createHydrogenContext} from '@shopify/hydrogen';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
-/***********************************************/
-/**********  EXAMPLE UPDATE STARTS  ************/
-// 1. Import the Rick and Morty client.
 import {createRickAndMortyClient} from '~/lib/createRickAndMortyClient.server';
-/**********   EXAMPLE UPDATE END   ************/
-/***********************************************/
 
 /**
- * The context implementation is separate from server.ts
- * so that type can be extracted for AppLoadContext
+ * Creates Hydrogen context for React Router 7.8.x with Rick and Morty client
+ * Returns HydrogenRouterContextProvider with hybrid access patterns
  * */
-export async function createAppLoadContext(
+export async function createHydrogenRouterContext(
   request: Request,
   env: Env,
   executionContext: ExecutionContext,
@@ -30,38 +25,44 @@ export async function createAppLoadContext(
     AppSession.init(request, [env.SESSION_SECRET]),
   ]);
 
-  const hydrogenContext = createHydrogenContext({
-    env,
-    request,
-    cache,
-    waitUntil,
-    session,
-    i18n: {language: 'EN', country: 'US'},
-    cart: {
-      queryFragment: CART_QUERY_FRAGMENT,
-    },
-  });
-
-  /***********************************************/
-  /**********  EXAMPLE UPDATE STARTS  ************/
   /**
-   * 2. Create a Rick and Morty client.
+   * Create a Rick and Morty client for third-party GraphQL queries
    */
   const rickAndMorty = createRickAndMortyClient({
     cache,
     waitUntil,
     request,
   });
-  /**********   EXAMPLE UPDATE END   ************/
-  /***********************************************/
 
-  return {
-    ...hydrogenContext,
-    /***********************************************/
-    /**********  EXAMPLE UPDATE STARTS  ************/
-    rickAndMorty, // 3. Pass the Rick and Morty client to the action and loader context.
-    /**********   EXAMPLE UPDATE END   ************/
-    /***********************************************/
-    // declare additional Remix loader context
-  };
+  // Define the additional context object
+  const additionalContext = {
+    // Pass the Rick and Morty client to the action and loader context
+    rickAndMorty,
+  } as const;
+
+  const hydrogenContext = createHydrogenContext(
+    {
+      env,
+      request,
+      cache,
+      waitUntil,
+      session,
+      i18n: {language: 'EN', country: 'US'},
+      cart: {
+        queryFragment: CART_QUERY_FRAGMENT,
+      },
+    },
+    additionalContext,
+  );
+
+  return hydrogenContext;
+}
+
+// Augment HydrogenAdditionalContext with our custom Rick and Morty client
+type AdditionalContextType = {
+  rickAndMorty: ReturnType<typeof createRickAndMortyClient>;
+};
+
+declare global {
+  interface HydrogenAdditionalContext extends AdditionalContextType {}
 }

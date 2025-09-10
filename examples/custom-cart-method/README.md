@@ -1,4 +1,4 @@
-# Hydrogen example: Custom Card Edit
+# Hydrogen example: Custom Cart Method
 
 This is an example of implementation of how to edit product option in cart. It does this by creating an [custom method](https://shopify.dev/docs/api/hydrogen/2023-10/utilities/createcarthandler#example-custom-methods) named `updateLineByOptions` for cart.
 
@@ -22,12 +22,11 @@ npm create @shopify/hydrogen@latest -- --template custom-cart-method
 
 ## Key files
 
-This folder contains the minimal set of files needed to showcase the implementation.
-Files that aren’t included by default with Hydrogen and that you’ll need to
-create are labeled with 🆕.
+This example modifies the standard cart implementation to add custom cart methods.
+All files listed are modifications of existing Hydrogen skeleton files.
 
-| File                                                 | Description                                                                                    |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------- | --- |
-| [`server.ts`](server.ts)                             | Oxygen server worker. `context.cart` is created here and where the custom method is located    | \   |
-| [`app/components/Cart.tsx`](app/components/Cart.tsx) | Cart component that renders the side cart                                                      |
-| [`app/routes/cart.ts`](app/routes/cart.tsx)          | Cart route that handle cart action such as add or remove line item using `context.cart` object |
+| File                                                  | Description                                                                                     |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [`server.ts`](server.ts)                             | Modified Oxygen server worker where the custom cart method `updateLineByOptions` is added      |
+| [`app/components/Cart.tsx`](app/components/Cart.tsx) | Modified cart component to include inline product option editing UI                            |
+| [`app/routes/cart.tsx`](app/routes/cart.tsx)         | Modified cart route to handle the new `CustomUpdateLineByOptions` action                       |

@@ -1,21 +1,21 @@
-import {useNonce, getShopAnalytics, Analytics, Script} from '@shopify/hydrogen';
+import {Analytics, getShopAnalytics, useNonce, Script} from '@shopify/hydrogen';
 import {
+  Outlet,
+  useRouteError,
+  isRouteErrorResponse,
+  type ShouldRevalidateFunction,
   Links,
   Meta,
-  Outlet,
   Scripts,
-  useRouteError,
-  useRouteLoaderData,
   ScrollRestoration,
-  isRouteErrorResponse,
-  type LoaderFunctionArgs,
-  type ShouldRevalidateFunction,
+  useRouteLoaderData,
 } from 'react-router';
+import type {Route} from './+types/root';
 import favicon from '~/assets/favicon.svg';
+import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from '~/components/PageLayout';
-import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 import {GoogleTagManager} from '~/components/GoogleTagManager';
 
 export type RootLoader = typeof loader;
@@ -29,15 +29,16 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
   nextUrl,
 }) => {
   // revalidate when a mutation is performed e.g add to cart, login...
-  if (formMethod && formMethod !== 'GET') {
-    return true;
-  }
+  if (formMethod && formMethod !== 'GET') return true;
 
   // revalidate when manually revalidating via useRevalidator
-  if (currentUrl.toString() === nextUrl.toString()) {
-    return true;
-  }
+  if (currentUrl.toString() === nextUrl.toString()) return true;
 
+  // Defaulting to no revalidation for root loader data to improve performance.
+  // When using this feature, you risk your UI getting out of sync with your server.
+  // Use with caution. If you are uncomfortable with this optimization, update the
+  // line below to `return true` instead.
+  // For more details see: https://remix.run/docs/en/main/route/should-revalidate
   return false;
 };
 
@@ -65,7 +66,7 @@ export function links() {
   ];
 }
 
-export async function loader(args: LoaderFunctionArgs) {
+export async function loader(args: Route.LoaderArgs) {
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
@@ -97,7 +98,7 @@ export async function loader(args: LoaderFunctionArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({context}: LoaderFunctionArgs) {
+async function loadCriticalData({context}: Route.LoaderArgs) {
   const {storefront} = context;
 
   const [header] = await Promise.all([
@@ -120,7 +121,7 @@ async function loadCriticalData({context}: LoaderFunctionArgs) {
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  */
-function loadDeferredData({context}: LoaderFunctionArgs) {
+function loadDeferredData({context}: Route.LoaderArgs) {
   const {storefront, customerAccount, cart} = context;
 
   // defer the footer query (below the fold)
@@ -131,7 +132,7 @@ function loadDeferredData({context}: LoaderFunctionArgs) {
         footerMenuHandle: 'footer', // Adjust to your footer menu handle
       },
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       // Log query errors, but don't throw them so the page can still render
       console.error(error);
       return null;

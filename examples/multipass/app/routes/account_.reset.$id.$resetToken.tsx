@@ -1,21 +1,15 @@
-import {
-  data,
-  Form,
-  redirect,
-  useActionData,
-  type ActionFunctionArgs,
-  type MetaFunction,
-} from 'react-router';
+import {data, Form, redirect, useActionData} from 'react-router';
+import type {Route} from './+types/account_.reset.$id.$resetToken';
 
 type ActionResponse = {
   error: string | null;
 };
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: 'Reset Password'}];
 };
 
-export async function action({request, context, params}: ActionFunctionArgs) {
+export async function action({request, context, params}: Route.ActionArgs) {
   if (request.method !== 'POST') {
     return data({error: 'Method not allowed'}, {status: 405});
   }

@@ -2,10 +2,7 @@
 #! oxygen_storefront_id: 1000014888
 
 name: Examples deploy
-# Temporarily disabled during React Router 7.8.x migration
-# Examples are not in workspaces and need to be updated separately
-on: 
-  workflow_dispatch: # Only run manually if needed
+on: [push]
 
 permissions:
   contents: read
@@ -25,6 +22,7 @@ jobs:
             {name: 'metaobjects', token: '1000014928'},
             {name: 'third-party-queries-caching', token: '1000014929'},
             {name: 'custom-cart-method', token: '1000014930'},
+            {name: 'legacy-customer-account-flow', token: '1000022490'},
           ]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -57,7 +55,7 @@ jobs:
         id: deploy
         working-directory: examples/${{ matrix.examples.name }}
         run: |
-          npx shopify hydrogen deploy --no-lockfile-check --diff --token=$OXYGEN_DEPLOYMENT_TOKEN_${{ matrix.examples.token }}
+          npx shopify hydrogen deploy --no-lockfile-check --token=$OXYGEN_DEPLOYMENT_TOKEN_${{ matrix.examples.token }}
         env:
           SHOPIFY_HYDROGEN_FLAG_METADATA_DESCRIPTION: ${{ github.event.head_commit.message }}
           OXYGEN_DEPLOYMENT_TOKEN_1000014888: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014888 }}

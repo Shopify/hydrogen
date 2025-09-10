@@ -1,19 +1,12 @@
-import {
-  Form,
-  Link,
-  useActionData,
-  data,
-  redirect,
-  type LoaderFunctionArgs,
-  type ActionFunctionArgs,
-} from 'react-router';
+import {Form, Link, useActionData, data, redirect} from 'react-router';
+import type {Route} from './+types/account_.recover';
 
 type ActionResponse = {
   error?: string;
   resetRequested?: boolean;
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
   if (customerAccessToken) {
     return redirect('/account');
@@ -22,7 +15,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   return {};
 }
 
-export async function action({request, context}: ActionFunctionArgs) {
+export async function action({request, context}: Route.ActionArgs) {
   const {storefront} = context;
   const form = await request.formData();
   const email = form.has('email') ? String(form.get('email')) : null;

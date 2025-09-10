@@ -2,9 +2,9 @@ import {
   CartForm,
   Image,
   Money,
-  OptimisticCartLine,
   useOptimisticCart,
   type OptimisticCart,
+  type OptimisticCartLine,
 } from '@shopify/hydrogen';
 import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import {Link} from 'react-router';
@@ -90,11 +90,20 @@ function CartLineItem({
   line: CartLine;
 }) {
   const {id, merchandise} = line;
+  
+  const lineItemUrl = useVariantUrl(
+    merchandise?.product?.handle || '',
+    merchandise?.selectedOptions
+  );
+  
+  if (!merchandise) {
+    return null;
+  }
+  
   const {product, title, image, selectedOptions} = merchandise;
-  const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
 
   return (
-    <li key={id} className="cart-line">
+    <li className="cart-line">
       {image && (
         <Image
           alt={title}

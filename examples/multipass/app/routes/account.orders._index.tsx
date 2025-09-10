@@ -1,22 +1,16 @@
-import {
-  Link,
-  useLoaderData,
-  data,
-  redirect,
-  type LoaderFunctionArgs,
-  type MetaFunction,
-} from 'react-router';
+import {Link, useLoaderData, data, redirect} from 'react-router';
+import type {Route} from './+types/account.orders._index';
 import {Money, Pagination, getPaginationVariables} from '@shopify/hydrogen';
 import type {
   CustomerOrdersFragment,
   OrderItemFragment,
 } from 'storefrontapi.generated';
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: 'Orders'}];
 };
 
-export async function loader({request, context}: LoaderFunctionArgs) {
+export async function loader({request, context}: Route.LoaderArgs) {
   const {session, storefront} = context;
 
   const customerAccessToken = await session.get('customerAccessToken');

@@ -9,10 +9,9 @@ import {
   ScrollRestoration,
   isRouteErrorResponse,
   data,
-  type HeadersFunction,
-  type LoaderFunctionArgs,
   type ShouldRevalidateFunction,
 } from 'react-router';
+import type {Route} from './+types/root';
 import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
 import favicon from '~/assets/favicon.svg';
 import resetStyles from '~/styles/reset.css?url';
@@ -41,6 +40,8 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
   }
 
   return false;
+  // Improve performance by reducing unnecessary re-renders and re-fetches:
+  // return false unless there are specific reasons to revalidate
 };
 
 /**
@@ -69,57 +70,26 @@ export function links() {
 
 /***********************************************/
 /**********  EXAMPLE UPDATE STARTS  ************/
-export const headers: HeadersFunction = ({loaderHeaders}) => loaderHeaders;
+export const headers: Route.HeadersFunction = ({loaderHeaders}) => loaderHeaders;
 /**********   EXAMPLE UPDATE END   ************/
 /***********************************************/
 
-export async function loader({context}: LoaderFunctionArgs) {
-  const {storefront, customerAccount, cart, env} = context;
-  const publicStoreDomain = env.PUBLIC_STORE_DOMAIN;
+export async function loader(args: Route.LoaderArgs) {
+  // Start fetching non-critical data without blocking time to first byte
+  const deferredData = await loadDeferredData(args);
 
-  /***********************************************/
-  /**********  EXAMPLE UPDATE STARTS  ************/
-  const customerAccessToken = await context.session.get('customerAccessToken');
+  // Await the critical data required to render initial state of the page
+  const criticalData = await loadCriticalData(args);
 
-  // validate the customer access token is valid
-  const {isLoggedIn, headers} = await validateCustomerAccessToken(
-    context.session,
-    customerAccessToken,
-  );
-  /**********   EXAMPLE UPDATE END   ************/
-  /***********************************************/
-
-  const cartPromise = cart.get();
-
-  // defer the footer query (below the fold)
-  const footerPromise = storefront.query(FOOTER_QUERY, {
-    cache: storefront.CacheLong(),
-    variables: {
-      footerMenuHandle: 'footer', // Adjust to your footer menu handle
-    },
-  });
-
-  // await the header query (above the fold)
-  const headerPromise = storefront.query(HEADER_QUERY, {
-    cache: storefront.CacheLong(),
-    variables: {
-      headerMenuHandle: 'main-menu', // Adjust to your header menu handle
-    },
-  });
+  const {env} = args.context;
 
   return data(
     {
-      cart: cartPromise,
-      footer: footerPromise,
-      header: await headerPromise,
-      /***********************************************/
-      /**********  EXAMPLE UPDATE STARTS  ************/
-      isLoggedIn,
-      /**********   EXAMPLE UPDATE END   ************/
-      /***********************************************/
-      publicStoreDomain,
+      ...deferredData,
+      ...criticalData,
+      publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
       shop: getShopAnalytics({
-        storefront,
+        storefront: args.context.storefront,
         publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
       }),
       consent: {
@@ -127,16 +97,82 @@ export async function loader({context}: LoaderFunctionArgs) {
         storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
         withPrivacyBanner: true,
         // localize the privacy banner
-        country: context.storefront.i18n.country,
-        language: context.storefront.i18n.language,
+        country: args.context.storefront.i18n.country,
+        language: args.context.storefront.i18n.language,
       },
     },
     /***********************************************/
     /**********  EXAMPLE UPDATE STARTS  ************/
-    {headers},
+    {headers: deferredData.headers},
     /**********   EXAMPLE UPDATE END   ************/
     /***********************************************/
   );
+}
+
+/**
+ * Load data necessary for rendering content above the fold. This is the critical data
+ * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+ */
+async function loadCriticalData({context}: Route.LoaderArgs) {
+  const {storefront} = context;
+
+  const [header] = await Promise.all([
+    storefront.query(HEADER_QUERY, {
+      cache: storefront.CacheLong(),
+      variables: {
+        headerMenuHandle: 'main-menu', // Adjust to your header menu handle
+      },
+    }),
+    // Add other queries here, so that they are loaded in parallel
+  ]);
+
+  return {header};
+}
+
+/**
+ * Load data for rendering content below the fold. This data is deferred and will be
+ * fetched after the initial page load. If it's unavailable, the page should still 200.
+ * Make sure to not throw any errors here, as it will cause the page to 500.
+ */
+async function loadDeferredData({context}: Route.LoaderArgs) {
+  const {storefront, cart, session} = context;
+
+  /***********************************************/
+  /**********  EXAMPLE UPDATE STARTS  ************/
+  const customerAccessToken = await session.get('customerAccessToken');
+
+  // validate the customer access token is valid
+  const {isLoggedIn, headers} = await validateCustomerAccessToken(
+    session,
+    customerAccessToken,
+  );
+  /**********   EXAMPLE UPDATE END   ************/
+  /***********************************************/
+
+  // defer the footer query (below the fold)
+  const footer = storefront
+    .query(FOOTER_QUERY, {
+      cache: storefront.CacheLong(),
+      variables: {
+        footerMenuHandle: 'footer', // Adjust to your footer menu handle
+      },
+    })
+    .catch((error: Error) => {
+      // Log query errors, but don't throw them so the page can still render
+      console.error(error);
+      return null;
+    });
+
+  return {
+    cart: cart.get(),
+    footer,
+    /***********************************************/
+    /**********  EXAMPLE UPDATE STARTS  ************/
+    isLoggedIn,
+    headers,
+    /**********   EXAMPLE UPDATE END   ************/
+    /***********************************************/
+  };
 }
 
 export function Layout({children}: {children?: React.ReactNode}) {
@@ -160,7 +196,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
             shop={data.shop}
             consent={data.consent}
           >
-            <PageLayout {...data}>{children}</PageLayout>
+            <PageLayout {...data as Parameters<typeof PageLayout>[0]}>{children}</PageLayout>
           </Analytics.Provider>
         ) : (
           children
@@ -216,7 +252,7 @@ export function ErrorBoundary() {
  * ```
  */
 async function validateCustomerAccessToken(
-  session: LoaderFunctionArgs['context']['session'],
+  session: Route.LoaderArgs['context']['session'],
   customerAccessToken?: CustomerAccessToken,
 ) {
   let isLoggedIn = false;

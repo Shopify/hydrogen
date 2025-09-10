@@ -2,9 +2,7 @@
 
 The example apps in this directory show how to implement popular design patterns in Hydrogen.
 
-Each example only contains the files that are different from Hydrogen’s [Skeleton template](/templates/skeleton/), but it's still possible to inspect and run them locally. See each example's README file for details on the problem it solves, how the solution works, and any other requirements you’ll need.
-
-Examples are kept intentionally minimal, containing only the new and updated code required to illustrate a working use case.
+Each example is a complete, standalone Hydrogen application that demonstrates specific features and patterns. See each example's README file for details on the problem it solves, how the solution works, and any other requirements you'll need.
 
 ## Full-featured example
 
@@ -25,7 +23,6 @@ These are some of the most commonly used Hydrogen examples. Browse the folders i
 | [Metaobjects](/examples/metaobjects/)                                     | How to use [metaobjects](https://help.shopify.com/en/manual/custom-data/metaobjects) as a Content Management System (CMS) for Hydrogen.                                                                                                                                     |
 | [Multipass](/examples/multipass/)                                         | Connect your existing third-party authentication method to Shopify’s customer accounts, so buyers can use a single login across multiple services.                                                                                                                          |
 | [Partytown](/examples/partytown/)                                         | Lazy-loading [Google Tag Manager](https://support.google.com/tagmanager) using [Partytown](https://partytown.builder.io/).feature.                                                                                                                                          |
-| [Subscriptions](/examples/subscriptions/)                                 | Implementation of [subscriptions](https://shopify.dev/docs/apps/selling-strategies/subscriptions) for Hydrogen.                                                                                                                                                             |
 | [Third-party Queries and Caching](/examples/third-party-queries-caching/) | How to leverage Oxygen's sub-request caching when querying third-party GraphQL API in Hydrogen.                                                                                                                                                                             |
 
 ## Install an example
@@ -44,17 +41,16 @@ If you don’t see the example you’re looking for, you can [request one throug
 
 Hydrogen is an open-source project, and we welcome your input! See the Hydrogen [contribution docs](/docs/examples/README.md) for more details on how to add your own examples to this repo.
 
-### Creating new examples as diffs
+### Creating new examples
 
-An example diff is a partial Hydrogen app that only contains the files that change from the skeleton template. The Hydrogen CLI will merge the example diff on top of the skeleton template in a temporary directory before running the `dev` or `build` commands.
+When creating a new example:
 
-Keep the following in mind when creating a new example diff:
-
-1. Start a new example diff by copying another minimal example and changing code.
-   Only include and commit files that are different from the skeleton template.
-1. `package.json` must always be created with a unique name with example- prefix.
-1. `dependencies`, `devDependencies`, and `peerDependencies` in `package.json` are also merged to those in skeleton. Therefore, only list new or modified dependencies in the example.
-1. The scripts in `package.json` must pass the `--diff` flag to the `dev` and `build` commands. Otherwise, it will be treated as a full Hydrogen app instead of a diff.
-1. The `tsconfig.json` must have special values. Copy it from another existing diff example.
-1. Add the example package to `workspaces` option in the main repo package.json
-1. Add the new example in this README
+1. Copy an existing example as a starting point
+2. Update the `package.json` with a unique name using the `example-` prefix
+3. Modify the code to demonstrate your specific feature or pattern
+4. Add the example package to the `workspaces` option in the main repo package.json
+5. Add the new example to this README
+6. Include a comprehensive README.md explaining:
+   - What problem the example solves
+   - Key files and modifications
+   - Any special requirements or setup needed
