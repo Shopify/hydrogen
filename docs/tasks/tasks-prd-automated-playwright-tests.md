@@ -21,7 +21,7 @@
 
   - [x] 1.1. Write a failing system test in `e2e/setup/launch.spec.ts` that launches the dev server for the existing skeleton template and asserts the root page title contains "Hydrogen". Run with `npx playwright test e2e/setup/launch.spec.ts` and confirm it fails.
 
-  - [ ] 1.2. Create `e2e/playwright.config.ts` with a minimal configuration (base URL `http://localhost:3000`, retries 0, reporters = `list`).
+  - [x] 1.2. Create `e2e/playwright.config.ts` with a minimal configuration (base URL `http://localhost:3000`, retries 0, reporters = `list`).
 
   - [ ] 1.3. Add `e2e/server.ts` helper that starts and stops the dev server programmatically for tests.
 
