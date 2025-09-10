@@ -3,7 +3,7 @@
 '@shopify/cli-hydrogen': major
 ---
 
-# Migrate skeleton template to React Router 7.8.x
+Migrate skeleton template to React Router 7.8.x
 
 This major release migrates the Hydrogen skeleton template to React Router 7.8.x, introducing automatic type generation, enhanced type safety, and modernized APIs that leverage React Router's latest features.
 
