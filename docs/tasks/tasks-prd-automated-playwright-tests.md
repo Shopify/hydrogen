@@ -4,6 +4,8 @@
 - `e2e/setup/launch.spec.ts` – System test that verifies dev server launches and displays Hydrogen title.
 - `e2e/server.ts` – Helper module for programmatically starting and stopping the dev server.
 - `e2e/smoke/` – Directory for fast smoke tests that run against an existing skeleton template.
+- `e2e/smoke/home.spec.ts` – Smoke test for home page: hero image, product grid, and console errors.
+- `e2e/smoke/cart.spec.ts` – Smoke test for cart functionality: open cart, add product, verify handle.
 - `e2e/matrix/` – Directory for full-matrix tests that scaffold permutations of `npm create @shopify/hydrogen`.
 - `package.json` – Adds `e2e` npm script and optional flags (`--smoke`, `--headed`).
 - `.github/workflows/e2e.yml` – GitHub Actions workflow running smoke and full matrix on PRs
@@ -19,7 +21,7 @@
 
 ## Tasks
 
-- [ ] 1. Establish Playwright infrastructure and baseline configuration (PR #1)
+- [x] 1. Establish Playwright infrastructure and baseline configuration (PR #1)
 
   - [x] 1.1. Write a failing system test in `e2e/setup/launch.spec.ts` that launches the dev server for the existing skeleton template and asserts the root page title contains "Hydrogen". Run with `npx playwright test e2e/setup/launch.spec.ts` and confirm it fails.
 
@@ -31,14 +33,14 @@
 
   - [x] 1.5. Verify by running `npx playwright test e2e/setup/launch.spec.ts` locally—tests must pass and exit 0.
 
-  - [ ] 1.6. Push branch `e2e_infra-baseline` to GitHub, and open PR #1 titled “E2E Infra: Baseline Playwright Setup”.
-  - [ ] 1.7. Wait for the full CI pipeline on PR #1 to complete successfully; fix issues if it fails.
+  - [x] 1.6. Push branch `e2e_infra-baseline` to GitHub, and open PR #1 titled "E2E Infra: Baseline Playwright Setup".
+  - [x] 1.7. Wait for the full CI pipeline on PR #1 to complete successfully; fix issues if it fails.
 
 - [ ] 2. Build Smoke Test Pack for the existing skeleton template (PR #2)
 
-  - [ ] 2.1. Create branch `e2e_smoke-pack` **based on `e2e_infra-baseline`**.
+  - [x] 2.1. Create branch `e2e_smoke-pack` **based on `e2e_infra-baseline`**.
 
-  - [ ] 2.2. Write failing smoke tests under `e2e/smoke/`:
+  - [x] 2.2. Write failing smoke tests under `e2e/smoke/`:
       - `home.spec.ts` – asserts hero image, product grid, no console errors.
       - `cart.spec.ts` – opens cart, adds first product, verifies handle appears.
 
