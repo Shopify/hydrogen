@@ -44,7 +44,7 @@
       - `home.spec.ts` – asserts hero image, product grid, no console errors.
       - `cart.spec.ts` – opens cart, adds first product, verifies handle appears.
 
-  - [ ] 2.3. Run tests to confirm both fail with clear errors.
+  - [x] 2.3. Run tests to confirm both fail with clear errors.
 
   - [ ] 2.4. Implement assertions and helper utilities to make tests pass without changing application code.
 
