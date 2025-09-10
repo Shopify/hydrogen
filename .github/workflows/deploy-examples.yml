@@ -22,6 +22,7 @@ jobs:
             {name: 'metaobjects', token: '1000014928'},
             {name: 'third-party-queries-caching', token: '1000014929'},
             {name: 'custom-cart-method', token: '1000014930'},
+            {name: 'legacy-customer-account-flow', token: '1000014931'},
           ]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -63,3 +64,4 @@ jobs:
           OXYGEN_DEPLOYMENT_TOKEN_1000014928: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014928 }}
           OXYGEN_DEPLOYMENT_TOKEN_1000014929: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014929 }}
           OXYGEN_DEPLOYMENT_TOKEN_1000014930: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014930 }}
+          OXYGEN_DEPLOYMENT_TOKEN_1000014931: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014931 }}
