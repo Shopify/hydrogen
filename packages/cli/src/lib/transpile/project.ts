@@ -1,5 +1,11 @@
 import type {CompilerOptions} from 'ts-morph';
-import {glob, readFile, writeFile, removeFile, fileExists} from '@shopify/cli-kit/node/fs';
+import {
+  glob,
+  readFile,
+  writeFile,
+  removeFile,
+  fileExists,
+} from '@shopify/cli-kit/node/fs';
 import {outputDebug} from '@shopify/cli-kit/node/output';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {formatCode, getCodeFormatOptions} from '../format-code.js';
