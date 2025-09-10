@@ -9,7 +9,7 @@
 - `e2e/matrix/` – Directory for full-matrix tests that scaffold permutations of `npm create @shopify/hydrogen`.
 - `scripts/run-e2e.js` – Custom E2E test runner that handles --smoke, --headed, and --matrix flags.
 - `package.json` – Adds `e2e` npm script with support for `--smoke` flag via custom runner script.
-- `.github/workflows/e2e.yml` – GitHub Actions workflow running smoke and full matrix on PRs
+- `.github/workflows/e2e.yml` – GitHub Actions workflow running smoke and full matrix on pull requests only
 - `docs/testing/e2e.md` – Contributor guide for running and debugging Playwright tests.
 - `README.md` – Brief section linking to the E2E guide.
 
@@ -88,9 +88,9 @@
 
   - [x] 3.2. Add `"e2e": "playwright test"` to `package.json` plus `--smoke` flag support.
 
-  - [ ] 3.3. Add `.github/workflows/e2e.yml` workflow that runs `npm run e2e -- --smoke` on `pull_request` and `push` (all branches).
+  - [ ] 3.3. Add `.github/workflows/e2e.yml` workflow that runs `npm run e2e -- --smoke` on `pull_request` events only.
 
-  - [ ] 3.4. Verify workflow locally with `act pull_request` or by pushing a draft PR—CI must pass and upload artifacts on failure.
+  - [ ] 3.4. Verify workflow by pushing a draft PR—CI must pass and upload artifacts on failure.
 
   - [ ] 3.5. Push branch and open PR #3 titled “CI: Run Smoke Pack in Pull Requests”, stacked on top of PR #2.
   - [ ] 3.6. Await CI completion on PR #3.
@@ -129,7 +129,7 @@
 
   - [ ] 5.1. Create branch `e2e_ci-full-matrix` **based on the last merged permutation branch**.
 
-  - [ ] 5.2. Update `.github/workflows/e2e.yml` to run the full matrix (`npm run e2e -- --matrix all`) on `push` and `pull_request` events with a job strategy (3 parallel workers, 20-min timeout).
+  - [ ] 5.2. Update `.github/workflows/e2e.yml` to run the full matrix (`npm run e2e -- --matrix all`) on `pull_request` events with a job strategy (3 parallel workers, 20-min timeout).
 
   - [ ] 5.3. Ensure failure artifacts (screenshots, videos, logs) are uploaded for any failing matrix job.
 
