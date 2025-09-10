@@ -21,7 +21,7 @@ export async function loader({params, context}: Route.LoaderArgs) {
     await context.customerAccount.query(CUSTOMER_ORDER_QUERY, {
       variables: {
         orderId,
-        language: context.storefront.i18n.language,
+        language: context.customerAccount.i18n.language,
       },
     });
 

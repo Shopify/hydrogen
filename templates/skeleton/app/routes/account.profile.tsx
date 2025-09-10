@@ -52,7 +52,7 @@ export async function action({request, context}: Route.ActionArgs) {
       {
         variables: {
           customer,
-          language: context.storefront.i18n.language,
+          language: context.customerAccount.i18n.language,
         },
       },
     );

@@ -38,8 +38,7 @@ export async function loader({context}: Route.LoaderArgs) {
 }
 
 export async function action({request, context}: Route.ActionArgs) {
-  const {customerAccount, storefront} = context;
-  const {i18n} = storefront;
+  const {customerAccount} = context;
 
   try {
     const form = await request.formData();
@@ -96,7 +95,7 @@ export async function action({request, context}: Route.ActionArgs) {
               variables: {
                 address,
                 defaultAddress,
-                language: i18n.language,
+                language: context.customerAccount.i18n.language,
               },
             },
           );
@@ -146,7 +145,7 @@ export async function action({request, context}: Route.ActionArgs) {
                 address,
                 addressId: decodeURIComponent(addressId),
                 defaultAddress,
-                language: i18n.language,
+                language: context.customerAccount.i18n.language,
               },
             },
           );
@@ -194,7 +193,7 @@ export async function action({request, context}: Route.ActionArgs) {
             {
               variables: {
                 addressId: decodeURIComponent(addressId),
-                language: i18n.language,
+                language: context.customerAccount.i18n.language,
               },
             },
           );

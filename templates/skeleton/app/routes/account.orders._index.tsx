@@ -29,7 +29,7 @@ export async function loader({request, context}: Route.LoaderArgs) {
     {
       variables: {
         ...paginationVariables,
-        language: context.storefront.i18n.language,
+        language: context.customerAccount.i18n.language,
       },
     },
   );

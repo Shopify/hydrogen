@@ -17,7 +17,7 @@ export async function loader({context}: Route.LoaderArgs) {
     CUSTOMER_DETAILS_QUERY,
     {
       variables: {
-        language: context.storefront.i18n.language,
+        language: context.customerAccount.i18n.language,
       },
     },
   );
