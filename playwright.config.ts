@@ -20,8 +20,11 @@ export default defineConfig({
   // No retries for now
   retries: 0,
 
-  // Use list reporter for clear output
-  reporter: 'list',
+  // Use multiple reporters for better debugging
+  reporter: [
+    ['list'],
+    ['html', {outputFolder: 'playwright-report', open: 'never'}],
+  ],
 
   // Automatically start dev server before tests
   webServer: {
