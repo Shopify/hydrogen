@@ -2,9 +2,22 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:github.com)",
-      "Bash(gh run view:*)"
+      "Bash(gh run view:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(npx playwright:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(DEBUG=pw:webserver npx playwright test e2e/setup/launch.spec.ts)",
+      "Bash(npm ls:*)",
+      "Bash(git checkout:*)",
+      "Bash(time npm run e2e:smoke)",
+      "Bash(time npm run e2e -- --smoke)",
+      "Read(/Users/karadaviduik/src/github.com/Shopify/hydrogen/.github/workflows/**)",
+      "Read(/Users/karadaviduik/src/github.com/Shopify/hydrogen/.github/workflows/**)",
+      "Read(/Users/karadaviduik/src/github.com/Shopify/hydrogen/.github/workflows/**)"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "docs-shopify-cli",
     "docs-cloudflare-workers-sdk",
