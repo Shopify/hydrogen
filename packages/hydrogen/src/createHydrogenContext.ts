@@ -9,6 +9,7 @@ import {
   type CustomerAccountOptions,
   type CustomerAccount,
 } from './customer/types';
+import {LanguageCode} from '@shopify/hydrogen-react/customer-account-api-types';
 import {
   createCartHandler,
   type CartHandlerOptions,
@@ -210,8 +211,10 @@ export function createHydrogenContext<
     authUrl: customerAccountOptions?.authUrl,
     customAuthStatusHandler: customerAccountOptions?.customAuthStatusHandler,
 
-    // locale
-    language: i18n?.language,
+    // locale - i18n.language is a union of StorefrontLanguageCode | CustomerLanguageCode
+    // We cast here because createCustomerAccountClient expects CustomerLanguageCode specifically,
+    // but the union type is compatible since most language codes overlap between the two APIs
+    language: i18n?.language as LanguageCode | undefined,
 
     // defaults
     customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,

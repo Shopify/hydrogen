@@ -50,7 +50,7 @@ import type {
 } from './types';
 import {createCustomerAccountHelper, URL_TYPE} from './customer-account-helper';
 import {warnOnce} from '../utils/warning';
-import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
+import {LanguageCode} from '@shopify/hydrogen-react/customer-account-api-types';
 
 function defaultAuthStatusHandler(
   request: CrossRuntimeRequest,
@@ -338,6 +338,7 @@ export function createCustomerAccountClient({
   }
 
   return {
+    i18n: {language: language ?? ('EN' as LanguageCode)},
     login: async (options?: LoginOptions) => {
       ifInvalidCredentialThrowError();
       const loginUrl = new URL(getCustomerAccountUrl(URL_TYPE.AUTH));

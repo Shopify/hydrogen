@@ -30,8 +30,9 @@ import {generateUUID} from './utils/uuid';
 import {parseJSON} from './utils/parse-json';
 import {
   CountryCode,
-  LanguageCode,
+  LanguageCode as StorefrontLanguageCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {LanguageCode as CustomerLanguageCode} from '@shopify/hydrogen-react/customer-account-api-types';
 import type {
   ClientReturn,
   ClientVariablesInRestParams,
@@ -56,7 +57,7 @@ import {
 import type {WaitUntil, StorefrontHeaders} from './types';
 
 export type I18nBase = {
-  language: LanguageCode;
+  language: StorefrontLanguageCode | CustomerLanguageCode;
   country: CountryCode;
 };
 
@@ -191,7 +192,10 @@ type StorefrontMutationOptions = StorefrontCommonExtraParams & {
   cache?: never;
 };
 
-const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
+const defaultI18n: I18nBase = {
+  language: 'EN' as StorefrontLanguageCode,
+  country: 'US' as CountryCode,
+};
 
 /**
  *  This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/2025-04/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
