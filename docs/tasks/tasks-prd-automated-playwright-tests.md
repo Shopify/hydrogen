@@ -48,7 +48,7 @@
 
   - [x] 2.4. Implement assertions and helper utilities to make tests pass without changing application code.
 
-  - [ ] 2.5. Verify by running `npm run e2e -- --smoke` and ensuring the pack completes in <60 s.
+  - [x] 2.5. Verify by running `npm run e2e -- --smoke` and ensuring the pack completes in <60 s.
 
   - [ ] 2.6. Push branch and open PR #2 titled “E2E: Smoke Test Pack for Skeleton Template”. Ensure PR #2 is **stacked on top of PR #1**.
   - [ ] 2.7. Wait for CI to finish and pass on PR #2.
