@@ -21,9 +21,15 @@ test.describe('Cart Functionality', () => {
     await expect(addToCartButton).toBeVisible();
     await addToCartButton.click();
 
-    await page.waitForTimeout(1500);
+    // Wait for the cart update network request to complete
+    await page.waitForLoadState('networkidle');
 
+    // Additionally wait for the cart badge text to change from initial value
     const cartBadgeAfter = page.locator('a[href="/cart"]').first();
+    await expect(cartBadgeAfter).not.toHaveText(initialCartText || '', {
+      timeout: 10000,
+    });
+
     const updatedCartText = await cartBadgeAfter.textContent();
     const updatedCount = updatedCartText?.match(/\d+/)?.[0] || '0';
 
