@@ -123,9 +123,6 @@ export interface HydrogenContext<
   session: TSession;
 }
 
-// Since HydrogenContext uses a conditional type with a free type parameter,
-// TS cannot definitively determine what the return type should be within the function body
-// HydrogenContextOverloads is use to restore type assertions so we don't need to do type casting
 export interface HydrogenContextOverloads<
   TSession extends HydrogenSession,
   TCustomMethods extends CustomMethodsBase | undefined = {},
@@ -141,19 +138,6 @@ export interface HydrogenContextOverloads<
   waitUntil?: WaitUntil;
   session: TSession;
 }
-
-// type for createHydrogenContext methods
-// export function createHydrogenContext<
-//   TSession extends HydrogenSession = HydrogenSession,
-//   TCustomMethods extends CustomMethodsBase | undefined = {},
-//   TI18n extends I18nBase = I18nBase,
-//   TEnv extends HydrogenEnv = Env,
-//   TAdditionalContext extends Record<string, any> = {},
-// >(
-//   options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
-//   additionalContext?: TAdditionalContext,
-// ): HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> &
-//   TAdditionalContext;
 
 export function createHydrogenContext<
   TSession extends HydrogenSession,
