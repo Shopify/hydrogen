@@ -1,5 +1,84 @@
 # @shopify/hydrogen
 
+## 2025.7.0
+
+### Major Changes
+
+- Update Storefront API and Customer Account API to version 2025-07 ([#3082](https://github.com/Shopify/hydrogen/pull/3082)) by [@juanpprieto](https://github.com/juanpprieto)
+
+  This update includes:
+
+  - Updated API version constants to 2025-07
+  - Regenerated GraphQL types for both Storefront and Customer Account APIs
+  - Updated all hardcoded API version references in documentation and tests
+  - Regenerated skeleton template types
+  - Updated skeleton's @shopify/cli dependency to ~3.83.3
+
+  Breaking changes may occur due to API schema changes between versions.
+
+### Patch Changes
+
+- Fix GraphQL client development warnings ([#3108](https://github.com/Shopify/hydrogen/pull/3108)) by [@juanpprieto](https://github.com/juanpprieto)
+
+  Updates `@shopify/graphql-client` from v1.4.0 to v1.4.1 to resolve sourcemap warnings and pre-optimizes the dependency in Vite configuration to prevent unexpected page reloads during development.
+
+  **What's fixed:**
+
+  - Eliminates sourcemap warnings: "Sourcemap for '/node_modules/@shopify/graphql-client/dist/graphql-client/graphql-client.mjs' points to missing source files"
+  - Prevents "new dependencies optimized" messages and automatic page reloads during development
+
+  **Technical changes:**
+
+  - Updated `@shopify/graphql-client` dependency to v1.4.1 which includes proper sourcemap generation
+  - Added `@shopify/graphql-client` to Vite's `optimizeDeps.include` array for pre-optimization
+
+- Fixed React Context error that occurred during client-side hydration when using Content Security Policy (CSP) with nonces. The error "Cannot read properties of null (reading 'useContext')" was caused by the `NonceProvider` being present during server-side rendering but missing during client hydration. ([#3082](https://github.com/Shopify/hydrogen/pull/3082)) by [@juanpprieto](https://github.com/juanpprieto)
+
+  #### Changes for Existing Projects
+
+  If you have customized your `app/entry.client.tsx` file, you may need to wrap your app with the `NonceProvider` during hydration to avoid this error:
+
+  ```diff
+  // app/entry.client.tsx
+  import {HydratedRouter} from 'react-router/dom';
+  import {startTransition, StrictMode} from 'react';
+  import {hydrateRoot} from 'react-dom/client';
+  + import {NonceProvider} from '@shopify/hydrogen';
+
+  if (!window.location.origin.includes('webcache.googleusercontent.com')) {
+    startTransition(() => {
+  +   // Extract nonce from existing script tags
+  +   const existingNonce = document
+  +     .querySelector<HTMLScriptElement>('script[nonce]')
+  +     ?.nonce;
+  +
+      hydrateRoot(
+        document,
+        <StrictMode>
+  -       <HydratedRouter />
+  +       <NonceProvider value={existingNonce}>
+  +         <HydratedRouter />
+  +       </NonceProvider>
+        </StrictMode>,
+      );
+    });
+  }
+  ```
+
+  This ensures the React Context tree matches between server and client rendering, preventing hydration mismatches.
+
+  #### Package Changes
+
+  - **@shopify/hydrogen**: Exported `NonceProvider` from the main package to allow client-side usage and simplified Vite configuration to improve React Context stability during development
+  - **skeleton**: Updated the template's `entry.client.tsx` to include the `NonceProvider` wrapper during hydration
+
+- Fix and upgrade /graphiql route ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Add GraphQL @defer directive support to storefront client ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Updated dependencies [[`6d067665562223ce2865f1c14be54b0b50258bd4`](https://github.com/Shopify/hydrogen/commit/6d067665562223ce2865f1c14be54b0b50258bd4), [`ae7bedc89c1968b4a035f421b5ee6908f6376b1b`](https://github.com/Shopify/hydrogen/commit/ae7bedc89c1968b4a035f421b5ee6908f6376b1b), [`6d067665562223ce2865f1c14be54b0b50258bd4`](https://github.com/Shopify/hydrogen/commit/6d067665562223ce2865f1c14be54b0b50258bd4), [`1bff1dac122eed09583dce54fc83a19ababddfca`](https://github.com/Shopify/hydrogen/commit/1bff1dac122eed09583dce54fc83a19ababddfca), [`b79e92f775cadecf6ab21de536f86c4f34bf1bde`](https://github.com/Shopify/hydrogen/commit/b79e92f775cadecf6ab21de536f86c4f34bf1bde), [`ae7bedc89c1968b4a035f421b5ee6908f6376b1b`](https://github.com/Shopify/hydrogen/commit/ae7bedc89c1968b4a035f421b5ee6908f6376b1b)]:
+  - @shopify/hydrogen-react@2026.0.0
+
 ## 2025.5.0
 
 ### Patch Changes

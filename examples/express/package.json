@@ -13,7 +13,7 @@
     "@react-router/express": "7.6.0",
     "@react-router/node": "7.6.0",
     "@remix-run/eslint-config": "^2.16.1",
-    "@shopify/hydrogen": "2025.5.0",
+    "@shopify/hydrogen": "2026.0.0",
     "compression": "^1.7.4",
     "cross-env": "^7.0.3",
     "express": "^4.19.2",
