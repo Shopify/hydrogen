@@ -470,6 +470,27 @@ Since it's not possible to directly apply query filters when retrieving collecti
            ...ProductItem
 ```
 
+### Step 9: app/styles/app.css
+
+
+
+#### File: /app/styles/app.css
+
+```diff
+@@ -419,6 +419,11 @@ button.reset:hover:not(:has(> *)) {
+   width: 100%;
+ }
+ 
++.product-item .combined-listing-price {
++  display: flex;
++  grid-gap: 0.5rem;
++}
++
+ /*
+ * --------------------------------------------------
+ * routes/products.$handle.tsx
+```
+
 ### Step 10: (Optional) Filter out combined listings from the collections index page
 
 Update the `collections.all` route to filter out combined listings from the search results, and include the price range for combined listings.

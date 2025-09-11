@@ -109,6 +109,13 @@ steps:
       - file: app/routes/collections.$handle.tsx
         patchFile: collections.$handle.tsx.6ad5f7.patch
   - type: PATCH
+    step: "9"
+    name: app/styles/app.css
+    description: null
+    diffs:
+      - file: app/styles/app.css
+        patchFile: app.css.14ae98.patch
+  - type: PATCH
     step: 10
     name: (Optional) Filter out combined listings from the collections index page
     description: |
