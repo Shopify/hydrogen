@@ -297,7 +297,50 @@ patch -p3 < ../../cookbook/recipes/[recipe]/patches/[filename].patch
 # New: export const meta: Route.MetaFunction
 ```
 
-### 3.5 Clean Up After Manual Application
+### 3.5 React Router 7.8.x Specific Fixes
+
+**Common patterns that need updating in every recipe:**
+
+1. **Route File Imports**
+   ```typescript
+   // OLD (all route files):
+   import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+   import {type MetaFunction} from '@remix-run/react';
+   
+   // NEW:
+   import type {Route} from './+types/[route-name]';
+   ```
+
+2. **Function Signatures**
+   ```typescript
+   // OLD:
+   export async function loader(args: LoaderFunctionArgs) { ... }
+   export const meta: MetaFunction<typeof loader> = () => { ... };
+   
+   // NEW:
+   export async function loader(args: Route.LoaderArgs) { ... }
+   export const meta: Route.MetaFunction = () => { ... };
+   ```
+
+3. **Data Function Import**
+   ```typescript
+   // OLD:
+   import {data} from '@shopify/remix-oxygen';
+   
+   // NEW:
+   import {data} from 'react-router';
+   ```
+
+4. **Type-Only Imports (verbatimModuleSyntax)**
+   ```typescript
+   // OLD:
+   import {SomeType} from 'some-module';
+   
+   // NEW:
+   import type {SomeType} from 'some-module';
+   ```
+
+### 3.6 Clean Up After Manual Application
 ```bash
 # Remove any .rej or .orig files created
 find . -name "*.rej" -delete
@@ -465,6 +508,136 @@ Generating recipe LLM prompt
 /path/to/cookbook/recipes/[recipe-name]/recipe.yaml
 From https://github.com/Shopify/hydrogen
  * branch                main       -> FETCH_HEAD
+```
+
+### 5.2.1 CRITICAL: Verify Patch Count After Regeneration
+
+**⚠️ CRITICAL SUCCESS CRITERIA ⚠️**
+
+After regenerating patches, you MUST verify that all original functionality is preserved:
+
+```bash
+# Count patches before and after regeneration
+ls cookbook/recipes/[recipe-name]/patches/*.patch | wc -l
+
+# List all patches to verify each has a regenerated equivalent
+ls -la cookbook/recipes/[recipe-name]/patches/
+```
+
+**RED FLAGS - DO NOT PROCEED IF:**
+- ❌ Number of patches significantly decreased (missing patches = lost functionality)
+- ❌ Key files from original recipe have no patches (e.g., if root.tsx, Header.tsx, variants.ts had patches before, they MUST have patches after)
+- ❌ Only 1-2 patches remain when there were originally 5+ patches
+
+**WHY THIS MATTERS:**
+- The cookbook's `generate --onlyFiles` command only creates patches for files with git diffs
+- If you didn't apply ALL changes before regenerating, patches will be missing
+- Missing patches = incomplete recipe = broken functionality
+
+**IF PATCHES ARE MISSING:**
+1. DO NOT discard skeleton changes
+2. Check which files are missing patches
+3. Manually apply the missing changes to those files
+4. Run generate again to capture all patches
+
+**Example Check:**
+```bash
+# Before regeneration: 8 patches
+# After regeneration: only 2 patches = PROBLEM!
+# This means 6 files worth of changes were not applied to skeleton
+```
+
+### 5.2.2 Systematic Recovery of Missing Patches
+
+**When patches are missing after regeneration, follow this systematic approach:**
+
+#### Step 1: Identify Missing Patches
+```bash
+# Compare original vs new patches
+git diff --name-only cookbook/recipes/[recipe]/patches/
+
+# List what patches were deleted (these need recovery)
+git diff cookbook/recipes/[recipe]/patches/ | grep "^-" | grep ".patch"
+```
+
+#### Step 2: Review Each Missing Patch
+For each missing patch, examine what it was trying to do:
+
+```bash
+# View the original patch content
+git show HEAD:cookbook/recipes/[recipe]/patches/[missing-patch-name].patch
+
+# Understand the intent:
+# - What file was it modifying?
+# - What functionality was it adding?
+# - Is it just import changes or actual logic?
+```
+
+#### Step 3: Apply Missing Changes Systematically
+
+**Example from markets recipe recovery:**
+
+1. **Header.tsx patch (missing)**
+   ```bash
+   # Original patch added CountrySelector to header
+   # Manual fix:
+   - Add import: import {CountrySelector} from './CountrySelector';
+   - Add component in HeaderCtas: <CountrySelector />
+   ```
+
+2. **root.tsx patch (missing)**
+   ```bash
+   # Original patch added selectedLocale to loader and key prop
+   # Manual fix:
+   - Add to loader return: selectedLocale: args.context.storefront.i18n,
+   - Add key prop to PageLayout: key={`${data.selectedLocale.language}-${data.selectedLocale.country}`}
+   ```
+
+3. **sitemap patch (missing)**
+   ```bash
+   # Original patch used SUPPORTED_LOCALES for sitemap generation
+   # Manual fix:
+   - Add import: import {SUPPORTED_LOCALES} from '../lib/i18n';
+   - Replace hardcoded locales with: SUPPORTED_LOCALES.map(...)
+   ```
+
+4. **variants.ts patch (missing)**
+   ```bash
+   # Original patch removed pathname-based URL generation
+   # Manual fix:
+   - Remove import: useLocation from 'react-router'
+   - Remove pathname parameter from functions
+   - Simplify path generation to: const path = `/products/${handle}`;
+   ```
+
+#### Step 4: Verify Each File Has Changes
+After applying missing changes, verify git sees the modifications:
+
+```bash
+# Check which files now have changes
+git status templates/skeleton/
+
+# Verify each previously-patched file shows as modified:
+git diff --name-only templates/skeleton/ | grep -E "(Header|root|sitemap|variants)"
+```
+
+#### Step 5: Regenerate with All Changes
+```bash
+# Now regenerate patches - should capture ALL files
+cd cookbook
+npm run cookbook -- generate --recipe [recipe] --onlyFiles
+
+# Verify patch count matches original
+ls recipes/[recipe]/patches/*.patch | wc -l
+```
+
+**CRITICAL VALIDATION:**
+```bash
+# Each original patch file should have a regenerated equivalent:
+# Original: Header.tsx.05d0c2.patch
+# New:      Header.tsx.[newhash].patch ✅
+
+# If any file is still missing a patch, repeat Step 3 for that file
 ```
 
 ### 5.3 Verify Regenerated Recipe Works
@@ -767,6 +940,11 @@ find . -name "*.rej" -o -name "*.orig" | xargs rm -f
 **Solution**: After validation, discard skeleton changes while keeping cookbook changes
 **Example**: `cd templates/skeleton && git clean -fd && git checkout -- .`
 
+### Pitfall 10: Not Verifying Patch Count After Regeneration
+**Problem**: Missing patches after regeneration means lost functionality
+**Solution**: ALWAYS compare patch count before/after and investigate discrepancies
+**Example**: 6 patches → 2 patches = 4 missing changes that need manual recovery
+
 ## Automation Opportunities
 
 ### Create Helper Scripts
@@ -886,6 +1064,10 @@ timeout 5 npm run dev 2>&1 | head -20
 cd ../../cookbook
 npm run cookbook -- generate --recipe [recipe-name] --onlyFiles
 
+# 9.1 CRITICAL: Verify patch count!
+ls recipes/[recipe-name]/patches/*.patch | wc -l
+# If count decreased, return to step 7 and apply missing changes
+
 # 10. Final test on clean skeleton
 cd ../templates/skeleton && git clean -fd && git checkout -- .
 cd ../../cookbook
@@ -899,6 +1081,13 @@ npm run typecheck && npm run build
 ---
 
 ## Quick Reference Checklist
+
+### Pre-Flight Checks
+- [ ] Working from cookbook directory (`pwd` shows `/cookbook`)
+- [ ] Skeleton is clean (`git status` in skeleton shows no changes)
+- [ ] Know original patch count (`ls recipes/[name]/patches/*.patch | wc -l`)
+
+### Fix Process Checklist
 
 When a recipe breaks:
 
@@ -914,6 +1103,36 @@ When a recipe breaks:
 10. [ ] **Regenerate with --onlyFiles** - preserve recipe.yaml
 11. [ ] **Final test on clean skeleton** - ensure it works from scratch
 12. [ ] **Commit with descriptive message** - document what was fixed
+
+### React Router 7.8.x Migration Checklist
+
+For each route file in the recipe:
+- [ ] Replace `LoaderFunctionArgs` with `Route.LoaderArgs`
+- [ ] Replace `ActionFunctionArgs` with `Route.ActionArgs`
+- [ ] Replace `MetaFunction<typeof loader>` with `Route.MetaFunction`
+- [ ] Replace `HeadersFunction` with `Route.HeadersFunction`
+- [ ] Add `import type {Route} from './+types/[route-name]'`
+- [ ] Remove imports from `@shopify/remix-oxygen` (except `data` if needed)
+- [ ] Move `data` import to `react-router` if used
+- [ ] Add `type` keyword to type-only imports (verbatimModuleSyntax)
+
+### Missing Patch Recovery Checklist
+
+When patches are missing after regeneration:
+1. [ ] **Identify missing patches**: `git diff --name-only cookbook/recipes/[recipe]/patches/`
+2. [ ] **Review each missing patch**: `git show HEAD:cookbook/recipes/[recipe]/patches/[patch-name]`
+3. [ ] **Apply changes manually** to each missing file
+4. [ ] **Verify git sees changes**: `git status templates/skeleton/`
+5. [ ] **Regenerate again**: `npm run cookbook -- generate --recipe [recipe] --onlyFiles`
+6. [ ] **Verify patch count restored**: Original count = New count ✅
+
+### Final Validation Checklist
+- [ ] TypeScript passes: `npm run typecheck`
+- [ ] Build succeeds: `npm run build`
+- [ ] Dev server starts: `npm run dev`
+- [ ] Recipe validation passes: `npm run validate:recipe [name]`
+- [ ] Patch count matches original
+- [ ] All original functionality preserved
 
 ## Commands Quick Reference
 
