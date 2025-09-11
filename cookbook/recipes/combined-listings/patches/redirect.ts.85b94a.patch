@@ -1,9 +1,9 @@
-index ce1feb5a..29fe2ecc 100644
+index f18c1d0d6..cbffc8a44 100644
 --- a/templates/skeleton/app/lib/redirect.ts
 +++ b/templates/skeleton/app/lib/redirect.ts
 @@ -1,4 +1,6 @@
- import {redirect} from '@shopify/remix-oxygen';
-+import {ProductFragment} from 'storefrontapi.generated';
+ import {redirect} from 'react-router';
++import type {ProductFragment} from 'storefrontapi.generated';
 +import {isCombinedListing} from './combined-listings';
  
  export function redirectIfHandleIsLocalized(
