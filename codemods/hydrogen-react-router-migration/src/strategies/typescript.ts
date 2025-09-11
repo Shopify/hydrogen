@@ -18,6 +18,9 @@ export class TypeScriptStrategy {
         'type'
       );
       
+      // Ensure the literal uses single quotes
+      routeImport.source.raw = `'${importPath}'`;
+      
       // Insert after last import
       const imports = root.find(this.j.ImportDeclaration);
       if (imports.length > 0) {

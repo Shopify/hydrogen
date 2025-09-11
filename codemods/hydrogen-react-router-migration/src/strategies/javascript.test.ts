@@ -3,7 +3,7 @@ import jscodeshift from 'jscodeshift';
 import { JavaScriptStrategy } from './javascript';
 
 describe('JavaScript Strategy', () => {
-  const j = jscodeshift;
+  const j = jscodeshift.withParser('tsx');
   let strategy: JavaScriptStrategy;
   
   beforeEach(() => {

@@ -37,18 +37,18 @@ export function shouldTransformFile(
 }
 
 export function extractRouteName(filePath: string): string | null {
-  // Handle various route file patterns
+  // Handle various route file patterns (order matters - more specific patterns first)
   const patterns = [
-    // Standard Remix/RR pattern: routes/products.$handle.tsx
-    /routes\/(.+)\.(tsx?|jsx?)$/,
-    // Nested routes: routes/products/[handle].tsx
+    // Nested routes with brackets: routes/products/[handle].tsx
     /routes\/(.+)\/\[(.+)\]\.(tsx?|jsx?)$/,
-    // Flat routes: routes/products-$handle.tsx
+    // Flat routes with dash-dollar: routes/products-$handle.tsx
     /routes\/(.+)-\$(.+)\.(tsx?|jsx?)$/,
     // Index routes: routes/_index.tsx
     /routes\/(_?index)\.(tsx?|jsx?)$/,
     // Layout routes: routes/_layout.tsx
     /routes\/(_?layout)\.(tsx?|jsx?)$/,
+    // Standard Remix/RR pattern: routes/products.$handle.tsx (must be last - it's the most general)
+    /routes\/(.+)\.(tsx?|jsx?)$/,
   ];
   
   for (const pattern of patterns) {

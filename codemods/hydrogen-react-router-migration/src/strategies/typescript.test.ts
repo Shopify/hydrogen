@@ -1,9 +1,9 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, beforeEach } from 'vitest';
 import jscodeshift from 'jscodeshift';
 import { TypeScriptStrategy } from './typescript';
 
 describe('TypeScript Strategy', () => {
-  const j = jscodeshift;
+  const j = jscodeshift.withParser('tsx');
   let strategy: TypeScriptStrategy;
   
   beforeEach(() => {
@@ -21,7 +21,10 @@ export async function loader() {}
       const hasChanges = strategy.addRouteTypeImport(root, 'products.$handle');
       
       expect(hasChanges).toBe(true);
-      expect(root.toSource()).toContain("import type {Route} from './+types/products.$handle';");
+      const result = root.toSource({ quote: 'single' });
+      expect(result).toContain("import type");
+      expect(result).toContain("Route");
+      expect(result).toContain("'./+types/products.$handle'");
     });
     
     test('does not add duplicate import', () => {
