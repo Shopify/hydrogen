@@ -21,7 +21,7 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/lib/combined-listings.ts](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts) | The `combined-listings.ts` file contains utilities and settings for handling combined listings. |
+| [app/lib/combined-listings.ts](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts) | The `combined-listings.ts` file contains utilities and settings for handling combined listings. |
 
 ## Steps
 
@@ -55,7 +55,7 @@ export const combinedListingsSettings = {
 
 Create a new `combined-listings.ts` file that contains utilities and settings for handling combined listings.
 
-#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
+#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
 
 <details>
 
@@ -105,12 +105,12 @@ export function isCombinedListing(product: unknown) {
 1. Update the `ProductForm` component to hide the **Add to cart** button for the parent products of combined listings and for variants' selected state.
 2. Update the `Link` component to not replace the current URL when the product is a combined listing parent product.
 
-#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/templates/skeleton/app/components/ProductForm.tsx)
+#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/templates/skeleton/app/components/ProductForm.tsx)
 
 <details>
 
 ```diff
-index 61290120..e7dbc4d1 100644
+index 61290120f..e7dbc4d18 100644
 --- a/templates/skeleton/app/components/ProductForm.tsx
 +++ b/templates/skeleton/app/components/ProductForm.tsx
 @@ -11,9 +11,11 @@ import type {ProductFragment} from 'storefrontapi.generated';
@@ -212,10 +212,10 @@ index 61290120..e7dbc4d1 100644
 
 Update the `ProductImage` component to support images from both product variants and the product itself.
 
-#### File: [app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/templates/skeleton/app/components/ProductImage.tsx)
+#### File: [app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/templates/skeleton/app/components/ProductImage.tsx)
 
 ```diff
-index 5f3ac1cc..f1c9f2cd 100644
+index 5f3ac1cce..f1c9f2cdd 100644
 --- a/templates/skeleton/app/components/ProductImage.tsx
 +++ b/templates/skeleton/app/components/ProductImage.tsx
 @@ -1,10 +1,13 @@
@@ -240,10 +240,10 @@ index 5f3ac1cc..f1c9f2cd 100644
 
 Update `ProductItem.tsx` to show a range of prices for the combined listing parent product instead of the variant price.
 
-#### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/templates/skeleton/app/components/ProductItem.tsx)
+#### File: [app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/templates/skeleton/app/components/ProductItem.tsx)
 
 ```diff
-index 3b0f6913..07fc73cd 100644
+index 3b0f69133..07fc73cd2 100644
 --- a/templates/skeleton/app/components/ProductItem.tsx
 +++ b/templates/skeleton/app/components/ProductItem.tsx
 @@ -6,6 +6,7 @@ import type {
@@ -281,10 +281,10 @@ index 3b0f6913..07fc73cd 100644
 
 If you want to redirect automatically to the first variant of a combined listing when the parent handle is selected, add a redirect utility that's called whenever the parent handle is requested.
 
-#### File: [app/lib/redirect.ts](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/templates/skeleton/app/lib/redirect.ts)
+#### File: [app/lib/redirect.ts](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/templates/skeleton/app/lib/redirect.ts)
 
 ```diff
-index ce1feb5a..29fe2ecc 100644
+index ce1feb5a3..29fe2ecc1 100644
 --- a/templates/skeleton/app/lib/redirect.ts
 +++ b/templates/skeleton/app/lib/redirect.ts
 @@ -1,4 +1,6 @@
@@ -325,12 +325,12 @@ index ce1feb5a..29fe2ecc 100644
 1. Add the `tags` property to the items returned by the product query.
 2. (Optional) Add the filtering query to the product query to exclude combined listings.
 
-#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/templates/skeleton/app/routes/_index.tsx)
+#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/templates/skeleton/app/routes/_index.tsx)
 
 <details>
 
 ```diff
-index 543e76be..1e75522b 100644
+index 543e76be9..1e75522b1 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
 @@ -1,13 +1,13 @@
@@ -410,12 +410,12 @@ index 543e76be..1e75522b 100644
 
 Since it's not possible to directly apply query filters when retrieving collection products, you can manually filter out combined listings after they're retrieved based on their tags.
 
-#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/templates/skeleton/app/routes/collections.$handle.tsx)
+#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/templates/skeleton/app/routes/collections.$handle.tsx)
 
 <details>
 
 ```diff
-index b44bc1ba..fb04d67f 100644
+index b44bc1ba7..fb04d67fb 100644
 --- a/templates/skeleton/app/routes/collections.$handle.tsx
 +++ b/templates/skeleton/app/routes/collections.$handle.tsx
 @@ -4,7 +4,10 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
@@ -482,10 +482,10 @@ index b44bc1ba..fb04d67f 100644
 
 Update the `collections.all` route to filter out combined listings from the search results, and include the price range for combined listings.
 
-#### File: [app/routes/collections.all.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/templates/skeleton/app/routes/collections.all.tsx)
+#### File: [app/routes/collections.all.tsx](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/templates/skeleton/app/routes/collections.all.tsx)
 
 ```diff
-index b9d0f33f..d1688772 100644
+index b9d0f33f1..d1688772e 100644
 --- a/templates/skeleton/app/routes/collections.all.tsx
 +++ b/templates/skeleton/app/routes/collections.all.tsx
 @@ -3,7 +3,10 @@ import {useLoaderData, type MetaFunction} from 'react-router';
@@ -541,12 +541,12 @@ index b9d0f33f..d1688772 100644
 2. Show the featured image of the combined listing parent product instead of the variant image.
 3. (Optional) Redirect to the first variant of a combined listing when the handle is requested.
 
-#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/templates/skeleton/app/routes/products.$handle.tsx)
+#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/templates/skeleton/app/routes/products.$handle.tsx)
 
 <details>
 
 ```diff
-index 4989ca00..e087fb10 100644
+index 4989ca006..e087fb10b 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,4 +1,4 @@
@@ -681,10 +681,10 @@ index 4989ca00..e087fb10 100644
 
 Add a class to the product item to show a range of prices for combined listings.
 
-#### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/templates/skeleton/app/styles/app.css)
+#### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/1bff1dac122eed09583dce54fc83a19ababddfca/templates/skeleton/app/styles/app.css)
 
 ```diff
-index b9294c59..c8fa5109 100644
+index b9294c592..c8fa5109e 100644
 --- a/templates/skeleton/app/styles/app.css
 +++ b/templates/skeleton/app/styles/app.css
 @@ -419,6 +419,11 @@ button.reset:hover:not(:has(> *)) {

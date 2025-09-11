@@ -172,10 +172,9 @@ Defaults to the '.env' located in your project path `--path`.",
     }),
   },
   customerAccountPush: {
-    'customer-account-push__unstable': Flags.boolean({
-      hidden: true,
+    'customer-account-push': Flags.boolean({
       description:
-        "Use tunneling for local development and push the tunneling domain to admin. Required to use Customer Account API's Oauth flow",
+        "Use tunneling for local development and push the tunneling domain to admin. Required to use Customer Account API's OAuth flow",
       required: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH',
     }),

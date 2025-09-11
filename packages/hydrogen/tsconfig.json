@@ -3,7 +3,13 @@
   "include": ["src", "dev.env.d.ts"],
   "compilerOptions": {
     "jsx": "react-jsx",
-    "types": ["node", "vite/client", "jest", "@testing-library/jest-dom"],
+    "types": [
+      "node",
+      "vite/client",
+      "vitest/globals",
+      "jest",
+      "@testing-library/jest-dom"
+    ],
     "paths": {
       "@shopify/hydrogen": ["./src"],
       "~/mini-oxygen/*": ["../mini-oxygen/src/*"]

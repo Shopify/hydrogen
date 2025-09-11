@@ -4,7 +4,11 @@ import {reactRouter} from '@react-router/dev/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  plugins: [hydrogen(), reactRouter(), tsconfigPaths()],
+  plugins: [
+    hydrogen(),
+    reactRouter(),
+    tsconfigPaths(),
+  ],
   build: {
     // Allow a strict Content-Security-Policy
     // withtout inlining assets as base64:

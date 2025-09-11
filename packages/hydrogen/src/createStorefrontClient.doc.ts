@@ -31,7 +31,7 @@ const data: ReferenceEntityTemplateSchema = {
       url: '/docs/api/hydrogen/utilities/inmemorycache',
     },
   ],
-  description: `This function extends \`createStorefrontClient\` from [Hydrogen React](/docs/api/hydrogen-react/2025-04/utilities/createstorefrontclient).
+  description: `This function extends \`createStorefrontClient\` from [Hydrogen React](/docs/api/hydrogen-react/2025-07/utilities/createstorefrontclient).
 The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
 
 Learn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).`,

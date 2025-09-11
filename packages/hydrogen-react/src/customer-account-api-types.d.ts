@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Customer Account API 2025-04
+ * Based on Customer Account API 2025-07
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -217,10 +217,18 @@ export type AppliedGiftCard = Node & {
   presentmentAmountUsed: MoneyV2;
 };
 
-/** Represents a generic custom attribute, such as whether an order is a customer's first. */
+/**
+ * A custom property. Attributes are used to store additional information about a Shopify resource, such as
+ * products, customers, or orders. Attributes are stored as key-value pairs.
+ *
+ * For example, a list of attributes might include whether a customer is a first-time buyer (`"customer_first_order": "true"`),
+ * whether an order is gift-wrapped (`"gift_wrapped": "true"`), a preferred delivery date
+ * (`"preferred_delivery_date": "2025-10-01"`), the discount applied (`"loyalty_discount_applied": "10%"`), and any
+ * notes provided by the customer (`"customer_notes": "Please leave at the front door"`).
+ */
 export type Attribute = {
   __typename?: 'Attribute';
-  /** The key or name of the attribute. For example, `"customersFirstOrder"`. */
+  /** The key or name of the attribute. For example, `"customer_first_order"`. */
   key: Scalars['String']['output'];
   /** The value of the attribute. For example, `"true"`. */
   value?: Maybe<Scalars['String']['output']>;
@@ -916,6 +924,7 @@ export type CompanyContactStatusType =
 
 /** Represents a company's business location. */
 export type CompanyLocation = HasMetafields &
+  HasStoreCreditAccounts &
   Node & {
     __typename?: 'CompanyLocation';
     /** The billing address of the company location. */
@@ -954,6 +963,8 @@ export type CompanyLocation = HasMetafields &
     roleAssignments: CompanyContactRoleAssignmentConnection;
     /** The shipping address of the company location. */
     shippingAddress?: Maybe<CompanyAddress>;
+    /** A list of the owner resource's store credit accounts. Store credit accounts are not shown for shops with store credit disabled at checkout. */
+    storeCreditAccounts: StoreCreditAccountConnection;
     /** The list of tax exemptions applied to the location. */
     taxExemptions: Array<TaxExemption>;
     /** The list of tax exemptions applied to the location with additional details. */
@@ -1029,6 +1040,15 @@ export type CompanyLocationRoleAssignmentsArgs = {
   query?: InputMaybe<Scalars['String']['input']>;
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
   sortKey?: InputMaybe<CompanyContactRoleAssignmentSortKeys>;
+};
+
+/** Represents a company's business location. */
+export type CompanyLocationStoreCreditAccountsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  query?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** Return type for `companyLocationAssignAddress` mutation. */
@@ -1643,8 +1663,9 @@ export type CropRegion =
   | 'TOP';
 
 /**
- * The three-letter currency codes that represent the world currencies used in stores. These include standard ISO 4217 codes, legacy codes,
- * and non-standard codes.
+ * The currency codes that represent the world currencies throughout the Admin API. Currency codes include
+ * [standard ISO 4217 codes](https://en.wikipedia.org/wiki/ISO_4217), legacy codes, non-standard codes,
+ * digital currency codes.
  */
 export type CurrencyCode =
   /** United Arab Emirates Dirham (AED). */
@@ -1937,6 +1958,8 @@ export type CurrencyCode =
   | 'UGX'
   /** United States Dollars (USD). */
   | 'USD'
+  /** United States Dollars Coin (USDC). */
+  | 'USDC'
   /** Uruguayan Pesos (UYU). */
   | 'UYU'
   /** Uzbekistan som (UZS). */
@@ -2675,6 +2698,22 @@ export type DiscountCodeApplication = DiscountApplication & {
   value: PricingValue;
 };
 
+/** The type of line (line item or shipping line) on an order that the subscription discount is applicable towards. */
+export type DiscountTargetType =
+  /** The discount applies onto line items. */
+  | 'LINE_ITEM'
+  /** The discount applies onto shipping lines. */
+  | 'SHIPPING_LINE';
+
+/** The type of the subscription discount. */
+export type DiscountType =
+  /** Automatic discount type. */
+  | 'AUTOMATIC_DISCOUNT'
+  /** Code discount type. */
+  | 'CODE_DISCOUNT'
+  /** Manual discount type. */
+  | 'MANUAL';
+
 /** Represents an error in the input of a mutation. */
 export type DisplayableError = {
   /** The path to the input field that caused the error. */
@@ -3005,6 +3044,49 @@ export type EmailMarketingState =
   | 'SUBSCRIBED'
   /** The customer is not currently subscribed to email marketing but was previously subscribed. */
   | 'UNSUBSCRIBED';
+
+/** An item for exchange. */
+export type ExchangeLineItem = Node & {
+  __typename?: 'ExchangeLineItem';
+  /** A globally-unique ID. */
+  id: Scalars['ID']['output'];
+  /** The image associated to the line item's variant. */
+  image?: Maybe<Image>;
+  /** Whether the product has only a single variant with the default option and value. */
+  productHasOnlyDefaultVariant?: Maybe<Scalars['Boolean']['output']>;
+  /** The ID of the product at time of refund creation. */
+  productId?: Maybe<Scalars['ID']['output']>;
+  /** The number of variant items ordered. */
+  quantity: Scalars['Int']['output'];
+  /** The title of the product at time of order creation. */
+  title?: Maybe<Scalars['String']['output']>;
+  /** The ID of the variant at time of refund creation. */
+  variantId?: Maybe<Scalars['ID']['output']>;
+  /** The variant SKU number. */
+  variantSku?: Maybe<Scalars['String']['output']>;
+  /** The title of the variant at time of refund creation. */
+  variantTitle?: Maybe<Scalars['String']['output']>;
+};
+
+/** An auto-generated type for paginating through multiple ExchangeLineItems. */
+export type ExchangeLineItemConnection = {
+  __typename?: 'ExchangeLineItemConnection';
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
+  edges: Array<ExchangeLineItemEdge>;
+  /** A list of nodes that are contained in ExchangeLineItemEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
+  nodes: Array<ExchangeLineItem>;
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
+  pageInfo: PageInfo;
+};
+
+/** An auto-generated type which holds one ExchangeLineItem and a cursor during pagination. */
+export type ExchangeLineItemEdge = {
+  __typename?: 'ExchangeLineItemEdge';
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of ExchangeLineItemEdge. */
+  node: ExchangeLineItem;
+};
 
 /** Tokens used by ui extensions to query various APIs. */
 export type ExtensionApiTokens = {
@@ -3410,6 +3492,12 @@ export type Image = {
    */
   src: Scalars['URL']['output'];
   /**
+   * The ThumbHash of the image.
+   *
+   * Useful to display placeholder images while the original image is loading.
+   */
+  thumbhash?: Maybe<Scalars['String']['output']>;
+  /**
    * The location of the transformed image as a URL.
    *
    * All transformation arguments are considered "best-effort". If they can be applied to an image, they will be.
@@ -3447,6 +3535,8 @@ export type ImageUrlArgs = {
 
 /** List of supported image content types. */
 export type ImageContentType =
+  /** A BMP image. */
+  | 'BMP'
   /** A JPG image. */
   | 'JPG'
   /** A PNG image. */
@@ -4204,6 +4294,8 @@ export type MetafieldsSetUserErrorCode =
   | 'DISALLOWED_OWNER_TYPE'
   /** The input value isn't included in the list. */
   | 'INCLUSION'
+  /** The input value is invalid. */
+  | 'INVALID'
   /** The compareDigest is invalid. */
   | 'INVALID_COMPARE_DIGEST'
   /** The type is invalid. */
@@ -4235,12 +4327,19 @@ export type MoneyBag = {
   shopMoney: MoneyV2;
 };
 
-/** A monetary value with currency. */
+/** A precise monetary value and its associated currency. For example, 12.99 USD. */
 export type MoneyV2 = {
   __typename?: 'MoneyV2';
-  /** Decimal money amount. */
+  /**
+   * A monetary value in decimal format, allowing for precise representation of cents or fractional
+   * currency. For example, 12.99.
+   */
   amount: Scalars['Decimal']['output'];
-  /** Currency of the money. */
+  /**
+   * The three-letter currency code that represents a world currency used in a store. Currency codes
+   * include standard [standard ISO 4217 codes](https://en.wikipedia.org/wiki/ISO_4217), legacy codes,
+   * and non-standard codes. For example, USD.
+   */
   currencyCode: CurrencyCode;
 };
 
@@ -5411,6 +5510,12 @@ export type PaymentIconImage = Node & {
    */
   src: Scalars['URL']['output'];
   /**
+   * The ThumbHash of the image.
+   *
+   * Useful to display placeholder images while the original image is loading.
+   */
+  thumbhash?: Maybe<Scalars['String']['output']>;
+  /**
    * The location of the transformed image as a URL.
    *
    * All transformation arguments are considered "best-effort". If they can be applied to an image, they will be.
@@ -5980,6 +6085,8 @@ export type Return = Node & {
   createdAt?: Maybe<Scalars['DateTime']['output']>;
   /** The additional details about why the merchant declined the return request. */
   decline?: Maybe<ReturnDecline>;
+  /** The exchange line items attached to the return. */
+  exchangeLineItems: ExchangeLineItemConnection;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
   /** The name assigned to the return. */
@@ -5998,6 +6105,16 @@ export type Return = Node & {
   tmpReturnLineItemsCount: Scalars['Int']['output'];
   /** The date when the return was last updated. */
   updatedAt?: Maybe<Scalars['DateTime']['output']>;
+};
+
+/** A product return. */
+export type ReturnExchangeLineItemsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  includeRemovedItems?: InputMaybe<Scalars['Boolean']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 /** A product return. */
@@ -6726,6 +6843,8 @@ export type StoreCreditAccount = Node & {
   __typename?: 'StoreCreditAccount';
   /** The current balance of the store credit account. */
   balance: MoneyV2;
+  /** The expirable part of the store credit account balance. */
+  expirableBalance: MoneyV2;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
   /** The transaction history of the store credit account. */
@@ -7108,6 +7227,8 @@ export type SubscriptionContract = Node &
     deliveryPolicy: SubscriptionDeliveryPolicy;
     /** The delivery price for each billing of the subscription contract. */
     deliveryPrice: MoneyV2;
+    /** The list of subscription discounts associated with the subscription contract. */
+    discounts?: Maybe<SubscriptionDiscountConnection>;
     /** A globally-unique ID. */
     id: Scalars['ID']['output'];
     /** The last billing error type of the contract. */
@@ -7141,6 +7262,15 @@ export type SubscriptionContract = Node &
     /** The date and time when the subscription contract was updated. */
     updatedAt: Scalars['DateTime']['output'];
   };
+
+/** A Subscription Contract. */
+export type SubscriptionContractDiscountsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+};
 
 /** A Subscription Contract. */
 export type SubscriptionContractLinesArgs = {
@@ -7191,6 +7321,8 @@ export type SubscriptionContractBase = {
   deliveryMethod?: Maybe<SubscriptionDeliveryMethod>;
   /** The delivery price for each billing of the subscription contract. */
   deliveryPrice: MoneyV2;
+  /** The list of subscription discounts associated with the subscription contract. */
+  discounts?: Maybe<SubscriptionDiscountConnection>;
   /** The number of lines associated with the subscription contract. */
   lineCount: Scalars['Int']['output'];
   /** A list of subscription lines associated with the subscription contract. */
@@ -7205,6 +7337,15 @@ export type SubscriptionContractBase = {
   priceBreakdownEstimate?: Maybe<SubscriptionPriceBreakdown>;
   /** The date and time when the subscription contract was updated. */
   updatedAt: Scalars['DateTime']['output'];
+};
+
+/** The common fields of a subscription contract. */
+export type SubscriptionContractBaseDiscountsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 /** The common fields of a subscription contract. */
@@ -7536,6 +7677,88 @@ export type SubscriptionDeliveryPolicy = {
   intervalCount?: Maybe<Count>;
 };
 
+/** A discount applied to a subscription contract. */
+export type SubscriptionDiscount = {
+  __typename?: 'SubscriptionDiscount';
+  /** Specify whether the subscription discount will apply on all subscription lines. */
+  appliesToAllLines: Scalars['Boolean']['output'];
+  /** The unique ID. */
+  id: Scalars['ID']['output'];
+  /** The list of subscription lines associated with the subscription discount. */
+  lines?: Maybe<SubscriptionLineConnection>;
+  /** The maximum number of times the subscription discount will be applied on orders. */
+  recurringCycleLimit?: Maybe<Scalars['Int']['output']>;
+  /** Type of line the discount applies on. */
+  targetType: DiscountTargetType;
+  /** The title associated with the subscription discount. */
+  title?: Maybe<Scalars['String']['output']>;
+  /** The type of the subscription discount. */
+  type: DiscountType;
+  /** The number of times the discount was applied. */
+  usageCount?: Maybe<Count>;
+  /** The value of the subscription discount. */
+  value: SubscriptionDiscountValue;
+};
+
+/** A discount applied to a subscription contract. */
+export type SubscriptionDiscountLinesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+/** Represents what a particular discount reduces from a line price. */
+export type SubscriptionDiscountAllocation = {
+  __typename?: 'SubscriptionDiscountAllocation';
+  /** Allocation amount. */
+  amount: MoneyV2;
+  /** Discount that created the allocation. */
+  discount: SubscriptionDiscount;
+};
+
+/** An auto-generated type for paginating through multiple SubscriptionDiscounts. */
+export type SubscriptionDiscountConnection = {
+  __typename?: 'SubscriptionDiscountConnection';
+  /** The connection between the node and its parent. Each edge contains a minimum of the edge's cursor and the node. */
+  edges: Array<SubscriptionDiscountEdge>;
+  /** A list of nodes that are contained in SubscriptionDiscountEdge. You can fetch data about an individual node, or you can follow the edges to fetch data about a collection of related nodes. At each node, you specify the fields that you want to retrieve. */
+  nodes: Array<SubscriptionDiscount>;
+  /** An object that’s used to retrieve [cursor information](https://shopify.dev/api/usage/pagination-graphql) about the current page. */
+  pageInfo: PageInfo;
+};
+
+/** An auto-generated type which holds one SubscriptionDiscount and a cursor during pagination. */
+export type SubscriptionDiscountEdge = {
+  __typename?: 'SubscriptionDiscountEdge';
+  /** The position of each node in an array, used in [pagination](https://shopify.dev/api/usage/pagination-graphql). */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of SubscriptionDiscountEdge. */
+  node: SubscriptionDiscount;
+};
+
+/** The value of the discount and how it will be applied. */
+export type SubscriptionDiscountFixedAmountValue = {
+  __typename?: 'SubscriptionDiscountFixedAmountValue';
+  /** The fixed amount value of the discount. */
+  amount: MoneyV2;
+  /** Whether the amount is applied per item. */
+  appliesOnEachItem: Scalars['Boolean']['output'];
+};
+
+/** The percentage value of the discount. */
+export type SubscriptionDiscountPercentageValue = {
+  __typename?: 'SubscriptionDiscountPercentageValue';
+  /** The percentage value of the discount. */
+  percentage: Scalars['Int']['output'];
+};
+
+/** The value of the discount and how it will be applied. */
+export type SubscriptionDiscountValue =
+  | SubscriptionDiscountFixedAmountValue
+  | SubscriptionDiscountPercentageValue;
+
 /** Defines valid subscription intervals. */
 export type SubscriptionInterval =
   /** Represents a day interval. */
@@ -7554,6 +7777,8 @@ export type SubscriptionLine = {
   currentPrice: MoneyV2;
   /** The custom attributes associated with the line item. */
   customAttributes: Array<Attribute>;
+  /** Discount allocations. */
+  discountAllocations: Array<SubscriptionDiscountAllocation>;
   /** The unique ID of the line item. */
   id: Scalars['ID']['output'];
   /** The image associated with the product variant. */
@@ -8663,12 +8888,26 @@ export type UnitPriceMeasurementUnit =
   | 'CL'
   /** 100 centimeters equals 1 meter. */
   | 'CM'
+  /** Imperial system unit of volume (U.S. customary unit). */
+  | 'FLOZ'
+  /** 1 foot equals 12 inches. */
+  | 'FT'
+  /** Imperial system unit of area. */
+  | 'FT2'
   /** Metric system unit of weight. */
   | 'G'
+  /** 1 gallon equals 128 fluid ounces (U.S. customary unit). */
+  | 'GAL'
+  /** Imperial system unit of length. */
+  | 'IN'
+  /** 1 item, a unit of count. */
+  | 'ITEM'
   /** 1 kilogram equals 1000 grams. */
   | 'KG'
   /** Metric system unit of volume. */
   | 'L'
+  /** Imperial system unit of weight. */
+  | 'LB'
   /** Metric system unit of length. */
   | 'M'
   /** Metric system unit of area. */
@@ -8680,7 +8919,17 @@ export type UnitPriceMeasurementUnit =
   /** 1000 milliliters equals 1 liter. */
   | 'ML'
   /** 1000 millimeters equals 1 meter. */
-  | 'MM';
+  | 'MM'
+  /** 16 ounces equals 1 pound. */
+  | 'OZ'
+  /** 1 pint equals 16 fluid ounces (U.S. customary unit). */
+  | 'PT'
+  /** 1 quart equals 32 fluid ounces (U.S. customary unit). */
+  | 'QT'
+  /** The unit of measurement is unknown. Upgrade to the latest version of the API to resolve this unit. */
+  | 'UNKNOWN'
+  /** 1 yard equals 36 inches. */
+  | 'YD';
 
 /** This represents new sale types that have been added in future API versions. You may update to a more recent API version to receive additional details about this sale. */
 export type UnknownSale = Node &

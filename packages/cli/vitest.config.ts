@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     globalSetup: './vitest.setup.ts',
     coverage: {
+      provider: 'v8',
       all: true,
       include: ['src/**'],
       exclude: [

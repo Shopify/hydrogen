@@ -1,0 +1,28 @@
+index 61290120f..b1eaea077 100644
+--- a/templates/skeleton/app/components/ProductForm.tsx
++++ b/templates/skeleton/app/components/ProductForm.tsx
+@@ -11,9 +11,11 @@ import type {ProductFragment} from 'storefrontapi.generated';
+ export function ProductForm({
+   productOptions,
+   selectedVariant,
++  isBundle,
+ }: {
+   productOptions: MappedProductOptions[];
+   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
++  isBundle: boolean;
+ }) {
+   const navigate = useNavigate();
+   const {open} = useAside();
+@@ -118,7 +120,11 @@ export function ProductForm({
+             : []
+         }
+       >
+-        {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
++        {selectedVariant?.availableForSale
++          ? isBundle
++            ? 'Add bundle to cart'
++            : 'Add to cart'
++          : 'Sold out'}
+       </AddToCartButton>
+     </div>
+   );
