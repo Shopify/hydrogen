@@ -68,6 +68,7 @@ export const CART_QUERY_FRAGMENT = `#graphql
     updatedAt
     id
     appliedGiftCards {
+      id
       lastCharacters
       amountUsed {
         ...Money
