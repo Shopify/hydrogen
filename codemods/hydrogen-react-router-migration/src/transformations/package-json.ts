@@ -145,13 +145,13 @@ function extractMajorVersion(version: string): number | null {
   return isNaN(major) ? null : major;
 }
 
-function sortObject<T extends Record<string, any>>(obj: T): T {
-  return Object.keys(obj)
-    .sort()
-    .reduce((sorted, key) => {
-      sorted[key] = obj[key];
-      return sorted;
-    }, {} as T);
+function sortObject<T extends Record<string, unknown>>(obj: T): T {
+  const sorted = {} as T;
+  const keys = Object.keys(obj).sort();
+  for (const key of keys) {
+    sorted[key as keyof T] = obj[key as keyof T];
+  }
+  return sorted;
 }
 
 export function getPackageJsonPath(projectRoot: string): string {

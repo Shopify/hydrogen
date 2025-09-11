@@ -1,4 +1,4 @@
-import type { JSCodeshift, Collection } from 'jscodeshift';
+import type { JSCodeshift, Collection, TSPropertySignature } from 'jscodeshift';
 
 export class TypeScriptStrategy {
   constructor(private j: JSCodeshift) {}
@@ -19,7 +19,10 @@ export class TypeScriptStrategy {
       );
       
       // Ensure the literal uses single quotes
-      routeImport.source.raw = `'${importPath}'`;
+      if ('raw' in routeImport.source) {
+        const source = routeImport.source as { value: string; raw?: string };
+        source.raw = `'${importPath}'`;
+      }
       
       // Insert after last import
       const imports = root.find(this.j.ImportDeclaration);
@@ -104,9 +107,14 @@ export class TypeScriptStrategy {
     root.find(this.j.VariableDeclarator, {
       id: { name: 'meta' }
     }).forEach(path => {
-      const typeAnnotation = path.value.id.typeAnnotation;
-      if (typeAnnotation?.typeAnnotation?.typeName?.name === 'MetaFunction') {
-        path.value.id.typeAnnotation = this.j.tsTypeAnnotation(
+      const id = path.value.id;
+      if (id.type === 'Identifier' && id.typeAnnotation) {
+        const typeAnnotation = id.typeAnnotation;
+        if (typeAnnotation && typeAnnotation.type === 'TSTypeAnnotation' && 
+            typeAnnotation.typeAnnotation.type === 'TSTypeReference' &&
+            typeAnnotation.typeAnnotation.typeName.type === 'Identifier' &&
+            typeAnnotation.typeAnnotation.typeName.name === 'MetaFunction') {
+          id.typeAnnotation = this.j.tsTypeAnnotation(
           this.j.tsTypeReference(
             this.j.tsQualifiedName(
               this.j.identifier('Route'),
@@ -115,6 +123,7 @@ export class TypeScriptStrategy {
           )
         );
         hasChanges = true;
+      }
       }
     });
     
@@ -146,7 +155,7 @@ export class TypeScriptStrategy {
         );
       }
       return null;
-    }).filter(Boolean);
+    }).filter((prop): prop is TSPropertySignature => prop !== null);
     
     const moduleDeclaration = this.j.exportNamedDeclaration(
       this.j.tsModuleDeclaration(

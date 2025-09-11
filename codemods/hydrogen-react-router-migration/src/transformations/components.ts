@@ -156,9 +156,10 @@ function transformOxygenImports(j: JSCodeshift, root: Collection): boolean {
         if ((arg?.type === 'Literal' || arg?.type === 'StringLiteral') && 
             arg.value === oldImport) {
           arg.value = newImport;
-          if (arg.extra) {
-            arg.extra.rawValue = newImport;
-            arg.extra.raw = `'${newImport}'`;
+          if ('extra' in arg && arg.extra) {
+            const extra = arg.extra as { rawValue?: string; raw?: string };
+            extra.rawValue = newImport;
+            extra.raw = `'${newImport}'`;
           }
           hasChanges = true;
         }
@@ -245,8 +246,8 @@ export function addEnvironmentTypeReference(
       }
       
       // Also check for comments
-      const comments = node.leadingComments || [];
-      return comments.some(comment => 
+      const comments = ('leadingComments' in node && Array.isArray(node.leadingComments) ? node.leadingComments : []);
+      return comments.some((comment: { value: string }) => 
         comment.value.includes('@shopify/hydrogen/react-router-types')
       );
     });

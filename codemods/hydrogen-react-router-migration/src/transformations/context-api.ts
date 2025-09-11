@@ -1,4 +1,4 @@
-import type { Collection, JSCodeshift } from 'jscodeshift';
+import type { Collection, JSCodeshift, TSPropertySignature } from 'jscodeshift';
 import type { ProjectLanguage } from '../detectors/language';
 
 export function transformContextAPI(
@@ -184,7 +184,7 @@ function createTypeAugmentation(j: JSCodeshift, properties: any[]): any {
       );
     }
     return null;
-  }).filter(Boolean);
+  }).filter((prop): prop is TSPropertySignature => prop !== null);
   
   return j.exportNamedDeclaration(
     j.tsModuleDeclaration(
