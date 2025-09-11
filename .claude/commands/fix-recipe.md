@@ -65,240 +65,426 @@ ls cookbook/recipes/[user-specified-recipe]/
 
 ## Step 2: Initial Diagnosis Using Cookbook Apply
 
-### 2.1 Clean Skeleton and Apply Recipe
-Use the cookbook's apply command to understand the problems:
+### 2.1 Setup and Verify Working Directory
+**CRITICAL**: Always work from the cookbook directory to ensure correct relative paths:
 
 ```bash
-# Ensure skeleton is clean
-cd templates/skeleton
+# Navigate to cookbook directory first
+cd /path/to/repo/cookbook
+pwd  # Confirm you're in cookbook directory
+
+# List available recipes to confirm structure
+ls recipes/
+```
+
+### 2.2 Clean Skeleton and Attempt Recipe Application
+Clean the skeleton and attempt to apply the recipe to identify failures:
+
+```bash
+# Clean skeleton from cookbook directory
+cd ../templates/skeleton
 git status  # Should show no changes
 git clean -fd
 git checkout -- .
 
-# Apply the recipe to see failures
+# Return to cookbook and apply recipe
 cd ../../cookbook
 npm run cookbook -- apply --recipe [user-specified-recipe]
 ```
 
-### 2.2 Create Detailed Conflict Analysis
-**Create a per-file and per-patch technical list of all conflicts:**
+**Expected Output for Failed Application:**
+```
+- 🍱 Loading recipe '[recipe-name]'…
+- 🔄 Checking template directory…
+- 🍣 Checking ingredients…
+- 🗑️ Deleting files…
+- 🗳️ Copying ingredients…
+  - Copying [component].tsx
+- 🥣 Applying steps…
+  - 🩹 Patching app/routes/[file].tsx with [file].tsx.[hash].patch…
+patching file '/path/to/skeleton/app/routes/[file].tsx'
+1 out of 2 hunks failed--saving rejects to '/path/to/skeleton/app/routes/[file].tsx.rej'
+```
+
+**Key Information to Extract:**
+- Which patches failed (note the "X out of Y hunks failed" messages)
+- Which patches succeeded silently
+- Location of .rej files created
+
+### 2.3 Create Comprehensive Patch Analysis
+Test each patch individually to understand exactly what fails:
 
 ```bash
-# Document each failing patch
+# From cookbook directory, test each patch
 for patch in recipes/[recipe]/patches/*.patch; do
   echo "=== $(basename $patch) ==="
-  # Try to apply and capture the specific error
-  patch --dry-run -p3 -d ../templates/skeleton < "$patch" 2>&1 | grep -E "(FAILED|succeeded)"
+  # Use -p3 for correct path depth (removes 'templates/skeleton/' prefix)
+  patch --dry-run -p3 -d ../templates/skeleton < "$patch" 2>&1 | grep -E "(FAILED|succeeded|Hunk)"
 done
 ```
 
-### 2.3 Deep Investigation of Each Conflict
-For EACH failing patch, create a detailed analysis:
-
-```
-File: [filename]
-Patch: [patch-name]
-Failure Type: [Hunk failed / File not found / etc.]
-
-Expected Structure (from patch):
-- [Show the patch expectations]
-
-Current Structure (in skeleton):
-- [Show current file structure]
-
-Root Cause:
-- [Identify why it's failing]
-
-Required Changes:
-- [List what needs to be adapted]
-```
-
-### 2.4 Check for .rej and .orig Files
+**Alternative: Test patches individually for detailed output:**
 ```bash
-# Find reject files that show exact conflicts
+# Test a specific problematic patch
+cd ../templates/skeleton
+patch --dry-run -p3 < ../../cookbook/recipes/[recipe]/patches/[filename].patch
+```
+
+**Common Patch Failure Patterns:**
+1. **"No file found"**: Wrong path depth, use -p3 instead of -p1
+2. **"Hunk #X FAILED"**: Context mismatch due to changed imports/structure
+3. **Silent success**: Patch applied but may not be doing what's intended
+
+### 2.4 Analyze Rejection Files
+Rejection files show exactly what couldn't be applied:
+
+```bash
+# Find all rejection files
 find ../templates/skeleton -name "*.rej" -o -name "*.orig"
 
-# Examine each .rej file for details
+# Examine rejection contents
 for rej in $(find ../templates/skeleton -name "*.rej"); do
   echo "=== $rej ==="
   cat "$rej"
+  echo ""
 done
+```
+
+**Reading .rej Files:**
+- Shows the exact hunk that failed
+- First lines show what patch expected to find
+- Helps identify if issue is imports, types, or structural changes
+
+### 2.5 Document Patch Failures
+Create a failure matrix to track what needs fixing:
+
+```bash
+# Example analysis output to create:
+# _index.tsx.8041d5.patch: FAILED - Expects old import structure
+# app.css.e88d35.patch: SUCCESS
+# collections.$handle.tsx.951367.patch: PARTIAL - 1/3 hunks failed
+# products.$handle.tsx.3e0b7e.patch: PARTIAL - 1/7 hunks failed
 ```
 
 ## Step 3: Manual Application with Deep Evaluation
 
-### 3.1 Understand New Skeleton Structure
-Before applying changes, deeply understand the current skeleton:
+### 3.1 Understand Current Skeleton Structure
+Before applying changes, understand what the skeleton currently uses:
 
 ```bash
-# Analyze import patterns in current skeleton
-echo "=== Current Import Structure ==="
-grep -h "^import" templates/skeleton/app/routes/*.tsx | sort -u
+# From cookbook directory
+cd ../templates/skeleton
 
-# Check type definition structure
-ls -la templates/skeleton/app/routes/+types/
+# Check current import patterns for route files
+echo "=== Checking current import structure in routes ==="
+head -10 app/routes/_index.tsx
+head -10 app/routes/products.\$handle.tsx
 
-# Understand component structure
-find templates/skeleton/app/components -name "*.tsx" -exec basename {} \;
+# Key patterns to look for:
+# - Imports from 'react-router' (not '@shopify/remix-oxygen')
+# - Type imports from './+types/[route-name]'
+# - Route.LoaderArgs, Route.MetaFunction (not LoaderFunctionArgs, MetaFunction)
 ```
 
-### 3.2 Apply Changes Manually by Evaluating Each Patch
-For each patch that needs to be applied:
+**React Router 7.8.x Structure Example:**
+```typescript
+// New structure
+import { redirect, useLoaderData } from 'react-router';
+import type { Route } from './+types/products.$handle';
+export async function loader(args: Route.LoaderArgs) { ... }
+export const meta: Route.MetaFunction = () => { ... };
 
-1. **Copy new files (ingredients)**:
-   ```bash
-   cp -r cookbook/recipes/[recipe]/ingredients/* templates/skeleton/
-   ```
+// Old structure (what patches expect)
+import { redirect, type LoaderFunctionArgs } from '@shopify/remix-oxygen';
+import { useLoaderData, type MetaFunction } from '@remix-run/react';
+export async function loader(args: LoaderFunctionArgs) { ... }
+export const meta: MetaFunction<typeof loader> = () => { ... };
+```
 
-2. **For each patch, manually apply the INTENT, not the literal patch**:
-   ```bash
-   # Read the patch to understand intent
-   cat cookbook/recipes/[recipe]/patches/[patch-file]
-   
-   # Open the target file
-   vi templates/skeleton/[target-file]
-   
-   # Apply the logical changes, adapting to new structure:
-   # - Use Route.LoaderArgs instead of LoaderFunctionArgs
-   # - Import from 'react-router' not '@shopify/remix-oxygen'
-   # - Use Route.MetaFunction for meta exports
-   # - Import types from './+types/[route-name]'
-   ```
+### 3.2 Clean Skeleton and Copy Ingredients
+Start fresh and copy recipe ingredients:
 
-3. **Document each manual change made**:
-   ```
-   File: [filename]
-   Original Change: [what the patch wanted to do]
-   Adapted Change: [what you actually did]
-   Reason for Adaptation: [why the change was needed]
-   ```
-
-### 3.3 Verify No .orig or .rej Files
 ```bash
-# Must return empty - no .orig or .rej files allowed
-find templates/skeleton -name "*.orig" -o -name "*.rej"
+# Clean skeleton completely
+cd ../templates/skeleton
+git clean -fd
+git checkout -- .
 
-# If any exist, remove them
-find templates/skeleton -name "*.orig" -o -name "*.rej" | xargs rm -f
+# Copy ingredients - NOTE the nested structure!
+cd ../../cookbook
+cp -r recipes/[recipe]/ingredients/templates/skeleton/* ../templates/skeleton/
+
+# Verify ingredients were copied
+ls -la ../templates/skeleton/app/components/
+```
+
+**CRITICAL**: Ingredients often have nested paths like `ingredients/templates/skeleton/app/components/`. You must copy from the correct subdirectory!
+
+### 3.3 Apply Patches Intelligently
+For each patch, understand its intent and apply accordingly:
+
+```bash
+# Step 1: Read patch to understand intent
+cat recipes/[recipe]/patches/[filename].patch
+
+# Step 2: Check if patch is just formatting/imports
+# If patch only changes spacing or old imports, SKIP IT
+
+# Step 3: For substantive changes, apply manually or with patch
+cd ../templates/skeleton
+
+# Option A: Apply patch if it doesn't touch imports
+patch -p3 < ../../cookbook/recipes/[recipe]/patches/[filename].patch
+
+# Option B: Manually apply the logical change
+# Use your editor to add the actual functionality, ignoring import changes
+```
+
+**Decision Matrix for Each Patch:**
+
+| Patch Content | Action | Example |
+|--------------|--------|---------|
+| Only import formatting | Skip entirely | Changing space in imports |
+| Adds imports that no longer exist | Skip entirely | Adding `@shopify/remix-oxygen` imports |
+| Adds new GraphQL fields | Apply manually or patch | Adding `maxVariantPrice` to query |
+| Adds new components/logic | Apply with patch | Adding component logic |
+| Mixed imports + logic | Apply logic only manually | Import changes + GraphQL changes |
+
+### 3.4 Common Manual Fixes
+
+**Fix 1: GraphQL Query Additions**
+```bash
+# If patch adds fields to GraphQL query, apply just that part
+# Example: Adding maxVariantPrice to a product query
+# Find the query location and add the fields manually
+```
+
+**Fix 2: Component Imports**
+```bash
+# If patch adds component imports that now fail
+# Check if component was copied from ingredients
+# Add import with correct path
+```
+
+**Fix 3: Skip Formatting-Only Changes**
+```bash
+# If patch only changes:
+# - Space vs no space in imports
+# - Import order
+# - Similar trivial changes
+# SKIP THE ENTIRE PATCH
+```
+
+### 3.5 Clean Up After Manual Application
+```bash
+# Remove any .rej or .orig files created
+find . -name "*.rej" -delete
+find . -name "*.orig" -delete
+
+# Alternatively, in one command
+find . -name "*.rej" -o -name "*.orig" | xargs rm -f
 ```
 
 ## Step 4: Full Validation of Applied Changes
 
 ### 4.1 TypeScript Validation
+First, ensure the code compiles without errors:
+
 ```bash
-cd templates/skeleton
+cd ../templates/skeleton
 npm run typecheck
 ```
 
-If TypeScript errors occur, fix them before proceeding.
+**Common TypeScript Errors and Fixes:**
 
-### 4.2 Development Server Test
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `Cannot find module '~/components/[Component]'` | Ingredient not copied | Check ingredients were copied correctly |
+| `Type 'LoaderFunctionArgs' not found` | Old type imports | Change to `Route.LoaderArgs` |
+| `Property does not exist on type` | GraphQL type mismatch | Run `npm run codegen` to regenerate types |
+
+**If TypeScript errors occur:**
 ```bash
-cd templates/skeleton
+# Regenerate GraphQL types if needed
+npm run codegen
 
-# Start dev server
-npm run dev &
+# Check if components exist
+ls app/components/
+
+# Verify imports match file locations
+grep -r "import.*from.*components" app/routes/
+```
+
+### 4.2 Build Validation
+Ensure the application builds successfully:
+
+```bash
+# Run build
+npm run build
+```
+
+**Expected Successful Build Output:**
+```
+vite v6.2.4 building for production...
+✓ 198 modules transformed.
+✓ built in 828ms
+✓ 3 assets cleaned from React Router server build.
+```
+
+**If build fails:**
+- Check for syntax errors in manually edited files
+- Ensure all imports resolve correctly
+- Verify no .orig or .rej files are being processed
+
+### 4.3 Development Server Quick Test
+Test that the dev server starts and serves pages:
+
+```bash
+# Quick test with timeout
+timeout 5 npm run dev 2>&1 | head -20
+```
+
+**Expected Output:**
+```
+Environment variables injected into MiniOxygen:
+SESSION_SECRET   from local .env
+
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: use --host to expose
+
+╭─ success ────────────────────────────────────────────────────╮
+│                                                              │
+│  View Hydrogen app: http://localhost:3000/                   │
+│                                                              │
+│  View GraphiQL API browser:                                  │
+│  http://localhost:3000/graphiql                              │
+```
+
+### 4.4 Comprehensive Server Test (Optional)
+For thorough testing, start the server and test routes:
+
+```bash
+# Start dev server in background
+npm run dev > /dev/null 2>&1 &
 DEV_PID=$!
 
-# Wait for server to start
-sleep 5
+# Wait for startup
+sleep 10
 
-# Test home page
-curl -s http://localhost:3000/ > /dev/null && echo "✅ Dev server home page works" || echo "❌ Dev server home page failed"
+# Test routes
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ | grep 200 && echo "✅ Home page works" || echo "❌ Home page failed"
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/products/snowboard | grep 200 && echo "✅ Product page works" || echo "❌ Product page failed"
 
-# Test a product page if applicable
-curl -s http://localhost:3000/products/[test-product] > /dev/null && echo "✅ Product page works" || echo "❌ Product page failed"
-
-# Kill dev server
+# Kill server
 kill $DEV_PID
 ```
 
-### 4.3 Build Validation
+### 4.5 Feature-Specific Validation
+Verify the recipe's specific features work:
+
 ```bash
-cd templates/skeleton
+# Quick visual check - start dev server
+npm run dev
 
-# Build the application
-npm run build
-
-# Check build succeeded
-if [ -d "dist" ]; then
-  echo "✅ Build successful"
-else
-  echo "❌ Build failed"
-  exit 1
-fi
+# Then manually verify:
+# - New components appear where expected
+# - GraphQL queries return additional fields
+# - UI elements render correctly
+# - No console errors in browser
 ```
 
-### 4.4 Preview Server Test
+**What to Check for Each Recipe Type:**
+- **Component recipes**: New components render on appropriate pages
+- **GraphQL recipes**: Additional fields available in queries
+- **Route recipes**: New routes accessible
+- **Style recipes**: Visual changes applied correctly
+
+## Step 5: Regenerate Recipe Patches
+
+### 5.1 Prepare for Regeneration
+Ensure skeleton has all changes applied and no artifacts:
+
 ```bash
-cd templates/skeleton
+# From templates/skeleton directory
+# Remove any .orig or .rej files that might interfere
+find . -name "*.orig" -o -name "*.rej" -delete
 
-# Start preview server
-npm run preview &
-PREVIEW_PID=$!
-
-# Wait for server to start
-sleep 5
-
-# Test home page in preview
-curl -s http://localhost:4173/ > /dev/null && echo "✅ Preview home page works" || echo "❌ Preview home page failed"
-
-# Test dynamic routes
-curl -s http://localhost:4173/products/[test-product] > /dev/null && echo "✅ Preview dynamic routes work" || echo "❌ Preview dynamic routes failed"
-
-# Kill preview server
-kill $PREVIEW_PID
+# Verify all changes are applied
+git status
+# Should show:
+# - modified files (patches applied)
+# - new files (ingredients added)
+# - NO .orig or .rej files
 ```
 
-### 4.5 Runtime Feature Validation
-Test that the recipe's features actually work:
+### 5.2 Regenerate Patches Only
+**IMPORTANT**: Use `--onlyFiles` to preserve the recipe.yaml manifest:
 
 ```bash
-# For bundles recipe: Check bundle components render
-# For markets recipe: Check locale switching works
-# For subscriptions: Check selling plans appear
-# Document specific tests for each recipe's features
-```
-
-## Step 5: Regenerate or Update Recipe
-
-### 5.1 Verify Clean State for Regeneration
-```bash
-# CRITICAL: No .orig or .rej files can exist
-find templates/skeleton -name "*.orig" -o -name "*.rej"
-
-# If any found, remove them
-find templates/skeleton -name "*.orig" -o -name "*.rej" -delete
-```
-
-### 5.2 Regenerate Recipe with Current Changes
-```bash
-cd cookbook
-
-# Regenerate patches only (preserves recipe.yaml)
+cd ../../cookbook
 npm run cookbook -- generate --recipe [recipe-name] --onlyFiles
-
-# Or full regeneration with new manifest
-npm run cookbook -- regenerate --recipe [recipe-name] --format github
 ```
 
-### 5.3 Verify Regenerated Recipe
+**What this does:**
+- Creates new patch files from current skeleton state
+- Preserves existing recipe.yaml with descriptions
+- Updates patch filenames with new hashes
+- Removes patches that are no longer needed
+
+**Expected Output:**
+```
+📖 Generating recipe
+- 📖 Generating LLMs files…
+Generating recipe LLM prompt
+- [recipe-name]
+/path/to/cookbook/recipes/[recipe-name]/recipe.yaml
+From https://github.com/Shopify/hydrogen
+ * branch                main       -> FETCH_HEAD
+```
+
+### 5.3 Verify Regenerated Recipe Works
+Test the regenerated recipe on a clean skeleton:
+
 ```bash
-# Clean skeleton
-cd templates/skeleton
+# Clean skeleton completely
+cd ../templates/skeleton
 git clean -fd
 git checkout -- .
 
 # Apply regenerated recipe
-cd ../cookbook
+cd ../../cookbook
 npm run cookbook -- apply --recipe [recipe-name]
-
-# Run full validation again
-cd ../templates/skeleton
-npm run typecheck
-npm run build
-npm run dev # Test manually
 ```
+
+**Success Indicators:**
+- No "hunk failed" messages
+- No .rej files created
+- All patches apply cleanly
+
+**Quick Validation:**
+```bash
+cd ../templates/skeleton
+npm run typecheck && npm run build && echo "✅ Recipe works!" || echo "❌ Recipe still has issues"
+```
+
+### 5.4 Alternative: Full Regeneration
+If you need to update the manifest too:
+
+```bash
+cd cookbook
+npm run cookbook -- regenerate --recipe [recipe-name] --format github
+```
+
+**This will:**
+1. Apply the recipe to skeleton
+2. Regenerate both patches AND recipe.yaml
+3. Create new README.md
+4. Full recipe refresh
+
+**Use full regeneration when:**
+- Recipe description needs updating
+- Major structural changes occurred
+- Starting fresh is easier than fixing
 
 ## Step 6: Final Commit and Documentation
 
@@ -468,29 +654,37 @@ find . -name "*.rej" -o -name "*.orig" | xargs rm -f
 
 ## Common Pitfalls and Solutions
 
-### Pitfall 1: Assuming Patches Should Apply Literally
-**Problem**: Trying to force old patches to work with new structure
-**Solution**: Focus on the intent, not the literal patch
+### Pitfall 1: Wrong Patch Path Depth
+**Problem**: Using `-p1` when patches need `-p3` for correct path stripping
+**Solution**: Use `patch -p3` to strip the `templates/skeleton/` prefix from patches
+**Example**: `patch -p3 -d ../templates/skeleton < recipe.patch`
 
-### Pitfall 2: Not Checking Dependencies
-**Problem**: Recipe may depend on packages that changed
-**Solution**: Verify all required dependencies still exist and are compatible
+### Pitfall 2: Ingredients Have Nested Structure
+**Problem**: Copying from wrong directory level misses ingredients
+**Solution**: Copy from `ingredients/templates/skeleton/*` not just `ingredients/*`
+**Example**: `cp -r recipes/[recipe]/ingredients/templates/skeleton/* ../templates/skeleton/`
 
-### Pitfall 3: Ignoring Type Changes
-**Problem**: Fixing imports but not updating types
-**Solution**: Ensure TypeScript compilation passes after fixes
+### Pitfall 3: Trying to Fix Import-Only Patches
+**Problem**: Wasting time fixing patches that only change import formatting or old imports
+**Solution**: Skip patches that only modify imports - focus on functional changes
+**Example**: Skip patches changing `import { A }` to `import {A}` or adding `@shopify/remix-oxygen`
 
-### Pitfall 4: Partial Fixes
-**Problem**: Fixing visible errors but missing subtle breaks
-**Solution**: Always run full validation and build
+### Pitfall 4: Not Cleaning .rej Files Before Regeneration
+**Problem**: .rej and .orig files interfere with patch regeneration
+**Solution**: Always clean these files before regenerating: `find . -name "*.rej" -o -name "*.orig" -delete`
 
-### Pitfall 5: Not Testing Runtime Behavior
-**Problem**: Code compiles but doesn't work as expected
-**Solution**: Actually run the dev server and test the feature
+### Pitfall 5: Using Full Regeneration Instead of --onlyFiles
+**Problem**: Losing carefully crafted recipe.yaml descriptions
+**Solution**: Use `generate --recipe [name] --onlyFiles` to preserve manifest
 
-### Pitfall 6: Cleaning From Wrong Directory
-**Problem**: Running `git clean -fd` from repo root deletes all work
-**Solution**: ALWAYS cd into templates/skeleton first before cleaning
+### Pitfall 6: Not Understanding Patch Intent
+**Problem**: Applying patches literally when structure has changed
+**Solution**: Read patch to understand what it's trying to achieve, then implement that intent
+**Example**: If patch adds GraphQL fields, manually add just those fields
+
+### Pitfall 7: Testing With Wrong Working Directory
+**Problem**: Commands fail due to incorrect relative paths
+**Solution**: Always work from cookbook directory for recipe commands
 
 ## Automation Opportunities
 
@@ -537,11 +731,89 @@ done
 **Solution**: Always cd into specific directory (templates/skeleton) before cleaning
 **Key Learning**: Be extremely careful with destructive git commands - always verify your current directory first
 
-### Entry 4: [Add future learnings here]
-**Issue**: 
-**Pattern**: 
-**Solution**: 
-**Key Learning**: 
+### Entry 4: Patch Path Depth Critical for Application
+**Issue**: Patches failing with "No file found" error when using `-p1`
+**Pattern**: Patches include full path `templates/skeleton/app/...` that needs stripping
+**Solution**: Use `-p3` to strip first 3 path components (templates/skeleton/)
+**Key Learning**: Check patch headers to determine correct -p value; -p3 is standard for cookbook patches
+
+### Entry 5: Import-Only Patches Should Be Skipped
+**Issue**: Spending time fixing patches that only change import formatting
+**Pattern**: Old patches often include trivial changes like space removal in imports
+**Solution**: Identify and skip patches that only modify imports without adding functionality
+**Key Learning**: Focus on functional changes, not formatting - the new skeleton handles imports correctly
+
+### Entry 6: Ingredients Path Structure is Nested
+**Issue**: Components not found after copying ingredients
+**Pattern**: Ingredients stored in `ingredients/templates/skeleton/app/components/` not directly in `ingredients/`
+**Solution**: Copy from the nested path: `cp -r recipes/[recipe]/ingredients/templates/skeleton/* ../templates/skeleton/`
+**Key Learning**: Always check the actual structure of ingredients directory before copying
+
+### Entry 7: TypeScript Errors Reveal Missing Components
+**Issue**: TypeScript compilation fails with "Cannot find module" errors
+**Pattern**: Patches expect components that weren't properly copied from ingredients
+**Solution**: Verify ingredients were copied correctly, check paths match imports
+**Key Learning**: TypeScript errors are good indicators of what's missing - use them to guide fixes 
+
+---
+
+## Complete Workflow for Fixing a Recipe
+
+### Streamlined Process (What Actually Works)
+
+```bash
+# 1. Setup - Start in cookbook directory
+cd /path/to/repo/cookbook
+pwd  # Verify you're in cookbook
+
+# 2. Initial diagnosis
+cd ../templates/skeleton && git clean -fd && git checkout -- .
+cd ../../cookbook
+npm run cookbook -- apply --recipe [recipe-name]
+# Note which patches fail
+
+# 3. Clean and prepare for manual fixes
+cd ../templates/skeleton
+git clean -fd && git checkout -- .
+
+# 4. Copy ingredients (critical step!)
+cp -r ../cookbook/recipes/[recipe-name]/ingredients/templates/skeleton/* .
+ls app/components/  # Verify new components copied
+
+# 5. Apply patches selectively
+for patch in ../cookbook/recipes/[recipe-name]/patches/*.patch; do
+  echo "Testing $(basename $patch)..."
+  # Read patch first to check if it's just imports
+  head -20 "$patch"
+  # If it has real changes (not just imports), apply it
+  patch -p3 < "$patch"
+done
+
+# 6. Clean up artifacts
+find . -name "*.rej" -o -name "*.orig" -delete
+
+# 7. For patches that failed, apply intent manually
+# Example: If patch adds GraphQL fields, add them manually
+# Use editor to make logical changes, ignoring import modifications
+
+# 8. Validate it works
+npm run typecheck
+npm run build
+timeout 5 npm run dev 2>&1 | head -20
+
+# 9. Regenerate patches (preserves recipe.yaml)
+cd ../../cookbook
+npm run cookbook -- generate --recipe [recipe-name] --onlyFiles
+
+# 10. Final test on clean skeleton
+cd ../templates/skeleton && git clean -fd && git checkout -- .
+cd ../../cookbook
+npm run cookbook -- apply --recipe [recipe-name]
+cd ../templates/skeleton
+npm run typecheck && npm run build
+
+# 11. If all good, you're done!
+```
 
 ---
 
@@ -549,18 +821,18 @@ done
 
 When a recipe breaks:
 
-1. [ ] Run validation to identify failure
-2. [ ] Compare old patch with current file structure  
-3. [ ] Identify systematic changes (imports, types, etc.)
-4. [ ] Choose fix strategy (manual vs selective)
-5. [ ] **CD INTO skeleton directory before cleaning**
-6. [ ] Apply changes (manually or via patches)
-7. [ ] Regenerate patches with `--onlyFiles`
-8. [ ] Validate the fixed recipe
-9. [ ] Test build and runtime behavior
-10. [ ] Update documentation
-11. [ ] Clean up environment (from skeleton directory only!)
-12. [ ] Document learnings in this file
+1. [ ] **Start in cookbook directory** - verify with `pwd`
+2. [ ] **Test initial application** - note which patches fail
+3. [ ] **Clean skeleton** - `git clean -fd && git checkout -- .`
+4. [ ] **Copy ingredients correctly** - from `ingredients/templates/skeleton/*`
+5. [ ] **Apply patches with -p3** - not -p1
+6. [ ] **Skip import-only patches** - focus on functional changes
+7. [ ] **Clean .rej/.orig files** - before and after manual edits
+8. [ ] **Manually apply failed patches' intent** - not literal changes
+9. [ ] **Validate with TypeScript and build** - catch errors early
+10. [ ] **Regenerate with --onlyFiles** - preserve recipe.yaml
+11. [ ] **Final test on clean skeleton** - ensure it works from scratch
+12. [ ] **Commit with descriptive message** - document what was fixed
 
 ## Commands Quick Reference
 
