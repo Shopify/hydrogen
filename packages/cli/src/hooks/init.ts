@@ -4,12 +4,23 @@ import type {Hook} from '@oclif/core';
 import {outputDebug, outputNewline} from '@shopify/cli-kit/node/output';
 import {cwd, joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
+import {ensureMonorepoPluginLinked} from '../lib/plugin-autolinker.js';
 
 const hook: Hook<'init'> = async function (options) {
   // Check if this is a Hydrogen command to avoid running this
   // hook for commands in other plugins such as themes or apps.
-  if (!options.id?.startsWith('hydrogen:') || options.id === 'hydrogen:init') {
+  if (!options.id?.startsWith('hydrogen:')) {
     return;
+  }
+
+  // Auto-link monorepo plugin if needed (must be early in the hook)
+  // This ensures developers use the local CLI version during development
+  if (process.env.HYDROGEN_DISABLE_AUTOLINK !== 'true') {
+    await ensureMonorepoPluginLinked({
+      command: options.id,
+      args: options.argv,
+      workingDirectory: cwd(),
+    });
   }
 
   let projectPath = cwd();
