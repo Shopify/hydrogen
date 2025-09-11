@@ -12,7 +12,7 @@
     "declaration": true,
     "declarationDir": "./dist/types",
     "jsx": "react-jsx",
-    "types": ["jest", "@testing-library/jest-dom"]
+    "types": ["vitest/globals", "jest", "@testing-library/jest-dom"]
   },
   "include": ["src/**/*", "globals.d.ts"],
   "exclude": [

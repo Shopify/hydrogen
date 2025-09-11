@@ -1,4 +1,4 @@
-import {type MetaFunction, useLoaderData} from 'react-router';
+import {type MetaFunction, useLoaderData, useActionData} from 'react-router';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
 import {
@@ -79,7 +79,7 @@ export async function action({request, context}: ActionFunctionArgs) {
 
   const cartId = result?.cart?.id;
   const headers = cartId ? cart.setCartId(result.cart.id) : new Headers();
-  const {cart: cartResult, errors, warnings} = result;
+  const {cart: cartResult, errors, warnings, userErrors} = result;
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string') {
@@ -91,6 +91,7 @@ export async function action({request, context}: ActionFunctionArgs) {
     {
       cart: cartResult,
       errors,
+      userErrors,
       warnings,
       analytics: {
         cartId,
@@ -107,11 +108,17 @@ export async function loader({context}: LoaderFunctionArgs) {
 
 export default function Cart() {
   const cart = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
 
   return (
     <div className="cart">
       <h1>Cart</h1>
-      <CartMain layout="page" cart={cart} />
+      <CartMain
+        layout="page"
+        cart={cart}
+        warnings={actionData?.warnings}
+        userErrors={actionData?.userErrors}
+      />
     </div>
   );
 }
