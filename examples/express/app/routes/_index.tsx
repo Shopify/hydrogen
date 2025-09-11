@@ -3,11 +3,13 @@ import {useRouteError, isRouteErrorResponse, Link} from 'react-router';
 export default function Index() {
   return (
     <>
+      <h1>Hydrogen Express Example</h1>
       <p>
-        Edit this route in <em>app/routes/index.tsx</em>.
+        This example shows how to use Hydrogen with Express.js for Node.js deployments
+        instead of Oxygen/Workers.
       </p>
       <p>
-        <Link to="/products/snowboard">Snowboard product</Link>
+        <Link to="/products/the-carbon">View Example Product</Link>
       </p>
     </>
   );

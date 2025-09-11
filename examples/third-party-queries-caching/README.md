@@ -19,16 +19,13 @@ npm create @shopify/hydrogen@latest -- --template third-party-queries-caching
 
 ## Key files
 
-This folder contains the minimal set of files needed to showcase the implementation.
-Files that aren’t included by default with Hydrogen and that you’ll need to
-create are labeled with 🆕.
+This example demonstrates how to query third-party APIs with Oxygen caching.
+Files that aren't included by default with Hydrogen and that you'll need to create are labeled with 🆕.
 
 | File                                                                                          | Description                                                      |
 | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | 🆕 [`app/lib/createRickAndMortyClient.server.ts`](app/lib/createRickAndMortyClient.server.ts) | Rick & Morty GraphQL client factory function with Oxygen caching |
-| [`server.ts`](server.ts)                                                                      | Oxygen server worker                                             |
-| [`remix.env.d.ts`](remix.env.d.ts)                                                            | (Optional) Oxygen/Hydrogen TypeScript types                      |
-| [`app/routes/_index.tsx`](app/routes/_index.tsx)                                              | Hydrogen homepage route                                          |
+| [`app/routes/_index.tsx`](app/routes/_index.tsx)                                              | Modified home page route demonstrating third-party API queries with caching |
 
 ## Instructions
 

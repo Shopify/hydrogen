@@ -1,6 +1,7 @@
-import {type LoaderFunctionArgs, useLoaderData} from 'react-router';
+import {useLoaderData} from 'react-router';
+import type {Route} from './+types/products.$handle';
 
-export async function loader({params, context}: LoaderFunctionArgs) {
+export async function loader({params, context}: Route.LoaderArgs) {
   const {handle} = params;
   const {storefront} = context;
 

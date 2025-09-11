@@ -7,10 +7,8 @@ import {
   useActionData,
   useNavigation,
   useOutletContext,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
-  type MetaFunction,
 } from 'react-router';
+import type {Route} from './+types/account.addresses';
 
 export type ActionResponse = {
   addressId?: string | null;
@@ -21,11 +19,11 @@ export type ActionResponse = {
   updatedAddress?: AddressFragment;
 };
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: 'Addresses'}];
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   const {session} = context;
   const customerAccessToken = await session.get('customerAccessToken');
   if (!customerAccessToken) {
@@ -34,7 +32,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   return {};
 }
 
-export async function action({request, context}: ActionFunctionArgs) {
+export async function action({request, context}: Route.ActionArgs) {
   const {storefront, session} = context;
 
   try {
