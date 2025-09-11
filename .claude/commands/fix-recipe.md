@@ -1,4 +1,25 @@
+<!-- 
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           🛑 STOP AND READ THIS 🛑                           ║
+║                                                                              ║
+║  This guide has MANDATORY SEQUENTIAL STEPS that MUST be followed in order.  ║
+║  The FIRST STEP is to ASK THE USER which recipe to fix.                    ║
+║  DO NOT skip ahead. DO NOT make assumptions. DO NOT proceed without asking. ║
+║                                                                              ║
+║  If you are reading this, your NEXT action MUST be to ask:                  ║
+║  "Which recipe from cookbook/recipes/ would you like to fix?"               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+-->
+
 # Fix Broken Cookbook Recipe - Comprehensive Guide
+
+## ⚠️ CRITICAL: MANDATORY FIRST STEP - DO NOT SKIP ⚠️
+
+**STOP! Before reading further or taking ANY action:**
+1. You MUST ask the user which recipe to fix
+2. You MUST wait for their response
+3. You MUST NOT make assumptions based on context
+4. Even if the user mentioned multiple recipes earlier, ASK WHICH ONE TO FIX FIRST
 
 ## Purpose
 This document provides a systematic approach to diagnose and fix broken cookbook recipes when the underlying skeleton template changes (e.g., after framework migrations, major refactors, or dependency updates).
@@ -9,10 +30,12 @@ This document provides a systematic approach to diagnose and fix broken cookbook
 - Ability to run build and validation commands
 - Knowledge of the changed skeleton structure
 
-## Step 1: Recipe Selection
+## Step 1: Recipe Selection [MANDATORY - NEVER SKIP]
 
 ### 1.1 Ask User for Recipe to Fix
-**ALWAYS START HERE - DO NOT ASSUME**
+**🛑 ALWAYS START HERE - DO NOT ASSUME - THIS IS NOT OPTIONAL 🛑**
+
+**YOU MUST ASK THIS QUESTION FIRST:**
 
 ```
 Which recipe from cookbook/recipes/ would you like to fix?
@@ -26,7 +49,14 @@ Available recipes:
 Please specify the recipe name:
 ```
 
-Wait for user input before proceeding. Do not make assumptions about which recipe to fix.
+**CRITICAL REQUIREMENTS:**
+- ❌ DO NOT proceed to Step 2 without user confirmation
+- ❌ DO NOT assume based on previous conversation context
+- ❌ DO NOT attempt to fix multiple recipes without asking
+- ✅ WAIT for explicit user input specifying ONE recipe name
+- ✅ ONLY after receiving the recipe name, proceed to Step 2
+
+**If you skip this step, you are violating the core principle of this guide**
 
 ### 1.2 Verify Recipe Exists
 ```bash
