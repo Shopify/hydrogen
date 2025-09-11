@@ -3,6 +3,7 @@ import { checkPrerequisites, getProjectInfo } from './detectors/prerequisites';
 import { shouldTransformFile, analyzeFile } from './detectors/file-filter';
 import { detectProjectLanguage } from './detectors/language';
 import { transformRouteTypes } from './transformations/route-types';
+import { transformContextAPI } from './transformations/context-api';
 
 export interface TransformOptions extends Options {
   projectRoot?: string;
@@ -38,22 +39,13 @@ export default function transformer(
     hasChanges = transformRouteTypes(j, root, fileInfo.path, language) || hasChanges;
   }
   
-  // TODO: Apply more transformations in subsequent milestones
-  // if (fileAnalysis.isContext) {
-  //   hasChanges = transformContextAPI(j, root, fileInfo.path, language) || hasChanges;
-  // }
-  // hasChanges = transformImports(j, root, language) || hasChanges;
-  
-  // Temporary: Basic transformation for context files
-  if (fileAnalysis.isContext) {
-    root.find(j.Identifier, { name: 'createAppLoadContext' })
-      .forEach(path => {
-        if (path.parent.value.type !== 'FunctionDeclaration') {
-          path.value.name = 'createHydrogenRouterContext';
-          hasChanges = true;
-        }
-      });
+  // Apply context API transformation
+  if (fileAnalysis.isContext || fileAnalysis.isRoute) {
+    hasChanges = transformContextAPI(j, root, fileInfo.path, language) || hasChanges;
   }
+  
+  // TODO: Apply more transformations in subsequent milestones
+  // hasChanges = transformImports(j, root, language) || hasChanges;
   
   if (hasChanges) {
     return root.toSource({ quote: 'single' });

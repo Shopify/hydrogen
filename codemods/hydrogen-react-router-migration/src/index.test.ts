@@ -58,12 +58,12 @@ export { createAppLoadContext };
     expect(result).not.toContain('const context = createAppLoadContext');
   });
 
-  test('preserves function declarations', () => {
+  test('transforms function declarations in context files', () => {
     const source = `export function createAppLoadContext() { return {}; }`;
     const result = runTransform(source, 'app/lib/context.ts');
     
-    // Function declaration name should not be changed by basic transformer
-    // Only references are changed
-    expect(result).toBeUndefined();
+    // With context API transformation, function declarations are renamed
+    expect(result).toContain('createHydrogenRouterContext');
+    expect(result).not.toContain('createAppLoadContext');
   });
 });
