@@ -41,11 +41,6 @@ export type HydrogenPlugin = Plugin<{
 export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
   let middlewareOptions: HydrogenMiddlewareOptions = {};
 
-  const isHydrogenMonorepo = new URL(
-    '../../..',
-    import.meta.url,
-  ).pathname.endsWith('/hydrogen/packages/');
-
   return [
     {
       name: 'hydrogen:main',
@@ -85,7 +80,7 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
               // Optimize CJS dependencies that would otherwise cause issues
               'content-security-policy-builder',
               'worktop/cookie',
-              '@shopify/graphql-client'
+              '@shopify/graphql-client',
             ],
           },
         };
