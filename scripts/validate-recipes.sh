@@ -68,52 +68,14 @@ if [ "$VALIDATE_ALL" = true ]; then
     echo -e "${YELLOW}🔍 Validating all recipes...${NC}"
     echo ""
     
-    RECIPES_DIR="$COOKBOOK_DIR/recipes"
-    if [ -d "$RECIPES_DIR" ]; then
-        RECIPE_COUNT=$(ls -d "$RECIPES_DIR"/*/ 2>/dev/null | wc -l | tr -d ' ')
-        echo "Found $RECIPE_COUNT recipe(s) to validate"
-        echo "--------------------------------"
-        
-        SUCCESS_COUNT=0
-        FAILED_COUNT=0
-        FAILED_RECIPES=""
-        
-        for recipe_dir in "$RECIPES_DIR"/*/; do
-            if [ -d "$recipe_dir" ]; then
-                recipe_name=$(basename "$recipe_dir")
-                echo -e "\n${YELLOW}Testing recipe: $recipe_name${NC}"
-                
-                if npm run cookbook -- validate --recipe "$recipe_name"; then
-                    echo -e "${GREEN}✅ $recipe_name: PASSED${NC}"
-                    ((SUCCESS_COUNT++))
-                else
-                    echo -e "${RED}❌ $recipe_name: FAILED${NC}"
-                    ((FAILED_COUNT++))
-                    FAILED_RECIPES="$FAILED_RECIPES $recipe_name"
-                fi
-            fi
-        done
-        
+    # Run cookbook validate without specifying a recipe to validate all
+    if npm run cookbook -- validate; then
         echo ""
-        echo "================================"
-        echo -e "${YELLOW}Validation Summary${NC}"
-        echo "================================"
-        echo -e "${GREEN}✅ Passed: $SUCCESS_COUNT${NC}"
-        echo -e "${RED}❌ Failed: $FAILED_COUNT${NC}"
-        
-        if [ $FAILED_COUNT -gt 0 ]; then
-            echo ""
-            echo -e "${RED}Failed recipes:${NC}"
-            for recipe in $FAILED_RECIPES; do
-                echo "  - $recipe"
-            done
-            exit 1
-        else
-            echo ""
-            echo -e "${GREEN}🎉 All recipes validated successfully!${NC}"
-        fi
+        echo -e "${GREEN}🎉 All recipes validated successfully!${NC}"
+        exit 0
     else
-        echo -e "${RED}No recipes directory found at $RECIPES_DIR${NC}"
+        echo ""
+        echo -e "${RED}❌ Recipe validation failed${NC}"
         exit 1
     fi
 else
