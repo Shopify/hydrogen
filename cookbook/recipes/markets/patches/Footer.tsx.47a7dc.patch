@@ -1,0 +1,30 @@
+index 18815a55b..91e91c24a 100644
+--- a/templates/skeleton/app/components/Footer.tsx
++++ b/templates/skeleton/app/components/Footer.tsx
+@@ -1,5 +1,6 @@
+ import {Suspense} from 'react';
+-import {Await, NavLink} from 'react-router';
++import {Await} from 'react-router';
++import {Link} from '~/components/Link';
+ import type {FooterQuery, HeaderQuery} from 'storefrontapi.generated';
+ 
+ interface FooterProps {
+@@ -58,7 +59,8 @@ function FooterMenu({
+             {item.title}
+           </a>
+         ) : (
+-          <NavLink
++          <Link
++            variant="nav"
+             end
+             key={item.id}
+             prefetch="intent"
+@@ -66,7 +68,7 @@ function FooterMenu({
+             to={url}
+           >
+             {item.title}
+-          </NavLink>
++          </Link>
+         );
+       })}
+     </nav>

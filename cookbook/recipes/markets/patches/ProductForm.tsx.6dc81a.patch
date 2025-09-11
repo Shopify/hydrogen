@@ -1,0 +1,10 @@
+index ee52ab688..1478e69a1 100644
+--- a/templates/skeleton/app/components/ProductForm.tsx
++++ b/templates/skeleton/app/components/ProductForm.tsx
+@@ -1,4 +1,5 @@
+-import {Link, useNavigate} from 'react-router';
++import {useNavigate} from 'react-router';
++import {Link} from '~/components/Link';
+ import {type MappedProductOptions} from '@shopify/hydrogen';
+ import type {
+   Maybe,

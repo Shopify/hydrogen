@@ -1,0 +1,10 @@
+index ed7843be8..94b09d545 100644
+--- a/templates/skeleton/app/components/PageLayout.tsx
++++ b/templates/skeleton/app/components/PageLayout.tsx
+@@ -1,4 +1,5 @@
+-import {Await, Link} from 'react-router';
++import {Await} from 'react-router';
++import {Link} from '~/components/Link';
+ import {Suspense, useId} from 'react';
+ import type {
+   CartApiQueryFragment,
