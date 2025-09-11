@@ -128,43 +128,32 @@ jobs:
       - name: 🔬 Test
         run: npm run test
 
-  # TODO: Re-enable validate_recipes job once recipes are updated for React Router 7.8.x
-  # validate_recipes:
-  #   name: ⬣ Validate Recipes
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 15
-  #   concurrency:
-  #     group: ci-validate-recipes-${{ github.ref }}
-  #     cancel-in-progress: true
-  #   steps:
-  #     - name: ⬇️ Checkout repo
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+  validate_recipes:
+    name: ⬣ Validate Recipes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: ci-validate-recipes-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-  #     - name: ⎔ Setup node
-  #       uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-  #       with:
-  #         node-version-file: '.nvmrc'
-  #         cache: 'npm'
-  #         cache-dependency-path: '**/package-lock.json'
+      - name: ⎔ Setup node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
-  #     - name: 📥 Install dependencies
-  #       run: |
-  #         npm ci
-  #         npm rebuild
+      - name: 📥 Install dependencies
+        run: |
+          npm ci
+          npm rebuild
 
-  #     - name: 📦 Build packages
-  #       run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:pkg
+      - name: 📝 Validate schema
+        working-directory: cookbook
+        run: npm run cookbook -- schema && git diff --exit-code recipe.schema.json
 
-  #     - name: 📥 Install dependencies (cookbook)
-  #       working-directory: cookbook
-  #       run: |
-  #         npm ci
-  #         npm rebuild
-
-  #     - name: 📝 Validate schema
-  #       working-directory: cookbook
-  #       run: npm run cookbook -- schema && git diff --exit-code recipe.schema.json
-
-  #     - name: 🧐 Validate Recipes
-  #       working-directory: cookbook
-  #       run: npm run cookbook -- validate
+      - name: 🧐 Validate All Recipes
+        run: ./scripts/validate-recipes.sh --all

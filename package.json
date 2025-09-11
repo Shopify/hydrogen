@@ -9,7 +9,7 @@
     "build:examples:disabled": "echo 'Examples build temporarily disabled for React Router 7.8.x migration'",
     "build:templates": "turbo build --parallel --filter=./templates/*",
     "build:all": "npm run build:pkg && npm run build:templates && npm run build:examples:disabled",
-    "ci:checks": "turbo run lint test format:check typecheck",
+    "ci:checks": "turbo run lint test format:check typecheck && npm run validate:recipes",
     "decrypt": "ejson decrypt secrets.ejson",
     "dev": "npm run dev:pkg",
     "dev:pkg": "turbo dev --parallel --filter=./packages/*",
@@ -37,8 +37,8 @@
     "changeset": "changeset",
     "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/*/dist && rimraf templates/*/.cache",
     "check": "npm run build && npm run lint && npm run typecheck && npm run test",
-    "validate:recipes": "cd cookbook && npm ci && npm run cookbook -- validate",
-    "validate:recipe": "cd cookbook && npm ci && npm run cookbook -- validate --recipe",
+    "validate:recipes": "./scripts/validate-recipes.sh --all",
+    "validate:recipe": "./scripts/validate-recipes.sh --recipe",
     "pre-commit:encrypt": "bash -c 'git diff --cached --name-only | grep -q \"^secrets.ejson$\" && ejson encrypt secrets.ejson && git add secrets.ejson || true'"
   },
   "workspaces": [
