@@ -36,17 +36,28 @@ export function transformRouteTypes(
     return false;
   }
   
-  // Add Route type import (or JSDoc for JS)
-  hasChanges = strategy.addRouteTypeImport(root, routeName) || hasChanges;
+  // First, check if any transformations are needed
+  let needsRouteType = false;
   
   // Transform loader types
-  hasChanges = strategy.transformLoaderType(root) || hasChanges;
+  const loaderTransformed = strategy.transformLoaderType(root);
+  hasChanges = loaderTransformed || hasChanges;
+  needsRouteType = loaderTransformed || needsRouteType;
   
   // Transform action types
-  hasChanges = strategy.transformActionType(root) || hasChanges;
+  const actionTransformed = strategy.transformActionType(root);
+  hasChanges = actionTransformed || hasChanges;
+  needsRouteType = actionTransformed || needsRouteType;
   
   // Transform meta types
-  hasChanges = strategy.transformMetaType(root) || hasChanges;
+  const metaTransformed = strategy.transformMetaType(root);
+  hasChanges = metaTransformed || hasChanges;
+  needsRouteType = metaTransformed || needsRouteType;
+  
+  // Only add Route type import if we actually transformed something
+  if (needsRouteType) {
+    hasChanges = strategy.addRouteTypeImport(root, routeName) || hasChanges;
+  }
   
   // Clean up old imports
   hasChanges = removeOldTypeImports(j, root) || hasChanges;

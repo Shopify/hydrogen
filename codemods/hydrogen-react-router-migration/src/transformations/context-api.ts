@@ -186,17 +186,20 @@ function createTypeAugmentation(j: JSCodeshift, properties: any[]): any {
     return null;
   }).filter((prop): prop is TSPropertySignature => prop !== null);
   
-  return j.exportNamedDeclaration(
-    j.tsModuleDeclaration(
-      j.identifier('ReactRouter'),
-      j.tsModuleBlock([
-        j.tsInterfaceDeclaration(
-          j.identifier('AppLoadContext'),
-          j.tsInterfaceBody(interfaceProperties)
-        )
-      ])
-    )
+  const moduleDecl = j.tsModuleDeclaration(
+    j.identifier('ReactRouter'),
+    j.tsModuleBlock([
+      j.tsInterfaceDeclaration(
+        j.identifier('AppLoadContext'),
+        j.tsInterfaceBody(interfaceProperties)
+      )
+    ])
   );
+  
+  // Set declare flag to make it a module augmentation
+  moduleDecl.declare = true;
+  
+  return moduleDecl;
 }
 
 function createJSDocTypedef(j: JSCodeshift, properties: any[]): string {

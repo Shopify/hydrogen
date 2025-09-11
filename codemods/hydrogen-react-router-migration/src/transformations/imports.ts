@@ -10,53 +10,23 @@ interface ImportMapping {
 
 const IMPORT_MAPPINGS: ImportMapping[] = [
   {
-    from: ['@shopify/hydrogen'],
-    to: 'react-router',
-    nameChanges: {
-      json: 'data',
-    },
-    remove: ['defer'],
-  },
-  {
     from: ['@remix-run/react', '@remix-run/node', '@remix-run/server-runtime'],
     to: 'react-router',
-    nameChanges: {
-      json: 'data',
-    },
-    remove: ['defer'],
+    nameChanges: {},
+    remove: ['defer', 'json'],
+  },
+  {
+    from: ['@shopify/remix-oxygen'],
+    to: 'react-router',
+    nameChanges: {},
+    remove: ['defer', 'json'],
   },
 ];
 
-const HYDROGEN_SPECIFIC_EXPORTS = new Set([
-  'Analytics',
-  'AnalyticsProvider',
-  'CartForm',
-  'CartProvider',
-  'CustomerProvider',
-  'Hydrogen',
-  'HydrogenProvider',
-  'InMemoryCache',
-  'Money',
-  'Pagination',
-  'PaginationProvider',
-  'Seo',
-  'ShopPayButton',
-  'VariantSelector',
-  'createStorefrontClient',
-  'createCustomerAccountClient',
-  'createCartHandler',
-  'storefrontRedirect',
-  'graphiqlLoader',
-  'getPaginationVariables',
-  'flattenConnection',
-  'getShopAnalytics',
-  'parseGid',
-  'generateCacheControlHeader',
-  'CacheLong',
-  'CacheShort',
-  'CacheNone',
-  'CacheCustom',
-  'NO_STORE',
+// Exports that should go to @shopify/hydrogen/oxygen
+const OXYGEN_SPECIFIC_EXPORTS = new Set([
+  'createRequestHandler',
+  'getStorefrontHeaders',
 ]);
 
 export function transformImports(
@@ -67,6 +37,13 @@ export function transformImports(
 ): boolean {
   let hasChanges = false;
 
+  // Skip @shopify/hydrogen imports entirely - they should remain untouched
+  const hydrogenImports = root.find(j.ImportDeclaration).filter(path => 
+    path.value.source.value === '@shopify/hydrogen'
+  );
+  
+  // Don't process @shopify/hydrogen imports at all
+  
   for (const mapping of IMPORT_MAPPINGS) {
     for (const fromPackage of mapping.from) {
       // Handle both regular and type imports
@@ -79,10 +56,12 @@ export function transformImports(
         const specifiers = importDecl.specifiers || [];
         const isTypeImport = importDecl.importKind === 'type';
         
-        const remainingHydrogenSpecifiers: any[] = [];
-        const reactRouterSpecifiers: any[] = [];
+        type ImportSpecifierType = ReturnType<JSCodeshift['importSpecifier']> | ReturnType<JSCodeshift['importDefaultSpecifier']> | ReturnType<JSCodeshift['importNamespaceSpecifier']>;
+        const reactRouterSpecifiers: ImportSpecifierType[] = [];
         const removedSpecifiers: string[] = [];
-
+        const oxygenSpecifiers: ImportSpecifierType[] = [];
+        const addedImports = new Set<string>(); // Track what we've already added
+        
         specifiers.forEach((spec) => {
           if (spec.type === 'ImportSpecifier' && spec.imported?.type === 'Identifier') {
             const importedName = spec.imported.name;
@@ -93,11 +72,17 @@ export function transformImports(
               return;
             }
 
-            if (fromPackage === '@shopify/hydrogen' && HYDROGEN_SPECIFIC_EXPORTS.has(importedName)) {
-              remainingHydrogenSpecifiers.push(spec);
+            // Special handling for @shopify/remix-oxygen
+            if (fromPackage === '@shopify/remix-oxygen' && OXYGEN_SPECIFIC_EXPORTS.has(importedName)) {
+              oxygenSpecifiers.push(spec);
             } else {
               const newName = mapping.nameChanges?.[importedName];
               if (newName && newName !== importedName) {
+                // Check if we already added this import (e.g., both json and defer -> data)
+                if (addedImports.has(newName)) {
+                  hasChanges = true;
+                  return; // Skip duplicate
+                }
                 if (spec.local?.name === importedName) {
                   spec.imported.name = newName;
                   spec.local.name = newName;
@@ -105,75 +90,78 @@ export function transformImports(
                   spec.imported.name = newName;
                 }
                 hasChanges = true;
+                addedImports.add(newName);
               }
               reactRouterSpecifiers.push(spec);
             }
           } else if (spec.type === 'ImportDefaultSpecifier' || spec.type === 'ImportNamespaceSpecifier') {
-            if (fromPackage === '@shopify/hydrogen') {
-              remainingHydrogenSpecifiers.push(spec);
+            if (fromPackage === '@shopify/remix-oxygen') {
+              oxygenSpecifiers.push(spec);
             } else {
               reactRouterSpecifiers.push(spec);
             }
           }
         });
 
-        if (reactRouterSpecifiers.length > 0 || removedSpecifiers.length > 0) {
+        if (reactRouterSpecifiers.length > 0 || removedSpecifiers.length > 0 || oxygenSpecifiers.length > 0) {
           hasChanges = true;
 
-          if (remainingHydrogenSpecifiers.length === 0 && reactRouterSpecifiers.length > 0) {
+          // Handle oxygen specifiers (for createRequestHandler)
+          if (oxygenSpecifiers.length > 0) {
+            // Check if we have both oxygen and react-router specs
+            if (reactRouterSpecifiers.length > 0) {
+              // Create/update react-router import
+              const existingReactRouterImport = root.find(j.ImportDeclaration).filter(p => 
+                p.value.source.value === mapping.to && 
+                p.value.importKind === (isTypeImport ? 'type' : undefined)
+              );
+
+              if (existingReactRouterImport.length > 0) {
+                const existing = existingReactRouterImport.at(0).get();
+                const existingSpecs = existing.value.specifiers || [];
+                
+                const existingNames = new Set(
+                  existingSpecs
+                    .filter((s: ImportSpecifierType) => s.type === 'ImportSpecifier' && s.imported?.type === 'Identifier')
+                    .map((s: ImportSpecifierType) => s.type === 'ImportSpecifier' && s.imported?.type === 'Identifier' ? s.imported.name : '')
+                );
+
+                reactRouterSpecifiers.forEach((spec) => {
+                  if (spec.type === 'ImportSpecifier' && !existingNames.has(spec.imported?.name)) {
+                    existingSpecs.push(spec);
+                  }
+                });
+
+                existing.value.specifiers = existingSpecs;
+              } else {
+                const newImport = j.importDeclaration(
+                  reactRouterSpecifiers,
+                  j.stringLiteral(mapping.to)
+                );
+                if (isTypeImport) {
+                  newImport.importKind = 'type';
+                }
+                j(path).insertAfter(newImport);
+              }
+              
+              // Change current import to oxygen
+              importDecl.source.value = '@shopify/hydrogen/oxygen';
+              importDecl.specifiers = oxygenSpecifiers;
+            } else {
+              // Only oxygen specs, just change the source
+              importDecl.source.value = '@shopify/hydrogen/oxygen';
+              importDecl.specifiers = oxygenSpecifiers;
+            }
+          } else if (reactRouterSpecifiers.length > 0 && oxygenSpecifiers.length === 0) {
+            // Only react-router specs, change the source
             importDecl.source.value = mapping.to;
             importDecl.specifiers = reactRouterSpecifiers;
-          } else if (remainingHydrogenSpecifiers.length > 0 && reactRouterSpecifiers.length > 0) {
-            importDecl.specifiers = remainingHydrogenSpecifiers;
-            
-            // Find existing react-router import (matching type/regular)
-            const existingReactRouterImport = root.find(j.ImportDeclaration).filter(p => 
-              p.value.source.value === mapping.to && 
-              p.value.importKind === (isTypeImport ? 'type' : undefined)
-            );
-
-            if (existingReactRouterImport.length > 0) {
-              const existing = existingReactRouterImport.at(0).get();
-              const existingSpecs = existing.value.specifiers || [];
-              
-              const existingNames = new Set(
-                existingSpecs
-                  .filter((s: any) => s.type === 'ImportSpecifier')
-                  .map((s: any) => s.imported?.name)
-              );
-
-              reactRouterSpecifiers.forEach((spec) => {
-                if (spec.type === 'ImportSpecifier' && !existingNames.has(spec.imported?.name)) {
-                  existingSpecs.push(spec);
-                }
-              });
-
-              existing.value.specifiers = existingSpecs;
-            } else {
-              const newImport = j.importDeclaration(
-                reactRouterSpecifiers,
-                j.stringLiteral(mapping.to)
-              );
-              if (isTypeImport) {
-                newImport.importKind = 'type';
-              }
-              j(path).insertAfter(newImport);
-            }
-          } else if (remainingHydrogenSpecifiers.length > 0 && removedSpecifiers.length > 0) {
-            importDecl.specifiers = remainingHydrogenSpecifiers;
-          } else {
+          } else if (removedSpecifiers.length > 0 && reactRouterSpecifiers.length === 0 && oxygenSpecifiers.length === 0) {
+            // All specs were removed (e.g., only had defer)
             j(path).remove();
           }
         }
 
-        if (removedSpecifiers.length > 0) {
-          removeDeferUsage(j, root, removedSpecifiers);
-        }
-        
-        // Transform json calls to data calls if json was renamed
-        if (mapping.nameChanges?.json === 'data') {
-          transformJsonToData(j, root);
-        }
       });
     }
   }
@@ -186,35 +174,6 @@ export function transformImports(
   return hasChanges;
 }
 
-function transformJsonToData(j: JSCodeshift, root: Collection): void {
-  // Replace json calls with data calls
-  root.find(j.CallExpression, {
-    callee: { name: 'json' },
-  }).forEach((path) => {
-    path.value.callee = j.identifier('data');
-  });
-  
-}
-
-function removeDeferUsage(
-  j: JSCodeshift,
-  root: Collection,
-  removedSpecifiers: string[]
-): void {
-  // Replace defer calls with data calls
-  if (removedSpecifiers.includes('defer')) {
-    root.find(j.CallExpression, {
-      callee: { name: 'defer' },
-    }).forEach((path) => {
-      const args = path.value.arguments;
-      const newCall = j.callExpression(
-        j.identifier('data'),
-        args
-      );
-      j(path).replaceWith(newCall);
-    });
-  }
-}
 
 function cleanupDuplicateImports(j: JSCodeshift, root: Collection): void {
   // Group imports by source AND kind (type vs regular)
@@ -234,13 +193,14 @@ function cleanupDuplicateImports(j: JSCodeshift, root: Collection): void {
   importsBySourceAndKind.forEach((imports, sourceAndKind) => {
     if (imports.length <= 1) return;
 
-    const allSpecifiers: any[] = [];
+    type ImportSpecifierType = ReturnType<JSCodeshift['importSpecifier']> | ReturnType<JSCodeshift['importDefaultSpecifier']> | ReturnType<JSCodeshift['importNamespaceSpecifier']>;
+    const allSpecifiers: ImportSpecifierType[] = [];
     const seenSpecifiers = new Set<string>();
 
     imports.forEach((importPath, index) => {
       const specifiers = importPath.value.specifiers || [];
       
-      specifiers.forEach((spec: any) => {
+      specifiers.forEach((spec: ImportSpecifierType) => {
         const key = getSpecifierKey(spec);
         if (!seenSpecifiers.has(key)) {
           seenSpecifiers.add(key);
@@ -259,15 +219,17 @@ function cleanupDuplicateImports(j: JSCodeshift, root: Collection): void {
   });
 }
 
-function getSpecifierKey(spec: any): string {
+function getSpecifierKey(spec: ReturnType<JSCodeshift['importSpecifier']> | ReturnType<JSCodeshift['importDefaultSpecifier']> | ReturnType<JSCodeshift['importNamespaceSpecifier']>): string {
   if (spec.type === 'ImportDefaultSpecifier') {
-    return `default:${spec.local?.name}`;
+    return `default:${spec.local?.name || ''}`;
   }
   if (spec.type === 'ImportNamespaceSpecifier') {
-    return `namespace:${spec.local?.name}`;
+    return `namespace:${spec.local?.name || ''}`;
   }
   if (spec.type === 'ImportSpecifier') {
-    return `named:${spec.imported?.name}:${spec.local?.name}`;
+    const imported = spec.imported?.type === 'Identifier' ? spec.imported.name : '';
+    const local = spec.local?.name || '';
+    return `named:${imported}:${local}`;
   }
   return '';
 }

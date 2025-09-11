@@ -30,7 +30,7 @@ describe('Codemod Setup', () => {
     const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf-8'));
     
     expect(packageJson.dependencies).toHaveProperty('jscodeshift');
-    expect(packageJson.dependencies).toHaveProperty('@types/jscodeshift');
+    expect(packageJson.devDependencies).toHaveProperty('@types/jscodeshift');
   });
 
   test('directory structure is correct', () => {

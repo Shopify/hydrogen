@@ -84,11 +84,24 @@ function analyzeFileTypes(directory: string): FileStats {
   }
   
   function traverse(dir: string) {
-    const files = fs.readdirSync(dir);
+    let files: string[];
+    try {
+      files = fs.readdirSync(dir);
+    } catch (error) {
+      // Directory might not exist or be accessible
+      return;
+    }
     
     for (const file of files) {
       const filePath = path.join(dir, file);
-      const stat = fs.statSync(filePath);
+      let stat: fs.Stats;
+      
+      try {
+        stat = fs.statSync(filePath);
+      } catch (error) {
+        // File might have been deleted or is a broken symlink
+        continue;
+      }
       
       if (stat.isDirectory() && !file.startsWith('.') && file !== 'node_modules') {
         traverse(filePath);

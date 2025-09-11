@@ -1,25 +1,54 @@
 {
-  "name": "@shopify/hydrogen-react-router-migration",
+  "name": "hydrogen-react-router-migration",
   "version": "1.0.0",
   "private": true,
+  "description": "Automated migration tool for transitioning Hydrogen projects from Remix to React Router v7 (Codemod Registry)",
+  "keywords": [
+    "shopify",
+    "hydrogen",
+    "react-router",
+    "remix",
+    "migration",
+    "codemod",
+    "jscodeshift"
+  ],
+  "homepage": "https://github.com/Shopify/hydrogen/tree/main/codemods/hydrogen-react-router-migration",
+  "bugs": {
+    "url": "https://github.com/Shopify/hydrogen/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/hydrogen.git",
+    "directory": "codemods/hydrogen-react-router-migration"
+  },
+  "license": "MIT",
+  "author": "Shopify",
   "type": "module",
   "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "test": "vitest",
     "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src test",
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "jscodeshift": "^0.15.0",
-    "@types/jscodeshift": "^0.11.11"
+    "commander": "^11.0.0",
+    "chalk": "^5.3.0"
   },
   "devDependencies": {
-    "vitest": "^1.0.0",
+    "@types/jscodeshift": "^0.11.11",
     "@types/node": "^20.0.0",
+    "vitest": "^1.0.0",
     "typescript": "^5.3.0",
-    "eslint": "^8.50.0"
+    "eslint": "^8.50.0",
+    "@vitest/coverage-v8": "^1.0.0"
   },
   "engines": {
     "node": ">=18.0.0"

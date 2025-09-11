@@ -222,5 +222,65 @@ export function loader() {
       expect(result).not.toContain('@shopify/hydrogen');
       expect(result).toContain('return data({ test: 1 })');
     });
+
+    test('keeps getSeoMeta in @shopify/hydrogen imports', () => {
+      const source = `
+import { json, getSeoMeta } from '@shopify/hydrogen';
+import { useLoaderData } from '@remix-run/react';
+
+export const meta = ({matches}) => {
+  return getSeoMeta(...matches.map(match => match.data.seo));
+};`;
+
+      const root = j(source);
+      const hasChanges = transformImports(j, root, 'app/routes/test.tsx', tsProject);
+      const result = root.toSource({ quote: 'single' });
+
+      expect(hasChanges).toBe(true);
+      expect(result).toContain("import { getSeoMeta } from '@shopify/hydrogen'");
+      expect(result).toContain("data");
+      expect(result).toContain("useLoaderData");
+      expect(result).toContain("from 'react-router'");
+      expect(result).not.toContain("getSeoMeta } from 'react-router'");
+    });
+
+    test('transforms @shopify/remix-oxygen imports correctly', () => {
+      const source = `
+import { defer, json, type LoaderFunctionArgs } from '@shopify/remix-oxygen';
+import { createRequestHandler } from '@shopify/remix-oxygen';
+
+export async function loader({}: LoaderFunctionArgs) {
+  return json({});
+}`;
+
+      const root = j(source);
+      const hasChanges = transformImports(j, root, 'server.ts', tsProject);
+      const result = root.toSource({ quote: 'single' });
+
+      expect(hasChanges).toBe(true);
+      expect(result).toContain("data");
+      expect(result).toContain("type LoaderFunctionArgs");
+      expect(result).toContain("from 'react-router'");
+      expect(result).toContain("import { createRequestHandler } from '@shopify/hydrogen/oxygen'");
+      expect(result).not.toContain('@shopify/remix-oxygen');
+      expect(result).not.toContain('defer');
+    });
+
+    test('handles mixed imports from @shopify/remix-oxygen', () => {
+      const source = `
+import { defer, json, createRequestHandler } from '@shopify/remix-oxygen';`;
+
+      const root = j(source);
+      const hasChanges = transformImports(j, root, 'server.ts', tsProject);
+      const result = root.toSource({ quote: 'single' });
+
+      expect(hasChanges).toBe(true);
+      expect(result).toContain("data");
+      expect(result).toContain("from 'react-router'");
+      expect(result).toContain("import { createRequestHandler } from '@shopify/hydrogen/oxygen'");
+      expect(result).not.toContain('defer');
+      expect(result).not.toContain('json');
+      expect(result).not.toContain('@shopify/remix-oxygen');
+    });
   });
 });

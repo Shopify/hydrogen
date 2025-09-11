@@ -26,12 +26,19 @@ export function shouldTransformFile(
   if (!validExtensions.includes(ext)) return false;
   
   // Check if file is in transformable directories
+  // Handle both absolute and relative paths
+  const normalizedPath = filePath.replace(/\\/g, '/'); // Normalize Windows paths
   const isInTransformableDir = 
-    filePath.includes('/app/') || 
-    filePath.includes('/routes/') ||
-    filePath.includes('/lib/') ||
-    filePath.includes('/server.') ||
-    filePath.includes('/entry.');
+    normalizedPath.includes('/app/') || 
+    normalizedPath.includes('/routes/') ||
+    normalizedPath.includes('/lib/') ||
+    normalizedPath.includes('/server.') ||
+    normalizedPath.includes('/entry.') ||
+    normalizedPath.startsWith('app/') ||  // Handle relative paths from project root
+    normalizedPath.startsWith('routes/') ||
+    normalizedPath.startsWith('lib/') ||
+    normalizedPath.startsWith('server.') ||
+    normalizedPath.startsWith('entry.');
   
   return isInTransformableDir;
 }
