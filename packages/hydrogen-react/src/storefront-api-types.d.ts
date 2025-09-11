@@ -1307,6 +1307,8 @@ export type CartErrorCode =
   | 'ADDRESS_FIELD_IS_REQUIRED'
   /** The specified address field is too long. */
   | 'ADDRESS_FIELD_IS_TOO_LONG'
+  /** Buyer cannot purchase for company location. */
+  | 'BUYER_CANNOT_PURCHASE_FOR_COMPANY_LOCATION'
   /** The cart is too large to save. */
   | 'CART_TOO_LARGE'
   /** The input value is invalid. */
