@@ -133,38 +133,73 @@ function updateChangelogs(updates) {
   }
 }
 
+// Get all package.json paths from packages/ and templates/ directories
+function getAllPackageJsonPaths() {
+  const paths = [];
+  
+  // Get packages directory entries
+  const packagesDir = path.join(process.cwd(), 'packages');
+  const packageDirs = fs.readdirSync(packagesDir);
+  
+  for (const dir of packageDirs) {
+    const pkgPath = path.join(packagesDir, dir, 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      paths.push(pkgPath);
+    }
+  }
+  
+  // Get templates directory entries
+  const templatesDir = path.join(process.cwd(), 'templates');
+  const templateDirs = fs.readdirSync(templatesDir)
+    .filter(d => d !== 'TEMPLATE_GUIDELINES.md');
+  
+  for (const dir of templateDirs) {
+    const pkgPath = path.join(templatesDir, dir, 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      paths.push(pkgPath);
+    }
+  }
+  
+  return paths;
+}
+
+// Update dependencies in a single package.json
+function updatePackageDependencies(pkg, versionMap) {
+  let modified = false;
+  const depTypes = ['dependencies', 'devDependencies', 'peerDependencies'];
+  
+  for (const depType of depTypes) {
+    if (!pkg[depType]) continue;
+    
+    for (const [depName, depVersion] of Object.entries(pkg[depType])) {
+      if (versionMap[depName]) {
+        // Preserve any prefix like ^, ~, or workspace:
+        const prefix = depVersion.match(/^([^\d]*)/)[1];
+        pkg[depType][depName] = prefix + versionMap[depName];
+        modified = true;
+      }
+    }
+  }
+  
+  return modified;
+}
+
 // Update internal dependencies
 function updateInternalDependencies(updates) {
+  // Create version map from updates
   const versionMap = {};
   for (const update of updates) {
     versionMap[update.name] = update.newVersion;
   }
-
-  // Update all package.json files that might depend on CalVer packages
-  const packagesDir = path.join(process.cwd(), 'packages');
-  const dirs = fs.readdirSync(packagesDir);
-
-  for (const dir of dirs) {
-    const pkgPath = path.join(packagesDir, dir, 'package.json');
-    if (!fs.existsSync(pkgPath)) continue;
-
+  
+  // Get all package.json paths
+  const packagePaths = getAllPackageJsonPaths();
+  
+  // Update each package.json file
+  for (const pkgPath of packagePaths) {
     const pkg = readPackage(pkgPath);
-    let modified = false;
-
-    // Check all dependency types
-    for (const depType of ['dependencies', 'devDependencies', 'peerDependencies']) {
-      if (!pkg[depType]) continue;
-
-      for (const [depName, depVersion] of Object.entries(pkg[depType])) {
-        if (versionMap[depName]) {
-          // Update to new version (preserve any prefix like ^, ~, or workspace:)
-          const prefix = depVersion.match(/^([^\d]*)/)[1];
-          pkg[depType][depName] = prefix + versionMap[depName];
-          modified = true;
-        }
-      }
-    }
-
+    const modified = updatePackageDependencies(pkg, versionMap);
+    
     if (modified) {
       writePackage(pkgPath, pkg);
     }
