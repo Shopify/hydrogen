@@ -4,6 +4,7 @@ import { shouldTransformFile, analyzeFile } from './detectors/file-filter';
 import { detectProjectLanguage } from './detectors/language';
 import { transformRouteTypes } from './transformations/route-types';
 import { transformContextAPI } from './transformations/context-api';
+import { transformImports } from './transformations/imports';
 
 export interface TransformOptions extends Options {
   projectRoot?: string;
@@ -34,6 +35,9 @@ export default function transformer(
   
   let hasChanges = false;
   
+  // Apply import transformations first (before other transformations)
+  hasChanges = transformImports(j, root, fileInfo.path, language) || hasChanges;
+  
   // Apply transformations based on file type
   if (fileAnalysis.isRoute) {
     hasChanges = transformRouteTypes(j, root, fileInfo.path, language) || hasChanges;
@@ -43,9 +47,6 @@ export default function transformer(
   if (fileAnalysis.isContext || fileAnalysis.isRoute) {
     hasChanges = transformContextAPI(j, root, fileInfo.path, language) || hasChanges;
   }
-  
-  // TODO: Apply more transformations in subsequent milestones
-  // hasChanges = transformImports(j, root, language) || hasChanges;
   
   if (hasChanges) {
     return root.toSource({ quote: 'single' });
@@ -57,3 +58,4 @@ export default function transformer(
 // Export for CLI usage
 export { checkPrerequisites, getProjectInfo } from './detectors/prerequisites';
 export { detectProjectLanguage } from './detectors/language';
+export { updatePackageJson } from './transformations/package-json';

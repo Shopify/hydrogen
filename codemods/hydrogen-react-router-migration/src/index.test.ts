@@ -66,4 +66,37 @@ export { createAppLoadContext };
     expect(result).toContain('createHydrogenRouterContext');
     expect(result).not.toContain('createAppLoadContext');
   });
+
+  test('transforms imports from @shopify/hydrogen', () => {
+    const source = `
+import { json, redirect } from '@shopify/hydrogen';
+
+export async function loader() {
+  return json({ test: true });
+}`;
+    const result = runTransform(source, 'app/routes/test.tsx');
+    
+    expect(result).toContain("import { data, redirect } from 'react-router'");
+    expect(result).toContain('return data({ test: true })');
+    expect(result).not.toContain('@shopify/hydrogen');
+    expect(result).not.toContain('json(');
+  });
+
+  test('handles mixed Hydrogen and React Router imports', () => {
+    const source = `
+import { json, Analytics, Money } from '@shopify/hydrogen';
+
+export function loader() {
+  return json({ test: true });
+}
+
+export function Component() {
+  return <Money />;
+}`;
+    const result = runTransform(source, 'app/routes/test.tsx');
+    
+    expect(result).toContain("import { Analytics, Money } from '@shopify/hydrogen'");
+    expect(result).toContain("import { data } from 'react-router'");
+    expect(result).toContain('return data({ test: true })');
+  });
 });

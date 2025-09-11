@@ -955,11 +955,11 @@ function getContextBase(node: any): any {
 ```
 
 ### Success Criteria
-- [ ] createAppLoadContext renamed to createHydrogenRouterContext
-- [ ] Custom context properties extracted to additionalContext
-- [ ] TypeScript module augmentation added
-- [ ] Context usage updated throughout codebase
-- [ ] storefront.i18n references migrated to customerAccount.i18n
+- [x] createAppLoadContext renamed to createHydrogenRouterContext
+- [x] Custom context properties extracted to additionalContext
+- [x] TypeScript module augmentation added
+- [x] Context usage updated throughout codebase
+- [x] storefront.i18n references migrated to customerAccount.i18n
 - [ ] HydrogenRouterContextProvider pattern implemented
 
 ### Unit Tests
@@ -1220,13 +1220,17 @@ export function addEnvironmentTypeReference(
 ```
 
 ### Success Criteria
-- [ ] All Remix package imports transformed to react-router
-- [ ] Oxygen imports updated to @shopify/hydrogen/oxygen
+- [x] All Remix package imports transformed to react-router
+- [x] Oxygen imports updated to @shopify/hydrogen/oxygen (handled in imports)
 - [ ] Component names updated (RemixServer → ServerRouter)
 - [ ] Error type annotations added to catch blocks
-- [ ] Duplicate imports consolidated
+- [x] Duplicate imports consolidated
 - [ ] Virtual module paths updated
 - [ ] Environment type references added
+- [x] json renamed to data
+- [x] defer removed from imports and usage
+- [x] Package.json dependencies updated
+- [x] Type imports handled correctly
 
 ### Unit Tests
 ```typescript
