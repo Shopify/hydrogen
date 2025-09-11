@@ -25,21 +25,38 @@ const {
 } = require('./calver-shared.js');
 
 // Read all package.json files for CalVer packages
-// Uses hydrogen as source of truth for version baseline consistency
+// Uses the original version from git as baseline (before changesets corruption)
 function readPackageVersions() {
   const versions = {};
   
-  // Read hydrogen as the single source of truth for CalVer baseline
-  const hydrogenPath = getPackagePath('@shopify/hydrogen');
-  const hydrogenPkg = readPackage(hydrogenPath);
-  const sourceOfTruthVersion = hydrogenPkg.version;
+  // Get the original version from git (before changesets ran)
+  // This prevents using corrupted versions like 2026.0.0 that changesets might generate
+  let sourceOfTruthVersion;
+  try {
+    // Try to get the version from the base branch (before changesets modified it)
+    const gitVersion = execSync('git show HEAD~1:packages/hydrogen/package.json 2>/dev/null || git show origin/main:packages/hydrogen/package.json', {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'ignore']
+    });
+    const versionMatch = gitVersion.match(/"version":\s*"([^"]+)"/);
+    if (versionMatch) {
+      sourceOfTruthVersion = versionMatch[1];
+      console.log(`Using original version from git: ${sourceOfTruthVersion}`);
+    }
+  } catch (error) {
+    // Fallback to current version if git command fails
+    const hydrogenPath = getPackagePath('@shopify/hydrogen');
+    const hydrogenPkg = readPackage(hydrogenPath);
+    sourceOfTruthVersion = hydrogenPkg.version;
+    console.log(`Using current version as fallback: ${sourceOfTruthVersion}`);
+  }
   
   for (const pkgName of CALVER_PACKAGES) {
     const pkgPath = getPackagePath(pkgName);
     const pkg = readPackage(pkgPath);
     versions[pkgName] = {
       path: pkgPath,
-      oldVersion: sourceOfTruthVersion, // Use hydrogen version as baseline for all packages
+      oldVersion: sourceOfTruthVersion, // Use original version as baseline for all packages
       pkg,
     };
   }
