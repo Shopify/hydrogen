@@ -5,6 +5,7 @@ import { detectProjectLanguage } from './detectors/language';
 import { transformRouteTypes } from './transformations/route-types';
 import { transformContextAPI } from './transformations/context-api';
 import { transformImports } from './transformations/imports';
+import { transformComponents, addEnvironmentTypeReference } from './transformations/components';
 
 export interface TransformOptions extends Options {
   projectRoot?: string;
@@ -38,6 +39,9 @@ export default function transformer(
   // Apply import transformations first (before other transformations)
   hasChanges = transformImports(j, root, fileInfo.path, language) || hasChanges;
   
+  // Apply component transformations (after imports but before route types)
+  hasChanges = transformComponents(j, root, fileInfo.path, language) || hasChanges;
+  
   // Apply transformations based on file type
   if (fileAnalysis.isRoute) {
     hasChanges = transformRouteTypes(j, root, fileInfo.path, language) || hasChanges;
@@ -46,6 +50,11 @@ export default function transformer(
   // Apply context API transformation
   if (fileAnalysis.isContext || fileAnalysis.isRoute) {
     hasChanges = transformContextAPI(j, root, fileInfo.path, language) || hasChanges;
+  }
+  
+  // Add environment type references for .d.ts files
+  if (fileInfo.path.includes('.d.ts')) {
+    hasChanges = addEnvironmentTypeReference(j, root, fileInfo.path) || hasChanges;
   }
   
   if (hasChanges) {

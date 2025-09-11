@@ -1219,18 +1219,23 @@ export function addEnvironmentTypeReference(
 }
 ```
 
-### Success Criteria
+### Success Criteria (Milestone 5 - Completed)
 - [x] All Remix package imports transformed to react-router
-- [x] Oxygen imports updated to @shopify/hydrogen/oxygen (handled in imports)
-- [ ] Component names updated (RemixServer → ServerRouter)
-- [ ] Error type annotations added to catch blocks
-- [x] Duplicate imports consolidated
-- [ ] Virtual module paths updated
-- [ ] Environment type references added
 - [x] json renamed to data
 - [x] defer removed from imports and usage
+- [x] Duplicate imports consolidated
 - [x] Package.json dependencies updated
 - [x] Type imports handled correctly
+- [x] Mixed Hydrogen/React Router imports handled
+
+### Milestone 6 - Component and API Transformations (Completed)
+- [x] Oxygen imports updated to @shopify/hydrogen/oxygen
+- [x] Component names updated (RemixServer → ServerRouter, RemixBrowser → HydratedRouter)
+- [x] Error type annotations added to catch blocks (TypeScript only)
+- [x] Virtual module paths updated (virtual:remix → virtual:react-router)
+- [x] Environment type references added for .d.ts files
+- [x] Component references in code transformed
+- [x] Dynamic imports handled correctly
 
 ### Unit Tests
 ```typescript

@@ -99,4 +99,29 @@ export function Component() {
     expect(result).toContain("import { data } from 'react-router'");
     expect(result).toContain('return data({ test: true })');
   });
+
+  test('transforms component names', () => {
+    const source = `
+import { RemixServer } from 'react-router';
+
+export default function handleRequest() {
+  return <RemixServer />;
+}`;
+    const result = runTransform(source, 'app/entry.server.tsx');
+    
+    expect(result).toContain('import { ServerRouter } from');
+    expect(result).toContain('<ServerRouter />');
+    expect(result).not.toContain('RemixServer');
+  });
+
+  test('transforms oxygen imports', () => {
+    const source = `
+import { createRequestHandler } from '@shopify/remix-oxygen';
+
+export default createRequestHandler();`;
+    const result = runTransform(source, 'app/server.ts');
+    
+    expect(result).toContain("from '@shopify/hydrogen/oxygen'");
+    expect(result).not.toContain('@shopify/remix-oxygen');
+  });
 });
