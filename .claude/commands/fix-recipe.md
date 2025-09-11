@@ -9,80 +9,301 @@ This document provides a systematic approach to diagnose and fix broken cookbook
 - Ability to run build and validation commands
 - Knowledge of the changed skeleton structure
 
-## Step 1: Initial Diagnosis
+## Step 1: Recipe Selection
 
-### 1.1 Identify the Failure
-First, run validation to understand what's broken:
+### 1.1 Ask User for Recipe to Fix
+**ALWAYS START HERE - DO NOT ASSUME**
 
-```bash
-# Validate a specific recipe
-npm run validate:recipe <recipe-name>
+```
+Which recipe from cookbook/recipes/ would you like to fix?
+Available recipes:
+- bundles
+- markets
+- subscriptions
+- combined-listings
+- [other recipes in the directory]
 
-# Or use the cookbook directly
-cd cookbook && npm run cookbook -- validate --recipe <recipe-name>
+Please specify the recipe name:
 ```
 
-### 1.2 Analyze the Error Output
-Look for key indicators:
-- **"X out of Y hunks failed"**: Patch context doesn't match
-- **"File not found"**: File was moved or renamed
-- **"patching file"**: Shows which file is failing
-- **".rej file"**: Contains rejected hunks (though may not always be created)
+Wait for user input before proceeding. Do not make assumptions about which recipe to fix.
 
-### 1.3 Document the Failure Pattern
-Record what type of failure you're seeing:
-- [ ] Import structure changes
-- [ ] Type definition changes  
-- [ ] File location changes
-- [ ] Function signature changes
-- [ ] Component API changes
-- [ ] Build system changes
-
-**Learning from bundles recipe:**
-The failure showed "1 out of 2 hunks failed" for `_index.tsx`, indicating the patch expected old import structure that no longer exists.
-
-## Step 2: Understand the Changes
-
-### 2.1 Compare Old vs New Structure
-Examine what changed in the skeleton:
-
+### 1.2 Verify Recipe Exists
 ```bash
-# Check the failing patch content
-cat cookbook/recipes/<recipe-name>/patches/<failing-patch>
-
-# Check the current file structure
-cat templates/skeleton/<path-to-file>
-
-# Look for patterns across multiple files
-grep -r "import.*LoaderFunctionArgs" templates/skeleton/
-grep -r "import.*Route" templates/skeleton/
+ls cookbook/recipes/[user-specified-recipe]/
 ```
 
-### 2.2 Identify Systematic Changes
-Document patterns that affect multiple files:
-- Import changes (e.g., `@shopify/remix-oxygen` → `./+types/`)
-- Type changes (e.g., `LoaderFunctionArgs` → `Route.LoaderArgs`)
-- Export changes (e.g., `export const meta` → `export const meta: Route.MetaFunction`)
-- File structure changes (e.g., new type definition files)
+## Step 2: Initial Diagnosis Using Cookbook Apply
 
-**Learning from bundles recipe:**
-React Router 7.8.x migration introduced:
-- Type imports from `./+types/<route-name>` instead of `@shopify/remix-oxygen`
-- `Route.LoaderArgs` instead of `LoaderFunctionArgs`
-- `Route.MetaFunction` instead of imported `MetaFunction`
+### 2.1 Clean Skeleton and Apply Recipe
+Use the cookbook's apply command to understand the problems:
 
-## Step 3: Fix Strategy Selection
+```bash
+# Ensure skeleton is clean
+cd templates/skeleton
+git status  # Should show no changes
+git clean -fd
+git checkout -- .
 
-### 3.1 Choose Approach Based on Failure Type
+# Apply the recipe to see failures
+cd ../../cookbook
+npm run cookbook -- apply --recipe [user-specified-recipe]
+```
 
-| Failure Type | Recommended Approach | When to Use |
-|--------------|---------------------|-------------|
-| Minor context changes | Regenerate patches only | Patches fail but logic unchanged |
-| Major structural changes | Full manual reapplication | Framework migration, file reorganization |
-| Mixed (some work, some don't) | Selective regeneration | Part of recipe still valid |
-| Complete failure | Start from scratch | Nothing salvageable |
+### 2.2 Create Detailed Conflict Analysis
+**Create a per-file and per-patch technical list of all conflicts:**
 
-### 3.2 Decision Tree
+```bash
+# Document each failing patch
+for patch in recipes/[recipe]/patches/*.patch; do
+  echo "=== $(basename $patch) ==="
+  # Try to apply and capture the specific error
+  patch --dry-run -p3 -d ../templates/skeleton < "$patch" 2>&1 | grep -E "(FAILED|succeeded)"
+done
+```
+
+### 2.3 Deep Investigation of Each Conflict
+For EACH failing patch, create a detailed analysis:
+
+```
+File: [filename]
+Patch: [patch-name]
+Failure Type: [Hunk failed / File not found / etc.]
+
+Expected Structure (from patch):
+- [Show the patch expectations]
+
+Current Structure (in skeleton):
+- [Show current file structure]
+
+Root Cause:
+- [Identify why it's failing]
+
+Required Changes:
+- [List what needs to be adapted]
+```
+
+### 2.4 Check for .rej and .orig Files
+```bash
+# Find reject files that show exact conflicts
+find ../templates/skeleton -name "*.rej" -o -name "*.orig"
+
+# Examine each .rej file for details
+for rej in $(find ../templates/skeleton -name "*.rej"); do
+  echo "=== $rej ==="
+  cat "$rej"
+done
+```
+
+## Step 3: Manual Application with Deep Evaluation
+
+### 3.1 Understand New Skeleton Structure
+Before applying changes, deeply understand the current skeleton:
+
+```bash
+# Analyze import patterns in current skeleton
+echo "=== Current Import Structure ==="
+grep -h "^import" templates/skeleton/app/routes/*.tsx | sort -u
+
+# Check type definition structure
+ls -la templates/skeleton/app/routes/+types/
+
+# Understand component structure
+find templates/skeleton/app/components -name "*.tsx" -exec basename {} \;
+```
+
+### 3.2 Apply Changes Manually by Evaluating Each Patch
+For each patch that needs to be applied:
+
+1. **Copy new files (ingredients)**:
+   ```bash
+   cp -r cookbook/recipes/[recipe]/ingredients/* templates/skeleton/
+   ```
+
+2. **For each patch, manually apply the INTENT, not the literal patch**:
+   ```bash
+   # Read the patch to understand intent
+   cat cookbook/recipes/[recipe]/patches/[patch-file]
+   
+   # Open the target file
+   vi templates/skeleton/[target-file]
+   
+   # Apply the logical changes, adapting to new structure:
+   # - Use Route.LoaderArgs instead of LoaderFunctionArgs
+   # - Import from 'react-router' not '@shopify/remix-oxygen'
+   # - Use Route.MetaFunction for meta exports
+   # - Import types from './+types/[route-name]'
+   ```
+
+3. **Document each manual change made**:
+   ```
+   File: [filename]
+   Original Change: [what the patch wanted to do]
+   Adapted Change: [what you actually did]
+   Reason for Adaptation: [why the change was needed]
+   ```
+
+### 3.3 Verify No .orig or .rej Files
+```bash
+# Must return empty - no .orig or .rej files allowed
+find templates/skeleton -name "*.orig" -o -name "*.rej"
+
+# If any exist, remove them
+find templates/skeleton -name "*.orig" -o -name "*.rej" | xargs rm -f
+```
+
+## Step 4: Full Validation of Applied Changes
+
+### 4.1 TypeScript Validation
+```bash
+cd templates/skeleton
+npm run typecheck
+```
+
+If TypeScript errors occur, fix them before proceeding.
+
+### 4.2 Development Server Test
+```bash
+cd templates/skeleton
+
+# Start dev server
+npm run dev &
+DEV_PID=$!
+
+# Wait for server to start
+sleep 5
+
+# Test home page
+curl -s http://localhost:3000/ > /dev/null && echo "✅ Dev server home page works" || echo "❌ Dev server home page failed"
+
+# Test a product page if applicable
+curl -s http://localhost:3000/products/[test-product] > /dev/null && echo "✅ Product page works" || echo "❌ Product page failed"
+
+# Kill dev server
+kill $DEV_PID
+```
+
+### 4.3 Build Validation
+```bash
+cd templates/skeleton
+
+# Build the application
+npm run build
+
+# Check build succeeded
+if [ -d "dist" ]; then
+  echo "✅ Build successful"
+else
+  echo "❌ Build failed"
+  exit 1
+fi
+```
+
+### 4.4 Preview Server Test
+```bash
+cd templates/skeleton
+
+# Start preview server
+npm run preview &
+PREVIEW_PID=$!
+
+# Wait for server to start
+sleep 5
+
+# Test home page in preview
+curl -s http://localhost:4173/ > /dev/null && echo "✅ Preview home page works" || echo "❌ Preview home page failed"
+
+# Test dynamic routes
+curl -s http://localhost:4173/products/[test-product] > /dev/null && echo "✅ Preview dynamic routes work" || echo "❌ Preview dynamic routes failed"
+
+# Kill preview server
+kill $PREVIEW_PID
+```
+
+### 4.5 Runtime Feature Validation
+Test that the recipe's features actually work:
+
+```bash
+# For bundles recipe: Check bundle components render
+# For markets recipe: Check locale switching works
+# For subscriptions: Check selling plans appear
+# Document specific tests for each recipe's features
+```
+
+## Step 5: Regenerate or Update Recipe
+
+### 5.1 Verify Clean State for Regeneration
+```bash
+# CRITICAL: No .orig or .rej files can exist
+find templates/skeleton -name "*.orig" -o -name "*.rej"
+
+# If any found, remove them
+find templates/skeleton -name "*.orig" -o -name "*.rej" -delete
+```
+
+### 5.2 Regenerate Recipe with Current Changes
+```bash
+cd cookbook
+
+# Regenerate patches only (preserves recipe.yaml)
+npm run cookbook -- generate --recipe [recipe-name] --onlyFiles
+
+# Or full regeneration with new manifest
+npm run cookbook -- regenerate --recipe [recipe-name] --format github
+```
+
+### 5.3 Verify Regenerated Recipe
+```bash
+# Clean skeleton
+cd templates/skeleton
+git clean -fd
+git checkout -- .
+
+# Apply regenerated recipe
+cd ../cookbook
+npm run cookbook -- apply --recipe [recipe-name]
+
+# Run full validation again
+cd ../templates/skeleton
+npm run typecheck
+npm run build
+npm run dev # Test manually
+```
+
+## Step 6: Final Commit and Documentation
+
+### 6.1 Commit the Fixed Recipe
+```bash
+cd cookbook
+git add recipes/[recipe-name]/
+git commit -m "fix: update [recipe-name] recipe for React Router 7.8.x compatibility
+
+- Updated patches to work with new import structure
+- Adapted to Route.LoaderArgs and Route.MetaFunction types
+- Removed obsolete import modifications
+- Validated with dev, build, and preview servers
+- All runtime features confirmed working"
+```
+
+### 6.2 Document Migration Notes
+Add to recipe README or create a MIGRATION.md:
+
+```markdown
+## React Router 7.8.x Compatibility
+
+This recipe has been updated for React Router 7.8.x which uses:
+- Consolidated imports from 'react-router'
+- Type imports from './+types/[route-name]'
+- Route.LoaderArgs instead of LoaderFunctionArgs
+- Route.MetaFunction for meta exports
+
+Last validated: [date]
+Skeleton commit: [commit-hash]
+```
+
+## Decision Tree for Fix Strategy
+
+### Choose Approach Based on Failure Analysis
 ```
 Is the recipe's core functionality still relevant?
 ├─ No → Archive recipe or mark as deprecated
