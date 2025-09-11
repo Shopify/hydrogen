@@ -1,0 +1,9 @@
+index e2b661122..5a731fcd5 100644
+--- a/templates/skeleton/app/components/SearchResults.tsx
++++ b/templates/skeleton/app/components/SearchResults.tsx
+@@ -1,4 +1,4 @@
+-import {Link} from 'react-router';
++import {Link} from '~/components/Link';
+ import {Image, Money, Pagination} from '@shopify/hydrogen';
+ import {urlWithTrackingParams, type RegularSearchReturn} from '~/lib/search';
+ 

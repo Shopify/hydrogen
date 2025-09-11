@@ -1,16 +1,11 @@
-import type {SubscriptionBillingPolicyFragment} from 'customer-accountapi.generated';
+import type {SubscriptionBillingPolicyFragment, SubscriptionsContractsQueryQuery} from 'customer-accountapi.generated';
 import {
   data,
-  LinksFunction,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
-import {
   useActionData,
   useFetcher,
   useLoaderData,
-  type MetaFunction,
 } from 'react-router';
+import type {Route} from './+types/account.subscriptions';
 import {SUBSCRIPTIONS_CONTRACTS_QUERY} from '../graphql/customer-account/CustomerSubscriptionsQuery';
 import {SUBSCRIPTION_CANCEL_MUTATION} from '../graphql/customer-account/CustomerSubscriptionsMutations';
 
@@ -20,15 +15,15 @@ export type ActionResponse = {
   error: string | null;
 };
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: 'Subscriptions'}];
 };
 
-export const links: LinksFunction = () => [
+export const links: Route.LinksFunction = () => [
   {rel: 'stylesheet', href: accountSubscriptionsStyle},
 ];
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   await context.customerAccount.handleAuthStatus();
 
   const {data: subscriptions} = await context.customerAccount.query(
@@ -38,7 +33,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   return {subscriptions};
 }
 
-export async function action({request, context}: ActionFunctionArgs) {
+export async function action({request, context}: Route.ActionArgs) {
   const {customerAccount} = context;
 
   if (request.method !== 'DELETE') {

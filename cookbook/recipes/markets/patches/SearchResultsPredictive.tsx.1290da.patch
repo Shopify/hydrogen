@@ -1,0 +1,10 @@
+index 91cf65c29..0482d9a75 100644
+--- a/templates/skeleton/app/components/SearchResultsPredictive.tsx
++++ b/templates/skeleton/app/components/SearchResultsPredictive.tsx
+@@ -1,4 +1,5 @@
+-import {Link, useFetcher, type Fetcher} from 'react-router';
++import {useFetcher, type Fetcher} from 'react-router';
++import {Link} from '~/components/Link';
+ import {Image, Money} from '@shopify/hydrogen';
+ import React, {useRef, useEffect} from 'react';
+ import {

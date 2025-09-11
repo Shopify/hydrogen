@@ -1,0 +1,36 @@
+index c416c2b3d..92bc735b9 100644
+--- a/templates/skeleton/app/routes/collections.$handle.tsx
++++ b/templates/skeleton/app/routes/collections.$handle.tsx
+@@ -76,7 +76,13 @@ export default function Collection() {
+         connection={collection.products}
+         resourcesClassName="products-grid"
+       >
+-        {({node: product, index}) => (
++        {({
++          node: product,
++          index,
++        }: {
++          node: ProductItemFragment;
++          index: number;
++        }) => (
+           <ProductItem
+             key={product.id}
+             product={product}
+@@ -120,10 +126,16 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
+         ...MoneyProductItem
+       }
+     }
++    # Check if the product is a bundle
++    isBundle: selectedOrFirstAvailableVariant(ignoreUnknownOptions: true, selectedOptions: { name: "", value: ""}) {
++      ...on ProductVariant {
++        requiresComponents
++      }
++    }
+   }
+ ` as const;
+ 
+-// NOTE: https://shopify.dev/docs/api/storefront/2022-04/objects/collection
++// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/collection
+ const COLLECTION_QUERY = `#graphql
+   ${PRODUCT_ITEM_FRAGMENT}
+   query Collection(

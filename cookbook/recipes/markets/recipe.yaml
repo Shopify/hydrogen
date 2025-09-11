@@ -60,29 +60,94 @@ ingredients:
   - path: templates/skeleton/app/components/CountrySelector.tsx
     description: A component that displays a country selector inside the Header.
   - path: templates/skeleton/app/components/Link.tsx
-    description: A wrapper around the Link component that uses the selected locale
-      path prefix.
+    description: A unified locale-aware Link component that handles both regular links and navigation links with active states. Automatically prepends locale prefixes and cleans menu URLs.
   - path: templates/skeleton/app/lib/i18n.ts
-    description: A helper function to get locale information from the context, a
-      hook to retrieve the selected locale, and a list of available locales.
+    description: Comprehensive i18n utilities including locale detection, path transformation hooks, URL cleaning functions, and locale validation. Centralizes all localization logic in one place.
   - path: templates/skeleton/app/routes/($locale)._index.tsx
     description: A route that renders a localized version of the home page.
+  - path: templates/skeleton/app/routes/($locale).account.$.tsx
+    description: Fallback route for unauthenticated account pages with locale support
+  - path: templates/skeleton/app/routes/($locale).account._index.tsx
+    description: Localized account dashboard redirect route
+  - path: templates/skeleton/app/routes/($locale).account.addresses.tsx
+    description: Customer address management page with locale-aware forms and links
+  - path: templates/skeleton/app/routes/($locale).account.orders.$id.tsx
+    description: Individual order details page with localized currency and date formatting
+  - path: templates/skeleton/app/routes/($locale).account.orders._index.tsx
+    description: Customer order history listing with locale-specific pagination
+  - path: templates/skeleton/app/routes/($locale).account.profile.tsx
+    description: Customer profile editing form with localized field labels
+  - path: templates/skeleton/app/routes/($locale).account.tsx
+    description: Account layout wrapper with locale-aware navigation tabs
+  - path: templates/skeleton/app/routes/($locale).account_.authorize.tsx
+    description: OAuth authorization callback route with locale preservation
+  - path: templates/skeleton/app/routes/($locale).account_.login.tsx
+    description: Customer login redirect with locale-specific return URL
+  - path: templates/skeleton/app/routes/($locale).account_.logout.tsx
+    description: Logout handler that maintains locale after sign out
+  - path: templates/skeleton/app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx
+    description: Blog article page with locale-specific content and SEO metadata
+  - path: templates/skeleton/app/routes/($locale).blogs.$blogHandle._index.tsx
+    description: Blog listing page with localized article previews and pagination
+  - path: templates/skeleton/app/routes/($locale).blogs._index.tsx
+    description: All blogs overview page with locale-aware navigation links
   - path: templates/skeleton/app/routes/($locale).cart.tsx
     description: A localized cart route.
+  - path: templates/skeleton/app/routes/($locale).collections.$handle.tsx
+    description: Collection page displaying products with locale-specific pricing and availability
+  - path: templates/skeleton/app/routes/($locale).collections._index.tsx
+    description: Collections listing page with localized collection names and images
+  - path: templates/skeleton/app/routes/($locale).collections.all.tsx
+    description: All products page with locale-based filtering and sorting
+  - path: templates/skeleton/app/routes/($locale).pages.$handle.tsx
+    description: Dynamic page route for locale-specific content pages
+  - path: templates/skeleton/app/routes/($locale).policies.$handle.tsx
+    description: Policy page (privacy, terms, etc.) with locale-specific legal content
+  - path: templates/skeleton/app/routes/($locale).policies._index.tsx
+    description: Policies index page listing all available store policies
   - path: templates/skeleton/app/routes/($locale).products.$handle.tsx
     description: A route that renders a localized version of the product page.
+  - path: templates/skeleton/app/routes/($locale).search.tsx
+    description: Search results page with locale-aware product matching and predictive search
   - path: templates/skeleton/app/routes/($locale).tsx
     description: A utility route that makes sure the locale is valid.
 deletedFiles:
   - templates/skeleton/app/routes/_index.tsx
+  - templates/skeleton/app/routes/account.$.tsx
+  - templates/skeleton/app/routes/account._index.tsx
+  - templates/skeleton/app/routes/account.addresses.tsx
+  - templates/skeleton/app/routes/account.orders.$id.tsx
+  - templates/skeleton/app/routes/account.orders._index.tsx
+  - templates/skeleton/app/routes/account.profile.tsx
+  - templates/skeleton/app/routes/account.tsx
+  - templates/skeleton/app/routes/account_.authorize.tsx
+  - templates/skeleton/app/routes/account_.login.tsx
+  - templates/skeleton/app/routes/account_.logout.tsx
+  - templates/skeleton/app/routes/blogs.$blogHandle.$articleHandle.tsx
+  - templates/skeleton/app/routes/blogs.$blogHandle._index.tsx
+  - templates/skeleton/app/routes/blogs._index.tsx
   - templates/skeleton/app/routes/cart.tsx
+  - templates/skeleton/app/routes/collections.$handle.tsx
+  - templates/skeleton/app/routes/collections._index.tsx
+  - templates/skeleton/app/routes/collections.all.tsx
+  - templates/skeleton/app/routes/pages.$handle.tsx
+  - templates/skeleton/app/routes/policies.$handle.tsx
+  - templates/skeleton/app/routes/policies._index.tsx
   - templates/skeleton/app/routes/products.$handle.tsx
+  - templates/skeleton/app/routes/search.tsx
 steps:
   - type: INFO
     step: 1
     name: Add localization utilities and update core components
     description: In this section, we'll create utilities to handle localization and
       country selection, and update the core components to use these utilities.
+  - type: PATCH
+    step: "1"
+    name: Update CartLineItem with locale-aware product links
+    description: Update cart line items to use the unified Link component for product links
+    diffs:
+      - file: app/components/CartLineItem.tsx
+        patchFile: CartLineItem.tsx.6dcaed.patch
   - type: NEW_FILE
     step: 1.1
     name: Create a CountrySelector component
@@ -95,30 +160,39 @@ steps:
       - path: templates/skeleton/app/components/CountrySelector.tsx
   - type: NEW_FILE
     step: 1.2
-    name: Create a Link wrapper component
-    description: Create a wrapper component around the `Link` component that
-      prepends the selected locale path prefix (if any) to the actual links.
+    name: Create a unified locale-aware Link component
+    description: |
+      Create a single Link component that handles both regular links and navigation links.
+      This component automatically:
+      - Prepends the current locale to paths
+      - Supports variant="nav" for navigation links with active states
+      - Cleans invalid locale prefixes from menu URLs
+      - Enables locale switching while preserving paths
     ingredients:
       - path: templates/skeleton/app/components/Link.tsx
   - type: NEW_FILE
     step: 1.3
-    name: Create i18n helpers
+    name: Create comprehensive i18n utilities
     description: |
-      1. Create a helper function to get locale information from the context, and
-      a hook to retrieve the selected locale.
-      2. Define a set of supported locales for the app.
-      3. Add a utility function to validate the locale from the route param against the supported locales.
+      Create a centralized i18n module that includes:
+      1. `useSelectedLocale()` hook to get the current locale from route data
+      2. `useLocalizedPath()` hook for intelligent path transformation
+      3. `cleanPath()` function to remove invalid locale/language prefixes
+      4. `findLocaleByPrefix()` to detect locales in paths
+      5. `normalizePrefix()` for consistent prefix formatting
+      6. Locale validation utilities for route params
+      7. Support for case-insensitive locale matching
     ingredients:
       - path: templates/skeleton/app/lib/i18n.ts
   - type: PATCH
     step: 1.4
-    name: Use the new Link component in the ProductItem component
+    name: Update ProductItem to use locale-aware Link
     description: |
-      Update the `ProductItem` component to use the `Link` component from the
-      `app/components/Link.tsx` file.
+      Replace standard react-router Link imports with the new unified Link component.
+      This ensures all product links automatically include the correct locale prefix.
     diffs:
       - file: app/components/ProductItem.tsx
-        patchFile: ProductItem.tsx.8ddc67.patch
+        patchFile: ProductItem.tsx.d10538.patch
   - type: PATCH
     step: 1.5
     name: Add the selected locale to the context
@@ -126,15 +200,17 @@ steps:
       Detect the locale from the URL path, and add it to the HydrogenContext.
     diffs:
       - file: app/lib/context.ts
-        patchFile: context.ts.12ce79.patch
+        patchFile: context.ts.c833ec.patch
   - type: PATCH
     step: 1.6
-    name: Add the CountrySelector component to the Header
+    name: Update Header with CountrySelector and locale-aware Links
     description: |
-      This adds a country selector component to the navigation.
+      1. Add the CountrySelector component to the header navigation
+      2. Update all navigation links to use the unified Link component with variant="nav"
+      3. Menu URLs are automatically cleaned of invalid locale prefixes
     diffs:
       - file: app/components/Header.tsx
-        patchFile: Header.tsx.05d0c2.patch
+        patchFile: Header.tsx.5672cc.patch
   - type: PATCH
     step: 1.7
     name: Add the selected locale to the root route
@@ -145,12 +221,19 @@ steps:
       when the locale changes.
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.53a6d3.patch
+        patchFile: root.tsx.96879d.patch
   - type: INFO
     step: 2
     name: Localizing the individual routes
     description: |
       In this section, we'll add localization to the individual routes using the language [dynamic segment](https://reactrouter.com/start/data/routing#optional-segments).
+  - type: PATCH
+    step: "2"
+    name: Update CartMain with locale-aware links
+    description: Replace all Link imports to use the unified locale-aware Link component for consistent navigation
+    diffs:
+      - file: app/components/CartMain.tsx
+        patchFile: CartMain.tsx.cf9819.patch
   - type: INFO
     step: 2.1
     name: Add language dynamic segment to the desired routes
@@ -202,7 +285,7 @@ steps:
       Update the sitemap route to use the locales included in `SUPPORTED_LOCALES`.
     diffs:
       - file: app/routes/sitemap.$type.$page[.xml].tsx
-        patchFile: sitemap.$type.$page[.xml].tsx.9700e3.patch
+        patchFile: sitemap.$type.$page[.xml].tsx.3dae08.patch
   - type: PATCH
     step: 2.7
     name: Update the useVariantUrl function
@@ -210,7 +293,162 @@ steps:
       Remove the `pathname` parameter from the `useVariantUrl` function, and the logic that prepends the locale to the path.
     diffs:
       - file: app/lib/variants.ts
-        patchFile: variants.ts.dd2ccb.patch
+        patchFile: variants.ts.7d506f.patch
+  - type: PATCH
+    step: "3"
+    name: Update Footer with locale-aware navigation
+    description: Update footer navigation to use Link component with variant="nav" for automatic locale handling and active states
+    diffs:
+      - file: app/components/Footer.tsx
+        patchFile: Footer.tsx.47a7dc.patch
+  - type: PATCH
+    step: "5"
+    name: Update PageLayout to use locale-aware Link
+    description: Replace standard Link imports with the unified locale-aware component
+    diffs:
+      - file: app/components/PageLayout.tsx
+        patchFile: PageLayout.tsx.5d2451.patch
+  - type: NEW_FILE
+    step: "5"
+    name: app/routes/($locale).account.$.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).account.$.tsx
+  - type: PATCH
+    step: "6"
+    name: Update ProductForm navigation
+    description: Update product form to use locale-aware Link component for variant selection and navigation
+    diffs:
+      - file: app/components/ProductForm.tsx
+        patchFile: ProductForm.tsx.6dc81a.patch
+  - type: NEW_FILE
+    step: "6"
+    name: app/routes/($locale).account._index.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).account._index.tsx
+  - type: NEW_FILE
+    step: "7"
+    name: app/routes/($locale).account.addresses.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).account.addresses.tsx
+  - type: PATCH
+    step: "8"
+    name: Update SearchResults with locale-aware links
+    description: Update search result links to use the unified Link component for proper locale handling
+    diffs:
+      - file: app/components/SearchResults.tsx
+        patchFile: SearchResults.tsx.4b9e3a.patch
+  - type: NEW_FILE
+    step: "8"
+    name: app/routes/($locale).account.orders.$id.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).account.orders.$id.tsx
+  - type: PATCH
+    step: "9"
+    name: Update predictive search with locale-aware links
+    description: Update predictive search results to use the unified Link component
+    diffs:
+      - file: app/components/SearchResultsPredictive.tsx
+        patchFile: SearchResultsPredictive.tsx.1290da.patch
+  - type: NEW_FILE
+    step: "9"
+    name: app/routes/($locale).account.orders._index.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).account.orders._index.tsx
+  - type: NEW_FILE
+    step: "10"
+    name: app/routes/($locale).account.profile.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).account.profile.tsx
+  - type: NEW_FILE
+    step: "11"
+    name: app/routes/($locale).account.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).account.tsx
+  - type: NEW_FILE
+    step: "12"
+    name: app/routes/($locale).account_.authorize.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).account_.authorize.tsx
+  - type: NEW_FILE
+    step: "13"
+    name: app/routes/($locale).account_.login.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).account_.login.tsx
+  - type: NEW_FILE
+    step: "14"
+    name: app/routes/($locale).account_.logout.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).account_.logout.tsx
+  - type: NEW_FILE
+    step: "15"
+    name: app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx
+  - type: NEW_FILE
+    step: "16"
+    name: app/routes/($locale).blogs.$blogHandle._index.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).blogs.$blogHandle._index.tsx
+  - type: NEW_FILE
+    step: "17"
+    name: app/routes/($locale).blogs._index.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).blogs._index.tsx
+  - type: NEW_FILE
+    step: "19"
+    name: app/routes/($locale).collections.$handle.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).collections.$handle.tsx
+  - type: NEW_FILE
+    step: "20"
+    name: app/routes/($locale).collections._index.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).collections._index.tsx
+  - type: NEW_FILE
+    step: "21"
+    name: app/routes/($locale).collections.all.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).collections.all.tsx
+  - type: NEW_FILE
+    step: "22"
+    name: app/routes/($locale).pages.$handle.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).pages.$handle.tsx
+  - type: NEW_FILE
+    step: "23"
+    name: app/routes/($locale).policies.$handle.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).policies.$handle.tsx
+  - type: NEW_FILE
+    step: "24"
+    name: app/routes/($locale).policies._index.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).policies._index.tsx
+  - type: NEW_FILE
+    step: "26"
+    name: app/routes/($locale).search.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).search.tsx
 nextSteps: |
   - Test your implementation by going to your store and selecting a different
   market from the country selector.
@@ -234,4 +472,4 @@ llms:
       solution: Make sure you update *all* routes that need localization (not only the
         routes for the home page, the cart page, and the product page). See step
         2.1 for details.
-commit: 6d5b52d60a3c22dddf133926cdcee1606af46d0e
+commit: 859ce537a65d41cbf07a54689f0210b45f8621ba

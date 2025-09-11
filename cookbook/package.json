@@ -13,7 +13,9 @@
     "zod-to-json-schema": "^3.24.5"
   },
   "devDependencies": {
+    "@types/inquirer": "^9.0.7",
     "@types/node": "^22.13.4",
+    "@types/yargs": "^17.0.33",
     "typescript": "^5.0.0"
   }
 }
