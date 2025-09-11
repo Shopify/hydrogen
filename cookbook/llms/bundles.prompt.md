@@ -66,6 +66,8 @@ In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/sho
 
 - app/components/BundleBadge.tsx
 - app/components/BundledVariants.tsx
+- templates/skeleton/app/components/BundleBadge.tsx
+- templates/skeleton/app/components/BundledVariants.tsx
 
 ## Steps
 
@@ -81,7 +83,7 @@ In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/sho
 
 Create a new BundleBadge component to be displayed on bundle product listings.
 
-#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
+#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/4bcfd7248adb500c95ac5ba6aa0612c890c4e3d0/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
 
 ```tsx
 export function BundleBadge() {
@@ -108,7 +110,7 @@ export function BundleBadge() {
 
 Create a new `BundledVariants` component that wraps the variants of a bundle product in a single product listing.
 
-#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/6d5b52d60a3c22dddf133926cdcee1606af46d0e/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
+#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/4bcfd7248adb500c95ac5ba6aa0612c890c4e3d0/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
 
 ```tsx
 import {Link} from 'react-router';
@@ -177,6 +179,33 @@ export function BundledVariants({
 
 ```
 
+### Step 3: templates/skeleton/app/components/BundleBadge.tsx
+
+
+
+#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/4bcfd7248adb500c95ac5ba6aa0612c890c4e3d0/cookbook/recipes/bundles/ingredients/templates/skeleton/templates/skeleton/app/components/BundleBadge.tsx)
+
+```tsx
+export function BundleBadge() {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        padding: '.5rem .75rem',
+        fontSize: '11px',
+        backgroundColor: '#10804c',
+        color: 'white',
+        top: '1rem',
+        right: '1rem',
+      }}
+    >
+      BUNDLE
+    </div>
+  );
+}
+
+```
+
 ### Step 4: Add maxVariantPrice to the product fields for RecommendedProducts
 
 Add `maxVariantPrice` to the `RecommendedProducts` query's product fields.
@@ -184,14 +213,7 @@ Add `maxVariantPrice` to the `RecommendedProducts` query's product fields.
 #### File: /app/routes/_index.tsx
 
 ```diff
-@@ -1,5 +1,5 @@
- import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
--import { Await, useLoaderData, Link, type MetaFunction } from 'react-router';
-+import {Await, useLoaderData, Link, type MetaFunction} from 'react-router';
- import {Suspense} from 'react';
- import {Image, Money} from '@shopify/hydrogen';
- import type {
-@@ -147,6 +147,10 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+@@ -151,6 +151,10 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
          amount
          currencyCode
        }
@@ -204,6 +226,79 @@ Add `maxVariantPrice` to the `RecommendedProducts` query's product fields.
        id
 ```
 
+### Step 4: templates/skeleton/app/components/BundledVariants.tsx
+
+
+
+#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/4bcfd7248adb500c95ac5ba6aa0612c890c4e3d0/cookbook/recipes/bundles/ingredients/templates/skeleton/templates/skeleton/app/components/BundledVariants.tsx)
+
+```tsx
+import {Link} from 'react-router';
+import {Image} from '@shopify/hydrogen';
+import type {
+  ProductVariantComponent,
+  Image as ShopifyImage,
+} from '@shopify/hydrogen/storefront-api-types';
+
+export function BundledVariants({
+  variants,
+}: {
+  variants: ProductVariantComponent[];
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        paddingTop: '1rem',
+      }}
+    >
+      {variants
+        ?.map(({productVariant: bundledVariant, quantity}) => {
+          const url = `/products/${bundledVariant.product.handle}`;
+          return (
+            <Link
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                marginBottom: '.5rem',
+              }}
+              to={url}
+              key={bundledVariant.id}
+            >
+              <Image
+                alt={bundledVariant.title}
+                aspectRatio="1/1"
+                height={60}
+                loading="lazy"
+                width={60}
+                data={bundledVariant.image as ShopifyImage}
+              />
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  paddingLeft: '1rem',
+                }}
+              >
+                <small>
+                  {bundledVariant.product.title}
+                  {bundledVariant.title !== 'Default Title'
+                    ? `- ${bundledVariant.title}`
+                    : null}
+                </small>
+                <small>Qty: {quantity}</small>
+              </div>
+            </Link>
+          );
+        })
+        .filter(Boolean)}
+    </div>
+  );
+}
+
+```
+
 ### Step 5: Update the product fragment to query for bundles and display BundledVariants
 
 1. Add the `requiresComponents` field to the `Product` fragment, which is
@@ -213,22 +308,16 @@ used to identify bundled products.
 #### File: /app/routes/products.$handle.tsx
 
 ```diff
-@@ -1,4 +1,4 @@
--import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
- import { useLoaderData, type MetaFunction } from 'react-router';
- import {
-   getSelectedProductOptions,
-@@ -12,6 +12,8 @@ import {ProductPrice} from '~/components/ProductPrice';
+@@ -15,6 +15,8 @@ import {ProductPrice} from '~/components/ProductPrice';
  import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 +import type {ProductVariantComponent} from '@shopify/hydrogen/storefront-api-types';
 +import {BundledVariants} from '~/components/BundledVariants';
  
- export const meta: MetaFunction<typeof loader> = ({data}) => {
+ export const meta: Route.MetaFunction = ({data}) => {
    return [
-@@ -101,9 +103,12 @@ export default function Product() {
+@@ -104,9 +106,12 @@ export default function Product() {
  
    const {title, descriptionHtml} = product;
  
@@ -242,7 +331,7 @@ used to identify bundled products.
        <div className="product-main">
          <h1>{title}</h1>
          <ProductPrice
-@@ -114,6 +119,7 @@ export default function Product() {
+@@ -117,6 +122,7 @@ export default function Product() {
          <ProductForm
            productOptions={productOptions}
            selectedVariant={selectedVariant}
@@ -250,7 +339,7 @@ used to identify bundled products.
          />
          <br />
          <br />
-@@ -123,6 +129,14 @@ export default function Product() {
+@@ -126,6 +132,14 @@ export default function Product() {
          <br />
          <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
          <br />
@@ -265,7 +354,7 @@ used to identify bundled products.
        </div>
        <Analytics.ProductView
          data={{
-@@ -177,6 +191,28 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+@@ -180,6 +194,28 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
        amount
        currencyCode
      }
@@ -294,7 +383,7 @@ used to identify bundled products.
    }
  ` as const;
  
-@@ -213,6 +249,25 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -216,6 +252,25 @@ const PRODUCT_FRAGMENT = `#graphql
      adjacentVariants (selectedOptions: $selectedOptions) {
        ...ProductVariant
      }
@@ -329,15 +418,7 @@ Like the previous step, use the `requiresComponents` field to detect if the prod
 #### File: /app/routes/collections.$handle.tsx
 
 ```diff
-@@ -4,6 +4,7 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
- import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
- import {redirectIfHandleIsLocalized} from '~/lib/redirect';
- import {ProductItem} from '~/components/ProductItem';
-+import {ProductItemFragment} from 'storefrontapi.generated';
- 
- export const meta: MetaFunction<typeof loader> = ({data}) => {
-   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
-@@ -79,7 +80,13 @@ export default function Collection() {
+@@ -76,7 +76,13 @@ export default function Collection() {
          connection={collection.products}
          resourcesClassName="products-grid"
        >
@@ -352,7 +433,7 @@ Like the previous step, use the `requiresComponents` field to detect if the prod
            <ProductItem
              key={product.id}
              product={product}
-@@ -123,10 +130,16 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
+@@ -120,10 +126,16 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
          ...MoneyProductItem
        }
      }
@@ -437,7 +518,7 @@ If a product is a bundle, show the `BundleBadge` component in the cart line item
 #### File: /app/components/CartLineItem.tsx
 
 ```diff
-@@ -6,6 +6,7 @@ import { Link } from 'react-router';
+@@ -6,6 +6,7 @@ import {Link} from 'react-router';
  import {ProductPrice} from './ProductPrice';
  import {useAside} from './Aside';
  import type {CartApiQueryFragment} from 'storefrontapi.generated';
