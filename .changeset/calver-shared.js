@@ -100,7 +100,8 @@ function hasMajorChangesets() {
       
       // Check for major bumps in any CalVer package
       for (const pkg of CALVER_PACKAGES) {
-        if (content.includes(`"${pkg}": major`)) {
+        // Check for both single and double quotes (changesets can use either)
+        if (content.includes(`"${pkg}": major`) || content.includes(`'${pkg}': major`)) {
           return true;
         }
       }
@@ -128,9 +129,10 @@ function hasCalVerChangesets() {
       
       // Check for any bumps (patch, minor, major) in CalVer packages
       for (const pkg of CALVER_PACKAGES) {
-        if (content.includes(`"${pkg}": patch`) || 
-            content.includes(`"${pkg}": minor`) || 
-            content.includes(`"${pkg}": major`)) {
+        // Check for both single and double quotes (changesets can use either)
+        if (content.includes(`"${pkg}": patch`) || content.includes(`'${pkg}': patch`) ||
+            content.includes(`"${pkg}": minor`) || content.includes(`'${pkg}': minor`) ||
+            content.includes(`"${pkg}": major`) || content.includes(`'${pkg}': major`)) {
           return true;
         }
       }
