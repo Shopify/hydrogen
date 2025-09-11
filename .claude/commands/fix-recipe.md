@@ -240,6 +240,12 @@ patch -p3 < ../../cookbook/recipes/[recipe]/patches/[filename].patch
 # Use your editor to add the actual functionality, ignoring import changes
 ```
 
+**Key Learning from combined-listings fix:**
+- Some patches partially apply (e.g., GraphQL changes work but imports fail)
+- When this happens, the successful parts are already applied
+- Check `.rej` files to see what failed and manually apply only those parts
+- Don't re-apply the entire patch - just fix the rejected hunks
+
 **Decision Matrix for Each Patch:**
 
 | Patch Content | Action | Example |
@@ -275,6 +281,22 @@ patch -p3 < ../../cookbook/recipes/[recipe]/patches/[filename].patch
 # SKIP THE ENTIRE PATCH
 ```
 
+**Fix 4: Type Import Issues**
+```bash
+# With verbatimModuleSyntax enabled, TypeScript requires explicit type imports
+# Change: import {ProductFragment} from 'storefrontapi.generated';
+# To: import type {ProductFragment} from 'storefrontapi.generated';
+```
+
+**Fix 5: Route Type Updates**
+```bash
+# React Router 7.8.x uses different type patterns
+# Old: export async function loader(args: LoaderFunctionArgs)
+# New: export async function loader(args: Route.LoaderArgs)
+# Old: export const meta: MetaFunction<typeof loader>
+# New: export const meta: Route.MetaFunction
+```
+
 ### 3.5 Clean Up After Manual Application
 ```bash
 # Remove any .rej or .orig files created
@@ -292,6 +314,8 @@ First, ensure the code compiles without errors:
 
 ```bash
 cd ../templates/skeleton
+# ALWAYS run codegen first after applying patches
+npm run codegen
 npm run typecheck
 ```
 
@@ -302,6 +326,7 @@ npm run typecheck
 | `Cannot find module '~/components/[Component]'` | Ingredient not copied | Check ingredients were copied correctly |
 | `Type 'LoaderFunctionArgs' not found` | Old type imports | Change to `Route.LoaderArgs` |
 | `Property does not exist on type` | GraphQL type mismatch | Run `npm run codegen` to regenerate types |
+| `'[Type]' is a type and must be imported using a type-only import` | verbatimModuleSyntax | Add `type` keyword to import |
 
 **If TypeScript errors occur:**
 ```bash
@@ -486,9 +511,54 @@ npm run cookbook -- regenerate --recipe [recipe-name] --format github
 - Major structural changes occurred
 - Starting fresh is easier than fixing
 
-## Step 6: Final Commit and Documentation
+## Step 6: Final Validation and Cleanup
 
-### 6.1 Commit the Fixed Recipe
+### 6.1 Run Official Recipe Validation
+**CRITICAL**: This is the final check to ensure your recipe is fully working:
+
+```bash
+# From repository root (NOT cookbook directory)
+npm run validate:recipe [recipe-name]
+```
+
+**What validation does:**
+1. Applies recipe to a clean skeleton
+2. Installs all dependencies
+3. Runs TypeScript type checking
+4. Builds the application
+5. Reports success or failure
+
+**Success Output:**
+```
+✅ Recipe [recipe-name] is valid!
+```
+
+**If validation fails:**
+- Review the error output carefully
+- Fix any remaining issues
+- Regenerate patches if needed
+- Run validation again
+
+### 6.2 Clean Up Skeleton Changes
+After successful validation, discard skeleton changes while preserving cookbook changes:
+
+```bash
+# Discard all skeleton changes (we only needed them for patch generation)
+cd templates/skeleton
+git clean -fd
+git checkout -- .
+
+# Verify cookbook changes are preserved
+cd ../../cookbook
+git status  # Should show modified recipe files
+```
+
+**IMPORTANT**: 
+- ✅ KEEP all changes in `cookbook/recipes/[recipe-name]/`
+- ❌ DISCARD all changes in `templates/skeleton/`
+- The skeleton changes were only temporary for generating patches
+
+### 6.3 Commit the Fixed Recipe
 ```bash
 cd cookbook
 git add recipes/[recipe-name]/
@@ -497,11 +567,11 @@ git commit -m "fix: update [recipe-name] recipe for React Router 7.8.x compatibi
 - Updated patches to work with new import structure
 - Adapted to Route.LoaderArgs and Route.MetaFunction types
 - Removed obsolete import modifications
-- Validated with dev, build, and preview servers
+- Validated with npm run validate:recipe
 - All runtime features confirmed working"
 ```
 
-### 6.2 Document Migration Notes
+### 6.4 Document Migration Notes
 Add to recipe README or create a MIGRATION.md:
 
 ```markdown
@@ -515,6 +585,7 @@ This recipe has been updated for React Router 7.8.x which uses:
 
 Last validated: [date]
 Skeleton commit: [commit-hash]
+Validation: Passed npm run validate:recipe
 ```
 
 ## Decision Tree for Fix Strategy
@@ -685,6 +756,16 @@ find . -name "*.rej" -o -name "*.orig" | xargs rm -f
 ### Pitfall 7: Testing With Wrong Working Directory
 **Problem**: Commands fail due to incorrect relative paths
 **Solution**: Always work from cookbook directory for recipe commands
+
+### Pitfall 8: Forgetting Final Validation
+**Problem**: Recipe seems to work but fails in clean environment
+**Solution**: Always run `npm run validate:recipe [name]` before committing
+**Example**: Recipe builds locally but validation catches missing dependencies
+
+### Pitfall 9: Committing Skeleton Changes
+**Problem**: Accidentally committing temporary skeleton modifications
+**Solution**: After validation, discard skeleton changes while keeping cookbook changes
+**Example**: `cd templates/skeleton && git clean -fd && git checkout -- .`
 
 ## Automation Opportunities
 
