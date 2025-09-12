@@ -94,7 +94,7 @@ describe('init', () => {
         projectRootDir,
         `test-project-init-${Date.now()}-${Math.random().toString(36).substring(7)}`,
       );
-      mkdirSync(tmpDir, {recursive: true});
+      mkdirSync(tmpDir);
 
       await expect(
         runInit({

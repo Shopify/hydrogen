@@ -27,7 +27,7 @@ describe('build', () => {
       projectRootDir,
       `test-project-build-${Date.now()}-${Math.random().toString(36).substring(7)}`,
     );
-    mkdirSync(tmpDir, {recursive: true});
+    mkdirSync(tmpDir);
   });
 
   afterAll(async () => {
