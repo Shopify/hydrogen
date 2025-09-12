@@ -288,7 +288,5 @@ describe('<Image />', () => {
 });
 
 function getWarnings(): string[] {
-  return (console.warn as Mock<[string]>).mock.calls.map(
-    ([message]) => message,
-  );
+  return (console.warn as Mock).mock.calls.map((args) => args[0] as string);
 }
