@@ -193,6 +193,7 @@ async function handleLoggedOutResponse(options: {
   return_to: string | null;
   checkoutDomain: string | undefined;
 }) {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   const {return_to, checkoutDomain} = options;
   // Match checkout urls such as:
   // https://checkout.example.com/cart/c/c1-dd274dd3e6dca2f6a6ea899e8fe9b90f?key=6900d0a8b227761f88cf2e523ae2e662

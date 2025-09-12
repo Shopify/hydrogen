@@ -9,6 +9,7 @@ import {
   type CustomerAccountOptions,
   type CustomerAccount,
 } from './customer/types';
+import {LanguageCode} from '@shopify/hydrogen-react/customer-account-api-types';
 import {
   createCartHandler,
   type CartHandlerOptions,
@@ -23,10 +24,21 @@ import type {
   WaitUntil,
   HydrogenSession,
   StorefrontHeaders,
+  HydrogenRouterContextProvider,
 } from './types';
-import {type CrossRuntimeRequest, getHeader} from './utils/request';
+import {type CrossRuntimeRequest} from './utils/request';
 import {warnOnce} from './utils/warning';
 import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
+import {unstable_RouterContextProvider} from 'react-router';
+import {
+  storefrontContext,
+  cartContext,
+  customerAccountContext,
+  envContext,
+  sessionContext,
+  waitUntilContext,
+} from './context-keys';
+import {getStorefrontHeaders} from './oxygen/getStorefrontHeaders';
 
 export type HydrogenContextOptions<
   TSession extends HydrogenSession = HydrogenSession,
@@ -113,41 +125,33 @@ export interface HydrogenContext<
   session: TSession;
 }
 
-// Since HydrogenContext uses a conditional type with a free type parameter,
-// TS cannot definitively determine what the return type should be within the function body
-// HydrogenContextOverloads is use to restore type assertions so we don't need to do type casting
 export interface HydrogenContextOverloads<
   TSession extends HydrogenSession,
-  TCustomMethods extends CustomMethodsBase,
+  TCustomMethods extends CustomMethodsBase | undefined = {},
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
 > {
   storefront: StorefrontClient<TI18n>['storefront'];
   customerAccount: CustomerAccount;
-  cart: HydrogenCart | HydrogenCartCustom<TCustomMethods>;
+  cart: TCustomMethods extends CustomMethodsBase
+    ? HydrogenCartCustom<TCustomMethods>
+    : HydrogenCart;
   env: TEnv;
   waitUntil?: WaitUntil;
   session: TSession;
 }
 
-// type for createHydrogenContext methods
 export function createHydrogenContext<
-  TSession extends HydrogenSession = HydrogenSession,
+  TSession extends HydrogenSession,
   TCustomMethods extends CustomMethodsBase | undefined = {},
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
+  TAdditionalContext extends Record<string, any> = {},
 >(
   options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
-): HydrogenContext<TSession, TCustomMethods, TI18n, TEnv>;
-
-export function createHydrogenContext<
-  TSession extends HydrogenSession,
-  TCustomMethods extends CustomMethodsBase,
-  TI18n extends I18nBase,
-  TEnv extends HydrogenEnv = Env,
->(
-  options: HydrogenContextOptions<TSession, TCustomMethods, TI18n, TEnv>,
-): HydrogenContextOverloads<TSession, TCustomMethods, TI18n, TEnv> {
+  additionalContext?: TAdditionalContext,
+): HydrogenRouterContextProvider<TSession, TCustomMethods, TI18n, TEnv> &
+  TAdditionalContext {
   const {
     env,
     request,
@@ -186,7 +190,7 @@ export function createHydrogenContext<
 
     // storefrontOptions
     storefrontHeaders:
-      storefrontOptions.headers || getStorefrontHeaders(request),
+      storefrontOptions.headers || getStorefrontHeaders(request as Request),
     storefrontApiVersion: storefrontOptions.apiVersion,
 
     // defaults
@@ -208,8 +212,10 @@ export function createHydrogenContext<
     authUrl: customerAccountOptions?.authUrl,
     customAuthStatusHandler: customerAccountOptions?.customAuthStatusHandler,
 
-    // locale
-    language: i18n?.language,
+    // locale - i18n.language is a union of StorefrontLanguageCode | CustomerLanguageCode
+    // We cast here because createCustomerAccountClient expects CustomerLanguageCode specifically,
+    // but the union type is compatible since most language codes overlap between the two APIs
+    language: i18n?.language as LanguageCode | undefined,
 
     // defaults
     customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
@@ -234,23 +240,88 @@ export function createHydrogenContext<
     customerAccount,
   });
 
-  return {
-    storefront,
-    customerAccount,
-    cart,
-    env,
-    waitUntil,
-    session,
-  };
-}
+  // Create React Router context provider
+  const routerProvider = new unstable_RouterContextProvider();
 
-function getStorefrontHeaders(request: CrossRuntimeRequest): StorefrontHeaders {
-  return {
-    requestGroupId: getHeader(request, 'request-id'),
-    buyerIp: getHeader(request, 'oxygen-buyer-ip'),
-    cookie: getHeader(request, 'cookie'),
-    purpose: getHeader(request, 'purpose'),
+  // Set React Router context keys (enables context.get(storefrontContext))
+  routerProvider.set(storefrontContext, storefront);
+  routerProvider.set(cartContext, cart);
+  routerProvider.set(customerAccountContext, customerAccount);
+  routerProvider.set(envContext, env);
+  routerProvider.set(sessionContext, session);
+  if (waitUntil) {
+    routerProvider.set(waitUntilContext, waitUntil);
+  }
+
+  // Create Hydrogen services map for direct property access
+  const services = {
+    storefront,
+    cart,
+    customerAccount,
+    env,
+    session,
+    waitUntil,
+    // Merge additional context properties (CMS clients, 3P SDKs, etc.)
+    ...(additionalContext || {}),
   };
+
+  // Create Proxy for hybrid access pattern - cleanest approach
+  const hybridProvider = new Proxy(routerProvider, {
+    get(target, prop, receiver) {
+      // If it's a React Router method or property, use the target
+      if (prop in target) {
+        const value = target[prop as keyof typeof target];
+        // Bind methods to preserve 'this' context
+        return typeof value === 'function' ? value.bind(target) : value;
+      }
+
+      // If it's a Hydrogen service property, return from services
+      if (prop in services) {
+        return services[prop as keyof typeof services];
+      }
+
+      // Default behavior for other properties
+      return Reflect.get(target, prop, receiver);
+    },
+
+    has(target, prop) {
+      // Property exists if it's in target OR services
+      return prop in target || prop in services;
+    },
+
+    ownKeys(target) {
+      // Return all keys from both target and services
+      return [...Reflect.ownKeys(target), ...Object.keys(services)];
+    },
+
+    getOwnPropertyDescriptor(target, prop) {
+      // If property exists on target, return its descriptor
+      if (prop in target) {
+        return Reflect.getOwnPropertyDescriptor(target, prop);
+      }
+
+      // If property exists in services, return a descriptor that makes it enumerable
+      if (prop in services) {
+        return {
+          enumerable: true,
+          configurable: true,
+          writable: false,
+          value: services[prop as keyof typeof services],
+        };
+      }
+
+      // Property doesn't exist
+      return undefined;
+    },
+  });
+
+  return hybridProvider as HydrogenRouterContextProvider<
+    TSession,
+    TCustomMethods,
+    TI18n,
+    TEnv
+  > &
+    TAdditionalContext;
 }
 
 export type HydrogenContextOptionsForDocs<
