@@ -63,8 +63,11 @@
   ],
   "prettier": "@shopify/prettier-config",
   "dependencies": {
-    "react-router": "^7.5.1",
-    "react-router-dom": "^7.5.1",
+    "@shopify/cli-hydrogen": "*",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-router": "7.8.2",
+    "react-router-dom": "7.8.2",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
@@ -74,6 +77,8 @@
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@playwright/test": "^1.40.1",
+    "@react-router/dev": "7.8.2",
+    "@react-router/fs-routes": "7.8.2",
     "@shopify/cli": "~3.80.4",
     "@types/eslint": "^9.6.1",
     "@types/semver": "^7.5.8",

@@ -55,7 +55,6 @@ This release contained breaking changes and was immediately deprecated. Do not u
 ### Patch Changes
 
 - Fix an issue with our starter template where duplicate content can exist on URLs that use internationalized handles. For example, if you have a product handle in english of `the-havoc` and translate it to `das-chaos` in German, duplicate content exists at both: ([#2821](https://github.com/Shopify/hydrogen/pull/2821)) by [@blittle](https://github.com/blittle)
-
   1. https://hydrogen.shop/de-de/products/das-chaos
   2. https://hydrogen.shop/de-de/products/the-havoc
 
@@ -83,7 +82,6 @@ This release contained breaking changes and was immediately deprecated. Do not u
   ```
 
 - Moved the `Layout` component back into `root.tsx` to avoid issues with styled errors. ([#2829](https://github.com/Shopify/hydrogen/pull/2829)) by [@ruggishop](https://github.com/ruggishop)
-
   1. If you have a separate `app/layout.tsx` file, delete it and move its default exported component into your `root.tsx`. For example:
 
      ```ts
@@ -125,7 +123,6 @@ This release contained breaking changes and was immediately deprecated. Do not u
 - Support for the Remix future flag `v3_routeConfig`. ([#2722](https://github.com/Shopify/hydrogen/pull/2722)) by [@seanparsons](https://github.com/seanparsons)
 
   Please refer to the Remix documentation for more details on `v3_routeConfig` future flag: [https://remix.run/docs/en/main/start/future-flags#v3_routeconfig](https://remix.run/docs/en/main/start/future-flags#v3_routeconfig)
-
   1. Add the following npm package dev dependencies:
 
      ```diff
@@ -409,7 +406,6 @@ This release contained breaking changes and was immediately deprecated. Do not u
 ### Patch Changes
 
 - Clean up messaging around unlinked storefronts when running CLI commands ([#1937](https://github.com/Shopify/hydrogen/pull/1937)) by [@aswamy](https://github.com/aswamy)
-
   - When you run `env list`, `env pull`, or `deploy` against a storefront that isn't linked, it will show a warning message instead of an error message.
   - If you don't have a storefront to link to on Admin, we will just ask you to create a storefront instead of displaying an option list of size 1.
   - If you deleted a storefront on Admin, we will try to relink your storefront when running `env list`, `env pull`, or `deploy`.
@@ -440,7 +436,6 @@ This release contained breaking changes and was immediately deprecated. Do not u
 - Move the Hydrogen CLI's `env push` command to stable. ([#1946](https://github.com/Shopify/hydrogen/pull/1946)) by [@aswamy](https://github.com/aswamy)
 
 - Deprecate the `--env-branch` flag, in favor of `--env`. ([#1841](https://github.com/Shopify/hydrogen/pull/1841)) by [@aswamy](https://github.com/aswamy)
-
   - `--env` accepts the environment's handle, instead of the environment's associated branch name
     - Run `env list` to display all environments and their handles
   - Any CLI commands that accepted the `--env-branch` flag now accept the `--env` flag.
@@ -527,7 +522,6 @@ This release contained breaking changes and was immediately deprecated. Do not u
 ### Minor Changes
 
 - Adds new command line flag options for the `deploy` command: ([#1736](https://github.com/Shopify/hydrogen/pull/1736)) by [@vincentezw](https://github.com/vincentezw)
-
   - `build-command`: Allows users to specify which command is used to build the project (instead of the default build function). This provides more flexibility for projects that have custom build processes.
   - `no-lockfile-check`: Allows users to skip the lockfile check during the build process. This can be useful in scenarios where you want to bypass the lockfile check for certain reasons, such as in monorepos, where the lockfile resides in the root folder.
 
@@ -630,7 +624,6 @@ This release contained breaking changes and was immediately deprecated. Do not u
 ### Minor Changes
 
 - Add the [`upgrade` command](https://h2o.fyi/cli#upgrade) to make it easier to upgrade from older versions of Hydrogen. Features: ([#1458](https://github.com/Shopify/hydrogen/pull/1458)) by [@juanpprieto](https://github.com/juanpprieto)
-
   - Automatically updates dependencies in your package.json file.
   - Generates a customized instruction file in the `/.shopify` directory, outlining any code changes required to complete the upgrade.
   - Adds a warning when running the `dev` command with an outdated version.
@@ -809,7 +802,6 @@ This release contained breaking changes and was immediately deprecated. Do not u
 - Delay installing certain dependencies to speed up project initialization time. ([#1272](https://github.com/Shopify/hydrogen/pull/1272)) by [@frandiox](https://github.com/frandiox)
 
 - (Unstable) server-side network request debug virtual route ([#1284](https://github.com/Shopify/hydrogen/pull/1284)) by [@wizardlyhel](https://github.com/wizardlyhel)
-
   1. Update your `server.ts` so that it also passes in the `waitUntil` and `env`.
 
      ```diff
@@ -888,7 +880,6 @@ This release contained breaking changes and was immediately deprecated. Do not u
 - Support Remix Hot Module Replacement (HMR) and Hot Data Revalidation (HDR). ([#1187](https://github.com/Shopify/hydrogen/pull/1187)) by [@frandiox](https://github.com/frandiox)
 
   Start using it with the following changes to your project:
-
   1. Upgrade to the latest Hydrogen version and Remix 1.19.1.
 
   2. Enable the v2 dev server in `remix.config.js`:
@@ -1108,7 +1099,6 @@ Shopify CLI now gives you [more options](https://shopify.dev/docs/custom-storefr
   > Note: This feature is unstable and subject to change in patch releases.
 
   How to use it while unstable:
-
   1. Write your queries/mutations in `.ts` or `.tsx` files and use the `#graphql` comment inside the strings. It's important that every query/mutation/fragment in your project has a **unique name**:
 
      ```ts
@@ -1249,7 +1239,6 @@ Shopify CLI now gives you [more options](https://shopify.dev/docs/custom-storefr
 - Bump internal Remix dependencies to 1.15.0. ([#728](https://github.com/Shopify/hydrogen/pull/728)) by [@wizardlyhel](https://github.com/wizardlyhel)
 
   Recommendations to follow:
-
   - Upgrade all the Remix packages in your app to 1.15.0.
   - Enable Remix v2 future flags at your earliest convenience following [the official guide](https://remix.run/docs/en/1.15.0/pages/v2).
 

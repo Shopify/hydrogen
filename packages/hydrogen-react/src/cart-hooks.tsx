@@ -61,8 +61,12 @@ export function useCartFetch() {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export function useInstantCheckout() {
+export function useInstantCheckout(): {
+  cart: Cart | undefined;
+  checkoutUrl: Cart['checkoutUrl'];
+  error: string | undefined;
+  createInstantCheckout: (cartInput: CartInput) => Promise<void>;
+} {
   const [cart, updateCart] = useState<Cart | undefined>();
   const [checkoutUrl, updateCheckoutUrl] = useState<Cart['checkoutUrl']>();
   const [error, updateError] = useState<string | undefined>();

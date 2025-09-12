@@ -392,7 +392,6 @@
 ### Patch Changes
 
 - (Unstable) server-side network request debug virtual route ([#1284](https://github.com/Shopify/hydrogen/pull/1284)) by [@wizardlyhel](https://github.com/wizardlyhel)
-
   1. Update your `server.ts` so that it also passes in the `waitUntil` and `env`.
 
      ```diff
