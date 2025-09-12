@@ -1,10 +1,5 @@
-import {
-  data as remixData,
-  redirect,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
-  type HeadersFunction,
-} from 'react-router';
+import {data as remixData, redirect} from 'react-router';
+import type {Route} from './+types/account_.login.multipass';
 import {Multipassify} from '~/lib/multipass/multipassify.server';
 import type {
   CustomerInfoType,
@@ -12,18 +7,18 @@ import type {
   NotLoggedInResponseType,
 } from '~/lib/multipass/types';
 
-export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
+export const headers: Route.HeadersFunction = ({actionHeaders}) => actionHeaders;
 
 /*
   Redirect document GET requests to the login page (housekeeping)
 */
-export async function loader({params, context}: LoaderFunctionArgs) {
+export async function loader({params, context}: Route.LoaderArgs) {
   const customerAccessToken = context.session.get('customerAccessToken');
 
   if (customerAccessToken) {
-    return redirect(params.lang ? `${params.lang}/account` : '/account');
+    return redirect('/account');
   }
-  return redirect(params.lang ? `${params.lang}/account` : '/account/login');
+  return redirect('/account/login');
 }
 
 /*
@@ -31,7 +26,7 @@ export async function loader({params, context}: LoaderFunctionArgs) {
   Handles POST requests to `/account/login/multipass`
   expects body: { return_to?: string, customer }
 */
-export async function action({request, context}: ActionFunctionArgs) {
+export async function action({request, context}: Route.ActionArgs) {
   const {session, storefront, env} = context;
   const origin = request.headers.get('Origin') || '';
   const isOptionsReq = request.method === 'OPTIONS';
@@ -65,7 +60,7 @@ export async function action({request, context}: ActionFunctionArgs) {
     if (!customerAccessToken) {
       return handleLoggedOutResponse({
         return_to: body?.return_to ?? null,
-        checkoutDomain: env.SHOPIFY_CHECKOUT_DOMAIN,
+        checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
       });
     }
 
@@ -193,13 +188,12 @@ async function handleLoggedOutResponse(options: {
   return_to: string | null;
   checkoutDomain: string | undefined;
 }) {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const {return_to, checkoutDomain} = options;
+  const {return_to: returnTo, checkoutDomain} = options;
   // Match checkout urls such as:
   // https://checkout.example.com/cart/c/c1-dd274dd3e6dca2f6a6ea899e8fe9b90f?key=6900d0a8b227761f88cf2e523ae2e662
-  const isCheckoutReq = /[\w-]{32}\?key/g.test(return_to || '');
+  const isCheckoutReq = /[\w-]{32}\?key/g.test(returnTo || '');
 
-  if (!return_to || !isCheckoutReq) {
+  if (!returnTo || !isCheckoutReq) {
     return notLoggedInResponse({
       url: null,
       error: 'NOT_AUTHORIZED',
@@ -207,7 +201,7 @@ async function handleLoggedOutResponse(options: {
   }
 
   // Force logging off the user in the checkout
-  const encodedCheckoutUrl = encodeURIComponent(return_to);
+  const encodedCheckoutUrl = encodeURIComponent(returnTo);
 
   // For example, checkoutDomain `checkout.hydrogen.shop` or `shop.example.com` or `{shop}.myshopify.com`.
   const logOutUrl = `https://${checkoutDomain}/account/logout?return_url=${encodedCheckoutUrl}&step=contact_information`;

@@ -1,11 +1,5 @@
-import {
-  type ActionFunctionArgs,
-  type HeadersFunction,
-  type LoaderFunctionArgs,
-  type MetaFunction,
-  data,
-  useLoaderData,
-} from 'react-router';
+import {data, useLoaderData} from 'react-router';
+import type {Route} from './+types/cart';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
 import type {
@@ -13,15 +7,14 @@ import type {
   CartLineUpdateInput,
 } from '@shopify/hydrogen/storefront-api-types';
 import {CartMain} from '~/components/Cart';
-import type {RootLoader} from '~/root';
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: `Hydrogen | Cart`}];
 };
 
-export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
+export const headers: Route.HeadersFunction = ({actionHeaders}) => actionHeaders;
 
-export async function action({request, context}: ActionFunctionArgs) {
+export async function action({request, context}: Route.ActionArgs) {
   const {cart} = context;
 
   const formData = await request.formData();
@@ -103,7 +96,7 @@ export async function action({request, context}: ActionFunctionArgs) {
 
   const cartId = result?.cart?.id;
   const headers = cartId ? cart.setCartId(result.cart.id) : new Headers();
-  const {cart: cartResult, errors} = result;
+  const {cart: cartResult, errors, warnings} = result;
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string') {
@@ -115,6 +108,7 @@ export async function action({request, context}: ActionFunctionArgs) {
     {
       cart: cartResult,
       errors,
+      warnings,
       analytics: {
         cartId,
       },
@@ -123,7 +117,7 @@ export async function action({request, context}: ActionFunctionArgs) {
   );
 }
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   const {cart} = context;
   return await cart.get();
 }

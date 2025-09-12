@@ -4,7 +4,8 @@
       "WebFetch(domain:github.com)",
       "Bash(gh run view:*)",
       "Bash(npm test:*)",
-      "Bash(npm run ci:checks:*)"
+      "Bash(npm run ci:checks:*)",
+      "Bash(git checkout:*)"
     ]
   },
   "enabledMcpjsonServers": [

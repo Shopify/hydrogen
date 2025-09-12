@@ -2,6 +2,7 @@ import {describe, it, expect} from 'vitest';
 import {
   inTemporaryDirectory,
   readFile,
+  writeFile,
   copyFile,
   fileExists,
 } from '@shopify/cli-kit/node/fs';
@@ -10,6 +11,7 @@ import {ts} from 'ts-morph';
 import {getAssetsDir, getSkeletonSourceDir} from '../../build.js';
 import {replaceContextI18n} from './replacers.js';
 import {DEFAULT_COMPILER_OPTIONS} from '../../transpile/morph/index.js';
+import {transpileFile} from '../../transpile/index.js';
 
 const contextTs = 'app/lib/context.ts';
 const expectedI18nFileTs = 'app/lib/i18n.ts';
@@ -59,11 +61,27 @@ describe('i18n replacers', () => {
         import { CART_QUERY_FRAGMENT } from "~/lib/fragments";
         import { getLocaleFromRequest } from "~/lib/i18n";
 
+        // Define the additional context object
+        const additionalContext = {
+          // Additional context for custom properties, CMS clients, 3P SDKs, etc.
+          // These will be available as both context.propertyName and context.get(propertyContext)
+          // Example of complex objects that could be added:
+          // cms: await createCMSClient(env),
+          // reviews: await createReviewsClient(env),
+        } as const;
+
+        // Automatically augment HydrogenAdditionalContext with the additional context type
+        type AdditionalContextType = typeof additionalContext;
+
+        declare global {
+          interface HydrogenAdditionalContext extends AdditionalContextType {}
+        }
+
         /**
-         * The context implementation is separate from server.ts
-         * so that type can be extracted for AppLoadContext
+         * Creates Hydrogen context for React Router 7.8.x
+         * Returns HydrogenRouterContextProvider with hybrid access patterns
          * */
-        export async function createAppLoadContext(
+        export async function createHydrogenRouterContext(
           request: Request,
           env: Env,
           executionContext: ExecutionContext
@@ -81,22 +99,23 @@ describe('i18n replacers', () => {
             AppSession.init(request, [env.SESSION_SECRET]),
           ]);
 
-          const hydrogenContext = createHydrogenContext({
-            env,
-            request,
-            cache,
-            waitUntil,
-            session,
-            i18n: getLocaleFromRequest(request),
-            cart: {
-              queryFragment: CART_QUERY_FRAGMENT,
+          const hydrogenContext = createHydrogenContext(
+            {
+              env,
+              request,
+              cache,
+              waitUntil,
+              session,
+              // Or detect from URL path based on locale subpath, cookies, or any other strategy
+              i18n: getLocaleFromRequest(request),
+              cart: {
+                queryFragment: CART_QUERY_FRAGMENT,
+              },
             },
-          });
+            additionalContext
+          );
 
-          return {
-            ...hydrogenContext,
-            // declare additional Remix loader context
-          };
+          return hydrogenContext;
         }
         "
       `);
@@ -274,7 +293,17 @@ describe('i18n replacers', () => {
       );
       const testContextFilePath = joinPath(tmpDir, contextJs);
 
+      // Copy the TypeScript file
       await copyFile(skeletonContextFilePath, testContextFilePath);
+
+      // Transpile TypeScript content to JavaScript
+      const tsContent = await readFile(testContextFilePath);
+      const jsContent = await transpileFile(
+        tsContent,
+        testContextFilePath,
+        false,
+      );
+      await writeFile(testContextFilePath, jsContent);
 
       await replaceContextI18n(
         {rootDirectory: tmpDir, contextCreate: contextJs},

@@ -18,15 +18,17 @@ Setup a new project with this example:
 npm create @shopify/hydrogen@latest -- --template infinite-scroll
 ```
 
+## Dependencies
+
+This example requires the `react-intersection-observer` package, which is automatically installed when you create a project with this template.
+
 ## Key files
 
-This folder contains the minimal set of files needed to showcase the implementation.
-Files that aren’t included by default with Hydrogen and that you’ll need to
-create are labeled with 🆕.
+This example modifies the collections page to add infinite scroll functionality.
 
-| File                                                                       | Description                 |
-| -------------------------------------------------------------------------- | --------------------------- |
-| [`app/routes/collections.$handle.tsx`](app/routes/collections.$handle.tsx) | The product collection page |
+| File                                                                       | Description                                                            |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| [`app/routes/collections.$handle.tsx`](app/routes/collections.$handle.tsx) | Modified collection page with infinite scroll using react-intersection-observer |
 
 ## Instructions
 

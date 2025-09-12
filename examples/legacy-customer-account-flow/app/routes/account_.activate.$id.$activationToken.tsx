@@ -1,29 +1,22 @@
-import {
-  Form,
-  useActionData,
-  data,
-  redirect,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
-  type MetaFunction,
-} from 'react-router';
+import {Form, useActionData, data, redirect} from 'react-router';
+import type {Route} from './+types/account_.activate.$id.$activationToken';
 
 type ActionResponse = {
   error: string | null;
 };
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: 'Activate Account'}];
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   if (await context.session.get('customerAccessToken')) {
     return redirect('/account');
   }
   return {};
 }
 
-export async function action({request, context, params}: ActionFunctionArgs) {
+export async function action({request, context, params}: Route.ActionArgs) {
   const {session, storefront} = context;
   const {id, activationToken} = params;
 

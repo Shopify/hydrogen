@@ -1,7 +1,18 @@
 {
-  "include": ["app/**/*.d.ts", "app/**/*.ts", "app/**/*.tsx", "*.ts", "*.d.ts", "env.d.ts"],
-  "exclude": [".react-router/**/*", "build/**/*", "node_modules/**/*", "packages/**/*"],
+  "include": [
+    "env.d.ts",
+    "app/env.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "app/**/*.d.ts",
+    "*.ts",
+    "*.tsx",
+    "*.d.ts",
+    ".react-router/types/**/*"
+  ],
+  "exclude": ["node_modules", "dist", "build"],
   "compilerOptions": {
+    "verbatimModuleSyntax": true,
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "isolatedModules": true,
     "esModuleInterop": true,
@@ -11,13 +22,16 @@
     "module": "ES2022",
     "target": "ES2022",
     "strict": true,
+    "noImplicitAny": true,
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "baseUrl": ".",
+    "types": ["@shopify/hydrogen/react-router-types", "vite/client"],
     "paths": {
       "~/*": ["app/*"]
     },
-    "noEmit": true
+    "noEmit": true,
+    "rootDirs": [".", "./.react-router/types"]
   }
 }

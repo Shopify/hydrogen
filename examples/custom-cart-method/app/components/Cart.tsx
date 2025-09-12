@@ -4,6 +4,7 @@ import {
   Money,
   VariantSelector,
   type VariantOption,
+  useOptimisticCart,
 } from '@shopify/hydrogen';
 import type {
   CartLineUpdateInput,
@@ -20,7 +21,8 @@ type CartMainProps = {
   layout: 'page' | 'aside';
 };
 
-export function CartMain({layout, cart}: CartMainProps) {
+export function CartMain({layout, cart: originalCart}: CartMainProps) {
+  const cart = useOptimisticCart(originalCart);
   const linesCount = Boolean(cart?.lines?.nodes?.length || 0);
   const withDiscount =
     cart &&
@@ -35,8 +37,14 @@ export function CartMain({layout, cart}: CartMainProps) {
   );
 }
 
-function CartDetails({layout, cart}: CartMainProps) {
-  const cartHasItems = !!cart && cart.totalQuantity > 0;
+function CartDetails({
+  layout,
+  cart,
+}: {
+  layout: CartMainProps['layout'];
+  cart: any;
+}) {
+  const cartHasItems = !!cart && cart.totalQuantity && cart.totalQuantity > 0;
 
   return (
     <div className="cart-details">
@@ -79,11 +87,20 @@ function CartLineItem({
   line: CartLine;
 }) {
   const {id, merchandise} = line;
+  
+  const lineItemUrl = useVariantUrl(
+    merchandise?.product?.handle || '',
+    merchandise?.selectedOptions
+  );
+  
+  if (!merchandise) {
+    return null;
+  }
+  
   const {product, title, image, selectedOptions} = merchandise;
-  const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
 
   return (
-    <li key={id} className="cart-line">
+    <li className="cart-line">
       {image && (
         <Image
           alt={title}
@@ -143,7 +160,7 @@ export function CartSummary({
   children = null,
 }: {
   children?: React.ReactNode;
-  cost: CartApiQueryFragment['cost'];
+  cost: CartApiQueryFragment['cost'] | undefined;
   layout: CartMainProps['layout'];
 }) {
   const className =

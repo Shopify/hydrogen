@@ -1,4 +1,4 @@
-import snakecaseKeys from 'snakecase-keys';
+import snakeCake from 'snakecase-keys';
 import CryptoJS from 'crypto-js';
 import type {MultipassCustomer} from './types';
 
@@ -50,7 +50,7 @@ export class Multipassify {
     }
 
     // Generate a token
-    const token = this.generateToken(snakecaseKeys(customer));
+    const token = this.generateToken(snakeCake(customer));
 
     // Get the origin of the request
     const toOrigin = new URL(request.url).origin;

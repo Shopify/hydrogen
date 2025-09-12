@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen': major
+'@shopify/hydrogen': minor
 ---
 
 Add React Router 7.8.x support infrastructure with full compatibility for both context access patterns.
@@ -15,7 +15,6 @@ Hydrogen now provides its own `createRequestHandler` that wraps React Router's i
 ```
 
 This new handler:
-
 - Uses React Router's `createRequestHandler` internally
 - Adds Hydrogen-specific request validation
 - Includes powered-by headers
@@ -36,7 +35,6 @@ export default {
 ```
 
 The preset provides:
-
 - Optimized build settings for Oxygen deployment
 - Proper server/client module resolution
 - Performance-tuned bundling configuration
@@ -94,7 +92,6 @@ The `HydrogenRouterContextProvider` type provides better type safety and Intelli
 ## New Context Access Patterns
 
 ### Pattern 1: Direct Context Access (Existing)
-
 Continue using direct destructuring from context - no changes needed:
 
 ```ts
@@ -102,16 +99,15 @@ Continue using direct destructuring from context - no changes needed:
 export async function loader({context}: Route.LoaderArgs) {
   // Direct access - works as before
   const {storefront, cart, env} = context;
-
+  
   const data = await storefront.query(QUERY);
   const cartData = await cart.get();
-
+  
   return {data, cart: cartData};
 }
 ```
 
 ### Pattern 2: Context Registry Pattern (New)
-
 Use the new `hydrogenContext` registry with React Router 7.8's `context.get()`:
 
 ```diff
@@ -126,7 +122,7 @@ export async function loader({context}: Route.LoaderArgs) {
 + const cart = context.get(hydrogenContext.cart);
 + const session = context.get(hydrogenContext.session);
 + const env = context.get(hydrogenContext.env);
-
+  
   const product = await storefront.query(PRODUCT_QUERY);
   return {product};
 }
@@ -139,9 +135,8 @@ export async function action({context}: Route.ActionArgs) {
 ```
 
 Available context keys in `hydrogenContext`:
-
 - `hydrogenContext.storefront` - Storefront API client
-- `hydrogenContext.customerAccount` - Customer Account API client
+- `hydrogenContext.customerAccount` - Customer Account API client  
 - `hydrogenContext.cart` - Cart handler instance
 - `hydrogenContext.env` - Environment variables
 - `hydrogenContext.waitUntil` - Oxygen waitUntil for background tasks
@@ -239,3 +234,4 @@ export default {
 ```
 
 The new `createRequestHandler` from `@shopify/hydrogen/oxygen` wraps React Router's handler with additional Hydrogen-specific functionality like powered-by headers and request validation.
+

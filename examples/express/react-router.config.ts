@@ -1,9 +1,11 @@
-// @ts-ignore - React Router dev types are in root node_modules (in Hydrogen monorepo)
-import type {Config} from '@react-router/dev';
+import type {Config} from '@react-router/dev/config';
 
 export default {
-  appDirectory: 'app',
-  serverModuleFormat: 'esm',
+  // Server-side rendering is enabled by default
   ssr: true,
-  serverBuildFile: 'index.js',
+  
+  // Enable middleware to get proper Hydrogen context typing
+  future: {
+    unstable_middleware: true,
+  },
 } satisfies Config;

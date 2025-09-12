@@ -16,8 +16,7 @@ import type {
 export async function multipass(
   options: MultipassOptions,
 ): Promise<void | MultipassResponse> {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const {redirect, return_to} = options;
+  const {redirect, return_to: returnTo} = options;
 
   try {
     // Generate multipass token POST `/account/login/multipass`
@@ -26,7 +25,7 @@ export async function multipass(
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({return_to}),
+      body: JSON.stringify({return_to: returnTo}),
     });
 
     if (!response.ok) {
@@ -54,8 +53,7 @@ export async function multipass(
     window.location.href = data.url;
     return data;
   } catch (error) {
-    // @ts-expect-error - error may not have message property
-    // eslint-disable-next-line no-console
+    //@ts-expect-error error might not have message property
     console.log('⚠️ Bypassing multipass checkout due to', error.message);
 
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -67,8 +65,8 @@ export async function multipass(
       };
     }
 
-    if (return_to) {
-      window.location.href = return_to;
+    if (returnTo) {
+      window.location.href = returnTo;
     }
 
     return {url: null, token: null, error: message};

@@ -11,21 +11,22 @@ export function parseSection<InputType, ReturnType>(_section: InputType) {
     'references',
     // 'nodes',
   ] as const);
-  const parsed = {} as Record<string, any>;
+  const parsed = {} as Record<string, unknown>;
 
   // parse each key in the section
   for (const key in section) {
     const node = section[key];
     if (typeof node === 'object') {
-      // @ts-expect-error - type and value properties not defined on node type
+      // @ts-expect-error node might not have type and value properties
       const isMetafield = node?.type && node?.value;
       const isArray = Array.isArray(node);
       if (isArray) {
-        parsed[key] = node.map((item) => parseSection(item));
+        // Break the recursion for TypeScript 5.9+ by treating as unknown[]
+        parsed[key] = (node as unknown[]).map((item) => parseSection(item));
       } else if (isMetafield) {
         parsed[key] = parseMetafieldValue(node);
       } else if (node && Object.keys(node as object).length > 0) {
-        parsed[key] = parseSection(node);
+        parsed[key] = parseSection(node as unknown);
       } else {
         delete parsed[key];
       }
@@ -33,7 +34,7 @@ export function parseSection<InputType, ReturnType>(_section: InputType) {
       parsed[key] = node;
     }
   }
-  return parsed as typeof section & ReturnType;
+  return parsed as unknown as typeof section & ReturnType;
 }
 
 function parseMetafieldValue(node: Record<string, any>) {

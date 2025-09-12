@@ -5,17 +5,13 @@ import type {
 } from 'customer-accountapi.generated';
 import {
   data,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
-import {
   Form,
   useActionData,
   useNavigation,
   useOutletContext,
-  type MetaFunction,
   type Fetcher,
 } from 'react-router';
+import type {Route} from './+types/account.addresses';
 import {
   UPDATE_ADDRESS_MUTATION,
   DELETE_ADDRESS_MUTATION,
@@ -31,19 +27,18 @@ export type ActionResponse = {
   updatedAddress?: AddressFragment;
 };
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: 'Addresses'}];
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
-  await context.customerAccount.handleAuthStatus();
+export async function loader({context}: Route.LoaderArgs) {
+  context.customerAccount.handleAuthStatus();
 
   return {};
 }
 
-export async function action({request, context}: ActionFunctionArgs) {
-  const {customerAccount, storefront} = context;
-  const {i18n} = storefront;
+export async function action({request, context}: Route.ActionArgs) {
+  const {customerAccount} = context;
 
   try {
     const form = await request.formData();
@@ -100,7 +95,7 @@ export async function action({request, context}: ActionFunctionArgs) {
               variables: {
                 address,
                 defaultAddress,
-                language: i18n.language,
+                language: context.customerAccount.i18n.language,
               },
             },
           );
@@ -150,7 +145,7 @@ export async function action({request, context}: ActionFunctionArgs) {
                 address,
                 addressId: decodeURIComponent(addressId),
                 defaultAddress,
-                language: i18n.language,
+                language: context.customerAccount.i18n.language,
               },
             },
           );
@@ -198,7 +193,7 @@ export async function action({request, context}: ActionFunctionArgs) {
             {
               variables: {
                 addressId: decodeURIComponent(addressId),
-                language: i18n.language,
+                language: context.customerAccount.i18n.language,
               },
             },
           );

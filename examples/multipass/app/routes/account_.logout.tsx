@@ -1,11 +1,7 @@
-import {
-  data,
-  redirect,
-  type ActionFunctionArgs,
-  type MetaFunction,
-} from 'react-router';
+import {data, redirect} from 'react-router';
+import type {Route} from './+types/account_.logout';
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: 'Logout'}];
 };
 
@@ -13,7 +9,7 @@ export async function loader() {
   return redirect('/account/login');
 }
 
-export async function action({request, context}: ActionFunctionArgs) {
+export async function action({request, context}: Route.ActionArgs) {
   const {session} = context;
   session.unset('customerAccessToken');
 

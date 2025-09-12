@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "build": "react-router typegen && react-router build",
-    "dev": "cross-env NODE_ENV=development nodemon --require dotenv/config ./server.mjs --watch ./server.mjs",
+    "dev": "node ./scripts/dev.mjs",
+    "dev:server": "cross-env NODE_ENV=development nodemon --require dotenv/config ./server.mjs --watch ./server.mjs",
     "start": "cross-env NODE_ENV=production node ./server.mjs",
-    "typecheck": "react-router typegen && tsc --noEmit"
+    "typecheck": "react-router typegen && tsc --noEmit",
+    "typegen": "react-router typegen"
   },
   "dependencies": {
     "@react-router/express": "7.8.2",
