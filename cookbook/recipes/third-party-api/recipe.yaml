@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+gid: 3bce358d-d709-4dc8-8c4e-e0c047c17b12
+title: Third-party API Queries and Caching
+summary: Add third-party GraphQL API queries with Oxygen's sub-request caching
+  to your Hydrogen storefront.
+description: |
+  This recipe demonstrates how to query third-party GraphQL APIs with Oxygen caching in Hydrogen. 
+  The example uses the public Rick & Morty API to show how to:
+
+  1. Create a cached GraphQL client for third-party APIs
+  2. Integrate the client into Hydrogen's context
+  3. Query and display data from external APIs alongside Shopify data
+
+  This pattern can be adapted for any third-party API integration including CMS systems, 
+  review platforms, analytics services, or custom backend APIs.
+notes:
+  - The example uses rickandmortyapi.com for demonstration, but the pattern
+    works with any GraphQL API
+  - Caching strategies can be customized per query using Hydrogen's cache
+    utilities
+  - The client is added to the global context, making it available in all routes
+requirements: |
+  Basic knowledge of GraphQL and understanding of Hydrogen's caching system.
+ingredients:
+  - path: templates/skeleton/app/lib/createRickAndMortyClient.server.ts
+    description: A GraphQL client factory for third-party APIs with Oxygen caching support
+deletedFiles: []
+steps:
+  - type: NEW_FILE
+    step: 1
+    name: Create the third-party API client
+    description: |
+      Create a new GraphQL client factory that integrates with Oxygen's caching system.
+      This client handles query minification, error handling, and cache key generation.
+    ingredients:
+      - path: templates/skeleton/app/lib/createRickAndMortyClient.server.ts
+  - type: PATCH
+    step: 2
+    name: Add the client to Hydrogen context
+    description: |
+      Import the Rick and Morty client and add it to the Hydrogen context so it's available
+      in all routes. Also update TypeScript declarations for proper type support.
+    diffs:
+      - file: app/lib/context.ts
+        patchFile: context.ts.276f49.patch
+  - type: PATCH
+    step: 3
+    name: Query and display third-party data
+    description: |
+      Update the homepage to fetch data from the third-party API and display it alongside
+      Shopify data. This demonstrates parallel data fetching and proper caching strategies.
+    diffs:
+      - file: app/routes/_index.tsx
+        patchFile: _index.tsx.82ab90.patch
+nextSteps: null
+llms:
+  userQueries: []
+  troubleshooting: []
+commit: 1f9640d5acfd505435862b8b2317343bbce96d72
