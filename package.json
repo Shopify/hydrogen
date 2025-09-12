@@ -37,7 +37,11 @@
     "check": "npm run build && npm run lint && npm run typecheck && npm run test",
     "e2e": "node scripts/run-e2e.js",
     "e2e:smoke": "node scripts/run-e2e.js --smoke",
-    "pre-commit:encrypt": "bash -c 'git diff --cached --name-only | grep -q \"^secrets.ejson$\" && ejson encrypt secrets.ejson && git add secrets.ejson || true'"
+    "pre-commit:encrypt": "bash -c 'git diff --cached --name-only | grep -q \"^secrets.ejson$\" && ejson encrypt secrets.ejson && git add secrets.ejson || true'",
+    "prd:select": "node scripts/select-prd.js",
+    "prd:status": "node scripts/prd-status.js",
+    "prd:status:full": "node scripts/prd-status.js --full",
+    "prd:list": "node scripts/list-prds.js"
   },
   "workspaces": [
     "docs/preview",

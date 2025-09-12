@@ -1,0 +1,1 @@
+Read @.claude/current-prd.md which contains the current PRD configuration and file references.

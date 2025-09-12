@@ -1,0 +1,411 @@
+# Rule: Generating a Task List from a PRD
+
+## Goal
+
+To guide an AI assistant in creating a detailed, step-by-step task list in Markdown format based on an existing Product Requirements Document (PRD). The task list should guide a coding agent through implementation in a Rails application following **outside-in TDD practices** that keep behavior authoritative through tests.
+
+## Output
+
+- **Format:** Markdown (`.md`)
+- **Location:** `${PROJECT_ROOT}/docs/tasks/`
+- **Filename:** `tasks-[prd-file-name].md` (e.g., `tasks-prd-vocabulary-import.md`)
+
+## Outside-In TDD for AI Agents
+
+### Core Principles
+
+**Behavior stays authoritative**: When tests exist up front, the AI's code must satisfy a spec you control, instead of the spec drifting to match whatever code it produces.
+
+**Safe iteration**: Generate one failing test at a time, run it locally, then ask for minimal code to make it pass. Small diffs are easier to review and rescue when AI hallucinates.
+
+**Better design**: Writing tests first forces clear seams (service objects, adapters, presenters, Stimulus controllers) and discourages tight coupling across layers.
+
+**External services are easy to fake early**: AI can stub with WebMock and generate contract tests for adapters before any real API calls.
+
+### AI-Driven TDD Workflow (Minitest)
+
+1. **Describe the feature** in plain language with user flow and edge cases
+2. **Generate high-level specs first**:
+   - System tests (Capybara-based) for end-to-end flows
+   - Controller tests for request/response handling
+   - Contract tests for external service adapters
+   - Run them; they should fail with clear error messages
+3. **Iterate inside-out with failing tests**:
+   - Service adapter skeleton (stubbed HTTP calls) → pass contract tests
+   - Business logic PORO/model changes → unit tests
+   - Controller actions & JSON/HTML responses → controller tests
+   - Stimulus controllers + Tailwind views → system tests
+4. **After green, add edge-case tests**; refactor with confidence
+
+## Process
+
+1.  **Receive PRD Reference:** The user points the AI to a specific PRD file
+2.  **Analyze PRD:** The AI reads and analyzes the functional requirements, user stories, and other sections of the specified PRD.
+3.  **Phase 1: Generate Parent Tasks:** Based on the PRD analysis, create the file and generate the main, high-level tasks required to implement the feature. Use your judgement on how many high-level tasks to use. It's likely to be about 5-8 for Rails features. Present these tasks to the user in the specified format (without sub-tasks yet). Inform the user: "I have generated the high-level tasks based on the PRD. Ready to generate the sub-tasks? Respond with 'Go' to proceed."
+4.  **Wait for Confirmation:** Pause and wait for the user to respond with "Go".
+5.  **Phase 2: Generate Sub-Tasks:** Once the user confirms, break down each parent task into smaller, actionable sub-tasks following **outside-in TDD principles**. Ensure sub-tasks logically follow from the parent task and emphasize **test-first** development with safe iteration points.
+6.  **Identify Relevant Files:** Based on the tasks and PRD, identify potential files that will need to be created or modified. List these under the `Relevant Files` section, including corresponding test files that should be created **first**.
+7.  **Generate Final Output:** Combine the parent tasks, sub-tasks, relevant files, and notes into the final Markdown structure with emphasis on **outside-in TDD workflow**.
+8.  **Save Task List:** Save the generated document in the `/docs/tasks/` directory with the filename `tasks-[prd-file-name].md`, where `[prd-file-name]` matches the base name of the input PRD file (e.g., if the input was `prd-vocabulary-import.md`, the output is `tasks-prd-vocabulary-import.md`).
+
+## Task Generation Best Practices
+
+### **Complete User Experience Coverage**
+- **Navigation Integration**: Always include tasks for adding navigation links when creating new UI sections
+- **Access Points**: Ensure users can actually reach new functionality through existing UI
+- **Error States**: Generate tasks for handling and displaying error conditions
+- **Loading States**: Include tasks for progress indicators and loading feedback
+
+### **UI/UX Task Generation Preferences**
+- **Simplicity First**: Generate tasks that favor simple, reliable solutions over complex dynamic features
+- **Progressive Enhancement**: Start with basic functionality, then add dynamic behavior if needed
+- **Browser Standards**: Consider browser refresh patterns as valid solutions for data updates
+- **Accessibility**: Include tasks for proper ARIA labels, keyboard navigation, and screen reader support
+
+### **Comprehensive Test Coverage**
+- **Test Type Clarity**: Distinguish between unit tests, integration tests (workflow), and system tests (browser-based)
+- **Realistic Data**: Generate tasks to verify external API response formats before creating test stubs
+- **Error Scenarios**: Include both success and failure path testing
+- **Edge Cases**: Generate tasks for boundary conditions and special characters
+
+## Output Format
+
+The generated task list _must_ follow this structure:
+
+```markdown
+## Relevant Files
+
+- `test/models/vocabulary/feature_test.rb` - Unit tests for the model (TDD - create first).
+- `app/models/vocabulary/feature.rb` - Model implementation for this feature.
+- `test/services/vocabulary/feature_service_test.rb` - Service object tests (TDD - create first).
+- `app/services/vocabulary/feature_service.rb` - Business logic service.
+- `test/controllers/vocabulary/features_controller_test.rb` - Controller tests.
+- `app/controllers/vocabulary/features_controller.rb` - HTTP request handling.
+- `app/views/vocabulary/features/index.html.erb` - View templates.
+- `app/views/shared/_navigation.html.erb` - Navigation updates (if adding new sections).
+- `db/migrate/[timestamp]_create_vocabulary_features.rb` - Database migration.
+- `docs/rules/feature-name.mdc` - Cursor rule for feature-specific patterns (if complex).
+
+### Notes
+
+- Follow TDD: Tests should be written before implementation code (create test files first).
+- Use `rails test test/path/to/specific_test.rb` to run individual test files.
+- All Ruby files must include `# frozen_string_literal: true` at the top.
+- Add an empty line at the end of all files.
+- When generating migrations, use: `rails generate migration MigrationName`
+- **External APIs**: Always verify response formats with actual API calls before creating test stubs.
+- **Dependencies**: Include any new gems needed in Gemfile (e.g., WebMock for HTTP stubbing).
+- **Navigation**: Include tasks for adding navigation links when creating new UI sections.
+- **Simplicity**: Favor simple solutions (e.g., page refresh) over complex dynamic features when appropriate.
+
+## Tasks
+
+- [ ] 1. Parent Task Title
+
+  - [ ] 1.1. [Sub-task description 1.1]
+
+  - [ ] 1.2. [Sub-task description 1.2]
+
+  - [ ] 1.3. Verify by running `rails test` or appropriate verification command.
+
+- [ ] 2. Parent Task Title
+
+  - [ ] 2.1. [Sub-task description 2.1]
+
+  - [ ] 2.2. Verify by running `rails test test/path/to/tests.rb` or appropriate command.
+
+- [ ] 3.0. Parent Task Title (may not require sub-tasks if purely structural or configuration)
+
+  - [ ] 3.1. Verify by running appropriate verification command.
+```
+
+Note: We put an empty line between all task list items for easier reading by humans.
+
+**Important**: Each parent task must end with a verification sub-task that runs a command to confirm all previous sub-tasks were completed successfully. If the verification fails, the implementing agent should review and fix all sub-tasks in that section before trying the verification again.
+
+## Rails-Specific Considerations
+
+When generating tasks for this Rails application:
+
+- **TDD Priority:** Always create test files before implementation files
+- **Naming Conventions:** Follow Rails naming (e.g., `VocabularyQueueItem` model → `vocabulary_queue_items` table)
+- **Directory Structure:** Use Rails conventions (`app/models/vocabulary/`, `test/models/vocabulary/`)
+- **Background Jobs:** If async processing is needed, create jobs in `app/jobs/` using Solid Queue
+- **LLM Integration:** For AI features, reference the LLM service patterns in `app/services/llm_service.rb`
+- **Frontend:** Use Hotwire (Turbo + Stimulus) for dynamic behavior, not React/Vue
+- **Navigation Integration:** Always include navigation link tasks when creating new UI sections
+- **Access Patterns:** Ensure users can reach new functionality through existing interface
+
+### **External Service Integration Patterns**
+
+When the PRD involves external APIs or services:
+
+1. **API Format Validation**
+   - Include tasks to test actual API endpoints with curl/HTTP client
+   - Verify response formats before creating test stubs
+   - Document real API examples in cursor rules
+
+2. **Service Wrapper Pattern**
+   - Create dedicated service classes for external APIs
+   - Include proper error handling (connection errors, API errors)
+   - Support for authentication (API keys, tokens)
+   - Configuration management for URLs, keys, etc.
+
+3. **Testing Strategy**
+   - Use WebMock/VCR for HTTP stubbing in tests
+   - Create realistic test data based on actual API responses
+   - Test both success and failure scenarios
+   - Include integration tests with mocked services
+
+4. **Configuration Management**
+   - Store API keys in Rails credentials or environment variables
+   - Allow URL configuration for different environments
+   - Provide sensible defaults for development
+
+5. **UI/UX Integration**
+   - Generate tasks for error state handling when external services are unavailable
+   - Include connection status indicators
+   - Provide user-friendly error messages with actionable guidance
+   - Consider offline/retry patterns for network issues
+
+### Recommended Task Structure for Rails Features
+
+While the specific tasks depend on the PRD, most Rails features follow this general progression:
+
+1. **External Dependencies & Configuration** (if applicable)
+   - Add required gems to Gemfile
+   - Configure external service credentials
+   - Test external API response formats
+   - Create cursor rules for integration patterns
+
+2. **Test Specifications** (TDD first)
+   - Model tests (validations, associations, methods)
+   - Service object tests (if complex business logic)
+   - Controller tests (request/response handling)
+   - Integration tests (end-to-end user workflows)
+   - System tests (full browser-based testing when needed)
+
+3. **Database Layer**
+   - Generate and write migrations
+   - Define indexes and constraints
+   - Run migrations
+
+4. **Model Layer**
+   - Create model with validations
+   - Define associations
+   - Add scopes and methods
+
+5. **Business Logic Layer** (if needed)
+   - Service objects for complex operations
+   - Background jobs for async processing
+   - External API integrations
+
+6. **Controller Layer**
+   - Routes definition
+   - RESTful actions
+   - Strong parameters
+   - Error handling
+   - JSON API endpoints (if needed)
+   - Turbo responses
+
+7. **View Layer**
+   - ERB templates with Tailwind CSS styling
+   - Stimulus controllers (only when dynamic behavior is necessary)
+   - Shared partials for reusable components
+   - Navigation updates for new sections
+   - Turbo frames/streams (when appropriate)
+
+8. **Integration & Polish**
+   - Integration tests for complete workflows
+   - Error state handling and display
+   - Loading state indicators
+   - Accessibility improvements
+   - Performance considerations
+
+## **Outside-In TDD Task Ordering Rules**
+
+**CRITICAL**: Always order sub-tasks to follow strict outside-in TDD principles with **tests controlling behavior**:
+
+### ✅ **Correct Outside-In TDD Order:**
+```
+X.1 Write failing [high-level test] that describes expected behavior
+X.2 Run test to confirm it fails with clear error message
+X.3 Write minimal code to make test pass (create classes/methods as needed)
+X.4 Run test to confirm it passes
+X.5 Write next failing test for edge case or next behavior
+X.6 Refactor when all tests pass
+```
+
+### ❌ **Anti-Pattern (Never Do):**
+```
+X.1 Create [component] class with full implementation
+X.2 Write tests to match what was built  ← Wrong! Tests should drive behavior
+```
+
+### **Specific Outside-In TDD Patterns by Component:**
+
+#### **External Service Integration:**
+```
+1. Write contract test defining expected adapter interface
+2. Run test (fails - no adapter exists)
+3. Create adapter skeleton with stubbed methods
+4. Write integration test with WebMock stubs
+5. Implement adapter methods to pass contract test
+6. Add error handling tests, then implementation
+```
+
+#### **Business Logic Services:**
+```
+1. Write service test defining expected public interface
+2. Run test (fails - no service exists)
+3. Create service class with method stubs
+4. Write unit tests for each method behavior
+5. Implement methods one test at a time
+6. Add validation and error handling tests
+```
+
+#### **Controller Actions:**
+```
+1. Write controller test defining expected HTTP responses
+2. Run test (fails - no routes/controller)
+3. Add routes and create controller with action stubs
+4. Write tests for different response codes/formats
+5. Implement controller actions to pass tests
+6. Add authentication/authorization tests as needed
+```
+
+#### **UI Features with System Tests:**
+```
+1. Write system test describing user workflow end-to-end
+2. Run test (fails - no UI exists)
+3. Create controller tests for required actions
+4. Implement minimal controller actions
+5. Create view templates to make system test pass
+6. Add Stimulus controllers for dynamic behavior if needed
+```
+
+### **Safe Iteration Guidelines:**
+
+- **One failing test at a time**: Don't write multiple failing tests; fix current one first
+- **Minimal implementation**: Write just enough code to make the current test pass
+- **Clear error messages**: Ensure failing tests give actionable feedback about what to build
+- **Fast feedback loops**: Run tests after each small change
+- **Commit green**: Only commit when all tests pass
+
+### **Test Layer Strategy:**
+
+#### **Contract Tests** (`test/contract/`)
+```ruby
+# Verify service interfaces match consumer expectations
+assert_respond_to AnkiConnectService.new, :sync_notes
+assert_equal 1, AnkiConnectService.new.method(:sync_notes).arity
+```
+
+#### **Integration Tests** (`test/integration/`)
+```ruby
+# Mock only external HTTP, use real internal services
+WebMock.stub_request(:post, "http://localhost:8765").to_return(status: 200, body: '{"result": []}')
+post srs_sync_path # Uses real controller → real service → mocked HTTP
+```
+
+#### **System Tests** (`test/system/`)
+```ruby
+# Test critical user paths end-to-end with Capybara
+visit vocabulary_notes_path
+click_link "Sync to Anki"
+assert_text "Sync completed successfully"
+```
+
+### **Enhanced Task Ordering for Outside-In Development:**
+
+1. **System Tests First**: Define the complete user experience
+2. **Contract Tests**: Define service interfaces before implementation
+3. **Integration Tests**: Verify services work together (mock only HTTP)
+4. **Unit Tests**: Drive individual component implementation
+5. **Implementation**: Build minimal code to satisfy tests
+6. **Refinement**: Add edge cases and error handling with more tests
+
+## **Enhanced Notes Section Requirements**
+
+When generating the Notes section, always include:
+
+- **Outside-In TDD Reminder**: Emphasize test-first development with behavior-driven design
+- **Safe Iteration**: Generate one failing test at a time, implement minimal code to pass
+- **Testing Commands**: How to run individual test files with `rails test test/path/to/file.rb`
+- **Test Layer Strategy**: When to use contract vs integration vs system tests
+- **External Service Testing**: WebMock stubbing patterns and contract test examples
+- **Code Standards**: Ruby file headers, formatting requirements
+- **Configuration Notes**: Credentials, environment variables if needed
+- **Documentation**: When to create cursor rules for complex patterns
+- **Navigation**: Reminder to include navigation links for new UI sections
+- **Simplicity Preference**: Favor simple, maintainable solutions over complex dynamic features
+- **Accessibility**: Basic accessibility requirements for UI components
+- **AI Iteration Guidance**: How to safely iterate with failing tests and minimal implementations
+
+### **AI Agent Iteration Instructions**
+
+Include specific guidance for the AI agent implementing the tasks:
+
+```markdown
+### AI Implementation Guidelines
+
+**Follow Outside-In TDD Strictly:**
+1. Always write the failing test first
+2. Run the test to see it fail with a clear error message
+3. Write minimal code to make it pass (create classes/files as needed)
+4. Run the test again to confirm it passes
+5. Only then move to the next test/behavior
+
+**Safe Iteration Pattern:**
+- Ask the human to run tests after each implementation
+- If a test fails unexpectedly, debug the test before changing the code
+- Commit code only when all tests pass
+- If you get stuck, ask for clarification rather than guessing
+
+**Verification Step Protocol:**
+- Always run the verification command at the end of each parent task
+- If verification fails, do NOT mark the parent task as complete
+- Review all sub-tasks to identify what was missed or incorrectly implemented
+- Fix any issues found during the review
+- Re-run the verification command
+- Only mark the parent task complete when verification passes
+
+**External Service Integration:**
+- Always create contract tests before implementing service wrappers
+- Use WebMock to stub HTTP calls in integration tests
+- Verify real API response formats before creating stubs
+- Test both success and error scenarios
+
+**When in Doubt:**
+- Prioritize making tests pass over adding extra features
+- Ask for clarification if test requirements are ambiguous
+- Keep implementations simple - fancy optimizations come later
+```
+
+## Interaction Model
+
+The process explicitly requires a pause after generating parent tasks to get user confirmation ("Go") before proceeding to generate the detailed sub-tasks. This ensures the high-level plan aligns with user expectations before diving into details.
+
+## Target Audience
+
+Assume the primary reader of the task list is a **coding AI agent** (potentially with a comprehension level of a junior developer) that will implement the feature following Rails conventions and **outside-in TDD practices**. Include any information you think will help them succeed with test-driven development.
+
+## **Quality Checks for Generated Tasks**
+
+Before finalizing, verify:
+
+1. **Outside-In TDD Compliance**: All tasks start with writing failing tests that define expected behavior
+2. **Safe Iteration**: Tasks are broken into small, testable increments
+3. **Test Layer Strategy**: Contract, integration, and system tests are used appropriately
+4. **External Service Handling**: Contract tests and WebMock stubs included for APIs
+5. **Behavior Authority**: Tests control the specification, not the implementation
+6. **Configuration Coverage**: Credentials, URLs, and environment setup included
+7. **Dependency Management**: New gems (WebMock, etc.) and their setup included
+8. **Documentation**: Cursor rules for complex patterns included
+9. **Error Scenarios**: Both success and failure paths covered in tests first
+10. **Real Data Validation**: External service responses verified before stubbing
+11. **Navigation Access**: UI sections include navigation links for user access
+12. **Task Granularity**: Sub-tasks sized for safe iteration (one failing test at a time)
+13. **AI Agent Guidance**: Clear instructions for test-driven implementation
+14. **User Experience**: Error states, loading states, and accessibility driven by tests
+15. **Simplicity Check**: Complex features justified and tested thoroughly
