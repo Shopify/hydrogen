@@ -148,3 +148,6 @@ examples/express/build
 
 # tsup bundled config files
 **/tsup.config.bundled_*.mjs
+
+# PRD/Task management config
+.claude/current-prd.md
