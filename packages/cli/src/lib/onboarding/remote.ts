@@ -62,7 +62,7 @@ export async function setupRemoteTemplate(
       // do not continue if it's already aborted
       if (controller.signal.aborted) return;
 
-      const {sourcePath, skeletonPath} = downloaded;
+      const {sourcePath} = downloaded;
 
       // Always copy the entire template/example
       await copyFile(sourcePath, project.directory);

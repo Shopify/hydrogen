@@ -1,6 +1,7 @@
 import {readFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
+import {outputDebug} from '@shopify/cli-kit/node/output';
 import semver from 'semver';
 
 type ReactRouterPackage =
@@ -39,6 +40,9 @@ export async function checkReactRouterVersions(appPath: string): Promise<void> {
   } catch (error) {
     // If we can't read package.json, skip the check silently
     // This could happen if running from a different directory or during CI/CD
+    outputDebug(
+      `Unable to read package.json for React Router version check: ${error}`,
+    );
     return;
   }
 
