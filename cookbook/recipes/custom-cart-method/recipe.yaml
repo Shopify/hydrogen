@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+gid: 27d7e01b-7264-44e4-ae7c-32dc8da58c46
+title: Custom Cart Method
+summary: Add inline product option editing to cart items
+description: |
+  This recipe demonstrates how to implement custom cart methods in Hydrogen to enable inline editing of product options directly within the cart. Users can change product variants (size, color, etc.) without removing and re-adding items.
+  
+  Key features:
+  - Custom cart method `updateLineByOptions` for variant selection
+  - Inline dropdown selectors for each product option in cart
+  - Automatic cart updates when options are changed
+  - Full TypeScript support with proper type augmentation
+  
+notes:
+  - This implementation requires GraphQL codegen to be run after applying the recipe
+  - The custom cart method uses the Storefront API's variantBySelectedOptions query
+  - Cart updates happen automatically on option change without page refresh
+requirements: |
+  - Basic understanding of Hydrogen cart implementation
+  - Familiarity with GraphQL and TypeScript
+  - Knowledge of React Router actions and forms
+ingredients: []
+deletedFiles: []
+steps:
+  - type: PATCH
+    step: "1"
+    name: app/components/CartLineItem.tsx
+    description: null
+    diffs:
+      - file: app/components/CartLineItem.tsx
+        patchFile: CartLineItem.tsx.12f63e.patch
+  - type: PATCH
+    step: "2"
+    name: app/lib/context.ts
+    description: null
+    diffs:
+      - file: app/lib/context.ts
+        patchFile: context.ts.276f49.patch
+  - type: PATCH
+    step: "3"
+    name: app/lib/fragments.ts
+    description: null
+    diffs:
+      - file: app/lib/fragments.ts
+        patchFile: fragments.ts.5f86c7.patch
+  - type: PATCH
+    step: "4"
+    name: app/routes/cart.tsx
+    description: null
+    diffs:
+      - file: app/routes/cart.tsx
+        patchFile: cart.tsx.362410.patch
+nextSteps: null
+llms:
+  userQueries: []
+  troubleshooting: []
+commit: 1f9640d5acfd505435862b8b2317343bbce96d72
