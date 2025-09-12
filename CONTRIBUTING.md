@@ -78,6 +78,133 @@ Follow the prompts to select which package(s) are affected by your change, and w
 
 When merging PRs, please select the **Squash and Merge** option, which consolidates all the changes from the PR into a single commit. This helps reduce the commit noise in our Git repository.
 
+## PRD-Driven Development with AI
+
+Hydrogen uses a PRD-driven development process for complex features, based on the methodology described in ["PRD → Task List → Work"](https://kovyrin.net/2025/06/20/prd-tasklist-process/). This approach helps break down complex projects into manageable pieces that can be implemented systematically with AI assistance.
+
+### When to Use PRD-Driven Development
+
+This process is ideal for:
+- Features requiring several hours to weeks of work
+- Complex projects needing detailed planning and specification
+- Changes affecting multiple parts of the codebase
+- Features requiring careful consideration of user experience and technical implementation
+
+**Note:** For quick tasks (under 30 minutes) or simple bug fixes, this process may be overkill.
+
+### The Three-Step Process
+
+#### 1. Create a Product Requirements Document (PRD)
+
+Start by creating a comprehensive PRD that clearly defines what needs to be built:
+
+```bash
+# Use the Claude command to generate a PRD
+# Located at: .claude/commands/900-create-prd.md
+```
+
+The AI will:
+- Ask clarifying questions about the feature
+- Generate a structured PRD with goals, user stories, requirements, and success metrics
+- Save the document to `docs/tasks/prd-[feature-name].md`
+
+#### 2. Generate a Task List from the PRD
+
+Once the PRD is finalized, generate a detailed task list:
+
+```bash
+# Use the Claude command to create tasks from your PRD
+# Located at: .claude/commands/901-create-tasks.md
+```
+
+The AI will:
+- Analyze the PRD and create high-level parent tasks
+- Wait for your confirmation ("Go") before generating sub-tasks
+- Follow outside-in TDD principles for task ordering
+- Save the task list to `docs/tasks/tasks-prd-[feature-name].md`
+
+#### 3. Execute Tasks Systematically
+
+Work through the task list one sub-task at a time:
+
+```bash
+# Select which PRD/task list to work on
+npm run prd:select
+
+# Use the Claude command to process tasks
+# Located at: .claude/commands/904-process-task.md
+```
+
+The execution follows these principles:
+- Complete one sub-task at a time
+- Update the task list as you progress
+- Commit changes after each meaningful segment
+- Stop and wait for approval between sub-tasks
+
+### PRD Management Commands
+
+| Command | Description | When to Use |
+| ------- | ----------- | ----------- |
+| `npm run prd:select` | Choose which PRD/task pair to work on | When starting work or switching between features |
+| `npm run prd:status` | Show current PRD selection and progress | To check which PRD is active and task completion status |
+| `npm run prd:status:full` | Show status plus complete task list | To see all tasks and current progress in detail |
+| `npm run prd:list` | List all available PRDs with completion status | To see all PRDs in the repository |
+
+### Claude Commands for PRD Workflow
+
+| Command File | Purpose | When to Use |
+| ------------ | ------- | ----------- |
+| `.claude/commands/900-create-prd.md` | Create a new PRD | Starting a new feature |
+| `.claude/commands/901-create-tasks.md` | Generate task list from PRD | After PRD is complete |
+| `.claude/commands/902-update-prd.md` | Update existing PRD | When requirements change |
+| `.claude/commands/903-update-tasks.md` | Update task list | When PRD changes or tasks need adjustment |
+| `.claude/commands/904-process-task.md` | Execute next task | During implementation |
+| `.claude/commands/905-closing.md` | Save learnings before closing session | When ending a work session (if manual intervention was required) |
+
+### Living Documentation
+
+As noted in the [PRD → Task List → Work methodology](https://kovyrin.net/2025/06/20/prd-tasklist-process/), "the task list is a living document, not a rigid contract." This means:
+
+- Tasks can be added, modified, or removed as you learn more
+- The task list should be updated with learnings and discoveries
+- Use `.claude/commands/905-closing.md` to capture insights before ending a session
+- Regular updates help future AI sessions be more effective
+
+### Example Workflow
+
+```bash
+# 1. Start a new feature
+# Run the create PRD command in Claude
+
+# 2. Generate tasks from the PRD
+# Run the create tasks command in Claude
+
+# 3. Select the PRD to work on
+npm run prd:select
+# Choose your PRD from the list
+
+# 4. Check current status
+npm run prd:status
+
+# 5. Start working through tasks
+# Use .claude/commands/904-process-task.md in Claude
+
+# 6. View detailed progress
+npm run prd:status:full
+
+# 7. Before ending your session
+# Use .claude/commands/905-closing.md to save learnings
+```
+
+### Configuration
+
+The system uses `.claude/current-prd.md` (gitignored) to track which PRD/task pair is currently active. This file contains:
+- The active PRD name and file path
+- The associated task list file path
+- Selection timestamp
+
+All file references use the `@` syntax for automatic loading in Claude Code.
+
 ## Testing
 
 Hydrogen tests are run using [vitest](https://vitest.dev). You can run the tests with the following commands.
