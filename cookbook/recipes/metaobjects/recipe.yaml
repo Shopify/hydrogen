@@ -1,0 +1,240 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+gid: 5e5f8934-e836-4b4c-aa60-30b5f45944f9
+title: Dynamic Content with Metaobjects
+summary: Build a flexible CMS using Shopify metaobjects for dynamic content sections
+description: |
+  This recipe demonstrates how to create a content management system using Shopify metaobjects.
+  It enables merchants to create and manage dynamic content sections through the Shopify admin,
+  providing a flexible way to build pages with reusable components.
+  
+  Key features:
+  - Dynamic route-based content rendering
+  - Modular section components (Hero, Featured Products, Featured Collections, Stores)
+  - Content editing capabilities with direct links to Shopify admin
+  - Rich text support with Slate editor
+  - Comprehensive documentation with visual guides
+  
+  The recipe includes example section components that can be customized or extended
+  to match your specific content needs.
+notes:
+  - You need to create the metaobject definitions in your Shopify admin before using this recipe
+  - See the included guides/metaobjects/README.md for detailed setup instructions
+  - Each section component has a one-to-one relationship with a metaobject definition
+  - The PUBLIC_STORE_DOMAIN environment variable is required for edit links to work
+requirements: |
+  - Basic understanding of Shopify metaobjects
+  - Shopify Plus or development store (for metaobjects access)
+  - Environment variable: PUBLIC_STORE_DOMAIN (your store's admin domain)
+ingredients:
+  - path: templates/skeleton/app/components/EditRoute.tsx
+    description: null
+  - path: templates/skeleton/app/routes/stores.$name.tsx
+    description: null
+  - path: templates/skeleton/app/routes/stores._index.tsx
+    description: null
+  - path: templates/skeleton/app/sections/RouteContent.tsx
+    description: null
+  - path: templates/skeleton/app/sections/SectionFeaturedCollections.tsx
+    description: null
+  - path: templates/skeleton/app/sections/SectionFeaturedProducts.tsx
+    description: null
+  - path: templates/skeleton/app/sections/SectionHero.tsx
+    description: null
+  - path: templates/skeleton/app/sections/SectionStoreProfile.tsx
+    description: null
+  - path: templates/skeleton/app/sections/SectionStores.tsx
+    description: null
+  - path: templates/skeleton/app/sections/Sections.tsx
+    description: null
+  - path: templates/skeleton/app/utils/parseSection.ts
+    description: null
+  - path: templates/skeleton/guides/metaobjects/README.md
+    description: null
+  - path: templates/skeleton/guides/metaobjects/images/definition_link.png
+    description: null
+  - path: templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png
+    description: null
+  - path: templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png
+    description: null
+  - path: templates/skeleton/guides/metaobjects/images/definition_section_hero.png
+    description: null
+  - path: templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png
+    description: null
+  - path: templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png
+    description: null
+  - path: templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png
+    description: null
+  - path: templates/skeleton/guides/metaobjects/images/definition_store.png
+    description: null
+  - path: templates/skeleton/guides/metaobjects/images/definitions_list.png
+    description: null
+  - path: templates/skeleton/guides/metaobjects/images/definiton_route.png
+    description: null
+deletedFiles: []
+steps:
+  - type: PATCH
+    step: "1"
+    name: app/lib/fragments.ts
+    description: null
+    diffs:
+      - file: app/lib/fragments.ts
+        patchFile: fragments.ts.5f86c7.patch
+  - type: NEW_FILE
+    step: "1"
+    name: app/components/EditRoute.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/EditRoute.tsx
+  - type: PATCH
+    step: "2"
+    name: app/root.tsx
+    description: null
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.0ad938.patch
+  - type: NEW_FILE
+    step: "2"
+    name: app/routes/stores.$name.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/stores.$name.tsx
+  - type: PATCH
+    step: "3"
+    name: app/routes/_index.tsx
+    description: null
+    diffs:
+      - file: app/routes/_index.tsx
+        patchFile: _index.tsx.82ab90.patch
+  - type: NEW_FILE
+    step: "3"
+    name: app/routes/stores._index.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/stores._index.tsx
+  - type: PATCH
+    step: "4"
+    name: package.json
+    description: null
+    diffs:
+      - file: package.json
+        patchFile: package.json.cfee98.patch
+  - type: NEW_FILE
+    step: "4"
+    name: app/sections/RouteContent.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/sections/RouteContent.tsx
+  - type: NEW_FILE
+    step: "5"
+    name: app/sections/SectionFeaturedCollections.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/sections/SectionFeaturedCollections.tsx
+  - type: NEW_FILE
+    step: "6"
+    name: app/sections/SectionFeaturedProducts.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/sections/SectionFeaturedProducts.tsx
+  - type: NEW_FILE
+    step: "7"
+    name: app/sections/SectionHero.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/sections/SectionHero.tsx
+  - type: NEW_FILE
+    step: "8"
+    name: app/sections/SectionStoreProfile.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/sections/SectionStoreProfile.tsx
+  - type: NEW_FILE
+    step: "9"
+    name: app/sections/SectionStores.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/sections/SectionStores.tsx
+  - type: NEW_FILE
+    step: "10"
+    name: app/sections/Sections.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/sections/Sections.tsx
+  - type: NEW_FILE
+    step: "11"
+    name: app/utils/parseSection.ts
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/utils/parseSection.ts
+  - type: NEW_FILE
+    step: "12"
+    name: guides/metaobjects/README.md
+    description: null
+    ingredients:
+      - path: templates/skeleton/guides/metaobjects/README.md
+  - type: NEW_FILE
+    step: "13"
+    name: guides/metaobjects/images/definition_link.png
+    description: null
+    ingredients:
+      - path: templates/skeleton/guides/metaobjects/images/definition_link.png
+  - type: NEW_FILE
+    step: "14"
+    name: guides/metaobjects/images/definition_section_featured_collections.png
+    description: null
+    ingredients:
+      - path: templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png
+  - type: NEW_FILE
+    step: "15"
+    name: guides/metaobjects/images/definition_section_featured_products.png
+    description: null
+    ingredients:
+      - path: templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png
+  - type: NEW_FILE
+    step: "16"
+    name: guides/metaobjects/images/definition_section_hero.png
+    description: null
+    ingredients:
+      - path: templates/skeleton/guides/metaobjects/images/definition_section_hero.png
+  - type: NEW_FILE
+    step: "17"
+    name: guides/metaobjects/images/definition_section_rich_text.png
+    description: null
+    ingredients:
+      - path: templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png
+  - type: NEW_FILE
+    step: "18"
+    name: guides/metaobjects/images/definition_section_store_profile.png
+    description: null
+    ingredients:
+      - path: templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png
+  - type: NEW_FILE
+    step: "19"
+    name: guides/metaobjects/images/definition_section_stores_grid.png
+    description: null
+    ingredients:
+      - path: templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png
+  - type: NEW_FILE
+    step: "20"
+    name: guides/metaobjects/images/definition_store.png
+    description: null
+    ingredients:
+      - path: templates/skeleton/guides/metaobjects/images/definition_store.png
+  - type: NEW_FILE
+    step: "21"
+    name: guides/metaobjects/images/definitions_list.png
+    description: null
+    ingredients:
+      - path: templates/skeleton/guides/metaobjects/images/definitions_list.png
+  - type: NEW_FILE
+    step: "22"
+    name: guides/metaobjects/images/definiton_route.png
+    description: null
+    ingredients:
+      - path: templates/skeleton/guides/metaobjects/images/definiton_route.png
+nextSteps: null
+llms:
+  userQueries: []
+  troubleshooting: []
+commit: 1f9640d5acfd505435862b8b2317343bbce96d72
