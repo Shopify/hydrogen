@@ -18,7 +18,7 @@ function TrackPageView() {
       path: location.pathname,
       title: document.title,
     });
-  }, []);
+  }, [location.pathname]);
 
   return <pre>pageView event tracked</pre>;
 }
