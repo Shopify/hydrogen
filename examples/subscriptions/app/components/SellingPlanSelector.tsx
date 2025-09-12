@@ -49,17 +49,16 @@ export function SellingPlanSelector({
   }) => React.ReactNode;
 }) {
   const {search, pathname} = useLocation();
-  const params = new URLSearchParams(search);
 
   return useMemo(
-    () =>
-      // @ts-ignore
-      sellingPlanGroups.nodes.map((sellingPlanGroup: SellingPlanGroup) => {
+    () => {
+      const params = new URLSearchParams(search);
+      // @ts-expect-error - Mutating the sellingPlanGroup to add isSelected and url properties
+      return sellingPlanGroups.nodes.map((sellingPlanGroup: SellingPlanGroup) => {
         // Augmnet each sellingPlan node with isSelected and url
         const sellingPlans = sellingPlanGroup.sellingPlans.nodes
           .map((sellingPlan) => {
             if (!sellingPlan?.id) {
-              // @ts-ignore
               console.warn(
                 'SellingPlanSelector: sellingPlan.id is missing in the product query',
               );
@@ -74,7 +73,8 @@ export function SellingPlanSelector({
           .filter(Boolean) as SellingPlan[];
         sellingPlanGroup.sellingPlans.nodes = sellingPlans;
         return children({sellingPlanGroup, selectedSellingPlan});
-      }),
-    [sellingPlanGroups],
+      });
+    },
+    [sellingPlanGroups, children, paramKey, search, pathname, selectedSellingPlan],
   );
 }
