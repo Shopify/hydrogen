@@ -365,6 +365,10 @@ export function createCustomerAccountClient({
         loginUrl.searchParams.append('ui_locales', uiLocales);
       }
 
+      if (options?.countryCode) {
+        loginUrl.searchParams.append('region_country', options.countryCode);
+      }
+
       const verifier = generateCodeVerifier();
       const challenge = await generateCodeChallenge(verifier);
 

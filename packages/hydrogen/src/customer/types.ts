@@ -5,8 +5,11 @@ import type {
 import {type GraphQLError} from '../utils/graphql';
 import type {CrossRuntimeRequest} from '../utils/request';
 import type {HydrogenSession, WaitUntil} from '../types';
+import type {
+  LanguageCode,
+  CountryCode,
+} from '@shopify/hydrogen-react/customer-account-api-types';
 import type {BuyerInput} from '@shopify/hydrogen-react/storefront-api-types';
-import type {LanguageCode} from '@shopify/hydrogen-react/customer-account-api-types';
 
 // Return type of unauthorizedHandler = Return type of loader/action function
 // This type is not exported https://github.com/remix-run/react-router/blob/main/packages/router/utils.ts#L167
@@ -49,6 +52,7 @@ export interface CustomerAccountMutations {
 
 export type LoginOptions = {
   uiLocales?: LanguageCode;
+  countryCode?: CountryCode;
 };
 
 export type LogoutOptions = {
