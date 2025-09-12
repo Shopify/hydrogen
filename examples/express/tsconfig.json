@@ -1,5 +1,6 @@
 {
-  "include": ["./**/*.d.ts", "./**/*.ts", "./**/*.tsx"],
+  "include": ["app/**/*.d.ts", "app/**/*.ts", "app/**/*.tsx", "*.ts", "*.d.ts", "env.d.ts"],
+  "exclude": [".react-router/**/*", "build/**/*", "node_modules/**/*", "packages/**/*"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "isolatedModules": true,
