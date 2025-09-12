@@ -145,3 +145,6 @@ business-platform.schema.json
 examples/**/*.generated.d.ts
 
 examples/express/build
+
+# tsup bundled config files
+**/tsup.config.bundled_*.mjs

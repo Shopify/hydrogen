@@ -40,7 +40,7 @@ describe('auth.helpers', () => {
   describe('refreshToken', () => {
     beforeEach(() => {
       session = {
-        commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+        commit: vi.fn(() => Promise.resolve('cookie')),
         get: vi.fn(),
         set: vi.fn(),
         unset: vi.fn(),
@@ -153,7 +153,7 @@ describe('auth.helpers', () => {
   describe('clearSession', () => {
     beforeEach(() => {
       session = {
-        commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+        commit: vi.fn(() => Promise.resolve('cookie')),
         get: vi.fn(),
         set: vi.fn(),
         unset: vi.fn(),
@@ -173,7 +173,7 @@ describe('auth.helpers', () => {
   describe('checkExpires', () => {
     beforeEach(() => {
       session = {
-        commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+        commit: vi.fn(() => Promise.resolve('cookie')),
         get: vi.fn(),
         set: vi.fn(),
         unset: vi.fn(),
