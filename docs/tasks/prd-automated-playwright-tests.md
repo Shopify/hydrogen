@@ -31,8 +31,8 @@ Hydrogen’s skeleton template currently relies on manual smoke-testing to catch
 4. Headless execution is default; a `--headed` flag enables headed debugging.
 5. The command automatically installs Playwright browsers if missing.
 6. GitHub Actions workflow:
-   1. Runs the Smoke Pack on every PR.
-   2. Runs the Full Matrix Pack on every PR
+   1. Runs the Smoke Pack on every pull request.
+   2. Runs the Full Matrix Pack on every pull request.
    3. Uploads screenshots, videos, network logs, and console traces for failures.
 7. The test runner exits non-zero on any failure to block merges.
 8. Documentation lives in `docs/testing/e2e.md` and a short section in the root `README.md`.
