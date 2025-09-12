@@ -9,7 +9,7 @@
     "dev": "shopify hydrogen dev --codegen",
     "preview": "shopify hydrogen preview --build",
     "lint": "eslint --no-error-on-unmatched-pattern .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "react-router typegen && tsc --noEmit",
     "codegen": "shopify hydrogen codegen"
   },
   "prettier": "@shopify/prettier-config",
@@ -31,7 +31,7 @@
     "@graphql-codegen/cli": "5.0.2",
     "@react-router/dev": "7.8.2",
     "@react-router/fs-routes": "7.8.2",
-    "@shopify/cli": "~3.80.4",
+    "@shopify/cli": "~3.83.3",
     "@shopify/hydrogen-codegen": "^0.3.3",
     "@shopify/mini-oxygen": "^3.2.1",
     "@shopify/oxygen-workers-types": "^4.1.6",

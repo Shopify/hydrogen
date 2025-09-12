@@ -22,7 +22,6 @@ export function getCustomerPrice(
     amount: price.amount ?? faker.finance.amount(),
   };
 }
-
 export function getUnitPriceMeasurement(
   unitPriceMeasurement: Partial<UnitPriceMeasurement> = {},
 ): UnitPriceMeasurement {
@@ -31,15 +30,17 @@ export function getUnitPriceMeasurement(
     VOLUME: UnitPriceMeasurementMeasuredUnit[];
     LENGTH: UnitPriceMeasurementMeasuredUnit[];
     AREA: UnitPriceMeasurementMeasuredUnit[];
+    COUNT: UnitPriceMeasurementMeasuredUnit[];
   } = {
-    WEIGHT: ['MG', 'G', 'KG'],
-    VOLUME: ['ML', 'CL', 'L', 'M3'],
-    LENGTH: ['MM', 'CM', 'M'],
-    AREA: ['M2'],
+    WEIGHT: ['MG', 'G', 'KG', 'LB', 'OZ'],
+    VOLUME: ['ML', 'CL', 'L', 'M3', 'FLOZ', 'PT', 'QT', 'GAL'],
+    LENGTH: ['MM', 'CM', 'M', 'IN', 'FT', 'YD'],
+    AREA: ['M2', 'FT2'],
+    COUNT: ['ITEM'],
   };
   const measuredType = faker.helpers.arrayElement<
     keyof typeof measuredTypeToUnitMap
-  >(['WEIGHT', 'VOLUME', 'AREA', 'LENGTH']);
+  >(['WEIGHT', 'VOLUME', 'AREA', 'LENGTH', 'COUNT']);
   const quantityUnit = faker.helpers.arrayElement(
     measuredTypeToUnitMap[measuredType],
   );

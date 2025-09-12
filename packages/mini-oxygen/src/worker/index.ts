@@ -184,7 +184,12 @@ export function createMiniOxygen({
 
   return {
     ready,
-    dispatchFetch: mf.dispatchFetch,
+    dispatchFetch: async (request: Request) => {
+      // Miniflare's dispatchFetch accepts (input: RequestInfo, init?: RequestInit)
+      // We need to pass redirect: 'manual' as part of the init parameter
+      const response = await mf.dispatchFetch(request, {redirect: 'manual'});
+      return response;
+    },
     getBindings: mf.getBindings,
     getCaches: mf.getCaches,
     getWorker: mf.getWorker,

@@ -47,17 +47,16 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
       config(_, env) {
         sharedOptions.command = env.command;
 
-        const isHydrogenMonorepo = new URL(
-          '../../..',
-          import.meta.url,
-        ).pathname.endsWith('/hydrogen/packages/');
-
         return {
           build: {
             outDir: 'dist',
           },
           server: {
             watch: null,
+          },
+          resolve: {
+            // Deduplicate React to ensure single instance for context sharing
+            dedupe: ['react', 'react-dom'],
           },
           ssr: {
             optimizeDeps: {
@@ -77,15 +76,12 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           // Vite performs an initial reload after optimizing these dependencies.
           // Do it early to avoid the initial reload:
           optimizeDeps: {
-            // Avoid optimizing Hydrogen itself in the monorepo
-            // to prevent caching source code changes:
-            include: isHydrogenMonorepo
-              ? [
-                  'content-security-policy-builder',
-                  'worktop/cookie',
-                  '@shopify/graphql-client',
-                ]
-              : ['@shopify/hydrogen'],
+            include: [
+              // Optimize CJS dependencies that would otherwise cause issues
+              'content-security-policy-builder',
+              'worktop/cookie',
+              '@shopify/graphql-client',
+            ],
           },
         };
       },

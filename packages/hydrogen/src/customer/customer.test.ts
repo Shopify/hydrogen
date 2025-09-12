@@ -62,7 +62,7 @@ const mockBuyerSession = {
 describe('customer', () => {
   beforeEach(() => {
     session = {
-      commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+      commit: vi.fn(() => Promise.resolve('cookie')),
       get: vi.fn(() => {
         return {...mockCustomerAccountSession, ...mockBuyerSession};
       }) as HydrogenSession['get'],
@@ -352,7 +352,7 @@ describe('customer', () => {
         it('Redirects to app origin when customer is not login by default', async () => {
           const origin = 'https://shop123.com';
           const mockSession: HydrogenSession = {
-            commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+            commit: vi.fn(() => Promise.resolve('cookie')),
             get: vi.fn(() => undefined) as HydrogenSession['get'],
             set: vi.fn(),
             unset: vi.fn(),
@@ -383,7 +383,7 @@ describe('customer', () => {
           const postLogoutRedirectUri = '/post-logout-landing-page';
 
           const mockSession: HydrogenSession = {
-            commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+            commit: vi.fn(() => Promise.resolve('cookie')),
             get: vi.fn(() => undefined) as HydrogenSession['get'],
             set: vi.fn(),
             unset: vi.fn(),
@@ -417,7 +417,7 @@ describe('customer', () => {
             'https://something-bad.com/post-logout-landing-page';
 
           const mockSession: HydrogenSession = {
-            commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+            commit: vi.fn(() => Promise.resolve('cookie')),
             get: vi.fn(() => undefined) as HydrogenSession['get'],
             set: vi.fn(),
             unset: vi.fn(),
@@ -746,7 +746,7 @@ describe('customer', () => {
       it('Redirects to redirectPath on successful authorization and updates session', async () => {
         const redirectPath = '/account/orders';
         session = {
-          commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+          commit: vi.fn(() => Promise.resolve('cookie')),
           get: vi.fn(() => {
             return {...mockCustomerAccountSession, redirectPath};
           }) as HydrogenSession['get'],

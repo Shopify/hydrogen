@@ -155,6 +155,8 @@ node scripts/get-latest-branch.js  // → "2025-07"
 
 #### 3. CalVer Enforcement
 - **`enforce-calver-ci.js`** - Production CI script (runs in GitHub Actions)
+  - Uses git baseline to read original versions (before changesets corruption)
+  - Fetches from `HEAD~1` or `origin/main` to avoid using invalid semver versions
 - **`enforce-calver-local.js`** - Local testing with dry-run support
 
 ### CI/CD Integration
@@ -457,6 +459,7 @@ Scenario B: With Bypass
    - Prevents version inconsistencies across packages
    - Resolves "Invalid quarter" errors caused by package drift
    - Ensures consistent CalVer enforcement across the monorepo
+   - **Git Baseline Protection**: Reads original versions from git history to avoid changeset corruption
 2. **Version Regression Protection**: Prevents versions from going backwards
 3. **Quarter Alignment Validation**: Ensures majors use quarters (1,4,7,10)
 4. **Smart Invalid Quarter Handling**: 
@@ -478,15 +481,22 @@ Scenario B: With Bypass
 ## Troubleshooting
 
 ### Issue: "Invalid quarter in version X.Y.Z: Y not in [1,4,7,10]"
-**Solution**: CalVer packages have version inconsistencies. The fix-calver system resolves this:
-```bash
-# Check current versions across packages
-echo "Hydrogen: $(cat packages/hydrogen/package.json | jq -r .version)"
-echo "Hydrogen-React: $(cat packages/hydrogen-react/package.json | jq -r .version)"
-echo "Skeleton: $(cat templates/skeleton/package.json | jq -r .version)"
+**Common Causes**:
+1. **Changesets corruption**: When changesets treats CalVer as semver (e.g., 2025.5.0 → 2026.0.0)
+2. **Package version drift**: Different CalVer packages have inconsistent versions
 
-# The system now uses hydrogen as source of truth for all packages
-node .changeset/calver-shared.js get-next "$(cat packages/hydrogen/package.json | jq -r .version)" "patch"
+**Solution**: The system now handles both issues automatically:
+- **Git baseline**: `enforce-calver-ci.js` reads original versions from git history before changesets runs
+- **Source of truth**: All CalVer packages use hydrogen's version as baseline
+
+```bash
+# Check what version changesets generated (likely corrupted)
+cat packages/hydrogen/package.json | jq -r .version
+
+# Check the original version from git (before changesets)
+git show HEAD~1:packages/hydrogen/package.json | grep '"version"'
+
+# The enforce-calver-ci.js script automatically uses the git version
 ```
 
 ### Issue: Branch detection shows wrong quarter
@@ -500,6 +510,14 @@ ls .changeset/*.md | xargs grep -l "major"
 ```bash
 # Correct order
 npm run version:changeset && node .changeset/enforce-calver-ci.js
+```
+
+### Issue: Changesets with single quotes not detected
+**Solution**: The system now checks for both single and double quotes in changeset frontmatter
+```bash
+# Both formats are now supported:
+'@shopify/hydrogen': major  # Single quotes (common in YAML)
+"@shopify/hydrogen": major  # Double quotes
 ```
 
 ### Issue: Version regression error

@@ -1,5 +1,6 @@
 {
   "$schema": "https://turborepo.org/schema.json",
+  "globalEnv": ["SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -55,6 +56,46 @@
         "@shopify/remix-oxygen#build"
       ],
       "outputs": ["dist/**"]
+    },
+    "example-hydrogen-express#build": {
+      "dependsOn": [
+        "@shopify/hydrogen#build",
+        "@shopify/remix-oxygen#build"
+      ]
+    },
+    "example-legacy-customer-account-flow#build": {
+      "dependsOn": [
+        "@shopify/hydrogen#build",
+        "@shopify/cli-hydrogen#build",
+        "@shopify/remix-oxygen#build"
+      ]
+    },
+    "example-b2b#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build", "@shopify/remix-oxygen#build"]
+    },
+    "example-custom-cart-method#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build", "@shopify/remix-oxygen#build"]
+    },
+    "example-gtm#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build", "@shopify/remix-oxygen#build"]
+    },
+    "example-infinite-scroll#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build", "@shopify/remix-oxygen#build"]
+    },
+    "example-metaobjects#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build", "@shopify/remix-oxygen#build"]
+    },
+    "example-multipass#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build", "@shopify/remix-oxygen#build"]
+    },
+    "example-partytown#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build", "@shopify/remix-oxygen#build"]
+    },
+    "example-subscriptions#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build", "@shopify/remix-oxygen#build"]
+    },
+    "example-third-party-queries-caching#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@shopify/cli-hydrogen#build", "@shopify/remix-oxygen#build"]
     }
   }
 }
