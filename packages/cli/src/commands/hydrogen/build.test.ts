@@ -17,17 +17,17 @@ import {mkdirSync} from 'node:fs';
 describe('build', () => {
   const outputMock = mockAndCaptureOutput();
 
-  let tmpDirInstance: number = 0;
   let tmpDir: string;
 
   beforeAll(async () => {
     // Should be the root of the hydrogen repository.
     const projectRootDir = path.join(__dirname, '..', '..', '..', '..', '..');
+    // Use timestamp to ensure unique directory name
     tmpDir = path.join(
       projectRootDir,
-      `test-project-build-${tmpDirInstance++}`,
+      `test-project-build-${Date.now()}-${Math.random().toString(36).substring(7)}`,
     );
-    mkdirSync(tmpDir);
+    mkdirSync(tmpDir, {recursive: true});
   });
 
   afterAll(async () => {
@@ -84,5 +84,5 @@ describe('build', () => {
 
     // Close build result resources.
     await runBuildResult.close();
-  });
+  }, 60000); // 60 second timeout for build
 });

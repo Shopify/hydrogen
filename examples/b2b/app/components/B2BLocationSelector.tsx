@@ -37,26 +37,25 @@ export function B2BLocationSelector() {
                 }}
               >
                 {(fetcher) => (
-                  <label>
-                    <button
-                      onClick={(event) => {
-                        setModalOpen(false);
-                        fetcher.submit(event.currentTarget.form, {
-                          method: 'POST',
-                        });
-                      }}
-                      className="location-item"
-                    >
-                      <div>
-                        <p>
-                          <strong>{location.name}</strong>
-                        </p>
-                        {addressLines.map((line: string) => (
-                          <p key={line}>{line}</p>
-                        ))}
-                      </div>
-                    </button>
-                  </label>
+                  <button
+                    aria-label={`Select B2B location: ${location.name}`}
+                    onClick={(event) => {
+                      setModalOpen(false);
+                      void fetcher.submit(event.currentTarget.form, {
+                        method: 'POST',
+                      });
+                    }}
+                    className="location-item"
+                  >
+                    <div>
+                      <p>
+                        <strong>{location.name}</strong>
+                      </p>
+                      {addressLines.map((line: string) => (
+                        <p key={line}>{line}</p>
+                      ))}
+                    </div>
+                  </button>
                 )}
               </CartForm>
             );

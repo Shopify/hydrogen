@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Storefront API 2025-04
+ * Based on Storefront API 2025-07
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -1307,6 +1307,8 @@ export type CartErrorCode =
   | 'ADDRESS_FIELD_IS_REQUIRED'
   /** The specified address field is too long. */
   | 'ADDRESS_FIELD_IS_TOO_LONG'
+  /** The cart is too large to save. */
+  | 'CART_TOO_LARGE'
   /** The input value is invalid. */
   | 'INVALID'
   /** Company location not found or not allowed. */
@@ -1325,6 +1327,8 @@ export type CartErrorCode =
   | 'INVALID_METAFIELDS'
   /** The payment wasn't valid. */
   | 'INVALID_PAYMENT'
+  /** The payment is invalid. Deferred payment is required. */
+  | 'INVALID_PAYMENT_DEFERRED_PAYMENT_REQUIRED'
   /** Cannot update payment on an empty cart */
   | 'INVALID_PAYMENT_EMPTY_CART'
   /** The given zip code is invalid for the provided country. */
@@ -1367,16 +1371,26 @@ export type CartErrorCode =
   | 'PAYMENTS_CREDIT_CARD_YEAR_EXPIRED'
   /** Credit card expiry year is invalid. */
   | 'PAYMENTS_CREDIT_CARD_YEAR_INVALID_EXPIRY_YEAR'
+  /** The payment method is not applicable. */
+  | 'PAYMENT_METHOD_NOT_APPLICABLE'
   /** The payment method is not supported. */
   | 'PAYMENT_METHOD_NOT_SUPPORTED'
+  /** The delivery group is in a pending state. */
+  | 'PENDING_DELIVERY_GROUPS'
   /** The given province cannot be found. */
   | 'PROVINCE_NOT_FOUND'
+  /** Selling plan is not applicable. */
+  | 'SELLING_PLAN_NOT_APPLICABLE'
+  /** An error occurred while saving the cart. */
+  | 'SERVICE_UNAVAILABLE'
   /** Too many delivery addresses on Cart. */
   | 'TOO_MANY_DELIVERY_ADDRESSES'
   /** A general error occurred during address validation. */
   | 'UNSPECIFIED_ADDRESS_ERROR'
   /** Validation failed. */
   | 'VALIDATION_CUSTOM'
+  /** Variant can only be purchased with a selling plan. */
+  | 'VARIANT_REQUIRES_SELLING_PLAN'
   /** The given zip code is unsupported. */
   | 'ZIP_CODE_NOT_SUPPORTED';
 
@@ -1779,6 +1793,17 @@ export type CartPrepareForCompletionResult =
   | CartStatusReady
   | CartThrottled;
 
+/** Return type for `cartRemovePersonalData` mutation. */
+export type CartRemovePersonalDataPayload = {
+  __typename?: 'CartRemovePersonalDataPayload';
+  /** The updated cart. */
+  cart?: Maybe<Cart>;
+  /** The list of errors that occurred from executing the mutation. */
+  userErrors: Array<CartUserError>;
+  /** A list of warnings that occurred during the mutation. */
+  warnings: Array<CartWarning>;
+};
+
 /**
  * A selectable delivery address for a cart.
  *
@@ -1923,6 +1948,30 @@ export type CartWarning = {
 
 /** The code for the cart warning. */
 export type CartWarningCode =
+  /** The discount code cannot be honored. */
+  | 'DISCOUNT_CODE_NOT_HONOURED'
+  /** The discount is currently inactive. */
+  | 'DISCOUNT_CURRENTLY_INACTIVE'
+  /** The customer is not eligible for this discount. */
+  | 'DISCOUNT_CUSTOMER_NOT_ELIGIBLE'
+  /** The customer's discount usage limit has been reached. */
+  | 'DISCOUNT_CUSTOMER_USAGE_LIMIT_REACHED'
+  /** An eligible customer is missing for this discount. */
+  | 'DISCOUNT_ELIGIBLE_CUSTOMER_MISSING'
+  /** The purchase type is incompatible with this discount. */
+  | 'DISCOUNT_INCOMPATIBLE_PURCHASE_TYPE'
+  /** The discount was not found. */
+  | 'DISCOUNT_NOT_FOUND'
+  /** There are no entitled line items for this discount. */
+  | 'DISCOUNT_NO_ENTITLED_LINE_ITEMS'
+  /** There are no entitled shipping lines for this discount. */
+  | 'DISCOUNT_NO_ENTITLED_SHIPPING_LINES'
+  /** The purchase is not in range for this discount. */
+  | 'DISCOUNT_PURCHASE_NOT_IN_RANGE'
+  /** The quantity is not in range for this discount. */
+  | 'DISCOUNT_QUANTITY_NOT_IN_RANGE'
+  /** The discount usage limit has been reached. */
+  | 'DISCOUNT_USAGE_LIMIT_REACHED'
   /** A delivery address with the same details already exists on this cart. */
   | 'DUPLICATE_DELIVERY_ADDRESS'
   /** The merchandise does not have enough stock. */
@@ -4008,6 +4057,15 @@ export type Image = {
    */
   src: Scalars['URL']['output'];
   /**
+   * The ThumbHash of the image.
+   *
+   * Useful to display placeholder images while the original image is loading.
+   *
+   * See https://evanw.github.io/thumbhash/ for details on how to use it.
+   *
+   */
+  thumbhash?: Maybe<Scalars['String']['output']>;
+  /**
    * The location of the transformed image as a URL.
    *
    * All transformation arguments are considered "best-effort". If they can be applied to an image, they will be.
@@ -5312,6 +5370,8 @@ export type Mutation = {
   cartPaymentUpdate?: Maybe<CartPaymentUpdatePayload>;
   /** Prepare the cart for cart checkout completion. */
   cartPrepareForCompletion?: Maybe<CartPrepareForCompletionPayload>;
+  /** Removes personally identifiable information from the cart. */
+  cartRemovePersonalData?: Maybe<CartRemovePersonalDataPayload>;
   /** Update the selected delivery options for a delivery group. */
   cartSelectedDeliveryOptionsUpdate?: Maybe<CartSelectedDeliveryOptionsUpdatePayload>;
   /** Submit the cart for checkout completion. */
@@ -5489,6 +5549,11 @@ export type MutationCartPaymentUpdateArgs = {
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartPrepareForCompletionArgs = {
+  cartId: Scalars['ID']['input'];
+};
+
+/** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
+export type MutationCartRemovePersonalDataArgs = {
   cartId: Scalars['ID']['input'];
 };
 
@@ -7958,6 +8023,8 @@ export type Shop = HasMetafields &
     __typename?: 'Shop';
     /** The shop's branding configuration. */
     brand?: Maybe<Brand>;
+    /** The URL for the customer account (only present if shop has a customer account vanity domain). */
+    customerAccountUrl?: Maybe<Scalars['String']['output']>;
     /** A description of the shop. */
     description?: Maybe<Scalars['String']['output']>;
     /** A globally-unique ID. */
@@ -8824,8 +8891,12 @@ export type UnitPriceMeasurement = {
 export type UnitPriceMeasurementMeasuredType =
   /** Unit of measurements representing areas. */
   | 'AREA'
+  /** Unit of measurements representing counts. */
+  | 'COUNT'
   /** Unit of measurements representing lengths. */
   | 'LENGTH'
+  /** The type of measurement is unknown. Upgrade to the latest version of the API to resolve this type. */
+  | 'UNKNOWN'
   /** Unit of measurements representing volumes. */
   | 'VOLUME'
   /** Unit of measurements representing weights. */
@@ -8837,12 +8908,26 @@ export type UnitPriceMeasurementMeasuredUnit =
   | 'CL'
   /** 100 centimeters equals 1 meter. */
   | 'CM'
+  /** Imperial system unit of volume (U.S. customary unit). */
+  | 'FLOZ'
+  /** 1 foot equals 12 inches. */
+  | 'FT'
+  /** Imperial system unit of area. */
+  | 'FT2'
   /** Metric system unit of weight. */
   | 'G'
+  /** 1 gallon equals 128 fluid ounces (U.S. customary unit). */
+  | 'GAL'
+  /** Imperial system unit of length. */
+  | 'IN'
+  /** 1 item, a unit of count. */
+  | 'ITEM'
   /** 1 kilogram equals 1000 grams. */
   | 'KG'
   /** Metric system unit of volume. */
   | 'L'
+  /** Imperial system unit of weight. */
+  | 'LB'
   /** Metric system unit of length. */
   | 'M'
   /** Metric system unit of area. */
@@ -8854,7 +8939,17 @@ export type UnitPriceMeasurementMeasuredUnit =
   /** 1000 milliliters equals 1 liter. */
   | 'ML'
   /** 1000 millimeters equals 1 meter. */
-  | 'MM';
+  | 'MM'
+  /** 16 ounces equals 1 pound. */
+  | 'OZ'
+  /** 1 pint equals 16 fluid ounces (U.S. customary unit). */
+  | 'PT'
+  /** 1 quart equals 32 fluid ounces (U.S. customary unit). */
+  | 'QT'
+  /** The unit of measurement is unknown. Upgrade to the latest version of the API to resolve this unit. */
+  | 'UNKNOWN'
+  /** 1 yard equals 36 inches. */
+  | 'YD';
 
 /** Systems of weights and measures. */
 export type UnitSystem =

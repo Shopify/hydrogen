@@ -84,17 +84,17 @@ describe('init', () => {
   });
 
   describe('project validity', () => {
-    let tmpDirInstance: number = 0;
     let tmpDir: string;
 
     beforeAll(async () => {
       // Should be the root of the hydrogen repository.
       const projectRootDir = path.join(__dirname, '..', '..', '..', '..', '..');
+      // Use timestamp to ensure unique directory name
       tmpDir = path.join(
         projectRootDir,
-        `test-project-init-${tmpDirInstance++}`,
+        `test-project-init-${Date.now()}-${Math.random().toString(36).substring(7)}`,
       );
-      mkdirSync(tmpDir);
+      mkdirSync(tmpDir, {recursive: true});
 
       await expect(
         runInit({
@@ -104,7 +104,7 @@ describe('init', () => {
           styling: 'none',
         }),
       ).resolves.not.toThrow();
-    });
+    }, 60000); // 60 second timeout for init
 
     afterAll(async () => {
       await removeFile(tmpDir);

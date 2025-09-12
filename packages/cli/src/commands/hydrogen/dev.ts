@@ -105,7 +105,7 @@ export default class Dev extends Command {
 
     const devParams = {
       ...flagsToCamelObject(flags),
-      customerAccountPush: flags['customer-account-push__unstable'],
+      customerAccountPush: flags['customer-account-push'],
       path: directory,
       cliConfig: this.config,
     };
