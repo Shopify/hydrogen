@@ -1,0 +1,5 @@
+name: hydrogen
+
+up:
+  - node:
+      version: v22.19.0
