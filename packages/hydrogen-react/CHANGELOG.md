@@ -187,7 +187,6 @@
 ### Patch Changes
 
 - Remove deprecated parameters and props (#1455 and #1435): ([#1435](https://github.com/Shopify/hydrogen/pull/1435)) by [@wizardlyhel](https://github.com/wizardlyhel)
-
   - `createStorefrontClient` parameters `buyerIp` and `requestGroupId`
   - `<Image>` props `loaderOptions` and `widths`
 
@@ -368,7 +367,6 @@ This major release includes support for the [2023-07 version](https://shopify.de
   ```
 
   Note that `widths` and `loaderOptions` have now been deprecated, declaring `width` is no longer necessary, and we’ve added an `aspectRatio` prop:
-
   - `widths` is now calculated automatically based on a new `srcSetOptions` prop (see below for details).
   - `loaderOptions` has been removed in favour of declaring `crop` and `src` as props. `width` and `height` should only be set as props if rendering a fixed image size, with `width` otherwise defaulting to `100%`, and the loader calculating each dynamically.
   - `aspectRatio` is calculated automatically using `data.width` and `data.height` (if available) — but if you want to present an image with an aspect ratio other than what was uploaded, you can set using the format `Int/Int` (e.g. `3/2`, [see MDN docs for more info](https://developer.mozilla.org/en-US/docs/Web/CSS/aspect-ratio), note that you must use the _fraction_ style of declaring aspect ratio, decimals are not supported); if you've set an `aspectRatio`, we will default the crop to be `crop: center` (in the example above we've specified this to use `left` instead).
@@ -513,7 +511,6 @@ This major release includes support for the [2023-07 version](https://shopify.de
   An example output might look like: `https://mycdn.com/image.jpeg?width=100&height=100&crop=center`
 
   ### Additional changes
-
   - Added the `srcSetOptions` prop used to create the image URLs used in `srcset`. It’s an object with the following keys and defaults:
 
     ```js
@@ -560,7 +557,6 @@ This major release includes support for the [2023-07 version](https://shopify.de
 
   Introducing `getStorefrontHeaders` that collects the required Shopify headers for making a
   Storefront API call.
-
   - Make cart constants available as exports from `@shopify/hydrogen-react`
   - Deprecating `buyerIp` and `requestGroupId` props from `createStorefrontClient` from `@shopify/hydrogen`
   - Deprecating `getBuyerIp` function from `@shopify/remix-oxygen`
@@ -608,7 +604,6 @@ This major release includes support for the [2023-07 version](https://shopify.de
 - 6225d33: Add a deprecation notice to `<CartLinePrice/>`:
 
   Use `Money` instead. To migrate, use the `priceType` prop that matches the corresponding property on the `CartLine` object:
-
   - `regular`: `cartLine.cost.totalAmount`
   - `compareAt`: `cartLine.cost.compareAtAmountPerQuantity`
 
@@ -658,7 +653,6 @@ Depending on your upgrade path, here's a summary of the changes you need to be a
 The detailed changelog now follows:
 
 - 8d8ab13: ## Breaking Changes on Shopify analytics components
-
   - `useShopifyCookies` - if hasUserConsent is `false`, no cookies will be set
   - `sendShopifyAnalytics` - if `hasUserConsent` is false, no analytics will be sent
   - `ShopifyAppSource` got rename to `ShopifySalesChannel`
@@ -666,7 +660,6 @@ The detailed changelog now follows:
   - Added documents on analytics components
 
 - 6184517: Added the following components and hooks, which have been a part of this package for a while but weren't actually able to be used/imported.
-
   - `<CartCost />`
   - `<CartLinePrice />`
   - `<CartLineProvider />`
@@ -675,7 +668,6 @@ The detailed changelog now follows:
 - 3309706: `<ShopifyProvider />` and `useShop()` have had a breaking update:
 
   ## `ShopifyProvider`
-
   - `<ShopifyProvider />` previously accepted a single `shopifyConfig` object as a prop; now, each of the keys in this object are their own separate props.
   - We also removed `country` and `language` as objects, and they are now strings with the names `countryIsoCode` and `languageIsoCode`, respectively.
   - The `locale` prop has been removed completely; this was a duplicative prop that was a combination of `countryIsoCode` and `languageIsoCode`, so it made no sense to have to include it as well.
@@ -760,20 +752,17 @@ The detailed changelog now follows:
 - 16b6b81: Shopify Analytics
 
   Methods:
-
   - `useShopifyCookies(hasUserConsent = true, domain = ''): void` - sets and refreshes Shopify cookies
   - `getShopifyCookie(cookieString: string): ShopifyCookie` - returns Shopify cookies
   - `sendShopifyAnalytics({eventName: AnalyticsEventName, payload: ShopifyAnalytics}, domain?): Promise<void>` - sends Shopify analytics
   - `getClientBrowserParameters(): ClientBrowserParameters` - returns commonly tracked client browser values
 
   Constants:
-
   - `AnalyticsEventName` - list of Shopify accepted analytics events
   - `AnalyticsPageType` - list of Shopify accepted page type names
   - `ShopifyAppSource` - list of Shopify accepted application source
 
   Types:
-
   - `ShopifyCookies`
   - `ClientBrowserParameters`
   - `ShopifyAnalytics` - generic type for `ShopifyPageView` and `ShopifyAddToCart`
@@ -797,11 +786,9 @@ The detailed changelog now follows:
   ## Hydrogen React changes
 
   ### Breaking Changes
-
   - The default Cart query no longer uses `compareAtPriceV2` and `priceV2`; use `compareAtPrice` and `price` instead. The `V2` fields will be removed in an upcoming version of the Storefront API.
   - The storefront client and ShopifyProvider now provide the `storeDomain` exactly as it is received; it's recommended that you pass the domain with the protocol and the fully-qualified domain name for your Storefront. For example: `https://hydrogen-test.myshopify.com`
   - `parseMetafield`'s implementation has been updated and vastly improved so that it is correctly parsing all the metafield types.
-
     - The parsed metafield will now be found on the `parsedValue` property. For example:
 
       ```ts
@@ -824,7 +811,6 @@ The detailed changelog now follows:
   - The `<Metafield/>` component has been removed; use `parseMetafield().parsedValue` to have control over what you want to render
 
   ### Other Changes
-
   - The TypeScript types for the returned value of `flattenConnection()` should now be friendlier: if you are using a `PartialDeep` object, you'll still get a `PartialDeep` object in return; if you're NOT using a `PartialDeep` object, then the returned type will not be wrapped in `PartialDeep`.
 
 ## 2022.10.8
@@ -869,7 +855,6 @@ The detailed changelog now follows:
 - 6a3a0b3: Add `CartLinePrice` component
 - ad4aca4: Update TypeScript types for `<MediaFile/>` so that `mediaOptions`'s properties are all optional instead of required.
 - 669809a: `<ShopifyProvider/>` and `useShop()` updates:
-
   - Added a function `getShopifyDomain()` which will return a fully-qualified domain URL for your Shopify backend. For example:
 
     ```ts
@@ -908,7 +893,6 @@ The detailed changelog now follows:
   ```
 
 - 0683765: Adds CartLines components and hooks.
-
   - The `CartLineProvider` component creates a context for using a cart line.
   - The `useCartLine` hook provides access to the cart line object. It must be a descendent of a `CartProvider` component.
 
@@ -1019,17 +1003,14 @@ The detailed changelog now follows:
 - b9c3940: Add `<CartProvider/>` and releated hooks & types.
 
   Component:
-
   - `<CartProvider/>`
 
   Hooks:
-
   - `useCart()`
   - `useCartFetch()`
   - `useInstantCheckout()`
 
   Types:
-
   - `CartState`
   - `CartStatus`
   - `Cart`

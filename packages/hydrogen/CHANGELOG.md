@@ -38,7 +38,6 @@
 - Deprecation Notice: VariantSelector ([#2837](https://github.com/Shopify/hydrogen/pull/2837)) by [@juanpprieto](https://github.com/juanpprieto)
 
   `VariantSelector` is deprecated because it does not supports 2k variants or combined listing products. Use `getProductOptions` for a streamlined migration to a modern scalable product form.
-
   1. Update the SFAPI product query to request the new required fields `encodedVariantExistence` and `encodedVariantAvailability`. This will allow the product form to determine which variants are available for selection.
 
   ```diff
@@ -755,7 +754,6 @@
 - Support for the Remix future flag `v3_routeConfig`. ([#2722](https://github.com/Shopify/hydrogen/pull/2722)) by [@seanparsons](https://github.com/seanparsons)
 
   Please refer to the Remix documentation for more details on `v3_routeConfig` future flag: [https://remix.run/docs/en/main/start/future-flags#v3_routeconfig](https://remix.run/docs/en/main/start/future-flags#v3_routeconfig)
-
   1. Add the following npm package dev dependencies:
 
      ```diff
@@ -853,7 +851,6 @@
 - Turn on Remix `v3_singleFetch` future flag ([#2708](https://github.com/Shopify/hydrogen/pull/2708)) by [@wizardlyhel](https://github.com/wizardlyhel)
 
 - B2B methods and props are now stable. Warnings are in place for unstable usages and will be removed completely in the next major version. ([#2736](https://github.com/Shopify/hydrogen/pull/2736)) by [@dustinfirman](https://github.com/dustinfirman)
-
   1. Search for anywhere using `UNSTABLE_getBuyer` and `UNSTABLE_setBuyer` is update accordingly.
 
      ```diff
@@ -908,7 +905,6 @@
 ### Patch Changes
 
 - Added namespace support to prevent conflicts when using multiple Pagination components: ([#2649](https://github.com/Shopify/hydrogen/pull/2649)) by [@scottdixon](https://github.com/scottdixon)
-
   - New optional `namespace` prop for the `<Pagination/>` component
   - New optional `namespace` option for `getPaginationVariables()` utility
   - When specified, pagination URL parameters are prefixed with the namespace (e.g., `products_cursor` instead of `cursor`)
@@ -941,7 +937,6 @@
 - Add optional headers param for logout redirect ([#2602](https://github.com/Shopify/hydrogen/pull/2602)) by [@coryagami](https://github.com/coryagami)
 
 - Stabilize `getSitemap`, `getSitemapIndex` and implement on skeleton ([#2589](https://github.com/Shopify/hydrogen/pull/2589)) by [@juanpprieto](https://github.com/juanpprieto)
-
   1. Update the `getSitemapIndex` at `/app/routes/[sitemap.xml].tsx`
 
   ```diff
@@ -1053,7 +1048,6 @@
 - [**Breaking change**] ([#2585](https://github.com/Shopify/hydrogen/pull/2585)) by [@wizardlyhel](https://github.com/wizardlyhel)
 
   Deprecate usages of `product.options.values` and use `product.options.optionValues` instead.
-
   1. Update your product graphql query to use the new `optionValues` field.
 
   ```diff
@@ -1614,7 +1608,6 @@
 ### Major Changes
 
 - Better Hydrogen error handling ([#1645](https://github.com/Shopify/hydrogen/pull/1645)) by [@wizardlyhel](https://github.com/wizardlyhel)
-
   - Fix storefront client throwing on partial successful errors
   - Fix subrequest profiler to better display network errors with URL information for Storefront API requests
 
@@ -1629,7 +1622,6 @@
   `storefront.isApiError` is deprecated.
 
   ### Updated return types for `createCartHandler` methods
-
   - `cart.get()` used to return a `Cart` type. Now it returns `CartReturn` type to accommodate the `errors` object.
   - All other `cart` methods (ie. `cart.addLines`) used to return a `CartQueryData` type. Now it returns `CartQueryDataReturn` type to accommodate the `errors` object.
 
@@ -1710,7 +1702,6 @@
 Hydrogen 2023-10 has upgraded to Remix v2 and is now a peer dependency.
 
 - Please check the [Remix v2 release notes](https://github.com/remix-run/remix/releases/tag/remix%402.0.0) to see what needs to be changed in your app code. Common changes include:
-
   - Renaming types prefixed with `V2_`. For example, `V2_MetaFunction` is now `MetaFunction`.
   - Renaming other types like `LoaderArgs` and `ActionArgs`, which are now `LoaderFunctionArgs` and `ActionFunctionArgs` respectively.
 
@@ -1773,7 +1764,6 @@ Hydrogen 2023-10 has upgraded to Remix v2 and is now a peer dependency.
   ```
 
 - Remove deprecated parameters and props (#1455 and #1435): ([#1435](https://github.com/Shopify/hydrogen/pull/1435)) by [@wizardlyhel](https://github.com/wizardlyhel)
-
   - `createStorefrontClient` parameters `buyerIp` and `requestGroupId`
   - `<Image>` props `loaderOptions` and `widths`
 
@@ -1859,7 +1849,6 @@ Hydrogen 2023-10 has upgraded to Remix v2 and is now a peer dependency.
 - Supress the hydration warning in the new `<Script>` component when `nonce` values differ between the server and client, which is expected. ([#1312](https://github.com/Shopify/hydrogen/pull/1312)) by [@frandiox](https://github.com/frandiox)
 
 - (Unstable) server-side network request debug virtual route ([#1284](https://github.com/Shopify/hydrogen/pull/1284)) by [@wizardlyhel](https://github.com/wizardlyhel)
-
   1. Update your `server.ts` so that it also passes in the `waitUntil` and `env`.
 
      ```diff
@@ -1902,7 +1891,6 @@ Hydrogen 2023-10 has upgraded to Remix v2 and is now a peer dependency.
 - Fix the Pagination component to reset internal state when the URL changes (not including Pagination params). ([#1291](https://github.com/Shopify/hydrogen/pull/1291)) by [@blittle](https://github.com/blittle)
 
   We also now validate the connection prop to include a `pageInfo` object with the following properties:
-
   1. `hasNextPage`
   1. `hasPreviousPage`
   1. `endCursor`
@@ -2006,12 +1994,10 @@ The latest version of Hydrogen comes with new and updated components and utiliti
 ### Patch Changes
 
 - Function and component for cart management: ([#786](https://github.com/Shopify/hydrogen/pull/786)) by [@wizardlyhel](https://github.com/wizardlyhel)
-
   - `createCartHandler` - Creates an object instance that simplifies cart operations such as add/update/remove from cart.
   - `CartForm` - A form component that helps you sets up form inputs for cart handler.
 
   **Documentation:**
-
   - Updated [how-to guides](https://shopify.dev/docs/custom-storefronts/hydrogen/cart)
   - [`createCartHandler`](https://shopify.dev/docs/api/hydrogen/2023-04/utilities/createcarthandler)
   - [`CartForm`](https://shopify.dev/docs/api/hydrogen/2023-04/components/cartform)
@@ -2180,7 +2166,6 @@ Add a `<VariantSelector>` component to make building product forms easier. Also 
   ```
 
   Note that `widths` and `loaderOptions` have now been deprecated, declaring `width` is no longer necessary, and we’ve added an `aspectRatio` prop:
-
   - `widths` is now calculated automatically based on a new `srcSetOptions` prop (see below for details).
   - `loaderOptions` has been removed in favour of declaring `crop` and `src` as props. `width` and `height` should only be set as props if rendering a fixed image size, with `width` otherwise defaulting to `100%`, and the loader calculating each dynamically.
   - `aspectRatio` is calculated automatically using `data.width` and `data.height` (if available) — but if you want to present an image with an aspect ratio other than what was uploaded, you can set using the format `Int/Int` (e.g. `3/2`, [see MDN docs for more info](https://developer.mozilla.org/en-US/docs/Web/CSS/aspect-ratio), note that you must use the _fraction_ style of declaring aspect ratio, decimals are not supported); if you've set an `aspectRatio`, we will default the crop to be `crop: center` (in the example above we've specified this to use `left` instead).
@@ -2325,7 +2310,6 @@ Add a `<VariantSelector>` component to make building product forms easier. Also 
   An example output might look like: `https://mycdn.com/image.jpeg?width=100&height=100&crop=center`
 
   ### Additional changes
-
   - Added the `srcSetOptions` prop used to create the image URLs used in `srcset`. It’s an object with the following keys and defaults:
 
     ```js
@@ -2353,7 +2337,6 @@ Add a `<VariantSelector>` component to make building product forms easier. Also 
 - Bump internal Remix dependencies to 1.15.0. ([#728](https://github.com/Shopify/hydrogen/pull/728)) by [@wizardlyhel](https://github.com/wizardlyhel)
 
   Recommendations to follow:
-
   - Upgrade all the Remix packages in your app to 1.15.0.
   - Enable Remix v2 future flags at your earliest convenience following [the official guide](https://remix.run/docs/en/1.15.0/pages/v2).
 
@@ -2440,7 +2423,6 @@ Add a `<VariantSelector>` component to make building product forms easier. Also 
 
   Introducing `getStorefrontHeaders` that collects the required Shopify headers for making a
   Storefront API call.
-
   - Make cart constants available as exports from `@shopify/hydrogen-react`
   - Deprecating `buyerIp` and `requestGroupId` props from `createStorefrontClient` from `@shopify/hydrogen`
   - Deprecating `getBuyerIp` function from `@shopify/remix-oxygen`
