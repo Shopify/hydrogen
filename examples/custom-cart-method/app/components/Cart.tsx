@@ -377,11 +377,11 @@ function CartLineUpdateByOptionsForm({line}: {line: CartLine}) {
               <LineItemOptions
                 option={option}
                 selectedOptions={selectedOptions}
-                onChange={(event) =>
-                  fetcher.submit(event.currentTarget.form, {
+                onChange={(event) => {
+                  void fetcher.submit(event.currentTarget.form, {
                     method: 'POST',
-                  })
-                }
+                  });
+                }}
               />
             )}
           </VariantSelector>

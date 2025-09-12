@@ -5,10 +5,8 @@ import type {
 import {type GraphQLError} from '../utils/graphql';
 import type {CrossRuntimeRequest} from '../utils/request';
 import type {HydrogenSession, WaitUntil} from '../types';
-import type {
-  LanguageCode,
-  BuyerInput,
-} from '@shopify/hydrogen-react/storefront-api-types';
+import type {BuyerInput} from '@shopify/hydrogen-react/storefront-api-types';
+import type {LanguageCode} from '@shopify/hydrogen-react/customer-account-api-types';
 
 // Return type of unauthorizedHandler = Return type of loader/action function
 // This type is not exported https://github.com/remix-run/react-router/blob/main/packages/router/utils.ts#L167
@@ -63,6 +61,8 @@ export type LogoutOptions = {
 };
 
 export type CustomerAccount = {
+  /** The i18n configuration for Customer Account API */
+  i18n: {language: LanguageCode};
   /** Start the OAuth login flow. This function should be called and returned from a Remix loader.
    * It redirects the customer to a Shopify login domain. It also defined the final path the customer
    * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is

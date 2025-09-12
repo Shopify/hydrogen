@@ -1,3 +1,6 @@
+// Import React Router type augmentations to ensure they're loaded
+/// <reference path="../react-router.d.ts" />
+
 export {
   Analytics,
   getShopAnalytics,
@@ -64,6 +67,7 @@ export {cartMetafieldsSetDefault} from './cart/queries/cartMetafieldsSetDefault'
 export {cartNoteUpdateDefault} from './cart/queries/cartNoteUpdateDefault';
 export {cartSelectedDeliveryOptionsUpdateDefault} from './cart/queries/cartSelectedDeliveryOptionsUpdateDefault';
 export {changelogHandler} from './changelogHandler';
+export {hydrogenContext} from './context-keys';
 export {
   createHydrogenContext,
   type HydrogenContext,
@@ -103,6 +107,7 @@ export {
   getSelectedProductOptions,
   VariantSelector,
 } from './product/VariantSelector';
+export {hydrogenPreset} from './react-router-preset';
 export {RichText} from './RichText';
 export {graphiqlLoader} from './routing/graphiql';
 export {storefrontRedirect} from './routing/redirect';
@@ -113,7 +118,12 @@ export {Seo} from './seo/seo';
 export {ShopPayButton} from './shop/ShopPayButton';
 export {getSitemap, getSitemapIndex} from './sitemap/sitemap';
 export * from './storefront';
-export type {HydrogenEnv, HydrogenSession, HydrogenSessionData} from './types';
+export type {
+  HydrogenEnv,
+  HydrogenRouterContextProvider,
+  HydrogenSession,
+  HydrogenSessionData,
+} from './types';
 export type {
   ClientBrowserParameters,
   MappedProductOptions,

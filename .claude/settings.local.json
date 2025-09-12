@@ -3,9 +3,8 @@
     "allow": [
       "WebFetch(domain:github.com)",
       "Bash(gh run view:*)",
-      "Bash(npm ls:*)",
       "Bash(npm test:*)",
-      "Bash(git checkout:*)"
+      "Bash(npm run ci:checks:*)"
     ]
   },
   "enabledMcpjsonServers": [

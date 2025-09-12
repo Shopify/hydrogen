@@ -29,10 +29,10 @@ export function MultipassCheckoutButton(props: MultipassCheckoutButtonProps) {
        * If they user is logged in we persist it in the checkout,
        * otherwise we log them out of the checkout too.
        */
-      return await multipass({return_to: checkoutUrl, redirect});
+      await multipass({return_to: checkoutUrl, redirect});
     },
     [redirect, checkoutUrl, onClick],
   );
 
-  return <button onClick={checkoutHandler}>{children}</button>;
+  return <button onClick={(e) => void checkoutHandler(e)}>{children}</button>;
 }

@@ -90,7 +90,7 @@ export function ProductForm({
                       disabled={!exists}
                       onClick={() => {
                         if (!selected) {
-                          navigate(`?${variantUriQuery}`, {
+                          void navigate(`?${variantUriQuery}`, {
                             replace: true,
                           });
                         }

@@ -54,6 +54,7 @@ export function SectionHero(props: SectionHeroFragment) {
               marginTop: '1rem',
             }}
             target={link?.target?.value === 'false' ? '_self' : '_blank'}
+            rel="noreferrer"
           >
             {link?.text?.value}
           </Link>

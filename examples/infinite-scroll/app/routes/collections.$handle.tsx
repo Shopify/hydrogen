@@ -139,7 +139,7 @@ function ProductsGrid({
 
   useEffect(() => {
     if (inView && hasNextPage) {
-      navigate(nextPageUrl, {
+      void navigate(nextPageUrl, {
         replace: true,
         preventScrollReset: true,
         state,

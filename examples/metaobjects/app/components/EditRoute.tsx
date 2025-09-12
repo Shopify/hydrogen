@@ -9,7 +9,7 @@ import {Link, useMatches} from 'react-router';
 export function EditRoute({routeId}: {routeId: string}) {
   const [url, setUrl] = useState<URL | null>(null);
   const [root] = useMatches();
-  // @ts-ignore
+  // @ts-expect-error - publicStoreSubdomain is not typed in root data
   const publicStoreSubdomain = root?.data?.publicStoreSubdomain;
 
   useEffect(() => {
@@ -31,6 +31,7 @@ export function EditRoute({routeId}: {routeId: string}) {
     <Link
       to={adminEditUrl}
       target="_blank"
+      rel="noreferrer"
       style={{
         position: 'absolute',
         top: '5rem',
