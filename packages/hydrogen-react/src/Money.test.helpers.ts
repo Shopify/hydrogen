@@ -18,11 +18,10 @@ export function getCustomerPrice(
   price: Partial<CustomerMoneyV2> = {},
 ): CustomerMoneyV2 {
   return {
-    currencyCode: price.currencyCode ?? 'USDC', // Use USDC as example of Customer-only currency
+    currencyCode: price.currencyCode ?? 'USDC', // Use USDC as example of Customer Account API-specific currency
     amount: price.amount ?? faker.finance.amount(),
   };
 }
-
 export function getUnitPriceMeasurement(
   unitPriceMeasurement: Partial<UnitPriceMeasurement> = {},
 ): UnitPriceMeasurement {
