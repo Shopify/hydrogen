@@ -76,32 +76,12 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           // Vite performs an initial reload after optimizing these dependencies.
           // Do it early to avoid the initial reload:
           optimizeDeps: {
-            // Avoid optimizing Hydrogen itself in the monorepo
-            // to prevent caching source code changes:
-            include: isHydrogenMonorepo
-              ? [
-                  // React Router dependencies for initial reload optimization
-                  'react',
-                  'react-dom',
-                  'react-router',
-                  'react-router-dom',
-                  // CJS dependencies that would otherwise cause issues
-                  'content-security-policy-builder',
-                  'worktop/cookie',
-                  '@shopify/graphql-client',
-                ]
-              : [
-                  '@shopify/hydrogen',
-                  // React Router dependencies for initial reload optimization
-                  'react',
-                  'react-dom',
-                  'react-router',
-                  'react-router-dom',
-                  // CJS dependencies that would otherwise cause issues
-                  'content-security-policy-builder',
-                  'worktop/cookie',
-                  '@shopify/graphql-client',
-                ],
+            include: [
+              // Optimize CJS dependencies that would otherwise cause issues
+              'content-security-policy-builder',
+              'worktop/cookie',
+              '@shopify/graphql-client',
+            ],
           },
         };
       },
