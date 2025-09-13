@@ -1,18 +1,24 @@
-
-import {data as remixData, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-import { Form, NavLink, Outlet, useLoaderData } from 'react-router';
+import {
+  data as remixData,
+  Form,
+  NavLink,
+  Outlet,
+  useLoaderData,
+} from 'react-router';
+import type {Route} from './+types/account';
 import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
 
 export function shouldRevalidate() {
   return true;
 }
 
-export async function loader({context}: LoaderFunctionArgs) {
-  const {data, errors} = await context.customerAccount.query(
+export async function loader({context}: Route.LoaderArgs) {
+  const {customerAccount} = context;
+  const {data, errors} = await customerAccount.query(
     CUSTOMER_DETAILS_QUERY,
     {
       variables: {
-        language: context.storefront.i18n.language,
+        language: customerAccount.i18n.language,
       },
     },
   );

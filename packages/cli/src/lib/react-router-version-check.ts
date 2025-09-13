@@ -46,50 +46,36 @@ export async function checkReactRouterVersions(appPath: string): Promise<void> {
     return;
   }
 
-  const allDependencies = {
+  // Combine all dependencies into one object
+  const allDeps = {
     ...packageJson.dependencies,
     ...packageJson.devDependencies,
+    ...packageJson.peerDependencies,
   };
 
   // Check each React Router package
-  for (const pkgName of REACT_ROUTER_PACKAGES) {
-    const declaredVersion = allDependencies[pkgName];
+  for (const pkg of REACT_ROUTER_PACKAGES) {
+    const installedVersion = allDeps[pkg];
 
-    if (!declaredVersion) {
-      // Package not used in this project
+    if (!installedVersion) {
+      // Package not installed, skip
       continue;
     }
 
-    // Try to read the actual installed version from node_modules
-    let installedVersion: string | undefined;
-    try {
-      const pkgJsonPath = joinPath(
-        appPath,
-        'node_modules',
-        pkgName,
-        'package.json',
-      );
-      const pkgJson = JSON.parse(await readFile(pkgJsonPath));
-      installedVersion = pkgJson.version;
-    } catch {
-      // Package might not be installed yet
-      continue;
-    }
+    // Clean the version string (remove ^, ~, etc.)
+    const cleanVersion = installedVersion.replace(/^[\^~]/, '');
 
-    // Check if the installed version satisfies the expected range
-    if (
-      installedVersion &&
-      !semver.satisfies(installedVersion, EXPECTED_VERSION)
-    ) {
+    // Check if it's compatible with our expected version
+    if (!semver.satisfies(EXPECTED_VERSION, installedVersion)) {
       mismatches.push({
-        package: pkgName,
+        package: pkg,
         installed: installedVersion,
         expected: EXPECTED_VERSION,
       });
     }
   }
 
-  // Display warning if there are mismatches
+  // If there are mismatches, show a warning
   if (mismatches.length > 0) {
     const mismatchList = mismatches
       .map(
@@ -125,13 +111,17 @@ export async function checkReactRouterVersions(appPath: string): Promise<void> {
     }
 
     renderWarning({
-      headline: 'Unsupported React Router version detected',
+      headline: 'React Router version mismatch detected',
       body: [
-        'The following packages have incompatible versions:',
+        'Hydrogen requires React Router 7.8.x for proper functionality.',
+        '',
+        'Version mismatches found:',
         mismatchList,
         '',
-        `Please update your React Router packages to match Hydrogen's requirements.`,
-        `Run: ${commands.join(' && ')}`,
+        'To fix this issue, run:',
+        ...commands.map((cmd) => `  ${cmd}`),
+        '',
+        'This may cause issues with routing, code splitting, and other features.',
       ].join('\n'),
     });
   }

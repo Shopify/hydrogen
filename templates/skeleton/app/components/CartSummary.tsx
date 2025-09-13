@@ -8,7 +8,8 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
 import {useEffect, useRef} from 'react';
-import {FetcherWithComponents, useFetcher} from 'react-router';
+import {useFetcher} from 'react-router';
+import type {FetcherWithComponents} from 'react-router';
 import {CartWarnings} from '~/components/CartWarnings';
 import {CartUserErrors} from '~/components/CartUserErrors';
 
