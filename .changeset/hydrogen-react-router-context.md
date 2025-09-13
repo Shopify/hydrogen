@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen': minor
+'@shopify/hydrogen': major
 ---
 
 Add React Router 7.8.x support infrastructure with full compatibility for both context access patterns.
