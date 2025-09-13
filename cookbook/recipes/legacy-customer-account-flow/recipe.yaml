@@ -1,0 +1,158 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+gid: 113d1846-1e41-44e2-a3b4-b8b11abf09c0
+title: Legacy Customer Account Flow
+summary: Implement legacy customer account authentication using the Storefront API
+description: |
+  This recipe converts a Hydrogen app from the new Customer Account API authentication
+  to the legacy customer account flow using the Storefront API. This is useful for stores
+  that haven't migrated to the new Customer Account API yet.
+
+  Key features:
+  - Full customer registration and login flow
+  - Password recovery and reset functionality
+  - Account activation via email
+  - Customer profile management
+  - Order history and address management
+  - Session-based authentication using customer access tokens
+notes:
+  - This uses the deprecated Storefront API customer endpoints
+  - Consider migrating to the new Customer Account API for better security and
+    features
+  - Customer access tokens are stored in session cookies
+  - All account routes are server-side rendered for security
+requirements: |
+  - A Shopify store with customer accounts enabled
+  - Storefront API access
+  - Email notifications configured in Shopify admin for account activation and password reset
+ingredients:
+  - path: templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx
+    description: null
+  - path: templates/skeleton/app/routes/account_.recover.tsx
+    description: null
+  - path: templates/skeleton/app/routes/account_.register.tsx
+    description: null
+  - path: templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx
+    description: null
+deletedFiles: []
+steps:
+  - type: PATCH
+    step: "1"
+    name: README.md
+    description: null
+    diffs:
+      - file: README.md
+        patchFile: README.md.47d06f.patch
+  - type: PATCH
+    step: "1"
+    name: app/components/Header.tsx
+    description: null
+    diffs:
+      - file: app/components/Header.tsx
+        patchFile: Header.tsx.80a27a.patch
+  - type: NEW_FILE
+    step: "1"
+    name: app/routes/account_.activate.$id.$activationToken.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx
+  - type: PATCH
+    step: "2"
+    name: app/components/PageLayout.tsx
+    description: null
+    diffs:
+      - file: app/components/PageLayout.tsx
+        patchFile: PageLayout.tsx.8c3338.patch
+  - type: NEW_FILE
+    step: "2"
+    name: app/routes/account_.recover.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/account_.recover.tsx
+  - type: PATCH
+    step: "3"
+    name: app/root.tsx
+    description: null
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.0ad938.patch
+  - type: NEW_FILE
+    step: "3"
+    name: app/routes/account_.register.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/account_.register.tsx
+  - type: PATCH
+    step: "4"
+    name: app/routes/account.$.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.$.tsx
+        patchFile: account.$.tsx.2df983.patch
+  - type: NEW_FILE
+    step: "4"
+    name: app/routes/account_.reset.$id.$resetToken.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx
+  - type: PATCH
+    step: "5"
+    name: app/routes/account.addresses.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.addresses.tsx
+        patchFile: account.addresses.tsx.34e472.patch
+  - type: PATCH
+    step: "6"
+    name: app/routes/account.orders.$id.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.orders.$id.tsx
+        patchFile: account.orders.$id.tsx.fa0356.patch
+  - type: PATCH
+    step: "7"
+    name: app/routes/account.orders._index.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.orders._index.tsx
+        patchFile: account.orders._index.tsx.2b0f8a.patch
+  - type: PATCH
+    step: "8"
+    name: app/routes/account.profile.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.profile.tsx
+        patchFile: account.profile.tsx.255a24.patch
+  - type: PATCH
+    step: "9"
+    name: app/routes/account.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.tsx
+        patchFile: account.tsx.ca55f3.patch
+  - type: PATCH
+    step: "10"
+    name: app/routes/account_.login.tsx
+    description: null
+    diffs:
+      - file: app/routes/account_.login.tsx
+        patchFile: account_.login.tsx.1d534b.patch
+  - type: PATCH
+    step: "11"
+    name: app/routes/account_.logout.tsx
+    description: null
+    diffs:
+      - file: app/routes/account_.logout.tsx
+        patchFile: account_.logout.tsx.d6592d.patch
+  - type: PATCH
+    step: "12"
+    name: app/routes/cart.tsx
+    description: null
+    diffs:
+      - file: app/routes/cart.tsx
+        patchFile: cart.tsx.362410.patch
+nextSteps: null
+llms:
+  userQueries: []
+  troubleshooting: []
+commit: 99c2a1d70f91a7419ab85ef2d63cb1d9d1d7843b

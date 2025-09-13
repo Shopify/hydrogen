@@ -649,6 +649,7 @@ declare global {
 ```bash
 npm run cookbook -- generate --recipe [name]
 # Creates recipe from current skeleton changes
+# IMPORTANT: Use this when skeleton has new changes to capture
 ```
 
 ### Apply Recipe
@@ -660,7 +661,8 @@ npm run cookbook -- apply --recipe [name]
 ### Regenerate Recipe
 ```bash
 npm run cookbook -- regenerate --recipe [name] --format github
-# Reapplies and regenerates after changes
+# ONLY for updating documentation/metadata when recipe.yaml changes
+# Does NOT capture new skeleton changes - use generate instead
 ```
 
 ### Validate Recipe
@@ -692,6 +694,7 @@ npm run cookbook -- render --recipe [name] --format github
 1. **Always reset skeleton first** - `git checkout -- templates/skeleton/`
 2. **Verify patches were created** - Check `ls -la recipes/[name]/patches/`
 3. **Count patches match modifications** - Should have one patch per modified file
+4. **Use generate, not regenerate** - `generate` captures new skeleton changes, `regenerate` only updates docs
 
 ### Validation Phase
 1. **Always run in this order**:
