@@ -1,10 +1,10 @@
-import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import type {Route} from './+types/[sitemap.xml]';
 import {getSitemapIndex} from '@shopify/hydrogen';
 
 export async function loader({
   request,
   context: {storefront},
-}: LoaderFunctionArgs) {
+}: Route.LoaderArgs) {
   const response = await getSitemapIndex({
     storefront,
     request,
@@ -14,4 +14,3 @@ export async function loader({
 
   return response;
 }
-

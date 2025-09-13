@@ -1,10 +1,13 @@
-import { Link, useLoaderData, type MetaFunction } from 'react-router';
+import {
+  Link,
+  useLoaderData,
+} from 'react-router';
+import type {Route} from './+types/account.orders._index';
 import {
   Money,
   getPaginationVariables,
   flattenConnection,
 } from '@shopify/hydrogen';
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {CUSTOMER_ORDERS_QUERY} from '~/graphql/customer-account/CustomerOrdersQuery';
 import type {
   CustomerOrdersFragment,
@@ -12,21 +15,22 @@ import type {
 } from 'customer-accountapi.generated';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: 'Orders'}];
 };
 
-export async function loader({request, context}: LoaderFunctionArgs) {
+export async function loader({request, context}: Route.LoaderArgs) {
+  const {customerAccount} = context;
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 20,
   });
 
-  const {data, errors} = await context.customerAccount.query(
+  const {data, errors} = await customerAccount.query(
     CUSTOMER_ORDERS_QUERY,
     {
       variables: {
         ...paginationVariables,
-        language: context.storefront.i18n.language,
+        language: customerAccount.i18n.language,
       },
     },
   );
