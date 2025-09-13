@@ -1,0 +1,200 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+gid: d230565c-84f4-4555-b7b8-8c574d54df80
+title: multipass
+summary: ""
+description: ""
+notes: []
+requirements: null
+ingredients:
+  - path: templates/skeleton/app/components/MultipassCheckoutButton.tsx
+    description: null
+  - path: templates/skeleton/app/lib/multipass/multipass.ts
+    description: null
+  - path: templates/skeleton/app/lib/multipass/multipassify.server.ts
+    description: null
+  - path: templates/skeleton/app/lib/multipass/types.ts
+    description: null
+  - path: templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx
+    description: null
+  - path: templates/skeleton/app/routes/account_.login.multipass.tsx
+    description: null
+  - path: templates/skeleton/app/routes/account_.recover.tsx
+    description: null
+  - path: templates/skeleton/app/routes/account_.register.tsx
+    description: null
+  - path: templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx
+    description: null
+deletedFiles: []
+steps:
+  - type: PATCH
+    step: "1"
+    name: README.md
+    description: null
+    diffs:
+      - file: README.md
+        patchFile: README.md.47d06f.patch
+  - type: NEW_FILE
+    step: "1"
+    name: app/components/MultipassCheckoutButton.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/MultipassCheckoutButton.tsx
+  - type: PATCH
+    step: "2"
+    name: app/components/CartSummary.tsx
+    description: null
+    diffs:
+      - file: app/components/CartSummary.tsx
+        patchFile: CartSummary.tsx.eb8134.patch
+  - type: NEW_FILE
+    step: "2"
+    name: app/lib/multipass/multipass.ts
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/lib/multipass/multipass.ts
+  - type: PATCH
+    step: "3"
+    name: app/root.tsx
+    description: null
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.0ad938.patch
+  - type: NEW_FILE
+    step: "3"
+    name: app/lib/multipass/multipassify.server.ts
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/lib/multipass/multipassify.server.ts
+  - type: PATCH
+    step: "4"
+    name: app/routes/account.$.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.$.tsx
+        patchFile: account.$.tsx.2df983.patch
+  - type: NEW_FILE
+    step: "4"
+    name: app/lib/multipass/types.ts
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/lib/multipass/types.ts
+  - type: PATCH
+    step: "5"
+    name: app/routes/account._index.tsx
+    description: null
+    diffs:
+      - file: app/routes/account._index.tsx
+        patchFile: account._index.tsx.bf7dac.patch
+  - type: NEW_FILE
+    step: "5"
+    name: app/routes/account_.activate.$id.$activationToken.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx
+  - type: PATCH
+    step: "6"
+    name: app/routes/account.addresses.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.addresses.tsx
+        patchFile: account.addresses.tsx.34e472.patch
+  - type: NEW_FILE
+    step: "6"
+    name: app/routes/account_.login.multipass.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/account_.login.multipass.tsx
+  - type: PATCH
+    step: "7"
+    name: app/routes/account.orders.$id.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.orders.$id.tsx
+        patchFile: account.orders.$id.tsx.fa0356.patch
+  - type: NEW_FILE
+    step: "7"
+    name: app/routes/account_.recover.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/account_.recover.tsx
+  - type: PATCH
+    step: "8"
+    name: app/routes/account.orders._index.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.orders._index.tsx
+        patchFile: account.orders._index.tsx.2b0f8a.patch
+  - type: NEW_FILE
+    step: "8"
+    name: app/routes/account_.register.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/account_.register.tsx
+  - type: PATCH
+    step: "9"
+    name: app/routes/account.profile.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.profile.tsx
+        patchFile: account.profile.tsx.255a24.patch
+  - type: NEW_FILE
+    step: "9"
+    name: app/routes/account_.reset.$id.$resetToken.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx
+  - type: PATCH
+    step: "10"
+    name: app/routes/account.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.tsx
+        patchFile: account.tsx.ca55f3.patch
+  - type: PATCH
+    step: "11"
+    name: app/routes/account_.authorize.tsx
+    description: null
+    diffs:
+      - file: app/routes/account_.authorize.tsx
+        patchFile: account_.authorize.tsx.28c477.patch
+  - type: PATCH
+    step: "12"
+    name: app/routes/account_.login.tsx
+    description: null
+    diffs:
+      - file: app/routes/account_.login.tsx
+        patchFile: account_.login.tsx.1d534b.patch
+  - type: PATCH
+    step: "13"
+    name: app/routes/account_.logout.tsx
+    description: null
+    diffs:
+      - file: app/routes/account_.logout.tsx
+        patchFile: account_.logout.tsx.d6592d.patch
+  - type: PATCH
+    step: "14"
+    name: app/routes/cart.tsx
+    description: null
+    diffs:
+      - file: app/routes/cart.tsx
+        patchFile: cart.tsx.362410.patch
+  - type: PATCH
+    step: "15"
+    name: package.json
+    description: null
+    diffs:
+      - file: package.json
+        patchFile: package.json.cfee98.patch
+  - type: PATCH
+    step: "16"
+    name: vite.config.ts
+    description: null
+    diffs:
+      - file: vite.config.ts
+        patchFile: vite.config.ts.f0a2c4.patch
+nextSteps: null
+llms:
+  userQueries: []
+  troubleshooting: []
+commit: 99c2a1d70f91a7419ab85ef2d63cb1d9d1d7843b
