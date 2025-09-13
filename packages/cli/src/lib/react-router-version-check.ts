@@ -28,9 +28,7 @@ const EXPECTED_VERSION = '7.8.2';
 /**
  * Checks if the installed React Router packages are compatible with Hydrogen's requirements
  */
-export async function checkReactRouterVersions(
-  appPath: string,
-): Promise<void> {
+export async function checkReactRouterVersions(appPath: string): Promise<void> {
   const mismatches: VersionMismatch[] = [];
 
   // Read the app's package.json to get declared versions
