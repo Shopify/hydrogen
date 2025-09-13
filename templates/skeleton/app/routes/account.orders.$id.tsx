@@ -12,16 +12,17 @@ export const meta: Route.MetaFunction = ({data}) => {
 };
 
 export async function loader({params, context}: Route.LoaderArgs) {
+  const {customerAccount} = context;
   if (!params.id) {
     return redirect('/account/orders');
   }
 
   const orderId = atob(params.id);
   const {data, errors}: {data: OrderQuery; errors?: Array<{message: string}>} =
-    await context.customerAccount.query(CUSTOMER_ORDER_QUERY, {
+    await customerAccount.query(CUSTOMER_ORDER_QUERY, {
       variables: {
         orderId,
-        language: context.customerAccount.i18n.language,
+        language: customerAccount.i18n.language,
       },
     });
 

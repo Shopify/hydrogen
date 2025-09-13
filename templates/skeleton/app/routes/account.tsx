@@ -13,11 +13,12 @@ export function shouldRevalidate() {
 }
 
 export async function loader({context}: Route.LoaderArgs) {
-  const {data, errors} = await context.customerAccount.query(
+  const {customerAccount} = context;
+  const {data, errors} = await customerAccount.query(
     CUSTOMER_DETAILS_QUERY,
     {
       variables: {
-        language: context.customerAccount.i18n.language,
+        language: customerAccount.i18n.language,
       },
     },
   );

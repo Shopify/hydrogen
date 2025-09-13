@@ -20,16 +20,17 @@ export const meta: Route.MetaFunction = () => {
 };
 
 export async function loader({request, context}: Route.LoaderArgs) {
+  const {customerAccount} = context;
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 20,
   });
 
-  const {data, errors} = await context.customerAccount.query(
+  const {data, errors} = await customerAccount.query(
     CUSTOMER_ORDERS_QUERY,
     {
       variables: {
         ...paginationVariables,
-        language: context.customerAccount.i18n.language,
+        language: customerAccount.i18n.language,
       },
     },
   );
