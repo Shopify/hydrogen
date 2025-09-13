@@ -23,7 +23,6 @@ import {
 import {runBuild} from './build.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 import {deferPromise} from '../../lib/defer.js';
-import {prepareDiffDirectory} from '../../lib/template-diff.js';
 
 export default class Preview extends Command {
   static descriptionWithMarkdown =
@@ -56,27 +55,11 @@ export default class Preview extends Command {
     ...overrideFlag(commonFlags.codegen, {
       codegen: {dependsOn: ['build']},
     }),
-    // Diff in preview only makes sense when combined with --build.
-    // Without the build flag, preview only needs access to the existing
-    // `dist` directory in the project, so there's no need to merge the
-    // project with the skeleton template in a temporary directory.
-    ...overrideFlag(commonFlags.diff, {
-      diff: {dependsOn: ['build']},
-    }),
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Preview);
-    const originalDirectory = flags.path
-      ? resolvePath(flags.path)
-      : process.cwd();
-
-    const diff =
-      flags.build && flags.diff
-        ? await prepareDiffDirectory(originalDirectory, flags.watch)
-        : undefined;
-
-    const directory = diff?.targetDirectory ?? originalDirectory;
+    const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
     const {close} = await runPreview({
       ...flagsToCamelObject(flags),
@@ -85,11 +68,6 @@ export default class Preview extends Command {
 
     setupResourceCleanup(async () => {
       await close();
-      if (diff) {
-        await diff.copyDiffBuild();
-        if (flags.codegen) await diff.copyDiffCodegen();
-        await diff.cleanup();
-      }
     });
   }
 }

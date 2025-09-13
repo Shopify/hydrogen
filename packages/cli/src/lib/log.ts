@@ -476,10 +476,11 @@ export async function muteRemixLogs(root: string) {
   // Remix 1.19.1 warns about `serverNodeBuiltinsPolyfill` being deprecated
   // using a global logger that cannot be modified. Mute it here.
   try {
-    type RemixLog = typeof import('@remix-run/dev/dist/tux/logger.js');
+    // @ts-ignore - internal API
+    type RemixLog = typeof import('@react-router/dev/dist/tux/logger.js');
 
     const {logger} = await importLocal<RemixLog>(
-      '@remix-run/dev/dist/tux/logger.js',
+      '@react-router/dev/dist/tux/logger.js',
       root,
     );
     logger.warn = logger.debug = logger.info = () => {};
