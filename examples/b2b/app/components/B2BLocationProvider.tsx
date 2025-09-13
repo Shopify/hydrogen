@@ -27,7 +27,7 @@ export function B2BLocationProvider({children}: {children: React.ReactNode}) {
   useEffect(() => {
     if (fetcher.data || fetcher.state === 'loading') return;
 
-    fetcher.load('/b2blocations');
+    void fetcher.load('/b2blocations');
   }, [fetcher]);
 
   const value = useMemo<B2BLocationContextValue>(() => {

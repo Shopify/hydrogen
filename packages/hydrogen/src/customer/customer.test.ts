@@ -62,7 +62,7 @@ const mockBuyerSession = {
 describe('customer', () => {
   beforeEach(() => {
     session = {
-      commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+      commit: vi.fn(() => Promise.resolve('cookie')),
       get: vi.fn(() => {
         return {...mockCustomerAccountSession, ...mockBuyerSession};
       }) as HydrogenSession['get'],
@@ -230,6 +230,88 @@ describe('customer', () => {
       });
     });
 
+    describe('countryCode', () => {
+      it('Redirects to the customer account api login url with countryCode as param', async () => {
+        const origin = 'https://something-good.com';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(origin),
+          waitUntil: vi.fn(),
+        });
+
+        const response = await customer.login({
+          countryCode: 'US',
+        });
+        const url = new URL(response.headers.get('location')!);
+
+        expect(url.searchParams.get('region_country')).toBe('US');
+      });
+
+      it('Includes both uiLocales and countryCode when both are provided', async () => {
+        const origin = 'https://something-good.com';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(origin),
+          waitUntil: vi.fn(),
+        });
+
+        const response = await customer.login({
+          uiLocales: 'FR',
+          countryCode: 'CA',
+        });
+        const url = new URL(response.headers.get('location')!);
+
+        expect(url.searchParams.get('ui_locales')).toBe('fr');
+        expect(url.searchParams.get('region_country')).toBe('CA');
+      });
+
+      it('Does not include region_country param when countryCode is not provided', async () => {
+        const origin = 'https://something-good.com';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(origin),
+          waitUntil: vi.fn(),
+        });
+
+        const response = await customer.login();
+        const url = new URL(response.headers.get('location')!);
+
+        expect(url.searchParams.get('region_country')).toBeNull();
+      });
+
+      it('Handles different country code formats', async () => {
+        const origin = 'https://something-good.com';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(origin),
+          waitUntil: vi.fn(),
+        });
+
+        // Test with various country codes
+        const countryCodes = ['GB', 'JP', 'AU', 'DE'];
+
+        for (const code of countryCodes) {
+          const response = await customer.login({
+            countryCode: code as any,
+          });
+          const url = new URL(response.headers.get('location')!);
+          expect(url.searchParams.get('region_country')).toBe(code);
+        }
+      });
+    });
+
     describe('logout', () => {
       describe('using new auth url when shopId is present in env', () => {
         it('Redirects to the customer account api logout url', async () => {
@@ -352,7 +434,7 @@ describe('customer', () => {
         it('Redirects to app origin when customer is not login by default', async () => {
           const origin = 'https://shop123.com';
           const mockSession: HydrogenSession = {
-            commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+            commit: vi.fn(() => Promise.resolve('cookie')),
             get: vi.fn(() => undefined) as HydrogenSession['get'],
             set: vi.fn(),
             unset: vi.fn(),
@@ -383,7 +465,7 @@ describe('customer', () => {
           const postLogoutRedirectUri = '/post-logout-landing-page';
 
           const mockSession: HydrogenSession = {
-            commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+            commit: vi.fn(() => Promise.resolve('cookie')),
             get: vi.fn(() => undefined) as HydrogenSession['get'],
             set: vi.fn(),
             unset: vi.fn(),
@@ -417,7 +499,7 @@ describe('customer', () => {
             'https://something-bad.com/post-logout-landing-page';
 
           const mockSession: HydrogenSession = {
-            commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+            commit: vi.fn(() => Promise.resolve('cookie')),
             get: vi.fn(() => undefined) as HydrogenSession['get'],
             set: vi.fn(),
             unset: vi.fn(),
@@ -746,7 +828,7 @@ describe('customer', () => {
       it('Redirects to redirectPath on successful authorization and updates session', async () => {
         const redirectPath = '/account/orders';
         session = {
-          commit: vi.fn(() => new Promise((resolve) => resolve('cookie'))),
+          commit: vi.fn(() => Promise.resolve('cookie')),
           get: vi.fn(() => {
             return {...mockCustomerAccountSession, redirectPath};
           }) as HydrogenSession['get'],

@@ -104,7 +104,7 @@
     "happy-dom": "^17.0.0",
     "react": "18.3.1",
     "schema-dts": "^1.1.2",
-    "vitest": "^1.0.4"
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "react-router": "7.8.2",

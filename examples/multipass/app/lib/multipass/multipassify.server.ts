@@ -1,4 +1,4 @@
-import snake_cake from 'snakecase-keys';
+import snakecaseKeys from 'snakecase-keys';
 import CryptoJS from 'crypto-js';
 import type {MultipassCustomer} from './types';
 
@@ -50,7 +50,7 @@ export class Multipassify {
     }
 
     // Generate a token
-    const token = this.generateToken(snake_cake(customer));
+    const token = this.generateToken(snakecaseKeys(customer));
 
     // Get the origin of the request
     const toOrigin = new URL(request.url).origin;
@@ -77,7 +77,6 @@ export class Multipassify {
     const encrypted = this.encrypt(JSON.stringify(customer));
     const signature = this.sign(encrypted);
 
-    // @ts-ignore - concat is a method on WordArray
     const token = encrypted.concat(signature);
     let token64 = token.toString(CryptoJS.enc.Base64);
 
@@ -100,7 +99,6 @@ export class Multipassify {
     });
 
     // Append iv as first block of the encryption
-    // @ts-ignore - concat is a method on WordArray
     return iv.concat(cipher.ciphertext);
   }
 
