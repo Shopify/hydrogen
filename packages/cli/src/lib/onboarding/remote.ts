@@ -9,7 +9,6 @@ import {
   downloadExternalRepo,
   downloadMonorepoTemplates,
 } from '../template-downloader.js';
-import {applyTemplateDiff} from '../template-diff.js';
 import {getCliCommand} from '../shell.js';
 import {
   commitAll,
@@ -63,16 +62,9 @@ export async function setupRemoteTemplate(
       // do not continue if it's already aborted
       if (controller.signal.aborted) return;
 
-      const {sourcePath, skeletonPath} = downloaded;
+      const {sourcePath} = downloaded;
 
-      const pkgJson = await readAndParsePackageJson(
-        joinPath(sourcePath, 'package.json'),
-      );
-
-      if (pkgJson.scripts?.dev?.includes('--diff')) {
-        return applyTemplateDiff(project.directory, sourcePath, skeletonPath);
-      }
-
+      // Always copy the entire template/example
       await copyFile(sourcePath, project.directory);
     })
     .catch(abort);

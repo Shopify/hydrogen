@@ -2,6 +2,7 @@ import {describe, it, expect} from 'vitest';
 import {
   inTemporaryDirectory,
   readFile,
+  writeFile,
   copyFile,
   fileExists,
 } from '@shopify/cli-kit/node/fs';
@@ -10,6 +11,7 @@ import {ts} from 'ts-morph';
 import {getAssetsDir, getSkeletonSourceDir} from '../../build.js';
 import {replaceContextI18n} from './replacers.js';
 import {DEFAULT_COMPILER_OPTIONS} from '../../transpile/morph/index.js';
+import {transpileFile} from '../../transpile/index.js';
 
 const contextTs = 'app/lib/context.ts';
 const expectedI18nFileTs = 'app/lib/i18n.ts';
@@ -274,7 +276,17 @@ describe('i18n replacers', () => {
       );
       const testContextFilePath = joinPath(tmpDir, contextJs);
 
+      // Copy the TypeScript file
       await copyFile(skeletonContextFilePath, testContextFilePath);
+
+      // Transpile TypeScript content to JavaScript
+      const tsContent = await readFile(testContextFilePath);
+      const jsContent = await transpileFile(
+        tsContent,
+        testContextFilePath,
+        false,
+      );
+      await writeFile(testContextFilePath, jsContent);
 
       await replaceContextI18n(
         {rootDirectory: tmpDir, contextCreate: contextJs},

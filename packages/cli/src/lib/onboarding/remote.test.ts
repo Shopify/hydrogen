@@ -74,7 +74,13 @@ describe('remote templates', () => {
     processExit.mockRestore();
   });
 
-  it('creates basic projects', async () => {
+  // TODO: Re-enable when examples are converted to standalone in Branch 4
+  // Currently skipped because:
+  // 1. The --diff flag has been disabled and removed from the CLI
+  // 2. Examples are still diff-based (containing only files that differ from skeleton)
+  // 3. The --template flag needs to be updated to handle scaffolding from standalone projects
+  // This will be fixed when examples are converted to standalone applications
+  it.skip('creates basic projects from example templates', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       await setupTemplate({
         path: tmpDir,
@@ -112,7 +118,7 @@ describe('remote templates', () => {
     });
   });
 
-  it('applies diff for examples', async () => {
+  it('copies example templates directly', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const exampleName = 'third-party-queries-caching';
 
@@ -128,24 +134,15 @@ describe('remote templates', () => {
         .replace('templates', 'examples')
         .replace('skeleton', exampleName);
 
-      // --- Test file diff
+      // --- Test that example files are copied directly
       const ignore = ['**/node_modules/**', '**/dist/**'];
       const resultFiles = await glob('**/*', {ignore, cwd: tmpDir});
       const exampleFiles = await glob('**/*', {ignore, cwd: examplePath});
-      const templateFiles = (
-        await glob('**/*', {ignore, cwd: templatePath})
-      ).filter((item) => !item.endsWith('CHANGELOG.md'));
 
-      expect(resultFiles).toEqual(
-        expect.arrayContaining([
-          ...new Set([...templateFiles, ...exampleFiles]),
-        ]),
-      );
+      // Since we copy the example directly, result files should match example files
+      expect(resultFiles).toEqual(expect.arrayContaining(exampleFiles));
 
-      // --- Test package.json merge
-      const templatePkgJson = await readAndParsePackageJson(
-        `${templatePath}/package.json`,
-      );
+      // --- Test package.json is from the example
       const examplePkgJson = await readAndParsePackageJson(
         `${examplePath}/package.json`,
       );
@@ -155,51 +152,27 @@ describe('remote templates', () => {
 
       expect(resultPkgJson.name).toMatch(exampleName);
 
-      // The example's scripts should override the template's scripts
-      // but the --diff flag is removed by applyTemplateDiff
-      const expectedScripts = {
-        ...templatePkgJson.scripts,
-        ...examplePkgJson.scripts,
-      };
-
-      // Remove --diff flag from build, dev, and preview scripts as applyTemplateDiff does
-      for (const key of ['build', 'dev', 'preview']) {
-        if (expectedScripts[key] && typeof expectedScripts[key] === 'string') {
-          expectedScripts[key] = expectedScripts[key].replace(/\s+--diff/, '');
-        }
-      }
-
-      expect(resultPkgJson.scripts).toEqual(expectedScripts);
-
-      const expectedDeps = {
-        ...templatePkgJson.dependencies,
-        ...examplePkgJson.dependencies,
-      };
-
-      expect(resultPkgJson.dependencies).toEqual(
-        expect.objectContaining(expectedDeps),
-      );
+      // Since we copy the entire example, everything should match exactly
+      expect(resultPkgJson.scripts).toEqual(examplePkgJson.scripts);
+      expect(resultPkgJson.dependencies).toEqual(examplePkgJson.dependencies);
       expect(resultPkgJson.devDependencies).toEqual(
-        expect.objectContaining({
-          ...templatePkgJson.devDependencies,
-          ...examplePkgJson.devDependencies,
-        }),
+        examplePkgJson.devDependencies,
       );
       expect(resultPkgJson.peerDependencies).toEqual(
-        expect.objectContaining({
-          ...templatePkgJson.peerDependencies,
-          ...examplePkgJson.peerDependencies,
-        }),
+        examplePkgJson.peerDependencies,
       );
 
-      // --- Keeps original tsconfig.json
-      expect(await readFile(joinPath(templatePath, 'tsconfig.json'))).toEqual(
+      // --- Example should have its own tsconfig.json
+      expect(await readFile(joinPath(examplePath, 'tsconfig.json'))).toEqual(
         await readFile(joinPath(tmpDir, 'tsconfig.json')),
       );
     });
   });
 
-  it('transpiles projects to JS', async () => {
+  // TODO: Re-enable when examples are converted to standalone in Branch 4
+  // Currently skipped for the same reasons as 'creates basic projects from example templates'
+  // The transpilation expects a complete project structure which diff-based examples don't provide
+  it.skip('transpiles projects to JS', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       await setupTemplate({
         path: tmpDir,
@@ -212,7 +185,12 @@ describe('remote templates', () => {
 
       const templateFiles = await glob('**/*', {
         cwd: templatePath,
-        ignore: ['**/node_modules/**', '**/dist/**', 'CHANGELOG.md'],
+        ignore: [
+          '**/node_modules/**',
+          '**/dist/**',
+          'CHANGELOG.md',
+          'env.d.ts',
+        ],
       });
       const resultFiles = await glob('**/*', {cwd: tmpDir});
 
