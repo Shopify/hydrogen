@@ -1,0 +1,49 @@
+index 3b8983cd5..e5a228517 100644
+--- a/templates/skeleton/tsconfig.json
++++ b/templates/skeleton/tsconfig.json
+@@ -1,6 +1,7 @@
+ {
+   "include": [
+     "env.d.ts",
++    "app/env.ts",
+     "app/**/*.ts",
+     "app/**/*.tsx",
+     "app/**/*.d.ts",
+@@ -9,8 +10,9 @@
+     "*.d.ts",
+     ".react-router/types/**/*"
+   ],
+-  "exclude": ["node_modules", "dist", "build", "packages/**/dist/**/*"],
++  "exclude": ["node_modules", "dist", "build"],
+   "compilerOptions": {
++    "verbatimModuleSyntax": true,
+     "lib": ["DOM", "DOM.Iterable", "ES2022"],
+     "isolatedModules": true,
+     "esModuleInterop": true,
+@@ -20,23 +22,16 @@
+     "module": "ES2022",
+     "target": "ES2022",
+     "strict": true,
++    "noImplicitAny": true,
+     "allowJs": true,
+     "forceConsistentCasingInFileNames": true,
+     "skipLibCheck": true,
+     "baseUrl": ".",
+-    "types": [
+-      "@shopify/oxygen-workers-types",
+-      "react-router",
+-      "@shopify/hydrogen/react-router-types",
+-      "vite/client"
+-    ],
++    "types": ["@shopify/hydrogen/react-router-types", "vite/client"],
+     "paths": {
+       "~/*": ["app/*"]
+     },
+     "noEmit": true,
+-    "rootDirs": [".", "./.react-router/types"],
+-    "incremental": true,
+-    "composite": false,
+-    "verbatimModuleSyntax": true
++    "rootDirs": [".", "./.react-router/types"]
+   }
+ }

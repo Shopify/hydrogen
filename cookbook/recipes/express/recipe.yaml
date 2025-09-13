@@ -1,0 +1,203 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+gid: 99596983-f4f0-4285-8f88-9112794cb812
+title: express
+summary: ""
+description: ""
+notes: []
+requirements: null
+ingredients:
+  - path: templates/skeleton/app/env.ts
+    description: null
+  - path: templates/skeleton/public/favicon.svg
+    description: null
+  - path: templates/skeleton/scripts/dev.mjs
+    description: null
+  - path: templates/skeleton/server.mjs
+    description: null
+deletedFiles:
+  - templates/skeleton/.graphqlrc.ts
+  - templates/skeleton/app/components/AddToCartButton.tsx
+  - templates/skeleton/app/components/Aside.tsx
+  - templates/skeleton/app/components/CartLineItem.tsx
+  - templates/skeleton/app/components/CartMain.tsx
+  - templates/skeleton/app/components/CartSummary.tsx
+  - templates/skeleton/app/components/CartUserErrors.tsx
+  - templates/skeleton/app/components/CartWarnings.tsx
+  - templates/skeleton/app/components/Footer.tsx
+  - templates/skeleton/app/components/Header.tsx
+  - templates/skeleton/app/components/PageLayout.tsx
+  - templates/skeleton/app/components/PaginatedResourceSection.tsx
+  - templates/skeleton/app/components/ProductForm.tsx
+  - templates/skeleton/app/components/ProductImage.tsx
+  - templates/skeleton/app/components/ProductItem.tsx
+  - templates/skeleton/app/components/ProductPrice.tsx
+  - templates/skeleton/app/components/SearchForm.tsx
+  - templates/skeleton/app/components/SearchFormPredictive.tsx
+  - templates/skeleton/app/components/SearchResults.tsx
+  - templates/skeleton/app/components/SearchResultsPredictive.tsx
+  - templates/skeleton/app/graphql/customer-account/CustomerAddressMutations.ts
+  - templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts
+  - templates/skeleton/app/graphql/customer-account/CustomerOrderQuery.ts
+  - templates/skeleton/app/graphql/customer-account/CustomerOrdersQuery.ts
+  - templates/skeleton/app/graphql/customer-account/CustomerUpdateMutation.ts
+  - templates/skeleton/app/lib/context.ts
+  - templates/skeleton/app/lib/fragments.ts
+  - templates/skeleton/app/lib/redirect.ts
+  - templates/skeleton/app/lib/search.ts
+  - templates/skeleton/app/lib/session.ts
+  - templates/skeleton/app/lib/variants.ts
+  - templates/skeleton/app/routes/$.tsx
+  - templates/skeleton/app/routes/[robots.txt].tsx
+  - templates/skeleton/app/routes/[sitemap.xml].tsx
+  - templates/skeleton/app/routes/account.$.tsx
+  - templates/skeleton/app/routes/account._index.tsx
+  - templates/skeleton/app/routes/account.addresses.tsx
+  - templates/skeleton/app/routes/account.orders.$id.tsx
+  - templates/skeleton/app/routes/account.orders._index.tsx
+  - templates/skeleton/app/routes/account.profile.tsx
+  - templates/skeleton/app/routes/account.tsx
+  - templates/skeleton/app/routes/account_.authorize.tsx
+  - templates/skeleton/app/routes/account_.login.tsx
+  - templates/skeleton/app/routes/account_.logout.tsx
+  - templates/skeleton/app/routes/api.$version.[graphql.json].tsx
+  - templates/skeleton/app/routes/blogs.$blogHandle.$articleHandle.tsx
+  - templates/skeleton/app/routes/blogs.$blogHandle._index.tsx
+  - templates/skeleton/app/routes/blogs._index.tsx
+  - templates/skeleton/app/routes/cart.$lines.tsx
+  - templates/skeleton/app/routes/cart.tsx
+  - templates/skeleton/app/routes/collections.$handle.tsx
+  - templates/skeleton/app/routes/collections._index.tsx
+  - templates/skeleton/app/routes/collections.all.tsx
+  - templates/skeleton/app/routes/discount.$code.tsx
+  - templates/skeleton/app/routes/pages.$handle.tsx
+  - templates/skeleton/app/routes/policies.$handle.tsx
+  - templates/skeleton/app/routes/policies._index.tsx
+  - templates/skeleton/app/routes/search.tsx
+  - templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx
+  - templates/skeleton/app/styles/reset.css
+  - templates/skeleton/customer-accountapi.generated.d.ts
+  - templates/skeleton/env.d.ts
+  - templates/skeleton/server.ts
+  - templates/skeleton/storefrontapi.generated.d.ts
+steps:
+  - type: PATCH
+    step: "1"
+    name: README.md
+    description: null
+    diffs:
+      - file: README.md
+        patchFile: README.md.47d06f.patch
+  - type: NEW_FILE
+    step: "1"
+    name: app/env.ts
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/env.ts
+  - type: PATCH
+    step: "2"
+    name: app/entry.client.tsx
+    description: null
+    diffs:
+      - file: app/entry.client.tsx
+        patchFile: entry.client.tsx.461d9f.patch
+  - type: NEW_FILE
+    step: "2"
+    name: public/favicon.svg
+    description: null
+    ingredients:
+      - path: templates/skeleton/public/favicon.svg
+  - type: PATCH
+    step: "3"
+    name: app/entry.server.tsx
+    description: null
+    diffs:
+      - file: app/entry.server.tsx
+        patchFile: entry.server.tsx.c0cb8d.patch
+  - type: NEW_FILE
+    step: "3"
+    name: scripts/dev.mjs
+    description: null
+    ingredients:
+      - path: templates/skeleton/scripts/dev.mjs
+  - type: PATCH
+    step: "4"
+    name: app/root.tsx
+    description: null
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.0ad938.patch
+  - type: NEW_FILE
+    step: "4"
+    name: server.mjs
+    description: null
+    ingredients:
+      - path: templates/skeleton/server.mjs
+  - type: PATCH
+    step: "5"
+    name: app/routes.ts
+    description: null
+    diffs:
+      - file: app/routes.ts
+        patchFile: routes.ts.2d27a5.patch
+  - type: PATCH
+    step: "6"
+    name: app/routes/_index.tsx
+    description: null
+    diffs:
+      - file: app/routes/_index.tsx
+        patchFile: _index.tsx.82ab90.patch
+  - type: PATCH
+    step: "7"
+    name: app/routes/products.$handle.tsx
+    description: null
+    diffs:
+      - file: app/routes/products.$handle.tsx
+        patchFile: products.$handle.tsx.7d2454.patch
+  - type: PATCH
+    step: "8"
+    name: app/styles/app.css
+    description: null
+    diffs:
+      - file: app/styles/app.css
+        patchFile: app.css.cea6f0.patch
+  - type: PATCH
+    step: "9"
+    name: eslint.config.js
+    description: null
+    diffs:
+      - file: eslint.config.js
+        patchFile: eslint.config.js.fd8326.patch
+  - type: PATCH
+    step: "10"
+    name: package.json
+    description: null
+    diffs:
+      - file: package.json
+        patchFile: package.json.cfee98.patch
+  - type: PATCH
+    step: "11"
+    name: react-router.config.ts
+    description: null
+    diffs:
+      - file: react-router.config.ts
+        patchFile: react-router.config.ts.b7ef35.patch
+  - type: PATCH
+    step: "12"
+    name: tsconfig.json
+    description: null
+    diffs:
+      - file: tsconfig.json
+        patchFile: tsconfig.json.f38fc0.patch
+  - type: PATCH
+    step: "13"
+    name: vite.config.ts
+    description: null
+    diffs:
+      - file: vite.config.ts
+        patchFile: vite.config.ts.f0a2c4.patch
+nextSteps: null
+llms:
+  userQueries: []
+  troubleshooting: []
+commit: 99c2a1d70f91a7419ab85ef2d63cb1d9d1d7843b
