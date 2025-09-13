@@ -126,7 +126,7 @@ jobs:
         run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:all
 
       - name: 🔬 Test
-        run: npm run test
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run test
 
   validate_recipes:
     name: ⬣ Validate Recipes
