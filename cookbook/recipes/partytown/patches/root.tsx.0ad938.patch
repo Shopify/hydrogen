@@ -1,0 +1,65 @@
+index 6fdeb1b26..cf8e85b87 100644
+--- a/templates/skeleton/app/root.tsx
++++ b/templates/skeleton/app/root.tsx
+@@ -1,4 +1,4 @@
+-import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
++import {Analytics, getShopAnalytics, useNonce, Script} from '@shopify/hydrogen';
+ import {
+   Outlet,
+   useRouteError,
+@@ -16,6 +16,11 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+ import resetStyles from '~/styles/reset.css?url';
+ import appStyles from '~/styles/app.css?url';
+ import {PageLayout} from './components/PageLayout';
++// @description Import Partytown components for Google Tag Manager integration
++import {PartytownGoogleTagManager} from '~/components/PartytownGoogleTagManager';
++import {Partytown} from '@qwik.dev/partytown/react';
++import {maybeProxyRequest} from '~/utils/partytown/maybeProxyRequest';
++import {partytownAtomicHeaders} from '~/utils/partytown/partytownAtomicHeaders';
+ 
+ export type RootLoader = typeof loader;
+ 
+@@ -90,6 +95,8 @@ export async function loader(args: Route.LoaderArgs) {
+       country: args.context.storefront.i18n.country,
+       language: args.context.storefront.i18n.language,
+     },
++    // @description Pass GTM container ID from environment variables
++    gtmContainerId: args.context.env.GTM_ID || args.context.env.GTM_CONTAINER_ID,
+   };
+ }
+ 
+@@ -162,7 +169,33 @@ export function Layout({children}: {children?: React.ReactNode}) {
+             shop={data.shop}
+             consent={data.consent}
+           >
+-            <PageLayout {...data}>{children}</PageLayout>
++            <PageLayout {...data}>
++              {/* @description Initialize Google Tag Manager data layer and Partytown web worker */}
++              <Script
++                type="text/partytown"
++                dangerouslySetInnerHTML={{
++                  __html: `
++              dataLayer = window.dataLayer || [];
++
++              window.gtag = function () {
++                dataLayer.push(arguments);
++              };
++
++              window.gtag('js', new Date());
++              window.gtag('config', "${data.gtmContainerId}");
++            `,
++                }}
++              />
++
++              <PartytownGoogleTagManager gtmContainerId={data.gtmContainerId} />
++
++              <Partytown
++                nonce={nonce}
++                forward={['dataLayer.push', 'gtag']}
++                resolveUrl={maybeProxyRequest}
++              />
++              {children}
++            </PageLayout>
+           </Analytics.Provider>
+         ) : (
+           children
