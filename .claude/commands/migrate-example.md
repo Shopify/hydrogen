@@ -150,8 +150,13 @@ Apply changes to skeleton template for recipe generation.
 1. Reset skeleton to clean state
 2. Copy new files with proper paths
 3. Apply modifications to existing files
-4. Add `@description` comments at key points
-5. Update dependencies if needed
+4. **MERGE README.md** - Combine example's README with skeleton's README
+   - Keep skeleton's base structure
+   - Add example-specific sections
+   - Include setup instructions
+   - Document new features and configuration
+5. Add `@description` comments at key points
+6. Update dependencies if needed
 
 ### Critical: Example Code Block Integration Strategy
 
