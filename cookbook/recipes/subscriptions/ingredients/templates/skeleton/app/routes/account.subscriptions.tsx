@@ -1,19 +1,11 @@
-import type {
-  SubscriptionBillingPolicyFragment,
-  SubscriptionDiscountFragmentFragment,
-} from 'customer-accountapi.generated';
+import type {SubscriptionBillingPolicyFragment, SubscriptionsContractsQueryQuery} from 'customer-accountapi.generated';
 import {
   data,
-  LinksFunction,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
-import {
   useActionData,
   useFetcher,
   useLoaderData,
-  type MetaFunction,
 } from 'react-router';
+import type {Route} from './+types/account.subscriptions';
 import {SUBSCRIPTIONS_CONTRACTS_QUERY} from '../graphql/customer-account/CustomerSubscriptionsQuery';
 import {SUBSCRIPTION_CANCEL_MUTATION} from '../graphql/customer-account/CustomerSubscriptionsMutations';
 
@@ -23,15 +15,15 @@ export type ActionResponse = {
   error: string | null;
 };
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: 'Subscriptions'}];
 };
 
-export const links: LinksFunction = () => [
+export const links: Route.LinksFunction = () => [
   {rel: 'stylesheet', href: accountSubscriptionsStyle},
 ];
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   await context.customerAccount.handleAuthStatus();
 
   const {data: subscriptions} = await context.customerAccount.query(
@@ -41,7 +33,7 @@ export async function loader({context}: LoaderFunctionArgs) {
   return {subscriptions};
 }
 
-export async function action({request, context}: ActionFunctionArgs) {
+export async function action({request, context}: Route.ActionArgs) {
   const {customerAccount} = context;
 
   if (request.method !== 'DELETE') {
@@ -96,11 +88,8 @@ export default function AccountProfile() {
         </p>
       ) : null}
       <div className="account-subscriptions">
-        {subscriptions?.customer?.subscriptionContracts.nodes.length === 0 ? (
-          <p>No active subscriptions</p>
-        ) : (
-          subscriptions?.customer?.subscriptionContracts.nodes.map(
-            (subscription) => {
+        {subscriptions?.customer?.subscriptionContracts.nodes.map(
+          (subscription) => {
             const isBeingCancelled =
               fetcher.state !== 'idle' &&
               fetcher.formData?.get('subId') === subscription.id;
@@ -118,15 +107,6 @@ export default function AccountProfile() {
                       billingPolicy={subscription.billingPolicy}
                     />
                   </div>
-                  {subscription.discounts?.nodes && subscription.discounts.nodes.length > 0 && (
-                    <div className="subscription-discounts">
-                      {subscription.discounts.nodes.map((discount, index) => (
-                        <div key={index} className="subscription-discount">
-                          {formatDiscountValue(discount)}
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
                 <div className="subscription-row-actions">
                   <div
@@ -155,7 +135,7 @@ export default function AccountProfile() {
               </div>
             );
           },
-        ))}
+        )}
       </div>
     </div>
   );
@@ -185,20 +165,4 @@ function SubscriptionInterval({
       {count} {getInterval()}
     </span>
   );
-}
-
-function formatDiscountValue(
-  discount: SubscriptionDiscountFragmentFragment,
-): string {
-  const value = discount.value;
-  
-  if (value?.__typename === 'SubscriptionDiscountPercentageValue') {
-    return `${value.percentage}% off`;
-  } else if (value?.__typename === 'SubscriptionDiscountFixedAmountValue') {
-    return `$${value.amount.amount} off`;
-  } else if (discount.title) {
-    return discount.title;
-  }
-  
-  return 'Discount applied';
 }
