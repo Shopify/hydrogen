@@ -36,34 +36,151 @@ Here's the gtm recipe for the base Hydrogen skeleton template:
 
 This recipe integrates Google Tag Manager (GTM) into your Hydrogen storefront, enabling you to track user interactions, ecommerce events, and implement marketing tags without modifying code.
 
+Hydrogen includes built-in support for the Customer Privacy API, a browser-based JavaScript API that you can use to display cookie-consent banners and verify data processing permissions.
+
 Key features:
 - GTM script integration with proper CSP nonce support
-- Analytics integration for product views
-- Extensible dataLayer implementation
+- Content Security Policy configuration for GTM domains
+- Analytics integration for product views via dataLayer
+- Extensible dataLayer implementation for custom events
 - Support for GTM's preview mode
+- Customer Privacy API integration
+
+The recipe includes:
+1. Content Security Policy updates in entry.server.tsx for GTM domains
+2. GTM script tags in the head and body sections
+3. GoogleTagManager component that subscribes to analytics events
+4. Proper nonce attributes for security compliance
 
 ## Notes
 
 > [!NOTE]
-> Replace GTM-<YOUR_GTM_ID> with your actual Google Tag Manager container ID
+> Replace GTM-<YOUR_GTM_ID> with your actual Google Tag Manager container ID in both script locations
 
 > [!NOTE]
 > The nonce attribute ensures compatibility with Content Security Policy
 
 > [!NOTE]
-> Additional analytics events can be added to the GoogleTagManager component
+> Additional analytics events can be added to the GoogleTagManager component by subscribing to different event types
+
+> [!NOTE]
+> Configure customer privacy settings in your Shopify admin to enable cookie consent banners
+
+> [!NOTE]
+> The CSP configuration allows GTM, Google Analytics, and related tracking domains
 
 ## Requirements
 
+Prerequisites:
 - A Google Tag Manager account and container ID
+- Customer privacy settings configured in Shopify admin (for cookie consent)
 - Basic understanding of GTM and dataLayer events
 - Knowledge of Shopify's analytics events
+
+To enable cookie consent:
+1. Go to Shopify admin → Settings → Customer Privacy → Cookie Banner
+2. Configure region visibility for the banner
+3. Customize appearance and position as needed
 
 ## New files added to the template by this recipe
 
 - app/components/GoogleTagManager.tsx
 
 ## Steps
+
+### Step 1: README.md
+
+
+
+#### File: /README.md
+
+```diff
+@@ -1,6 +1,6 @@
+-# Hydrogen template: Skeleton
++# Hydrogen template: Google Tag Manager (GTM)
+ 
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++This Hydrogen template demonstrates how to implement Google Tag Manager with analytics integration. Hydrogen supports both Shopify analytics and third-party services with built-in support for the [Customer Privacy API](https://shopify.dev/docs/api/customer-privacy).
+ 
+ [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
+ [Get familiar with Remix](https://remix.run/docs/en/v1)
+@@ -16,18 +16,67 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
+ - Prettier
+ - GraphQL generator
+ - TypeScript and JavaScript flavors
+-- Minimal setup of components and routes
++- **Google Tag Manager integration**
++- **Analytics.Provider setup**
++- **Customer Privacy API support**
+ 
+ ## Getting started
+ 
+ **Requirements:**
+ 
+ - Node.js version 18.0.0 or higher
++- Google Tag Manager account with container ID
+ 
+ ```bash
+ npm create @shopify/hydrogen@latest
+ ```
+ 
++## Google Tag Manager Setup
++
++### 1. Enable Customer Privacy / Cookie Consent Banner
++
++In the Shopify admin, navigate to Settings → Customer Privacy → Cookie Banner:
++
++- Configure region visibility for the banner
++- Customize banner appearance and position (optional)
++- Set up cookie preferences
++
++### 2. Configuration Requirements
++
++- [Configure customer privacy settings](https://help.shopify.com/en/manual/privacy-and-security/privacy/customer-privacy-settings/privacy-settings) - Manage privacy settings to comply with data protection laws
++- [Add a cookie banner](https://help.shopify.com/en/manual/privacy-and-security/privacy/customer-privacy-settings/privacy-settings#add-a-cookie-banner) - Display consent notifications for data collection
++
++### 3. Update GTM Container ID
++
++Replace `GTM-<YOUR_GTM_ID>` with your actual Google Tag Manager container ID in:
++- `app/root.tsx` - Script tags in head and body sections
++
++### 4. Content Security Policy
++
++The template includes pre-configured CSP headers for GTM domains:
++- `*.googletagmanager.com`
++- `*.google-analytics.com`
++- `*.analytics.google.com`
++
++## Key Files
++
++| File | Description |
++|------|-------------|
++| `app/components/GoogleTagManager.tsx` | Subscribes to analytics events and pushes to GTM dataLayer |
++| `app/root.tsx` | Contains GTM script tags and Analytics.Provider setup |
++| `app/entry.server.tsx` | Configured CSP headers for GTM domains |
++
++## Analytics Events
++
++The GTM component listens to Hydrogen analytics events and pushes them to the dataLayer:
++
++```tsx
++// Example: Product viewed event
++subscribe('product_viewed', () => {
++  window.dataLayer.push({event: 'viewed-product'});
++});
++```
++
+ ## Building for production
+ 
+ ```bash
+@@ -42,4 +91,4 @@ npm run dev
+ 
+ ## Setup for using Customer Account API (`/account` section)
+ 
+-Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
++Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
+\ No newline at end of file
+```
 
 ### Step 1: app/entry.server.tsx
 
@@ -103,7 +220,7 @@ Key features:
 
 
 
-#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/1f9640d5acfd505435862b8b2317343bbce96d72/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
+#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
 
 ```tsx
 import {useAnalytics} from '@shopify/hydrogen';
