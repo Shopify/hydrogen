@@ -7,21 +7,24 @@ description: |
   This recipe demonstrates how to create a content management system using Shopify metaobjects.
   It enables merchants to create and manage dynamic content sections through the Shopify admin,
   providing a flexible way to build pages with reusable components.
-  
+
   Key features:
   - Dynamic route-based content rendering
   - Modular section components (Hero, Featured Products, Featured Collections, Stores)
   - Content editing capabilities with direct links to Shopify admin
   - Rich text support with Slate editor
   - Comprehensive documentation with visual guides
-  
+
   The recipe includes example section components that can be customized or extended
   to match your specific content needs.
 notes:
-  - You need to create the metaobject definitions in your Shopify admin before using this recipe
+  - You need to create the metaobject definitions in your Shopify admin before
+    using this recipe
   - See the included guides/metaobjects/README.md for detailed setup instructions
-  - Each section component has a one-to-one relationship with a metaobject definition
-  - The PUBLIC_STORE_DOMAIN environment variable is required for edit links to work
+  - Each section component has a one-to-one relationship with a metaobject
+    definition
+  - The PUBLIC_STORE_DOMAIN environment variable is required for edit links to
+    work
 requirements: |
   - Basic understanding of Shopify metaobjects
   - Shopify Plus or development store (for metaobjects access)
@@ -73,6 +76,13 @@ ingredients:
     description: null
 deletedFiles: []
 steps:
+  - type: PATCH
+    step: "1"
+    name: README.md
+    description: Updates README with metaobjects CMS documentation and architecture overview
+    diffs:
+      - file: README.md
+        patchFile: README.md.47d06f.patch
   - type: PATCH
     step: "1"
     name: app/lib/fragments.ts
@@ -237,4 +247,4 @@ nextSteps: null
 llms:
   userQueries: []
   troubleshooting: []
-commit: 1f9640d5acfd505435862b8b2317343bbce96d72
+commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
