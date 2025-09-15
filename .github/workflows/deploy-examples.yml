@@ -2,7 +2,10 @@
 #! oxygen_storefront_id: 1000014888
 
 name: Examples deploy
-on: [push]
+# Temporarily disabled during React Router 7.8.x migration
+# Examples are not in workspaces and need to be updated separately
+on: 
+  workflow_dispatch: # Only run manually if needed
 
 permissions:
   contents: read

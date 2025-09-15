@@ -142,8 +142,8 @@ function loadDeferredData({context}: Route.LoaderArgs) {
 }
 
 export function Layout({children}: {children?: React.ReactNode}) {
-  const nonce = useNonce();
   const data = useRouteLoaderData<RootLoader>('root');
+  const nonce = useNonce();
 
   return (
     <html lang="en">
