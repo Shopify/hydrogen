@@ -1,6 +1,6 @@
 # Overview
 
-This prompt describes how to implement "custom-cart-method" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "Custom Cart Method" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -12,7 +12,7 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 
 # Summary
 
-
+Add inline product option editing to cart items
 
 # User Intent Recognition
 
@@ -34,13 +34,137 @@ Here's the custom-cart-method recipe for the base Hydrogen skeleton template:
 
 ## Description
 
+This recipe demonstrates how to implement custom cart methods in Hydrogen to enable inline editing of product options directly within the cart. Users can change product variants (size, color, etc.) without removing and re-adding items.
 
+Key features:
+- Custom cart method `updateLineByOptions` for variant selection
+- Inline dropdown selectors for each product option in cart
+- Automatic cart updates when options are changed
+- Full TypeScript support with proper type augmentation
+
+## Notes
+
+> [!NOTE]
+> This implementation requires GraphQL codegen to be run after applying the recipe
+
+> [!NOTE]
+> The custom cart method uses the Storefront API's variantBySelectedOptions query
+
+> [!NOTE]
+> Cart updates happen automatically on option change without page refresh
+
+## Requirements
+
+- Basic understanding of Hydrogen cart implementation
+- Familiarity with GraphQL and TypeScript
+- Knowledge of React Router actions and forms
 
 ## New files added to the template by this recipe
 
 
 
 ## Steps
+
+### Step 1: README.md
+
+
+
+#### File: /README.md
+
+```diff
+@@ -1,6 +1,8 @@
+-# Hydrogen template: Skeleton
++# Hydrogen template: Custom Cart Method
+ 
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++This Hydrogen template demonstrates how to implement custom cart methods for inline product option editing. Hydrogen is Shopify's stack for headless commerce, designed to work with [Remix](https://remix.run/), Shopify's full stack web framework.
++
++This template shows how to enable users to change product variants (size, color, etc.) directly within the cart without removing and re-adding items, providing a smoother shopping experience.
+ 
+ [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
+ [Get familiar with Remix](https://remix.run/docs/en/v1)
+@@ -16,7 +18,29 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
+ - Prettier
+ - GraphQL generator
+ - TypeScript and JavaScript flavors
+-- Minimal setup of components and routes
++- **Custom cart method implementation**
++- **Inline variant selection in cart**
++- **Type-safe cart operations**
++
++## Custom Cart Method Features
++
++### Inline Option Editing
++- Change product variants directly in the cart
++- No need to remove and re-add items
++- Dropdown selectors for each product option (size, color, etc.)
++- Seamless user experience with instant updates
++
++### Technical Implementation
++- Custom `updateLineByOptions` cart method
++- TypeScript type augmentation for cart context
++- GraphQL fragments for product options
++- Optimistic UI updates with React Router actions
++
++### Cart Update Flow
++1. User selects new option from dropdown
++2. Custom cart method queries for new variant
++3. Cart line item updates with new variant
++4. Total price and inventory automatically adjust
+ 
+ ## Getting started
+ 
+@@ -28,6 +52,25 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
+ npm create @shopify/hydrogen@latest
+ ```
+ 
++## Implementation Details
++
++### Custom Cart Method
++```typescript
++async updateLineByOptions(lineId: string, selectedOptions: any[]) {
++  const {product} = await storefront.query(VARIANTS_QUERY, {
++    variables: {handle: productHandle, selectedOptions}
++  });
++  
++  return cart.updateLineItems([{
++    id: lineId,
++    merchandiseId: product.variantBySelectedOptions?.id
++  }]);
++}
++```
++
++### Type Augmentation
++The recipe extends Hydrogen's cart context with proper TypeScript types for the custom method, ensuring type safety throughout your application.
++
+ ## Building for production
+ 
+ ```bash
+@@ -40,6 +83,21 @@ npm run build
+ npm run dev
+ ```
+ 
++## Important Notes
++
++After applying this recipe:
++1. Run `npm run codegen` to generate GraphQL types
++2. Test with products that have multiple variants
++3. Verify inventory updates when switching variants
++
++## Customization
++
++You can extend this pattern to:
++- Add custom validation for option combinations
++- Implement bundle editing capabilities
++- Create quick-add features with variant selection
++- Build advanced cart customization flows
++
+ ## Setup for using Customer Account API (`/account` section)
+ 
+-Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
++Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
+\ No newline at end of file
+```
 
 ### Step 1: app/components/CartLineItem.tsx
 

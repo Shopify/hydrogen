@@ -5,16 +5,17 @@ title: Custom Cart Method
 summary: Add inline product option editing to cart items
 description: |
   This recipe demonstrates how to implement custom cart methods in Hydrogen to enable inline editing of product options directly within the cart. Users can change product variants (size, color, etc.) without removing and re-adding items.
-  
+
   Key features:
   - Custom cart method `updateLineByOptions` for variant selection
   - Inline dropdown selectors for each product option in cart
   - Automatic cart updates when options are changed
   - Full TypeScript support with proper type augmentation
-  
 notes:
-  - This implementation requires GraphQL codegen to be run after applying the recipe
-  - The custom cart method uses the Storefront API's variantBySelectedOptions query
+  - This implementation requires GraphQL codegen to be run after applying the
+    recipe
+  - The custom cart method uses the Storefront API's variantBySelectedOptions
+    query
   - Cart updates happen automatically on option change without page refresh
 requirements: |
   - Basic understanding of Hydrogen cart implementation
@@ -23,6 +24,13 @@ requirements: |
 ingredients: []
 deletedFiles: []
 steps:
+  - type: PATCH
+    step: "1"
+    name: README.md
+    description: Updates README with custom cart method documentation and implementation guide
+    diffs:
+      - file: README.md
+        patchFile: README.md.47d06f.patch
   - type: PATCH
     step: "1"
     name: app/components/CartLineItem.tsx
@@ -55,4 +63,4 @@ nextSteps: null
 llms:
   userQueries: []
   troubleshooting: []
-commit: 1f9640d5acfd505435862b8b2317343bbce96d72
+commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
