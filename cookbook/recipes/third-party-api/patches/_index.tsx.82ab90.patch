@@ -1,8 +1,13 @@
-index 28102dbe6..b72d3531d 100644
+index 28102dbe6..618b99a08 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
-@@ -5,7 +5,7 @@ import {
- } from 'react-router';
+@@ -1,11 +1,7 @@
+-import {
+-  Await,
+-  useLoaderData,
+-  Link,
+-} from 'react-router';
++import {Await, useLoaderData, Link} from 'react-router';
  import type {Route} from './+types/_index';
  import {Suspense} from 'react';
 -import {Image} from '@shopify/hydrogen';
@@ -10,7 +15,7 @@ index 28102dbe6..b72d3531d 100644
  import type {
    FeaturedCollectionFragment,
    RecommendedProductsQuery,
-@@ -31,13 +31,19 @@ export async function loader(args: Route.LoaderArgs) {
+@@ -31,13 +27,19 @@ export async function loader(args: Route.LoaderArgs) {
   * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
   */
  async function loadCriticalData({context}: Route.LoaderArgs) {
@@ -32,7 +37,7 @@ index 28102dbe6..b72d3531d 100644
    };
  }
  
-@@ -64,12 +70,31 @@ export default function Homepage() {
+@@ -64,12 +66,50 @@ export default function Homepage() {
    const data = useLoaderData<typeof loader>();
    return (
      <div className="home">
@@ -49,10 +54,29 @@ index 28102dbe6..b72d3531d 100644
 +  return (
 +    <section className="third-party-api-example">
 +      <h2>Rick & Morty Characters (Third-Party API Example)</h2>
-+      <p>This data is fetched from rickandmortyapi.com GraphQL API with Oxygen caching:</p>
-+      <ul style={{listStyle: 'none', display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
++      <p>
++        This data is fetched from rickandmortyapi.com GraphQL API with Oxygen
++        caching:
++      </p>
++      <br />
++      <ul
++        style={{
++          listStyle: 'none',
++          display: 'flex',
++          flexDirection: 'column',
++          gap: '1rem',
++          flexWrap: 'wrap',
++        }}
++      >
 +        {characters?.results?.map((character: any) => (
-+          <li key={character.id} style={{padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px'}}>
++          <li
++            key={character.id}
++            style={{
++              padding: '0.5rem',
++              border: '1px solid #ccc',
++              borderRadius: '4px',
++            }}
++          >
 +            {character.name}
 +          </li>
 +        ))}
@@ -64,7 +88,7 @@ index 28102dbe6..b72d3531d 100644
  function FeaturedCollection({
    collection,
  }: {
-@@ -141,6 +166,18 @@ const FEATURED_COLLECTION_QUERY = `#graphql
+@@ -141,6 +181,18 @@ const FEATURED_COLLECTION_QUERY = `#graphql
    }
  ` as const;
  

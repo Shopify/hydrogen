@@ -34,30 +34,57 @@ Here's the third-party-api recipe for the base Hydrogen skeleton template:
 
 ## Description
 
-This recipe demonstrates how to query third-party GraphQL APIs with Oxygen caching in Hydrogen. 
-The example uses the public Rick & Morty API to show how to:
+This recipe demonstrates how to integrate third-party GraphQL APIs into your Hydrogen storefront 
+with Oxygen's powerful sub-request caching system. Using the Rick & Morty API as an example, 
+you'll learn how to:
 
-1. Create a cached GraphQL client for third-party APIs
-2. Integrate the client into Hydrogen's context
-3. Query and display data from external APIs alongside Shopify data
+1. **Create a cached GraphQL client** - Build a reusable client factory that handles query 
+   minification, error handling, and integrates with Oxygen's caching infrastructure
 
-This pattern can be adapted for any third-party API integration including CMS systems, 
-review platforms, analytics services, or custom backend APIs.
+2. **Integrate with Hydrogen's context** - Add the third-party client to the global context 
+   system, making it available in all routes and actions throughout your application
+
+3. **Query external APIs efficiently** - Fetch data from third-party sources in parallel 
+   with Shopify API calls, leveraging Oxygen's caching to minimize latency and API calls
+
+## Use Cases
+
+This pattern is perfect for integrating:
+- **CMS platforms** (Contentful, Sanity, Strapi)
+- **Review systems** (Yotpo, Judge.me, Reviews.io)
+- **Analytics services** (custom dashboards, reporting APIs)
+- **Custom backend APIs** (inventory systems, ERP integrations)
+- **Marketing tools** (email platforms, loyalty programs)
+
+## Performance Benefits
+
+- **Sub-request caching**: Responses are cached at the edge, reducing API calls
+- **Parallel data fetching**: Load third-party and Shopify data simultaneously
+- **Configurable cache strategies**: Use CacheShort(), CacheLong(), or custom TTLs
+- **Automatic cache key generation**: Based on query and variables
 
 ## Notes
 
 > [!NOTE]
-> The example uses rickandmortyapi.com for demonstration, but the pattern works with any GraphQL API
+> The example uses rickandmortyapi.com for demonstration, but the pattern works with any GraphQL or REST API
 
 > [!NOTE]
-> Caching strategies can be customized per query using Hydrogen's cache utilities
+> Caching strategies can be customized per query using Hydrogen's cache utilities (CacheShort, CacheLong, CacheNone)
 
 > [!NOTE]
 > The client is added to the global context, making it available in all routes
 
+> [!NOTE]
+> TypeScript types are automatically augmented for full IDE support
+
+> [!NOTE]
+> Error handling is built-in with graceful fallbacks
+
 ## Requirements
 
-Basic knowledge of GraphQL and understanding of Hydrogen's caching system.
+- Basic knowledge of GraphQL
+- Understanding of Hydrogen's context system
+- Familiarity with TypeScript (for type augmentation)
 
 ## New files added to the template by this recipe
 
@@ -65,12 +92,77 @@ Basic knowledge of GraphQL and understanding of Hydrogen's caching system.
 
 ## Steps
 
+### Step 1: README.md
+
+
+
+#### File: /README.md
+
+```diff
+@@ -1,6 +1,6 @@
+-# Hydrogen template: Skeleton
++# Hydrogen template: Skeleton with Third-party API Integration
+ 
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify's full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, plus an example of integrating third-party GraphQL APIs with Oxygen caching.
+ 
+ [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
+ [Get familiar with Remix](https://remix.run/docs/en/v1)
+@@ -40,6 +40,46 @@ npm run build
+ npm run dev
+ ```
+ 
++## Third-party API Integration
++
++This example demonstrates how to query third-party GraphQL APIs with Oxygen's sub-request caching. The example uses the public [Rick & Morty API](https://rickandmortyapi.com/documentation/#graphql) to show how to:
++
++1. Create a cached GraphQL client for third-party APIs
++2. Integrate the client into Hydrogen's context  
++3. Query and display data from external APIs alongside Shopify data
++
++### Key files for third-party API integration
++
++| File | Description |
++| --- | --- |
++| [`app/lib/createRickAndMortyClient.server.ts`](app/lib/createRickAndMortyClient.server.ts) | GraphQL client factory with Oxygen caching support |
++| [`app/lib/context.ts`](app/lib/context.ts) | Modified to include the third-party client in Hydrogen context |
++| [`app/routes/_index.tsx`](app/routes/_index.tsx) | Homepage demonstrating parallel queries to both Shopify and third-party APIs |
++
++### How it works
++
++The Rick & Morty client is created in the context and made available to all routes:
++
++```ts
++// In app/lib/context.ts
++const rickAndMorty = createRickAndMortyClient({
++  cache,
++  waitUntil,
++  request,
++});
++```
++
++Then you can query the third-party API in any route:
++
++```ts
++// In any route loader
++const {characters} = await context.rickAndMorty.query(CHARACTERS_QUERY, {
++  cache: CacheShort(),
++});
++```
++
++This pattern can be adapted for any third-party API integration including CMS systems, review platforms, analytics services, or custom backend APIs.
++
+ ## Setup for using Customer Account API (`/account` section)
+ 
+ Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
+```
+
 ### Step 1: Create the third-party API client
 
 Create a new GraphQL client factory that integrates with Oxygen's caching system.
 This client handles query minification, error handling, and cache key generation.
 
-#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/1f9640d5acfd505435862b8b2317343bbce96d72/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
+#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
 
 ```ts
 import {
@@ -217,8 +309,13 @@ Shopify data. This demonstrates parallel data fetching and proper caching strate
 #### File: /app/routes/_index.tsx
 
 ```diff
-@@ -5,7 +5,7 @@ import {
- } from 'react-router';
+@@ -1,11 +1,7 @@
+-import {
+-  Await,
+-  useLoaderData,
+-  Link,
+-} from 'react-router';
++import {Await, useLoaderData, Link} from 'react-router';
  import type {Route} from './+types/_index';
  import {Suspense} from 'react';
 -import {Image} from '@shopify/hydrogen';
@@ -226,7 +323,7 @@ Shopify data. This demonstrates parallel data fetching and proper caching strate
  import type {
    FeaturedCollectionFragment,
    RecommendedProductsQuery,
-@@ -31,13 +31,19 @@ export async function loader(args: Route.LoaderArgs) {
+@@ -31,13 +27,19 @@ export async function loader(args: Route.LoaderArgs) {
   * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
   */
  async function loadCriticalData({context}: Route.LoaderArgs) {
@@ -248,7 +345,7 @@ Shopify data. This demonstrates parallel data fetching and proper caching strate
    };
  }
  
-@@ -64,12 +70,31 @@ export default function Homepage() {
+@@ -64,12 +66,50 @@ export default function Homepage() {
    const data = useLoaderData<typeof loader>();
    return (
      <div className="home">
@@ -265,10 +362,29 @@ Shopify data. This demonstrates parallel data fetching and proper caching strate
 +  return (
 +    <section className="third-party-api-example">
 +      <h2>Rick & Morty Characters (Third-Party API Example)</h2>
-+      <p>This data is fetched from rickandmortyapi.com GraphQL API with Oxygen caching:</p>
-+      <ul style={{listStyle: 'none', display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
++      <p>
++        This data is fetched from rickandmortyapi.com GraphQL API with Oxygen
++        caching:
++      </p>
++      <br />
++      <ul
++        style={{
++          listStyle: 'none',
++          display: 'flex',
++          flexDirection: 'column',
++          gap: '1rem',
++          flexWrap: 'wrap',
++        }}
++      >
 +        {characters?.results?.map((character: any) => (
-+          <li key={character.id} style={{padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px'}}>
++          <li
++            key={character.id}
++            style={{
++              padding: '0.5rem',
++              border: '1px solid #ccc',
++              borderRadius: '4px',
++            }}
++          >
 +            {character.name}
 +          </li>
 +        ))}
@@ -280,7 +396,7 @@ Shopify data. This demonstrates parallel data fetching and proper caching strate
  function FeaturedCollection({
    collection,
  }: {
-@@ -141,6 +166,18 @@ const FEATURED_COLLECTION_QUERY = `#graphql
+@@ -141,6 +181,18 @@ const FEATURED_COLLECTION_QUERY = `#graphql
    }
  ` as const;
  
