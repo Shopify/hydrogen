@@ -1,6 +1,6 @@
 # Overview
 
-This prompt describes how to implement "infinite-scroll" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "Infinite Scroll for Collections" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -12,7 +12,7 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 
 # Summary
 
-
+Add infinite scroll pagination to collection pages for seamless product browsing
 
 # User Intent Recognition
 
@@ -34,13 +34,134 @@ Here's the infinite-scroll recipe for the base Hydrogen skeleton template:
 
 ## Description
 
+Implements infinite scroll functionality on collection pages using intersection observer.
+Products automatically load as users scroll down, replacing traditional pagination buttons
+with a smooth, continuous browsing experience.
 
+Key features:
+- Automatic loading when "Load more" button comes into view
+- Preserves browser history and URL state
+- Maintains scroll position during navigation
+- Optimized loading with eager/lazy image loading
+
+## Notes
+
+> [!NOTE]
+> The intersection observer triggers when the "Load more" button enters the viewport
+
+> [!NOTE]
+> Navigation updates use replace mode to avoid cluttering browser history
+
+> [!NOTE]
+> First 8 products load eagerly for faster initial render
+
+> [!NOTE]
+> Subsequent products use lazy loading to optimize performance
+
+## Requirements
+
+- Basic understanding of React hooks (useEffect, custom hooks)
+- Familiarity with Shopify's Pagination component
+- Knowledge of intersection observer API concepts
 
 ## New files added to the template by this recipe
 
 
 
 ## Steps
+
+### Step 1: README.md
+
+
+
+#### File: /README.md
+
+```diff
+@@ -1,6 +1,8 @@
+-# Hydrogen template: Skeleton
++# Hydrogen template: Infinite Scroll
+ 
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++This Hydrogen template demonstrates infinite scroll pagination for collection pages. Hydrogen is Shopify's stack for headless commerce, designed to work with [Remix](https://remix.run/), Shopify's full stack web framework.
++
++This template shows how to implement a seamless browsing experience where products automatically load as users scroll down, replacing traditional pagination with continuous content loading.
+ 
+ [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
+ [Get familiar with Remix](https://remix.run/docs/en/v1)
+@@ -16,7 +18,28 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
+ - Prettier
+ - GraphQL generator
+ - TypeScript and JavaScript flavors
+-- Minimal setup of components and routes
++- **Infinite scroll pagination**
++- **Intersection Observer implementation**
++- **Optimized image loading strategies**
++
++## Infinite Scroll Features
++
++### Automatic Loading
++- Products load automatically when the "Load more" button enters the viewport
++- No manual clicking required for pagination
++- Smooth, uninterrupted browsing experience
++
++### Performance Optimizations
++- First 8 products load eagerly for instant display
++- Subsequent products use lazy loading
++- Images optimized with proper loading strategies
++- Minimal JavaScript overhead using native Intersection Observer
++
++### User Experience
++- Preserves browser history and URL state
++- Maintains scroll position during navigation
++- Clean URL updates using replace mode
++- No history cluttering from pagination
+ 
+ ## Getting started
+ 
+@@ -28,6 +51,25 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
+ npm create @shopify/hydrogen@latest
+ ```
+ 
++## Implementation Details
++
++The infinite scroll implementation uses:
++- React's `useEffect` hook for scroll detection
++- Intersection Observer API for viewport detection
++- Remix's navigation for URL updates
++- Shopify's Pagination component as the base
++
++### Key Components
++
++```tsx
++// Intersection Observer setup
++useEffect(() => {
++  if (!fetcher.data && !fetcher.state) {
++    fetcher.load(nextPageUrl);
++  }
++}, [inView]);
++```
++
+ ## Building for production
+ 
+ ```bash
+@@ -40,6 +82,14 @@ npm run build
+ npm run dev
+ ```
+ 
++## Customization
++
++You can adjust the infinite scroll behavior by:
++- Changing the threshold for when loading triggers
++- Modifying the number of products loaded per batch
++- Customizing the loading indicator
++- Adding scroll-to-top functionality
++
+ ## Setup for using Customer Account API (`/account` section)
+ 
+-Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
++Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
+\ No newline at end of file
+```
 
 ### Step 1: app/routes/collections.$handle.tsx
 
