@@ -1,4 +1,4 @@
-index a9b5b4dd3..ce1bb4f16 100644
+index f82d683fd..b84e44801 100644
 --- a/templates/skeleton/app/routes/cart.tsx
 +++ b/templates/skeleton/app/routes/cart.tsx
 @@ -15,9 +15,13 @@ export const meta: Route.MetaFunction = () => {

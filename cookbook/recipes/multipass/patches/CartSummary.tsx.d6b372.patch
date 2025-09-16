@@ -1,4 +1,4 @@
-index 3eae48c76..3e3f5f56e 100644
+index 601834964..4ca46ded7 100644
 --- a/templates/skeleton/app/components/CartSummary.tsx
 +++ b/templates/skeleton/app/components/CartSummary.tsx
 @@ -12,6 +12,8 @@ import {useFetcher} from 'react-router';
@@ -10,7 +10,7 @@ index 3eae48c76..3e3f5f56e 100644
  
  type CartSummaryProps = {
    cart: OptimisticCart<CartApiQueryFragment | null>;
-@@ -58,9 +60,10 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
+@@ -59,9 +61,10 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
  
    return (
      <div>

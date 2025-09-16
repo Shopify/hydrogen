@@ -20,6 +20,32 @@ export function validateRecipe(params: {
     applyRecipe({
       recipeTitle,
     });
+    
+    // Check for any .orig or .rej files that might interfere with validation
+    const conflictFiles: string[] = [];
+    
+    try {
+      const files = execSync(`find ${TEMPLATE_PATH} -name "*.orig" -o -name "*.rej"`, {
+        encoding: 'utf-8',
+        stdio: 'pipe'
+      }).trim().split('\n').filter(Boolean);
+      
+      if (files.length > 0) {
+        conflictFiles.push(...files);
+      }
+    } catch (e) {
+      // No conflict files found, which is good
+    }
+    
+    if (conflictFiles.length > 0) {
+      console.error(`\n❌ Conflict files detected in template directory:`);
+      conflictFiles.forEach(file => {
+        console.error(`   - ${file}`);
+      });
+      console.error(`\nThese files will cause TypeScript errors during validation.`);
+      console.error(`Please resolve patch conflicts before running validation.`);
+      return false;
+    }
 
     const validationCommands: Command[] = [
       ...(hydrogenPackagesVersion != null
@@ -44,12 +70,18 @@ export function validateRecipe(params: {
         console.log(`❌ Command failed: ${command}`);
         if (error.stdout) {
           console.log('❌ === Command stdout ===');
-          console.log(error.stdout.toString());
+          const stdout = Buffer.isBuffer(error.stdout) 
+            ? error.stdout.toString('utf-8') 
+            : error.stdout.toString();
+          console.log(stdout);
           console.log('❌ === End stdout ===');
         }
         if (error.stderr) {
           console.log('❌ === Command stderr ===');
-          console.log(error.stderr.toString());
+          const stderr = Buffer.isBuffer(error.stderr)
+            ? error.stderr.toString('utf-8')
+            : error.stderr.toString();
+          console.log(stderr);
           console.log('❌ === End stderr ===');
         }
         throw error;
