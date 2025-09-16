@@ -70,61 +70,27 @@ jobs:
           echo "Applying recipe: ${{ matrix.recipes.name }}"
           npm run cookbook -- apply --recipe ${{ matrix.recipes.name }}
       
-      - name: 📋 Copy skeleton to temporary directory
-        run: |
-          # Copy skeleton with applied recipe to a temp directory outside the monorepo
-          cp -r templates/skeleton /tmp/hydrogen-recipe-${{ matrix.recipes.name }}
-          echo "Copied skeleton to /tmp/hydrogen-recipe-${{ matrix.recipes.name }}"
-      
-      - name: 🔗 Update package.json to use local packages
-        working-directory: /tmp/hydrogen-recipe-${{ matrix.recipes.name }}
-        run: |
-          # Update package.json to point to local built packages
-          node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
-            
-            // Point to local packages using file: protocol
-            if (pkg.dependencies['@shopify/hydrogen']) {
-              pkg.dependencies['@shopify/hydrogen'] = 'file:${{ github.workspace }}/packages/hydrogen';
-            }
-            if (pkg.dependencies['@shopify/hydrogen-react']) {
-              pkg.dependencies['@shopify/hydrogen-react'] = 'file:${{ github.workspace }}/packages/hydrogen-react';
-            }
-            if (pkg.dependencies['@shopify/remix-oxygen']) {
-              pkg.dependencies['@shopify/remix-oxygen'] = 'file:${{ github.workspace }}/packages/remix-oxygen';
-            }
-            if (pkg.devDependencies['@shopify/cli']) {
-              pkg.devDependencies['@shopify/cli'] = 'file:${{ github.workspace }}/packages/cli';
-            }
-            if (pkg.devDependencies['@shopify/cli-hydrogen']) {
-              pkg.devDependencies['@shopify/cli-hydrogen'] = 'file:${{ github.workspace }}/packages/cli-hydrogen';
-            }
-            if (pkg.devDependencies['@shopify/hydrogen-codegen']) {
-              pkg.devDependencies['@shopify/hydrogen-codegen'] = 'file:${{ github.workspace }}/packages/hydrogen-codegen';
-            }
-            if (pkg.devDependencies['@shopify/mini-oxygen']) {
-              pkg.devDependencies['@shopify/mini-oxygen'] = 'file:${{ github.workspace }}/packages/mini-oxygen';
-            }
-            
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-          "
-          
-          cat package.json
-      
       - name: 📥 Install dependencies (skeleton with recipe)
-        working-directory: /tmp/hydrogen-recipe-${{ matrix.recipes.name }}
+        working-directory: templates/skeleton
         run: |
-          # Install dependencies with local packages
+          # Install in the monorepo context to use workspace packages
           npm install
       
       - name: 📝 Generate GraphQL types
+        working-directory: templates/skeleton
         run: |
-          npx shopify hydrogen codegen --path /tmp/hydrogen-recipe-${{ matrix.recipes.name }}
+          npm run codegen
       
       - name: 🔨 Build skeleton with recipe
+        working-directory: templates/skeleton
         run: |
-          npx shopify hydrogen build --path /tmp/hydrogen-recipe-${{ matrix.recipes.name }}
+          npm run build
+      
+      - name: 📋 Copy built skeleton to temporary directory
+        run: |
+          # Copy built skeleton with applied recipe to a temp directory for deployment
+          cp -r templates/skeleton /tmp/hydrogen-recipe-${{ matrix.recipes.name }}
+          echo "Copied built skeleton to /tmp/hydrogen-recipe-${{ matrix.recipes.name }}"
       
       - name: 🚀 Deploy to Oxygen
         id: deploy
