@@ -76,10 +76,30 @@ jobs:
           cp -r templates/skeleton /tmp/hydrogen-recipe-${{ matrix.recipes.name }}
           echo "Copied skeleton to /tmp/hydrogen-recipe-${{ matrix.recipes.name }}"
       
+      - name: 🔗 Link local packages
+        run: |
+          # Link the locally built packages
+          cd packages/hydrogen && npm link
+          cd ../hydrogen-react && npm link
+          cd ../remix-oxygen && npm link
+          cd ../cli && npm link
+          cd ../cli-hydrogen && npm link
+          cd ../hydrogen-codegen && npm link
+          cd ../mini-oxygen && npm link
+      
       - name: 📥 Install dependencies (skeleton with recipe)
         working-directory: /tmp/hydrogen-recipe-${{ matrix.recipes.name }}
         run: |
-          # Use npm install instead of npm ci because recipes may modify package.json
+          # Link to local packages first
+          npm link @shopify/hydrogen
+          npm link @shopify/hydrogen-react
+          npm link @shopify/remix-oxygen
+          npm link @shopify/cli
+          npm link @shopify/cli-hydrogen
+          npm link @shopify/hydrogen-codegen
+          npm link @shopify/mini-oxygen
+          
+          # Then install remaining dependencies
           npm install
       
       - name: 📝 Generate GraphQL types
