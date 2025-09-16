@@ -26,14 +26,16 @@ export function applyRecipe(params: {
 
   // list the ingredients in the recipe's ingredients folder as a list of flat paths (e.g. foo/bar/baz.txt)
   const ingredientsPath = path.join(recipeDir, 'ingredients');
-  const fsIngredients = fs
-    .readdirSync(ingredientsPath, {recursive: true, withFileTypes: true})
-    .filter((ingredient) => ingredient.isFile())
-    .map((ingredient) =>
-      path
-        .join(ingredient.path, ingredient.name)
-        .replace(path.join(recipeDir, 'ingredients') + '/', ''),
-    );
+  const fsIngredients = fs.existsSync(ingredientsPath)
+    ? fs
+        .readdirSync(ingredientsPath, {recursive: true, withFileTypes: true})
+        .filter((ingredient) => ingredient.isFile())
+        .map((ingredient) =>
+          path
+            .join(ingredient.path, ingredient.name)
+            .replace(path.join(recipeDir, 'ingredients') + '/', ''),
+        )
+    : [];
 
   // if the template directory contains modified files, exit with an error
   console.log(`- 🔄 Checking template directory…`);
