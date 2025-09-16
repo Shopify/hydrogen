@@ -94,12 +94,7 @@ async function getContext(req) {
       i18n: {language: 'EN', country: 'US'},
       cart: {
         // Add a customt cart fragment if needed
-        queryFragment: `
-          fragment CartApiQuery on Cart {
-            id
-            totalQuantity
-          }
-        `,
+        queryFragment: CUSTOM_CART_QUERY,
       },
     },
     // Additional context can be added here
@@ -108,6 +103,111 @@ async function getContext(req) {
 
   return hydrogenContext;
 }
+
+const CUSTOM_CART_QUERY = `#graphql
+  fragment CartApiQuery on Cart {
+    id
+    checkoutUrl
+    totalQuantity
+    buyerIdentity {
+      countryCode
+      customer {
+        id
+        email
+        firstName
+        lastName
+        displayName
+      }
+      email
+      phone
+    }
+    lines(first: $numCartLines) {
+      edges {
+        node {
+          id
+          quantity
+          attributes {
+            key
+            value
+          }
+          cost {
+            totalAmount {
+              amount
+              currencyCode
+            }
+            amountPerQuantity {
+              amount
+              currencyCode
+            }
+            compareAtAmountPerQuantity {
+              amount
+              currencyCode
+            }
+          }
+          merchandise {
+            ... on ProductVariant {
+              id
+              availableForSale
+              compareAtPrice {
+                amount
+                currencyCode
+              }
+              price {
+                amount
+                currencyCode
+              }
+              requiresShipping
+              title
+              image {
+                id
+                url
+                altText
+                width
+                height
+              }
+              product {
+                handle
+                title
+                id
+              }
+              selectedOptions {
+                name
+                value
+              }
+            }
+          }
+        }
+      }
+    }
+    cost {
+      subtotalAmount {
+        amount
+        currencyCode
+      }
+      totalAmount {
+        amount
+        currencyCode
+      }
+      totalDutyAmount {
+        amount
+        currencyCode
+      }
+      totalTaxAmount {
+        amount
+        currencyCode
+      }
+    }
+    note
+    attributes {
+      key
+      value
+    }
+    discountCodes {
+      code
+    }
+  }
+
+`;
 
 class AppSession {
   constructor(sessionStorage, session) {

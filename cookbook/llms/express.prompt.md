@@ -634,7 +634,7 @@ process.on('SIGTERM', () => {
  export function links() {
    return [
      {
-@@ -61,18 +35,20 @@ export function links() {
+@@ -61,18 +35,19 @@ export function links() {
        rel: 'preconnect',
        href: 'https://shop.app',
      },
@@ -649,12 +649,11 @@ process.on('SIGTERM', () => {
 +export async function loader({context}: Route.LoaderArgs) {
 +  const [customerAccessToken, cartId] = await Promise.all([
 +    context.session.get('customerAccessToken'),
-+    context.session.get('cartId'),
 +  ]);
  
 -  // Await the critical data required to render initial state of the page
 -  const criticalData = await loadCriticalData(args);
-+  const deferredData = loadDeferredData({context, cartId});
++  const deferredData = loadDeferredData({context});
 +  const criticalData = await loadCriticalData({context});
  
 -  const {storefront, env} = args.context;
@@ -662,7 +661,7 @@ process.on('SIGTERM', () => {
  
    return {
      ...deferredData,
-@@ -86,59 +62,47 @@ export async function loader(args: Route.LoaderArgs) {
+@@ -86,59 +61,29 @@ export async function loader(args: Route.LoaderArgs) {
        checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
        storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
        withPrivacyBanner: false,
@@ -710,9 +709,8 @@ process.on('SIGTERM', () => {
 -  const {storefront, customerAccount, cart} = context;
 +function loadDeferredData({
 +  context,
-+  cartId,
 +}: Pick<Route.LoaderArgs, 'context'> & {cartId?: string}) {
-+  const {storefront} = context;
++  const {storefront, cart} = context;
  
 -  // defer the footer query (below the fold)
 -  const footer = storefront
@@ -732,28 +730,11 @@ process.on('SIGTERM', () => {
 -    isLoggedIn: customerAccount.isLoggedIn(),
 -    footer,
 -  };
-+  const cart = cartId
-+    ? storefront
-+        .query(CART_QUERY, {
-+          variables: {
-+            cartId,
-+            country: storefront.i18n?.country,
-+            language: storefront.i18n?.language,
-+          },
-+          cache: storefront.CacheNone(),
-+        })
-+        .then((result) => result?.cart || null)
-+        .catch((error: Error) => {
-+          console.error(error);
-+          return null;
-+        })
-+    : Promise.resolve(null);
-+
-+  return {cart};
++  return {cart: cart.get()};
  }
  
  export function Layout({children}: {children?: React.ReactNode}) {
-@@ -150,8 +114,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -150,8 +95,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
        <head>
          <meta charSet="utf-8" />
          <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -763,7 +744,7 @@ process.on('SIGTERM', () => {
          <Meta />
          <Links />
        </head>
-@@ -162,7 +125,11 @@ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -162,7 +106,11 @@ export function Layout({children}: {children?: React.ReactNode}) {
              shop={data.shop}
              consent={data.consent}
            >
@@ -776,7 +757,7 @@ process.on('SIGTERM', () => {
            </Analytics.Provider>
          ) : (
            children
-@@ -202,3 +169,125 @@ export function ErrorBoundary() {
+@@ -202,3 +150,19 @@ export function ErrorBoundary() {
      </div>
    );
  }
@@ -785,112 +766,6 @@ process.on('SIGTERM', () => {
 +  query CartQuery($cartId: ID!, $country: CountryCode, $language: LanguageCode)
 +  @inContext(country: $country, language: $language) {
 +    cart(id: $cartId) {
-+      id
-+      checkoutUrl
-+      totalQuantity
-+      buyerIdentity {
-+        countryCode
-+        customer {
-+          id
-+          email
-+          firstName
-+          lastName
-+          displayName
-+        }
-+        email
-+        phone
-+      }
-+      lines(first: 100) {
-+        edges {
-+          node {
-+            id
-+            quantity
-+            attributes {
-+              key
-+              value
-+            }
-+            cost {
-+              totalAmount {
-+                amount
-+                currencyCode
-+              }
-+              amountPerQuantity {
-+                amount
-+                currencyCode
-+              }
-+              compareAtAmountPerQuantity {
-+                amount
-+                currencyCode
-+              }
-+            }
-+            merchandise {
-+              ... on ProductVariant {
-+                id
-+                availableForSale
-+                compareAtPrice {
-+                  amount
-+                  currencyCode
-+                }
-+                price {
-+                  amount
-+                  currencyCode
-+                }
-+                requiresShipping
-+                title
-+                image {
-+                  id
-+                  url
-+                  altText
-+                  width
-+                  height
-+                }
-+                product {
-+                  handle
-+                  title
-+                  id
-+                }
-+                selectedOptions {
-+                  name
-+                  value
-+                }
-+              }
-+            }
-+          }
-+        }
-+      }
-+      cost {
-+        subtotalAmount {
-+          amount
-+          currencyCode
-+        }
-+        totalAmount {
-+          amount
-+          currencyCode
-+        }
-+        totalDutyAmount {
-+          amount
-+          currencyCode
-+        }
-+        totalTaxAmount {
-+          amount
-+          currencyCode
-+        }
-+      }
-+      note
-+      attributes {
-+        key
-+        value
-+      }
-+      discountCodes {
-+        code
-+      }
-+      metafields(identifiers: []) {
-+        key
-+        namespace
-+        value
-+        id
-+      }
-+    }
 +  }
 +` as const;
 +
@@ -1007,12 +882,7 @@ async function getContext(req) {
       i18n: {language: 'EN', country: 'US'},
       cart: {
         // Add a customt cart fragment if needed
-        queryFragment: `
-          fragment CartApiQuery on Cart {
-            id
-            totalQuantity
-          }
-        `,
+        queryFragment: CUSTOM_CART_QUERY,
       },
     },
     // Additional context can be added here
@@ -1021,6 +891,111 @@ async function getContext(req) {
 
   return hydrogenContext;
 }
+
+const CUSTOM_CART_QUERY = `#graphql
+  fragment CartApiQuery on Cart {
+    id
+    checkoutUrl
+    totalQuantity
+    buyerIdentity {
+      countryCode
+      customer {
+        id
+        email
+        firstName
+        lastName
+        displayName
+      }
+      email
+      phone
+    }
+    lines(first: $numCartLines) {
+      edges {
+        node {
+          id
+          quantity
+          attributes {
+            key
+            value
+          }
+          cost {
+            totalAmount {
+              amount
+              currencyCode
+            }
+            amountPerQuantity {
+              amount
+              currencyCode
+            }
+            compareAtAmountPerQuantity {
+              amount
+              currencyCode
+            }
+          }
+          merchandise {
+            ... on ProductVariant {
+              id
+              availableForSale
+              compareAtPrice {
+                amount
+                currencyCode
+              }
+              price {
+                amount
+                currencyCode
+              }
+              requiresShipping
+              title
+              image {
+                id
+                url
+                altText
+                width
+                height
+              }
+              product {
+                handle
+                title
+                id
+              }
+              selectedOptions {
+                name
+                value
+              }
+            }
+          }
+        }
+      }
+    }
+    cost {
+      subtotalAmount {
+        amount
+        currencyCode
+      }
+      totalAmount {
+        amount
+        currencyCode
+      }
+      totalDutyAmount {
+        amount
+        currencyCode
+      }
+      totalTaxAmount {
+        amount
+        currencyCode
+      }
+    }
+    note
+    attributes {
+      key
+      value
+    }
+    discountCodes {
+      code
+    }
+  }
+
+`;
 
 class AppSession {
   constructor(sessionStorage, session) {
