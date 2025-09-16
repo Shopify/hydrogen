@@ -1,6 +1,6 @@
 # Overview
 
-This prompt describes how to implement "multipass" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "Multipass Authentication with Storefront API" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -12,18 +12,31 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 
 # Summary
 
-
+Enable Shopify Plus Multipass authentication using Storefront API for seamless customer login and checkout
 
 # User Intent Recognition
 
 <user_queries>
-
+- How do I set up Multipass authentication in my Hydrogen store?
+- How can I use Storefront API for customer authentication instead of Customer Account API?
+- How do I implement session-based authentication in Hydrogen?
+- How can I maintain customer login state across checkout?
+- How do I integrate external authentication with Shopify Plus?
 </user_queries>
 
 # Troubleshooting
 
 <troubleshooting>
-
+- **Issue**: ReferenceError: require is not defined (snakecase-keys error)
+  **Solution**: The recipe includes a custom ESM-compatible snake_case implementation. Ensure you're using the updated multipassify.server.ts file that doesn't import snakecase-keys
+- **Issue**: PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET is undefined
+  **Solution**: Add the Multipass secret to your environment variables. You can find this in your Shopify Plus admin under Settings > Checkout > Multipass
+- **Issue**: TypeScript error: Property 'PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET' does not exist on type 'Env'
+  **Solution**: The recipe adds this type definition to env.d.ts. Run 'npm run typecheck' after applying all patches
+- **Issue**: Customer login redirects to Customer Account API login page
+  **Solution**: Ensure all account routes have been properly converted to use Storefront API. Check that account_.login.tsx uses the form-based login, not customerAccount.login()
+- **Issue**: Multipass checkout button not appearing
+  **Solution**: Verify that CartSummary.tsx imports and uses MultipassCheckoutButton component, and that the cart.tsx route has been patched
 </troubleshooting>
 
 # Recipe Implementation
@@ -34,7 +47,37 @@ Here's the multipass recipe for the base Hydrogen skeleton template:
 
 ## Description
 
+This recipe implements Shopify Plus Multipass authentication using the Storefront API instead of the Customer Account API.
+It provides session-based authentication with customer access tokens, enabling customers to maintain their logged-in
+state across the storefront and checkout process. This is particularly useful for Shopify Plus stores that need to
+integrate with external authentication systems or maintain customer sessions across different platforms.
 
+Key features:
+- Converts all customer account routes from Customer Account API to Storefront API
+- Implements session-based authentication with customer access tokens
+- Adds Multipass checkout button for seamless checkout experience
+- Provides token validation and automatic token refresh
+- Includes complete authentication flow (login, logout, register, recover, reset)
+
+## Notes
+
+> [!NOTE]
+> This recipe requires Shopify Plus as Multipass is a Plus-only feature
+
+> [!NOTE]
+> The recipe replaces the snakecase-keys npm package with a custom ESM-compatible implementation to work in Worker environments
+
+> [!NOTE]
+> All customer authentication is handled through Storefront API mutations instead of Customer Account API
+
+> [!NOTE]
+> Session tokens are validated on each request and automatically cleared if expired
+
+## Requirements
+
+- Shopify Plus subscription for Multipass functionality
+- PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET environment variable must be set
+- React Router 7.8.x or higher
 
 ## New files added to the template by this recipe
 
