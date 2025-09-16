@@ -1,11 +1,16 @@
 # Don't change the line below!
 #! oxygen_storefront_id: 1000014888
 
-name: Examples deploy
-# Temporarily disabled during React Router 7.8.x migration
-# Examples are not in workspaces and need to be updated separately
+name: Deploy Recipe Examples
 on: 
-  workflow_dispatch: # Only run manually if needed
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'templates/skeleton/**'
+      - 'cookbook/recipes/**'
+      - '.github/workflows/deploy-examples.yml'
+  workflow_dispatch: # Allow manual runs
 
 permissions:
   contents: read
@@ -13,17 +18,15 @@ permissions:
 
 jobs:
   deploy:
-    name: Deploy to Oxygen
+    name: Deploy Recipe to Oxygen
     timeout-minutes: 30
     runs-on: ubuntu-latest
     strategy:
-      # In addition to updating the examples matrix below, make sure to also update
-      # the add a key in the `env` block of the `Build and Publish to Oxygen` step
       matrix:
-        examples:
+        recipes:
           [
             {name: 'metaobjects', token: '1000014928'},
-            {name: 'third-party-queries-caching', token: '1000014929'},
+            {name: 'third-party-api', token: '1000014929'},  # Replaces third-party-queries-caching
             {name: 'custom-cart-method', token: '1000014930'},
             {name: 'legacy-customer-account-flow', token: '1000022490'},
           ]
@@ -49,18 +52,39 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
-      - name: Install dependencies
+      
+      - name: 📥 Install dependencies (root)
         run: npm ci
+      
       - name: 📦 Build packages
         run: |
           CI=true npm run build:pkg
-      - name: Build and Publish to Oxygen
-        id: deploy
-        working-directory: examples/${{ matrix.examples.name }}
+      
+      - name: 📥 Install dependencies (cookbook)
+        working-directory: cookbook
+        run: npm ci
+      
+      - name: 🍳 Apply recipe to skeleton
+        working-directory: cookbook
         run: |
-          npx shopify hydrogen deploy --no-lockfile-check --token=$OXYGEN_DEPLOYMENT_TOKEN_${{ matrix.examples.token }}
+          echo "Applying recipe: ${{ matrix.recipes.name }}"
+          npm run cookbook -- apply --recipe ${{ matrix.recipes.name }}
+      
+      - name: 📥 Install dependencies (skeleton with recipe)
+        working-directory: templates/skeleton
+        run: npm ci
+      
+      - name: 🔨 Build skeleton with recipe
+        working-directory: templates/skeleton
+        run: npm run build
+      
+      - name: 🚀 Deploy to Oxygen
+        id: deploy
+        working-directory: templates/skeleton
+        run: |
+          npx shopify hydrogen deploy --no-lockfile-check --token=$OXYGEN_DEPLOYMENT_TOKEN_${{ matrix.recipes.token }}
         env:
-          SHOPIFY_HYDROGEN_FLAG_METADATA_DESCRIPTION: ${{ github.event.head_commit.message }}
+          SHOPIFY_HYDROGEN_FLAG_METADATA_DESCRIPTION: "Recipe: ${{ matrix.recipes.name }} - ${{ github.event.head_commit.message }}"
           OXYGEN_DEPLOYMENT_TOKEN_1000014888: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014888 }}
           OXYGEN_DEPLOYMENT_TOKEN_1000022490: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000022490 }}
           OXYGEN_DEPLOYMENT_TOKEN_1000014892: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014892 }}
