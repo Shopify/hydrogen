@@ -1,4 +1,4 @@
-index 7373fbf2f..d1638295c 100644
+index 46272bbd3..64494bda5 100644
 --- a/templates/skeleton/app/routes/account.tsx
 +++ b/templates/skeleton/app/routes/account.tsx
 @@ -1,44 +1,104 @@
@@ -20,11 +20,12 @@ index 7373fbf2f..d1638295c 100644
  }
  
 -export async function loader({context}: Route.LoaderArgs) {
--  const {data, errors} = await context.customerAccount.query(
+-  const {customerAccount} = context;
+-  const {data, errors} = await customerAccount.query(
 -    CUSTOMER_DETAILS_QUERY,
 -    {
 -      variables: {
--        language: context.customerAccount.i18n.language,
+-        language: customerAccount.i18n.language,
 -      },
 -    },
 -  );
@@ -98,7 +99,7 @@ index 7373fbf2f..d1638295c 100644
 +  }
 +}
 +
-+export default function Acccount() {
++export default function Account() {
 +  const {customer, isPrivateRoute, isAccountHome} =
 +    useLoaderData<typeof loader>();
 +
@@ -117,7 +118,6 @@ index 7373fbf2f..d1638295c 100644
  
 -export default function AccountLayout() {
 -  const {customer} = useLoaderData<typeof loader>();
--
 +function AccountLayout({
 +  customer,
 +  children,
@@ -125,10 +125,10 @@ index 7373fbf2f..d1638295c 100644
 +  customer: CustomerFragment;
 +  children: React.ReactNode;
 +}) {
+ 
    const heading = customer
      ? customer.firstName
-       ? `Welcome, ${customer.firstName}`
-@@ -50,9 +110,7 @@ export default function AccountLayout() {
+@@ -51,9 +111,7 @@ export default function AccountLayout() {
        <h1>{heading}</h1>
        <br />
        <AccountMenu />
@@ -139,7 +139,7 @@ index 7373fbf2f..d1638295c 100644
      </div>
    );
  }
-@@ -97,3 +155,50 @@ function Logout() {
+@@ -98,3 +156,50 @@ function Logout() {
      </Form>
    );
  }

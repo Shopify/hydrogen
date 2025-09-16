@@ -1,6 +1,29 @@
-import snakecaseKeys from 'snakecase-keys';
 import CryptoJS from 'crypto-js';
 import type {MultipassCustomer} from './types';
+
+// Simple snake_case converter for ESM/Worker runtime
+function toSnakeCase(str: string): string {
+  return str.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
+}
+
+function snakecaseKeys(obj: any): any {
+  if (typeof obj !== 'object' || obj === null) {
+    return obj;
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(snakecaseKeys);
+  }
+  
+  const result: any = {};
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const snakeKey = toSnakeCase(key);
+      result[snakeKey] = snakecaseKeys(obj[key]);
+    }
+  }
+  return result;
+}
 
 /*
   Shopify multipassify implementation for node and v8/worker runtime

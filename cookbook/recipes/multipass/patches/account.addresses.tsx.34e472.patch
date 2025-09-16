@@ -1,4 +1,4 @@
-index ca1753858..43310abf9 100644
+index ddfa18f3f..9e104eed2 100644
 --- a/templates/skeleton/app/routes/account.addresses.tsx
 +++ b/templates/skeleton/app/routes/account.addresses.tsx
 @@ -1,22 +1,14 @@
@@ -90,7 +90,7 @@ index ca1753858..43310abf9 100644
        'zip',
      ];
  
-@@ -89,170 +79,134 @@ export async function action({request, context}: Route.ActionArgs) {
+@@ -89,143 +79,119 @@ export async function action({request, context}: Route.ActionArgs) {
        case 'POST': {
          // handle new address creation
          try {
@@ -101,7 +101,7 @@ index ca1753858..43310abf9 100644
 -              variables: {
 -                address,
 -                defaultAddress,
--                language: context.customerAccount.i18n.language,
+-                language: customerAccount.i18n.language,
 -              },
 +              variables: {customerAccessToken: accessToken, address},
              },
@@ -185,7 +185,7 @@ index ca1753858..43310abf9 100644
                  address,
 -                addressId: decodeURIComponent(addressId),
 -                defaultAddress,
--                language: context.customerAccount.i18n.language,
+-                language: customerAccount.i18n.language,
 +                customerAccessToken: accessToken,
 +                id: decodeURIComponent(addressId),
                },
@@ -260,7 +260,7 @@ index ca1753858..43310abf9 100644
              {
 -              variables: {
 -                addressId: decodeURIComponent(addressId),
--                language: context.customerAccount.i18n.language,
+-                language: customerAccount.i18n.language,
 -              },
 +              variables: {customerAccessToken: accessToken, id: addressId},
              },
@@ -302,37 +302,7 @@ index ca1753858..43310abf9 100644
          }
        }
  
-       default: {
-         return data(
-           {error: {[addressId]: 'Method not allowed'}},
--          {
--            status: 405,
--          },
-+          {status: 405},
-         );
-       }
-     }
-   } catch (error: unknown) {
-     if (error instanceof Error) {
--      return data(
--        {error: error.message},
--        {
--          status: 400,
--        },
--      );
-+      return data({error: error.message}, {status: 400});
-     }
--    return data(
--      {error},
--      {
--        status: 400,
--      },
--    );
-+    return data({error}, {status: 400});
-   }
- }
- 
-@@ -291,21 +245,17 @@ function NewAddressForm() {
+@@ -291,21 +257,17 @@ function NewAddressForm() {
      address2: '',
      city: '',
      company: '',
@@ -359,7 +329,7 @@ index ca1753858..43310abf9 100644
        {({stateForMethod}) => (
          <div>
            <button
-@@ -331,7 +281,6 @@ function ExistingAddresses({
+@@ -331,7 +293,6 @@ function ExistingAddresses({
        {addresses.nodes.map((address) => (
          <AddressForm
            key={address.id}
@@ -367,7 +337,7 @@ index ca1753858..43310abf9 100644
            address={address}
            defaultAddress={defaultAddress}
          >
-@@ -360,26 +309,26 @@ function ExistingAddresses({
+@@ -360,26 +321,26 @@ function ExistingAddresses({
  }
  
  export function AddressForm({
@@ -403,7 +373,7 @@ index ca1753858..43310abf9 100644
          <label htmlFor="firstName">First name*</label>
          <input
            aria-label="First name"
-@@ -444,13 +393,13 @@ export function AddressForm({
+@@ -444,13 +405,13 @@ export function AddressForm({
            required
            type="text"
          />
@@ -422,7 +392,7 @@ index ca1753858..43310abf9 100644
            placeholder="State / Province"
            required
            type="text"
-@@ -466,25 +415,24 @@ export function AddressForm({
+@@ -466,25 +427,24 @@ export function AddressForm({
            required
            type="text"
          />
@@ -459,7 +429,7 @@ index ca1753858..43310abf9 100644
            placeholder="+16135551111"
            pattern="^\+?[1-9]\d{3,14}$"
            type="tel"
-@@ -514,3 +462,98 @@ export function AddressForm({
+@@ -514,3 +474,98 @@ export function AddressForm({
      </Form>
    );
  }

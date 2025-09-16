@@ -1,7 +1,7 @@
-index 75bb2ad64..4cde38e00 100644
+index 35fc7ca58..4cde38e00 100644
 --- a/templates/skeleton/app/routes/account.orders._index.tsx
 +++ b/templates/skeleton/app/routes/account.orders._index.tsx
-@@ -1,51 +1,60 @@
+@@ -1,52 +1,60 @@
 -import {
 -  Link,
 -  useLoaderData,
@@ -27,17 +27,18 @@ index 75bb2ad64..4cde38e00 100644
  };
  
  export async function loader({request, context}: Route.LoaderArgs) {
+-  const {customerAccount} = context;
 -  const paginationVariables = getPaginationVariables(request, {
 -    pageBy: 20,
 -  });
 +  const {session, storefront} = context;
  
--  const {data, errors} = await context.customerAccount.query(
+-  const {data, errors} = await customerAccount.query(
 -    CUSTOMER_ORDERS_QUERY,
 -    {
 -      variables: {
 -        ...paginationVariables,
--        language: context.customerAccount.i18n.language,
+-        language: customerAccount.i18n.language,
 -      },
 -    },
 -  );
@@ -91,7 +92,7 @@ index 75bb2ad64..4cde38e00 100644
        {orders.nodes.length ? <OrdersTable orders={orders} /> : <EmptyOrders />}
      </div>
    );
-@@ -55,9 +64,23 @@ function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
+@@ -56,9 +64,23 @@ function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
    return (
      <div className="acccount-orders">
        {orders?.nodes.length ? (
@@ -118,7 +119,7 @@ index 75bb2ad64..4cde38e00 100644
        ) : (
          <EmptyOrders />
        )}
-@@ -78,20 +101,91 @@ function EmptyOrders() {
+@@ -79,20 +101,91 @@ function EmptyOrders() {
  }
  
  function OrderItem({order}: {order: OrderItemFragment}) {
