@@ -37,7 +37,7 @@ describe('createCartHandler', () => {
     const cart = getCartHandler();
 
     expectTypeOf(cart).toEqualTypeOf<HydrogenCart>;
-    expect(Object.keys(cart)).toHaveLength(18);
+    expect(Object.keys(cart)).toHaveLength(19);
     expect(cart).toHaveProperty('get');
     expect(cart).toHaveProperty('getCartId');
     expect(cart).toHaveProperty('setCartId');
@@ -47,12 +47,16 @@ describe('createCartHandler', () => {
     expect(cart).toHaveProperty('removeLines');
     expect(cart).toHaveProperty('updateDiscountCodes');
     expect(cart).toHaveProperty('updateGiftCardCodes');
+    expect(cart).toHaveProperty('removeGiftCardCodes');
     expect(cart).toHaveProperty('updateBuyerIdentity');
     expect(cart).toHaveProperty('updateNote');
     expect(cart).toHaveProperty('updateSelectedDeliveryOption');
     expect(cart).toHaveProperty('updateAttributes');
     expect(cart).toHaveProperty('setMetafields');
     expect(cart).toHaveProperty('deleteMetafield');
+    expect(cart).toHaveProperty('addDeliveryAddresses');
+    expect(cart).toHaveProperty('removeDeliveryAddresses');
+    expect(cart).toHaveProperty('updateDeliveryAddresses');
   });
 
   it('can add custom methods', () => {
@@ -68,7 +72,7 @@ describe('createCartHandler', () => {
     });
 
     expectTypeOf(cart).toEqualTypeOf<HydrogenCartCustom<{foo: () => 'bar'}>>;
-    expect(Object.keys(cart)).toHaveLength(19);
+    expect(Object.keys(cart)).toHaveLength(20);
     expect(cart.foo()).toBe('bar');
   });
 
@@ -82,7 +86,7 @@ describe('createCartHandler', () => {
     });
 
     expectTypeOf(cart).toEqualTypeOf<HydrogenCart>;
-    expect(Object.keys(cart)).toHaveLength(18);
+    expect(Object.keys(cart)).toHaveLength(19);
     expect(await cart.get()).toBe('bar');
   });
 
@@ -146,6 +150,9 @@ describe('createCartHandler', () => {
 
     const result12 = await cart.updateGiftCardCodes([]);
     expect(result12.userErrors?.[0]).toContain(cartMutateFragment);
+
+    const result13 = await cart.removeGiftCardCodes([]);
+    expect(result13.userErrors?.[0]).toContain(cartMutateFragment);
   });
 
   it('function get has a working default implementation', async () => {

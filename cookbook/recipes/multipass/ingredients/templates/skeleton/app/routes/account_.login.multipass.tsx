@@ -1,5 +1,5 @@
 import {data as remixData, redirect} from 'react-router';
-import type {Route} from './+types/account_.login.multipass';
+import type {LoaderFunctionArgs, ActionFunctionArgs, HeadersFunction} from 'react-router';
 import {Multipassify} from '~/lib/multipass/multipassify.server';
 import type {
   CustomerInfoType,
@@ -7,13 +7,13 @@ import type {
   NotLoggedInResponseType,
 } from '~/lib/multipass/types';
 
-export const headers: Route.HeadersFunction = ({actionHeaders}) =>
+export const headers: HeadersFunction = ({actionHeaders}) =>
   actionHeaders;
 
 /*
   Redirect document GET requests to the login page (housekeeping)
 */
-export async function loader({params, context}: Route.LoaderArgs) {
+export async function loader({params, context}: LoaderFunctionArgs) {
   const customerAccessToken = context.session.get('customerAccessToken');
 
   if (customerAccessToken) {
@@ -27,7 +27,7 @@ export async function loader({params, context}: Route.LoaderArgs) {
   Handles POST requests to `/account/login/multipass`
   expects body: { return_to?: string, customer }
 */
-export async function action({request, context}: Route.ActionArgs) {
+export async function action({request, context}: ActionFunctionArgs) {
   const {session, storefront, env} = context;
   const origin = request.headers.get('Origin') || '';
   const isOptionsReq = request.method === 'OPTIONS';

@@ -20,6 +20,32 @@ export function validateRecipe(params: {
     applyRecipe({
       recipeTitle,
     });
+    
+    // Check for any .orig or .rej files that might interfere with validation
+    const conflictFiles: string[] = [];
+    
+    try {
+      const files = execSync(`find ${TEMPLATE_PATH} -name "*.orig" -o -name "*.rej"`, {
+        encoding: 'utf-8',
+        stdio: 'pipe'
+      }).trim().split('\n').filter(Boolean);
+      
+      if (files.length > 0) {
+        conflictFiles.push(...files);
+      }
+    } catch (e) {
+      // No conflict files found, which is good
+    }
+    
+    if (conflictFiles.length > 0) {
+      console.error(`\n❌ Conflict files detected in template directory:`);
+      conflictFiles.forEach(file => {
+        console.error(`   - ${file}`);
+      });
+      console.error(`\nThese files will cause TypeScript errors during validation.`);
+      console.error(`Please resolve patch conflicts before running validation.`);
+      return false;
+    }
 
     const validationCommands: Command[] = [
       ...(hydrogenPackagesVersion != null
@@ -33,7 +59,33 @@ export function validateRecipe(params: {
 
     for (const {command, options} of validationCommands) {
       console.log(`- 🔬 Running ${command}…`);
-      execSync(command, options);
+      try {
+        const result = execSync(command, options);
+        // Also log output for successful commands in verbose mode
+        if (process.env.VERBOSE) {
+          console.log(result.toString());
+        }
+      } catch (error: any) {
+        // Log the actual error output for debugging
+        console.log(`❌ Command failed: ${command}`);
+        if (error.stdout) {
+          console.log('❌ === Command stdout ===');
+          const stdout = Buffer.isBuffer(error.stdout) 
+            ? error.stdout.toString('utf-8') 
+            : error.stdout.toString();
+          console.log(stdout);
+          console.log('❌ === End stdout ===');
+        }
+        if (error.stderr) {
+          console.log('❌ === Command stderr ===');
+          const stderr = Buffer.isBuffer(error.stderr)
+            ? error.stderr.toString('utf-8')
+            : error.stderr.toString();
+          console.log(stderr);
+          console.log('❌ === End stderr ===');
+        }
+        throw error;
+      }
     }
 
     const duration = Date.now() - start;
@@ -57,28 +109,28 @@ type Command = {
 function installDependencies(): Command {
   return {
     command: 'npm install',
-    options: {cwd: TEMPLATE_PATH},
+    options: {cwd: TEMPLATE_PATH, encoding: 'buffer'},
   };
 }
 
 function runCodegen(): Command {
   return {
     command: 'npm run codegen',
-    options: {cwd: TEMPLATE_PATH},
+    options: {cwd: TEMPLATE_PATH, encoding: 'buffer'},
   };
 }
 
 function runTypecheck(): Command {
   return {
     command: 'npm run typecheck',
-    options: {cwd: TEMPLATE_PATH},
+    options: {cwd: TEMPLATE_PATH, encoding: 'buffer'},
   };
 }
 
 function buildSkeleton(): Command {
   return {
     command: 'npm run build',
-    options: {cwd: TEMPLATE_PATH},
+    options: {cwd: TEMPLATE_PATH, encoding: 'buffer'},
   };
 }
 
@@ -91,6 +143,6 @@ function installHydrogenPackages(version: string): Command {
   ];
   return {
     command: `npm install ${packages.map((p) => `${p}-${version}.tgz`).join(' ')}`,
-    options: {cwd: TEMPLATE_PATH},
+    options: {cwd: TEMPLATE_PATH, encoding: 'buffer'},
   };
 }

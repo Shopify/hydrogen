@@ -4421,6 +4421,8 @@ export type Mutation = {
    * @deprecated The `storefrontCustomerAccessTokenCreate` is deprecated and will be removed in a future version. Please see [the changelog](https://shopify.dev/changelog/deprecation-of-storefrontcustomeraccesstokencreate-mutation) for more information.
    */
   storefrontCustomerAccessTokenCreate?: Maybe<StorefrontCustomerAccessTokenCreatePayload>;
+  /** Initiates a new Stripe Financial Connections session. */
+  stripeFinancialConnectionsSessionInitiate?: Maybe<StripeFinancialConnectionsSessionInitiatePayload>;
   /** Skips a Subscription Billing Cycle. */
   subscriptionBillingCycleSkip?: Maybe<SubscriptionBillingCycleSkipPayload>;
   /** Unskips a Subscription Billing Cycle. */
@@ -7065,6 +7067,15 @@ export type StorefrontCustomerAccessTokenCreatePayload = {
   userErrors: Array<UserErrorsStorefrontCustomerAccessTokenCreateUserErrors>;
 };
 
+/** Return type for `stripeFinancialConnectionsSessionInitiate` mutation. */
+export type StripeFinancialConnectionsSessionInitiatePayload = {
+  __typename?: 'StripeFinancialConnectionsSessionInitiatePayload';
+  /** The Stripe Financial Connections client secret for session initiation. */
+  clientSecret?: Maybe<Scalars['String']['output']>;
+  /** The list of errors that occurred from executing the mutation. */
+  userErrors: Array<UserErrorsStripeFinancialConnectionsSessionUserErrors>;
+};
+
 /** Represents a subscription anchor. */
 export type SubscriptionAnchor =
   | SubscriptionMonthDayAnchor
@@ -9333,6 +9344,23 @@ export type UserErrorsStorefrontCustomerAccessTokenCreateUserErrors =
 export type UserErrorsStorefrontCustomerAccessTokenCreateUserErrorsCode =
   /** The customer does not exist. */
   'CUSTOMER_DOES_NOT_EXIST';
+
+/** The error codes for failed Stripe Financial Connections session initiation. */
+export type UserErrorsStripeFinancialConnectionsSessionUserErrors =
+  DisplayableError & {
+    __typename?: 'UserErrorsStripeFinancialConnectionsSessionUserErrors';
+    /** The error code. */
+    code?: Maybe<UserErrorsStripeFinancialConnectionsSessionUserErrorsCode>;
+    /** The path to the input field that caused the error. */
+    field?: Maybe<Array<Scalars['String']['output']>>;
+    /** The error message. */
+    message: Scalars['String']['output'];
+  };
+
+/** Possible error codes that can be returned by `UserErrorsStripeFinancialConnectionsSessionUserErrors`. */
+export type UserErrorsStripeFinancialConnectionsSessionUserErrorsCode =
+  /** Stripe Financial Connections session could not be initiated. */
+  'STRIPE_FINANCIAL_CONNECTIONS_SESSION_ERROR';
 
 /** The configuration used for Payment Wallets. */
 export type WalletPaymentConfig = ApplePayWalletConfig | GooglePayWalletConfig;
