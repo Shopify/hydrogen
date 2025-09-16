@@ -1,4 +1,4 @@
-index 375fc7b04..8b65d8abf 100644
+index 375fc7b04..5471b0fda 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -11,46 +11,20 @@ import {
@@ -157,7 +157,7 @@ index 375fc7b04..8b65d8abf 100644
 +          },
 +          cache: storefront.CacheNone(),
 +        })
-+        .then((result) => result.cart)
++        .then((result) => result?.cart || null)
 +        .catch((error: Error) => {
 +          console.error(error);
 +          return null;
@@ -191,7 +191,7 @@ index 375fc7b04..8b65d8abf 100644
            </Analytics.Provider>
          ) : (
            children
-@@ -202,3 +169,120 @@ export function ErrorBoundary() {
+@@ -202,3 +169,125 @@ export function ErrorBoundary() {
      </div>
    );
  }
@@ -299,6 +299,12 @@ index 375fc7b04..8b65d8abf 100644
 +      discountCodes {
 +        code
 +      }
++      metafields(identifiers: []) {
++        key
++        namespace
++        value
++        id
++      }
 +    }
 +  }
 +` as const;
@@ -311,4 +317,3 @@ index 375fc7b04..8b65d8abf 100644
 +    }
 +  }
 +` as const;
-+

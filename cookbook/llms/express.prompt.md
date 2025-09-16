@@ -1,6 +1,6 @@
 # Overview
 
-This prompt describes how to implement "express" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "Express Server for Hydrogen" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -17,13 +17,26 @@ Deploy Hydrogen on Node.js with Express instead of Shopify Oxygen
 # User Intent Recognition
 
 <user_queries>
-
+- How do I deploy Hydrogen to Node.js instead of Oxygen?
+- How can I use Express with Hydrogen?
+- How do I deploy Hydrogen to Heroku/AWS/Vercel?
+- How to run Hydrogen without Shopify Oxygen?
+- Can I use Hydrogen with my own server?
 </user_queries>
 
 # Troubleshooting
 
 <troubleshooting>
-
+- **Issue**: Error: [h2:error:createStorefrontClient] `storeDomain` is required
+  **Solution**: Create a .env file with your Shopify store credentials. See the nextSteps section for required environment variables.
+- **Issue**: Cannot read file: fs/path/stream errors during build
+  **Solution**: This is expected. The vite.config.ts properly externalizes Node.js built-in modules for the Express server.
+- **Issue**: GraphQL codegen fails with 'Unable to find any GraphQL type definitions'
+  **Solution**: The recipe preserves GraphQL functionality. Make sure .graphqlrc.ts exists and your GraphQL queries use the gql template literal.
+- **Issue**: Port already in use when running npm run dev
+  **Solution**: The Express server defaults to port 3000. Either stop the process using that port or set PORT environment variable to a different port.
+- **Issue**: TypeScript errors about missing @react-router/node types
+  **Solution**: Run 'npm install' to ensure all dependencies including @types packages are installed.
 </troubleshooting>
 
 # Recipe Implementation
@@ -34,27 +47,40 @@ Here's the express recipe for the base Hydrogen skeleton template:
 
 ## Description
 
-This recipe transforms a Hydrogen skeleton template to run on a standard Node.js Express server, making it deployable to any Node.js hosting platform instead of Shopify Oxygen. It removes Oxygen-specific features and configurations while maintaining all core Hydrogen functionality.
+This recipe transforms a Hydrogen skeleton template to run on a standard Node.js Express server,
+making it deployable to any Node.js hosting platform instead of Shopify Oxygen. It maintains core
+Hydrogen functionality including GraphQL codegen and Storefront API integration while replacing
+Oxygen-specific features with Express equivalents.
+
+Key changes:
+- Replaces Oxygen server with Express server
+- Uses Vite for development with hot module replacement
+- Implements session management through Express middleware
+- Provides production-ready server configuration
+- Keeps GraphQL codegen functionality intact
 
 ## Notes
 
 > [!NOTE]
-> Requires Node.js 18+ for production deployment
+> Requires Node.js 20+ for production deployment (less than 22.0.0)
 
 > [!NOTE]
-> Uses nodemon for development with hot reload support
+> Uses nodemon for development server with automatic restarts
 
 > [!NOTE]
 > Environment variables are loaded from .env file using dotenv
 
 > [!NOTE]
-> Session management is handled through Express middleware
+> Session management is handled through Express middleware with SESSION_SECRET
 
 > [!NOTE]
-> Removes Oxygen-specific optimizations and configurations
+> GraphQL codegen still works with Storefront API types
 
 > [!NOTE]
 > Compatible with React Router 7.8.x
+
+> [!NOTE]
+> The .graphqlrc.ts file is preserved with customer account section commented out
 
 ## Requirements
 
@@ -716,7 +742,7 @@ process.on('SIGTERM', () => {
 +          },
 +          cache: storefront.CacheNone(),
 +        })
-+        .then((result) => result.cart)
++        .then((result) => result?.cart || null)
 +        .catch((error: Error) => {
 +          console.error(error);
 +          return null;
@@ -750,7 +776,7 @@ process.on('SIGTERM', () => {
            </Analytics.Provider>
          ) : (
            children
-@@ -202,3 +169,120 @@ export function ErrorBoundary() {
+@@ -202,3 +169,125 @@ export function ErrorBoundary() {
      </div>
    );
  }
@@ -858,6 +884,12 @@ process.on('SIGTERM', () => {
 +      discountCodes {
 +        code
 +      }
++      metafields(identifiers: []) {
++        key
++        namespace
++        value
++        id
++      }
 +    }
 +  }
 +` as const;
@@ -870,7 +902,6 @@ process.on('SIGTERM', () => {
 +    }
 +  }
 +` as const;
-+
 ```
 
 ### Step 4: server.mjs

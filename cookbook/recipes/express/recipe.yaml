@@ -8,7 +8,7 @@ description: |
   making it deployable to any Node.js hosting platform instead of Shopify Oxygen. It maintains core
   Hydrogen functionality including GraphQL codegen and Storefront API integration while replacing
   Oxygen-specific features with Express equivalents.
-  
+
   Key changes:
   - Replaces Oxygen server with Express server
   - Uses Vite for development with hot module replacement
@@ -16,13 +16,14 @@ description: |
   - Provides production-ready server configuration
   - Keeps GraphQL codegen functionality intact
 notes:
-  - "Requires Node.js 20+ for production deployment (less than 22.0.0)"
-  - "Uses nodemon for development server with automatic restarts"
-  - "Environment variables are loaded from .env file using dotenv"
-  - "Session management is handled through Express middleware with SESSION_SECRET"
-  - "GraphQL codegen still works with Storefront API types"
-  - "Compatible with React Router 7.8.x"
-  - "The .graphqlrc.ts file is preserved with customer account section commented out"
+  - Requires Node.js 20+ for production deployment (less than 22.0.0)
+  - Uses nodemon for development server with automatic restarts
+  - Environment variables are loaded from .env file using dotenv
+  - Session management is handled through Express middleware with SESSION_SECRET
+  - GraphQL codegen still works with Storefront API types
+  - Compatible with React Router 7.8.x
+  - The .graphqlrc.ts file is preserved with customer account section commented
+    out
 requirements: |
   - Node.js 18 or higher
   - npm or yarn package manager
@@ -220,20 +221,25 @@ nextSteps: |
   - Deploy to your preferred Node.js hosting platform (Heroku, AWS, Vercel, Railway, etc.)
 llms:
   userQueries:
-    - "How do I deploy Hydrogen to Node.js instead of Oxygen?"
-    - "How can I use Express with Hydrogen?"
-    - "How do I deploy Hydrogen to Heroku/AWS/Vercel?"
-    - "How to run Hydrogen without Shopify Oxygen?"
-    - "Can I use Hydrogen with my own server?"
+    - How do I deploy Hydrogen to Node.js instead of Oxygen?
+    - How can I use Express with Hydrogen?
+    - How do I deploy Hydrogen to Heroku/AWS/Vercel?
+    - How to run Hydrogen without Shopify Oxygen?
+    - Can I use Hydrogen with my own server?
   troubleshooting:
     - issue: "Error: [h2:error:createStorefrontClient] `storeDomain` is required"
-      solution: "Create a .env file with your Shopify store credentials. See the nextSteps section for required environment variables."
+      solution: Create a .env file with your Shopify store credentials. See the
+        nextSteps section for required environment variables.
     - issue: "Cannot read file: fs/path/stream errors during build"
-      solution: "This is expected. The vite.config.ts properly externalizes Node.js built-in modules for the Express server."
-    - issue: "GraphQL codegen fails with 'Unable to find any GraphQL type definitions'"
-      solution: "The recipe preserves GraphQL functionality. Make sure .graphqlrc.ts exists and your GraphQL queries use the gql template literal."
-    - issue: "Port already in use when running npm run dev"
-      solution: "The Express server defaults to port 3000. Either stop the process using that port or set PORT environment variable to a different port."
-    - issue: "TypeScript errors about missing @react-router/node types"
-      solution: "Run 'npm install' to ensure all dependencies including @types packages are installed."
+      solution: This is expected. The vite.config.ts properly externalizes Node.js
+        built-in modules for the Express server.
+    - issue: GraphQL codegen fails with 'Unable to find any GraphQL type definitions'
+      solution: The recipe preserves GraphQL functionality. Make sure .graphqlrc.ts
+        exists and your GraphQL queries use the gql template literal.
+    - issue: Port already in use when running npm run dev
+      solution: The Express server defaults to port 3000. Either stop the process
+        using that port or set PORT environment variable to a different port.
+    - issue: TypeScript errors about missing @react-router/node types
+      solution: Run 'npm install' to ensure all dependencies including @types packages
+        are installed.
 commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
