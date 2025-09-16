@@ -89,7 +89,11 @@ function createCSPHeader(
   const {shop, ...directives} = props ?? {};
   const nonceString = `'nonce-${nonce}'`;
   const styleSrc = ["'self'", "'unsafe-inline'", 'https://cdn.shopify.com'];
-  const connectSrc = ["'self'", 'https://monorail-edge.shopifysvc.com'];
+  const connectSrc = [
+    "'self'",
+    'https://cdn.shopify.com/',
+    'https://monorail-edge.shopifysvc.com',
+  ];
   if (shop && shop.checkoutDomain) {
     connectSrc.push(`https://${shop.checkoutDomain}`);
   }
