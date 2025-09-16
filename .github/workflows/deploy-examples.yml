@@ -76,30 +76,46 @@ jobs:
           cp -r templates/skeleton /tmp/hydrogen-recipe-${{ matrix.recipes.name }}
           echo "Copied skeleton to /tmp/hydrogen-recipe-${{ matrix.recipes.name }}"
       
-      - name: 🔗 Link local packages
+      - name: 🔗 Update package.json to use local packages
+        working-directory: /tmp/hydrogen-recipe-${{ matrix.recipes.name }}
         run: |
-          # Link the locally built packages
-          cd packages/hydrogen && npm link
-          cd ../hydrogen-react && npm link
-          cd ../remix-oxygen && npm link
-          cd ../cli && npm link
-          cd ../cli-hydrogen && npm link
-          cd ../hydrogen-codegen && npm link
-          cd ../mini-oxygen && npm link
+          # Update package.json to point to local built packages
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
+            
+            // Point to local packages using file: protocol
+            if (pkg.dependencies['@shopify/hydrogen']) {
+              pkg.dependencies['@shopify/hydrogen'] = 'file:${{ github.workspace }}/packages/hydrogen';
+            }
+            if (pkg.dependencies['@shopify/hydrogen-react']) {
+              pkg.dependencies['@shopify/hydrogen-react'] = 'file:${{ github.workspace }}/packages/hydrogen-react';
+            }
+            if (pkg.dependencies['@shopify/remix-oxygen']) {
+              pkg.dependencies['@shopify/remix-oxygen'] = 'file:${{ github.workspace }}/packages/remix-oxygen';
+            }
+            if (pkg.devDependencies['@shopify/cli']) {
+              pkg.devDependencies['@shopify/cli'] = 'file:${{ github.workspace }}/packages/cli';
+            }
+            if (pkg.devDependencies['@shopify/cli-hydrogen']) {
+              pkg.devDependencies['@shopify/cli-hydrogen'] = 'file:${{ github.workspace }}/packages/cli-hydrogen';
+            }
+            if (pkg.devDependencies['@shopify/hydrogen-codegen']) {
+              pkg.devDependencies['@shopify/hydrogen-codegen'] = 'file:${{ github.workspace }}/packages/hydrogen-codegen';
+            }
+            if (pkg.devDependencies['@shopify/mini-oxygen']) {
+              pkg.devDependencies['@shopify/mini-oxygen'] = 'file:${{ github.workspace }}/packages/mini-oxygen';
+            }
+            
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+          "
+          
+          cat package.json
       
       - name: 📥 Install dependencies (skeleton with recipe)
         working-directory: /tmp/hydrogen-recipe-${{ matrix.recipes.name }}
         run: |
-          # Link to local packages first
-          npm link @shopify/hydrogen
-          npm link @shopify/hydrogen-react
-          npm link @shopify/remix-oxygen
-          npm link @shopify/cli
-          npm link @shopify/cli-hydrogen
-          npm link @shopify/hydrogen-codegen
-          npm link @shopify/mini-oxygen
-          
-          # Then install remaining dependencies
+          # Install dependencies with local packages
           npm install
       
       - name: 📝 Generate GraphQL types
