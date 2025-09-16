@@ -164,7 +164,7 @@ Here's the express recipe for the base Hydrogen skeleton template:
 
 
 
-#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/99c2a1d70f91a7419ab85ef2d63cb1d9d1d7843b/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
+#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
 
 ```ts
 // This file extends the Hydrogen types for this project
@@ -235,7 +235,7 @@ export {};
 
 
 
-#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/99c2a1d70f91a7419ab85ef2d63cb1d9d1d7843b/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
+#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
 
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
@@ -396,7 +396,7 @@ export {};
 
 
 
-#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/99c2a1d70f91a7419ab85ef2d63cb1d9d1d7843b/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
+#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
 
 ```mjs
 #!/usr/bin/env node
@@ -826,7 +826,7 @@ process.on('SIGTERM', () => {
 
 
 
-#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/99c2a1d70f91a7419ab85ef2d63cb1d9d1d7843b/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
+#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
 
 ```mjs
 import {createRequestHandler} from '@react-router/express';
@@ -2114,7 +2114,7 @@ class AppSession {
 #### File: /eslint.config.js
 
 ```diff
-@@ -1,266 +1 @@
+@@ -1,246 +1,2 @@
 -import {fixupConfigRules, fixupPluginRules} from '@eslint/compat';
 -import eslintComments from 'eslint-plugin-eslint-comments';
 -import react from 'eslint-plugin-react';
@@ -2270,9 +2270,7 @@ class AppSession {
 -    languageOptions: {
 -      parser: tsParser,
 -      parserOptions: {
--        projectService: {
--          allowDefaultProject: ['.graphqlrc.ts'],
--        },
+-        project: './tsconfig.json',
 -        tsconfigRootDir: __dirname,
 -        ecmaFeatures: {
 -          jsx: true,
@@ -2293,57 +2291,6 @@ class AppSession {
 -    },
 -    rules: {
 -      '@typescript-eslint/ban-ts-comment': 'off',
--      '@typescript-eslint/naming-convention': 'off',
--      '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
--      '@typescript-eslint/no-floating-promises': 'error',
--      '@typescript-eslint/no-misused-promises': 'error',
--    },
--  },
--  {
--    files: ['**/.eslintrc.cjs'],
--    languageOptions: {
--      globals: {
--        ...globals.node,
--      },
--    },
--  },
--  ...compat.extends('plugin:jest/recommended').map((config) => ({
--    ...config,
--    files: ['**/*.test.*'],
--  })),
--  {
--    files: ['**/*.test.*'],
--    plugins: {
--      jest,
--    },
--    languageOptions: {
--      globals: {
--        ...globals.node,
--        ...globals.jest,
--      },
--    },
--  },
--  {
--    files: ['**/*.server.*'],
--    rules: {
--      'react-hooks/rules-of-hooks': 'off',
--    },
--  },
--  ...fixupConfigRules(
--    compat.extends(
--      'plugin:@typescript-eslint/eslint-recommended',
--      'plugin:@typescript-eslint/recommended',
--    ),
--  ).map((config) => ({
--    ...config,
--    files: ['**/*.ts', '**/*.tsx'],
--  })),
--  {
--    files: ['**/*.ts', '**/*.tsx'],
--    languageOptions: {
--      parser: tsParser,
--    },
--    rules: {
 -      '@typescript-eslint/explicit-module-boundary-types': 'off',
 -      '@typescript-eslint/naming-convention': [
 -        'error',
@@ -2376,12 +2323,46 @@ class AppSession {
 -      '@typescript-eslint/no-empty-object-type': 'off',
 -      '@typescript-eslint/no-explicit-any': 'off',
 -      '@typescript-eslint/no-non-null-assertion': 'off',
+-      '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
 -      '@typescript-eslint/no-unused-vars': 'off',
+-      '@typescript-eslint/no-floating-promises': 'error',
+-      '@typescript-eslint/no-misused-promises': 'error',
 -      'react/prop-types': 'off',
 -    },
 -  },
+-  {
+-    files: ['**/.eslintrc.cjs'],
+-    languageOptions: {
+-      globals: {
+-        ...globals.node,
+-      },
+-    },
+-  },
+-  ...compat.extends('plugin:jest/recommended').map((config) => ({
+-    ...config,
+-    files: ['**/*.test.*'],
+-  })),
+-  {
+-    files: ['**/*.test.*'],
+-    plugins: {
+-      jest,
+-    },
+-    languageOptions: {
+-      globals: {
+-        ...globals.node,
+-        ...globals.jest,
+-      },
+-    },
+-  },
+-  {
+-    files: ['**/*.server.*'],
+-    rules: {
+-      'react-hooks/rules-of-hooks': 'off',
+-    },
+-  },
 -];
-+export {default} from '../../templates/skeleton/eslint.config.js';
++// Minimal ESLint configuration for Express template
++export default [];
 \ No newline at end of file
 ```
 
@@ -2527,8 +2508,8 @@ class AppSession {
      "app/**/*.ts",
      "app/**/*.tsx",
      "app/**/*.d.ts",
-@@ -9,8 +10,9 @@
-     "*.d.ts",
+@@ -10,8 +11,9 @@
+     ".graphqlrc.ts",
      ".react-router/types/**/*"
    ],
 -  "exclude": ["node_modules", "dist", "build", "packages/**/dist/**/*"],
@@ -2538,7 +2519,7 @@ class AppSession {
      "lib": ["DOM", "DOM.Iterable", "ES2022"],
      "isolatedModules": true,
      "esModuleInterop": true,
-@@ -20,23 +22,16 @@
+@@ -21,23 +23,16 @@
      "module": "ES2022",
      "target": "ES2022",
      "strict": true,
@@ -2574,7 +2555,7 @@ class AppSession {
 #### File: /vite.config.ts
 
 ```diff
-@@ -1,19 +1,20 @@
+@@ -1,18 +1,19 @@
  import {defineConfig} from 'vite';
  import {hydrogen} from '@shopify/hydrogen/vite';
 -import {oxygen} from '@shopify/mini-oxygen/vite';
@@ -2592,15 +2573,14 @@ class AppSession {
      // Allow a strict Content-Security-Policy
      // withtout inlining assets as base64:
      assetsInlineLimit: 0,
+-  },
+-  server: {
+-    allowedHosts: ['.tryhydrogen.dev'],
 +    target: 'esnext',
    },
--
--  // Default React Router 7.8.x structure (no custom environment config)
--
    ssr: {
      optimizeDeps: {
-       /**
-@@ -26,10 +27,7 @@ export default defineConfig({
+@@ -26,7 +27,7 @@ export default defineConfig({
         * Include 'example-dep' in the array below.
         * @see https://vitejs.dev/config/dep-optimization-options
         */
@@ -2608,9 +2588,6 @@ class AppSession {
 +      include: [],
      },
    },
--  server: {
--    allowedHosts: ['.tryhydrogen.dev'],
--  },
  });
 ```
 

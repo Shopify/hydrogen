@@ -1,4 +1,4 @@
-index 3b8983cd5..e5a228517 100644
+index 54587bd58..cfcc33ca6 100644
 --- a/templates/skeleton/tsconfig.json
 +++ b/templates/skeleton/tsconfig.json
 @@ -1,6 +1,7 @@
@@ -9,8 +9,8 @@ index 3b8983cd5..e5a228517 100644
      "app/**/*.ts",
      "app/**/*.tsx",
      "app/**/*.d.ts",
-@@ -9,8 +10,9 @@
-     "*.d.ts",
+@@ -10,8 +11,9 @@
+     ".graphqlrc.ts",
      ".react-router/types/**/*"
    ],
 -  "exclude": ["node_modules", "dist", "build", "packages/**/dist/**/*"],
@@ -20,7 +20,7 @@ index 3b8983cd5..e5a228517 100644
      "lib": ["DOM", "DOM.Iterable", "ES2022"],
      "isolatedModules": true,
      "esModuleInterop": true,
-@@ -20,23 +22,16 @@
+@@ -21,23 +23,16 @@
      "module": "ES2022",
      "target": "ES2022",
      "strict": true,

@@ -1,4 +1,4 @@
-index 6fdeb1b26..65452561b 100644
+index 375fc7b04..acc77a97b 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -11,46 +11,20 @@ import {

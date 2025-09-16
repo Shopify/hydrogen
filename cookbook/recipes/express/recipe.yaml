@@ -2,10 +2,19 @@
 
 gid: 99596983-f4f0-4285-8f88-9112794cb812
 title: express
-summary: ""
-description: ""
-notes: []
-requirements: null
+summary: "Deploy Hydrogen on Node.js with Express instead of Shopify Oxygen"
+description: "This recipe transforms a Hydrogen skeleton template to run on a standard Node.js Express server, making it deployable to any Node.js hosting platform instead of Shopify Oxygen. It removes Oxygen-specific features and configurations while maintaining all core Hydrogen functionality."
+notes:
+  - "Requires Node.js 18+ for production deployment"
+  - "Uses nodemon for development with hot reload support"
+  - "Environment variables are loaded from .env file using dotenv"
+  - "Session management is handled through Express middleware"
+  - "Removes Oxygen-specific optimizations and configurations"
+  - "Compatible with React Router 7.8.x"
+requirements:
+  - "Node.js 18 or higher"
+  - "npm or yarn package manager"
+  - "Shopify Storefront API credentials"
 ingredients:
   - path: templates/skeleton/app/env.ts
     description: null
@@ -196,8 +205,13 @@ steps:
     diffs:
       - file: vite.config.ts
         patchFile: vite.config.ts.f0a2c4.patch
-nextSteps: null
+nextSteps:
+  - "Create a .env file with your Shopify Storefront API credentials"
+  - "Run 'npm install' to install Express and other Node.js dependencies"
+  - "Run 'npm run dev' to start the development server with hot reload"
+  - "For production, run 'npm run build' followed by 'npm start'"
+  - "Deploy to your preferred Node.js hosting platform (Heroku, AWS, Vercel, etc.)"
 llms:
   userQueries: []
   troubleshooting: []
-commit: 99c2a1d70f91a7419ab85ef2d63cb1d9d1d7843b
+commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6

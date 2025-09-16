@@ -1,7 +1,7 @@
-index 1ebce62d3..3a7387e89 100644
+index a12ad9e2e..3a7387e89 100644
 --- a/templates/skeleton/vite.config.ts
 +++ b/templates/skeleton/vite.config.ts
-@@ -1,19 +1,20 @@
+@@ -1,18 +1,19 @@
  import {defineConfig} from 'vite';
  import {hydrogen} from '@shopify/hydrogen/vite';
 -import {oxygen} from '@shopify/mini-oxygen/vite';
@@ -19,15 +19,14 @@ index 1ebce62d3..3a7387e89 100644
      // Allow a strict Content-Security-Policy
      // withtout inlining assets as base64:
      assetsInlineLimit: 0,
+-  },
+-  server: {
+-    allowedHosts: ['.tryhydrogen.dev'],
 +    target: 'esnext',
    },
--
--  // Default React Router 7.8.x structure (no custom environment config)
--
    ssr: {
      optimizeDeps: {
-       /**
-@@ -26,10 +27,7 @@ export default defineConfig({
+@@ -26,7 +27,7 @@ export default defineConfig({
         * Include 'example-dep' in the array below.
         * @see https://vitejs.dev/config/dep-optimization-options
         */
@@ -35,7 +34,4 @@ index 1ebce62d3..3a7387e89 100644
 +      include: [],
      },
    },
--  server: {
--    allowedHosts: ['.tryhydrogen.dev'],
--  },
  });

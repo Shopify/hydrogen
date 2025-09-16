@@ -1,7 +1,7 @@
-index be316f81c..35368e85a 100644
+index 6c972c781..fa8054776 100644
 --- a/templates/skeleton/eslint.config.js
 +++ b/templates/skeleton/eslint.config.js
-@@ -1,266 +1 @@
+@@ -1,246 +1,2 @@
 -import {fixupConfigRules, fixupPluginRules} from '@eslint/compat';
 -import eslintComments from 'eslint-plugin-eslint-comments';
 -import react from 'eslint-plugin-react';
@@ -157,9 +157,7 @@ index be316f81c..35368e85a 100644
 -    languageOptions: {
 -      parser: tsParser,
 -      parserOptions: {
--        projectService: {
--          allowDefaultProject: ['.graphqlrc.ts'],
--        },
+-        project: './tsconfig.json',
 -        tsconfigRootDir: __dirname,
 -        ecmaFeatures: {
 -          jsx: true,
@@ -180,57 +178,6 @@ index be316f81c..35368e85a 100644
 -    },
 -    rules: {
 -      '@typescript-eslint/ban-ts-comment': 'off',
--      '@typescript-eslint/naming-convention': 'off',
--      '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
--      '@typescript-eslint/no-floating-promises': 'error',
--      '@typescript-eslint/no-misused-promises': 'error',
--    },
--  },
--  {
--    files: ['**/.eslintrc.cjs'],
--    languageOptions: {
--      globals: {
--        ...globals.node,
--      },
--    },
--  },
--  ...compat.extends('plugin:jest/recommended').map((config) => ({
--    ...config,
--    files: ['**/*.test.*'],
--  })),
--  {
--    files: ['**/*.test.*'],
--    plugins: {
--      jest,
--    },
--    languageOptions: {
--      globals: {
--        ...globals.node,
--        ...globals.jest,
--      },
--    },
--  },
--  {
--    files: ['**/*.server.*'],
--    rules: {
--      'react-hooks/rules-of-hooks': 'off',
--    },
--  },
--  ...fixupConfigRules(
--    compat.extends(
--      'plugin:@typescript-eslint/eslint-recommended',
--      'plugin:@typescript-eslint/recommended',
--    ),
--  ).map((config) => ({
--    ...config,
--    files: ['**/*.ts', '**/*.tsx'],
--  })),
--  {
--    files: ['**/*.ts', '**/*.tsx'],
--    languageOptions: {
--      parser: tsParser,
--    },
--    rules: {
 -      '@typescript-eslint/explicit-module-boundary-types': 'off',
 -      '@typescript-eslint/naming-convention': [
 -        'error',
@@ -263,10 +210,44 @@ index be316f81c..35368e85a 100644
 -      '@typescript-eslint/no-empty-object-type': 'off',
 -      '@typescript-eslint/no-explicit-any': 'off',
 -      '@typescript-eslint/no-non-null-assertion': 'off',
+-      '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
 -      '@typescript-eslint/no-unused-vars': 'off',
+-      '@typescript-eslint/no-floating-promises': 'error',
+-      '@typescript-eslint/no-misused-promises': 'error',
 -      'react/prop-types': 'off',
 -    },
 -  },
+-  {
+-    files: ['**/.eslintrc.cjs'],
+-    languageOptions: {
+-      globals: {
+-        ...globals.node,
+-      },
+-    },
+-  },
+-  ...compat.extends('plugin:jest/recommended').map((config) => ({
+-    ...config,
+-    files: ['**/*.test.*'],
+-  })),
+-  {
+-    files: ['**/*.test.*'],
+-    plugins: {
+-      jest,
+-    },
+-    languageOptions: {
+-      globals: {
+-        ...globals.node,
+-        ...globals.jest,
+-      },
+-    },
+-  },
+-  {
+-    files: ['**/*.server.*'],
+-    rules: {
+-      'react-hooks/rules-of-hooks': 'off',
+-    },
+-  },
 -];
-+export {default} from '../../templates/skeleton/eslint.config.js';
++// Minimal ESLint configuration for Express template
++export default [];
 \ No newline at end of file
