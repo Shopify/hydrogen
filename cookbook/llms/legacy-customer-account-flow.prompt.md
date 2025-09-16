@@ -150,7 +150,7 @@ Key features:
 
 
 
-#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/99c2a1d70f91a7419ab85ef2d63cb1d9d1d7843b/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
+#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
 
 ```tsx
 import {Form, useActionData, data, redirect} from 'react-router';
@@ -331,7 +331,7 @@ const CUSTOMER_ACTIVATE_MUTATION = `#graphql
 
 
 
-#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/99c2a1d70f91a7419ab85ef2d63cb1d9d1d7843b/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
+#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
 
 ```tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -594,7 +594,7 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
 
 
 
-#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/99c2a1d70f91a7419ab85ef2d63cb1d9d1d7843b/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.register.tsx)
+#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.register.tsx)
 
 ```tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -830,7 +830,7 @@ const REGISTER_LOGIN_MUTATION = `#graphql
 
 
 
-#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/99c2a1d70f91a7419ab85ef2d63cb1d9d1d7843b/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
+#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
 
 ```tsx
 import {Form, useActionData, data, redirect} from 'react-router';
@@ -1074,7 +1074,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 -              variables: {
 -                address,
 -                defaultAddress,
--                language: context.customerAccount.i18n.language,
+-                language: customerAccount.i18n.language,
 -              },
 +              variables: {customerAccessToken: accessToken, address},
              },
@@ -1158,7 +1158,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
                  address,
 -                addressId: decodeURIComponent(addressId),
 -                defaultAddress,
--                language: context.customerAccount.i18n.language,
+-                language: customerAccount.i18n.language,
 +                customerAccessToken: accessToken,
 +                id: decodeURIComponent(addressId),
                },
@@ -1233,7 +1233,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
              {
 -              variables: {
 -                addressId: decodeURIComponent(addressId),
--                language: context.customerAccount.i18n.language,
+-                language: customerAccount.i18n.language,
 -              },
 +              variables: {customerAccessToken: accessToken, id: addressId},
              },
@@ -1540,7 +1540,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 #### File: /app/routes/account.orders.$id.tsx
 
 ```diff
-@@ -1,66 +1,50 @@
+@@ -1,67 +1,50 @@
 -import {redirect, useLoaderData} from 'react-router';
 +import {Link, useLoaderData, redirect} from 'react-router';
  import type {Route} from './+types/account.orders.$id';
@@ -1559,6 +1559,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
  };
  
  export async function loader({params, context}: Route.LoaderArgs) {
+-  const {customerAccount} = context;
 +  const {session, storefront} = context;
 +
    if (!params.id) {
@@ -1567,10 +1568,10 @@ const CUSTOMER_RESET_MUTATION = `#graphql
  
    const orderId = atob(params.id);
 -  const {data, errors}: {data: OrderQuery; errors?: Array<{message: string}>} =
--    await context.customerAccount.query(CUSTOMER_ORDER_QUERY, {
+-    await customerAccount.query(CUSTOMER_ORDER_QUERY, {
 -      variables: {
 -        orderId,
--        language: context.customerAccount.i18n.language,
+-        language: customerAccount.i18n.language,
 -      },
 -    });
 +  const customerAccessToken = await session.get('customerAccessToken');
@@ -1630,7 +1631,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
        : null;
  
    return {
-@@ -68,18 +52,12 @@ export async function loader({params, context}: Route.LoaderArgs) {
+@@ -69,18 +52,12 @@ export async function loader({params, context}: Route.LoaderArgs) {
      lineItems,
      discountValue,
      discountPercentage,
@@ -1651,7 +1652,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
    return (
      <div className="account-order">
        <h2>Order {order.name}</h2>
-@@ -96,12 +74,10 @@ export default function OrderRoute() {
+@@ -97,12 +74,10 @@ export default function OrderRoute() {
              </tr>
            </thead>
            <tbody>
@@ -1668,7 +1669,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
            </tbody>
            <tfoot>
              {((discountValue && discountValue.amount) ||
-@@ -130,7 +106,7 @@ export default function OrderRoute() {
+@@ -131,7 +106,7 @@ export default function OrderRoute() {
                  <p>Subtotal</p>
                </th>
                <td>
@@ -1677,7 +1678,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
                </td>
              </tr>
              <tr>
-@@ -141,7 +117,7 @@ export default function OrderRoute() {
+@@ -142,7 +117,7 @@ export default function OrderRoute() {
                  <p>Tax</p>
                </th>
                <td>
@@ -1686,7 +1687,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
                </td>
              </tr>
              <tr>
-@@ -152,7 +128,7 @@ export default function OrderRoute() {
+@@ -153,7 +128,7 @@ export default function OrderRoute() {
                  <p>Total</p>
                </th>
                <td>
@@ -1695,7 +1696,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
                </td>
              </tr>
            </tfoot>
-@@ -161,16 +137,17 @@ export default function OrderRoute() {
+@@ -162,16 +137,17 @@ export default function OrderRoute() {
            <h3>Shipping Address</h3>
            {order?.shippingAddress ? (
              <address>
@@ -1722,7 +1723,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
                )}
              </address>
            ) : (
-@@ -178,13 +155,13 @@ export default function OrderRoute() {
+@@ -179,13 +155,13 @@ export default function OrderRoute() {
            )}
            <h3>Status</h3>
            <div>
@@ -1738,7 +1739,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
            View Order Status →
          </a>
        </p>
-@@ -194,27 +171,145 @@ export default function OrderRoute() {
+@@ -195,27 +171,145 @@ export default function OrderRoute() {
  
  function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
    return (
@@ -1902,20 +1903,20 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 #### File: /app/routes/account.orders._index.tsx
 
 ```diff
-@@ -1,51 +1,60 @@
+@@ -1,45 +1,53 @@
 -import {
 -  Link,
 -  useLoaderData,
 -} from 'react-router';
 +import {Link, useLoaderData, data, redirect} from 'react-router';
  import type {Route} from './+types/account.orders._index';
--import {
--  Money,
--  getPaginationVariables,
+ import {
+   Money,
+   getPaginationVariables,
 -  flattenConnection,
--} from '@shopify/hydrogen';
++  Pagination,
+ } from '@shopify/hydrogen';
 -import {CUSTOMER_ORDERS_QUERY} from '~/graphql/customer-account/CustomerOrdersQuery';
-+import {Money, Pagination, getPaginationVariables} from '@shopify/hydrogen';
  import type {
    CustomerOrdersFragment,
    OrderItemFragment,
@@ -1928,17 +1929,18 @@ const CUSTOMER_RESET_MUTATION = `#graphql
  };
  
  export async function loader({request, context}: Route.LoaderArgs) {
+-  const {customerAccount} = context;
 -  const paginationVariables = getPaginationVariables(request, {
 -    pageBy: 20,
 -  });
 +  const {session, storefront} = context;
  
--  const {data, errors} = await context.customerAccount.query(
+-  const {data, errors} = await customerAccount.query(
 -    CUSTOMER_ORDERS_QUERY,
 -    {
 -      variables: {
 -        ...paginationVariables,
--        language: context.customerAccount.i18n.language,
+-        language: customerAccount.i18n.language,
 -      },
 -    },
 -  );
@@ -1980,19 +1982,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
  }
  
  export default function Orders() {
-   const {customer} = useLoaderData<{customer: CustomerOrdersFragment}>();
--  const {orders} = customer;
-+  const {orders, numberOfOrders} = customer;
-   return (
-     <div className="orders">
-+      <h2>
-+        Orders <small>({numberOfOrders})</small>
-+      </h2>
-+      <br />
-       {orders.nodes.length ? <OrdersTable orders={orders} /> : <EmptyOrders />}
-     </div>
-   );
-@@ -55,9 +64,23 @@ function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
+@@ -56,9 +64,23 @@ function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
    return (
      <div className="acccount-orders">
        {orders?.nodes.length ? (
@@ -2019,7 +2009,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
        ) : (
          <EmptyOrders />
        )}
-@@ -78,20 +101,91 @@ function EmptyOrders() {
+@@ -79,20 +101,91 @@ function EmptyOrders() {
  }
  
  function OrderItem({order}: {order: OrderItemFragment}) {
@@ -2118,259 +2108,6 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 +` as const;
 ```
 
-### Step 8: app/routes/account.profile.tsx
-
-
-
-#### File: /app/routes/account.profile.tsx
-
-```diff
-@@ -1,12 +1,12 @@
--import type {CustomerFragment} from 'customer-accountapi.generated';
--import type {CustomerUpdateInput} from '@shopify/hydrogen/customer-account-api-types';
--import {CUSTOMER_UPDATE_MUTATION} from '~/graphql/customer-account/CustomerUpdateMutation';
-+import type {CustomerFragment} from 'storefrontapi.generated';
-+import type {CustomerUpdateInput} from '@shopify/hydrogen/storefront-api-types';
- import {
--  data,
-   Form,
-   useActionData,
-   useNavigation,
-   useOutletContext,
-+  data,
-+  redirect,
- } from 'react-router';
- import type {Route} from './+types/account.profile';
- 
-@@ -20,62 +20,79 @@ export const meta: Route.MetaFunction = () => {
- };
- 
- export async function loader({context}: Route.LoaderArgs) {
--  context.customerAccount.handleAuthStatus();
--
-+  const customerAccessToken = await context.session.get('customerAccessToken');
-+  if (!customerAccessToken) {
-+    return redirect('/account/login');
-+  }
-   return {};
- }
- 
- export async function action({request, context}: Route.ActionArgs) {
--  const {customerAccount} = context;
-+  const {session, storefront} = context;
- 
-   if (request.method !== 'PUT') {
-     return data({error: 'Method not allowed'}, {status: 405});
-   }
- 
-   const form = await request.formData();
-+  const customerAccessToken = await session.get('customerAccessToken');
-+  if (!customerAccessToken) {
-+    return data({error: 'Unauthorized'}, {status: 401});
-+  }
- 
-   try {
-+    const password = getPassword(form);
-     const customer: CustomerUpdateInput = {};
--    const validInputKeys = ['firstName', 'lastName'] as const;
-+    const validInputKeys = [
-+      'firstName',
-+      'lastName',
-+      'email',
-+      'password',
-+      'phone',
-+    ] as const;
-     for (const [key, value] of form.entries()) {
-       if (!validInputKeys.includes(key as any)) {
-         continue;
-       }
-+      if (key === 'acceptsMarketing') {
-+        customer.acceptsMarketing = value === 'on';
-+      }
-       if (typeof value === 'string' && value.length) {
-         customer[key as (typeof validInputKeys)[number]] = value;
-       }
-     }
- 
-+    if (password) {
-+      customer.password = password;
-+    }
-+
-     // update customer and possibly password
--    const {data, errors} = await customerAccount.mutate(
--      CUSTOMER_UPDATE_MUTATION,
--      {
--        variables: {
--          customer,
--          language: context.customerAccount.i18n.language,
--        },
-+    const updated = await storefront.mutate(CUSTOMER_UPDATE_MUTATION, {
-+      variables: {
-+        customerAccessToken: customerAccessToken.accessToken,
-+        customer,
-       },
--    );
-+    });
- 
--    if (errors?.length) {
--      throw new Error(errors[0].message);
-+    // check for mutation errors
-+    if (updated.customerUpdate?.customerUserErrors?.length) {
-+      return data(
-+        {error: updated.customerUpdate?.customerUserErrors[0]},
-+        {status: 400},
-+      );
-     }
- 
--    if (!data?.customerUpdate?.customer) {
--      throw new Error('Customer profile update failed.');
-+    // update session with the updated access token
-+    if (updated.customerUpdate?.customerAccessToken?.accessToken) {
-+      session.set(
-+        'customerAccessToken',
-+        updated.customerUpdate?.customerAccessToken,
-+      );
-     }
- 
--    return {
--      error: null,
--      customer: data?.customerUpdate?.customer,
--    };
-+    return {error: null, customer: updated.customerUpdate?.customer};
-   } catch (error: any) {
--    return data(
--      {error: error.message, customer: null},
--      {
--        status: 400,
--      },
--    );
-+    return data({error: error.message, customer: null}, {status: 400});
-   }
- }
- 
-@@ -114,6 +131,64 @@ export default function AccountProfile() {
-             defaultValue={customer.lastName ?? ''}
-             minLength={2}
-           />
-+          <label htmlFor="phone">Mobile</label>
-+          <input
-+            id="phone"
-+            name="phone"
-+            type="tel"
-+            autoComplete="tel"
-+            placeholder="Mobile"
-+            aria-label="Mobile"
-+            defaultValue={customer.phone ?? ''}
-+          />
-+          <label htmlFor="email">Email address</label>
-+          <input
-+            id="email"
-+            name="email"
-+            type="email"
-+            autoComplete="email"
-+            required
-+            placeholder="Email address"
-+            aria-label="Email address"
-+            defaultValue={customer.email ?? ''}
-+          />
-+          <div className="account-profile-marketing">
-+            <input
-+              id="acceptsMarketing"
-+              name="acceptsMarketing"
-+              type="checkbox"
-+              placeholder="Accept marketing"
-+              aria-label="Accept marketing"
-+              defaultChecked={customer.acceptsMarketing}
-+            />
-+            <label htmlFor="acceptsMarketing">
-+              &nbsp; Subscribed to marketing communications
-+            </label>
-+          </div>
-+        </fieldset>
-+        <br />
-+        <legend>Change password (optional)</legend>
-+        <fieldset>
-+          <label htmlFor="newPassword">New password</label>
-+          <input
-+            id="newPassword"
-+            name="newPassword"
-+            type="password"
-+            placeholder="New password"
-+            aria-label="New password"
-+            minLength={8}
-+          />
-+
-+          <label htmlFor="newPasswordConfirm">New password (confirm)</label>
-+          <input
-+            id="newPasswordConfirm"
-+            name="newPasswordConfirm"
-+            type="password"
-+            placeholder="New password (confirm)"
-+            aria-label="New password confirm"
-+            minLength={8}
-+          />
-+          <small>Passwords must be at least 8 characters.</small>
-         </fieldset>
-         {action?.error ? (
-           <p>
-@@ -131,3 +206,55 @@ export default function AccountProfile() {
-     </div>
-   );
- }
-+
-+function getPassword(form: FormData): string | undefined {
-+  let password;
-+  const newPassword = form.get('newPassword');
-+  const newPasswordConfirm = form.get('newPasswordConfirm');
-+
-+  let passwordError;
-+
-+  if (newPassword && newPassword !== newPasswordConfirm) {
-+    passwordError = new Error('New passwords must match.');
-+  }
-+
-+  if (passwordError) {
-+    throw passwordError;
-+  }
-+
-+  if (newPassword) {
-+    password = newPassword;
-+  }
-+
-+  return String(password);
-+}
-+
-+const CUSTOMER_UPDATE_MUTATION = `#graphql
-+  # https://shopify.dev/docs/api/storefront/latest/mutations/customerUpdate
-+  mutation customerUpdate(
-+    $customerAccessToken: String!,
-+    $customer: CustomerUpdateInput!
-+    $country: CountryCode
-+    $language: LanguageCode
-+  ) @inContext(language: $language, country: $country) {
-+    customerUpdate(customerAccessToken: $customerAccessToken, customer: $customer) {
-+      customer {
-+        acceptsMarketing
-+        email
-+        firstName
-+        id
-+        lastName
-+        phone
-+      }
-+      customerAccessToken {
-+        accessToken
-+        expiresAt
-+      }
-+      customerUserErrors {
-+        code
-+        field
-+        message
-+      }
-+    }
-+  }
-+` as const;
-```
-
 ### Step 9: app/routes/account.tsx
 
 
@@ -2378,7 +2115,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 #### File: /app/routes/account.tsx
 
 ```diff
-@@ -1,44 +1,105 @@
+@@ -1,45 +1,105 @@
  import {
 -  data as remixData,
    Form,
@@ -2397,11 +2134,12 @@ const CUSTOMER_RESET_MUTATION = `#graphql
  }
  
 -export async function loader({context}: Route.LoaderArgs) {
--  const {data, errors} = await context.customerAccount.query(
+-  const {customerAccount} = context;
+-  const {data, errors} = await customerAccount.query(
 -    CUSTOMER_DETAILS_QUERY,
 -    {
 -      variables: {
--        language: context.customerAccount.i18n.language,
+-        language: customerAccount.i18n.language,
 -      },
 -    },
 -  );
@@ -2506,7 +2244,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
    const heading = customer
      ? customer.firstName
        ? `Welcome, ${customer.firstName}`
-@@ -50,9 +111,7 @@ export default function AccountLayout() {
+@@ -51,9 +111,7 @@ export default function AccountLayout() {
        <h1>{heading}</h1>
        <br />
        <AccountMenu />
@@ -2517,7 +2255,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
      </div>
    );
  }
-@@ -97,3 +156,50 @@ function Logout() {
+@@ -98,3 +156,50 @@ function Logout() {
      </Form>
    );
  }
@@ -2577,10 +2315,14 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 #### File: /app/routes/account_.login.tsx
 
 ```diff
-@@ -1,5 +1,133 @@
+@@ -1,7 +1,139 @@
 +import {Form, Link, useActionData, data, redirect} from 'react-router';
  import type {Route} from './+types/account_.login';
  
+-export async function loader({request, context}: Route.LoaderArgs) {
+-  return context.customerAccount.login({
+-    countryCode: context.storefront.i18n.country,
+-  });
 +type ActionResponse = {
 +  error: string | null;
 +};
@@ -2589,8 +2331,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 +  return [{title: 'Login'}];
 +};
 +
- export async function loader({context}: Route.LoaderArgs) {
--  return context.customerAccount.login();
++export async function loader({context}: Route.LoaderArgs) {
 +  if (await context.session.get('customerAccessToken')) {
 +    return redirect('/account');
 +  }
@@ -2624,13 +2365,20 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 +    );
 +
 +    if (!customerAccessTokenCreate?.customerAccessToken?.accessToken) {
-+      throw new Error(customerAccessTokenCreate?.customerUserErrors[0].message);
++      throw new Error(
++        customerAccessTokenCreate?.customerUserErrors?.[0]?.message ||
++          'Unknown error',
++      );
 +    }
 +
 +    const {customerAccessToken} = customerAccessTokenCreate;
 +    session.set('customerAccessToken', customerAccessToken);
 +
-+    return redirect('/account');
++    return redirect('/account', {
++      headers: {
++        'Set-Cookie': await session.commit(),
++      },
++    });
 +  } catch (error: unknown) {
 +    if (error instanceof Error) {
 +      return data({error: error.message}, {status: 400});
@@ -2640,8 +2388,8 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 +}
 +
 +export default function Login() {
-+  const data = useActionData<ActionResponse>();
-+  const error = data?.error || null;
++  const actionData = useActionData<ActionResponse>();
++  const error = actionData?.error || null;
 +
 +  return (
 +    <div className="login">
@@ -2657,7 +2405,6 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 +            required
 +            placeholder="Email address"
 +            aria-label="Email address"
-+            // eslint-disable-next-line jsx-a11y/no-autofocus
 +            autoFocus
 +          />
 +          <label htmlFor="password">Password</label>
@@ -2712,6 +2459,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 +    }
 +  }
 +` as const;
+\ No newline at end of file
 ```
 
 ### Step 11: app/routes/account_.logout.tsx
@@ -2748,43 +2496,11 @@ const CUSTOMER_RESET_MUTATION = `#graphql
  
 -export async function action({context}: Route.ActionArgs) {
 -  return context.customerAccount.logout();
+-}
 +export default function Logout() {
 +  return null;
- }
-```
-
-### Step 12: app/routes/cart.tsx
-
-
-
-#### File: /app/routes/cart.tsx
-
-```diff
-@@ -15,9 +15,13 @@ export const meta: Route.MetaFunction = () => {
- export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
- 
- export async function action({request, context}: Route.ActionArgs) {
--  const {cart} = context;
-+  // @description Get session for customer access token in legacy flow
-+  const {session, cart} = context;
- 
--  const formData = await request.formData();
-+  const [formData, customerAccessToken] = await Promise.all([
-+    request.formData(),
-+    session.get('customerAccessToken'),
-+  ]);
- 
-   const {action, inputs} = CartForm.getFormInput(formData);
- 
-@@ -69,6 +73,8 @@ export async function action({request, context}: Route.ActionArgs) {
-     case CartForm.ACTIONS.BuyerIdentityUpdate: {
-       result = await cart.updateBuyerIdentity({
-         ...inputs.buyerIdentity,
-+        // @description Add customer access token for legacy authentication
-+        customerAccessToken: customerAccessToken?.accessToken,
-       });
-       break;
-     }
++}
+\ No newline at end of file
 ```
 
 </recipe_implementation>

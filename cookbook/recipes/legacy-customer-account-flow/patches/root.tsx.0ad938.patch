@@ -1,4 +1,4 @@
-index 6fdeb1b26..3a7ef6240 100644
+index 375fc7b04..bbe14e665 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -1,5 +1,6 @@

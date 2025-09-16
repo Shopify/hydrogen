@@ -1,4 +1,4 @@
-index ca1753858..f61a37599 100644
+index ddfa18f3f..f61a37599 100644
 --- a/templates/skeleton/app/routes/account.addresses.tsx
 +++ b/templates/skeleton/app/routes/account.addresses.tsx
 @@ -1,22 +1,14 @@
@@ -100,7 +100,7 @@ index ca1753858..f61a37599 100644
 -              variables: {
 -                address,
 -                defaultAddress,
--                language: context.customerAccount.i18n.language,
+-                language: customerAccount.i18n.language,
 -              },
 +              variables: {customerAccessToken: accessToken, address},
              },
@@ -184,7 +184,7 @@ index ca1753858..f61a37599 100644
                  address,
 -                addressId: decodeURIComponent(addressId),
 -                defaultAddress,
--                language: context.customerAccount.i18n.language,
+-                language: customerAccount.i18n.language,
 +                customerAccessToken: accessToken,
 +                id: decodeURIComponent(addressId),
                },
@@ -259,7 +259,7 @@ index ca1753858..f61a37599 100644
              {
 -              variables: {
 -                addressId: decodeURIComponent(addressId),
--                language: context.customerAccount.i18n.language,
+-                language: customerAccount.i18n.language,
 -              },
 +              variables: {customerAccessToken: accessToken, id: addressId},
              },

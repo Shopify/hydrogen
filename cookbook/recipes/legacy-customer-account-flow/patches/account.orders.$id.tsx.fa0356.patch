@@ -1,7 +1,7 @@
-index b7ef043cc..52280986d 100644
+index f5e200a84..52280986d 100644
 --- a/templates/skeleton/app/routes/account.orders.$id.tsx
 +++ b/templates/skeleton/app/routes/account.orders.$id.tsx
-@@ -1,66 +1,50 @@
+@@ -1,67 +1,50 @@
 -import {redirect, useLoaderData} from 'react-router';
 +import {Link, useLoaderData, redirect} from 'react-router';
  import type {Route} from './+types/account.orders.$id';
@@ -20,6 +20,7 @@ index b7ef043cc..52280986d 100644
  };
  
  export async function loader({params, context}: Route.LoaderArgs) {
+-  const {customerAccount} = context;
 +  const {session, storefront} = context;
 +
    if (!params.id) {
@@ -28,10 +29,10 @@ index b7ef043cc..52280986d 100644
  
    const orderId = atob(params.id);
 -  const {data, errors}: {data: OrderQuery; errors?: Array<{message: string}>} =
--    await context.customerAccount.query(CUSTOMER_ORDER_QUERY, {
+-    await customerAccount.query(CUSTOMER_ORDER_QUERY, {
 -      variables: {
 -        orderId,
--        language: context.customerAccount.i18n.language,
+-        language: customerAccount.i18n.language,
 -      },
 -    });
 +  const customerAccessToken = await session.get('customerAccessToken');
@@ -91,7 +92,7 @@ index b7ef043cc..52280986d 100644
        : null;
  
    return {
-@@ -68,18 +52,12 @@ export async function loader({params, context}: Route.LoaderArgs) {
+@@ -69,18 +52,12 @@ export async function loader({params, context}: Route.LoaderArgs) {
      lineItems,
      discountValue,
      discountPercentage,
@@ -112,7 +113,7 @@ index b7ef043cc..52280986d 100644
    return (
      <div className="account-order">
        <h2>Order {order.name}</h2>
-@@ -96,12 +74,10 @@ export default function OrderRoute() {
+@@ -97,12 +74,10 @@ export default function OrderRoute() {
              </tr>
            </thead>
            <tbody>
@@ -129,7 +130,7 @@ index b7ef043cc..52280986d 100644
            </tbody>
            <tfoot>
              {((discountValue && discountValue.amount) ||
-@@ -130,7 +106,7 @@ export default function OrderRoute() {
+@@ -131,7 +106,7 @@ export default function OrderRoute() {
                  <p>Subtotal</p>
                </th>
                <td>
@@ -138,7 +139,7 @@ index b7ef043cc..52280986d 100644
                </td>
              </tr>
              <tr>
-@@ -141,7 +117,7 @@ export default function OrderRoute() {
+@@ -142,7 +117,7 @@ export default function OrderRoute() {
                  <p>Tax</p>
                </th>
                <td>
@@ -147,7 +148,7 @@ index b7ef043cc..52280986d 100644
                </td>
              </tr>
              <tr>
-@@ -152,7 +128,7 @@ export default function OrderRoute() {
+@@ -153,7 +128,7 @@ export default function OrderRoute() {
                  <p>Total</p>
                </th>
                <td>
@@ -156,7 +157,7 @@ index b7ef043cc..52280986d 100644
                </td>
              </tr>
            </tfoot>
-@@ -161,16 +137,17 @@ export default function OrderRoute() {
+@@ -162,16 +137,17 @@ export default function OrderRoute() {
            <h3>Shipping Address</h3>
            {order?.shippingAddress ? (
              <address>
@@ -183,7 +184,7 @@ index b7ef043cc..52280986d 100644
                )}
              </address>
            ) : (
-@@ -178,13 +155,13 @@ export default function OrderRoute() {
+@@ -179,13 +155,13 @@ export default function OrderRoute() {
            )}
            <h3>Status</h3>
            <div>
@@ -199,7 +200,7 @@ index b7ef043cc..52280986d 100644
            View Order Status →
          </a>
        </p>
-@@ -194,27 +171,145 @@ export default function OrderRoute() {
+@@ -195,27 +171,145 @@ export default function OrderRoute() {
  
  function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
    return (

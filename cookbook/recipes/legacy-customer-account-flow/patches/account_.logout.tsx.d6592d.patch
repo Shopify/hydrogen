@@ -1,4 +1,4 @@
-index 5e67cc857..187f8a3f2 100644
+index 5e67cc857..d88e717d5 100644
 --- a/templates/skeleton/app/routes/account_.logout.tsx
 +++ b/templates/skeleton/app/routes/account_.logout.tsx
 @@ -1,11 +1,25 @@
@@ -28,6 +28,8 @@ index 5e67cc857..187f8a3f2 100644
  
 -export async function action({context}: Route.ActionArgs) {
 -  return context.customerAccount.logout();
+-}
 +export default function Logout() {
 +  return null;
- }
++}
+\ No newline at end of file

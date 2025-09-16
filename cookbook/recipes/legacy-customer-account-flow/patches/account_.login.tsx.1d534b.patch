@@ -1,10 +1,14 @@
-index 666477006..cf1415c9d 100644
+index 825648a14..7536e0371 100644
 --- a/templates/skeleton/app/routes/account_.login.tsx
 +++ b/templates/skeleton/app/routes/account_.login.tsx
-@@ -1,5 +1,133 @@
+@@ -1,7 +1,139 @@
 +import {Form, Link, useActionData, data, redirect} from 'react-router';
  import type {Route} from './+types/account_.login';
  
+-export async function loader({request, context}: Route.LoaderArgs) {
+-  return context.customerAccount.login({
+-    countryCode: context.storefront.i18n.country,
+-  });
 +type ActionResponse = {
 +  error: string | null;
 +};
@@ -13,8 +17,7 @@ index 666477006..cf1415c9d 100644
 +  return [{title: 'Login'}];
 +};
 +
- export async function loader({context}: Route.LoaderArgs) {
--  return context.customerAccount.login();
++export async function loader({context}: Route.LoaderArgs) {
 +  if (await context.session.get('customerAccessToken')) {
 +    return redirect('/account');
 +  }
@@ -48,13 +51,20 @@ index 666477006..cf1415c9d 100644
 +    );
 +
 +    if (!customerAccessTokenCreate?.customerAccessToken?.accessToken) {
-+      throw new Error(customerAccessTokenCreate?.customerUserErrors[0].message);
++      throw new Error(
++        customerAccessTokenCreate?.customerUserErrors?.[0]?.message ||
++          'Unknown error',
++      );
 +    }
 +
 +    const {customerAccessToken} = customerAccessTokenCreate;
 +    session.set('customerAccessToken', customerAccessToken);
 +
-+    return redirect('/account');
++    return redirect('/account', {
++      headers: {
++        'Set-Cookie': await session.commit(),
++      },
++    });
 +  } catch (error: unknown) {
 +    if (error instanceof Error) {
 +      return data({error: error.message}, {status: 400});
@@ -64,8 +74,8 @@ index 666477006..cf1415c9d 100644
 +}
 +
 +export default function Login() {
-+  const data = useActionData<ActionResponse>();
-+  const error = data?.error || null;
++  const actionData = useActionData<ActionResponse>();
++  const error = actionData?.error || null;
 +
 +  return (
 +    <div className="login">
@@ -81,7 +91,6 @@ index 666477006..cf1415c9d 100644
 +            required
 +            placeholder="Email address"
 +            aria-label="Email address"
-+            // eslint-disable-next-line jsx-a11y/no-autofocus
 +            autoFocus
 +          />
 +          <label htmlFor="password">Password</label>
@@ -136,3 +145,4 @@ index 666477006..cf1415c9d 100644
 +    }
 +  }
 +` as const;
+\ No newline at end of file
