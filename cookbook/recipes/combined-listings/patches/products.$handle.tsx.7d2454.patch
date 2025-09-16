@@ -1,0 +1,121 @@
+index 422a2eb95..f898702c6 100644
+--- a/templates/skeleton/app/routes/products.$handle.tsx
++++ b/templates/skeleton/app/routes/products.$handle.tsx
+@@ -14,7 +14,14 @@ import {
+ import {ProductPrice} from '~/components/ProductPrice';
+ import {ProductImage} from '~/components/ProductImage';
+ import {ProductForm} from '~/components/ProductForm';
+-import {redirectIfHandleIsLocalized} from '~/lib/redirect';
++import {
++  redirectIfCombinedListing,
++  redirectIfHandleIsLocalized,
++} from '~/lib/redirect';
++import {
++  isCombinedListing,
++  combinedListingsSettings,
++} from '../lib/combined-listings';
+ 
+ export const meta: Route.MetaFunction = ({data}) => {
+   return [
+@@ -66,6 +73,10 @@ async function loadCriticalData({
+   // The API handle might be localized, so redirect to the localized handle
+   redirectIfHandleIsLocalized(request, {handle, data: product});
+ 
++  if (combinedListingsSettings.redirectToFirstVariant) {
++    redirectIfCombinedListing(request, product);
++  }
++
+   return {
+     product,
+   };
+@@ -85,6 +96,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
+ 
+ export default function Product() {
+   const {product} = useLoaderData<typeof loader>();
++  const combinedListing = isCombinedListing(product);
+ 
+   // Optimistically selects a variant with given available variant information
+   const selectedVariant = useOptimisticVariant(
+@@ -94,7 +106,9 @@ export default function Product() {
+ 
+   // Sets the search param to the selected variant without navigation
+   // only when no search params are set in the url
+-  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
++  useSelectedOptionInUrlParam(
++    combinedListing ? [] : selectedVariant.selectedOptions,
++  );
+ 
+   // Get the product options array
+   const productOptions = getProductOptions({
+@@ -102,21 +116,41 @@ export default function Product() {
+     selectedOrFirstAvailableVariant: selectedVariant,
+   });
+ 
+-  const {title, descriptionHtml} = product;
++  const {descriptionHtml, title} = product;
++
++  const productImage = combinedListing
++    ? (product.featuredImage ?? selectedVariant?.image)
++    : selectedVariant?.image;
+ 
+   return (
+     <div className="product">
+-      <ProductImage image={selectedVariant?.image} />
++      <ProductImage image={productImage} />
+       <div className="product-main">
+         <h1>{title}</h1>
+-        <ProductPrice
+-          price={selectedVariant?.price}
+-          compareAtPrice={selectedVariant?.compareAtPrice}
+-        />
++        {combinedListing ? (
++          <div>
++            <div style={{display: 'flex', gap: '10px'}}>
++              <span style={{display: 'flex', gap: '5px'}}>
++                From
++                <ProductPrice price={product.priceRange.minVariantPrice} />
++              </span>
++              <span style={{display: 'flex', gap: '5px'}}>
++                To
++                <ProductPrice price={product.priceRange.maxVariantPrice} />
++              </span>
++            </div>
++          </div>
++        ) : (
++          <ProductPrice
++            price={selectedVariant?.price}
++            compareAtPrice={selectedVariant?.compareAtPrice}
++          />
++        )}
+         <br />
+         <ProductForm
++          combinedListing={combinedListing}
+           productOptions={productOptions}
+-          selectedVariant={selectedVariant}
++          selectedVariant={combinedListing ? undefined : selectedVariant}
+         />
+         <br />
+         <br />
+@@ -193,6 +227,22 @@ const PRODUCT_FRAGMENT = `#graphql
+     description
+     encodedVariantExistence
+     encodedVariantAvailability
++    tags
++    featuredImage {
++      id
++      url
++      altText
++    }
++    priceRange {
++      minVariantPrice {
++        amount
++        currencyCode
++      }
++      maxVariantPrice {
++        amount
++        currencyCode
++      }
++    }
+     options {
+       name
+       optionValues {
