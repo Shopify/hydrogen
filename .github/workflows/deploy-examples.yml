@@ -72,7 +72,9 @@ jobs:
       
       - name: 📥 Install dependencies (skeleton with recipe)
         working-directory: templates/skeleton
-        run: npm ci
+        run: |
+          # Use npm install instead of npm ci because recipes may modify package.json
+          npm install
       
       - name: 📝 Generate GraphQL types
         working-directory: templates/skeleton
