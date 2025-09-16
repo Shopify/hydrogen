@@ -86,16 +86,11 @@ jobs:
         run: |
           npm run build
       
-      - name: 📋 Copy built skeleton to temporary directory
-        run: |
-          # Copy built skeleton with applied recipe to a temp directory for deployment
-          cp -r templates/skeleton /tmp/hydrogen-recipe-${{ matrix.recipes.name }}
-          echo "Copied built skeleton to /tmp/hydrogen-recipe-${{ matrix.recipes.name }}"
-      
       - name: 🚀 Deploy to Oxygen
         id: deploy
+        working-directory: templates/skeleton
         run: |
-          npx shopify hydrogen deploy --path /tmp/hydrogen-recipe-${{ matrix.recipes.name }} --no-lockfile-check --token=$OXYGEN_DEPLOYMENT_TOKEN_${{ matrix.recipes.token }}
+          npx shopify hydrogen deploy --no-lockfile-check --token=$OXYGEN_DEPLOYMENT_TOKEN_${{ matrix.recipes.token }}
         env:
           SHOPIFY_HYDROGEN_FLAG_METADATA_DESCRIPTION: "Recipe: ${{ matrix.recipes.name }} - ${{ github.event.head_commit.message }}"
           OXYGEN_DEPLOYMENT_TOKEN_1000014888: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014888 }}
