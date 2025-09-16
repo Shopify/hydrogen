@@ -201,13 +201,6 @@ steps:
     diffs:
       - file: vite.config.ts
         patchFile: vite.config.ts.f0a2c4.patch
-  - type: PATCH
-    step: "17"
-    name: env.d.ts
-    description: Add Multipass environment variable type to TypeScript definitions
-    diffs:
-      - file: env.d.ts
-        patchFile: env.d.ts.f7e2a1.patch
 nextSteps: |
   - Set up your PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET in your environment variables
   - Test the login flow by visiting /account/login
