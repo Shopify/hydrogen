@@ -97,7 +97,7 @@ to match your specific content needs.
 
 ### Step 1: README.md
 
-
+Updates README with metaobjects CMS documentation and architecture overview
 
 #### File: /README.md
 
@@ -386,7 +386,7 @@ export default function Store() {
 #### File: /app/routes/_index.tsx
 
 ```diff
-@@ -1,16 +1,8 @@
+@@ -1,19 +1,11 @@
 -import {
 -  Await,
 -  useLoaderData,
@@ -406,7 +406,11 @@ export default function Store() {
 +import {ROUTE_CONTENT_QUERY, RouteContent} from '~/sections/RouteContent';
  
  export const meta: Route.MetaFunction = () => {
-   return [{title: 'Hydrogen | Home'}];
+-  return [{title: 'Hydrogen | Home'}];
++  return [{title: 'Hydrogen Metaobject | Home'}];
+ };
+ 
+ export async function loader(args: Route.LoaderArgs) {
 @@ -31,14 +23,18 @@ export async function loader(args: Route.LoaderArgs) {
   * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
   */
@@ -462,7 +466,7 @@ export default function Store() {
 +      <RouteContent route={route} />
      </div>
    );
--}
+ }
 -
 -function FeaturedCollection({
 -  collection,
@@ -563,8 +567,6 @@ export default function Store() {
 -    }
 -  }
 -` as const;
-+}
-\ No newline at end of file
 ```
 
 ### Step 3: app/routes/stores._index.tsx
@@ -669,6 +671,10 @@ import {EditRoute} from '~/components/EditRoute';
 import type {RouteContentQuery} from 'storefrontapi.generated';
 
 export function RouteContent({route}: {route: RouteContentQuery['route']}) {
+  if (!route?.sections) {
+    return <p>No route content sections</p>;
+  }
+
   return (
     <div>
       {route?.id && <EditRoute routeId={route.id} />}

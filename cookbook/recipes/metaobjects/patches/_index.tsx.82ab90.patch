@@ -1,7 +1,7 @@
-index 28102dbe6..a23c0760c 100644
+index 28102dbe6..27dbb95cf 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
-@@ -1,16 +1,8 @@
+@@ -1,19 +1,11 @@
 -import {
 -  Await,
 -  useLoaderData,
@@ -21,7 +21,11 @@ index 28102dbe6..a23c0760c 100644
 +import {ROUTE_CONTENT_QUERY, RouteContent} from '~/sections/RouteContent';
  
  export const meta: Route.MetaFunction = () => {
-   return [{title: 'Hydrogen | Home'}];
+-  return [{title: 'Hydrogen | Home'}];
++  return [{title: 'Hydrogen Metaobject | Home'}];
+ };
+ 
+ export async function loader(args: Route.LoaderArgs) {
 @@ -31,14 +23,18 @@ export async function loader(args: Route.LoaderArgs) {
   * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
   */
@@ -77,7 +81,7 @@ index 28102dbe6..a23c0760c 100644
 +      <RouteContent route={route} />
      </div>
    );
--}
+ }
 -
 -function FeaturedCollection({
 -  collection,
@@ -178,5 +182,3 @@ index 28102dbe6..a23c0760c 100644
 -    }
 -  }
 -` as const;
-+}
-\ No newline at end of file
