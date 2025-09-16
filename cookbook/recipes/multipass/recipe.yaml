@@ -181,6 +181,13 @@ steps:
       - file: app/routes/account_.logout.tsx
         patchFile: account_.logout.tsx.d6592d.patch
   - type: PATCH
+    step: "13"
+    name: env.d.ts
+    description: null
+    diffs:
+      - file: env.d.ts
+        patchFile: env.d.ts.899ef3.patch
+  - type: PATCH
     step: "14"
     name: app/routes/cart.tsx
     description: null

@@ -3222,6 +3222,25 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 \ No newline at end of file
 ```
 
+### Step 13: env.d.ts
+
+
+
+#### File: /env.d.ts
+
+```diff
+@@ -5,3 +5,9 @@
+ 
+ // Enhance TypeScript's built-in typings.
+ import '@total-typescript/ts-reset';
++
++declare global {
++  interface Env {
++    PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET?: string;
++  }
++}
+```
+
 ### Step 14: app/routes/cart.tsx
 
 
