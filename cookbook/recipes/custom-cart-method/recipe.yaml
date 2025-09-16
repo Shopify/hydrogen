@@ -25,35 +25,35 @@ ingredients: []
 deletedFiles: []
 steps:
   - type: PATCH
-    step: "1"
+    step: '1'
     name: README.md
     description: Updates README with custom cart method documentation and implementation guide
     diffs:
       - file: README.md
         patchFile: README.md.47d06f.patch
   - type: PATCH
-    step: "1"
+    step: '1'
     name: app/components/CartLineItem.tsx
     description: null
     diffs:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.12f63e.patch
   - type: PATCH
-    step: "2"
+    step: '2'
     name: app/lib/context.ts
     description: null
     diffs:
       - file: app/lib/context.ts
         patchFile: context.ts.276f49.patch
   - type: PATCH
-    step: "3"
+    step: '3'
     name: app/lib/fragments.ts
     description: null
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.5f86c7.patch
   - type: PATCH
-    step: "4"
+    step: '4'
     name: app/routes/cart.tsx
     description: null
     diffs:
