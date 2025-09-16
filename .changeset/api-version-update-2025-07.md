@@ -8,7 +8,6 @@
 Update Storefront API and Customer Account API to version 2025-07
 
 This update includes:
-
 - Updated API version constants to 2025-07
 - Regenerated GraphQL types for both Storefront and Customer Account APIs
 - Updated all hardcoded API version references in documentation and tests
