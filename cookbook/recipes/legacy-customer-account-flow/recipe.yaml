@@ -181,4 +181,4 @@ llms:
       solution: Adjust the session configuration in server.ts to increase the cookie maxAge for longer sessions.
     - issue: TypeScript errors about missing types
       solution: Run `npm run codegen` to generate the Storefront API types after applying all patches.
-commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
+commit: 9f2150d58dd00c18e41aaf5e53fcf957b096d33f
