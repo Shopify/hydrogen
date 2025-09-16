@@ -1,4 +1,4 @@
-index 422a2eb95..466f23b2e 100644
+index 422a2eb95..061b059ca 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -1,50 +1,7 @@
@@ -54,7 +54,7 @@ index 422a2eb95..466f23b2e 100644
    const {handle} = params;
    const {storefront} = context;
  
-@@ -52,188 +9,40 @@ async function loadCriticalData({
+@@ -52,188 +9,42 @@ async function loadCriticalData({
      throw new Error('Expected product handle to be defined');
    }
  
@@ -64,17 +64,9 @@ index 422a2eb95..466f23b2e 100644
 -    }),
 -    // Add other queries here, so that they are loaded in parallel
 -  ]);
-+  const {product} = await storefront.query(
-+    `#graphql
-+    query Product( $handle: String!) {
-+      product(handle: $handle) {
-+        id
-+        title
-+        descriptionHtml
-+      }
-+    }`,
-+    {variables: {handle}},
-+  );
++  const {product} = await storefront.query(PRODUCT_QUERY, {
++    variables: {handle},
++  });
  
    if (!product?.id) {
      throw new Response(null, {status: 404});
@@ -174,7 +166,7 @@ index 422a2eb95..466f23b2e 100644
      </div>
    );
  }
--
+ 
 -const PRODUCT_VARIANT_FRAGMENT = `#graphql
 -  fragment ProductVariant on ProductVariant {
 -    availableForSale
@@ -253,16 +245,20 @@ index 422a2eb95..466f23b2e 100644
 -  ${PRODUCT_VARIANT_FRAGMENT}
 -` as const;
 -
--const PRODUCT_QUERY = `#graphql
+ const PRODUCT_QUERY = `#graphql
 -  query Product(
 -    $country: CountryCode
 -    $handle: String!
 -    $language: LanguageCode
 -    $selectedOptions: [SelectedOptionInput!]!
 -  ) @inContext(country: $country, language: $language) {
--    product(handle: $handle) {
++  query Product( $handle: String!) {
+     product(handle: $handle) {
 -      ...Product
--    }
--  }
++      id
++      title
++      descriptionHtml
+     }
+   }
 -  ${PRODUCT_FRAGMENT}
--` as const;
+ ` as const;

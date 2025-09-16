@@ -1,7 +1,7 @@
-index a12ad9e2e..3a7387e89 100644
+index a12ad9e2e..ca7e15fb1 100644
 --- a/templates/skeleton/vite.config.ts
 +++ b/templates/skeleton/vite.config.ts
-@@ -1,18 +1,19 @@
+@@ -1,20 +1,22 @@
  import {defineConfig} from 'vite';
  import {hydrogen} from '@shopify/hydrogen/vite';
 -import {oxygen} from '@shopify/mini-oxygen/vite';
@@ -25,13 +25,19 @@ index a12ad9e2e..3a7387e89 100644
 +    target: 'esnext',
    },
    ssr: {
++    external: ['fs', 'path', 'stream', 'crypto', 'util'],
      optimizeDeps: {
-@@ -26,7 +27,7 @@ export default defineConfig({
+       /**
+        * Include dependencies here if they throw CJS<>ESM errors.
+@@ -26,7 +28,10 @@ export default defineConfig({
         * Include 'example-dep' in the array below.
         * @see https://vitejs.dev/config/dep-optimization-options
         */
 -      include: ['set-cookie-parser', 'cookie', 'react-router'],
-+      include: [],
++      include: [
++        '@react-router/node',
++        '@react-router/express',
++      ],
      },
    },
  });

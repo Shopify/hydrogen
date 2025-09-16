@@ -1,16 +1,28 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 gid: 99596983-f4f0-4285-8f88-9112794cb812
-title: express
-summary: "Deploy Hydrogen on Node.js with Express instead of Shopify Oxygen"
-description: "This recipe transforms a Hydrogen skeleton template to run on a standard Node.js Express server, making it deployable to any Node.js hosting platform instead of Shopify Oxygen. It removes Oxygen-specific features and configurations while maintaining all core Hydrogen functionality."
+title: Express Server for Hydrogen
+summary: Deploy Hydrogen on Node.js with Express instead of Shopify Oxygen
+description: |
+  This recipe transforms a Hydrogen skeleton template to run on a standard Node.js Express server,
+  making it deployable to any Node.js hosting platform instead of Shopify Oxygen. It maintains core
+  Hydrogen functionality including GraphQL codegen and Storefront API integration while replacing
+  Oxygen-specific features with Express equivalents.
+  
+  Key changes:
+  - Replaces Oxygen server with Express server
+  - Uses Vite for development with hot module replacement
+  - Implements session management through Express middleware
+  - Provides production-ready server configuration
+  - Keeps GraphQL codegen functionality intact
 notes:
-  - "Requires Node.js 18+ for production deployment"
-  - "Uses nodemon for development with hot reload support"
+  - "Requires Node.js 20+ for production deployment (less than 22.0.0)"
+  - "Uses nodemon for development server with automatic restarts"
   - "Environment variables are loaded from .env file using dotenv"
-  - "Session management is handled through Express middleware"
-  - "Removes Oxygen-specific optimizations and configurations"
+  - "Session management is handled through Express middleware with SESSION_SECRET"
+  - "GraphQL codegen still works with Storefront API types"
   - "Compatible with React Router 7.8.x"
+  - "The .graphqlrc.ts file is preserved with customer account section commented out"
 requirements: |
   - Node.js 18 or higher
   - npm or yarn package manager
@@ -25,7 +37,6 @@ ingredients:
   - path: templates/skeleton/server.mjs
     description: null
 deletedFiles:
-  - templates/skeleton/.graphqlrc.ts
   - templates/skeleton/app/components/AddToCartButton.tsx
   - templates/skeleton/app/components/Aside.tsx
   - templates/skeleton/app/components/CartLineItem.tsx
@@ -88,8 +99,14 @@ deletedFiles:
   - templates/skeleton/customer-accountapi.generated.d.ts
   - templates/skeleton/env.d.ts
   - templates/skeleton/server.ts
-  - templates/skeleton/storefrontapi.generated.d.ts
 steps:
+  - type: PATCH
+    step: "1"
+    name: .graphqlrc.ts
+    description: null
+    diffs:
+      - file: .graphqlrc.ts
+        patchFile: .graphqlrc.ts.60300e.patch
   - type: PATCH
     step: "1"
     name: README.md
@@ -185,33 +202,38 @@ steps:
       - file: package.json
         patchFile: package.json.cfee98.patch
   - type: PATCH
-    step: "11"
-    name: react-router.config.ts
-    description: null
-    diffs:
-      - file: react-router.config.ts
-        patchFile: react-router.config.ts.b7ef35.patch
-  - type: PATCH
-    step: "12"
-    name: tsconfig.json
-    description: null
-    diffs:
-      - file: tsconfig.json
-        patchFile: tsconfig.json.f38fc0.patch
-  - type: PATCH
     step: "13"
     name: vite.config.ts
     description: null
     diffs:
       - file: vite.config.ts
         patchFile: vite.config.ts.f0a2c4.patch
-nextSteps:
-  - "Create a .env file with your Shopify Storefront API credentials"
-  - "Run 'npm install' to install Express and other Node.js dependencies"
-  - "Run 'npm run dev' to start the development server with hot reload"
-  - "For production, run 'npm run build' followed by 'npm start'"
-  - "Deploy to your preferred Node.js hosting platform (Heroku, AWS, Vercel, etc.)"
+nextSteps: |
+  - Create a .env file with your Shopify Storefront API credentials:
+    PUBLIC_STOREFRONT_API_TOKEN="your-token"
+    PUBLIC_STORE_DOMAIN="your-store.myshopify.com" 
+    PUBLIC_STOREFRONT_ID="your-storefront-id"
+    SESSION_SECRET="your-session-secret-at-least-32-chars"
+  - Run 'npm install' to install Express and other Node.js dependencies
+  - Run 'npm run dev' to start the development server with hot reload
+  - For production, run 'npm run build' followed by 'npm start'
+  - Deploy to your preferred Node.js hosting platform (Heroku, AWS, Vercel, Railway, etc.)
 llms:
-  userQueries: []
-  troubleshooting: []
+  userQueries:
+    - "How do I deploy Hydrogen to Node.js instead of Oxygen?"
+    - "How can I use Express with Hydrogen?"
+    - "How do I deploy Hydrogen to Heroku/AWS/Vercel?"
+    - "How to run Hydrogen without Shopify Oxygen?"
+    - "Can I use Hydrogen with my own server?"
+  troubleshooting:
+    - issue: "Error: [h2:error:createStorefrontClient] `storeDomain` is required"
+      solution: "Create a .env file with your Shopify store credentials. See the nextSteps section for required environment variables."
+    - issue: "Cannot read file: fs/path/stream errors during build"
+      solution: "This is expected. The vite.config.ts properly externalizes Node.js built-in modules for the Express server."
+    - issue: "GraphQL codegen fails with 'Unable to find any GraphQL type definitions'"
+      solution: "The recipe preserves GraphQL functionality. Make sure .graphqlrc.ts exists and your GraphQL queries use the gql template literal."
+    - issue: "Port already in use when running npm run dev"
+      solution: "The Express server defaults to port 3000. Either stop the process using that port or set PORT environment variable to a different port."
+    - issue: "TypeScript errors about missing @react-router/node types"
+      solution: "Run 'npm install' to ensure all dependencies including @types packages are installed."
 commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6

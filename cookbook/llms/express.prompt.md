@@ -12,7 +12,7 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 
 # Summary
 
-
+Deploy Hydrogen on Node.js with Express instead of Shopify Oxygen
 
 # User Intent Recognition
 
@@ -34,7 +34,33 @@ Here's the express recipe for the base Hydrogen skeleton template:
 
 ## Description
 
+This recipe transforms a Hydrogen skeleton template to run on a standard Node.js Express server, making it deployable to any Node.js hosting platform instead of Shopify Oxygen. It removes Oxygen-specific features and configurations while maintaining all core Hydrogen functionality.
 
+## Notes
+
+> [!NOTE]
+> Requires Node.js 18+ for production deployment
+
+> [!NOTE]
+> Uses nodemon for development with hot reload support
+
+> [!NOTE]
+> Environment variables are loaded from .env file using dotenv
+
+> [!NOTE]
+> Session management is handled through Express middleware
+
+> [!NOTE]
+> Removes Oxygen-specific optimizations and configurations
+
+> [!NOTE]
+> Compatible with React Router 7.8.x
+
+## Requirements
+
+- Node.js 18 or higher
+- npm or yarn package manager
+- Shopify Storefront API credentials
 
 ## New files added to the template by this recipe
 
@@ -44,6 +70,31 @@ Here's the express recipe for the base Hydrogen skeleton template:
 - server.mjs
 
 ## Steps
+
+### Step 1: .graphqlrc.ts
+
+
+
+#### File: /.graphqlrc.ts
+
+```diff
+@@ -17,10 +17,11 @@ export default {
+       ],
+     },
+ 
+-    customer: {
+-      schema: getSchema('customer-account'),
+-      documents: ['./app/graphql/customer-account/*.{ts,tsx,js,jsx}'],
+-    },
++    // Customer account API - commented out for Express recipe
++    // customer: {
++    //   schema: getSchema('customer-account'),
++    //   documents: ['./app/graphql/customer-account/*.{ts,tsx,js,jsx}'],
++    // },
+ 
+     // Add your own GraphQL projects here for CMS, Shopify Admin API, etc.
+   },
+```
 
 ### Step 1: README.md
 
@@ -699,7 +750,7 @@ process.on('SIGTERM', () => {
            </Analytics.Provider>
          ) : (
            children
-@@ -202,3 +169,119 @@ export function ErrorBoundary() {
+@@ -202,3 +169,120 @@ export function ErrorBoundary() {
      </div>
    );
  }
@@ -809,7 +860,7 @@ process.on('SIGTERM', () => {
 +      }
 +    }
 +  }
-+`;
++` as const;
 +
 +const LAYOUT_QUERY = `#graphql
 +  query layout {
@@ -818,8 +869,8 @@ process.on('SIGTERM', () => {
 +      description
 +    }
 +  }
-+`;
-\ No newline at end of file
++` as const;
++
 ```
 
 ### Step 4: server.mjs
@@ -1097,8 +1148,8 @@ class AppSession {
 +    <>
 +      <h1>Hydrogen Express Example</h1>
 +      <p>
-+        This example shows how to use Hydrogen with Express.js for Node.js deployments
-+        instead of Oxygen/Workers.
++        This example shows how to use Hydrogen with Express.js for Node.js
++        deployments instead of Oxygen/Workers.
 +      </p>
 +      <p>
 +        <Link to="/products/the-carbon">View Example Product</Link>
@@ -1278,7 +1329,7 @@ class AppSession {
    const {handle} = params;
    const {storefront} = context;
  
-@@ -52,188 +9,40 @@ async function loadCriticalData({
+@@ -52,188 +9,42 @@ async function loadCriticalData({
      throw new Error('Expected product handle to be defined');
    }
  
@@ -1288,17 +1339,9 @@ class AppSession {
 -    }),
 -    // Add other queries here, so that they are loaded in parallel
 -  ]);
-+  const {product} = await storefront.query(
-+    `#graphql
-+    query Product( $handle: String!) {
-+      product(handle: $handle) {
-+        id
-+        title
-+        descriptionHtml
-+      }
-+    }`,
-+    {variables: {handle}},
-+  );
++  const {product} = await storefront.query(PRODUCT_QUERY, {
++    variables: {handle},
++  });
  
    if (!product?.id) {
      throw new Response(null, {status: 404});
@@ -1398,7 +1441,7 @@ class AppSession {
      </div>
    );
  }
--
+ 
 -const PRODUCT_VARIANT_FRAGMENT = `#graphql
 -  fragment ProductVariant on ProductVariant {
 -    availableForSale
@@ -1477,19 +1520,23 @@ class AppSession {
 -  ${PRODUCT_VARIANT_FRAGMENT}
 -` as const;
 -
--const PRODUCT_QUERY = `#graphql
+ const PRODUCT_QUERY = `#graphql
 -  query Product(
 -    $country: CountryCode
 -    $handle: String!
 -    $language: LanguageCode
 -    $selectedOptions: [SelectedOptionInput!]!
 -  ) @inContext(country: $country, language: $language) {
--    product(handle: $handle) {
++  query Product( $handle: String!) {
+     product(handle: $handle) {
 -      ...Product
--    }
--  }
++      id
++      title
++      descriptionHtml
+     }
+   }
 -  ${PRODUCT_FRAGMENT}
--` as const;
+ ` as const;
 ```
 
 ### Step 8: app/styles/app.css
@@ -2373,7 +2420,7 @@ class AppSession {
 #### File: /package.json
 
 ```diff
-@@ -2,61 +2,47 @@
+@@ -2,61 +2,52 @@
    "name": "skeleton",
    "private": true,
    "sideEffects": false,
@@ -2390,6 +2437,7 @@ class AppSession {
 +    "start": "cross-env NODE_ENV=production node ./server.mjs",
      "typecheck": "react-router typegen && tsc --noEmit",
 -    "codegen": "shopify hydrogen codegen && react-router typegen"
++    "codegen": "shopify hydrogen codegen && react-router typegen",
 +    "typegen": "react-router typegen"
    },
 -  "prettier": "@shopify/prettier-config",
@@ -2398,12 +2446,12 @@ class AppSession {
 +    "@react-router/node": "7.8.2",
 +    "@remix-run/eslint-config": "^2.16.1",
      "@shopify/hydrogen": "2025.5.0",
--    "graphql": "^16.10.0",
--    "graphql-tag": "^2.12.6",
--    "isbot": "^5.1.22",
 +    "compression": "^1.7.4",
 +    "cross-env": "^7.0.3",
 +    "express": "^4.19.2",
+     "graphql": "^16.10.0",
+     "graphql-tag": "^2.12.6",
+-    "isbot": "^5.1.22",
 +    "isbot": "^5.1.21",
 +    "morgan": "^1.10.0",
      "react": "18.3.1",
@@ -2416,11 +2464,11 @@ class AppSession {
 -    "@eslint/compat": "^1.2.5",
 -    "@eslint/eslintrc": "^3.2.0",
      "@eslint/js": "^9.18.0",
--    "@graphql-codegen/cli": "5.0.2",
+     "@graphql-codegen/cli": "5.0.2",
      "@react-router/dev": "7.8.2",
      "@react-router/fs-routes": "7.8.2",
      "@shopify/cli": "~3.80.4",
--    "@shopify/hydrogen-codegen": "^0.3.3",
+     "@shopify/hydrogen-codegen": "^0.3.3",
 -    "@shopify/mini-oxygen": "^3.2.1",
 -    "@shopify/oxygen-workers-types": "^4.1.6",
 -    "@shopify/prettier-config": "^1.1.2",
@@ -2456,95 +2504,6 @@ class AppSession {
 -    "node": ">=18.0.0"
 +    "node": ">=20.0.0 <22.0.0"
    }
--}
-+}
-\ No newline at end of file
-```
-
-### Step 11: react-router.config.ts
-
-
-
-#### File: /react-router.config.ts
-
-```diff
-@@ -1,13 +1,11 @@
- import type {Config} from '@react-router/dev/config';
--import {hydrogenPreset} from '@shopify/hydrogen/react-router-preset';
- 
--/**
-- * React Router 7.8.x Configuration for Hydrogen
-- *
-- * This configuration uses the official Hydrogen preset to provide optimal
-- * React Router settings for Shopify Oxygen deployment. The preset enables
-- * validated performance optimizations while ensuring compatibility.
-- */
- export default {
--  presets: [hydrogenPreset()],
--} satisfies Config;
-+  // Server-side rendering is enabled by default
-+  ssr: true,
-+  
-+  // Enable middleware to get proper Hydrogen context typing
-+  future: {
-+    unstable_middleware: true,
-+  },
-+} satisfies Config;
-\ No newline at end of file
-```
-
-### Step 12: tsconfig.json
-
-
-
-#### File: /tsconfig.json
-
-```diff
-@@ -1,6 +1,7 @@
- {
-   "include": [
-     "env.d.ts",
-+    "app/env.ts",
-     "app/**/*.ts",
-     "app/**/*.tsx",
-     "app/**/*.d.ts",
-@@ -10,8 +11,9 @@
-     ".graphqlrc.ts",
-     ".react-router/types/**/*"
-   ],
--  "exclude": ["node_modules", "dist", "build", "packages/**/dist/**/*"],
-+  "exclude": ["node_modules", "dist", "build"],
-   "compilerOptions": {
-+    "verbatimModuleSyntax": true,
-     "lib": ["DOM", "DOM.Iterable", "ES2022"],
-     "isolatedModules": true,
-     "esModuleInterop": true,
-@@ -21,23 +23,16 @@
-     "module": "ES2022",
-     "target": "ES2022",
-     "strict": true,
-+    "noImplicitAny": true,
-     "allowJs": true,
-     "forceConsistentCasingInFileNames": true,
-     "skipLibCheck": true,
-     "baseUrl": ".",
--    "types": [
--      "@shopify/oxygen-workers-types",
--      "react-router",
--      "@shopify/hydrogen/react-router-types",
--      "vite/client"
--    ],
-+    "types": ["@shopify/hydrogen/react-router-types", "vite/client"],
-     "paths": {
-       "~/*": ["app/*"]
-     },
-     "noEmit": true,
--    "rootDirs": [".", "./.react-router/types"],
--    "incremental": true,
--    "composite": false,
--    "verbatimModuleSyntax": true
-+    "rootDirs": [".", "./.react-router/types"]
-   }
  }
 ```
 
@@ -2555,7 +2514,7 @@ class AppSession {
 #### File: /vite.config.ts
 
 ```diff
-@@ -1,18 +1,19 @@
+@@ -1,20 +1,22 @@
  import {defineConfig} from 'vite';
  import {hydrogen} from '@shopify/hydrogen/vite';
 -import {oxygen} from '@shopify/mini-oxygen/vite';
@@ -2579,13 +2538,19 @@ class AppSession {
 +    target: 'esnext',
    },
    ssr: {
++    external: ['fs', 'path', 'stream', 'crypto', 'util'],
      optimizeDeps: {
-@@ -26,7 +27,7 @@ export default defineConfig({
+       /**
+        * Include dependencies here if they throw CJS<>ESM errors.
+@@ -26,7 +28,10 @@ export default defineConfig({
         * Include 'example-dep' in the array below.
         * @see https://vitejs.dev/config/dep-optimization-options
         */
 -      include: ['set-cookie-parser', 'cookie', 'react-router'],
-+      include: [],
++      include: [
++        '@react-router/node',
++        '@react-router/express',
++      ],
      },
    },
  });
@@ -2593,7 +2558,6 @@ class AppSession {
 
 ## Deleted Files
 
-- [`templates/skeleton/.graphqlrc.ts`](templates/skeleton/.graphqlrc.ts)
 - [`templates/skeleton/app/components/AddToCartButton.tsx`](templates/skeleton/app/components/AddToCartButton.tsx)
 - [`templates/skeleton/app/components/Aside.tsx`](templates/skeleton/app/components/Aside.tsx)
 - [`templates/skeleton/app/components/CartLineItem.tsx`](templates/skeleton/app/components/CartLineItem.tsx)
@@ -2656,6 +2620,5 @@ class AppSession {
 - [`templates/skeleton/customer-accountapi.generated.d.ts`](templates/skeleton/customer-accountapi.generated.d.ts)
 - [`templates/skeleton/env.d.ts`](templates/skeleton/env.d.ts)
 - [`templates/skeleton/server.ts`](templates/skeleton/server.ts)
-- [`templates/skeleton/storefrontapi.generated.d.ts`](templates/skeleton/storefrontapi.generated.d.ts)
 
 </recipe_implementation>

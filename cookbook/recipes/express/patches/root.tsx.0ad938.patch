@@ -1,4 +1,4 @@
-index 375fc7b04..acc77a97b 100644
+index 375fc7b04..8b65d8abf 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -11,46 +11,20 @@ import {
@@ -191,7 +191,7 @@ index 375fc7b04..acc77a97b 100644
            </Analytics.Provider>
          ) : (
            children
-@@ -202,3 +169,119 @@ export function ErrorBoundary() {
+@@ -202,3 +169,120 @@ export function ErrorBoundary() {
      </div>
    );
  }
@@ -301,7 +301,7 @@ index 375fc7b04..acc77a97b 100644
 +      }
 +    }
 +  }
-+`;
++` as const;
 +
 +const LAYOUT_QUERY = `#graphql
 +  query layout {
@@ -310,5 +310,5 @@ index 375fc7b04..acc77a97b 100644
 +      description
 +    }
 +  }
-+`;
-\ No newline at end of file
++` as const;
++

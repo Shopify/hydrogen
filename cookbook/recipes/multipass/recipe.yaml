@@ -198,12 +198,12 @@ steps:
     diffs:
       - file: vite.config.ts
         patchFile: vite.config.ts.f0a2c4.patch
-nextSteps:
-  - "Set up your PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET in your environment variables"
-  - "Test the login flow by visiting /account/login"
-  - "Verify the Multipass checkout button appears in the cart"
-  - "Configure external authentication systems to generate Multipass tokens"
-  - "Customize the authentication forms and error messages as needed"
+nextSteps: |
+  - Set up your PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET in your environment variables
+  - Test the login flow by visiting /account/login
+  - Verify the Multipass checkout button appears in the cart
+  - Configure external authentication systems to generate Multipass tokens
+  - Customize the authentication forms and error messages as needed
 llms:
   userQueries:
     - "How do I set up Multipass authentication in my Hydrogen store?"

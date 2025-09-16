@@ -1,4 +1,4 @@
-index 28102dbe6..0110bbf8b 100644
+index 28102dbe6..dc121c804 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
 @@ -1,171 +1,28 @@
@@ -76,8 +76,8 @@ index 28102dbe6..0110bbf8b 100644
 +    <>
 +      <h1>Hydrogen Express Example</h1>
 +      <p>
-+        This example shows how to use Hydrogen with Express.js for Node.js deployments
-+        instead of Oxygen/Workers.
++        This example shows how to use Hydrogen with Express.js for Node.js
++        deployments instead of Oxygen/Workers.
 +      </p>
 +      <p>
 +        <Link to="/products/the-carbon">View Example Product</Link>
