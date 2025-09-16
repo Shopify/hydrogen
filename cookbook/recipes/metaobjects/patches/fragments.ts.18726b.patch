@@ -1,7 +1,7 @@
-index dc4426a9f..76d6a1d9c 100644
+index cf35c25ea..99874574c 100644
 --- a/templates/skeleton/app/lib/fragments.ts
 +++ b/templates/skeleton/app/lib/fragments.ts
-@@ -231,3 +231,25 @@ export const FOOTER_QUERY = `#graphql
+@@ -232,3 +232,25 @@ export const FOOTER_QUERY = `#graphql
    }
    ${MENU_FRAGMENT}
  ` as const;
