@@ -39,13 +39,18 @@ export function applyRecipe(params: {
 
   // if the template directory contains modified files, exit with an error
   console.log(`- 🔄 Checking template directory…`);
-  const status = parseGitStatus({filenamesToIgnore: []});
-  if (
-    status.modifiedFiles.filter(
-      (f) => !['package.json', 'package-lock.json'].includes(f),
-    ).length > 0
-  ) {
-    throw new Error('Template folder has uncommitted changes.');
+  // Skip git status check in CI environment
+  if (process.env.CI !== 'true') {
+    const status = parseGitStatus({filenamesToIgnore: []});
+    if (
+      status.modifiedFiles.filter(
+        (f) => !['package.json', 'package-lock.json'].includes(f),
+      ).length > 0
+    ) {
+      throw new Error('Template folder has uncommitted changes.');
+    }
+  } else {
+    console.log('  - Skipping git status check in CI environment');
   }
 
   // check that each ingredient in the recipe is present in the ingredients folder

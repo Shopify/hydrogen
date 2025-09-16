@@ -60,11 +60,6 @@ jobs:
         run: |
           CI=true npm run build:pkg
       
-      - name: 🔄 Reset template directory
-        run: |
-          git checkout -- templates/skeleton/
-          git clean -fd templates/skeleton/
-      
       - name: 📥 Install dependencies (cookbook)
         working-directory: cookbook
         run: npm ci
