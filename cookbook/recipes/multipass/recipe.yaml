@@ -21,10 +21,10 @@ notes:
   - "The recipe replaces the snakecase-keys npm package with a custom ESM-compatible implementation to work in Worker environments"
   - "All customer authentication is handled through Storefront API mutations instead of Customer Account API"
   - "Session tokens are validated on each request and automatically cleared if expired"
-requirements:
-  - "Shopify Plus subscription for Multipass functionality"
-  - "PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET environment variable must be set"
-  - "React Router 7.8.x or higher"
+requirements: |
+  - Shopify Plus subscription for Multipass functionality
+  - PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET environment variable must be set
+  - React Router 7.8.x or higher
 ingredients:
   - path: templates/skeleton/app/components/MultipassCheckoutButton.tsx
     description: null

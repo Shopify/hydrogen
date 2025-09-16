@@ -171,9 +171,9 @@ llms:
     - How to migrate from Customer Account API to Storefront API?
     - How to implement form-based login in Hydrogen?
   troubleshooting:
-    - issue: Login form shows "Invalid credentials" even with correct password
+    - issue: 'Login form shows "Invalid credentials" even with correct password'
       solution: Ensure the customer account is activated. Check if the store has classic customer accounts enabled, not the new customer accounts.
-    - issue: "Customer Account API not configured" error
+    - issue: '"Customer Account API not configured" error'
       solution: This recipe replaces the Customer Account API. Make sure all patches were applied successfully and run `npm run codegen`.
     - issue: Password reset emails not being sent
       solution: Configure email notifications in Shopify admin under Settings > Notifications. Ensure the customer email is verified.

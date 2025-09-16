@@ -11,10 +11,10 @@ notes:
   - "Session management is handled through Express middleware"
   - "Removes Oxygen-specific optimizations and configurations"
   - "Compatible with React Router 7.8.x"
-requirements:
-  - "Node.js 18 or higher"
-  - "npm or yarn package manager"
-  - "Shopify Storefront API credentials"
+requirements: |
+  - Node.js 18 or higher
+  - npm or yarn package manager
+  - Shopify Storefront API credentials
 ingredients:
   - path: templates/skeleton/app/env.ts
     description: null

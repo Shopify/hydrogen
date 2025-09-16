@@ -573,17 +573,18 @@ Initialize Partytown and GTM in the root layout
  
  export type RootLoader = typeof loader;
  
-@@ -90,6 +94,9 @@ export async function loader(args: Route.LoaderArgs) {
+@@ -90,6 +94,10 @@ export async function loader(args: Route.LoaderArgs) {
        country: args.context.storefront.i18n.country,
        language: args.context.storefront.i18n.language,
      },
 +    // @description Pass GTM container ID from environment variables
 +    gtmContainerId:
++      // @ts-ignore - GTM_ID and GTM_CONTAINER_ID are optional environment variables
 +      args.context.env.GTM_ID || args.context.env.GTM_CONTAINER_ID,
    };
  }
  
-@@ -162,7 +169,10 @@ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -162,7 +170,10 @@ export function Layout({children}: {children?: React.ReactNode}) {
              shop={data.shop}
              consent={data.consent}
            >
@@ -595,7 +596,7 @@ Initialize Partytown and GTM in the root layout
            </Analytics.Provider>
          ) : (
            children
-@@ -174,6 +184,38 @@ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -174,6 +185,38 @@ export function Layout({children}: {children?: React.ReactNode}) {
    );
  }
  
