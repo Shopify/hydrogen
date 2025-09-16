@@ -7,6 +7,6 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["example-*"],
+  "ignore": [],
   "privatePackages": {"version": true, "tag": true}
 }

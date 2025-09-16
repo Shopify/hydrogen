@@ -1,0 +1,245 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+gid: 99596983-f4f0-4285-8f88-9112794cb812
+title: Express Server for Hydrogen
+summary: Deploy Hydrogen on Node.js with Express instead of Shopify Oxygen
+description: |
+  This recipe transforms a Hydrogen skeleton template to run on a standard Node.js Express server,
+  making it deployable to any Node.js hosting platform instead of Shopify Oxygen. It maintains core
+  Hydrogen functionality including GraphQL codegen and Storefront API integration while replacing
+  Oxygen-specific features with Express equivalents.
+
+  Key changes:
+  - Replaces Oxygen server with Express server
+  - Uses Vite for development with hot module replacement
+  - Implements session management through Express middleware
+  - Provides production-ready server configuration
+  - Keeps GraphQL codegen functionality intact
+notes:
+  - Requires Node.js 20+ for production deployment (less than 22.0.0)
+  - Uses nodemon for development server with automatic restarts
+  - Environment variables are loaded from .env file using dotenv
+  - Session management is handled through Express middleware with SESSION_SECRET
+  - GraphQL codegen still works with Storefront API types
+  - Compatible with React Router 7.8.x
+  - The .graphqlrc.ts file is preserved with customer account section commented
+    out
+requirements: |
+  - Node.js 18 or higher
+  - npm or yarn package manager
+  - Shopify Storefront API credentials
+ingredients:
+  - path: templates/skeleton/app/env.ts
+    description: null
+  - path: templates/skeleton/public/favicon.svg
+    description: null
+  - path: templates/skeleton/scripts/dev.mjs
+    description: null
+  - path: templates/skeleton/server.mjs
+    description: null
+deletedFiles:
+  - templates/skeleton/app/components/AddToCartButton.tsx
+  - templates/skeleton/app/components/Aside.tsx
+  - templates/skeleton/app/components/CartLineItem.tsx
+  - templates/skeleton/app/components/CartMain.tsx
+  - templates/skeleton/app/components/CartSummary.tsx
+  - templates/skeleton/app/components/CartUserErrors.tsx
+  - templates/skeleton/app/components/CartWarnings.tsx
+  - templates/skeleton/app/components/Footer.tsx
+  - templates/skeleton/app/components/Header.tsx
+  - templates/skeleton/app/components/PageLayout.tsx
+  - templates/skeleton/app/components/PaginatedResourceSection.tsx
+  - templates/skeleton/app/components/ProductForm.tsx
+  - templates/skeleton/app/components/ProductImage.tsx
+  - templates/skeleton/app/components/ProductItem.tsx
+  - templates/skeleton/app/components/ProductPrice.tsx
+  - templates/skeleton/app/components/SearchForm.tsx
+  - templates/skeleton/app/components/SearchFormPredictive.tsx
+  - templates/skeleton/app/components/SearchResults.tsx
+  - templates/skeleton/app/components/SearchResultsPredictive.tsx
+  - templates/skeleton/app/graphql/customer-account/CustomerAddressMutations.ts
+  - templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts
+  - templates/skeleton/app/graphql/customer-account/CustomerOrderQuery.ts
+  - templates/skeleton/app/graphql/customer-account/CustomerOrdersQuery.ts
+  - templates/skeleton/app/graphql/customer-account/CustomerUpdateMutation.ts
+  - templates/skeleton/app/lib/context.ts
+  - templates/skeleton/app/lib/fragments.ts
+  - templates/skeleton/app/lib/redirect.ts
+  - templates/skeleton/app/lib/search.ts
+  - templates/skeleton/app/lib/session.ts
+  - templates/skeleton/app/lib/variants.ts
+  - templates/skeleton/app/routes/$.tsx
+  - templates/skeleton/app/routes/[robots.txt].tsx
+  - templates/skeleton/app/routes/[sitemap.xml].tsx
+  - templates/skeleton/app/routes/account.$.tsx
+  - templates/skeleton/app/routes/account._index.tsx
+  - templates/skeleton/app/routes/account.addresses.tsx
+  - templates/skeleton/app/routes/account.orders.$id.tsx
+  - templates/skeleton/app/routes/account.orders._index.tsx
+  - templates/skeleton/app/routes/account.profile.tsx
+  - templates/skeleton/app/routes/account.tsx
+  - templates/skeleton/app/routes/account_.authorize.tsx
+  - templates/skeleton/app/routes/account_.login.tsx
+  - templates/skeleton/app/routes/account_.logout.tsx
+  - templates/skeleton/app/routes/api.$version.[graphql.json].tsx
+  - templates/skeleton/app/routes/blogs.$blogHandle.$articleHandle.tsx
+  - templates/skeleton/app/routes/blogs.$blogHandle._index.tsx
+  - templates/skeleton/app/routes/blogs._index.tsx
+  - templates/skeleton/app/routes/cart.$lines.tsx
+  - templates/skeleton/app/routes/cart.tsx
+  - templates/skeleton/app/routes/collections.$handle.tsx
+  - templates/skeleton/app/routes/collections._index.tsx
+  - templates/skeleton/app/routes/collections.all.tsx
+  - templates/skeleton/app/routes/discount.$code.tsx
+  - templates/skeleton/app/routes/pages.$handle.tsx
+  - templates/skeleton/app/routes/policies.$handle.tsx
+  - templates/skeleton/app/routes/policies._index.tsx
+  - templates/skeleton/app/routes/search.tsx
+  - templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx
+  - templates/skeleton/app/styles/reset.css
+  - templates/skeleton/customer-accountapi.generated.d.ts
+  - templates/skeleton/env.d.ts
+  - templates/skeleton/server.ts
+steps:
+  - type: PATCH
+    step: "1"
+    name: .graphqlrc.ts
+    description: null
+    diffs:
+      - file: .graphqlrc.ts
+        patchFile: .graphqlrc.ts.60300e.patch
+  - type: PATCH
+    step: "1"
+    name: README.md
+    description: null
+    diffs:
+      - file: README.md
+        patchFile: README.md.47d06f.patch
+  - type: NEW_FILE
+    step: "1"
+    name: app/env.ts
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/env.ts
+  - type: PATCH
+    step: "2"
+    name: app/entry.client.tsx
+    description: null
+    diffs:
+      - file: app/entry.client.tsx
+        patchFile: entry.client.tsx.461d9f.patch
+  - type: NEW_FILE
+    step: "2"
+    name: public/favicon.svg
+    description: null
+    ingredients:
+      - path: templates/skeleton/public/favicon.svg
+  - type: PATCH
+    step: "3"
+    name: app/entry.server.tsx
+    description: null
+    diffs:
+      - file: app/entry.server.tsx
+        patchFile: entry.server.tsx.c0cb8d.patch
+  - type: NEW_FILE
+    step: "3"
+    name: scripts/dev.mjs
+    description: null
+    ingredients:
+      - path: templates/skeleton/scripts/dev.mjs
+  - type: PATCH
+    step: "4"
+    name: app/root.tsx
+    description: null
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.0ad938.patch
+  - type: NEW_FILE
+    step: "4"
+    name: server.mjs
+    description: null
+    ingredients:
+      - path: templates/skeleton/server.mjs
+  - type: PATCH
+    step: "5"
+    name: app/routes.ts
+    description: null
+    diffs:
+      - file: app/routes.ts
+        patchFile: routes.ts.2d27a5.patch
+  - type: PATCH
+    step: "6"
+    name: app/routes/_index.tsx
+    description: null
+    diffs:
+      - file: app/routes/_index.tsx
+        patchFile: _index.tsx.82ab90.patch
+  - type: PATCH
+    step: "7"
+    name: app/routes/products.$handle.tsx
+    description: null
+    diffs:
+      - file: app/routes/products.$handle.tsx
+        patchFile: products.$handle.tsx.7d2454.patch
+  - type: PATCH
+    step: "8"
+    name: app/styles/app.css
+    description: null
+    diffs:
+      - file: app/styles/app.css
+        patchFile: app.css.cea6f0.patch
+  - type: PATCH
+    step: "9"
+    name: eslint.config.js
+    description: null
+    diffs:
+      - file: eslint.config.js
+        patchFile: eslint.config.js.fd8326.patch
+  - type: PATCH
+    step: "10"
+    name: package.json
+    description: null
+    diffs:
+      - file: package.json
+        patchFile: package.json.cfee98.patch
+  - type: PATCH
+    step: "13"
+    name: vite.config.ts
+    description: null
+    diffs:
+      - file: vite.config.ts
+        patchFile: vite.config.ts.f0a2c4.patch
+nextSteps: |
+  - Create a .env file with your Shopify Storefront API credentials:
+    PUBLIC_STOREFRONT_API_TOKEN="your-token"
+    PUBLIC_STORE_DOMAIN="your-store.myshopify.com" 
+    PUBLIC_STOREFRONT_ID="your-storefront-id"
+    SESSION_SECRET="your-session-secret-at-least-32-chars"
+  - Run 'npm install' to install Express and other Node.js dependencies
+  - Run 'npm run dev' to start the development server with hot reload
+  - For production, run 'npm run build' followed by 'npm start'
+  - Deploy to your preferred Node.js hosting platform (Heroku, AWS, Vercel, Railway, etc.)
+llms:
+  userQueries:
+    - How do I deploy Hydrogen to Node.js instead of Oxygen?
+    - How can I use Express with Hydrogen?
+    - How do I deploy Hydrogen to Heroku/AWS/Vercel?
+    - How to run Hydrogen without Shopify Oxygen?
+    - Can I use Hydrogen with my own server?
+  troubleshooting:
+    - issue: "Error: [h2:error:createStorefrontClient] `storeDomain` is required"
+      solution: Create a .env file with your Shopify store credentials. See the
+        nextSteps section for required environment variables.
+    - issue: "Cannot read file: fs/path/stream errors during build"
+      solution: This is expected. The vite.config.ts properly externalizes Node.js
+        built-in modules for the Express server.
+    - issue: GraphQL codegen fails with 'Unable to find any GraphQL type definitions'
+      solution: The recipe preserves GraphQL functionality. Make sure .graphqlrc.ts
+        exists and your GraphQL queries use the gql template literal.
+    - issue: Port already in use when running npm run dev
+      solution: The Express server defaults to port 3000. Either stop the process
+        using that port or set PORT environment variable to a different port.
+    - issue: TypeScript errors about missing @react-router/node types
+      solution: Run 'npm install' to ensure all dependencies including @types packages
+        are installed.
+commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6

@@ -1,0 +1,128 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+gid: cd59a36d-90c6-4792-910c-672bded9211b
+title: Partytown + Google Tag Manager
+summary: Add Partytown web worker integration for Google Tag Manager to improve
+  performance
+description: |
+  This recipe integrates Partytown with your Hydrogen storefront to run Google Tag Manager 
+  and other third-party scripts in a web worker, keeping the main thread free for critical 
+  rendering tasks.
+
+  Key features:
+  - Moves GTM and analytics scripts off the main thread
+  - Improves Core Web Vitals scores
+  - Maintains full GTM functionality
+  - Includes CORS reverse proxy for third-party scripts
+  - CSP headers configured for GTM domains
+notes:
+  - Remember to set your GTM_CONTAINER_ID or GTM_ID environment variable
+  - Run 'npm run partytown' to copy library files for production
+  - TypeScript users need to manually add GTM types to env.d.ts
+requirements: |
+  - Google Tag Manager container ID
+  - Basic understanding of web workers and CSP
+  - Node.js 18.0.0 or higher
+ingredients:
+  - path: templates/skeleton/app/components/PartytownGoogleTagManager.tsx
+    description: Component that loads GTM scripts in a web worker via Partytown
+  - path: templates/skeleton/app/routes/reverse-proxy.ts
+    description: Reverse proxy route for third-party scripts requiring CORS headers
+  - path: templates/skeleton/app/utils/partytown/maybeProxyRequest.ts
+    description: URL resolver to control which scripts should be reverse-proxied
+  - path: templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts
+    description: Helper utility to enable Partytown atomic mode for better performance
+deletedFiles: []
+steps:
+  - type: PATCH
+    step: "1"
+    name: .gitignore
+    description: Add public/~partytown to ignore Partytown library files
+    diffs:
+      - file: .gitignore
+        patchFile: .gitignore.b2d7bd.patch
+  - type: NEW_FILE
+    step: "1"
+    name: app/components/PartytownGoogleTagManager.tsx
+    description: Add GTM component that loads scripts in web worker
+    ingredients:
+      - path: templates/skeleton/app/components/PartytownGoogleTagManager.tsx
+  - type: PATCH
+    step: "2"
+    name: README.md
+    description: Document Partytown setup and configuration instructions
+    diffs:
+      - file: README.md
+        patchFile: README.md.47d06f.patch
+  - type: NEW_FILE
+    step: "2"
+    name: app/routes/reverse-proxy.ts
+    description: Reverse proxy route for third-party scripts requiring CORS headers
+    ingredients:
+      - path: templates/skeleton/app/routes/reverse-proxy.ts
+  - type: PATCH
+    step: "3"
+    name: app/entry.server.tsx
+    description: Configure CSP headers for GTM and Google Analytics domains
+    diffs:
+      - file: app/entry.server.tsx
+        patchFile: entry.server.tsx.c0cb8d.patch
+  - type: NEW_FILE
+    step: "3"
+    name: app/utils/partytown/maybeProxyRequest.ts
+    description: URL resolver to control which scripts should be reverse-proxied
+    ingredients:
+      - path: templates/skeleton/app/utils/partytown/maybeProxyRequest.ts
+  - type: PATCH
+    step: "4"
+    name: app/root.tsx
+    description: Initialize Partytown and GTM in the root layout
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.0ad938.patch
+  - type: NEW_FILE
+    step: "4"
+    name: app/utils/partytown/partytownAtomicHeaders.ts
+    description: Helper utility to enable Partytown atomic mode for better performance
+    ingredients:
+      - path: templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts
+  - type: PATCH
+    step: "5"
+    name: package.json
+    description: Add Partytown dependency and npm script for copying library files
+    diffs:
+      - file: package.json
+        patchFile: package.json.cfee98.patch
+  - type: PATCH
+    step: "6"
+    name: vite.config.ts
+    description: null
+    diffs:
+      - file: vite.config.ts
+        patchFile: vite.config.ts.f0a2c4.patch
+nextSteps: |
+  After applying this recipe:
+
+  1. Install dependencies:
+     npm install
+
+  2. Copy Partytown library files:
+     npm run partytown
+
+  3. Add your GTM container ID to .env:
+     GTM_CONTAINER_ID=GTM-XXXXXXX
+
+  4. For TypeScript projects, add to env.d.ts:
+     interface Env extends HydrogenEnv {
+       GTM_CONTAINER_ID?: `GTM-${string}`;
+       GTM_ID?: `GTM-${string}`;
+     }
+
+  5. Test your implementation:
+     npm run dev
+
+  Visit your site and check the Network tab to verify GTM is loading via the web worker.
+llms:
+  userQueries: []
+  troubleshooting: []
+commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6

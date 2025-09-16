@@ -6,9 +6,8 @@
   "scripts": {
     "build": "npm run build:pkg",
     "build:pkg": "turbo build --parallel --filter=./packages/*",
-    "build:examples:disabled": "echo 'Examples build temporarily disabled for React Router 7.8.x migration'",
     "build:templates": "turbo build --parallel --filter=./templates/*",
-    "build:all": "npm run build:pkg && npm run build:templates && npm run build:examples:disabled",
+    "build:all": "npm run build:pkg && npm run build:templates",
     "ci:checks": "turbo run lint test format:check typecheck",
     "decrypt": "ejson decrypt secrets.ejson",
     "dev": "npm run dev:pkg",
@@ -22,7 +21,6 @@
     "format": "prettier --write --ignore-unknown ./packages",
     "format:check": "prettier --check --ignore-unknown ./packages",
     "typecheck": "turbo typecheck --parallel",
-    "typecheck:examples:disabled": "echo 'Examples typecheck temporarily disabled for React Router 7.8.x migration'",
     "test": "turbo run test --parallel",
     "test:watch": "turbo run test:watch",
     "test:calver": "./.changeset/test-calver-comparison.sh",
@@ -55,11 +53,15 @@
   "prettier": "@shopify/prettier-config",
   "dependencies": {
     "@shopify/cli-hydrogen": "*",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-intersection-observer": "^8.32.0",
     "react-router": "7.8.2",
     "react-router-dom": "7.8.2",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@qwik.dev/partytown": "^0.11.2",
     "@changesets/changelog-github": "^0.4.8",
     "@changesets/cli": "^2.29.6",
     "@eslint/compat": "1.2.5",
@@ -121,9 +123,7 @@
   },
   "overrides": {
     "@oclif/core": "3.26.5",
-    "@shopify/cli-kit": "3.80.4",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "@shopify/cli-kit": "3.80.4"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.34.9",
