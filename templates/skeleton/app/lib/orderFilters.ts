@@ -7,7 +7,7 @@ export const ORDER_FILTER_FIELDS = {
 } as const;
 
 /**
- * Parameters for filtering customer orders
+ * Parameters for filtering customer orders, see: https://shopify.dev/docs/api/customer/latest/queries/customer#returns-Customer.fields.orders.arguments.query
  */
 export interface OrderFilterParams {
   /** Order name or number (e.g., "#1001" or "1001") */
@@ -33,10 +33,12 @@ function sanitizeFilterValue(value: string): string {
  * @param filters - The filter parameters
  * @returns A formatted query string for the GraphQL query parameter, or undefined if no filters
  * @example
- * buildOrderSearchQuery({ name: '1001' }) // returns "name:1001"
- * buildOrderSearchQuery({ name: '1001', confirmationNumber: 'ABC123' }) // returns "name:1001 AND confirmation_number:ABC123"
+ * buildOrderSearchQuery(\{ name: '1001' \}) // returns "name:1001"
+ * buildOrderSearchQuery(\{ name: '1001', confirmationNumber: 'ABC123' \}) // returns "name:1001 AND confirmation_number:ABC123"
  */
-export function buildOrderSearchQuery(filters: OrderFilterParams): string | undefined {
+export function buildOrderSearchQuery(
+  filters: OrderFilterParams,
+): string | undefined {
   const queryParts: string[] = [];
 
   if (filters.name) {
@@ -65,9 +67,11 @@ export function buildOrderSearchQuery(filters: OrderFilterParams): string | unde
  * @returns Parsed filter parameters
  * @example
  * const url = new URL('https://example.com/orders?name=1001&confirmation_number=ABC123');
- * parseOrderFilters(url.searchParams) // returns { name: '1001', confirmationNumber: 'ABC123' }
+ * parseOrderFilters(url.searchParams) // returns \{ name: '1001', confirmationNumber: 'ABC123' \}
  */
-export function parseOrderFilters(searchParams: URLSearchParams): OrderFilterParams {
+export function parseOrderFilters(
+  searchParams: URLSearchParams,
+): OrderFilterParams {
   const filters: OrderFilterParams = {};
 
   const name = searchParams.get(ORDER_FILTER_FIELDS.NAME);
@@ -75,7 +79,9 @@ export function parseOrderFilters(searchParams: URLSearchParams): OrderFilterPar
     filters.name = name;
   }
 
-  const confirmationNumber = searchParams.get(ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER);
+  const confirmationNumber = searchParams.get(
+    ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER,
+  );
   if (confirmationNumber) {
     filters.confirmationNumber = confirmationNumber;
   }
