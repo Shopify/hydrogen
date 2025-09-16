@@ -5,7 +5,6 @@ import {
   type Params,
   useLocation,
   useMatches,
-  LoaderFunction,
 } from 'react-router';
 import {generateSeoTags, type SeoConfig} from './generate-seo-tags';
 

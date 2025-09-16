@@ -29,7 +29,4 @@ export default defineConfig({
       include: ['set-cookie-parser', 'cookie', 'react-router'],
     },
   },
-  server: {
-    allowedHosts: ['.tryhydrogen.dev'],
-  },
 });
