@@ -1,0 +1,49 @@
+index c584e5370..e3231cba4 100644
+--- a/templates/skeleton/README.md
++++ b/templates/skeleton/README.md
+@@ -18,6 +18,45 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
+ - TypeScript and JavaScript flavors
+ - Minimal setup of components and routes
+ 
++## B2B Features
++
++This template includes B2B (Business-to-Business) functionality for stores on Shopify Plus plans:
++
++### What's included:
++
++1. **Company Location Selection**: Allows B2B customers to select their company location for contextualized pricing and rules
++2. **Quantity Rules**: Display and enforce minimum, maximum, and increment quantity rules for B2B products
++3. **Volume Pricing**: Show quantity-based price breaks for bulk purchases
++4. **Contextualized Queries**: Product queries use buyer context (company location + customer token) for accurate B2B pricing
++
++### B2B Requirements:
++
++- Your store must be on a [Shopify Plus plan](https://help.shopify.com/manual/intro-to-shopify/pricing-plans/plans-features/shopify-plus-plan)
++- Your store must use [new customer accounts](https://help.shopify.com/en/manual/customers/customer-accounts/new-customer-accounts)
++- You need a customer with permission to order for a [B2B company](https://help.shopify.com/en/manual/b2b)
++
++### Key B2B Files:
++
++| File | Description |
++| --- | --- |
++| `app/routes/b2blocations.tsx` | Handles B2B location selection and session management |
++| `app/components/B2BLocationProvider.tsx` | React context provider for B2B location state |
++| `app/components/B2BLocationSelector.tsx` | Modal component for choosing company location |
++| `app/components/PriceBreaks.tsx` | Displays volume-based pricing tiers |
++| `app/components/QuantityRules.tsx` | Shows quantity rules (min/max/increment) |
++| `app/graphql/customer-account/CustomerLocationsQuery.ts` | GraphQL query for fetching company locations |
++
++### How it works:
++
++1. When a B2B customer logs in, the system retrieves their company location data using the Customer Account API
++2. If the customer has access to multiple locations, they can select one via the location selector
++3. The selected location ID is stored in the session and used to contextualize all product queries
++4. Products display B2B-specific information like quantity rules and volume pricing
++5. Cart operations respect B2B quantity rules and pricing
++
++> [!NOTE]
++> In this implementation, only the product display page (`app/routes/products.$handle.tsx`) uses contextualized queries. For production, all product queries should be contextualized with buyer information.
++
+ ## Getting started
+ 
+ **Requirements:**

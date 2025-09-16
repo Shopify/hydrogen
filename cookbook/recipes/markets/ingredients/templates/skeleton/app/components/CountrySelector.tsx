@@ -1,5 +1,10 @@
-import {Form} from 'react-router';
-import {Locale, SUPPORTED_LOCALES, useSelectedLocale} from '../lib/i18n';
+import {Form, useLocation} from 'react-router';
+import type {Locale} from '../lib/i18n';
+import {
+  SUPPORTED_LOCALES,
+  useSelectedLocale,
+  getPathWithoutLocale,
+} from '../lib/i18n';
 import {CartForm} from '@shopify/hydrogen';
 
 export function CountrySelector() {
@@ -28,7 +33,7 @@ export function CountrySelector() {
         }}
       >
         {SUPPORTED_LOCALES.map((locale) => (
-          <LocaleLink
+          <LocaleForm
             key={`locale-${locale.language}-${locale.country}`}
             locale={locale}
           />
@@ -38,7 +43,14 @@ export function CountrySelector() {
   );
 }
 
-const LocaleLink = ({locale}: {locale: Locale}) => {
+function LocaleForm({locale}: {locale: Locale}) {
+  const {pathname, search} = useLocation();
+  const selectedLocale = useSelectedLocale();
+
+  // Get the new path with the new locale, preserving the current path
+  const pathWithoutLocale = getPathWithoutLocale(pathname, selectedLocale);
+  const newPath = `${locale.pathPrefix.replace(/\/+$/, '')}${pathWithoutLocale}${search}`;
+
   const action = `${locale.pathPrefix.replace(/\/+$/, '')}/cart`;
   const variables = {
     action: CartForm.ACTIONS.BuyerIdentityUpdate,
@@ -51,7 +63,7 @@ const LocaleLink = ({locale}: {locale: Locale}) => {
 
   return (
     <Form method="POST" action={action}>
-      <input type="hidden" name="redirectTo" value={locale.pathPrefix} />
+      <input type="hidden" name="redirectTo" value={newPath} />
       <input
         type="hidden"
         name="cartFormInput"
@@ -62,4 +74,4 @@ const LocaleLink = ({locale}: {locale: Locale}) => {
       </button>
     </Form>
   );
-};
+}

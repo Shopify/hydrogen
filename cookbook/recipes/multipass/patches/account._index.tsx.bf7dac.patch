@@ -1,0 +1,10 @@
+index 677a584c0..b3486c5e5 100644
+--- a/templates/skeleton/app/routes/account._index.tsx
++++ b/templates/skeleton/app/routes/account._index.tsx
+@@ -2,4 +2,4 @@ import {redirect} from 'react-router';
+ 
+ export async function loader() {
+   return redirect('/account/orders');
+-}
++}
+\ No newline at end of file

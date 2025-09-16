@@ -1,0 +1,197 @@
+index 422a2eb95..79bacfbe2 100644
+--- a/templates/skeleton/app/routes/products.$handle.tsx
++++ b/templates/skeleton/app/routes/products.$handle.tsx
+@@ -3,6 +3,7 @@ import {
+   useLoaderData,
+ } from 'react-router';
+ import type {Route} from './+types/products.$handle';
++import type {SellingPlanFragment} from 'storefrontapi.generated';
+ import {
+   getSelectedProductOptions,
+   Analytics,
+@@ -16,6 +17,12 @@ import {ProductImage} from '~/components/ProductImage';
+ import {ProductForm} from '~/components/ProductForm';
+ import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+ 
++import sellingPlanStyle from '~/styles/selling-plan.css?url';
++
++export const links: Route.LinksFunction = () => [
++  {rel: 'stylesheet', href: sellingPlanStyle},
++];
++
+ export const meta: Route.MetaFunction = ({data}) => {
+   return [
+     {title: `Hydrogen | ${data?.product.title ?? ''}`},
+@@ -66,8 +73,34 @@ async function loadCriticalData({
+   // The API handle might be localized, so redirect to the localized handle
+   redirectIfHandleIsLocalized(request, {handle, data: product});
+ 
++  // Initialize the selectedSellingPlan to null
++  let selectedSellingPlan = null;
++
++  // Get the selected selling plan id from the request url
++  const selectedSellingPlanId =
++    new URL(request.url).searchParams.get('selling_plan') ?? null;
++
++  // Get the selected selling plan bsed on the selectedSellingPlanId
++  if (selectedSellingPlanId) {
++    const selectedSellingPlanGroup =
++      product.sellingPlanGroups.nodes?.find((sellingPlanGroup) => {
++        return sellingPlanGroup.sellingPlans.nodes?.find(
++          (sellingPlan: SellingPlanFragment) =>
++            sellingPlan.id === selectedSellingPlanId,
++        );
++      }) ?? null;
++
++    if (selectedSellingPlanGroup) {
++      selectedSellingPlan =
++        selectedSellingPlanGroup.sellingPlans.nodes.find((sellingPlan) => {
++          return sellingPlan.id === selectedSellingPlanId;
++        }) ?? null;
++    }
++  }
++
+   return {
+     product,
++    selectedSellingPlan,
+   };
+ }
+ 
+@@ -84,7 +117,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
+ }
+ 
+ export default function Product() {
+-  const {product} = useLoaderData<typeof loader>();
++  const {product, selectedSellingPlan} = useLoaderData<typeof loader>();
+ 
+   // Optimistically selects a variant with given available variant information
+   const selectedVariant = useOptimisticVariant(
+@@ -102,7 +135,7 @@ export default function Product() {
+     selectedOrFirstAvailableVariant: selectedVariant,
+   });
+ 
+-  const {title, descriptionHtml} = product;
++  const {title, descriptionHtml, sellingPlanGroups} = product;
+ 
+   return (
+     <div className="product">
+@@ -112,11 +145,15 @@ export default function Product() {
+         <ProductPrice
+           price={selectedVariant?.price}
+           compareAtPrice={selectedVariant?.compareAtPrice}
++          selectedSellingPlan={selectedSellingPlan}
++          selectedVariant={selectedVariant}
+         />
+         <br />
+         <ProductForm
+           productOptions={productOptions}
+           selectedVariant={selectedVariant}
++          selectedSellingPlan={selectedSellingPlan}
++          sellingPlanGroups={sellingPlanGroups}
+         />
+         <br />
+         <br />
+@@ -180,9 +217,83 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+       amount
+       currencyCode
+     }
++    sellingPlanAllocations(first: 10) {
++      nodes {
++        sellingPlan {
++          id
++        }
++      }
++    }
+   }
+ ` as const;
+ 
++const SELLING_PLAN_FRAGMENT = `#graphql
++  fragment SellingPlanMoney on MoneyV2 {
++    amount
++    currencyCode
++  }
++  fragment SellingPlan on SellingPlan {
++    id
++    options {
++      name
++      value
++    }
++    priceAdjustments {
++      adjustmentValue {
++        ... on SellingPlanFixedAmountPriceAdjustment {
++          __typename
++          adjustmentAmount {
++            ... on MoneyV2 {
++               ...SellingPlanMoney
++            }
++          }
++        }
++        ... on SellingPlanFixedPriceAdjustment {
++          __typename
++          price {
++            ... on MoneyV2 {
++              ...SellingPlanMoney
++            }
++          }
++        }
++        ... on SellingPlanPercentagePriceAdjustment {
++          __typename
++          adjustmentPercentage
++        }
++      }
++      orderCount
++    }
++    recurringDeliveries
++    checkoutCharge {
++      type
++      value {
++        ... on MoneyV2 {
++          ...SellingPlanMoney
++        }
++        ... on SellingPlanCheckoutChargePercentageValue {
++          percentage
++        }
++      }
++    }
++ }
++` as const;
++
++const SELLING_PLAN_GROUP_FRAGMENT = `#graphql
++  fragment SellingPlanGroup on SellingPlanGroup {
++    name
++    options {
++      name
++      values
++    }
++    sellingPlans(first:10) {
++      nodes {
++        ...SellingPlan
++      }
++    }
++  }
++  ${SELLING_PLAN_FRAGMENT}
++` as const;
++
+ const PRODUCT_FRAGMENT = `#graphql
+   fragment Product on Product {
+     id
+@@ -210,6 +321,11 @@ const PRODUCT_FRAGMENT = `#graphql
+         }
+       }
+     }
++    sellingPlanGroups(first:10) {
++      nodes {
++        ...SellingPlanGroup
++      }
++    }
+     selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
+       ...ProductVariant
+     }
+@@ -221,6 +337,7 @@ const PRODUCT_FRAGMENT = `#graphql
+       title
+     }
+   }
++  ${SELLING_PLAN_GROUP_FRAGMENT}
+   ${PRODUCT_VARIANT_FRAGMENT}
+ ` as const;
+ 

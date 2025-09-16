@@ -1,0 +1,193 @@
+index 46272bbd3..64494bda5 100644
+--- a/templates/skeleton/app/routes/account.tsx
++++ b/templates/skeleton/app/routes/account.tsx
+@@ -1,44 +1,104 @@
+ import {
+-  data as remixData,
++  data,
+   Form,
+   NavLink,
+   Outlet,
++  redirect,
+   useLoaderData,
+ } from 'react-router';
+ import type {Route} from './+types/account';
+-import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
++import type {CustomerFragment} from 'storefrontapi.generated';
+ 
+ export function shouldRevalidate() {
+   return true;
+ }
+ 
+-export async function loader({context}: Route.LoaderArgs) {
+-  const {customerAccount} = context;
+-  const {data, errors} = await customerAccount.query(
+-    CUSTOMER_DETAILS_QUERY,
+-    {
+-      variables: {
+-        language: customerAccount.i18n.language,
+-      },
+-    },
+-  );
++export const headers: Route.HeadersFunction = ({loaderHeaders}) => loaderHeaders;
+ 
+-  if (errors?.length || !data?.customer) {
+-    throw new Error('Customer not found');
++export async function loader({request, context}: Route.LoaderArgs) {
++  const {session, storefront} = context;
++  const {pathname} = new URL(request.url);
++  const customerAccessToken = await session.get('customerAccessToken');
++  const isLoggedIn = !!customerAccessToken?.accessToken;
++  const isAccountHome = pathname === '/account' || pathname === '/account/';
++  const isPrivateRoute =
++    /^\/account\/(orders|orders\/.*|profile|addresses|addresses\/.*)$/.test(
++      pathname,
++    );
++
++  if (!isLoggedIn) {
++    if (isPrivateRoute || isAccountHome) {
++      session.unset('customerAccessToken');
++      return redirect('/account/login');
++    } else {
++      // public subroute such as /account/login...
++      return {
++        isLoggedIn: false,
++        isAccountHome,
++        isPrivateRoute,
++        customer: null,
++      };
++    }
++  } else {
++    // loggedIn, default redirect to the orders page
++    if (isAccountHome) {
++      return redirect('/account/orders');
++    }
+   }
+ 
+-  return remixData(
+-    {customer: data.customer},
+-    {
+-      headers: {
+-        'Cache-Control': 'no-cache, no-store, must-revalidate',
++  try {
++    const {customer} = await storefront.query(CUSTOMER_QUERY, {
++      variables: {
++        customerAccessToken: customerAccessToken.accessToken,
++        country: storefront.i18n.country,
++        language: storefront.i18n.language,
+       },
+-    },
++      cache: storefront.CacheNone(),
++    });
++
++    if (!customer) {
++      throw new Error('Customer not found');
++    }
++
++    return data(
++      {isLoggedIn, isPrivateRoute, isAccountHome, customer},
++      {
++        headers: {
++          'Cache-Control': 'no-cache, no-store, must-revalidate',
++        },
++      },
++    );
++  } catch (error) {
++    console.error('There was a problem loading account', error);
++    session.unset('customerAccessToken');
++    return redirect('/account/login');
++  }
++}
++
++export default function Account() {
++  const {customer, isPrivateRoute, isAccountHome} =
++    useLoaderData<typeof loader>();
++
++  if (!isPrivateRoute && !isAccountHome) {
++    return <Outlet context={{customer}} />;
++  }
++
++  return (
++    <AccountLayout customer={customer as CustomerFragment}>
++      <br />
++      <br />
++      <Outlet context={{customer}} />
++    </AccountLayout>
+   );
+ }
+ 
+-export default function AccountLayout() {
+-  const {customer} = useLoaderData<typeof loader>();
++function AccountLayout({
++  customer,
++  children,
++}: {
++  customer: CustomerFragment;
++  children: React.ReactNode;
++}) {
+ 
+   const heading = customer
+     ? customer.firstName
+@@ -51,9 +111,7 @@ export default function AccountLayout() {
+       <h1>{heading}</h1>
+       <br />
+       <AccountMenu />
+-      <br />
+-      <br />
+-      <Outlet context={{customer}} />
++      {children}
+     </div>
+   );
+ }
+@@ -98,3 +156,50 @@ function Logout() {
+     </Form>
+   );
+ }
++
++export const CUSTOMER_FRAGMENT = `#graphql
++  fragment Customer on Customer {
++    acceptsMarketing
++    addresses(first: 6) {
++      nodes {
++        ...Address
++      }
++    }
++    defaultAddress {
++      ...Address
++    }
++    email
++    firstName
++    lastName
++    numberOfOrders
++    phone
++  }
++  fragment Address on MailingAddress {
++    id
++    formatted
++    firstName
++    lastName
++    company
++    address1
++    address2
++    country
++    province
++    city
++    zip
++    phone
++  }
++` as const;
++
++// NOTE: https://shopify.dev/docs/api/storefront/latest/queries/customer
++const CUSTOMER_QUERY = `#graphql
++  query Customer(
++    $customerAccessToken: String!
++    $country: CountryCode
++    $language: LanguageCode
++  ) @inContext(country: $country, language: $language) {
++    customer(customerAccessToken: $customerAccessToken) {
++      ...Customer
++    }
++  }
++  ${CUSTOMER_FRAGMENT}
++` as const;
+\ No newline at end of file

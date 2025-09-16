@@ -1,0 +1,103 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+gid: a070bb16-7f92-420a-a458-161f90242297
+title: Google Tag Manager Integration
+summary: Add Google Tag Manager to your Hydrogen storefront for advanced
+  analytics and marketing tracking
+description: |
+  This recipe integrates Google Tag Manager (GTM) into your Hydrogen storefront, enabling you to track user interactions, ecommerce events, and implement marketing tags without modifying code.
+
+  Hydrogen includes built-in support for the Customer Privacy API, a browser-based JavaScript API that you can use to display cookie-consent banners and verify data processing permissions.
+
+  Key features:
+  - GTM script integration with proper CSP nonce support
+  - Content Security Policy configuration for GTM domains
+  - Analytics integration for product views via dataLayer
+  - Extensible dataLayer implementation for custom events
+  - Support for GTM's preview mode
+  - Customer Privacy API integration
+
+  The recipe includes:
+  1. Content Security Policy updates in entry.server.tsx for GTM domains
+  2. GTM script tags in the head and body sections
+  3. GoogleTagManager component that subscribes to analytics events
+  4. Proper nonce attributes for security compliance
+notes:
+  - Replace GTM-<YOUR_GTM_ID> with your actual Google Tag Manager container ID
+    in both script locations
+  - The nonce attribute ensures compatibility with Content Security Policy
+  - Additional analytics events can be added to the GoogleTagManager component
+    by subscribing to different event types
+  - Configure customer privacy settings in your Shopify admin to enable cookie
+    consent banners
+  - The CSP configuration allows GTM, Google Analytics, and related tracking
+    domains
+requirements: |
+  Prerequisites:
+  - A Google Tag Manager account and container ID
+  - Customer privacy settings configured in Shopify admin (for cookie consent)
+  - Basic understanding of GTM and dataLayer events
+  - Knowledge of Shopify's analytics events
+
+  To enable cookie consent:
+  1. Go to Shopify admin → Settings → Customer Privacy → Cookie Banner
+  2. Configure region visibility for the banner
+  3. Customize appearance and position as needed
+ingredients:
+  - path: templates/skeleton/app/components/GoogleTagManager.tsx
+    description: null
+deletedFiles: []
+steps:
+  - type: PATCH
+    step: "1"
+    name: README.md
+    description: Updates README with GTM-specific documentation and setup instructions
+    diffs:
+      - file: README.md
+        patchFile: README.md.47d06f.patch
+  - type: PATCH
+    step: "1"
+    name: app/entry.server.tsx
+    description: null
+    diffs:
+      - file: app/entry.server.tsx
+        patchFile: entry.server.tsx.c0cb8d.patch
+  - type: NEW_FILE
+    step: "1"
+    name: app/components/GoogleTagManager.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/GoogleTagManager.tsx
+  - type: PATCH
+    step: "2"
+    name: app/root.tsx
+    description: null
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.0ad938.patch
+nextSteps: |
+  After applying this recipe:
+
+  1. Replace GTM-<YOUR_GTM_ID> with your actual container ID in app/root.tsx (2 locations)
+
+  2. Configure GTM in your Google Tag Manager dashboard:
+     - Set up tags for Google Analytics 4 or other tracking services
+     - Create triggers for the 'viewed-product' custom event
+     - Configure ecommerce data layer variables
+
+  3. Extend the GoogleTagManager component to track additional events:
+     - cart_updated
+     - collection_viewed
+     - search_performed
+     - checkout_started
+
+  4. Test your implementation:
+     - Use GTM Preview mode to verify tags are firing
+     - Check browser console for dataLayer pushes
+     - Verify CSP is not blocking any GTM resources
+
+  5. Enable customer privacy settings in Shopify admin for GDPR compliance
+llms:
+  userQueries: []
+  troubleshooting: []
+commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6

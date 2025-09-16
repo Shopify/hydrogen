@@ -157,8 +157,11 @@ async function generateSteps(params: {
   function processModifiedFiles(): Step[] {
     let patchSteps: Step[] = [];
     const modifiedFiles = params.modifiedFiles.filter((file) => {
-      // ignore generated types files
-      return !file.endsWith('.d.ts');
+      // ignore generated types files (but not env.d.ts which contains manual changes)
+      return !file.endsWith('.generated.d.ts') && 
+             !file.endsWith('.generated.ts') &&
+             !file.endsWith('storefrontapi.d.ts') &&
+             !file.endsWith('customer-accountapi.d.ts');
     });
     let i = 0;
     for (const file of modifiedFiles) {

@@ -1,0 +1,59 @@
+index 6fdeb1b26..090d951eb 100644
+--- a/templates/skeleton/app/root.tsx
++++ b/templates/skeleton/app/root.tsx
+@@ -1,4 +1,4 @@
+-import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
++import {Analytics, getShopAnalytics, useNonce, Script} from '@shopify/hydrogen';
+ import {
+   Outlet,
+   useRouteError,
+@@ -16,6 +16,7 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+ import resetStyles from '~/styles/reset.css?url';
+ import appStyles from '~/styles/app.css?url';
+ import {PageLayout} from './components/PageLayout';
++import {GoogleTagManager} from '~/components/GoogleTagManager';
+ 
+ export type RootLoader = typeof loader;
+ 
+@@ -154,8 +155,32 @@ export function Layout({children}: {children?: React.ReactNode}) {
+         <link rel="stylesheet" href={appStyles}></link>
+         <Meta />
+         <Links />
++        {/* @description Add Google Tag Manager script to head */}
++        <Script
++          nonce={nonce}
++          dangerouslySetInnerHTML={{
++            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
++            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
++            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
++            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
++            })(window,document,'script','dataLayer','GTM-<YOUR_GTM_ID>');`,
++          }}
++        ></Script>
+       </head>
+       <body>
++        {/* @description Add Google Tag Manager noscript iframe for users without JavaScript */}
++        <noscript>
++          <iframe
++            title="Google Tag Manager"
++            src="https://www.googletagmanager.com/ns.html?id=GTM-<YOUR_GTM_ID>"
++            height="0"
++            width="0"
++            style={{
++              display: 'none',
++              visibility: 'hidden',
++            }}
++          ></iframe>
++        </noscript>
+         {data ? (
+           <Analytics.Provider
+             cart={data.cart}
+@@ -163,6 +188,8 @@ export function Layout({children}: {children?: React.ReactNode}) {
+             consent={data.consent}
+           >
+             <PageLayout {...data}>{children}</PageLayout>
++            {/* @description Initialize Google Tag Manager analytics integration */}
++            <GoogleTagManager />
+           </Analytics.Provider>
+         ) : (
+           children

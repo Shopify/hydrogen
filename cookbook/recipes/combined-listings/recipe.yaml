@@ -13,7 +13,8 @@ description: |
   3. Update the `ProductForm` component to hide the **Add to cart** button for the parent products of combined listings.
   4. Update the `ProductImage` component to support images from product variants and the product itself.
   5. Show a range of prices for combined listings in `ProductItem`.
-notes: []
+notes:
+  - This recipe is compatible with React Router 7.8.x and uses consolidated imports from 'react-router' instead of separate '@shopify/remix-oxygen' and '@remix-run/react' packages.
 requirements: |
   - Your store must be on either a [Shopify Plus](https://www.shopify.com/plus) or enterprise plan.
   - Your store must have the [Combined Listings app](https://admin.shopify.com/apps/combined-listings) installed.
@@ -66,7 +67,7 @@ steps:
       2. Update the `Link` component to not replace the current URL when the product is a combined listing parent product.
     diffs:
       - file: app/components/ProductForm.tsx
-        patchFile: ProductForm.tsx.252e88.patch
+        patchFile: ProductForm.tsx.08e544.patch
   - type: PATCH
     step: 5
     name: Extend the ProductImage component
@@ -74,7 +75,7 @@ steps:
       Update the `ProductImage` component to support images from both product variants and the product itself.
     diffs:
       - file: app/components/ProductImage.tsx
-        patchFile: ProductImage.tsx.ac6815.patch
+        patchFile: ProductImage.tsx.c04b49.patch
   - type: PATCH
     step: 6
     name: Show a range of prices for combined listings in ProductItem
@@ -82,7 +83,7 @@ steps:
       Update `ProductItem.tsx` to show a range of prices for the combined listing parent product instead of the variant price.
     diffs:
       - file: app/components/ProductItem.tsx
-        patchFile: ProductItem.tsx.f84e8c.patch
+        patchFile: ProductItem.tsx.64cb5c.patch
   - type: PATCH
     step: 7
     name: (Optional) Add redirect utility to first variant of a combined listing
@@ -90,7 +91,7 @@ steps:
       If you want to redirect automatically to the first variant of a combined listing when the parent handle is selected, add a redirect utility that's called whenever the parent handle is requested.
     diffs:
       - file: app/lib/redirect.ts
-        patchFile: redirect.ts.89266f.patch
+        patchFile: redirect.ts.e4c72e.patch
   - type: PATCH
     step: 8
     name: Update queries for combined listings
@@ -99,7 +100,7 @@ steps:
       2. (Optional) Add the filtering query to the product query to exclude combined listings.
     diffs:
       - file: app/routes/_index.tsx
-        patchFile: _index.tsx.ee5996.patch
+        patchFile: _index.tsx.82ab90.patch
   - type: PATCH
     step: 9
     name: (Optional) Filter out combined listings from collections pages
@@ -107,15 +108,7 @@ steps:
       Since it's not possible to directly apply query filters when retrieving collection products, you can manually filter out combined listings after they're retrieved based on their tags.
     diffs:
       - file: app/routes/collections.$handle.tsx
-        patchFile: collections.$handle.tsx.c46c36.patch
-  - type: PATCH
-    step: 10
-    name: (Optional) Filter out combined listings from the collections index page
-    description: |
-      Update the `collections.all` route to filter out combined listings from the search results, and include the price range for combined listings.
-    diffs:
-      - file: app/routes/collections.all.tsx
-        patchFile: collections.all.tsx.df435d.patch
+        patchFile: collections.$handle.tsx.903c17.patch
   - type: PATCH
     step: 11
     name: Update the product page
@@ -125,7 +118,7 @@ steps:
       3. (Optional) Redirect to the first variant of a combined listing when the handle is requested.
     diffs:
       - file: app/routes/products.$handle.tsx
-        patchFile: products.$handle.tsx.7addea.patch
+        patchFile: products.$handle.tsx.7d2454.patch
   - type: PATCH
     step: 12
     name: Update stylesheet
@@ -133,7 +126,7 @@ steps:
       Add a class to the product item to show a range of prices for combined listings.
     diffs:
       - file: app/styles/app.css
-        patchFile: app.css.48239a.patch
+        patchFile: app.css.cea6f0.patch
 nextSteps: |
   - Test your implementation by going to your store and searching for a combined listing. Make sure that the combined listing's details appear in the search results and on the product page.
   - (Optional) [Place a test order](https://help.shopify.com/en/manual/checkout-settings/test-orders) to see how orders for combined listings appear in your Shopify admin.
@@ -154,4 +147,4 @@ llms:
       solution: Make sure to tag combined listing parent products in the Shopify admin
         and use that tag to filter out combined listings from the product list
         in the GraphQL query.
-commit: 1bff1dac122eed09583dce54fc83a19ababddfca
+commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6

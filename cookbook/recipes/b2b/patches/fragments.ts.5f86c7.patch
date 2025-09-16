@@ -1,0 +1,47 @@
+index dc4426a9f..f676a7bdc 100644
+--- a/templates/skeleton/app/lib/fragments.ts
++++ b/templates/skeleton/app/lib/fragments.ts
+@@ -52,6 +52,21 @@ export const CART_QUERY_FRAGMENT = `#graphql
+           name
+           value
+         }
++        # @description Add B2B quantity rules and price breaks
++        quantityRule {
++          maximum
++          minimum
++          increment
++        }
++        quantityPriceBreaks(first: 5) {
++          nodes {
++            minimumQuantity
++            price {
++              amount
++              currencyCode
++            }
++          }
++        }
+       }
+     }
+   }
+@@ -102,6 +117,21 @@ export const CART_QUERY_FRAGMENT = `#graphql
+           name
+           value
+         }
++        # @description Add B2B quantity rules and price breaks for cart line component
++        quantityRule {
++          maximum
++          minimum
++          increment
++        }
++        quantityPriceBreaks(first: 5) {
++          nodes {
++            minimumQuantity
++            price {
++              amount
++              currencyCode
++            }
++          }
++        }
+       }
+     }
+   }

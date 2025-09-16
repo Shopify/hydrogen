@@ -1,0 +1,34 @@
+index f18c1d0d6..cbffc8a44 100644
+--- a/templates/skeleton/app/lib/redirect.ts
++++ b/templates/skeleton/app/lib/redirect.ts
+@@ -1,4 +1,6 @@
+ import {redirect} from 'react-router';
++import type {ProductFragment} from 'storefrontapi.generated';
++import {isCombinedListing} from './combined-listings';
+ 
+ export function redirectIfHandleIsLocalized(
+   request: Request,
+@@ -21,3 +23,23 @@ export function redirectIfHandleIsLocalized(
+     throw redirect(url.toString());
+   }
+ }
++
++export function redirectIfCombinedListing(
++  request: Request,
++  product: ProductFragment,
++) {
++  const url = new URL(request.url);
++  let shouldRedirect = false;
++
++  if (isCombinedListing(product)) {
++    url.pathname = url.pathname.replace(
++      product.handle,
++      product.selectedOrFirstAvailableVariant?.product.handle ?? '',
++    );
++    shouldRedirect = true;
++  }
++
++  if (shouldRedirect) {
++    throw redirect(url.toString());
++  }
++}

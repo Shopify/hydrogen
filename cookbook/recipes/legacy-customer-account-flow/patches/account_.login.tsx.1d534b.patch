@@ -1,0 +1,148 @@
+index 825648a14..7536e0371 100644
+--- a/templates/skeleton/app/routes/account_.login.tsx
++++ b/templates/skeleton/app/routes/account_.login.tsx
+@@ -1,7 +1,139 @@
++import {Form, Link, useActionData, data, redirect} from 'react-router';
+ import type {Route} from './+types/account_.login';
+ 
+-export async function loader({request, context}: Route.LoaderArgs) {
+-  return context.customerAccount.login({
+-    countryCode: context.storefront.i18n.country,
+-  });
++type ActionResponse = {
++  error: string | null;
++};
++
++export const meta: Route.MetaFunction = () => {
++  return [{title: 'Login'}];
++};
++
++export async function loader({context}: Route.LoaderArgs) {
++  if (await context.session.get('customerAccessToken')) {
++    return redirect('/account');
++  }
++  return {};
+ }
++
++export async function action({request, context}: Route.ActionArgs) {
++  const {session, storefront} = context;
++
++  if (request.method !== 'POST') {
++    return data({error: 'Method not allowed'}, {status: 405});
++  }
++
++  try {
++    const form = await request.formData();
++    const email = String(form.has('email') ? form.get('email') : '');
++    const password = String(form.has('password') ? form.get('password') : '');
++    const validInputs = Boolean(email && password);
++
++    if (!validInputs) {
++      throw new Error('Please provide both an email and a password.');
++    }
++
++    const {customerAccessTokenCreate} = await storefront.mutate(
++      LOGIN_MUTATION,
++      {
++        variables: {
++          input: {email, password},
++        },
++      },
++    );
++
++    if (!customerAccessTokenCreate?.customerAccessToken?.accessToken) {
++      throw new Error(
++        customerAccessTokenCreate?.customerUserErrors?.[0]?.message ||
++          'Unknown error',
++      );
++    }
++
++    const {customerAccessToken} = customerAccessTokenCreate;
++    session.set('customerAccessToken', customerAccessToken);
++
++    return redirect('/account', {
++      headers: {
++        'Set-Cookie': await session.commit(),
++      },
++    });
++  } catch (error: unknown) {
++    if (error instanceof Error) {
++      return data({error: error.message}, {status: 400});
++    }
++    return data({error}, {status: 400});
++  }
++}
++
++export default function Login() {
++  const actionData = useActionData<ActionResponse>();
++  const error = actionData?.error || null;
++
++  return (
++    <div className="login">
++      <h1>Sign in.</h1>
++      <Form method="POST">
++        <fieldset>
++          <label htmlFor="email">Email address</label>
++          <input
++            id="email"
++            name="email"
++            type="email"
++            autoComplete="email"
++            required
++            placeholder="Email address"
++            aria-label="Email address"
++            autoFocus
++          />
++          <label htmlFor="password">Password</label>
++          <input
++            id="password"
++            name="password"
++            type="password"
++            autoComplete="current-password"
++            placeholder="Password"
++            aria-label="Password"
++            minLength={8}
++            required
++          />
++        </fieldset>
++        {error ? (
++          <p>
++            <mark>
++              <small>{error}</small>
++            </mark>
++          </p>
++        ) : (
++          <br />
++        )}
++        <button type="submit">Sign in</button>
++      </Form>
++      <br />
++      <div>
++        <p>
++          <Link to="/account/recover">Forgot password →</Link>
++        </p>
++        <p>
++          <Link to="/account/register">Register →</Link>
++        </p>
++      </div>
++    </div>
++  );
++}
++
++// NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customeraccesstokencreate
++const LOGIN_MUTATION = `#graphql
++  mutation login($input: CustomerAccessTokenCreateInput!) {
++    customerAccessTokenCreate(input: $input) {
++      customerUserErrors {
++        code
++        field
++        message
++      }
++      customerAccessToken {
++        accessToken
++        expiresAt
++      }
++    }
++  }
++` as const;
+\ No newline at end of file

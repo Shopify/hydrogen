@@ -1,0 +1,244 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+gid: d230565c-84f4-4555-b7b8-8c574d54df80
+title: Multipass Authentication with Storefront API
+summary: Enable Shopify Plus Multipass authentication using Storefront API for
+  seamless customer login and checkout
+description: |
+  This recipe implements Shopify Plus Multipass authentication using the Storefront API instead of the Customer Account API.
+  It provides session-based authentication with customer access tokens, enabling customers to maintain their logged-in
+  state across the storefront and checkout process. This is particularly useful for Shopify Plus stores that need to
+  integrate with external authentication systems or maintain customer sessions across different platforms.
+
+  Key features:
+  - Converts all customer account routes from Customer Account API to Storefront API
+  - Implements session-based authentication with customer access tokens
+  - Adds Multipass checkout button for seamless checkout experience
+  - Provides token validation and automatic token refresh
+  - Includes complete authentication flow (login, logout, register, recover, reset)
+notes:
+  - This recipe requires Shopify Plus as Multipass is a Plus-only feature
+  - The recipe replaces the snakecase-keys npm package with a custom
+    ESM-compatible implementation to work in Worker environments
+  - All customer authentication is handled through Storefront API mutations
+    instead of Customer Account API
+  - Session tokens are validated on each request and automatically cleared if
+    expired
+requirements: |
+  - Shopify Plus subscription for Multipass functionality
+  - PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET environment variable must be set
+  - React Router 7.8.x or higher
+ingredients:
+  - path: templates/skeleton/app/components/MultipassCheckoutButton.tsx
+    description: null
+  - path: templates/skeleton/app/lib/multipass/multipass.ts
+    description: null
+  - path: templates/skeleton/app/lib/multipass/multipassify.server.ts
+    description: null
+  - path: templates/skeleton/app/lib/multipass/types.ts
+    description: null
+  - path: templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx
+    description: null
+  - path: templates/skeleton/app/routes/account_.login.multipass.tsx
+    description: null
+  - path: templates/skeleton/app/routes/account_.recover.tsx
+    description: null
+  - path: templates/skeleton/app/routes/account_.register.tsx
+    description: null
+  - path: templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx
+    description: null
+deletedFiles: []
+steps:
+  - type: PATCH
+    step: "1"
+    name: README.md
+    description: null
+    diffs:
+      - file: README.md
+        patchFile: README.md.47d06f.patch
+  - type: NEW_FILE
+    step: "1"
+    name: app/components/MultipassCheckoutButton.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/MultipassCheckoutButton.tsx
+  - type: PATCH
+    step: "2"
+    name: app/components/CartSummary.tsx
+    description: null
+    diffs:
+      - file: app/components/CartSummary.tsx
+        patchFile: CartSummary.tsx.eb8134.patch
+  - type: NEW_FILE
+    step: "2"
+    name: app/lib/multipass/multipass.ts
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/lib/multipass/multipass.ts
+  - type: PATCH
+    step: "3"
+    name: app/root.tsx
+    description: null
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.0ad938.patch
+  - type: NEW_FILE
+    step: "3"
+    name: app/lib/multipass/multipassify.server.ts
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/lib/multipass/multipassify.server.ts
+  - type: PATCH
+    step: "4"
+    name: app/routes/account.$.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.$.tsx
+        patchFile: account.$.tsx.2df983.patch
+  - type: NEW_FILE
+    step: "4"
+    name: app/lib/multipass/types.ts
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/lib/multipass/types.ts
+  - type: PATCH
+    step: "5"
+    name: app/routes/account._index.tsx
+    description: null
+    diffs:
+      - file: app/routes/account._index.tsx
+        patchFile: account._index.tsx.bf7dac.patch
+  - type: NEW_FILE
+    step: "5"
+    name: app/routes/account_.activate.$id.$activationToken.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx
+  - type: PATCH
+    step: "6"
+    name: app/routes/account.addresses.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.addresses.tsx
+        patchFile: account.addresses.tsx.34e472.patch
+  - type: NEW_FILE
+    step: "6"
+    name: app/routes/account_.login.multipass.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/account_.login.multipass.tsx
+  - type: PATCH
+    step: "7"
+    name: app/routes/account.orders.$id.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.orders.$id.tsx
+        patchFile: account.orders.$id.tsx.fa0356.patch
+  - type: NEW_FILE
+    step: "7"
+    name: app/routes/account_.recover.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/account_.recover.tsx
+  - type: PATCH
+    step: "8"
+    name: app/routes/account.orders._index.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.orders._index.tsx
+        patchFile: account.orders._index.tsx.2b0f8a.patch
+  - type: NEW_FILE
+    step: "8"
+    name: app/routes/account_.register.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/account_.register.tsx
+  - type: NEW_FILE
+    step: "9"
+    name: app/routes/account_.reset.$id.$resetToken.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx
+  - type: PATCH
+    step: "10"
+    name: app/routes/account.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.tsx
+        patchFile: account.tsx.ca55f3.patch
+  - type: PATCH
+    step: "12"
+    name: app/routes/account_.login.tsx
+    description: null
+    diffs:
+      - file: app/routes/account_.login.tsx
+        patchFile: account_.login.tsx.1d534b.patch
+  - type: PATCH
+    step: "13"
+    name: app/routes/account_.logout.tsx
+    description: null
+    diffs:
+      - file: app/routes/account_.logout.tsx
+        patchFile: account_.logout.tsx.d6592d.patch
+  - type: PATCH
+    step: "13"
+    name: env.d.ts
+    description: null
+    diffs:
+      - file: env.d.ts
+        patchFile: env.d.ts.899ef3.patch
+  - type: PATCH
+    step: "14"
+    name: app/routes/cart.tsx
+    description: null
+    diffs:
+      - file: app/routes/cart.tsx
+        patchFile: cart.tsx.362410.patch
+  - type: PATCH
+    step: "15"
+    name: package.json
+    description: null
+    diffs:
+      - file: package.json
+        patchFile: package.json.cfee98.patch
+  - type: PATCH
+    step: "16"
+    name: vite.config.ts
+    description: null
+    diffs:
+      - file: vite.config.ts
+        patchFile: vite.config.ts.f0a2c4.patch
+nextSteps: |
+  - Set up your PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET in your environment variables
+  - Test the login flow by visiting /account/login
+  - Verify the Multipass checkout button appears in the cart
+  - Configure external authentication systems to generate Multipass tokens
+  - Customize the authentication forms and error messages as needed
+llms:
+  userQueries:
+    - How do I set up Multipass authentication in my Hydrogen store?
+    - How can I use Storefront API for customer authentication instead of
+      Customer Account API?
+    - How do I implement session-based authentication in Hydrogen?
+    - How can I maintain customer login state across checkout?
+    - How do I integrate external authentication with Shopify Plus?
+  troubleshooting:
+    - issue: "ReferenceError: require is not defined (snakecase-keys error)"
+      solution: The recipe includes a custom ESM-compatible snake_case implementation.
+        Ensure you're using the updated multipassify.server.ts file that doesn't
+        import snakecase-keys
+    - issue: PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET is undefined
+      solution: Add the Multipass secret to your environment variables. You can find
+        this in your Shopify Plus admin under Settings > Checkout > Multipass
+    - issue: "TypeScript error: Property 'PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET' does
+        not exist on type 'Env'"
+      solution: The recipe adds this type definition to env.d.ts. Run 'npm run
+        typecheck' after applying all patches
+    - issue: Customer login redirects to Customer Account API login page
+      solution: Ensure all account routes have been properly converted to use
+        Storefront API. Check that account_.login.tsx uses the form-based login,
+        not customerAccount.login()
+    - issue: Multipass checkout button not appearing
+      solution: Verify that CartSummary.tsx imports and uses MultipassCheckoutButton
+        component, and that the cart.tsx route has been patched
+commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6

@@ -1,0 +1,139 @@
+# yaml-language-server: $schema=../../recipe.schema.json
+
+gid: f6c7af65-86e0-48c3-80da-08c4605f575c
+title: B2B Commerce
+summary: Add Business-to-Business (B2B) functionality with company locations, quantity rules, and volume pricing
+description: |
+  This recipe adds comprehensive B2B functionality to your Hydrogen storefront, enabling business customers to:
+  
+  - Select their company location for contextualized pricing
+  - View and respect quantity rules (minimum, maximum, increment)
+  - See volume-based price breaks for bulk purchases
+  - Access B2B-specific pricing through contextualized GraphQL queries
+  
+  The implementation includes a location selector modal, quantity rule displays on product pages, 
+  and cart functionality that respects B2B quantity rules. All product queries are contextualized 
+  with buyer information (company location + customer token) to ensure accurate B2B pricing.
+notes:
+  - This recipe requires a Shopify Plus plan for B2B functionality
+  - Your store must use new customer accounts (not classic accounts)
+  - Only the product display page uses contextualized queries in this example
+  - For production, all product queries should be contextualized with buyer information
+  - The location selector appears automatically for customers with multiple company locations
+requirements: |
+  - Shopify Plus plan with B2B enabled
+  - New customer accounts activated
+  - At least one B2B company with customer access configured
+  - Products with quantity rules or volume pricing configured (optional but recommended for testing)
+ingredients:
+  - path: templates/skeleton/app/components/B2BLocationProvider.tsx
+    description: null
+  - path: templates/skeleton/app/components/B2BLocationSelector.tsx
+    description: null
+  - path: templates/skeleton/app/components/PriceBreaks.tsx
+    description: null
+  - path: templates/skeleton/app/components/QuantityRules.tsx
+    description: null
+  - path: templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts
+    description: null
+  - path: templates/skeleton/app/routes/b2blocations.tsx
+    description: null
+deletedFiles: []
+steps:
+  - type: PATCH
+    step: "1"
+    name: README.md
+    description: null
+    diffs:
+      - file: README.md
+        patchFile: README.md.47d06f.patch
+  - type: NEW_FILE
+    step: "1"
+    name: app/components/B2BLocationProvider.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/B2BLocationProvider.tsx
+  - type: PATCH
+    step: "2"
+    name: app/components/CartLineItem.tsx
+    description: null
+    diffs:
+      - file: app/components/CartLineItem.tsx
+        patchFile: CartLineItem.tsx.12f63e.patch
+  - type: NEW_FILE
+    step: "2"
+    name: app/components/B2BLocationSelector.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/B2BLocationSelector.tsx
+  - type: PATCH
+    step: "3"
+    name: app/components/Header.tsx
+    description: null
+    diffs:
+      - file: app/components/Header.tsx
+        patchFile: Header.tsx.80a27a.patch
+  - type: NEW_FILE
+    step: "3"
+    name: app/components/PriceBreaks.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/PriceBreaks.tsx
+  - type: PATCH
+    step: "4"
+    name: app/components/ProductForm.tsx
+    description: null
+    diffs:
+      - file: app/components/ProductForm.tsx
+        patchFile: ProductForm.tsx.08e544.patch
+  - type: NEW_FILE
+    step: "4"
+    name: app/components/QuantityRules.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/components/QuantityRules.tsx
+  - type: PATCH
+    step: "5"
+    name: app/lib/fragments.ts
+    description: null
+    diffs:
+      - file: app/lib/fragments.ts
+        patchFile: fragments.ts.5f86c7.patch
+  - type: NEW_FILE
+    step: "5"
+    name: app/graphql/customer-account/CustomerLocationsQuery.ts
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts
+  - type: PATCH
+    step: "6"
+    name: app/root.tsx
+    description: null
+    diffs:
+      - file: app/root.tsx
+        patchFile: root.tsx.0ad938.patch
+  - type: NEW_FILE
+    step: "6"
+    name: app/routes/b2blocations.tsx
+    description: null
+    ingredients:
+      - path: templates/skeleton/app/routes/b2blocations.tsx
+  - type: PATCH
+    step: "7"
+    name: app/routes/account_.logout.tsx
+    description: null
+    diffs:
+      - file: app/routes/account_.logout.tsx
+        patchFile: account_.logout.tsx.d6592d.patch
+  - type: PATCH
+    step: "8"
+    name: app/routes/products.$handle.tsx
+    description: null
+    diffs:
+      - file: app/routes/products.$handle.tsx
+        patchFile: products.$handle.tsx.7d2454.patch
+nextSteps: null
+llms:
+  userQueries: []
+  troubleshooting: []
+commit: 1f9640d5acfd505435862b8b2317343bbce96d72
