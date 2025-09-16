@@ -74,6 +74,10 @@ jobs:
         working-directory: templates/skeleton
         run: npm ci
       
+      - name: 📝 Generate GraphQL types
+        working-directory: templates/skeleton
+        run: npm run codegen
+      
       - name: 🔨 Build skeleton with recipe
         working-directory: templates/skeleton
         run: npm run build
