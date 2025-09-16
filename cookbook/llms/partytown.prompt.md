@@ -1,6 +1,6 @@
 # Overview
 
-This prompt describes how to implement "partytown" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "Partytown + Google Tag Manager" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -12,7 +12,7 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 
 # Summary
 
-
+Add Partytown web worker integration for Google Tag Manager to improve performance
 
 # User Intent Recognition
 
@@ -34,7 +34,33 @@ Here's the partytown recipe for the base Hydrogen skeleton template:
 
 ## Description
 
+This recipe integrates Partytown with your Hydrogen storefront to run Google Tag Manager 
+and other third-party scripts in a web worker, keeping the main thread free for critical 
+rendering tasks.
 
+Key features:
+- Moves GTM and analytics scripts off the main thread
+- Improves Core Web Vitals scores
+- Maintains full GTM functionality
+- Includes CORS reverse proxy for third-party scripts
+- CSP headers configured for GTM domains
+
+## Notes
+
+> [!NOTE]
+> Remember to set your GTM_CONTAINER_ID or GTM_ID environment variable
+
+> [!NOTE]
+> Run 'npm run partytown' to copy library files for production
+
+> [!NOTE]
+> TypeScript users need to manually add GTM types to env.d.ts
+
+## Requirements
+
+- Google Tag Manager container ID
+- Basic understanding of web workers and CSP
+- Node.js 18.0.0 or higher
 
 ## New files added to the template by this recipe
 
@@ -47,7 +73,7 @@ Here's the partytown recipe for the base Hydrogen skeleton template:
 
 ### Step 1: .gitignore
 
-
+Add public/~partytown to ignore Partytown library files
 
 #### File: /.gitignore
 
@@ -64,9 +90,9 @@ Here's the partytown recipe for the base Hydrogen skeleton template:
 
 ### Step 1: app/components/PartytownGoogleTagManager.tsx
 
+Add GTM component that loads scripts in web worker
 
-
-#### File: [PartytownGoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/4daf37ea291334b23bd543fdad5673ab7c9a6133/cookbook/recipes/partytown/ingredients/templates/skeleton/app/components/PartytownGoogleTagManager.tsx)
+#### File: [PartytownGoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/partytown/ingredients/templates/skeleton/app/components/PartytownGoogleTagManager.tsx)
 
 ```tsx
 import {useEffect, useRef} from 'react';
@@ -142,7 +168,7 @@ export function PartytownGoogleTagManager(props: {
 
 ### Step 2: README.md
 
-
+Document Partytown setup and configuration instructions
 
 #### File: /README.md
 
@@ -240,9 +266,9 @@ export function PartytownGoogleTagManager(props: {
 
 ### Step 2: app/routes/reverse-proxy.ts
 
+Reverse proxy route for third-party scripts requiring CORS headers
 
-
-#### File: [reverse-proxy.ts](https://github.com/Shopify/hydrogen/blob/4daf37ea291334b23bd543fdad5673ab7c9a6133/cookbook/recipes/partytown/ingredients/templates/skeleton/app/routes/reverse-proxy.ts)
+#### File: [reverse-proxy.ts](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/partytown/ingredients/templates/skeleton/app/routes/reverse-proxy.ts)
 
 ```ts
 // Reverse proxies partytown libs that require CORS. Used by Partytown resolveUrl
@@ -453,7 +479,7 @@ async function handleRequest(request: Route.LoaderArgs['request']) {
 
 ### Step 3: app/entry.server.tsx
 
-
+Configure CSP headers for GTM and Google Analytics domains
 
 #### File: /app/entry.server.tsx
 
@@ -482,9 +508,9 @@ async function handleRequest(request: Route.LoaderArgs['request']) {
 
 ### Step 3: app/utils/partytown/maybeProxyRequest.ts
 
+URL resolver to control which scripts should be reverse-proxied
 
-
-#### File: [maybeProxyRequest.ts](https://github.com/Shopify/hydrogen/blob/4daf37ea291334b23bd543fdad5673ab7c9a6133/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/maybeProxyRequest.ts)
+#### File: [maybeProxyRequest.ts](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/maybeProxyRequest.ts)
 
 ```ts
 /**
@@ -525,7 +551,7 @@ export function maybeProxyRequest(url: URL, location: Location, type: string) {
 
 ### Step 4: app/root.tsx
 
-
+Initialize Partytown and GTM in the root layout
 
 #### File: /app/root.tsx
 
@@ -536,7 +562,7 @@ export function maybeProxyRequest(url: URL, location: Location, type: string) {
  import {
    Outlet,
    useRouteError,
-@@ -16,6 +16,11 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+@@ -16,6 +16,10 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
  import resetStyles from '~/styles/reset.css?url';
  import appStyles from '~/styles/app.css?url';
  import {PageLayout} from './components/PageLayout';
@@ -544,30 +570,44 @@ export function maybeProxyRequest(url: URL, location: Location, type: string) {
 +import {PartytownGoogleTagManager} from '~/components/PartytownGoogleTagManager';
 +import {Partytown} from '@qwik.dev/partytown/react';
 +import {maybeProxyRequest} from '~/utils/partytown/maybeProxyRequest';
-+import {partytownAtomicHeaders} from '~/utils/partytown/partytownAtomicHeaders';
  
  export type RootLoader = typeof loader;
  
-@@ -90,6 +95,8 @@ export async function loader(args: Route.LoaderArgs) {
+@@ -90,6 +94,9 @@ export async function loader(args: Route.LoaderArgs) {
        country: args.context.storefront.i18n.country,
        language: args.context.storefront.i18n.language,
      },
 +    // @description Pass GTM container ID from environment variables
-+    gtmContainerId: args.context.env.GTM_ID || args.context.env.GTM_CONTAINER_ID,
++    gtmContainerId:
++      args.context.env.GTM_ID || args.context.env.GTM_CONTAINER_ID,
    };
  }
  
-@@ -162,7 +169,33 @@ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -162,7 +169,10 @@ export function Layout({children}: {children?: React.ReactNode}) {
              shop={data.shop}
              consent={data.consent}
            >
 -            <PageLayout {...data}>{children}</PageLayout>
 +            <PageLayout {...data}>
-+              {/* @description Initialize Google Tag Manager data layer and Partytown web worker */}
-+              <Script
-+                type="text/partytown"
-+                dangerouslySetInnerHTML={{
-+                  __html: `
++              <PartyTownScripts gtmContainerId={data.gtmContainerId} />
++              {children}
++            </PageLayout>
+           </Analytics.Provider>
+         ) : (
+           children
+@@ -174,6 +184,38 @@ export function Layout({children}: {children?: React.ReactNode}) {
+   );
+ }
+ 
++function PartyTownScripts({gtmContainerId}: {gtmContainerId: string}) {
++  const nonce = useNonce();
++  return (
++    <>
++      {/* @description Initialize Google Tag Manager data layer and Partytown web worker */}
++      <Script
++        type="text/partytown"
++        dangerouslySetInnerHTML={{
++          __html: `
 +              dataLayer = window.dataLayer || [];
 +
 +              window.gtag = function () {
@@ -575,30 +615,32 @@ export function maybeProxyRequest(url: URL, location: Location, type: string) {
 +              };
 +
 +              window.gtag('js', new Date());
-+              window.gtag('config', "${data.gtmContainerId}");
++              window.gtag('config', "${gtmContainerId}");
 +            `,
-+                }}
-+              />
++        }}
++      />
 +
-+              <PartytownGoogleTagManager gtmContainerId={data.gtmContainerId} />
++      <PartytownGoogleTagManager gtmContainerId={gtmContainerId} />
 +
-+              <Partytown
-+                nonce={nonce}
-+                forward={['dataLayer.push', 'gtag']}
-+                resolveUrl={maybeProxyRequest}
-+              />
-+              {children}
-+            </PageLayout>
-           </Analytics.Provider>
-         ) : (
-           children
++      <Partytown
++        forward={['dataLayer.push', 'gtag']}
++        resolveUrl={maybeProxyRequest}
++        nonce={nonce}
++      />
++    </>
++  );
++}
++
+ export default function App() {
+   return <Outlet />;
+ }
 ```
 
 ### Step 4: app/utils/partytown/partytownAtomicHeaders.ts
 
+Helper utility to enable Partytown atomic mode for better performance
 
-
-#### File: [partytownAtomicHeaders.ts](https://github.com/Shopify/hydrogen/blob/4daf37ea291334b23bd543fdad5673ab7c9a6133/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts)
+#### File: [partytownAtomicHeaders.ts](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts)
 
 ```ts
 /*
@@ -615,7 +657,7 @@ export function partytownAtomicHeaders() {
 
 ### Step 5: package.json
 
-
+Add Partytown dependency and npm script for copying library files
 
 #### File: /package.json
 
@@ -637,6 +679,29 @@ export function partytownAtomicHeaders() {
      "@shopify/hydrogen": "2025.5.0",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
+```
+
+### Step 6: vite.config.ts
+
+
+
+#### File: /vite.config.ts
+
+```diff
+@@ -26,7 +26,12 @@ export default defineConfig({
+        * Include 'example-dep' in the array below.
+        * @see https://vitejs.dev/config/dep-optimization-options
+        */
+-      include: ['set-cookie-parser', 'cookie', 'react-router'],
++      include: [
++        'set-cookie-parser',
++        'cookie',
++        'react-router',
++        '@qwik.dev/partytown/react',
++      ],
+     },
+   },
+ });
 ```
 
 </recipe_implementation>

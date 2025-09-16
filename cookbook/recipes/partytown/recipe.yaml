@@ -2,7 +2,8 @@
 
 gid: cd59a36d-90c6-4792-910c-672bded9211b
 title: Partytown + Google Tag Manager
-summary: Add Partytown web worker integration for Google Tag Manager to improve performance
+summary: Add Partytown web worker integration for Google Tag Manager to improve
+  performance
 description: |
   This recipe integrates Partytown with your Hydrogen storefront to run Google Tag Manager 
   and other third-party scripts in a web worker, keeping the main thread free for critical 
@@ -14,7 +15,6 @@ description: |
   - Maintains full GTM functionality
   - Includes CORS reverse proxy for third-party scripts
   - CSP headers configured for GTM domains
-
 notes:
   - Remember to set your GTM_CONTAINER_ID or GTM_ID environment variable
   - Run 'npm run partytown' to copy library files for production
@@ -57,7 +57,7 @@ steps:
   - type: NEW_FILE
     step: "2"
     name: app/routes/reverse-proxy.ts
-    description: null
+    description: Reverse proxy route for third-party scripts requiring CORS headers
     ingredients:
       - path: templates/skeleton/app/routes/reverse-proxy.ts
   - type: PATCH
@@ -70,7 +70,7 @@ steps:
   - type: NEW_FILE
     step: "3"
     name: app/utils/partytown/maybeProxyRequest.ts
-    description: null
+    description: URL resolver to control which scripts should be reverse-proxied
     ingredients:
       - path: templates/skeleton/app/utils/partytown/maybeProxyRequest.ts
   - type: PATCH
@@ -83,7 +83,7 @@ steps:
   - type: NEW_FILE
     step: "4"
     name: app/utils/partytown/partytownAtomicHeaders.ts
-    description: null
+    description: Helper utility to enable Partytown atomic mode for better performance
     ingredients:
       - path: templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts
   - type: PATCH
@@ -93,29 +93,36 @@ steps:
     diffs:
       - file: package.json
         patchFile: package.json.cfee98.patch
+  - type: PATCH
+    step: "6"
+    name: vite.config.ts
+    description: null
+    diffs:
+      - file: vite.config.ts
+        patchFile: vite.config.ts.f0a2c4.patch
 nextSteps: |
   After applying this recipe:
-  
+
   1. Install dependencies:
      npm install
-  
+
   2. Copy Partytown library files:
      npm run partytown
-  
+
   3. Add your GTM container ID to .env:
      GTM_CONTAINER_ID=GTM-XXXXXXX
-  
+
   4. For TypeScript projects, add to env.d.ts:
      interface Env extends HydrogenEnv {
        GTM_CONTAINER_ID?: `GTM-${string}`;
        GTM_ID?: `GTM-${string}`;
      }
-  
+
   5. Test your implementation:
      npm run dev
-  
+
   Visit your site and check the Network tab to verify GTM is loading via the web worker.
 llms:
   userQueries: []
   troubleshooting: []
-commit: 4daf37ea291334b23bd543fdad5673ab7c9a6133
+commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
