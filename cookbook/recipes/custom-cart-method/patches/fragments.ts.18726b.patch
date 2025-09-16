@@ -1,4 +1,4 @@
-index dc4426a9f..5300adaf6 100644
+index cf35c25ea..cf79917eb 100644
 --- a/templates/skeleton/app/lib/fragments.ts
 +++ b/templates/skeleton/app/lib/fragments.ts
 @@ -47,6 +47,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
@@ -25,7 +25,7 @@ index dc4426a9f..5300adaf6 100644
          }
          selectedOptions {
            name
-@@ -231,3 +241,23 @@ export const FOOTER_QUERY = `#graphql
+@@ -232,3 +242,23 @@ export const FOOTER_QUERY = `#graphql
    }
    ${MENU_FRAGMENT}
  ` as const;

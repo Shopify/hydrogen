@@ -235,7 +235,7 @@ Key features:
 
 
 
-#### File: [MultipassCheckoutButton.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/components/MultipassCheckoutButton.tsx)
+#### File: [MultipassCheckoutButton.tsx](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/components/MultipassCheckoutButton.tsx)
 
 ```tsx
 import React, {useCallback} from 'react';
@@ -294,7 +294,7 @@ export function MultipassCheckoutButton(props: MultipassCheckoutButtonProps) {
  
  type CartSummaryProps = {
    cart: OptimisticCart<CartApiQueryFragment | null>;
-@@ -58,9 +60,10 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
+@@ -59,9 +61,10 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
  
    return (
      <div>
@@ -313,7 +313,7 @@ export function MultipassCheckoutButton(props: MultipassCheckoutButtonProps) {
 
 
 
-#### File: [multipass.ts](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipass.ts)
+#### File: [multipass.ts](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipass.ts)
 
 ```ts
 import type {
@@ -463,7 +463,7 @@ export async function multipass(
 
 
 
-#### File: [multipassify.server.ts](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipassify.server.ts)
+#### File: [multipassify.server.ts](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipassify.server.ts)
 
 ```ts
 import CryptoJS from 'crypto-js';
@@ -672,7 +672,7 @@ export class Multipassify {
 
 
 
-#### File: [types.ts](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/types.ts)
+#### File: [types.ts](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/types.ts)
 
 ```ts
 /*
@@ -766,7 +766,7 @@ export interface MultipassTokenResponseType {
 
 
 
-#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
+#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
 
 ```tsx
 import {Form, useActionData, data, redirect} from 'react-router';
@@ -1464,11 +1464,11 @@ const CUSTOMER_ACTIVATE_MUTATION = `#graphql
 
 
 
-#### File: [account_.login.multipass.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.login.multipass.tsx)
+#### File: [account_.login.multipass.tsx](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.login.multipass.tsx)
 
 ```tsx
 import {data as remixData, redirect} from 'react-router';
-import type {Route} from './+types/account_.login.multipass';
+import type {LoaderFunctionArgs, ActionFunctionArgs, HeadersFunction} from 'react-router';
 import {Multipassify} from '~/lib/multipass/multipassify.server';
 import type {
   CustomerInfoType,
@@ -1476,13 +1476,13 @@ import type {
   NotLoggedInResponseType,
 } from '~/lib/multipass/types';
 
-export const headers: Route.HeadersFunction = ({actionHeaders}) =>
+export const headers: HeadersFunction = ({actionHeaders}) =>
   actionHeaders;
 
 /*
   Redirect document GET requests to the login page (housekeeping)
 */
-export async function loader({params, context}: Route.LoaderArgs) {
+export async function loader({params, context}: LoaderFunctionArgs) {
   const customerAccessToken = context.session.get('customerAccessToken');
 
   if (customerAccessToken) {
@@ -1496,7 +1496,7 @@ export async function loader({params, context}: Route.LoaderArgs) {
   Handles POST requests to `/account/login/multipass`
   expects body: { return_to?: string, customer }
 */
-export async function action({request, context}: Route.ActionArgs) {
+export async function action({request, context}: ActionFunctionArgs) {
   const {session, storefront, env} = context;
   const origin = request.headers.get('Origin') || '';
   const isOptionsReq = request.method === 'OPTIONS';
@@ -2127,7 +2127,7 @@ const CUSTOMER_INFO_QUERY = `#graphql
 
 
 
-#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
+#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
 
 ```tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -2485,7 +2485,7 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
 
 
 
-#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.register.tsx)
+#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.register.tsx)
 
 ```tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -2697,7 +2697,7 @@ const REGISTER_LOGIN_MUTATION = `#graphql
 
 
 
-#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
+#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
 
 ```tsx
 import {data, Form, redirect, useActionData} from 'react-router';
@@ -3264,7 +3264,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
  
    const {action, inputs} = CartForm.getFormInput(formData);
  
-@@ -69,6 +73,8 @@ export async function action({request, context}: Route.ActionArgs) {
+@@ -74,6 +78,8 @@ export async function action({request, context}: Route.ActionArgs) {
      case CartForm.ACTIONS.BuyerIdentityUpdate: {
        result = await cart.updateBuyerIdentity({
          ...inputs.buyerIdentity,

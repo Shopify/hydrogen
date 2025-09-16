@@ -66,6 +66,11 @@ export async function action({request, context}: Route.ActionArgs) {
       result = await cart.updateGiftCardCodes(giftCardCodes);
       break;
     }
+    case CartForm.ACTIONS.GiftCardCodesRemove: {
+      const appliedGiftCardIds = inputs.giftCardCodes as string[];
+      result = await cart.removeGiftCardCodes(appliedGiftCardIds);
+      break;
+    }
     case CartForm.ACTIONS.BuyerIdentityUpdate: {
       result = await cart.updateBuyerIdentity({
         ...inputs.buyerIdentity,

@@ -55,7 +55,7 @@ steps:
     description: null
     diffs:
       - file: README.md
-        patchFile: README.md.47d06f.patch
+        patchFile: README.md.49f8fa.patch
   - type: NEW_FILE
     step: "1"
     name: app/components/MultipassCheckoutButton.tsx
@@ -68,7 +68,7 @@ steps:
     description: null
     diffs:
       - file: app/components/CartSummary.tsx
-        patchFile: CartSummary.tsx.eb8134.patch
+        patchFile: CartSummary.tsx.d6b372.patch
   - type: NEW_FILE
     step: "2"
     name: app/lib/multipass/multipass.ts
@@ -81,7 +81,7 @@ steps:
     description: null
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.0ad938.patch
+        patchFile: root.tsx.8c182c.patch
   - type: NEW_FILE
     step: "3"
     name: app/lib/multipass/multipassify.server.ts
@@ -94,7 +94,7 @@ steps:
     description: null
     diffs:
       - file: app/routes/account.$.tsx
-        patchFile: account.$.tsx.2df983.patch
+        patchFile: account.$.tsx.c167a3.patch
   - type: NEW_FILE
     step: "4"
     name: app/lib/multipass/types.ts
@@ -107,7 +107,7 @@ steps:
     description: null
     diffs:
       - file: app/routes/account._index.tsx
-        patchFile: account._index.tsx.bf7dac.patch
+        patchFile: account._index.tsx.b885fb.patch
   - type: NEW_FILE
     step: "5"
     name: app/routes/account_.activate.$id.$activationToken.tsx
@@ -120,7 +120,7 @@ steps:
     description: null
     diffs:
       - file: app/routes/account.addresses.tsx
-        patchFile: account.addresses.tsx.34e472.patch
+        patchFile: account.addresses.tsx.e473cc.patch
   - type: NEW_FILE
     step: "6"
     name: app/routes/account_.login.multipass.tsx
@@ -133,7 +133,7 @@ steps:
     description: null
     diffs:
       - file: app/routes/account.orders.$id.tsx
-        patchFile: account.orders.$id.tsx.fa0356.patch
+        patchFile: account.orders.$id.tsx.1e38f8.patch
   - type: NEW_FILE
     step: "7"
     name: app/routes/account_.recover.tsx
@@ -146,7 +146,7 @@ steps:
     description: null
     diffs:
       - file: app/routes/account.orders._index.tsx
-        patchFile: account.orders._index.tsx.2b0f8a.patch
+        patchFile: account.orders._index.tsx.a9982e.patch
   - type: NEW_FILE
     step: "8"
     name: app/routes/account_.register.tsx
@@ -165,49 +165,49 @@ steps:
     description: null
     diffs:
       - file: app/routes/account.tsx
-        patchFile: account.tsx.ca55f3.patch
+        patchFile: account.tsx.367e7a.patch
   - type: PATCH
     step: "12"
     name: app/routes/account_.login.tsx
     description: null
     diffs:
       - file: app/routes/account_.login.tsx
-        patchFile: account_.login.tsx.1d534b.patch
+        patchFile: account_.login.tsx.4e5990.patch
   - type: PATCH
     step: "13"
     name: app/routes/account_.logout.tsx
     description: null
     diffs:
       - file: app/routes/account_.logout.tsx
-        patchFile: account_.logout.tsx.d6592d.patch
+        patchFile: account_.logout.tsx.1da785.patch
   - type: PATCH
     step: "13"
     name: env.d.ts
     description: null
     diffs:
       - file: env.d.ts
-        patchFile: env.d.ts.899ef3.patch
+        patchFile: env.d.ts.d94e72.patch
   - type: PATCH
     step: "14"
     name: app/routes/cart.tsx
     description: null
     diffs:
       - file: app/routes/cart.tsx
-        patchFile: cart.tsx.362410.patch
+        patchFile: cart.tsx.943271.patch
   - type: PATCH
     step: "15"
     name: package.json
     description: null
     diffs:
       - file: package.json
-        patchFile: package.json.cfee98.patch
+        patchFile: package.json.47be7b.patch
   - type: PATCH
     step: "16"
     name: vite.config.ts
     description: null
     diffs:
       - file: vite.config.ts
-        patchFile: vite.config.ts.f0a2c4.patch
+        patchFile: vite.config.ts.93b90b.patch
 nextSteps: |
   - Set up your PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET in your environment variables
   - Test the login flow by visiting /account/login
@@ -241,4 +241,4 @@ llms:
     - issue: Multipass checkout button not appearing
       solution: Verify that CartSummary.tsx imports and uses MultipassCheckoutButton
         component, and that the cart.tsx route has been patched
-commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
+commit: 75623a5bfdd8d6f0eab0d3547860341c20d9076c
