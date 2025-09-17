@@ -1,15 +1,15 @@
-index 46272bbd3..64494bda5 100644
+index 46272bbd3..9f5598433 100644
 --- a/templates/skeleton/app/routes/account.tsx
 +++ b/templates/skeleton/app/routes/account.tsx
-@@ -1,44 +1,104 @@
+@@ -1,45 +1,105 @@
  import {
 -  data as remixData,
-+  data,
    Form,
    NavLink,
    Outlet,
-+  redirect,
    useLoaderData,
++  data,
++  redirect,
  } from 'react-router';
  import type {Route} from './+types/account';
 -import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
@@ -93,6 +93,7 @@ index 46272bbd3..64494bda5 100644
 +      },
 +    );
 +  } catch (error) {
++    // eslint-disable-next-line no-console
 +    console.error('There was a problem loading account', error);
 +    session.unset('customerAccessToken');
 +    return redirect('/account/login');
@@ -118,6 +119,7 @@ index 46272bbd3..64494bda5 100644
  
 -export default function AccountLayout() {
 -  const {customer} = useLoaderData<typeof loader>();
+-
 +function AccountLayout({
 +  customer,
 +  children,
@@ -125,9 +127,9 @@ index 46272bbd3..64494bda5 100644
 +  customer: CustomerFragment;
 +  children: React.ReactNode;
 +}) {
- 
    const heading = customer
      ? customer.firstName
+       ? `Welcome, ${customer.firstName}`
 @@ -51,9 +111,7 @@ export default function AccountLayout() {
        <h1>{heading}</h1>
        <br />
@@ -190,4 +192,3 @@ index 46272bbd3..64494bda5 100644
 +  }
 +  ${CUSTOMER_FRAGMENT}
 +` as const;
-\ No newline at end of file

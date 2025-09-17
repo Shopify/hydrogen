@@ -1,4 +1,4 @@
-index 074def2a4..8ed5a1545 100644
+index 074def2a4..6a8a24520 100644
 --- a/templates/skeleton/app/routes/account.$.tsx
 +++ b/templates/skeleton/app/routes/account.$.tsx
 @@ -1,9 +1,9 @@
@@ -10,10 +10,8 @@ index 074def2a4..8ed5a1545 100644
 -  context.customerAccount.handleAuthStatus();
 -
 -  return redirect('/account');
--}
 +  if (await context.session.get('customerAccessToken')) {
 +    return redirect('/account');
 +  }
 +  return redirect('/account/login');
-+}
-\ No newline at end of file
+ }

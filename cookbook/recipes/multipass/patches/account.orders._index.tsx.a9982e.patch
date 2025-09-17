@@ -1,27 +1,40 @@
-index 35fc7ca58..4cde38e00 100644
+index a9f479ea7..dbd38f370 100644
 --- a/templates/skeleton/app/routes/account.orders._index.tsx
 +++ b/templates/skeleton/app/routes/account.orders._index.tsx
-@@ -1,52 +1,60 @@
+@@ -1,222 +1,183 @@
 -import {
 -  Link,
 -  useLoaderData,
+-  useNavigation,
+-  useSearchParams,
 -} from 'react-router';
 +import {Link, useLoaderData, data, redirect} from 'react-router';
  import type {Route} from './+types/account.orders._index';
--import {
--  Money,
--  getPaginationVariables,
+-import {useRef} from 'react';
+ import {
+   Money,
+   getPaginationVariables,
 -  flattenConnection,
--} from '@shopify/hydrogen';
+ } from '@shopify/hydrogen';
+-import {
+-  buildOrderSearchQuery,
+-  parseOrderFilters,
+-  ORDER_FILTER_FIELDS,
+-  type OrderFilterParams,
+-} from '~/lib/orderFilters';
 -import {CUSTOMER_ORDERS_QUERY} from '~/graphql/customer-account/CustomerOrdersQuery';
-+import {Money, Pagination, getPaginationVariables} from '@shopify/hydrogen';
  import type {
    CustomerOrdersFragment,
    OrderItemFragment,
 -} from 'customer-accountapi.generated';
--import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 +} from 'storefrontapi.generated';
+ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  
+-type OrdersLoaderData = {
+-  customer: CustomerOrdersFragment;
+-  filters: OrderFilterParams;
+-};
+-
  export const meta: Route.MetaFunction = () => {
    return [{title: 'Orders'}];
  };
@@ -33,15 +46,17 @@ index 35fc7ca58..4cde38e00 100644
 -  });
 +  const {session, storefront} = context;
  
--  const {data, errors} = await customerAccount.query(
--    CUSTOMER_ORDERS_QUERY,
--    {
--      variables: {
--        ...paginationVariables,
--        language: customerAccount.i18n.language,
--      },
+-  const url = new URL(request.url);
+-  const filters = parseOrderFilters(url.searchParams);
+-  const query = buildOrderSearchQuery(filters);
+-
+-  const {data, errors} = await customerAccount.query(CUSTOMER_ORDERS_QUERY, {
+-    variables: {
+-      ...paginationVariables,
+-      query,
+-      language: customerAccount.i18n.language,
 -    },
--  );
+-  });
 -
 -  if (errors?.length || !data?.customer) {
 -    throw Error('Customer orders not found');
@@ -50,7 +65,7 @@ index 35fc7ca58..4cde38e00 100644
 +    return redirect('/account/login');
    }
  
--  return {customer: data.customer};
+-  return {customer: data.customer, filters};
 +  try {
 +    const paginationVariables = getPaginationVariables(request, {
 +      pageBy: 20,
@@ -80,59 +95,176 @@ index 35fc7ca58..4cde38e00 100644
  }
  
  export default function Orders() {
-   const {customer} = useLoaderData<{customer: CustomerOrdersFragment}>();
--  const {orders} = customer;
-+  const {orders, numberOfOrders} = customer;
+-  const {customer, filters} = useLoaderData<OrdersLoaderData>();
++  const data = useLoaderData<typeof loader>();
++  
++  if ('error' in data) {
++    return <div>Error: {data.error}</div>;
++  }
++  
++  const {customer} = data;
+   const {orders} = customer;
+ 
    return (
      <div className="orders">
-+      <h2>
-+        Orders <small>({numberOfOrders})</small>
-+      </h2>
-+      <br />
-       {orders.nodes.length ? <OrdersTable orders={orders} /> : <EmptyOrders />}
+-      <OrderSearchForm currentFilters={filters} />
+-      <OrdersTable orders={orders} filters={filters} />
++      <OrdersTable orders={orders} />
      </div>
    );
-@@ -56,9 +64,23 @@ function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
-   return (
-     <div className="acccount-orders">
-       {orders?.nodes.length ? (
--        <PaginatedResourceSection connection={orders}>
--          {({node: order}) => <OrderItem key={order.id} order={order} />}
--        </PaginatedResourceSection>
-+        <Pagination connection={orders}>
-+          {({nodes, isLoading, PreviousLink, NextLink}) => {
-+            return (
-+              <>
-+                <PreviousLink>
-+                  {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
-+                </PreviousLink>
-+                {nodes.map((order) => {
-+                  return <OrderItem key={order.id} order={order} />;
-+                })}
-+                <NextLink>
-+                  {isLoading ? 'Loading...' : <span>Load more ↓</span>}
-+                </NextLink>
-+              </>
-+            );
-+          }}
-+        </Pagination>
-       ) : (
-         <EmptyOrders />
-       )}
-@@ -79,20 +101,91 @@ function EmptyOrders() {
  }
  
+-function OrdersTable({
+-  orders,
+-  filters,
+-}: {
+-  orders: CustomerOrdersFragment['orders'];
+-  filters: OrderFilterParams;
+-}) {
+-  const hasFilters = !!(filters.name || filters.confirmationNumber);
+-
++function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
+   return (
+-    <div className="acccount-orders" aria-live="polite">
++    <div className="acccount-orders">
+       {orders?.nodes.length ? (
+         <PaginatedResourceSection connection={orders}>
+           {({node: order}) => <OrderItem key={order.id} order={order} />}
+         </PaginatedResourceSection>
+       ) : (
+-        <EmptyOrders hasFilters={hasFilters} />
++        <EmptyOrders />
+       )}
+     </div>
+   );
+ }
+ 
+-function EmptyOrders({hasFilters = false}: {hasFilters?: boolean}) {
++function EmptyOrders() {
+   return (
+     <div>
+-      {hasFilters ? (
+-        <>
+-          <p>No orders found matching your search.</p>
+-          <br />
+-          <p>
+-            <Link to="/account/orders">Clear filters →</Link>
+-          </p>
+-        </>
+-      ) : (
+-        <>
+-          <p>You haven&apos;t placed any orders yet.</p>
+-          <br />
+-          <p>
+-            <Link to="/collections">Start Shopping →</Link>
+-          </p>
+-        </>
+-      )}
++      <p>You haven&apos;t placed any orders yet.</p>
++      <br />
++      <p>
++        <Link to="/collections">Start Shopping →</Link>
++      </p>
+     </div>
+   );
+ }
+ 
+-function OrderSearchForm({
+-  currentFilters,
+-}: {
+-  currentFilters: OrderFilterParams;
+-}) {
+-  const [searchParams, setSearchParams] = useSearchParams();
+-  const navigation = useNavigation();
+-  const isSearching =
+-    navigation.state !== 'idle' &&
+-    navigation.location?.pathname?.includes('orders');
+-  const formRef = useRef<HTMLFormElement>(null);
+-
+-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+-    event.preventDefault();
+-    const formData = new FormData(event.currentTarget);
+-    const params = new URLSearchParams();
+-
+-    const name = formData.get(ORDER_FILTER_FIELDS.NAME)?.toString().trim();
+-    const confirmationNumber = formData
+-      .get(ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER)
+-      ?.toString()
+-      .trim();
+-
+-    if (name) params.set(ORDER_FILTER_FIELDS.NAME, name);
+-    if (confirmationNumber)
+-      params.set(ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER, confirmationNumber);
+-
+-    setSearchParams(params);
+-  };
+-
+-  const hasFilters = currentFilters.name || currentFilters.confirmationNumber;
+-
+-  return (
+-    <form
+-      ref={formRef}
+-      onSubmit={handleSubmit}
+-      className="order-search-form"
+-      aria-label="Search orders"
+-    >
+-      <fieldset className="order-search-fieldset">
+-        <legend className="order-search-legend">Filter Orders</legend>
+-
+-        <div className="order-search-inputs">
+-          <input
+-            type="search"
+-            name={ORDER_FILTER_FIELDS.NAME}
+-            placeholder="Order #"
+-            aria-label="Order number"
+-            defaultValue={currentFilters.name || ''}
+-            className="order-search-input"
+-          />
+-          <input
+-            type="search"
+-            name={ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER}
+-            placeholder="Confirmation #"
+-            aria-label="Confirmation number"
+-            defaultValue={currentFilters.confirmationNumber || ''}
+-            className="order-search-input"
+-          />
+-        </div>
+-
+-        <div className="order-search-buttons">
+-          <button type="submit" disabled={isSearching}>
+-            {isSearching ? 'Searching' : 'Search'}
+-          </button>
+-          {hasFilters && (
+-            <button
+-              type="button"
+-              disabled={isSearching}
+-              onClick={() => {
+-                setSearchParams(new URLSearchParams());
+-                formRef.current?.reset();
+-              }}
+-            >
+-              Clear
+-            </button>
+-          )}
+-        </div>
+-      </fieldset>
+-    </form>
+-  );
+-}
+-
  function OrderItem({order}: {order: OrderItemFragment}) {
 -  const fulfillmentStatus = flattenConnection(order.fulfillments)[0]?.status;
    return (
      <>
        <fieldset>
--        <Link to={`/account/orders/${btoa(order.id)}`}>
+         <Link to={`/account/orders/${btoa(order.id)}`}>
 -          <strong>#{order.number}</strong>
-+        <Link to={`/account/orders/${order.id}`}>
 +          <strong>#{order.orderNumber}</strong>
          </Link>
          <p>{new Date(order.processedAt).toDateString()}</p>
+-        {order.confirmationNumber && (
+-          <p>Confirmation: {order.confirmationNumber}</p>
+-        )}
          <p>{order.financialStatus}</p>
 -        {fulfillmentStatus && <p>{fulfillmentStatus}</p>}
 -        <Money data={order.totalPrice} />
@@ -199,7 +331,6 @@ index 35fc7ca58..4cde38e00 100644
 +  ${ORDER_ITEM_FRAGMENT}
 +` as const;
 +
-+// NOTE: https://shopify.dev/docs/api/storefront/latest/queries/customer
 +const CUSTOMER_ORDERS_QUERY = `#graphql
 +  ${CUSTOMER_FRAGMENT}
 +  query CustomerOrders(
