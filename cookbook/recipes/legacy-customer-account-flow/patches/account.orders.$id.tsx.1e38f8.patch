@@ -1,4 +1,4 @@
-index 3c2430385..419cb76ec 100644
+index 3c2430385..52280986d 100644
 --- a/templates/skeleton/app/routes/account.orders.$id.tsx
 +++ b/templates/skeleton/app/routes/account.orders.$id.tsx
 @@ -1,67 +1,50 @@
@@ -92,7 +92,7 @@ index 3c2430385..419cb76ec 100644
        : null;
  
    return {
-@@ -69,18 +52,12 @@ export async function loader({params, context}: Route.LoaderArgs) {
+@@ -69,25 +52,16 @@ export async function loader({params, context}: Route.LoaderArgs) {
      lineItems,
      discountValue,
      discountPercentage,
@@ -113,7 +113,14 @@ index 3c2430385..419cb76ec 100644
    return (
      <div className="account-order">
        <h2>Order {order.name}</h2>
-@@ -132,7 +109,7 @@ export default function OrderRoute() {
+       <p>Placed on {new Date(order.processedAt!).toDateString()}</p>
+-      {order.confirmationNumber && (
+-        <p>Confirmation: {order.confirmationNumber}</p>
+-      )}
+       <br />
+       <div>
+         <table>
+@@ -132,7 +106,7 @@ export default function OrderRoute() {
                  <p>Subtotal</p>
                </th>
                <td>
@@ -122,7 +129,7 @@ index 3c2430385..419cb76ec 100644
                </td>
              </tr>
              <tr>
-@@ -143,7 +120,7 @@ export default function OrderRoute() {
+@@ -143,7 +117,7 @@ export default function OrderRoute() {
                  <p>Tax</p>
                </th>
                <td>
@@ -131,7 +138,7 @@ index 3c2430385..419cb76ec 100644
                </td>
              </tr>
              <tr>
-@@ -154,7 +131,7 @@ export default function OrderRoute() {
+@@ -154,7 +128,7 @@ export default function OrderRoute() {
                  <p>Total</p>
                </th>
                <td>
@@ -140,7 +147,7 @@ index 3c2430385..419cb76ec 100644
                </td>
              </tr>
            </tfoot>
-@@ -163,16 +140,17 @@ export default function OrderRoute() {
+@@ -163,16 +137,17 @@ export default function OrderRoute() {
            <h3>Shipping Address</h3>
            {order?.shippingAddress ? (
              <address>
@@ -167,7 +174,7 @@ index 3c2430385..419cb76ec 100644
                )}
              </address>
            ) : (
-@@ -180,13 +158,13 @@ export default function OrderRoute() {
+@@ -180,13 +155,13 @@ export default function OrderRoute() {
            )}
            <h3>Status</h3>
            <div>
@@ -183,7 +190,7 @@ index 3c2430385..419cb76ec 100644
            View Order Status →
          </a>
        </p>
-@@ -196,27 +174,145 @@ export default function OrderRoute() {
+@@ -196,27 +171,145 @@ export default function OrderRoute() {
  
  function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
    return (

@@ -1655,7 +1655,7 @@ Convert order details page to use Storefront API queries
        : null;
  
    return {
-@@ -69,18 +52,12 @@ export async function loader({params, context}: Route.LoaderArgs) {
+@@ -69,25 +52,16 @@ export async function loader({params, context}: Route.LoaderArgs) {
      lineItems,
      discountValue,
      discountPercentage,
@@ -1676,7 +1676,14 @@ Convert order details page to use Storefront API queries
    return (
      <div className="account-order">
        <h2>Order {order.name}</h2>
-@@ -132,7 +109,7 @@ export default function OrderRoute() {
+       <p>Placed on {new Date(order.processedAt!).toDateString()}</p>
+-      {order.confirmationNumber && (
+-        <p>Confirmation: {order.confirmationNumber}</p>
+-      )}
+       <br />
+       <div>
+         <table>
+@@ -132,7 +106,7 @@ export default function OrderRoute() {
                  <p>Subtotal</p>
                </th>
                <td>
@@ -1685,7 +1692,7 @@ Convert order details page to use Storefront API queries
                </td>
              </tr>
              <tr>
-@@ -143,7 +120,7 @@ export default function OrderRoute() {
+@@ -143,7 +117,7 @@ export default function OrderRoute() {
                  <p>Tax</p>
                </th>
                <td>
@@ -1694,7 +1701,7 @@ Convert order details page to use Storefront API queries
                </td>
              </tr>
              <tr>
-@@ -154,7 +131,7 @@ export default function OrderRoute() {
+@@ -154,7 +128,7 @@ export default function OrderRoute() {
                  <p>Total</p>
                </th>
                <td>
@@ -1703,7 +1710,7 @@ Convert order details page to use Storefront API queries
                </td>
              </tr>
            </tfoot>
-@@ -163,16 +140,17 @@ export default function OrderRoute() {
+@@ -163,16 +137,17 @@ export default function OrderRoute() {
            <h3>Shipping Address</h3>
            {order?.shippingAddress ? (
              <address>
@@ -1730,7 +1737,7 @@ Convert order details page to use Storefront API queries
                )}
              </address>
            ) : (
-@@ -180,13 +158,13 @@ export default function OrderRoute() {
+@@ -180,13 +155,13 @@ export default function OrderRoute() {
            )}
            <h3>Status</h3>
            <div>
@@ -1746,7 +1753,7 @@ Convert order details page to use Storefront API queries
            View Order Status →
          </a>
        </p>
-@@ -196,27 +174,145 @@ export default function OrderRoute() {
+@@ -196,27 +171,145 @@ export default function OrderRoute() {
  
  function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
    return (
@@ -1910,7 +1917,7 @@ Convert orders list to use Storefront API with pagination
 #### File: /app/routes/account.orders._index.tsx
 
 ```diff
-@@ -1,222 +1,178 @@
+@@ -1,222 +1,184 @@
 -import {
 -  Link,
 -  useLoaderData,
@@ -2005,7 +2012,13 @@ Convert orders list to use Storefront API with pagination
  
  export default function Orders() {
 -  const {customer, filters} = useLoaderData<OrdersLoaderData>();
-+  const {customer} = useLoaderData<typeof loader>();
++  const data = useLoaderData<typeof loader>();
++  
++  if ('error' in data) {
++    return <div>Error: {data.error}</div>;
++  }
++  
++  const {customer} = data;
    const {orders} = customer;
  
    return (

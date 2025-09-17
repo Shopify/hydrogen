@@ -1,7 +1,7 @@
-index a9f479ea7..f341ad515 100644
+index a9f479ea7..9625a81e5 100644
 --- a/templates/skeleton/app/routes/account.orders._index.tsx
 +++ b/templates/skeleton/app/routes/account.orders._index.tsx
-@@ -1,222 +1,178 @@
+@@ -1,222 +1,184 @@
 -import {
 -  Link,
 -  useLoaderData,
@@ -96,7 +96,13 @@ index a9f479ea7..f341ad515 100644
  
  export default function Orders() {
 -  const {customer, filters} = useLoaderData<OrdersLoaderData>();
-+  const {customer} = useLoaderData<typeof loader>();
++  const data = useLoaderData<typeof loader>();
++  
++  if ('error' in data) {
++    return <div>Error: {data.error}</div>;
++  }
++  
++  const {customer} = data;
    const {orders} = customer;
  
    return (
