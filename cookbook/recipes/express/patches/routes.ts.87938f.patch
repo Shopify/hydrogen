@@ -1,4 +1,4 @@
-index 7df8a1b9c..a1610c2bc 100644
+index 7df8a1b9..a1610c2b 100644
 --- a/templates/skeleton/app/routes.ts
 +++ b/templates/skeleton/app/routes.ts
 @@ -1,9 +1,8 @@

@@ -245,7 +245,7 @@ export function deprecated(name: string, {isBoolean = false} = {}) {
   return {
     ...customFlag(),
     type: (isBoolean ? 'boolean' : 'option') as unknown as 'option',
-  };
+  } as FlagProps;
 }
 
 export function overrideFlag<T extends Record<string, Record<string, any>>>(

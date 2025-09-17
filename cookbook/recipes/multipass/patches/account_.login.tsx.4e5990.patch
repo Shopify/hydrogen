@@ -1,7 +1,7 @@
-index 825648a14..eae3d7f39 100644
+index 825648a14..4c33c9f69 100644
 --- a/templates/skeleton/app/routes/account_.login.tsx
 +++ b/templates/skeleton/app/routes/account_.login.tsx
-@@ -1,7 +1,133 @@
+@@ -1,7 +1,134 @@
 +import {Form, Link, useActionData, data, redirect} from 'react-router';
  import type {Route} from './+types/account_.login';
  
@@ -139,4 +139,4 @@ index 825648a14..eae3d7f39 100644
 +    }
 +  }
 +` as const;
-\ No newline at end of file
++
