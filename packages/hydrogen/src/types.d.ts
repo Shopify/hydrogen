@@ -3,7 +3,7 @@ import type {
   Session,
   SessionData,
   FlashSessionData,
-  unstable_RouterContextProvider,
+  RouterContextProvider,
 } from 'react-router';
 import type {RequestEventPayload} from './vite/request-events';
 import {
@@ -80,7 +80,7 @@ export interface HydrogenRouterContextProvider<
   TCustomMethods extends CustomMethodsBase | undefined = {},
   TI18n extends I18nBase = I18nBase,
   TEnv extends HydrogenEnv = Env,
-> extends unstable_RouterContextProvider {
+> extends RouterContextProvider {
   /** A GraphQL client for querying the Storefront API */
   storefront: import('./storefront').Storefront<TI18n>;
   /** A GraphQL client for querying the Customer Account API */

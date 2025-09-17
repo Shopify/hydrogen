@@ -510,9 +510,9 @@ describe('createHydrogenContext', () => {
     it('should allow setting and getting custom context values', () => {
       const hydrogenContext = createHydrogenContext(defaultOptions);
 
-      // Use React Router's unstable_createContext
-      const {unstable_createContext} = require('react-router');
-      const customKey = unstable_createContext('customKey');
+      // Use React Router's createContext
+      const {createContext} = require('react-router');
+      const customKey = createContext('customKey');
       const customValue = {test: 'value', data: [1, 2, 3]};
 
       // Set custom value
