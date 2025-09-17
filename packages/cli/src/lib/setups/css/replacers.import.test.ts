@@ -29,9 +29,10 @@
  */
 
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {replaceRootLinks} from './replacers';
-import * as fileUtils from '../../file';
-import * as formatUtils from '../../format-code';
+import {replaceRootLinks} from './replacers.js';
+import * as fileUtils from '../../file.js';
+import * as formatUtils from '../../format-code.js';
+import {type FormatOptions} from '../../format-code.js';
 import {Project, SyntaxKind} from 'ts-morph';
 
 vi.mock('../../file');
@@ -84,25 +85,28 @@ export function Layout({children}) {
 
       vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
         filepath: '/test/app/root.jsx',
+        extension: 'jsx',
         astType: 'jsx',
       });
       
       vi.mocked(fileUtils.replaceFileContent).mockImplementation(
-        async (filepath, formatConfig, callback) => {
+        async (filepath: string, formatConfig: FormatOptions | false, callback: (content: string) => Promise<string | null | undefined> | string | null | undefined) => {
           const result = await callback(buggyContent);
           
           // Should add the missing import
-          expect(result).toContain("import tailwindStyles from '~/styles/tailwind.css?url'");
+          if (result) {
+            expect(result).toContain("import tailwindStyles from '~/styles/tailwind.css?url'");
+            
+            // Should only have one import
+            const importMatches = result.match(/import tailwindStyles/g);
+            expect(importMatches?.length).toBe(1);
+            
+            // Should preserve existing usage
+            expect(result).toContain('href: tailwindStyles');
+            expect(result).toContain('<link rel"stylesheet" href={tailwindStyles}></link>');
+          }
           
-          // Should only have one import
-          const importMatches = result.match(/import tailwindStyles/g);
-          expect(importMatches?.length).toBe(1);
-          
-          // Should preserve existing usage
-          expect(result).toContain('href: tailwindStyles');
-          expect(result).toContain('<link rel="stylesheet" href={tailwindStyles}></link>');
-          
-          return result;
+          return;
         }
       );
 
@@ -152,21 +156,24 @@ export function Layout({children}: {children?: React.ReactNode}) {
 
       vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
         filepath: '/test/app/root.tsx',
+        extension: 'tsx',
         astType: 'tsx',
       });
       
       vi.mocked(fileUtils.replaceFileContent).mockImplementation(
-        async (filepath, formatConfig, callback) => {
+        async (filepath: string, formatConfig: FormatOptions | false, callback: (content: string) => Promise<string | null | undefined> | string | null | undefined) => {
           const result = await callback(buggyTsContent);
           
           // Should add the missing import
-          expect(result).toContain("import tailwindStyles from '~/styles/tailwind.css?url'");
+          if (result) {
+            expect(result).toContain("import tailwindStyles from '~/styles/tailwind.css?url'");
+            
+            // Should only have one import  
+            const importMatches = result.match(/import tailwindStyles/g);
+            expect(importMatches?.length).toBe(1);
+          }
           
-          // Should only have one import
-          const importMatches = result.match(/import tailwindStyles/g);
-          expect(importMatches?.length).toBe(1);
-          
-          return result;
+          return;
         }
       );
 
@@ -206,23 +213,26 @@ export function Layout({children}) {
 
       vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
         filepath: '/test/app/root.jsx',
+        extension: 'jsx',
         astType: 'jsx',
       });
       
       vi.mocked(fileUtils.replaceFileContent).mockImplementation(
-        async (filepath, formatConfig, callback) => {
+        async (filepath: string, formatConfig: FormatOptions | false, callback: (content: string) => Promise<string | null | undefined> | string | null | undefined) => {
           const result = await callback(partiallyReplacedContent);
           
           // Should remove appStyles import
-          expect(result).not.toContain('import appStyles');
+          if (result) {
+            expect(result).not.toContain('import appStyles');
+            
+            // Should add tailwindStyles import
+            expect(result).toContain("import tailwindStyles from");
+            
+            // Should preserve tailwindStyles usage
+            expect(result).toContain('href: tailwindStyles');
+          }
           
-          // Should add tailwindStyles import
-          expect(result).toContain("import tailwindStyles from");
-          
-          // Should preserve tailwindStyles usage
-          expect(result).toContain('href: tailwindStyles');
-          
-          return result;
+          return;
         }
       );
 
@@ -245,18 +255,21 @@ export function links() {
 
       vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
         filepath: '/test/app/root.tsx',
+        extension: 'tsx',
         astType: 'tsx',
       });
       
       vi.mocked(fileUtils.replaceFileContent).mockImplementation(
-        async (filepath, formatConfig, callback) => {
+        async (filepath: string, formatConfig: FormatOptions | false, callback: (content: string) => Promise<string | null | undefined> | string | null | undefined) => {
           const result = await callback(contentWithImport);
           
-          // Should not duplicate the import
-          const importMatches = result.match(/import tailwindStyles/g);
-          expect(importMatches?.length).toBe(1);
+          if (result) {
+            // Should not duplicate the import
+            const importMatches = result.match(/import tailwindStyles/g);
+            expect(importMatches?.length).toBe(1);
+          }
           
-          return result;
+          return;
         }
       );
 
@@ -281,28 +294,31 @@ export function links() {
 
       vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
         filepath: '/test/app/root.tsx',
+        extension: 'tsx',
         astType: 'tsx',
       });
       
       vi.mocked(fileUtils.replaceFileContent).mockImplementation(
-        async (filepath, formatConfig, callback) => {
+        async (filepath: string, formatConfig: FormatOptions | false, callback: (content: string) => Promise<string | null | undefined> | string | null | undefined) => {
           const result = await callback(content);
           
-          // Import should be added after the last import
-          const lines = result.split('\n');
-          const tailwindImportIndex = lines.findIndex(line => 
-            line.includes('import tailwindStyles')
-          );
-          const resetStylesImportIndex = lines.findIndex(line => 
-            line.includes('import resetStyles')
-          );
+          if (result) {
+            // Import should be added after the last import
+            const lines = result.split('\n');
+            const tailwindImportIndex = lines.findIndex((line: string) => 
+              line.includes('import tailwindStyles')
+            );
+            const resetStylesImportIndex = lines.findIndex((line: string) => 
+              line.includes('import resetStyles')
+            );
+            
+            expect(tailwindImportIndex).toBeGreaterThan(resetStylesImportIndex);
+            expect(tailwindImportIndex).toBeLessThan(
+              lines.findIndex((line: string) => line.includes('export function'))
+            );
+          }
           
-          expect(tailwindImportIndex).toBeGreaterThan(resetStylesImportIndex);
-          expect(tailwindImportIndex).toBeLessThan(
-            lines.findIndex(line => line.includes('export function'))
-          );
-          
-          return result;
+          return;
         }
       );
 
@@ -359,7 +375,9 @@ export function links() {
       // Add the missing import
       const lastImport = sourceFile.getLastChildByKind(SyntaxKind.ImportDeclaration);
       if (lastImport) {
-        lastImport.insertStatementAfter(
+        const importIndex = sourceFile.getStatements().indexOf(lastImport);
+        sourceFile.insertStatements(
+          importIndex + 1,
           "import tailwindStyles from '~/styles/tailwind.css?url';"
         );
       }

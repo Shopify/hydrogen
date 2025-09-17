@@ -20,11 +20,12 @@
  * These tests ensure CLI commands work correctly with both legacy and modern React Router builds.
  */
 
-import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {getViteConfig} from './vite-config';
-import * as importUtils from './import-utils';
-import * as fileUtils from './file';
+import {describe, it, expect, vi, beforeEach, type Mock} from 'vitest';
+import {getViteConfig} from './vite-config.js';
+import * as importUtils from './import-utils.js';
+import * as fileUtils from './file.js';
 import {joinPath} from '@shopify/cli-kit/node/path';
+import type * as Vite from 'vite';
 
 vi.mock('./import-utils');
 vi.mock('./file');
@@ -33,6 +34,7 @@ vi.mock('./remix-config');
 // Mock file utility functions
 vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
   filepath: '/test/project/server.ts',
+  extension: 'ts',
   astType: 'ts'
 });
 
@@ -43,7 +45,7 @@ describe('getViteConfig - viteEnvironmentApi path resolution', () => {
     vi.clearAllMocks();
   });
 
-  const createMockVite = (resolvedConfig: any) => ({
+  const createMockVite = (resolvedConfig: any): Partial<typeof Vite> => ({
     loadConfigFromFile: vi.fn().mockResolvedValue({
       path: '/test/vite.config.ts',
       config: {}
@@ -79,7 +81,7 @@ describe('getViteConfig - viteEnvironmentApi path resolution', () => {
       };
 
       vi.mocked(importUtils.importVite).mockResolvedValue(
-        createMockVite(mockResolvedConfig)
+        createMockVite(mockResolvedConfig) as typeof Vite
       );
 
       const result = await getViteConfig(mockRoot);
@@ -113,7 +115,7 @@ describe('getViteConfig - viteEnvironmentApi path resolution', () => {
       };
 
       vi.mocked(importUtils.importVite).mockResolvedValue(
-        createMockVite(mockResolvedConfig)
+        createMockVite(mockResolvedConfig) as typeof Vite
       );
 
       const result = await getViteConfig(mockRoot);
@@ -148,7 +150,7 @@ describe('getViteConfig - viteEnvironmentApi path resolution', () => {
       };
 
       vi.mocked(importUtils.importVite).mockResolvedValue(
-        createMockVite(mockResolvedConfig)
+        createMockVite(mockResolvedConfig) as typeof Vite
       );
 
       const result = await getViteConfig(mockRoot);
@@ -184,7 +186,7 @@ describe('getViteConfig - viteEnvironmentApi path resolution', () => {
       };
 
       vi.mocked(importUtils.importVite).mockResolvedValue(
-        createMockVite(mockResolvedConfig)
+        createMockVite(mockResolvedConfig) as typeof Vite
       );
 
       const result = await getViteConfig(mockRoot);
@@ -218,7 +220,7 @@ describe('getViteConfig - viteEnvironmentApi path resolution', () => {
       };
 
       vi.mocked(importUtils.importVite).mockResolvedValue(
-        createMockVite(mockResolvedConfig)
+        createMockVite(mockResolvedConfig) as typeof Vite
       );
 
       const result = await getViteConfig(mockRoot);
@@ -250,7 +252,7 @@ describe('getViteConfig - viteEnvironmentApi path resolution', () => {
       };
 
       vi.mocked(importUtils.importVite).mockResolvedValue(
-        createMockVite(mockResolvedConfig)
+        createMockVite(mockResolvedConfig) as typeof Vite
       );
 
       const result = await getViteConfig(mockRoot);
@@ -286,7 +288,7 @@ describe('getViteConfig - viteEnvironmentApi path resolution', () => {
       });
 
       vi.mocked(importUtils.importVite).mockResolvedValue(
-        createMockVite(mockResolvedConfig)
+        createMockVite(mockResolvedConfig) as typeof Vite
       );
 
       const result = await getViteConfig(mockRoot);
@@ -314,7 +316,7 @@ describe('getViteConfig - viteEnvironmentApi path resolution', () => {
       };
 
       vi.mocked(importUtils.importVite).mockResolvedValue(
-        createMockVite(mockResolvedConfig)
+        createMockVite(mockResolvedConfig) as typeof Vite
       );
 
       const result = await getViteConfig(mockRoot);
@@ -349,7 +351,7 @@ describe('getViteConfig - viteEnvironmentApi path resolution', () => {
       };
 
       vi.mocked(importUtils.importVite).mockResolvedValue(
-        createMockVite(mockResolvedConfig)
+        createMockVite(mockResolvedConfig) as typeof Vite
       );
 
       const result = await getViteConfig(mockRoot);
@@ -388,7 +390,7 @@ describe('getViteConfig - viteEnvironmentApi path resolution', () => {
       };
 
       vi.mocked(importUtils.importVite).mockResolvedValue(
-        createMockVite(mockResolvedConfig)
+        createMockVite(mockResolvedConfig) as typeof Vite
       );
 
       const result = await getViteConfig(mockRoot);
@@ -421,7 +423,7 @@ describe('getViteConfig - viteEnvironmentApi path resolution', () => {
       };
 
       vi.mocked(importUtils.importVite).mockResolvedValue(
-        createMockVite(mockResolvedConfig)
+        createMockVite(mockResolvedConfig) as typeof Vite
       );
 
       const result = await getViteConfig(mockRoot);
@@ -457,7 +459,7 @@ describe('getViteConfig - viteEnvironmentApi path resolution', () => {
       };
 
       vi.mocked(importUtils.importVite).mockResolvedValue(
-        createMockVite(mockResolvedConfig)
+        createMockVite(mockResolvedConfig) as typeof Vite
       );
 
       const result = await getViteConfig(nestedRoot);

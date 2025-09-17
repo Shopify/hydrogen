@@ -24,12 +24,13 @@
  */
 
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {setupTailwind} from './tailwind';
-import * as fileUtils from '../../file';
-import * as formatUtils from '../../format-code';
-import * as assetUtils from './assets';
-import * as replacerUtils from './replacers';
-import * as buildUtils from '../../build';
+import {setupTailwind} from './tailwind.js';
+import * as fileUtils from '../../file.js';
+import * as formatUtils from '../../format-code.js';
+import {type FormatOptions} from '../../format-code.js';
+import * as assetUtils from './assets.js';
+import * as replacerUtils from './replacers.js';
+import * as buildUtils from '../../build.js';
 import {TAILWIND_VERSION, TAILWIND_VITE_VERSION} from './versions.js';
 
 vi.mock('../../file');
@@ -54,10 +55,10 @@ describe('setupTailwind', () => {
 
   it('should setup Tailwind CSS with all optimizations', async () => {
     vi.mocked(assetUtils.canWriteFiles).mockResolvedValue(true);
-    vi.mocked(fileUtils.mergePackageJson).mockResolvedValue(undefined);
-    vi.mocked(assetUtils.copyAssets).mockResolvedValue(undefined);
-    vi.mocked(replacerUtils.replaceRootLinks).mockResolvedValue(undefined);
-    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue(undefined);
+    vi.mocked(fileUtils.mergePackageJson).mockResolvedValue();
+    vi.mocked(assetUtils.copyAssets).mockImplementation(async () => []);
+    vi.mocked(replacerUtils.replaceRootLinks).mockResolvedValue();
+    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue();
 
     const result = await setupTailwind({
       rootDirectory: mockRootDirectory,
@@ -109,10 +110,10 @@ describe('setupTailwind', () => {
 
   it('should force setup when force flag is true', async () => {
     vi.mocked(assetUtils.canWriteFiles).mockResolvedValue(true);
-    vi.mocked(fileUtils.mergePackageJson).mockResolvedValue(undefined);
-    vi.mocked(assetUtils.copyAssets).mockResolvedValue(undefined);
-    vi.mocked(replacerUtils.replaceRootLinks).mockResolvedValue(undefined);
-    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue(undefined);
+    vi.mocked(fileUtils.mergePackageJson).mockResolvedValue();
+    vi.mocked(assetUtils.copyAssets).mockImplementation(async () => []);
+    vi.mocked(replacerUtils.replaceRootLinks).mockResolvedValue();
+    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue();
 
     const result = await setupTailwind(
       {
@@ -132,12 +133,12 @@ describe('setupTailwind', () => {
 
   it('should handle errors in replaceRootLinks gracefully', async () => {
     vi.mocked(assetUtils.canWriteFiles).mockResolvedValue(true);
-    vi.mocked(fileUtils.mergePackageJson).mockResolvedValue(undefined);
-    vi.mocked(assetUtils.copyAssets).mockResolvedValue(undefined);
+    vi.mocked(fileUtils.mergePackageJson).mockResolvedValue();
+    vi.mocked(assetUtils.copyAssets).mockImplementation(async () => []);
     vi.mocked(replacerUtils.replaceRootLinks).mockRejectedValue(
       new Error('Could not find root file')
     );
-    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue(undefined);
+    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue();
 
     const result = await setupTailwind({
       rootDirectory: mockRootDirectory,
@@ -154,10 +155,10 @@ describe('setupTailwind', () => {
     const nestedAppDirectory = '/test/project/src/app';
     
     vi.mocked(assetUtils.canWriteFiles).mockResolvedValue(true);
-    vi.mocked(fileUtils.mergePackageJson).mockResolvedValue(undefined);
-    vi.mocked(assetUtils.copyAssets).mockResolvedValue(undefined);
-    vi.mocked(replacerUtils.replaceRootLinks).mockResolvedValue(undefined);
-    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue(undefined);
+    vi.mocked(fileUtils.mergePackageJson).mockResolvedValue();
+    vi.mocked(assetUtils.copyAssets).mockImplementation(async () => []);
+    vi.mocked(replacerUtils.replaceRootLinks).mockResolvedValue();
+    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue();
 
     const result = await setupTailwind({
       rootDirectory: mockRootDirectory,
@@ -189,21 +190,22 @@ describe('setupTailwind integration scenarios', () => {
 
   it('should handle TypeScript projects correctly', async () => {
     vi.mocked(assetUtils.canWriteFiles).mockResolvedValue(true);
-    vi.mocked(fileUtils.mergePackageJson).mockResolvedValue(undefined);
-    vi.mocked(assetUtils.copyAssets).mockResolvedValue(undefined);
+    vi.mocked(fileUtils.mergePackageJson).mockResolvedValue();
+    vi.mocked(assetUtils.copyAssets).mockImplementation(async () => []);
     
     // Mock TypeScript file detection
     vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
       filepath: '/test/project/app/root.tsx',
+      extension: 'tsx',
       astType: 'tsx',
     });
     
-    vi.mocked(replacerUtils.replaceRootLinks).mockImplementation(async (appDir, config, importer) => {
+    vi.mocked(replacerUtils.replaceRootLinks).mockImplementation(async (appDir: string, config: FormatOptions, importer: {name: string; path: string; isDefault: boolean; isConditional?: boolean}) => {
       expect(importer.name).toBe('tailwindStyles');
       expect(importer.isDefault).toBe(true);
     });
     
-    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue(undefined);
+    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue();
 
     const result = await setupTailwind({
       rootDirectory: mockRootDirectory,
@@ -218,21 +220,22 @@ describe('setupTailwind integration scenarios', () => {
 
   it('should handle JavaScript projects correctly', async () => {
     vi.mocked(assetUtils.canWriteFiles).mockResolvedValue(true);
-    vi.mocked(fileUtils.mergePackageJson).mockResolvedValue(undefined);
-    vi.mocked(assetUtils.copyAssets).mockResolvedValue(undefined);
+    vi.mocked(fileUtils.mergePackageJson).mockResolvedValue();
+    vi.mocked(assetUtils.copyAssets).mockImplementation(async () => []);
     
     // Mock JavaScript file detection
     vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
       filepath: '/test/project/app/root.jsx',
+      extension: 'jsx',
       astType: 'jsx',
     });
     
-    vi.mocked(replacerUtils.replaceRootLinks).mockImplementation(async (appDir, config, importer) => {
+    vi.mocked(replacerUtils.replaceRootLinks).mockImplementation(async (appDir: string, config: FormatOptions, importer: {name: string; path: string; isDefault: boolean; isConditional?: boolean}) => {
       expect(importer.name).toBe('tailwindStyles');
       expect(importer.isDefault).toBe(true);
     });
     
-    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue(undefined);
+    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue();
 
     const result = await setupTailwind({
       rootDirectory: mockRootDirectory,
@@ -247,11 +250,11 @@ describe('setupTailwind integration scenarios', () => {
 
   it('should ensure latest Tailwind version is installed', async () => {
     vi.mocked(assetUtils.canWriteFiles).mockResolvedValue(true);
-    vi.mocked(assetUtils.copyAssets).mockResolvedValue(undefined);
-    vi.mocked(replacerUtils.replaceRootLinks).mockResolvedValue(undefined);
-    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue(undefined);
+    vi.mocked(assetUtils.copyAssets).mockImplementation(async () => []);
+    vi.mocked(replacerUtils.replaceRootLinks).mockResolvedValue();
+    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue();
     
-    vi.mocked(fileUtils.mergePackageJson).mockImplementation(async (assetDir, rootDir) => {
+    vi.mocked(fileUtils.mergePackageJson).mockImplementation(async (assetDir: string, rootDir: string) => {
       expect(assetDir).toBe('/assets/tailwind');
       // This should merge the package.json with latest tailwindcss version
     });
@@ -267,8 +270,8 @@ describe('setupTailwind integration scenarios', () => {
 
   it('should handle projects with existing CSS setup', async () => {
     vi.mocked(assetUtils.canWriteFiles).mockResolvedValue(true);
-    vi.mocked(fileUtils.mergePackageJson).mockResolvedValue(undefined);
-    vi.mocked(assetUtils.copyAssets).mockResolvedValue(undefined);
+    vi.mocked(fileUtils.mergePackageJson).mockResolvedValue();
+    vi.mocked(assetUtils.copyAssets).mockImplementation(async () => []);
     
     // Mock existing appStyles that should be replaced
     const mockContentWithAppStyles = `
@@ -278,15 +281,15 @@ export function links() {
 }`;
     
     vi.mocked(fileUtils.replaceFileContent).mockImplementation(
-      async (filepath, formatConfig, callback) => {
+      async (filepath: string, formatConfig: FormatOptions | false, callback: (content: string) => Promise<string | null | undefined> | string | null | undefined) => {
         const result = await callback(mockContentWithAppStyles);
         expect(result).not.toContain('appStyles');
         expect(result).toContain('tailwindStyles');
       }
     );
     
-    vi.mocked(replacerUtils.replaceRootLinks).mockResolvedValue(undefined);
-    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue(undefined);
+    vi.mocked(replacerUtils.replaceRootLinks).mockResolvedValue();
+    vi.mocked(replacerUtils.injectVitePlugin).mockResolvedValue();
 
     await setupTailwind({
       rootDirectory: mockRootDirectory,

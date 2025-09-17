@@ -32,7 +32,7 @@ import {
   afterAll,
 } from 'vitest';
 import {runInit} from './init.js';
-import {exec} from '@shopify/cli-kit/node/system';
+import {exec, captureOutput} from '@shopify/cli-kit/node/system';
 import {
   fileExists,
   readFile,
@@ -172,7 +172,7 @@ describe('init - E2E Tailwind v4 Integration', () => {
       });
       console.log('✓ Build completed successfully');
     } catch (error) {
-      console.log('Build failed:', error.message);
+      console.log('Build failed:', (error as Error).message);
       
       // Let's check what actually got built
       try {
@@ -180,11 +180,11 @@ describe('init - E2E Tailwind v4 Integration', () => {
         console.log('dist directory exists:', distExists);
         
         if (distExists) {
-          const distContents = await exec('ls', ['-la', joinPath(projectPath, 'dist')], {cwd: projectPath});
-          console.log('dist contents:', distContents?.stdout || 'empty');
+          const distContents = await captureOutput('ls', ['-la', joinPath(projectPath, 'dist')], {cwd: projectPath});
+          console.log('dist contents:', distContents || 'empty');
         }
       } catch (debugError) {
-        console.log('Debug check failed:', debugError.message);
+        console.log('Debug check failed:', (debugError as Error).message);
       }
       
       // Don't fail the test for build issues - focus on core scaffolding
@@ -214,12 +214,11 @@ describe('init - E2E Tailwind v4 Integration', () => {
           // The Hydrogen plugin should have cssCodeSplit: false by default
           // This is validated by checking that CSS is bundled together, not split
           // We can check this by looking for a single main CSS file rather than route-specific CSS
-          const findCssResult = await exec(
+          const findCssOutput = await captureOutput(
             'find',
             [clientBuildPath, '-name', '*.css', '-type', 'f'],
             {cwd: projectPath},
           );
-          const findCssOutput = findCssResult?.stdout || '';
           
           const cssFiles = findCssOutput.trim().split('\n').filter(Boolean);
           console.log(`Found ${cssFiles.length} CSS files in build`);
@@ -234,7 +233,7 @@ describe('init - E2E Tailwind v4 Integration', () => {
           console.log(`⚠️ Client build directory missing at ${clientBuildPath} - build may have failed`);
         }
       } catch (error) {
-        console.log('⚠️ Could not get vite config for build validation:', error.message);
+        console.log('⚠️ Could not get vite config for build validation:', (error as Error).message);
       }
     } else {
       console.log('⚠️ Build output not present - build failed but core scaffolding works');

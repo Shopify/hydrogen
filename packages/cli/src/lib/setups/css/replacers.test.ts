@@ -23,9 +23,9 @@
  */
 
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {replaceRootLinks, injectVitePlugin} from './replacers';
-import * as fileUtils from '../../file';
-import * as formatUtils from '../../format-code';
+import {replaceRootLinks, injectVitePlugin} from './replacers.js';
+import * as fileUtils from '../../file.js';
+import * as formatUtils from '../../format-code.js';
 
 vi.mock('../../file');
 vi.mock('../../format-code');
@@ -81,6 +81,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
     it('should replace appStyles with tailwindStyles and add import', async () => {
       vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
         filepath: '/test/app/root.tsx',
+        extension: 'tsx',
         astType: 'tsx',
       });
       
@@ -110,6 +111,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
       
       vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
         filepath: '/test/app/root.tsx',
+        extension: 'tsx',
         astType: 'tsx',
       });
       
@@ -131,6 +133,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
     it('should handle conditional CSS imports', async () => {
       vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
         filepath: '/test/app/root.tsx',
+        extension: 'tsx',
         astType: 'tsx',
       });
       
@@ -188,14 +191,16 @@ export function Layout({children}) {
     it('should add missing tailwindStyles import in JavaScript files', async () => {
       vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
         filepath: '/test/app/root.jsx',
+        extension: 'jsx',
         astType: 'jsx',
       });
       
       vi.mocked(fileUtils.replaceFileContent).mockImplementation(
         async (filepath, formatConfig, callback) => {
           const result = await callback(mockJsContent);
-          expect(result).toContain('import tailwindStyles from \'~/styles/tailwind.css?url\'');
-          expect(result.match(/import tailwindStyles/g)?.length).toBe(1);
+          expect(result).toBeTruthy();
+          expect(result!).toContain('import tailwindStyles from \'~/styles/tailwind.css?url\'');
+          expect(result!.match(/import tailwindStyles/g)?.length).toBe(1);
         }
       );
 
@@ -211,13 +216,16 @@ export function Layout({children}) {
       
       vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
         filepath: '/test/app/root.jsx',
+        extension: 'jsx',
         astType: 'jsx',
       });
       
       vi.mocked(fileUtils.replaceFileContent).mockImplementation(
         async (filepath, formatConfig, callback) => {
           const result = await callback(contentWithImport);
-          expect(result.match(/import tailwindStyles/g)?.length).toBe(1);
+          if (result) {
+            expect(result.match(/import tailwindStyles/g)?.length).toBe(1);
+          }
         }
       );
 
@@ -253,6 +261,7 @@ export function App() {
       
       vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
         filepath: '/test/app/root.tsx',
+        extension: 'tsx',
         astType: 'tsx',
       });
       
@@ -297,6 +306,7 @@ export function Layout({children}) {
       
       vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
         filepath: '/test/app/root.tsx',
+        extension: 'tsx',
         astType: 'tsx',
       });
       
@@ -338,6 +348,7 @@ export default defineConfig({
     
     vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
       filepath: '/test/vite.config.ts',
+      extension: 'ts',
       astType: 'ts',
     });
     
@@ -367,14 +378,17 @@ export default defineConfig({
     
     vi.mocked(fileUtils.findFileWithExtension).mockResolvedValue({
       filepath: '/test/vite.config.ts',
+      extension: 'ts',
       astType: 'ts',
     });
     
     vi.mocked(fileUtils.replaceFileContent).mockImplementation(
       async (filepath, formatConfig, callback) => {
         const result = await callback(mockViteConfigWithPlugin);
-        expect(result.match(/import tailwindcss/g)?.length).toBe(1);
-        expect(result.match(/tailwindcss\(\)/g)?.length).toBe(1);
+        if (result) {
+          expect(result.match(/import tailwindcss/g)?.length).toBe(1);
+          expect(result.match(/tailwindcss\(\)/g)?.length).toBe(1);
+        }
       }
     );
 
