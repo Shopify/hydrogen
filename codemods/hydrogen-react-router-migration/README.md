@@ -10,18 +10,22 @@ This codemod automates the migration of Shopify Hydrogen storefronts from Remix-
 
 Before running this codemod:
 
-1. **Run the official Remix to React Router v7 migration** first:
+1. **Commit your current changes**
+   - The codemod will check for uncommitted changes and warn you
+   - This ensures you can safely revert if needed
+
+2. **Run the official Remix to React Router v7 migration** first:
    ```bash
    npx codemod remix/2/react-router/upgrade
    ```
    
-   This codemod will automatically detect if the React Router migration has been applied.
-   If not, it will exit with instructions to run the official migration first.
+   > **Note**: This Hydrogen codemod will automatically detect if the React Router migration has been applied. If not, it will exit with clear instructions to run the official migration first.
 
-2. **Ensure your project has**:
+3. **Ensure your project has**:
    - Hydrogen v2024.x or later  
    - TypeScript or JavaScript
    - Standard Remix app structure (`/app` directory)
+   - React Router v7 installed (handled by step 2)
 
 ## Usage
 
@@ -49,7 +53,14 @@ npx codemod shopify/hydrogen-react-router-migration "app/routes/*.tsx"
 If you need more control, you can use jscodeshift directly:
 
 ```bash
+# From published npm package (when available)
 npx jscodeshift -t https://raw.githubusercontent.com/Shopify/hydrogen/main/codemods/hydrogen-react-router-migration/src/index.ts \
+  --parser=tsx \
+  --extensions=ts,tsx,js,jsx \
+  app/
+
+# From local development
+npx jscodeshift -t /path/to/hydrogen/codemods/hydrogen-react-router-migration/src/index.ts \
   --parser=tsx \
   --extensions=ts,tsx,js,jsx \
   app/
@@ -77,8 +88,10 @@ This codemod focuses on Hydrogen-specific patterns that the React Router codemod
 - **Hydrogen context**: `context.storefront.i18n` → `context.customerAccount.i18n`
 - **Response utilities**: Additional `defer()` → `data()` transformations for Oxygen
 - **Type augmentation**: Hydrogen-specific type exports and augmentations
-- **Context creation**: `createAppLoadContext` → `createHydrogenContext` patterns
+- **Context creation**: `createAppLoadContext` → `createHydrogenRouterContext` patterns
 - **Hydrogen imports**: Ensures `@shopify/hydrogen` imports remain untouched
+- **Error handling**: Adds TypeScript `unknown` type to catch blocks for better type safety
+- **Virtual modules**: Updates `virtual:remix/server-build` → `virtual:react-router/server-build`
 
 ## What It Transforms
 
@@ -115,8 +128,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 ### 3. Response Utilities
 
-- `json()` → `data()`
-- `defer()` → `data()` (React Router v7 handles streaming automatically)
+The codemod intelligently transforms response utilities based on usage:
+
+- `json(data)` → `data` (returns plain object when no headers/status needed)
+- `json(data, {headers})` → `data(data, {headers})` (keeps `data()` wrapper when options present)
+- `defer(data)` → `data` (React Router v7 handles streaming automatically)
+- Removes `defer()` as React Router v7 handles promise streaming natively
 
 ### 4. Context API
 
@@ -249,13 +266,24 @@ The codemod handles mixed codebases:
 
 ## Validation and Safety
 
-The codemod includes built-in validation:
+The codemod includes comprehensive safety features:
 
-- **Pre-transformation checks**: Ensures prerequisites are met
-- **Post-transformation validation**: Verifies output correctness
+### Pre-flight Checks
+- **Git status verification**: Warns if uncommitted changes exist
+- **React Router detection**: Automatically verifies React Router v7 migration has been applied
+- **Language detection**: Auto-detects TypeScript vs JavaScript projects
+- **Intelligent file filtering**: Only processes relevant files (routes, entry points, context files)
+
+### Transformation Safety
+- **Syntax validation**: Ensures valid AST output
+- **Import consolidation**: Automatically merges duplicate imports
+- **Type safety**: Preserves TypeScript types and adds appropriate annotations
+- **Error recovery**: Gracefully handles transformation errors without corrupting files
+
+### Post-transformation Validation
 - **File integrity checks**: Prevents data loss
-- **Syntax validation**: Ensures valid output
-- **Error recovery**: Gracefully handles and reports errors
+- **Comprehensive test coverage**: 800+ lines of E2E tests, 3000+ lines of unit tests
+- **Edge case handling**: Handles mixed JS/TS codebases, complex import patterns
 
 ## Manual Steps After Migration
 
@@ -366,6 +394,38 @@ hydrogen-react-router-migration/
 ├── fixtures/                       # Test fixtures
 └── tests/                         # Test files
 ```
+
+## Real-World Testing
+
+### Hydrogen Demo Store Results
+
+The codemod has been tested against the official Hydrogen Demo Store with successful results:
+
+```bash
+# Test command used
+cd /path/to/hydrogen-demo-store
+npx jscodeshift -t /path/to/hydrogen/codemods/hydrogen-react-router-migration/src/index.ts \
+  --parser=tsx \
+  --extensions=ts,tsx,js,jsx \
+  app/
+
+# Results
+Processing 80 files... 
+Spawning 10 workers...
+Results: 
+0 errors
+0 unmodified  
+43 skipped (non-route files)
+37 ok (successfully transformed)
+Time elapsed: 1.488 seconds
+```
+
+**Key transformations applied:**
+- ✅ Converted `@shopify/remix-oxygen` imports to `react-router`
+- ✅ Transformed `defer()` and `json()` calls to appropriate React Router v7 patterns
+- ✅ Updated `context.storefront.i18n` to `context.customerAccount.i18n`
+- ✅ Added `Route` type imports for TypeScript files
+- ✅ Transformed `LoaderFunctionArgs` to `Route.LoaderArgs`
 
 ## Contributing
 
