@@ -9,7 +9,7 @@
 
 📚 [Docs](https://shopify.dev/custom-storefronts/hydrogen) | 💬 [Discussions](https://github.com/Shopify/hydrogen/discussions) | 📝 [Changelog](./packages/hydrogen/CHANGELOG.md)
 
-Hydrogen is Shopify’s stack for headless commerce. It provides a set of tools, utilities, and best-in-class examples for building dynamic and performant commerce applications. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework, but it also provides a React library portable to other supporting frameworks.
+Hydrogen is Shopify's stack for headless commerce. It provides a set of tools, utilities, and best-in-class examples for building dynamic and performant commerce applications. Hydrogen is designed to dovetail with [React Router](https://reactrouter.com/), the modern multi-strategy router for React, but it also provides a React library portable to other supporting frameworks.
 
  </div>
 
@@ -47,21 +47,20 @@ Hydrogen is organized as a [monorepo](https://monorepo.tools/), which includes m
 
 | Package                                                    | Latest version                                                                                                                                | Description                                                                                                    | Readme                                      |
 | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| [`@shopify/hydrogen`](/packages/hydrogen/)                 | [![Latest badge](https://img.shields.io/npm/v/@shopify/hydrogen/latest.svg)](https://www.npmjs.com/package/@shopify/hydrogen)                 | Opinionated tools, utilities, and best-in-class examples for building a commerce application with Remix.       | [Readme](/packages/hydrogen#readme)         |
+| [`@shopify/hydrogen`](/packages/hydrogen/)                 | [![Latest badge](https://img.shields.io/npm/v/@shopify/hydrogen/latest.svg)](https://www.npmjs.com/package/@shopify/hydrogen)                 | Opinionated tools, utilities, and best-in-class examples for building a commerce application with React Router. | [Readme](/packages/hydrogen#readme)         |
 | [`@shopify/hydrogen-react`](/packages/hydrogen-react/)     | [![Latest badge](https://img.shields.io/npm/v/@shopify/hydrogen-react/latest.svg)](https://www.npmjs.com/package/@shopify/hydrogen-react)     | Unopionated and performant library of Shopify-specific commerce components, hooks, and utilities.              | [Readme](/packages/hydrogen-react#readme)   |
 | [`@shopify/cli-hydrogen`](/packages/cli/)                  | [![Latest badge](https://img.shields.io/npm/v/@shopify/cli-hydrogen/latest.svg)](https://www.npmjs.com/package/@shopify/cli-hydrogen)         | Hydrogen extension for [Shopify CLI](https://shopify.dev/docs/custom-storefronts/hydrogen/cli).                | [Readme](/packages/cli#readme)              |
 | [`@shopify/create-hydrogen`](/packages/create-hydrogen/)   | [![Latest badge](https://img.shields.io/npm/v/@shopify/create-hydrogen/latest.svg)](https://www.npmjs.com/package/@shopify/create-hydrogen)   | Generate a new Hydrogen project from the command line.                                                         | [Readme](/packages/create-hydrogen#readme)  |
-| [`@shopify/hydrogen-codegen`](/packages/hydrogen-codegen/) | [![Latest badge](https://img.shields.io/npm/v/@shopify/hydrogen-codegen/latest.svg)](https://www.npmjs.com/package/@shopify/hydrogen-codegen) | Generate types for Storefront API queries automatically.                                                       | [Readme](/packages/hydrogen-codegen#readme) |
-| [`@shopify/remix-oxygen`](/packages/remix-oxygen/)         | [![Latest badge](https://img.shields.io/npm/v/@shopify/remix-oxygen/latest.svg)](https://www.npmjs.com/package/@shopify/remix-oxygen)         | Remix adapter enabling Hydrogen to run on the [Oxygen](https://shopify.dev/custom-storefronts/oxygen) runtime. | [Readme](/packages/remix-oxygen#readme)     |
+| [`@shopify/hydrogen-codegen`](/packages/hydrogen-codegen/) | [![Latest badge](https://img.shields.io/npm/v/@shopify/hydrogen-codegen/latest.svg)](https://www.npmjs.com/package/@shopify/hydrogen-codegen) | Generate types for Storefront API and Customer Account API queries automatically.                              | [Readme](/packages/hydrogen-codegen#readme) |
 | [`@shopify/mini-oxygen`](/packages/mini-oxygen/)           | [![Latest badge](https://img.shields.io/npm/v/@shopify/mini-oxygen/latest.svg)](https://www.npmjs.com/package/@shopify/mini-oxygen)           | A local runtime for Hydrogen apps that simulates the Oxygen production environment.                            | [Readme](/packages/mini-oxygen#readme)      |
 
 ## Versioning
 
-Hydrogen and hydrogen-react are tied to specific versions of the [Shopify Storefront API](https://shopify.dev/api/storefront), which follows [calver](https://calver.org/).
+Hydrogen and hydrogen-react are tied to specific versions of the [Shopify Storefront API](https://shopify.dev/api/storefront) and [Customer Account API](https://shopify.dev/docs/api/customer), which follow [calver](https://calver.org/).
 
-For example, if you're using Storefront API version `2025-04`, then Hydrogen and hydrogen-react versions `2025.4.x` are fully compatible.
+For example, if you're using Storefront API or Customer Account API version `2025-07`, then Hydrogen and hydrogen-react versions `2025.7.x` are fully compatible.
 
-If the Storefront API version update includes breaking changes, then Hydrogen and hydrogen-react may also include breaking changes. Because the API version is updated every three months, breaking changes could occur every three months.
+If the Storefront API or Customer Account API version updates include breaking changes, then Hydrogen and hydrogen-react may also include breaking changes. Because the API versions are updated every three months, breaking changes could occur every three months.
 
 Learn more about API [release schedules](https://shopify.dev/api/usage/versioning#release-schedule) at Shopify.
 
