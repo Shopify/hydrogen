@@ -19,12 +19,15 @@ description: |
   - Session-based authentication using customer access tokens
   - Secure server-side rendering for all account routes
 notes:
-  - This uses the deprecated Storefront API customer endpoints instead of the new Customer Account API
+  - This uses the deprecated Storefront API customer endpoints instead of the
+    new Customer Account API
   - Customer access tokens are stored in session cookies for authentication
   - All account routes are server-side rendered for security
-  - The login/register/recover routes use the account_ prefix to avoid layout nesting
+  - The login/register/recover routes use the account_ prefix to avoid layout
+    nesting
   - Account data routes use the account. prefix to inherit the account layout
-  - Consider migrating to the new Customer Account API for better security and features
+  - Consider migrating to the new Customer Account API for better security and
+    features
 requirements: |
   - A Shopify store with customer accounts enabled (classic accounts, not new customer accounts)
   - Storefront API access with customer read/write permissions
@@ -49,14 +52,14 @@ steps:
     description: Update README to document legacy customer account flow
     diffs:
       - file: README.md
-        patchFile: README.md.47d06f.patch
+        patchFile: README.md.49f8fa.patch
   - type: PATCH
     step: "1"
     name: app/components/Header.tsx
     description: Add account link to header navigation
     diffs:
       - file: app/components/Header.tsx
-        patchFile: Header.tsx.80a27a.patch
+        patchFile: Header.tsx.82c1ce.patch
   - type: NEW_FILE
     step: "1"
     name: app/routes/account_.activate.$id.$activationToken.tsx
@@ -69,7 +72,7 @@ steps:
     description: Update PageLayout to handle account routes
     diffs:
       - file: app/components/PageLayout.tsx
-        patchFile: PageLayout.tsx.8c3338.patch
+        patchFile: PageLayout.tsx.130b44.patch
   - type: NEW_FILE
     step: "2"
     name: app/routes/account_.recover.tsx
@@ -82,7 +85,7 @@ steps:
     description: Add customer access token validation to root loader
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.0ad938.patch
+        patchFile: root.tsx.8c182c.patch
   - type: NEW_FILE
     step: "3"
     name: app/routes/account_.register.tsx
@@ -95,7 +98,7 @@ steps:
     description: Convert catch-all route to use Storefront API authentication
     diffs:
       - file: app/routes/account.$.tsx
-        patchFile: account.$.tsx.2df983.patch
+        patchFile: account.$.tsx.c167a3.patch
   - type: NEW_FILE
     step: "4"
     name: app/routes/account_.reset.$id.$resetToken.tsx
@@ -108,45 +111,52 @@ steps:
     description: Convert address management to use Storefront API mutations
     diffs:
       - file: app/routes/account.addresses.tsx
-        patchFile: account.addresses.tsx.34e472.patch
+        patchFile: account.addresses.tsx.e473cc.patch
   - type: PATCH
     step: "6"
     name: app/routes/account.orders.$id.tsx
     description: Convert order details page to use Storefront API queries
     diffs:
       - file: app/routes/account.orders.$id.tsx
-        patchFile: account.orders.$id.tsx.fa0356.patch
+        patchFile: account.orders.$id.tsx.1e38f8.patch
   - type: PATCH
     step: "7"
     name: app/routes/account.orders._index.tsx
     description: Convert orders list to use Storefront API with pagination
     diffs:
       - file: app/routes/account.orders._index.tsx
-        patchFile: account.orders._index.tsx.2b0f8a.patch
+        patchFile: account.orders._index.tsx.a9982e.patch
+  - type: PATCH
+    step: "9"
+    name: app/routes/account.profile.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.profile.tsx
+        patchFile: account.profile.tsx.0a4fcb.patch
   - type: PATCH
     step: "9"
     name: app/routes/account.tsx
     description: Convert account layout to use session-based authentication
     diffs:
       - file: app/routes/account.tsx
-        patchFile: account.tsx.ca55f3.patch
+        patchFile: account.tsx.367e7a.patch
   - type: PATCH
     step: "10"
     name: app/routes/account_.login.tsx
     description: Replace Customer Account API login with Storefront API form
     diffs:
       - file: app/routes/account_.login.tsx
-        patchFile: account_.login.tsx.1d534b.patch
+        patchFile: account_.login.tsx.4e5990.patch
   - type: PATCH
     step: "11"
     name: app/routes/account_.logout.tsx
     description: Replace Customer Account API logout with session cleanup
     diffs:
       - file: app/routes/account_.logout.tsx
-        patchFile: account_.logout.tsx.d6592d.patch
+        patchFile: account_.logout.tsx.1da785.patch
 nextSteps: |
   After applying this recipe:
-  
+
   1. Run `npm run codegen` to generate GraphQL types for the Storefront API queries
   2. Run `npm run dev` to start the development server
   3. Test the authentication flow:
@@ -171,14 +181,19 @@ llms:
     - How to migrate from Customer Account API to Storefront API?
     - How to implement form-based login in Hydrogen?
   troubleshooting:
-    - issue: 'Login form shows "Invalid credentials" even with correct password'
-      solution: Ensure the customer account is activated. Check if the store has classic customer accounts enabled, not the new customer accounts.
+    - issue: Login form shows "Invalid credentials" even with correct password
+      solution: Ensure the customer account is activated. Check if the store has
+        classic customer accounts enabled, not the new customer accounts.
     - issue: '"Customer Account API not configured" error'
-      solution: This recipe replaces the Customer Account API. Make sure all patches were applied successfully and run `npm run codegen`.
+      solution: This recipe replaces the Customer Account API. Make sure all patches
+        were applied successfully and run `npm run codegen`.
     - issue: Password reset emails not being sent
-      solution: Configure email notifications in Shopify admin under Settings > Notifications. Ensure the customer email is verified.
+      solution: Configure email notifications in Shopify admin under Settings >
+        Notifications. Ensure the customer email is verified.
     - issue: Session expires too quickly
-      solution: Adjust the session configuration in server.ts to increase the cookie maxAge for longer sessions.
+      solution: Adjust the session configuration in server.ts to increase the cookie
+        maxAge for longer sessions.
     - issue: TypeScript errors about missing types
-      solution: Run `npm run codegen` to generate the Storefront API types after applying all patches.
-commit: 461e5a5b6e7c0c3e88ad7e1fa7e92f8c7c0c90e2
+      solution: Run `npm run codegen` to generate the Storefront API types after
+        applying all patches.
+commit: 0b4f01c9aa0e09332140a6a4e3114949873fb0f9

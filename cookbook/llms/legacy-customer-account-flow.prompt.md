@@ -17,13 +17,25 @@ Implement legacy customer account authentication using the Storefront API
 # User Intent Recognition
 
 <user_queries>
-
+- How do I implement customer accounts without the Customer Account API?
+- How to use legacy customer authentication in Hydrogen?
+- How to migrate from Customer Account API to Storefront API?
+- How to implement form-based login in Hydrogen?
 </user_queries>
 
 # Troubleshooting
 
 <troubleshooting>
-
+- **Issue**: Login form shows "Invalid credentials" even with correct password
+  **Solution**: Ensure the customer account is activated. Check if the store has classic customer accounts enabled, not the new customer accounts.
+- **Issue**: "Customer Account API not configured" error
+  **Solution**: This recipe replaces the Customer Account API. Make sure all patches were applied successfully and run `npm run codegen`.
+- **Issue**: Password reset emails not being sent
+  **Solution**: Configure email notifications in Shopify admin under Settings > Notifications. Ensure the customer email is verified.
+- **Issue**: Session expires too quickly
+  **Solution**: Adjust the session configuration in server.ts to increase the cookie maxAge for longer sessions.
+- **Issue**: TypeScript errors about missing types
+  **Solution**: Run `npm run codegen` to generate the Storefront API types after applying all patches.
 </troubleshooting>
 
 # Recipe Implementation
@@ -36,35 +48,47 @@ Here's the legacy-customer-account-flow recipe for the base Hydrogen skeleton te
 
 This recipe converts a Hydrogen app from the new Customer Account API authentication
 to the legacy customer account flow using the Storefront API. This is useful for stores
-that haven't migrated to the new Customer Account API yet.
+that haven't migrated to the new Customer Account API yet or need to maintain compatibility
+with existing customer authentication systems.
 
 Key features:
-- Full customer registration and login flow
-- Password recovery and reset functionality
-- Account activation via email
-- Customer profile management
-- Order history and address management
+- Full customer registration and login flow with form-based authentication
+- Password recovery and reset functionality via email
+- Account activation via email tokens
+- Customer profile management with editable fields
+- Order history with detailed order views
+- Address management (create, edit, delete, set default)
 - Session-based authentication using customer access tokens
+- Secure server-side rendering for all account routes
 
 ## Notes
 
 > [!NOTE]
-> This uses the deprecated Storefront API customer endpoints
+> This uses the deprecated Storefront API customer endpoints instead of the new Customer Account API
 
 > [!NOTE]
-> Consider migrating to the new Customer Account API for better security and features
-
-> [!NOTE]
-> Customer access tokens are stored in session cookies
+> Customer access tokens are stored in session cookies for authentication
 
 > [!NOTE]
 > All account routes are server-side rendered for security
 
+> [!NOTE]
+> The login/register/recover routes use the account_ prefix to avoid layout nesting
+
+> [!NOTE]
+> Account data routes use the account. prefix to inherit the account layout
+
+> [!NOTE]
+> Consider migrating to the new Customer Account API for better security and features
+
 ## Requirements
 
-- A Shopify store with customer accounts enabled
-- Storefront API access
-- Email notifications configured in Shopify admin for account activation and password reset
+- A Shopify store with customer accounts enabled (classic accounts, not new customer accounts)
+- Storefront API access with customer read/write permissions
+- Email notifications configured in Shopify admin for:
+  - Account activation emails
+  - Password reset emails
+  - Welcome emails (optional)
 
 ## New files added to the template by this recipe
 
@@ -77,7 +101,7 @@ Key features:
 
 ### Step 1: README.md
 
-
+Update README to document legacy customer account flow
 
 #### File: /README.md
 
@@ -115,7 +139,7 @@ Key features:
 
 ### Step 1: app/components/Header.tsx
 
-
+Add account link to header navigation
 
 #### File: /app/components/Header.tsx
 
@@ -148,9 +172,9 @@ Key features:
 
 ### Step 1: app/routes/account_.activate.$id.$activationToken.tsx
 
+Add account activation route for email verification
 
-
-#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
+#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
 
 ```tsx
 import {Form, useActionData, data, redirect} from 'react-router';
@@ -310,7 +334,7 @@ const CUSTOMER_ACTIVATE_MUTATION = `#graphql
 
 ### Step 2: app/components/PageLayout.tsx
 
-
+Update PageLayout to handle account routes
 
 #### File: /app/components/PageLayout.tsx
 
@@ -329,9 +353,9 @@ const CUSTOMER_ACTIVATE_MUTATION = `#graphql
 
 ### Step 2: app/routes/account_.recover.tsx
 
+Add password recovery form for forgotten passwords
 
-
-#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
+#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
 
 ```tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -463,7 +487,7 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
 
 ### Step 3: app/root.tsx
 
-
+Add customer access token validation to root loader
 
 #### File: /app/root.tsx
 
@@ -592,9 +616,9 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
 
 ### Step 3: app/routes/account_.register.tsx
 
+Add customer registration form
 
-
-#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.register.tsx)
+#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.register.tsx)
 
 ```tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -805,7 +829,7 @@ const REGISTER_LOGIN_MUTATION = `#graphql
 
 ### Step 4: app/routes/account.$.tsx
 
-
+Convert catch-all route to use Storefront API authentication
 
 #### File: /app/routes/account.$.tsx
 
@@ -828,9 +852,9 @@ const REGISTER_LOGIN_MUTATION = `#graphql
 
 ### Step 4: app/routes/account_.reset.$id.$resetToken.tsx
 
+Add password reset form with token validation
 
-
-#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
+#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
 
 ```tsx
 import {Form, useActionData, data, redirect} from 'react-router';
@@ -970,7 +994,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 
 ### Step 5: app/routes/account.addresses.tsx
 
-
+Convert address management to use Storefront API mutations
 
 #### File: /app/routes/account.addresses.tsx
 
@@ -1535,7 +1559,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 
 ### Step 6: app/routes/account.orders.$id.tsx
 
-
+Convert order details page to use Storefront API queries
 
 #### File: /app/routes/account.orders.$id.tsx
 
@@ -1652,24 +1676,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
    return (
      <div className="account-order">
        <h2>Order {order.name}</h2>
-@@ -97,12 +74,10 @@ export default function OrderRoute() {
-             </tr>
-           </thead>
-           <tbody>
--            {lineItems.map(
--              (lineItem: OrderLineItemFullFragment, lineItemIndex: number) => (
--                // eslint-disable-next-line react/no-array-index-key
--                <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
--              ),
--            )}
-+            {lineItems.map((lineItem, lineItemIndex) => (
-+              // eslint-disable-next-line react/no-array-index-key
-+              <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
-+            ))}
-           </tbody>
-           <tfoot>
-             {((discountValue && discountValue.amount) ||
-@@ -131,7 +106,7 @@ export default function OrderRoute() {
+@@ -132,7 +109,7 @@ export default function OrderRoute() {
                  <p>Subtotal</p>
                </th>
                <td>
@@ -1678,7 +1685,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
                </td>
              </tr>
              <tr>
-@@ -142,7 +117,7 @@ export default function OrderRoute() {
+@@ -143,7 +120,7 @@ export default function OrderRoute() {
                  <p>Tax</p>
                </th>
                <td>
@@ -1687,7 +1694,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
                </td>
              </tr>
              <tr>
-@@ -153,7 +128,7 @@ export default function OrderRoute() {
+@@ -154,7 +131,7 @@ export default function OrderRoute() {
                  <p>Total</p>
                </th>
                <td>
@@ -1696,7 +1703,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
                </td>
              </tr>
            </tfoot>
-@@ -162,16 +137,17 @@ export default function OrderRoute() {
+@@ -163,16 +140,17 @@ export default function OrderRoute() {
            <h3>Shipping Address</h3>
            {order?.shippingAddress ? (
              <address>
@@ -1723,7 +1730,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
                )}
              </address>
            ) : (
-@@ -179,13 +155,13 @@ export default function OrderRoute() {
+@@ -180,13 +158,13 @@ export default function OrderRoute() {
            )}
            <h3>Status</h3>
            <div>
@@ -1739,7 +1746,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
            View Order Status →
          </a>
        </p>
-@@ -195,27 +171,145 @@ export default function OrderRoute() {
+@@ -196,27 +174,145 @@ export default function OrderRoute() {
  
  function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
    return (
@@ -1898,32 +1905,45 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 
 ### Step 7: app/routes/account.orders._index.tsx
 
-
+Convert orders list to use Storefront API with pagination
 
 #### File: /app/routes/account.orders._index.tsx
 
 ```diff
-@@ -1,45 +1,53 @@
+@@ -1,222 +1,178 @@
 -import {
 -  Link,
 -  useLoaderData,
+-  useNavigation,
+-  useSearchParams,
 -} from 'react-router';
 +import {Link, useLoaderData, data, redirect} from 'react-router';
  import type {Route} from './+types/account.orders._index';
+-import {useRef} from 'react';
  import {
    Money,
    getPaginationVariables,
 -  flattenConnection,
-+  Pagination,
  } from '@shopify/hydrogen';
+-import {
+-  buildOrderSearchQuery,
+-  parseOrderFilters,
+-  ORDER_FILTER_FIELDS,
+-  type OrderFilterParams,
+-} from '~/lib/orderFilters';
 -import {CUSTOMER_ORDERS_QUERY} from '~/graphql/customer-account/CustomerOrdersQuery';
  import type {
    CustomerOrdersFragment,
    OrderItemFragment,
 -} from 'customer-accountapi.generated';
--import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 +} from 'storefrontapi.generated';
+ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  
+-type OrdersLoaderData = {
+-  customer: CustomerOrdersFragment;
+-  filters: OrderFilterParams;
+-};
+-
  export const meta: Route.MetaFunction = () => {
    return [{title: 'Orders'}];
  };
@@ -1935,15 +1955,17 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 -  });
 +  const {session, storefront} = context;
  
--  const {data, errors} = await customerAccount.query(
--    CUSTOMER_ORDERS_QUERY,
--    {
--      variables: {
--        ...paginationVariables,
--        language: customerAccount.i18n.language,
--      },
+-  const url = new URL(request.url);
+-  const filters = parseOrderFilters(url.searchParams);
+-  const query = buildOrderSearchQuery(filters);
+-
+-  const {data, errors} = await customerAccount.query(CUSTOMER_ORDERS_QUERY, {
+-    variables: {
+-      ...paginationVariables,
+-      query,
+-      language: customerAccount.i18n.language,
 -    },
--  );
+-  });
 -
 -  if (errors?.length || !data?.customer) {
 -    throw Error('Customer orders not found');
@@ -1952,7 +1974,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 +    return redirect('/account/login');
    }
  
--  return {customer: data.customer};
+-  return {customer: data.customer, filters};
 +  try {
 +    const paginationVariables = getPaginationVariables(request, {
 +      pageBy: 20,
@@ -1982,47 +2004,170 @@ const CUSTOMER_RESET_MUTATION = `#graphql
  }
  
  export default function Orders() {
-@@ -56,9 +64,23 @@ function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
+-  const {customer, filters} = useLoaderData<OrdersLoaderData>();
++  const {customer} = useLoaderData<typeof loader>();
+   const {orders} = customer;
+ 
    return (
-     <div className="acccount-orders">
-       {orders?.nodes.length ? (
--        <PaginatedResourceSection connection={orders}>
--          {({node: order}) => <OrderItem key={order.id} order={order} />}
--        </PaginatedResourceSection>
-+        <Pagination connection={orders}>
-+          {({nodes, isLoading, PreviousLink, NextLink}) => {
-+            return (
-+              <>
-+                <PreviousLink>
-+                  {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
-+                </PreviousLink>
-+                {nodes.map((order) => {
-+                  return <OrderItem key={order.id} order={order} />;
-+                })}
-+                <NextLink>
-+                  {isLoading ? 'Loading...' : <span>Load more ↓</span>}
-+                </NextLink>
-+              </>
-+            );
-+          }}
-+        </Pagination>
-       ) : (
-         <EmptyOrders />
-       )}
-@@ -79,20 +101,91 @@ function EmptyOrders() {
+     <div className="orders">
+-      <OrderSearchForm currentFilters={filters} />
+-      <OrdersTable orders={orders} filters={filters} />
++      <OrdersTable orders={orders} />
+     </div>
+   );
  }
  
+-function OrdersTable({
+-  orders,
+-  filters,
+-}: {
+-  orders: CustomerOrdersFragment['orders'];
+-  filters: OrderFilterParams;
+-}) {
+-  const hasFilters = !!(filters.name || filters.confirmationNumber);
+-
++function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
+   return (
+-    <div className="acccount-orders" aria-live="polite">
++    <div className="acccount-orders">
+       {orders?.nodes.length ? (
+         <PaginatedResourceSection connection={orders}>
+           {({node: order}) => <OrderItem key={order.id} order={order} />}
+         </PaginatedResourceSection>
+       ) : (
+-        <EmptyOrders hasFilters={hasFilters} />
++        <EmptyOrders />
+       )}
+     </div>
+   );
+ }
+ 
+-function EmptyOrders({hasFilters = false}: {hasFilters?: boolean}) {
++function EmptyOrders() {
+   return (
+     <div>
+-      {hasFilters ? (
+-        <>
+-          <p>No orders found matching your search.</p>
+-          <br />
+-          <p>
+-            <Link to="/account/orders">Clear filters →</Link>
+-          </p>
+-        </>
+-      ) : (
+-        <>
+-          <p>You haven&apos;t placed any orders yet.</p>
+-          <br />
+-          <p>
+-            <Link to="/collections">Start Shopping →</Link>
+-          </p>
+-        </>
+-      )}
++      <p>You haven&apos;t placed any orders yet.</p>
++      <br />
++      <p>
++        <Link to="/collections">Start Shopping →</Link>
++      </p>
+     </div>
+   );
+ }
+ 
+-function OrderSearchForm({
+-  currentFilters,
+-}: {
+-  currentFilters: OrderFilterParams;
+-}) {
+-  const [searchParams, setSearchParams] = useSearchParams();
+-  const navigation = useNavigation();
+-  const isSearching =
+-    navigation.state !== 'idle' &&
+-    navigation.location?.pathname?.includes('orders');
+-  const formRef = useRef<HTMLFormElement>(null);
+-
+-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+-    event.preventDefault();
+-    const formData = new FormData(event.currentTarget);
+-    const params = new URLSearchParams();
+-
+-    const name = formData.get(ORDER_FILTER_FIELDS.NAME)?.toString().trim();
+-    const confirmationNumber = formData
+-      .get(ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER)
+-      ?.toString()
+-      .trim();
+-
+-    if (name) params.set(ORDER_FILTER_FIELDS.NAME, name);
+-    if (confirmationNumber)
+-      params.set(ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER, confirmationNumber);
+-
+-    setSearchParams(params);
+-  };
+-
+-  const hasFilters = currentFilters.name || currentFilters.confirmationNumber;
+-
+-  return (
+-    <form
+-      ref={formRef}
+-      onSubmit={handleSubmit}
+-      className="order-search-form"
+-      aria-label="Search orders"
+-    >
+-      <fieldset className="order-search-fieldset">
+-        <legend className="order-search-legend">Filter Orders</legend>
+-
+-        <div className="order-search-inputs">
+-          <input
+-            type="search"
+-            name={ORDER_FILTER_FIELDS.NAME}
+-            placeholder="Order #"
+-            aria-label="Order number"
+-            defaultValue={currentFilters.name || ''}
+-            className="order-search-input"
+-          />
+-          <input
+-            type="search"
+-            name={ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER}
+-            placeholder="Confirmation #"
+-            aria-label="Confirmation number"
+-            defaultValue={currentFilters.confirmationNumber || ''}
+-            className="order-search-input"
+-          />
+-        </div>
+-
+-        <div className="order-search-buttons">
+-          <button type="submit" disabled={isSearching}>
+-            {isSearching ? 'Searching' : 'Search'}
+-          </button>
+-          {hasFilters && (
+-            <button
+-              type="button"
+-              disabled={isSearching}
+-              onClick={() => {
+-                setSearchParams(new URLSearchParams());
+-                formRef.current?.reset();
+-              }}
+-            >
+-              Clear
+-            </button>
+-          )}
+-        </div>
+-      </fieldset>
+-    </form>
+-  );
+-}
+-
  function OrderItem({order}: {order: OrderItemFragment}) {
 -  const fulfillmentStatus = flattenConnection(order.fulfillments)[0]?.status;
    return (
      <>
        <fieldset>
--        <Link to={`/account/orders/${btoa(order.id)}`}>
+         <Link to={`/account/orders/${btoa(order.id)}`}>
 -          <strong>#{order.number}</strong>
-+        <Link to={`/account/orders/${order.id}`}>
 +          <strong>#{order.orderNumber}</strong>
          </Link>
          <p>{new Date(order.processedAt).toDateString()}</p>
+-        {order.confirmationNumber && (
+-          <p>Confirmation: {order.confirmationNumber}</p>
+-        )}
          <p>{order.financialStatus}</p>
 -        {fulfillmentStatus && <p>{fulfillmentStatus}</p>}
 -        <Money data={order.totalPrice} />
@@ -2106,11 +2251,265 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 +    }
 +  }
 +` as const;
+\ No newline at end of file
+```
+
+### Step 9: app/routes/account.profile.tsx
+
+
+
+#### File: /app/routes/account.profile.tsx
+
+```diff
+@@ -1,12 +1,12 @@
+-import type {CustomerFragment} from 'customer-accountapi.generated';
+-import type {CustomerUpdateInput} from '@shopify/hydrogen/customer-account-api-types';
+-import {CUSTOMER_UPDATE_MUTATION} from '~/graphql/customer-account/CustomerUpdateMutation';
++import type {CustomerFragment} from 'storefrontapi.generated';
++import type {CustomerUpdateInput} from '@shopify/hydrogen/storefront-api-types';
+ import {
+-  data,
+   Form,
+   useActionData,
+   useNavigation,
+   useOutletContext,
++  data,
++  redirect,
+ } from 'react-router';
+ import type {Route} from './+types/account.profile';
+ 
+@@ -20,62 +20,79 @@ export const meta: Route.MetaFunction = () => {
+ };
+ 
+ export async function loader({context}: Route.LoaderArgs) {
+-  context.customerAccount.handleAuthStatus();
+-
++  const customerAccessToken = await context.session.get('customerAccessToken');
++  if (!customerAccessToken) {
++    return redirect('/account/login');
++  }
+   return {};
+ }
+ 
+ export async function action({request, context}: Route.ActionArgs) {
+-  const {customerAccount} = context;
++  const {session, storefront} = context;
+ 
+   if (request.method !== 'PUT') {
+     return data({error: 'Method not allowed'}, {status: 405});
+   }
+ 
+   const form = await request.formData();
++  const customerAccessToken = await session.get('customerAccessToken');
++  if (!customerAccessToken) {
++    return data({error: 'Unauthorized'}, {status: 401});
++  }
+ 
+   try {
++    const password = getPassword(form);
+     const customer: CustomerUpdateInput = {};
+-    const validInputKeys = ['firstName', 'lastName'] as const;
++    const validInputKeys = [
++      'firstName',
++      'lastName',
++      'email',
++      'password',
++      'phone',
++    ] as const;
+     for (const [key, value] of form.entries()) {
+       if (!validInputKeys.includes(key as any)) {
+         continue;
+       }
++      if (key === 'acceptsMarketing') {
++        customer.acceptsMarketing = value === 'on';
++      }
+       if (typeof value === 'string' && value.length) {
+         customer[key as (typeof validInputKeys)[number]] = value;
+       }
+     }
+ 
++    if (password) {
++      customer.password = password;
++    }
++
+     // update customer and possibly password
+-    const {data, errors} = await customerAccount.mutate(
+-      CUSTOMER_UPDATE_MUTATION,
+-      {
+-        variables: {
+-          customer,
+-          language: customerAccount.i18n.language,
+-        },
++    const updated = await storefront.mutate(CUSTOMER_UPDATE_MUTATION, {
++      variables: {
++        customerAccessToken: customerAccessToken.accessToken,
++        customer,
+       },
+-    );
++    });
+ 
+-    if (errors?.length) {
+-      throw new Error(errors[0].message);
++    // check for mutation errors
++    if (updated.customerUpdate?.customerUserErrors?.length) {
++      return data(
++        {error: updated.customerUpdate?.customerUserErrors[0]},
++        {status: 400},
++      );
+     }
+ 
+-    if (!data?.customerUpdate?.customer) {
+-      throw new Error('Customer profile update failed.');
++    // update session with the updated access token
++    if (updated.customerUpdate?.customerAccessToken?.accessToken) {
++      session.set(
++        'customerAccessToken',
++        updated.customerUpdate?.customerAccessToken,
++      );
+     }
+ 
+-    return {
+-      error: null,
+-      customer: data?.customerUpdate?.customer,
+-    };
++    return {error: null, customer: updated.customerUpdate?.customer};
+   } catch (error: any) {
+-    return data(
+-      {error: error.message, customer: null},
+-      {
+-        status: 400,
+-      },
+-    );
++    return data({error: error.message, customer: null}, {status: 400});
+   }
+ }
+ 
+@@ -114,6 +131,64 @@ export default function AccountProfile() {
+             defaultValue={customer.lastName ?? ''}
+             minLength={2}
+           />
++          <label htmlFor="phone">Mobile</label>
++          <input
++            id="phone"
++            name="phone"
++            type="tel"
++            autoComplete="tel"
++            placeholder="Mobile"
++            aria-label="Mobile"
++            defaultValue={customer.phone ?? ''}
++          />
++          <label htmlFor="email">Email address</label>
++          <input
++            id="email"
++            name="email"
++            type="email"
++            autoComplete="email"
++            required
++            placeholder="Email address"
++            aria-label="Email address"
++            defaultValue={customer.email ?? ''}
++          />
++          <div className="account-profile-marketing">
++            <input
++              id="acceptsMarketing"
++              name="acceptsMarketing"
++              type="checkbox"
++              placeholder="Accept marketing"
++              aria-label="Accept marketing"
++              defaultChecked={customer.acceptsMarketing}
++            />
++            <label htmlFor="acceptsMarketing">
++              &nbsp; Subscribed to marketing communications
++            </label>
++          </div>
++        </fieldset>
++        <br />
++        <legend>Change password (optional)</legend>
++        <fieldset>
++          <label htmlFor="newPassword">New password</label>
++          <input
++            id="newPassword"
++            name="newPassword"
++            type="password"
++            placeholder="New password"
++            aria-label="New password"
++            minLength={8}
++          />
++
++          <label htmlFor="newPasswordConfirm">New password (confirm)</label>
++          <input
++            id="newPasswordConfirm"
++            name="newPasswordConfirm"
++            type="password"
++            placeholder="New password (confirm)"
++            aria-label="New password confirm"
++            minLength={8}
++          />
++          <small>Passwords must be at least 8 characters.</small>
+         </fieldset>
+         {action?.error ? (
+           <p>
+@@ -131,3 +206,55 @@ export default function AccountProfile() {
+     </div>
+   );
+ }
++
++function getPassword(form: FormData): string | undefined {
++  let password;
++  const newPassword = form.get('newPassword');
++  const newPasswordConfirm = form.get('newPasswordConfirm');
++
++  let passwordError;
++
++  if (newPassword && newPassword !== newPasswordConfirm) {
++    passwordError = new Error('New passwords must match.');
++  }
++
++  if (passwordError) {
++    throw passwordError;
++  }
++
++  if (newPassword) {
++    password = newPassword;
++  }
++
++  return String(password);
++}
++
++const CUSTOMER_UPDATE_MUTATION = `#graphql
++  # https://shopify.dev/docs/api/storefront/latest/mutations/customerUpdate
++  mutation customerUpdate(
++    $customerAccessToken: String!,
++    $customer: CustomerUpdateInput!
++    $country: CountryCode
++    $language: LanguageCode
++  ) @inContext(language: $language, country: $country) {
++    customerUpdate(customerAccessToken: $customerAccessToken, customer: $customer) {
++      customer {
++        acceptsMarketing
++        email
++        firstName
++        id
++        lastName
++        phone
++      }
++      customerAccessToken {
++        accessToken
++        expiresAt
++      }
++      customerUserErrors {
++        code
++        field
++        message
++      }
++    }
++  }
++` as const;
 ```
 
 ### Step 9: app/routes/account.tsx
 
-
+Convert account layout to use session-based authentication
 
 #### File: /app/routes/account.tsx
 
@@ -2310,7 +2709,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 
 ### Step 10: app/routes/account_.login.tsx
 
-
+Replace Customer Account API login with Storefront API form
 
 #### File: /app/routes/account_.login.tsx
 
@@ -2464,7 +2863,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 
 ### Step 11: app/routes/account_.logout.tsx
 
-
+Replace Customer Account API logout with session cleanup
 
 #### File: /app/routes/account_.logout.tsx
 
