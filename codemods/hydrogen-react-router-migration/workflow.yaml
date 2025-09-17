@@ -1,0 +1,10 @@
+schema_version: "1.0.0"
+version: "1.0.0"
+name: Hydrogen React Router Migration
+nodes:
+  - id: transform
+    name: Transform files
+    steps:
+      - name: Run jscodeshift
+        run: |
+          npx jscodeshift -t transform.js

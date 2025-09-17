@@ -55,11 +55,12 @@ Then run this Hydrogen-specific codemod.`,
     };
   }
   
-  // Check if already on React Router 7.8.x
-  if (rrVersion.includes('7.8') || rrVersion.includes('7.9')) {
+  // Check if already on React Router 7.x or higher
+  if (rrVersion.startsWith('^7.') || rrVersion.startsWith('~7.') || rrVersion.startsWith('7.') ||
+      rrVersion.startsWith('^8.') || rrVersion.startsWith('~8.') || rrVersion.startsWith('8.')) {
     return {
       ready: false,
-      message: 'Already on React Router 7.8.x or higher - no migration needed!',
+      message: 'Already on React Router 7.x or higher - transformations may be redundant!',
       details: {
         hasRemixDeps: false,
         hasReactRouter: true,
@@ -145,6 +146,6 @@ export function formatSuccessMessage(details: PrerequisiteResult['details']): st
       ? 'Mixed (TypeScript & JavaScript)' 
       : language.isTypeScript ? 'TypeScript' : 'JavaScript'} ✓
 
-Ready to migrate to React Router 7.8.x...
+Ready to migrate to React Router 7.9.x...
 `;
 }

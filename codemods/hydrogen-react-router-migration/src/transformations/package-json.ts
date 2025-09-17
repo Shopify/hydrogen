@@ -15,7 +15,7 @@ export interface PackageJsonResult {
 
 const DEPENDENCIES_TO_ADD: PackageJsonUpdate = {
   dependencies: {
-    'react-router': '^7.8.0',
+    'react-router': '^7.9.0',
   },
   removeDependencies: [
     '@remix-run/react',

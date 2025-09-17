@@ -24,7 +24,7 @@ export function validatePreTransform(
   try {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
     
-    // Check for React Router 7.8.x already installed
+    // Check for React Router 7.x already installed
     const hasReactRouter = 
       packageJson.dependencies?.['react-router'] ||
       packageJson.devDependencies?.['react-router'];
@@ -33,8 +33,8 @@ export function validatePreTransform(
       const version = packageJson.dependencies?.['react-router'] || 
                      packageJson.devDependencies?.['react-router'];
       
-      if (version.includes('7.8')) {
-        warnings.push('React Router 7.8.x already installed - some transformations may be redundant');
+      if (version.startsWith('^7.') || version.startsWith('~7.') || version.startsWith('7.')) {
+        warnings.push('React Router 7.x already installed - some transformations may be redundant');
       }
     }
     

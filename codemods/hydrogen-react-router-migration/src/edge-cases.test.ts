@@ -29,7 +29,7 @@ describe('Edge Cases', () => {
       report: () => {}
     };
     
-    const result = transformer(fileInfo, api, {});
+    const result = transformer(fileInfo, api, { skipReactRouterCheck: true, skipGitCheck: true });
     
     // Skip this test if the transformer doesn't run (missing fixtures)
     if (!result) {
@@ -86,7 +86,7 @@ describe('Edge Cases', () => {
       
       // Should not throw on valid syntax
       expect(() => {
-        transformer(fileInfo, api, {});
+        transformer(fileInfo, api, { skipReactRouterCheck: true, skipGitCheck: true });
       }).not.toThrow();
     }
   });
@@ -110,7 +110,7 @@ export function useComponent() {
       report: () => {}
     };
     
-    const result = transformer(fileInfo, api, {});
+    const result = transformer(fileInfo, api, { skipReactRouterCheck: true, skipGitCheck: true });
     
     // Should handle without infinite loops
     expect(result === undefined || typeof result === 'string').toBe(true);
@@ -141,7 +141,7 @@ export async function loader(args) {
       report: () => {}
     };
     
-    const result = transformer(fileInfo, api, {});
+    const result = transformer(fileInfo, api, { skipReactRouterCheck: true, skipGitCheck: true });
     
     if (result) {
       // Comments should be preserved
@@ -180,7 +180,7 @@ export function Component() {
       report: () => {}
     };
     
-    const result = transformer(fileInfo, api, {});
+    const result = transformer(fileInfo, api, { skipReactRouterCheck: true, skipGitCheck: true });
     
     // Should transform even deeply nested components
     if (result) {
@@ -206,7 +206,7 @@ export function Component() {
       report: () => {}
     };
     
-    const result = transformer(fileInfo, api, {});
+    const result = transformer(fileInfo, api, { skipReactRouterCheck: true, skipGitCheck: true });
     
     // Should return undefined when no changes
     expect(result).toBeUndefined();

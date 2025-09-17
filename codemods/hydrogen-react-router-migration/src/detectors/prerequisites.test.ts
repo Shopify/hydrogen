@@ -60,7 +60,7 @@ describe('Prerequisites Checker', () => {
     expect(result.message).toContain('No react-router dependency found');
   });
   
-  test('fails when already on React Router 7.8.x', () => {
+  test('fails when already on React Router 7.x or higher', () => {
     const packageJson = {
       dependencies: {
         '@shopify/hydrogen': '2025.5.0',
@@ -75,7 +75,7 @@ describe('Prerequisites Checker', () => {
     const result = checkPrerequisites(tempDir);
     
     expect(result.ready).toBe(false);
-    expect(result.message).toContain('Already on React Router 7.8.x');
+    expect(result.message).toContain('Already on React Router 7.x or higher');
   });
   
   test('fails when Hydrogen is missing', () => {

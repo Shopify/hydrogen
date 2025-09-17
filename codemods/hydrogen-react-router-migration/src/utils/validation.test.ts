@@ -75,7 +75,7 @@ describe('Validation', () => {
       
       expect(result.valid).toBe(true);
       expect(result.warnings).toContain(
-        'React Router 7.8.x already installed - some transformations may be redundant'
+        'React Router 7.x already installed - some transformations may be redundant'
       );
     });
 

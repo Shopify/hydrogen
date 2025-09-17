@@ -1,7 +1,7 @@
 {
   "name": "hydrogen-react-router-migration",
   "version": "1.0.0",
-  "private": true,
+  "private": false,
   "description": "Automated migration tool for transitioning Hydrogen projects from Remix to React Router v7 (Codemod Registry)",
   "keywords": [
     "shopify",
@@ -35,7 +35,10 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src test",
     "build": "tsc",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublish": "npm run clean && npm run build",
+    "publish:codemod": "npm run build && npx codemod publish",
+    "publish:dry": "npm run build && npx codemod publish --dry-run"
   },
   "dependencies": {
     "jscodeshift": "^0.15.0",

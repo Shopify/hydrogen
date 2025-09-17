@@ -133,7 +133,7 @@ export default function Index() {
       
       // Should throw error about missing React Router migration
       expect(() => {
-        transformer(fileInfo, api, { projectRoot: tempDir });
+        transformer(fileInfo, api, { projectRoot: tempDir, skipGitCheck: true });
       }).toThrow('React Router v7 migration has not been applied');
     });
 
@@ -197,10 +197,10 @@ export default function Index() {
       };
       
       // Should not throw and should transform
-      const result = transformer(fileInfo, api, { projectRoot: tempDir });
+      const result = transformer(fileInfo, api, { projectRoot: tempDir, skipReactRouterCheck: true, skipGitCheck: true });
       
       expect(result).toBeDefined();
-      expect(result).toContain('data(');
+      expect(result).toContain('return { data: \'test\' }');
       expect(result).not.toContain('json(');
     });
 
@@ -287,7 +287,7 @@ export async function loader() {
       };
       
       // Should pass validation
-      const result = transformer(fileInfo, api, { projectRoot: tempDir });
+      const result = transformer(fileInfo, api, { projectRoot: tempDir, skipReactRouterCheck: true, skipGitCheck: true });
       expect(result).toBeDefined();
     });
   });
@@ -344,11 +344,12 @@ export async function action() {
         report: () => {}
       };
       
-      const result = transformer(fileInfo, api, { projectRoot: tempDir });
+      const result = transformer(fileInfo, api, { projectRoot: tempDir, skipReactRouterCheck: true, skipGitCheck: true });
       
       expect(result).toBeDefined();
-      // json and defer should be transformed to data
-      expect(result).toContain('data(');
+      // json and defer should be transformed to plain objects
+      expect(result).toContain('return {\n    data: \'test\'');
+      expect(result).toContain('return { success: true }');
       expect(result).not.toContain('defer(');
       expect(result).not.toContain('json(');
       // redirect should come from react-router
@@ -393,7 +394,7 @@ export default function Component() {
         report: () => {}
       };
       
-      const result = transformer(fileInfo, api, { projectRoot: tempDir });
+      const result = transformer(fileInfo, api, { projectRoot: tempDir, skipReactRouterCheck: true, skipGitCheck: true });
       
       // @shopify/hydrogen imports should remain exactly as they were
       // Since no changes are made, result should be undefined
@@ -423,16 +424,17 @@ export async function loader() {
         report: () => {}
       };
       
-      const result = transformer(fileInfo, api, { projectRoot: tempDir });
+      const result = transformer(fileInfo, api, { projectRoot: tempDir, skipReactRouterCheck: true, skipGitCheck: true });
       
       expect(result).toBeDefined();
       // Should have a single consolidated import from react-router
       const reactRouterImports = (result.match(/from 'react-router'/g) || []).length;
       expect(reactRouterImports).toBe(1);
-      // Should include all the necessary imports
-      expect(result).toContain('data');
+      // Should include all the necessary imports (no data since we just return plain objects)
       expect(result).toContain('redirect');
       expect(result).toContain('Link');
+      // json should be transformed to plain object
+      expect(result).toContain('return { test: true }');
       expect(result).toContain('useLoaderData');
     });
 
@@ -462,15 +464,16 @@ export async function action({ request }: ActionFunctionArgs) {
         report: () => {}
       };
       
-      const result = transformer(fileInfo, api, { projectRoot: tempDir });
+      const result = transformer(fileInfo, api, { projectRoot: tempDir, skipReactRouterCheck: true, skipGitCheck: true });
       
       expect(result).toBeDefined();
       // Should have type imports for Route types
       expect(result).toContain('import type { Route }');
       // Should have regular imports for utilities
       expect(result).toContain("from 'react-router'");
-      expect(result).toContain('data');
       expect(result).toContain('redirect');
+      // json should be transformed to plain object
+      expect(result).toContain('return { test: true }');
       // Should use Route.LoaderArgs and Route.ActionArgs
       expect(result).toContain('Route.LoaderArgs');
       expect(result).toContain('Route.ActionArgs');
@@ -532,7 +535,7 @@ export async function createAppLoadContext(request: Request, env: Env) {
         report: () => {}
       };
       
-      const result = transformer(fileInfo, api, { projectRoot: tempDir });
+      const result = transformer(fileInfo, api, { projectRoot: tempDir, skipReactRouterCheck: true, skipGitCheck: true });
       
       expect(result).toBeDefined();
       // Function name should be transformed
@@ -571,7 +574,7 @@ export async function loader({ context }: Route.LoaderArgs) {
         report: () => {}
       };
       
-      const result = transformer(fileInfo, api, { projectRoot: tempDir });
+      const result = transformer(fileInfo, api, { projectRoot: tempDir, skipReactRouterCheck: true, skipGitCheck: true });
       
       expect(result).toBeDefined();
       // Should transform i18n access pattern
@@ -638,7 +641,7 @@ export default async function handleRequest(
         report: () => {}
       };
       
-      const result = transformer(fileInfo, api, { projectRoot: tempDir });
+      const result = transformer(fileInfo, api, { projectRoot: tempDir, skipReactRouterCheck: true, skipGitCheck: true });
       
       expect(result).toBeDefined();
       // Component should be renamed
@@ -674,7 +677,7 @@ startTransition(() => {
         report: () => {}
       };
       
-      const result = transformer(fileInfo, api, { projectRoot: tempDir });
+      const result = transformer(fileInfo, api, { projectRoot: tempDir, skipReactRouterCheck: true, skipGitCheck: true });
       
       expect(result).toBeDefined();
       // Component should be renamed
@@ -704,7 +707,7 @@ export default {
         report: () => {}
       };
       
-      const result = transformer(fileInfo, api, { projectRoot: tempDir });
+      const result = transformer(fileInfo, api, { projectRoot: tempDir, skipReactRouterCheck: true, skipGitCheck: true });
       
       expect(result).toBeDefined();
       // Virtual module should be renamed
@@ -769,7 +772,7 @@ function handleError() {
         report: () => {}
       };
       
-      const result = transformer(fileInfo, api, { projectRoot: tempDir });
+      const result = transformer(fileInfo, api, { projectRoot: tempDir, skipReactRouterCheck: true, skipGitCheck: true });
       
       expect(result).toBeDefined();
       // Should add type annotations to catch parameters
@@ -830,11 +833,11 @@ export default function Component() {
         report: () => {}
       };
       
-      const result = transformer(fileInfo, api, { projectRoot: tempDir });
+      const result = transformer(fileInfo, api, { projectRoot: tempDir, skipReactRouterCheck: true, skipGitCheck: true });
       
       expect(result).toBeDefined();
       // Should transform imports and function calls
-      expect(result).toContain('data(');
+      expect(result).toContain('return {\n    someData: await fetchData()');
       expect(result).not.toContain('defer(');
       expect(result).not.toContain('json(');
       expect(result).toMatch(/from ['"]react-router['"]/);

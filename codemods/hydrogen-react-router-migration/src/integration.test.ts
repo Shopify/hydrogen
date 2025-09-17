@@ -285,8 +285,8 @@ export default function Product() {
     const result = transformer(fileInfo, api, {});
     
     expect(result).toBeDefined();
-    expect(result).toContain('data(');
-    expect(result).not.toContain('json(');
+    // json from @shopify/hydrogen should remain unchanged
+    expect(result).toContain('json({ product })');
     expect(result).toContain('react-router');
     expect(result).not.toContain('@remix-run/react');
     // JavaScript route files may get JSDoc comments if they have loader/action

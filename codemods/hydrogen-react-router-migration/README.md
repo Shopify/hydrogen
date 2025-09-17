@@ -4,7 +4,7 @@ Automated migration tool for transitioning Hydrogen v2024.x projects from Remix 
 
 ## Overview
 
-This codemod automates the migration of Shopify Hydrogen storefronts from Remix-based routing to React Router v7.8.x, which is required for Hydrogen v2025.x. It handles imports, types, context APIs, and component transformations while preserving your application logic.
+This codemod automates the migration of Shopify Hydrogen storefronts from Remix-based routing to React Router v7.9.x, which is required for Hydrogen v2025.x. It handles imports, types, context APIs, and component transformations while preserving your application logic.
 
 ## Prerequisites
 
@@ -426,6 +426,70 @@ Time elapsed: 1.488 seconds
 - ✅ Updated `context.storefront.i18n` to `context.customerAccount.i18n`
 - ✅ Added `Route` type imports for TypeScript files
 - ✅ Transformed `LoaderFunctionArgs` to `Route.LoaderArgs`
+
+## Publishing
+
+This codemod can be published to the [Codemod Registry](https://codemod.com) for easy distribution.
+
+### Prerequisites
+
+1. Install the Codemod CLI:
+   ```bash
+   npm install -g @codemod/cli
+   ```
+
+2. Authenticate with the registry:
+   ```bash
+   npx codemod login
+   ```
+
+### Publishing Steps
+
+1. **Build the codemod:**
+   ```bash
+   npm run build
+   ```
+
+2. **Test locally (dry-run):**
+   ```bash
+   npm run publish:dry
+   ```
+   
+   This will create a tarball (`shopify-hydrogen-react-router-migration-{version}.tar.gz`) without publishing.
+
+3. **Publish to registry:**
+   ```bash
+   npm run publish:codemod
+   ```
+
+### Manual Publishing
+
+If you prefer to publish manually:
+
+```bash
+# Build TypeScript files
+npm run build
+
+# Create and publish the package
+npx codemod publish
+```
+
+### Version Management
+
+To update the version before publishing:
+
+1. Update version in `package.json`
+2. Update version in `.codemodrc.json`
+3. Update version in `codemod.yaml`
+4. Build and publish as described above
+
+### Testing Published Codemod
+
+Once published, users can run the codemod with:
+
+```bash
+npx codemod shopify-hydrogen-react-router-migration
+```
 
 ## Contributing
 

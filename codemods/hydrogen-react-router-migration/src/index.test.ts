@@ -14,7 +14,10 @@ function runTransform(source: string, path: string = 'test.tsx'): string | undef
     report: () => {}
   };
   
-  const options = {};
+  const options = {
+    skipReactRouterCheck: true,
+    skipGitCheck: true
+  };
   
   return transformer(fileInfo, api, options);
 }

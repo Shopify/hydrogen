@@ -21,10 +21,26 @@ export function transformResponseUtilities(
   // Track if we need to add data import
   let needsDataImport = false;
 
-  // Transform json() calls
+  // Check which imports are from @shopify/hydrogen (should NOT be transformed)
+  const hydrogenImports = new Set<string>();
+  root.find(j.ImportDeclaration).forEach(path => {
+    if (path.value.source.value === '@shopify/hydrogen') {
+      (path.value.specifiers || []).forEach(spec => {
+        if (spec.type === 'ImportSpecifier' && spec.imported?.type === 'Identifier') {
+          hydrogenImports.add(spec.imported.name);
+        }
+      });
+    }
+  });
+
+  // Transform json() calls (only if NOT from @shopify/hydrogen)
   root.find(j.CallExpression, {
     callee: { name: 'json' }
   }).forEach((path) => {
+    // Skip if json is from @shopify/hydrogen
+    if (hydrogenImports.has('json')) {
+      return;
+    }
     const args = path.value.arguments;
     
     if (args.length === 1) {
@@ -43,10 +59,14 @@ export function transformResponseUtilities(
     }
   });
 
-  // Transform defer() calls
+  // Transform defer() calls (only if NOT from @shopify/hydrogen)
   root.find(j.CallExpression, {
     callee: { name: 'defer' }
   }).forEach((path) => {
+    // Skip if defer is from @shopify/hydrogen
+    if (hydrogenImports.has('defer')) {
+      return;
+    }
     const args = path.value.arguments;
     
     // defer(data) → data

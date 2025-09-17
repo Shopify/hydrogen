@@ -38,11 +38,11 @@ describe('Package.json Updates', () => {
       const result = updatePackageJson(mockProjectRoot);
 
       expect(result.updated).toBe(true);
-      expect(result.changes).toContain('Added dependency: react-router@^7.8.0');
+      expect(result.changes).toContain('Added dependency: react-router@^7.9.0');
       
       const writtenContent = writeFileSyncMock.mock.calls[0][1] as string;
       const writtenJson = JSON.parse(writtenContent);
-      expect(writtenJson.dependencies['react-router']).toBe('^7.8.0');
+      expect(writtenJson.dependencies['react-router']).toBe('^7.9.0');
     });
 
     test('removes Remix dependencies', () => {
@@ -92,11 +92,11 @@ describe('Package.json Updates', () => {
       const result = updatePackageJson(mockProjectRoot);
 
       expect(result.updated).toBe(true);
-      expect(result.changes).toContain('Updated dependency: react-router from ^6.0.0 to ^7.8.0');
+      expect(result.changes).toContain('Updated dependency: react-router from ^6.0.0 to ^7.9.0');
       
       const writtenContent = writeFileSyncMock.mock.calls[0][1] as string;
       const writtenJson = JSON.parse(writtenContent);
-      expect(writtenJson.dependencies['react-router']).toBe('^7.8.0');
+      expect(writtenJson.dependencies['react-router']).toBe('^7.9.0');
     });
 
     test('does not update if react-router 7.x already present', () => {
@@ -176,7 +176,7 @@ describe('Package.json Updates', () => {
       const writtenContent = writeFileSyncMock.mock.calls[0][1] as string;
       const writtenJson = JSON.parse(writtenContent);
       expect(writtenJson.dependencies).toBeDefined();
-      expect(writtenJson.dependencies['react-router']).toBe('^7.8.0');
+      expect(writtenJson.dependencies['react-router']).toBe('^7.9.0');
     });
   });
 
@@ -184,7 +184,7 @@ describe('Package.json Updates', () => {
     test('returns true when react-router is in dependencies', () => {
       const mockPackageJson = {
         dependencies: {
-          'react-router': '^7.8.0',
+          'react-router': '^7.9.0',
         },
       };
 
@@ -197,7 +197,7 @@ describe('Package.json Updates', () => {
     test('returns true when react-router is in devDependencies', () => {
       const mockPackageJson = {
         devDependencies: {
-          'react-router': '^7.8.0',
+          'react-router': '^7.9.0',
         },
       };
 
@@ -257,7 +257,7 @@ describe('Package.json Updates', () => {
     test('returns false when no Remix dependencies', () => {
       const mockPackageJson = {
         dependencies: {
-          'react-router': '^7.8.0',
+          'react-router': '^7.9.0',
         },
       };
 

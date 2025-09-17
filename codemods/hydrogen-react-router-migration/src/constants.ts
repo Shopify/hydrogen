@@ -26,6 +26,6 @@ export const HYDROGEN_VERSION_RANGE = {
 } as const;
 
 export const REACT_ROUTER_VERSION_RANGE = {
-  from: '>=7.6.0 <7.8.0',
-  to: '7.8.2'
+  from: '>=7.6.0 <7.9.0',
+  to: '7.9.0'
 } as const;

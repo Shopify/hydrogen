@@ -1,0 +1,37 @@
+schema_version: "1.0.0"
+name: shopify-hydrogen-react-router-migration
+version: 1.0.0
+description: Migrate Hydrogen-specific patterns from Remix to React Router 7.9.x
+engine: jscodeshift
+workflow: "workflow.yaml"
+author: Shopify
+tags:
+  - hydrogen
+  - react-router
+  - migration
+  - shopify
+  - remix
+language: typescript
+applicability:
+  from:
+    - name: "@shopify/hydrogen"
+      version: ">=2024.4.0 <2025.7.0"
+    - name: "@shopify/remix-oxygen"
+      version: ">=2.0.0"
+    - name: "react-router"
+      version: ">=7.0.0 <7.9.0"
+  to:
+    - name: "@shopify/hydrogen"
+      version: ">=2025.1.0"
+    - name: "react-router"
+      version: ">=7.9.0"
+entry: transform.js
+include:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+exclude:
+  - "**/node_modules/**"
+  - "**/dist/**"
+  - "**/.turbo/**"
