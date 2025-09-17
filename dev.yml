@@ -7,7 +7,7 @@ env:
   NODE_ENV: development
 
 up:
-  - node: 'v24.8.0'
+  - node: 'v20.19.5'
   - custom:
       name: Install npm dependencies
       met?: test -d node_modules
