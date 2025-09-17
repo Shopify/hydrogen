@@ -1,7 +1,7 @@
-index a9f479ea7..dbd38f370 100644
+index a9f479ea7..9625a81e5 100644
 --- a/templates/skeleton/app/routes/account.orders._index.tsx
 +++ b/templates/skeleton/app/routes/account.orders._index.tsx
-@@ -1,222 +1,183 @@
+@@ -1,222 +1,184 @@
 -import {
 -  Link,
 -  useLoaderData,
@@ -331,6 +331,7 @@ index a9f479ea7..dbd38f370 100644
 +  ${ORDER_ITEM_FRAGMENT}
 +` as const;
 +
++// NOTE: https://shopify.dev/docs/api/storefront/latest/queries/customer
 +const CUSTOMER_ORDERS_QUERY = `#graphql
 +  ${CUSTOMER_FRAGMENT}
 +  query CustomerOrders(

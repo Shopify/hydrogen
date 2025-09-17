@@ -1,4 +1,4 @@
-index 6f5c4abfc..a407bed64 100644
+index 6f5c4abf..a407bed6 100644
 --- a/templates/skeleton/app/entry.server.tsx
 +++ b/templates/skeleton/app/entry.server.tsx
 @@ -1,53 +1,77 @@

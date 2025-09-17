@@ -95,7 +95,7 @@ Key features:
 
 ### Step 1: README.md
 
-
+Update README with multipass authentication documentation
 
 #### File: /README.md
 
@@ -233,9 +233,9 @@ Key features:
 
 ### Step 1: app/components/MultipassCheckoutButton.tsx
 
+Add checkout button component that generates multipass tokens
 
-
-#### File: [MultipassCheckoutButton.tsx](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/components/MultipassCheckoutButton.tsx)
+#### File: [MultipassCheckoutButton.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/multipass/ingredients/templates/skeleton/app/components/MultipassCheckoutButton.tsx)
 
 ```tsx
 import React, {useCallback} from 'react';
@@ -280,7 +280,7 @@ export function MultipassCheckoutButton(props: MultipassCheckoutButtonProps) {
 
 ### Step 2: app/components/CartSummary.tsx
 
-
+Add multipass checkout button to cart summary
 
 #### File: /app/components/CartSummary.tsx
 
@@ -311,9 +311,9 @@ export function MultipassCheckoutButton(props: MultipassCheckoutButtonProps) {
 
 ### Step 2: app/lib/multipass/multipass.ts
 
+Core multipass encryption and token generation utilities
 
-
-#### File: [multipass.ts](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipass.ts)
+#### File: [multipass.ts](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipass.ts)
 
 ```ts
 import type {
@@ -394,7 +394,7 @@ export async function multipass(
 
 ### Step 3: app/root.tsx
 
-
+Add session validation and token refresh logic
 
 #### File: /app/root.tsx
 
@@ -461,9 +461,9 @@ export async function multipass(
 
 ### Step 3: app/lib/multipass/multipassify.server.ts
 
+Server-side multipass token generation with ESM-compatible snake_case
 
-
-#### File: [multipassify.server.ts](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipassify.server.ts)
+#### File: [multipassify.server.ts](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipassify.server.ts)
 
 ```ts
 import CryptoJS from 'crypto-js';
@@ -645,7 +645,7 @@ export class Multipassify {
 
 ### Step 4: app/routes/account.$.tsx
 
-
+Convert catch-all account route to use Storefront API
 
 #### File: /app/routes/account.$.tsx
 
@@ -659,20 +659,18 @@ export class Multipassify {
 -  context.customerAccount.handleAuthStatus();
 -
 -  return redirect('/account');
--}
 +  if (await context.session.get('customerAccessToken')) {
 +    return redirect('/account');
 +  }
 +  return redirect('/account/login');
-+}
-\ No newline at end of file
+ }
 ```
 
 ### Step 4: app/lib/multipass/types.ts
 
+TypeScript types for multipass functionality
 
-
-#### File: [types.ts](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/types.ts)
+#### File: [types.ts](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/types.ts)
 
 ```ts
 /*
@@ -746,27 +744,11 @@ export interface MultipassTokenResponseType {
 }
 ```
 
-### Step 5: app/routes/account._index.tsx
-
-
-
-#### File: /app/routes/account._index.tsx
-
-```diff
-@@ -2,4 +2,4 @@ import {redirect} from 'react-router';
- 
- export async function loader() {
-   return redirect('/account/orders');
--}
-+}
-\ No newline at end of file
-```
-
 ### Step 5: app/routes/account_.activate.$id.$activationToken.tsx
 
+Add customer account activation route
 
-
-#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
+#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
 
 ```tsx
 import {Form, useActionData, data, redirect} from 'react-router';
@@ -925,7 +907,7 @@ const CUSTOMER_ACTIVATE_MUTATION = `#graphql
 
 ### Step 6: app/routes/account.addresses.tsx
 
-
+Convert addresses management to use Storefront API
 
 #### File: /app/routes/account.addresses.tsx
 
@@ -1462,9 +1444,9 @@ const CUSTOMER_ACTIVATE_MUTATION = `#graphql
 
 ### Step 6: app/routes/account_.login.multipass.tsx
 
+Add multipass login handler route
 
-
-#### File: [account_.login.multipass.tsx](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.login.multipass.tsx)
+#### File: [account_.login.multipass.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.login.multipass.tsx)
 
 ```tsx
 import {data as remixData, redirect} from 'react-router';
@@ -1764,22 +1746,24 @@ const CUSTOMER_INFO_QUERY = `#graphql
 
 ### Step 7: app/routes/account.orders.$id.tsx
 
-
+Convert order details to use Storefront API
 
 #### File: /app/routes/account.orders.$id.tsx
 
 ```diff
-@@ -1,36 +1,33 @@
+@@ -1,67 +1,50 @@
 -import {redirect, useLoaderData} from 'react-router';
 +import {Link, useLoaderData, redirect} from 'react-router';
  import type {Route} from './+types/account.orders.$id';
- import {Money, Image} from '@shopify/hydrogen';
--import type {
--  OrderLineItemFullFragment,
+-import {Money, Image} from '@shopify/hydrogen';
++import {Money, Image, flattenConnection} from '@shopify/hydrogen';
+ import type {
+   OrderLineItemFullFragment,
 -  OrderQuery,
 -} from 'customer-accountapi.generated';
 -import {CUSTOMER_ORDER_QUERY} from '~/graphql/customer-account/CustomerOrderQuery';
-+import type {OrderLineItemFullFragment} from 'storefrontapi.generated';
++  DiscountApplicationFragment,
++} from 'storefrontapi.generated';
  
  export const meta: Route.MetaFunction = ({data}) => {
    return [{title: `Order ${data?.order?.name}`}];
@@ -1813,37 +1797,39 @@ const CUSTOMER_INFO_QUERY = `#graphql
 +  const {order} = await storefront.query(CUSTOMER_ORDER_QUERY, {
 +    variables: {orderId},
 +  });
-+
+ 
+-  // Extract line items directly from nodes array
+-  const lineItems = order.lineItems.nodes;
 +  if (!order || !('lineItems' in order)) {
 +    throw new Response('Order not found', {status: 404});
 +  }
  
-   // Extract line items directly from nodes array
-   const lineItems = order.lineItems.nodes;
-@@ -38,49 +35,30 @@ export async function loader({params, context}: Route.LoaderArgs) {
-   // Extract discount applications directly from nodes array
-   const discountApplications = order.discountApplications.nodes;
+-  // Extract discount applications directly from nodes array
+-  const discountApplications = order.discountApplications.nodes;
++  const lineItems = flattenConnection(order.lineItems) as OrderLineItemFullFragment[];
++  const discountApplications = flattenConnection(order.discountApplications) as DiscountApplicationFragment[];
  
 -  // Get fulfillment status from first fulfillment node
 -  const fulfillmentStatus = order.fulfillments.nodes[0]?.status ?? 'N/A';
 -
-   // Get first discount value with proper type checking
-   const firstDiscount = discountApplications[0]?.value;
- 
-   // Type guard for MoneyV2 discount
--  const discountValue =
+-  // Get first discount value with proper type checking
+-  const firstDiscount = discountApplications[0]?.value;
+-
+-  // Type guard for MoneyV2 discount
++  const firstDiscount = discountApplications[0];
++  
+   const discountValue =
 -    firstDiscount?.__typename === 'MoneyV2'
 -      ? (firstDiscount as Extract<
 -          typeof firstDiscount,
 -          {__typename: 'MoneyV2'}
 -        >)
--      : null;
-+  const discountValue = firstDiscount?.__typename === 'MoneyV2' 
-+    ? firstDiscount as Extract<typeof firstDiscount, {__typename: 'MoneyV2'}>
-+    : null;
++    firstDiscount?.value?.__typename === 'MoneyV2' 
++      ? firstDiscount.value 
+       : null;
  
-   // Type guard for percentage discount
--  const discountPercentage =
+-  // Type guard for percentage discount
+   const discountPercentage =
 -    firstDiscount?.__typename === 'PricingPercentageValue'
 -      ? (
 -          firstDiscount as Extract<
@@ -1851,13 +1837,12 @@ const CUSTOMER_INFO_QUERY = `#graphql
 -            {__typename: 'PricingPercentageValue'}
 -          >
 -        ).percentage
--      : null;
-+  const discountPercentage = firstDiscount?.__typename === 'PricingPercentageValue'
-+    ? (firstDiscount as Extract<typeof firstDiscount, {__typename: 'PricingPercentageValue'}>).percentage
-+    : null;
++    firstDiscount?.value?.__typename === 'PricingPercentageValue'
++      ? firstDiscount.value.percentage
+       : null;
  
    return {
-     order,
+@@ -69,25 +52,16 @@ export async function loader({params, context}: Route.LoaderArgs) {
      lineItems,
      discountValue,
      discountPercentage,
@@ -1878,24 +1863,22 @@ const CUSTOMER_INFO_QUERY = `#graphql
    return (
      <div className="account-order">
        <h2>Order {order.name}</h2>
-@@ -97,12 +75,10 @@ export default function OrderRoute() {
-             </tr>
+       <p>Placed on {new Date(order.processedAt!).toDateString()}</p>
+-      {order.confirmationNumber && (
+-        <p>Confirmation: {order.confirmationNumber}</p>
+-      )}
+       <br />
+       <div>
+         <table>
+@@ -101,7 +75,6 @@ export default function OrderRoute() {
            </thead>
            <tbody>
--            {lineItems.map(
--              (lineItem: OrderLineItemFullFragment, lineItemIndex: number) => (
--                // eslint-disable-next-line react/no-array-index-key
--                <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
--              ),
--            )}
-+            {lineItems.map((lineItem: OrderLineItemFullFragment, lineItemIndex: number) => (
-+              // eslint-disable-next-line react/no-array-index-key
-+              <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
-+            ))}
+             {lineItems.map((lineItem, lineItemIndex) => (
+-              // eslint-disable-next-line react/no-array-index-key
+               <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
+             ))}
            </tbody>
-           <tfoot>
-             {((discountValue && discountValue.amount) ||
-@@ -131,7 +107,7 @@ export default function OrderRoute() {
+@@ -132,29 +105,29 @@ export default function OrderRoute() {
                  <p>Subtotal</p>
                </th>
                <td>
@@ -1904,7 +1887,11 @@ const CUSTOMER_INFO_QUERY = `#graphql
                </td>
              </tr>
              <tr>
-@@ -142,7 +118,7 @@ export default function OrderRoute() {
+               <th scope="row" colSpan={3}>
+-                Tax
++                <p>Tax</p>
+               </th>
+               <th scope="row">
                  <p>Tax</p>
                </th>
                <td>
@@ -1913,7 +1900,11 @@ const CUSTOMER_INFO_QUERY = `#graphql
                </td>
              </tr>
              <tr>
-@@ -153,7 +129,7 @@ export default function OrderRoute() {
+               <th scope="row" colSpan={3}>
+-                Total
++                <p>Total</p>
+               </th>
+               <th scope="row">
                  <p>Total</p>
                </th>
                <td>
@@ -1922,7 +1913,7 @@ const CUSTOMER_INFO_QUERY = `#graphql
                </td>
              </tr>
            </tfoot>
-@@ -162,16 +138,17 @@ export default function OrderRoute() {
+@@ -163,16 +136,17 @@ export default function OrderRoute() {
            <h3>Shipping Address</h3>
            {order?.shippingAddress ? (
              <address>
@@ -1949,7 +1940,7 @@ const CUSTOMER_INFO_QUERY = `#graphql
                )}
              </address>
            ) : (
-@@ -179,13 +156,13 @@ export default function OrderRoute() {
+@@ -180,13 +154,13 @@ export default function OrderRoute() {
            )}
            <h3>Status</h3>
            <div>
@@ -1965,7 +1956,7 @@ const CUSTOMER_INFO_QUERY = `#graphql
            View Order Status →
          </a>
        </p>
-@@ -195,27 +172,145 @@ export default function OrderRoute() {
+@@ -196,27 +170,144 @@ export default function OrderRoute() {
  
  function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
    return (
@@ -2005,7 +1996,6 @@ const CUSTOMER_INFO_QUERY = `#graphql
    );
  }
 +
-+// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/Order
 +const CUSTOMER_ORDER_QUERY = `#graphql
 +  fragment OrderMoney on MoneyV2 {
 +    amount
@@ -2125,9 +2115,9 @@ const CUSTOMER_INFO_QUERY = `#graphql
 
 ### Step 7: app/routes/account_.recover.tsx
 
+Add password recovery route
 
-
-#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
+#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
 
 ```tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -2258,32 +2248,45 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
 
 ### Step 8: app/routes/account.orders._index.tsx
 
-
+Convert orders list to use Storefront API
 
 #### File: /app/routes/account.orders._index.tsx
 
 ```diff
-@@ -1,52 +1,60 @@
+@@ -1,222 +1,183 @@
 -import {
 -  Link,
 -  useLoaderData,
+-  useNavigation,
+-  useSearchParams,
 -} from 'react-router';
 +import {Link, useLoaderData, data, redirect} from 'react-router';
  import type {Route} from './+types/account.orders._index';
--import {
--  Money,
--  getPaginationVariables,
+-import {useRef} from 'react';
+ import {
+   Money,
+   getPaginationVariables,
 -  flattenConnection,
--} from '@shopify/hydrogen';
+ } from '@shopify/hydrogen';
+-import {
+-  buildOrderSearchQuery,
+-  parseOrderFilters,
+-  ORDER_FILTER_FIELDS,
+-  type OrderFilterParams,
+-} from '~/lib/orderFilters';
 -import {CUSTOMER_ORDERS_QUERY} from '~/graphql/customer-account/CustomerOrdersQuery';
-+import {Money, Pagination, getPaginationVariables} from '@shopify/hydrogen';
  import type {
    CustomerOrdersFragment,
    OrderItemFragment,
 -} from 'customer-accountapi.generated';
--import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 +} from 'storefrontapi.generated';
+ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  
+-type OrdersLoaderData = {
+-  customer: CustomerOrdersFragment;
+-  filters: OrderFilterParams;
+-};
+-
  export const meta: Route.MetaFunction = () => {
    return [{title: 'Orders'}];
  };
@@ -2295,15 +2298,17 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
 -  });
 +  const {session, storefront} = context;
  
--  const {data, errors} = await customerAccount.query(
--    CUSTOMER_ORDERS_QUERY,
--    {
--      variables: {
--        ...paginationVariables,
--        language: customerAccount.i18n.language,
--      },
+-  const url = new URL(request.url);
+-  const filters = parseOrderFilters(url.searchParams);
+-  const query = buildOrderSearchQuery(filters);
+-
+-  const {data, errors} = await customerAccount.query(CUSTOMER_ORDERS_QUERY, {
+-    variables: {
+-      ...paginationVariables,
+-      query,
+-      language: customerAccount.i18n.language,
 -    },
--  );
+-  });
 -
 -  if (errors?.length || !data?.customer) {
 -    throw Error('Customer orders not found');
@@ -2312,7 +2317,7 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
 +    return redirect('/account/login');
    }
  
--  return {customer: data.customer};
+-  return {customer: data.customer, filters};
 +  try {
 +    const paginationVariables = getPaginationVariables(request, {
 +      pageBy: 20,
@@ -2342,59 +2347,176 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
  }
  
  export default function Orders() {
-   const {customer} = useLoaderData<{customer: CustomerOrdersFragment}>();
--  const {orders} = customer;
-+  const {orders, numberOfOrders} = customer;
+-  const {customer, filters} = useLoaderData<OrdersLoaderData>();
++  const data = useLoaderData<typeof loader>();
++  
++  if ('error' in data) {
++    return <div>Error: {data.error}</div>;
++  }
++  
++  const {customer} = data;
+   const {orders} = customer;
+ 
    return (
      <div className="orders">
-+      <h2>
-+        Orders <small>({numberOfOrders})</small>
-+      </h2>
-+      <br />
-       {orders.nodes.length ? <OrdersTable orders={orders} /> : <EmptyOrders />}
+-      <OrderSearchForm currentFilters={filters} />
+-      <OrdersTable orders={orders} filters={filters} />
++      <OrdersTable orders={orders} />
      </div>
    );
-@@ -56,9 +64,23 @@ function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
-   return (
-     <div className="acccount-orders">
-       {orders?.nodes.length ? (
--        <PaginatedResourceSection connection={orders}>
--          {({node: order}) => <OrderItem key={order.id} order={order} />}
--        </PaginatedResourceSection>
-+        <Pagination connection={orders}>
-+          {({nodes, isLoading, PreviousLink, NextLink}) => {
-+            return (
-+              <>
-+                <PreviousLink>
-+                  {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
-+                </PreviousLink>
-+                {nodes.map((order) => {
-+                  return <OrderItem key={order.id} order={order} />;
-+                })}
-+                <NextLink>
-+                  {isLoading ? 'Loading...' : <span>Load more ↓</span>}
-+                </NextLink>
-+              </>
-+            );
-+          }}
-+        </Pagination>
-       ) : (
-         <EmptyOrders />
-       )}
-@@ -79,20 +101,91 @@ function EmptyOrders() {
  }
  
+-function OrdersTable({
+-  orders,
+-  filters,
+-}: {
+-  orders: CustomerOrdersFragment['orders'];
+-  filters: OrderFilterParams;
+-}) {
+-  const hasFilters = !!(filters.name || filters.confirmationNumber);
+-
++function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
+   return (
+-    <div className="acccount-orders" aria-live="polite">
++    <div className="acccount-orders">
+       {orders?.nodes.length ? (
+         <PaginatedResourceSection connection={orders}>
+           {({node: order}) => <OrderItem key={order.id} order={order} />}
+         </PaginatedResourceSection>
+       ) : (
+-        <EmptyOrders hasFilters={hasFilters} />
++        <EmptyOrders />
+       )}
+     </div>
+   );
+ }
+ 
+-function EmptyOrders({hasFilters = false}: {hasFilters?: boolean}) {
++function EmptyOrders() {
+   return (
+     <div>
+-      {hasFilters ? (
+-        <>
+-          <p>No orders found matching your search.</p>
+-          <br />
+-          <p>
+-            <Link to="/account/orders">Clear filters →</Link>
+-          </p>
+-        </>
+-      ) : (
+-        <>
+-          <p>You haven&apos;t placed any orders yet.</p>
+-          <br />
+-          <p>
+-            <Link to="/collections">Start Shopping →</Link>
+-          </p>
+-        </>
+-      )}
++      <p>You haven&apos;t placed any orders yet.</p>
++      <br />
++      <p>
++        <Link to="/collections">Start Shopping →</Link>
++      </p>
+     </div>
+   );
+ }
+ 
+-function OrderSearchForm({
+-  currentFilters,
+-}: {
+-  currentFilters: OrderFilterParams;
+-}) {
+-  const [searchParams, setSearchParams] = useSearchParams();
+-  const navigation = useNavigation();
+-  const isSearching =
+-    navigation.state !== 'idle' &&
+-    navigation.location?.pathname?.includes('orders');
+-  const formRef = useRef<HTMLFormElement>(null);
+-
+-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+-    event.preventDefault();
+-    const formData = new FormData(event.currentTarget);
+-    const params = new URLSearchParams();
+-
+-    const name = formData.get(ORDER_FILTER_FIELDS.NAME)?.toString().trim();
+-    const confirmationNumber = formData
+-      .get(ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER)
+-      ?.toString()
+-      .trim();
+-
+-    if (name) params.set(ORDER_FILTER_FIELDS.NAME, name);
+-    if (confirmationNumber)
+-      params.set(ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER, confirmationNumber);
+-
+-    setSearchParams(params);
+-  };
+-
+-  const hasFilters = currentFilters.name || currentFilters.confirmationNumber;
+-
+-  return (
+-    <form
+-      ref={formRef}
+-      onSubmit={handleSubmit}
+-      className="order-search-form"
+-      aria-label="Search orders"
+-    >
+-      <fieldset className="order-search-fieldset">
+-        <legend className="order-search-legend">Filter Orders</legend>
+-
+-        <div className="order-search-inputs">
+-          <input
+-            type="search"
+-            name={ORDER_FILTER_FIELDS.NAME}
+-            placeholder="Order #"
+-            aria-label="Order number"
+-            defaultValue={currentFilters.name || ''}
+-            className="order-search-input"
+-          />
+-          <input
+-            type="search"
+-            name={ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER}
+-            placeholder="Confirmation #"
+-            aria-label="Confirmation number"
+-            defaultValue={currentFilters.confirmationNumber || ''}
+-            className="order-search-input"
+-          />
+-        </div>
+-
+-        <div className="order-search-buttons">
+-          <button type="submit" disabled={isSearching}>
+-            {isSearching ? 'Searching' : 'Search'}
+-          </button>
+-          {hasFilters && (
+-            <button
+-              type="button"
+-              disabled={isSearching}
+-              onClick={() => {
+-                setSearchParams(new URLSearchParams());
+-                formRef.current?.reset();
+-              }}
+-            >
+-              Clear
+-            </button>
+-          )}
+-        </div>
+-      </fieldset>
+-    </form>
+-  );
+-}
+-
  function OrderItem({order}: {order: OrderItemFragment}) {
 -  const fulfillmentStatus = flattenConnection(order.fulfillments)[0]?.status;
    return (
      <>
        <fieldset>
--        <Link to={`/account/orders/${btoa(order.id)}`}>
+         <Link to={`/account/orders/${btoa(order.id)}`}>
 -          <strong>#{order.number}</strong>
-+        <Link to={`/account/orders/${order.id}`}>
 +          <strong>#{order.orderNumber}</strong>
          </Link>
          <p>{new Date(order.processedAt).toDateString()}</p>
+-        {order.confirmationNumber && (
+-          <p>Confirmation: {order.confirmationNumber}</p>
+-        )}
          <p>{order.financialStatus}</p>
 -        {fulfillmentStatus && <p>{fulfillmentStatus}</p>}
 -        <Money data={order.totalPrice} />
@@ -2461,7 +2583,6 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
 +  ${ORDER_ITEM_FRAGMENT}
 +` as const;
 +
-+// NOTE: https://shopify.dev/docs/api/storefront/latest/queries/customer
 +const CUSTOMER_ORDERS_QUERY = `#graphql
 +  ${CUSTOMER_FRAGMENT}
 +  query CustomerOrders(
@@ -2483,9 +2604,9 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
 
 ### Step 8: app/routes/account_.register.tsx
 
+Add customer registration route
 
-
-#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.register.tsx)
+#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.register.tsx)
 
 ```tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -2693,11 +2814,265 @@ const REGISTER_LOGIN_MUTATION = `#graphql
 ` as const;
 ```
 
-### Step 9: app/routes/account_.reset.$id.$resetToken.tsx
+### Step 9: app/routes/account.profile.tsx
 
+Convert customer profile management from Customer Account API to Storefront API
 
+#### File: /app/routes/account.profile.tsx
 
-#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
+```diff
+@@ -1,12 +1,12 @@
+-import type {CustomerFragment} from 'customer-accountapi.generated';
+-import type {CustomerUpdateInput} from '@shopify/hydrogen/customer-account-api-types';
+-import {CUSTOMER_UPDATE_MUTATION} from '~/graphql/customer-account/CustomerUpdateMutation';
++import type {CustomerFragment} from 'storefrontapi.generated';
++import type {CustomerUpdateInput} from '@shopify/hydrogen/storefront-api-types';
+ import {
+-  data,
+   Form,
+   useActionData,
+   useNavigation,
+   useOutletContext,
++  data,
++  redirect,
+ } from 'react-router';
+ import type {Route} from './+types/account.profile';
+ 
+@@ -20,62 +20,79 @@ export const meta: Route.MetaFunction = () => {
+ };
+ 
+ export async function loader({context}: Route.LoaderArgs) {
+-  context.customerAccount.handleAuthStatus();
+-
++  const customerAccessToken = await context.session.get('customerAccessToken');
++  if (!customerAccessToken) {
++    return redirect('/account/login');
++  }
+   return {};
+ }
+ 
+ export async function action({request, context}: Route.ActionArgs) {
+-  const {customerAccount} = context;
++  const {session, storefront} = context;
+ 
+   if (request.method !== 'PUT') {
+     return data({error: 'Method not allowed'}, {status: 405});
+   }
+ 
+   const form = await request.formData();
++  const customerAccessToken = await session.get('customerAccessToken');
++  if (!customerAccessToken) {
++    return data({error: 'Unauthorized'}, {status: 401});
++  }
+ 
+   try {
++    const password = getPassword(form);
+     const customer: CustomerUpdateInput = {};
+-    const validInputKeys = ['firstName', 'lastName'] as const;
++    const validInputKeys = [
++      'firstName',
++      'lastName',
++      'email',
++      'password',
++      'phone',
++    ] as const;
+     for (const [key, value] of form.entries()) {
+       if (!validInputKeys.includes(key as any)) {
+         continue;
+       }
++      if (key === 'acceptsMarketing') {
++        customer.acceptsMarketing = value === 'on';
++      }
+       if (typeof value === 'string' && value.length) {
+         customer[key as (typeof validInputKeys)[number]] = value;
+       }
+     }
+ 
++    if (password) {
++      customer.password = password;
++    }
++
+     // update customer and possibly password
+-    const {data, errors} = await customerAccount.mutate(
+-      CUSTOMER_UPDATE_MUTATION,
+-      {
+-        variables: {
+-          customer,
+-          language: customerAccount.i18n.language,
+-        },
++    const updated = await storefront.mutate(CUSTOMER_UPDATE_MUTATION, {
++      variables: {
++        customerAccessToken: customerAccessToken.accessToken,
++        customer,
+       },
+-    );
++    });
+ 
+-    if (errors?.length) {
+-      throw new Error(errors[0].message);
++    // check for mutation errors
++    if (updated.customerUpdate?.customerUserErrors?.length) {
++      return data(
++        {error: updated.customerUpdate?.customerUserErrors[0]},
++        {status: 400},
++      );
+     }
+ 
+-    if (!data?.customerUpdate?.customer) {
+-      throw new Error('Customer profile update failed.');
++    // update session with the updated access token
++    if (updated.customerUpdate?.customerAccessToken?.accessToken) {
++      session.set(
++        'customerAccessToken',
++        updated.customerUpdate?.customerAccessToken,
++      );
+     }
+ 
+-    return {
+-      error: null,
+-      customer: data?.customerUpdate?.customer,
+-    };
++    return {error: null, customer: updated.customerUpdate?.customer};
+   } catch (error: any) {
+-    return data(
+-      {error: error.message, customer: null},
+-      {
+-        status: 400,
+-      },
+-    );
++    return data({error: error.message, customer: null}, {status: 400});
+   }
+ }
+ 
+@@ -114,6 +131,64 @@ export default function AccountProfile() {
+             defaultValue={customer.lastName ?? ''}
+             minLength={2}
+           />
++          <label htmlFor="phone">Mobile</label>
++          <input
++            id="phone"
++            name="phone"
++            type="tel"
++            autoComplete="tel"
++            placeholder="Mobile"
++            aria-label="Mobile"
++            defaultValue={customer.phone ?? ''}
++          />
++          <label htmlFor="email">Email address</label>
++          <input
++            id="email"
++            name="email"
++            type="email"
++            autoComplete="email"
++            required
++            placeholder="Email address"
++            aria-label="Email address"
++            defaultValue={customer.email ?? ''}
++          />
++          <div className="account-profile-marketing">
++            <input
++              id="acceptsMarketing"
++              name="acceptsMarketing"
++              type="checkbox"
++              placeholder="Accept marketing"
++              aria-label="Accept marketing"
++              defaultChecked={customer.acceptsMarketing}
++            />
++            <label htmlFor="acceptsMarketing">
++              &nbsp; Subscribed to marketing communications
++            </label>
++          </div>
++        </fieldset>
++        <br />
++        <legend>Change password (optional)</legend>
++        <fieldset>
++          <label htmlFor="newPassword">New password</label>
++          <input
++            id="newPassword"
++            name="newPassword"
++            type="password"
++            placeholder="New password"
++            aria-label="New password"
++            minLength={8}
++          />
++
++          <label htmlFor="newPasswordConfirm">New password (confirm)</label>
++          <input
++            id="newPasswordConfirm"
++            name="newPasswordConfirm"
++            type="password"
++            placeholder="New password (confirm)"
++            aria-label="New password confirm"
++            minLength={8}
++          />
++          <small>Passwords must be at least 8 characters.</small>
+         </fieldset>
+         {action?.error ? (
+           <p>
+@@ -131,3 +206,55 @@ export default function AccountProfile() {
+     </div>
+   );
+ }
++
++function getPassword(form: FormData): string | undefined {
++  let password;
++  const newPassword = form.get('newPassword');
++  const newPasswordConfirm = form.get('newPasswordConfirm');
++
++  let passwordError;
++
++  if (newPassword && newPassword !== newPasswordConfirm) {
++    passwordError = new Error('New passwords must match.');
++  }
++
++  if (passwordError) {
++    throw passwordError;
++  }
++
++  if (newPassword) {
++    password = newPassword;
++  }
++
++  return String(password);
++}
++
++const CUSTOMER_UPDATE_MUTATION = `#graphql
++  # https://shopify.dev/docs/api/storefront/latest/mutations/customerUpdate
++  mutation customerUpdate(
++    $customerAccessToken: String!,
++    $customer: CustomerUpdateInput!
++    $country: CountryCode
++    $language: LanguageCode
++  ) @inContext(language: $language, country: $country) {
++    customerUpdate(customerAccessToken: $customerAccessToken, customer: $customer) {
++      customer {
++        acceptsMarketing
++        email
++        firstName
++        id
++        lastName
++        phone
++      }
++      customerAccessToken {
++        accessToken
++        expiresAt
++      }
++      customerUserErrors {
++        code
++        field
++        message
++      }
++    }
++  }
++` as const;
+\ No newline at end of file
+```
+
+### Step 10: app/routes/account_.reset.$id.$resetToken.tsx
+
+Add password reset confirmation route
+
+#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
 
 ```tsx
 import {data, Form, redirect, useActionData} from 'react-router';
@@ -2834,22 +3209,22 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 ` as const;
 ```
 
-### Step 10: app/routes/account.tsx
+### Step 11: app/routes/account.tsx
 
-
+Convert account layout to use Storefront API customer data
 
 #### File: /app/routes/account.tsx
 
 ```diff
-@@ -1,44 +1,104 @@
+@@ -1,45 +1,105 @@
  import {
 -  data as remixData,
-+  data,
    Form,
    NavLink,
    Outlet,
-+  redirect,
    useLoaderData,
++  data,
++  redirect,
  } from 'react-router';
  import type {Route} from './+types/account';
 -import {CUSTOMER_DETAILS_QUERY} from '~/graphql/customer-account/CustomerDetailsQuery';
@@ -2933,6 +3308,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 +      },
 +    );
 +  } catch (error) {
++    // eslint-disable-next-line no-console
 +    console.error('There was a problem loading account', error);
 +    session.unset('customerAccessToken');
 +    return redirect('/account/login');
@@ -2958,6 +3334,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
  
 -export default function AccountLayout() {
 -  const {customer} = useLoaderData<typeof loader>();
+-
 +function AccountLayout({
 +  customer,
 +  children,
@@ -2965,9 +3342,9 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 +  customer: CustomerFragment;
 +  children: React.ReactNode;
 +}) {
- 
    const heading = customer
      ? customer.firstName
+       ? `Welcome, ${customer.firstName}`
 @@ -51,9 +111,7 @@ export default function AccountLayout() {
        <h1>{heading}</h1>
        <br />
@@ -3030,17 +3407,16 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 +  }
 +  ${CUSTOMER_FRAGMENT}
 +` as const;
-\ No newline at end of file
 ```
 
 ### Step 12: app/routes/account_.login.tsx
 
-
+Replace Customer Account API login with form-based Storefront API login
 
 #### File: /app/routes/account_.login.tsx
 
 ```diff
-@@ -1,7 +1,133 @@
+@@ -1,7 +1,134 @@
 +import {Form, Link, useActionData, data, redirect} from 'react-router';
  import type {Route} from './+types/account_.login';
  
@@ -3178,12 +3554,12 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 +    }
 +  }
 +` as const;
-\ No newline at end of file
++
 ```
 
 ### Step 13: app/routes/account_.logout.tsx
 
-
+Implement session-based logout
 
 #### File: /app/routes/account_.logout.tsx
 
@@ -3222,9 +3598,9 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 \ No newline at end of file
 ```
 
-### Step 13: env.d.ts
+### Step 14: env.d.ts
 
-
+Add multipass secret environment variable type
 
 #### File: /env.d.ts
 
@@ -3241,9 +3617,9 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 +}
 ```
 
-### Step 14: app/routes/cart.tsx
+### Step 15: app/routes/cart.tsx
 
-
+Add multipass URL generation for checkout
 
 #### File: /app/routes/cart.tsx
 
@@ -3275,9 +3651,9 @@ const CUSTOMER_RESET_MUTATION = `#graphql
      }
 ```
 
-### Step 15: package.json
+### Step 16: package.json
 
-
+Add crypto dependencies for multipass token generation
 
 #### File: /package.json
 
@@ -3300,14 +3676,14 @@ const CUSTOMER_RESET_MUTATION = `#graphql
      "@types/react-dom": "^18.2.7",
 ```
 
-### Step 16: vite.config.ts
+### Step 17: vite.config.ts
 
-
+Configure Vite for crypto polyfills
 
 #### File: /vite.config.ts
 
 ```diff
-@@ -26,7 +26,7 @@ export default defineConfig({
+@@ -23,7 +23,7 @@ export default defineConfig({
         * Include 'example-dep' in the array below.
         * @see https://vitejs.dev/config/dep-optimization-options
         */
@@ -3315,7 +3691,11 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 +      include: ['set-cookie-parser', 'cookie', 'react-router', 'crypto-js'],
      },
    },
- });
+   server: {
 ```
+
+## Deleted Files
+
+- [`templates/skeleton/app/routes/account_.authorize.tsx`](templates/skeleton/app/routes/account_.authorize.tsx)
 
 </recipe_implementation>

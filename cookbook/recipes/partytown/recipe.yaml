@@ -40,7 +40,7 @@ steps:
     description: Add public/~partytown to ignore Partytown library files
     diffs:
       - file: .gitignore
-        patchFile: .gitignore.b2d7bd.patch
+        patchFile: .gitignore.0d4d92.patch
   - type: NEW_FILE
     step: "1"
     name: app/components/PartytownGoogleTagManager.tsx
@@ -53,7 +53,7 @@ steps:
     description: Document Partytown setup and configuration instructions
     diffs:
       - file: README.md
-        patchFile: README.md.47d06f.patch
+        patchFile: README.md.49f8fa.patch
   - type: NEW_FILE
     step: "2"
     name: app/routes/reverse-proxy.ts
@@ -66,7 +66,7 @@ steps:
     description: Configure CSP headers for GTM and Google Analytics domains
     diffs:
       - file: app/entry.server.tsx
-        patchFile: entry.server.tsx.c0cb8d.patch
+        patchFile: entry.server.tsx.6d386f.patch
   - type: NEW_FILE
     step: "3"
     name: app/utils/partytown/maybeProxyRequest.ts
@@ -79,7 +79,7 @@ steps:
     description: Initialize Partytown and GTM in the root layout
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.0ad938.patch
+        patchFile: root.tsx.8c182c.patch
   - type: NEW_FILE
     step: "4"
     name: app/utils/partytown/partytownAtomicHeaders.ts
@@ -92,14 +92,14 @@ steps:
     description: Add Partytown dependency and npm script for copying library files
     diffs:
       - file: package.json
-        patchFile: package.json.cfee98.patch
+        patchFile: package.json.47be7b.patch
   - type: PATCH
     step: "6"
     name: vite.config.ts
     description: null
     diffs:
       - file: vite.config.ts
-        patchFile: vite.config.ts.f0a2c4.patch
+        patchFile: vite.config.ts.93b90b.patch
 nextSteps: |
   After applying this recipe:
 
@@ -125,4 +125,4 @@ nextSteps: |
 llms:
   userQueries: []
   troubleshooting: []
-commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
+commit: 0b4f01c9aa0e09332140a6a4e3114949873fb0f9

@@ -1,7 +1,7 @@
-index 639aa1507..ac8755f49 100644
+index a280aba1..5ede7d95 100644
 --- a/templates/skeleton/app/styles/app.css
 +++ b/templates/skeleton/app/styles/app.css
-@@ -1,582 +1,38 @@
+@@ -1,584 +1,40 @@
 -:root {
 -  --aside-width: 400px;
 -  --cart-aside-summary-height-with-discount: 300px;
@@ -607,3 +607,5 @@ index 639aa1507..ac8755f49 100644
 +  padding: 2rem;
 +  max-width: 25rem;
  }
+ 
+ /*

@@ -84,7 +84,7 @@ jobs:
       - name: 🔨 Build skeleton with recipe
         working-directory: templates/skeleton
         run: |
-          npm run build
+          SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build
       
       - name: 🚀 Deploy to Oxygen
         id: deploy

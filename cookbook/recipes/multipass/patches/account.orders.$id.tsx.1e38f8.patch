@@ -1,17 +1,19 @@
-index f5e200a84..d93e7a8ca 100644
+index 3c2430385..77bd99344 100644
 --- a/templates/skeleton/app/routes/account.orders.$id.tsx
 +++ b/templates/skeleton/app/routes/account.orders.$id.tsx
-@@ -1,36 +1,33 @@
+@@ -1,67 +1,50 @@
 -import {redirect, useLoaderData} from 'react-router';
 +import {Link, useLoaderData, redirect} from 'react-router';
  import type {Route} from './+types/account.orders.$id';
- import {Money, Image} from '@shopify/hydrogen';
--import type {
--  OrderLineItemFullFragment,
+-import {Money, Image} from '@shopify/hydrogen';
++import {Money, Image, flattenConnection} from '@shopify/hydrogen';
+ import type {
+   OrderLineItemFullFragment,
 -  OrderQuery,
 -} from 'customer-accountapi.generated';
 -import {CUSTOMER_ORDER_QUERY} from '~/graphql/customer-account/CustomerOrderQuery';
-+import type {OrderLineItemFullFragment} from 'storefrontapi.generated';
++  DiscountApplicationFragment,
++} from 'storefrontapi.generated';
  
  export const meta: Route.MetaFunction = ({data}) => {
    return [{title: `Order ${data?.order?.name}`}];
@@ -45,37 +47,39 @@ index f5e200a84..d93e7a8ca 100644
 +  const {order} = await storefront.query(CUSTOMER_ORDER_QUERY, {
 +    variables: {orderId},
 +  });
-+
+ 
+-  // Extract line items directly from nodes array
+-  const lineItems = order.lineItems.nodes;
 +  if (!order || !('lineItems' in order)) {
 +    throw new Response('Order not found', {status: 404});
 +  }
  
-   // Extract line items directly from nodes array
-   const lineItems = order.lineItems.nodes;
-@@ -38,49 +35,30 @@ export async function loader({params, context}: Route.LoaderArgs) {
-   // Extract discount applications directly from nodes array
-   const discountApplications = order.discountApplications.nodes;
+-  // Extract discount applications directly from nodes array
+-  const discountApplications = order.discountApplications.nodes;
++  const lineItems = flattenConnection(order.lineItems) as OrderLineItemFullFragment[];
++  const discountApplications = flattenConnection(order.discountApplications) as DiscountApplicationFragment[];
  
 -  // Get fulfillment status from first fulfillment node
 -  const fulfillmentStatus = order.fulfillments.nodes[0]?.status ?? 'N/A';
 -
-   // Get first discount value with proper type checking
-   const firstDiscount = discountApplications[0]?.value;
- 
-   // Type guard for MoneyV2 discount
--  const discountValue =
+-  // Get first discount value with proper type checking
+-  const firstDiscount = discountApplications[0]?.value;
+-
+-  // Type guard for MoneyV2 discount
++  const firstDiscount = discountApplications[0];
++  
+   const discountValue =
 -    firstDiscount?.__typename === 'MoneyV2'
 -      ? (firstDiscount as Extract<
 -          typeof firstDiscount,
 -          {__typename: 'MoneyV2'}
 -        >)
--      : null;
-+  const discountValue = firstDiscount?.__typename === 'MoneyV2' 
-+    ? firstDiscount as Extract<typeof firstDiscount, {__typename: 'MoneyV2'}>
-+    : null;
++    firstDiscount?.value?.__typename === 'MoneyV2' 
++      ? firstDiscount.value 
+       : null;
  
-   // Type guard for percentage discount
--  const discountPercentage =
+-  // Type guard for percentage discount
+   const discountPercentage =
 -    firstDiscount?.__typename === 'PricingPercentageValue'
 -      ? (
 -          firstDiscount as Extract<
@@ -83,13 +87,12 @@ index f5e200a84..d93e7a8ca 100644
 -            {__typename: 'PricingPercentageValue'}
 -          >
 -        ).percentage
--      : null;
-+  const discountPercentage = firstDiscount?.__typename === 'PricingPercentageValue'
-+    ? (firstDiscount as Extract<typeof firstDiscount, {__typename: 'PricingPercentageValue'}>).percentage
-+    : null;
++    firstDiscount?.value?.__typename === 'PricingPercentageValue'
++      ? firstDiscount.value.percentage
+       : null;
  
    return {
-     order,
+@@ -69,25 +52,16 @@ export async function loader({params, context}: Route.LoaderArgs) {
      lineItems,
      discountValue,
      discountPercentage,
@@ -110,24 +113,22 @@ index f5e200a84..d93e7a8ca 100644
    return (
      <div className="account-order">
        <h2>Order {order.name}</h2>
-@@ -97,12 +75,10 @@ export default function OrderRoute() {
-             </tr>
+       <p>Placed on {new Date(order.processedAt!).toDateString()}</p>
+-      {order.confirmationNumber && (
+-        <p>Confirmation: {order.confirmationNumber}</p>
+-      )}
+       <br />
+       <div>
+         <table>
+@@ -101,7 +75,6 @@ export default function OrderRoute() {
            </thead>
            <tbody>
--            {lineItems.map(
--              (lineItem: OrderLineItemFullFragment, lineItemIndex: number) => (
--                // eslint-disable-next-line react/no-array-index-key
--                <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
--              ),
--            )}
-+            {lineItems.map((lineItem: OrderLineItemFullFragment, lineItemIndex: number) => (
-+              // eslint-disable-next-line react/no-array-index-key
-+              <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
-+            ))}
+             {lineItems.map((lineItem, lineItemIndex) => (
+-              // eslint-disable-next-line react/no-array-index-key
+               <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
+             ))}
            </tbody>
-           <tfoot>
-             {((discountValue && discountValue.amount) ||
-@@ -131,7 +107,7 @@ export default function OrderRoute() {
+@@ -132,29 +105,29 @@ export default function OrderRoute() {
                  <p>Subtotal</p>
                </th>
                <td>
@@ -136,7 +137,11 @@ index f5e200a84..d93e7a8ca 100644
                </td>
              </tr>
              <tr>
-@@ -142,7 +118,7 @@ export default function OrderRoute() {
+               <th scope="row" colSpan={3}>
+-                Tax
++                <p>Tax</p>
+               </th>
+               <th scope="row">
                  <p>Tax</p>
                </th>
                <td>
@@ -145,7 +150,11 @@ index f5e200a84..d93e7a8ca 100644
                </td>
              </tr>
              <tr>
-@@ -153,7 +129,7 @@ export default function OrderRoute() {
+               <th scope="row" colSpan={3}>
+-                Total
++                <p>Total</p>
+               </th>
+               <th scope="row">
                  <p>Total</p>
                </th>
                <td>
@@ -154,7 +163,7 @@ index f5e200a84..d93e7a8ca 100644
                </td>
              </tr>
            </tfoot>
-@@ -162,16 +138,17 @@ export default function OrderRoute() {
+@@ -163,16 +136,17 @@ export default function OrderRoute() {
            <h3>Shipping Address</h3>
            {order?.shippingAddress ? (
              <address>
@@ -181,7 +190,7 @@ index f5e200a84..d93e7a8ca 100644
                )}
              </address>
            ) : (
-@@ -179,13 +156,13 @@ export default function OrderRoute() {
+@@ -180,13 +154,13 @@ export default function OrderRoute() {
            )}
            <h3>Status</h3>
            <div>
@@ -197,7 +206,7 @@ index f5e200a84..d93e7a8ca 100644
            View Order Status →
          </a>
        </p>
-@@ -195,27 +172,145 @@ export default function OrderRoute() {
+@@ -196,27 +170,144 @@ export default function OrderRoute() {
  
  function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
    return (
@@ -237,7 +246,6 @@ index f5e200a84..d93e7a8ca 100644
    );
  }
 +
-+// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/Order
 +const CUSTOMER_ORDER_QUERY = `#graphql
 +  fragment OrderMoney on MoneyV2 {
 +    amount

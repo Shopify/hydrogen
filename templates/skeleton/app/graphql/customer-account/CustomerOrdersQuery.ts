@@ -14,6 +14,7 @@ export const ORDER_ITEM_FRAGMENT = `#graphql
     }
     id
     number
+    confirmationNumber
     processedAt
   }
 ` as const;
@@ -27,7 +28,8 @@ export const CUSTOMER_ORDERS_FRAGMENT = `#graphql
       first: $first,
       last: $last,
       before: $startCursor,
-      after: $endCursor
+      after: $endCursor,
+      query: $query
     ) {
       nodes {
         ...OrderItem
@@ -51,6 +53,7 @@ export const CUSTOMER_ORDERS_QUERY = `#graphql
     $first: Int
     $last: Int
     $startCursor: String
+    $query: String
     $language: LanguageCode
   ) @inContext(language: $language) {
     customer {

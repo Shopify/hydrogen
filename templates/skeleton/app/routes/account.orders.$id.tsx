@@ -85,6 +85,9 @@ export default function OrderRoute() {
     <div className="account-order">
       <h2>Order {order.name}</h2>
       <p>Placed on {new Date(order.processedAt!).toDateString()}</p>
+      {order.confirmationNumber && (
+        <p>Confirmation: {order.confirmationNumber}</p>
+      )}
       <br />
       <div>
         <table>
@@ -97,12 +100,10 @@ export default function OrderRoute() {
             </tr>
           </thead>
           <tbody>
-            {lineItems.map(
-              (lineItem: OrderLineItemFullFragment, lineItemIndex: number) => (
-                // eslint-disable-next-line react/no-array-index-key
-                <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
-              ),
-            )}
+            {lineItems.map((lineItem, lineItemIndex) => (
+              // eslint-disable-next-line react/no-array-index-key
+              <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
+            ))}
           </tbody>
           <tfoot>
             {((discountValue && discountValue.amount) ||

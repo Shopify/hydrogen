@@ -1,4 +1,4 @@
-index 28102dbe6..dc121c804 100644
+index 28102dbe..dc121c80 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
 @@ -1,171 +1,28 @@
