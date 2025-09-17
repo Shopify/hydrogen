@@ -70,7 +70,7 @@
     "@playwright/test": "^1.40.1",
     "@react-router/dev": "7.8.2",
     "@react-router/fs-routes": "7.8.2",
-    "@shopify/cli": "3.84.1",
+    "@shopify/cli": "~3.80.4",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/eslint": "9.6.1",
     "@types/semver": "^7.5.8",
@@ -122,7 +122,8 @@
     ]
   },
   "overrides": {
-    "@oclif/core": "3.26.5"
+    "@oclif/core": "3.26.5",
+    "@shopify/cli-kit": "3.80.4"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.34.9",
