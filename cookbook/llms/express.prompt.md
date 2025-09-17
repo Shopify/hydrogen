@@ -241,7 +241,7 @@ Key changes:
 
 
 
-#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
+#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
 
 ```ts
 // This file extends the Hydrogen types for this project
@@ -312,7 +312,7 @@ export {};
 
 
 
-#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
+#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
 
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
@@ -473,7 +473,7 @@ export {};
 
 
 
-#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
+#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
 
 ```mjs
 #!/usr/bin/env node
@@ -783,7 +783,7 @@ process.on('SIGTERM', () => {
 
 
 
-#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
+#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
 
 ```mjs
 import {createRequestHandler} from '@react-router/express';
@@ -1552,7 +1552,7 @@ class AppSession {
 #### File: /app/styles/app.css
 
 ```diff
-@@ -1,582 +1,38 @@
+@@ -1,584 +1,40 @@
 -:root {
 -  --aside-width: 400px;
 -  --cart-aside-summary-height-with-discount: 300px;
@@ -2158,6 +2158,8 @@ class AppSession {
 +  padding: 2rem;
 +  max-width: 25rem;
  }
+ 
+ /*
 ```
 
 ### Step 9: eslint.config.js
@@ -2426,11 +2428,8 @@ class AppSession {
 #### File: /package.json
 
 ```diff
-@@ -2,61 +2,52 @@
-   "name": "skeleton",
-   "private": true,
-   "sideEffects": false,
--  "version": "2025.5.2",
+@@ -5,58 +5,51 @@
+   "version": "2025.5.2",
    "type": "module",
    "scripts": {
 -    "build": "shopify hydrogen build --codegen",
@@ -2442,11 +2441,9 @@ class AppSession {
 +    "dev:server": "cross-env NODE_ENV=development nodemon --require dotenv/config ./server.mjs --watch ./server.mjs",
 +    "start": "cross-env NODE_ENV=production node ./server.mjs",
      "typecheck": "react-router typegen && tsc --noEmit",
--    "codegen": "shopify hydrogen codegen && react-router typegen"
-+    "codegen": "shopify hydrogen codegen && react-router typegen",
-+    "typegen": "react-router typegen"
+     "codegen": "shopify hydrogen codegen && react-router typegen"
    },
--  "prettier": "@shopify/prettier-config",
+   "prettier": "@shopify/prettier-config",
    "dependencies": {
 +    "@react-router/express": "7.8.2",
 +    "@react-router/node": "7.8.2",
@@ -2457,14 +2454,12 @@ class AppSession {
 +    "express": "^4.19.2",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
--    "isbot": "^5.1.22",
-+    "isbot": "^5.1.21",
+     "isbot": "^5.1.22",
 +    "morgan": "^1.10.0",
      "react": "18.3.1",
      "react-dom": "18.3.1",
--    "react-router": "7.8.2",
--    "react-router-dom": "7.8.2"
-+    "react-router": "7.8.2"
+     "react-router": "7.8.2",
+     "react-router-dom": "7.8.2"
    },
    "devDependencies": {
 -    "@eslint/compat": "^1.2.5",
@@ -2473,7 +2468,7 @@ class AppSession {
      "@graphql-codegen/cli": "5.0.2",
      "@react-router/dev": "7.8.2",
      "@react-router/fs-routes": "7.8.2",
-     "@shopify/cli": "~3.80.4",
+     "@shopify/cli": "3.84.1",
      "@shopify/hydrogen-codegen": "^0.3.3",
 -    "@shopify/mini-oxygen": "^3.2.1",
 -    "@shopify/oxygen-workers-types": "^4.1.6",
@@ -2498,11 +2493,10 @@ class AppSession {
 -    "eslint-plugin-react-hooks": "^5.1.0",
 -    "globals": "^15.14.0",
 -    "prettier": "^3.4.2",
--    "typescript": "^5.9.2",
 +    "dotenv": "^16.0.3",
 +    "nodemon": "^2.0.22",
 +    "npm-run-all": "^4.1.5",
-+    "typescript": "5.9.2",
+     "typescript": "^5.9.2",
      "vite": "^6.2.4",
      "vite-tsconfig-paths": "^4.3.1"
    },
@@ -2520,27 +2514,16 @@ class AppSession {
 #### File: /vite.config.ts
 
 ```diff
-@@ -1,20 +1,22 @@
- import {defineConfig} from 'vite';
- import {hydrogen} from '@shopify/hydrogen/vite';
--import {oxygen} from '@shopify/mini-oxygen/vite';
- import {reactRouter} from '@react-router/dev/vite';
+@@ -5,13 +5,15 @@ import {reactRouter} from '@react-router/dev/vite';
  import tsconfigPaths from 'vite-tsconfig-paths';
  
  export default defineConfig({
 -  plugins: [hydrogen(), oxygen(), reactRouter(), tsconfigPaths()],
-+  plugins: [
-+    hydrogen(),
-+    reactRouter(),
-+    tsconfigPaths(),
-+  ],
++  plugins: [hydrogen(), reactRouter(), tsconfigPaths()],
    build: {
      // Allow a strict Content-Security-Policy
      // withtout inlining assets as base64:
      assetsInlineLimit: 0,
--  },
--  server: {
--    allowedHosts: ['.tryhydrogen.dev'],
 +    target: 'esnext',
    },
    ssr: {
@@ -2548,17 +2531,17 @@ class AppSession {
      optimizeDeps: {
        /**
         * Include dependencies here if they throw CJS<>ESM errors.
-@@ -26,7 +28,10 @@ export default defineConfig({
+@@ -23,10 +25,7 @@ export default defineConfig({
         * Include 'example-dep' in the array below.
         * @see https://vitejs.dev/config/dep-optimization-options
         */
 -      include: ['set-cookie-parser', 'cookie', 'react-router'],
-+      include: [
-+        '@react-router/node',
-+        '@react-router/express',
-+      ],
++      include: ['@react-router/node', '@react-router/express'],
      },
    },
+-  server: {
+-    allowedHosts: ['.tryhydrogen.dev'],
+-  },
  });
 ```
 
