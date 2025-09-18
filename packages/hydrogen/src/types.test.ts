@@ -4,14 +4,14 @@ import type {
   HydrogenEnv,
   HydrogenSession,
 } from './types';
-import type {unstable_RouterContextProvider} from 'react-router';
+import type {RouterContextProvider} from 'react-router';
 import type {Storefront} from './storefront';
 import type {CustomerAccount} from './customer/types';
 import type {HydrogenCart} from './cart/createCartHandler';
 
 describe('Type augmentations', () => {
   describe('HydrogenRouterContextProvider', () => {
-    it('should extend unstable_RouterContextProvider', () => {
+    it('should extend RouterContextProvider', () => {
       type Provider = HydrogenRouterContextProvider;
 
       // Check that it has RouterContextProvider methods
@@ -150,7 +150,7 @@ describe('Type augmentations', () => {
   });
 
   describe('React Router augmentation compatibility', () => {
-    it('should extend unstable_RouterContextProvider with Hydrogen properties', () => {
+    it('should extend RouterContextProvider with Hydrogen properties', () => {
       type Provider = HydrogenRouterContextProvider;
 
       // Should have React Router methods

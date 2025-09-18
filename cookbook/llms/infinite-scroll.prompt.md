@@ -303,8 +303,8 @@ Key features:
      "react": "18.3.1",
      "react-dom": "18.3.1",
 +    "react-intersection-observer": "^8.34.0",
-     "react-router": "7.8.2",
-     "react-router-dom": "7.8.2"
+     "react-router": "7.9.1",
+     "react-router-dom": "7.9.1"
    },
 ```
 

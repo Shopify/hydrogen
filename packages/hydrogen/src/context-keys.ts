@@ -1,4 +1,4 @@
-import {unstable_createContext} from 'react-router';
+import {createContext} from 'react-router';
 import type {StorefrontClient, I18nBase} from './storefront';
 import type {CustomerAccount} from './customer/types';
 import type {
@@ -10,14 +10,14 @@ import type {HydrogenEnv, HydrogenSession, WaitUntil} from './types';
 
 // Internal context keys - not exported from package, only used internally
 export const storefrontContext =
-  unstable_createContext<StorefrontClient<I18nBase>['storefront']>();
-export const cartContext = unstable_createContext<
+  createContext<StorefrontClient<I18nBase>['storefront']>();
+export const cartContext = createContext<
   HydrogenCart | HydrogenCartCustom<CustomMethodsBase>
 >();
-export const customerAccountContext = unstable_createContext<CustomerAccount>();
-export const envContext = unstable_createContext<HydrogenEnv>();
-export const sessionContext = unstable_createContext<HydrogenSession>();
-export const waitUntilContext = unstable_createContext<WaitUntil>();
+export const customerAccountContext = createContext<CustomerAccount>();
+export const envContext = createContext<HydrogenEnv>();
+export const sessionContext = createContext<HydrogenSession>();
+export const waitUntilContext = createContext<WaitUntil>();
 
 /**
  * Grouped export of all Hydrogen context keys for convenient access.
