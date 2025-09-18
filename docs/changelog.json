@@ -15,7 +15,7 @@
         "react-router-dom": "7.8.2"
       },
       "devDependencies": {
-        "@shopify/mini-oxygen": "^4.0.0",
+        "@shopify/mini-oxygen": "4.0.0",
         "@shopify/cli": "3.83.3",
         "@react-router/dev": "7.8.2",
         "@react-router/fs-routes": "7.8.2"
@@ -31,7 +31,41 @@
         "@remix-run/fs-routes",
         "@remix-run/route-config"
       ],
-      "dependenciesMeta": {},
+      "dependenciesMeta": {
+        "@shopify/cli": {
+          "required": true
+        },
+        "react-router": {
+          "required": true
+        },
+        "@react-router/dev": {
+          "required": true
+        },
+        "@react-router/fs-routes": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/remix-oxygen": {
+          "required": false
+        },
+        "@remix-run/react": {
+          "required": false
+        },
+        "@remix-run/server-runtime": {
+          "required": false
+        },
+        "@remix-run/dev": {
+          "required": false
+        },
+        "@remix-run/fs-routes": {
+          "required": false
+        },
+        "@remix-run/route-config": {
+          "required": false
+        }
+      },
       "fixes": [
         {
           "title": "Fix OAuth redirect handling for Customer Account API flows",
