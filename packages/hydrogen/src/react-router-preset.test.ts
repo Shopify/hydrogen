@@ -19,8 +19,8 @@ describe('hydrogenPreset', () => {
       buildDirectory: 'dist',
       ssr: true,
       future: {
+        v8_middleware: true,
         unstable_optimizeDeps: true,
-        unstable_middleware: true,
         unstable_splitRouteModules: true,
         unstable_subResourceIntegrity: false,
         unstable_viteEnvironmentApi: false,
@@ -144,8 +144,8 @@ describe('hydrogenPreset', () => {
       }) as ReactRouterConfig | undefined;
 
       // Verify all performance flags are enabled
+      expect(config?.future?.v8_middleware).toBe(true);
       expect(config?.future?.unstable_optimizeDeps).toBe(true);
-      expect(config?.future?.unstable_middleware).toBe(true);
       expect(config?.future?.unstable_splitRouteModules).toBe(true);
     });
 

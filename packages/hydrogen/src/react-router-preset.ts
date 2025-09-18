@@ -1,12 +1,12 @@
 import type {Preset} from '@react-router/dev/config';
 
 /**
- * Official Hydrogen Preset for React Router 7.8.x
+ * Official Hydrogen Preset for React Router 7.9.x
  *
  * Provides optimal React Router configuration for Hydrogen applications on Oxygen.
  * Enables validated performance optimizations while ensuring CLI compatibility.
  *
- * React Router 7.8.x Feature Support Matrix for Hydrogen 2025.7.0
+ * React Router 7.9.x Feature Support Matrix for Hydrogen 2025.7.0
  *
  * +----------------------------------+----------+----------------------------------+
  * | Feature                          | Status   | Notes                            |
@@ -20,7 +20,7 @@ import type {Preset} from '@react-router/dev/config';
  * | PERFORMANCE FLAGS                                                               |
  * +----------------------------------+----------+----------------------------------+
  * | unstable_optimizeDeps            | Enabled  | Build performance optimization   |
- * | unstable_middleware              | Enabled  | Required for Hydrogen context    |
+ * | v8_middleware                    | Enabled  | Required for Hydrogen context    |
  * | unstable_splitRouteModules       | Enabled  | Route code splitting             |
  * +----------------------------------+----------+----------------------------------+
  * | ROUTE DISCOVERY                                                                 |
@@ -63,8 +63,8 @@ export function hydrogenPreset(): Preset {
       ssr: true,
 
       future: {
+        v8_middleware: true,
         unstable_optimizeDeps: true,
-        unstable_middleware: true,
         unstable_splitRouteModules: true,
         unstable_subResourceIntegrity: false,
         unstable_viteEnvironmentApi: false,

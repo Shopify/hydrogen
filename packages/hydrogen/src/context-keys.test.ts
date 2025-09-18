@@ -1,5 +1,5 @@
 import {describe, it, expect, beforeEach, vi} from 'vitest';
-import {unstable_RouterContextProvider} from 'react-router';
+import {RouterContextProvider} from 'react-router';
 import {hydrogenContext} from './context-keys';
 import {createHydrogenContext} from './createHydrogenContext';
 
@@ -65,7 +65,7 @@ describe('hydrogenContext', () => {
     });
 
     it('should support context.get() for storefront', () => {
-      // The context should have a get method from unstable_RouterContextProvider
+      // The context should have a get method from RouterContextProvider
       expect(typeof context.get).toBe('function');
 
       // Get the storefront using context.get()
@@ -97,7 +97,7 @@ describe('hydrogenContext', () => {
     });
 
     it('should support context.set() for custom values', () => {
-      // The context should have a set method from unstable_RouterContextProvider
+      // The context should have a set method from RouterContextProvider
       expect(typeof context.set).toBe('function');
 
       // Create a custom context key

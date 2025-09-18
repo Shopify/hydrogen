@@ -29,7 +29,7 @@ import type {
 import {type CrossRuntimeRequest, getHeader} from './utils/request';
 import {warnOnce} from './utils/warning';
 import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
-import {unstable_RouterContextProvider} from 'react-router';
+import {RouterContextProvider} from 'react-router';
 import {
   storefrontContext,
   cartContext,
@@ -240,7 +240,7 @@ export function createHydrogenContext<
   });
 
   // Create React Router context provider
-  const routerProvider = new unstable_RouterContextProvider();
+  const routerProvider = new RouterContextProvider();
 
   // Set React Router context keys (enables context.get(storefrontContext))
   routerProvider.set(storefrontContext, storefront);
