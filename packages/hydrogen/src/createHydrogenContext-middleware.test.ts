@@ -1,6 +1,12 @@
 import {describe, it, expect, vi} from 'vitest';
 import {createHydrogenContext} from './createHydrogenContext';
 import type {HydrogenSession} from './types';
+import {
+  cartContext,
+  envContext,
+  sessionContext,
+  storefrontContext,
+} from './context-keys';
 
 describe('createHydrogenContext with v8_middleware compatibility', () => {
   const mockRequest = new Request('http://localhost');
@@ -51,6 +57,12 @@ describe('createHydrogenContext with v8_middleware compatibility', () => {
     expect(context.storefront).toBeDefined();
     expect(context.cart).toBeDefined();
     expect(context.env).toBe(mockEnv);
+
+    // Compare some of the results
+    expect(context.get(sessionContext)).toBe(context.session);
+    expect(context.get(storefrontContext)).toBe(context.storefront);
+    expect(context.get(cartContext)).toBe(context.cart);
+    expect(context.get(envContext)).toBe(context.env);
   });
 
   it('should work with v8_middleware context pattern', () => {
@@ -72,6 +84,18 @@ describe('createHydrogenContext with v8_middleware compatibility', () => {
 
     expect(typeof context.get).toBe('function');
     expect(typeof context.set).toBe('function');
+
+    const mockSession2: HydrogenSession = {
+      get: vi.fn(),
+      set: vi.fn(),
+      unset: vi.fn(),
+      commit: vi.fn(() => Promise.resolve('cookie')),
+      isPending: false,
+    };
+
+    expect(context.get(sessionContext)).toBe(mockSession);
+    context.set(sessionContext, mockSession2);
+    expect(context.get(sessionContext)).toBe(mockSession2);
   });
 
   it('should maintain context key access through get() method', async () => {
