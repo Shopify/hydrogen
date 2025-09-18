@@ -153,7 +153,7 @@ steps:
     description: Update cart line items to use the unified Link component for product links
     diffs:
       - file: app/components/CartLineItem.tsx
-        patchFile: CartLineItem.tsx.12f63e.patch
+        patchFile: CartLineItem.tsx.f93ff4.patch
   - type: NEW_FILE
     step: 1.1
     name: Create a CountrySelector component
@@ -198,7 +198,7 @@ steps:
       This ensures all product links automatically include the correct locale prefix.
     diffs:
       - file: app/components/ProductItem.tsx
-        patchFile: ProductItem.tsx.64cb5c.patch
+        patchFile: ProductItem.tsx.f84e8c.patch
   - type: PATCH
     step: 1.5
     name: Add the selected locale to the context
@@ -206,7 +206,7 @@ steps:
       Detect the locale from the URL path, and add it to the HydrogenContext.
     diffs:
       - file: app/lib/context.ts
-        patchFile: context.ts.276f49.patch
+        patchFile: context.ts.cfd9da.patch
   - type: PATCH
     step: 1.6
     name: Update Header with CountrySelector and locale-aware Links
@@ -216,7 +216,7 @@ steps:
       3. Menu URLs are automatically cleaned of invalid locale prefixes
     diffs:
       - file: app/components/Header.tsx
-        patchFile: Header.tsx.80a27a.patch
+        patchFile: Header.tsx.82c1ce.patch
   - type: PATCH
     step: 1.7
     name: Add the selected locale to the root route
@@ -227,7 +227,7 @@ steps:
       when the locale changes.
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.0ad938.patch
+        patchFile: root.tsx.8c182c.patch
   - type: INFO
     step: 2
     name: Localizing the individual routes
@@ -240,7 +240,7 @@ steps:
       component for consistent navigation
     diffs:
       - file: app/components/CartMain.tsx
-        patchFile: CartMain.tsx.1c4aae.patch
+        patchFile: CartMain.tsx.6d121b.patch
   - type: INFO
     step: 2.1
     name: Add language dynamic segment to the desired routes
@@ -430,4 +430,4 @@ llms:
       solution: Make sure you update *all* routes that need localization (not only the
         routes for the home page, the cart page, and the product page). See step
         2.1 for details.
-commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
+commit: 147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7

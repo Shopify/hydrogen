@@ -1,4 +1,4 @@
-index 6fdeb1b26..65de11af9 100644
+index fa83da97e..5a0fef093 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -16,9 +16,39 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
@@ -41,16 +41,20 @@ index 6fdeb1b26..65de11af9 100644
  /**
   * This is important to avoid re-fetching root queries on sub-navigations
   */
-@@ -162,7 +192,11 @@ export function Layout({children}: {children?: React.ReactNode}) {
-             shop={data.shop}
-             consent={data.consent}
-           >
--            <PageLayout {...data}>{children}</PageLayout>
-+            {/* @description Wrap PageLayout with B2B location provider for company location management */}
-+            <B2BLocationProvider>
-+              <PageLayout {...data}>{children}</PageLayout>
-+              <B2BLocationSelector />
-+            </B2BLocationProvider>
-           </Analytics.Provider>
-         ) : (
-           children
+@@ -176,9 +206,13 @@ export default function App() {
+       shop={data.shop}
+       consent={data.consent}
+     >
+-      <PageLayout {...data}>
+-        <Outlet />;
+-      </PageLayout>
++      {/* @description Wrap PageLayout with B2B location provider for company location management */}
++      <B2BLocationProvider>
++        <PageLayout {...data}>
++          <Outlet />
++        </PageLayout>
++        <B2BLocationSelector />
++      </B2BLocationProvider>
+     </Analytics.Provider>
+   );
+ }

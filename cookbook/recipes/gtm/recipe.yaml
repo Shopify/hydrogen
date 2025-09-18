@@ -54,14 +54,14 @@ steps:
     description: Updates README with GTM-specific documentation and setup instructions
     diffs:
       - file: README.md
-        patchFile: README.md.47d06f.patch
+        patchFile: README.md.49f8fa.patch
   - type: PATCH
     step: "1"
     name: app/entry.server.tsx
     description: null
     diffs:
       - file: app/entry.server.tsx
-        patchFile: entry.server.tsx.c0cb8d.patch
+        patchFile: entry.server.tsx.6d386f.patch
   - type: NEW_FILE
     step: "1"
     name: app/components/GoogleTagManager.tsx
@@ -74,7 +74,7 @@ steps:
     description: null
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.0ad938.patch
+        patchFile: root.tsx.8c182c.patch
 nextSteps: |
   After applying this recipe:
 
@@ -100,4 +100,4 @@ nextSteps: |
 llms:
   userQueries: []
   troubleshooting: []
-commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
+commit: 147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7
