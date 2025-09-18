@@ -16,10 +16,20 @@
       },
       "devDependencies": {
         "@shopify/mini-oxygen": "^4.0.0",
-        "@shopify/cli": "~3.83.3"
+        "@shopify/cli": "~3.83.3",
+        "@react-router/dev": "7.8.2",
+        "@react-router/fs-routes": "7.8.2"
       },
-      "removeDependencies": ["@shopify/remix-oxygen"],
-      "removeDevDependencies": [],
+      "removeDependencies": [
+        "@shopify/remix-oxygen",
+        "@remix-run/react",
+        "@remix-run/server-runtime"
+      ],
+      "removeDevDependencies": [
+        "@remix-run/dev",
+        "@remix-run/fs-routes",
+        "@remix-run/route-config"
+      ],
       "dependenciesMeta": {},
       "fixes": [
         {
