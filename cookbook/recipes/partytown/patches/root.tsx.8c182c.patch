@@ -1,4 +1,4 @@
-index 375fc7b04..d63dd33ac 100644
+index fa83da97e..a2b8986a6 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -1,4 +1,4 @@
@@ -29,19 +29,7 @@ index 375fc7b04..d63dd33ac 100644
    };
  }
  
-@@ -162,7 +170,10 @@ export function Layout({children}: {children?: React.ReactNode}) {
-             shop={data.shop}
-             consent={data.consent}
-           >
--            <PageLayout {...data}>{children}</PageLayout>
-+            <PageLayout {...data}>
-+              <PartyTownScripts gtmContainerId={data.gtmContainerId} />
-+              {children}
-+            </PageLayout>
-           </Analytics.Provider>
-         ) : (
-           children
-@@ -174,6 +185,38 @@ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -163,6 +171,38 @@ export function Layout({children}: {children?: React.ReactNode}) {
    );
  }
  
@@ -78,5 +66,15 @@ index 375fc7b04..d63dd33ac 100644
 +}
 +
  export default function App() {
-   return <Outlet />;
- }
+   const data = useRouteLoaderData<RootLoader>('root');
+ 
+@@ -177,7 +217,8 @@ export default function App() {
+       consent={data.consent}
+     >
+       <PageLayout {...data}>
+-        <Outlet />;
++        <PartyTownScripts gtmContainerId={data.gtmContainerId} />
++        <Outlet />
+       </PageLayout>
+     </Analytics.Provider>
+   );

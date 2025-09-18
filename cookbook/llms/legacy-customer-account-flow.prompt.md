@@ -174,7 +174,7 @@ Add account link to header navigation
 
 Add account activation route for email verification
 
-#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
+#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
 
 ```tsx
 import {Form, useActionData, data, redirect} from 'react-router';
@@ -355,7 +355,7 @@ Update PageLayout to handle account routes
 
 Add password recovery form for forgotten passwords
 
-#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
+#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
 
 ```tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -572,7 +572,7 @@ Add customer access token validation to root loader
  }
  
  /**
-@@ -202,3 +222,39 @@ export function ErrorBoundary() {
+@@ -207,3 +227,39 @@ export function ErrorBoundary() {
      </div>
    );
  }
@@ -618,7 +618,7 @@ Add customer access token validation to root loader
 
 Add customer registration form
 
-#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.register.tsx)
+#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.register.tsx)
 
 ```tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -854,7 +854,7 @@ Convert catch-all route to use Storefront API authentication
 
 Add password reset form with token validation
 
-#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
+#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
 
 ```tsx
 import {Form, useActionData, data, redirect} from 'react-router';
