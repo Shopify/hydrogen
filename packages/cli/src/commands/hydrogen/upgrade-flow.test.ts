@@ -86,19 +86,32 @@ describe('upgrade flow integration', () => {
       console.log('Test project created at:', projectDir);
       console.log('From version:', fromVersion, 'commit:', fromCommit);
       console.log('To version:', toVersion);
-      
+
       // Check package.json content
       const pkgJsonPath = join(projectDir, 'package.json');
       let pkgJsonContent = await readFile(pkgJsonPath, 'utf8');
-      console.log('Initial package.json dependencies:', JSON.stringify(JSON.parse(pkgJsonContent).dependencies, null, 2));
-      console.log('Initial package.json devDependencies:', JSON.stringify(JSON.parse(pkgJsonContent).devDependencies, null, 2));
-      
+      console.log(
+        'Initial package.json dependencies:',
+        JSON.stringify(JSON.parse(pkgJsonContent).dependencies, null, 2),
+      );
+      console.log(
+        'Initial package.json devDependencies:',
+        JSON.stringify(JSON.parse(pkgJsonContent).devDependencies, null, 2),
+      );
+
       // Update @shopify/cli to 3.83.3 if the changelog has removeDependencies
       // This version is required to handle removeDependencies properly
-      if (latestRelease.removeDependencies || latestRelease.removeDevDependencies) {
+      if (
+        latestRelease.removeDependencies ||
+        latestRelease.removeDevDependencies
+      ) {
         const pkg = JSON.parse(pkgJsonContent);
         if (pkg.devDependencies?.['@shopify/cli']) {
-          console.log('Updating @shopify/cli from', pkg.devDependencies['@shopify/cli'], 'to 3.83.3 for removeDependencies support');
+          console.log(
+            'Updating @shopify/cli from',
+            pkg.devDependencies['@shopify/cli'],
+            'to 3.83.3 for removeDependencies support',
+          );
           pkg.devDependencies['@shopify/cli'] = '3.83.3';
           pkgJsonContent = JSON.stringify(pkg, null, 2);
           await writeFile(pkgJsonPath, pkgJsonContent, 'utf8');
