@@ -1,17 +1,8 @@
 name: hydrogen
 display_name: Hydrogen
 
-type: node
-
-env:
-  NODE_ENV: development
-
 up:
-  - node: 'v20.19.5'
-  - custom:
-      name: Install npm dependencies
-      met?: test -d node_modules
-      meet: npm install
+  - node: 'v22.19.0'
 
 commands:
   # Standard development commands
