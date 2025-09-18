@@ -3,6 +3,203 @@
   "version": "1",
   "releases": [
     {
+      "title": "React Router 7 migration with API version 2025-07",
+      "version": "2025.7.0",
+      "date": "2025-09-17",
+      "hash": "pending-merge",
+      "commit": "https://github.com/Shopify/hydrogen/pull/3166",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3166",
+      "dependencies": {
+        "@shopify/hydrogen": "2025.7.0",
+        "react-router": "7.9.1",
+        "react-router-dom": "7.9.1"
+      },
+      "devDependencies": {
+        "@shopify/mini-oxygen": "^4.0.0",
+        "@shopify/cli": "~3.83.3"
+      },
+      "removeDependencies": ["@shopify/remix-oxygen"],
+      "removeDevDependencies": [],
+      "dependenciesMeta": {},
+      "fixes": [
+        {
+          "title": "Fix OAuth redirect handling for Customer Account API flows",
+          "info": "MiniOxygen now correctly handles external redirects by passing them to the browser instead of following them internally, ensuring OAuth/PKCE authentication flows work properly.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3082",
+          "id": "3082"
+        },
+        {
+          "title": "Stabilize Customer Account API development flag",
+          "info": "The --customer-account-push flag is now stable and ready for production use, enabling tunneling for local development with Customer Account API OAuth flows.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3082",
+          "id": "3082-flag"
+        },
+        {
+          "title": "Fix defer/streaming in development & preview",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039"
+        },
+        {
+          "title": "Fix CSP NonceProvider hydration error",
+          "info": "Fixed React Context error that occurred during client-side hydration when using Content Security Policy (CSP) with nonces.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3082",
+          "id": "3082-nonce"
+        },
+        {
+          "title": "Fix GraphQL client development warnings",
+          "info": "Eliminates sourcemap warnings and prevents unexpected page reloads during development.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3108",
+          "id": "3108"
+        },
+        {
+          "title": "Fix Money component compatibility with USDC currency",
+          "info": "Updates Money component to handle unsupported currency codes like USDC from Customer Account API.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3082",
+          "id": "3082-money"
+        },
+        {
+          "title": "Fix parseMetafield money type currency handling",
+          "info": "Transform currency_code (from Storefront API) to currencyCode (expected by MoneyV2 type).",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3072",
+          "id": "3072"
+        },
+        {
+          "title": "Fix TypeScript enum compatibility between APIs",
+          "info": "Updated codegen to reference Storefront API's LanguageCode and CurrencyCode enums for Customer Account API types.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3139",
+          "id": "3139"
+        },
+        {
+          "title": "Display cart user errors in skeleton template",
+          "info": "Cart mutations now properly display user errors such as invalid discount codes or gift cards.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3082",
+          "id": "3082-errors"
+        },
+        {
+          "title": "Add TypeScript ESLint rules for promise handling",
+          "info": "Prevents 'The script will never generate a response' errors when deploying to Oxygen/Cloudflare Workers.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3146",
+          "id": "3146"
+        },
+        {
+          "title": "Fix environment variable quoting in env pull command",
+          "info": "Properly handles shell metacharacters in environment variables.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3050",
+          "id": "3050"
+        },
+        {
+          "title": "Add --force-client-sourcemap flag to deploy command",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039-sourcemap"
+        },
+        {
+          "title": "Add Vite v7 exports support",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039-vite"
+        },
+        {
+          "title": "Fix and upgrade GraphiQL route",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039-graphiql"
+        },
+        {
+          "title": "Replace deprecated faker.internet.color()",
+          "info": "Updated to use faker.color.rgb() instead.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2985",
+          "id": "2985"
+        }
+      ],
+      "features": [
+        {
+          "title": "Migrate to React Router 7.8.x",
+          "info": "This major release migrates Hydrogen to React Router 7.8.x, introducing automatic type generation, enhanced type safety, and modernized APIs. The @shopify/remix-oxygen package is no longer needed.",
+          "breaking": true,
+          "steps": [
+            {
+              "title": "Run the automated migration codemod",
+              "info": "This codemod will automatically update most imports and references from Remix to React Router",
+              "code": "YGBgZGlmZgpucHggQGNvZGVtb2QuY29tL2NvZGVtb2QgcmVtaXgvMi9yZWFjdC1yb3V0ZXIvdXBncmFkZQpgYGAK"
+            },
+            {
+              "title": "Update remaining import statements manually",
+              "info": "Change all @shopify/remix-oxygen and @remix-run/* imports to react-router or @shopify/hydrogen/oxygen",
+              "code": "YGBgZGlmZgotIGltcG9ydCB7cmVkaXJlY3QsIHR5cGUgTG9hZGVyRnVuY3Rpb25BcmdzfSBmcm9tICJAc2hvcGlmeS9yZW1peC1veHlnZW4iOwotIGltcG9ydCB7dXNlTG9hZGVyRGF0YSwgdHlwZSBNZXRhRnVuY3Rpb259IGZyb20gIkByZW1peC1ydW4vcmVhY3QiOworIGltcG9ydCB7cmVkaXJlY3QsIHVzZUxvYWRlckRhdGF9IGZyb20gInJlYWN0LXJvdXRlciI7CisgaW1wb3J0IHR5cGUge1JvdXRlfSBmcm9tICIuLyt0eXBlcy9yb3V0ZS1uYW1lIjsKYGBgCg=="
+            },
+            {
+              "title": "Add .react-router to .gitignore",
+              "info": "React Router 7 generates type files that should not be committed to version control",
+              "code": "YGBgZGlmZgplY2hvICIucmVhY3Qtcm91dGVyLyIgPj4gLmdpdGlnbm9yZQpgYGAK"
+            },
+            {
+              "title": "Verify your app starts and builds correctly",
+              "info": "Test that your application runs without errors after the migration",
+              "code": "YGBgZGlmZgpucG0gcnVuIGRldgpucG0gcnVuIGJ1aWxkCmBgYAo="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3141",
+          "id": "3141"
+        },
+        {
+          "title": "Update to Storefront API and Customer Account API version 2025-07",
+          "info": "Updated API version constants, regenerated GraphQL types, and updated all API references. Breaking changes may occur due to API schema changes between versions.",
+          "breaking": true,
+          "pr": "https://github.com/Shopify/hydrogen/pull/3082",
+          "id": "3082-api"
+        },
+        {
+          "title": "Add React Router 7.8.x context infrastructure",
+          "info": "New createRequestHandler export from @shopify/hydrogen/oxygen and hydrogenPreset for React Router configuration.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3142",
+          "id": "3142"
+        },
+        {
+          "title": "Add countryCode parameter to Customer Account API login",
+          "info": "Enables region-specific experiences by passing a CountryCode to the login method for contextualized authentication.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3148",
+          "id": "3148"
+        },
+        {
+          "title": "Add support for removing individual gift cards from cart",
+          "info": "Introduces cartGiftCardCodesRemove mutation to remove specific gift cards by their IDs, solving the limitation where only the last 4 digits were available.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3128",
+          "id": "3128"
+        },
+        {
+          "title": "Upgrade Miniflare from v2 to v4",
+          "info": "Internal MiniOxygen API refactored to work with Miniflare v4's new architecture, improving development server performance and compatibility.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039-miniflare"
+        },
+        {
+          "title": "Add order filtering support to Customer Account API orders route",
+          "info": "Skeleton template now supports order filtering in the /account/orders route for improved user experience.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3125",
+          "id": "3125"
+        },
+        {
+          "title": "Add fulfillmentStatus to Customer Account API order query",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039-fulfillment"
+        },
+        {
+          "title": "Add @inContext language support to Customer Account API mutations",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039-incontext"
+        },
+        {
+          "title": "Add GraphQL @defer directive support to storefront client",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039-defer"
+        },
+        {
+          "title": "Include cdn.shopify.com by default in CSP connectSrc",
+          "info": "Improves Content Security Policy defaults for Shopify CDN resources.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3172",
+          "id": "3172"
+        }
+      ]
+    },
+    {
       "title": "[COMPLETE BEFORE ATTEMPTING 2025.5 UPGRADE] Bump Shopify CLI version",
       "version": "2025.4.1",
       "hash": "e4f44954a5dc53e6dfccd1b7e96de593bbb0887a",
