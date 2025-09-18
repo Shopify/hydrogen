@@ -90,7 +90,7 @@ To enable cookie consent:
 
 ### Step 1: README.md
 
-
+Updates README with GTM-specific documentation and setup instructions
 
 #### File: /README.md
 
@@ -220,7 +220,7 @@ To enable cookie consent:
 
 
 
-#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
+#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
 
 ```tsx
 import {useAnalytics} from '@shopify/hydrogen';
@@ -270,7 +270,7 @@ export function GoogleTagManager() {
  
  export type RootLoader = typeof loader;
  
-@@ -154,8 +155,32 @@ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -153,8 +154,32 @@ export function Layout({children}: {children?: React.ReactNode}) {
          <link rel="stylesheet" href={appStyles}></link>
          <Meta />
          <Links />
@@ -300,18 +300,21 @@ export function GoogleTagManager() {
 +            }}
 +          ></iframe>
 +        </noscript>
-         {data ? (
-           <Analytics.Provider
-             cart={data.cart}
-@@ -163,6 +188,8 @@ export function Layout({children}: {children?: React.ReactNode}) {
-             consent={data.consent}
-           >
-             <PageLayout {...data}>{children}</PageLayout>
-+            {/* @description Initialize Google Tag Manager analytics integration */}
-+            <GoogleTagManager />
-           </Analytics.Provider>
-         ) : (
-           children
+         {children}
+         <ScrollRestoration nonce={nonce} />
+         <Scripts nonce={nonce} />
+@@ -177,8 +202,10 @@ export default function App() {
+       consent={data.consent}
+     >
+       <PageLayout {...data}>
+-        <Outlet />;
++        <Outlet />
+       </PageLayout>
++      {/* @description Initialize Google Tag Manager analytics integration */}
++      <GoogleTagManager />
+     </Analytics.Provider>
+   );
+ }
 ```
 
 </recipe_implementation>

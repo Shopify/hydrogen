@@ -241,7 +241,7 @@ Key changes:
 
 
 
-#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
+#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
 
 ```ts
 // This file extends the Hydrogen types for this project
@@ -312,7 +312,7 @@ export {};
 
 
 
-#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
+#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
 
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
@@ -473,7 +473,7 @@ export {};
 
 
 
-#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
+#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
 
 ```mjs
 #!/usr/bin/env node
@@ -734,7 +734,7 @@ process.on('SIGTERM', () => {
  }
  
  export function Layout({children}: {children?: React.ReactNode}) {
-@@ -150,8 +95,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
+@@ -149,8 +94,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
        <head>
          <meta charSet="utf-8" />
          <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -744,20 +744,22 @@ process.on('SIGTERM', () => {
          <Meta />
          <Links />
        </head>
-@@ -162,7 +106,11 @@ export function Layout({children}: {children?: React.ReactNode}) {
-             shop={data.shop}
-             consent={data.consent}
-           >
--            <PageLayout {...data}>{children}</PageLayout>
-+            <div className="PageLayout">
-+              <h1>{data.layout?.shop?.name} (Express example)</h1>
-+              <h2>{data.layout?.shop?.description}</h2>
-+              {children}
-+            </div>
-           </Analytics.Provider>
-         ) : (
-           children
-@@ -202,3 +150,19 @@ export function ErrorBoundary() {
+@@ -176,9 +120,11 @@ export default function App() {
+       shop={data.shop}
+       consent={data.consent}
+     >
+-      <PageLayout {...data}>
+-        <Outlet />;
+-      </PageLayout>
++      <div className="PageLayout">
++        <h1>{data.layout?.shop?.name} (Express example)</h1>
++        <h2>{data.layout?.shop?.description}</h2>
++        <Outlet />
++      </div>
+     </Analytics.Provider>
+   );
+ }
+@@ -207,3 +153,19 @@ export function ErrorBoundary() {
      </div>
    );
  }
@@ -783,7 +785,7 @@ process.on('SIGTERM', () => {
 
 
 
-#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
+#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
 
 ```mjs
 import {createRequestHandler} from '@react-router/express';

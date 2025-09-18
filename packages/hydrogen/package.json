@@ -90,7 +90,6 @@
     "source-map-support": "^0.5.21",
     "type-fest": "^4.33.0",
     "use-resize-observer": "^9.1.0",
-    "uuid": "11.1.0",
     "worktop": "^0.7.3",
     "@shopify/graphql-client": "1.4.1"
   },

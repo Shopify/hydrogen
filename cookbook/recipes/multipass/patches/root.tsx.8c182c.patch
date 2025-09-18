@@ -1,4 +1,4 @@
-index 375fc7b04..0989489b8 100644
+index fa83da97e..d9d4c39c9 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -1,4 +1,15 @@
@@ -34,7 +34,7 @@ index 375fc7b04..0989489b8 100644
  }
  
  /**
-@@ -202,3 +220,24 @@ export function ErrorBoundary() {
+@@ -207,3 +225,24 @@ export function ErrorBoundary() {
      </div>
    );
  }

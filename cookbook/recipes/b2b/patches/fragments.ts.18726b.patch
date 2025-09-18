@@ -1,4 +1,4 @@
-index dc4426a9f..f676a7bdc 100644
+index cf35c25ea..6866c19af 100644
 --- a/templates/skeleton/app/lib/fragments.ts
 +++ b/templates/skeleton/app/lib/fragments.ts
 @@ -52,6 +52,21 @@ export const CART_QUERY_FRAGMENT = `#graphql

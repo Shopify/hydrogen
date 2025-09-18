@@ -142,7 +142,6 @@ function loadDeferredData({context}: Route.LoaderArgs) {
 }
 
 export function Layout({children}: {children?: React.ReactNode}) {
-  const data = useRouteLoaderData<RootLoader>('root');
   const nonce = useNonce();
 
   return (
@@ -156,17 +155,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
         <Links />
       </head>
       <body>
-        {data ? (
-          <Analytics.Provider
-            cart={data.cart}
-            shop={data.shop}
-            consent={data.consent}
-          >
-            <PageLayout {...data}>{children}</PageLayout>
-          </Analytics.Provider>
-        ) : (
-          children
-        )}
+        {children}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>
@@ -175,7 +164,23 @@ export function Layout({children}: {children?: React.ReactNode}) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const data = useRouteLoaderData<RootLoader>('root');
+
+  if (!data) {
+    return <Outlet />;
+  }
+
+  return (
+    <Analytics.Provider
+      cart={data.cart}
+      shop={data.shop}
+      consent={data.consent}
+    >
+      <PageLayout {...data}>
+        <Outlet />;
+      </PageLayout>
+    </Analytics.Provider>
+  );
 }
 
 export function ErrorBoundary() {
