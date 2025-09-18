@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+lib/
+build/
+*.js
+*.d.ts
+*.js.map
+!transform.js
+!jest.config.js
+!vitest.config.js
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+
+# Publishing artifacts
+*.tar.gz

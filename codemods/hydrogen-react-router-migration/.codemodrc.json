@@ -1,0 +1,27 @@
+{
+  "$schema": "https://codemod.com/schema/codemodrc.json",
+  "name": "shopify-hydrogen-react-router-migration",
+  "version": "1.0.0",
+  "private": false,
+  "engine": "jscodeshift",
+  "meta": {
+    "tags": ["hydrogen", "react-router", "migration", "shopify"],
+    "description": "Migrate Hydrogen-specific patterns to React Router 7.9.x",
+    "git": "https://github.com/shopify/hydrogen/tree/main/codemods/hydrogen-react-router-migration"
+  },
+  "applicability": {
+    "from": [
+      ["@shopify/hydrogen", ">=2024.4.0 <2025.7.0"],
+      ["@shopify/remix-oxygen", ">=2.0.0"],
+      ["react-router", ">=7.0.0 <7.9.0"]
+    ],
+    "to": [
+      ["@shopify/hydrogen", ">=2025.1.0"],
+      ["react-router", ">=7.9.0"]
+    ]
+  },
+  "include": ["**/*.{ts,tsx,js,jsx}"],
+  "exclude": ["**/node_modules/**", "**/dist/**", "**/.turbo/**"],
+  "preCommands": [],
+  "postCommands": []
+}

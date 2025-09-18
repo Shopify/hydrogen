@@ -7,6 +7,7 @@
     "build": "npm run build:pkg",
     "build:pkg": "turbo build --parallel --filter=./packages/*",
     "build:templates": "turbo build --parallel --filter=./templates/*",
+    "build:codemods": "turbo build --parallel --filter=./codemods/*",
     "build:all": "npm run build:pkg && npm run build:templates",
     "ci:checks": "turbo run lint test format:check typecheck",
     "decrypt": "ejson decrypt secrets.ejson",
@@ -48,7 +49,8 @@
     "packages/hydrogen",
     "packages/mini-oxygen",
     "packages/remix-oxygen",
-    "templates/skeleton"
+    "templates/skeleton",
+    "codemods/hydrogen-react-router-migration"
   ],
   "prettier": "@shopify/prettier-config",
   "dependencies": {
