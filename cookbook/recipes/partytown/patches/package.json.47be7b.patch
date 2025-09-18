@@ -1,4 +1,4 @@
-index 0ee1599a1..c331a831d 100644
+index 1a18b2dce..ebaac6b5f 100644
 --- a/templates/skeleton/package.json
 +++ b/templates/skeleton/package.json
 @@ -8,12 +8,14 @@
