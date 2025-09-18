@@ -85,10 +85,12 @@
   "dependencies": {
     "@shopify/hydrogen-react": "2025.5.0",
     "content-security-policy-builder": "^2.2.0",
-    "isbot": "^5.1.21",
+    "flame-chart-js": "^3.3.0",
     "source-map-support": "^0.5.21",
     "type-fest": "^4.33.0",
     "use-resize-observer": "^9.1.0",
+    "uuid": "^11.0.5",
+    "isbot": "^5.1.22",
     "worktop": "^0.7.3",
     "@shopify/graphql-client": "1.4.1"
   },
