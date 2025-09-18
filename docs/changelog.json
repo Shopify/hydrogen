@@ -21,6 +21,7 @@
         "@react-router/fs-routes": "7.8.2"
       },
       "removeDependencies": [
+        "@shopify/hydrogen",
         "@shopify/remix-oxygen",
         "@remix-run/react",
         "@remix-run/server-runtime"
