@@ -2,7 +2,7 @@ name: hydrogen
 display_name: Hydrogen
 
 up:
-  - node: 'v22.19.0'
+  - node: 'v20.19.5'
 
 commands:
   # Standard development commands
