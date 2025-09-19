@@ -22,6 +22,11 @@ export default defineConfig({
       name: 'smoke',
       testDir: './e2e/smoke',
     },
+    {
+      name: 'debug',
+      testDir: './e2e',
+      testMatch: '**/debug-*.spec.ts',
+    },
   ],
 
   // Automatically start dev server before tests
