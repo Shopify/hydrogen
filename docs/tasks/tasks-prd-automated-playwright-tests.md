@@ -111,7 +111,7 @@
       - Add `setup` project pointing to `./e2e/setup` directory
       - Remove any dynamic `testDir` logic based on environment variables
 
-  - [ ] 3.4. Update `package.json` scripts section to add simple E2E commands:
+  - [x] 3.4. Update `package.json` scripts section to add simple E2E commands:
       - Keep existing `"e2e": "playwright test"` to run all tests
       - Update `"e2e:smoke": "playwright test --project=smoke"` to run only smoke tests via project
 
