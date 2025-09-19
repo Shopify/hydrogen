@@ -98,7 +98,7 @@
       - Keep existing `"e2e": "playwright test"` to run all tests
       - Update `"e2e:smoke": "playwright test --project=smoke"` to run only smoke tests via project
 
-  - [ ] 3.5. Verify the new configuration works with all flag combinations:
+  - [x] 3.5. Verify the new configuration works with all flag combinations:
       - Run `npm run e2e` to ensure all tests execute
       - Run `npm run e2e:smoke` to ensure only smoke tests run
       - Run `npm run e2e:smoke -- --headed` to verify flags pass through correctly
