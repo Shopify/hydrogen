@@ -26,7 +26,7 @@ export default defineConfig({
 
   // Automatically start dev server before tests
   webServer: {
-    command: 'cd templates/skeleton && npm run dev',
+    command: './scripts/e2e-setup.sh && cd templates/skeleton && npm run dev',
     url: 'http://localhost:3000',
     timeout: 60 * 1000,
     reuseExistingServer: !process.env.CI,

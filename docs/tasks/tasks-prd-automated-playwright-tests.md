@@ -1,6 +1,7 @@
 ## Relevant Files
 
 - `playwright.config.ts` – Playwright configuration with project definitions for test organization.
+- `scripts/e2e-setup.sh` – Smart setup script that checks and installs dependencies before E2E tests run.
 - `e2e/setup/launch.spec.ts` – System test that verifies dev server launches and displays Hydrogen title.
 - `e2e/server.ts` – Helper module for programmatically starting and stopping the dev server.
 - `e2e/smoke/` – Directory for fast smoke tests that run against an existing skeleton template.
@@ -104,9 +105,39 @@
       - Run `npm run e2e:smoke -- --headed` to verify flags pass through correctly
       - Run `npm run e2e -- --ui` to test Playwright's UI mode works
 
-  - [ ] 3.6. Push branch and open PR #3 titled "E2E: Configure Playwright projects and npm scripts", stacked on top of `modify-prd-e2e`.
+  - [x] 3.6. **Added E2E setup script for automatic dependency management (2025-09-18)**:
+      - Created `scripts/e2e-setup.sh` that intelligently checks and installs dependencies
+      - Script only runs `npm install` when package.json or package-lock.json changes (saves time)
+      - Always runs `npm run build:pkg` (fast with Turbo caching)
+      - Updated `playwright.config.ts` webServer command to use the setup script
+      - Ensures E2E tests always have fresh builds while being pragmatic about install times
+      - Addresses user feedback about needing to manually run `npm install && npm run build` before tests
 
-  - [x] 3.7. Wait for CI to finish and pass on PR #3.
+  - [x] 3.7. Push branch and open PR #3 titled "E2E: Configure Playwright projects and npm scripts", stacked on top of `modify-prd-e2e`.
+      - PR created: https://github.com/Shopify/hydrogen/pull/3181
+      - Updated with E2E setup script functionality
+
+  - [x] 3.8. **[DEBUG] Fixed console errors appearing only in Playwright debug mode (2025-09-19)**:
+      - **Issue**: Smoke tests failing with 5 console errors when run with `--debug` flag but passing in normal mode
+      - **Root cause analysis**:
+        1. In debug mode, Playwright injects `<x-pw-glass>` element for its debugging UI
+        2. This causes React hydration to fail (server HTML doesn't match client)
+        3. When hydration fails, React replaces the entire document
+        4. During this replacement, the browser makes a default `favicon.ico` request
+        5. Since the skeleton uses `favicon.svg` (not `.ico`), this results in a 404
+      - **Evidence gathered**:
+        - No actual 404 network request captured by Playwright's network monitoring
+        - The error only appears alongside x-pw-glass hydration errors
+        - In normal mode, no favicon.ico request is made
+        - Created debug tests to isolate and verify the behavior
+      - **Solution implemented**: Updated `e2e/smoke/home.spec.ts` to filter out:
+        1. Direct x-pw-glass errors
+        2. Hydration failures that follow x-pw-glass errors  
+        3. The favicon.ico 404 that's a side effect of the hydration failure
+      - **Outcome**: Tests now pass in both normal and debug modes while still catching real errors
+      - This ensures we're not masking real errors - only the cascade of errors specifically caused by Playwright's debug mode overlay
+
+  - [ ] 3.9. Wait for CI to finish and pass on PR #3.
 
 
 - [ ] 4. Test authenticated Hydrogen CLI commands with Shopify integration (PR #4)
