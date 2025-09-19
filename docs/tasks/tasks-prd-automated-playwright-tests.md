@@ -85,11 +85,11 @@
 
 - [ ] 3. Configure Playwright projects and npm scripts for E2E testing (PR #3)
 
-  - [ ] 3.1. Create branch `e2e_npm-scripts` **based on `modify-prd-e2e`**.
+  - [x] 3.1. Create branch `e2e_npm-scripts` **based on `modify-prd-e2e`**.
 
-  - [ ] 3.2. Remove the custom runner script `scripts/run-e2e.js` if it exists (no longer needed with native Playwright projects).
+  - [x] 3.2. Remove the custom runner script `scripts/run-e2e.js` if it exists (no longer needed with native Playwright projects).
 
-  - [ ] 3.3. Update `playwright.config.ts` to define test projects for better organization:
+  - [x] 3.3. Update `playwright.config.ts` to define test projects for better organization:
       - Add `smoke` project pointing to `./e2e/smoke` directory
       - Add `setup` project pointing to `./e2e/setup` directory
       - Remove any dynamic `testDir` logic based on environment variables
