@@ -1,6 +1,7 @@
 ## Relevant Files
 
 - `playwright.config.ts` – Playwright configuration with project definitions for test organization.
+- `scripts/e2e-setup.sh` – Smart setup script that checks and installs dependencies before E2E tests run.
 - `e2e/setup/launch.spec.ts` – System test that verifies dev server launches and displays Hydrogen title.
 - `e2e/server.ts` – Helper module for programmatically starting and stopping the dev server.
 - `e2e/smoke/` – Directory for fast smoke tests that run against an existing skeleton template.
@@ -104,9 +105,17 @@
       - Run `npm run e2e:smoke -- --headed` to verify flags pass through correctly
       - Run `npm run e2e -- --ui` to test Playwright's UI mode works
 
-  - [ ] 3.6. Push branch and open PR #3 titled "E2E: Configure Playwright projects and npm scripts", stacked on top of `modify-prd-e2e`.
+  - [x] 3.6. **Added E2E setup script for automatic dependency management (2025-09-18)**:
+      - Created `scripts/e2e-setup.sh` that intelligently checks and installs dependencies
+      - Script only runs `npm install` when package.json or package-lock.json changes (saves time)
+      - Always runs `npm run build:pkg` (fast with Turbo caching)
+      - Updated `playwright.config.ts` webServer command to use the setup script
+      - Ensures E2E tests always have fresh builds while being pragmatic about install times
+      - Addresses user feedback about needing to manually run `npm install && npm run build` before tests
 
-  - [ ] 3.7. Wait for CI to finish and pass on PR #3.
+  - [x] 3.7. Push branch and open PR #3 titled "E2E: Configure Playwright projects and npm scripts", stacked on top of `modify-prd-e2e`.
+
+  - [ ] 3.8. Wait for CI to finish and pass on PR #3.
 
 - [ ] 4. Implement Full Matrix Pack scaffolding and tests for template permutations (3-4 PRs total)
 
