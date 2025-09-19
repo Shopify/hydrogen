@@ -84,7 +84,7 @@
 
   - [x] 2.7. Wait for CI to finish and pass on PR #2.
 
-- [ ] 3. Configure Playwright projects and npm scripts for E2E testing (PR #3)
+- [x] 3. Configure Playwright projects and npm scripts for E2E testing (PR #3)
 
   - [x] 3.1. Create branch `e2e_npm-scripts` **based on `modify-prd-e2e`**.
 
@@ -114,6 +114,8 @@
       - Addresses user feedback about needing to manually run `npm install && npm run build` before tests
 
   - [x] 3.7. Push branch and open PR #3 titled "E2E: Configure Playwright projects and npm scripts", stacked on top of `modify-prd-e2e`.
+      - PR created: https://github.com/Shopify/hydrogen/pull/3181
+      - Updated with E2E setup script functionality
 
   - [ ] 3.8. Wait for CI to finish and pass on PR #3.
 
