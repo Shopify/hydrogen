@@ -5,10 +5,33 @@ test.describe('Home Page', () => {
     page,
   }) => {
     const consoleErrors: string[] = [];
+    const allErrors: string[] = []; // Track all errors to detect x-pw-glass
 
     page.on('console', (msg) => {
       if (msg.type() === 'error') {
-        consoleErrors.push(msg.text());
+        const errorText = msg.text();
+        allErrors.push(errorText);
+
+        // Filter out Playwright debug mode specific errors:
+        // 1. Hydration errors caused by x-pw-glass element injection
+        // 2. Subsequent errors that are side effects of hydration failure
+        const hasSeenPwGlass = allErrors.some((e) => e.includes('x-pw-glass'));
+
+        const isPlaywrightDebugRelatedError =
+          // Direct x-pw-glass errors
+          errorText.includes('x-pw-glass') ||
+          // Hydration errors after x-pw-glass was seen
+          (hasSeenPwGlass && errorText.includes('Hydration failed')) ||
+          (hasSeenPwGlass &&
+            errorText.includes('error occurred during hydration')) ||
+          // Favicon.ico 404 that occurs as side effect of hydration failure
+          (hasSeenPwGlass &&
+            errorText.includes('Failed to load resource') &&
+            errorText.includes('favicon.ico'));
+
+        if (!isPlaywrightDebugRelatedError) {
+          consoleErrors.push(errorText);
+        }
       }
     });
 
