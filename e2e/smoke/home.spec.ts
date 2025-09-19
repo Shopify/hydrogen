@@ -12,9 +12,27 @@ test.describe('Home Page', () => {
         const errorText = msg.text();
         allErrors.push(errorText);
 
-        // Filter out Playwright debug mode specific errors:
-        // 1. Hydration errors caused by x-pw-glass element injection
-        // 2. Subsequent errors that are side effects of hydration failure
+        /**
+         * Filter out Playwright debug mode specific errors
+         *
+         * When running with --debug flag, Playwright injects an <x-pw-glass> element
+         * for its debugging UI. This causes a cascade of errors:
+         *
+         * 1. React hydration fails because server HTML doesn't match client HTML
+         *    (server doesn't have the x-pw-glass element)
+         * 2. When hydration fails, React replaces the entire document
+         * 3. During document replacement, browser makes a default favicon.ico request
+         * 4. Since skeleton uses favicon.svg (not .ico), this results in a 404
+         *
+         * Evidence this is safe to filter:
+         * - No actual 404 network request is captured by Playwright monitoring
+         * - These errors ONLY appear alongside x-pw-glass hydration errors
+         * - In normal mode (without --debug), no such errors occur
+         * - The application works correctly; it's purely a debug mode artifact
+         *
+         * We filter these specific debug-related errors while still catching all
+         * real application errors, ensuring test reliability in both modes.
+         */
         const hasSeenPwGlass = allErrors.some((e) => e.includes('x-pw-glass'));
 
         const isPlaywrightDebugRelatedError =
