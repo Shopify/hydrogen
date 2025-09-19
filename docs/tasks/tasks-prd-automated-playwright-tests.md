@@ -101,7 +101,7 @@
 
   - [x] 2.7. Wait for CI to finish and pass on PR #2.
 
-- [ ] 3. Configure Playwright projects and npm scripts for E2E testing (PR #3)
+- [x] 3. Configure Playwright projects and npm scripts for E2E testing (PR #3)
 
   - [x] 3.1. Create branch `e2e_npm-scripts` **based on `modify-prd-e2e`**.
 
