@@ -37,18 +37,6 @@ import type {Config, Preset} from '@react-router/dev/config';
  * | unstable_viteEnvironmentApi      | Blocked  | CLI fallback detection used      |
  * +----------------------------------+----------+----------------------------------+
  * ```
- *
- * Performance Benefits:
- * - Build time improvement: 15-20% faster via unstable_optimizeDeps
- * - Bundle optimization: Automatic route splitting reduces initial size
- * - Runtime performance: Lazy loading improves page load times
- * - Development experience: Faster server startup and hot reload
- *
- * Benchmark Results (Skeleton Template):
- * - Client build: 919ms (vs 1100ms baseline)
- * - Server build: 1.08s with optimized splitting
- * - Route chunks: 47+ individual client chunks
- * - Bundle sizes: 528.70 kB server, 143.86 kB client entry
  */
 
 function hydrogenPreset(): Preset {
