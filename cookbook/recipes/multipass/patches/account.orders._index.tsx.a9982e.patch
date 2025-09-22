@@ -90,7 +90,7 @@ index a9f479ea7..dbd38f370 100644
 +    if (error instanceof Error) {
 +      return data({error: error.message}, {status: 400});
 +    }
-+    return data({error}, {status: 400});
++    return data({error: String(error)}, {status: 400});
 +  }
  }
  
