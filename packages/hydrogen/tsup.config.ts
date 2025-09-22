@@ -138,24 +138,4 @@ export default defineConfig([
       console.log('\n', 'Copied virtual route assets to build directory', '\n');
     },
   },
-  {
-    entry: ['src/react-router-preset.ts'],
-    outDir: 'dist/production',
-    format: 'esm',
-    minify: true,
-    bundle: true,
-    sourcemap: false,
-    dts: true,
-    external: ['@react-router/dev/config'],
-  },
-  {
-    entry: ['src/react-router-preset.ts'],
-    outDir: 'dist/development',
-    format: 'esm',
-    minify: false,
-    bundle: true,
-    sourcemap: true,
-    dts: true,
-    external: ['@react-router/dev/config'],
-  },
 ]);

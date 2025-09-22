@@ -32,14 +32,6 @@ describe('Package exports', () => {
     });
   });
 
-  describe('React Router preset export', () => {
-    it('should export hydrogenPreset that returns valid configuration', () => {
-      const preset = HydrogenExports.hydrogenPreset();
-      expect(preset.name).toBe('hydrogen-2025.7.0');
-      expect(typeof preset.reactRouterConfig).toBe('function');
-    });
-  });
-
   describe('Critical exports not accidentally removed', () => {
     it('should not export internal utilities', () => {
       // Ensure we're not accidentally exposing internals
