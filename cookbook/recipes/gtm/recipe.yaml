@@ -58,20 +58,20 @@ steps:
   - type: PATCH
     step: "1"
     name: app/entry.server.tsx
-    description: null
+    description: Configures Content Security Policy headers to allow GTM domains for scripts, images, and connections
     diffs:
       - file: app/entry.server.tsx
         patchFile: entry.server.tsx.6d386f.patch
   - type: NEW_FILE
     step: "1"
     name: app/components/GoogleTagManager.tsx
-    description: null
+    description: React component that subscribes to Hydrogen analytics events and pushes them to GTM's dataLayer
     ingredients:
       - path: templates/skeleton/app/components/GoogleTagManager.tsx
   - type: PATCH
     step: "2"
     name: app/root.tsx
-    description: null
+    description: Adds GTM script tags to head and body, imports GoogleTagManager component, and integrates it with Analytics.Provider
     diffs:
       - file: app/root.tsx
         patchFile: root.tsx.8c182c.patch
@@ -100,4 +100,4 @@ nextSteps: |
 llms:
   userQueries: []
   troubleshooting: []
-commit: 147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7
+commit: 25290311dd1d135ab90bca26fb496d2b92c8631a

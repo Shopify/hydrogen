@@ -189,7 +189,7 @@ Updates README with GTM-specific documentation and setup instructions
 #### File: /app/entry.server.tsx
 
 ```diff
-@@ -15,6 +15,24 @@ export default async function handleRequest(
+@@ -17,6 +17,24 @@ export default async function handleRequest(
    context: HydrogenRouterContextProvider,
  ) {
    const {nonce, header, NonceProvider} = createContentSecurityPolicy({
@@ -220,7 +220,7 @@ Updates README with GTM-specific documentation and setup instructions
 
 
 
-#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
+#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
 
 ```tsx
 import {useAnalytics} from '@shopify/hydrogen';
