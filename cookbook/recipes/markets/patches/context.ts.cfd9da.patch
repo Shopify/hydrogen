@@ -1,4 +1,4 @@
-index 3989ec05e..385d12f04 100644
+index 1672af417..ed3bb35c3 100644
 --- a/templates/skeleton/app/lib/context.ts
 +++ b/templates/skeleton/app/lib/context.ts
 @@ -1,6 +1,7 @@
@@ -9,16 +9,16 @@ index 3989ec05e..385d12f04 100644
  
  // Define the additional context object
  const additionalContext = {
-@@ -40,6 +41,8 @@ export async function createHydrogenRouterContext(
+@@ -41,6 +42,8 @@ export async function createHydrogenRouterContext(
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
  
 +  const i18n = getLocaleFromRequest(request);
 +
-   const hydrogenContext = createHydrogenContext(
+   const hydrogenContext = await createHydrogenContext(
      {
        env,
-@@ -47,8 +50,7 @@ export async function createHydrogenRouterContext(
+@@ -48,8 +51,7 @@ export async function createHydrogenRouterContext(
        cache,
        waitUntil,
        session,
