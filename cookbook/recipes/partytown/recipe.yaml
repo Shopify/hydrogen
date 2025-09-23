@@ -7,7 +7,7 @@ summary: Add Partytown web worker integration for Google Tag Manager to improve
 description: |
   This recipe integrates Partytown with your Hydrogen storefront to run Google Tag Manager 
   and other third-party scripts in a web worker, keeping the main thread free for critical 
-  rendering tasks.
+  rendering tasks. Compatible with React Router 7.9.x and the latest Hydrogen skeleton.
 
   Key features:
   - Moves GTM and analytics scripts off the main thread
@@ -96,7 +96,7 @@ steps:
   - type: PATCH
     step: "6"
     name: vite.config.ts
-    description: null
+    description: Add Partytown React package to Vite optimization dependencies
     diffs:
       - file: vite.config.ts
         patchFile: vite.config.ts.93b90b.patch
@@ -125,4 +125,4 @@ nextSteps: |
 llms:
   userQueries: []
   troubleshooting: []
-commit: 147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7
+commit: 25290311dd1d135ab90bca26fb496d2b92c8631a
