@@ -11,7 +11,7 @@
       "pr": "https://github.com/Shopify/hydrogen/pull/3166",
       "dependencies": {
         "@shopify/hydrogen": "2025.7.0",
-        "react-router": "7.9.1"
+        "react-router": "7.9.1",
         "react-router-dom": "7.9.1"
       },
       "devDependencies": {
@@ -85,6 +85,7 @@
         },
         {
           "title": "Fix defer/streaming in development & preview",
+          "info": "Resolves issues with GraphQL @defer directive and streaming responses in development and preview environments, ensuring proper async data loading behavior matches production.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039"
         },
@@ -138,16 +139,19 @@
         },
         {
           "title": "Add --force-client-sourcemap flag to deploy command",
+          "info": "New CLI flag that forces inclusion of client-side sourcemaps in production deployments for enhanced debugging capabilities when needed.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039-sourcemap"
         },
         {
           "title": "Add Vite v7 exports support",
+          "info": "Adds compatibility with Vite 7's new module export patterns, ensuring smooth builds and proper tree-shaking with the latest Vite version.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039-vite"
         },
         {
           "title": "Fix and upgrade GraphiQL route",
+          "info": "Updates the GraphiQL development tool to the latest version with improved UI and fixes for query execution in the development environment.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039-graphiql"
         },
@@ -227,16 +231,19 @@
         },
         {
           "title": "Add fulfillmentStatus to Customer Account API order query",
+          "info": "Extends the Customer Account API order query to include fulfillmentStatus field, enabling tracking of order shipping and delivery states in customer-facing interfaces.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039-fulfillment"
         },
         {
           "title": "Add @inContext language support to Customer Account API mutations",
+          "info": "Enables language-specific responses in Customer Account API mutations using the @inContext directive for improved internationalization support.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039-incontext"
         },
         {
           "title": "Add GraphQL @defer directive support to storefront client",
+          "info": "Implements support for GraphQL's @defer directive in the storefront client, allowing incremental data loading for improved perceived performance on complex queries.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039-defer"
         },
