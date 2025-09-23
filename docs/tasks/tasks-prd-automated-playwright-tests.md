@@ -3,11 +3,14 @@
 - `playwright.config.ts` – Playwright configuration with project definitions for test organization.
 - `e2e/setup/launch.spec.ts` – System test that verifies dev server launches and displays Hydrogen title.
 - `e2e/server.ts` – Helper module for programmatically starting and stopping the dev server.
+- `e2e/helpers/ejson-secrets.ts` – Helper for decrypting/encrypting ejson secrets for authenticated tests.
 - `e2e/smoke/` – Directory for fast smoke tests that run against an existing skeleton template.
 - `e2e/smoke/home.spec.ts` – Smoke test for home page: hero image, product grid, and console errors.
 - `e2e/smoke/cart.spec.ts` – Smoke test for cart functionality: open cart, add product, verify handle.
 - `e2e/matrix/` – Directory for full-matrix tests that scaffold permutations of `npm create @shopify/hydrogen`.
 - `e2e/recipes/` – Directory for recipe integration tests.
+- `e2e/cli/` – Directory for CLI command tests including authenticated flows.
+- `secrets.ejson` – Encrypted secrets file containing test account credentials.
 - `package.json` – Adds `e2e` and `e2e:smoke` npm scripts for running tests.
 - `.github/workflows/e2e.yml` – GitHub Actions workflow running smoke and full matrix on pull requests only.
 - `docs/testing/e2e.md` – Contributor guide for running and debugging Playwright tests.
@@ -19,6 +22,18 @@
 - Keep each pull request self-contained, reviewable, and **≤500 lines changed** (ideal ≈300 LOC).
 - After completing every parent task below, open a new PR targeting `main` in the Hydrogen repository and include instructions for reviewers to run `npm run e2e`.
 - All new code must be lint-clean and pass the full test suite in CI.
+
+#### Ejson Setup for Authenticated Tests
+
+- **Prerequisites**: Developers must have the ejson private key installed. Obtain it via hush link from team members and run `./scripts/setup-ejson-private-key.sh` with the key in your clipboard.
+- **Adding Secrets**: Both email address and password are treated as encrypted secrets for enhanced security. When adding test credentials:
+  - The implementing developer will be prompted for credentials when ready
+  - Add both email and password to `secrets.ejson` as encrypted fields
+  - Run `npm run encrypt` to encrypt them before committing
+- **Decryption in Tests**: Use `ejson decrypt secrets.ejson` to decrypt in-place, then read both credentials directly from the modified file.
+- **Re-encryption**: Always run `ejson encrypt secrets.ejson` after tests to restore encrypted state.
+- **Security**: Never commit decrypted secrets. Both email and password must remain encrypted. The pre-commit hook automatically encrypts if `secrets.ejson` is staged.
+- **CI Setup**: GitHub Actions will need the ejson private key configured as a repository secret.
 
 ### Implementation Learnings
 
@@ -46,6 +61,8 @@
 - **Don't assume npm scripts exist**: Always check `package.json` before trying to run commands like `npm run e2e`.
 - **Test timing is critical**: The smoke tests complete in ~9-10 seconds, well under the 60-second requirement.
 - **Network idle states**: The skeleton template makes multiple API calls on page load and after cart actions. Always wait for these to complete.
+- **Ejson state management**: Always verify `secrets.ejson` is encrypted before committing. The file is modified in-place during decryption.
+- **Missing private key**: Tests will fail if the ejson private key isn't installed. Check `/opt/ejson/keys/` for the key file.
 
 ## Tasks
 
@@ -110,77 +127,101 @@
 
 - [ ] 4. Test authenticated Hydrogen CLI commands with Shopify integration (PR #4)
 
-  - [ ] 4.1. Create branch `e2e_cli-authenticated` **based on `e2e_cli-commands`**.
+  - [ ] 4.1. Create branch `e2e_cli-authenticated` **based on `e2e_npm-scripts`**.
 
-  - [ ] 4.2. Write failing test suite `e2e/cli/authenticated-commands.spec.ts`:
-      - Define expected behavior for authenticated commands
-      - Include mock authentication flow
+  - [ ] 4.2. Set up ejson secrets for test authentication:
+      - **SECURITY NOTE**: Both email address and password will be treated as encrypted secrets
+      - Prompt user for test account credentials when ready to configure
+      - Add both email address and password to `secrets.ejson` as encrypted fields
+      - Run `npm run encrypt` to ensure all credentials are properly encrypted
+      - Verify that both email and password fields are encrypted in the file
+      - Commit the encrypted `secrets.ejson` file
+
+  - [ ] 4.3. Create ejson decryption helper `e2e/helpers/ejson-secrets.ts`:
+      - Write failing test to verify ejson decryption works
+      - Implement function to run `ejson decrypt secrets.ejson` command
+      - Parse decrypted JSON to extract both email and password securely
+      - Ensure both credentials are handled as sensitive data throughout
+      - Implement function to re-encrypt with `ejson encrypt secrets.ejson`
+      - Add error handling for missing private key scenarios
+      - Never log or expose decrypted email or password values
+
+  - [ ] 4.4. Write failing test suite `e2e/cli/auth-setup.spec.ts` for basic auth:
+      - Define expected behavior for login/logout operations
+      - Define expected behavior for link/unlink operations
+      - These are foundational tests that establish auth for all subsequent tests
       - Run tests to confirm they fail appropriately
 
-  - [ ] 4.3. Set up test authentication environment:
-      - Investigate Shopify CLI's authentication mechanism for testing
-      - Configure appropriate test credentials (method TBD)
-      - Create helper for managing auth state
+  - [ ] 4.5. Set up test authentication environment:
+      - Use ejson helper to decrypt and load both email and password
+      - Create helper for managing auth state with both decrypted credentials
+      - Ensure neither email nor password are exposed in logs or error messages
       - Implement cleanup to reset auth between tests
+      - Ensure all secrets are re-encrypted after test completion
 
-  - [ ] 4.4. Implement `hydrogen login` test:
-      - Run `npm exec shopify hydrogen login`
-      - Handle authentication flow (may need mock or test account)
+  - [ ] 4.6. Implement basic `hydrogen login` and `hydrogen logout` tests:
+      - Decrypt secrets using ejson helper to get both email and password
+      - Run `npm exec shopify hydrogen login` with test credentials
+      - Handle authentication flow with both decrypted email and password
+      - Ensure neither credential is logged during the process
       - Verify successful login
-      - Check auth token is stored correctly
+      - Test `hydrogen logout` and verify clean logout
+      - Re-encrypt all secrets after test completion
 
-  - [ ] 4.5. Implement `hydrogen link` test:
-      - Ensure logged in state
+  - [ ] 4.7. Implement basic `hydrogen link` and `hydrogen unlink` tests:
+      - Ensure logged in state from previous test
       - Run `npm exec shopify hydrogen link`
       - Select or create test storefront in Shopify admin
       - Verify linking completes successfully
-      - Check configuration is updated
+      - Test `hydrogen unlink` and verify clean unlinking
+      - Re-link for use by subsequent tests
 
-  - [ ] 4.6. Implement `hydrogen customer-account-push` test:
+  - [ ] 4.8. Write failing test suite `e2e/cli/authenticated-commands.spec.ts` for remaining commands:
+      - Define expected behavior for all other authenticated commands
+      - Will use the auth established by auth-setup.spec.ts
+      - Run tests to confirm they fail appropriately
+
+  - [ ] 4.9. Implement `hydrogen customer-account-push` test:
       - Ensure project is linked
       - Run `npm exec shopify hydrogen customer-account-push`
       - Verify Customer Account API configuration pushed
       - Check for success confirmation
 
-  - [ ] 4.7. Implement `hydrogen deploy` test:
+  - [ ] 4.10. Implement `hydrogen deploy` test:
       - Ensure project is linked and built
       - Run `npm exec shopify hydrogen deploy`
       - Verify deployment initiates (may use test/staging)
       - Check deployment status output
 
-  - [ ] 4.8. Implement environment variable management tests:
+  - [ ] 4.11. Implement environment variable management tests:
       - Test `npm exec shopify hydrogen env list`
       - Test `npm exec shopify hydrogen env pull`
       - Test `npm exec shopify hydrogen env push`
       - Verify environment variables sync correctly
 
-  - [ ] 4.9. Implement `hydrogen list` test:
+  - [ ] 4.12. Implement `hydrogen list` test:
       - Run `npm exec shopify hydrogen list`
       - Verify linked storefronts are displayed
       - Check output format and information
 
-  - [ ] 4.10. Implement `hydrogen unlink` test:
-      - Ensure project is linked
-      - Run `npm exec shopify hydrogen unlink`
-      - Verify unlink completes
-      - Check configuration is cleaned up
+  - [ ] 4.13. Verify authenticated flow persistence:
+      - Ensure login persists across test runs
+      - Ensure link persists for use by Tasks 6 and 8
+      - Document how to reset auth state if needed
 
-  - [ ] 4.11. Implement `hydrogen logout` test:
-      - Ensure logged in state
-      - Run `npm exec shopify hydrogen logout`
-      - Verify logout completes
-      - Check auth token is removed
-
-  - [ ] 4.12. Add authentication test utilities:
-      - Create mock auth helpers if needed
-      - Add cleanup functions for test isolation
+  - [ ] 4.14. Add authentication test utilities:
       - Create assertion helpers for auth state
+      - Add cleanup functions for test isolation
+      - Implement safeguards to prevent committing decrypted secrets
+      - Add git pre-commit hook to verify secrets.ejson is encrypted
+      - Ensure both email and password remain encrypted in the repository
+      - Add validation that neither credential appears in plain text in any file
 
-  - [ ] 4.13. Verify authenticated CLI tests complete in reasonable time (<30 minutes).
+  - [ ] 4.15. Verify authenticated CLI tests complete in reasonable time (<30 minutes).
 
-  - [ ] 4.14. Push branch and open PR titled "E2E: Authenticated CLI commands", stacked on previous PR.
+  - [ ] 4.16. Push branch and open PR titled "E2E: Authenticated CLI commands", stacked on previous PR.
 
-  - [ ] 4.15. Wait for CI to finish and pass on PR.
+  - [ ] 4.17. Wait for CI to finish and pass on PR.
 
 - [ ] 5. Test Hydrogen CLI commands for core functionality (PR #5)
 
@@ -259,68 +300,85 @@
 
 - [ ] 6. Enhance smoke tests with comprehensive user journey testing (PR #6)
 
-  - [ ] 6.1. Create branch `e2e_enhanced-smoke` **based on `e2e_npm-scripts`**.
+  - [ ] 6.1. Create branch `e2e_enhanced-smoke` **based on `e2e_cli-authenticated`**.
 
-  - [ ] 6.2. Write failing test `e2e/smoke/user-journey.spec.ts` defining complete user flow:
+  - [ ] 6.2. **Update existing `e2e/smoke/home.spec.ts` to use linked storefront**:
+      - Modify test to use the linked Shopify storefront from Task 4
+      - Update assertions to work with real shop data
+      - Ensure test still validates hero image, product grid, and console errors
+      - Verify the test passes with linked storefront
+
+  - [ ] 6.3. Write failing test `e2e/smoke/user-journey.spec.ts` defining complete user flow:
       - Test should navigate from homepage → collections → product → cart → checkout
       - Define expected elements and behaviors at each step
       - Include assertions for cart quantity changes and price updates
       - Run test to confirm it fails with clear error messages
 
-  - [ ] 6.3. Implement homepage verification:
+  - [ ] 6.4. **Set up authenticated environment for user journey test**:
+      - Import ejson helper from Task 4 implementation
+      - Decrypt secrets to get both email and password credentials
+      - Use the linked storefront established in Task 4
+      - Ensure hydrogen login is active with both decrypted credentials
+      - Verify link to Hydrogen storefront is configured
+      - All tests run against real Shopify data, not mock shop
+      - Re-encrypt all secrets after test setup
+
+  - [ ] 6.5. Implement homepage verification:
       - Wait for all network requests using `waitForLoadState('networkidle')`
       - Assert no console errors
       - Verify key homepage elements are present
 
-  - [ ] 6.4. Implement cart state capture:
+  - [ ] 6.6. Implement cart state capture:
       - Open cart drawer/modal
       - Capture initial quantities (empty or existing items)
       - Create helper to parse cart state
 
-  - [ ] 6.5. Implement collections navigation:
+  - [ ] 6.7. Implement collections navigation:
       - Navigate to `/collections` page
       - Wait for product grid to load
       - Verify collection page elements
 
-  - [ ] 6.6. Implement product selection and navigation:
+  - [ ] 6.8. Implement product selection and navigation:
       - Click first product in collection grid
       - Verify navigation to product detail page (URL pattern `/products/*`)
       - Assert product page elements loaded
 
-  - [ ] 6.7. Implement add to cart functionality:
+  - [ ] 6.9. Implement add to cart functionality:
       - Click "Add to Cart" button
       - Wait for cart update network requests
       - Avoid fixed timeouts, use proper wait conditions
 
-  - [ ] 6.8. Implement cart verification:
+  - [ ] 6.10. Implement cart verification:
       - Open cart again
       - Verify item quantity increased
       - Assert price updated correctly
       - Create helper for price comparison
 
-  - [ ] 6.9. Implement checkout navigation:
+  - [ ] 6.11. Implement checkout navigation:
       - Locate checkout button
       - Verify button exists and is clickable
       - Click checkout button
       - Wait for navigation to checkout page
 
-  - [ ] 6.10. Implement checkout page verification:
+  - [ ] 6.12. Implement checkout page verification:
       - Assert URL contains checkout pattern
       - Verify checkout form elements (shipping, payment sections)
       - Ensure no errors during checkout page load
 
-  - [ ] 6.11. Add test helpers and utilities:
+  - [ ] 6.13. Add test helpers and utilities:
       - Create reusable functions for common actions
       - Add price parsing utilities
       - Create cart state comparison helpers
 
-  - [ ] 6.12. Verify enhanced smoke tests complete in ≤60 seconds locally.
+  - [ ] 6.14. Verify enhanced smoke tests complete in ≤60 seconds locally.
 
-  - [ ] 6.13. Push branch and open PR #6 titled "E2E: Enhanced smoke tests with user journey", stacked on `e2e_npm-scripts`.
+  - [ ] 6.15. Push branch and open PR #6 titled "E2E: Enhanced smoke tests with user journey", stacked on `e2e_npm-scripts`.
 
-  - [ ] 6.14. Wait for CI to finish and pass on PR #6.
+  - [ ] 6.16. Wait for CI to finish and pass on PR #6.
 
 - [ ] 7. Implement Full Matrix Pack scaffolding and tests for template permutations (3-4 PRs total)
+
+  **IMPORTANT**: This task MUST scaffold ALL permutations. The scaffolding is intentionally comprehensive despite being slow - this is the entire purpose of the matrix tests.
 
   **Permutation dimensions (32 total):**
   1. **Language**: JavaScript | TypeScript
@@ -328,7 +386,9 @@
   3. **Scaffold routes & core functionality**: Yes | No
      - If **Yes** → additional **Markets URL structure**: Subfolders | Subdomains | Top-level domains
 
-  - [ ] 7.1. **PR #1: Matrix infrastructure and non-scaffolded permutations** (8 permutations)
+  **All permutations will use the linked Shopify storefront from Task 4, not mock shop data.**
+
+  - [ ] 7.1. **PR #1: Matrix infrastructure and non-scaffolded permutations** (8 permutations - ALL MUST BE SCAFFOLDED)
 
     - [ ] 7.1.1. Create branch `e2e_matrix-infrastructure` **based on `e2e_enhanced-smoke`**.
 
@@ -336,16 +396,20 @@
 
     - [ ] 7.1.3. Create scaffolding helper `e2e/matrix/scaffold.ts` that:
         - Invokes `npm create @shopify/hydrogen` with given flags
+        - **MUST actually scaffold each project** - no shortcuts or mocking
         - Creates projects in `tmp/` with pattern `hydrogen-<permutation>-<YYYYMMDDHHMMSS>`
         - Returns the project path for testing
         - Selects most recent project when duplicates exist
+        - Uses linked Shopify storefront credentials from Task 4
 
     - [ ] 7.1.4. Ensure `tmp/` directory is listed in `.gitignore`.
 
     - [ ] 7.1.5. Create data-driven test structure in `e2e/matrix/non-scaffolded.spec.ts`:
         - Define test matrix for 8 non-scaffolded permutations (2 languages × 4 styling options)
+        - **Each permutation MUST be fully scaffolded using `npm create @shopify/hydrogen`**
         - Use `test.describe.parallel` for concurrent execution
         - Share common assertions (page loads, cart works, no errors)
+        - All tests run against linked Shopify storefront, not mock data
 
     - [ ] 7.1.6. Configure Playwright project for matrix tests in `playwright.config.ts`.
 
@@ -355,14 +419,16 @@
 
     - [ ] 7.1.9. Wait for CI to pass on PR.
 
-  - [ ] 7.2. **PR #2: Scaffolded permutations without markets** (8 permutations)
+  - [ ] 7.2. **PR #2: Scaffolded permutations without markets** (8 permutations - ALL MUST BE SCAFFOLDED)
 
     - [ ] 7.2.1. Create branch `e2e_matrix-scaffolded-basic` **based on `e2e_matrix-infrastructure`**.
 
     - [ ] 7.2.2. Create `e2e/matrix/scaffolded-basic.spec.ts` with data-driven tests:
         - Define test matrix for 8 scaffolded permutations without markets
+        - **Each permutation MUST be fully scaffolded** - this is the core requirement
         - Reuse assertion helpers from infrastructure PR
         - Test additional scaffolded routes (products, collections, etc.)
+        - Use linked Shopify storefront for all tests
 
     - [ ] 7.2.3. Extend scaffold helper to handle scaffolded route options.
 
@@ -372,7 +438,7 @@
 
     - [ ] 7.2.6. Wait for CI to pass on PR.
 
-  - [ ] 7.3. **PR #3: Scaffolded permutations with markets** (16 permutations)
+  - [ ] 7.3. **PR #3: Scaffolded permutations with markets** (16 permutations - ALL MUST BE SCAFFOLDED)
 
     - [ ] 7.3.1. Create branch `e2e_matrix-scaffolded-markets` **based on `e2e_matrix-scaffolded-basic`**.
 
@@ -407,9 +473,12 @@
       - Run tests to confirm they fail appropriately
 
   - [ ] 8.3. Set up authenticated test environment:
-      - Ensure Shopify authentication is configured
+      - Import ejson helper from Task 4 implementation
+      - Decrypt secrets to get both email and password credentials
+      - Ensure Shopify authentication is configured with both decrypted credentials
       - Link to test storefront with appropriate data
       - Configure Customer Account API access
+      - Re-encrypt all secrets after environment setup
 
   - [ ] 8.4. Identify recipes requiring authentication:
       - Review each recipe's requirements
