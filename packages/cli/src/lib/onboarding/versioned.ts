@@ -1,6 +1,5 @@
 import {tmpdir} from 'node:os';
-import {mkdtemp} from 'node:fs/promises';
-import {readFile} from 'node:fs/promises';
+import {mkdtemp, readFile} from 'node:fs/promises';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';

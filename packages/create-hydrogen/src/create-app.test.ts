@@ -265,7 +265,7 @@ describe('create-app', () => {
       const pathArg = remainingArgs.find((arg) => !arg.startsWith('-'));
 
       // This is what the actual code does
-      await runInit({version: version, path: pathArg});
+      await runInit({version, path: pathArg});
 
       expect(mockRunInit).toHaveBeenCalledWith({
         version: '2025.1.1',
@@ -298,7 +298,7 @@ describe('create-app', () => {
       const {version, remainingArgs} = parseVersion();
       const pathArg = remainingArgs.find((arg) => !arg.startsWith('-'));
 
-      await runInit({version: version, path: pathArg});
+      await runInit({version, path: pathArg});
 
       expect(mockRunInit).toHaveBeenCalledWith({
         version: undefined,

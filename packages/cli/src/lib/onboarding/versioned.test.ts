@@ -402,7 +402,7 @@ describe('versioned', () => {
       ];
 
       for (const version of invalidVersions) {
-        const options = {version: version};
+        const options = {version};
         await expect(
           setupVersionedTemplate(options, mockController),
         ).rejects.toThrow('Invalid version format');
@@ -425,7 +425,7 @@ describe('versioned', () => {
 
       for (const version of validVersions) {
         const options = {
-          version: version,
+          version,
           mockShop: true,
           quickstart: true,
         };
