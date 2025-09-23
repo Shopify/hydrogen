@@ -37,6 +37,11 @@ export default class Init extends Command {
         'Scaffolds project based on an existing template or example from the Hydrogen repository.',
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
+    version: Flags.string({
+      description:
+        'Scaffolds project from a specific Hydrogen version (e.g., 2025.1.3)',
+      env: 'SHOPIFY_HYDROGEN_VERSION',
+    }),
     ...commonFlags.installDeps,
     'mock-shop': Flags.boolean({
       description: 'Use mock.shop as the data source for the storefront.',

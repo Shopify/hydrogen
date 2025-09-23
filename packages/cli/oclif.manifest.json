@@ -1011,6 +1011,14 @@
           "multiple": false,
           "type": "option"
         },
+        "version": {
+          "description": "Scaffolds project from a specific Hydrogen version (e.g., 2025.1.3)",
+          "env": "SHOPIFY_HYDROGEN_VERSION",
+          "name": "version",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "install-deps": {
           "description": "Auto installs dependencies using the active package manager.",
           "env": "SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS",

@@ -71,6 +71,7 @@ import {enhanceAuthLogs} from '../log.js';
 export type InitOptions = {
   path?: string;
   template?: string;
+  version?: string;
   language?: Language;
   mockShop?: boolean;
   styling?: StylingChoice;
@@ -633,7 +634,7 @@ export async function renderProjectReady(
     bodyLines.push(['Styling', CSS_STRATEGY_NAME_MAP[cssStrategy]]);
   }
 
-  if (!i18nError && i18n) {
+  if (!i18nError && i18n && I18N_STRATEGY_NAME_MAP[i18n]) {
     bodyLines.push(['Markets', I18N_STRATEGY_NAME_MAP[i18n].split(' (')[0]!]);
   }
 
