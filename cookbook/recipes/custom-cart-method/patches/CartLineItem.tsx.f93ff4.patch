@@ -1,7 +1,7 @@
-index 80e34be28..2f37ea800 100644
+index 80e34be28..e5313b270 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
-@@ -1,6 +1,15 @@
+@@ -1,6 +1,13 @@
 -import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 +import type {
 +  CartLineUpdateInput,
@@ -13,13 +13,11 @@ index 80e34be28..2f37ea800 100644
 +  CartForm,
 +  Image,
 +  type OptimisticCartLine,
-+  VariantSelector,
-+  type VariantOption,
 +} from '@shopify/hydrogen';
  import {useVariantUrl} from '~/lib/variants';
  import {Link} from 'react-router';
  import {ProductPrice} from './ProductPrice';
-@@ -54,13 +63,8 @@ export function CartLineItem({
+@@ -54,13 +61,8 @@ export function CartLineItem({
          </Link>
          <ProductPrice price={line?.cost?.totalAmount} />
          <ul>
@@ -35,7 +33,7 @@ index 80e34be28..2f37ea800 100644
          </ul>
          <CartLineQuantity line={line} />
        </div>
-@@ -166,3 +170,87 @@ function CartLineUpdateButton({
+@@ -166,3 +168,94 @@ function CartLineUpdateButton({
  function getUpdateKey(lineIds: string[]) {
    return [CartForm.ACTIONS.LinesUpdate, ...lineIds].join('-');
  }
@@ -45,6 +43,25 @@ index 80e34be28..2f37ea800 100644
 +  const {
 +    merchandise: {product, selectedOptions},
 +  } = line;
++
++  // If no options or only one option value per option, don't show the form
++  const hasEditableOptions = product.options?.some(
++    (option) => option.optionValues && option.optionValues.length > 1,
++  );
++
++  if (!hasEditableOptions) {
++    return (
++      <>
++        {selectedOptions.map((option) => (
++          <li key={option.name}>
++            <small>
++              {option.name}: {option.value}
++            </small>
++          </li>
++        ))}
++      </>
++    );
++  }
 +
 +  return (
 +    <CartForm
@@ -61,65 +78,53 @@ index 80e34be28..2f37ea800 100644
 +    >
 +      {(fetcher) => (
 +        <>
-+          <VariantSelector
-+            handle={product.handle}
-+            options={product.options}
-+            variants={[]}
-+          >
-+            {({option}) => (
-+              <LineItemOptions
-+                option={option}
-+                selectedOptions={selectedOptions}
-+                onChange={(event) => {
-+                  void fetcher.submit(event.currentTarget.form, {
-+                    method: 'POST',
-+                  });
-+                }}
-+              />
-+            )}
-+          </VariantSelector>
++          {product.options?.map((option) => {
++            const currentValue = selectedOptions.find(
++              (selected) => selected.name === option.name,
++            )?.value;
++
++            // Skip options with only one value
++            if (!option.optionValues || option.optionValues.length <= 1) {
++              return (
++                <li key={option.name}>
++                  <small>
++                    {option.name}: {currentValue}
++                  </small>
++                </li>
++              );
++            }
++
++            return (
++              <li key={option.name}>
++                <small>
++                  {option.name}:{' '}
++                  <select
++                    name={option.name}
++                    value={currentValue}
++                    onChange={(event) => {
++                      void fetcher.submit(event.currentTarget.form, {
++                        method: 'POST',
++                      });
++                    }}
++                  >
++                    {option.optionValues.map((optionValue) => (
++                      <option
++                        key={`${option.name}-${optionValue.name}`}
++                        value={optionValue.name}
++                      >
++                        {optionValue.name}
++                      </option>
++                    ))}
++                  </select>
++                </small>
++              </li>
++            );
++          })}
 +          <noscript>
 +            <button type="submit">Update</button>
 +          </noscript>
 +        </>
 +      )}
 +    </CartForm>
-+  );
-+}
-+
-+function LineItemOptions({
-+  option,
-+  selectedOptions,
-+  onChange,
-+}: {
-+  option: VariantOption;
-+  selectedOptions: SelectedOption[];
-+  onChange: React.ChangeEventHandler<HTMLSelectElement>;
-+}) {
-+  const defaultOption = selectedOptions.find(
-+    (selectedOption) => selectedOption.name === option.name,
-+  );
-+
-+  return (
-+    <li key={option.name}>
-+      <small>
-+        {option.name}:{' '}
-+        <select
-+          name={option.name}
-+          value={defaultOption?.value}
-+          onChange={onChange}
-+        >
-+          {option.values.map(({value, isAvailable}) => (
-+            <option
-+              key={`optionValue-${value}`}
-+              value={value}
-+              disabled={!isAvailable}
-+            >
-+              {value}
-+            </option>
-+          ))}
-+        </select>
-+      </small>
-+    </li>
 +  );
 +}

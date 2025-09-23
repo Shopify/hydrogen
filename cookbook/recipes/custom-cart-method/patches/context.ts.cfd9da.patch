@@ -1,4 +1,4 @@
-index 3989ec05e..6f7ea46fd 100644
+index 1672af417..0f546bb09 100644
 --- a/templates/skeleton/app/lib/context.ts
 +++ b/templates/skeleton/app/lib/context.ts
 @@ -1,6 +1,15 @@
@@ -35,17 +35,7 @@ index 3989ec05e..6f7ea46fd 100644
  }
  
  /**
-@@ -40,7 +58,8 @@ export async function createHydrogenRouterContext(
-     AppSession.init(request, [env.SESSION_SECRET]),
-   ]);
- 
--  const hydrogenContext = createHydrogenContext(
-+  // @description Create a placeholder context first to reference in customMethods
-+  const hydrogenContext: ReturnType<typeof createHydrogenContext> = createHydrogenContext(
-     {
-       env,
-       request,
-@@ -51,6 +70,33 @@ export async function createHydrogenRouterContext(
+@@ -52,6 +70,33 @@ export async function createHydrogenRouterContext(
        i18n: {language: 'EN', country: 'US'},
        cart: {
          queryFragment: CART_QUERY_FRAGMENT,
@@ -77,5 +67,5 @@ index 3989ec05e..6f7ea46fd 100644
 +          },
 +        },
        },
-     },
-     additionalContext,
+       analytics: {
+         enabled: true,
