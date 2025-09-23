@@ -108,70 +108,70 @@
 
   - [x] 3.7. Wait for CI to finish and pass on PR #3.
 
-- [ ] 4. Enhance smoke tests with comprehensive user journey testing (PR #4)
+- [ ] 6. Enhance smoke tests with comprehensive user journey testing (PR #6)
 
-  - [ ] 4.1. Create branch `e2e_enhanced-smoke` **based on `e2e_npm-scripts`**.
+  - [ ] 6.1. Create branch `e2e_enhanced-smoke` **based on `e2e_npm-scripts`**.
 
-  - [ ] 4.2. Write failing test `e2e/smoke/user-journey.spec.ts` defining complete user flow:
+  - [ ] 6.2. Write failing test `e2e/smoke/user-journey.spec.ts` defining complete user flow:
       - Test should navigate from homepage → collections → product → cart → checkout
       - Define expected elements and behaviors at each step
       - Include assertions for cart quantity changes and price updates
       - Run test to confirm it fails with clear error messages
 
-  - [ ] 4.3. Implement homepage verification:
+  - [ ] 6.3. Implement homepage verification:
       - Wait for all network requests using `waitForLoadState('networkidle')`
       - Assert no console errors
       - Verify key homepage elements are present
 
-  - [ ] 4.4. Implement cart state capture:
+  - [ ] 6.4. Implement cart state capture:
       - Open cart drawer/modal
       - Capture initial quantities (empty or existing items)
       - Create helper to parse cart state
 
-  - [ ] 4.5. Implement collections navigation:
+  - [ ] 6.5. Implement collections navigation:
       - Navigate to `/collections` page
       - Wait for product grid to load
       - Verify collection page elements
 
-  - [ ] 4.6. Implement product selection and navigation:
+  - [ ] 6.6. Implement product selection and navigation:
       - Click first product in collection grid
       - Verify navigation to product detail page (URL pattern `/products/*`)
       - Assert product page elements loaded
 
-  - [ ] 4.7. Implement add to cart functionality:
+  - [ ] 6.7. Implement add to cart functionality:
       - Click "Add to Cart" button
       - Wait for cart update network requests
       - Avoid fixed timeouts, use proper wait conditions
 
-  - [ ] 4.8. Implement cart verification:
+  - [ ] 6.8. Implement cart verification:
       - Open cart again
       - Verify item quantity increased
       - Assert price updated correctly
       - Create helper for price comparison
 
-  - [ ] 4.9. Implement checkout navigation:
+  - [ ] 6.9. Implement checkout navigation:
       - Locate checkout button
       - Verify button exists and is clickable
       - Click checkout button
       - Wait for navigation to checkout page
 
-  - [ ] 4.10. Implement checkout page verification:
+  - [ ] 6.10. Implement checkout page verification:
       - Assert URL contains checkout pattern
       - Verify checkout form elements (shipping, payment sections)
       - Ensure no errors during checkout page load
 
-  - [ ] 4.11. Add test helpers and utilities:
+  - [ ] 6.11. Add test helpers and utilities:
       - Create reusable functions for common actions
       - Add price parsing utilities
       - Create cart state comparison helpers
 
-  - [ ] 4.12. Verify enhanced smoke tests complete in ≤60 seconds locally.
+  - [ ] 6.12. Verify enhanced smoke tests complete in ≤60 seconds locally.
 
-  - [ ] 4.13. Push branch and open PR #4 titled "E2E: Enhanced smoke tests with user journey", stacked on `e2e_npm-scripts`.
+  - [ ] 6.13. Push branch and open PR #6 titled "E2E: Enhanced smoke tests with user journey", stacked on `e2e_npm-scripts`.
 
-  - [ ] 4.14. Wait for CI to finish and pass on PR #4.
+  - [ ] 6.14. Wait for CI to finish and pass on PR #6.
 
-- [ ] 5. Implement Full Matrix Pack scaffolding and tests for template permutations (3-4 PRs total)
+- [ ] 7. Implement Full Matrix Pack scaffolding and tests for template permutations (3-4 PRs total)
 
   **Permutation dimensions (32 total):**
   1. **Language**: JavaScript | TypeScript
@@ -179,132 +179,132 @@
   3. **Scaffold routes & core functionality**: Yes | No
      - If **Yes** → additional **Markets URL structure**: Subfolders | Subdomains | Top-level domains
 
-  - [ ] 5.1. **PR #1: Matrix infrastructure and non-scaffolded permutations** (8 permutations)
+  - [ ] 7.1. **PR #1: Matrix infrastructure and non-scaffolded permutations** (8 permutations)
 
-    - [ ] 5.1.1. Create branch `e2e_matrix-infrastructure` **based on `e2e_enhanced-smoke`**.
+    - [ ] 7.1.1. Create branch `e2e_matrix-infrastructure` **based on `e2e_enhanced-smoke`**.
 
-    - [ ] 5.1.2. Write contract tests in `e2e/matrix/contract.spec.ts` defining the expected CLI interface for scaffolding permutations.
+    - [ ] 7.1.2. Write contract tests in `e2e/matrix/contract.spec.ts` defining the expected CLI interface for scaffolding permutations.
 
-    - [ ] 5.1.3. Create scaffolding helper `e2e/matrix/scaffold.ts` that:
+    - [ ] 7.1.3. Create scaffolding helper `e2e/matrix/scaffold.ts` that:
         - Invokes `npm create @shopify/hydrogen` with given flags
         - Creates projects in `tmp/` with pattern `hydrogen-<permutation>-<YYYYMMDDHHMMSS>`
         - Returns the project path for testing
         - Selects most recent project when duplicates exist
 
-    - [ ] 5.1.4. Ensure `tmp/` directory is listed in `.gitignore`.
+    - [ ] 7.1.4. Ensure `tmp/` directory is listed in `.gitignore`.
 
-    - [ ] 5.1.5. Create data-driven test structure in `e2e/matrix/non-scaffolded.spec.ts`:
+    - [ ] 7.1.5. Create data-driven test structure in `e2e/matrix/non-scaffolded.spec.ts`:
         - Define test matrix for 8 non-scaffolded permutations (2 languages × 4 styling options)
         - Use `test.describe.parallel` for concurrent execution
         - Share common assertions (page loads, cart works, no errors)
 
-    - [ ] 5.1.6. Configure Playwright project for matrix tests in `playwright.config.ts`.
+    - [ ] 7.1.6. Configure Playwright project for matrix tests in `playwright.config.ts`.
 
-    - [ ] 5.1.7. Verify locally with `npm run e2e -- --project=matrix` and ensure all 8 permutations pass.
+    - [ ] 7.1.7. Verify locally with `npm run e2e -- --project=matrix` and ensure all 8 permutations pass.
 
-    - [ ] 5.1.8. Push branch and open PR titled "E2E Matrix: Infrastructure and non-scaffolded permutations".
+    - [ ] 7.1.8. Push branch and open PR titled "E2E Matrix: Infrastructure and non-scaffolded permutations".
 
-    - [ ] 5.1.9. Wait for CI to pass on PR.
+    - [ ] 7.1.9. Wait for CI to pass on PR.
 
-  - [ ] 5.2. **PR #2: Scaffolded permutations without markets** (8 permutations)
+  - [ ] 7.2. **PR #2: Scaffolded permutations without markets** (8 permutations)
 
-    - [ ] 5.2.1. Create branch `e2e_matrix-scaffolded-basic` **based on `e2e_matrix-infrastructure`**.
+    - [ ] 7.2.1. Create branch `e2e_matrix-scaffolded-basic` **based on `e2e_matrix-infrastructure`**.
 
-    - [ ] 5.2.2. Create `e2e/matrix/scaffolded-basic.spec.ts` with data-driven tests:
+    - [ ] 7.2.2. Create `e2e/matrix/scaffolded-basic.spec.ts` with data-driven tests:
         - Define test matrix for 8 scaffolded permutations without markets
         - Reuse assertion helpers from infrastructure PR
         - Test additional scaffolded routes (products, collections, etc.)
 
-    - [ ] 5.2.3. Extend scaffold helper to handle scaffolded route options.
+    - [ ] 7.2.3. Extend scaffold helper to handle scaffolded route options.
 
-    - [ ] 5.2.4. Verify locally with `npm run e2e -- --project=matrix` for new permutations.
+    - [ ] 7.2.4. Verify locally with `npm run e2e -- --project=matrix` for new permutations.
 
-    - [ ] 5.2.5. Push branch and open PR titled "E2E Matrix: Scaffolded permutations without markets", stacked on PR #1.
+    - [ ] 7.2.5. Push branch and open PR titled "E2E Matrix: Scaffolded permutations without markets", stacked on PR #1.
 
-    - [ ] 5.2.6. Wait for CI to pass on PR.
+    - [ ] 7.2.6. Wait for CI to pass on PR.
 
-  - [ ] 5.3. **PR #3: Scaffolded permutations with markets** (16 permutations)
+  - [ ] 7.3. **PR #3: Scaffolded permutations with markets** (16 permutations)
 
-    - [ ] 5.3.1. Create branch `e2e_matrix-scaffolded-markets` **based on `e2e_matrix-scaffolded-basic`**.
+    - [ ] 7.3.1. Create branch `e2e_matrix-scaffolded-markets` **based on `e2e_matrix-scaffolded-basic`**.
 
-    - [ ] 5.3.2. Create `e2e/matrix/scaffolded-markets.spec.ts` with data-driven tests:
+    - [ ] 7.3.2. Create `e2e/matrix/scaffolded-markets.spec.ts` with data-driven tests:
         - Define test matrix for 16 permutations (2 languages × 4 styling × 2 market structures)
         - Note: Only test 2 market structures to keep PR manageable
         - Test market-specific routing and URL patterns
 
-    - [ ] 5.3.3. Extend scaffold helper to handle market URL structure options.
+    - [ ] 7.3.3. Extend scaffold helper to handle market URL structure options.
 
-    - [ ] 5.3.4. Add performance timing to track total matrix runtime.
+    - [ ] 7.3.4. Add performance timing to track total matrix runtime.
 
-    - [ ] 5.3.5. Verify locally and ensure total matrix runtime stays under 20 minutes.
+    - [ ] 7.3.5. Verify locally and ensure total matrix runtime stays under 20 minutes.
 
-    - [ ] 5.3.6. Push branch and open PR titled "E2E Matrix: Scaffolded permutations with markets", stacked on PR #2.
+    - [ ] 7.3.6. Push branch and open PR titled "E2E Matrix: Scaffolded permutations with markets", stacked on PR #2.
 
-    - [ ] 5.3.7. Wait for CI to pass on PR.
+    - [ ] 7.3.7. Wait for CI to pass on PR.
 
-  - [ ] 5.4. **Verify full matrix performance**
+  - [ ] 7.4. **Verify full matrix performance**
 
-    - [ ] 5.4.1. After all matrix PRs are merged, run full matrix locally (`npm run e2e -- --project=matrix`).
+    - [ ] 7.4.1. After all matrix PRs are merged, run full matrix locally (`npm run e2e -- --project=matrix`).
 
-    - [ ] 5.4.2. Confirm total runtime ≤20 min; if not, optimize test parallelization or reduce coverage.
+    - [ ] 7.4.2. Confirm total runtime ≤20 min; if not, optimize test parallelization or reduce coverage.
 
-- [ ] 6. Test Hydrogen CLI commands for core functionality (PR #5)
+- [ ] 5. Test Hydrogen CLI commands for core functionality (PR #5)
 
-  - [ ] 6.1. Create branch `e2e_cli-commands` **based on the last merged matrix branch**.
+  - [ ] 5.1. Create branch `e2e_cli-commands` **based on the last merged matrix branch**.
 
-  - [ ] 6.2. Write failing test suite `e2e/cli/core-commands.spec.ts` defining expected CLI behavior:
+  - [ ] 5.2. Write failing test suite `e2e/cli/core-commands.spec.ts` defining expected CLI behavior:
       - Define expected output and behavior for each command
       - Tests will use Hydrogen's built-in mock shop (automatically active when not linked)
       - Include both success and error scenarios
       - Run tests to confirm they fail with clear error messages
 
-  - [ ] 6.3. Implement `hydrogen build` test:
+  - [ ] 5.3. Implement `hydrogen build` test:
       - Scaffold a minimal project for testing
       - Run `npm exec shopify hydrogen build`
       - Verify build completes successfully
       - Check for expected output files in `dist/`
       - Assert no error output
 
-  - [ ] 6.4. Implement `hydrogen check` test:
+  - [ ] 5.4. Implement `hydrogen check` test:
       - Run `npm exec shopify hydrogen check` on test project
       - Verify code checking completes
       - Parse output for validation results
       - Test with both valid and invalid code scenarios
 
-  - [ ] 6.5. Implement `hydrogen codegen` test:
+  - [ ] 5.5. Implement `hydrogen codegen` test:
       - Create test GraphQL files with queries
       - Run `npm exec shopify hydrogen codegen`
       - Verify generated TypeScript types exist
       - Check that generated files match expected patterns
 
-  - [ ] 6.6. Implement `hydrogen debug cpu` test:
+  - [ ] 5.6. Implement `hydrogen debug cpu` test:
       - Start `npm exec shopify hydrogen debug cpu` in background
       - Wait for GUI server to start
       - Verify server is accessible on expected port
       - Check for CPU profiling interface elements
       - Cleanly terminate the debug session
 
-  - [ ] 6.7. Implement `hydrogen dev` test:
+  - [ ] 5.7. Implement `hydrogen dev` test:
       - Run `npm exec shopify hydrogen dev` with test project
       - Wait for dev server to start
       - Verify server responds on localhost:3000
       - Test hot reload functionality
       - Cleanly shutdown dev server
 
-  - [ ] 6.8. Implement `hydrogen preview` test:
+  - [ ] 5.8. Implement `hydrogen preview` test:
       - Build project first with `hydrogen build`
       - Run `npm exec shopify hydrogen preview`
       - Verify preview server starts
       - Test that built assets are served correctly
       - Verify differs from dev server behavior
 
-  - [ ] 6.9. Implement `hydrogen shortcut` test:
+  - [ ] 5.9. Implement `hydrogen shortcut` test:
       - Run `npm exec shopify hydrogen shortcut`
       - Verify shortcut functionality works
       - Test with various shortcut scenarios
       - Assert expected behavior for each shortcut
 
-  - [ ] 6.10. Implement `hydrogen upgrade` test:
+  - [ ] 5.10. Implement `hydrogen upgrade` test:
       - Create project with older dependencies
       - Run `npm exec shopify hydrogen upgrade`
       - Verify NPM dependencies are modified
@@ -312,90 +312,90 @@
       - Verify upgrade completes without errors
       - Test that project still builds after upgrade
 
-  - [ ] 6.11. Add test helpers and utilities:
+  - [ ] 5.11. Add test helpers and utilities:
       - Create CLI output parsing utilities
       - Add process management helpers
       - Create assertion helpers for CLI-specific checks
 
-  - [ ] 6.12. Verify all CLI tests complete in <10 minutes locally.
+  - [ ] 5.12. Verify all CLI tests complete in <10 minutes locally.
 
-  - [ ] 6.13. Push branch and open PR titled "E2E: CLI command tests", stacked appropriately.
+  - [ ] 5.13. Push branch and open PR titled "E2E: CLI command tests", stacked appropriately.
 
-  - [ ] 6.14. Wait for CI to finish and pass on PR.
+  - [ ] 5.14. Wait for CI to finish and pass on PR.
 
-- [ ] 7. Test authenticated Hydrogen CLI commands with Shopify integration (PR #6)
+- [ ] 4. Test authenticated Hydrogen CLI commands with Shopify integration (PR #4)
 
-  - [ ] 7.1. Create branch `e2e_cli-authenticated` **based on `e2e_cli-commands`**.
+  - [ ] 4.1. Create branch `e2e_cli-authenticated` **based on `e2e_cli-commands`**.
 
-  - [ ] 7.2. Write failing test suite `e2e/cli/authenticated-commands.spec.ts`:
+  - [ ] 4.2. Write failing test suite `e2e/cli/authenticated-commands.spec.ts`:
       - Define expected behavior for authenticated commands
       - Include mock authentication flow
       - Run tests to confirm they fail appropriately
 
-  - [ ] 7.3. Set up test authentication environment:
+  - [ ] 4.3. Set up test authentication environment:
       - Investigate Shopify CLI's authentication mechanism for testing
       - Configure appropriate test credentials (method TBD)
       - Create helper for managing auth state
       - Implement cleanup to reset auth between tests
 
-  - [ ] 7.4. Implement `hydrogen login` test:
+  - [ ] 4.4. Implement `hydrogen login` test:
       - Run `npm exec shopify hydrogen login`
       - Handle authentication flow (may need mock or test account)
       - Verify successful login
       - Check auth token is stored correctly
 
-  - [ ] 7.5. Implement `hydrogen link` test:
+  - [ ] 4.5. Implement `hydrogen link` test:
       - Ensure logged in state
       - Run `npm exec shopify hydrogen link`
       - Select or create test storefront in Shopify admin
       - Verify linking completes successfully
       - Check configuration is updated
 
-  - [ ] 7.6. Implement `hydrogen customer-account-push` test:
+  - [ ] 4.6. Implement `hydrogen customer-account-push` test:
       - Ensure project is linked
       - Run `npm exec shopify hydrogen customer-account-push`
       - Verify Customer Account API configuration pushed
       - Check for success confirmation
 
-  - [ ] 7.7. Implement `hydrogen deploy` test:
+  - [ ] 4.7. Implement `hydrogen deploy` test:
       - Ensure project is linked and built
       - Run `npm exec shopify hydrogen deploy`
       - Verify deployment initiates (may use test/staging)
       - Check deployment status output
 
-  - [ ] 7.8. Implement environment variable management tests:
+  - [ ] 4.8. Implement environment variable management tests:
       - Test `npm exec shopify hydrogen env list`
       - Test `npm exec shopify hydrogen env pull`
       - Test `npm exec shopify hydrogen env push`
       - Verify environment variables sync correctly
 
-  - [ ] 7.9. Implement `hydrogen list` test:
+  - [ ] 4.9. Implement `hydrogen list` test:
       - Run `npm exec shopify hydrogen list`
       - Verify linked storefronts are displayed
       - Check output format and information
 
-  - [ ] 7.10. Implement `hydrogen unlink` test:
+  - [ ] 4.10. Implement `hydrogen unlink` test:
       - Ensure project is linked
       - Run `npm exec shopify hydrogen unlink`
       - Verify unlink completes
       - Check configuration is cleaned up
 
-  - [ ] 7.11. Implement `hydrogen logout` test:
+  - [ ] 4.11. Implement `hydrogen logout` test:
       - Ensure logged in state
       - Run `npm exec shopify hydrogen logout`
       - Verify logout completes
       - Check auth token is removed
 
-  - [ ] 7.12. Add authentication test utilities:
+  - [ ] 4.12. Add authentication test utilities:
       - Create mock auth helpers if needed
       - Add cleanup functions for test isolation
       - Create assertion helpers for auth state
 
-  - [ ] 7.13. Verify authenticated CLI tests complete in reasonable time (<30 minutes).
+  - [ ] 4.13. Verify authenticated CLI tests complete in reasonable time (<30 minutes).
 
-  - [ ] 7.14. Push branch and open PR titled "E2E: Authenticated CLI commands", stacked on previous PR.
+  - [ ] 4.14. Push branch and open PR titled "E2E: Authenticated CLI commands", stacked on previous PR.
 
-  - [ ] 7.15. Wait for CI to finish and pass on PR.
+  - [ ] 4.15. Wait for CI to finish and pass on PR.
 
 - [ ] 8. Test recipe functionality with real shop data and authentication (PR #7)
 
