@@ -10,16 +10,16 @@ export async function setupTemplate(options: InitOptions) {
   const controller = new AbortController();
 
   try {
-    // If a specific Hydrogen version is requested, use versioned setup
-    if (options.version && !options.template) {
+    if (options.template) {
+      return await setupRemoteTemplate(
+        {...options, template: options.template},
+        controller,
+      );
+    } else if (options.version) {
       return await setupVersionedTemplate(options, controller);
+    } else {
+      return await setupLocalStarterTemplate(options, controller);
     }
-
-    const template = options.template;
-
-    return template
-      ? await setupRemoteTemplate({...options, template}, controller)
-      : await setupLocalStarterTemplate(options, controller);
   } catch (error) {
     controller.abort();
     throw error;
