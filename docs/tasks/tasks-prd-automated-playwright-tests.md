@@ -111,11 +111,12 @@
 
 - [ ] 4. Test authenticated Hydrogen CLI commands with Shopify integration (PR #4)
 
-  - [ ] 4.1. Create branch `e2e_cli-authenticated` **based on `e2e_cli-commands`**.
+  - [ ] 4.1. Create branch `e2e_cli-authenticated` **based on `e2e_npm-scripts`**.
 
-  - [ ] 4.2. Write failing test suite `e2e/cli/authenticated-commands.spec.ts`:
-      - Define expected behavior for authenticated commands
-      - Include mock authentication flow
+  - [ ] 4.2. Write failing test suite `e2e/cli/auth-setup.spec.ts` for basic auth:
+      - Define expected behavior for login/logout operations  
+      - Define expected behavior for link/unlink operations
+      - These are foundational tests that establish auth for all subsequent tests
       - Run tests to confirm they fail appropriately
 
   - [ ] 4.3. Set up test authentication environment:
@@ -124,53 +125,53 @@
       - Create helper for managing auth state
       - Implement cleanup to reset auth between tests
 
-  - [ ] 4.4. Implement `hydrogen login` test:
+  - [ ] 4.4. Implement basic `hydrogen login` and `hydrogen logout` tests:
       - Run `npm exec shopify hydrogen login`
       - Handle authentication flow (may need mock or test account)
       - Verify successful login
-      - Check auth token is stored correctly
+      - Test `hydrogen logout` and verify clean logout
+      - Verify auth state is properly managed
 
-  - [ ] 4.5. Implement `hydrogen link` test:
-      - Ensure logged in state
+  - [ ] 4.5. Implement basic `hydrogen link` and `hydrogen unlink` tests:
+      - Ensure logged in state from previous test
       - Run `npm exec shopify hydrogen link`
       - Select or create test storefront in Shopify admin
       - Verify linking completes successfully
-      - Check configuration is updated
+      - Test `hydrogen unlink` and verify clean unlinking
+      - Re-link for use by subsequent tests
 
-  - [ ] 4.6. Implement `hydrogen customer-account-push` test:
+  - [ ] 4.6. Write failing test suite `e2e/cli/authenticated-commands.spec.ts` for remaining commands:
+      - Define expected behavior for all other authenticated commands
+      - Will use the auth established by auth-setup.spec.ts
+      - Run tests to confirm they fail appropriately
+
+  - [ ] 4.7. Implement `hydrogen customer-account-push` test:
       - Ensure project is linked
       - Run `npm exec shopify hydrogen customer-account-push`
       - Verify Customer Account API configuration pushed
       - Check for success confirmation
 
-  - [ ] 4.7. Implement `hydrogen deploy` test:
+  - [ ] 4.8. Implement `hydrogen deploy` test:
       - Ensure project is linked and built
       - Run `npm exec shopify hydrogen deploy`
       - Verify deployment initiates (may use test/staging)
       - Check deployment status output
 
-  - [ ] 4.8. Implement environment variable management tests:
+  - [ ] 4.9. Implement environment variable management tests:
       - Test `npm exec shopify hydrogen env list`
       - Test `npm exec shopify hydrogen env pull`
       - Test `npm exec shopify hydrogen env push`
       - Verify environment variables sync correctly
 
-  - [ ] 4.9. Implement `hydrogen list` test:
+  - [ ] 4.10. Implement `hydrogen list` test:
       - Run `npm exec shopify hydrogen list`
       - Verify linked storefronts are displayed
       - Check output format and information
 
-  - [ ] 4.10. Implement `hydrogen unlink` test:
-      - Ensure project is linked
-      - Run `npm exec shopify hydrogen unlink`
-      - Verify unlink completes
-      - Check configuration is cleaned up
-
-  - [ ] 4.11. Implement `hydrogen logout` test:
-      - Ensure logged in state
-      - Run `npm exec shopify hydrogen logout`
-      - Verify logout completes
-      - Check auth token is removed
+  - [ ] 4.11. Verify authenticated flow persistence:
+      - Ensure login persists across test runs
+      - Ensure link persists for use by Tasks 6 and 7
+      - Document how to reset auth state if needed
 
   - [ ] 4.12. Add authentication test utilities:
       - Create mock auth helpers if needed
@@ -260,20 +261,21 @@
   - [ ] 5.14. Wait for CI to finish and pass on PR.
 
 
-- [ ] 4. Test authenticated Hydrogen CLI commands with Shopify integration (PR #4)
+- [ ] 6. Enhance smoke tests with comprehensive user journey testing (PR #6)
 
-  - [ ] 4.1. Create branch `e2e_cli-authenticated` **based on `e2e_npm-scripts`**.
+  - [ ] 6.1. Create branch `e2e_enhanced-smoke` **based on `e2e_cli-authenticated`**.
 
-  - [ ] 4.2. Write failing test suite `e2e/cli/authenticated-commands.spec.ts`:
-      - Define expected behavior for authenticated commands
-      - Include mock authentication flow
-      - Run tests to confirm they fail appropriately
+  - [ ] 6.2. Write failing test `e2e/smoke/user-journey.spec.ts` defining complete user flow:
+      - Test should navigate from homepage → collections → product → cart → checkout
+      - Define expected elements and behaviors at each step
+      - Include assertions for cart quantity changes and price updates
+      - Run test to confirm it fails with clear error messages
 
-  - [ ] 4.3. Set up test authentication environment:
-      - Investigate Shopify CLI's authentication mechanism for testing
-      - Configure appropriate test credentials (method TBD)
-      - Create helper for managing auth state
-      - Implement cleanup to reset auth between tests
+  - [ ] 6.3. **Set up authenticated environment for user journey test**:
+      - Use the linked storefront established in Task 4
+      - Ensure hydrogen login is active
+      - Verify link to Hydrogen storefront is configured
+      - All tests run against real Shopify data, not mock shop
 
   - [ ] 6.4. Implement cart state capture:
       - Open cart drawer/modal
@@ -326,13 +328,17 @@
 
 - [ ] 7. Implement Full Matrix Pack scaffolding and tests for template permutations (3-4 PRs total)
 
+  **IMPORTANT**: This task MUST scaffold ALL permutations. The scaffolding is intentionally comprehensive despite being slow - this is the entire purpose of the matrix tests.
+
   **Permutation dimensions (32 total):**
   1. **Language**: JavaScript | TypeScript
   2. **Styling**: Tailwind v4 | Vanilla Extract | CSS Modules | PostCSS
   3. **Scaffold routes & core functionality**: Yes | No
      - If **Yes** → additional **Markets URL structure**: Subfolders | Subdomains | Top-level domains
+  
+  **All permutations will use the linked Shopify storefront from Task 4, not mock shop data.**
 
-  - [ ] 7.1. **PR #1: Matrix infrastructure and non-scaffolded permutations** (8 permutations)
+  - [ ] 7.1. **PR #1: Matrix infrastructure and non-scaffolded permutations** (8 permutations - ALL MUST BE SCAFFOLDED)
 
     - [ ] 7.1.1. Create branch `e2e_matrix-infrastructure` **based on `e2e_enhanced-smoke`**.
 
@@ -340,16 +346,20 @@
 
     - [ ] 7.1.3. Create scaffolding helper `e2e/matrix/scaffold.ts` that:
         - Invokes `npm create @shopify/hydrogen` with given flags
+        - **MUST actually scaffold each project** - no shortcuts or mocking
         - Creates projects in `tmp/` with pattern `hydrogen-<permutation>-<YYYYMMDDHHMMSS>`
         - Returns the project path for testing
         - Selects most recent project when duplicates exist
+        - Uses linked Shopify storefront credentials from Task 4
 
     - [ ] 7.1.4. Ensure `tmp/` directory is listed in `.gitignore`.
 
     - [ ] 7.1.5. Create data-driven test structure in `e2e/matrix/non-scaffolded.spec.ts`:
         - Define test matrix for 8 non-scaffolded permutations (2 languages × 4 styling options)
+        - **Each permutation MUST be fully scaffolded using `npm create @shopify/hydrogen`**
         - Use `test.describe.parallel` for concurrent execution
         - Share common assertions (page loads, cart works, no errors)
+        - All tests run against linked Shopify storefront, not mock data
 
     - [ ] 7.1.6. Configure Playwright project for matrix tests in `playwright.config.ts`.
 
@@ -359,14 +369,16 @@
 
     - [ ] 7.1.9. Wait for CI to pass on PR.
 
-  - [ ] 7.2. **PR #2: Scaffolded permutations without markets** (8 permutations)
+  - [ ] 7.2. **PR #2: Scaffolded permutations without markets** (8 permutations - ALL MUST BE SCAFFOLDED)
 
     - [ ] 7.2.1. Create branch `e2e_matrix-scaffolded-basic` **based on `e2e_matrix-infrastructure`**.
 
     - [ ] 7.2.2. Create `e2e/matrix/scaffolded-basic.spec.ts` with data-driven tests:
         - Define test matrix for 8 scaffolded permutations without markets
+        - **Each permutation MUST be fully scaffolded** - this is the core requirement
         - Reuse assertion helpers from infrastructure PR
         - Test additional scaffolded routes (products, collections, etc.)
+        - Use linked Shopify storefront for all tests
 
     - [ ] 7.2.3. Extend scaffold helper to handle scaffolded route options.
 
@@ -376,7 +388,7 @@
 
     - [ ] 7.2.6. Wait for CI to pass on PR.
 
-  - [ ] 7.3. **PR #3: Scaffolded permutations with markets** (16 permutations)
+  - [ ] 7.3. **PR #3: Scaffolded permutations with markets** (16 permutations - ALL MUST BE SCAFFOLDED)
 
     - [ ] 7.3.1. Create branch `e2e_matrix-scaffolded-markets` **based on `e2e_matrix-scaffolded-basic`**.
 
