@@ -108,20 +108,172 @@
 
   - [x] 3.7. Wait for CI to finish and pass on PR #3.
 
-- [ ] 6. Enhance smoke tests with comprehensive user journey testing (PR #6)
 
-  - [ ] 6.1. Create branch `e2e_enhanced-smoke` **based on `e2e_npm-scripts`**.
+- [ ] 4. Test authenticated Hydrogen CLI commands with Shopify integration (PR #4)
 
-  - [ ] 6.2. Write failing test `e2e/smoke/user-journey.spec.ts` defining complete user flow:
-      - Test should navigate from homepage → collections → product → cart → checkout
-      - Define expected elements and behaviors at each step
-      - Include assertions for cart quantity changes and price updates
-      - Run test to confirm it fails with clear error messages
+  - [ ] 4.1. Create branch `e2e_cli-authenticated` **based on `e2e_cli-commands`**.
 
-  - [ ] 6.3. Implement homepage verification:
-      - Wait for all network requests using `waitForLoadState('networkidle')`
-      - Assert no console errors
-      - Verify key homepage elements are present
+  - [ ] 4.2. Write failing test suite `e2e/cli/authenticated-commands.spec.ts`:
+      - Define expected behavior for authenticated commands
+      - Include mock authentication flow
+      - Run tests to confirm they fail appropriately
+
+  - [ ] 4.3. Set up test authentication environment:
+      - Investigate Shopify CLI's authentication mechanism for testing
+      - Configure appropriate test credentials (method TBD)
+      - Create helper for managing auth state
+      - Implement cleanup to reset auth between tests
+
+  - [ ] 4.4. Implement `hydrogen login` test:
+      - Run `npm exec shopify hydrogen login`
+      - Handle authentication flow (may need mock or test account)
+      - Verify successful login
+      - Check auth token is stored correctly
+
+  - [ ] 4.5. Implement `hydrogen link` test:
+      - Ensure logged in state
+      - Run `npm exec shopify hydrogen link`
+      - Select or create test storefront in Shopify admin
+      - Verify linking completes successfully
+      - Check configuration is updated
+
+  - [ ] 4.6. Implement `hydrogen customer-account-push` test:
+      - Ensure project is linked
+      - Run `npm exec shopify hydrogen customer-account-push`
+      - Verify Customer Account API configuration pushed
+      - Check for success confirmation
+
+  - [ ] 4.7. Implement `hydrogen deploy` test:
+      - Ensure project is linked and built
+      - Run `npm exec shopify hydrogen deploy`
+      - Verify deployment initiates (may use test/staging)
+      - Check deployment status output
+
+  - [ ] 4.8. Implement environment variable management tests:
+      - Test `npm exec shopify hydrogen env list`
+      - Test `npm exec shopify hydrogen env pull`
+      - Test `npm exec shopify hydrogen env push`
+      - Verify environment variables sync correctly
+
+  - [ ] 4.9. Implement `hydrogen list` test:
+      - Run `npm exec shopify hydrogen list`
+      - Verify linked storefronts are displayed
+      - Check output format and information
+
+  - [ ] 4.10. Implement `hydrogen unlink` test:
+      - Ensure project is linked
+      - Run `npm exec shopify hydrogen unlink`
+      - Verify unlink completes
+      - Check configuration is cleaned up
+
+  - [ ] 4.11. Implement `hydrogen logout` test:
+      - Ensure logged in state
+      - Run `npm exec shopify hydrogen logout`
+      - Verify logout completes
+      - Check auth token is removed
+
+  - [ ] 4.12. Add authentication test utilities:
+      - Create mock auth helpers if needed
+      - Add cleanup functions for test isolation
+      - Create assertion helpers for auth state
+
+  - [ ] 4.13. Verify authenticated CLI tests complete in reasonable time (<30 minutes).
+
+  - [ ] 4.14. Push branch and open PR titled "E2E: Authenticated CLI commands", stacked on previous PR.
+
+  - [ ] 4.15. Wait for CI to finish and pass on PR.
+
+
+- [ ] 5. Test Hydrogen CLI commands for core functionality (PR #5)
+
+  - [ ] 5.1. Create branch `e2e_cli-commands` **based on the last merged matrix branch**.
+
+  - [ ] 5.2. Write failing test suite `e2e/cli/core-commands.spec.ts` defining expected CLI behavior:
+      - Define expected output and behavior for each command
+      - Tests will use Hydrogen's built-in mock shop (automatically active when not linked)
+      - Include both success and error scenarios
+      - Run tests to confirm they fail with clear error messages
+
+  - [ ] 5.3. Implement `hydrogen build` test:
+      - Scaffold a minimal project for testing
+      - Run `npm exec shopify hydrogen build`
+      - Verify build completes successfully
+      - Check for expected output files in `dist/`
+      - Assert no error output
+
+  - [ ] 5.4. Implement `hydrogen check` test:
+      - Run `npm exec shopify hydrogen check` on test project
+      - Verify code checking completes
+      - Parse output for validation results
+      - Test with both valid and invalid code scenarios
+
+  - [ ] 5.5. Implement `hydrogen codegen` test:
+      - Create test GraphQL files with queries
+      - Run `npm exec shopify hydrogen codegen`
+      - Verify generated TypeScript types exist
+      - Check that generated files match expected patterns
+
+  - [ ] 5.6. Implement `hydrogen debug cpu` test:
+      - Start `npm exec shopify hydrogen debug cpu` in background
+      - Wait for GUI server to start
+      - Verify server is accessible on expected port
+      - Check for CPU profiling interface elements
+      - Cleanly terminate the debug session
+
+  - [ ] 5.7. Implement `hydrogen dev` test:
+      - Run `npm exec shopify hydrogen dev` with test project
+      - Wait for dev server to start
+      - Verify server responds on localhost:3000
+      - Test hot reload functionality
+      - Cleanly shutdown dev server
+
+  - [ ] 5.8. Implement `hydrogen preview` test:
+      - Build project first with `hydrogen build`
+      - Run `npm exec shopify hydrogen preview`
+      - Verify preview server starts
+      - Test that built assets are served correctly
+      - Verify differs from dev server behavior
+
+  - [ ] 5.9. Implement `hydrogen shortcut` test:
+      - Run `npm exec shopify hydrogen shortcut`
+      - Verify shortcut functionality works
+      - Test with various shortcut scenarios
+      - Assert expected behavior for each shortcut
+
+  - [ ] 5.10. Implement `hydrogen upgrade` test:
+      - Create project with older dependencies
+      - Run `npm exec shopify hydrogen upgrade`
+      - Verify NPM dependencies are modified
+      - Check for follow-up instructions generation
+      - Verify upgrade completes without errors
+      - Test that project still builds after upgrade
+
+  - [ ] 5.11. Add test helpers and utilities:
+      - Create CLI output parsing utilities
+      - Add process management helpers
+      - Create assertion helpers for CLI-specific checks
+
+  - [ ] 5.12. Verify all CLI tests complete in <10 minutes locally.
+
+  - [ ] 5.13. Push branch and open PR titled "E2E: CLI command tests", stacked appropriately.
+
+  - [ ] 5.14. Wait for CI to finish and pass on PR.
+
+
+- [ ] 4. Test authenticated Hydrogen CLI commands with Shopify integration (PR #4)
+
+  - [ ] 4.1. Create branch `e2e_cli-authenticated` **based on `e2e_npm-scripts`**.
+
+  - [ ] 4.2. Write failing test suite `e2e/cli/authenticated-commands.spec.ts`:
+      - Define expected behavior for authenticated commands
+      - Include mock authentication flow
+      - Run tests to confirm they fail appropriately
+
+  - [ ] 4.3. Set up test authentication environment:
+      - Investigate Shopify CLI's authentication mechanism for testing
+      - Configure appropriate test credentials (method TBD)
+      - Create helper for managing auth state
+      - Implement cleanup to reset auth between tests
 
   - [ ] 6.4. Implement cart state capture:
       - Open cart drawer/modal
@@ -170,6 +322,7 @@
   - [ ] 6.13. Push branch and open PR #6 titled "E2E: Enhanced smoke tests with user journey", stacked on `e2e_npm-scripts`.
 
   - [ ] 6.14. Wait for CI to finish and pass on PR #6.
+
 
 - [ ] 7. Implement Full Matrix Pack scaffolding and tests for template permutations (3-4 PRs total)
 
@@ -248,154 +401,6 @@
 
     - [ ] 7.4.2. Confirm total runtime ≤20 min; if not, optimize test parallelization or reduce coverage.
 
-- [ ] 5. Test Hydrogen CLI commands for core functionality (PR #5)
-
-  - [ ] 5.1. Create branch `e2e_cli-commands` **based on the last merged matrix branch**.
-
-  - [ ] 5.2. Write failing test suite `e2e/cli/core-commands.spec.ts` defining expected CLI behavior:
-      - Define expected output and behavior for each command
-      - Tests will use Hydrogen's built-in mock shop (automatically active when not linked)
-      - Include both success and error scenarios
-      - Run tests to confirm they fail with clear error messages
-
-  - [ ] 5.3. Implement `hydrogen build` test:
-      - Scaffold a minimal project for testing
-      - Run `npm exec shopify hydrogen build`
-      - Verify build completes successfully
-      - Check for expected output files in `dist/`
-      - Assert no error output
-
-  - [ ] 5.4. Implement `hydrogen check` test:
-      - Run `npm exec shopify hydrogen check` on test project
-      - Verify code checking completes
-      - Parse output for validation results
-      - Test with both valid and invalid code scenarios
-
-  - [ ] 5.5. Implement `hydrogen codegen` test:
-      - Create test GraphQL files with queries
-      - Run `npm exec shopify hydrogen codegen`
-      - Verify generated TypeScript types exist
-      - Check that generated files match expected patterns
-
-  - [ ] 5.6. Implement `hydrogen debug cpu` test:
-      - Start `npm exec shopify hydrogen debug cpu` in background
-      - Wait for GUI server to start
-      - Verify server is accessible on expected port
-      - Check for CPU profiling interface elements
-      - Cleanly terminate the debug session
-
-  - [ ] 5.7. Implement `hydrogen dev` test:
-      - Run `npm exec shopify hydrogen dev` with test project
-      - Wait for dev server to start
-      - Verify server responds on localhost:3000
-      - Test hot reload functionality
-      - Cleanly shutdown dev server
-
-  - [ ] 5.8. Implement `hydrogen preview` test:
-      - Build project first with `hydrogen build`
-      - Run `npm exec shopify hydrogen preview`
-      - Verify preview server starts
-      - Test that built assets are served correctly
-      - Verify differs from dev server behavior
-
-  - [ ] 5.9. Implement `hydrogen shortcut` test:
-      - Run `npm exec shopify hydrogen shortcut`
-      - Verify shortcut functionality works
-      - Test with various shortcut scenarios
-      - Assert expected behavior for each shortcut
-
-  - [ ] 5.10. Implement `hydrogen upgrade` test:
-      - Create project with older dependencies
-      - Run `npm exec shopify hydrogen upgrade`
-      - Verify NPM dependencies are modified
-      - Check for follow-up instructions generation
-      - Verify upgrade completes without errors
-      - Test that project still builds after upgrade
-
-  - [ ] 5.11. Add test helpers and utilities:
-      - Create CLI output parsing utilities
-      - Add process management helpers
-      - Create assertion helpers for CLI-specific checks
-
-  - [ ] 5.12. Verify all CLI tests complete in <10 minutes locally.
-
-  - [ ] 5.13. Push branch and open PR titled "E2E: CLI command tests", stacked appropriately.
-
-  - [ ] 5.14. Wait for CI to finish and pass on PR.
-
-- [ ] 4. Test authenticated Hydrogen CLI commands with Shopify integration (PR #4)
-
-  - [ ] 4.1. Create branch `e2e_cli-authenticated` **based on `e2e_cli-commands`**.
-
-  - [ ] 4.2. Write failing test suite `e2e/cli/authenticated-commands.spec.ts`:
-      - Define expected behavior for authenticated commands
-      - Include mock authentication flow
-      - Run tests to confirm they fail appropriately
-
-  - [ ] 4.3. Set up test authentication environment:
-      - Investigate Shopify CLI's authentication mechanism for testing
-      - Configure appropriate test credentials (method TBD)
-      - Create helper for managing auth state
-      - Implement cleanup to reset auth between tests
-
-  - [ ] 4.4. Implement `hydrogen login` test:
-      - Run `npm exec shopify hydrogen login`
-      - Handle authentication flow (may need mock or test account)
-      - Verify successful login
-      - Check auth token is stored correctly
-
-  - [ ] 4.5. Implement `hydrogen link` test:
-      - Ensure logged in state
-      - Run `npm exec shopify hydrogen link`
-      - Select or create test storefront in Shopify admin
-      - Verify linking completes successfully
-      - Check configuration is updated
-
-  - [ ] 4.6. Implement `hydrogen customer-account-push` test:
-      - Ensure project is linked
-      - Run `npm exec shopify hydrogen customer-account-push`
-      - Verify Customer Account API configuration pushed
-      - Check for success confirmation
-
-  - [ ] 4.7. Implement `hydrogen deploy` test:
-      - Ensure project is linked and built
-      - Run `npm exec shopify hydrogen deploy`
-      - Verify deployment initiates (may use test/staging)
-      - Check deployment status output
-
-  - [ ] 4.8. Implement environment variable management tests:
-      - Test `npm exec shopify hydrogen env list`
-      - Test `npm exec shopify hydrogen env pull`
-      - Test `npm exec shopify hydrogen env push`
-      - Verify environment variables sync correctly
-
-  - [ ] 4.9. Implement `hydrogen list` test:
-      - Run `npm exec shopify hydrogen list`
-      - Verify linked storefronts are displayed
-      - Check output format and information
-
-  - [ ] 4.10. Implement `hydrogen unlink` test:
-      - Ensure project is linked
-      - Run `npm exec shopify hydrogen unlink`
-      - Verify unlink completes
-      - Check configuration is cleaned up
-
-  - [ ] 4.11. Implement `hydrogen logout` test:
-      - Ensure logged in state
-      - Run `npm exec shopify hydrogen logout`
-      - Verify logout completes
-      - Check auth token is removed
-
-  - [ ] 4.12. Add authentication test utilities:
-      - Create mock auth helpers if needed
-      - Add cleanup functions for test isolation
-      - Create assertion helpers for auth state
-
-  - [ ] 4.13. Verify authenticated CLI tests complete in reasonable time (<30 minutes).
-
-  - [ ] 4.14. Push branch and open PR titled "E2E: Authenticated CLI commands", stacked on previous PR.
-
-  - [ ] 4.15. Wait for CI to finish and pass on PR.
 
 - [ ] 8. Test recipe functionality with real shop data and authentication (PR #7)
 
