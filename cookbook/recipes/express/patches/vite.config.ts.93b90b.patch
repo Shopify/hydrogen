@@ -1,7 +1,11 @@
-index a17024462..058b559de 100644
+index a17024462..4d73ce869 100644
 --- a/templates/skeleton/vite.config.ts
 +++ b/templates/skeleton/vite.config.ts
-@@ -5,13 +5,15 @@ import {reactRouter} from '@react-router/dev/vite';
+@@ -1,17 +1,18 @@
+ import {defineConfig} from 'vite';
+ import {hydrogen} from '@shopify/hydrogen/vite';
+-import {oxygen} from '@shopify/mini-oxygen/vite';
+ import {reactRouter} from '@react-router/dev/vite';
  import tsconfigPaths from 'vite-tsconfig-paths';
  
  export default defineConfig({
@@ -18,7 +22,7 @@ index a17024462..058b559de 100644
      optimizeDeps: {
        /**
         * Include dependencies here if they throw CJS<>ESM errors.
-@@ -23,10 +25,7 @@ export default defineConfig({
+@@ -23,10 +24,7 @@ export default defineConfig({
         * Include 'example-dep' in the array below.
         * @see https://vitejs.dev/config/dep-optimization-options
         */

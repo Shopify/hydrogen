@@ -6,11 +6,14 @@ summary: Deploy Hydrogen on Node.js with Express instead of Shopify Oxygen
 description: |
   This recipe transforms a Hydrogen skeleton template to run on a standard Node.js Express server,
   making it deployable to any Node.js hosting platform instead of Shopify Oxygen. It maintains core
-  Hydrogen functionality including GraphQL codegen and Storefront API integration while replacing
-  Oxygen-specific features with Express equivalents.
+  Hydrogen functionality including GraphQL codegen, analytics support, and Storefront API integration
+  while replacing Oxygen-specific features with Express equivalents.
 
   Key changes:
-  - Replaces Oxygen server with Express server
+  - Replaces Oxygen server with Express server using renderToPipeableStream for SSR
+  - Converts from renderToReadableStream to Node.js-compatible streaming
+  - Maintains analytics token generation and Server-Timing headers
+  - Simplifies routes by removing complex product components
   - Uses Vite for development with hot module replacement
   - Implements session management through Express middleware
   - Provides production-ready server configuration
@@ -21,13 +24,15 @@ notes:
   - Environment variables are loaded from .env file using dotenv
   - Session management is handled through Express middleware with SESSION_SECRET
   - GraphQL codegen still works with Storefront API types
-  - Compatible with React Router 7.8.x
-  - The .graphqlrc.ts file is preserved with customer account section commented
-    out
+  - Compatible with React Router 7.9.x
+  - Analytics functionality is preserved including Server-Timing headers and cookies
+  - Routes are simplified to demonstrate basic product display without complex UI components
+  - The .graphqlrc.ts file is preserved with customer account section commented out
 requirements: |
-  - Node.js 18 or higher
+  - Node.js 20 or higher (but less than 22.0.0)
   - npm or yarn package manager
   - Shopify Storefront API credentials
+  - SESSION_SECRET environment variable (at least 32 characters)
 ingredients:
   - path: templates/skeleton/app/env.ts
     description: null
@@ -161,13 +166,6 @@ steps:
     ingredients:
       - path: templates/skeleton/server.mjs
   - type: PATCH
-    step: "5"
-    name: app/routes.ts
-    description: null
-    diffs:
-      - file: app/routes.ts
-        patchFile: routes.ts.e77b9b.patch
-  - type: PATCH
     step: "6"
     name: app/routes/_index.tsx
     description: null
@@ -181,20 +179,6 @@ steps:
     diffs:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.7addea.patch
-  - type: PATCH
-    step: "8"
-    name: app/styles/app.css
-    description: null
-    diffs:
-      - file: app/styles/app.css
-        patchFile: app.css.48239a.patch
-  - type: PATCH
-    step: "9"
-    name: eslint.config.js
-    description: null
-    diffs:
-      - file: eslint.config.js
-        patchFile: eslint.config.js.63bcba.patch
   - type: PATCH
     step: "10"
     name: package.json
@@ -242,4 +226,8 @@ llms:
     - issue: TypeScript errors about missing @react-router/node types
       solution: Run 'npm install' to ensure all dependencies including @types packages
         are installed.
-commit: 147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7
+    - issue: TypeError Cannot read properties of undefined (reading 'PUBLIC_CHECKOUT_DOMAIN')
+      solution: Ensure the .env file is properly loaded. The dev:server script must include
+        '--require dotenv/config' when running nodemon. Check that package.json has the
+        correct dev:server script.
+commit: 25290311dd1d135ab90bca26fb496d2b92c8631a
