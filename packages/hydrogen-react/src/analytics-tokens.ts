@@ -9,7 +9,8 @@
 export type AnalyticsTokenSource =
   | 'existing-cookies'
   | 'relay-only'
-  | 'server-timing';
+  | 'server-timing'
+  | 'storefront-api';
 
 /**
  * Analytics tokens structure for visitor and session tracking

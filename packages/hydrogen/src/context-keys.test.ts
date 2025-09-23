@@ -34,7 +34,7 @@ describe('hydrogenContext', () => {
     let mockSession: any;
     let mockEnv: any;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       mockRequest = new Request('http://localhost');
       mockSession = {
         commit: vi.fn(),
@@ -57,7 +57,7 @@ describe('hydrogenContext', () => {
       };
 
       // Create a hydrogen context
-      context = createHydrogenContext({
+      context = await createHydrogenContext({
         env: mockEnv,
         request: mockRequest,
         session: mockSession,
@@ -129,7 +129,7 @@ describe('hydrogenContext', () => {
   });
 
   describe('proxy behavior', () => {
-    it('should support all RouterContextProvider methods', () => {
+    it('should support all RouterContextProvider methods', async () => {
       const mockRequest = new Request('http://localhost');
       const mockSession = {
         commit: vi.fn(),
@@ -151,7 +151,7 @@ describe('hydrogenContext', () => {
         SHOP_ID: '',
       };
 
-      const context = createHydrogenContext({
+      const context = await createHydrogenContext({
         env: mockEnv,
         request: mockRequest,
         session: mockSession,
