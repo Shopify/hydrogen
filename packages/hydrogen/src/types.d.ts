@@ -95,6 +95,8 @@ export interface HydrogenRouterContextProvider<
   waitUntil?: WaitUntil;
   /** Session implementation */
   session: TSession;
+  /** Analytics tokens for tracking (optional) */
+  analyticsTokens?: import('@shopify/hydrogen-react').AnalyticsTokens;
 }
 
 declare global {

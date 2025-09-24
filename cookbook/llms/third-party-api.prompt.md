@@ -162,7 +162,7 @@ This pattern is perfect for integrating:
 Create a new GraphQL client factory that integrates with Oxygen's caching system.
 This client handles query minification, error handling, and cache key generation.
 
-#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
+#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
 
 ```ts
 import {
@@ -237,28 +237,46 @@ in all routes. Also update TypeScript declarations for proper type support.
 #### File: /app/lib/context.ts
 
 ```diff
-@@ -1,25 +1,11 @@
+@@ -1,25 +1,41 @@
  import {createHydrogenContext} from '@shopify/hydrogen';
  import {AppSession} from '~/lib/session';
  import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
--
--// Define the additional context object
--const additionalContext = {
--  // Additional context for custom properties, CMS clients, 3P SDKs, etc.
--  // These will be available as both context.propertyName and context.get(propertyContext)
--  // Example of complex objects that could be added:
--  // cms: await createCMSClient(env),
--  // reviews: await createReviewsClient(env),
--} as const;
--
--// Automatically augment HydrogenAdditionalContext with the additional context type
--type AdditionalContextType = typeof additionalContext;
--
--declare global {
--  interface HydrogenAdditionalContext extends AdditionalContextType {}
--}
 +// @description Import the Rick and Morty client for third-party GraphQL queries
 +import {createRickAndMortyClient} from '~/lib/createRickAndMortyClient.server';
+ 
+-// Define the additional context object
+-const additionalContext = {
++// @description Define the additional context object with the third-party client
++const additionalContext = ({
++  cache,
++  waitUntil,
++  request,
++}: {
++  cache: Cache;
++  waitUntil: (promise: Promise<any>) => void;
++  request: Request;
++}) => ({
+   // Additional context for custom properties, CMS clients, 3P SDKs, etc.
+   // These will be available as both context.propertyName and context.get(propertyContext)
+   // Example of complex objects that could be added:
+   // cms: await createCMSClient(env),
+   // reviews: await createReviewsClient(env),
+-} as const;
++  // @description Pass the Rick and Morty client to the action and loader context
++  rickAndMorty: createRickAndMortyClient({
++    cache,
++    waitUntil,
++    request,
++  }),
++} as const);
+ 
+ // Automatically augment HydrogenAdditionalContext with the additional context type
+-type AdditionalContextType = typeof additionalContext;
++type AdditionalContextType = ReturnType<typeof additionalContext>;
+ 
+ declare global {
+   interface HydrogenAdditionalContext extends AdditionalContextType {}
+ }
  
  /**
 - * Creates Hydrogen context for React Router 7.8.x
@@ -266,39 +284,29 @@ in all routes. Also update TypeScript declarations for proper type support.
   * Returns HydrogenRouterContextProvider with hybrid access patterns
   * */
  export async function createHydrogenRouterContext(
-@@ -40,6 +26,19 @@ export async function createHydrogenRouterContext(
+@@ -41,6 +57,13 @@ export async function createHydrogenRouterContext(
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
  
-+  // @description Create a Rick and Morty client for third-party GraphQL queries with Oxygen caching
-+  const rickAndMorty = createRickAndMortyClient({
++  // @description Create the additional context with third-party client
++  const contextWithThirdParty = additionalContext({
 +    cache,
 +    waitUntil,
 +    request,
 +  });
 +
-+  // @description Define the additional context object with the third-party client
-+  const additionalContext = {
-+    // Pass the Rick and Morty client to the action and loader context
-+    rickAndMorty,
-+  } as const;
-+
-   const hydrogenContext = createHydrogenContext(
+   const hydrogenContext = await createHydrogenContext(
      {
        env,
-@@ -58,3 +57,12 @@ export async function createHydrogenRouterContext(
+@@ -57,7 +80,7 @@ export async function createHydrogenRouterContext(
+         enabled: true,
+       },
+     },
+-    additionalContext,
++    contextWithThirdParty,
+   );
  
    return hydrogenContext;
- }
-+
-+// @description Augment HydrogenAdditionalContext with third-party client type
-+type AdditionalContextType = {
-+  rickAndMorty: ReturnType<typeof createRickAndMortyClient>;
-+};
-+
-+declare global {
-+  interface HydrogenAdditionalContext extends AdditionalContextType {}
-+}
 ```
 
 ### Step 3: Query and display third-party data

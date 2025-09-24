@@ -8,9 +8,11 @@ description: |
 
   Key features:
   - Custom cart method `updateLineByOptions` for variant selection
-  - Inline dropdown selectors for each product option in cart
+  - Inline dropdown selectors for each product option in cart (without deprecated VariantSelector)
+  - Uses modern `optionValues` pattern compatible with latest Storefront API
   - Automatic cart updates when options are changed
   - Full TypeScript support with proper type augmentation
+  - Compatible with React Router 7.9.x and async createHydrogenContext
 notes:
   - This implementation requires GraphQL codegen to be run after applying the
     recipe
@@ -25,37 +27,42 @@ ingredients: []
 deletedFiles: []
 steps:
   - type: PATCH
-    step: '1'
+    step: "1"
     name: README.md
-    description: Updates README with custom cart method documentation and implementation guide
+    description: Updates README with custom cart method documentation and
+      implementation guide
     diffs:
       - file: README.md
         patchFile: README.md.49f8fa.patch
   - type: PATCH
-    step: '1'
+    step: "1"
     name: app/components/CartLineItem.tsx
-    description: Adds variant selector functionality to cart line items for changing product options
+    description: Adds dropdown-based option selection to cart line items for changing
+      product variants inline
     diffs:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.f93ff4.patch
   - type: PATCH
-    step: '2'
+    step: "2"
     name: app/lib/context.ts
-    description: Extends HydrogenCart context with updateLineByOptions method for variant switching
+    description: Extends HydrogenCart context with updateLineByOptions method for
+      variant switching
     diffs:
       - file: app/lib/context.ts
         patchFile: context.ts.cfd9da.patch
   - type: PATCH
-    step: '3'
+    step: "3"
     name: app/lib/fragments.ts
-    description: Adds product options to cart fragments and creates PRODUCT_VARIANT_QUERY for fetching variants
+    description: Adds product options to cart fragments and creates
+      PRODUCT_VARIANT_QUERY for fetching variants
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.18726b.patch
   - type: PATCH
-    step: '4'
+    step: "4"
     name: app/routes/cart.tsx
-    description: Implements CustomUpdateLineByOptions action handler for processing variant changes in cart
+    description: Implements CustomUpdateLineByOptions action handler for processing
+      variant changes in cart
     diffs:
       - file: app/routes/cart.tsx
         patchFile: cart.tsx.943271.patch
@@ -63,4 +70,4 @@ nextSteps: null
 llms:
   userQueries: []
   troubleshooting: []
-commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
+commit: 25290311dd1d135ab90bca26fb496d2b92c8631a

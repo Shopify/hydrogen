@@ -241,7 +241,7 @@ Key changes:
 
 
 
-#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
+#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
 
 ```ts
 // This file extends the Hydrogen types for this project
@@ -312,7 +312,7 @@ export {};
 
 
 
-#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
+#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
 
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
@@ -353,7 +353,7 @@ export {};
 #### File: /app/entry.server.tsx
 
 ```diff
-@@ -1,53 +1,77 @@
+@@ -1,73 +1,97 @@
 +import {PassThrough} from 'node:stream';
 +import type {EntryContext} from 'react-router';
 +import {createReadableStreamFromReadable} from '@react-router/node';
@@ -365,6 +365,8 @@ export {};
  import {
    createContentSecurityPolicy,
    type HydrogenRouterContextProvider,
+   createAnalyticsServerTimingHeader,
+   createAnalyticsCookieHeaders,
  } from '@shopify/hydrogen';
 -import type {EntryContext} from 'react-router';
  
@@ -420,9 +422,14 @@ export {};
 +    const readyOption: keyof RenderToPipeableStreamOptions =
 +      userAgent && isbot(userAgent) ? 'onAllReady' : 'onShellReady';
  
--  return new Response(body, {
--    headers: responseHeaders,
--    status: responseStatusCode,
+-  if (context.analyticsTokens) {
+-    const serverTimingValue = createAnalyticsServerTimingHeader(context.analyticsTokens);
+-    if (serverTimingValue) {
+-      responseHeaders.set('Server-Timing', serverTimingValue);
+-    }
+-    
+-    const cookieHeaders = createAnalyticsCookieHeaders(
+-      context.analyticsTokens,
 +    const {pipe, abort} = renderToPipeableStream(
 +      <NonceProvider>
 +        <ServerRouter
@@ -431,7 +438,8 @@ export {};
 +          nonce={nonce}
 +        />
 +      </NonceProvider>,
-+      {
+       {
+-        requestUrl: request.url,
 +        nonce,
 +        [readyOption]() {
 +          shellRendered = true;
@@ -440,6 +448,24 @@ export {};
 +
 +          responseHeaders.set('Content-Type', 'text/html');
 +          responseHeaders.set('Content-Security-Policy', header);
++
++          if (context.analyticsTokens) {
++            const serverTimingValue = createAnalyticsServerTimingHeader(context.analyticsTokens);
++            if (serverTimingValue) {
++              responseHeaders.set('Server-Timing', serverTimingValue);
++            }
++            
++            const cookieHeaders = createAnalyticsCookieHeaders(
++              context.analyticsTokens,
++              {
++                requestUrl: request.url,
++              },
++            );
++            
++            cookieHeaders.forEach(cookieHeader => {
++              responseHeaders.append('Set-Cookie', cookieHeader);
++            });
++          }
 +
 +          resolve(
 +            new Response(stream, {
@@ -459,9 +485,17 @@ export {};
 +            console.error(error);
 +          }
 +        },
-+      },
-+    );
-+
+       },
+     );
+-    
+-    cookieHeaders.forEach(cookieHeader => {
+-      responseHeaders.append('Set-Cookie', cookieHeader);
+-    });
+-  }
+ 
+-  return new Response(body, {
+-    headers: responseHeaders,
+-    status: responseStatusCode,
 +    setTimeout(abort, ABORT_DELAY);
    });
 -}
@@ -473,7 +507,7 @@ export {};
 
 
 
-#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
+#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
 
 ```mjs
 #!/usr/bin/env node
@@ -785,7 +819,7 @@ process.on('SIGTERM', () => {
 
 
 
-#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
+#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
 
 ```mjs
 import {createRequestHandler} from '@react-router/express';
@@ -1050,30 +1084,6 @@ class AppSession {
 
 ```
 
-### Step 5: app/routes.ts
-
-
-
-#### File: /app/routes.ts
-
-```diff
-@@ -1,9 +1,8 @@
- import {flatRoutes} from '@react-router/fs-routes';
- import {type RouteConfig} from '@react-router/dev/routes';
--import {hydrogenRoutes} from '@shopify/hydrogen';
- 
--export default hydrogenRoutes([
--  ...(await flatRoutes()),
--  // Manual route definitions can be added to this array, in addition to or instead of using the `flatRoutes` file-based routing convention.
--  // See https://reactrouter.com/api/framework-conventions/routes.ts#routests
--]) satisfies RouteConfig;
-+export default (async () => {
-+  const {hydrogenRoutes} = await import('@shopify/hydrogen');
-+  const routes = await flatRoutes();
-+  return hydrogenRoutes([...routes]);
-+})() satisfies Promise<RouteConfig>;
-```
-
 ### Step 6: app/routes/_index.tsx
 
 
@@ -1186,18 +1196,10 @@ class AppSession {
 -      <h1>{collection.title}</h1>
 -    </Link>
 -  );
+-}
 +export function ErrorBoundary() {
 +  const error = useRouteError();
-+
-+  if (isRouteErrorResponse(error)) {
-+    console.error(error.status, error.statusText, error.data);
-+    return <div>Route Error</div>;
-+  } else {
-+    console.error((error as Error).message);
-+    return <div>Thrown Error</div>;
-+  }
- }
--
+ 
 -function RecommendedProducts({
 -  products,
 -}: {
@@ -1236,7 +1238,13 @@ class AppSession {
 -      height
 -    }
 -    handle
--  }
++  if (isRouteErrorResponse(error)) {
++    console.error(error.status, error.statusText, error.data);
++    return <div>Route Error</div>;
++  } else {
++    console.error((error as Error).message);
++    return <div>Thrown Error</div>;
+   }
 -  query FeaturedCollection($country: CountryCode, $language: LanguageCode)
 -    @inContext(country: $country, language: $language) {
 -    collections(first: 1, sortKey: UPDATED_AT, reverse: true) {
@@ -1275,6 +1283,8 @@ class AppSession {
 -    }
 -  }
 -` as const;
++}
+\ No newline at end of file
 ```
 
 ### Step 7: app/routes/products.$handle.tsx
@@ -1547,882 +1557,6 @@ class AppSession {
  ` as const;
 ```
 
-### Step 8: app/styles/app.css
-
-
-
-#### File: /app/styles/app.css
-
-```diff
-@@ -1,584 +1,40 @@
--:root {
--  --aside-width: 400px;
--  --cart-aside-summary-height-with-discount: 300px;
--  --cart-aside-summary-height: 250px;
--  --grid-item-width: 355px;
--  --header-height: 64px;
--  --color-dark: #000;
--  --color-light: #fff;
--}
--
--img {
--  border-radius: 4px;
--}
--
--/*
--* --------------------------------------------------
--* Non anchor links
--* --------------------------------------------------
--*/
--.link:hover {
--  text-decoration: underline;
--  cursor: pointer;
--}
--
--/*
--* --------------------------------------------------
--* components/Aside
--* --------------------------------------------------
--*/
--@media (max-width: 45em) {
--  html:has(.overlay.expanded) {
--    overflow: hidden;
--  }
--}
--
--aside {
--  background: var(--color-light);
--  box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
--  height: 100vh;
--  width: min(var(--aside-width), 100vw);
--  position: fixed;
--  right: calc(-1 * var(--aside-width));
--  top: 0;
--  transition: transform 200ms ease-in-out;
--}
--
--aside header {
--  align-items: center;
--  border-bottom: 1px solid var(--color-dark);
--  display: flex;
--  height: var(--header-height);
--  justify-content: space-between;
--  padding: 0 20px;
--}
--
--aside header h3 {
-+body {
-+  padding: 0;
-   margin: 0;
-+  background: rgb(245, 245, 241);
-+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-+    Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
- }
- 
--aside header .close {
--  font-weight: bold;
--  opacity: 0.8;
--  text-decoration: none;
--  transition: all 200ms;
--  width: 20px;
--}
--
--aside header .close:hover {
--  opacity: 1;
--}
--
--aside header h2 {
--  margin-bottom: 0.6rem;
--  margin-top: 0;
--}
--
--aside main {
--  margin: 1rem;
--}
--
--aside p {
--  margin: 0 0 0.25rem;
--}
--
--aside p:last-child {
-+h1,
-+h2,
-+p {
-   margin: 0;
-+  padding: 0;
- }
- 
--aside li {
--  margin-bottom: 0.125rem;
--}
--
--.overlay {
--  background: rgba(0, 0, 0, 0.2);
--  bottom: 0;
--  left: 0;
--  opacity: 0;
--  pointer-events: none;
--  position: fixed;
--  right: 0;
--  top: 0;
--  transition: opacity 400ms ease-in-out;
--  transition: opacity 400ms;
--  visibility: hidden;
--  z-index: 10;
--}
--
--.overlay .close-outside {
--  background: transparent;
--  border: none;
--  color: transparent;
--  height: 100%;
--  left: 0;
--  position: absolute;
--  top: 0;
--  width: calc(100% - var(--aside-width));
--}
--
--.overlay .light {
--  background: rgba(255, 255, 255, 0.5);
--}
--
--.overlay .cancel {
--  cursor: default;
--  height: 100%;
--  position: absolute;
--  width: 100%;
--}
--
--.overlay.expanded {
--  opacity: 1;
--  pointer-events: auto;
--  visibility: visible;
--}
--/* reveal aside */
--.overlay.expanded aside {
--  transform: translateX(calc(var(--aside-width) * -1));
--}
--
--button.reset {
--  border: 0;
--  background: inherit;
--  font-size: inherit;
--}
--
--button.reset > * {
--  margin: 0;
--}
--
--button.reset:not(:has(> *)) {
--  height: 1.5rem;
--  line-height: 1.5rem;
--}
--
--button.reset:hover:not(:has(> *)) {
--  text-decoration: underline;
--  cursor: pointer;
--}
--
--/*
--* --------------------------------------------------
--* components/Header
--* --------------------------------------------------
--*/
--.header {
--  align-items: center;
--  background: #fff;
--  display: flex;
--  height: var(--header-height);
--  padding: 0 1rem;
--  position: sticky;
--  top: 0;
--  z-index: 1;
--}
--
--.header-menu-mobile-toggle {
--  @media (min-width: 48em) {
--    display: none;
--  }
--}
--
--.header-menu-mobile {
--  display: flex;
--  flex-direction: column;
--  grid-gap: 1rem;
--}
--
--.header-menu-desktop {
--  display: none;
--  grid-gap: 1rem;
--  @media (min-width: 45em) {
--    display: flex;
--    grid-gap: 1rem;
--    margin-left: 3rem;
--  }
--}
--
--.header-menu-item {
--  cursor: pointer;
--}
--
--.header-ctas {
--  align-items: center;
--  display: flex;
--  grid-gap: 1rem;
--  margin-left: auto;
--}
--
--.header-ctas > * {
--  min-width: fit-content;
--}
--
--/*
--* --------------------------------------------------
--* components/Footer
--* --------------------------------------------------
--*/
--.footer {
--  background: var(--color-dark);
--  margin-top: auto;
--}
--
--.footer-menu {
--  justify-content: center;
--  display: flex;
--  flex-wrap: wrap;
--  grid-gap: 1rem;
--  padding: 1rem;
--}
--
--.footer-menu a {
--  color: var(--color-light);
--  min-width: fit-content;
--}
--
--/*
--* --------------------------------------------------
--* components/Cart
--* --------------------------------------------------
--*/
--.cart-main {
--  height: 100%;
--  max-height: calc(100vh - var(--cart-aside-summary-height));
--  overflow-y: auto;
--  width: auto;
--}
--
--.cart-main.with-discount {
--  max-height: calc(100vh - var(--cart-aside-summary-height-with-discount));
--}
--
--.cart-line {
--  display: flex;
--  padding: 0.75rem 0;
--}
--
--.cart-line img {
--  height: 100%;
--  display: block;
--  margin-right: 0.75rem;
--}
--
--.cart-summary-page {
--  position: relative;
--}
--
--.cart-summary-aside {
--  background: white;
--  border-top: 1px solid var(--color-dark);
--  bottom: 0;
--  padding-top: 0.75rem;
--  position: absolute;
--  width: calc(var(--aside-width) - 40px);
--}
--
--.cart-line-quantity {
--  display: flex;
--}
--
--.cart-discount {
--  align-items: center;
--  display: flex;
--  margin-top: 0.25rem;
--}
--
--.cart-subtotal {
--  align-items: center;
--  display: flex;
--}
--/*
--* --------------------------------------------------
--* components/Search
--* --------------------------------------------------
--*/
--.predictive-search {
--  height: calc(100vh - var(--header-height) - 40px);
--  overflow-y: auto;
--}
--
--.predictive-search-form {
--  background: var(--color-light);
--  position: sticky;
--  top: 0;
--}
--
--.predictive-search-result {
--  margin-bottom: 2rem;
--}
--
--.predictive-search-result h5 {
--  text-transform: uppercase;
--}
--
--.predictive-search-result-item {
--  margin-bottom: 0.5rem;
--}
--
--.predictive-search-result-item a {
--  align-items: center;
--  display: flex;
--}
--
--.predictive-search-result-item a img {
--  margin-right: 0.75rem;
--  height: 100%;
--}
--
--.search-result {
--  margin-bottom: 1.5rem;
--}
--
--.search-results-item {
--  margin-bottom: 0.5rem;
--}
--
--.search-results-item a {
--  display: flex;
--  flex: row;
--  align-items: center;
--  gap: 1rem;
--}
--
--/*
--* --------------------------------------------------
--* routes/__index
--* --------------------------------------------------
--*/
--.featured-collection {
--  display: block;
--  margin-bottom: 2rem;
--  position: relative;
--}
--
--.featured-collection-image {
--  aspect-ratio: 1 / 1;
--  @media (min-width: 45em) {
--    aspect-ratio: 16 / 9;
--  }
--}
--
--.featured-collection img {
--  height: auto;
--  max-height: 100%;
--  object-fit: cover;
--}
--
--.recommended-products-grid {
--  display: grid;
--  grid-gap: 1.5rem;
--  grid-template-columns: repeat(2, 1fr);
--  @media (min-width: 45em) {
--    grid-template-columns: repeat(4, 1fr);
--  }
--}
--
--.recommended-product img {
--  height: auto;
--}
--
--/*
--* --------------------------------------------------
--* routes/collections._index.tsx
--* --------------------------------------------------
--*/
--.collections-grid {
--  display: grid;
--  grid-gap: 1.5rem;
--  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
--  margin-bottom: 2rem;
--}
--
--.collection-item img {
--  height: auto;
--}
--
--/*
--* --------------------------------------------------
--* routes/collections.$handle.tsx
--* --------------------------------------------------
--*/
--.collection-description {
-+h1 {
-+  font-size: 1.6rem;
-+  font-weight: 700;
-   margin-bottom: 1rem;
--  max-width: 95%;
--  @media (min-width: 45em) {
--    max-width: 600px;
--  }
-+  line-height: 1.4;
- }
- 
--.products-grid {
--  display: grid;
--  grid-gap: 1.5rem;
--  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
--  margin-bottom: 2rem;
-+h2 {
-+  font-size: 1.2rem;
-+  font-weight: 700;
-+  margin-bottom: 1rem;
-+  line-height: 1.4;
- }
- 
--.product-item img {
--  height: auto;
--  width: 100%;
--}
--
--/*
--* --------------------------------------------------
--* routes/products.$handle.tsx
--* --------------------------------------------------
--*/
--.product {
--  display: grid;
--  @media (min-width: 45em) {
--    grid-template-columns: 1fr 1fr;
--    grid-gap: 4rem;
--  }
--}
--
--.product h1 {
--  margin-top: 0;
--}
--
--.product-image img {
--  height: auto;
--  width: 100%;
--}
--
--.product-main {
--  align-self: start;
--  position: sticky;
--  top: 6rem;
--}
--
--.product-price-on-sale {
--  display: flex;
--  grid-gap: 0.5rem;
--}
--
--.product-price-on-sale s {
--  opacity: 0.5;
--}
--
--.product-options-grid {
--  display: flex;
--  flex-wrap: wrap;
--  grid-gap: 0.75rem;
--}
--
--.product-options-item,
--.product-options-item:disabled {
--  padding: 0.25rem 0.5rem;
--  background-color: transparent;
-+p {
-   font-size: 1rem;
--  font-family: inherit;
-+  line-height: 1.4;
- }
- 
--.product-option-label-swatch {
--  width: 1.25rem;
--  height: 1.25rem;
--  margin: 0.25rem 0;
--}
--
--.product-option-label-swatch img {
--  width: 100%;
--}
--
--/*
--* --------------------------------------------------
--* routes/blog._index.tsx
--* --------------------------------------------------
--*/
--.blog-grid {
--  display: grid;
--  grid-gap: 1.5rem;
--  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
--  margin-bottom: 2rem;
--}
--
--.blog-article-image {
--  aspect-ratio: 3/2;
--  display: block;
--}
--
--.blog-article-image img {
--  height: 100%;
--}
--
--/*
--* --------------------------------------------------
--* routes/blog.$articlehandle.tsx
--* --------------------------------------------------
--*/
--.article img {
--  height: auto;
--  width: 100%;
--}
--
--/*
--* --------------------------------------------------
--* routes/account
--* --------------------------------------------------
--*/
--
--.account-logout {
--  display: inline-block;
--}
--
--/*
--* --------------------------------------------------
--* components/CartUserErrors
--* --------------------------------------------------
--*/
--.cart-user-errors {
--  background-color: #fee;
--  border: 1px solid #fcc;
--  border-radius: 4px;
--  color: #c00;
--  margin-bottom: 1rem;
--  padding: 1rem;
--}
--
--.cart-user-errors h4 {
--  margin: 0 0 0.5rem 0;
--  font-weight: bold;
--}
--
--.cart-user-errors ul {
--  margin: 0;
--  padding-left: 1.5rem;
--}
--
--.cart-user-errors li {
--  margin-bottom: 0.25rem;
--}
--
--.cart-user-errors .error-field {
--  font-size: 0.9em;
--  opacity: 0.8;
--}
--
--/*
--* --------------------------------------------------
--* components/CartWarnings
--* --------------------------------------------------
--*/
--.cart-warnings {
--  background-color: #fff8dc;
--  border: 1px solid #ffd700;
--  border-radius: 4px;
--  color: #856404;
--  margin-bottom: 1rem;
--  padding: 1rem;
--}
--
--.cart-warnings h4 {
--  margin: 0 0 0.5rem 0;
--  font-weight: bold;
--}
--
--.cart-warnings ul {
--  margin: 0;
--  padding-left: 1.5rem;
--}
--
--.cart-warnings li {
--  margin-bottom: 0.25rem;
-+.Layout {
-+  padding: 2rem;
-+  max-width: 25rem;
- }
- 
- /*
-```
-
-### Step 9: eslint.config.js
-
-
-
-#### File: /eslint.config.js
-
-```diff
-@@ -1,246 +1,2 @@
--import {fixupConfigRules, fixupPluginRules} from '@eslint/compat';
--import eslintComments from 'eslint-plugin-eslint-comments';
--import react from 'eslint-plugin-react';
--import reactHooks from 'eslint-plugin-react-hooks';
--import jsxA11Y from 'eslint-plugin-jsx-a11y';
--import globals from 'globals';
--import typescriptEslint from '@typescript-eslint/eslint-plugin';
--import _import from 'eslint-plugin-import';
--import tsParser from '@typescript-eslint/parser';
--import jest from 'eslint-plugin-jest';
--import path from 'node:path';
--import {fileURLToPath} from 'node:url';
--import js from '@eslint/js';
--import {FlatCompat} from '@eslint/eslintrc';
--
--const __filename = fileURLToPath(import.meta.url);
--const __dirname = path.dirname(__filename);
--const compat = new FlatCompat({
--  baseDirectory: __dirname,
--  recommendedConfig: js.configs.recommended,
--  allConfig: js.configs.all,
--});
--
--export default [
--  {
--    ignores: [
--      '**/node_modules/',
--      '**/build/',
--      '**/dist/',
--      '**/*.graphql.d.ts',
--      '**/*.graphql.ts',
--      '**/*.generated.d.ts',
--      '**/.react-router/',
--      '**/packages/hydrogen/dist/',
--    ],
--  },
--  ...fixupConfigRules(
--    compat.extends(
--      'eslint:recommended',
--      'plugin:eslint-comments/recommended',
--      'plugin:react/recommended',
--      'plugin:react-hooks/recommended',
--      'plugin:jsx-a11y/recommended',
--    ),
--  ),
--  {
--    plugins: {
--      'eslint-comments': fixupPluginRules(eslintComments),
--      react: fixupPluginRules(react),
--      'react-hooks': fixupPluginRules(reactHooks),
--      'jsx-a11y': fixupPluginRules(jsxA11Y),
--    },
--    languageOptions: {
--      globals: {
--        ...globals.browser,
--        ...globals.node,
--      },
--      ecmaVersion: 'latest',
--      sourceType: 'module',
--      parserOptions: {
--        ecmaFeatures: {
--          jsx: true,
--        },
--      },
--    },
--    settings: {
--      react: {
--        version: 'detect',
--      },
--    },
--    rules: {
--      'eslint-comments/no-unused-disable': 'error',
--      'no-console': [
--        'warn',
--        {
--          allow: ['warn', 'error'],
--        },
--      ],
--      'no-use-before-define': 'off',
--      'no-warning-comments': 'off',
--      'object-shorthand': [
--        'error',
--        'always',
--        {
--          avoidQuotes: true,
--        },
--      ],
--      'no-useless-escape': 'off',
--      'no-case-declarations': 'off',
--    },
--  },
--  ...fixupConfigRules(
--    compat.extends(
--      'plugin:react/recommended',
--      'plugin:react/jsx-runtime',
--      'plugin:react-hooks/recommended',
--      'plugin:jsx-a11y/recommended',
--    ),
--  ).map((config) => ({
--    ...config,
--    files: ['**/*.{js,jsx,ts,tsx}'],
--  })),
--  {
--    files: ['**/*.{js,jsx,ts,tsx}'],
--    plugins: {
--      react: fixupPluginRules(react),
--      'jsx-a11y': fixupPluginRules(jsxA11Y),
--    },
--    settings: {
--      react: {
--        version: 'detect',
--      },
--      formComponents: ['Form'],
--      linkComponents: [
--        {
--          name: 'Link',
--          linkAttribute: 'to',
--        },
--        {
--          name: 'NavLink',
--          linkAttribute: 'to',
--        },
--      ],
--      'import/resolver': {
--        typescript: {},
--      },
--    },
--    rules: {
--      'jsx-a11y/control-has-associated-label': 'off',
--      'jsx-a11y/label-has-for': 'off',
--      'react/display-name': 'off',
--      'react/no-array-index-key': 'warn',
--      'react/prop-types': 'off',
--      'react/react-in-jsx-scope': 'off',
--    },
--  },
--  ...fixupConfigRules(
--    compat.extends(
--      'plugin:@typescript-eslint/recommended',
--      'plugin:import/recommended',
--      'plugin:import/typescript',
--    ),
--  ).map((config) => ({
--    ...config,
--    files: ['**/*.{ts,tsx}'],
--  })),
--  {
--    files: ['**/*.{ts,tsx}'],
--    plugins: {
--      '@typescript-eslint': fixupPluginRules(typescriptEslint),
--      import: fixupPluginRules(_import),
--    },
--    languageOptions: {
--      parser: tsParser,
--      parserOptions: {
--        project: './tsconfig.json',
--        tsconfigRootDir: __dirname,
--        ecmaFeatures: {
--          jsx: true,
--        },
--      },
--    },
--    settings: {
--      'import/internal-regex': '^~/',
--      'import/resolvers': {
--        node: {
--          extensions: ['.ts', '.tsx'],
--        },
--        typescript: {
--          alwaysTryTypes: true,
--          project: __dirname,
--        },
--      },
--    },
--    rules: {
--      '@typescript-eslint/ban-ts-comment': 'off',
--      '@typescript-eslint/explicit-module-boundary-types': 'off',
--      '@typescript-eslint/naming-convention': [
--        'error',
--        {
--          selector: 'default',
--          format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
--          leadingUnderscore: 'allowSingleOrDouble',
--          trailingUnderscore: 'allowSingleOrDouble',
--        },
--        {
--          selector: 'typeLike',
--          format: ['PascalCase'],
--        },
--        {
--          selector: 'typeParameter',
--          format: ['PascalCase'],
--          leadingUnderscore: 'allow',
--        },
--        {
--          selector: 'interface',
--          format: ['PascalCase'],
--        },
--        {
--          selector: 'property',
--          format: null,
--        },
--      ],
--      '@typescript-eslint/no-empty-function': 'off',
--      '@typescript-eslint/no-empty-interface': 'off',
--      '@typescript-eslint/no-empty-object-type': 'off',
--      '@typescript-eslint/no-explicit-any': 'off',
--      '@typescript-eslint/no-non-null-assertion': 'off',
--      '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
--      '@typescript-eslint/no-unused-vars': 'off',
--      '@typescript-eslint/no-floating-promises': 'error',
--      '@typescript-eslint/no-misused-promises': 'error',
--      'react/prop-types': 'off',
--    },
--  },
--  {
--    files: ['**/.eslintrc.cjs'],
--    languageOptions: {
--      globals: {
--        ...globals.node,
--      },
--    },
--  },
--  ...compat.extends('plugin:jest/recommended').map((config) => ({
--    ...config,
--    files: ['**/*.test.*'],
--  })),
--  {
--    files: ['**/*.test.*'],
--    plugins: {
--      jest,
--    },
--    languageOptions: {
--      globals: {
--        ...globals.node,
--        ...globals.jest,
--      },
--    },
--  },
--  {
--    files: ['**/*.server.*'],
--    rules: {
--      'react-hooks/rules-of-hooks': 'off',
--    },
--  },
--];
-+// Minimal ESLint configuration for Express template
-+export default [];
-\ No newline at end of file
-```
-
 ### Step 10: package.json
 
 
@@ -2516,7 +1650,11 @@ class AppSession {
 #### File: /vite.config.ts
 
 ```diff
-@@ -5,13 +5,15 @@ import {reactRouter} from '@react-router/dev/vite';
+@@ -1,17 +1,18 @@
+ import {defineConfig} from 'vite';
+ import {hydrogen} from '@shopify/hydrogen/vite';
+-import {oxygen} from '@shopify/mini-oxygen/vite';
+ import {reactRouter} from '@react-router/dev/vite';
  import tsconfigPaths from 'vite-tsconfig-paths';
  
  export default defineConfig({
@@ -2533,7 +1671,7 @@ class AppSession {
      optimizeDeps: {
        /**
         * Include dependencies here if they throw CJS<>ESM errors.
-@@ -23,10 +25,7 @@ export default defineConfig({
+@@ -23,10 +24,7 @@ export default defineConfig({
         * Include 'example-dep' in the array below.
         * @see https://vitejs.dev/config/dep-optimization-options
         */

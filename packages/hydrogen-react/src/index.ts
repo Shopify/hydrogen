@@ -5,6 +5,13 @@ export {
   AnalyticsPageType,
   ShopifySalesChannel,
 } from './analytics-constants.js';
+export {
+  type AnalyticsCookieOptions,
+  type AnalyticsTokens,
+  type AnalyticsTokenSource,
+  createAnalyticsCookieHeaders,
+  createAnalyticsServerTimingHeader,
+} from './analytics-tokens.js';
 export type {
   ClientBrowserParameters,
   ShopifyAddToCart,

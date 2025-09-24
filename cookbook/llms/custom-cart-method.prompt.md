@@ -67,7 +67,7 @@ Key features:
 
 ### Step 1: README.md
 
-
+Updates README with custom cart method documentation and implementation guide
 
 #### File: /README.md
 
@@ -168,12 +168,12 @@ Key features:
 
 ### Step 1: app/components/CartLineItem.tsx
 
-
+Adds variant selector functionality to cart line items for changing product options
 
 #### File: /app/components/CartLineItem.tsx
 
 ```diff
-@@ -1,6 +1,15 @@
+@@ -1,6 +1,13 @@
 -import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 +import type {
 +  CartLineUpdateInput,
@@ -185,13 +185,11 @@ Key features:
 +  CartForm,
 +  Image,
 +  type OptimisticCartLine,
-+  VariantSelector,
-+  type VariantOption,
 +} from '@shopify/hydrogen';
  import {useVariantUrl} from '~/lib/variants';
  import {Link} from 'react-router';
  import {ProductPrice} from './ProductPrice';
-@@ -54,13 +63,8 @@ export function CartLineItem({
+@@ -54,13 +61,8 @@ export function CartLineItem({
          </Link>
          <ProductPrice price={line?.cost?.totalAmount} />
          <ul>
@@ -207,7 +205,7 @@ Key features:
          </ul>
          <CartLineQuantity line={line} />
        </div>
-@@ -166,3 +170,87 @@ function CartLineUpdateButton({
+@@ -166,3 +168,94 @@ function CartLineUpdateButton({
  function getUpdateKey(lineIds: string[]) {
    return [CartForm.ACTIONS.LinesUpdate, ...lineIds].join('-');
  }
@@ -217,6 +215,25 @@ Key features:
 +  const {
 +    merchandise: {product, selectedOptions},
 +  } = line;
++
++  // If no options or only one option value per option, don't show the form
++  const hasEditableOptions = product.options?.some(
++    (option) => option.optionValues && option.optionValues.length > 1,
++  );
++
++  if (!hasEditableOptions) {
++    return (
++      <>
++        {selectedOptions.map((option) => (
++          <li key={option.name}>
++            <small>
++              {option.name}: {option.value}
++            </small>
++          </li>
++        ))}
++      </>
++    );
++  }
 +
 +  return (
 +    <CartForm
@@ -233,23 +250,48 @@ Key features:
 +    >
 +      {(fetcher) => (
 +        <>
-+          <VariantSelector
-+            handle={product.handle}
-+            options={product.options}
-+            variants={[]}
-+          >
-+            {({option}) => (
-+              <LineItemOptions
-+                option={option}
-+                selectedOptions={selectedOptions}
-+                onChange={(event) => {
-+                  void fetcher.submit(event.currentTarget.form, {
-+                    method: 'POST',
-+                  });
-+                }}
-+              />
-+            )}
-+          </VariantSelector>
++          {product.options?.map((option) => {
++            const currentValue = selectedOptions.find(
++              (selected) => selected.name === option.name,
++            )?.value;
++
++            // Skip options with only one value
++            if (!option.optionValues || option.optionValues.length <= 1) {
++              return (
++                <li key={option.name}>
++                  <small>
++                    {option.name}: {currentValue}
++                  </small>
++                </li>
++              );
++            }
++
++            return (
++              <li key={option.name}>
++                <small>
++                  {option.name}:{' '}
++                  <select
++                    name={option.name}
++                    value={currentValue}
++                    onChange={(event) => {
++                      void fetcher.submit(event.currentTarget.form, {
++                        method: 'POST',
++                      });
++                    }}
++                  >
++                    {option.optionValues.map((optionValue) => (
++                      <option
++                        key={`${option.name}-${optionValue.name}`}
++                        value={optionValue.name}
++                      >
++                        {optionValue.name}
++                      </option>
++                    ))}
++                  </select>
++                </small>
++              </li>
++            );
++          })}
 +          <noscript>
 +            <button type="submit">Update</button>
 +          </noscript>
@@ -258,48 +300,11 @@ Key features:
 +    </CartForm>
 +  );
 +}
-+
-+function LineItemOptions({
-+  option,
-+  selectedOptions,
-+  onChange,
-+}: {
-+  option: VariantOption;
-+  selectedOptions: SelectedOption[];
-+  onChange: React.ChangeEventHandler<HTMLSelectElement>;
-+}) {
-+  const defaultOption = selectedOptions.find(
-+    (selectedOption) => selectedOption.name === option.name,
-+  );
-+
-+  return (
-+    <li key={option.name}>
-+      <small>
-+        {option.name}:{' '}
-+        <select
-+          name={option.name}
-+          value={defaultOption?.value}
-+          onChange={onChange}
-+        >
-+          {option.values.map(({value, isAvailable}) => (
-+            <option
-+              key={`optionValue-${value}`}
-+              value={value}
-+              disabled={!isAvailable}
-+            >
-+              {value}
-+            </option>
-+          ))}
-+        </select>
-+      </small>
-+    </li>
-+  );
-+}
 ```
 
 ### Step 2: app/lib/context.ts
 
-
+Extends HydrogenCart context with updateLineByOptions method for variant switching
 
 #### File: /app/lib/context.ts
 
@@ -338,17 +343,7 @@ Key features:
  }
  
  /**
-@@ -40,7 +58,8 @@ export async function createHydrogenRouterContext(
-     AppSession.init(request, [env.SESSION_SECRET]),
-   ]);
- 
--  const hydrogenContext = createHydrogenContext(
-+  // @description Create a placeholder context first to reference in customMethods
-+  const hydrogenContext: ReturnType<typeof createHydrogenContext> = createHydrogenContext(
-     {
-       env,
-       request,
-@@ -51,6 +70,33 @@ export async function createHydrogenRouterContext(
+@@ -52,6 +70,33 @@ export async function createHydrogenRouterContext(
        i18n: {language: 'EN', country: 'US'},
        cart: {
          queryFragment: CART_QUERY_FRAGMENT,
@@ -380,42 +375,46 @@ Key features:
 +          },
 +        },
        },
-     },
-     additionalContext,
+       analytics: {
+         enabled: true,
 ```
 
 ### Step 3: app/lib/fragments.ts
 
-
+Adds product options to cart fragments and creates PRODUCT_VARIANT_QUERY for fetching variants
 
 #### File: /app/lib/fragments.ts
 
 ```diff
-@@ -47,6 +47,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
+@@ -47,6 +47,13 @@ export const CART_QUERY_FRAGMENT = `#graphql
            title
            id
            vendor
 +          # @description Add product options for variant selection
 +          options {
 +            name
-+            values
++            optionValues {
++              name
++            }
 +          }
          }
          selectedOptions {
            name
-@@ -97,6 +102,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
+@@ -97,6 +104,13 @@ export const CART_QUERY_FRAGMENT = `#graphql
            title
            id
            vendor
 +          # @description Add product options for variant selection
 +          options {
 +            name
-+            values
++            optionValues {
++              name
++            }
 +          }
          }
          selectedOptions {
            name
-@@ -231,3 +241,23 @@ export const FOOTER_QUERY = `#graphql
+@@ -232,3 +246,23 @@ export const FOOTER_QUERY = `#graphql
    }
    ${MENU_FRAGMENT}
  ` as const;
@@ -443,7 +442,7 @@ Key features:
 
 ### Step 4: app/routes/cart.tsx
 
-
+Implements CustomUpdateLineByOptions action handler for processing variant changes in cart
 
 #### File: /app/routes/cart.tsx
 

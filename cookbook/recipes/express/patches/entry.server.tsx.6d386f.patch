@@ -1,7 +1,7 @@
-index 6f5c4abfc..a407bed64 100644
+index 86cf79ca3..63d5d820d 100644
 --- a/templates/skeleton/app/entry.server.tsx
 +++ b/templates/skeleton/app/entry.server.tsx
-@@ -1,53 +1,77 @@
+@@ -1,73 +1,97 @@
 +import {PassThrough} from 'node:stream';
 +import type {EntryContext} from 'react-router';
 +import {createReadableStreamFromReadable} from '@react-router/node';
@@ -13,6 +13,8 @@ index 6f5c4abfc..a407bed64 100644
  import {
    createContentSecurityPolicy,
    type HydrogenRouterContextProvider,
+   createAnalyticsServerTimingHeader,
+   createAnalyticsCookieHeaders,
  } from '@shopify/hydrogen';
 -import type {EntryContext} from 'react-router';
  
@@ -68,9 +70,14 @@ index 6f5c4abfc..a407bed64 100644
 +    const readyOption: keyof RenderToPipeableStreamOptions =
 +      userAgent && isbot(userAgent) ? 'onAllReady' : 'onShellReady';
  
--  return new Response(body, {
--    headers: responseHeaders,
--    status: responseStatusCode,
+-  if (context.analyticsTokens) {
+-    const serverTimingValue = createAnalyticsServerTimingHeader(context.analyticsTokens);
+-    if (serverTimingValue) {
+-      responseHeaders.set('Server-Timing', serverTimingValue);
+-    }
+-    
+-    const cookieHeaders = createAnalyticsCookieHeaders(
+-      context.analyticsTokens,
 +    const {pipe, abort} = renderToPipeableStream(
 +      <NonceProvider>
 +        <ServerRouter
@@ -79,7 +86,8 @@ index 6f5c4abfc..a407bed64 100644
 +          nonce={nonce}
 +        />
 +      </NonceProvider>,
-+      {
+       {
+-        requestUrl: request.url,
 +        nonce,
 +        [readyOption]() {
 +          shellRendered = true;
@@ -88,6 +96,24 @@ index 6f5c4abfc..a407bed64 100644
 +
 +          responseHeaders.set('Content-Type', 'text/html');
 +          responseHeaders.set('Content-Security-Policy', header);
++
++          if (context.analyticsTokens) {
++            const serverTimingValue = createAnalyticsServerTimingHeader(context.analyticsTokens);
++            if (serverTimingValue) {
++              responseHeaders.set('Server-Timing', serverTimingValue);
++            }
++            
++            const cookieHeaders = createAnalyticsCookieHeaders(
++              context.analyticsTokens,
++              {
++                requestUrl: request.url,
++              },
++            );
++            
++            cookieHeaders.forEach(cookieHeader => {
++              responseHeaders.append('Set-Cookie', cookieHeader);
++            });
++          }
 +
 +          resolve(
 +            new Response(stream, {
@@ -107,9 +133,17 @@ index 6f5c4abfc..a407bed64 100644
 +            console.error(error);
 +          }
 +        },
-+      },
-+    );
-+
+       },
+     );
+-    
+-    cookieHeaders.forEach(cookieHeader => {
+-      responseHeaders.append('Set-Cookie', cookieHeader);
+-    });
+-  }
+ 
+-  return new Response(body, {
+-    headers: responseHeaders,
+-    status: responseStatusCode,
 +    setTimeout(abort, ABORT_DELAY);
    });
 -}

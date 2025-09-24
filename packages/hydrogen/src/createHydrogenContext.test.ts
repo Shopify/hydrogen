@@ -82,7 +82,7 @@ describe('createHydrogenContext', () => {
 
   describe('storefront client', () => {
     it('returns storefront client', async () => {
-      const hydrogenContext = createHydrogenContext(defaultOptions);
+      const hydrogenContext = await createHydrogenContext(defaultOptions);
 
       expect(hydrogenContext).toEqual(
         expect.objectContaining({storefront: expect.any(Object)}),
@@ -92,7 +92,7 @@ describe('createHydrogenContext', () => {
     it('called createStorefrontClient with default values', async () => {
       const mockRequest = new Request('https://localhost');
 
-      createHydrogenContext({
+      await createHydrogenContext({
         ...defaultOptions,
         request: mockRequest,
       });
@@ -116,7 +116,7 @@ describe('createHydrogenContext', () => {
         purpose: 'purpose value',
       };
 
-      createHydrogenContext({
+      await createHydrogenContext({
         ...defaultOptions,
         storefront: {
           headers: mockStorefrontHeaders,
@@ -131,7 +131,7 @@ describe('createHydrogenContext', () => {
     });
 
     it('called createStorefrontClient with values that does not have default', async () => {
-      createHydrogenContext({
+      await createHydrogenContext({
         ...defaultOptions,
         i18n: {language: 'EN', country: 'CA'},
       });
@@ -151,7 +151,7 @@ describe('createHydrogenContext', () => {
         purpose: 'purpose',
       };
 
-      createHydrogenContext({
+      await createHydrogenContext({
         ...defaultOptions,
         storefront: {headers: mockeStorefrontHeaders},
       });
@@ -166,7 +166,7 @@ describe('createHydrogenContext', () => {
     it('called createStorefrontClient with renamed apiVersion key', async () => {
       const mockApiVersion = 'new storefrontApiVersion';
 
-      createHydrogenContext({
+      await createHydrogenContext({
         ...defaultOptions,
         storefront: {
           apiVersion: mockApiVersion,
@@ -195,7 +195,7 @@ describe('createHydrogenContext', () => {
 
     it('called createCustomerAccountClient with values that does not have default', async () => {
       const mockAuthUrl = 'customerAccountId overwrite';
-      createHydrogenContext({
+      await createHydrogenContext({
         ...defaultOptions,
         customerAccount: {
           authUrl: mockAuthUrl,
@@ -212,7 +212,7 @@ describe('createHydrogenContext', () => {
     it('called createCustomerAccountClient with renamed apiVersion key', async () => {
       const mockApiVersion = 'new customerApiVersion';
 
-      createHydrogenContext({
+      await createHydrogenContext({
         ...defaultOptions,
         customerAccount: {
           apiVersion: mockApiVersion,
@@ -229,7 +229,7 @@ describe('createHydrogenContext', () => {
 
   describe('cart client', () => {
     it('returns cart client', async () => {
-      const hydrogenContext = createHydrogenContext(defaultOptions);
+      const hydrogenContext = await createHydrogenContext(defaultOptions);
 
       expect(hydrogenContext).toStrictEqual(
         expect.objectContaining({cart: expect.any(Object)}),
@@ -239,7 +239,7 @@ describe('createHydrogenContext', () => {
     it('called createCartHandler with default values', async () => {
       const mockRequest = new Request('https://localhost');
 
-      const hydrogenContext = createHydrogenContext({
+      const hydrogenContext = await createHydrogenContext({
         ...defaultOptions,
         request: mockRequest,
       });
@@ -267,7 +267,7 @@ describe('createHydrogenContext', () => {
         return 'mock getCartId';
       };
 
-      createHydrogenContext({
+      await createHydrogenContext({
         ...defaultOptions,
         cart: {
           getId: mockGetCartId,
@@ -284,7 +284,7 @@ describe('createHydrogenContext', () => {
     it('called createCartHandler with values that does not have default', async () => {
       const mockCartQueryFragment = 'mock cartQueryFragment';
 
-      createHydrogenContext({
+      await createHydrogenContext({
         ...defaultOptions,
         cart: {
           queryFragment: mockCartQueryFragment,
@@ -303,7 +303,7 @@ describe('createHydrogenContext', () => {
         return 'mock getCartId';
       };
 
-      createHydrogenContext({
+      await createHydrogenContext({
         ...defaultOptions,
         cart: {
           getId: mockGetCartId,
@@ -324,7 +324,7 @@ describe('createHydrogenContext', () => {
         return new Headers();
       };
 
-      createHydrogenContext({
+      await createHydrogenContext({
         ...defaultOptions,
         cart: {
           setId: mockSetCartId,
@@ -343,7 +343,7 @@ describe('createHydrogenContext', () => {
     it('called createCartHandler with renamed queryFragment key', async () => {
       const mockQueryFragment = 'new queryFragment';
 
-      createHydrogenContext({
+      await createHydrogenContext({
         ...defaultOptions,
         cart: {
           queryFragment: mockQueryFragment,
@@ -360,7 +360,7 @@ describe('createHydrogenContext', () => {
     it('called createCartHandler with renamed mutateFragment key', async () => {
       const mockMutateFragment = 'new mutateFragment';
 
-      createHydrogenContext({
+      await createHydrogenContext({
         ...defaultOptions,
         cart: {
           mutateFragment: mockMutateFragment,
@@ -376,14 +376,14 @@ describe('createHydrogenContext', () => {
 
     describe('cart return based on options', () => {
       it('returns cart handler with HydrogenCart if there cart.customMethods key does not exist', async () => {
-        const hydrogenContext = createHydrogenContext(defaultOptions);
+        const hydrogenContext = await createHydrogenContext(defaultOptions);
 
         expect(hydrogenContext).toHaveProperty('cart');
         expectTypeOf(hydrogenContext.cart).toEqualTypeOf<HydrogenCart>();
       });
 
       it('returns cart handler with HydrogenCart if there cart.customMethods is undefined', async () => {
-        const hydrogenContext = createHydrogenContext({
+        const hydrogenContext = await createHydrogenContext({
           ...defaultOptions,
           cart: {customMethods: undefined},
         });
@@ -395,7 +395,7 @@ describe('createHydrogenContext', () => {
       it('returns cart handler with HydrogenCartCustom if there cart.customMethods is defined', async () => {
         const customMethods = {arrowFunction: () => {}};
 
-        const hydrogenContext = createHydrogenContext({
+        const hydrogenContext = await createHydrogenContext({
           ...defaultOptions,
           cart: {customMethods},
         });
@@ -409,7 +409,7 @@ describe('createHydrogenContext', () => {
       it('returns cart handler with HydrogenCartCustom if there cart.customMethods is defined using method definition', async () => {
         const customMethods = {methodDefinition() {}};
 
-        const hydrogenContext = createHydrogenContext({
+        const hydrogenContext = await createHydrogenContext({
           ...defaultOptions,
           cart: {customMethods},
         });
@@ -423,7 +423,7 @@ describe('createHydrogenContext', () => {
       it('returns cart handler with HydrogenCartCustom if there cart.customMethods is defined using method definition and declare inline', async () => {
         // this will pass in ts file but fail in js file.
         // which is why we still left a note in the custom-cart-method example to avoid using method definition
-        const hydrogenContext = createHydrogenContext({
+        const hydrogenContext = await createHydrogenContext({
           ...defaultOptions,
           cart: {
             customMethods: {
@@ -439,7 +439,7 @@ describe('createHydrogenContext', () => {
       });
 
       it('returns cart handler with HydrogenCart if there cart.customMethods is an empty object', async () => {
-        const hydrogenContext = createHydrogenContext({
+        const hydrogenContext = await createHydrogenContext({
           ...defaultOptions,
           cart: {
             customMethods: {},
@@ -456,7 +456,7 @@ describe('createHydrogenContext', () => {
     it('returns env as it was passed in', async () => {
       const customizedEnv = {...mockEnv, extraKey: 'extra key value'};
 
-      const hydrogenContext = createHydrogenContext({
+      const hydrogenContext = await createHydrogenContext({
         ...defaultOptions,
         env: customizedEnv,
       });
@@ -472,7 +472,7 @@ describe('createHydrogenContext', () => {
       const mockWaitUntil = vi.fn();
       const second = vi.fn();
 
-      const hydrogenContext = createHydrogenContext({
+      const hydrogenContext = await createHydrogenContext({
         ...defaultOptions,
         waitUntil: mockWaitUntil,
       });
@@ -487,7 +487,7 @@ describe('createHydrogenContext', () => {
     it('returns waitUntil as it was passed in', async () => {
       const mockSession = {} as HydrogenSession;
 
-      const hydrogenContext = createHydrogenContext({
+      const hydrogenContext = await createHydrogenContext({
         ...defaultOptions,
         session: mockSession,
       });
@@ -499,16 +499,16 @@ describe('createHydrogenContext', () => {
   });
 
   describe('React Router proxy behavior', () => {
-    it('should support both get() and set() methods from RouterContextProvider', () => {
-      const hydrogenContext = createHydrogenContext(defaultOptions);
+    it('should support both get() and set() methods from RouterContextProvider', async () => {
+      const hydrogenContext = await createHydrogenContext(defaultOptions);
 
       // Check that RouterContextProvider methods exist
       expect(typeof hydrogenContext.get).toBe('function');
       expect(typeof hydrogenContext.set).toBe('function');
     });
 
-    it('should allow setting and getting custom context values', () => {
-      const hydrogenContext = createHydrogenContext(defaultOptions);
+    it('should allow setting and getting custom context values', async () => {
+      const hydrogenContext = await createHydrogenContext(defaultOptions);
 
       // Use React Router's createContext
       const {createContext} = require('react-router');
@@ -523,8 +523,8 @@ describe('createHydrogenContext', () => {
       expect(retrieved).toEqual(customValue);
     });
 
-    it('should support both direct access and get() method for Hydrogen services', () => {
-      const hydrogenContext = createHydrogenContext(defaultOptions);
+    it('should support both direct access and get() method for Hydrogen services', async () => {
+      const hydrogenContext = await createHydrogenContext(defaultOptions);
 
       // Direct access should work
       expect(hydrogenContext.storefront).toBeDefined();
@@ -545,8 +545,8 @@ describe('createHydrogenContext', () => {
       expect(hydrogenContext.get(sessionContext)).toBe(hydrogenContext.session);
     });
 
-    it('should properly enumerate both RouterContextProvider and Hydrogen properties', () => {
-      const hydrogenContext = createHydrogenContext(defaultOptions);
+    it('should properly enumerate both RouterContextProvider and Hydrogen properties', async () => {
+      const hydrogenContext = await createHydrogenContext(defaultOptions);
 
       const keys = Object.keys(hydrogenContext);
 
@@ -562,9 +562,9 @@ describe('createHydrogenContext', () => {
       expect('set' in hydrogenContext).toBe(true);
     });
 
-    it('should support optional waitUntil in context', () => {
+    it('should support optional waitUntil in context', async () => {
       const mockWaitUntil = vi.fn();
-      const hydrogenContext = createHydrogenContext({
+      const hydrogenContext = await createHydrogenContext({
         ...defaultOptions,
         waitUntil: mockWaitUntil,
       });
@@ -576,8 +576,8 @@ describe('createHydrogenContext', () => {
       expect(hydrogenContext.get(waitUntilContext)).toBe(mockWaitUntil);
     });
 
-    it('should handle undefined waitUntil correctly', () => {
-      const hydrogenContext = createHydrogenContext(defaultOptions);
+    it('should handle undefined waitUntil correctly', async () => {
+      const hydrogenContext = await createHydrogenContext(defaultOptions);
 
       // Direct access returns undefined
       expect(hydrogenContext.waitUntil).toBeUndefined();

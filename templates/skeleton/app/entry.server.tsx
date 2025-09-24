@@ -4,6 +4,8 @@ import {renderToReadableStream} from 'react-dom/server';
 import {
   createContentSecurityPolicy,
   type HydrogenRouterContextProvider,
+  createAnalyticsServerTimingHeader,
+  createAnalyticsCookieHeaders,
 } from '@shopify/hydrogen';
 import type {EntryContext} from 'react-router';
 
@@ -45,6 +47,24 @@ export default async function handleRequest(
 
   responseHeaders.set('Content-Type', 'text/html');
   responseHeaders.set('Content-Security-Policy', header);
+
+  if (context.analyticsTokens) {
+    const serverTimingValue = createAnalyticsServerTimingHeader(context.analyticsTokens);
+    if (serverTimingValue) {
+      responseHeaders.set('Server-Timing', serverTimingValue);
+    }
+    
+    const cookieHeaders = createAnalyticsCookieHeaders(
+      context.analyticsTokens,
+      {
+        requestUrl: request.url,
+      },
+    );
+    
+    cookieHeaders.forEach(cookieHeader => {
+      responseHeaders.append('Set-Cookie', cookieHeader);
+    });
+  }
 
   return new Response(body, {
     headers: responseHeaders,

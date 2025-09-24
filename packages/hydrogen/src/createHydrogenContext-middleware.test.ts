@@ -33,8 +33,8 @@ describe('createHydrogenContext with v8_middleware compatibility', () => {
   const mockWaitUntil = vi.fn();
   const mockCache = {} as Cache;
 
-  it('should support both direct property access and get() method', () => {
-    const context = createHydrogenContext(
+  it('should support both direct property access and get() method', async () => {
+    const context = await createHydrogenContext(
       {
         env: mockEnv,
         request: mockRequest,
@@ -65,8 +65,8 @@ describe('createHydrogenContext with v8_middleware compatibility', () => {
     expect(context.get(envContext)).toBe(context.env);
   });
 
-  it('should work with v8_middleware context pattern', () => {
-    const context = createHydrogenContext(
+  it('should work with v8_middleware context pattern', async () => {
+    const context = await createHydrogenContext(
       {
         env: mockEnv,
         request: mockRequest,
@@ -99,7 +99,7 @@ describe('createHydrogenContext with v8_middleware compatibility', () => {
   });
 
   it('should maintain context key access through get() method', async () => {
-    const context = createHydrogenContext(
+    const context = await createHydrogenContext(
       {
         env: mockEnv,
         request: mockRequest,
@@ -129,8 +129,8 @@ describe('createHydrogenContext with v8_middleware compatibility', () => {
     expect(envViaGet).toBe(mockEnv);
   });
 
-  it('should work in server.ts pattern with getLoadContext', () => {
-    const context = createHydrogenContext(
+  it('should work in server.ts pattern with getLoadContext', async () => {
+    const context = await createHydrogenContext(
       {
         env: mockEnv,
         request: mockRequest,
@@ -156,8 +156,8 @@ describe('createHydrogenContext with v8_middleware compatibility', () => {
     expect(loadContext.storefront.query).toBeDefined();
   });
 
-  it('should properly type check with TypeScript types', () => {
-    const context = createHydrogenContext(
+  it('should properly type check with TypeScript types', async () => {
+    const context = await createHydrogenContext(
       {
         env: mockEnv,
         request: mockRequest,

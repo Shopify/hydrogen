@@ -1,7 +1,7 @@
-index 6f5c4abfc..a2443e77b 100644
+index 86cf79ca3..bca5b7778 100644
 --- a/templates/skeleton/app/entry.server.tsx
 +++ b/templates/skeleton/app/entry.server.tsx
-@@ -19,6 +19,19 @@ export default async function handleRequest(
+@@ -21,6 +21,19 @@ export default async function handleRequest(
        checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
        storeDomain: context.env.PUBLIC_STORE_DOMAIN,
      },

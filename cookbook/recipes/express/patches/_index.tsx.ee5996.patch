@@ -1,4 +1,4 @@
-index 28102dbe6..dc121c804 100644
+index 28102dbe6..397e03fc6 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
 @@ -1,171 +1,28 @@
@@ -106,18 +106,10 @@ index 28102dbe6..dc121c804 100644
 -      <h1>{collection.title}</h1>
 -    </Link>
 -  );
+-}
 +export function ErrorBoundary() {
 +  const error = useRouteError();
-+
-+  if (isRouteErrorResponse(error)) {
-+    console.error(error.status, error.statusText, error.data);
-+    return <div>Route Error</div>;
-+  } else {
-+    console.error((error as Error).message);
-+    return <div>Thrown Error</div>;
-+  }
- }
--
+ 
 -function RecommendedProducts({
 -  products,
 -}: {
@@ -156,7 +148,13 @@ index 28102dbe6..dc121c804 100644
 -      height
 -    }
 -    handle
--  }
++  if (isRouteErrorResponse(error)) {
++    console.error(error.status, error.statusText, error.data);
++    return <div>Route Error</div>;
++  } else {
++    console.error((error as Error).message);
++    return <div>Thrown Error</div>;
+   }
 -  query FeaturedCollection($country: CountryCode, $language: LanguageCode)
 -    @inContext(country: $country, language: $language) {
 -    collections(first: 1, sortKey: UPDATED_AT, reverse: true) {
@@ -195,3 +193,5 @@ index 28102dbe6..dc121c804 100644
 -    }
 -  }
 -` as const;
++}
+\ No newline at end of file

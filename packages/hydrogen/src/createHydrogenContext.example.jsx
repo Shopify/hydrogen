@@ -15,7 +15,7 @@ export default {
     ]);
 
     /* Create context objects required to use Hydrogen with your credentials and options */
-    const hydrogenContext = createHydrogenContext({
+    const hydrogenContext = await createHydrogenContext({
       /* Environment variables from the fetch function */
       env,
       /* Request object from the fetch function */

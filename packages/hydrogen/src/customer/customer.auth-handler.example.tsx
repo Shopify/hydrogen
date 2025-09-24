@@ -15,7 +15,7 @@ export default {
     const session = await AppSession.init(request, [env.SESSION_SECRET]);
 
     // Create the Hydrogen context with all the standard services
-    const hydrogenContext = createHydrogenContext({
+    const hydrogenContext = await createHydrogenContext({
       env,
       request,
       cache: {} as Cache, // Use your cache implementation

@@ -2,12 +2,14 @@
 
 gid: e1bfda7e-18d3-497e-8917-9d15ab0ef1cf
 title: Markets
-summary: This recipe adds basic localization support to your Hydrogen app using
-  Shopify Markets.
+summary: This recipe adds comprehensive localization support to your Hydrogen app using
+  Shopify Markets with locale-aware routing and unified Link components.
 description: |
   This recipe shows how to add support for [Shopify
   Markets](https://shopify.dev/docs/apps/build/markets) to your Hydrogen app. Markets
   let you segment your audience based on location and serve different content to each market.
+  Implements locale-aware routing with ($locale) dynamic segments, unified Link component for
+  automatic locale prefixes, and comprehensive i18n utilities for path transformation.
 
   You can use Markets in a variety of ways. In this recipe,
   you'll set up basic localization support for your Hydrogen store,
@@ -430,4 +432,4 @@ llms:
       solution: Make sure you update *all* routes that need localization (not only the
         routes for the home page, the cart page, and the product page). See step
         2.1 for details.
-commit: 147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7
+commit: 25290311dd1d135ab90bca26fb496d2b92c8631a
