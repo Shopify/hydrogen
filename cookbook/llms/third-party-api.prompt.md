@@ -162,7 +162,7 @@ This pattern is perfect for integrating:
 Create a new GraphQL client factory that integrates with Oxygen's caching system.
 This client handles query minification, error handling, and cache key generation.
 
-#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
+#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
 
 ```ts
 import {
@@ -237,7 +237,7 @@ in all routes. Also update TypeScript declarations for proper type support.
 #### File: /app/lib/context.ts
 
 ```diff
-@@ -1,25 +1,11 @@
+@@ -1,25 +1,10 @@
  import {createHydrogenContext} from '@shopify/hydrogen';
  import {AppSession} from '~/lib/session';
  import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
@@ -257,7 +257,6 @@ in all routes. Also update TypeScript declarations for proper type support.
 -declare global {
 -  interface HydrogenAdditionalContext extends AdditionalContextType {}
 -}
-+// @description Import the Rick and Morty client for third-party GraphQL queries
 +import {createRickAndMortyClient} from '~/lib/createRickAndMortyClient.server';
  
  /**
@@ -266,7 +265,7 @@ in all routes. Also update TypeScript declarations for proper type support.
   * Returns HydrogenRouterContextProvider with hybrid access patterns
   * */
  export async function createHydrogenRouterContext(
-@@ -40,6 +26,19 @@ export async function createHydrogenRouterContext(
+@@ -40,6 +25,19 @@ export async function createHydrogenRouterContext(
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
  
@@ -286,7 +285,7 @@ in all routes. Also update TypeScript declarations for proper type support.
    const hydrogenContext = createHydrogenContext(
      {
        env,
-@@ -58,3 +57,12 @@ export async function createHydrogenRouterContext(
+@@ -58,3 +56,12 @@ export async function createHydrogenRouterContext(
  
    return hydrogenContext;
  }
@@ -299,6 +298,7 @@ in all routes. Also update TypeScript declarations for proper type support.
 +declare global {
 +  interface HydrogenAdditionalContext extends AdditionalContextType {}
 +}
+\ No newline at end of file
 ```
 
 ### Step 3: Query and display third-party data
