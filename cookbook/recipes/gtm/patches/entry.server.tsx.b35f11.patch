@@ -1,4 +1,4 @@
-index 6f5c4abfc..b8eb74f4b 100644
+index 6f5c4abf..b8eb74f4 100644
 --- a/templates/skeleton/app/entry.server.tsx
 +++ b/templates/skeleton/app/entry.server.tsx
 @@ -15,6 +15,24 @@ export default async function handleRequest(
