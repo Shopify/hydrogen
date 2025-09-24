@@ -1,4 +1,4 @@
-index a9f479ea7..9625a81e5 100644
+index a9f479ea7..2d30caa0d 100644
 --- a/templates/skeleton/app/routes/account.orders._index.tsx
 +++ b/templates/skeleton/app/routes/account.orders._index.tsx
 @@ -1,222 +1,184 @@
@@ -90,7 +90,7 @@ index a9f479ea7..9625a81e5 100644
 +    if (error instanceof Error) {
 +      return data({error: error.message}, {status: 400});
 +    }
-+    return data({error}, {status: 400});
++    return data({error: String(error)}, {status: 400});
 +  }
  }
  
