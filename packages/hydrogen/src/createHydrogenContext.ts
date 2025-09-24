@@ -252,7 +252,10 @@ export async function createHydrogenContext<
     customerAccount,
   });
 
-  // Fetch analytics tokens if enabled
+  // Create React Router context provider (must be synchronous)
+  const routerProvider = new RouterContextProvider();
+
+  // Fetch analytics tokens if enabled (async operation)
   let analyticsTokens: AnalyticsTokens | undefined;
   if (analyticsOptions?.enabled) {
     analyticsTokens = await getBackendApprovedTokens(
@@ -261,9 +264,6 @@ export async function createHydrogenContext<
       env.PUBLIC_CHECKOUT_DOMAIN,
     );
   }
-
-  // Create React Router context provider
-  const routerProvider = new RouterContextProvider();
 
   // Set React Router context keys (enables context.get(storefrontContext))
   routerProvider.set(storefrontContext, storefront);

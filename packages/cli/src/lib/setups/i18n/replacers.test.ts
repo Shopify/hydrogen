@@ -99,7 +99,7 @@ describe('i18n replacers', () => {
             AppSession.init(request, [env.SESSION_SECRET]),
           ]);
 
-          const hydrogenContext = createHydrogenContext(
+          const hydrogenContext = await createHydrogenContext(
             {
               env,
               request,
@@ -110,6 +110,9 @@ describe('i18n replacers', () => {
               i18n: getLocaleFromRequest(request),
               cart: {
                 queryFragment: CART_QUERY_FRAGMENT,
+              },
+              analytics: {
+                enabled: true,
               },
             },
             additionalContext
