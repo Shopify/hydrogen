@@ -1,4 +1,4 @@
-index 9b7b86cbd..c1aa68ad8 100644
+index 9b7b86cb..c1aa68ad 100644
 --- a/templates/skeleton/app/entry.client.tsx
 +++ b/templates/skeleton/app/entry.client.tsx
 @@ -1,21 +1,13 @@

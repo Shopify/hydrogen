@@ -1,4 +1,4 @@
-index a17024462..058b559de 100644
+index a1702446..058b559d 100644
 --- a/templates/skeleton/vite.config.ts
 +++ b/templates/skeleton/vite.config.ts
 @@ -5,13 +5,15 @@ import {reactRouter} from '@react-router/dev/vite';

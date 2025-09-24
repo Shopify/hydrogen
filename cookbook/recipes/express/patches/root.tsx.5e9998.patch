@@ -1,4 +1,4 @@
-index fa83da97e..1ba9888f0 100644
+index df87425c..1ba9888f 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -11,46 +11,20 @@ import {
@@ -164,12 +164,11 @@ index fa83da97e..1ba9888f0 100644
        consent={data.consent}
      >
 -      <PageLayout {...data}>
--        <Outlet />;
--      </PageLayout>
 +      <div className="PageLayout">
 +        <h1>{data.layout?.shop?.name} (Express example)</h1>
 +        <h2>{data.layout?.shop?.description}</h2>
-+        <Outlet />
+         <Outlet />
+-      </PageLayout>
 +      </div>
      </Analytics.Provider>
    );
