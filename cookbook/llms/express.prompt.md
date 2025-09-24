@@ -77,7 +77,7 @@ Key changes:
 > GraphQL codegen still works with Storefront API types
 
 > [!NOTE]
-> Compatible with React Router 7.8.x
+> Compatible with React Router 7.9.x
 
 > [!NOTE]
 > The .graphqlrc.ts file is preserved with customer account section commented out
