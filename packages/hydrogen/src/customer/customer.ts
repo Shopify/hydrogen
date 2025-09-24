@@ -48,7 +48,11 @@ import type {
   LogoutOptions,
   Buyer,
 } from './types';
-import {createCustomerAccountHelper, URL_TYPE} from './customer-account-helper';
+import {
+  createCustomerAccountHelper,
+  createCustomerAccountHelperWithDiscovery,
+  URL_TYPE,
+} from './customer-account-helper';
 import {warnOnce} from '../utils/warning';
 import {LanguageCode} from '@shopify/hydrogen-react/customer-account-api-types';
 
@@ -96,6 +100,8 @@ export function createCustomerAccountClient({
   authorizePath = '/account/authorize',
   defaultRedirectPath = '/account',
   language,
+  useDiscovery = true,
+  storefrontDomain,
 }: CustomerAccountOptions): CustomerAccount {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -130,17 +136,49 @@ export function createCustomerAccountClient({
     redirectUrl: authUrl,
   });
 
-  const getCustomerAccountUrl = createCustomerAccountHelper(
-    customerApiVersion,
-    shopId,
-  );
+  // Extract storefront domain from request if not provided
+  const resolvedStorefrontDomain = storefrontDomain || requestUrl.hostname;
+
+  // For now, use the synchronous helper but with a lazy discovery promise
+  let getCustomerAccountUrlPromise: Promise<
+    (urlType: URL_TYPE) => string
+  > | null = null;
+
+  const getCustomerAccountUrl = (urlType: URL_TYPE): string => {
+    return createCustomerAccountHelper(
+      customerApiVersion,
+      shopId,
+      resolvedStorefrontDomain,
+      useDiscovery,
+    )(urlType);
+  };
+
+  const getCustomerAccountUrlAsync = async (
+    urlType: URL_TYPE,
+  ): Promise<string> => {
+    if (!useDiscovery || !resolvedStorefrontDomain) {
+      // Fallsback to legacy helper
+      return getCustomerAccountUrl(urlType);
+    }
+
+    if (!getCustomerAccountUrlPromise) {
+      getCustomerAccountUrlPromise = createCustomerAccountHelperWithDiscovery(
+        customerApiVersion,
+        shopId,
+        resolvedStorefrontDomain,
+        useDiscovery,
+      );
+    }
+
+    const helper = await getCustomerAccountUrlPromise;
+    return helper(urlType);
+  };
 
   const ifInvalidCredentialThrowError = createIfInvalidCredentialThrowError(
-    getCustomerAccountUrl,
+    getCustomerAccountUrlAsync,
     customerAccountId,
   );
 
-  const customerAccountApiUrl = getCustomerAccountUrl(URL_TYPE.GRAPHQL);
   const locks: Locks = {};
 
   async function fetchCustomerAPI<T>({
@@ -163,6 +201,10 @@ export function createCustomerAccountClient({
     const stackInfo = getCallerStackLine?.();
 
     const startTime = new Date().getTime();
+
+    const customerAccountApiUrl = await getCustomerAccountUrlAsync(
+      URL_TYPE.GRAPHQL,
+    );
 
     const response = await fetch(customerAccountApiUrl, {
       method: 'POST',
@@ -260,7 +302,7 @@ export function createCustomerAccountClient({
         expiresAt,
         session,
         customerAccountId,
-        customerAccountTokenExchangeUrl: getCustomerAccountUrl(
+        customerAccountTokenExchangeUrl: await getCustomerAccountUrlAsync(
           URL_TYPE.TOKEN_EXCHANGE,
         ),
         httpsOrigin,
@@ -294,7 +336,7 @@ export function createCustomerAccountClient({
     mutation: Parameters<CustomerAccount['mutate']>[0],
     options?: Parameters<CustomerAccount['mutate']>[1],
   ) {
-    ifInvalidCredentialThrowError();
+    await ifInvalidCredentialThrowError();
 
     mutation = minifyQuery(mutation);
     assertMutation(mutation, 'customer.mutate');
@@ -309,7 +351,7 @@ export function createCustomerAccountClient({
     query: Parameters<CustomerAccount['query']>[0],
     options?: Parameters<CustomerAccount['query']>[1],
   ) {
-    ifInvalidCredentialThrowError();
+    await ifInvalidCredentialThrowError();
 
     query = minifyQuery(query);
     assertQuery(query, 'customer.query');
@@ -340,8 +382,8 @@ export function createCustomerAccountClient({
   return {
     i18n: {language: language ?? ('EN' as LanguageCode)},
     login: async (options?: LoginOptions) => {
-      ifInvalidCredentialThrowError();
-      const loginUrl = new URL(getCustomerAccountUrl(URL_TYPE.AUTH));
+      await ifInvalidCredentialThrowError();
+      const loginUrl = new URL(await getCustomerAccountUrlAsync(URL_TYPE.AUTH));
 
       const state = generateState();
       const nonce = generateNonce();
@@ -352,7 +394,7 @@ export function createCustomerAccountClient({
       loginUrl.searchParams.append('redirect_uri', redirectUri);
       loginUrl.searchParams.set(
         'scope',
-        getCustomerAccountUrl(URL_TYPE.LOGIN_SCOPE),
+        await getCustomerAccountUrlAsync(URL_TYPE.LOGIN_SCOPE),
       );
       loginUrl.searchParams.append('state', state);
       loginUrl.searchParams.append('nonce', nonce);
@@ -390,7 +432,7 @@ export function createCustomerAccountClient({
     },
 
     logout: async (options?: LogoutOptions) => {
-      ifInvalidCredentialThrowError();
+      await ifInvalidCredentialThrowError();
 
       const idToken = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken;
       const postLogoutRedirectUri = ensureLocalRedirectUrl({
@@ -399,12 +441,16 @@ export function createCustomerAccountClient({
         redirectUrl: options?.postLogoutRedirectUri,
       });
 
+      const graphqlUrl = await getCustomerAccountUrlAsync(URL_TYPE.GRAPHQL);
+
       const logoutUrl = idToken
         ? new URL(
-            `${getCustomerAccountUrl(URL_TYPE.LOGOUT)}?${new URLSearchParams([
-              ['id_token_hint', idToken],
-              ['post_logout_redirect_uri', postLogoutRedirectUri],
-            ]).toString()}`,
+            `${await getCustomerAccountUrlAsync(URL_TYPE.LOGOUT)}?${new URLSearchParams(
+              [
+                ['id_token_hint', idToken],
+                ['post_logout_redirect_uri', postLogoutRedirectUri],
+              ],
+            ).toString()}`,
           ).toString()
         : postLogoutRedirectUri;
 
@@ -432,11 +478,11 @@ export function createCustomerAccountClient({
     isLoggedIn,
     handleAuthStatus,
     getAccessToken,
-    getApiUrl: () => customerAccountApiUrl,
+    getApiUrl: () => getCustomerAccountUrl(URL_TYPE.GRAPHQL),
     mutate: mutate as CustomerAccount['mutate'],
     query: query as CustomerAccount['query'],
     authorize: async () => {
-      ifInvalidCredentialThrowError();
+      await ifInvalidCredentialThrowError();
 
       const code = requestUrl.searchParams.get('code');
       const state = requestUrl.searchParams.get('state');
@@ -488,7 +534,7 @@ export function createCustomerAccountClient({
 
       const stackInfo = getCallerStackLine?.();
       const startTime = new Date().getTime();
-      const url = getCustomerAccountUrl(URL_TYPE.TOKEN_EXCHANGE);
+      const url = await getCustomerAccountUrlAsync(URL_TYPE.TOKEN_EXCHANGE);
       const response = await fetch(url, {
         method: 'POST',
         headers,
@@ -537,7 +583,7 @@ export function createCustomerAccountClient({
         customerAccessToken = await exchangeAccessToken(
           access_token,
           customerAccountId,
-          getCustomerAccountUrl(URL_TYPE.TOKEN_EXCHANGE),
+          await getCustomerAccountUrlAsync(URL_TYPE.TOKEN_EXCHANGE),
           httpsOrigin,
           {
             waitUntil,
@@ -582,15 +628,15 @@ export function createCustomerAccountClient({
 }
 
 function createIfInvalidCredentialThrowError(
-  getCustomerAccountUrl: (urlType: URL_TYPE) => string,
+  getCustomerAccountUrlAsync: (urlType: URL_TYPE) => Promise<string>,
   customerAccountId?: string,
 ) {
-  return function ifInvalidCredentialThrowError() {
+  return async function ifInvalidCredentialThrowError() {
     try {
       if (!customerAccountId) throw Error();
 
-      new URL(getCustomerAccountUrl(URL_TYPE.CA_BASE_URL));
-      new URL(getCustomerAccountUrl(URL_TYPE.CA_BASE_AUTH_URL));
+      new URL(await getCustomerAccountUrlAsync(URL_TYPE.CA_BASE_URL));
+      new URL(await getCustomerAccountUrlAsync(URL_TYPE.CA_BASE_AUTH_URL));
     } catch {
       console.error(
         new Error(

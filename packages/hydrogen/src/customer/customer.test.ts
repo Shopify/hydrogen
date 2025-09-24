@@ -909,6 +909,7 @@ describe('customer', () => {
         shopId: '1',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
+        useDiscovery: false,
       });
 
       (session.get as any).mockImplementation(() => ({
@@ -981,6 +982,7 @@ describe('customer', () => {
         shopId: '1',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
+        useDiscovery: false,
       });
 
       (session.get as any).mockImplementation(() => ({
