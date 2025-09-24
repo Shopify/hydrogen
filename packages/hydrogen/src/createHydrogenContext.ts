@@ -219,6 +219,7 @@ export function createHydrogenContext<
     // defaults
     customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID,
     shopId: env.SHOP_ID,
+    storefrontDomain: env.PUBLIC_STORE_DOMAIN,
   });
 
   /*
