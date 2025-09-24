@@ -1,0 +1,16 @@
+index 3b0f6913..81ff9ec9 100644
+--- a/templates/skeleton/app/components/ProductItem.tsx
++++ b/templates/skeleton/app/components/ProductItem.tsx
+@@ -1,4 +1,3 @@
+-import {Link} from 'react-router';
+ import {Image, Money} from '@shopify/hydrogen';
+ import type {
+   ProductItemFragment,
+@@ -6,6 +5,7 @@ import type {
+   RecommendedProductFragment,
+ } from 'storefrontapi.generated';
+ import {useVariantUrl} from '~/lib/variants';
++import {Link} from './Link';
+ 
+ export function ProductItem({
+   product,

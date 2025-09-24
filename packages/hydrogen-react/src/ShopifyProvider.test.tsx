@@ -20,7 +20,7 @@ describe('<ShopifyProvider/>', () => {
   it('renders its children', () => {
     render(
       <ShopifyProvider {...SHOPIFY_CONFIG}>
-        <div>child</div>;
+        <div>child</div>
       </ShopifyProvider>,
     );
 

@@ -92,7 +92,7 @@ Add public/~partytown to ignore Partytown library files
 
 Add GTM component that loads scripts in web worker
 
-#### File: [PartytownGoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/partytown/ingredients/templates/skeleton/app/components/PartytownGoogleTagManager.tsx)
+#### File: [PartytownGoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/partytown/ingredients/templates/skeleton/app/components/PartytownGoogleTagManager.tsx)
 
 ```tsx
 import {useEffect, useRef} from 'react';
@@ -268,7 +268,7 @@ Document Partytown setup and configuration instructions
 
 Reverse proxy route for third-party scripts requiring CORS headers
 
-#### File: [reverse-proxy.ts](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/partytown/ingredients/templates/skeleton/app/routes/reverse-proxy.ts)
+#### File: [reverse-proxy.ts](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/partytown/ingredients/templates/skeleton/app/routes/reverse-proxy.ts)
 
 ```ts
 // Reverse proxies partytown libs that require CORS. Used by Partytown resolveUrl
@@ -510,7 +510,7 @@ Configure CSP headers for GTM and Google Analytics domains
 
 URL resolver to control which scripts should be reverse-proxied
 
-#### File: [maybeProxyRequest.ts](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/maybeProxyRequest.ts)
+#### File: [maybeProxyRequest.ts](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/maybeProxyRequest.ts)
 
 ```ts
 /**
@@ -623,23 +623,21 @@ Initialize Partytown and GTM in the root layout
  export default function App() {
    const data = useRouteLoaderData<RootLoader>('root');
  
-@@ -177,7 +217,8 @@ export default function App() {
+@@ -177,6 +217,7 @@ export default function App() {
        consent={data.consent}
      >
        <PageLayout {...data}>
--        <Outlet />;
 +        <PartyTownScripts gtmContainerId={data.gtmContainerId} />
-+        <Outlet />
+         <Outlet />
        </PageLayout>
      </Analytics.Provider>
-   );
 ```
 
 ### Step 4: app/utils/partytown/partytownAtomicHeaders.ts
 
 Helper utility to enable Partytown atomic mode for better performance
 
-#### File: [partytownAtomicHeaders.ts](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts)
+#### File: [partytownAtomicHeaders.ts](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts)
 
 ```ts
 /*

@@ -131,7 +131,7 @@ describe('<Analytics.Provider />', () => {
   it('renders its children', async () => {
     render(
       <Analytics.Provider cart={null} shop={SHOP_DATA} consent={CONSENT_DATA}>
-        <div>child</div>;
+        <div>child</div>
       </Analytics.Provider>,
     );
 

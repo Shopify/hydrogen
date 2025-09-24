@@ -1,0 +1,28 @@
+index 6f5c4abf..b8eb74f4 100644
+--- a/templates/skeleton/app/entry.server.tsx
++++ b/templates/skeleton/app/entry.server.tsx
+@@ -15,6 +15,24 @@ export default async function handleRequest(
+   context: HydrogenRouterContextProvider,
+ ) {
+   const {nonce, header, NonceProvider} = createContentSecurityPolicy({
++    /* @description Add Google Tag Manager domains to Content Security Policy */
++    scriptSrc: [
++      "'self'",
++      'https://cdn.shopify.com',
++      'https://*.googletagmanager.com',
++    ],
++    imgSrc: [
++      "'self'",
++      'https://cdn.shopify.com',
++      'https://*.google-analytics.com',
++      'https://*.googletagmanager.com',
++    ],
++    connectSrc: [
++      "'self'",
++      'https://*.google-analytics.com',
++      'https://*.analytics.google.com',
++      'https://*.googletagmanager.com',
++    ],
+     shop: {
+       checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
+       storeDomain: context.env.PUBLIC_STORE_DOMAIN,

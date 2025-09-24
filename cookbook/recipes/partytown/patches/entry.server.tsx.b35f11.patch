@@ -1,0 +1,23 @@
+index 6f5c4abf..a2443e77 100644
+--- a/templates/skeleton/app/entry.server.tsx
++++ b/templates/skeleton/app/entry.server.tsx
+@@ -19,6 +19,19 @@ export default async function handleRequest(
+       checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
+       storeDomain: context.env.PUBLIC_STORE_DOMAIN,
+     },
++    // @description Add CSP headers for Google Tag Manager and Analytics via Partytown
++    scriptSrc: [
++      "'self'",
++      'cdn.shopify.com',
++      'www.googletagmanager.com',
++      'www.google-analytics.com',
++      'localhost:*',
++    ],
++    connectSrc: [
++      "'self'",
++      'www.googletagmanager.com',
++      'www.google-analytics.com',
++    ],
+   });
+ 
+   const body = await renderToReadableStream(
