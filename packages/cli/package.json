@@ -21,7 +21,7 @@
     "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 LANG=en-US.UTF-8 vitest --test-timeout=60000"
   },
   "devDependencies": {
-    "@react-router/dev": "7.9.1",
+    "@react-router/dev": "7.9.2",
     "@types/diff": "^5.0.2",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/prettier": "^2.7.2",
@@ -60,7 +60,7 @@
   },
   "peerDependencies": {
     "@graphql-codegen/cli": "^5.0.2",
-    "@react-router/dev": "7.9.1",
+    "@react-router/dev": "7.9.2",
     "@shopify/hydrogen-codegen": "^0.3.3",
     "@shopify/mini-oxygen": "^3.2.1",
     "graphql-config": "^5.0.3",
