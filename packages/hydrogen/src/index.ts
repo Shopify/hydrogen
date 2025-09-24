@@ -108,6 +108,7 @@ export {
   getSelectedProductOptions,
   VariantSelector,
 } from './product/VariantSelector';
+export {hydrogenPreset} from './react-router-preset';
 export {RichText} from './RichText';
 export {graphiqlLoader} from './routing/graphiql';
 export {storefrontRedirect} from './routing/redirect';
