@@ -1,4 +1,4 @@
-index 3989ec05e..385d12f04 100644
+index 3989ec05..385d12f0 100644
 --- a/templates/skeleton/app/lib/context.ts
 +++ b/templates/skeleton/app/lib/context.ts
 @@ -1,6 +1,7 @@
