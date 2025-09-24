@@ -220,7 +220,7 @@ Updates README with GTM-specific documentation and setup instructions
 
 
 
-#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
+#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
 
 ```tsx
 import {useAnalytics} from '@shopify/hydrogen';
@@ -303,12 +303,9 @@ export function GoogleTagManager() {
          {children}
          <ScrollRestoration nonce={nonce} />
          <Scripts nonce={nonce} />
-@@ -177,8 +202,10 @@ export default function App() {
-       consent={data.consent}
-     >
+@@ -179,6 +204,8 @@ export default function App() {
        <PageLayout {...data}>
--        <Outlet />;
-+        <Outlet />
+         <Outlet />
        </PageLayout>
 +      {/* @description Initialize Google Tag Manager analytics integration */}
 +      <GoogleTagManager />

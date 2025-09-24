@@ -1,0 +1,92 @@
+index c584e537..1ac3a34c 100644
+--- a/templates/skeleton/README.md
++++ b/templates/skeleton/README.md
+@@ -1,6 +1,6 @@
+-# Hydrogen template: Skeleton
++# Hydrogen template: Skeleton + Partytown + Google Tag Manager
+ 
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify's full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, enhanced with [Partytown](https://partytown.builder.io/) for performance-oriented lazy-loading of [Google Tag Manager](https://support.google.com/tagmanager).
+ 
+ [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
+ [Get familiar with Remix](https://remix.run/docs/en/v1)
+@@ -17,12 +17,15 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
+ - GraphQL generator
+ - TypeScript and JavaScript flavors
+ - Minimal setup of components and routes
++- **Partytown** - Relocates resource intensive scripts off the main thread into a web worker
++- **Google Tag Manager** - Integration with CSP support
+ 
+ ## Getting started
+ 
+ **Requirements:**
+ 
+ - Node.js version 18.0.0 or higher
++- [Google Tag Manager ID](https://support.google.com/tagmanager/answer/6103696?hl=en) (optional)
+ 
+ ```bash
+ npm create @shopify/hydrogen@latest
+@@ -40,6 +43,62 @@ npm run build
+ npm run dev
+ ```
+ 
++## Partytown + Google Tag Manager Setup
++
++### Key files
++
++| File | Description |
++| --- | --- |
++| [`app/components/PartytownGoogleTagManager.tsx`](app/components/PartytownGoogleTagManager.tsx) | Component that loads GTM in a web worker via Partytown |
++| [`app/utils/partytown/maybeProxyRequest.ts`](app/utils/partytown/maybeProxyRequest.ts) | URL resolver for controlling which scripts should be reverse-proxied |
++| [`app/utils/partytown/partytownAtomicHeaders.ts`](app/utils/partytown/partytownAtomicHeaders.ts) | Headers utility for enabling Atomics mode |
++| [`app/routes/reverse-proxy.ts`](app/routes/reverse-proxy.ts) | Reverse proxy route for scripts requiring CORS headers |
++| [`app/root.tsx`](app/root.tsx) | Root layout with Partytown and GTM implementation |
++| [`app/entry.server.tsx`](app/entry.server.tsx) | Enhanced CSP configuration for GTM domains |
++
++### Configuration
++
++1. **Copy Partytown library files** (required for production):
++   ```bash
++   npm run partytown
++   ```
++
++2. **Set environment variables** in your `.env` file:
++   ```bash
++   GTM_CONTAINER_ID=GTM-XXXXXXX  # Your Google Tag Manager container ID
++   # OR
++   GTM_ID=GTM-XXXXXXX
++   ```
++
++3. **TypeScript users**: Add the environment variable to your type definitions in `app/env.d.ts`:
++   ```typescript
++   interface Env extends HydrogenEnv {
++     GTM_CONTAINER_ID?: `GTM-${string}`;
++     GTM_ID?: `GTM-${string}`;
++   }
++   ```
++
++### How it works
++
++1. **Partytown** runs third-party scripts in a web worker, keeping the main thread free
++2. **GTM scripts** are loaded with `type="text/partytown"` to run in the worker
++3. **Reverse proxy** handles scripts that need CORS headers
++4. **CSP headers** are configured to allow GTM and Google Analytics domains
++
++### Performance benefits
++
++- Main thread remains responsive
++- Third-party scripts don't block critical rendering
++- Better Core Web Vitals scores
++- Improved user experience
++
+ ## Setup for using Customer Account API (`/account` section)
+ 
+ Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
++
++## Resources
++
++- [Hydrogen documentation](https://shopify.dev/custom-storefronts/hydrogen)
++- [Partytown documentation](https://partytown.builder.io/)
++- [Google Tag Manager setup](https://support.google.com/tagmanager/answer/6103696)
++- [Introducing Partytown](https://dev.to/adamdbradley/introducing-partytown-run-third-party-scripts-from-a-web-worker-2cnp)
+\ No newline at end of file
