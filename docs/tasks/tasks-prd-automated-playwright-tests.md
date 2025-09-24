@@ -154,11 +154,11 @@
       - **Outcome**: Tests now pass in both normal and debug modes while still catching real errors
       - This ensures we're not masking real errors - only the cascade of errors specifically caused by Playwright's debug mode overlay
 
-  - [ ] 3.9. Wait for CI to finish and pass on PR #3.
+  - [x] 3.9. Wait for CI to finish and pass on PR #3.
 
 - [ ] 4. Test authenticated Hydrogen CLI commands with Shopify integration (PR #4)
 
-  - [ ] 4.1. Create branch `e2e_cli-authenticated` **based on `e2e_npm-scripts`**.
+  - [x] 4.1. Create branch `e2e_cli-authenticated` **based on `e2e_npm-scripts`**.
 
   - [ ] 4.2. Set up ejson secrets for test authentication:
       - **SECURITY NOTE**: Both email address and password will be treated as encrypted secrets
