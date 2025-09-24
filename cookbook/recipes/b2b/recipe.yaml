@@ -49,7 +49,7 @@ steps:
     description: null
     diffs:
       - file: README.md
-        patchFile: README.md.49f8fa.patch
+        patchFile: README.md.db10ed.patch
   - type: NEW_FILE
     step: "1"
     name: app/components/B2BLocationProvider.tsx
@@ -62,7 +62,7 @@ steps:
     description: null
     diffs:
       - file: app/components/CartLineItem.tsx
-        patchFile: CartLineItem.tsx.f93ff4.patch
+        patchFile: CartLineItem.tsx.2c9a50.patch
   - type: NEW_FILE
     step: "2"
     name: app/components/B2BLocationSelector.tsx
@@ -75,7 +75,7 @@ steps:
     description: null
     diffs:
       - file: app/components/Header.tsx
-        patchFile: Header.tsx.82c1ce.patch
+        patchFile: Header.tsx.e25645.patch
   - type: NEW_FILE
     step: "3"
     name: app/components/PriceBreaks.tsx
@@ -88,7 +88,7 @@ steps:
     description: null
     diffs:
       - file: app/components/ProductForm.tsx
-        patchFile: ProductForm.tsx.252e88.patch
+        patchFile: ProductForm.tsx.649d3b.patch
   - type: NEW_FILE
     step: "4"
     name: app/components/QuantityRules.tsx
@@ -101,7 +101,7 @@ steps:
     description: null
     diffs:
       - file: app/lib/fragments.ts
-        patchFile: fragments.ts.18726b.patch
+        patchFile: fragments.ts.026109.patch
   - type: NEW_FILE
     step: "5"
     name: app/graphql/customer-account/CustomerLocationsQuery.ts
@@ -114,7 +114,7 @@ steps:
     description: null
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.8c182c.patch
+        patchFile: root.tsx.5e9998.patch
   - type: NEW_FILE
     step: "6"
     name: app/routes/b2blocations.tsx
@@ -127,16 +127,16 @@ steps:
     description: null
     diffs:
       - file: app/routes/account_.logout.tsx
-        patchFile: account_.logout.tsx.1da785.patch
+        patchFile: account_.logout.tsx.a1f12e.patch
   - type: PATCH
     step: "8"
     name: app/routes/products.$handle.tsx
     description: null
     diffs:
       - file: app/routes/products.$handle.tsx
-        patchFile: products.$handle.tsx.7addea.patch
+        patchFile: products.$handle.tsx.6f2e82.patch
 nextSteps: null
 llms:
   userQueries: []
   troubleshooting: []
-commit: 147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7
+commit: 25290311dd1d135ab90bca26fb496d2b92c8631a
