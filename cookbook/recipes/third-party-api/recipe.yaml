@@ -13,7 +13,8 @@ description: |
      minification, error handling, and integrates with Oxygen's caching infrastructure
 
   2. **Integrate with Hydrogen's context** - Add the third-party client to the global context 
-     system, making it available in all routes and actions throughout your application
+     system, making it available in all routes and actions throughout your application. Works 
+     with the existing additionalContext pattern in React Router 7.9.x
 
   3. **Query external APIs efficiently** - Fetch data from third-party sources in parallel 
      with Shopify API calls, leveraging Oxygen's caching to minimize latency and API calls
@@ -53,10 +54,10 @@ steps:
   - type: PATCH
     step: "1"
     name: README.md
-    description: null
+    description: Update README to document the third-party API integration pattern and example
     diffs:
       - file: README.md
-        patchFile: README.md.47d06f.patch
+        patchFile: README.md.49f8fa.patch
   - type: NEW_FILE
     step: 1
     name: Create the third-party API client
@@ -69,11 +70,13 @@ steps:
     step: 2
     name: Add the client to Hydrogen context
     description: |
-      Import the Rick and Morty client and add it to the Hydrogen context so it's available
-      in all routes. Also update TypeScript declarations for proper type support.
+      Import the Rick and Morty client and integrate it with the existing additionalContext
+      pattern in the Hydrogen context. Updates the context to be a function that accepts
+      cache, waitUntil, and request parameters. Also updates TypeScript declarations for
+      proper type support.
     diffs:
       - file: app/lib/context.ts
-        patchFile: context.ts.276f49.patch
+        patchFile: context.ts.cfd9da.patch
   - type: PATCH
     step: 3
     name: Query and display third-party data
@@ -82,7 +85,7 @@ steps:
       Shopify data. This demonstrates parallel data fetching and proper caching strategies.
     diffs:
       - file: app/routes/_index.tsx
-        patchFile: _index.tsx.82ab90.patch
+        patchFile: _index.tsx.ee5996.patch
 nextSteps: |
   After applying this recipe, you can:
 
@@ -130,4 +133,4 @@ nextSteps: |
 llms:
   userQueries: []
   troubleshooting: []
-commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
+commit: 25290311dd1d135ab90bca26fb496d2b92c8631a
