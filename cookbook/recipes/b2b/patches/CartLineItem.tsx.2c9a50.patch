@@ -1,4 +1,4 @@
-index 80e34be28..1d09318c0 100644
+index 80e34be2..1d09318c 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
 @@ -76,8 +76,13 @@ export function CartLineItem({

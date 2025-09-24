@@ -1,4 +1,4 @@
-index 47c8f3056..5e3ec2c17 100644
+index 47c8f305..5e3ec2c1 100644
 --- a/templates/skeleton/app/components/ProductForm.tsx
 +++ b/templates/skeleton/app/components/ProductForm.tsx
 @@ -8,12 +8,15 @@ import {AddToCartButton} from './AddToCartButton';

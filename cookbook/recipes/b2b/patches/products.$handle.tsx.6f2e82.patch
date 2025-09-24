@@ -1,4 +1,4 @@
-index 422a2eb95..f05fd79c1 100644
+index 422a2eb9..f05fd79c 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -15,6 +15,19 @@ import {ProductPrice} from '~/components/ProductPrice';

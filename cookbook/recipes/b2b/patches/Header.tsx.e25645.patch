@@ -1,4 +1,4 @@
-index 45b620b49..12f7f1650 100644
+index 45b620b4..12f7f165 100644
 --- a/templates/skeleton/app/components/Header.tsx
 +++ b/templates/skeleton/app/components/Header.tsx
 @@ -7,6 +7,9 @@ import {

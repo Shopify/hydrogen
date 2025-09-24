@@ -1,4 +1,4 @@
-index fa83da97e..5a0fef093 100644
+index df87425c..5a0fef09 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -16,9 +16,39 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
@@ -46,7 +46,7 @@ index fa83da97e..5a0fef093 100644
        consent={data.consent}
      >
 -      <PageLayout {...data}>
--        <Outlet />;
+-        <Outlet />
 -      </PageLayout>
 +      {/* @description Wrap PageLayout with B2B location provider for company location management */}
 +      <B2BLocationProvider>

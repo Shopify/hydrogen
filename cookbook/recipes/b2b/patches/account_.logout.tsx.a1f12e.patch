@@ -1,4 +1,4 @@
-index 5e67cc857..6d331155e 100644
+index 5e67cc85..6d331155 100644
 --- a/templates/skeleton/app/routes/account_.logout.tsx
 +++ b/templates/skeleton/app/routes/account_.logout.tsx
 @@ -7,5 +7,10 @@ export async function loader() {
