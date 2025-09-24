@@ -1,4 +1,4 @@
-index fa83da97e..a2b8986a6 100644
+index df87425c..a2b8986a 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -1,4 +1,4 @@
@@ -68,13 +68,11 @@ index fa83da97e..a2b8986a6 100644
  export default function App() {
    const data = useRouteLoaderData<RootLoader>('root');
  
-@@ -177,7 +217,8 @@ export default function App() {
+@@ -177,6 +217,7 @@ export default function App() {
        consent={data.consent}
      >
        <PageLayout {...data}>
--        <Outlet />;
 +        <PartyTownScripts gtmContainerId={data.gtmContainerId} />
-+        <Outlet />
+         <Outlet />
        </PageLayout>
      </Analytics.Provider>
-   );
