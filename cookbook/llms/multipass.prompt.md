@@ -77,7 +77,7 @@ Key features:
 
 - Shopify Plus subscription for Multipass functionality
 - PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET environment variable must be set
-- React Router 7.8.x or higher
+- React Router 7.9.x or higher
 
 ## New files added to the template by this recipe
 
@@ -115,7 +115,7 @@ Update README with multipass authentication documentation
  
 -- Remix
 +### Core Hydrogen Stack
-+- Remix (React Router 7.8.x)
++- React Router
  - Hydrogen
  - Oxygen
  - Vite

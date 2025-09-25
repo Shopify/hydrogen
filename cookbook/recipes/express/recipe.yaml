@@ -21,7 +21,7 @@ notes:
   - Environment variables are loaded from .env file using dotenv
   - Session management is handled through Express middleware with SESSION_SECRET
   - GraphQL codegen still works with Storefront API types
-  - Compatible with React Router 7.8.x
+  - Compatible with React Router 7.9.x
   - The .graphqlrc.ts file is preserved with customer account section commented
     out
 requirements: |

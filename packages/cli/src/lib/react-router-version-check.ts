@@ -113,7 +113,7 @@ export async function checkReactRouterVersions(appPath: string): Promise<void> {
     renderWarning({
       headline: 'React Router version mismatch detected',
       body: [
-        'Hydrogen requires React Router 7.8.x for proper functionality.',
+        'Hydrogen requires React Router 7.9.x for proper functionality.',
         '',
         'Version mismatches found:',
         mismatchList,

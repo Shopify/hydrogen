@@ -393,7 +393,7 @@ async function findRouteDependencies(
         relativePath(dirname(filePath), appDirectory) || '.',
       );
 
-      // Skip attempting to resolve React Router 7.8.x generated type imports
+      // Skip attempting to resolve React Router 7.9.x generated type imports
       // These are virtual imports that will be generated post-scaffolding
       if (match.includes('/+types/')) {
         continue;

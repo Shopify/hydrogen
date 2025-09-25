@@ -27,7 +27,7 @@ notes:
 requirements: |
   - Shopify Plus subscription for Multipass functionality
   - PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET environment variable must be set
-  - React Router 7.8.x or higher
+  - React Router 7.9.x or higher
 ingredients:
   - path: templates/skeleton/app/components/MultipassCheckoutButton.tsx
     description: null
