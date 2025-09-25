@@ -82,15 +82,21 @@ export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
           // Vite performs an initial reload after optimizing these dependencies.
           // Do it early to avoid the initial reload:
           optimizeDeps: {
-            // Avoid optimizing Hydrogen itself in the monorepo
-            // to prevent caching source code changes:
+            // Vite performs an initial reload after optimizing these dependencies.
+            // Do it early to avoid the initial reload:
             include: isHydrogenMonorepo
               ? [
+                  // In monorepo, optimize non-Hydrogen packages to allow
+                  // source code changes to be reflected without cache issues
                   'content-security-policy-builder',
                   'worktop/cookie',
-                  '@shopify/graphql-client',
+                  '@shopify/hydrogen > @shopify/graphql-client',
+                  'use-resize-observer',
                 ]
-              : ['@shopify/hydrogen'],
+              : [
+                  // In production projects, optimize Hydrogen and critical deps
+                  '@shopify/hydrogen',
+                ],
           },
         };
       },
