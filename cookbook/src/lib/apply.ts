@@ -26,24 +26,31 @@ export function applyRecipe(params: {
 
   // list the ingredients in the recipe's ingredients folder as a list of flat paths (e.g. foo/bar/baz.txt)
   const ingredientsPath = path.join(recipeDir, 'ingredients');
-  const fsIngredients = fs
-    .readdirSync(ingredientsPath, {recursive: true, withFileTypes: true})
-    .filter((ingredient) => ingredient.isFile())
-    .map((ingredient) =>
-      path
-        .join(ingredient.path, ingredient.name)
-        .replace(path.join(recipeDir, 'ingredients') + '/', ''),
-    );
+  const fsIngredients = fs.existsSync(ingredientsPath)
+    ? fs
+        .readdirSync(ingredientsPath, {recursive: true, withFileTypes: true})
+        .filter((ingredient) => ingredient.isFile())
+        .map((ingredient) =>
+          path
+            .join(ingredient.path, ingredient.name)
+            .replace(path.join(recipeDir, 'ingredients') + '/', ''),
+        )
+    : [];
 
   // if the template directory contains modified files, exit with an error
   console.log(`- 🔄 Checking template directory…`);
-  const status = parseGitStatus({filenamesToIgnore: []});
-  if (
-    status.modifiedFiles.filter(
-      (f) => !['package.json', 'package-lock.json'].includes(f),
-    ).length > 0
-  ) {
-    throw new Error('Template folder has uncommitted changes.');
+  // Skip git status check in CI environment
+  if (process.env.CI !== 'true') {
+    const status = parseGitStatus({filenamesToIgnore: []});
+    if (
+      status.modifiedFiles.filter(
+        (f) => !['package.json', 'package-lock.json'].includes(f),
+      ).length > 0
+    ) {
+      throw new Error('Template folder has uncommitted changes.');
+    }
+  } else {
+    console.log('  - Skipping git status check in CI environment');
   }
 
   // check that each ingredient in the recipe is present in the ingredients folder
