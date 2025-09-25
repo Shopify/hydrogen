@@ -1,0 +1,61 @@
+index 375fc7b04..0989489b8 100644
+--- a/templates/skeleton/app/root.tsx
++++ b/templates/skeleton/app/root.tsx
+@@ -1,4 +1,15 @@
+-import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
++import {
++  Analytics,
++  getShopAnalytics,
++  useNonce,
++  type HydrogenSession,
++} from '@shopify/hydrogen';
++
++// @description Define CustomerAccessToken type for multipass
++type CustomerAccessToken = {
++  accessToken: string;
++  expiresAt: string;
++};
+ import {
+   Outlet,
+   useRouteError,
+@@ -110,7 +121,14 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
+     // Add other queries here, so that they are loaded in parallel
+   ]);
+ 
+-  return {header};
++  // @description Validate customer authentication for multipass
++  const customerAccessToken = await context.session.get('customerAccessToken');
++  const isLoggedIn = await validateCustomerAccessToken(
++    context.session,
++    customerAccessToken,
++  );
++
++  return {header, isLoggedIn: Promise.resolve(isLoggedIn)};
+ }
+ 
+ /**
+@@ -202,3 +220,24 @@ export function ErrorBoundary() {
+     </div>
+   );
+ }
++
++// @description Validate customer access token for multipass authentication
++export async function validateCustomerAccessToken(
++  session: HydrogenSession,
++  customerAccessToken?: CustomerAccessToken,
++) {
++  if (!customerAccessToken?.accessToken || !customerAccessToken?.expiresAt) {
++    return false;
++  }
++
++  const expiresAt = new Date(customerAccessToken.expiresAt).getTime();
++  const dateNow = Date.now();
++  const customerAccessTokenExpired = expiresAt < dateNow;
++
++  if (customerAccessTokenExpired) {
++    session.unset('customerAccessToken');
++    return false;
++  }
++
++  return true;
++}
