@@ -43,8 +43,6 @@ deletedFiles:
   - templates/skeleton/app/components/CartLineItem.tsx
   - templates/skeleton/app/components/CartMain.tsx
   - templates/skeleton/app/components/CartSummary.tsx
-  - templates/skeleton/app/components/CartUserErrors.tsx
-  - templates/skeleton/app/components/CartWarnings.tsx
   - templates/skeleton/app/components/Footer.tsx
   - templates/skeleton/app/components/Header.tsx
   - templates/skeleton/app/components/PageLayout.tsx
