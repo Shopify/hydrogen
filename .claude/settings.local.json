@@ -5,7 +5,8 @@
       "Bash(gh run view:*)",
       "Bash(npm test:*)",
       "Bash(gh pr view:*)",
-      "Bash(npm run ci:checks:*)"
+      "Bash(npm run ci:checks:*)",
+      "Bash(git rev-list:*)"
     ]
   },
   "enabledMcpjsonServers": [
@@ -19,5 +20,6 @@
     "docs-hydrogen",
     "docs-xstate",
     "shopify-dev-mcp"
-  ]
+  ],
+  "enableAllProjectMcpServers": true
 }
