@@ -16,13 +16,11 @@ export function AddToCartButton({
   onClick?: () => void;
   fetcherKey: string;
 }) {
-  // force an error by modifying the line with an invalid merchandiseId
+  // force an error by modifying the line with an invalid quantity
   const troubledLines = Array.isArray(lines)
     ? lines.map((line) => ({
         ...line,
-        // change the last merchandiseId character to trigger an error
-        // merchandiseId: `${line.merchandiseId.slice(0, 1)`
-        quantity: 7999,
+        quantity: 9999,
       }))
     : [];
 

@@ -54,6 +54,7 @@ export function CartWarnings({warnings}: CartWarningsProps) {
       <h4>Warnings</h4>
       <ul>
         {warnings.map((warning, index) => (
+          // eslint-disable-next-line react/no-array-index-key
           <li key={`${warning.code}-${index}`}>{warning.message}</li>
         ))}
       </ul>

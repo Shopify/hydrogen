@@ -1,4 +1,4 @@
-import {Await, Link, useFetcher} from 'react-router';
+import {Await, Link} from 'react-router';
 import {Suspense, useId} from 'react';
 import type {
   CartApiQueryFragment,
@@ -58,7 +58,7 @@ export function PageLayout({
 
 function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
   const notification = useCartNotification();
-  console.log({notification});
+
   return (
     <Aside type="cart" heading="CART">
       <Suspense fallback={<p>Loading cart ...</p>}>

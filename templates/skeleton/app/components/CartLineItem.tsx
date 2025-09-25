@@ -97,7 +97,7 @@ function CartLineQuantity({line}: {line: CartLine}) {
         <button
           aria-label="Increase quantity"
           name="increase-quantity"
-          value={nextQuantity + 1000}
+          value={nextQuantity}
           disabled={!!isOptimistic}
         >
           <span>&#43;</span>
