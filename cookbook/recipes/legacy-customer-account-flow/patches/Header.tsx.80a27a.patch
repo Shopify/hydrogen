@@ -1,0 +1,27 @@
+index 45b620b49..f55c41435 100644
+--- a/templates/skeleton/app/components/Header.tsx
++++ b/templates/skeleton/app/components/Header.tsx
+@@ -11,7 +11,8 @@ import {useAside} from '~/components/Aside';
+ interface HeaderProps {
+   header: HeaderQuery;
+   cart: Promise<CartApiQueryFragment | null>;
+-  isLoggedIn: Promise<boolean>;
++  // @description Use boolean instead of Promise for legacy authentication
++  isLoggedIn: boolean;
+   publicStoreDomain: string;
+ }
+ 
+@@ -103,11 +104,8 @@ function HeaderCtas({
+     <nav className="header-ctas" role="navigation">
+       <HeaderMenuMobileToggle />
+       <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
+-        <Suspense fallback="Sign in">
+-          <Await resolve={isLoggedIn} errorElement="Sign in">
+-            {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
+-          </Await>
+-        </Suspense>
++        {/* @description Display Account/Sign in based on legacy authentication status */}
++        {isLoggedIn ? 'Account' : 'Sign in'}
+       </NavLink>
+       <SearchToggle />
+       <CartToggle cart={cart} />
