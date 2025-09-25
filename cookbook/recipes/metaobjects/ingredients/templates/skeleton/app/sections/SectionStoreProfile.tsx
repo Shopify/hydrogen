@@ -2,7 +2,7 @@ import type {ParsedMetafields} from '@shopify/hydrogen';
 import {parseSection} from '~/utils/parseSection';
 import {Link} from 'react-router';
 import type {SectionStoreProfileFragment} from 'storefrontapi.generated';
-import {Key, ReactElement, JSXElementConstructor, ReactNode} from 'react';
+import type {Key, ReactElement, JSXElementConstructor, ReactNode} from 'react';
 
 export function SectionStoreProfile(props: SectionStoreProfileFragment) {
   const section = parseSection<

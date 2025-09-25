@@ -33,7 +33,7 @@ Metaobject Definitions
 
 The following is the list of metaojects that are used in this example:
 
-![Metaobject definitions list](./images/definitions_list.png "Metaobject Definitions List")
+![Metaobject definitions list](./images/definitions_list.png 'Metaobject Definitions List')
 
 ### Route Definition
 
@@ -42,7 +42,7 @@ you wish to render in a given Hydrogen route.
 
 #### Route fields
 
-![Route Definition](./images/definition_route.png "Metaobject Route Definition"))
+![Route Definition](./images/definiton_route.png 'Metaobject Route Definition')
 
 ### SectionHero Definition
 
@@ -50,7 +50,7 @@ This definition includes a basic set of fields to render a typical Hero section.
 
 ### SectionHero fields
 
-![SectionHero Definition](./images/definition_section_hero.png "Metaobject SectionHero Definition")
+![SectionHero Definition](./images/definition_section_hero.png 'Metaobject SectionHero Definition')
 
 ### SectionFeaturedProducts Definition
 
@@ -59,7 +59,7 @@ that a merchant can curate via the admin.
 
 #### SectionFeaturedProducts fields
 
-![SectionFeaturedProducts Definition](./images/definition_section_featured_products.png "Metaobject SectionFeaturedProducts Definition")
+![SectionFeaturedProducts Definition](./images/definition_section_featured_products.png 'Metaobject SectionFeaturedProducts Definition')
 
 ### SectionFeaturedCollections Definition
 
@@ -68,7 +68,7 @@ that a merchant can curate via the admin.
 
 #### SectionFeaturedCollections fields
 
-![SectionFeaturedCollections Definition](./images/definition_section_featured_collections.png "Metaobject SectionFeaturedCollections Definition")
+![SectionFeaturedCollections Definition](./images/definition_section_featured_collections.png 'Metaobject SectionFeaturedCollections Definition')
 
 ### Store Definition
 
@@ -77,7 +77,7 @@ a store branch.
 
 #### Store fields
 
-![Store Definition](./images/definition_store.png "Metaobject Store Definition")
+![Store Definition](./images/definition_store.png 'Metaobject Store Definition')
 
 ### SectionStoreProfile Definition
 
@@ -86,7 +86,7 @@ section entry.
 
 #### SectionSetoreProfile fields
 
-![SectionStoreProfile Definition](./images/definition_section_store_profile.png "Metaobject SectionStoreProfile Definition")
+![SectionStoreProfile Definition](./images/definition_section_store_profile.png 'Metaobject SectionStoreProfile Definition')
 
 ### SectionStoreGrid Definition
 
@@ -95,7 +95,7 @@ of stores to display in grid.
 
 #### SectionStoreGrid fields
 
-![SectionStoreGrid Definition](./images/definition_section_stores_grid.png "Metaobject SectionStoreGrid Definition")
+![SectionStoreGrid Definition](./images/definition_section_stores_grid.png 'Metaobject SectionStoreGrid Definition')
 
 ---
 

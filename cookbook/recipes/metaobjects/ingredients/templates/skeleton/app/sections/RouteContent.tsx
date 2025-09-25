@@ -4,6 +4,10 @@ import {EditRoute} from '~/components/EditRoute';
 import type {RouteContentQuery} from 'storefrontapi.generated';
 
 export function RouteContent({route}: {route: RouteContentQuery['route']}) {
+  if (!route?.sections) {
+    return <p>No route content sections</p>;
+  }
+
   return (
     <div>
       {route?.id && <EditRoute routeId={route.id} />}

@@ -9,7 +9,7 @@ import {Link, useMatches} from 'react-router';
 export function EditRoute({routeId}: {routeId: string}) {
   const [url, setUrl] = useState<URL | null>(null);
   const [root] = useMatches();
-  // @ts-expect-error - publicStoreSubdomain is not typed in root data
+  // @ts-expect-error data might not have publicStoreSubdomain
   const publicStoreSubdomain = root?.data?.publicStoreSubdomain;
 
   useEffect(() => {
