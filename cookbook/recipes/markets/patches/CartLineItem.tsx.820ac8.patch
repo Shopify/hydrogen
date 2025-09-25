@@ -1,4 +1,4 @@
-index 80e34be2..bd520a03 100644
+index 80e34be28..bd520a033 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
 @@ -2,7 +2,7 @@ import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';

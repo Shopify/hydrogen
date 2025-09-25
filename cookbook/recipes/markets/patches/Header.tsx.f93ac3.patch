@@ -1,4 +1,4 @@
-index 45b620b4..00c29ecc 100644
+index 45b620b49..00c29ecc9 100644
 --- a/templates/skeleton/app/components/Header.tsx
 +++ b/templates/skeleton/app/components/Header.tsx
 @@ -1,5 +1,6 @@
