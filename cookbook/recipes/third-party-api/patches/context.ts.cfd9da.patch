@@ -1,7 +1,7 @@
-index 3989ec05e..22e48fc8e 100644
+index 692d5ae17..0635384ad 100644
 --- a/templates/skeleton/app/lib/context.ts
 +++ b/templates/skeleton/app/lib/context.ts
-@@ -1,25 +1,11 @@
+@@ -1,25 +1,10 @@
  import {createHydrogenContext} from '@shopify/hydrogen';
  import {AppSession} from '~/lib/session';
  import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
@@ -21,16 +21,15 @@ index 3989ec05e..22e48fc8e 100644
 -declare global {
 -  interface HydrogenAdditionalContext extends AdditionalContextType {}
 -}
-+// @description Import the Rick and Morty client for third-party GraphQL queries
 +import {createRickAndMortyClient} from '~/lib/createRickAndMortyClient.server';
  
  /**
-- * Creates Hydrogen context for React Router 7.8.x
-+ * Creates Hydrogen context for React Router 7.8.x with third-party API support
+- * Creates Hydrogen context for React Router 7.9.x
++ * Creates Hydrogen context for React Router 7.9.x with third-party API support
   * Returns HydrogenRouterContextProvider with hybrid access patterns
   * */
  export async function createHydrogenRouterContext(
-@@ -40,6 +26,19 @@ export async function createHydrogenRouterContext(
+@@ -40,6 +25,19 @@ export async function createHydrogenRouterContext(
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
  
@@ -50,7 +49,7 @@ index 3989ec05e..22e48fc8e 100644
    const hydrogenContext = createHydrogenContext(
      {
        env,
-@@ -58,3 +57,12 @@ export async function createHydrogenRouterContext(
+@@ -58,3 +56,12 @@ export async function createHydrogenRouterContext(
  
    return hydrogenContext;
  }
@@ -63,3 +62,4 @@ index 3989ec05e..22e48fc8e 100644
 +declare global {
 +  interface HydrogenAdditionalContext extends AdditionalContextType {}
 +}
+\ No newline at end of file

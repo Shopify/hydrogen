@@ -1,4 +1,4 @@
-index a9f479ea7..dbd38f370 100644
+index a9f479ea7..d097338ef 100644
 --- a/templates/skeleton/app/routes/account.orders._index.tsx
 +++ b/templates/skeleton/app/routes/account.orders._index.tsx
 @@ -1,222 +1,183 @@
@@ -99,7 +99,7 @@ index a9f479ea7..dbd38f370 100644
 +  const data = useLoaderData<typeof loader>();
 +  
 +  if ('error' in data) {
-+    return <div>Error: {data.error}</div>;
++    return <div>Error: {String(data.error)}</div>;
 +  }
 +  
 +  const {customer} = data;

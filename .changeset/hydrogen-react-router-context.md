@@ -2,7 +2,7 @@
 '@shopify/hydrogen': major
 ---
 
-Add React Router 7.8.x support infrastructure with full compatibility for both context access patterns.
+Add React Router 7.9.2 support infrastructure with full compatibility for both context access patterns.
 
 ## New `createRequestHandler` Export from `/oxygen`
 
@@ -108,7 +108,7 @@ export async function loader({context}: Route.LoaderArgs) {
 ```
 
 ### Pattern 2: Context Registry Pattern (New)
-Use the new `hydrogenContext` registry with React Router 7.8's `context.get()`:
+Use the new `hydrogenContext` registry with React Router 7.9's `context.get()`:
 
 ```diff
 // app/routes/products.$handle.tsx
@@ -221,7 +221,7 @@ export default {
 
     const handleRequest = createRequestHandler({
 -     build: remixBuild,
-+     // React Router 7.8.x server build
++     // React Router 7.9.x server build
 +     build: await import('virtual:react-router/server-build'),
       mode: process.env.NODE_ENV,
 -     getLoadContext: () => context,

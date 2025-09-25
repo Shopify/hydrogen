@@ -34,7 +34,7 @@ declare global {
 
 declare module 'react-router' {
   // Merge Hydrogen properties into React Router's context provider
-  interface unstable_RouterContextProvider extends HydrogenAdditionalContext {
+  interface RouterContextProvider extends HydrogenAdditionalContext {
     // Standard Hydrogen context properties from HydrogenRouterContextProvider
     storefront: HydrogenRouterContextProvider['storefront'];
     cart: HydrogenCart & HydrogenCustomCartMethods;

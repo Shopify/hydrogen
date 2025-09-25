@@ -536,9 +536,9 @@ index 0ee1599a1..7939e3b36 100644
 @@ -21,7 +21,9 @@
      "react": "18.3.1",
      "react-dom": "18.3.1",
-     "react-router": "7.9.1",
--    "react-router-dom": "7.9.1"
-+    "react-router-dom": "7.9.1",
+     "react-router": "7.9.2",
+-    "react-router-dom": "7.9.2"
++    "react-router-dom": "7.9.2",
 +    "slate": "^0.101.4",
 +    "slate-react": "^0.101.3"
    },

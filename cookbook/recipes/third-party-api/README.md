@@ -146,8 +146,8 @@ index 3989ec05e..22e48fc8e 100644
 +import {createRickAndMortyClient} from '~/lib/createRickAndMortyClient.server';
  
  /**
-- * Creates Hydrogen context for React Router 7.8.x
-+ * Creates Hydrogen context for React Router 7.8.x with third-party API support
+- * Creates Hydrogen context for React Router 7.9.x
++ * Creates Hydrogen context for React Router 7.9.x with third-party API support
   * Returns HydrogenRouterContextProvider with hybrid access patterns
   * */
  export async function createHydrogenRouterContext(

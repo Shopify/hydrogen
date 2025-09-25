@@ -56,7 +56,7 @@ steps:
     description: null
     diffs:
       - file: README.md
-        patchFile: README.md.47d06f.patch
+        patchFile: README.md.49f8fa.patch
   - type: NEW_FILE
     step: 1
     name: Create the third-party API client
@@ -73,7 +73,7 @@ steps:
       in all routes. Also update TypeScript declarations for proper type support.
     diffs:
       - file: app/lib/context.ts
-        patchFile: context.ts.276f49.patch
+        patchFile: context.ts.cfd9da.patch
   - type: PATCH
     step: 3
     name: Query and display third-party data
@@ -82,7 +82,7 @@ steps:
       Shopify data. This demonstrates parallel data fetching and proper caching strategies.
     diffs:
       - file: app/routes/_index.tsx
-        patchFile: _index.tsx.82ab90.patch
+        patchFile: _index.tsx.ee5996.patch
 nextSteps: |
   After applying this recipe, you can:
 
@@ -130,4 +130,4 @@ nextSteps: |
 llms:
   userQueries: []
   troubleshooting: []
-commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
+commit: f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd

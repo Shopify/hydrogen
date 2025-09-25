@@ -78,7 +78,7 @@ describe('i18n replacers', () => {
         }
 
         /**
-         * Creates Hydrogen context for React Router 7.8.x
+         * Creates Hydrogen context for React Router 7.9.x
          * Returns HydrogenRouterContextProvider with hybrid access patterns
          * */
         export async function createHydrogenRouterContext(
