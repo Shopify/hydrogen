@@ -3,9 +3,9 @@
 '@shopify/cli-hydrogen': major
 ---
 
-Migrate skeleton template to React Router 7.8.x
+Migrate skeleton template to React Router 7.9.2
 
-This major release migrates the Hydrogen skeleton template to React Router 7.8.x, introducing automatic type generation, enhanced type safety, and modernized APIs that leverage React Router's latest features.
+This major release migrates the Hydrogen skeleton template to React Router 7.9.2, introducing automatic type generation, enhanced type safety, and modernized APIs that leverage React Router's latest features.
 
 ## Breaking Changes
 
@@ -172,7 +172,7 @@ export default {
     );
 
     const handleRequest = createRequestHandler({
-      // React Router 7.8.x uses virtual imports for the server build
+      // React Router 7.9.x uses virtual imports for the server build
       build: await import('virtual:react-router/server-build'),
       mode: process.env.NODE_ENV,
       getLoadContext: () => hydrogenContext,
@@ -219,7 +219,7 @@ export async function loader({params, context}: Route.LoaderArgs) {
 
 ### Automatic Type Generation
 
-React Router 7.8.x automatically generates TypeScript types for every route, providing:
+React Router 7.9.x automatically generates TypeScript types for every route, providing:
 
 - Type-safe params (knows which params are required vs optional)
 - Fully typed loader/action data in components

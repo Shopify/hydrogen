@@ -77,7 +77,7 @@ Key changes:
 > GraphQL codegen still works with Storefront API types
 
 > [!NOTE]
-> Compatible with React Router 7.8.x
+> Compatible with React Router 7.9.x
 
 > [!NOTE]
 > The .graphqlrc.ts file is preserved with customer account section commented out
@@ -2446,8 +2446,8 @@ class AppSession {
    },
    "prettier": "@shopify/prettier-config",
    "dependencies": {
-+    "@react-router/express": "7.9.1",
-+    "@react-router/node": "7.9.1",
++    "@react-router/express": "7.9.2",
++    "@react-router/node": "7.9.2",
 +    "@remix-run/eslint-config": "^2.16.1",
      "@shopify/hydrogen": "2025.5.0",
 +    "compression": "^1.7.4",
@@ -2459,16 +2459,16 @@ class AppSession {
 +    "morgan": "^1.10.0",
      "react": "18.3.1",
      "react-dom": "18.3.1",
-     "react-router": "7.9.1",
-     "react-router-dom": "7.9.1"
+     "react-router": "7.9.2",
+     "react-router-dom": "7.9.2"
    },
    "devDependencies": {
 -    "@eslint/compat": "^1.2.5",
 -    "@eslint/eslintrc": "^3.2.0",
      "@eslint/js": "^9.18.0",
      "@graphql-codegen/cli": "5.0.2",
-     "@react-router/dev": "7.9.1",
-     "@react-router/fs-routes": "7.9.1",
+     "@react-router/dev": "7.9.2",
+     "@react-router/fs-routes": "7.9.2",
      "@shopify/cli": "3.84.1",
      "@shopify/hydrogen-codegen": "^0.3.3",
 -    "@shopify/mini-oxygen": "^3.2.1",

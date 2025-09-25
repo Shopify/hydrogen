@@ -196,4 +196,4 @@ llms:
     - issue: TypeScript errors about missing types
       solution: Run `npm run codegen` to generate the Storefront API types after
         applying all patches.
-commit: 147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7
+commit: f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd
