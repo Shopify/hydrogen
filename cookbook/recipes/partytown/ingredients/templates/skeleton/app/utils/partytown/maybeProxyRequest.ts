@@ -8,7 +8,8 @@
  * @see https://partytown.builder.io/proxying-requests
  */
 export function maybeProxyRequest(url: URL, location: Location, type: string) {
-  const nonProxyDomains = ['www.googletagmanager.com'];
+  // Domains that already provide correct CORS headers
+  const nonProxyDomains: string[] = [];
 
   // Don't proxy requests to certain domains
   const bypassProxy = nonProxyDomains.some((domain) =>
