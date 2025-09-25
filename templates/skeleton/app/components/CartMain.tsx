@@ -10,6 +10,7 @@ import type {
 import {useAside} from '~/components/Aside';
 import {CartLineItem} from '~/components/CartLineItem';
 import {CartSummary} from './CartSummary';
+import {CartNotifications} from './CartNotifications';
 
 export type CartLayout = 'page' | 'aside';
 
@@ -43,6 +44,7 @@ export function CartMain({
     Boolean(cart?.discountCodes?.filter((code) => code.applicable)?.length);
   const className = `cart-main ${withDiscount ? 'with-discount' : ''}`;
   const cartHasItems = cart?.totalQuantity ? cart.totalQuantity > 0 : false;
+  const cartHasErrorsWarnings = Boolean(warnings || userErrors);
 
   return (
     <div className={className}>
@@ -55,14 +57,10 @@ export function CartMain({
             ))}
           </ul>
         </div>
-        {cartHasItems && (
-          <CartSummary
-            cart={cart}
-            layout={layout}
-            warnings={warnings}
-            userErrors={userErrors}
-          />
-        )}
+        {cartHasItems ? <CartSummary cart={cart} layout={layout} /> : null}
+        {cartHasErrorsWarnings ? (
+          <CartNotifications userErrors={userErrors} warnings={warnings} />
+        ) : null}
       </div>
     </div>
   );

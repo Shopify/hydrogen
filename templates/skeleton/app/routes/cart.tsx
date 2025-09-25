@@ -2,6 +2,7 @@ import {
   useLoaderData,
   data,
   type HeadersFunction,
+  useActionData,
 } from 'react-router';
 import type {Route} from './+types/cart';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
@@ -13,6 +14,8 @@ export const meta: Route.MetaFunction = () => {
 };
 
 export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
+
+export type CartActionReturnType = Awaited<ReturnType<typeof action>>['data'];
 
 export async function action({request, context}: Route.ActionArgs) {
   const {cart} = context;
@@ -83,7 +86,7 @@ export async function action({request, context}: Route.ActionArgs) {
 
   const cartId = result?.cart?.id;
   const headers = cartId ? cart.setCartId(result.cart.id) : new Headers();
-  const {cart: cartResult, errors, warnings} = result;
+  const {cart: cartResult, errors, warnings, userErrors} = result;
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string') {
@@ -95,10 +98,9 @@ export async function action({request, context}: Route.ActionArgs) {
     {
       cart: cartResult,
       errors,
+      userErrors,
       warnings,
-      analytics: {
-        cartId,
-      },
+      analytics: {cartId},
     },
     {status, headers},
   );
@@ -111,11 +113,17 @@ export async function loader({context}: Route.LoaderArgs) {
 
 export default function Cart() {
   const cart = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
 
   return (
     <div className="cart">
       <h1>Cart</h1>
-      <CartMain layout="page" cart={cart} />
+      <CartMain
+        layout="page"
+        cart={cart}
+        warnings={actionData?.warnings}
+        userErrors={actionData?.userErrors}
+      />
     </div>
   );
 }
