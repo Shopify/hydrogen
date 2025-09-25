@@ -43,6 +43,8 @@ deletedFiles:
   - templates/skeleton/app/components/CartLineItem.tsx
   - templates/skeleton/app/components/CartMain.tsx
   - templates/skeleton/app/components/CartSummary.tsx
+  - templates/skeleton/app/components/CartUserErrors.tsx
+  - templates/skeleton/app/components/CartWarnings.tsx
   - templates/skeleton/app/components/Footer.tsx
   - templates/skeleton/app/components/Header.tsx
   - templates/skeleton/app/components/PageLayout.tsx
@@ -105,14 +107,14 @@ steps:
     description: null
     diffs:
       - file: .graphqlrc.ts
-        patchFile: .graphqlrc.ts.25b347.patch
+        patchFile: .graphqlrc.ts.dbb3fe.patch
   - type: PATCH
     step: "1"
     name: README.md
     description: null
     diffs:
       - file: README.md
-        patchFile: README.md.cc20f2.patch
+        patchFile: README.md.db10ed.patch
   - type: NEW_FILE
     step: "1"
     name: app/env.ts
@@ -125,7 +127,7 @@ steps:
     description: null
     diffs:
       - file: app/entry.client.tsx
-        patchFile: entry.client.tsx.ac3d50.patch
+        patchFile: entry.client.tsx.0b6923.patch
   - type: NEW_FILE
     step: "2"
     name: public/favicon.svg
@@ -138,7 +140,7 @@ steps:
     description: null
     diffs:
       - file: app/entry.server.tsx
-        patchFile: entry.server.tsx.b04b68.patch
+        patchFile: entry.server.tsx.b35f11.patch
   - type: NEW_FILE
     step: "3"
     name: scripts/dev.mjs
@@ -151,7 +153,7 @@ steps:
     description: null
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.cbb801.patch
+        patchFile: root.tsx.5e9998.patch
   - type: NEW_FILE
     step: "4"
     name: server.mjs
@@ -164,49 +166,49 @@ steps:
     description: null
     diffs:
       - file: app/routes.ts
-        patchFile: routes.ts.1bc08e.patch
+        patchFile: routes.ts.87938f.patch
   - type: PATCH
     step: "6"
     name: app/routes/_index.tsx
     description: null
     diffs:
       - file: app/routes/_index.tsx
-        patchFile: _index.tsx.1eac8c.patch
+        patchFile: _index.tsx.243e26.patch
   - type: PATCH
     step: "7"
     name: app/routes/products.$handle.tsx
     description: null
     diffs:
       - file: app/routes/products.$handle.tsx
-        patchFile: products.$handle.tsx.e9710f.patch
+        patchFile: products.$handle.tsx.6f2e82.patch
   - type: PATCH
     step: "8"
     name: app/styles/app.css
     description: null
     diffs:
       - file: app/styles/app.css
-        patchFile: app.css.43ed91.patch
+        patchFile: app.css.881a99.patch
   - type: PATCH
     step: "9"
     name: eslint.config.js
     description: null
     diffs:
       - file: eslint.config.js
-        patchFile: eslint.config.js.99cfce.patch
+        patchFile: eslint.config.js.e5f62b.patch
   - type: PATCH
     step: "10"
     name: package.json
     description: null
     diffs:
       - file: package.json
-        patchFile: package.json.bbe7a5.patch
+        patchFile: package.json.f30b0a.patch
   - type: PATCH
     step: "13"
     name: vite.config.ts
     description: null
     diffs:
       - file: vite.config.ts
-        patchFile: vite.config.ts.7d4835.patch
+        patchFile: vite.config.ts.475b4c.patch
 nextSteps: |
   - Create a .env file with your Shopify Storefront API credentials:
     PUBLIC_STOREFRONT_API_TOKEN="your-token"
@@ -240,4 +242,4 @@ llms:
     - issue: TypeScript errors about missing @react-router/node types
       solution: Run 'npm install' to ensure all dependencies including @types packages
         are installed.
-commit: 5b23ad73d4955edab47be5411d5644680ab580b6
+commit: 25290311dd1d135ab90bca26fb496d2b92c8631a
