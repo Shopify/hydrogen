@@ -97,7 +97,7 @@ function CartLineQuantity({line}: {line: CartLine}) {
         <button
           aria-label="Increase quantity"
           name="increase-quantity"
-          value={nextQuantity}
+          value={nextQuantity + 1000}
           disabled={!!isOptimistic}
         >
           <span>&#43;</span>
@@ -123,7 +123,7 @@ function CartLineRemoveButton({
 }) {
   return (
     <CartForm
-      fetcherKey={getUpdateKey(lineIds)}
+      fetcherKey={getUpdateKey(CartForm.ACTIONS.LinesRemove, lineIds)}
       route="/cart"
       action={CartForm.ACTIONS.LinesRemove}
       inputs={{lineIds}}
@@ -146,7 +146,7 @@ function CartLineUpdateButton({
 
   return (
     <CartForm
-      fetcherKey={getUpdateKey(lineIds)}
+      fetcherKey={getUpdateKey(CartForm.ACTIONS.LinesUpdate, lineIds)}
       route="/cart"
       action={CartForm.ACTIONS.LinesUpdate}
       inputs={{lines}}
@@ -156,6 +156,10 @@ function CartLineUpdateButton({
   );
 }
 
+type GetUpdateKeyActions =
+  | typeof CartForm.ACTIONS.LinesUpdate
+  | typeof CartForm.ACTIONS.LinesRemove;
+
 /**
  * Returns a unique key for the update action. This is used to make sure actions modifying the same line
  * items are not run concurrently, but cancel each other. For example, if the user clicks "Increase quantity"
@@ -163,6 +167,6 @@ function CartLineUpdateButton({
  * @param lineIds - line ids affected by the update
  * @returns
  */
-function getUpdateKey(lineIds: string[]) {
-  return [CartForm.ACTIONS.LinesUpdate, ...lineIds].join('-');
+function getUpdateKey(action: GetUpdateKeyActions, lineIds: string[]) {
+  return [action, CartForm.ACTIONS.LinesUpdate, ...lineIds].join('-');
 }

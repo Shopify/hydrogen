@@ -1,4 +1,4 @@
-import {Await, Link} from 'react-router';
+import {Await, Link, useFetcher} from 'react-router';
 import {Suspense, useId} from 'react';
 import type {
   CartApiQueryFragment,
@@ -14,6 +14,7 @@ import {
   SearchFormPredictive,
 } from '~/components/SearchFormPredictive';
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
+import {useCartNotification} from '~/lib/notifications';
 
 interface PageLayoutProps {
   cart: Promise<CartApiQueryFragment | null>;
@@ -56,12 +57,21 @@ export function PageLayout({
 }
 
 function CartAside({cart}: {cart: PageLayoutProps['cart']}) {
+  const notification = useCartNotification();
+  console.log({notification});
   return (
     <Aside type="cart" heading="CART">
       <Suspense fallback={<p>Loading cart ...</p>}>
         <Await resolve={cart}>
           {(cart) => {
-            return <CartMain cart={cart} layout="aside" />;
+            return (
+              <CartMain
+                cart={cart}
+                userErrors={notification?.userErrors}
+                warnings={notification?.warnings}
+                layout="aside"
+              />
+            );
           }}
         </Await>
       </Suspense>
