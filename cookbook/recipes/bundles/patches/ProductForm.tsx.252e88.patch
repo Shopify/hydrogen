@@ -1,4 +1,4 @@
-index 61290120f..b1eaea077 100644
+index 47c8f3056..b9406e814 100644
 --- a/templates/skeleton/app/components/ProductForm.tsx
 +++ b/templates/skeleton/app/components/ProductForm.tsx
 @@ -11,9 +11,11 @@ import type {ProductFragment} from 'storefrontapi.generated';
