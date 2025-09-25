@@ -1553,7 +1553,7 @@ class AppSession {
 #### File: /app/styles/app.css
 
 ```diff
-@@ -1,584 +1,40 @@
+@@ -1,574 +1,44 @@
 -:root {
 -  --aside-width: 400px;
 -  --cart-aside-summary-height-with-discount: 300px;
@@ -2053,12 +2053,16 @@ class AppSession {
 -
 -.product-option-label-swatch img {
 -  width: 100%;
--}
--
--/*
--* --------------------------------------------------
++.Layout {
++  padding: 2rem;
++  max-width: 25rem;
+ }
+ 
+ /*
+ * --------------------------------------------------
 -* routes/blog._index.tsx
--* --------------------------------------------------
++* Express template styling
+ * --------------------------------------------------
 -*/
 -.blog-grid {
 -  display: grid;
@@ -2098,69 +2102,58 @@ class AppSession {
 -
 -/*
 -* --------------------------------------------------
--* components/CartUserErrors
+-* Order Search Form - Minimal & Responsive
 -* --------------------------------------------------
 -*/
--.cart-user-errors {
--  background-color: #fee;
--  border: 1px solid #fcc;
+-.order-search-form {
+-  margin-bottom: 1.5rem;
+-}
+-
+-.order-search-fieldset {
+-  border: 1px solid #e5e5e5;
 -  border-radius: 4px;
--  color: #c00;
--  margin-bottom: 1rem;
 -  padding: 1rem;
 -}
 -
--.cart-user-errors h4 {
--  margin: 0 0 0.5rem 0;
--  font-weight: bold;
+-.order-search-legend {
+-  font-weight: 600;
+-  padding: 0 0.5rem;
 -}
 -
--.cart-user-errors ul {
--  margin: 0;
--  padding-left: 1.5rem;
+-.order-search-active {
+-  font-weight: normal;
+-  opacity: 0.7;
+-  margin-left: 0.5rem;
 -}
 -
--.cart-user-errors li {
--  margin-bottom: 0.25rem;
+-.order-search-inputs {
+-  display: grid;
+-  gap: 1rem;
+-  margin: 0.25rem 0 1rem;
+-  grid-template-columns: 1fr;
 -}
 -
--.cart-user-errors .error-field {
--  font-size: 0.9em;
--  opacity: 0.8;
+-@media (min-width: 640px) {
+-  .order-search-inputs {
+-    grid-template-columns: 1fr 1fr;
+-  }
 -}
 -
--/*
--* --------------------------------------------------
--* components/CartWarnings
--* --------------------------------------------------
--*/
--.cart-warnings {
--  background-color: #fff8dc;
--  border: 1px solid #ffd700;
+-.order-search-input {
+-  width: 100%;
+-  padding: 0.5rem;
+-  border: 1px solid #d1d5db;
 -  border-radius: 4px;
--  color: #856404;
--  margin-bottom: 1rem;
--  padding: 1rem;
+-  font-size: 1rem;
 -}
 -
--.cart-warnings h4 {
--  margin: 0 0 0.5rem 0;
--  font-weight: bold;
+-.order-search-buttons {
+-  display: flex;
+-  gap: 0.75rem;
+-  flex-wrap: wrap;
 -}
--
--.cart-warnings ul {
--  margin: 0;
--  padding-left: 1.5rem;
--}
--
--.cart-warnings li {
--  margin-bottom: 0.25rem;
-+.Layout {
-+  padding: 2rem;
-+  max-width: 25rem;
- }
- 
- /*
++*/
+\ No newline at end of file
 ```
 
 ### Step 9: eslint.config.js
