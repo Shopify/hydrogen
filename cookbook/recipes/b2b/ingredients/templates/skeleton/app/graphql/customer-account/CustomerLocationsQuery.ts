@@ -31,4 +31,3 @@ export const CUSTOMER_LOCATIONS_QUERY = `#graphql
     }
   }
 ` as const;
-
