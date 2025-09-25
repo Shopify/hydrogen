@@ -77,7 +77,7 @@ Key changes:
 > GraphQL codegen still works with Storefront API types
 
 > [!NOTE]
-> Compatible with React Router 7.9.x
+> Compatible with React Router 7.8.x
 
 > [!NOTE]
 > The .graphqlrc.ts file is preserved with customer account section commented out
@@ -241,7 +241,7 @@ Key changes:
 
 
 
-#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
+#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
 
 ```ts
 // This file extends the Hydrogen types for this project
@@ -312,7 +312,7 @@ export {};
 
 
 
-#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
+#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
 
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
@@ -473,7 +473,7 @@ export {};
 
 
 
-#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
+#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
 
 ```mjs
 #!/usr/bin/env node
@@ -784,7 +784,7 @@ process.on('SIGTERM', () => {
 
 
 
-#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
+#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
 
 ```mjs
 import {createRequestHandler} from '@react-router/express';
@@ -2553,8 +2553,6 @@ class AppSession {
 - [`templates/skeleton/app/components/CartLineItem.tsx`](templates/skeleton/app/components/CartLineItem.tsx)
 - [`templates/skeleton/app/components/CartMain.tsx`](templates/skeleton/app/components/CartMain.tsx)
 - [`templates/skeleton/app/components/CartSummary.tsx`](templates/skeleton/app/components/CartSummary.tsx)
-- [`templates/skeleton/app/components/CartUserErrors.tsx`](templates/skeleton/app/components/CartUserErrors.tsx)
-- [`templates/skeleton/app/components/CartWarnings.tsx`](templates/skeleton/app/components/CartWarnings.tsx)
 - [`templates/skeleton/app/components/Footer.tsx`](templates/skeleton/app/components/Footer.tsx)
 - [`templates/skeleton/app/components/Header.tsx`](templates/skeleton/app/components/Header.tsx)
 - [`templates/skeleton/app/components/PageLayout.tsx`](templates/skeleton/app/components/PageLayout.tsx)
