@@ -1,13 +1,7 @@
-index 4989ca006..e087fb10b 100644
+index 422a2eb95..f898702c6 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
-@@ -1,4 +1,4 @@
--import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
- import { useLoaderData, type MetaFunction } from 'react-router';
- import {
-   getSelectedProductOptions,
-@@ -11,7 +11,14 @@ import {
+@@ -14,7 +14,14 @@ import {
  import {ProductPrice} from '~/components/ProductPrice';
  import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
@@ -21,9 +15,9 @@ index 4989ca006..e087fb10b 100644
 +  combinedListingsSettings,
 +} from '../lib/combined-listings';
  
- export const meta: MetaFunction<typeof loader> = ({data}) => {
+ export const meta: Route.MetaFunction = ({data}) => {
    return [
-@@ -63,6 +70,10 @@ async function loadCriticalData({
+@@ -66,6 +73,10 @@ async function loadCriticalData({
    // The API handle might be localized, so redirect to the localized handle
    redirectIfHandleIsLocalized(request, {handle, data: product});
  
@@ -34,7 +28,7 @@ index 4989ca006..e087fb10b 100644
    return {
      product,
    };
-@@ -82,6 +93,7 @@ function loadDeferredData({context, params}: LoaderFunctionArgs) {
+@@ -85,6 +96,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
  
  export default function Product() {
    const {product} = useLoaderData<typeof loader>();
@@ -42,7 +36,7 @@ index 4989ca006..e087fb10b 100644
  
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
-@@ -91,7 +103,9 @@ export default function Product() {
+@@ -94,7 +106,9 @@ export default function Product() {
  
    // Sets the search param to the selected variant without navigation
    // only when no search params are set in the url
@@ -53,7 +47,7 @@ index 4989ca006..e087fb10b 100644
  
    // Get the product options array
    const productOptions = getProductOptions({
-@@ -99,21 +113,41 @@ export default function Product() {
+@@ -102,21 +116,41 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
  
@@ -98,11 +92,11 @@ index 4989ca006..e087fb10b 100644
 +          combinedListing={combinedListing}
            productOptions={productOptions}
 -          selectedVariant={selectedVariant}
-+          selectedVariant={combinedListing ? selectedVariant : undefined}
++          selectedVariant={combinedListing ? undefined : selectedVariant}
          />
          <br />
          <br />
-@@ -190,6 +224,22 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -193,6 +227,22 @@ const PRODUCT_FRAGMENT = `#graphql
      description
      encodedVariantExistence
      encodedVariantAvailability

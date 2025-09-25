@@ -39,6 +39,13 @@ steps:
       2. In your Shopify admin, [use the Subscriptions app](https://admin.shopify.com/apps/subscriptions-remix/app) to create one or more subscription plans.
       3. On the [Products](https://admin.shopify.com/products) page, open any products that will be sold as subscriptions and add the relevant subscription plans in the **Purchase options** section.
       The Hydrogen demo storefront comes pre-configured with an example subscription product with the handle `shopify-wax`.
+  - type: PATCH
+    step: "1"
+    name: app/components/CartLineItem.tsx
+    description: null
+    diffs:
+      - file: app/components/CartLineItem.tsx
+        patchFile: CartLineItem.tsx.12f63e.patch
   - type: INFO
     step: 2
     name: Show subscription options on product pages
@@ -67,7 +74,7 @@ steps:
       3. Update `AddToCartButton` to include selling plan data when subscriptions are selected.
     diffs:
       - file: app/components/ProductForm.tsx
-        patchFile: ProductForm.tsx.9ac163.patch
+        patchFile: ProductForm.tsx.08e544.patch
   - type: PATCH
     step: 2.4
     name: Update ProductPrice to display subscription pricing
@@ -76,7 +83,7 @@ steps:
       2. Add logic to handle different price adjustment types and render the appropriate subscription price when a selling plan is selected.
     diffs:
       - file: app/components/ProductPrice.tsx
-        patchFile: ProductPrice.tsx.2a8473.patch
+        patchFile: ProductPrice.tsx.e490cc.patch
   - type: PATCH
     step: 2.5
     name: Update the product page to display subscription options
@@ -86,34 +93,24 @@ steps:
       3. Fetch subscription data through the updated cart GraphQL fragments.
     diffs:
       - file: app/routes/products.$handle.tsx
-        patchFile: products.$handle.tsx.d20426.patch
+        patchFile: products.$handle.tsx.7d2454.patch
   - type: INFO
     step: 3
     name: Show subscription details in the cart
     description: |
       In this step we'll implement support for showing subscription info in the cart's line items.
-  - type: PATCH
-    step: 3.1
-    name: Add selling plan data to cart queries
-    description: |
-      Add a `sellingPlanAllocation` field with the plan name to the standard and componentizable cart line GraphQL fragments. This displays subscription details in the cart.
-    diffs:
-      - file: app/lib/fragments.ts
-        patchFile: fragments.ts.f68ab0.patch
-  - type: PATCH
-    step: 3.2
-    name: Render the selling plan in the cart
-    description: |
-      1. Update `CartLineItem` to show subscription details when they're available.
-      2. Extract `sellingPlanAllocation` from cart line data, display the plan name, and standardize component import paths.
-    diffs:
-      - file: app/components/CartLineItem.tsx
-        patchFile: CartLineItem.tsx.b24264.patch
   - type: INFO
     step: 4
     name: Add subscription management to the account page
     description: |
       In this step we'll implement support for subscription management through an account subpage that lists existing subscription contracts.
+  - type: PATCH
+    step: "4"
+    name: app/lib/fragments.ts
+    description: null
+    diffs:
+      - file: app/lib/fragments.ts
+        patchFile: fragments.ts.5f86c7.patch
   - type: NEW_FILE
     step: 4.1
     name: Add queries to retrieve customer subscriptions
@@ -135,14 +132,6 @@ steps:
       Create a new account subpage that lets customers manage their existing  subscriptions based on the new GraphQL queries and mutations.
     ingredients:
       - path: templates/skeleton/app/routes/account.subscriptions.tsx
-  - type: PATCH
-    step: 4.4
-    name: Add a link to the Subscriptions page in the account menu
-    description: |
-      Add a `Subscriptions` link to the account menu.
-    diffs:
-      - file: app/routes/account.tsx
-        patchFile: account.tsx.989cf9.patch
   - type: NEW_FILE
     step: 4.5
     name: Add styles for the Subscriptions page
@@ -150,6 +139,13 @@ steps:
       Add styles for the Subscriptions page.
     ingredients:
       - path: templates/skeleton/app/styles/account-subscriptions.css
+  - type: PATCH
+    step: "5"
+    name: app/routes/account.tsx
+    description: null
+    diffs:
+      - file: app/routes/account.tsx
+        patchFile: account.tsx.ca55f3.patch
 nextSteps: |
   - Test your implementation by going to your store and adding a subscription-based product to the cart. Make sure that the product's subscription details appear on the product page and in the cart.
   - (Optional) [Place a test order](https://help.shopify.com/en/manual/checkout-settings/test-orders) to see how orders for subscription-based products appear in your Shopify admin.
@@ -168,4 +164,4 @@ llms:
     - issue: I'm not seeing the subscription details on my cart line items.
       solution: Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
-commit: ea5f3bf445d4d87c9bdc172202041d37e7efd96e
+commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6

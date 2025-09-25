@@ -8,33 +8,12 @@ const SUBSCRIPTION_CONTRACT_FRAGMENT = `#graphql
     billingPolicy {
       ...SubscriptionBillingPolicy
     }
-    discounts(first: 20) {
-      nodes {
-        ...SubscriptionDiscountFragment
-      }
-    }
   }
   fragment SubscriptionBillingPolicy on SubscriptionBillingPolicy {
     interval
     intervalCount {
       count
       precision
-    }
-  }
-  fragment SubscriptionDiscountFragment on SubscriptionDiscount {
-    id
-    title
-    recurringCycleLimit
-    value {
-      __typename
-      ... on SubscriptionDiscountFixedAmountValue {
-        amount {
-          amount
-        }
-      }
-      ... on SubscriptionDiscountPercentageValue {
-        percentage
-      }
     }
   }
 ` as const;

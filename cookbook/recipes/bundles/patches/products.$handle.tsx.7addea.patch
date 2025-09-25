@@ -1,22 +1,16 @@
-index 4989ca006..0356b373b 100644
+index 422a2eb95..efe0cda6d 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
-@@ -1,4 +1,4 @@
--import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
-+import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
- import { useLoaderData, type MetaFunction } from 'react-router';
- import {
-   getSelectedProductOptions,
-@@ -12,6 +12,8 @@ import {ProductPrice} from '~/components/ProductPrice';
+@@ -15,6 +15,8 @@ import {ProductPrice} from '~/components/ProductPrice';
  import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 +import type {ProductVariantComponent} from '@shopify/hydrogen/storefront-api-types';
 +import {BundledVariants} from '~/components/BundledVariants';
  
- export const meta: MetaFunction<typeof loader> = ({data}) => {
+ export const meta: Route.MetaFunction = ({data}) => {
    return [
-@@ -101,9 +103,12 @@ export default function Product() {
+@@ -104,9 +106,12 @@ export default function Product() {
  
    const {title, descriptionHtml} = product;
  
@@ -30,7 +24,7 @@ index 4989ca006..0356b373b 100644
        <div className="product-main">
          <h1>{title}</h1>
          <ProductPrice
-@@ -114,6 +119,7 @@ export default function Product() {
+@@ -117,6 +122,7 @@ export default function Product() {
          <ProductForm
            productOptions={productOptions}
            selectedVariant={selectedVariant}
@@ -38,7 +32,7 @@ index 4989ca006..0356b373b 100644
          />
          <br />
          <br />
-@@ -123,6 +129,14 @@ export default function Product() {
+@@ -126,6 +132,14 @@ export default function Product() {
          <br />
          <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
          <br />
@@ -53,7 +47,7 @@ index 4989ca006..0356b373b 100644
        </div>
        <Analytics.ProductView
          data={{
-@@ -177,6 +191,28 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+@@ -180,6 +194,28 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
        amount
        currencyCode
      }
@@ -82,7 +76,7 @@ index 4989ca006..0356b373b 100644
    }
  ` as const;
  
-@@ -213,6 +249,25 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -216,6 +252,25 @@ const PRODUCT_FRAGMENT = `#graphql
      adjacentVariants (selectedOptions: $selectedOptions) {
        ...ProductVariant
      }

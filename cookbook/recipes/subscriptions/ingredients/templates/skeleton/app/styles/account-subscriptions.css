@@ -25,37 +25,9 @@
 }
 
 .account-subscriptions .subscription-row .subscription-status-active {
-  background-color: #008060; /* Shopify Polaris green */
-  color: white;
-  padding: 0.125rem 0.5rem;
-  border-radius: 4px;
-  font-weight: 500;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
+  color: green;
 }
 
 .account-subscriptions .subscription-row .subscription-status-inactive {
-  background-color: #E94F2E; /* Shopify Polaris red/critical */
-  color: white;
-  padding: 0.125rem 0.5rem;
-  border-radius: 4px;
-  font-weight: 500;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-}
-
-.subscription-discounts {
-  margin-top: 0.5rem;
-}
-
-.subscription-discount {
-  display: inline-block;
-  background-color: #f0f0f0;
-  color: #333;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  margin-right: 0.5rem;
+  color: gray;
 }
