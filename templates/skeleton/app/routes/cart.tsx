@@ -1,21 +1,16 @@
-import {type MetaFunction, useLoaderData, useActionData} from 'react-router';
+import {useLoaderData, data, type HeadersFunction} from 'react-router';
+import type {Route} from './+types/cart';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
-import {
-  data,
-  type LoaderFunctionArgs,
-  type ActionFunctionArgs,
-  type HeadersFunction,
-} from '@shopify/remix-oxygen';
 import {CartMain} from '~/components/CartMain';
 
-export const meta: MetaFunction = () => {
+export const meta: Route.MetaFunction = () => {
   return [{title: `Hydrogen | Cart`}];
 };
 
 export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
 
-export async function action({request, context}: ActionFunctionArgs) {
+export async function action({request, context}: Route.ActionArgs) {
   const {cart} = context;
 
   const formData = await request.formData();
@@ -79,7 +74,7 @@ export async function action({request, context}: ActionFunctionArgs) {
 
   const cartId = result?.cart?.id;
   const headers = cartId ? cart.setCartId(result.cart.id) : new Headers();
-  const {cart: cartResult, errors, warnings, userErrors} = result;
+  const {cart: cartResult, errors, warnings} = result;
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string') {
@@ -91,7 +86,6 @@ export async function action({request, context}: ActionFunctionArgs) {
     {
       cart: cartResult,
       errors,
-      userErrors,
       warnings,
       analytics: {
         cartId,
@@ -101,24 +95,18 @@ export async function action({request, context}: ActionFunctionArgs) {
   );
 }
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   const {cart} = context;
   return await cart.get();
 }
 
 export default function Cart() {
   const cart = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
 
   return (
     <div className="cart">
       <h1>Cart</h1>
-      <CartMain
-        layout="page"
-        cart={cart}
-        warnings={actionData?.warnings}
-        userErrors={actionData?.userErrors}
-      />
+      <CartMain layout="page" cart={cart} />
     </div>
   );
 }

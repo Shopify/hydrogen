@@ -11,6 +11,9 @@ export default defineConfig({
     // withtout inlining assets as base64:
     assetsInlineLimit: 0,
   },
+  server: {
+    allowedHosts: ['.tryhydrogen.dev'],
+  },
   ssr: {
     optimizeDeps: {
       /**
@@ -25,8 +28,5 @@ export default defineConfig({
        */
       include: ['set-cookie-parser', 'cookie', 'react-router'],
     },
-  },
-  server: {
-    allowedHosts: ['.tryhydrogen.dev'],
   },
 });
