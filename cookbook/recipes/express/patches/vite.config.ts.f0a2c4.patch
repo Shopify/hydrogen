@@ -1,0 +1,43 @@
+index a12ad9e2e..ca7e15fb1 100644
+--- a/templates/skeleton/vite.config.ts
++++ b/templates/skeleton/vite.config.ts
+@@ -1,20 +1,22 @@
+ import {defineConfig} from 'vite';
+ import {hydrogen} from '@shopify/hydrogen/vite';
+-import {oxygen} from '@shopify/mini-oxygen/vite';
+ import {reactRouter} from '@react-router/dev/vite';
+ import tsconfigPaths from 'vite-tsconfig-paths';
+ 
+ export default defineConfig({
+-  plugins: [hydrogen(), oxygen(), reactRouter(), tsconfigPaths()],
++  plugins: [
++    hydrogen(),
++    reactRouter(),
++    tsconfigPaths(),
++  ],
+   build: {
+     // Allow a strict Content-Security-Policy
+     // withtout inlining assets as base64:
+     assetsInlineLimit: 0,
+-  },
+-  server: {
+-    allowedHosts: ['.tryhydrogen.dev'],
++    target: 'esnext',
+   },
+   ssr: {
++    external: ['fs', 'path', 'stream', 'crypto', 'util'],
+     optimizeDeps: {
+       /**
+        * Include dependencies here if they throw CJS<>ESM errors.
+@@ -26,7 +28,10 @@ export default defineConfig({
+        * Include 'example-dep' in the array below.
+        * @see https://vitejs.dev/config/dep-optimization-options
+        */
+-      include: ['set-cookie-parser', 'cookie', 'react-router'],
++      include: [
++        '@react-router/node',
++        '@react-router/express',
++      ],
+     },
+   },
+ });

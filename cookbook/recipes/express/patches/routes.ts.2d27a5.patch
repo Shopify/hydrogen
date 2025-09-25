@@ -1,0 +1,18 @@
+index 7df8a1b9c..a1610c2bc 100644
+--- a/templates/skeleton/app/routes.ts
++++ b/templates/skeleton/app/routes.ts
+@@ -1,9 +1,8 @@
+ import {flatRoutes} from '@react-router/fs-routes';
+ import {type RouteConfig} from '@react-router/dev/routes';
+-import {hydrogenRoutes} from '@shopify/hydrogen';
+ 
+-export default hydrogenRoutes([
+-  ...(await flatRoutes()),
+-  // Manual route definitions can be added to this array, in addition to or instead of using the `flatRoutes` file-based routing convention.
+-  // See https://reactrouter.com/api/framework-conventions/routes.ts#routests
+-]) satisfies RouteConfig;
++export default (async () => {
++  const {hydrogenRoutes} = await import('@shopify/hydrogen');
++  const routes = await flatRoutes();
++  return hydrogenRoutes([...routes]);
++})() satisfies Promise<RouteConfig>;
