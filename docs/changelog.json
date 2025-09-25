@@ -3,34 +3,42 @@
   "version": "1",
   "releases": [
     {
-      "title": "React Router 7.9.x migration with API version 2025-07",
+      "title": "React Router 7 migration with API version 2025-07",
       "version": "2025.7.0",
-      "date": "2025-09-24",
+      "date": "2025-09-17",
       "hash": "pending-merge",
       "commit": "https://github.com/Shopify/hydrogen/pull/3166",
       "pr": "https://github.com/Shopify/hydrogen/pull/3166",
       "dependencies": {
         "@shopify/hydrogen": "2025.7.0",
-        "react-router": "7.9.1",
-        "react-router-dom": "7.9.1"
+        "react-router": "7.9.2",
+        "react-router-dom": "7.9.2",
+        "react": "18.3.1",
+        "react-dom": "18.3.1"
       },
       "devDependencies": {
         "@shopify/mini-oxygen": "4.0.0",
-        "@shopify/cli": "3.84.1",
-        "@react-router/dev": "7.9.1",
-        "@react-router/fs-routes": "7.9.1"
+        "@shopify/cli": "3.83.3",
+        "@react-router/dev": "7.9.2",
+        "@react-router/fs-routes": "7.9.2"
       },
       "removeDependencies": [
         "@shopify/hydrogen",
         "@shopify/remix-oxygen",
         "@remix-run/react",
-        "@remix-run/server-runtime"
+        "@remix-run/server-runtime",
+        "react-router",
+        "react-router-dom",
+        "react",
+        "react-dom",
+        "@react-router/node"
       ],
       "removeDevDependencies": [
         "@remix-run/dev",
         "@remix-run/fs-routes",
-        "@remix-run/eslint-config",
-        "@remix-run/route-config"
+        "@remix-run/route-config",
+        "@react-router/fs-routes",
+        "@react-router/dev"
       ],
       "dependenciesMeta": {
         "@shopify/cli": {
@@ -65,39 +73,23 @@
         },
         "@remix-run/route-config": {
           "required": false
-        },
-        "@remix-run/eslint-config": {
-          "required": false
         }
       },
       "fixes": [
         {
-          "title": "Fix OAuth redirect handling for Customer Account API flows",
-          "info": "MiniOxygen now correctly handles external redirects by passing them to the browser instead of following them internally, ensuring OAuth/PKCE authentication flows work properly.",
-          "pr": "https://github.com/Shopify/hydrogen/pull/3082",
-          "id": "3082"
-        },
-        {
           "title": "Stabilize Customer Account API development flag",
-          "info": "The --customer-account-push flag is now stable and ready for production use, enabling tunneling for local development with Customer Account API OAuth flows.",
+          "info": "The --customer-account-push flag is now stable, enabling tunneling for local development with Customer Account API OAuth flows.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3082",
           "id": "3082-flag"
         },
         {
           "title": "Fix defer/streaming in development & preview",
-          "info": "Resolves issues with GraphQL @defer directive and streaming responses in development and preview environments, ensuring proper async data loading behavior matches production.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039"
         },
         {
-          "title": "Fix CSP NonceProvider hydration error",
-          "info": "Fixed React Context error that occurred during client-side hydration when using Content Security Policy (CSP) with nonces.",
-          "pr": "https://github.com/Shopify/hydrogen/pull/3082",
-          "id": "3082-nonce"
-        },
-        {
           "title": "Fix GraphQL client development warnings",
-          "info": "Eliminates sourcemap warnings and prevents unexpected page reloads during development.",
+          "info": "Remove sourcemap warnings and page reloads during development.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3108",
           "id": "3108"
         },
@@ -120,14 +112,8 @@
           "id": "3139"
         },
         {
-          "title": "Display cart user errors in skeleton template",
-          "info": "Cart mutations now properly display user errors such as invalid discount codes or gift cards.",
-          "pr": "https://github.com/Shopify/hydrogen/pull/3082",
-          "id": "3082-errors"
-        },
-        {
           "title": "Add TypeScript ESLint rules for promise handling",
-          "info": "Prevents 'The script will never generate a response' errors when deploying to Oxygen/Cloudflare Workers.",
+          "info": "Add TypeScript ESLint rules for promise handling to avoid deployment errors on Oxygen/Cloudflare Workers.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3146",
           "id": "3146"
         },
@@ -139,19 +125,16 @@
         },
         {
           "title": "Add --force-client-sourcemap flag to deploy command",
-          "info": "New CLI flag that forces inclusion of client-side sourcemaps in production deployments for enhanced debugging capabilities when needed.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039-sourcemap"
         },
         {
           "title": "Add Vite v7 exports support",
-          "info": "Adds compatibility with Vite 7's new module export patterns, ensuring smooth builds and proper tree-shaking with the latest Vite version.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039-vite"
         },
         {
           "title": "Fix and upgrade GraphiQL route",
-          "info": "Updates the GraphiQL development tool to the latest version with improved UI and fixes for query execution in the development environment.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039-graphiql"
         },
@@ -165,7 +148,7 @@
       "features": [
         {
           "title": "Migrate to React Router 7.9.x",
-          "info": "This major release migrates Hydrogen to React Router 7.9.x, introducing automatic type generation, enhanced type safety, and modernized APIs. The @shopify/remix-oxygen package is no longer needed.",
+          "info": "Migrates Hydrogen to React Router 7.9.x with automatic type generation and improved type safety. Removes @shopify/remix-oxygen package.",
           "breaking": true,
           "steps": [
             {
@@ -174,13 +157,27 @@
               "code": "YGBgZGlmZgpucHggQGNvZGVtb2QuY29tL2NvZGVtb2QgcmVtaXgvMi9yZWFjdC1yb3V0ZXIvdXBncmFkZQpgYGAK"
             },
             {
-              "title": "Update remaining import statements manually",
-              "info": "Change all @shopify/remix-oxygen and @remix-run/* imports to react-router or @shopify/hydrogen/oxygen",
-              "code": "YGBgZGlmZgotIGltcG9ydCB7cmVkaXJlY3QsIHR5cGUgTG9hZGVyRnVuY3Rpb25BcmdzfSBmcm9tICJAc2hvcGlmeS9yZW1peC1veHlnZW4iOwotIGltcG9ydCB7dXNlTG9hZGVyRGF0YSwgdHlwZSBNZXRhRnVuY3Rpb259IGZyb20gIkByZW1peC1ydW4vcmVhY3QiOworIGltcG9ydCB7cmVkaXJlY3QsIHVzZUxvYWRlckRhdGF9IGZyb20gInJlYWN0LXJvdXRlciI7CisgaW1wb3J0IHR5cGUge1JvdXRlfSBmcm9tICIuLyt0eXBlcy9yb3V0ZS1uYW1lIjsKYGBgCg=="
+              "title": "Update @shopify/remix-oxygen imports",
+              "info": "Replace @shopify/remix-oxygen imports with react-router equivalents",
+              "code": "YGBgZGlmZgotIGltcG9ydCB7cmVkaXJlY3QsIHR5cGUgTG9hZGVyRnVuY3Rpb25BcmdzfSBmcm9tICJAc2hvcGlmeS9yZW1peC1veHlnZW4iOworIGltcG9ydCB7cmVkaXJlY3R9IGZyb20gInJlYWN0LXJvdXRlciI7CisgaW1wb3J0IHR5cGUge0xvYWRlckZ1bmN0aW9uQXJnc30gZnJvbSAiQHNob3BpZnkvaHlkcm9nZW4vb3h5Z2VuIjsKYGBgCg=="
+            },
+            {
+              "title": "Update @remix-run/react imports",
+              "info": "Replace @remix-run/react imports with react-router equivalents",
+              "code": "YGBgZGlmZgotIGltcG9ydCB7dXNlTG9hZGVyRGF0YSwgdHlwZSBNZXRhRnVuY3Rpb259IGZyb20gIkByZW1peC1ydW4vcmVhY3QiOworIGltcG9ydCB7dXNlTG9hZGVyRGF0YX0gZnJvbSAicmVhY3Qtcm91dGVyIjsKYGBgCg=="
+            },
+            {
+              "title": "Add React Router 7 route type imports",
+              "info": "Import route-specific types from React Router 7's new type generation system",
+              "code": "YGBgZGlmZgorIGltcG9ydCB0eXBlIHtSb3V0ZX0gZnJvbSAiLi8rdHlwZXMvcm91dGUtbmFtZSI7CmBgYAo="
             },
             {
               "title": "Add .react-router to .gitignore",
               "info": "React Router 7 generates type files that should not be committed to version control",
+              "code": "YGBgZGlmZgplY2hvICIucmVhY3Qtcm91dGVyLyIgPj4gLmdpdGlnbm9yZQpgYGAK"
+            },
+            {
+              "title": "Update applicable package.json scripts to use react-router typegen",
               "code": "YGBgZGlmZgplY2hvICIucmVhY3Qtcm91dGVyLyIgPj4gLmdpdGlnbm9yZQpgYGAK"
             },
             {
@@ -193,27 +190,57 @@
           "id": "3141"
         },
         {
-          "title": "Update to Storefront API and Customer Account API version 2025-07",
-          "info": "Updated API version constants, regenerated GraphQL types, and updated all API references. Breaking changes may occur due to API schema changes between versions.",
+          "title": "Adopt new React Router context infrastructure and preset",
+          "info": "Major infrastructure changes including new createRequestHandler, hydrogenPreset configuration, enhanced context patterns, and React Context hydration fixes.",
           "breaking": true,
-          "pr": "https://github.com/Shopify/hydrogen/pull/3082",
-          "id": "3082-api"
-        },
-        {
-          "title": "Add React Router 7.9.x context infrastructure",
-          "info": "New createRequestHandler export from @shopify/hydrogen/oxygen and hydrogenPreset for React Router configuration.",
+          "steps": [
+            {
+              "title": "Update server.ts to use new createRequestHandler",
+              "info": "Replace @shopify/remix-oxygen import with @shopify/hydrogen/oxygen for enhanced functionality",
+              "code": "YGBgZGlmZgovLyBzZXJ2ZXIudHMKLSBpbXBvcnQge2NyZWF0ZVJlcXVlc3RIYW5kbGVyfSBmcm9tICJAc2hvcGlmeS9yZW1peC1veHlnZW4iOworIGltcG9ydCB7Y3JlYXRlUmVxdWVzdEhhbmRsZXJ9IGZyb20gIkBzaG9waWZ5L2h5ZHJvZ2VuL294eWdlbiI7CmBgYAo="
+            },
+            {
+              "title": "Add react-router.config.ts with hydrogenPreset",
+              "info": "Create configuration file with Hydrogen's optimized React Router settings",
+              "code": "YGBgdHlwZXNjcmlwdAovLyByZWFjdC1yb3V0ZXIuY29uZmlnLnRzCmltcG9ydCB0eXBlIHtDb25maWd9IGZyb20gIkByZWFjdC1yb3V0ZXIvZGV2L2NvbmZpZyI7CmltcG9ydCB7aHlkcm9nZW5QcmVzZXR9IGZyb20gIkBzaG9waWZ5L2h5ZHJvZ2VuL3JlYWN0LXJvdXRlci1wcmVzZXQiOwoKZXhwb3J0IGRlZmF1bHQgewogIHByZXNldHM6IFtoeWRyb2dlblByZXNldCgpXSwKfSBzYXRpc2ZpZXMgQ29uZmlnOwpgYGEK"
+            },
+            {
+              "title": "Update entry.server.tsx type annotations",
+              "info": "Replace AppLoadContext with HydrogenRouterContextProvider for enhanced type safety",
+              "code": "YGBgZGlmZgovLyBhcHAvZW50cnkuc2VydmVyLnRzeAotIGltcG9ydCB0eXBlIHtBcHBMb2FkQ29udGV4dH0gZnJvbSAiQHNob3BpZnkvcmVtaXgtb3h5Z2VuIjsKaW1wb3J0IHtTZXJ2ZXJSb3V0ZXJ9IGZyb20gInJlYWN0LXJvdXRlciI7CmltcG9ydCB7CiAgY3JlYXRlQ29udGVudFNlY3VyaXR5UG9saWN5LAorIHR5cGUgSHlkcm9nZW5Sb3V0ZXJDb250ZXh0UHJvdmlkZXIsCn0gZnJvbSAiQHNob3BpZnkvaHlkcm9nZW4iOwppbXBvcnQgdHlwZSB7RW50cnlDb250ZXh0fSBmcm9tICJyZWFjdC1yb3V0ZXIiOwoKZXhwb3J0IGRlZmF1bHQgYXN5bmMgZnVuY3Rpb24gaGFuZGxlUmVxdWVzdCgKICByZXF1ZXN0OiBSZXF1ZXN0LAogIHJlc3BvbnNlU3RhdHVzQ29kZTogbnVtYmVyLAogIHJlc3BvbnNlSGVhZGVyczogSGVhZGVycywKICByZWFjdFJvdXRlckNvbnRleHQ6IEVudHJ5Q29udGV4dCwKLSBjb250ZXh0OiBBcHBMb2FkQ29udGV4dCwKKyBjb250ZXh0OiBIeWRyb2dlblJvdXRlckNvbnRleHRQcm92aWRlciwKKSB7CiAgLy8gUmVzdCBvZiBpbXBsZW1lbnRhdGlvbiB1bmNoYW5nZWQKfQpgYGAK"
+            }
+          ],
           "pr": "https://github.com/Shopify/hydrogen/pull/3142",
           "id": "3142"
         },
         {
-          "title": "Add countryCode parameter to Customer Account API login",
-          "info": "Enables region-specific experiences by passing a CountryCode to the login method for contextualized authentication.",
+          "title": "Adopt new NonceProvider in entry client",
+          "breaking": true,
+          "steps": [
+            {
+              "title": "Update entry.client.tsx to include NonceProvider wrapper",
+              "info": "Wrap your app with NonceProvider during hydration to avoid 'Cannot read properties of null (reading 'useContext')' errors",
+              "code": "YGBgZGlmZgovLyBhcHAvZW50cnkuY2xpZW50LnRzeAppbXBvcnQge0h5ZHJhdGVkUm91dGVyfSBmcm9tICJyZWFjdC1yb3V0ZXIvZG9tIjsKaW1wb3J0IHtzdGFydFRyYW5zaXRpb24sIFN0cmljdE1vZGV9IGZyb20gInJlYWN0IjsKaW1wb3J0IHtoeWRyYXRlUm9vdH0gZnJvbSAicmVhY3QtZG9tL2NsaWVudCI7CisgaW1wb3J0IHtOb25jZVByb3ZpZGVyfSBmcm9tICJAc2hvcGlmeS9oeWRyb2dlbiI7CgppZiAoIXdpbmRvdy5sb2NhdGlvbi5vcmlnaW4uaW5jbHVkZXMoIndlYmNhY2hlLmdvb2dsZXVzZXJjb250ZW50LmNvbSIpKSB7CiAgc3RhcnRUcmFuc2l0aW9uKCgpID0+IHsKKyAgIC8vIEV4dHJhY3Qgbm9uY2UgZnJvbSBleGlzdGluZyBzY3JpcHQgdGFncworICAgY29uc3QgZXhpc3RpbmdOb25jZSA9IGRvY3VtZW50CisgICAgIC5xdWVyeVNlbGVjdG9yPEhUTUxTY3JpcHRFbGVtZW50Pigic2NyaXB0W25vbmNlXSIpCisgICAgID8ubm9uY2U7CisKICAgIGh5ZHJhdGVSb290KAogICAgICBkb2N1bWVudCwKICAgICAgPFN0cmljdE1vZGU+Ci0gICAgICAgPEh5ZHJhdGVkUm91dGVyIC8+CisgICAgICAgPE5vbmNlUHJvdmlkZXIgdmFsdWU9e2V4aXN0aW5nTm9uY2V9PgorICAgICAgICAgPEh5ZHJhdGVkUm91dGVyIC8+CisgICAgICAgPC9Ob25jZVByb3ZpZGVyPgogICAgICA8L1N0cmljdE1vZGU+LAogICAgKTsKICB9KTsKfQpgYGAK"
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3142",
+          "id": "3142"
+        },
+        {
+          "title": "Updated Storefront API and Customer Account API version 2025-07",
+          "breaking": false,
+          "pr": "https://github.com/Shopify/hydrogen/pull/3082",
+          "id": "3082"
+        },
+        {
+          "title": "Added countryCode parameter to Customer Account API login",
+          "info": "Add countryCode parameter to Customer Account API login method.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3148",
           "id": "3148"
         },
         {
           "title": "Add support for removing individual gift cards from cart",
-          "info": "Introduces cartGiftCardCodesRemove mutation to remove specific gift cards by their IDs, solving the limitation where only the last 4 digits were available.",
+          "info": "Add cartGiftCardCodesRemove mutation to remove specific gift cards by their IDs.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3128",
           "id": "3128"
         },
@@ -221,29 +248,26 @@
           "title": "Upgrade Miniflare from v2 to v3",
           "info": "Internal MiniOxygen API refactored to work with Miniflare v3's new architecture, improving development server performance and compatibility.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
-          "id": "3039-miniflare"
+          "id": "3039"
         },
         {
           "title": "Add order filtering support to Customer Account API orders route",
-          "info": "Skeleton template now supports order filtering in the /account/orders route for improved user experience.",
+          "info": "Add order filtering support to /account/orders route in skeleton template.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3125",
           "id": "3125"
         },
         {
           "title": "Add fulfillmentStatus to Customer Account API order query",
-          "info": "Extends the Customer Account API order query to include fulfillmentStatus field, enabling tracking of order shipping and delivery states in customer-facing interfaces.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039-fulfillment"
         },
         {
           "title": "Add @inContext language support to Customer Account API mutations",
-          "info": "Enables language-specific responses in Customer Account API mutations using the @inContext directive for improved internationalization support.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039-incontext"
         },
         {
           "title": "Add GraphQL @defer directive support to storefront client",
-          "info": "Implements support for GraphQL's @defer directive in the storefront client, allowing incremental data loading for improved perceived performance on complex queries.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039-defer"
         },
