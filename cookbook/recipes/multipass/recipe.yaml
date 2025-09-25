@@ -56,7 +56,7 @@ steps:
     description: Update README with multipass authentication documentation
     diffs:
       - file: README.md
-        patchFile: README.md.49f8fa.patch
+        patchFile: README.md.cc20f2.patch
   - type: NEW_FILE
     step: "1"
     name: app/components/MultipassCheckoutButton.tsx
@@ -69,7 +69,7 @@ steps:
     description: Add multipass checkout button to cart summary
     diffs:
       - file: app/components/CartSummary.tsx
-        patchFile: CartSummary.tsx.d6b372.patch
+        patchFile: CartSummary.tsx.fd8b99.patch
   - type: NEW_FILE
     step: "2"
     name: app/lib/multipass/multipass.ts
@@ -82,7 +82,7 @@ steps:
     description: Add session validation and token refresh logic
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.8c182c.patch
+        patchFile: root.tsx.cbb801.patch
   - type: NEW_FILE
     step: "3"
     name: app/lib/multipass/multipassify.server.ts
@@ -95,7 +95,7 @@ steps:
     description: Convert catch-all account route to use Storefront API
     diffs:
       - file: app/routes/account.$.tsx
-        patchFile: account.$.tsx.c167a3.patch
+        patchFile: account.$.tsx.87fd9e.patch
   - type: NEW_FILE
     step: "4"
     name: app/lib/multipass/types.ts
@@ -114,7 +114,7 @@ steps:
     description: Convert addresses management to use Storefront API
     diffs:
       - file: app/routes/account.addresses.tsx
-        patchFile: account.addresses.tsx.e473cc.patch
+        patchFile: account.addresses.tsx.7326c9.patch
   - type: NEW_FILE
     step: "6"
     name: app/routes/account_.login.multipass.tsx
@@ -127,7 +127,7 @@ steps:
     description: Convert order details to use Storefront API
     diffs:
       - file: app/routes/account.orders.$id.tsx
-        patchFile: account.orders.$id.tsx.1e38f8.patch
+        patchFile: account.orders.$id.tsx.9a5ba2.patch
   - type: NEW_FILE
     step: "7"
     name: app/routes/account_.recover.tsx
@@ -140,7 +140,7 @@ steps:
     description: Convert orders list to use Storefront API
     diffs:
       - file: app/routes/account.orders._index.tsx
-        patchFile: account.orders._index.tsx.a9982e.patch
+        patchFile: account.orders._index.tsx.ce8e22.patch
   - type: NEW_FILE
     step: "8"
     name: app/routes/account_.register.tsx
@@ -154,7 +154,7 @@ steps:
       Storefront API
     diffs:
       - file: app/routes/account.profile.tsx
-        patchFile: account.profile.tsx.0a4fcb.patch
+        patchFile: account.profile.tsx.5a0d15.patch
   - type: NEW_FILE
     step: "10"
     name: app/routes/account_.reset.$id.$resetToken.tsx
@@ -167,49 +167,49 @@ steps:
     description: Convert account layout to use Storefront API customer data
     diffs:
       - file: app/routes/account.tsx
-        patchFile: account.tsx.367e7a.patch
+        patchFile: account.tsx.7f62f3.patch
   - type: PATCH
     step: "12"
     name: app/routes/account_.login.tsx
     description: Replace Customer Account API login with form-based Storefront API login
     diffs:
       - file: app/routes/account_.login.tsx
-        patchFile: account_.login.tsx.4e5990.patch
+        patchFile: account_.login.tsx.f0add5.patch
   - type: PATCH
     step: "13"
     name: app/routes/account_.logout.tsx
     description: Implement session-based logout
     diffs:
       - file: app/routes/account_.logout.tsx
-        patchFile: account_.logout.tsx.1da785.patch
+        patchFile: account_.logout.tsx.8ba632.patch
   - type: PATCH
     step: "14"
     name: env.d.ts
     description: Add multipass secret environment variable type
     diffs:
       - file: env.d.ts
-        patchFile: env.d.ts.d94e72.patch
+        patchFile: env.d.ts.a469ac.patch
   - type: PATCH
     step: "15"
     name: app/routes/cart.tsx
     description: Add multipass URL generation for checkout
     diffs:
       - file: app/routes/cart.tsx
-        patchFile: cart.tsx.943271.patch
+        patchFile: cart.tsx.09be79.patch
   - type: PATCH
     step: "16"
     name: package.json
     description: Add crypto dependencies for multipass token generation
     diffs:
       - file: package.json
-        patchFile: package.json.47be7b.patch
+        patchFile: package.json.bbe7a5.patch
   - type: PATCH
     step: "17"
     name: vite.config.ts
     description: Configure Vite for crypto polyfills
     diffs:
       - file: vite.config.ts
-        patchFile: vite.config.ts.93b90b.patch
+        patchFile: vite.config.ts.7d4835.patch
 nextSteps: |
   - Set up your PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET in your environment variables
   - Test the login flow by visiting /account/login
@@ -243,4 +243,4 @@ llms:
     - issue: Multipass checkout button not appearing
       solution: Verify that CartSummary.tsx imports and uses MultipassCheckoutButton
         component, and that the cart.tsx route has been patched
-commit: f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd
+commit: 5b23ad73d4955edab47be5411d5644680ab580b6

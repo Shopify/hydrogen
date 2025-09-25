@@ -235,7 +235,7 @@ Update README with multipass authentication documentation
 
 Add checkout button component that generates multipass tokens
 
-#### File: [MultipassCheckoutButton.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/multipass/ingredients/templates/skeleton/app/components/MultipassCheckoutButton.tsx)
+#### File: [MultipassCheckoutButton.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/components/MultipassCheckoutButton.tsx)
 
 ```tsx
 import React, {useCallback} from 'react';
@@ -285,16 +285,17 @@ Add multipass checkout button to cart summary
 #### File: /app/components/CartSummary.tsx
 
 ```diff
-@@ -12,6 +12,8 @@ import {useFetcher} from 'react-router';
+@@ -5,6 +5,9 @@ import {useEffect, useRef} from 'react';
+ import {useFetcher} from 'react-router';
  import type {FetcherWithComponents} from 'react-router';
- import {CartWarnings} from '~/components/CartWarnings';
- import {CartUserErrors} from '~/components/CartUserErrors';
+ 
 +// @description Import MultipassCheckoutButton for Shopify Plus multipass checkout
 +import {MultipassCheckoutButton} from '~/components/MultipassCheckoutButton';
- 
++
  type CartSummaryProps = {
    cart: OptimisticCart<CartApiQueryFragment | null>;
-@@ -59,9 +61,10 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
+   layout: CartLayout;
+@@ -39,9 +42,10 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
  
    return (
      <div>
@@ -313,7 +314,7 @@ Add multipass checkout button to cart summary
 
 Core multipass encryption and token generation utilities
 
-#### File: [multipass.ts](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipass.ts)
+#### File: [multipass.ts](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipass.ts)
 
 ```ts
 import type {
@@ -463,7 +464,7 @@ Add session validation and token refresh logic
 
 Server-side multipass token generation with ESM-compatible snake_case
 
-#### File: [multipassify.server.ts](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipassify.server.ts)
+#### File: [multipassify.server.ts](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipassify.server.ts)
 
 ```ts
 import CryptoJS from 'crypto-js';
@@ -670,7 +671,7 @@ Convert catch-all account route to use Storefront API
 
 TypeScript types for multipass functionality
 
-#### File: [types.ts](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/types.ts)
+#### File: [types.ts](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/types.ts)
 
 ```ts
 /*
@@ -748,7 +749,7 @@ export interface MultipassTokenResponseType {
 
 Add customer account activation route
 
-#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
+#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
 
 ```tsx
 import {Form, useActionData, data, redirect} from 'react-router';
@@ -1446,7 +1447,7 @@ Convert addresses management to use Storefront API
 
 Add multipass login handler route
 
-#### File: [account_.login.multipass.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.login.multipass.tsx)
+#### File: [account_.login.multipass.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.login.multipass.tsx)
 
 ```tsx
 import {data as remixData, redirect} from 'react-router';
@@ -2117,7 +2118,7 @@ Convert order details to use Storefront API
 
 Add password recovery route
 
-#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
+#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
 
 ```tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -2606,7 +2607,7 @@ Convert orders list to use Storefront API
 
 Add customer registration route
 
-#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.register.tsx)
+#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.register.tsx)
 
 ```tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -3072,7 +3073,7 @@ Convert customer profile management from Customer Account API to Storefront API
 
 Add password reset confirmation route
 
-#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
+#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
 
 ```tsx
 import {data, Form, redirect, useActionData} from 'react-router';
