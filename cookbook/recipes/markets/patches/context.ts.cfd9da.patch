@@ -1,4 +1,4 @@
-index c424c5111..b5d3737af 100644
+index 3989ec05e..385d12f04 100644
 --- a/templates/skeleton/app/lib/context.ts
 +++ b/templates/skeleton/app/lib/context.ts
 @@ -1,6 +1,7 @@
@@ -7,22 +7,24 @@ index c424c5111..b5d3737af 100644
  import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 +import {getLocaleFromRequest} from './i18n';
  
- /**
-  * The context implementation is separate from server.ts
-@@ -24,13 +25,15 @@ export async function createAppLoadContext(
+ // Define the additional context object
+ const additionalContext = {
+@@ -40,6 +41,8 @@ export async function createHydrogenRouterContext(
      AppSession.init(request, [env.SESSION_SECRET]),
    ]);
  
 +  const i18n = getLocaleFromRequest(request);
 +
-   const hydrogenContext = createHydrogenContext({
-     env,
-     request,
-     cache,
-     waitUntil,
-     session,
--    i18n: {language: 'EN', country: 'US'},
-+    i18n,
-     cart: {
-       queryFragment: CART_QUERY_FRAGMENT,
-     },
+   const hydrogenContext = createHydrogenContext(
+     {
+       env,
+@@ -47,8 +50,7 @@ export async function createHydrogenRouterContext(
+       cache,
+       waitUntil,
+       session,
+-      // Or detect from URL path based on locale subpath, cookies, or any other strategy
+-      i18n: {language: 'EN', country: 'US'},
++      i18n,
+       cart: {
+         queryFragment: CART_QUERY_FRAGMENT,
+       },
