@@ -5,6 +5,7 @@
 - `e2e/setup/launch.spec.ts` – System test that verifies dev server launches and displays Hydrogen title.
 - `e2e/server.ts` – Helper module for programmatically starting and stopping the dev server.
 - `e2e/helpers/ejson-secrets.ts` – Helper for decrypting/encrypting ejson secrets for authenticated tests.
+- `e2e/setup/ejson-secrets.spec.ts` – Test suite for ejson secrets helper functionality.
 - `e2e/smoke/` – Directory for fast smoke tests that run against an existing skeleton template.
 - `e2e/smoke/home.spec.ts` – Smoke test for home page: hero image, product grid, and console errors.
 - `e2e/smoke/cart.spec.ts` – Smoke test for cart functionality: open cart, add product, verify handle.
@@ -154,13 +155,13 @@
       - **Outcome**: Tests now pass in both normal and debug modes while still catching real errors
       - This ensures we're not masking real errors - only the cascade of errors specifically caused by Playwright's debug mode overlay
 
-  - [ ] 3.9. Wait for CI to finish and pass on PR #3.
+  - [x] 3.9. Wait for CI to finish and pass on PR #3.
 
 - [ ] 4. Test authenticated Hydrogen CLI commands with Shopify integration (PR #4)
 
-  - [ ] 4.1. Create branch `e2e_cli-authenticated` **based on `e2e_npm-scripts`**.
+  - [x] 4.1. Create branch `e2e_cli-authenticated` **based on `e2e_npm-scripts`**.
 
-  - [ ] 4.2. Set up ejson secrets for test authentication:
+  - [x] 4.2. Set up ejson secrets for test authentication:
       - **SECURITY NOTE**: Both email address and password will be treated as encrypted secrets
       - Prompt user for test account credentials when ready to configure
       - Add both email address and password to `secrets.ejson` as encrypted fields
@@ -168,7 +169,7 @@
       - Verify that both email and password fields are encrypted in the file
       - Commit the encrypted `secrets.ejson` file
 
-  - [ ] 4.3. Create ejson decryption helper `e2e/helpers/ejson-secrets.ts`:
+  - [x] 4.3. Create ejson decryption helper `e2e/helpers/ejson-secrets.ts`:
       - Write failing test to verify ejson decryption works
       - Implement function to run `ejson decrypt secrets.ejson` command
       - Parse decrypted JSON to extract both email and password securely
