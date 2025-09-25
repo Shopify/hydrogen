@@ -1,0 +1,52 @@
+index 45b620b49..12f7f1650 100644
+--- a/templates/skeleton/app/components/Header.tsx
++++ b/templates/skeleton/app/components/Header.tsx
+@@ -7,6 +7,9 @@ import {
+ } from '@shopify/hydrogen';
+ import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
+ import {useAside} from '~/components/Aside';
++// @description Import B2B types and hooks for company location management
++import {type CustomerCompanyLocationConnection} from '~/root';
++import {useB2BLocation} from './B2BLocationProvider';
+ 
+ interface HeaderProps {
+   header: HeaderQuery;
+@@ -91,6 +94,8 @@ export function HeaderMenu({
+           </NavLink>
+         );
+       })}
++      {/* @description Add B2B location selector to header navigation */}
++      <ChangeLocation />
+     </nav>
+   );
+ }
+@@ -175,6 +180,29 @@ function CartBanner() {
+   return <CartBadge count={cart?.totalQuantity ?? 0} />;
+ }
+ 
++// @description Add B2B location change button for company location selection
++function ChangeLocation() {
++  const {company, companyLocationId, setModalOpen} = useB2BLocation();
++
++  const locations = company?.locations?.edges
++    ? company.locations.edges.map(
++        (location: CustomerCompanyLocationConnection) => {
++          return {...location.node};
++        },
++      )
++    : [];
++
++  if (locations.length <= 1 || !company) return null;
++
++  return (
++    <button onClick={() => setModalOpen(true)}>
++      {locations.find(
++        (companyLocation) => companyLocation.id == companyLocationId,
++      )?.name || 'Select Location'}
++    </button>
++  );
++}
++
+ const FALLBACK_HEADER_MENU = {
+   id: 'gid://shopify/Menu/199655587896',
+   items: [

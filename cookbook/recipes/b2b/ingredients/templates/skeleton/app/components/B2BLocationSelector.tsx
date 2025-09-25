@@ -16,7 +16,8 @@ export function B2BLocationSelector() {
       )
     : [];
 
-  if (!company || !modalOpen) return null;
+  if (!company || !modalOpen)
+    return <p>No company found for logged in user.</p>;
 
   return (
     <div className="modal">
@@ -37,25 +38,27 @@ export function B2BLocationSelector() {
                 }}
               >
                 {(fetcher) => (
-                  <button
-                    aria-label={`Select B2B location: ${location.name}`}
-                    onClick={(event) => {
-                      setModalOpen(false);
-                      void fetcher.submit(event.currentTarget.form, {
-                        method: 'POST',
-                      });
-                    }}
-                    className="location-item"
-                  >
-                    <div>
-                      <p>
-                        <strong>{location.name}</strong>
-                      </p>
-                      {addressLines.map((line: string) => (
-                        <p key={line}>{line}</p>
-                      ))}
-                    </div>
-                  </button>
+                  <div>
+                    <button
+                      aria-label={`Select B2B location: ${location.name}`}
+                      onClick={(event) => {
+                        setModalOpen(false);
+                        fetcher.submit(event.currentTarget.form, {
+                          method: 'POST',
+                        });
+                      }}
+                      className="location-item"
+                    >
+                      <div>
+                        <p>
+                          <strong>{location.name}</strong>
+                        </p>
+                        {addressLines.map((line: string) => (
+                          <p key={line}>{line}</p>
+                        ))}
+                      </div>
+                    </button>
+                  </div>
                 )}
               </CartForm>
             );
