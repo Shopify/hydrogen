@@ -31,3 +31,17 @@
 .account-subscriptions .subscription-row .subscription-status-inactive {
   color: gray;
 }
+
+.subscription-discounts {
+  margin-top: 0.5rem;
+}
+
+.subscription-discount {
+  display: inline-block;
+  background-color: #f0f0f0;
+  color: #333;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  margin-right: 0.5rem;
+}
