@@ -2047,7 +2047,7 @@ export type Customer = HasMetafields &
     return?: Maybe<Return>;
     /** A list of the owner resource's store credit accounts. Store credit accounts are not shown for shops with store credit disabled at checkout. */
     storeCreditAccounts: StoreCreditAccountConnection;
-    /** A Subscription Contract resource identified by ID. */
+    /** Returns a `SubscriptionContract` resource by ID. */
     subscriptionContract?: Maybe<SubscriptionContract>;
     /** The Subscription Contracts associated with the customer. */
     subscriptionContracts: SubscriptionContractConnection;
