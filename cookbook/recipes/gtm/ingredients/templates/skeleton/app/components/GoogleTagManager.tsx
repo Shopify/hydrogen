@@ -14,7 +14,7 @@ export function GoogleTagManager() {
   useEffect(() => {
     subscribe('product_viewed', () => {
       // Triggering a custom event in GTM when a product is viewed
-      window.dataLayer.push({'event': 'viewed-product'});
+      window.dataLayer.push({event: 'viewed-product'});
     });
 
     ready();
