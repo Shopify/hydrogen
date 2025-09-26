@@ -37,7 +37,8 @@
     "check": "npm run build && npm run lint && npm run typecheck && npm run test",
     "e2e": "node scripts/run-e2e.js",
     "e2e:smoke": "node scripts/run-e2e.js --smoke",
-    "pre-commit:encrypt": "bash -c 'git diff --cached --name-only | grep -q \"^secrets.ejson$\" && ejson encrypt secrets.ejson && git add secrets.ejson || true'"
+    "pre-commit:encrypt": "bash -c 'git diff --cached --name-only | grep -q \"^secrets.ejson$\" && ejson encrypt secrets.ejson && git add secrets.ejson || true'",
+    "review-recipe-diffs": "bash ./scripts/rename-patches-for-review.sh && bash ./scripts/review-sha-cleanup.sh"
   },
   "workspaces": [
     "docs/preview",
