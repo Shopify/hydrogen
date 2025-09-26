@@ -1,0 +1,58 @@
+index c416c2b3..b627a950 100644
+--- a/templates/skeleton/app/routes/collections.$handle.tsx
++++ b/templates/skeleton/app/routes/collections.$handle.tsx
+@@ -5,6 +5,10 @@ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+ import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+ import {ProductItem} from '~/components/ProductItem';
+ import type {ProductItemFragment} from 'storefrontapi.generated';
++import {
++  combinedListingsSettings,
++  isCombinedListing,
++} from '~/lib/combined-listings';
+ 
+ export const meta: Route.MetaFunction = ({data}) => {
+   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
+@@ -68,12 +72,25 @@ function loadDeferredData({context}: Route.LoaderArgs) {
+ export default function Collection() {
+   const {collection} = useLoaderData<typeof loader>();
+ 
++  // Manually filter out combined listings from the collection products, because filtering
++  // would not work here.
++  const filteredCollectionProducts = {
++    ...collection.products,
++    nodes: collection.products.nodes.filter(
++      (product) =>
++        !(
++          combinedListingsSettings.hideCombinedListingsFromProductList &&
++          isCombinedListing(product)
++        ),
++    ),
++  };
++
+   return (
+     <div className="collection">
+       <h1>{collection.title}</h1>
+       <p className="collection-description">{collection.description}</p>
+       <PaginatedResourceSection<ProductItemFragment>
+-        connection={collection.products}
++        connection={filteredCollectionProducts}
+         resourcesClassName="products-grid"
+       >
+         {({node: product, index}) => (
+@@ -105,6 +122,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
+     id
+     handle
+     title
++    tags
+     featuredImage {
+       id
+       altText
+@@ -144,7 +162,7 @@ const COLLECTION_QUERY = `#graphql
+         first: $first,
+         last: $last,
+         before: $startCursor,
+-        after: $endCursor
++        after: $endCursor,
+       ) {
+         nodes {
+           ...ProductItem

@@ -49,6 +49,11 @@ In this recipe, you'll make the following changes:
 4. Update the `ProductImage` component to support images from product variants and the product itself.
 5. Show a range of prices for combined listings in `ProductItem`.
 
+## Notes
+
+> [!NOTE]
+> This recipe is compatible with React Router 7.9.x and uses consolidated imports from 'react-router' instead of separate '@shopify/remix-oxygen' and '@remix-run/react' packages.
+
 ## Requirements
 
 - Your store must be on either a [Shopify Plus](https://www.shopify.com/plus) or enterprise plan.
@@ -90,7 +95,7 @@ export const combinedListingsSettings = {
 
 Create a new `combined-listings.ts` file that contains utilities and settings for handling combined listings.
 
-#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
+#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/aef8cf795ea8f68077d6fa1f1649e2791f6658a7/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
 
 ```ts
 // Edit these values to customize combined listings' behavior
@@ -335,6 +340,65 @@ If you want to redirect automatically to the first variant of a combined listing
 +}
 ```
 
+### Step 7: app/routes/collections.all.tsx
+
+
+
+#### File: /app/routes/collections.all.tsx
+
+```diff
+@@ -1,11 +1,13 @@
+ import type {Route} from './+types/collections.all';
+-import {
+-  useLoaderData,
+-} from 'react-router';
++import {useLoaderData} from 'react-router';
+ import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
+ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+ import {ProductItem} from '~/components/ProductItem';
+ import type {CollectionItemFragment} from 'storefrontapi.generated';
++import {
++  combinedListingsSettings,
++  maybeFilterOutCombinedListingsQuery,
++} from '../lib/combined-listings';
+ 
+ export const meta: Route.MetaFunction = () => {
+   return [{title: `Hydrogen | Products`}];
+@@ -33,7 +35,12 @@ async function loadCriticalData({context, request}: Route.LoaderArgs) {
+ 
+   const [{products}] = await Promise.all([
+     storefront.query(CATALOG_QUERY, {
+-      variables: {...paginationVariables},
++      variables: {
++        ...paginationVariables,
++        query: combinedListingsSettings.hideCombinedListingsFromProductList
++          ? maybeFilterOutCombinedListingsQuery
++          : '',
++      },
+     }),
+     // Add other queries here, so that they are loaded in parallel
+   ]);
+@@ -80,6 +87,7 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
+     id
+     handle
+     title
++    tags
+     featuredImage {
+       id
+       altText
+@@ -107,8 +115,9 @@ const CATALOG_QUERY = `#graphql
+     $last: Int
+     $startCursor: String
+     $endCursor: String
++    $query: String
+   ) @inContext(country: $country, language: $language) {
+-    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {
++    products(first: $first, last: $last, before: $startCursor, after: $endCursor, query: $query) {
+       nodes {
+         ...CollectionItem
+       }
+```
+
 ### Step 8: Update queries for combined listings
 
 1. Add the `tags` property to the items returned by the product query.
@@ -413,7 +477,45 @@ Since it's not possible to directly apply query filters when retrieving collecti
 #### File: /app/routes/collections.$handle.tsx
 
 ```diff
-@@ -105,6 +105,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
+@@ -5,6 +5,10 @@ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+ import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+ import {ProductItem} from '~/components/ProductItem';
+ import type {ProductItemFragment} from 'storefrontapi.generated';
++import {
++  combinedListingsSettings,
++  isCombinedListing,
++} from '~/lib/combined-listings';
+ 
+ export const meta: Route.MetaFunction = ({data}) => {
+   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
+@@ -68,12 +72,25 @@ function loadDeferredData({context}: Route.LoaderArgs) {
+ export default function Collection() {
+   const {collection} = useLoaderData<typeof loader>();
+ 
++  // Manually filter out combined listings from the collection products, because filtering
++  // would not work here.
++  const filteredCollectionProducts = {
++    ...collection.products,
++    nodes: collection.products.nodes.filter(
++      (product) =>
++        !(
++          combinedListingsSettings.hideCombinedListingsFromProductList &&
++          isCombinedListing(product)
++        ),
++    ),
++  };
++
+   return (
+     <div className="collection">
+       <h1>{collection.title}</h1>
+       <p className="collection-description">{collection.description}</p>
+       <PaginatedResourceSection<ProductItemFragment>
+-        connection={collection.products}
++        connection={filteredCollectionProducts}
+         resourcesClassName="products-grid"
+       >
+         {({node: product, index}) => (
+@@ -105,6 +122,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
      id
      handle
      title
@@ -421,7 +523,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
      featuredImage {
        id
        altText
-@@ -144,7 +145,7 @@ const COLLECTION_QUERY = `#graphql
+@@ -144,7 +162,7 @@ const COLLECTION_QUERY = `#graphql
          first: $first,
          last: $last,
          before: $startCursor,

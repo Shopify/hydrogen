@@ -1,4 +1,4 @@
-index f18c1d0d6..cbffc8a44 100644
+index f18c1d0d..cbffc8a4 100644
 --- a/templates/skeleton/app/lib/redirect.ts
 +++ b/templates/skeleton/app/lib/redirect.ts
 @@ -1,4 +1,6 @@
