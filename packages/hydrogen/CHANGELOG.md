@@ -1,5 +1,652 @@
 # @shopify/hydrogen
 
+## 2025.7.0
+
+### Major Changes
+
+- Update Storefront API and Customer Account API to version 2025-07 ([#3082](https://github.com/Shopify/hydrogen/pull/3082)) by [@juanpprieto](https://github.com/juanpprieto)
+
+  This update includes:
+  - Updated API version constants to 2025-07
+  - Regenerated GraphQL types for both Storefront and Customer Account APIs
+  - Updated all hardcoded API version references in documentation and tests
+  - Regenerated skeleton template types
+  - Updated skeleton's @shopify/cli dependency to ~3.83.3
+
+  Breaking changes may occur due to API schema changes between versions.
+
+- Add React Router 7.9.2 support infrastructure with full compatibility for both context access patterns. ([#3142](https://github.com/Shopify/hydrogen/pull/3142)) by [@juanpprieto](https://github.com/juanpprieto)
+
+  ## New `createRequestHandler` Export from `/oxygen`
+
+  Hydrogen now provides its own `createRequestHandler` that wraps React Router's implementation:
+
+  ```diff
+  // server.ts
+  - import {createRequestHandler} from '@shopify/remix-oxygen';
+  + import {createRequestHandler} from '@shopify/hydrogen/oxygen';
+  ```
+
+  This new handler:
+  - Uses React Router's `createRequestHandler` internally
+  - Adds Hydrogen-specific request validation
+  - Includes powered-by headers
+  - Handles double-slash URL normalization
+
+  ## New `react-router-preset` Export
+
+  Configure React Router with Hydrogen's optimized settings:
+
+  ```ts
+  // react-router.config.ts
+  import type {Config} from '@react-router/dev/config';
+  import {hydrogenPreset} from '@shopify/hydrogen/react-router-preset';
+
+  export default {
+    presets: [hydrogenPreset()],
+  } satisfies Config;
+  ```
+
+  The preset provides:
+  - Optimized build settings for Oxygen deployment
+  - Proper server/client module resolution
+  - Performance-tuned bundling configuration
+
+  ## Enhanced TypeScript Support with `HydrogenRouterContextProvider`
+
+  Improved type safety for entry.server.tsx with the new `HydrogenRouterContextProvider` type:
+
+  ```diff
+  // app/entry.server.tsx
+  - import type {AppLoadContext} from '@shopify/remix-oxygen';
+  import {ServerRouter} from 'react-router';
+  import {isbot} from 'isbot';
+  import {renderToReadableStream} from 'react-dom/server';
+  import {
+    createContentSecurityPolicy,
+  + type HydrogenRouterContextProvider,
+  } from '@shopify/hydrogen';
+  import type {EntryContext} from 'react-router';
+
+  export default async function handleRequest(
+    request: Request,
+    responseStatusCode: number,
+    responseHeaders: Headers,
+    reactRouterContext: EntryContext,
+  - context: AppLoadContext,
+  + context: HydrogenRouterContextProvider,
+  ) {
+    const {nonce, header, NonceProvider} = createContentSecurityPolicy({
+      shop: {
+        checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
+        storeDomain: context.env.PUBLIC_STORE_DOMAIN,
+      },
+    });
+
+    // Rest of the implementation remains the same
+    const body = await renderToReadableStream(
+      <NonceProvider>
+        <ServerRouter
+          context={reactRouterContext}
+          url={request.url}
+          nonce={nonce}
+        />
+      </NonceProvider>,
+      {
+        nonce,
+        signal: request.signal,
+      },
+    );
+  }
+  ```
+
+  The `HydrogenRouterContextProvider` type provides better type safety and IntelliSense for all Hydrogen services in your React Router context. Additionally, `NonceProvider` is now exported directly from `@shopify/hydrogen` for advanced use cases.
+
+  ## New Context Access Patterns
+
+  ### Pattern 1: Direct Context Access (Existing)
+
+  Continue using direct destructuring from context - no changes needed:
+
+  ```ts
+  // app/routes/_index.tsx
+  export async function loader({context}: Route.LoaderArgs) {
+    // Direct access - works as before
+    const {storefront, cart, env} = context;
+
+    const data = await storefront.query(QUERY);
+    const cartData = await cart.get();
+
+    return {data, cart: cartData};
+  }
+  ```
+
+  ### Pattern 2: Context Registry Pattern (New)
+
+  Use the new `hydrogenContext` registry with React Router 7.9's `context.get()`:
+
+  ```diff
+  // app/routes/products.$handle.tsx
+  + import {hydrogenContext} from '@shopify/hydrogen';
+
+  export async function loader({context}: Route.LoaderArgs) {
+  - // Direct destructuring
+  - const {storefront, cart, session, env} = context;
+  + // Registry-based access - new pattern
+  + const storefront = context.get(hydrogenContext.storefront);
+  + const cart = context.get(hydrogenContext.cart);
+  + const session = context.get(hydrogenContext.session);
+  + const env = context.get(hydrogenContext.env);
+
+    const product = await storefront.query(PRODUCT_QUERY);
+    return {product};
+  }
+
+  export async function action({context}: Route.ActionArgs) {
+  - const {cart} = context;
+  + const cart = context.get(hydrogenContext.cart);
+    return await cart.addLines([...]);
+  }
+  ```
+
+  Available context keys in `hydrogenContext`:
+  - `hydrogenContext.storefront` - Storefront API client
+  - `hydrogenContext.customerAccount` - Customer Account API client
+  - `hydrogenContext.cart` - Cart handler instance
+  - `hydrogenContext.env` - Environment variables
+  - `hydrogenContext.waitUntil` - Oxygen waitUntil for background tasks
+  - `hydrogenContext.session` - Session storage handler
+
+  ## New `createHydrogenContext` Helper Function
+
+  Simplified context creation with automatic hybrid access pattern support:
+
+  ```ts
+  // app/lib/context.ts
+  import {createHydrogenContext} from '@shopify/hydrogen';
+  import {AppSession} from '~/lib/session';
+  import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
+
+  // Optional: Define additional context for third-party services
+  const additionalContext = {
+    // CMS clients, review systems, analytics, etc.
+    // cms: await createCMSClient(env),
+    // reviews: await createReviewsClient(env),
+  } as const;
+
+  // Auto-augment types for TypeScript IntelliSense
+  declare global {
+    interface HydrogenAdditionalContext extends typeof additionalContext {}
+  }
+
+  export async function createHydrogenRouterContext(
+    request: Request,
+    env: Env,
+    executionContext: ExecutionContext,
+  ) {
+    const waitUntil = executionContext.waitUntil.bind(executionContext);
+    const [cache, session] = await Promise.all([
+      caches.open('hydrogen'),
+      AppSession.init(request, [env.SESSION_SECRET]),
+    ]);
+
+    // Create unified context with all Hydrogen services
+    const hydrogenContext = createHydrogenContext(
+      {
+        env,
+        request,
+        cache,
+        waitUntil,
+        session,
+        i18n: {language: 'EN', country: 'US'},
+        cart: {
+          queryFragment: CART_QUERY_FRAGMENT,
+        },
+      },
+      additionalContext, // Optional additional services
+    );
+
+    return hydrogenContext; // Supports both direct access and context.get()
+  }
+  ```
+
+  Then use in server.ts:
+
+  ```diff
+  // server.ts
+  import {storefrontRedirect} from '@shopify/hydrogen';
+  - import {createRequestHandler} from '@shopify/remix-oxygen';
+  + import {createRequestHandler} from '@shopify/hydrogen/oxygen';
+  + import {createHydrogenRouterContext} from '~/lib/context';
+
+  export default {
+    async fetch(request, env, executionContext) {
+  -   // Manual context creation with individual services
+  -   const context = {
+  -     storefront: createStorefrontClient(...),
+  -     cart: createCartHandler(...),
+  -     // ... etc
+  -   };
+  +   // Automatic context creation with hybrid access support
+  +   const hydrogenContext = await createHydrogenRouterContext(
+  +     request,
+  +     env,
+  +     executionContext,
+  +   );
+
+      const handleRequest = createRequestHandler({
+  -     build: remixBuild,
+  +     // React Router 7.9.x server build
+  +     build: await import('virtual:react-router/server-build'),
+        mode: process.env.NODE_ENV,
+  -     getLoadContext: () => context,
+  +     getLoadContext: () => hydrogenContext,
+      });
+
+      return handleRequest(request);
+    },
+  };
+  ```
+
+  The new `createRequestHandler` from `@shopify/hydrogen/oxygen` wraps React Router's handler with additional Hydrogen-specific functionality like powered-by headers and request validation.
+
+- Migrate skeleton template to React Router 7.9.2 ([#3141](https://github.com/Shopify/hydrogen/pull/3141)) by [@juanpprieto](https://github.com/juanpprieto)
+
+  This major release migrates the Hydrogen skeleton template to React Router 7.9.2, introducing automatic type generation, enhanced type safety, and modernized APIs that leverage React Router's latest features.
+
+  ## Breaking Changes
+
+  ### Dependency Changes
+
+  The `@shopify/remix-oxygen` package is no longer needed and has been removed:
+
+  **Before (package.json):**
+
+  ```json
+  "dependencies": {
+    "@shopify/hydrogen": "2025.5.0",
+    "@shopify/remix-oxygen": "^3.0.0",
+    // ...
+  }
+  ```
+
+  **After (package.json):**
+
+  ```json
+  "dependencies": {
+    "@shopify/hydrogen": "2025.5.0",
+    // @shopify/remix-oxygen removed - functionality now in @shopify/hydrogen/oxygen
+    // ...
+  }
+  ```
+
+  ### Import Path Changes
+
+  All route files must update their imports from Remix to React Router:
+
+  **Before:**
+
+  ```typescript
+  import {redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+  import {useLoaderData, type MetaFunction} from '@remix-run/react';
+  ```
+
+  **After:**
+
+  ```typescript
+  import {redirect, useLoaderData} from 'react-router';
+  import type {Route} from './+types/route-name';
+  ```
+
+  ### Context Creation Pattern
+
+  The context creation has been renamed and restructured:
+
+  **Before:**
+
+  ```typescript
+  // app/lib/context.ts
+  export async function createAppLoadContext(
+    request: Request,
+    env: Env,
+    executionContext: ExecutionContext,
+  ) {
+    const hydrogenContext = createHydrogenContext({
+      env,
+      request,
+      cache,
+      waitUntil,
+      session,
+      i18n: {language: 'EN', country: 'US'},
+      cart: {
+        queryFragment: CART_QUERY_FRAGMENT,
+      },
+    });
+
+    return {
+      ...hydrogenContext,
+      // declare additional Remix loader context
+    };
+  }
+  ```
+
+  **After:**
+
+  ```typescript
+  // app/lib/context.ts
+  import {createHydrogenContext} from '@shopify/hydrogen';
+
+  // Define the additional context object
+  const additionalContext = {
+    // Additional context for custom properties, CMS clients, 3P SDKs, etc.
+    // These will be available as both context.propertyName and context.get(propertyContext)
+  } as const;
+
+  // Automatically augment HydrogenAdditionalContext with the additional context type
+  type AdditionalContextType = typeof additionalContext;
+
+  declare global {
+    interface HydrogenAdditionalContext extends AdditionalContextType {}
+  }
+
+  export async function createHydrogenRouterContext(
+    request: Request,
+    env: Env,
+    executionContext: ExecutionContext,
+  ) {
+    const hydrogenContext = createHydrogenContext(
+      {
+        env,
+        request,
+        cache,
+        waitUntil,
+        session,
+        i18n: {language: 'EN', country: 'US'},
+        cart: {
+          queryFragment: CART_QUERY_FRAGMENT,
+        },
+      },
+      additionalContext,
+    );
+
+    return hydrogenContext;
+  }
+  ```
+
+  ### Server Entry Changes
+
+  The server.ts now uses `createRequestHandler` from `@shopify/hydrogen/oxygen` and React Router's virtual build import:
+
+  **Before:**
+
+  ```typescript
+  // server.ts
+  import {createRequestHandler} from '@shopify/remix-oxygen';
+  import {createAppLoadContext} from '~/lib/context';
+
+  export default {
+    async fetch(request, env, executionContext) {
+      const appLoadContext = await createAppLoadContext(
+        request,
+        env,
+        executionContext,
+      );
+
+      const handleRequest = createRequestHandler({
+        build: await import(/* @vite-ignore */ './build/server/index.js'),
+        mode: process.env.NODE_ENV,
+        getLoadContext: () => appLoadContext,
+      });
+
+      return handleRequest(request);
+    },
+  };
+  ```
+
+  **After:**
+
+  ```typescript
+  // server.ts
+  import {createRequestHandler} from '@shopify/hydrogen/oxygen'; // New import source!
+  import {createHydrogenRouterContext} from '~/lib/context';
+
+  export default {
+    async fetch(request, env, executionContext) {
+      const hydrogenContext = await createHydrogenRouterContext(
+        request,
+        env,
+        executionContext,
+      );
+
+      const handleRequest = createRequestHandler({
+        // React Router 7.9.x uses virtual imports for the server build
+        build: await import('virtual:react-router/server-build'),
+        mode: process.env.NODE_ENV,
+        getLoadContext: () => hydrogenContext,
+      });
+
+      return handleRequest(request);
+    },
+  };
+  ```
+
+  ### Route Type Pattern Changes
+
+  All routes now use React Router's automatic type generation:
+
+  **Before:**
+
+  ```typescript
+  export const meta: MetaFunction<typeof loader> = ({data}) => {
+    return [{title: data?.product?.title}];
+  };
+
+  export async function loader({params, context}: LoaderFunctionArgs) {
+    const handle = params.handle; // string | undefined
+    // ...
+  }
+  ```
+
+  **After:**
+
+  ```typescript
+  import type {Route} from './+types/products.$handle';
+
+  export const meta: Route.MetaFunction = ({data}) => {
+    return [{title: data?.product?.title}];
+  };
+
+  export async function loader({params, context}: Route.LoaderArgs) {
+    const handle = params.handle; // string - automatically typed as required!
+    // ...
+  }
+  ```
+
+  ## New Features
+
+  ### Automatic Type Generation
+
+  React Router 7.9.x automatically generates TypeScript types for every route, providing:
+  - Type-safe params (knows which params are required vs optional)
+  - Fully typed loader/action data in components
+  - Automatic IntelliSense for all route exports
+  - No more manual type assertions needed
+
+  ### Zero-Config Setup with Hydrogen Preset
+
+  ```typescript
+  // react-router.config.ts
+  import {hydrogenPreset} from '@shopify/hydrogen/react-router-preset';
+  import type {Config} from '@react-router/dev/config';
+
+  export default {
+    presets: [hydrogenPreset()],
+  } satisfies Config;
+  ```
+
+  ## Migration Guide
+  1. **Update package.json scripts** - Already configured in skeleton
+  2. **Update imports in all route files** - Replace Remix imports with React Router
+  3. **Use Route type imports** - Import `type {Route}` from generated types
+  4. **Update context creation** - Rename to `createHydrogenRouterContext`
+  5. **Update server.ts** - Use `virtual:react-router/server-build` import
+  6. **Add react-router.config.ts** - Use the hydrogenPreset for zero-config setup
+
+### Minor Changes
+
+- Add `countryCode` parameter to Customer Account API login ([#3148](https://github.com/Shopify/hydrogen/pull/3148)) by [@andrew-cottage](https://github.com/andrew-cottage)
+
+  Adds support for setting the country context during customer authentication. This allows merchants to provide region-specific experiences by passing a `CountryCode` to the login method.
+
+  When a `countryCode` is provided, the Customer Accounts login page will be contextualized to the customer's current market. This includes:
+  - The shop URL will be contextualized to the market.
+  - policy URLs will be contextualized to the market.
+
+  This enhancement enables seamless multi-market experiences where customers are automatically shown the right context based on their location..
+
+  ### What's new
+  - Added `countryCode` optional parameter to `customer.login()` options
+  - The country code is passed to Shopify's authentication service as the `region_country` parameter
+  - Supports all ISO 3166-1 alpha-2 country codes (e.g., 'US', 'CA', 'GB', 'AU')
+
+  ### Usage
+
+  ```tsx
+  // Basic usage with country code
+  const response = await customer.login({
+    countryCode: 'US',
+  });
+
+  // Combine with locale for full localization
+  const response = await customer.login({
+    uiLocales: 'FR',
+    countryCode: 'CA', // French-speaking customer in Canada
+  });
+
+  // Use with dynamic country detection
+  const detectedCountry = getCountryFromRequest(request);
+  const response = await customer.login({
+    countryCode: detectedCountry,
+  });
+  ```
+
+  ### Migration
+
+  This is a non-breaking change. The `countryCode` parameter is optional and existing implementations will continue to work without modification.
+
+### Patch Changes
+
+- Update and pin react-router to 7.9.2 for 2025.7.0 ([#3138](https://github.com/Shopify/hydrogen/pull/3138)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Fix GraphQL client development warnings ([#3108](https://github.com/Shopify/hydrogen/pull/3108)) by [@juanpprieto](https://github.com/juanpprieto)
+
+  Updates `@shopify/graphql-client` from v1.4.0 to v1.4.1 to resolve sourcemap warnings and pre-optimizes the dependency in Vite configuration to prevent unexpected page reloads during development.
+
+  **What's fixed:**
+  - Eliminates sourcemap warnings: "Sourcemap for '/node_modules/@shopify/graphql-client/dist/graphql-client/graphql-client.mjs' points to missing source files"
+  - Prevents "new dependencies optimized" messages and automatic page reloads during development
+
+  **Technical changes:**
+  - Updated `@shopify/graphql-client` dependency to v1.4.1 which includes proper sourcemap generation
+  - Added `@shopify/graphql-client` to Vite's `optimizeDeps.include` array for pre-optimization
+
+- Fixed React Context error that occurred during client-side hydration when using Content Security Policy (CSP) with nonces. The error "Cannot read properties of null (reading 'useContext')" was caused by the `NonceProvider` being present during server-side rendering but missing during client hydration. ([#3082](https://github.com/Shopify/hydrogen/pull/3082)) by [@juanpprieto](https://github.com/juanpprieto)
+
+  #### Changes for Existing Projects
+
+  If you have customized your `app/entry.client.tsx` file, you may need to wrap your app with the `NonceProvider` during hydration to avoid this error:
+
+  ```diff
+  // app/entry.client.tsx
+  import {HydratedRouter} from 'react-router/dom';
+  import {startTransition, StrictMode} from 'react';
+  import {hydrateRoot} from 'react-dom/client';
+  + import {NonceProvider} from '@shopify/hydrogen';
+
+  if (!window.location.origin.includes('webcache.googleusercontent.com')) {
+    startTransition(() => {
+  +   // Extract nonce from existing script tags
+  +   const existingNonce = document
+  +     .querySelector<HTMLScriptElement>('script[nonce]')
+  +     ?.nonce;
+  +
+      hydrateRoot(
+        document,
+        <StrictMode>
+  -       <HydratedRouter />
+  +       <NonceProvider value={existingNonce}>
+  +         <HydratedRouter />
+  +       </NonceProvider>
+        </StrictMode>,
+      );
+    });
+  }
+  ```
+
+  This ensures the React Context tree matches between server and client rendering, preventing hydration mismatches.
+
+  #### Package Changes
+  - **@shopify/hydrogen**: Exported `NonceProvider` from the main package to allow client-side usage and simplified Vite configuration to improve React Context stability during development
+  - **skeleton**: Updated the template's `entry.client.tsx` to include the `NonceProvider` wrapper during hydration
+
+- Add support for removing individual gift cards from cart ([#3128](https://github.com/Shopify/hydrogen/pull/3128)) by [@juanpprieto](https://github.com/juanpprieto)
+
+  The `cartGiftCardCodesUpdate` mutation requires all gift card codes to be provided, but the API only returns the last 4 digits for security. This made it impossible to remove specific gift cards when multiple were applied.
+
+  This fix introduces the missing `cartGiftCardCodesRemove` mutation to remove gift cards by their IDs.
+
+  **What changed:**
+
+  **In `@shopify/hydrogen`:**
+  - Added `cartGiftCardCodesRemoveDefault` mutation handler
+  - Added `removeGiftCardCodes` method to `HydrogenCart`
+  - Added `GiftCardCodesRemove` action to `CartForm.ACTIONS`
+  - Updated default cart fragment to include `appliedGiftCards` with `id` field
+
+  **In the skeleton template:**
+  - Added `id` field to `appliedGiftCards` fragment
+  - Updated `CartSummary` to show individual remove buttons per gift card
+  - Added handler for `GiftCardCodesRemove` action in cart route
+  - Maintained client-side tracking for additive gift card updates
+
+  **Usage example:**
+
+  ```tsx
+  // In your cart component
+  function RemoveGiftCardButton({giftCardId}: {giftCardId: string}) {
+    return (
+      <CartForm
+        route="/cart"
+        action={CartForm.ACTIONS.GiftCardCodesRemove}
+        inputs={{
+          giftCardCodes: [giftCardId], // Pass the gift card ID
+        }}
+      >
+        <button type="submit">Remove</button>
+      </CartForm>
+    );
+  }
+  ```
+
+  **Cart handler usage:**
+
+  ```ts
+  // The cart handler now includes removeGiftCardCodes method
+  const cart = createCartHandler({...});
+
+  // Remove specific gift cards by their IDs
+  const result = await cart.removeGiftCardCodes(['giftCardId1', 'giftCardId2']);
+  ```
+
+- Fix and upgrade /graphiql route ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Add GraphQL @defer directive support to storefront client ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Include `cdn.shopify.com` by default in CSP connectSrc ([#3172](https://github.com/Shopify/hydrogen/pull/3172)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`6d067665562223ce2865f1c14be54b0b50258bd4`](https://github.com/Shopify/hydrogen/commit/6d067665562223ce2865f1c14be54b0b50258bd4), [`ae7bedc89c1968b4a035f421b5ee6908f6376b1b`](https://github.com/Shopify/hydrogen/commit/ae7bedc89c1968b4a035f421b5ee6908f6376b1b), [`d57782a1ae3fa0017836d6010fb6ac5ab5d25965`](https://github.com/Shopify/hydrogen/commit/d57782a1ae3fa0017836d6010fb6ac5ab5d25965), [`2002c6cd66cebc1f94ccdb9dd04b511d2aedffa6`](https://github.com/Shopify/hydrogen/commit/2002c6cd66cebc1f94ccdb9dd04b511d2aedffa6), [`6d067665562223ce2865f1c14be54b0b50258bd4`](https://github.com/Shopify/hydrogen/commit/6d067665562223ce2865f1c14be54b0b50258bd4), [`1bff1dac122eed09583dce54fc83a19ababddfca`](https://github.com/Shopify/hydrogen/commit/1bff1dac122eed09583dce54fc83a19ababddfca), [`b79e92f775cadecf6ab21de536f86c4f34bf1bde`](https://github.com/Shopify/hydrogen/commit/b79e92f775cadecf6ab21de536f86c4f34bf1bde), [`ae7bedc89c1968b4a035f421b5ee6908f6376b1b`](https://github.com/Shopify/hydrogen/commit/ae7bedc89c1968b4a035f421b5ee6908f6376b1b)]:
+  - @shopify/hydrogen-react@2026.0.0
+
 ## 2025.5.0
 
 ### Patch Changes
