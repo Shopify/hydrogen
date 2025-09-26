@@ -581,8 +581,9 @@ function maybeIncludeDependency({
   if (isReactRouterPackage) return false;
 
   const isNextVersion = existingDependencyVersion === 'next';
+  const allowNextVersions = process.env.HYDROGEN_UPGRADE_ALLOW_NEXT === '1';
 
-  if (isNextVersion) return false;
+  if (isNextVersion && !allowNextVersions) return false;
 
   // Handle required/conditional dependenciesMeta deps
   const depMeta = selectedRelease.dependenciesMeta?.[name];
@@ -597,6 +598,14 @@ function maybeIncludeDependency({
 
   // Dep meta is required...
   if (!existingDependencyVersion) return true;
+
+  // Always upgrade next versions
+  if (
+    (existingDependencyVersion === 'next' || version === 'next') &&
+    process.env.HYDROGEN_UPGRADE_ALLOW_NEXT === '1'
+  ) {
+    return true;
+  }
 
   const isOlderVersion = semver.lt(
     getAbsoluteVersion(existingDependencyVersion),
@@ -722,6 +731,32 @@ export async function upgradeNodeModules({
           packageManager: await getPackageManager(appPath),
           args: depsToRemove,
         });
+
+        // Check node_modules state after removal
+        try {
+          const {exec} = await import('@shopify/cli-kit/node/system');
+          const hydrogenCheck = await exec(
+            'ls',
+            ['node_modules/@shopify/hydrogen/package.json'],
+            {cwd: appPath},
+          ).catch(() => null);
+          const remixCheck = await exec(
+            'ls',
+            ['node_modules/@remix-run/react/package.json'],
+            {cwd: appPath},
+          ).catch(() => null);
+
+          if (hydrogenCheck) {
+            const hydrogenVersion = await exec(
+              'node',
+              [
+                '-p',
+                'require("./node_modules/@shopify/hydrogen/package.json").version',
+              ],
+              {cwd: appPath},
+            ).catch(() => 'ERROR');
+          }
+        } catch (e) {}
       },
     });
   }
@@ -835,6 +870,21 @@ function appendReactRouterDependencies({
  * Gets the absolute version from a pinned or unpinned version
  */
 export function getAbsoluteVersion(version: string) {
+  // Return next versions unchanged
+  if (version === 'next' && process.env.HYDROGEN_UPGRADE_ALLOW_NEXT === '1') {
+    return 'next';
+  }
+
+  // Extract snapshot versions
+  if (process.env.HYDROGEN_UPGRADE_ALLOW_NEXT === '1') {
+    const snapshotMatch = version.match(
+      /^[\^~]?0\.0\.0-next-([a-f0-9]+)-(\d+)$/,
+    );
+    if (snapshotMatch) {
+      return version.replace(/^[\^~]?/, ''); // Return without range prefix
+    }
+  }
+
   const result = semver.minVersion(version);
   if (!result) {
     throw new AbortError(`Invalid version: ${version}`);
@@ -976,7 +1026,7 @@ async function displayUpgradeSummary({
  * Validate if a h2 upgrade was successful by comparing the previous and current
  * @shopify/hydrogen versions
  */
-async function validateUpgrade({
+export async function validateUpgrade({
   appPath,
   selectedRelease,
 }: {
@@ -992,6 +1042,21 @@ async function validateUpgrade({
   }
 
   const updatedPinnedVersion = getAbsoluteVersion(updatedVersion);
+
+  // Accept snapshot versions for next targets
+  const isSnapshotVersion = updatedPinnedVersion.match(
+    /^0\.0\.0-next-[a-f0-9]+-\d+$/,
+  );
+  const targetIsNext =
+    selectedRelease.dependencies?.['@shopify/hydrogen'] === 'next';
+
+  if (
+    isSnapshotVersion &&
+    targetIsNext &&
+    process.env.HYDROGEN_UPGRADE_ALLOW_NEXT === '1'
+  ) {
+    return;
+  }
 
   if (updatedPinnedVersion !== selectedRelease.version) {
     throw new AbortError(

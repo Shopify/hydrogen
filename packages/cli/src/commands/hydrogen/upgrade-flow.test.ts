@@ -1,5 +1,5 @@
-import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {mkdtemp, readFile, writeFile, mkdir} from 'node:fs/promises';
+import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
+import {mkdtemp, readFile, writeFile, mkdir, readdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {exec} from '@shopify/cli-kit/node/system';
@@ -8,6 +8,7 @@ import * as upgradeModule from './upgrade.js';
 import {spawn, ChildProcess} from 'node:child_process';
 import getPort from 'get-port';
 import {fileExists} from '@shopify/cli-kit/node/fs';
+import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 
 // Mock the UI prompts to avoid interactive prompts during tests
 vi.mock('@shopify/cli-kit/node/ui', async () => {
@@ -36,6 +37,11 @@ describe('upgrade flow integration', () => {
   beforeEach(() => {
     // Clear any cached changelog to ensure mocks work properly
     vi.clearAllMocks();
+    process.env.HYDROGEN_UPGRADE_ALLOW_NEXT = '1';
+  });
+
+  afterEach(() => {
+    delete process.env.HYDROGEN_UPGRADE_ALLOW_NEXT;
   });
 
   describe('End-to-end upgrade scenarios', () => {
@@ -161,9 +167,19 @@ describe('upgrade flow integration', () => {
       );
       const hydrogenVersion = packageJson.dependencies?.['@shopify/hydrogen'];
 
-      // Hydrogen version should match the target version
+      // Hydrogen version should match target version
+      const isSnapshotVersion = hydrogenVersion?.match(
+        /^[\^~]?0\.0\.0-next-[a-f0-9]+-\d+$/,
+      );
+      const targetUsesNext =
+        latestRelease?.dependencies?.['@shopify/hydrogen'] === 'next';
+
       expect(
-        hydrogenVersion === toVersion || hydrogenVersion === `^${toVersion}`,
+        hydrogenVersion === toVersion ||
+          hydrogenVersion === `^${toVersion}` ||
+          (isSnapshotVersion &&
+            targetUsesNext &&
+            process.env.HYDROGEN_UPGRADE_ALLOW_NEXT === '1'),
       ).toBe(true);
 
       // For same-version upgrades, verify dependencies were actually updated
@@ -507,7 +523,9 @@ describe('upgrade flow integration', () => {
           for (const [pkg, version] of Object.entries(release.dependencies)) {
             expect(typeof pkg).toBe('string');
             expect(typeof version).toBe('string');
-            expect(version).toMatch(semverRegex);
+            expect(
+              version === 'next' || version.match(semverRegex),
+            ).toBeTruthy();
           }
         }
 
@@ -517,7 +535,9 @@ describe('upgrade flow integration', () => {
           )) {
             expect(typeof pkg).toBe('string');
             expect(typeof version).toBe('string');
-            expect(version).toMatch(semverRegex);
+            expect(
+              version === 'next' || version.match(semverRegex),
+            ).toBeTruthy();
           }
         }
 
@@ -800,10 +820,15 @@ async function validateDependencyRemoval(
     ...packageJson.devDependencies,
   };
 
-  // Check each dependency that should be removed
+  // Check dependencies marked for removal
+  const reinstalledDeps = {
+    ...targetRelease.dependencies,
+    ...targetRelease.devDependencies,
+  };
+
   const failedRemovals: string[] = [];
   for (const dep of depsToRemove) {
-    if (dep in allDeps) {
+    if (dep in allDeps && !(dep in reinstalledDeps)) {
       failedRemovals.push(`${dep} (found with version ${allDeps[dep]})`);
     }
   }
@@ -1109,3 +1134,200 @@ async function validateFileIntegrity(projectDir: string) {
     }
   }
 }
+
+describe('Next version upgrade integration', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.HYDROGEN_UPGRADE_ALLOW_NEXT = '1';
+  });
+
+  afterEach(() => {
+    delete process.env.HYDROGEN_UPGRADE_ALLOW_NEXT;
+  });
+
+  it('generates correct package manager commands for next versions', () => {
+    const currentDependencies = {
+      '@shopify/hydrogen': '2025.4.1',
+      '@shopify/mini-oxygen': '3.2.0',
+      'react-router': '7.0.0',
+      '@shopify/cli': '3.82.0',
+    };
+
+    const nextVersionRelease = {
+      title: 'React Router 7 migration with API version 2025-07',
+      version: '2025.7.0',
+      hash: 'pending-merge',
+      commit:
+        'https://github.com/Shopify/hydrogen/pull/3166' as `https://${string}`,
+      pr: 'https://github.com/Shopify/hydrogen/pull/3166' as `https://${string}`,
+      date: '2025-09-17',
+      dependencies: {
+        '@shopify/hydrogen': 'next',
+        'react-router': '7.9.2',
+        'react-router-dom': '7.9.2',
+      },
+      devDependencies: {
+        '@shopify/mini-oxygen': 'next',
+        '@shopify/cli': '3.83.3',
+        '@react-router/dev': '7.9.2',
+        '@react-router/fs-routes': '7.9.2',
+      },
+      removeDependencies: [
+        '@shopify/remix-oxygen',
+        '@remix-run/react',
+        '@remix-run/server-runtime',
+      ],
+      removeDevDependencies: ['@remix-run/dev', '@remix-run/fs-routes'],
+      dependenciesMeta: {
+        '@shopify/cli': {required: true},
+        'react-router': {required: true},
+        '@react-router/dev': {required: true},
+        '@shopify/mini-oxygen': {required: true},
+      },
+      fixes: [],
+      features: [],
+    };
+
+    const args = upgradeModule.buildUpgradeCommandArgs({
+      selectedRelease: nextVersionRelease,
+      currentDependencies,
+    });
+
+    expect(args).toContain('@shopify/hydrogen@next');
+    expect(args).toContain('@shopify/mini-oxygen@next');
+    expect(args).toContain('@shopify/cli@3.83.3');
+    expect(args).toContain('react-router@7.9.2');
+    expect(args).toContain('react-router-dom@7.9.2');
+    expect(args).toContain('@react-router/dev@7.9.2');
+    expect(args).toContain('@react-router/fs-routes@7.9.2');
+
+    expect(args).not.toContain('@shopify/remix-oxygen');
+    expect(args).not.toContain('@remix-run/react');
+  });
+
+  it('handles available upgrades detection with next versions', () => {
+    const changelog = {
+      url: 'https://github.com/Shopify/hydrogen/pulls',
+      version: '1.0.0',
+      releases: [
+        {
+          title: 'Test release',
+          version: '2025.7.0',
+          hash: 'test-hash',
+          commit: 'https://github.com/test' as `https://${string}`,
+          pr: 'https://github.com/test' as `https://${string}`,
+          date: '2025-09-17',
+          dependencies: {'@shopify/hydrogen': 'next'},
+          devDependencies: {'@shopify/mini-oxygen': 'next'},
+          fixes: [],
+          features: [],
+        },
+      ],
+    };
+
+    const currentVersion = '2025.4.1';
+    const currentDependencies = {
+      '@shopify/hydrogen': '2025.4.1',
+      '@shopify/mini-oxygen': '3.2.0',
+    };
+
+    const {availableUpgrades} = upgradeModule.getAvailableUpgrades({
+      releases: changelog.releases,
+      currentVersion,
+      currentDependencies,
+    });
+
+    expect(availableUpgrades).toHaveLength(1);
+    expect(availableUpgrades[0]?.version).toBe('2025.7.0');
+  });
+
+  it('processes cumulative release with next versions', () => {
+    const releases = [
+      {
+        title: 'Test release',
+        version: '2025.7.0',
+        hash: 'test-hash',
+        commit: 'https://github.com/test' as `https://${string}`,
+        pr: 'https://github.com/test' as `https://${string}`,
+        date: '2025-09-17',
+        dependencies: {'@shopify/hydrogen': 'next'},
+        devDependencies: {'@shopify/mini-oxygen': 'next'},
+        fixes: [{title: 'Fix defer/streaming', id: '3039', pr: null}],
+        features: [
+          {
+            title: 'Migrate to React Router',
+            id: '3141',
+            breaking: true,
+            pr: null,
+          },
+        ],
+      },
+    ];
+
+    const currentVersion = '2025.4.1';
+    const selectedRelease = releases[0]!;
+
+    const cumulativeRelease = upgradeModule.getCummulativeRelease({
+      availableUpgrades: releases,
+      selectedRelease,
+      currentVersion,
+      currentDependencies: {},
+    });
+
+    expect(cumulativeRelease.fixes).toHaveLength(1);
+    expect(cumulativeRelease.features).toHaveLength(1);
+    expect(cumulativeRelease.fixes[0]?.title).toBe('Fix defer/streaming');
+    expect(cumulativeRelease.features[0]?.title).toBe(
+      'Migrate to React Router',
+    );
+  });
+
+  it('validates upgrade arguments for mixed version types', () => {
+    const currentDependencies = {
+      '@shopify/hydrogen': '2025.4.1',
+      '@shopify/mini-oxygen': '3.2.0',
+      '@shopify/cli-hydrogen': '6.0.0',
+      'react-router': '7.0.0',
+    };
+
+    const mixedRelease = {
+      title: 'Mixed version test release',
+      version: '2025.7.0',
+      hash: 'test-hash',
+      commit: 'https://github.com/test' as `https://${string}`,
+      pr: 'https://github.com/test' as `https://${string}`,
+      date: '2025-09-17',
+      dependencies: {
+        '@shopify/hydrogen': 'next',
+        'react-router': '7.9.2',
+      },
+      devDependencies: {
+        '@shopify/mini-oxygen': 'next',
+        '@shopify/cli-hydrogen': '2025.7.0',
+      },
+      dependenciesMeta: {},
+      fixes: [],
+      features: [],
+    };
+
+    const args = upgradeModule.buildUpgradeCommandArgs({
+      selectedRelease: mixedRelease,
+      currentDependencies,
+    });
+
+    const shopifyNextPackages = args.filter(
+      (arg) => arg.includes('@shopify/') && arg.endsWith('@next'),
+    );
+    const shopifySemverPackages = args.filter(
+      (arg) => arg.includes('@shopify/') && !arg.endsWith('@next'),
+    );
+    const nonShopifyPackages = args.filter((arg) => !arg.includes('@shopify/'));
+
+    expect(shopifyNextPackages).toEqual([
+      '@shopify/hydrogen@next',
+      '@shopify/mini-oxygen@next',
+    ]);
+    expect(shopifySemverPackages).toEqual(['@shopify/cli-hydrogen@2025.7.0']);
+    expect(nonShopifyPackages).toContain('react-router@7.9.2');
+  });
+});
