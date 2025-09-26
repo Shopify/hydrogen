@@ -2,9 +2,9 @@
 '@shopify/cli-hydrogen': minor
 ---
 
-Add --version=next support for upgrading to unpublished versions
+Add --version=next support for unpublished version upgrades
 
-Adds intuitive `--version=next` flag to the upgrade command, enabling developers to test unreleased Hydrogen versions
+The upgrade command now supports the `--version=next` flag, letting developers test unreleased Hydrogen versions
 
 ## Usage
 
