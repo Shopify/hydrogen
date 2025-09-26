@@ -3,7 +3,7 @@
   "version": "1",
   "releases": [
     {
-      "title": "[COMPLETE BEFORE ATTEMPTING 2025.5 UPGRADE] Bump Shopify CLI version",
+      "title": "[COMPLETE BEFORE ATTEMPTING 2025.7.0 UPGRADE] Bump Shopify CLI version",
       "version": "2025.4.1",
       "hash": "e4f44954a5dc53e6dfccd1b7e96de593bbb0887a",
       "commit": "https://github.com/Shopify/hydrogen/commit/e4f44954a5dc53e6dfccd1b7e96de593bbb0887a",
