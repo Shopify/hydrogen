@@ -1,4 +1,4 @@
-import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
+import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {mkdtemp, readFile, writeFile, mkdir, readdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
@@ -8,7 +8,6 @@ import * as upgradeModule from './upgrade.js';
 import {spawn, ChildProcess} from 'node:child_process';
 import getPort from 'get-port';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 
 // Mock the UI prompts to avoid interactive prompts during tests
 vi.mock('@shopify/cli-kit/node/ui', async () => {
@@ -37,11 +36,6 @@ describe('upgrade flow integration', () => {
   beforeEach(() => {
     // Clear any cached changelog to ensure mocks work properly
     vi.clearAllMocks();
-    process.env.HYDROGEN_UPGRADE_ALLOW_NEXT = '1';
-  });
-
-  afterEach(() => {
-    delete process.env.HYDROGEN_UPGRADE_ALLOW_NEXT;
   });
 
   describe('End-to-end upgrade scenarios', () => {
@@ -52,6 +46,31 @@ describe('upgrade flow integration', () => {
 
       if (!latestRelease) {
         throw new Error('No releases found in changelog');
+      }
+
+      // Check if required versions are published to npm - skip if not available
+      const requiredPackages = [
+        [
+          '@shopify/hydrogen',
+          latestRelease.dependencies?.['@shopify/hydrogen'],
+        ],
+        [
+          '@shopify/mini-oxygen',
+          latestRelease.devDependencies?.['@shopify/mini-oxygen'],
+        ],
+      ].filter(([name, version]) => version);
+
+      for (const [packageName, version] of requiredPackages) {
+        try {
+          await exec('npm', ['view', `${packageName}@${version}`, 'version'], {
+            cwd: process.cwd(),
+          });
+        } catch (error) {
+          console.log(
+            `Skipping latest version test: ${packageName}@${version} not published to npm`,
+          );
+          return; // Skip test if package version not available
+        }
       }
 
       // Find the previous release (just one version back for clean single-version upgrade)
@@ -167,19 +186,9 @@ describe('upgrade flow integration', () => {
       );
       const hydrogenVersion = packageJson.dependencies?.['@shopify/hydrogen'];
 
-      // Hydrogen version should match target version
-      const isSnapshotVersion = hydrogenVersion?.match(
-        /^[\^~]?0\.0\.0-next-[a-f0-9]+-\d+$/,
-      );
-      const targetUsesNext =
-        latestRelease?.dependencies?.['@shopify/hydrogen'] === 'next';
-
+      // Hydrogen version should match the target version
       expect(
-        hydrogenVersion === toVersion ||
-          hydrogenVersion === `^${toVersion}` ||
-          (isSnapshotVersion &&
-            targetUsesNext &&
-            process.env.HYDROGEN_UPGRADE_ALLOW_NEXT === '1'),
+        hydrogenVersion === toVersion || hydrogenVersion === `^${toVersion}`,
       ).toBe(true);
 
       // For same-version upgrades, verify dependencies were actually updated
@@ -254,7 +263,12 @@ describe('upgrade flow integration', () => {
       }
 
       // Test dependency management - validate removals and additions
-      await validateDependencyChanges(projectDir, fromRelease, latestRelease);
+      await validateDependencyChanges(
+        projectDir,
+        fromRelease,
+        latestRelease,
+        toVersion,
+      );
 
       // Test build functionality - always try it first
       let buildFailed = false;
@@ -523,9 +537,7 @@ describe('upgrade flow integration', () => {
           for (const [pkg, version] of Object.entries(release.dependencies)) {
             expect(typeof pkg).toBe('string');
             expect(typeof version).toBe('string');
-            expect(
-              version === 'next' || version.match(semverRegex),
-            ).toBeTruthy();
+            expect(version).toMatch(semverRegex);
           }
         }
 
@@ -535,9 +547,7 @@ describe('upgrade flow integration', () => {
           )) {
             expect(typeof pkg).toBe('string');
             expect(typeof version).toBe('string');
-            expect(
-              version === 'next' || version.match(semverRegex),
-            ).toBeTruthy();
+            expect(version).toMatch(semverRegex);
           }
         }
 
@@ -820,15 +830,10 @@ async function validateDependencyRemoval(
     ...packageJson.devDependencies,
   };
 
-  // Check dependencies marked for removal
-  const reinstalledDeps = {
-    ...targetRelease.dependencies,
-    ...targetRelease.devDependencies,
-  };
-
+  // Check each dependency that should be removed
   const failedRemovals: string[] = [];
   for (const dep of depsToRemove) {
-    if (dep in allDeps && !(dep in reinstalledDeps)) {
+    if (dep in allDeps) {
       failedRemovals.push(`${dep} (found with version ${allDeps[dep]})`);
     }
   }
@@ -987,15 +992,23 @@ async function validateDependencyChanges(
   projectDir: string,
   fromRelease: any,
   toRelease: any,
+  targetVersion?: string,
 ) {
   const packageJsonPath = join(projectDir, 'package.json');
   const packageContent = await readFile(packageJsonPath, 'utf8');
   const packageJson = JSON.parse(packageContent);
 
-  // Check dependency removals if specified
+  // Check dependency removals if specified, excluding packages that are also being reinstalled
   if (toRelease.removeDependencies) {
+    const reinstalledDeps = {
+      ...toRelease.dependencies,
+      ...toRelease.devDependencies,
+    };
+
     for (const dep of toRelease.removeDependencies) {
-      expect(packageJson.dependencies?.[dep]).toBeUndefined();
+      if (!(dep in reinstalledDeps)) {
+        expect(packageJson.dependencies?.[dep]).toBeUndefined();
+      }
     }
   }
 
@@ -1012,12 +1025,25 @@ async function validateDependencyChanges(
       // Only validate if the dependency is present (upgrade might not add all deps)
       if (actualVersion) {
         const versionStr = String(version);
-        expect(
-          actualVersion === versionStr ||
-            actualVersion === `^${versionStr}` ||
-            actualVersion === `~${versionStr}` ||
-            actualVersion.includes(versionStr),
-        ).toBe(true);
+
+        // For --version=next, accept snapshot versions for @shopify packages
+        const isShopifyPackage = dep.startsWith('@shopify/');
+        const isSnapshotVersion = !!actualVersion.match(
+          /^[\^~]?0\.0\.0-next-[a-f0-9]+-\d+$/,
+        );
+
+        if (targetVersion === 'next' && isShopifyPackage && isSnapshotVersion) {
+          // Snapshot version is valid for @shopify packages with --version=next
+          expect(isSnapshotVersion).toBe(true);
+        } else {
+          // Standard semver validation for other packages
+          expect(
+            actualVersion === versionStr ||
+              actualVersion === `^${versionStr}` ||
+              actualVersion === `~${versionStr}` ||
+              actualVersion.includes(versionStr),
+          ).toBe(true);
+        }
       }
     }
   }
@@ -1036,12 +1062,29 @@ async function validateDependencyChanges(
           expect(actualVersion).toMatch(/^[~^]?\d+\.\d+\.\d+/);
         } else {
           const versionStr = String(version);
-          expect(
-            actualVersion === versionStr ||
-              actualVersion === `^${versionStr}` ||
-              actualVersion === `~${versionStr}` ||
-              actualVersion.includes(versionStr),
-          ).toBe(true);
+
+          // For --version=next, accept snapshot versions for @shopify packages
+          const isShopifyPackage = dep.startsWith('@shopify/');
+          const isSnapshotVersion = !!actualVersion.match(
+            /^[\^~]?0\.0\.0-next-[a-f0-9]+-\d+$/,
+          );
+
+          if (
+            targetVersion === 'next' &&
+            isShopifyPackage &&
+            isSnapshotVersion
+          ) {
+            // Snapshot version is valid for @shopify packages with --version=next
+            expect(isSnapshotVersion).toBe(true);
+          } else {
+            // Standard semver validation for other packages
+            expect(
+              actualVersion === versionStr ||
+                actualVersion === `^${versionStr}` ||
+                actualVersion === `~${versionStr}` ||
+                actualVersion.includes(versionStr),
+            ).toBe(true);
+          }
         }
       }
     }
@@ -1135,199 +1178,129 @@ async function validateFileIntegrity(projectDir: string) {
   }
 }
 
-describe('Next version upgrade integration', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    process.env.HYDROGEN_UPGRADE_ALLOW_NEXT = '1';
-  });
+describe('--version=next upgrade flow', () => {
+  // Test: Full E2E upgrade to next versions (only runs when latest versions NOT published)
+  it('upgrades from previous version to next release', async () => {
+    const changelog = await upgradeModule.getChangelog();
+    const latestRelease = changelog.releases[0];
 
-  afterEach(() => {
-    delete process.env.HYDROGEN_UPGRADE_ALLOW_NEXT;
-  });
+    if (!latestRelease) {
+      throw new Error('No releases found in changelog');
+    }
 
-  it('generates correct package manager commands for next versions', () => {
-    const currentDependencies = {
-      '@shopify/hydrogen': '2025.4.1',
-      '@shopify/mini-oxygen': '3.2.0',
-      'react-router': '7.0.0',
-      '@shopify/cli': '3.82.0',
-    };
-
-    const nextVersionRelease = {
-      title: 'React Router 7 migration with API version 2025-07',
-      version: '2025.7.0',
-      hash: 'pending-merge',
-      commit:
-        'https://github.com/Shopify/hydrogen/pull/3166' as `https://${string}`,
-      pr: 'https://github.com/Shopify/hydrogen/pull/3166' as `https://${string}`,
-      date: '2025-09-17',
-      dependencies: {
-        '@shopify/hydrogen': 'next',
-        'react-router': '7.9.2',
-        'react-router-dom': '7.9.2',
-      },
-      devDependencies: {
-        '@shopify/mini-oxygen': 'next',
-        '@shopify/cli': '3.83.3',
-        '@react-router/dev': '7.9.2',
-        '@react-router/fs-routes': '7.9.2',
-      },
-      removeDependencies: [
-        '@shopify/remix-oxygen',
-        '@remix-run/react',
-        '@remix-run/server-runtime',
+    // Check if required versions are NOT published to npm - skip if they ARE published
+    const requiredPackages = [
+      ['@shopify/hydrogen', latestRelease.dependencies?.['@shopify/hydrogen']],
+      [
+        '@shopify/mini-oxygen',
+        latestRelease.devDependencies?.['@shopify/mini-oxygen'],
       ],
-      removeDevDependencies: ['@remix-run/dev', '@remix-run/fs-routes'],
-      dependenciesMeta: {
-        '@shopify/cli': {required: true},
-        'react-router': {required: true},
-        '@react-router/dev': {required: true},
-        '@shopify/mini-oxygen': {required: true},
-      },
-      fixes: [],
-      features: [],
-    };
+    ].filter(([name, version]) => version);
 
-    const args = upgradeModule.buildUpgradeCommandArgs({
-      selectedRelease: nextVersionRelease,
-      currentDependencies,
-    });
+    for (const [packageName, version] of requiredPackages) {
+      try {
+        await exec('npm', ['view', `${packageName}@${version}`, 'version'], {
+          cwd: process.cwd(),
+        });
+        console.log(
+          `Skipping next version test: ${packageName}@${version} already published to npm`,
+        );
+        return; // Skip test if package version IS available (opposite of latest test)
+      } catch (error) {
+        // Good - version not published, continue with next test
+      }
+    }
 
-    expect(args).toContain('@shopify/hydrogen@next');
-    expect(args).toContain('@shopify/mini-oxygen@next');
-    expect(args).toContain('@shopify/cli@3.83.3');
-    expect(args).toContain('react-router@7.9.2');
-    expect(args).toContain('react-router-dom@7.9.2');
-    expect(args).toContain('@react-router/dev@7.9.2');
-    expect(args).toContain('@react-router/fs-routes@7.9.2');
+    // Find a valid historical commit for scaffolding
+    let fromCommit = null;
+    if (changelog.releases.length > 1) {
+      const previousRelease = changelog.releases[1];
+      if (previousRelease) {
+        fromCommit = await findCommitForVersion(previousRelease.version);
+      }
+    }
 
-    expect(args).not.toContain('@shopify/remix-oxygen');
-    expect(args).not.toContain('@remix-run/react');
-  });
+    if (!fromCommit) {
+      console.log(
+        'Skipping --version=next test: no valid historical commit found',
+      );
+      return;
+    }
 
-  it('handles available upgrades detection with next versions', () => {
-    const changelog = {
-      url: 'https://github.com/Shopify/hydrogen/pulls',
-      version: '1.0.0',
-      releases: [
-        {
-          title: 'Test release',
-          version: '2025.7.0',
-          hash: 'test-hash',
-          commit: 'https://github.com/test' as `https://${string}`,
-          pr: 'https://github.com/test' as `https://${string}`,
-          date: '2025-09-17',
-          dependencies: {'@shopify/hydrogen': 'next'},
-          devDependencies: {'@shopify/mini-oxygen': 'next'},
-          fixes: [],
-          features: [],
-        },
-      ],
-    };
+    const fromVersion = changelog.releases[1]?.version || 'unknown';
+    const projectDir = await scaffoldHistoricalProject(fromCommit);
 
-    const currentVersion = '2025.4.1';
-    const currentDependencies = {
-      '@shopify/hydrogen': '2025.4.1',
-      '@shopify/mini-oxygen': '3.2.0',
-    };
-
-    const {availableUpgrades} = upgradeModule.getAvailableUpgrades({
-      releases: changelog.releases,
-      currentVersion,
-      currentDependencies,
-    });
-
-    expect(availableUpgrades).toHaveLength(1);
-    expect(availableUpgrades[0]?.version).toBe('2025.7.0');
-  });
-
-  it('processes cumulative release with next versions', () => {
-    const releases = [
-      {
-        title: 'Test release',
-        version: '2025.7.0',
-        hash: 'test-hash',
-        commit: 'https://github.com/test' as `https://${string}`,
-        pr: 'https://github.com/test' as `https://${string}`,
-        date: '2025-09-17',
-        dependencies: {'@shopify/hydrogen': 'next'},
-        devDependencies: {'@shopify/mini-oxygen': 'next'},
-        fixes: [{title: 'Fix defer/streaming', id: '3039', pr: null}],
-        features: [
-          {
-            title: 'Migrate to React Router',
-            id: '3141',
-            breaking: true,
-            pr: null,
-          },
-        ],
-      },
-    ];
-
-    const currentVersion = '2025.4.1';
-    const selectedRelease = releases[0]!;
-
-    const cumulativeRelease = upgradeModule.getCummulativeRelease({
-      availableUpgrades: releases,
-      selectedRelease,
-      currentVersion,
-      currentDependencies: {},
-    });
-
-    expect(cumulativeRelease.fixes).toHaveLength(1);
-    expect(cumulativeRelease.features).toHaveLength(1);
-    expect(cumulativeRelease.fixes[0]?.title).toBe('Fix defer/streaming');
-    expect(cumulativeRelease.features[0]?.title).toBe(
-      'Migrate to React Router',
+    // Verify initial state
+    const initialPackageJson = JSON.parse(
+      await readFile(join(projectDir, 'package.json'), 'utf8'),
     );
-  });
 
-  it('validates upgrade arguments for mixed version types', () => {
-    const currentDependencies = {
-      '@shopify/hydrogen': '2025.4.1',
-      '@shopify/mini-oxygen': '3.2.0',
-      '@shopify/cli-hydrogen': '6.0.0',
-      'react-router': '7.0.0',
-    };
+    // Run --version=next upgrade (this is the key difference)
+    await runUpgradeCommand(projectDir, 'next');
 
-    const mixedRelease = {
-      title: 'Mixed version test release',
-      version: '2025.7.0',
-      hash: 'test-hash',
-      commit: 'https://github.com/test' as `https://${string}`,
-      pr: 'https://github.com/test' as `https://${string}`,
-      date: '2025-09-17',
-      dependencies: {
-        '@shopify/hydrogen': 'next',
-        'react-router': '7.9.2',
-      },
-      devDependencies: {
-        '@shopify/mini-oxygen': 'next',
-        '@shopify/cli-hydrogen': '2025.7.0',
-      },
-      dependenciesMeta: {},
-      fixes: [],
-      features: [],
-    };
-
-    const args = upgradeModule.buildUpgradeCommandArgs({
-      selectedRelease: mixedRelease,
-      currentDependencies,
-    });
-
-    const shopifyNextPackages = args.filter(
-      (arg) => arg.includes('@shopify/') && arg.endsWith('@next'),
+    // Validate upgrade results
+    const packageJson = JSON.parse(
+      await readFile(join(projectDir, 'package.json'), 'utf8'),
     );
-    const shopifySemverPackages = args.filter(
-      (arg) => arg.includes('@shopify/') && !arg.endsWith('@next'),
-    );
-    const nonShopifyPackages = args.filter((arg) => !arg.includes('@shopify/'));
 
-    expect(shopifyNextPackages).toEqual([
-      '@shopify/hydrogen@next',
-      '@shopify/mini-oxygen@next',
-    ]);
-    expect(shopifySemverPackages).toEqual(['@shopify/cli-hydrogen@2025.7.0']);
-    expect(nonShopifyPackages).toContain('react-router@7.9.2');
-  });
+    // Check that @shopify packages were upgraded to snapshot versions
+    const hydrogenVersion = packageJson.dependencies?.['@shopify/hydrogen'];
+    const miniOxygenVersion =
+      packageJson.devDependencies?.['@shopify/mini-oxygen'];
+
+    const isHydrogenSnapshot = !!hydrogenVersion?.match(
+      /^[\^~]?0\.0\.0-next-[a-f0-9]+-\d+$/,
+    );
+    const isMiniOxygenSnapshot = !!miniOxygenVersion?.match(
+      /^[\^~]?0\.0\.0-next-[a-f0-9]+-\d+$/,
+    );
+
+    expect(isHydrogenSnapshot).toBe(true);
+    if (miniOxygenVersion) {
+      expect(isMiniOxygenSnapshot).toBe(true);
+    }
+
+    // Validate dependency changes with --version=next support
+    await validateDependencyChanges(
+      projectDir,
+      changelog.releases[1],
+      latestRelease,
+      'next',
+    );
+
+    // Check instruction file generation (should work same as latest test)
+    const shouldHaveInstructions =
+      latestRelease.features?.some((f: any) => f.steps?.length > 0) ||
+      latestRelease.fixes?.some((f: any) => f.steps?.length > 0);
+
+    if (shouldHaveInstructions) {
+      const hydrogenDir = join(projectDir, '.hydrogen');
+      const files = await readdir(hydrogenDir).catch(() => []);
+      const hasInstructionFile = files.some(
+        (f) => f.startsWith('upgrade-') && f.endsWith('.md'),
+      );
+
+      expect(hasInstructionFile).toBe(true);
+
+      if (hasInstructionFile) {
+        const instructionFile = files.find(
+          (f) => f.startsWith('upgrade-') && f.endsWith('.md'),
+        );
+        const instructionContent = await readFile(
+          join(hydrogenDir, instructionFile!),
+          'utf8',
+        );
+        expect(instructionContent.length).toBeGreaterThan(100);
+      }
+    }
+
+    // Skip dev server validation for --version=next when migration guide exists
+    // (project needs manual migration steps before it can run)
+    if (!shouldHaveInstructions) {
+      await testDevServer(projectDir, 'next-upgrade-validation');
+    }
+
+    // Validate file integrity (same as latest test)
+    await validateFileIntegrity(projectDir);
+  }, 180000);
 });

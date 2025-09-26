@@ -171,6 +171,7 @@ export async function runUpgrade({
       currentVersion,
       targetVersion,
       availableUpgrades,
+      currentDependencies,
     });
 
     // Get an aggregate list of features and fixes included in the upgrade versions range
@@ -184,6 +185,7 @@ export async function runUpgrade({
     confirmed = await displayConfirmation({
       cumulativeRelease,
       selectedRelease,
+      targetVersion,
     });
   } while (!confirmed);
 
@@ -195,10 +197,16 @@ export async function runUpgrade({
     selectedRelease,
   });
 
-  await upgradeNodeModules({appPath, selectedRelease, currentDependencies});
+  await upgradeNodeModules({
+    appPath,
+    selectedRelease,
+    currentDependencies,
+    targetVersion,
+  });
   await validateUpgrade({
     appPath,
     selectedRelease,
+    targetVersion,
   });
 
   const instrunctionsFilePath = await instrunctionsFilePathPromise;
@@ -210,6 +218,35 @@ export async function runUpgrade({
     instrunctionsFilePath,
     selectedRelease,
   });
+}
+
+/**
+ * Creates a next version release based on latest changelog entry
+ */
+function createNextRelease(
+  currentDependencies: Record<string, string>,
+  latestRelease: Release,
+): Release {
+  // Use latest release as base and override specific @shopify packages to "next"
+  const dependencies = {...latestRelease.dependencies};
+  const devDependencies = {...latestRelease.devDependencies};
+
+  // Override @shopify/hydrogen and @shopify/mini-oxygen to "next" if they exist
+  if (dependencies['@shopify/hydrogen']) {
+    dependencies['@shopify/hydrogen'] = 'next';
+  }
+  if (devDependencies['@shopify/mini-oxygen']) {
+    devDependencies['@shopify/mini-oxygen'] = 'next';
+  }
+
+  const nextRelease = {
+    ...latestRelease,
+    title: `${latestRelease.title} (next versions)`,
+    dependencies,
+    devDependencies,
+  };
+
+  return nextRelease;
 }
 
 /**
@@ -430,17 +467,21 @@ export async function getSelectedRelease({
   targetVersion,
   availableUpgrades,
   currentVersion,
+  currentDependencies,
 }: {
   targetVersion?: string;
   availableUpgrades: Array<Release>;
   currentVersion: string;
+  currentDependencies: Record<string, string>;
 }) {
   const targetRelease = targetVersion
-    ? availableUpgrades.find(
-        (release) =>
-          getAbsoluteVersion(release.version) ===
-          getAbsoluteVersion(targetVersion),
-      )
+    ? targetVersion === 'next'
+      ? createNextRelease(currentDependencies, availableUpgrades[0]!)
+      : availableUpgrades.find(
+          (release) =>
+            getAbsoluteVersion(release.version) ===
+            getAbsoluteVersion(targetVersion),
+        )
     : undefined;
 
   return (
@@ -466,6 +507,14 @@ export function getCummulativeRelease({
 
   if (!availableUpgrades?.length) {
     return {features: [], fixes: []};
+  }
+
+  // For synthetic next releases, return features/fixes directly
+  if (selectedRelease.dependencies?.['@shopify/hydrogen'] === 'next') {
+    return {
+      features: selectedRelease.features || [],
+      fixes: selectedRelease.fixes || [],
+    };
   }
 
   const upgradingReleases = availableUpgrades.filter((release) => {
@@ -501,9 +550,11 @@ export function getCummulativeRelease({
 export function displayConfirmation({
   cumulativeRelease,
   selectedRelease,
+  targetVersion,
 }: {
   cumulativeRelease: CumulativeRelease;
   selectedRelease: Release;
+  targetVersion?: string;
 }) {
   const {features, fixes} = cumulativeRelease;
   if (features.length || fixes.length) {
@@ -535,6 +586,11 @@ export function displayConfirmation({
     });
   }
 
+  // Skip confirmation for next version upgrades
+  if (targetVersion === 'next') {
+    return true;
+  }
+
   return renderConfirmationPrompt({
     message: `Are you sure you want to upgrade to ${selectedRelease.version}?`,
     cancellationMessage: `No, choose another version`,
@@ -563,10 +619,12 @@ function maybeIncludeDependency({
   currentDependencies,
   dependency: [name, version],
   selectedRelease,
+  targetVersion,
 }: {
   dependency: [string, string];
   currentDependencies: Record<string, string>;
   selectedRelease: Release;
+  targetVersion?: string;
 }) {
   const existingDependencyVersion = currentDependencies[name];
 
@@ -581,7 +639,7 @@ function maybeIncludeDependency({
   if (isReactRouterPackage) return false;
 
   const isNextVersion = existingDependencyVersion === 'next';
-  const allowNextVersions = process.env.HYDROGEN_UPGRADE_ALLOW_NEXT === '1';
+  const allowNextVersions = targetVersion === 'next';
 
   if (isNextVersion && !allowNextVersions) return false;
 
@@ -602,7 +660,7 @@ function maybeIncludeDependency({
   // Always upgrade next versions
   if (
     (existingDependencyVersion === 'next' || version === 'next') &&
-    process.env.HYDROGEN_UPGRADE_ALLOW_NEXT === '1'
+    targetVersion === 'next'
   ) {
     return true;
   }
@@ -623,9 +681,11 @@ function maybeIncludeDependency({
 export function buildUpgradeCommandArgs({
   selectedRelease,
   currentDependencies,
+  targetVersion,
 }: {
   selectedRelease: Release;
   currentDependencies: Record<string, string>;
+  targetVersion?: string;
 }) {
   const args: string[] = [];
 
@@ -635,9 +695,19 @@ export function buildUpgradeCommandArgs({
       currentDependencies,
       dependency,
       selectedRelease,
+      targetVersion,
     });
     if (!shouldUpgradeDep) continue;
-    args.push(`${dependency[0]}@${getAbsoluteVersion(dependency[1])}`);
+
+    // Transform specific @shopify packages to "next" when --version=next is used
+    const version =
+      targetVersion === 'next' &&
+      (dependency[0] === '@shopify/hydrogen' ||
+        dependency[0] === '@shopify/mini-oxygen')
+        ? 'next'
+        : getAbsoluteVersion(dependency[1]);
+
+    args.push(`${dependency[0]}@${version}`);
   }
 
   // upgrade devDependencies
@@ -646,9 +716,19 @@ export function buildUpgradeCommandArgs({
       currentDependencies,
       dependency,
       selectedRelease,
+      targetVersion,
     });
     if (!shouldUpgradeDep) continue;
-    args.push(`${dependency[0]}@${getAbsoluteVersion(dependency[1])}`);
+
+    // Transform specific @shopify packages to "next" when --version=next is used
+    const version =
+      targetVersion === 'next' &&
+      (dependency[0] === '@shopify/hydrogen' ||
+        dependency[0] === '@shopify/mini-oxygen')
+        ? 'next'
+        : getAbsoluteVersion(dependency[1]);
+
+    args.push(`${dependency[0]}@${version}`);
   }
 
   // Maybe upgrade Remix dependencies
@@ -709,10 +789,12 @@ export async function upgradeNodeModules({
   appPath,
   selectedRelease,
   currentDependencies,
+  targetVersion,
 }: {
   appPath: string;
   selectedRelease: Release;
   currentDependencies: Record<string, string>;
+  targetVersion?: string;
 }) {
   const tasks: Array<{title: string; task: () => Promise<void>}> = [];
 
@@ -765,6 +847,7 @@ export async function upgradeNodeModules({
   const upgradeArgs = buildUpgradeCommandArgs({
     selectedRelease,
     currentDependencies,
+    targetVersion,
   });
 
   if (upgradeArgs.length > 0) {
@@ -871,18 +954,14 @@ function appendReactRouterDependencies({
  */
 export function getAbsoluteVersion(version: string) {
   // Return next versions unchanged
-  if (version === 'next' && process.env.HYDROGEN_UPGRADE_ALLOW_NEXT === '1') {
+  if (version === 'next') {
     return 'next';
   }
 
   // Extract snapshot versions
-  if (process.env.HYDROGEN_UPGRADE_ALLOW_NEXT === '1') {
-    const snapshotMatch = version.match(
-      /^[\^~]?0\.0\.0-next-([a-f0-9]+)-(\d+)$/,
-    );
-    if (snapshotMatch) {
-      return version.replace(/^[\^~]?/, ''); // Return without range prefix
-    }
+  const snapshotMatch = version.match(/^[\^~]?0\.0\.0-next-([a-f0-9]+)-(\d+)$/);
+  if (snapshotMatch) {
+    return version.replace(/^[\^~]?/, ''); // Return without range prefix
   }
 
   const result = semver.minVersion(version);
@@ -1029,9 +1108,11 @@ async function displayUpgradeSummary({
 export async function validateUpgrade({
   appPath,
   selectedRelease,
+  targetVersion,
 }: {
   appPath: string;
   selectedRelease: Release;
+  targetVersion?: string;
 }) {
   const dependencies = await getDependencies(joinPath(appPath, 'package.json'));
 
@@ -1050,11 +1131,7 @@ export async function validateUpgrade({
   const targetIsNext =
     selectedRelease.dependencies?.['@shopify/hydrogen'] === 'next';
 
-  if (
-    isSnapshotVersion &&
-    targetIsNext &&
-    process.env.HYDROGEN_UPGRADE_ALLOW_NEXT === '1'
-  ) {
+  if (isSnapshotVersion && targetIsNext && targetVersion === 'next') {
     return;
   }
 
@@ -1104,28 +1181,30 @@ async function generateUpgradeInstructionsFile({
 }) {
   let filename = '';
 
-  const {featuresMd, breakingChangesMd} = cumulativeRelease.features
-    .filter((feature) => feature.steps)
-    .reduce(
-      (acc, feature) => {
-        if (feature.breaking) {
-          acc.breakingChangesMd.push(generateStepMd(feature));
-        } else {
-          acc.featuresMd.push(generateStepMd(feature));
-        }
-        return acc;
-      },
-      {featuresMd: [], breakingChangesMd: []} as {
-        featuresMd: string[];
-        breakingChangesMd: string[];
-      },
-    );
+  const featuresWithSteps = cumulativeRelease.features.filter(
+    (feature) => feature.steps,
+  );
+
+  const {featuresMd, breakingChangesMd} = featuresWithSteps.reduce(
+    (acc, feature) => {
+      if (feature.breaking) {
+        acc.breakingChangesMd.push(generateStepMd(feature));
+      } else {
+        acc.featuresMd.push(generateStepMd(feature));
+      }
+      return acc;
+    },
+    {featuresMd: [], breakingChangesMd: []} as {
+      featuresMd: string[];
+      breakingChangesMd: string[];
+    },
+  );
 
   const fixesMd = cumulativeRelease.fixes
     .filter((fixes) => fixes.steps)
     .map(generateStepMd);
 
-  if (!featuresMd.length && !fixesMd.length) {
+  if (!featuresMd.length && !fixesMd.length && !breakingChangesMd.length) {
     renderInfo({
       headline: `No upgrade instructions generated`,
       body: `There are no additional upgrade instructions for this version.`,

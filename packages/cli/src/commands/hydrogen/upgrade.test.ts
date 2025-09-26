@@ -22,6 +22,7 @@ import {
   getCummulativeRelease,
   getHydrogenVersion,
   getSelectedRelease,
+  validateUpgrade,
   runUpgrade,
   type CumulativeRelease,
   type Release,
@@ -582,9 +583,8 @@ describe('upgrade', async () => {
           await expect(
             getSelectedRelease({
               availableUpgrades,
-              // @ts-ignore - we know this release version exists
               currentVersion: current.currentVersion,
-              // OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies['@shopify/hydrogen'],
+              currentDependencies: current.currentDependencies,
               targetVersion: '2023.7.10',
             }),
           ).resolves.toMatchObject({
@@ -622,6 +622,7 @@ describe('upgrade', async () => {
             getSelectedRelease({
               availableUpgrades,
               currentVersion: current!.currentVersion!,
+              currentDependencies: current!.currentDependencies!,
               targetVersion: '2023.1.5', // fails because this version is in the past
             }),
           ).resolves.toMatchObject(availableUpgrades[0]!);
@@ -659,6 +660,7 @@ describe('upgrade', async () => {
             getSelectedRelease({
               availableUpgrades,
               currentVersion: previousRelease!.version,
+              currentDependencies: {},
             }),
           ).resolves.toMatchObject(availableUpgrades[0]!);
 
@@ -1178,6 +1180,7 @@ describe('HYDROGEN_UPGRADE_ALLOW_NEXT environment variable', () => {
       const args = buildUpgradeCommandArgs({
         selectedRelease: testRelease,
         currentDependencies,
+        targetVersion: 'next',
       });
 
       expect(args).toContain('@shopify/hydrogen@next');
@@ -1222,12 +1225,9 @@ describe('HYDROGEN_UPGRADE_ALLOW_NEXT environment variable', () => {
       expect(result).toBe('1.0.0');
     });
 
-    it('rejects next versions by default', () => {
-      delete process.env.HYDROGEN_UPGRADE_ALLOW_NEXT;
-
-      expect(() => getAbsoluteVersion('next')).toThrowError(
-        'Invalid comparator: next',
-      );
+    it('handles next versions without errors', () => {
+      const result = getAbsoluteVersion('next');
+      expect(result).toBe('next');
     });
 
     it('returns next version unchanged when enabled', () => {
@@ -1353,11 +1353,9 @@ describe('getAbsoluteVersion function', () => {
     expect(getAbsoluteVersion('~2.0.0')).toBe('2.0.0');
   });
 
-  it('throws error for next version by default', () => {
-    delete process.env.HYDROGEN_UPGRADE_ALLOW_NEXT;
-    expect(() => getAbsoluteVersion('next')).toThrowError(
-      'Invalid comparator: next',
-    );
+  it('returns next version unchanged', () => {
+    const result = getAbsoluteVersion('next');
+    expect(result).toBe('next');
   });
 
   it('returns next as-is when environment variable set', () => {
@@ -1377,15 +1375,10 @@ describe('getAbsoluteVersion function', () => {
     );
   });
 
-  it('isolates environment changes between tests', async () => {
-    await withEnvironment({HYDROGEN_UPGRADE_ALLOW_NEXT: '1'}, async () => {
-      expect(getAbsoluteVersion('next')).toBe('next');
-    });
-
-    // Environment should be restored
-    expect(() => getAbsoluteVersion('next')).toThrowError(
-      'Invalid comparator: next',
-    );
+  it('handles next versions consistently', () => {
+    // getAbsoluteVersion now always handles next versions
+    expect(getAbsoluteVersion('next')).toBe('next');
+    expect(getAbsoluteVersion('next')).toBe('next');
   });
 
   it('handles snapshot versions when environment variable set', () => {
@@ -1412,12 +1405,10 @@ describe('getAbsoluteVersion function', () => {
     expect(result).toBe('0.0.0-next-def456-20250924180000');
   });
 
-  it('processes snapshot versions as semver when environment variable not set', () => {
-    delete process.env.HYDROGEN_UPGRADE_ALLOW_NEXT;
-
+  it('processes snapshot versions with full version', () => {
     const snapshotVersion = '^0.0.0-next-aef8cf7-20250926023759';
     const result = getAbsoluteVersion(snapshotVersion);
-    expect(result).toBe('0.0.0');
+    expect(result).toBe('0.0.0-next-aef8cf7-20250926023759');
   });
 });
 
@@ -1471,7 +1462,11 @@ describe('validateUpgrade function with snapshot versions', () => {
         // Should not throw
         const {validateUpgrade} = await import('./upgrade.js');
         await expect(
-          validateUpgrade({appPath, selectedRelease: release}),
+          validateUpgrade({
+            appPath,
+            selectedRelease: release,
+            targetVersion: 'next',
+          }),
         ).resolves.toBeUndefined();
       },
       {cleanGitRepo: false},
@@ -1667,6 +1662,7 @@ describe('buildUpgradeCommandArgs with next versions', () => {
     const args = buildUpgradeCommandArgs({
       selectedRelease: NEXT_VERSION_RELEASE,
       currentDependencies,
+      targetVersion: 'next',
     });
 
     expect(args).toContain('@shopify/hydrogen@next');
@@ -1702,6 +1698,7 @@ describe('buildUpgradeCommandArgs with next versions', () => {
     const args = buildUpgradeCommandArgs({
       selectedRelease: mixedRelease,
       currentDependencies,
+      targetVersion: 'next',
     });
 
     expect(args).toContain('@shopify/hydrogen@next');
@@ -1724,6 +1721,7 @@ describe('buildUpgradeCommandArgs with next versions', () => {
     const args = buildUpgradeCommandArgs({
       selectedRelease: NEXT_VERSION_RELEASE,
       currentDependencies,
+      targetVersion: 'next',
     });
 
     expect(args).toContain('@shopify/hydrogen@next');
@@ -1731,6 +1729,100 @@ describe('buildUpgradeCommandArgs with next versions', () => {
     expect(args).toContain('react-router@7.9.2');
     expect(args).not.toContain('@shopify/remix-oxygen');
     expect(args).not.toContain('@remix-run/react');
+  });
+});
+
+describe('--version=next functionality', () => {
+  it('transforms @shopify packages to next versions in buildUpgradeCommandArgs', () => {
+    const testRelease = {
+      title: 'Test release',
+      version: '2025.7.0',
+      hash: 'test',
+      commit: 'https://github.com/test' as `https://${string}`,
+      pr: 'https://github.com/test' as `https://${string}`,
+      date: '2025-09-17',
+      dependencies: {
+        '@shopify/hydrogen': '2025.7.0',
+        'react-router': '7.9.2',
+      },
+      devDependencies: {
+        '@shopify/mini-oxygen': '4.0.0',
+        '@shopify/cli': '3.83.3',
+      },
+      dependenciesMeta: {},
+      fixes: [],
+      features: [],
+    } satisfies Release;
+
+    const currentDependencies = {
+      '@shopify/hydrogen': '2025.4.0',
+      '@shopify/mini-oxygen': '3.2.0',
+      'react-router': '7.0.0',
+      '@shopify/cli': '3.82.0',
+    };
+
+    const args = buildUpgradeCommandArgs({
+      selectedRelease: testRelease,
+      currentDependencies,
+      targetVersion: 'next',
+    });
+
+    expect(args).toContain('@shopify/hydrogen@next');
+    expect(args).toContain('@shopify/mini-oxygen@next');
+    expect(args).toContain('@shopify/cli@3.83.3');
+    expect(args).toContain('react-router@7.9.2');
+  });
+
+  it('handles getAbsoluteVersion with next versions', () => {
+    expect(getAbsoluteVersion('next')).toBe('next');
+    expect(getAbsoluteVersion('^1.0.0')).toBe('1.0.0');
+    expect(getAbsoluteVersion('^0.0.0-next-abc123-20250925')).toBe(
+      '0.0.0-next-abc123-20250925',
+    );
+  });
+
+  it('validates snapshot versions for targetVersion=next', async () => {
+    await inTemporaryHydrogenRepo(
+      async (appPath) => {
+        const packageJson = {
+          dependencies: {
+            '@shopify/hydrogen': '^0.0.0-next-abc123-20250925',
+          },
+        };
+
+        await writeFile(
+          joinPath(appPath, 'package.json'),
+          JSON.stringify(packageJson, null, 2),
+        );
+
+        await exec('git', ['add', 'package.json'], {cwd: appPath});
+        await exec('git', ['commit', '-m', 'Add snapshot package.json'], {
+          cwd: appPath,
+        });
+
+        const release = {
+          title: 'Test release',
+          version: '2025.7.0',
+          hash: 'test',
+          commit: 'https://github.com/test' as `https://${string}`,
+          pr: 'https://github.com/test' as `https://${string}`,
+          date: '2025-09-17',
+          dependencies: {'@shopify/hydrogen': 'next'},
+          devDependencies: {},
+          fixes: [],
+          features: [],
+        } satisfies Release;
+
+        await expect(
+          validateUpgrade({
+            appPath,
+            selectedRelease: release,
+            targetVersion: 'next',
+          }),
+        ).resolves.toBeUndefined();
+      },
+      {cleanGitRepo: false},
+    );
   });
 });
 
