@@ -615,10 +615,16 @@ function isReactRouterDependency([name]: [string, string]) {
 /**
  * Gets the appropriate version for a package, transforming @shopify packages to "next" when needed
  */
-export function getPackageVersion(packageName: string, version: string, targetVersion?: string): string {
-  const shouldUseNext = targetVersion === 'next' && 
-    (packageName === '@shopify/hydrogen' || packageName === '@shopify/mini-oxygen');
-  
+export function getPackageVersion(
+  packageName: string,
+  version: string,
+  targetVersion?: string,
+): string {
+  const shouldUseNext =
+    targetVersion === 'next' &&
+    (packageName === '@shopify/hydrogen' ||
+      packageName === '@shopify/mini-oxygen');
+
   return shouldUseNext ? 'next' : getAbsoluteVersion(version);
 }
 
@@ -709,7 +715,9 @@ export function buildUpgradeCommandArgs({
     });
     if (!shouldUpgradeDep) continue;
 
-    args.push(`${dependency[0]}@${getPackageVersion(dependency[0], dependency[1], targetVersion)}`);
+    args.push(
+      `${dependency[0]}@${getPackageVersion(dependency[0], dependency[1], targetVersion)}`,
+    );
   }
 
   // upgrade devDependencies
@@ -722,7 +730,9 @@ export function buildUpgradeCommandArgs({
     });
     if (!shouldUpgradeDep) continue;
 
-    args.push(`${dependency[0]}@${getPackageVersion(dependency[0], dependency[1], targetVersion)}`);
+    args.push(
+      `${dependency[0]}@${getPackageVersion(dependency[0], dependency[1], targetVersion)}`,
+    );
   }
 
   // Maybe upgrade Remix dependencies
@@ -1099,7 +1109,7 @@ export async function validateUpgrade({
   const targetIsNext =
     selectedRelease.dependencies?.['@shopify/hydrogen'] === 'next';
 
-  // Bypass version validation for --version=next when release uses next versions  
+  // Bypass version validation for --version=next when release uses next versions
   // Prevents false failures when upgrading stable versions to snapshot versions
   if (targetVersion === 'next' && targetIsNext) {
     return;

@@ -1472,8 +1472,12 @@ describe('--version=next functionality', () => {
   });
 
   it('getPackageVersion transforms @shopify packages when targetVersion is next', () => {
-    expect(getPackageVersion('@shopify/hydrogen', '2025.7.0', 'next')).toBe('next');
-    expect(getPackageVersion('@shopify/mini-oxygen', '4.0.0', 'next')).toBe('next');
+    expect(getPackageVersion('@shopify/hydrogen', '2025.7.0', 'next')).toBe(
+      'next',
+    );
+    expect(getPackageVersion('@shopify/mini-oxygen', '4.0.0', 'next')).toBe(
+      'next',
+    );
     expect(getPackageVersion('@shopify/cli', '3.83.3', 'next')).toBe('3.83.3');
     expect(getPackageVersion('react-router', '7.9.2', 'next')).toBe('7.9.2');
     expect(getPackageVersion('@shopify/hydrogen', '2025.7.0')).toBe('2025.7.0');
@@ -1511,7 +1515,7 @@ describe('--version=next functionality', () => {
         currentVersion: '2025.4.0',
         currentDependencies,
       });
-      
+
       expect(result.dependencies['@shopify/hydrogen']).toBe('next');
       expect(result.devDependencies['@shopify/mini-oxygen']).toBe('next');
       expect(result.dependencies['react-router']).toBe('7.9.2');
@@ -1789,7 +1793,6 @@ describe('--version=next functionality', () => {
       );
     });
   });
-
 
   describe('end-to-end --version=next command simulation', () => {
     it('should complete full upgrade flow with --version=next', async () => {

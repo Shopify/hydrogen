@@ -34,10 +34,10 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
 
 // Checks if all specified packages are published to npm
 async function arePackagesPublished(
-  packages: Array<[string, string | undefined]>
+  packages: Array<[string, string | undefined]>,
 ): Promise<boolean> {
   const packagesToCheck = packages.filter(([name, version]) => version);
-  
+
   for (const [packageName, version] of packagesToCheck) {
     try {
       await exec('npm', ['view', `${packageName}@${version}`, 'version'], {
@@ -49,19 +49,26 @@ async function arePackagesPublished(
       return false;
     }
   }
-  
+
   return true;
 }
 
 // Validates package version allowing snapshot versions for @shopify packages with --version=next
-function validatePackageVersion(dep: string, actualVersion: string, expectedVersion: string, targetVersion?: string) {
+function validatePackageVersion(
+  dep: string,
+  actualVersion: string,
+  expectedVersion: string,
+  targetVersion?: string,
+) {
   const isShopifyPackage = dep.startsWith('@shopify/');
-  const isSnapshotVersion = !!actualVersion.match(/^[\^~]?0\.0\.0-next-[a-f0-9]+-\d+$/);
-  
+  const isSnapshotVersion = !!actualVersion.match(
+    /^[\^~]?0\.0\.0-next-[a-f0-9]+-\d+$/,
+  );
+
   if (targetVersion === 'next' && isShopifyPackage && isSnapshotVersion) {
     return;
   }
-  
+
   expect(
     actualVersion === expectedVersion ||
       actualVersion === `^${expectedVersion}` ||
@@ -87,15 +94,21 @@ describe('upgrade flow integration', () => {
       }
 
       const packagesPublished = await arePackagesPublished([
-        ['@shopify/hydrogen', latestRelease.dependencies?.['@shopify/hydrogen']],
-        ['@shopify/mini-oxygen', latestRelease.devDependencies?.['@shopify/mini-oxygen']],
+        [
+          '@shopify/hydrogen',
+          latestRelease.dependencies?.['@shopify/hydrogen'],
+        ],
+        [
+          '@shopify/mini-oxygen',
+          latestRelease.devDependencies?.['@shopify/mini-oxygen'],
+        ],
       ]);
-      
+
       if (!packagesPublished) {
         console.log('🚫 Latest test skipped: packages not published');
         return;
       }
-      
+
       console.log('✅ Latest test running: packages are published');
 
       // Find the previous release (just one version back for clean single-version upgrade)
@@ -345,15 +358,21 @@ describe('upgrade flow integration', () => {
 
       // Check if required versions are NOT published to npm - skip if they ARE published
       const packagesPublished = await arePackagesPublished([
-        ['@shopify/hydrogen', latestRelease.dependencies?.['@shopify/hydrogen']],
-        ['@shopify/mini-oxygen', latestRelease.devDependencies?.['@shopify/mini-oxygen']],
+        [
+          '@shopify/hydrogen',
+          latestRelease.dependencies?.['@shopify/hydrogen'],
+        ],
+        [
+          '@shopify/mini-oxygen',
+          latestRelease.devDependencies?.['@shopify/mini-oxygen'],
+        ],
       ]);
-      
+
       if (packagesPublished) {
         console.log('🚫 Next test skipped: packages are published');
         return;
       }
-      
+
       console.log('✅ Next test running: packages not published');
 
       // Find a valid historical commit for scaffolding
@@ -1131,8 +1150,11 @@ async function validateDependencyChanges(
 
   // Check dependency removals if specified (skip packages that are reinstalled)
   if (toRelease.removeDependencies) {
-    const reinstalledDeps = {...toRelease.dependencies, ...toRelease.devDependencies};
-    
+    const reinstalledDeps = {
+      ...toRelease.dependencies,
+      ...toRelease.devDependencies,
+    };
+
     for (const dep of toRelease.removeDependencies) {
       if (!reinstalledDeps[dep]) {
         expect(packageJson.dependencies?.[dep]).toBeUndefined();
@@ -1152,7 +1174,12 @@ async function validateDependencyChanges(
       const actualVersion = packageJson.dependencies?.[dep];
       // Only validate if the dependency is present (upgrade might not add all deps)
       if (actualVersion) {
-        validatePackageVersion(dep, actualVersion, String(version), targetVersion);
+        validatePackageVersion(
+          dep,
+          actualVersion,
+          String(version),
+          targetVersion,
+        );
       }
     }
   }
@@ -1170,7 +1197,12 @@ async function validateDependencyChanges(
           // Ensure it's a valid semver-like version
           expect(actualVersion).toMatch(/^[~^]?\d+\.\d+\.\d+/);
         } else {
-          validatePackageVersion(dep, actualVersion, String(version), targetVersion);
+          validatePackageVersion(
+            dep,
+            actualVersion,
+            String(version),
+            targetVersion,
+          );
         }
       }
     }
