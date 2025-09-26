@@ -1,4 +1,4 @@
-import {describe, it, expect, vi, beforeEach} from 'vitest';
+import {describe, it, expect, vi, beforeEach, test} from 'vitest';
 import {mkdtemp, readFile, writeFile, mkdir, readdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
@@ -32,6 +32,44 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
   };
 });
 
+// Checks if all specified packages are published to npm
+async function arePackagesPublished(
+  packages: Array<[string, string | undefined]>
+): Promise<boolean> {
+  const packagesToCheck = packages.filter(([name, version]) => version);
+  
+  for (const [packageName, version] of packagesToCheck) {
+    try {
+      await exec('npm', ['view', `${packageName}@${version}`, 'version'], {
+        cwd: process.cwd(),
+      });
+      console.log(`✅ Found ${packageName}@${version} on npm`);
+    } catch (error) {
+      console.log(`❌ ${packageName}@${version} not found on npm`);
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+// Validates package version allowing snapshot versions for @shopify packages with --version=next
+function validatePackageVersion(dep: string, actualVersion: string, expectedVersion: string, targetVersion?: string) {
+  const isShopifyPackage = dep.startsWith('@shopify/');
+  const isSnapshotVersion = !!actualVersion.match(/^[\^~]?0\.0\.0-next-[a-f0-9]+-\d+$/);
+  
+  if (targetVersion === 'next' && isShopifyPackage && isSnapshotVersion) {
+    return;
+  }
+  
+  expect(
+    actualVersion === expectedVersion ||
+      actualVersion === `^${expectedVersion}` ||
+      actualVersion === `~${expectedVersion}` ||
+      actualVersion.includes(expectedVersion),
+  ).toBe(true);
+}
+
 describe('upgrade flow integration', () => {
   beforeEach(() => {
     // Clear any cached changelog to ensure mocks work properly
@@ -39,8 +77,8 @@ describe('upgrade flow integration', () => {
   });
 
   describe('End-to-end upgrade scenarios', () => {
-    // Test 1: Single version upgrade to latest release
-    it('upgrades from previous version to latest release', async () => {
+    // Tests latest stable version upgrade when packages are published to npm
+    it('upgrades to latest stable version when packages are available', async () => {
       const changelog = await upgradeModule.getChangelog();
       const latestRelease = changelog.releases[0];
 
@@ -48,30 +86,17 @@ describe('upgrade flow integration', () => {
         throw new Error('No releases found in changelog');
       }
 
-      // Check if required versions are published to npm - skip if not available
-      const requiredPackages = [
-        [
-          '@shopify/hydrogen',
-          latestRelease.dependencies?.['@shopify/hydrogen'],
-        ],
-        [
-          '@shopify/mini-oxygen',
-          latestRelease.devDependencies?.['@shopify/mini-oxygen'],
-        ],
-      ].filter(([name, version]) => version);
-
-      for (const [packageName, version] of requiredPackages) {
-        try {
-          await exec('npm', ['view', `${packageName}@${version}`, 'version'], {
-            cwd: process.cwd(),
-          });
-        } catch (error) {
-          console.log(
-            `Skipping latest version test: ${packageName}@${version} not published to npm`,
-          );
-          return; // Skip test if package version not available
-        }
+      const packagesPublished = await arePackagesPublished([
+        ['@shopify/hydrogen', latestRelease.dependencies?.['@shopify/hydrogen']],
+        ['@shopify/mini-oxygen', latestRelease.devDependencies?.['@shopify/mini-oxygen']],
+      ]);
+      
+      if (!packagesPublished) {
+        console.log('🚫 Latest test skipped: packages not published');
+        return;
       }
+      
+      console.log('✅ Latest test running: packages are published');
 
       // Find the previous release (just one version back for clean single-version upgrade)
       let fromRelease = null;
@@ -306,6 +331,112 @@ describe('upgrade flow integration', () => {
       if (devFailed) throw devError;
 
       // Validate critical file integrity (always strict)
+      await validateFileIntegrity(projectDir);
+    }, 180000);
+
+    // Tests next version upgrade when packages are not yet published to npm
+    it('upgrades to next versions when packages are unpublished', async () => {
+      const changelog = await upgradeModule.getChangelog();
+      const latestRelease = changelog.releases[0];
+
+      if (!latestRelease) {
+        throw new Error('No releases found in changelog');
+      }
+
+      // Check if required versions are NOT published to npm - skip if they ARE published
+      const packagesPublished = await arePackagesPublished([
+        ['@shopify/hydrogen', latestRelease.dependencies?.['@shopify/hydrogen']],
+        ['@shopify/mini-oxygen', latestRelease.devDependencies?.['@shopify/mini-oxygen']],
+      ]);
+      
+      if (packagesPublished) {
+        console.log('🚫 Next test skipped: packages are published');
+        return;
+      }
+      
+      console.log('✅ Next test running: packages not published');
+
+      // Find a valid historical commit for scaffolding
+      let fromCommit = null;
+      if (changelog.releases.length > 1) {
+        const previousRelease = changelog.releases[1];
+        if (previousRelease) {
+          fromCommit = await findCommitForVersion(previousRelease.version);
+        }
+      }
+
+      if (!fromCommit) {
+        return;
+      }
+
+      const projectDir = await scaffoldHistoricalProject(fromCommit);
+
+      // Run --version=next upgrade (this is the key difference)
+      await runUpgradeCommand(projectDir, 'next');
+
+      // Validate upgrade results
+      const packageJson = JSON.parse(
+        await readFile(join(projectDir, 'package.json'), 'utf8'),
+      );
+
+      // Check that @shopify packages were upgraded to snapshot versions
+      const hydrogenVersion = packageJson.dependencies?.['@shopify/hydrogen'];
+      const miniOxygenVersion =
+        packageJson.devDependencies?.['@shopify/mini-oxygen'];
+
+      const isHydrogenSnapshot = !!hydrogenVersion?.match(
+        /^[\^~]?0\.0\.0-next-[a-f0-9]+-\d+$/,
+      );
+      const isMiniOxygenSnapshot = !!miniOxygenVersion?.match(
+        /^[\^~]?0\.0\.0-next-[a-f0-9]+-\d+$/,
+      );
+
+      expect(isHydrogenSnapshot).toBe(true);
+      if (miniOxygenVersion) {
+        expect(isMiniOxygenSnapshot).toBe(true);
+      }
+
+      // Validate dependency changes with --version=next support
+      await validateDependencyChanges(
+        projectDir,
+        changelog.releases[1],
+        latestRelease,
+        'next',
+      );
+
+      // Check instruction file generation (should work same as latest test)
+      const shouldHaveInstructions =
+        latestRelease.features?.some((f: any) => f.steps?.length > 0) ||
+        latestRelease.fixes?.some((f: any) => f.steps?.length > 0);
+
+      if (shouldHaveInstructions) {
+        const hydrogenDir = join(projectDir, '.hydrogen');
+        const files = await readdir(hydrogenDir).catch(() => []);
+        const hasInstructionFile = files.some(
+          (f) => f.startsWith('upgrade-') && f.endsWith('.md'),
+        );
+
+        expect(hasInstructionFile).toBe(true);
+
+        if (hasInstructionFile) {
+          const instructionFile = files.find(
+            (f) => f.startsWith('upgrade-') && f.endsWith('.md'),
+          );
+          const instructionContent = await readFile(
+            join(hydrogenDir, instructionFile!),
+            'utf8',
+          );
+          expect(instructionContent.length).toBeGreaterThan(100);
+        }
+      }
+
+      // Skip dev server validation for --version=next when migration guide exists
+      // (project needs manual migration steps before it can run)
+      if (!shouldHaveInstructions) {
+        await testDevServer(projectDir, 'next-upgrade-validation');
+      }
+
+      // Validate file integrity (same as latest test)
       await validateFileIntegrity(projectDir);
     }, 180000);
   });
@@ -998,15 +1129,12 @@ async function validateDependencyChanges(
   const packageContent = await readFile(packageJsonPath, 'utf8');
   const packageJson = JSON.parse(packageContent);
 
-  // Check dependency removals if specified, excluding packages that are also being reinstalled
+  // Check dependency removals if specified (skip packages that are reinstalled)
   if (toRelease.removeDependencies) {
-    const reinstalledDeps = {
-      ...toRelease.dependencies,
-      ...toRelease.devDependencies,
-    };
-
+    const reinstalledDeps = {...toRelease.dependencies, ...toRelease.devDependencies};
+    
     for (const dep of toRelease.removeDependencies) {
-      if (!(dep in reinstalledDeps)) {
+      if (!reinstalledDeps[dep]) {
         expect(packageJson.dependencies?.[dep]).toBeUndefined();
       }
     }
@@ -1024,26 +1152,7 @@ async function validateDependencyChanges(
       const actualVersion = packageJson.dependencies?.[dep];
       // Only validate if the dependency is present (upgrade might not add all deps)
       if (actualVersion) {
-        const versionStr = String(version);
-
-        // For --version=next, accept snapshot versions for @shopify packages
-        const isShopifyPackage = dep.startsWith('@shopify/');
-        const isSnapshotVersion = !!actualVersion.match(
-          /^[\^~]?0\.0\.0-next-[a-f0-9]+-\d+$/,
-        );
-
-        if (targetVersion === 'next' && isShopifyPackage && isSnapshotVersion) {
-          // Snapshot version is valid for @shopify packages with --version=next
-          expect(isSnapshotVersion).toBe(true);
-        } else {
-          // Standard semver validation for other packages
-          expect(
-            actualVersion === versionStr ||
-              actualVersion === `^${versionStr}` ||
-              actualVersion === `~${versionStr}` ||
-              actualVersion.includes(versionStr),
-          ).toBe(true);
-        }
+        validatePackageVersion(dep, actualVersion, String(version), targetVersion);
       }
     }
   }
@@ -1061,30 +1170,7 @@ async function validateDependencyChanges(
           // Ensure it's a valid semver-like version
           expect(actualVersion).toMatch(/^[~^]?\d+\.\d+\.\d+/);
         } else {
-          const versionStr = String(version);
-
-          // For --version=next, accept snapshot versions for @shopify packages
-          const isShopifyPackage = dep.startsWith('@shopify/');
-          const isSnapshotVersion = !!actualVersion.match(
-            /^[\^~]?0\.0\.0-next-[a-f0-9]+-\d+$/,
-          );
-
-          if (
-            targetVersion === 'next' &&
-            isShopifyPackage &&
-            isSnapshotVersion
-          ) {
-            // Snapshot version is valid for @shopify packages with --version=next
-            expect(isSnapshotVersion).toBe(true);
-          } else {
-            // Standard semver validation for other packages
-            expect(
-              actualVersion === versionStr ||
-                actualVersion === `^${versionStr}` ||
-                actualVersion === `~${versionStr}` ||
-                actualVersion.includes(versionStr),
-            ).toBe(true);
-          }
+          validatePackageVersion(dep, actualVersion, String(version), targetVersion);
         }
       }
     }
@@ -1177,130 +1263,3 @@ async function validateFileIntegrity(projectDir: string) {
     }
   }
 }
-
-describe('--version=next upgrade flow', () => {
-  // Test: Full E2E upgrade to next versions (only runs when latest versions NOT published)
-  it('upgrades from previous version to next release', async () => {
-    const changelog = await upgradeModule.getChangelog();
-    const latestRelease = changelog.releases[0];
-
-    if (!latestRelease) {
-      throw new Error('No releases found in changelog');
-    }
-
-    // Check if required versions are NOT published to npm - skip if they ARE published
-    const requiredPackages = [
-      ['@shopify/hydrogen', latestRelease.dependencies?.['@shopify/hydrogen']],
-      [
-        '@shopify/mini-oxygen',
-        latestRelease.devDependencies?.['@shopify/mini-oxygen'],
-      ],
-    ].filter(([name, version]) => version);
-
-    for (const [packageName, version] of requiredPackages) {
-      try {
-        await exec('npm', ['view', `${packageName}@${version}`, 'version'], {
-          cwd: process.cwd(),
-        });
-        console.log(
-          `Skipping next version test: ${packageName}@${version} already published to npm`,
-        );
-        return; // Skip test if package version IS available (opposite of latest test)
-      } catch (error) {
-        // Good - version not published, continue with next test
-      }
-    }
-
-    // Find a valid historical commit for scaffolding
-    let fromCommit = null;
-    if (changelog.releases.length > 1) {
-      const previousRelease = changelog.releases[1];
-      if (previousRelease) {
-        fromCommit = await findCommitForVersion(previousRelease.version);
-      }
-    }
-
-    if (!fromCommit) {
-      console.log(
-        'Skipping --version=next test: no valid historical commit found',
-      );
-      return;
-    }
-
-    const fromVersion = changelog.releases[1]?.version || 'unknown';
-    const projectDir = await scaffoldHistoricalProject(fromCommit);
-
-    // Verify initial state
-    const initialPackageJson = JSON.parse(
-      await readFile(join(projectDir, 'package.json'), 'utf8'),
-    );
-
-    // Run --version=next upgrade (this is the key difference)
-    await runUpgradeCommand(projectDir, 'next');
-
-    // Validate upgrade results
-    const packageJson = JSON.parse(
-      await readFile(join(projectDir, 'package.json'), 'utf8'),
-    );
-
-    // Check that @shopify packages were upgraded to snapshot versions
-    const hydrogenVersion = packageJson.dependencies?.['@shopify/hydrogen'];
-    const miniOxygenVersion =
-      packageJson.devDependencies?.['@shopify/mini-oxygen'];
-
-    const isHydrogenSnapshot = !!hydrogenVersion?.match(
-      /^[\^~]?0\.0\.0-next-[a-f0-9]+-\d+$/,
-    );
-    const isMiniOxygenSnapshot = !!miniOxygenVersion?.match(
-      /^[\^~]?0\.0\.0-next-[a-f0-9]+-\d+$/,
-    );
-
-    expect(isHydrogenSnapshot).toBe(true);
-    if (miniOxygenVersion) {
-      expect(isMiniOxygenSnapshot).toBe(true);
-    }
-
-    // Validate dependency changes with --version=next support
-    await validateDependencyChanges(
-      projectDir,
-      changelog.releases[1],
-      latestRelease,
-      'next',
-    );
-
-    // Check instruction file generation (should work same as latest test)
-    const shouldHaveInstructions =
-      latestRelease.features?.some((f: any) => f.steps?.length > 0) ||
-      latestRelease.fixes?.some((f: any) => f.steps?.length > 0);
-
-    if (shouldHaveInstructions) {
-      const hydrogenDir = join(projectDir, '.hydrogen');
-      const files = await readdir(hydrogenDir).catch(() => []);
-      const hasInstructionFile = files.some(
-        (f) => f.startsWith('upgrade-') && f.endsWith('.md'),
-      );
-
-      expect(hasInstructionFile).toBe(true);
-
-      if (hasInstructionFile) {
-        const instructionFile = files.find(
-          (f) => f.startsWith('upgrade-') && f.endsWith('.md'),
-        );
-        const instructionContent = await readFile(
-          join(hydrogenDir, instructionFile!),
-          'utf8',
-        );
-        expect(instructionContent.length).toBeGreaterThan(100);
-      }
-    }
-
-    // Skip dev server validation for --version=next when migration guide exists
-    // (project needs manual migration steps before it can run)
-    if (!shouldHaveInstructions) {
-      await testDevServer(projectDir, 'next-upgrade-validation');
-    }
-
-    // Validate file integrity (same as latest test)
-    await validateFileIntegrity(projectDir);
-  }, 180000);
-});

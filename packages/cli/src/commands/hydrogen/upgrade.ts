@@ -613,6 +613,16 @@ function isReactRouterDependency([name]: [string, string]) {
 }
 
 /**
+ * Gets the appropriate version for a package, transforming @shopify packages to "next" when needed
+ */
+export function getPackageVersion(packageName: string, version: string, targetVersion?: string): string {
+  const shouldUseNext = targetVersion === 'next' && 
+    (packageName === '@shopify/hydrogen' || packageName === '@shopify/mini-oxygen');
+  
+  return shouldUseNext ? 'next' : getAbsoluteVersion(version);
+}
+
+/**
  * Checks if a dependency should be included in the upgrade command
  */
 function maybeIncludeDependency({
@@ -699,15 +709,7 @@ export function buildUpgradeCommandArgs({
     });
     if (!shouldUpgradeDep) continue;
 
-    // Transform specific @shopify packages to "next" when --version=next is used
-    const version =
-      targetVersion === 'next' &&
-      (dependency[0] === '@shopify/hydrogen' ||
-        dependency[0] === '@shopify/mini-oxygen')
-        ? 'next'
-        : getAbsoluteVersion(dependency[1]);
-
-    args.push(`${dependency[0]}@${version}`);
+    args.push(`${dependency[0]}@${getPackageVersion(dependency[0], dependency[1], targetVersion)}`);
   }
 
   // upgrade devDependencies
@@ -720,15 +722,7 @@ export function buildUpgradeCommandArgs({
     });
     if (!shouldUpgradeDep) continue;
 
-    // Transform specific @shopify packages to "next" when --version=next is used
-    const version =
-      targetVersion === 'next' &&
-      (dependency[0] === '@shopify/hydrogen' ||
-        dependency[0] === '@shopify/mini-oxygen')
-        ? 'next'
-        : getAbsoluteVersion(dependency[1]);
-
-    args.push(`${dependency[0]}@${version}`);
+    args.push(`${dependency[0]}@${getPackageVersion(dependency[0], dependency[1], targetVersion)}`);
   }
 
   // Maybe upgrade Remix dependencies
@@ -813,32 +807,6 @@ export async function upgradeNodeModules({
           packageManager: await getPackageManager(appPath),
           args: depsToRemove,
         });
-
-        // Check node_modules state after removal
-        try {
-          const {exec} = await import('@shopify/cli-kit/node/system');
-          const hydrogenCheck = await exec(
-            'ls',
-            ['node_modules/@shopify/hydrogen/package.json'],
-            {cwd: appPath},
-          ).catch(() => null);
-          const remixCheck = await exec(
-            'ls',
-            ['node_modules/@remix-run/react/package.json'],
-            {cwd: appPath},
-          ).catch(() => null);
-
-          if (hydrogenCheck) {
-            const hydrogenVersion = await exec(
-              'node',
-              [
-                '-p',
-                'require("./node_modules/@shopify/hydrogen/package.json").version',
-              ],
-              {cwd: appPath},
-            ).catch(() => 'ERROR');
-          }
-        } catch (e) {}
       },
     });
   }
@@ -1131,7 +1099,9 @@ export async function validateUpgrade({
   const targetIsNext =
     selectedRelease.dependencies?.['@shopify/hydrogen'] === 'next';
 
-  if (isSnapshotVersion && targetIsNext && targetVersion === 'next') {
+  // Bypass version validation for --version=next when release uses next versions  
+  // Prevents false failures when upgrading stable versions to snapshot versions
+  if (targetVersion === 'next' && targetIsNext) {
     return;
   }
 
@@ -1181,24 +1151,22 @@ async function generateUpgradeInstructionsFile({
 }) {
   let filename = '';
 
-  const featuresWithSteps = cumulativeRelease.features.filter(
-    (feature) => feature.steps,
-  );
-
-  const {featuresMd, breakingChangesMd} = featuresWithSteps.reduce(
-    (acc, feature) => {
-      if (feature.breaking) {
-        acc.breakingChangesMd.push(generateStepMd(feature));
-      } else {
-        acc.featuresMd.push(generateStepMd(feature));
-      }
-      return acc;
-    },
-    {featuresMd: [], breakingChangesMd: []} as {
-      featuresMd: string[];
-      breakingChangesMd: string[];
-    },
-  );
+  const {featuresMd, breakingChangesMd} = cumulativeRelease.features
+    .filter((feature) => feature.steps)
+    .reduce(
+      (acc, feature) => {
+        if (feature.breaking) {
+          acc.breakingChangesMd.push(generateStepMd(feature));
+        } else {
+          acc.featuresMd.push(generateStepMd(feature));
+        }
+        return acc;
+      },
+      {featuresMd: [], breakingChangesMd: []} as {
+        featuresMd: string[];
+        breakingChangesMd: string[];
+      },
+    );
 
   const fixesMd = cumulativeRelease.fixes
     .filter((fixes) => fixes.steps)
