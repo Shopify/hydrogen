@@ -1,4 +1,4 @@
-index 28102dbe6..9bc7a79db 100644
+index 28102dbe..9bc7a79d 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
 @@ -11,6 +11,7 @@ import type {
