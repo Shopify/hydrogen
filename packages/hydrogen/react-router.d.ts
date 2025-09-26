@@ -44,7 +44,7 @@ declare module 'react-router' {
     waitUntil: HydrogenRouterContextProvider['waitUntil'];
   }
 
-  // Also augment AppLoadContext for React Router 7.8.x type generation
+  // Also augment AppLoadContext for React Router 7.9.x type generation
   interface AppLoadContext extends HydrogenAdditionalContext {
     // Standard Hydrogen context properties from HydrogenRouterContextProvider
     storefront: HydrogenRouterContextProvider['storefront'];

@@ -16,7 +16,7 @@ index c584e5370..e1c0562dd 100644
  
 -- Remix
 +### Core Hydrogen Stack
-+- Remix (React Router 7.8.x)
++- React Router
  - Hydrogen
  - Oxygen
  - Vite
