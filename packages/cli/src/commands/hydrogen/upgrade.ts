@@ -171,6 +171,7 @@ export async function runUpgrade({
       currentVersion,
       targetVersion,
       availableUpgrades,
+      currentDependencies,
     });
 
     // Get an aggregate list of features and fixes included in the upgrade versions range
@@ -184,6 +185,7 @@ export async function runUpgrade({
     confirmed = await displayConfirmation({
       cumulativeRelease,
       selectedRelease,
+      targetVersion,
     });
   } while (!confirmed);
 
@@ -195,10 +197,16 @@ export async function runUpgrade({
     selectedRelease,
   });
 
-  await upgradeNodeModules({appPath, selectedRelease, currentDependencies});
+  await upgradeNodeModules({
+    appPath,
+    selectedRelease,
+    currentDependencies,
+    targetVersion,
+  });
   await validateUpgrade({
     appPath,
     selectedRelease,
+    targetVersion,
   });
 
   const instrunctionsFilePath = await instrunctionsFilePathPromise;
@@ -210,6 +218,35 @@ export async function runUpgrade({
     instrunctionsFilePath,
     selectedRelease,
   });
+}
+
+/**
+ * Creates a next version release based on latest changelog entry
+ */
+function createNextRelease(
+  currentDependencies: Record<string, string>,
+  latestRelease: Release,
+): Release {
+  // Use latest release as base and override specific @shopify packages to "next"
+  const dependencies = {...latestRelease.dependencies};
+  const devDependencies = {...latestRelease.devDependencies};
+
+  // Override @shopify/hydrogen and @shopify/mini-oxygen to "next" if they exist
+  if (dependencies['@shopify/hydrogen']) {
+    dependencies['@shopify/hydrogen'] = 'next';
+  }
+  if (devDependencies['@shopify/mini-oxygen']) {
+    devDependencies['@shopify/mini-oxygen'] = 'next';
+  }
+
+  const nextRelease = {
+    ...latestRelease,
+    title: `${latestRelease.title} (next versions)`,
+    dependencies,
+    devDependencies,
+  };
+
+  return nextRelease;
 }
 
 /**
@@ -430,17 +467,21 @@ export async function getSelectedRelease({
   targetVersion,
   availableUpgrades,
   currentVersion,
+  currentDependencies,
 }: {
   targetVersion?: string;
   availableUpgrades: Array<Release>;
   currentVersion: string;
+  currentDependencies: Record<string, string>;
 }) {
   const targetRelease = targetVersion
-    ? availableUpgrades.find(
-        (release) =>
-          getAbsoluteVersion(release.version) ===
-          getAbsoluteVersion(targetVersion),
-      )
+    ? targetVersion === 'next'
+      ? createNextRelease(currentDependencies, availableUpgrades[0]!)
+      : availableUpgrades.find(
+          (release) =>
+            getAbsoluteVersion(release.version) ===
+            getAbsoluteVersion(targetVersion),
+        )
     : undefined;
 
   return (
@@ -466,6 +507,14 @@ export function getCummulativeRelease({
 
   if (!availableUpgrades?.length) {
     return {features: [], fixes: []};
+  }
+
+  // For synthetic next releases, return features/fixes directly
+  if (selectedRelease.dependencies?.['@shopify/hydrogen'] === 'next') {
+    return {
+      features: selectedRelease.features || [],
+      fixes: selectedRelease.fixes || [],
+    };
   }
 
   const upgradingReleases = availableUpgrades.filter((release) => {
@@ -501,9 +550,11 @@ export function getCummulativeRelease({
 export function displayConfirmation({
   cumulativeRelease,
   selectedRelease,
+  targetVersion,
 }: {
   cumulativeRelease: CumulativeRelease;
   selectedRelease: Release;
+  targetVersion?: string;
 }) {
   const {features, fixes} = cumulativeRelease;
   if (features.length || fixes.length) {
@@ -535,6 +586,11 @@ export function displayConfirmation({
     });
   }
 
+  // Skip confirmation for next version upgrades
+  if (targetVersion === 'next') {
+    return true;
+  }
+
   return renderConfirmationPrompt({
     message: `Are you sure you want to upgrade to ${selectedRelease.version}?`,
     cancellationMessage: `No, choose another version`,
@@ -557,16 +613,34 @@ function isReactRouterDependency([name]: [string, string]) {
 }
 
 /**
+ * Gets the appropriate version for a package, transforming @shopify packages to "next" when needed
+ */
+export function getPackageVersion(
+  packageName: string,
+  version: string,
+  targetVersion?: string,
+): string {
+  const shouldUseNext =
+    targetVersion === 'next' &&
+    (packageName === '@shopify/hydrogen' ||
+      packageName === '@shopify/mini-oxygen');
+
+  return shouldUseNext ? 'next' : getAbsoluteVersion(version);
+}
+
+/**
  * Checks if a dependency should be included in the upgrade command
  */
 function maybeIncludeDependency({
   currentDependencies,
   dependency: [name, version],
   selectedRelease,
+  targetVersion,
 }: {
   dependency: [string, string];
   currentDependencies: Record<string, string>;
   selectedRelease: Release;
+  targetVersion?: string;
 }) {
   const existingDependencyVersion = currentDependencies[name];
 
@@ -581,8 +655,9 @@ function maybeIncludeDependency({
   if (isReactRouterPackage) return false;
 
   const isNextVersion = existingDependencyVersion === 'next';
+  const allowNextVersions = targetVersion === 'next';
 
-  if (isNextVersion) return false;
+  if (isNextVersion && !allowNextVersions) return false;
 
   // Handle required/conditional dependenciesMeta deps
   const depMeta = selectedRelease.dependenciesMeta?.[name];
@@ -597,6 +672,14 @@ function maybeIncludeDependency({
 
   // Dep meta is required...
   if (!existingDependencyVersion) return true;
+
+  // Always upgrade next versions
+  if (
+    (existingDependencyVersion === 'next' || version === 'next') &&
+    targetVersion === 'next'
+  ) {
+    return true;
+  }
 
   const isOlderVersion = semver.lt(
     getAbsoluteVersion(existingDependencyVersion),
@@ -614,9 +697,11 @@ function maybeIncludeDependency({
 export function buildUpgradeCommandArgs({
   selectedRelease,
   currentDependencies,
+  targetVersion,
 }: {
   selectedRelease: Release;
   currentDependencies: Record<string, string>;
+  targetVersion?: string;
 }) {
   const args: string[] = [];
 
@@ -626,9 +711,13 @@ export function buildUpgradeCommandArgs({
       currentDependencies,
       dependency,
       selectedRelease,
+      targetVersion,
     });
     if (!shouldUpgradeDep) continue;
-    args.push(`${dependency[0]}@${getAbsoluteVersion(dependency[1])}`);
+
+    args.push(
+      `${dependency[0]}@${getPackageVersion(dependency[0], dependency[1], targetVersion)}`,
+    );
   }
 
   // upgrade devDependencies
@@ -637,9 +726,13 @@ export function buildUpgradeCommandArgs({
       currentDependencies,
       dependency,
       selectedRelease,
+      targetVersion,
     });
     if (!shouldUpgradeDep) continue;
-    args.push(`${dependency[0]}@${getAbsoluteVersion(dependency[1])}`);
+
+    args.push(
+      `${dependency[0]}@${getPackageVersion(dependency[0], dependency[1], targetVersion)}`,
+    );
   }
 
   // Maybe upgrade Remix dependencies
@@ -700,10 +793,12 @@ export async function upgradeNodeModules({
   appPath,
   selectedRelease,
   currentDependencies,
+  targetVersion,
 }: {
   appPath: string;
   selectedRelease: Release;
   currentDependencies: Record<string, string>;
+  targetVersion?: string;
 }) {
   const tasks: Array<{title: string; task: () => Promise<void>}> = [];
 
@@ -730,6 +825,7 @@ export async function upgradeNodeModules({
   const upgradeArgs = buildUpgradeCommandArgs({
     selectedRelease,
     currentDependencies,
+    targetVersion,
   });
 
   if (upgradeArgs.length > 0) {
@@ -835,6 +931,17 @@ function appendReactRouterDependencies({
  * Gets the absolute version from a pinned or unpinned version
  */
 export function getAbsoluteVersion(version: string) {
+  // Return next versions unchanged
+  if (version === 'next') {
+    return 'next';
+  }
+
+  // Extract snapshot versions
+  const snapshotMatch = version.match(/^[\^~]?0\.0\.0-next-([a-f0-9]+)-(\d+)$/);
+  if (snapshotMatch) {
+    return version.replace(/^[\^~]?/, ''); // Return without range prefix
+  }
+
   const result = semver.minVersion(version);
   if (!result) {
     throw new AbortError(`Invalid version: ${version}`);
@@ -976,12 +1083,14 @@ async function displayUpgradeSummary({
  * Validate if a h2 upgrade was successful by comparing the previous and current
  * @shopify/hydrogen versions
  */
-async function validateUpgrade({
+export async function validateUpgrade({
   appPath,
   selectedRelease,
+  targetVersion,
 }: {
   appPath: string;
   selectedRelease: Release;
+  targetVersion?: string;
 }) {
   const dependencies = await getDependencies(joinPath(appPath, 'package.json'));
 
@@ -992,6 +1101,19 @@ async function validateUpgrade({
   }
 
   const updatedPinnedVersion = getAbsoluteVersion(updatedVersion);
+
+  // Accept snapshot versions for next targets
+  const isSnapshotVersion = updatedPinnedVersion.match(
+    /^0\.0\.0-next-[a-f0-9]+-\d+$/,
+  );
+  const targetIsNext =
+    selectedRelease.dependencies?.['@shopify/hydrogen'] === 'next';
+
+  // Bypass version validation for --version=next when release uses next versions
+  // Prevents false failures when upgrading stable versions to snapshot versions
+  if (targetVersion === 'next' && targetIsNext) {
+    return;
+  }
 
   if (updatedPinnedVersion !== selectedRelease.version) {
     throw new AbortError(
@@ -1060,7 +1182,7 @@ async function generateUpgradeInstructionsFile({
     .filter((fixes) => fixes.steps)
     .map(generateStepMd);
 
-  if (!featuresMd.length && !fixesMd.length) {
+  if (!featuresMd.length && !fixesMd.length && !breakingChangesMd.length) {
     renderInfo({
       headline: `No upgrade instructions generated`,
       body: `There are no additional upgrade instructions for this version.`,
