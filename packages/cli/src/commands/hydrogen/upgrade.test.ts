@@ -164,7 +164,7 @@ async function inTemporaryHydrogenRepo(
     if (cleanGitRepo) {
       await exec('git', ['add', 'package.json'], {cwd: tmpDir});
 
-      if (process.env.NODE_ENV === 'test' && process.env.CI) {
+      if (process.env.SHOPIFY_UNIT_TEST || process.env.CI) {
         await exec('git', ['config', 'user.email', 'test@hydrogen.shop'], {
           cwd: tmpDir,
         });
