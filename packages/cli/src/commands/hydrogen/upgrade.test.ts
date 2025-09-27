@@ -1723,21 +1723,6 @@ describe('--version=next functionality', () => {
             JSON.stringify(packageJson, null, 2),
           );
 
-          await exec('git', ['add', 'package.json'], {cwd: appPath});
-          
-          if (process.env.SHOPIFY_UNIT_TEST || process.env.CI) {
-            await exec('git', ['config', 'user.email', 'test@hydrogen.shop'], {
-              cwd: appPath,
-            });
-            await exec('git', ['config', 'user.name', 'Hydrogen Test'], {
-              cwd: appPath,
-            });
-          }
-          
-          await exec('git', ['commit', '-m', 'Add snapshot package.json'], {
-            cwd: appPath,
-          });
-
           const release = {
             title: 'Test release',
             version: '2025.7.0',
@@ -1776,21 +1761,6 @@ describe('--version=next functionality', () => {
             joinPath(appPath, 'package.json'),
             JSON.stringify(packageJson, null, 2),
           );
-
-          await exec('git', ['add', 'package.json'], {cwd: appPath});
-          
-          if (process.env.SHOPIFY_UNIT_TEST || process.env.CI) {
-            await exec('git', ['config', 'user.email', 'test@hydrogen.shop'], {
-              cwd: appPath,
-            });
-            await exec('git', ['config', 'user.name', 'Hydrogen Test'], {
-              cwd: appPath,
-            });
-          }
-          
-          await exec('git', ['commit', '-m', 'Add snapshot package.json'], {
-            cwd: appPath,
-          });
 
           const release = {
             title: 'Test release',
