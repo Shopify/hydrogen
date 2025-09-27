@@ -17,6 +17,8 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from './components/PageLayout';
 
+const CSS_FETCH_PRIORITY = 'high' as const;
+
 export type RootLoader = typeof loader;
 
 /**
@@ -53,6 +55,18 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
  */
 export function links() {
   return [
+    {
+      rel: 'preload',
+      as: 'style',
+      href: resetStyles,
+      fetchPriority: CSS_FETCH_PRIORITY,
+    },
+    {
+      rel: 'preload',
+      as: 'style',
+      href: appStyles,
+      fetchPriority: CSS_FETCH_PRIORITY,
+    },
     {
       rel: 'preconnect',
       href: 'https://cdn.shopify.com',
@@ -151,8 +165,8 @@ export function Layout({children}: {children?: React.ReactNode}) {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <link rel="stylesheet" href={resetStyles}></link>
         <link rel="stylesheet" href={appStyles}></link>
+        <Links /> {/* Include before <Meta /> */}
         <Meta />
-        <Links />
       </head>
       <body>
         {children}
