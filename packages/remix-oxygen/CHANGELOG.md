@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 3.0.1
+
+### Patch Changes
+
+- Update and pin react-router to 7.9.2 for 2025.7.0 ([#3138](https://github.com/Shopify/hydrogen/pull/3138)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 3.0.0
 
 ### Major Changes
