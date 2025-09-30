@@ -6,8 +6,8 @@
       "title": "Migrate to React Router 7 and API version 2025-07",
       "version": "2025.7.0",
       "date": "2025-09-17",
-      "hash": "pending-merge",
-      "commit": "https://github.com/Shopify/hydrogen/pull/3166",
+      "hash": "b09a1214b24251dbd48cd960d9ec8079a7c68d03",
+      "commit": "https://github.com/Shopify/hydrogen/commit/b09a1214b24251dbd48cd960d9ec8079a7c68d03",
       "pr": "https://github.com/Shopify/hydrogen/pull/3166",
       "dependencies": {
         "@shopify/hydrogen": "2025.7.0",
