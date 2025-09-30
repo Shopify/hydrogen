@@ -21,7 +21,9 @@ import {
   getAvailableUpgrades,
   getCummulativeRelease,
   getHydrogenVersion,
+  getPackageVersion,
   getSelectedRelease,
+  validateUpgrade,
   runUpgrade,
   type CumulativeRelease,
   type Release,
@@ -162,7 +164,7 @@ async function inTemporaryHydrogenRepo(
     if (cleanGitRepo) {
       await exec('git', ['add', 'package.json'], {cwd: tmpDir});
 
-      if (process.env.NODE_ENV === 'test' && process.env.CI) {
+      if (process.env.SHOPIFY_UNIT_TEST || process.env.CI) {
         await exec('git', ['config', 'user.email', 'test@hydrogen.shop'], {
           cwd: tmpDir,
         });
@@ -562,9 +564,8 @@ describe('upgrade', async () => {
           await expect(
             getSelectedRelease({
               availableUpgrades,
-              // @ts-ignore - we know this release version exists
               currentVersion: current.currentVersion,
-              // OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies['@shopify/hydrogen'],
+              currentDependencies: current.currentDependencies,
               targetVersion: '2023.7.10',
             }),
           ).resolves.toMatchObject({
@@ -602,7 +603,8 @@ describe('upgrade', async () => {
             getSelectedRelease({
               availableUpgrades,
               currentVersion: current!.currentVersion!,
-              targetVersion: '2023.1.5', // fails because this version is in the past
+              currentDependencies: current!.currentDependencies!,
+              targetVersion: '2023.1.5',
             }),
           ).resolves.toMatchObject(availableUpgrades[0]!);
 
@@ -639,6 +641,7 @@ describe('upgrade', async () => {
             getSelectedRelease({
               availableUpgrades,
               currentVersion: previousRelease!.version,
+              currentDependencies: {},
             }),
           ).resolves.toMatchObject(availableUpgrades[0]!);
 
@@ -1457,5 +1460,377 @@ describe('dependency removal', () => {
 
     // Should upgrade existing packages, ignore missing ones in removeDependencies
     expect(args).toEqual(['@shopify/hydrogen@2025.5.0', '@shopify/cli@3.80.0']);
+  });
+});
+
+describe('--version=next functionality', () => {
+  describe('monorepo-only restrictions', () => {
+    it('should allow --version=next in tests and CI environments', async () => {
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          // This should work because SHOPIFY_UNIT_TEST=1 is set in test environment
+          // and our logic allows --version=next in tests/CI even outside monorepo
+          await expect(
+            runUpgrade({
+              appPath,
+              version: 'next',
+              force: false,
+            }),
+          ).resolves.toBeUndefined();
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: {
+            dependencies: {
+              '@shopify/hydrogen': '2025.4.0',
+            },
+          },
+        },
+      );
+    });
+  });
+
+  it('handles getAbsoluteVersion with next versions', () => {
+    expect(getAbsoluteVersion('next')).toBe('next');
+    expect(getAbsoluteVersion('^0.0.0-next-abc123-20250925')).toBe(
+      '0.0.0-next-abc123-20250925',
+    );
+  });
+
+  it('getPackageVersion transforms @shopify packages when targetVersion is next', () => {
+    expect(getPackageVersion('@shopify/hydrogen', '2025.7.0', 'next')).toBe(
+      'next',
+    );
+    expect(getPackageVersion('@shopify/mini-oxygen', '4.0.0', 'next')).toBe(
+      'next',
+    );
+    expect(getPackageVersion('@shopify/cli', '3.83.3', 'next')).toBe('3.83.3');
+    expect(getPackageVersion('react-router', '7.9.2', 'next')).toBe('7.9.2');
+    expect(getPackageVersion('@shopify/hydrogen', '2025.7.0')).toBe('2025.7.0');
+  });
+
+  describe('createNextRelease function', () => {
+    it('should create synthetic release with next versions for @shopify packages', async () => {
+      const currentDependencies = {
+        '@shopify/hydrogen': '2025.4.0',
+        '@shopify/mini-oxygen': '3.2.0',
+      };
+
+      const latestRelease = {
+        title: 'Latest release',
+        version: '2025.7.0',
+        hash: 'abc123',
+        commit: 'https://github.com/test' as `https://${string}`,
+        pr: 'https://github.com/test' as `https://${string}`,
+        date: '2025-09-17',
+        dependencies: {
+          '@shopify/hydrogen': '2025.7.0',
+          'react-router': '7.9.2',
+        },
+        devDependencies: {
+          '@shopify/mini-oxygen': '4.0.0',
+          '@shopify/cli': '3.83.3',
+        },
+        fixes: [{title: 'Test fix', id: '123', pr: null}],
+        features: [{title: 'Test feature', id: '456', pr: null}],
+      } as Release;
+
+      const result = await getSelectedRelease({
+        targetVersion: 'next',
+        availableUpgrades: [latestRelease],
+        currentVersion: '2025.4.0',
+        currentDependencies,
+      });
+
+      expect(result.dependencies['@shopify/hydrogen']).toBe('next');
+      expect(result.devDependencies['@shopify/mini-oxygen']).toBe('next');
+      expect(result.dependencies['react-router']).toBe('7.9.2');
+      expect(result.title).toContain('(next versions)');
+    });
+  });
+
+  describe('getSelectedRelease with --version=next', () => {
+    it('should create synthetic next release when targetVersion is next', async () => {
+      const availableUpgrades = [
+        {
+          title: 'Latest release',
+          version: '2025.7.0',
+          hash: 'abc123',
+          commit: 'https://github.com/test' as `https://${string}`,
+          pr: 'https://github.com/test' as `https://${string}`,
+          date: '2025-09-17',
+          dependencies: {
+            '@shopify/hydrogen': '2025.7.0',
+            'react-router': '7.9.2',
+          },
+          devDependencies: {
+            '@shopify/mini-oxygen': '4.0.0',
+            '@shopify/cli': '3.83.3',
+          },
+          fixes: [],
+          features: [],
+        } as Release,
+      ];
+
+      const currentDependencies = {
+        '@shopify/hydrogen': '2025.4.0',
+        '@shopify/mini-oxygen': '3.2.0',
+      };
+
+      const result = await getSelectedRelease({
+        targetVersion: 'next',
+        availableUpgrades,
+        currentVersion: '2025.4.0',
+        currentDependencies,
+      });
+
+      expect(result.dependencies['@shopify/hydrogen']).toBe('next');
+      expect(result.devDependencies['@shopify/mini-oxygen']).toBe('next');
+      expect(result.dependencies['react-router']).toBe('7.9.2'); // Non-Shopify packages unchanged
+    });
+
+    it('should find regular release when targetVersion is specific version', async () => {
+      const availableUpgrades = [
+        {
+          title: 'Test release',
+          version: '2025.7.0',
+          hash: 'test-hash',
+          commit: 'https://github.com/test' as `https://${string}`,
+          pr: 'https://github.com/test' as `https://${string}`,
+          date: '2025-09-17',
+          dependencies: {},
+          devDependencies: {},
+          fixes: [],
+          features: [],
+        },
+      ];
+
+      const result = await getSelectedRelease({
+        targetVersion: '2025.7.0',
+        availableUpgrades,
+        currentVersion: '2025.4.0',
+        currentDependencies: {},
+      });
+
+      expect(result.version).toBe('2025.7.0');
+    });
+  });
+
+  describe('buildUpgradeCommandArgs with --version=next', () => {
+    it('should transform @shopify packages to next when targetVersion is next', () => {
+      const testRelease = {
+        title: 'Test release',
+        version: '2025.7.0',
+        hash: 'test',
+        commit: 'https://github.com/test' as `https://${string}`,
+        pr: 'https://github.com/test' as `https://${string}`,
+        date: '2025-09-17',
+        dependencies: {
+          '@shopify/hydrogen': '2025.7.0',
+          'react-router': '7.9.2',
+        },
+        devDependencies: {
+          '@shopify/mini-oxygen': '4.0.0',
+          '@shopify/cli': '3.83.3',
+        },
+        dependenciesMeta: {},
+        fixes: [],
+        features: [],
+      } satisfies Release;
+
+      const currentDependencies = {
+        '@shopify/hydrogen': '2025.4.0',
+        '@shopify/mini-oxygen': '3.2.0',
+        'react-router': '7.0.0',
+        '@shopify/cli': '3.82.0',
+      };
+
+      const args = buildUpgradeCommandArgs({
+        selectedRelease: testRelease,
+        currentDependencies,
+        targetVersion: 'next',
+      });
+
+      expect(args).toContain('@shopify/hydrogen@next');
+      expect(args).toContain('@shopify/mini-oxygen@next');
+      expect(args).toContain('@shopify/cli@3.83.3'); // Non-targeted Shopify packages use semver
+      expect(args).toContain('react-router@7.9.2'); // Non-Shopify packages unchanged
+    });
+
+    it('should not transform packages when targetVersion is not next', () => {
+      const testRelease = {
+        title: 'Test release',
+        version: '2025.7.0',
+        hash: 'test-hash',
+        commit: 'https://github.com/test' as `https://${string}`,
+        pr: 'https://github.com/test' as `https://${string}`,
+        date: '2025-09-17',
+        dependencies: {
+          '@shopify/hydrogen': '2025.7.0',
+        },
+        devDependencies: {
+          '@shopify/mini-oxygen': '4.0.0',
+        },
+        dependenciesMeta: {},
+        fixes: [],
+        features: [],
+      };
+
+      const currentDependencies = {
+        '@shopify/hydrogen': '2025.4.0',
+        '@shopify/mini-oxygen': '3.2.0',
+      };
+
+      const args = buildUpgradeCommandArgs({
+        selectedRelease: testRelease,
+        currentDependencies,
+        // No targetVersion specified
+      });
+
+      expect(args).toContain('@shopify/hydrogen@2025.7.0');
+      expect(args).toContain('@shopify/mini-oxygen@4.0.0');
+      expect(args).not.toContain('@shopify/hydrogen@next');
+      expect(args).not.toContain('@shopify/mini-oxygen@next');
+    });
+  });
+
+  describe('displayConfirmation with --version=next', () => {
+    it('should skip confirmation when targetVersion is next', () => {
+      const cumulativeRelease = {
+        features: [],
+        fixes: [],
+      };
+
+      const selectedRelease = {
+        version: '2025.7.0',
+      } as Release;
+
+      const result = displayConfirmation({
+        cumulativeRelease,
+        selectedRelease,
+        targetVersion: 'next',
+      });
+
+      expect(result).toBe(true); // Should skip confirmation
+    });
+
+    it('should show confirmation when targetVersion is not next', async () => {
+      const cumulativeRelease = {
+        features: [],
+        fixes: [],
+      };
+
+      const selectedRelease = {
+        version: '2025.7.0',
+      } as Release;
+
+      const result = await displayConfirmation({
+        cumulativeRelease,
+        selectedRelease,
+        // No targetVersion specified
+      });
+
+      expect(renderConfirmationPrompt).toHaveBeenCalled();
+    });
+  });
+
+  describe('validateUpgrade with snapshot versions', () => {
+    it('should accept snapshot versions when targetVersion is next', async () => {
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          const packageJson = {
+            dependencies: {
+              '@shopify/hydrogen': '^0.0.0-next-abc123-20250925',
+            },
+          };
+
+          await writeFile(
+            joinPath(appPath, 'package.json'),
+            JSON.stringify(packageJson, null, 2),
+          );
+
+          const release = {
+            title: 'Test release',
+            version: '2025.7.0',
+            hash: 'test',
+            commit: 'https://github.com/test' as `https://${string}`,
+            pr: 'https://github.com/test' as `https://${string}`,
+            date: '2025-09-17',
+            dependencies: {'@shopify/hydrogen': 'next'},
+            devDependencies: {},
+            fixes: [],
+            features: [],
+          } satisfies Release;
+
+          await expect(
+            validateUpgrade({
+              appPath,
+              selectedRelease: release,
+              targetVersion: 'next',
+            }),
+          ).resolves.toBeUndefined();
+        },
+        {cleanGitRepo: false},
+      );
+    });
+
+    it('should reject snapshot versions when targetVersion is not next', async () => {
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          const packageJson = {
+            dependencies: {
+              '@shopify/hydrogen': '^0.0.0-next-abc123-20250925',
+            },
+          };
+
+          await writeFile(
+            joinPath(appPath, 'package.json'),
+            JSON.stringify(packageJson, null, 2),
+          );
+
+          const release = {
+            title: 'Test release',
+            version: '2025.7.0',
+            hash: 'test-hash',
+            commit: 'https://github.com/test' as `https://${string}`,
+            pr: 'https://github.com/test' as `https://${string}`,
+            date: '2025-09-17',
+            dependencies: {'@shopify/hydrogen': '2025.7.0'},
+            devDependencies: {},
+            fixes: [],
+            features: [],
+          };
+
+          await expect(
+            validateUpgrade({appPath, selectedRelease: release}),
+          ).rejects.toThrow();
+        },
+        {cleanGitRepo: false},
+      );
+    });
+  });
+
+  describe('end-to-end --version=next command simulation', () => {
+    it('should complete full upgrade flow with --version=next', async () => {
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          const mockUpgrade = {
+            appPath,
+            version: 'next',
+            force: false,
+          };
+
+          await expect(runUpgrade(mockUpgrade)).resolves.toBeUndefined();
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: {
+            dependencies: {
+              '@shopify/hydrogen': '2025.4.0',
+            },
+          },
+        },
+      );
+    });
   });
 });
