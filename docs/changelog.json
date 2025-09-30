@@ -148,7 +148,7 @@
       "features": [
         {
           "title": "Migrate to React Router 7.9.x",
-          "info": "Migrates Hydrogen to React Router 7.9.x with automatic type generation and improved type safety. Removes @shopify/remix-oxygen package.",
+          "info": "Migrates Hydrogen to React Router 7.9.x with automatic type generation, improved type safety, and new context infrastructure. Removes @shopify/remix-oxygen package.",
           "breaking": true,
           "steps": [
             {
@@ -172,13 +172,33 @@
               "code": "YGBgZGlmZgovLyB0c2NvbmZpZy5qc29uCnsKICAiaW5jbHVkZSI6IFsKICAgICJlbnYuZC50cyIsCiAgICAiYXBwLyoqLyoudHMiLAogICAgImFwcC8qKi8qLnRzeCIsCisgICAiYXBwLyoqLyouZC50cyIsCisgICAiKi50cyIsCisgICAiKi50c3giLAorICAgIiouZC50cyIsCisgICAiLmdyYXBocWxyYy50cyIsCisgICAiLnJlYWN0LXJvdXRlci90eXBlcy8qKi8qIgotICAgIioqLyoudHMiLAotICAgIioqLyoudHN4IgogIF0sCiAgImNvbXBpbGVyT3B0aW9ucyI6IHsKICAgICJ0eXBlcyI6IFsKICAgICAgIkBzaG9waWZ5L294eWdlbi13b3JrZXJzLXR5cGVzIiwKKyAgICAgInJlYWN0LXJvdXRlciIsCisgICAgICJAc2hvcGlmeS9oeWRyb2dlbi9yZWFjdC1yb3V0ZXItdHlwZXMiLAorICAgICAidml0ZS9jbGllbnQiCi0gICAgICJAcmVtaXgtcnVuL25vZGUiLAotICAgICAidml0ZS9jbGllbnQiCiAgICBdLAorICAgInJvb3REaXJzIjogWyIuIiwgIi4vLnJlYWN0LXJvdXRlci90eXBlcyJdLAogICAgImJhc2VVcmwiOiAiLiIsCiAgICAicGF0aHMiOiB7CiAgICAgICJ+LyoiOiBbImFwcC8qIl0KICAgIH0KICB9Cn0KYGBgCg=="
             },
             {
-              "title": "Update @shopify/remix-oxygen imports",
-              "info": "Replace @shopify/remix-oxygen imports with react-router equivalents",
+              "title": "Create app/lib/context.ts with createHydrogenRouterContext",
+              "info": "Create a new context file that exports createHydrogenRouterContext function with support for additional context properties and type augmentation",
+              "code": "YGBgdHlwZXNjcmlwdAovLyBhcHAvbGliL2NvbnRleHQudHMKaW1wb3J0IHtjcmVhdGVIeWRyb2dlbkNvbnRleHR9IGZyb20gJ0BzaG9waWZ5L2h5ZHJvZ2VuJzsKaW1wb3J0IHtBcHBTZXNzaW9ufSBmcm9tICd+L2xpYi9zZXNzaW9uJzsKaW1wb3J0IHtDQVJUX1FVRVJZX0ZSQUdNRU5UfSBmcm9tICd+L2xpYi9mcmFnbWVudHMnOwoKY29uc3QgYWRkaXRpb25hbENvbnRleHQgPSB7CiAgLy8gQWRkaXRpb25hbCBjb250ZXh0IGZvciBjdXN0b20gcHJvcGVydGllcywgQ01TIGNsaWVudHMsIDNQIFNES3MsIGV0Yy4KfSBhcyBjb25zdDsKCnR5cGUgQWRkaXRpb25hbENvbnRleHRUeXBlID0gdHlwZW9mIGFkZGl0aW9uYWxDb250ZXh0OwoKZGVjbGFyZSBnbG9iYWwgewogIGludGVyZmFjZSBIeWRyb2dlbkFkZGl0aW9uYWxDb250ZXh0IGV4dGVuZHMgQWRkaXRpb25hbENvbnRleHRUeXBlIHt9Cn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBjcmVhdGVIeWRyb2dlblJvdXRlckNvbnRleHQoCiAgcmVxdWVzdDogUmVxdWVzdCwKICBlbnY6IEVudiwKICBleGVjdXRpb25Db250ZXh0OiBFeGVjdXRpb25Db250ZXh0LAopIHsKICBpZiAoIWVudj8uU0VTU0lPTl9TRUNSRVQpIHsKICAgIHRocm93IG5ldyBFcnJvcignU0VTU0lPTl9TRUNSRVQgZW52aXJvbm1lbnQgdmFyaWFibGUgaXMgbm90IHNldCcpOwogIH0KCiAgY29uc3Qgd2FpdFVudGlsID0gZXhlY3V0aW9uQ29udGV4dC53YWl0VW50aWwuYmluZChleGVjdXRpb25Db250ZXh0KTsKICBjb25zdCBbY2FjaGUsIHNlc3Npb25dID0gYXdhaXQgUHJvbWlzZS5hbGwoWwogICAgY2FjaGVzLm9wZW4oJ2h5ZHJvZ2VuJyksCiAgICBBcHBTZXNzaW9uLmluaXQocmVxdWVzdCwgW2Vudi5TRVNTSU9OX1NFQ1JFVF0pLAogIF0pOwoKICBjb25zdCBoeWRyb2dlbkNvbnRleHQgPSBjcmVhdGVIeWRyb2dlbkNvbnRleHQoCiAgICB7CiAgICAgIGVudiwKICAgICAgcmVxdWVzdCwKICAgICAgY2FjaGUsCiAgICAgIHdhaXRVbnRpbCwKICAgICAgc2Vzc2lvbiwKICAgICAgaTE4bjoge2xhbmd1YWdlOiAnRU4nLCBjb3VudHJ5OiAnVVMnfSwKICAgICAgY2FydDogewogICAgICAgIHF1ZXJ5RnJhZ21lbnQ6IENBUlRfUVVFUllfRlJBR01FTlQsCiAgICAgIH0sCiAgICB9LAogICAgYWRkaXRpb25hbENvbnRleHQsCiAgKTsKCiAgcmV0dXJuIGh5ZHJvZ2VuQ29udGV4dDsKfQpgYGAK"
+            },
+            {
+              "title": "Update server.ts to use createHydrogenRouterContext",
+              "info": "Replace @shopify/remix-oxygen with @shopify/hydrogen/oxygen and use the new context creation function with session handling",
+              "code": "YGBgZGlmZgovLyBzZXJ2ZXIudHMKLSBpbXBvcnQge2NyZWF0ZVJlcXVlc3RIYW5kbGVyfSBmcm9tICJAc2hvcGlmeS9yZW1peC1veHlnZW4iOworIGltcG9ydCB7Y3JlYXRlUmVxdWVzdEhhbmRsZXJ9IGZyb20gIkBzaG9waWZ5L2h5ZHJvZ2VuL294eWdlbiI7CisgaW1wb3J0IHtjcmVhdGVIeWRyb2dlblJvdXRlckNvbnRleHR9IGZyb20gIn4vbGliL2NvbnRleHQiOwoKZXhwb3J0IGRlZmF1bHQgewogIGFzeW5jIGZldGNoKHJlcXVlc3Q6IFJlcXVlc3QsIGVudjogRW52LCBleGVjdXRpb25Db250ZXh0OiBFeGVjdXRpb25Db250ZXh0KTogUHJvbWlzZTxSZXNwb25zZT4geworICAgY29uc3QgaHlkcm9nZW5Db250ZXh0ID0gYXdhaXQgY3JlYXRlSHlkcm9nZW5Sb3V0ZXJDb250ZXh0KAorICAgICByZXF1ZXN0LAorICAgICBlbnYsCisgICAgIGV4ZWN1dGlvbkNvbnRleHQsCisgICApOwoKICAgIGNvbnN0IGhhbmRsZVJlcXVlc3QgPSBjcmVhdGVSZXF1ZXN0SGFuZGxlcih7Ci0gICAgIGJ1aWxkOiBhd2FpdCBpbXBvcnQoJ3ZpcnR1YWw6cmVtaXgvc2VydmVyLWJ1aWxkJyksCisgICAgIGJ1aWxkOiBhd2FpdCBpbXBvcnQoJ3ZpcnR1YWw6cmVhY3Qtcm91dGVyL3NlcnZlci1idWlsZCcpLAogICAgICBtb2RlOiBwcm9jZXNzLmVudi5OT0RFX0VOViwKLSAgICAgZ2V0TG9hZENvbnRleHQ6ICgpID0+ICh7Li4ufSksCisgICAgIGdldExvYWRDb250ZXh0OiAoKSA9PiBoeWRyb2dlbkNvbnRleHQsCiAgICB9KTsKCiAgICBjb25zdCByZXNwb25zZSA9IGF3YWl0IGhhbmRsZVJlcXVlc3QocmVxdWVzdCk7CisKKyAgIGlmIChoeWRyb2dlbkNvbnRleHQuc2Vzc2lvbi5pc1BlbmRpbmcpIHsKKyAgICAgcmVzcG9uc2UuaGVhZGVycy5zZXQoJ1NldC1Db29raWUnLCBhd2FpdCBoeWRyb2dlbkNvbnRleHQuc2Vzc2lvbi5jb21taXQoKSk7CisgICB9CgogICAgcmV0dXJuIHJlc3BvbnNlOwogIH0KfTsKYGBgCg=="
+            },
+            {
+              "title": "Update entry.server.tsx with new context types",
+              "info": "Replace Remix types with React Router types and use HydrogenRouterContextProvider for enhanced type safety",
+              "code": "YGBgZGlmZgovLyBhcHAvZW50cnkuc2VydmVyLnRzeAotIGltcG9ydCB0eXBlIHtBcHBMb2FkQ29udGV4dH0gZnJvbSAiQHNob3BpZnkvcmVtaXgtb3h5Z2VuIjsKLSBpbXBvcnQgdHlwZSB7RW50cnlDb250ZXh0fSBmcm9tICJAcmVtaXgtcnVuL3NlcnZlci1ydW50aW1lIjsKKyBpbXBvcnQgdHlwZSB7RW50cnlDb250ZXh0fSBmcm9tICJyZWFjdC1yb3V0ZXIiOwppbXBvcnQgewogIGNyZWF0ZUNvbnRlbnRTZWN1cml0eVBvbGljeSwKKyB0eXBlIEh5ZHJvZ2VuUm91dGVyQ29udGV4dFByb3ZpZGVyLAp9IGZyb20gIkBzaG9waWZ5L2h5ZHJvZ2VuIjsKCmV4cG9ydCBkZWZhdWx0IGFzeW5jIGZ1bmN0aW9uIGhhbmRsZVJlcXVlc3QoCiAgcmVxdWVzdDogUmVxdWVzdCwKICByZXNwb25zZVN0YXR1c0NvZGU6IG51bWJlciwKICByZXNwb25zZUhlYWRlcnM6IEhlYWRlcnMsCi0gcmVtaXhDb250ZXh0OiBFbnRyeUNvbnRleHQsCisgcmVhY3RSb3V0ZXJDb250ZXh0OiBFbnRyeUNvbnRleHQsCi0gY29udGV4dDogQXBwTG9hZENvbnRleHQsCisgY29udGV4dDogSHlkcm9nZW5Sb3V0ZXJDb250ZXh0UHJvdmlkZXIsCikgewogIGNvbnN0IHtub25jZSwgaGVhZGVyLCBOb25jZVByb3ZpZGVyfSA9IGNyZWF0ZUNvbnRlbnRTZWN1cml0eVBvbGljeSh7Li4ufSk7CgogIGNvbnN0IGJvZHkgPSBhd2FpdCByZW5kZXJUb1JlYWRhYmxlU3RyZWFtKAogICAgPE5vbmNlUHJvdmlkZXI+CiAgICAgIDxTZXJ2ZXJSb3V0ZXIKLSAgICAgICBjb250ZXh0PXtyZW1peENvbnRleHR9CisgICAgICAgY29udGV4dD17cmVhY3RSb3V0ZXJDb250ZXh0fQogICAgICAgIHVybD17cmVxdWVzdC51cmx9CiAgICAgICAgbm9uY2U9e25vbmNlfQogICAgICAvPgogICAgPC9Ob25jZVByb3ZpZGVyPiwKICApOwp9CmBgYAo="
+            },
+            {
+              "title": "Update entry.client.tsx with NonceProvider and HydratedRouter",
+              "info": "Replace RemixBrowser with HydratedRouter and wrap with NonceProvider for CSP support during client-side hydration",
+              "code": "YGBgZGlmZgovLyBhcHAvZW50cnkuY2xpZW50LnRzeAotIGltcG9ydCB7UmVtaXhCcm93c2VyfSBmcm9tICJAcmVtaXgtcnVuL3JlYWN0IjsKKyBpbXBvcnQge0h5ZHJhdGVkUm91dGVyfSBmcm9tICJyZWFjdC1yb3V0ZXIvZG9tIjsKaW1wb3J0IHtzdGFydFRyYW5zaXRpb24sIFN0cmljdE1vZGV9IGZyb20gInJlYWN0IjsKaW1wb3J0IHtoeWRyYXRlUm9vdH0gZnJvbSAicmVhY3QtZG9tL2NsaWVudCI7CisgaW1wb3J0IHtOb25jZVByb3ZpZGVyfSBmcm9tICJAc2hvcGlmeS9oeWRyb2dlbiI7CgppZiAoIXdpbmRvdy5sb2NhdGlvbi5vcmlnaW4uaW5jbHVkZXMoIndlYmNhY2hlLmdvb2dsZXVzZXJjb250ZW50LmNvbSIpKSB7CiAgc3RhcnRUcmFuc2l0aW9uKCgpID0+IHsKKyAgIGNvbnN0IGV4aXN0aW5nTm9uY2UgPSBkb2N1bWVudAorICAgICAucXVlcnlTZWxlY3RvcjxIVE1MU2NyaXB0RWxlbWVudD4oInNjcmlwdFtub25jZV0iKQorICAgICA/Lm5vbmNlOworCiAgICBoeWRyYXRlUm9vdCgKICAgICAgZG9jdW1lbnQsCiAgICAgIDxTdHJpY3RNb2RlPgotICAgICAgIDxSZW1peEJyb3dzZXIgLz4KKyAgICAgICA8Tm9uY2VQcm92aWRlciB2YWx1ZT17ZXhpc3RpbmdOb25jZX0+CisgICAgICAgICA8SHlkcmF0ZWRSb3V0ZXIgLz4KKyAgICAgICA8L05vbmNlUHJvdmlkZXI+CiAgICAgIDwvU3RyaWN0TW9kZT4sCiAgICApOwogIH0pOwp9CmBgYAo="
+            },
+            {
+              "title": "Update @shopify/remix-oxygen imports in route files",
+              "info": "Replace @shopify/remix-oxygen imports with react-router equivalents in your route files",
               "code": "YGBgZGlmZgotIGltcG9ydCB7cmVkaXJlY3QsIHR5cGUgTG9hZGVyRnVuY3Rpb25BcmdzfSBmcm9tICJAc2hvcGlmeS9yZW1peC1veHlnZW4iOworIGltcG9ydCB7cmVkaXJlY3R9IGZyb20gInJlYWN0LXJvdXRlciI7CisgaW1wb3J0IHR5cGUge0xvYWRlckZ1bmN0aW9uQXJnc30gZnJvbSAiQHNob3BpZnkvaHlkcm9nZW4vb3h5Z2VuIjsKYGBgCg=="
             },
             {
-              "title": "Update @remix-run/react imports",
-              "info": "Replace @remix-run/react imports with react-router equivalents",
+              "title": "Update @remix-run/react imports in route files",
+              "info": "Replace @remix-run/react imports with react-router equivalents in your route files",
               "code": "YGBgZGlmZgotIGltcG9ydCB7dXNlTG9hZGVyRGF0YSwgdHlwZSBNZXRhRnVuY3Rpb259IGZyb20gIkByZW1peC1ydW4vcmVhY3QiOworIGltcG9ydCB7dXNlTG9hZGVyRGF0YX0gZnJvbSAicmVhY3Qtcm91dGVyIjsKYGBgCg=="
             },
             {
@@ -204,35 +224,6 @@
           ],
           "pr": "https://github.com/Shopify/hydrogen/pull/3141",
           "id": "3141"
-        },
-        {
-          "title": "Adopt new React Router context infrastructure",
-          "info": "Major infrastructure changes including new createHydrogenRouterContext function, enhanced context patterns with extensibility support, and type-safe context provider.",
-          "breaking": true,
-          "steps": [
-            {
-              "title": "Create app/lib/context.ts with createHydrogenRouterContext",
-              "info": "Create a new context file that exports createHydrogenRouterContext function with support for additional context properties and type augmentation",
-              "code": "YGBgdHlwZXNjcmlwdAovLyBhcHAvbGliL2NvbnRleHQudHMKaW1wb3J0IHtjcmVhdGVIeWRyb2dlbkNvbnRleHR9IGZyb20gJ0BzaG9waWZ5L2h5ZHJvZ2VuJzsKaW1wb3J0IHtBcHBTZXNzaW9ufSBmcm9tICd+L2xpYi9zZXNzaW9uJzsKaW1wb3J0IHtDQVJUX1FVRVJZX0ZSQUdNRU5UfSBmcm9tICd+L2xpYi9mcmFnbWVudHMnOwoKY29uc3QgYWRkaXRpb25hbENvbnRleHQgPSB7CiAgLy8gQWRkaXRpb25hbCBjb250ZXh0IGZvciBjdXN0b20gcHJvcGVydGllcywgQ01TIGNsaWVudHMsIDNQIFNES3MsIGV0Yy4KfSBhcyBjb25zdDsKCnR5cGUgQWRkaXRpb25hbENvbnRleHRUeXBlID0gdHlwZW9mIGFkZGl0aW9uYWxDb250ZXh0OwoKZGVjbGFyZSBnbG9iYWwgewogIGludGVyZmFjZSBIeWRyb2dlbkFkZGl0aW9uYWxDb250ZXh0IGV4dGVuZHMgQWRkaXRpb25hbENvbnRleHRUeXBlIHt9Cn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBjcmVhdGVIeWRyb2dlblJvdXRlckNvbnRleHQoCiAgcmVxdWVzdDogUmVxdWVzdCwKICBlbnY6IEVudiwKICBleGVjdXRpb25Db250ZXh0OiBFeGVjdXRpb25Db250ZXh0LAopIHsKICBpZiAoIWVudj8uU0VTU0lPTl9TRUNSRVQpIHsKICAgIHRocm93IG5ldyBFcnJvcignU0VTU0lPTl9TRUNSRVQgZW52aXJvbm1lbnQgdmFyaWFibGUgaXMgbm90IHNldCcpOwogIH0KCiAgY29uc3Qgd2FpdFVudGlsID0gZXhlY3V0aW9uQ29udGV4dC53YWl0VW50aWwuYmluZChleGVjdXRpb25Db250ZXh0KTsKICBjb25zdCBbY2FjaGUsIHNlc3Npb25dID0gYXdhaXQgUHJvbWlzZS5hbGwoWwogICAgY2FjaGVzLm9wZW4oJ2h5ZHJvZ2VuJyksCiAgICBBcHBTZXNzaW9uLmluaXQocmVxdWVzdCwgW2Vudi5TRVNTSU9OX1NFQ1JFVF0pLAogIF0pOwoKICBjb25zdCBoeWRyb2dlbkNvbnRleHQgPSBjcmVhdGVIeWRyb2dlbkNvbnRleHQoCiAgICB7CiAgICAgIGVudiwKICAgICAgcmVxdWVzdCwKICAgICAgY2FjaGUsCiAgICAgIHdhaXRVbnRpbCwKICAgICAgc2Vzc2lvbiwKICAgICAgaTE4bjoge2xhbmd1YWdlOiAnRU4nLCBjb3VudHJ5OiAnVVMnfSwKICAgICAgY2FydDogewogICAgICAgIHF1ZXJ5RnJhZ21lbnQ6IENBUlRfUVVFUllfRlJBR01FTlQsCiAgICAgIH0sCiAgICB9LAogICAgYWRkaXRpb25hbENvbnRleHQsCiAgKTsKCiAgcmV0dXJuIGh5ZHJvZ2VuQ29udGV4dDsKfQpgYGAK"
-            },
-            {
-              "title": "Update server.ts to use createHydrogenRouterContext",
-              "info": "Replace @shopify/remix-oxygen with @shopify/hydrogen/oxygen and use the new context creation function with session handling",
-              "code": "YGBgZGlmZgovLyBzZXJ2ZXIudHMKLSBpbXBvcnQge2NyZWF0ZVJlcXVlc3RIYW5kbGVyfSBmcm9tICJAc2hvcGlmeS9yZW1peC1veHlnZW4iOworIGltcG9ydCB7Y3JlYXRlUmVxdWVzdEhhbmRsZXJ9IGZyb20gIkBzaG9waWZ5L2h5ZHJvZ2VuL294eWdlbiI7CisgaW1wb3J0IHtjcmVhdGVIeWRyb2dlblJvdXRlckNvbnRleHR9IGZyb20gIn4vbGliL2NvbnRleHQiOwoKZXhwb3J0IGRlZmF1bHQgewogIGFzeW5jIGZldGNoKHJlcXVlc3Q6IFJlcXVlc3QsIGVudjogRW52LCBleGVjdXRpb25Db250ZXh0OiBFeGVjdXRpb25Db250ZXh0KTogUHJvbWlzZTxSZXNwb25zZT4geworICAgY29uc3QgaHlkcm9nZW5Db250ZXh0ID0gYXdhaXQgY3JlYXRlSHlkcm9nZW5Sb3V0ZXJDb250ZXh0KAorICAgICByZXF1ZXN0LAorICAgICBlbnYsCisgICAgIGV4ZWN1dGlvbkNvbnRleHQsCisgICApOwoKICAgIGNvbnN0IGhhbmRsZVJlcXVlc3QgPSBjcmVhdGVSZXF1ZXN0SGFuZGxlcih7Ci0gICAgIGJ1aWxkOiBhd2FpdCBpbXBvcnQoJ3ZpcnR1YWw6cmVtaXgvc2VydmVyLWJ1aWxkJyksCisgICAgIGJ1aWxkOiBhd2FpdCBpbXBvcnQoJ3ZpcnR1YWw6cmVhY3Qtcm91dGVyL3NlcnZlci1idWlsZCcpLAogICAgICBtb2RlOiBwcm9jZXNzLmVudi5OT0RFX0VOViwKLSAgICAgZ2V0TG9hZENvbnRleHQ6ICgpID0+ICh7Li4ufSksCisgICAgIGdldExvYWRDb250ZXh0OiAoKSA9PiBoeWRyb2dlbkNvbnRleHQsCiAgICB9KTsKCiAgICBjb25zdCByZXNwb25zZSA9IGF3YWl0IGhhbmRsZVJlcXVlc3QocmVxdWVzdCk7CisKKyAgIGlmIChoeWRyb2dlbkNvbnRleHQuc2Vzc2lvbi5pc1BlbmRpbmcpIHsKKyAgICAgcmVzcG9uc2UuaGVhZGVycy5zZXQoJ1NldC1Db29raWUnLCBhd2FpdCBoeWRyb2dlbkNvbnRleHQuc2Vzc2lvbi5jb21taXQoKSk7CisgICB9CgogICAgcmV0dXJuIHJlc3BvbnNlOwogIH0KfTsKYGBgCg=="
-            },
-            {
-              "title": "Update entry.server.tsx with new context types",
-              "info": "Replace Remix types with React Router types and use HydrogenRouterContextProvider for enhanced type safety",
-              "code": "YGBgZGlmZgovLyBhcHAvZW50cnkuc2VydmVyLnRzeAotIGltcG9ydCB0eXBlIHtBcHBMb2FkQ29udGV4dH0gZnJvbSAiQHNob3BpZnkvcmVtaXgtb3h5Z2VuIjsKLSBpbXBvcnQgdHlwZSB7RW50cnlDb250ZXh0fSBmcm9tICJAcmVtaXgtcnVuL3NlcnZlci1ydW50aW1lIjsKKyBpbXBvcnQgdHlwZSB7RW50cnlDb250ZXh0fSBmcm9tICJyZWFjdC1yb3V0ZXIiOwppbXBvcnQgewogIGNyZWF0ZUNvbnRlbnRTZWN1cml0eVBvbGljeSwKKyB0eXBlIEh5ZHJvZ2VuUm91dGVyQ29udGV4dFByb3ZpZGVyLAp9IGZyb20gIkBzaG9waWZ5L2h5ZHJvZ2VuIjsKCmV4cG9ydCBkZWZhdWx0IGFzeW5jIGZ1bmN0aW9uIGhhbmRsZVJlcXVlc3QoCiAgcmVxdWVzdDogUmVxdWVzdCwKICByZXNwb25zZVN0YXR1c0NvZGU6IG51bWJlciwKICByZXNwb25zZUhlYWRlcnM6IEhlYWRlcnMsCi0gcmVtaXhDb250ZXh0OiBFbnRyeUNvbnRleHQsCisgcmVhY3RSb3V0ZXJDb250ZXh0OiBFbnRyeUNvbnRleHQsCi0gY29udGV4dDogQXBwTG9hZENvbnRleHQsCisgY29udGV4dDogSHlkcm9nZW5Sb3V0ZXJDb250ZXh0UHJvdmlkZXIsCikgewogIGNvbnN0IHtub25jZSwgaGVhZGVyLCBOb25jZVByb3ZpZGVyfSA9IGNyZWF0ZUNvbnRlbnRTZWN1cml0eVBvbGljeSh7Li4ufSk7CgogIGNvbnN0IGJvZHkgPSBhd2FpdCByZW5kZXJUb1JlYWRhYmxlU3RyZWFtKAogICAgPE5vbmNlUHJvdmlkZXI+CiAgICAgIDxTZXJ2ZXJSb3V0ZXIKLSAgICAgICBjb250ZXh0PXtyZW1peENvbnRleHR9CisgICAgICAgY29udGV4dD17cmVhY3RSb3V0ZXJDb250ZXh0fQogICAgICAgIHVybD17cmVxdWVzdC51cmx9CiAgICAgICAgbm9uY2U9e25vbmNlfQogICAgICAvPgogICAgPC9Ob25jZVByb3ZpZGVyPiwKICApOwp9CmBgYAo="
-            },
-            {
-              "title": "Update entry.client.tsx with NonceProvider and HydratedRouter",
-              "info": "Replace RemixBrowser with HydratedRouter and wrap with NonceProvider for CSP support during client-side hydration",
-              "code": "YGBgZGlmZgovLyBhcHAvZW50cnkuY2xpZW50LnRzeAotIGltcG9ydCB7UmVtaXhCcm93c2VyfSBmcm9tICJAcmVtaXgtcnVuL3JlYWN0IjsKKyBpbXBvcnQge0h5ZHJhdGVkUm91dGVyfSBmcm9tICJyZWFjdC1yb3V0ZXIvZG9tIjsKaW1wb3J0IHtzdGFydFRyYW5zaXRpb24sIFN0cmljdE1vZGV9IGZyb20gInJlYWN0IjsKaW1wb3J0IHtoeWRyYXRlUm9vdH0gZnJvbSAicmVhY3QtZG9tL2NsaWVudCI7CisgaW1wb3J0IHtOb25jZVByb3ZpZGVyfSBmcm9tICJAc2hvcGlmeS9oeWRyb2dlbiI7CgppZiAoIXdpbmRvdy5sb2NhdGlvbi5vcmlnaW4uaW5jbHVkZXMoIndlYmNhY2hlLmdvb2dsZXVzZXJjb250ZW50LmNvbSIpKSB7CiAgc3RhcnRUcmFuc2l0aW9uKCgpID0+IHsKKyAgIGNvbnN0IGV4aXN0aW5nTm9uY2UgPSBkb2N1bWVudAorICAgICAucXVlcnlTZWxlY3RvcjxIVE1MU2NyaXB0RWxlbWVudD4oInNjcmlwdFtub25jZV0iKQorICAgICA/Lm5vbmNlOworCiAgICBoeWRyYXRlUm9vdCgKICAgICAgZG9jdW1lbnQsCiAgICAgIDxTdHJpY3RNb2RlPgotICAgICAgIDxSZW1peEJyb3dzZXIgLz4KKyAgICAgICA8Tm9uY2VQcm92aWRlciB2YWx1ZT17ZXhpc3RpbmdOb25jZX0+CisgICAgICAgICA8SHlkcmF0ZWRSb3V0ZXIgLz4KKyAgICAgICA8L05vbmNlUHJvdmlkZXI+CiAgICAgIDwvU3RyaWN0TW9kZT4sCiAgICApOwogIH0pOwp9CmBgYAo="
-            }
-          ],
-          "pr": "https://github.com/Shopify/hydrogen/pull/3142",
-          "id": "3142"
         },
         {
           "title": "Updated Storefront API and Customer Account API version 2025-07",
