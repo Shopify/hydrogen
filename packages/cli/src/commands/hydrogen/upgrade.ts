@@ -150,6 +150,20 @@ export async function runUpgrade({
     appPath,
   });
 
+  // Don't allow --version=next if project already uses next versions for key packages
+  if (targetVersion === 'next') {
+    const hasNextHydrogen = currentDependencies['@shopify/hydrogen'] === 'next';
+    const hasNextMiniOxygen =
+      currentDependencies['@shopify/mini-oxygen'] === 'next';
+
+    if (hasNextHydrogen || hasNextMiniOxygen) {
+      throw new AbortError(
+        'Project already uses next versions',
+        'Cannot upgrade to --version=next when @shopify/hydrogen or @shopify/mini-oxygen are already using "next" versions',
+      );
+    }
+  }
+
   const isPrerelease = semver.prerelease(currentVersion);
 
   if (isPrerelease) {
@@ -724,10 +738,10 @@ function maybeIncludeDependency({
   // Dep meta is required...
   if (!existingDependencyVersion) return true;
 
-  // Always upgrade next versions
+  // For --version=next, always upgrade @shopify packages to get latest snapshots
   if (
-    (existingDependencyVersion === 'next' || version === 'next') &&
-    targetVersion === 'next'
+    targetVersion === 'next' &&
+    (name === '@shopify/hydrogen' || name === '@shopify/mini-oxygen')
   ) {
     return true;
   }
