@@ -288,23 +288,57 @@
               "title": "Add OrderSearchForm component",
               "info": "Create a search form with order number and confirmation number inputs",
               "code": "YGBgZGlmZgovLyBhcHAvcm91dGVzL2FjY291bnQub3JkZXJzLl9pbmRleC50c3gKK2ltcG9ydCB7dXNlU2VhcmNoUGFyYW1zLCB1c2VOYXZpZ2F0aW9ufSBmcm9tICdyZWFjdC1yb3V0ZXInOworaW1wb3J0IHt1c2VSZWZ9IGZyb20gJ3JlYWN0JzsKK2ltcG9ydCB7T1JERVJfRklMVEVSX0ZJRUxEU30gZnJvbSAnfi9saWIvb3JkZXJGaWx0ZXJzJzsKCitmdW5jdGlvbiBPcmRlclNlYXJjaEZvcm0oe2N1cnJlbnRGaWx0ZXJzfToge2N1cnJlbnRGaWx0ZXJzOiBPcmRlckZpbHRlclBhcmFtc30pIHsKKyAgY29uc3QgW3NlYXJjaFBhcmFtcywgc2V0U2VhcmNoUGFyYW1zXSA9IHVzZVNlYXJjaFBhcmFtcygpOworICBjb25zdCBuYXZpZ2F0aW9uID0gdXNlTmF2aWdhdGlvbigpOworICBjb25zdCBpc1NlYXJjaGluZyA9IG5hdmlnYXRpb24uc3RhdGUgIT09ICdpZGxlJyAmJiBuYXZpZ2F0aW9uLmxvY2F0aW9uPy5wYXRobmFtZT8uaW5jbHVkZXMoJ29yZGVycycpOworICBjb25zdCBmb3JtUmVmID0gdXNlUmVmPEhUTUxGb3JtRWxlbWVudD4obnVsbCk7CisKKyAgY29uc3QgaGFuZGxlU3VibWl0ID0gKGV2ZW50OiBSZWFjdC5Gb3JtRXZlbnQ8SFRNTEZvcm1FbGVtZW50PikgPT4geworICAgIGV2ZW50LnByZXZlbnREZWZhdWx0KCk7CisgICAgY29uc3QgZm9ybURhdGEgPSBuZXcgRm9ybURhdGEoZXZlbnQuY3VycmVudFRhcmdldCk7CisgICAgY29uc3QgcGFyYW1zID0gbmV3IFVSTFNlYXJjaFBhcmFtcygpOworCisgICAgY29uc3QgbmFtZSA9IGZvcm1EYXRhLmdldChPUkRFUl9GSUxURVJfRklFTERTLk5BTUUpPy50b1N0cmluZygpLnRyaW0oKTsKKyAgICBjb25zdCBjb25maXJtYXRpb25OdW1iZXIgPSBmb3JtRGF0YS5nZXQoT1JERVJfRklMVEVSX0ZJRUxEUy5DT05GSVJNQVRJT05fTlVNQkVSKT8udG9TdHJpbmcoKS50cmltKCk7CisKKyAgICBpZiAobmFtZSkgcGFyYW1zLnNldChPUkRFUl9GSUxURVJfRklFTERTLk5BTUUsIG5hbWUpOworICAgIGlmIChjb25maXJtYXRpb25OdW1iZXIpIHBhcmFtcy5zZXQoT1JERVJfRklMVEVSX0ZJRUxEUy5DT05GSVJNQVRJT05fTlVNQkVSLCBjb25maXJtYXRpb25OdW1iZXIpOworCisgICAgc2V0U2VhcmNoUGFyYW1zKHBhcmFtcyk7CisgIH07CisKKyAgcmV0dXJuICgKKyAgICA8Zm9ybSByZWY9e2Zvcm1SZWZ9IG9uU3VibWl0PXtoYW5kbGVTdWJtaXR9PgorICAgICAgPGlucHV0IHR5cGU9InNlYXJjaCIgbmFtZT17T1JERVJfRklMVEVSX0ZJRUxEUy5OQU1FfSBwbGFjZWhvbGRlcj0iT3JkZXIgIyIgZGVmYXVsdFZhbHVlPXtjdXJyZW50RmlsdGVycy5uYW1lIHx8ICcnfSAvPgorICAgICAgPGlucHV0IHR5cGU9InNlYXJjaCIgbmFtZT17T1JERVJfRklMVEVSX0ZJRUxEUy5DT05GSVJNQVRJT05fTlVNQkVSfSBwbGFjZWhvbGRlcj0iQ29uZmlybWF0aW9uICMiIGRlZmF1bHRWYWx1ZT17Y3VycmVudEZpbHRlcnMuY29uZmlybWF0aW9uTnVtYmVyIHx8ICcnfSAvPgorICAgICAgPGJ1dHRvbiB0eXBlPSJzdWJtaXQiIGRpc2FibGVkPXtpc1NlYXJjaGluZ30+e2lzU2VhcmNoaW5nID8gJ1NlYXJjaGluZycgOiAnU2VhcmNoJ308L2J1dHRvbj4KKyAgICA8L2Zvcm0+CisgICk7Cit9CmBgYAo="
+            },
+            {
+              "title": "Update Orders component to use filters and add EmptyOrders",
+              "info": "Pass filters to components and add conditional empty state messaging based on whether filters are active",
+              "code": "YGBgZGlmZgovLyBhcHAvcm91dGVzL2FjY291bnQub3JkZXJzLl9pbmRleC50c3gKZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gT3JkZXJzKCkgewotIGNvbnN0IHtjdXN0b21lcn0gPSB1c2VMb2FkZXJEYXRhPE9yZGVyc0xvYWRlckRhdGE+KCk7CisgY29uc3Qge2N1c3RvbWVyLCBmaWx0ZXJzfSA9IHVzZUxvYWRlckRhdGE8T3JkZXJzTG9hZGVyRGF0YT4oKTsKICBjb25zdCB7b3JkZXJzfSA9IGN1c3RvbWVyOwoKICByZXR1cm4gKAogICAgPGRpdiBjbGFzc05hbWU9Im9yZGVycyI+CisgICAgIDxPcmRlclNlYXJjaEZvcm0gY3VycmVudEZpbHRlcnM9e2ZpbHRlcnN9IC8+Ci0gICAgIDxPcmRlcnNUYWJsZSBvcmRlcnM9e29yZGVyc30gLz4KKyAgICAgPE9yZGVyc1RhYmxlIG9yZGVycz17b3JkZXJzfSBmaWx0ZXJzPXtmaWx0ZXJzfSAvPgogICAgPC9kaXY+CiAgKTsKfQoKLWZ1bmN0aW9uIE9yZGVyc1RhYmxlKHtvcmRlcnN9OiB7b3JkZXJzOiBDdXN0b21lck9yZGVyc0ZyYWdtZW50WydvcmRlcnMnXX0pIHsKK2Z1bmN0aW9uIE9yZGVyc1RhYmxlKHtvcmRlcnMsIGZpbHRlcnN9OiB7b3JkZXJzOiBDdXN0b21lck9yZGVyc0ZyYWdtZW50WydvcmRlcnMnXTsgZmlsdGVyczogT3JkZXJGaWx0ZXJQYXJhbXN9KSB7CisgIGNvbnN0IGhhc0ZpbHRlcnMgPSAhIShmaWx0ZXJzLm5hbWUgfHwgZmlsdGVycy5jb25maXJtYXRpb25OdW1iZXIpOworCiAgcmV0dXJuICgKICAgIDxkaXY+CiAgICAgIHtvcmRlcnM/Lm5vZGVzLmxlbmd0aCA/ICgKICAgICAgICA8UGFnaW5hdGVkUmVzb3VyY2VTZWN0aW9uIGNvbm5lY3Rpb249e29yZGVyc30+CiAgICAgICAgICB7KHtub2RlOiBvcmRlcn0pID0+IDxPcmRlckl0ZW0ga2V5PXtvcmRlci5pZH0gb3JkZXI9e29yZGVyfSAvPn0KICAgICAgICA8L1BhZ2luYXRlZFJlc291cmNlU2VjdGlvbj4KICAgICAgKSA6ICgKLSAgICAgICA8cD5Zb3UgaGF2ZW4ndCBwbGFjZWQgYW55IG9yZGVycyB5ZXQuPC9wPgorICAgICAgIDxFbXB0eU9yZGVycyBoYXNGaWx0ZXJzPXtoYXNGaWx0ZXJzfSAvPgogICAgICApfQogICAgPC9kaXY+CiAgKTsKfQoKK2Z1bmN0aW9uIEVtcHR5T3JkZXJzKHtoYXNGaWx0ZXJzfToge2hhc0ZpbHRlcnM/OiBib29sZWFufSkgeworICByZXR1cm4gaGFzRmlsdGVycyA/ICgKKyAgICA8cD5ObyBvcmRlcnMgZm91bmQgbWF0Y2hpbmcgeW91ciBzZWFyY2guIDxMaW5rIHRvPSIvYWNjb3VudC9vcmRlcnMiPkNsZWFyIGZpbHRlcnM8L0xpbms+PC9wPgorICApIDogKAorICAgIDxwPllvdSBoYXZlbid0IHBsYWNlZCBhbnkgb3JkZXJzIHlldC48L3A+CisgICk7Cit9CmBgYAo="
             }
-          ]
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3125",
+          "id": "3125"
         },
         {
           "title": "Add fulfillmentStatus to Customer Account API order query",
+          "info": "The fulfillmentStatus field is now included in the Order fragment for better order status tracking.",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Add fulfillmentStatus field to Order fragment",
+              "info": "Include fulfillmentStatus in your Customer Account API order queries",
+              "code": "YGBgZGlmZgovLyBhcHAvZ3JhcGhxbC9jdXN0b21lci1hY2NvdW50L0N1c3RvbWVyT3JkZXJRdWVyeS50cwpmcmFnbWVudCBPcmRlciBvbiBPcmRlciB7CiAgaWQKICBuYW1lCiAgY29uZmlybWF0aW9uTnVtYmVyCiAgc3RhdHVzUGFnZVVybAorIGZ1bGZpbGxtZW50U3RhdHVzCiAgcHJvY2Vzc2VkQXQKICBmdWxmaWxsbWVudHMoZmlyc3Q6IDEpIHsKICAgIG5vZGVzIHsKICAgICAgc3RhdHVzCiAgICB9CiAgfQp9CmBgYAo="
+            }
+          ],
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039-fulfillment"
         },
         {
           "title": "Add @inContext language support to Customer Account API mutations",
+          "info": "All Customer Account API queries and mutations now support language context via the @inContext directive for proper localization.",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Add @inContext directive to all Customer Account API operations",
+              "info": "Add $language parameter and @inContext directive to queries and mutations for localized content",
+              "code": "YGBgZGlmZgovLyBhcHAvZ3JhcGhxbC9jdXN0b21lci1hY2NvdW50LyoudHMgKGFwcGx5IHRvIGFsbCBxdWVyaWVzIGFuZCBtdXRhdGlvbnMpCi8vIEV4YW1wbGU6IEN1c3RvbWVyRGV0YWlsc1F1ZXJ5LnRzCi0gcXVlcnkgQ3VzdG9tZXJEZXRhaWxzIHsKKyBxdWVyeSBDdXN0b21lckRldGFpbHMoJGxhbmd1YWdlOiBMYW5ndWFnZUNvZGUpIEBpbkNvbnRleHQobGFuZ3VhZ2U6ICRsYW5ndWFnZSkgewogICAgY3VzdG9tZXIgewogICAgICAuLi5DdXN0b21lcgogICAgfQogIH0KCi8vIEV4YW1wbGU6IEN1c3RvbWVyQWRkcmVzc011dGF0aW9ucy50cyAgCiAgbXV0YXRpb24gQ3VzdG9tZXJBZGRyZXNzVXBkYXRlKAogICAgJGFkZHJlc3M6IE1haWxpbmdBZGRyZXNzSW5wdXQhCiAgICAkYWRkcmVzc0lkOiBJRCEKICAgICRkZWZhdWx0QWRkcmVzczogQm9vbGVhbgorICAgJGxhbmd1YWdlOiBMYW5ndWFnZUNvZGUKLSApIHsKKyApIEBpbkNvbnRleHQobGFuZ3VhZ2U6ICRsYW5ndWFnZSkgewogICAgY3VzdG9tZXJBZGRyZXNzVXBkYXRlKC4uLikKICB9CgovLyBBcHBseSB0aGlzIHBhdHRlcm4gdG8gYWxsIEN1c3RvbWVyIEFjY291bnQgQVBJIHF1ZXJpZXMgYW5kIG11dGF0aW9uczoKLy8gLSBDdXN0b21lckRldGFpbHNRdWVyeS50cwovLyAtIEN1c3RvbWVyT3JkZXJRdWVyeS50cwovLyAtIEN1c3RvbWVyT3JkZXJzUXVlcnkudHMKLy8gLSBDdXN0b21lclVwZGF0ZU11dGF0aW9uLnRzCi8vIC0gQ3VzdG9tZXJBZGRyZXNzTXV0YXRpb25zLnRzIChhbGwgMyBtdXRhdGlvbnMpCmBgYAo="
+            }
+          ],
           "pr": "https://github.com/Shopify/hydrogen/pull/3039",
           "id": "3039-incontext"
         },
         {
           "title": "Add GraphQL @defer directive support to storefront client",
-          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
-          "id": "3039-defer"
+          "info": "Storefront client now supports the @defer directive for improved performance by deferring non-critical field loading.",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Use @defer directive in Storefront API queries",
+              "info": "Wrap non-critical fields with @defer to improve initial page load performance",
+              "code": "YGBgZGlmZgovLyBhcHAvcm91dGVzL3lvdXItcm91dGUudHN4IChleGFtcGxlKQoraW1wb3J0IHtMb2FkZXJGdW5jdGlvbkFyZ3MsIHVzZUxvYWRlckRhdGF9IGZyb20gJ3JlYWN0LXJvdXRlcic7CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gbG9hZGVyKHtjb250ZXh0fTogTG9hZGVyRnVuY3Rpb25BcmdzKSB7CiAgY29uc3QgZGF0YSA9IGF3YWl0IGNvbnRleHQuc3RvcmVmcm9udC5xdWVyeSgKICAgIGAKICBxdWVyeSBQcm9kdWN0UXVlcnkoJGhhbmRsZTogU3RyaW5nKSB7CiAgICBwcm9kdWN0KGhhbmRsZTogJGhhbmRsZSkgewogICAgICBpZAogICAgICBoYW5kbGUKKyAgICAgLi4uIEBkZWZlcihsYWJlbDogImRlZmVycmVkRmllbGRzIikgeworICAgICAgIHRpdGxlCisgICAgICAgZGVzY3JpcHRpb24KKyAgICAgfQogICAgfQogIH0KYCwKICAgIHsKICAgICAgdmFyaWFibGVzOiB7CiAgICAgICAgaGFuZGxlOiAndjItc25vd2JvYXJkJywKICAgICAgfSwKICAgIH0sCiAgKTsKICByZXR1cm4gZGF0YTsKfQoKLy8gVGhlIEBkZWZlciBkaXJlY3RpdmUgYWxsb3dzIHlvdSB0byBkZWZlciBsb2FkaW5nIG9mIG5vbi1jcml0aWNhbCBmaWVsZHMKLy8gaW1wcm92aW5nIGluaXRpYWwgcGFnZSBsb2FkIHBlcmZvcm1hbmNlCmBgYAo="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/2993",
+          "id": "2993"
         },
         {
           "title": "Include cdn.shopify.com by default in CSP connectSrc",
