@@ -79,6 +79,13 @@
         {
           "title": "Stabilize Customer Account API development flag",
           "info": "The --customer-account-push flag is now stable, enabling tunneling for local development with Customer Account API OAuth flows.",
+          "steps": [
+            {
+              "title": "Update command to use stable flag",
+              "info": "Remove the __unstable suffix from the customer-account-push command",
+              "code": "YGBgZGlmZgotIHNob3BpZnkgaHlkcm9nZW4gY3VzdG9tZXItYWNjb3VudC1wdXNoX191bnN0YWJsZSBbZmxhZ3NdCisgc2hvcGlmeSBoeWRyb2dlbiBjdXN0b21lci1hY2NvdW50LXB1c2ggW2ZsYWdzXQoKLy8gVGhlIC0tY3VzdG9tZXItYWNjb3VudC1wdXNoIGZsYWcgaXMgbm93IHN0YWJsZSBhbmQgbm8gbG9uZ2VyIHJlcXVpcmVzIF9fdW5zdGFibGUgc3VmZml4CmBgYAo="
+            }
+          ],
           "pr": "https://github.com/Shopify/hydrogen/pull/3082",
           "id": "3082-flag"
         },
@@ -114,6 +121,13 @@
         {
           "title": "Add TypeScript ESLint rules for promise handling",
           "info": "Add TypeScript ESLint rules for promise handling to avoid deployment errors on Oxygen/Cloudflare Workers.",
+          "steps": [
+            {
+              "title": "Add promise handling rules to ESLint config",
+              "info": "Enable no-floating-promises and no-misused-promises rules to catch unhandled promises that cause deployment failures",
+              "code": "YGBgZGlmZgovLyBlc2xpbnQuY29uZmlnLmpzCmV4cG9ydCBkZWZhdWx0IHRzZXNsaW50LmNvbmZpZygKICB7CiAgICBydWxlczogewogICAgICAvLyAuLi4gZXhpc3RpbmcgcnVsZXMgLi4uCisgICAgICdAdHlwZXNjcmlwdC1lc2xpbnQvbm8tZmxvYXRpbmctcHJvbWlzZXMnOiAnZXJyb3InLAorICAgICAnQHR5cGVzY3JpcHQtZXNsaW50L25vLW1pc3VzZWQtcHJvbWlzZXMnOiAnZXJyb3InLAogICAgfSwKICB9LAopOwoKLy8gVGhlc2UgcnVsZXMgcHJldmVudCB1bmhhbmRsZWQgcHJvbWlzZXMgYW5kIHByb21pc2UgbWlzdXNlCi8vIEhlbHBzIGF2b2lkICdUaGUgc2NyaXB0IHdpbGwgbmV2ZXIgZ2VuZXJhdGUgYSByZXNwb25zZScgZXJyb3JzIG9uIE94eWdlbi9DbG91ZGZsYXJlIFdvcmtlcnMKYGBgCg=="
+            }
+          ],
           "pr": "https://github.com/Shopify/hydrogen/pull/3146",
           "id": "3146"
         },
