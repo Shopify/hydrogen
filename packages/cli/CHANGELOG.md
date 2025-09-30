@@ -1,8 +1,8 @@
 # @shopify/cli-hydrogen
 
-## 12.0.0
+## 11.1.4
 
-### Major Changes
+### Patch Changes
 
 - Fix OAuth redirect handling and stabilize Customer Account API development flag ([#3082](https://github.com/Shopify/hydrogen/pull/3082)) by [@juanpprieto](https://github.com/juanpprieto)
 
