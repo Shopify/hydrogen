@@ -25,35 +25,35 @@ ingredients: []
 deletedFiles: []
 steps:
   - type: PATCH
-    step: '1'
+    step: 1
     name: README.md
     description: Updates README with custom cart method documentation and implementation guide
     diffs:
       - file: README.md
         patchFile: README.md.49f8fa.patch
   - type: PATCH
-    step: '1'
+    step: 2
     name: app/components/CartLineItem.tsx
     description: Adds variant selector functionality to cart line items for changing product options
     diffs:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.f93ff4.patch
   - type: PATCH
-    step: '2'
+    step: 3
     name: app/lib/context.ts
     description: Extends HydrogenCart context with updateLineByOptions method for variant switching
     diffs:
       - file: app/lib/context.ts
         patchFile: context.ts.cfd9da.patch
   - type: PATCH
-    step: '3'
+    step: 4
     name: app/lib/fragments.ts
     description: Adds product options to cart fragments and creates PRODUCT_VARIANT_QUERY for fetching variants
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.18726b.patch
   - type: PATCH
-    step: '4'
+    step: 5
     name: app/routes/cart.tsx
     description: Implements CustomUpdateLineByOptions action handler for processing variant changes in cart
     diffs:

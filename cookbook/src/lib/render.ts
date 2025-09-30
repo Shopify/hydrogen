@@ -6,12 +6,14 @@ import {
   RENDER_FILENAME_SHOPIFY,
   TEMPLATE_DIRECTORY,
 } from './constants';
+import {isText} from 'istextorbinary';
 import {
   maybeMDBlock,
   MDBlock,
   mdCode,
   mdFrontMatter,
   mdHeading,
+  mdImage,
   mdLinkString,
   mdList,
   mdNote,
@@ -253,12 +255,31 @@ export function renderStep(
     });
   }
 
+  function getContent(ingredient: string): MDBlock {
+    const relativePath = path.join('./', 'ingredients', ingredient);
+
+    const fullPath = path.join(
+      COOKBOOK_PATH,
+      'recipes',
+      recipeName,
+      relativePath,
+    );
+
+    if (isText(ingredient)) {
+      const content = fs.readFileSync(fullPath, 'utf8');
+      const collapsed = options.collapseDiffs === true;
+
+      return mdCode(path.extname(ingredient).slice(1), content, collapsed);
+    } else {
+      const filePath = format === 'github' ? relativePath : fullPath;
+      return mdImage(ingredient, filePath);
+    }
+  }
+
   function getIngredientFile(): MDBlock[] {
     if (step.type !== 'NEW_FILE' || step.ingredients == null) {
       return [];
     }
-
-    const collapsed = options.collapseDiffs === true;
 
     let blocks: MDBlock[] = [];
     const baseHeadingLevel = 4;
@@ -270,16 +291,6 @@ export function renderStep(
           recipeName,
           hash: recipe.commit,
         }) + `/ingredients/${ingredient}`;
-      const content = fs.readFileSync(
-        path.join(
-          COOKBOOK_PATH,
-          'recipes',
-          recipeName,
-          'ingredients',
-          ingredient,
-        ),
-        'utf8',
-      );
 
       blocks.push(
         ...(renamedFrom != null
@@ -295,7 +306,7 @@ export function renderStep(
             ' ',
           ),
         ),
-        mdCode(path.extname(ingredient).slice(1), content, collapsed),
+        getContent(ingredient),
       );
     }
     return blocks;

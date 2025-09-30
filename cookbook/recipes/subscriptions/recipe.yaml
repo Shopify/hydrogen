@@ -40,7 +40,7 @@ steps:
       3. On the [Products](https://admin.shopify.com/products) page, open any products that will be sold as subscriptions and add the relevant subscription plans in the **Purchase options** section.
       The Hydrogen demo storefront comes pre-configured with an example subscription product with the handle `shopify-wax`.
   - type: PATCH
-    step: "1"
+    step: 2
     name: Update CartLineItem to display subscription details
     description: |
       1. Update import paths to use absolute paths for better consistency.
@@ -50,26 +50,26 @@ steps:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.f93ff4.patch
   - type: INFO
-    step: 2
+    step: 3
     name: Show subscription options on product pages
     description: |
       In this step we'll implement the ability to display subscription options on  product pages, alongside the existing one-off purchase options.
   - type: NEW_FILE
-    step: 2.1
+    step: 3.1
     name: Create a SellingPlanSelector component
     description: |
       Create a new `SellingPlanSelector` component that displays the available subscription options for a product.
     ingredients:
       - path: templates/skeleton/app/components/SellingPlanSelector.tsx
   - type: NEW_FILE
-    step: 2.2
+    step: 3.2
     name: Add styles for the SellingPlanSelector component
     description: |
       Add styles for the `SellingPlanSelector` component.
     ingredients:
       - path: templates/skeleton/app/styles/selling-plan.css
   - type: PATCH
-    step: 2.3
+    step: 3.3
     name: Update ProductForm to support subscriptions
     description: |
       1. Add conditional rendering to display subscription options alongside the standard variant selectors.
@@ -79,7 +79,7 @@ steps:
       - file: app/components/ProductForm.tsx
         patchFile: ProductForm.tsx.252e88.patch
   - type: PATCH
-    step: 2.4
+    step: 3.4
     name: Update ProductPrice to display subscription pricing
     description: |
       1. Add a `SellingPlanPrice` function to calculate adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage).
@@ -88,7 +88,7 @@ steps:
       - file: app/components/ProductPrice.tsx
         patchFile: ProductPrice.tsx.49f564.patch
   - type: PATCH
-    step: 2.5
+    step: 3.5
     name: Update the product page to display subscription options
     description: |
       1. Add the `SellingPlanSelector` component to display subscription options on product pages.
@@ -98,12 +98,12 @@ steps:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.7addea.patch
   - type: INFO
-    step: 3
+    step: 4
     name: Show subscription details in the cart
     description: |
       In this step we'll implement support for showing subscription info in the cart's line items.
   - type: PATCH
-    step: 3.1
+    step: 4.1
     name: Add selling plan data to cart queries
     description: |
       Add `sellingPlanAllocation` field with the plan name to both the standard cart line and componentizable cart line GraphQL fragments. This ensures subscription details are fetched when querying cart data.
@@ -111,33 +111,33 @@ steps:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.18726b.patch
   - type: INFO
-    step: 4
+    step: 5
     name: Add subscription management to the account page
     description: |
       In this step we'll implement support for subscription management through an account subpage that lists existing subscription contracts.
   - type: NEW_FILE
-    step: 4.1
+    step: 5.1
     name: Add queries to retrieve customer subscriptions
     description: |
       Create GraphQL queries that retrieve the subscription info from the customer account client.
     ingredients:
       - path: templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts
   - type: NEW_FILE
-    step: 4.2
+    step: 5.2
     name: Add mutations to cancel customer subscriptions
     description: |
       Create a GraqhQL mutation to cancel an existing subscription.
     ingredients:
       - path: templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts
   - type: NEW_FILE
-    step: 4.3
+    step: 5.3
     name: Add an account subscriptions page
     description: |
       Create a new account subpage that lets customers manage their existing  subscriptions based on the new GraphQL queries and mutations.
     ingredients:
       - path: templates/skeleton/app/routes/account.subscriptions.tsx
   - type: PATCH
-    step: 4.4
+    step: 5.4
     name: Add a link to the Subscriptions page in the account menu
     description: |
       Add a `Subscriptions` link to the account menu so customers can easily access their subscription management page.
@@ -145,7 +145,7 @@ steps:
       - file: app/routes/account.tsx
         patchFile: account.tsx.367e7a.patch
   - type: NEW_FILE
-    step: 4.5
+    step: 5.5
     name: Add styles for the Subscriptions page
     description: |
       Add styles for the Subscriptions page.
@@ -161,12 +161,15 @@ llms:
     - How do I display subscription details on applicable line items in the cart?
   troubleshooting:
     - issue: I'm getting an error when I try to add a subscription to my storefront.
-      solution: Make sure you've installed the Shopify Subscriptions app and set up
+      solution:
+        Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
     - issue: I'm not seeing the subscription options on my product pages.
-      solution: Make sure you've installed the Shopify Subscriptions app and set up
+      solution:
+        Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
     - issue: I'm not seeing the subscription details on my cart line items.
-      solution: Make sure you've installed the Shopify Subscriptions app and set up
+      solution:
+        Make sure you've installed the Shopify Subscriptions app and set up
         selling plans for subscription products in your Shopify admin.
 commit: 9d0e85f6bf97f4e19dbbfeba210f94041fddeaf9

@@ -47,108 +47,108 @@ ingredients:
 deletedFiles: []
 steps:
   - type: PATCH
-    step: "1"
+    step: 1
     name: README.md
     description: Update README to document legacy customer account flow
     diffs:
       - file: README.md
         patchFile: README.md.49f8fa.patch
   - type: PATCH
-    step: "1"
+    step: 2
     name: app/components/Header.tsx
     description: Add account link to header navigation
     diffs:
       - file: app/components/Header.tsx
         patchFile: Header.tsx.82c1ce.patch
   - type: NEW_FILE
-    step: "1"
+    step: 3
     name: app/routes/account_.activate.$id.$activationToken.tsx
     description: Add account activation route for email verification
     ingredients:
       - path: templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx
   - type: PATCH
-    step: "2"
+    step: 4
     name: app/components/PageLayout.tsx
     description: Update PageLayout to handle account routes
     diffs:
       - file: app/components/PageLayout.tsx
         patchFile: PageLayout.tsx.130b44.patch
   - type: NEW_FILE
-    step: "2"
+    step: 5
     name: app/routes/account_.recover.tsx
     description: Add password recovery form for forgotten passwords
     ingredients:
       - path: templates/skeleton/app/routes/account_.recover.tsx
   - type: PATCH
-    step: "3"
+    step: 6
     name: app/root.tsx
     description: Add customer access token validation to root loader
     diffs:
       - file: app/root.tsx
         patchFile: root.tsx.8c182c.patch
   - type: NEW_FILE
-    step: "3"
+    step: 7
     name: app/routes/account_.register.tsx
     description: Add customer registration form
     ingredients:
       - path: templates/skeleton/app/routes/account_.register.tsx
   - type: PATCH
-    step: "4"
+    step: 8
     name: app/routes/account.$.tsx
     description: Convert catch-all route to use Storefront API authentication
     diffs:
       - file: app/routes/account.$.tsx
         patchFile: account.$.tsx.c167a3.patch
   - type: NEW_FILE
-    step: "4"
+    step: 9
     name: app/routes/account_.reset.$id.$resetToken.tsx
     description: Add password reset form with token validation
     ingredients:
       - path: templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx
   - type: PATCH
-    step: "5"
+    step: 10
     name: app/routes/account.addresses.tsx
     description: Convert address management to use Storefront API mutations
     diffs:
       - file: app/routes/account.addresses.tsx
         patchFile: account.addresses.tsx.e473cc.patch
   - type: PATCH
-    step: "6"
+    step: 11
     name: app/routes/account.orders.$id.tsx
     description: Convert order details page to use Storefront API queries
     diffs:
       - file: app/routes/account.orders.$id.tsx
         patchFile: account.orders.$id.tsx.1e38f8.patch
   - type: PATCH
-    step: "7"
+    step: 12
     name: app/routes/account.orders._index.tsx
     description: Convert orders list to use Storefront API with pagination
     diffs:
       - file: app/routes/account.orders._index.tsx
         patchFile: account.orders._index.tsx.a9982e.patch
   - type: PATCH
-    step: "9"
+    step: 13
     name: app/routes/account.profile.tsx
     description: null
     diffs:
       - file: app/routes/account.profile.tsx
         patchFile: account.profile.tsx.0a4fcb.patch
   - type: PATCH
-    step: "9"
+    step: 14
     name: app/routes/account.tsx
     description: Convert account layout to use session-based authentication
     diffs:
       - file: app/routes/account.tsx
         patchFile: account.tsx.367e7a.patch
   - type: PATCH
-    step: "10"
+    step: 15
     name: app/routes/account_.login.tsx
     description: Replace Customer Account API login with Storefront API form
     diffs:
       - file: app/routes/account_.login.tsx
         patchFile: account_.login.tsx.4e5990.patch
   - type: PATCH
-    step: "11"
+    step: 16
     name: app/routes/account_.logout.tsx
     description: Replace Customer Account API logout with session cleanup
     diffs:
@@ -185,13 +185,15 @@ llms:
       solution: Ensure the customer account is activated. Check if the store has
         classic customer accounts enabled, not the new customer accounts.
     - issue: '"Customer Account API not configured" error'
-      solution: This recipe replaces the Customer Account API. Make sure all patches
+      solution:
+        This recipe replaces the Customer Account API. Make sure all patches
         were applied successfully and run `npm run codegen`.
     - issue: Password reset emails not being sent
       solution: Configure email notifications in Shopify admin under Settings >
         Notifications. Ensure the customer email is verified.
     - issue: Session expires too quickly
-      solution: Adjust the session configuration in server.ts to increase the cookie
+      solution:
+        Adjust the session configuration in server.ts to increase the cookie
         maxAge for longer sessions.
     - issue: TypeScript errors about missing types
       solution: Run `npm run codegen` to generate the Storefront API types after

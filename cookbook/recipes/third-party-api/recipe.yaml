@@ -51,14 +51,14 @@ ingredients:
 deletedFiles: []
 steps:
   - type: PATCH
-    step: "1"
+    step: 1
     name: README.md
     description: null
     diffs:
       - file: README.md
         patchFile: README.md.49f8fa.patch
   - type: NEW_FILE
-    step: 1
+    step: 2
     name: Create the third-party API client
     description: |
       Create a new GraphQL client factory that integrates with Oxygen's caching system.
@@ -66,7 +66,7 @@ steps:
     ingredients:
       - path: templates/skeleton/app/lib/createRickAndMortyClient.server.ts
   - type: PATCH
-    step: 2
+    step: 3
     name: Add the client to Hydrogen context
     description: |
       Import the Rick and Morty client and add it to the Hydrogen context so it's available
@@ -75,7 +75,7 @@ steps:
       - file: app/lib/context.ts
         patchFile: context.ts.cfd9da.patch
   - type: PATCH
-    step: 3
+    step: 4
     name: Query and display third-party data
     description: |
       Update the homepage to fetch data from the third-party API and display it alongside

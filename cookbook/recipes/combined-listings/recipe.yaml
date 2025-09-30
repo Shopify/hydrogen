@@ -22,7 +22,8 @@ requirements: |
   - Your store must have the [Combined Listings app](https://admin.shopify.com/apps/combined-listings) installed.
 ingredients:
   - path: templates/skeleton/app/lib/combined-listings.ts
-    description: The `combined-listings.ts` file contains utilities and settings for
+    description:
+      The `combined-listings.ts` file contains utilities and settings for
       handling combined listings.
 deletedFiles: []
 steps:
@@ -57,7 +58,8 @@ steps:
   - type: NEW_FILE
     step: 3
     name: Add combined listings utilities
-    description: Create a new `combined-listings.ts` file that contains utilities
+    description:
+      Create a new `combined-listings.ts` file that contains utilities
       and settings for handling combined listings.
     ingredients:
       - path: templates/skeleton/app/lib/combined-listings.ts
@@ -95,14 +97,14 @@ steps:
       - file: app/lib/redirect.ts
         patchFile: redirect.ts.6d9851.patch
   - type: PATCH
-    step: "7"
+    step: 8
     name: app/routes/collections.all.tsx
     description: null
     diffs:
       - file: app/routes/collections.all.tsx
         patchFile: collections.all.tsx.38a40d.patch
   - type: PATCH
-    step: 8
+    step: 9
     name: Update queries for combined listings
     description: |
       1. Add the `tags` property to the items returned by the product query.
@@ -111,7 +113,7 @@ steps:
       - file: app/routes/_index.tsx
         patchFile: _index.tsx.243e26.patch
   - type: PATCH
-    step: 9
+    step: 10
     name: (Optional) Filter out combined listings from collections pages
     description: |
       Since it's not possible to directly apply query filters when retrieving collection products, you can manually filter out combined listings after they're retrieved based on their tags.
@@ -153,7 +155,8 @@ llms:
       variant price?
   troubleshooting:
     - issue: Combined listings are being displayed in the product list.
-      solution: Make sure to tag combined listing parent products in the Shopify admin
+      solution:
+        Make sure to tag combined listing parent products in the Shopify admin
         and use that tag to filter out combined listings from the product list
         in the GraphQL query.
 commit: aef8cf795ea8f68077d6fa1f1649e2791f6658a7
