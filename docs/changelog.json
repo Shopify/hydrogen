@@ -162,7 +162,7 @@
       "features": [
         {
           "title": "Migrate to React Router 7.9.x",
-          "info": "Migrates Hydrogen to React Router 7.9.x with automatic type generation, improved type safety, and new context infrastructure. Removes @shopify/remix-oxygen package.",
+          "info": "Migrates Hydrogen to React Router 7.9.x with automatic type generation, improved type safety, and new context infrastructure. Removes @shopify/remix-oxygen package. For additional reference, see the complete skeleton template at https://github.com/Shopify/hydrogen/tree/main/templates/skeleton",
           "breaking": true,
           "steps": [
             {
