@@ -23,6 +23,7 @@ import {
   getHydrogenVersion,
   getPackageVersion,
   getSelectedRelease,
+  isProjectInHydrogenMonorepo,
   validateUpgrade,
   runUpgrade,
   type CumulativeRelease,
@@ -1464,6 +1465,47 @@ describe('dependency removal', () => {
 });
 
 describe('--version=next functionality', () => {
+  describe('monorepo-only restrictions', () => {
+    it('should allow --version=next in tests and CI environments', async () => {
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          // This should work because SHOPIFY_UNIT_TEST=1 is set in test environment
+          // and our logic allows --version=next in tests/CI even outside monorepo
+          await expect(
+            runUpgrade({
+              appPath,
+              version: 'next',
+              force: false,
+            }),
+          ).resolves.toBeUndefined();
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: {
+            dependencies: {
+              '@shopify/hydrogen': '2025.4.0',
+            },
+          },
+        },
+      );
+    });
+
+    it('isProjectInHydrogenMonorepo detects monorepo projects correctly', async () => {
+      // Test with actual monorepo project (templates/skeleton)
+      const monorepoProjectPath = joinPath(
+        process.cwd(),
+        '../../templates/skeleton',
+      );
+      expect(await isProjectInHydrogenMonorepo(monorepoProjectPath)).toBe(true);
+
+      // Test with external project path (should be false)
+      const externalProjectPath = '/tmp/external-project';
+      expect(await isProjectInHydrogenMonorepo(externalProjectPath)).toBe(
+        false,
+      );
+    });
+  });
+
   it('handles getAbsoluteVersion with next versions', () => {
     expect(getAbsoluteVersion('next')).toBe('next');
     expect(getAbsoluteVersion('^0.0.0-next-abc123-20250925')).toBe(

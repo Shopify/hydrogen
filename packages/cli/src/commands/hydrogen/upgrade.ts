@@ -34,6 +34,7 @@ import {getCliCommand} from '../../lib/shell.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {getProjectPaths} from '../../lib/remix-config.js';
 import {hydrogenPackagesPath, isHydrogenMonorepo} from '../../lib/build.js';
+import {isCI} from '../../lib/is-ci.js';
 import {fetch} from '@shopify/cli-kit/node/http';
 
 type ReleaseItem = {
@@ -125,6 +126,20 @@ export async function runUpgrade({
   version: targetVersion,
   force,
 }: UpgradeOptions) {
+  // --version=next is only available when in monorepo, tests, or CI
+  if (targetVersion === 'next') {
+    const isInMonorepo = await isProjectInHydrogenMonorepo(appPath);
+    const isInTests = process.env.SHOPIFY_UNIT_TEST === '1';
+    const isInCIEnvironment = isCI();
+
+    if (!isInMonorepo && !isInTests && !isInCIEnvironment) {
+      throw new AbortError(
+        '--version=next is only available when running from the Hydrogen monorepo',
+        'This feature is designed for internal development and testing of unreleased versions',
+      );
+    }
+  }
+
   if (!force) {
     await checkIsGitRepo(appPath);
 
@@ -221,12 +236,48 @@ export async function runUpgrade({
 }
 
 /**
+ * Checks if a project path is within the Hydrogen monorepo structure
+ */
+export async function isProjectInHydrogenMonorepo(
+  appPath: string,
+): Promise<boolean> {
+  try {
+    const resolvedAppPath = resolvePath(appPath);
+
+    // Look for monorepo indicators relative to the project
+    const potentialMonorepoRoots = [
+      joinPath(resolvedAppPath, '../'),
+      joinPath(resolvedAppPath, '../../'),
+      joinPath(resolvedAppPath, '../../../'),
+    ];
+
+    for (const root of potentialMonorepoRoots) {
+      try {
+        const templatesPath = joinPath(root, 'templates/skeleton');
+        const packagesPath = joinPath(root, 'packages/cli');
+
+        // Check if we can find monorepo structure
+        const hasTemplates = await isDirectory(templatesPath);
+        const hasPackages = await isDirectory(packagesPath);
+
+        if (hasTemplates && hasPackages) {
+          return true;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Creates a next version release based on latest changelog entry
  */
-function createNextRelease(
-  currentDependencies: Record<string, string>,
-  latestRelease: Release,
-): Release {
+function createNextRelease(latestRelease: Release): Release {
   // Use latest release as base and override specific @shopify packages to "next"
   const dependencies = {...latestRelease.dependencies};
   const devDependencies = {...latestRelease.devDependencies};
@@ -476,7 +527,7 @@ export async function getSelectedRelease({
 }) {
   const targetRelease = targetVersion
     ? targetVersion === 'next'
-      ? createNextRelease(currentDependencies, availableUpgrades[0]!)
+      ? createNextRelease(availableUpgrades[0]!)
       : availableUpgrades.find(
           (release) =>
             getAbsoluteVersion(release.version) ===
@@ -716,7 +767,11 @@ export function buildUpgradeCommandArgs({
     if (!shouldUpgradeDep) continue;
 
     args.push(
-      `${dependency[0]}@${getPackageVersion(dependency[0], dependency[1], targetVersion)}`,
+      `${dependency[0]}@${getPackageVersion(
+        dependency[0],
+        dependency[1],
+        targetVersion,
+      )}`,
     );
   }
 
@@ -731,7 +786,11 @@ export function buildUpgradeCommandArgs({
     if (!shouldUpgradeDep) continue;
 
     args.push(
-      `${dependency[0]}@${getPackageVersion(dependency[0], dependency[1], targetVersion)}`,
+      `${dependency[0]}@${getPackageVersion(
+        dependency[0],
+        dependency[1],
+        targetVersion,
+      )}`,
     );
   }
 
