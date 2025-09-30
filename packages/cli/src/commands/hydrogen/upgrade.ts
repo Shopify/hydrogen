@@ -126,13 +126,13 @@ export async function runUpgrade({
   version: targetVersion,
   force,
 }: UpgradeOptions) {
-  // --version=next is only available when in monorepo, tests, or CI
+  // --version=next is only available when running from monorepo, tests, or CI
   if (targetVersion === 'next') {
-    const isInMonorepo = await isProjectInHydrogenMonorepo(appPath);
     const isInTests = process.env.SHOPIFY_UNIT_TEST === '1';
     const isInCIEnvironment = isCI();
+    const runningFromMonorepo = await isRunningFromHydrogenMonorepo();
 
-    if (!isInMonorepo && !isInTests && !isInCIEnvironment) {
+    if (!runningFromMonorepo && !isInTests && !isInCIEnvironment) {
       throw new AbortError(
         '--version=next is only available when running from the Hydrogen monorepo',
         'This feature is designed for internal development and testing of unreleased versions',
@@ -250,19 +250,17 @@ export async function runUpgrade({
 }
 
 /**
- * Checks if a project path is within the Hydrogen monorepo structure
+ * Checks if the current execution context is within the Hydrogen monorepo
  */
-export async function isProjectInHydrogenMonorepo(
-  appPath: string,
-): Promise<boolean> {
+export async function isRunningFromHydrogenMonorepo(): Promise<boolean> {
   try {
-    const resolvedAppPath = resolvePath(appPath);
+    const cwd = process.cwd();
 
-    // Look for monorepo indicators relative to the project
+    // Look for monorepo indicators relative to current working directory
     const potentialMonorepoRoots = [
-      joinPath(resolvedAppPath, '../'),
-      joinPath(resolvedAppPath, '../../'),
-      joinPath(resolvedAppPath, '../../../'),
+      cwd,
+      joinPath(cwd, '../'),
+      joinPath(cwd, '../../'),
     ];
 
     for (const root of potentialMonorepoRoots) {

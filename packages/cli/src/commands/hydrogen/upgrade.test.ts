@@ -23,7 +23,6 @@ import {
   getHydrogenVersion,
   getPackageVersion,
   getSelectedRelease,
-  isProjectInHydrogenMonorepo,
   validateUpgrade,
   runUpgrade,
   type CumulativeRelease,
@@ -1487,21 +1486,6 @@ describe('--version=next functionality', () => {
             },
           },
         },
-      );
-    });
-
-    it('isProjectInHydrogenMonorepo detects monorepo projects correctly', async () => {
-      // Test with actual monorepo project (templates/skeleton)
-      const monorepoProjectPath = joinPath(
-        process.cwd(),
-        '../../templates/skeleton',
-      );
-      expect(await isProjectInHydrogenMonorepo(monorepoProjectPath)).toBe(true);
-
-      // Test with external project path (should be false)
-      const externalProjectPath = '/tmp/external-project';
-      expect(await isProjectInHydrogenMonorepo(externalProjectPath)).toBe(
-        false,
       );
     });
   });
