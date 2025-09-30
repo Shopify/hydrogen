@@ -1,5 +1,25 @@
 # @shopify/create-hydrogen
 
+## 5.0.25
+
+### Patch Changes
+
+- Upgrade Miniflare from v2 to v4 in mini-oxygen package. ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+  - Internal MiniOxygen API has been refactored to work with Miniflare v4's new architecture.
+  - Simplified MiniOxygen class - no longer extends MiniflareCore.
+  - Updated global fetch handling to use Miniflare v4's `outboundService` API.
+  - Fixed test infrastructure to use project-relative temporary directories.
+  - Added support for Oxygen compatibility parameters (`compatibilityDate`, `compatibilityFlags`).
+  - Removed dependency on multiple `@miniflare/*` packages in favor of the consolidated `miniflare` package.
+
+- Update and pin react-router to 7.9.2 for 2025.7.0 ([#3138](https://github.com/Shopify/hydrogen/pull/3138)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Add `fulfillmentStatus` to CAAPI order query and route ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Unpin react-router and react-router-dom versions in the skeleton template ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Add `@inContext` language support to Customer Account API mutations ([#3039](https://github.com/Shopify/hydrogen/pull/3039)) by [@kdaviduik](https://github.com/kdaviduik)
+
 ## 5.0.24
 
 ### Patch Changes
