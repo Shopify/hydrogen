@@ -232,28 +232,64 @@
           "id": "3082"
         },
         {
-          "title": "Added countryCode parameter to Customer Account API login",
-          "info": "Add countryCode parameter to Customer Account API login method.",
+          "title": "Added countryCode parameter to Customer Account API methods",
+          "info": "The countryCode parameter is now available on all Customer Account API methods for better localization support.",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Add countryCode parameter to Customer Account API method calls",
+              "info": "Pass the customer account country code to any Customer Account API method. Example shown with login method.",
+              "code": "YGBgZGlmZgovLyBhcHAvcm91dGVzL2FjY291bnRfLmxvZ2luLnRzeCAoZXhhbXBsZSkKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGxvYWRlcih7cmVxdWVzdCwgY29udGV4dH06IFJvdXRlLkxvYWRlckFyZ3MpIHsKICByZXR1cm4gY29udGV4dC5jdXN0b21lckFjY291bnQubG9naW4oeworICAgY291bnRyeUNvZGU6IGNvbnRleHQuY3VzdG9tZXJBY2NvdW50LmkxOG4uY291bnRyeSwKICB9KTsKfQoKLy8gVGhlIGNvdW50cnlDb2RlIHBhcmFtZXRlciBpcyBub3cgYXZhaWxhYmxlIG9uIGFsbCBDdXN0b21lciBBY2NvdW50IEFQSSBtZXRob2RzCi8vIGFuZCBjYW4gYmUgcGFzc2VkIGZyb20gY29udGV4dC5jdXN0b21lckFjY291bnQuaTE4bi5jb3VudHJ5CmBgYAo="
+            }
+          ],
           "pr": "https://github.com/Shopify/hydrogen/pull/3148",
           "id": "3148"
         },
         {
           "title": "Add support for removing individual gift cards from cart",
-          "info": "Add cartGiftCardCodesRemove mutation to remove specific gift cards by their IDs.",
+          "info": "New CartForm.ACTIONS.GiftCardCodesRemove action allows removing individual gift cards by their IDs instead of replacing all gift cards.",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Add GiftCardCodesRemove case to cart action handler",
+              "info": "Handle the new GiftCardCodesRemove action in your cart route to enable individual gift card removal",
+              "code": "YGBgZGlmZgovLyBhcHAvcm91dGVzL2NhcnQudHN4CmV4cG9ydCBhc3luYyBmdW5jdGlvbiBhY3Rpb24oe3JlcXVlc3QsIGNvbnRleHR9OiBSb3V0ZS5BY3Rpb25BcmdzKSB7CiAgY29uc3Qge2NhcnR9ID0gY29udGV4dDsKICBjb25zdCBmb3JtRGF0YSA9IGF3YWl0IHJlcXVlc3QuZm9ybURhdGEoKTsKICBjb25zdCB7YWN0aW9uLCBpbnB1dHN9ID0gQ2FydEZvcm0uZ2V0Rm9ybUlucHV0KGZvcm1EYXRhKTsKCiAgc3dpdGNoIChhY3Rpb24pIHsKICAgIC8vIC4uLiBleGlzdGluZyBjYXNlcyAuLi4KKyAgIGNhc2UgQ2FydEZvcm0uQUNUSU9OUy5HaWZ0Q2FyZENvZGVzUmVtb3ZlOiB7CisgICAgIGNvbnN0IGFwcGxpZWRHaWZ0Q2FyZElkcyA9IGlucHV0cy5naWZ0Q2FyZENvZGVzIGFzIHN0cmluZ1tdOworICAgICByZXN1bHQgPSBhd2FpdCBjYXJ0LnJlbW92ZUdpZnRDYXJkQ29kZXMoYXBwbGllZEdpZnRDYXJkSWRzKTsKKyAgICAgYnJlYWs7CisgICB9CiAgfQp9CmBgYAo="
+            },
+            {
+              "title": "Add RemoveGiftCardForm component",
+              "info": "Create a new form component to handle individual gift card removal",
+              "code": "YGBgZGlmZgovLyBhcHAvY29tcG9uZW50cy9DYXJ0U3VtbWFyeS50c3gKK2Z1bmN0aW9uIFJlbW92ZUdpZnRDYXJkRm9ybSh7CisgIGdpZnRDYXJkSWQsCisgIGNoaWxkcmVuLAorfTogeworICBnaWZ0Q2FyZElkOiBzdHJpbmc7CisgIGNoaWxkcmVuOiBSZWFjdC5SZWFjdE5vZGU7Cit9KSB7CisgIHJldHVybiAoCisgICAgPENhcnRGb3JtCisgICAgICByb3V0ZT0iL2NhcnQiCisgICAgICBhY3Rpb249e0NhcnRGb3JtLkFDVElPTlMuR2lmdENhcmRDb2Rlc1JlbW92ZX0KKyAgICAgIGlucHV0cz17eworICAgICAgICBnaWZ0Q2FyZENvZGVzOiBbZ2lmdENhcmRJZF0sCisgICAgICB9fQorICAgID4KKyAgICAgIHtjaGlsZHJlbn0KKyAgICA8L0NhcnRGb3JtPgorICApOworfQpgYGAK"
+            },
+            {
+              "title": "Update CartGiftCard to display gift cards with remove buttons",
+              "info": "Render applied gift cards with individual remove buttons for better UX",
+              "code": "YGBgZGlmZgovLyBhcHAvY29tcG9uZW50cy9DYXJ0U3VtbWFyeS50c3gKZnVuY3Rpb24gQ2FydEdpZnRDYXJkKHtnaWZ0Q2FyZENvZGVzfTogey4uLn0pIHsKICByZXR1cm4gKAogICAgPGRpdj4KKyAgICAge2dpZnRDYXJkQ29kZXMgJiYgZ2lmdENhcmRDb2Rlcy5sZW5ndGggPiAwICYmICgKKyAgICAgICA8ZGw+CisgICAgICAgICA8ZHQ+QXBwbGllZCBHaWZ0IENhcmQocyk8L2R0PgorICAgICAgICAge2dpZnRDYXJkQ29kZXMubWFwKChnaWZ0Q2FyZCkgPT4gKAorICAgICAgICAgICA8UmVtb3ZlR2lmdENhcmRGb3JtIGtleT17Z2lmdENhcmQuaWR9IGdpZnRDYXJkSWQ9e2dpZnRDYXJkLmlkfT4KKyAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iY2FydC1kaXNjb3VudCI+CisgICAgICAgICAgICAgICA8Y29kZT4qKip7Z2lmdENhcmQubGFzdENoYXJhY3RlcnN9PC9jb2RlPgorICAgICAgICAgICAgICAgPE1vbmV5IGRhdGE9e2dpZnRDYXJkLmFtb3VudFVzZWR9IC8+CisgICAgICAgICAgICAgICA8YnV0dG9uIHR5cGU9InN1Ym1pdCI+UmVtb3ZlPC9idXR0b24+CisgICAgICAgICAgICAgPC9kaXY+CisgICAgICAgICAgIDwvUmVtb3ZlR2lmdENhcmRGb3JtPgorICAgICAgICAgKSl9CisgICAgICAgPC9kbD4KKyAgICAgKX0KICAgIDwvZGl2PgogICk7Cn0KYGBgCg=="
+            }
+          ],
           "pr": "https://github.com/Shopify/hydrogen/pull/3128",
           "id": "3128"
         },
         {
-          "title": "Upgrade Miniflare from v2 to v3",
-          "info": "Internal MiniOxygen API refactored to work with Miniflare v3's new architecture, improving development server performance and compatibility.",
-          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
-          "id": "3039"
-        },
-        {
           "title": "Add order filtering support to Customer Account API orders route",
-          "info": "Add order filtering support to /account/orders route in skeleton template.",
-          "pr": "https://github.com/Shopify/hydrogen/pull/3125",
-          "id": "3125"
+          "info": "Filter customer orders by order number and confirmation number using the Customer Account API query parameter.",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Create app/lib/orderFilters.ts utility",
+              "info": "Create helper functions to parse URL parameters and build Customer Account API search queries",
+              "code": "YGBgdHlwZXNjcmlwdAovLyBhcHAvbGliL29yZGVyRmlsdGVycy50cwpleHBvcnQgY29uc3QgT1JERVJfRklMVEVSX0ZJRUxEUyA9IHsKICBOQU1FOiAnbmFtZScsCiAgQ09ORklSTUFUSU9OX05VTUJFUjogJ2NvbmZpcm1hdGlvbl9udW1iZXInLAp9IGFzIGNvbnN0OwoKZXhwb3J0IGludGVyZmFjZSBPcmRlckZpbHRlclBhcmFtcyB7CiAgbmFtZT86IHN0cmluZzsKICBjb25maXJtYXRpb25OdW1iZXI/OiBzdHJpbmc7Cn0KCmZ1bmN0aW9uIHNhbml0aXplRmlsdGVyVmFsdWUodmFsdWU6IHN0cmluZyk6IHN0cmluZyB7CiAgcmV0dXJuIHZhbHVlLnJlcGxhY2UoL1teYS16QS1aMC05X1wtXS9nLCAnJyk7Cn0KCmV4cG9ydCBmdW5jdGlvbiBidWlsZE9yZGVyU2VhcmNoUXVlcnkoCiAgZmlsdGVyczogT3JkZXJGaWx0ZXJQYXJhbXMsCik6IHN0cmluZyB8IHVuZGVmaW5lZCB7CiAgY29uc3QgcXVlcnlQYXJ0czogc3RyaW5nW10gPSBbXTsKCiAgaWYgKGZpbHRlcnMubmFtZSkgewogICAgY29uc3QgY2xlYW5OYW1lID0gZmlsdGVycy5uYW1lLnJlcGxhY2UoL14jLywgJycpLnRyaW0oKTsKICAgIGNvbnN0IHNhbml0aXplZE5hbWUgPSBzYW5pdGl6ZUZpbHRlclZhbHVlKGNsZWFuTmFtZSk7CiAgICBpZiAoc2FuaXRpemVkTmFtZSkgewogICAgICBxdWVyeVBhcnRzLnB1c2goYG5hbWU6JHtzYW5pdGl6ZWROYW1lfWApOwogICAgfQogIH0KCiAgaWYgKGZpbHRlcnMuY29uZmlybWF0aW9uTnVtYmVyKSB7CiAgICBjb25zdCBjbGVhbkNvbmZpcm1hdGlvbiA9IGZpbHRlcnMuY29uZmlybWF0aW9uTnVtYmVyLnRyaW0oKTsKICAgIGNvbnN0IHNhbml0aXplZENvbmZpcm1hdGlvbiA9IHNhbml0aXplRmlsdGVyVmFsdWUoY2xlYW5Db25maXJtYXRpb24pOwogICAgaWYgKHNhbml0aXplZENvbmZpcm1hdGlvbikgewogICAgICBxdWVyeVBhcnRzLnB1c2goYGNvbmZpcm1hdGlvbl9udW1iZXI6JHtzYW5pdGl6ZWRDb25maXJtYXRpb259YCk7CiAgICB9CiAgfQoKICByZXR1cm4gcXVlcnlQYXJ0cy5sZW5ndGggPiAwID8gcXVlcnlQYXJ0cy5qb2luKCcgQU5EICcpIDogdW5kZWZpbmVkOwp9CgpleHBvcnQgZnVuY3Rpb24gcGFyc2VPcmRlckZpbHRlcnMoCiAgc2VhcmNoUGFyYW1zOiBVUkxTZWFyY2hQYXJhbXMsCik6IE9yZGVyRmlsdGVyUGFyYW1zIHsKICBjb25zdCBmaWx0ZXJzOiBPcmRlckZpbHRlclBhcmFtcyA9IHt9OwoKICBjb25zdCBuYW1lID0gc2VhcmNoUGFyYW1zLmdldChPUkRFUl9GSUxURVJfRklFTERTLk5BTUUpOwogIGlmIChuYW1lKSBmaWx0ZXJzLm5hbWUgPSBuYW1lOwoKICBjb25zdCBjb25maXJtYXRpb25OdW1iZXIgPSBzZWFyY2hQYXJhbXMuZ2V0KE9SREVSX0ZJTFRFUl9GSUVMRFMuQ09ORklSTUFUSU9OX05VTUJFUik7CiAgaWYgKGNvbmZpcm1hdGlvbk51bWJlcikgZmlsdGVycy5jb25maXJtYXRpb25OdW1iZXIgPSBjb25maXJtYXRpb25OdW1iZXI7CgogIHJldHVybiBmaWx0ZXJzOwp9CmBgYAo="
+            },
+            {
+              "title": "Update loader to parse filters and build search query",
+              "info": "Parse URL search parameters and build the Customer Account API query string for order filtering",
+              "code": "YGBgZGlmZgovLyBhcHAvcm91dGVzL2FjY291bnQub3JkZXJzLl9pbmRleC50c3gKK2ltcG9ydCB7CisgIGJ1aWxkT3JkZXJTZWFyY2hRdWVyeSwKKyAgcGFyc2VPcmRlckZpbHRlcnMsCisgIHR5cGUgT3JkZXJGaWx0ZXJQYXJhbXMsCit9IGZyb20gJ34vbGliL29yZGVyRmlsdGVycyc7CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gbG9hZGVyKHtyZXF1ZXN0LCBjb250ZXh0fTogUm91dGUuTG9hZGVyQXJncykgewogIGNvbnN0IHtjdXN0b21lckFjY291bnR9ID0gY29udGV4dDsKICBjb25zdCBwYWdpbmF0aW9uVmFyaWFibGVzID0gZ2V0UGFnaW5hdGlvblZhcmlhYmxlcyhyZXF1ZXN0LCB7CiAgICBwYWdlQnk6IDIwLAogIH0pOwoKKyBjb25zdCB1cmwgPSBuZXcgVVJMKHJlcXVlc3QudXJsKTsKKyBjb25zdCBmaWx0ZXJzID0gcGFyc2VPcmRlckZpbHRlcnModXJsLnNlYXJjaFBhcmFtcyk7CisgY29uc3QgcXVlcnkgPSBidWlsZE9yZGVyU2VhcmNoUXVlcnkoZmlsdGVycyk7CgogIGNvbnN0IHtkYXRhLCBlcnJvcnN9ID0gYXdhaXQgY3VzdG9tZXJBY2NvdW50LnF1ZXJ5KENVU1RPTUVSX09SREVSU19RVUVSWSwgewogICAgdmFyaWFibGVzOiB7CiAgICAgIC4uLnBhZ2luYXRpb25WYXJpYWJsZXMsCisgICAgIHF1ZXJ5LAogICAgICBsYW5ndWFnZTogY3VzdG9tZXJBY2NvdW50LmkxOG4ubGFuZ3VhZ2UsCiAgICB9LAogIH0pOwoKICBpZiAoZXJyb3JzPy5sZW5ndGggfHwgIWRhdGE/LmN1c3RvbWVyKSB7CiAgICB0aHJvdyBFcnJvcignQ3VzdG9tZXIgb3JkZXJzIG5vdCBmb3VuZCcpOwogIH0KCi0gcmV0dXJuIHtjdXN0b21lcjogZGF0YS5jdXN0b21lcn07CisgcmV0dXJuIHtjdXN0b21lcjogZGF0YS5jdXN0b21lciwgZmlsdGVyc307Cn0KYGBgCg=="
+            },
+            {
+              "title": "Add OrderSearchForm component",
+              "info": "Create a search form with order number and confirmation number inputs",
+              "code": "YGBgZGlmZgovLyBhcHAvcm91dGVzL2FjY291bnQub3JkZXJzLl9pbmRleC50c3gKK2ltcG9ydCB7dXNlU2VhcmNoUGFyYW1zLCB1c2VOYXZpZ2F0aW9ufSBmcm9tICdyZWFjdC1yb3V0ZXInOworaW1wb3J0IHt1c2VSZWZ9IGZyb20gJ3JlYWN0JzsKK2ltcG9ydCB7T1JERVJfRklMVEVSX0ZJRUxEU30gZnJvbSAnfi9saWIvb3JkZXJGaWx0ZXJzJzsKCitmdW5jdGlvbiBPcmRlclNlYXJjaEZvcm0oe2N1cnJlbnRGaWx0ZXJzfToge2N1cnJlbnRGaWx0ZXJzOiBPcmRlckZpbHRlclBhcmFtc30pIHsKKyAgY29uc3QgW3NlYXJjaFBhcmFtcywgc2V0U2VhcmNoUGFyYW1zXSA9IHVzZVNlYXJjaFBhcmFtcygpOworICBjb25zdCBuYXZpZ2F0aW9uID0gdXNlTmF2aWdhdGlvbigpOworICBjb25zdCBpc1NlYXJjaGluZyA9IG5hdmlnYXRpb24uc3RhdGUgIT09ICdpZGxlJyAmJiBuYXZpZ2F0aW9uLmxvY2F0aW9uPy5wYXRobmFtZT8uaW5jbHVkZXMoJ29yZGVycycpOworICBjb25zdCBmb3JtUmVmID0gdXNlUmVmPEhUTUxGb3JtRWxlbWVudD4obnVsbCk7CisKKyAgY29uc3QgaGFuZGxlU3VibWl0ID0gKGV2ZW50OiBSZWFjdC5Gb3JtRXZlbnQ8SFRNTEZvcm1FbGVtZW50PikgPT4geworICAgIGV2ZW50LnByZXZlbnREZWZhdWx0KCk7CisgICAgY29uc3QgZm9ybURhdGEgPSBuZXcgRm9ybURhdGEoZXZlbnQuY3VycmVudFRhcmdldCk7CisgICAgY29uc3QgcGFyYW1zID0gbmV3IFVSTFNlYXJjaFBhcmFtcygpOworCisgICAgY29uc3QgbmFtZSA9IGZvcm1EYXRhLmdldChPUkRFUl9GSUxURVJfRklFTERTLk5BTUUpPy50b1N0cmluZygpLnRyaW0oKTsKKyAgICBjb25zdCBjb25maXJtYXRpb25OdW1iZXIgPSBmb3JtRGF0YS5nZXQoT1JERVJfRklMVEVSX0ZJRUxEUy5DT05GSVJNQVRJT05fTlVNQkVSKT8udG9TdHJpbmcoKS50cmltKCk7CisKKyAgICBpZiAobmFtZSkgcGFyYW1zLnNldChPUkRFUl9GSUxURVJfRklFTERTLk5BTUUsIG5hbWUpOworICAgIGlmIChjb25maXJtYXRpb25OdW1iZXIpIHBhcmFtcy5zZXQoT1JERVJfRklMVEVSX0ZJRUxEUy5DT05GSVJNQVRJT05fTlVNQkVSLCBjb25maXJtYXRpb25OdW1iZXIpOworCisgICAgc2V0U2VhcmNoUGFyYW1zKHBhcmFtcyk7CisgIH07CisKKyAgcmV0dXJuICgKKyAgICA8Zm9ybSByZWY9e2Zvcm1SZWZ9IG9uU3VibWl0PXtoYW5kbGVTdWJtaXR9PgorICAgICAgPGlucHV0IHR5cGU9InNlYXJjaCIgbmFtZT17T1JERVJfRklMVEVSX0ZJRUxEUy5OQU1FfSBwbGFjZWhvbGRlcj0iT3JkZXIgIyIgZGVmYXVsdFZhbHVlPXtjdXJyZW50RmlsdGVycy5uYW1lIHx8ICcnfSAvPgorICAgICAgPGlucHV0IHR5cGU9InNlYXJjaCIgbmFtZT17T1JERVJfRklMVEVSX0ZJRUxEUy5DT05GSVJNQVRJT05fTlVNQkVSfSBwbGFjZWhvbGRlcj0iQ29uZmlybWF0aW9uICMiIGRlZmF1bHRWYWx1ZT17Y3VycmVudEZpbHRlcnMuY29uZmlybWF0aW9uTnVtYmVyIHx8ICcnfSAvPgorICAgICAgPGJ1dHRvbiB0eXBlPSJzdWJtaXQiIGRpc2FibGVkPXtpc1NlYXJjaGluZ30+e2lzU2VhcmNoaW5nID8gJ1NlYXJjaGluZycgOiAnU2VhcmNoJ308L2J1dHRvbj4KKyAgICA8L2Zvcm0+CisgICk7Cit9CmBgYAo="
+            }
+          ]
         },
         {
           "title": "Add fulfillmentStatus to Customer Account API order query",
@@ -275,6 +311,12 @@
           "info": "Improves Content Security Policy defaults for Shopify CDN resources.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3172",
           "id": "3172"
+        },
+        {
+          "title": "Upgrade Miniflare from v2 to v3",
+          "info": "Internal MiniOxygen API refactored to work with Miniflare v3's new architecture, improving development server performance and compatibility.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039"
         }
       ]
     },
