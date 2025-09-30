@@ -18,7 +18,7 @@
       },
       "devDependencies": {
         "@shopify/mini-oxygen": "4.0.0",
-        "@shopify/cli": "3.83.3",
+        "@shopify/cli": "3.85.4",
         "@react-router/dev": "7.9.2",
         "@react-router/fs-routes": "7.9.2"
       },
