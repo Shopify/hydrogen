@@ -154,7 +154,7 @@
             {
               "title": "Run the automated migration codemod",
               "info": "This codemod will automatically update most imports and references from Remix to React Router",
-              "code": "YGBgZGlmZgpucHggQGNvZGVtb2QuY29tL2NvZGVtb2QgcmVtaXgvMi9yZWFjdC1yb3V0ZXIvdXBncmFkZQpgYGAK"
+              "code": "YGBgZGlmZgpucHggY29kZW1vZEBsYXRlc3QgcmVtaXgvMi9yZWFjdC1yb3V0ZXIvdXBncmFkZQpgYGAK"
             },
             {
               "title": "Update @shopify/remix-oxygen imports",
