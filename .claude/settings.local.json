@@ -6,7 +6,8 @@
       "Bash(npm test:*)",
       "Bash(gh pr view:*)",
       "Bash(npm run ci:checks:*)",
-      "Bash(npm run cookbook:*)"
+      "Bash(npm run cookbook:*)",
+      "WebFetch(domain:gist.githubusercontent.com)"
     ]
   },
   "enabledMcpjsonServers": [
