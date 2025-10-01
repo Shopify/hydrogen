@@ -1,8 +1,36 @@
 import {execSync, ExecSyncOptionsWithBufferEncoding} from 'child_process';
 import {rmSync} from 'fs';
 import {applyRecipe} from './apply';
-import {TEMPLATE_PATH} from './constants';
+import {TEMPLATE_PATH, COOKBOOK_PATH} from './constants';
+import {loadRecipe, Recipe} from './recipe';
 import path from 'path';
+
+export function validateStepNumbering(recipe: Recipe): void {
+  console.log(`- 🔢 Checking step numbering…`);
+
+  const stepsByNumber = new Map<string, Set<string>>();
+
+  for (let i = 0; i < recipe.steps.length; i++) {
+    const step = recipe.steps[i];
+    const stepNum = String(step.step);
+    let names = stepsByNumber.get(stepNum);
+
+    if (!names) {
+      names = new Set();
+      stepsByNumber.set(stepNum, names);
+    }
+
+    if (names.has(step.name)) {
+      throw new Error(
+        `Step ${stepNum} has duplicate name "${step.name}". ` +
+          `Grouped steps must have distinct names.`,
+      );
+    }
+
+    names.add(step.name);
+  }
+}
+
 /**
  * Validate a recipe.
  * @param params - The parameters for the validation.
@@ -16,6 +44,14 @@ export function validateRecipe(params: {
   const {recipeTitle, hydrogenPackagesVersion} = params;
 
   try {
+    const recipeDir = path.join(COOKBOOK_PATH, 'recipes', recipeTitle);
+    const recipe = loadRecipe({directory: recipeDir});
+
+    // Note: applyRecipe() will also load the recipe. This duplication is acceptable
+    // for now as the performance cost is negligible (~5ms). Could be optimized by
+    // passing the recipe object to applyRecipe() if needed in the future.
+    validateStepNumbering(recipe);
+
     console.log(`- 🧑‍🍳 Applying recipe '${recipeTitle}'`);
     applyRecipe({
       recipeTitle,

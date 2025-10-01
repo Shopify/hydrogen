@@ -25,14 +25,6 @@ const StepSchema = z.object({
   type: z.enum(['PATCH', 'INFO', 'NEW_FILE']).describe('The type of step'),
   step: z
     .number()
-    .or(
-      z
-        .string()
-        .regex(/^\d+(?:\.\d+)?$/)
-        .describe(
-          'The step numerical representation, with optional substep if applicable',
-        ),
-    )
     .describe(
       'The step numerical representation, with optional substep if applicable',
     ),
