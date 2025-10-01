@@ -155,6 +155,7 @@ node scripts/get-latest-branch.js  // → "2025-07"
 
 #### 3. CalVer Enforcement
 - **`enforce-calver-ci.js`** - Production CI script (runs in GitHub Actions)
+  - Skips execution when only semver packages have changesets (guard check)
   - Uses git baseline to read original versions (before changesets corruption)
   - Fetches from `HEAD~1` or `origin/main` to avoid using invalid semver versions
 - **`enforce-calver-local.js`** - Local testing with dry-run support
@@ -546,6 +547,29 @@ node .changeset/calver-shared.js has-calver-changesets
 # - CLI-only changesets → false → "[ci] release semver"
 # - Mixed changesets → true → "[ci] release 2025.5.1"
 # - CalVer-only → true → "[ci] release 2025.5.1"
+```
+
+### Issue: Semver-only releases incorrectly bump CalVer packages
+
+**Root Cause**: `enforce-calver-ci.js` ran unconditionally for all CalVer packages, even when only semver packages had changesets
+
+**Impact**: Phantom version bumps and CHANGELOG entries for hydrogen/hydrogen-react/skeleton with no actual changes
+
+**Solution**: Guard check added to skip CalVer enforcement when no CalVer changesets exist
+
+```bash
+# Create test CLI changeset
+echo -e "---\n'@shopify/cli-hydrogen': patch\n---\nTest" > .changeset/test-cli.md
+
+# Should return false (no CalVer changesets)
+node .changeset/calver-shared.js has-calver-changesets
+
+# Should skip enforcement
+node .changeset/enforce-calver-ci.js
+# Output: "No CalVer changesets detected. Skipping CalVer enforcement."
+
+# Cleanup
+rm .changeset/test-cli.md
 ```
 
 ## Migration Notes
