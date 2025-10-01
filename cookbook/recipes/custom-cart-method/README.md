@@ -1,6 +1,11 @@
-# Custom Cart Method
+# Custom cart method in Hydrogen
 
-This recipe demonstrates how to implement custom cart methods in Hydrogen to enable inline editing of product options directly within the cart. Users can change product variants (size, color, etc.) without removing and re-adding items.
+This recipe implements custom cart methods in Hydrogen using the Storefront API's
+`variantBySelectedOptions` query to let customers edit product options directly
+within the cart. They'll be able to change product variants (like size and color)
+without having to remove items, select different variants, and then add them to
+the cart again. Their cart updates will happen automatically, without requiring
+a full page refresh.
 
 Key features:
 - Custom cart method `updateLineByOptions` for variant selection
@@ -8,26 +13,18 @@ Key features:
 - Automatic cart updates when options are changed
 - Full TypeScript support with proper type augmentation
 
-> [!NOTE]
-> This implementation requires GraphQL codegen to be run after applying the recipe
-
-> [!NOTE]
-> The custom cart method uses the Storefront API's variantBySelectedOptions query
-
-> [!NOTE]
-> Cart updates happen automatically on option change without page refresh
-
 ## Requirements
 
 - Basic understanding of Hydrogen cart implementation
 - Familiarity with GraphQL and TypeScript
 - Knowledge of React Router actions and forms
+- GraphQL codegen must be run after applying the recipe
 
 ## Steps
 
 ### Step 1: README.md
 
-Updates README with custom cart method documentation and implementation guide
+Update the README file with custom cart method documentation and an implementation guide.
 
 #### File: [README.md](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/README.md)
 
@@ -135,7 +132,7 @@ index c584e537..d4009139 100644
 
 ### Step 2: app/components/CartLineItem.tsx
 
-Adds variant selector functionality to cart line items for changing product options
+Add variant selector functionality to cart line items for changing product options.
 
 #### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/components/CartLineItem.tsx)
 
@@ -273,7 +270,7 @@ index 80e34be2..2f37ea80 100644
 
 ### Step 3: app/lib/context.ts
 
-Extends HydrogenCart context with updateLineByOptions method for variant switching
+Extend HydrogenCart context with updateLineByOptions method for variant switching.
 
 #### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/lib/context.ts)
 
@@ -367,7 +364,7 @@ index 692d5ae1..c2dc8b33 100644
 
 ### Step 4: app/lib/fragments.ts
 
-Adds product options to cart fragments and creates PRODUCT_VARIANT_QUERY for fetching variants
+Add product options to cart fragments and create PRODUCT_VARIANT_QUERY for fetching variants.
 
 #### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/lib/fragments.ts)
 
@@ -431,7 +428,7 @@ index cf35c25e..cf79917e 100644
 
 ### Step 5: app/routes/cart.tsx
 
-Implements CustomUpdateLineByOptions action handler for processing variant changes in cart
+Implement the CustomUpdateLineByOptions action handler for processing variant changes in cart.
 
 #### File: [app/routes/cart.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/cart.tsx)
 

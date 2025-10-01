@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 gid: 99596983-f4f0-4285-8f88-9112794cb812
-title: Express Server for Hydrogen
+title: Express server for Hydrogen
 summary: Deploy Hydrogen on Node.js with Express instead of Shopify Oxygen
 description: |
   This recipe transforms a Hydrogen skeleton template to run on a standard Node.js Express server,
@@ -15,17 +15,16 @@ description: |
   - Implements session management through Express middleware
   - Provides production-ready server configuration
   - Keeps GraphQL codegen functionality intact
-notes:
-  - Requires Node.js 20+ for production deployment (less than 22.0.0)
+
+  Technical details:
   - Uses nodemon for development server with automatic restarts
   - Environment variables are loaded from .env file using dotenv
   - Session management is handled through Express middleware with SESSION_SECRET
   - GraphQL codegen still works with Storefront API types
-  - Compatible with React Router 7.9.x
-  - The .graphqlrc.ts file is preserved with customer account section commented
-    out
+  - Compatible with React Router 7.8.x
+  - The .graphqlrc.ts file is preserved with customer account section commented out
 requirements: |
-  - Node.js 18 or higher
+  - Node.js 20 or higher (less than 22.0.0) for production deployment
   - npm or yarn package manager
   - Shopify Storefront API credentials
 ingredients:
@@ -136,7 +135,8 @@ steps:
   - type: PATCH
     step: 6
     name: app/entry.server.tsx
-    description: Replace Oxygen server rendering with Express-compatible Node.js SSR
+    description:
+      Replace Oxygen server rendering with Express-compatible Node.js SSR
       using PassThrough streams
     diffs:
       - file: app/entry.server.tsx
@@ -157,7 +157,8 @@ steps:
   - type: NEW_FILE
     step: 9
     name: server.mjs
-    description: Add Express server with Hydrogen context, session management, and
+    description:
+      Add Express server with Hydrogen context, session management, and
       SSR support
     ingredients:
       - path: templates/skeleton/server.mjs
@@ -199,7 +200,8 @@ steps:
   - type: PATCH
     step: 15
     name: package.json
-    description: Update dependencies and scripts for Express server deployment (add
+    description:
+      Update dependencies and scripts for Express server deployment (add
       express, nodemon, compression, remove Oxygen packages)
     diffs:
       - file: package.json
@@ -212,15 +214,17 @@ steps:
       - file: vite.config.ts
         patchFile: vite.config.ts.475b4c.patch
 nextSteps: |
-  - Create a .env file with your Shopify Storefront API credentials:
+  1. Create a `.env` file with your Shopify Storefront API credentials:
+    ```
     PUBLIC_STOREFRONT_API_TOKEN="your-token"
-    PUBLIC_STORE_DOMAIN="your-store.myshopify.com" 
+    PUBLIC_STORE_DOMAIN="your-store.myshopify.com"
     PUBLIC_STOREFRONT_ID="your-storefront-id"
     SESSION_SECRET="your-session-secret-at-least-32-chars"
-  - Run 'npm install' to install Express and other Node.js dependencies
-  - Run 'npm run dev' to start the development server with hot reload
-  - For production, run 'npm run build' followed by 'npm start'
-  - Deploy to your preferred Node.js hosting platform (Heroku, AWS, Vercel, Railway, etc.)
+    ```
+  2. Run `npm install` to install Express and other Node.js dependencies
+  3. Run `npm run dev` to start the development server with hot reload
+  4. For production, run `npm run build` followed by `npm start`
+  5. Deploy to your preferred Node.js hosting platform (Heroku, AWS, Vercel, Railway, etc.)
 llms:
   userQueries:
     - How do I deploy Hydrogen to Node.js instead of Oxygen?
@@ -229,19 +233,23 @@ llms:
     - How to run Hydrogen without Shopify Oxygen?
     - Can I use Hydrogen with my own server?
   troubleshooting:
-    - issue: "Error: [h2:error:createStorefrontClient] `storeDomain` is required"
+    - issue: 'Error: [h2:error:createStorefrontClient] `storeDomain` is required'
       solution: Create a .env file with your Shopify store credentials. See the
         nextSteps section for required environment variables.
-    - issue: "Cannot read file: fs/path/stream errors during build"
-      solution: This is expected. The vite.config.ts properly externalizes Node.js
+    - issue: 'Cannot read file: fs/path/stream errors during build'
+      solution:
+        This is expected. The vite.config.ts properly externalizes Node.js
         built-in modules for the Express server.
     - issue: GraphQL codegen fails with 'Unable to find any GraphQL type definitions'
-      solution: The recipe preserves GraphQL functionality. Make sure .graphqlrc.ts
+      solution:
+        The recipe preserves GraphQL functionality. Make sure .graphqlrc.ts
         exists and your GraphQL queries use the gql template literal.
     - issue: Port already in use when running npm run dev
-      solution: The Express server defaults to port 3000. Either stop the process
+      solution:
+        The Express server defaults to port 3000. Either stop the process
         using that port or set PORT environment variable to a different port.
     - issue: TypeScript errors about missing @react-router/node types
-      solution: Run 'npm install' to ensure all dependencies including @types packages
+      solution:
+        Run 'npm install' to ensure all dependencies including @types packages
         are installed.
 commit: 12374c8f03f82c6800000cf08e327c4db4c287bb

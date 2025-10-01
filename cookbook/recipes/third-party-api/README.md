@@ -1,19 +1,19 @@
-# Third-party API Queries and Caching
+# Third-party API queries and caching in Hydrogen
 
-This recipe demonstrates how to integrate third-party GraphQL APIs into your Hydrogen storefront 
+This recipe integrates third-party GraphQL APIs into your Hydrogen storefront 
 with Oxygen's powerful sub-request caching system. Using the Rick & Morty API as an example, 
 you'll learn how to:
 
-1. **Create a cached GraphQL client** - Build a reusable client factory that handles query 
-   minification, error handling, and integrates with Oxygen's caching infrastructure
+1. **Create a cached GraphQL client** - Build a reusable client factory that minifies queries, 
+   handles error handling, and integrates with Oxygen's caching infrastructure.
 
 2. **Integrate with Hydrogen's context** - Add the third-party client to the global context 
-   system, making it available in all routes and actions throughout your application
+   system, making it available in all routes and actions throughout your application.
 
 3. **Query external APIs efficiently** - Fetch data from third-party sources in parallel 
-   with Shopify API calls, leveraging Oxygen's caching to minimize latency and API calls
+   with Shopify API calls, leveraging Oxygen's caching to minimize latency and API calls.
 
-## Use Cases
+## Use cases
 
 This pattern is perfect for integrating:
 - **CMS platforms** (Contentful, Sanity, Strapi)
@@ -22,27 +22,22 @@ This pattern is perfect for integrating:
 - **Custom backend APIs** (inventory systems, ERP integrations)
 - **Marketing tools** (email platforms, loyalty programs)
 
-## Performance Benefits
+## Performance benefits
 
 - **Sub-request caching**: Responses are cached at the edge, reducing API calls
 - **Parallel data fetching**: Load third-party and Shopify data simultaneously
 - **Configurable cache strategies**: Use CacheShort(), CacheLong(), or custom TTLs
 - **Automatic cache key generation**: Based on query and variables
 
-> [!NOTE]
-> The example uses rickandmortyapi.com for demonstration, but the pattern works with any GraphQL or REST API
+## Key features
+
+- Caching strategies can be customized per query using Hydrogen's cache utilities (CacheShort, CacheLong, CacheNone)
+- The client is added to the global context, making it available in all routes
+- TypeScript types are automatically augmented for full IDE support
+- Error handling is built-in with graceful fallbacks
 
 > [!NOTE]
-> Caching strategies can be customized per query using Hydrogen's cache utilities (CacheShort, CacheLong, CacheNone)
-
-> [!NOTE]
-> The client is added to the global context, making it available in all routes
-
-> [!NOTE]
-> TypeScript types are automatically augmented for full IDE support
-
-> [!NOTE]
-> Error handling is built-in with graceful fallbacks
+> The examples in this recipe use rickandmortyapi.com for demonstration purposes, but the patterns work with any GraphQL or REST API.
 
 ## Requirements
 

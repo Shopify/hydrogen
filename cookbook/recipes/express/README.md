@@ -1,4 +1,4 @@
-# Express Server for Hydrogen
+# Express server for Hydrogen
 
 This recipe transforms a Hydrogen skeleton template to run on a standard Node.js Express server,
 making it deployable to any Node.js hosting platform instead of Shopify Oxygen. It maintains core
@@ -12,30 +12,17 @@ Key changes:
 - Provides production-ready server configuration
 - Keeps GraphQL codegen functionality intact
 
-> [!NOTE]
-> Requires Node.js 20+ for production deployment (less than 22.0.0)
-
-> [!NOTE]
-> Uses nodemon for development server with automatic restarts
-
-> [!NOTE]
-> Environment variables are loaded from .env file using dotenv
-
-> [!NOTE]
-> Session management is handled through Express middleware with SESSION_SECRET
-
-> [!NOTE]
-> GraphQL codegen still works with Storefront API types
-
-> [!NOTE]
-> Compatible with React Router 7.9.x
-
-> [!NOTE]
-> The .graphqlrc.ts file is preserved with customer account section commented out
+Technical details:
+- Uses nodemon for development server with automatic restarts
+- Environment variables are loaded from .env file using dotenv
+- Session management is handled through Express middleware with SESSION_SECRET
+- GraphQL codegen still works with Storefront API types
+- Compatible with React Router 7.8.x
+- The .graphqlrc.ts file is preserved with customer account section commented out
 
 ## Requirements
 
-- Node.js 18 or higher
+- Node.js 20 or higher (less than 22.0.0) for production deployment
 - npm or yarn package manager
 - Shopify Storefront API credentials
 
@@ -2643,12 +2630,14 @@ index a1702446..058b559d 100644
 
 ## Next steps
 
-- Create a .env file with your Shopify Storefront API credentials:
+1. Create a `.env` file with your Shopify Storefront API credentials:
+  ```
   PUBLIC_STOREFRONT_API_TOKEN="your-token"
-  PUBLIC_STORE_DOMAIN="your-store.myshopify.com" 
+  PUBLIC_STORE_DOMAIN="your-store.myshopify.com"
   PUBLIC_STOREFRONT_ID="your-storefront-id"
   SESSION_SECRET="your-session-secret-at-least-32-chars"
-- Run 'npm install' to install Express and other Node.js dependencies
-- Run 'npm run dev' to start the development server with hot reload
-- For production, run 'npm run build' followed by 'npm start'
-- Deploy to your preferred Node.js hosting platform (Heroku, AWS, Vercel, Railway, etc.)
+  ```
+2. Run `npm install` to install Express and other Node.js dependencies
+3. Run `npm run dev` to start the development server with hot reload
+4. For production, run `npm run build` followed by `npm start`
+5. Deploy to your preferred Node.js hosting platform (Heroku, AWS, Vercel, Railway, etc.)

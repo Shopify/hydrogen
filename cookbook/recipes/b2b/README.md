@@ -12,19 +12,7 @@ and cart functionality that respects B2B quantity rules. All product queries are
 with buyer information (company location + customer token) to ensure accurate B2B pricing.
 
 > [!NOTE]
-> This recipe requires a Shopify Plus plan for B2B functionality
-
-> [!NOTE]
-> Your store must use new customer accounts (not classic accounts)
-
-> [!NOTE]
-> Only the product display page uses contextualized queries in this example
-
-> [!NOTE]
 > For production, all product queries should be contextualized with buyer information
-
-> [!NOTE]
-> The location selector appears automatically for customers with multiple company locations
 
 ## Requirements
 

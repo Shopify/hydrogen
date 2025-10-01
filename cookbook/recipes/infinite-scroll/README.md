@@ -1,26 +1,12 @@
-# Infinite Scroll for Collections
+# Infinite scroll for collections in Hydrogen
 
-Implements infinite scroll functionality on collection pages using intersection observer.
-Products automatically load as users scroll down, replacing traditional pagination buttons
-with a smooth, continuous browsing experience.
+This recipe implements infinite scroll functionality on collection pages using the Intersection Observer API.
 
 Key features:
-- Automatic loading when "Load more" button comes into view
-- Preserves browser history and URL state
+- Automatic loading when "Load more" button comes into view using Intersection Observer API
+- Preserves browser history and URL state (replace mode to avoid clutter)
 - Maintains scroll position during navigation
-- Optimized loading with eager/lazy image loading
-
-> [!NOTE]
-> The intersection observer triggers when the "Load more" button enters the viewport
-
-> [!NOTE]
-> Navigation updates use replace mode to avoid cluttering browser history
-
-> [!NOTE]
-> First 8 products load eagerly for faster initial render
-
-> [!NOTE]
-> Subsequent products use lazy loading to optimize performance
+- Optimized loading with eager/lazy image loading (first 8 products eager, rest lazy)
 
 ## Requirements
 
@@ -32,7 +18,7 @@ Key features:
 
 ### Step 1: README.md
 
-Updates README with infinite scroll documentation and implementation details
+Update the README file with infinite scroll documentation and implementation details.
 
 #### File: [README.md](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/README.md)
 

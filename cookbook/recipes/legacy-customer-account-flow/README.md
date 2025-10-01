@@ -1,7 +1,7 @@
-# Legacy Customer Account Flow
+# Legacy customer account flow in Hydrogen
 
 This recipe converts a Hydrogen app from the new Customer Account API authentication
-to the legacy customer account flow using the Storefront API. This is useful for stores
+to the legacy customer account flow using deprecated customer endpoints in Storefront API. This is useful for stores
 that haven't migrated to the new Customer Account API yet or need to maintain compatibility
 with existing customer authentication systems.
 
@@ -15,29 +15,19 @@ Key features:
 - Session-based authentication using customer access tokens
 - Secure server-side rendering for all account routes
 
-> [!NOTE]
-> This uses the deprecated Storefront API customer endpoints instead of the new Customer Account API
+Technical details:
+- Customer access tokens are stored in session cookies for authentication.
+- The login/register/recover routes use the account\_ prefix to avoid layout nesting.
+- Account data routes use the `account.` prefix to inherit the account layout
 
 > [!NOTE]
-> Customer access tokens are stored in session cookies for authentication
-
-> [!NOTE]
-> All account routes are server-side rendered for security
-
-> [!NOTE]
-> The login/register/recover routes use the account_ prefix to avoid layout nesting
-
-> [!NOTE]
-> Account data routes use the account. prefix to inherit the account layout
-
-> [!NOTE]
-> Consider migrating to the new Customer Account API for better security and features
+> Consider migrating to the new Customer Account API for better security and features.
 
 ## Requirements
 
 - A Shopify store with customer accounts enabled (classic accounts, not new customer accounts)
 - Storefront API access with customer read/write permissions
-- Email notifications configured in Shopify admin for:
+- Email notifications configured in your Shopify admin for:
   - Account activation emails
   - Password reset emails
   - Welcome emails (optional)
@@ -57,7 +47,7 @@ _New files added to the template by this recipe._
 
 ### Step 1: README.md
 
-Update README to document legacy customer account flow
+Update the README file to document the legacy customer account flow.
 
 #### File: [README.md](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/README.md)
 
@@ -98,7 +88,7 @@ index c584e537..11bb1c8c 100644
 
 ### Step 2: app/components/Header.tsx
 
-Add account link to header navigation
+Add an account link to the header navigation.
 
 #### File: [app/components/Header.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/components/Header.tsx)
 
@@ -134,7 +124,7 @@ index 45b620b4..f55c4143 100644
 
 ### Step 3: app/routes/account_.activate.$id.$activationToken.tsx
 
-Add account activation route for email verification
+Add an account activation route for email verification.
 
 #### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
 
@@ -300,7 +290,7 @@ const CUSTOMER_ACTIVATE_MUTATION = `#graphql
 
 ### Step 4: app/components/PageLayout.tsx
 
-Update PageLayout to handle account routes
+Update PageLayout to handle account routes.
 
 #### File: [app/components/PageLayout.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/components/PageLayout.tsx)
 
@@ -322,7 +312,7 @@ index ed7843be..ab1f2d0c 100644
 
 ### Step 5: app/routes/account_.recover.tsx
 
-Add password recovery form for forgotten passwords
+Add a password recovery form.
 
 #### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
 
@@ -460,7 +450,7 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
 
 ### Step 6: app/root.tsx
 
-Add customer access token validation to root loader
+Add customer access token validation to the root loader.
 
 #### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/root.tsx)
 
@@ -596,7 +586,7 @@ index df87425c..aa6f5166 100644
 
 ### Step 7: app/routes/account_.register.tsx
 
-Add customer registration form
+Add a customer registration form.
 
 #### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.register.tsx)
 
@@ -813,7 +803,7 @@ const REGISTER_LOGIN_MUTATION = `#graphql
 
 ### Step 8: app/routes/account.$.tsx
 
-Convert catch-all route to use Storefront API authentication
+Convert the catch-all route to use Storefront API authentication.
 
 #### File: [app/routes/account.$.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account.$.tsx)
 
@@ -839,7 +829,7 @@ index 074def2a..6a8a2452 100644
 
 ### Step 9: app/routes/account_.reset.$id.$resetToken.tsx
 
-Add password reset form with token validation
+Add a password reset form with token validation.
 
 #### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
 
@@ -985,7 +975,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 
 ### Step 10: app/routes/account.addresses.tsx
 
-Convert address management to use Storefront API mutations
+Convert address management to use Storefront API mutations.
 
 #### File: [app/routes/account.addresses.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account.addresses.tsx)
 
@@ -1557,7 +1547,7 @@ index ddfa18f3..f61a3759 100644
 
 ### Step 11: app/routes/account.orders.$id.tsx
 
-Convert order details page to use Storefront API queries
+Convert the order details page to use Storefront API queries.
 
 #### File: [app/routes/account.orders.$id.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account.orders.$id.tsx)
 
@@ -1917,7 +1907,7 @@ index 3c243038..52280986 100644
 
 ### Step 12: app/routes/account.orders._index.tsx
 
-Convert orders list to use Storefront API with pagination
+Convert the orders list to use the Storefront API with pagination.
 
 #### File: [app/routes/account.orders._index.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account.orders._index.tsx)
 
@@ -2281,7 +2271,7 @@ index a9f479ea..2d30caa0 100644
 
 ### Step 13: app/routes/account.profile.tsx
 
-
+Convert the customer profile page to use Storefront API queries.
 
 #### File: [app/routes/account.profile.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account.profile.tsx)
 
@@ -2541,7 +2531,7 @@ index 7053f7d7..7b8c77d3 100644
 
 ### Step 14: app/routes/account.tsx
 
-Convert account layout to use session-based authentication
+Convert the account layout to use session-based authentication.
 
 #### File: [app/routes/account.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account.tsx)
 
@@ -2748,7 +2738,7 @@ index 46272bbd..9f559843 100644
 
 ### Step 15: app/routes/account_.login.tsx
 
-Replace Customer Account API login with Storefront API form
+Replace the Customer Account API login with the Storefront API form.
 
 #### File: [app/routes/account_.login.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account_.login.tsx)
 
@@ -2909,7 +2899,7 @@ index 825648a1..7536e037 100644
 
 ### Step 16: app/routes/account_.logout.tsx
 
-Replace Customer Account API logout with session cleanup
+Replace the Customer Account API logout with a session cleanup.
 
 #### File: [app/routes/account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account_.logout.tsx)
 
@@ -2955,8 +2945,8 @@ index 5e67cc85..d88e717d 100644
 
 After applying this recipe:
 
-1. Run `npm run codegen` to generate GraphQL types for the Storefront API queries
-2. Run `npm run dev` to start the development server
+1. Run `npm run codegen` to generate GraphQL types for the Storefront API queries.
+2. Run `npm run dev` to start the development server.
 3. Test the authentication flow:
    - Visit `/account/register` to create a new account
    - Check your email for the activation link
@@ -2964,11 +2954,11 @@ After applying this recipe:
    - Browse `/account/orders` to view order history
    - Visit `/account/addresses` to manage addresses
 4. Configure email templates in your Shopify admin:
-   - Go to Settings > Notifications
+   - Go to **Settings** > **Notifications**
    - Customize the Customer account activation email
    - Customize the Customer account password reset email
 5. Consider implementing:
-   - Remember me functionality with longer session expiry
+   - "Remember me" functionality with longer session expiry
    - Social login integration
    - Two-factor authentication
    - Customer profile fields (phone, marketing preferences)
