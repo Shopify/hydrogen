@@ -226,12 +226,11 @@ function validateCalVer(version) {
 
 // Main execution
 function main() {
-  // Read current versions (after changesets has run)
-  // This compares current pkg versions against git baseline
+  // Get versions: oldVersion from git baseline, pkg.version from current state
   const versions = readPackageVersions();
 
-  // Check if any CalVer package actually changed
-  // After changesets runs, if a package wasn't touched, oldVersion === pkg.version
+  // Skip CalVer enforcement if no CalVer packages were bumped by changesets
+  // This prevents semver-only releases (CLI, mini-oxygen) from touching CalVer packages
   let hasCalVerChanges = false;
   for (const [pkgName, data] of Object.entries(versions)) {
     if (data.pkg.version !== data.oldVersion) {
