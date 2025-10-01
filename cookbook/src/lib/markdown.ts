@@ -187,9 +187,9 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
           case 'shopify.dev':
             return [
               '<details>\n',
-              '{% codeblock file %}',
+              '<CodeBlock type="file">',
               ...code,
-              '{% endcodeblock %}',
+              '</CodeBlock>',
               '\n</details>',
             ].join('\n');
           default:
@@ -199,7 +199,7 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
       return code.join('\n');
     case 'SHOPIFY_CODEFILES':
       return [
-        '{% codeblock file %}',
+        '<CodeBlock type="file">',
         ...block.files.map((file) =>
           [
             '```' +
@@ -209,7 +209,7 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
             '```\n',
           ].join('\n'),
         ),
-        '{% endcodeblock %}',
+        '</CodeBlock>',
       ].join('\n');
     case 'LIST':
       return block.items.map((item) => `- ${item}`).join('\n');

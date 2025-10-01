@@ -35,8 +35,3 @@ export const FILES_TO_IGNORE_FOR_GENERATE = ['.env', '.cursor'];
  * The file name of the github README.
  */
 export const RENDER_FILENAME_GITHUB = 'README.md';
-
-/**
- * The file name of the shopify README.
- */
-export const RENDER_FILENAME_SHOPIFY = 'README.shopify.md';
