@@ -27,40 +27,45 @@ steps:
   - type: PATCH
     step: 1
     name: README.md
-    description: Updates README with custom cart method documentation and implementation guide
+    description: Updates README with custom cart method documentation and
+      implementation guide
     diffs:
       - file: README.md
-        patchFile: README.md.49f8fa.patch
+        patchFile: README.md.db10ed.patch
   - type: PATCH
     step: 2
     name: app/components/CartLineItem.tsx
-    description: Adds variant selector functionality to cart line items for changing product options
+    description: Adds variant selector functionality to cart line items for changing
+      product options
     diffs:
       - file: app/components/CartLineItem.tsx
-        patchFile: CartLineItem.tsx.f93ff4.patch
+        patchFile: CartLineItem.tsx.2c9a50.patch
   - type: PATCH
     step: 3
     name: app/lib/context.ts
-    description: Extends HydrogenCart context with updateLineByOptions method for variant switching
+    description: Extends HydrogenCart context with updateLineByOptions method for
+      variant switching
     diffs:
       - file: app/lib/context.ts
-        patchFile: context.ts.cfd9da.patch
+        patchFile: context.ts.1877b3.patch
   - type: PATCH
     step: 4
     name: app/lib/fragments.ts
-    description: Adds product options to cart fragments and creates PRODUCT_VARIANT_QUERY for fetching variants
+    description: Adds product options to cart fragments and creates
+      PRODUCT_VARIANT_QUERY for fetching variants
     diffs:
       - file: app/lib/fragments.ts
-        patchFile: fragments.ts.18726b.patch
+        patchFile: fragments.ts.026109.patch
   - type: PATCH
     step: 5
     name: app/routes/cart.tsx
-    description: Implements CustomUpdateLineByOptions action handler for processing variant changes in cart
+    description: Implements CustomUpdateLineByOptions action handler for processing
+      variant changes in cart
     diffs:
       - file: app/routes/cart.tsx
-        patchFile: cart.tsx.943271.patch
+        patchFile: cart.tsx.af0778.patch
 nextSteps: null
 llms:
   userQueries: []
   troubleshooting: []
-commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
+commit: 12374c8f03f82c6800000cf08e327c4db4c287bb

@@ -98,8 +98,7 @@ ingredients:
   - path: templates/skeleton/app/routes/($locale).cart.tsx
     description: A localized cart route.
   - path: templates/skeleton/app/routes/($locale).collections.$handle.tsx
-    description:
-      Collection page displaying products with locale-specific pricing
+    description: Collection page displaying products with locale-specific pricing
       and availability
   - path: templates/skeleton/app/routes/($locale).collections._index.tsx
     description: Collections listing page with localized collection names and images
@@ -146,8 +145,7 @@ steps:
   - type: INFO
     step: 1
     name: Add localization utilities and update core components
-    description:
-      In this section, we'll create utilities to handle localization and
+    description: In this section, we'll create utilities to handle localization and
       country selection, and update the core components to use these utilities.
   - type: PATCH
     step: 1.1
@@ -243,6 +241,12 @@ steps:
     diffs:
       - file: app/components/CartMain.tsx
         patchFile: CartMain.tsx.035161.patch
+  - type: NEW_FILE
+    step: 2.1
+    name: app/routes/($locale).account.orders.$id.tsx
+    description: Individual order details page with localized currency and date formatting
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).account.orders.$id.tsx
   - type: INFO
     step: 2.2
     name: Add language dynamic segment to the desired routes
@@ -252,6 +256,13 @@ steps:
       to `routes/($locale)._index.tsx`).
 
       For brevity, we'll focus on the home page, the cart page, and the product page in this example. In your app, you should do this for all the app routes.
+  - type: NEW_FILE
+    step: 2.2
+    name: app/routes/($locale).collections.$handle.tsx
+    description: Collection page displaying products with locale-specific pricing
+      and availability
+    ingredients:
+      - path: templates/skeleton/app/routes/($locale).collections.$handle.tsx
   - type: NEW_FILE
     step: 2.3
     name: Add localization to the home page
@@ -305,12 +316,6 @@ steps:
     description: Customer address management page with locale-aware forms and links
     ingredients:
       - path: templates/skeleton/app/routes/($locale).account.addresses.tsx
-  - type: NEW_FILE
-    step: 2.10
-    name: app/routes/($locale).account.orders.$id.tsx
-    description: Individual order details page with localized currency and date formatting
-    ingredients:
-      - path: templates/skeleton/app/routes/($locale).account.orders.$id.tsx
   - type: NEW_FILE
     step: 2.11
     name: app/routes/($locale).account.orders._index.tsx
@@ -366,14 +371,6 @@ steps:
     ingredients:
       - path: templates/skeleton/app/routes/($locale).blogs._index.tsx
   - type: NEW_FILE
-    step: 2.20
-    name: app/routes/($locale).collections.$handle.tsx
-    description:
-      Collection page displaying products with locale-specific pricing
-      and availability
-    ingredients:
-      - path: templates/skeleton/app/routes/($locale).collections.$handle.tsx
-  - type: NEW_FILE
     step: 2.21
     name: app/routes/($locale).collections._index.tsx
     description: Collections listing page with localized collection names and images
@@ -424,15 +421,13 @@ llms:
     - Help me segment my customers based on their location
   troubleshooting:
     - issue: I'm not seeing the localized content on my storefront.
-      solution:
-        In your Shopify admin, make sure you've set up your store's regions
+      solution: In your Shopify admin, make sure you've set up your store's regions
         and langauges using Shopify Markets, then check that your products are
         appropriately configured for each market. In your Hydrogen app, make
         sure you've added the dynamic segment to the desired routes and that the
         routes are correctly named.
     - issue: Some pages are showing localized content, but others aren't.
-      solution:
-        Make sure you update *all* routes that need localization (not only the
+      solution: Make sure you update *all* routes that need localization (not only the
         routes for the home page, the cart page, and the product page). See step
         2.1 for details.
-commit: 25290311dd1d135ab90bca26fb496d2b92c8631a
+commit: 12374c8f03f82c6800000cf08e327c4db4c287bb

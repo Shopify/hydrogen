@@ -34,12 +34,12 @@ Key features:
 
 Updates README with infinite scroll documentation and implementation details
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/README.md)
 
 <details>
 
-```diff
-index c584e5370..6eacfd824 100644
+~~~diff
+index c584e537..6eacfd82 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
 @@ -1,6 +1,8 @@
@@ -126,7 +126,7 @@ index c584e5370..6eacfd824 100644
 -Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 +Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 \ No newline at end of file
-```
+~~~
 
 </details>
 
@@ -134,12 +134,12 @@ index c584e5370..6eacfd824 100644
 
 
 
-#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/templates/skeleton/app/routes/collections.$handle.tsx)
+#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/collections.$handle.tsx)
 
 <details>
 
-```diff
-index c416c2b3d..e6a351500 100644
+~~~diff
+index c416c2b3..e6a35150 100644
 --- a/templates/skeleton/app/routes/collections.$handle.tsx
 +++ b/templates/skeleton/app/routes/collections.$handle.tsx
 @@ -1,9 +1,14 @@
@@ -261,7 +261,7 @@ index c416c2b3d..e6a351500 100644
  const PRODUCT_ITEM_FRAGMENT = `#graphql
    fragment MoneyProductItem on MoneyV2 {
      amount
-```
+~~~
 
 </details>
 
@@ -269,10 +269,10 @@ index c416c2b3d..e6a351500 100644
 
 
 
-#### File: [package.json](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/templates/skeleton/package.json)
+#### File: [package.json](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/package.json)
 
-```diff
-index 0ee1599a1..7b212aa62 100644
+~~~diff
+index e9ebd1d3..e51634ee 100644
 --- a/templates/skeleton/package.json
 +++ b/templates/skeleton/package.json
 @@ -20,6 +20,7 @@
@@ -283,4 +283,4 @@ index 0ee1599a1..7b212aa62 100644
      "react-router": "7.9.2",
      "react-router-dom": "7.9.2"
    },
-```
+~~~

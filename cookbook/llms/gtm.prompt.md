@@ -94,7 +94,7 @@ Updates README with GTM-specific documentation and setup instructions
 
 #### File: /README.md
 
-```diff
+~~~diff
 @@ -1,6 +1,6 @@
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Google Tag Manager (GTM)
@@ -180,15 +180,15 @@ Updates README with GTM-specific documentation and setup instructions
 -Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 +Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 \ No newline at end of file
-```
+~~~
 
-### Step 1: app/entry.server.tsx
+### Step 2: app/entry.server.tsx
 
 
 
 #### File: /app/entry.server.tsx
 
-```diff
+~~~diff
 @@ -15,6 +15,24 @@ export default async function handleRequest(
    context: HydrogenRouterContextProvider,
  ) {
@@ -214,15 +214,15 @@ Updates README with GTM-specific documentation and setup instructions
      shop: {
        checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
        storeDomain: context.env.PUBLIC_STORE_DOMAIN,
-```
+~~~
 
-### Step 1: app/components/GoogleTagManager.tsx
+### Step 3: app/components/GoogleTagManager.tsx
 
 
 
-#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
+#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
 
-```tsx
+~~~tsx
 import {useAnalytics} from '@shopify/hydrogen';
 import {useEffect} from 'react';
 
@@ -247,15 +247,15 @@ export function GoogleTagManager() {
 
   return null;
 }
-```
+~~~
 
-### Step 2: app/root.tsx
+### Step 4: app/root.tsx
 
 
 
 #### File: /app/root.tsx
 
-```diff
+~~~diff
 @@ -1,4 +1,4 @@
 -import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
 +import {Analytics, getShopAnalytics, useNonce, Script} from '@shopify/hydrogen';
@@ -312,6 +312,6 @@ export function GoogleTagManager() {
      </Analytics.Provider>
    );
  }
-```
+~~~
 
 </recipe_implementation>

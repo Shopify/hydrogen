@@ -56,7 +56,7 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/lib/createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts) | A GraphQL client factory for third-party APIs with Oxygen caching support |
+| [app/lib/createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts) | A GraphQL client factory for third-party APIs with Oxygen caching support |
 
 ## Steps
 
@@ -64,12 +64,12 @@ _New files added to the template by this recipe._
 
 
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/README.md)
 
 <details>
 
-```diff
-index c584e5370..4c8dceadf 100644
+~~~diff
+index c584e537..4c8dcead 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
 @@ -1,6 +1,6 @@
@@ -128,7 +128,7 @@ index c584e5370..4c8dceadf 100644
  ## Setup for using Customer Account API (`/account` section)
  
  Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
-```
+~~~
 
 </details>
 
@@ -137,11 +137,11 @@ index c584e5370..4c8dceadf 100644
 Create a new GraphQL client factory that integrates with Oxygen's caching system.
 This client handles query minification, error handling, and cache key generation.
 
-#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
+#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
 
 <details>
 
-```ts
+~~~ts
 import {
   createWithCache,
   CacheLong,
@@ -204,7 +204,7 @@ function minifyQuery<T extends string>(string: T) {
     .replace(/\s+/gm, ' ') // Minify spaces
     .trim() as T;
 }
-```
+~~~
 
 </details>
 
@@ -213,12 +213,12 @@ function minifyQuery<T extends string>(string: T) {
 Import the Rick and Morty client and add it to the Hydrogen context so it's available
 in all routes. Also update TypeScript declarations for proper type support.
 
-#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/templates/skeleton/app/lib/context.ts)
+#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/lib/context.ts)
 
 <details>
 
-```diff
-index 692d5ae17..0635384ad 100644
+~~~diff
+index 692d5ae1..0635384a 100644
 --- a/templates/skeleton/app/lib/context.ts
 +++ b/templates/skeleton/app/lib/context.ts
 @@ -1,25 +1,10 @@
@@ -283,7 +283,7 @@ index 692d5ae17..0635384ad 100644
 +  interface HydrogenAdditionalContext extends AdditionalContextType {}
 +}
 \ No newline at end of file
-```
+~~~
 
 </details>
 
@@ -292,12 +292,12 @@ index 692d5ae17..0635384ad 100644
 Update the homepage to fetch data from the third-party API and display it alongside
 Shopify data. This demonstrates parallel data fetching and proper caching strategies.
 
-#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/templates/skeleton/app/routes/_index.tsx)
+#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/_index.tsx)
 
 <details>
 
-```diff
-index 28102dbe6..618b99a08 100644
+~~~diff
+index 28102dbe..618b99a0 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
 @@ -1,11 +1,7 @@
@@ -406,7 +406,7 @@ index 28102dbe6..618b99a08 100644
  const RECOMMENDED_PRODUCTS_QUERY = `#graphql
    fragment RecommendedProduct on Product {
      id
-```
+~~~
 
 </details>
 

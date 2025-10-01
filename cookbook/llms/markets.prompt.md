@@ -129,13 +129,13 @@ selected.
 
 In this section, we'll create utilities to handle localization and country selection, and update the core components to use these utilities.
 
-### Step 1: Update CartLineItem with locale-aware product links
+#### Step 1.1: Update CartLineItem with locale-aware product links
 
 Update cart line items to use the unified Link component for product links
 
-#### File: /app/components/CartLineItem.tsx
+##### File: /app/components/CartLineItem.tsx
 
-```diff
+~~~diff
 @@ -2,7 +2,7 @@ import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
  import type {CartLayout} from '~/components/CartMain';
  import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
@@ -145,18 +145,18 @@ Update cart line items to use the unified Link component for product links
  import {ProductPrice} from './ProductPrice';
  import {useAside} from './Aside';
  import type {CartApiQueryFragment} from 'storefrontapi.generated';
-```
+~~~
 
-#### Step 1.1: Create a CountrySelector component
+#### Step 1.2: Create a CountrySelector component
 
 Create a new `CountrySelector` component that allows users to select the locale from a dropdown of the supported locales.
 
 To handle redirects, use a `Form` that updates the cart buyer identity,
 which eventually redirects to the localized root of the app.
 
-##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
+##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
 
-```tsx
+~~~tsx
 import {Form, useLocation} from 'react-router';
 import type {Locale} from '../lib/i18n';
 import {
@@ -235,9 +235,9 @@ function LocaleForm({locale}: {locale: Locale}) {
   );
 }
 
-```
+~~~
 
-#### Step 1.2: Create a unified locale-aware Link component
+#### Step 1.3: Create a unified locale-aware Link component
 
 Create a single Link component that handles both regular links and navigation links.
 This component automatically:
@@ -246,9 +246,9 @@ This component automatically:
 - Cleans invalid locale prefixes from menu URLs
 - Enables locale switching while preserving paths
 
-##### File: [Link.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
+##### File: [Link.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
 
-```tsx
+~~~tsx
 import type {LinkProps, NavLinkProps} from 'react-router';
 import {Link as ReactLink, NavLink as ReactNavLink} from 'react-router';
 import {useLocalizedPath, cleanPath} from '../lib/i18n';
@@ -311,9 +311,9 @@ export function Link(props: ExtendedLinkProps) {
   }
   return <ReactLink {...(restProps as LinkProps)} to={to} />;
 }
-```
+~~~
 
-#### Step 1.3: Create comprehensive i18n utilities
+#### Step 1.4: Create comprehensive i18n utilities
 
 Create a centralized i18n module that includes:
 1. `useSelectedLocale()` hook to get the current locale from route data
@@ -324,9 +324,9 @@ Create a centralized i18n module that includes:
 6. Locale validation utilities for route params
 7. Support for case-insensitive locale matching
 
-##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
+##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
 
-```ts
+~~~ts
 import {useMatches, useLocation} from 'react-router';
 import type {
   CountryCode as CustomerCountryCode,
@@ -521,16 +521,16 @@ export function useLocalizedPath(
   return normalizePrefix(currentLocale?.pathPrefix || '') + to;
 }
 
-```
+~~~
 
-#### Step 1.4: Update ProductItem to use locale-aware Link
+#### Step 1.5: Update ProductItem to use locale-aware Link
 
 Replace standard react-router Link imports with the new unified Link component.
 This ensures all product links automatically include the correct locale prefix.
 
 ##### File: /app/components/ProductItem.tsx
 
-```diff
+~~~diff
 @@ -1,4 +1,3 @@
 -import {Link} from 'react-router';
  import {Image, Money} from '@shopify/hydrogen';
@@ -544,15 +544,15 @@ This ensures all product links automatically include the correct locale prefix.
  
  export function ProductItem({
    product,
-```
+~~~
 
-#### Step 1.5: Add the selected locale to the context
+#### Step 1.6: Add the selected locale to the context
 
 Detect the locale from the URL path, and add it to the HydrogenContext.
 
 ##### File: /app/lib/context.ts
 
-```diff
+~~~diff
 @@ -1,6 +1,7 @@
  import {createHydrogenContext} from '@shopify/hydrogen';
  import {AppSession} from '~/lib/session';
@@ -580,9 +580,9 @@ Detect the locale from the URL path, and add it to the HydrogenContext.
        cart: {
          queryFragment: CART_QUERY_FRAGMENT,
        },
-```
+~~~
 
-#### Step 1.6: Update Header with CountrySelector and locale-aware Links
+#### Step 1.7: Update Header with CountrySelector and locale-aware Links
 
 1. Add the CountrySelector component to the header navigation
 2. Update all navigation links to use the unified Link component with variant="nav"
@@ -590,7 +590,7 @@ Detect the locale from the URL path, and add it to the HydrogenContext.
 
 ##### File: /app/components/Header.tsx
 
-```diff
+~~~diff
 @@ -1,5 +1,6 @@
  import {Suspense} from 'react';
 -import {Await, NavLink, useAsyncValue} from 'react-router';
@@ -674,9 +674,9 @@ Detect the locale from the URL path, and add it to the HydrogenContext.
        <SearchToggle />
        <CartToggle cart={cart} />
      </nav>
-```
+~~~
 
-#### Step 1.7: Add the selected locale to the root route
+#### Step 1.8: Add the selected locale to the root route
 
 1. Include the selected locale in the root route's loader data.
 2. Make sure to redirect to the 404 page if the requested locale is not supported.
@@ -685,7 +685,7 @@ when the locale changes.
 
 ##### File: /app/root.tsx
 
-```diff
+~~~diff
 @@ -77,6 +77,7 @@ export async function loader(args: Route.LoaderArgs) {
    return {
      ...deferredData,
@@ -706,19 +706,19 @@ when the locale changes.
          <Outlet />
        </PageLayout>
      </Analytics.Provider>
-```
+~~~
 
 ### Step 2: Localizing the individual routes
 
 In this section, we'll add localization to the individual routes using the language [dynamic segment](https://reactrouter.com/start/data/routing#optional-segments).
 
-### Step 2: Update CartMain with locale-aware links
+#### Step 2.1: Update CartMain with locale-aware links
 
 Replace all Link imports to use the unified locale-aware Link component for consistent navigation
 
-#### File: /app/components/CartMain.tsx
+##### File: /app/components/CartMain.tsx
 
-```diff
+~~~diff
 @@ -1,5 +1,5 @@
  import {useOptimisticCart} from '@shopify/hydrogen';
 -import {Link} from 'react-router';
@@ -726,9 +726,239 @@ Replace all Link imports to use the unified locale-aware Link component for cons
  import type {CartApiQueryFragment} from 'storefrontapi.generated';
  import {useAside} from '~/components/Aside';
  import {CartLineItem} from '~/components/CartLineItem';
-```
+~~~
 
-#### Step 2.1: Add language dynamic segment to the desired routes
+#### Step 2.1: app/routes/($locale).account.orders.$id.tsx
+
+Individual order details page with localized currency and date formatting
+
+##### File: [($locale).account.orders.$id.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders.$id.tsx)
+
+~~~tsx
+import {redirect, useLoaderData} from 'react-router';
+import type {Route} from './+types/($locale).account.orders.$id';
+import {Money, Image} from '@shopify/hydrogen';
+import type {
+  OrderLineItemFullFragment,
+  OrderQuery,
+} from 'customer-accountapi.generated';
+import {CUSTOMER_ORDER_QUERY} from '~/graphql/customer-account/CustomerOrderQuery';
+
+export const meta: Route.MetaFunction = ({data}) => {
+  return [{title: `Order ${data?.order?.name}`}];
+};
+
+export async function loader({params, context}: Route.LoaderArgs) {
+  if (!params.id) {
+    return redirect('/account/orders');
+  }
+
+  const orderId = atob(params.id);
+  const {data, errors}: {data: OrderQuery; errors?: Array<{message: string}>} =
+    await context.customerAccount.query(CUSTOMER_ORDER_QUERY, {
+      variables: {
+        orderId,
+        language: context.customerAccount.i18n.language,
+      },
+    });
+
+  if (errors?.length || !data?.order) {
+    throw new Error('Order not found');
+  }
+
+  const {order} = data;
+
+  // Extract line items directly from nodes array
+  const lineItems = order.lineItems.nodes;
+
+  // Extract discount applications directly from nodes array
+  const discountApplications = order.discountApplications.nodes;
+
+  // Get fulfillment status from first fulfillment node
+  const fulfillmentStatus = order.fulfillments.nodes[0]?.status ?? 'N/A';
+
+  // Get first discount value with proper type checking
+  const firstDiscount = discountApplications[0]?.value;
+
+  // Type guard for MoneyV2 discount
+  const discountValue =
+    firstDiscount?.__typename === 'MoneyV2'
+      ? (firstDiscount as Extract<
+          typeof firstDiscount,
+          {__typename: 'MoneyV2'}
+        >)
+      : null;
+
+  // Type guard for percentage discount
+  const discountPercentage =
+    firstDiscount?.__typename === 'PricingPercentageValue'
+      ? (
+          firstDiscount as Extract<
+            typeof firstDiscount,
+            {__typename: 'PricingPercentageValue'}
+          >
+        ).percentage
+      : null;
+
+  return {
+    order,
+    lineItems,
+    discountValue,
+    discountPercentage,
+    fulfillmentStatus,
+  };
+}
+
+export default function OrderRoute() {
+  const {
+    order,
+    lineItems,
+    discountValue,
+    discountPercentage,
+    fulfillmentStatus,
+  } = useLoaderData<typeof loader>();
+  return (
+    <div className="account-order">
+      <h2>Order {order.name}</h2>
+      <p>Placed on {new Date(order.processedAt!).toDateString()}</p>
+      <br />
+      <div>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Product</th>
+              <th scope="col">Price</th>
+              <th scope="col">Quantity</th>
+              <th scope="col">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lineItems.map(
+              (lineItem: OrderLineItemFullFragment, lineItemIndex: number) => (
+                // eslint-disable-next-line react/no-array-index-key
+                <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
+              ),
+            )}
+          </tbody>
+          <tfoot>
+            {((discountValue && discountValue.amount) ||
+              discountPercentage) && (
+              <tr>
+                <th scope="row" colSpan={3}>
+                  <p>Discounts</p>
+                </th>
+                <th scope="row">
+                  <p>Discounts</p>
+                </th>
+                <td>
+                  {discountPercentage ? (
+                    <span>-{discountPercentage}% OFF</span>
+                  ) : (
+                    discountValue && <Money data={discountValue!} />
+                  )}
+                </td>
+              </tr>
+            )}
+            <tr>
+              <th scope="row" colSpan={3}>
+                <p>Subtotal</p>
+              </th>
+              <th scope="row">
+                <p>Subtotal</p>
+              </th>
+              <td>
+                <Money data={order.subtotal!} />
+              </td>
+            </tr>
+            <tr>
+              <th scope="row" colSpan={3}>
+                Tax
+              </th>
+              <th scope="row">
+                <p>Tax</p>
+              </th>
+              <td>
+                <Money data={order.totalTax!} />
+              </td>
+            </tr>
+            <tr>
+              <th scope="row" colSpan={3}>
+                Total
+              </th>
+              <th scope="row">
+                <p>Total</p>
+              </th>
+              <td>
+                <Money data={order.totalPrice!} />
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+        <div>
+          <h3>Shipping Address</h3>
+          {order?.shippingAddress ? (
+            <address>
+              <p>{order.shippingAddress.name}</p>
+              {order.shippingAddress.formatted ? (
+                <p>{order.shippingAddress.formatted}</p>
+              ) : (
+                ''
+              )}
+              {order.shippingAddress.formattedArea ? (
+                <p>{order.shippingAddress.formattedArea}</p>
+              ) : (
+                ''
+              )}
+            </address>
+          ) : (
+            <p>No shipping address defined</p>
+          )}
+          <h3>Status</h3>
+          <div>
+            <p>{fulfillmentStatus}</p>
+          </div>
+        </div>
+      </div>
+      <br />
+      <p>
+        <a target="_blank" href={order.statusPageUrl} rel="noreferrer">
+          View Order Status →
+        </a>
+      </p>
+    </div>
+  );
+}
+
+function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
+  return (
+    <tr key={lineItem.id}>
+      <td>
+        <div>
+          {lineItem?.image && (
+            <div>
+              <Image data={lineItem.image} width={96} height={96} />
+            </div>
+          )}
+          <div>
+            <p>{lineItem.title}</p>
+            <small>{lineItem.variantTitle}</small>
+          </div>
+        </div>
+      </td>
+      <td>
+        <Money data={lineItem.price!} />
+      </td>
+      <td>{lineItem.quantity}</td>
+      <td>
+        <Money data={lineItem.totalDiscount!} />
+      </td>
+    </tr>
+  );
+}
+
+~~~
+
+#### Step 2.2: Add language dynamic segment to the desired routes
 
 To implement path-based localization, add a language
 dynamic segment to your localized routes (for example, renaming `routes/_index.tsx`
@@ -736,7 +966,178 @@ to `routes/($locale)._index.tsx`).
 
 For brevity, we'll focus on the home page, the cart page, and the product page in this example. In your app, you should do this for all the app routes.
 
-#### Step 2.2: Add localization to the home page
+#### Step 2.2: app/routes/($locale).collections.$handle.tsx
+
+Collection page displaying products with locale-specific pricing and availability
+
+##### File: [($locale).collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.$handle.tsx)
+
+~~~tsx
+import {redirect, useLoaderData} from 'react-router';
+import type {Route} from './+types/($locale).collections.$handle';
+import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
+import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {ProductItem} from '~/components/ProductItem';
+import type {ProductItemFragment} from 'storefrontapi.generated';
+
+export const meta: Route.MetaFunction = ({data}) => {
+  return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
+};
+
+export async function loader(args: Route.LoaderArgs) {
+  // Start fetching non-critical data without blocking time to first byte
+  const deferredData = loadDeferredData(args);
+
+  // Await the critical data required to render initial state of the page
+  const criticalData = await loadCriticalData(args);
+
+  return {...deferredData, ...criticalData};
+}
+
+/**
+ * Load data necessary for rendering content above the fold. This is the critical data
+ * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+ */
+async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
+  const {handle} = params;
+  const {storefront} = context;
+  const paginationVariables = getPaginationVariables(request, {
+    pageBy: 8,
+  });
+
+  if (!handle) {
+    throw redirect('/collections');
+  }
+
+  const [{collection}] = await Promise.all([
+    storefront.query(COLLECTION_QUERY, {
+      variables: {handle, ...paginationVariables},
+      // Add other queries here, so that they are loaded in parallel
+    }),
+  ]);
+
+  if (!collection) {
+    throw new Response(`Collection ${handle} not found`, {
+      status: 404,
+    });
+  }
+
+  // The API handle might be localized, so redirect to the localized handle
+  redirectIfHandleIsLocalized(request, {handle, data: collection});
+
+  return {
+    collection,
+  };
+}
+
+/**
+ * Load data for rendering content below the fold. This data is deferred and will be
+ * fetched after the initial page load. If it's unavailable, the page should still 200.
+ * Make sure to not throw any errors here, as it will cause the page to 500.
+ */
+function loadDeferredData({context}: Route.LoaderArgs) {
+  return {};
+}
+
+export default function Collection() {
+  const {collection} = useLoaderData<typeof loader>();
+
+  return (
+    <div className="collection">
+      <h1>{collection.title}</h1>
+      <p className="collection-description">{collection.description}</p>
+      <PaginatedResourceSection<ProductItemFragment>
+        connection={collection.products}
+        resourcesClassName="products-grid"
+      >
+        {({node: product, index}) => (
+          <ProductItem
+            key={product.id}
+            product={product}
+            loading={index < 8 ? 'eager' : undefined}
+          />
+        )}
+      </PaginatedResourceSection>
+      <Analytics.CollectionView
+        data={{
+          collection: {
+            id: collection.id,
+            handle: collection.handle,
+          },
+        }}
+      />
+    </div>
+  );
+}
+
+const PRODUCT_ITEM_FRAGMENT = `#graphql
+  fragment MoneyProductItem on MoneyV2 {
+    amount
+    currencyCode
+  }
+  fragment ProductItem on Product {
+    id
+    handle
+    title
+    featuredImage {
+      id
+      altText
+      url
+      width
+      height
+    }
+    priceRange {
+      minVariantPrice {
+        ...MoneyProductItem
+      }
+      maxVariantPrice {
+        ...MoneyProductItem
+      }
+    }
+  }
+` as const;
+
+// NOTE: https://shopify.dev/docs/api/storefront/2022-04/objects/collection
+const COLLECTION_QUERY = `#graphql
+  ${PRODUCT_ITEM_FRAGMENT}
+  query Collection(
+    $handle: String!
+    $country: CountryCode
+    $language: LanguageCode
+    $first: Int
+    $last: Int
+    $startCursor: String
+    $endCursor: String
+  ) @inContext(country: $country, language: $language) {
+    collection(handle: $handle) {
+      id
+      handle
+      title
+      description
+      products(
+        first: $first,
+        last: $last,
+        before: $startCursor,
+        after: $endCursor
+      ) {
+        nodes {
+          ...ProductItem
+        }
+        pageInfo {
+          hasPreviousPage
+          hasNextPage
+          endCursor
+          startCursor
+        }
+      }
+    }
+  }
+` as const;
+
+~~~
+
+#### Step 2.3: Add localization to the home page
 
 1. Add the dynamic segment to the home page route.
 2. Use the new `Link` component as a drop-in replacement.
@@ -744,9 +1145,9 @@ For brevity, we'll focus on the home page, the cart page, and the product page i
 > [!NOTE]
 > Rename `app/routes/_index.tsx` to `app/routes/($locale)._index.tsx`.
 
-##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
+##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
 
-```tsx
+~~~tsx
 import {Await, useLoaderData} from 'react-router';
 import type {Route} from './+types/($locale)._index';
 import {Suspense} from 'react';
@@ -916,18 +1317,18 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-#### Step 2.3: Add localization to the cart page
+#### Step 2.4: Add localization to the cart page
 
 Add the dynamic segment to the cart page route.
 
 > [!NOTE]
 > Rename `app/routes/cart.tsx` to `app/routes/($locale).cart.tsx`.
 
-##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
+##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
 
-```tsx
+~~~tsx
 import {useLoaderData, data} from 'react-router';
 import type {Route} from './+types/($locale).cart';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
@@ -1041,9 +1442,9 @@ export default function Cart() {
   );
 }
 
-```
+~~~
 
-#### Step 2.4: Add localization to the product page
+#### Step 2.5: Add localization to the product page
 
 1. Add the dynamic segment to the product page route.
 2. Update the `meta` function to also update the canonical URL to use the
@@ -1052,9 +1453,9 @@ localized prefix.
 > [!NOTE]
 > Rename `app/routes/products.$handle.tsx` to `app/routes/($locale).products.$handle.tsx`.
 
-##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
+##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
 
-```tsx
+~~~tsx
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/($locale).products.$handle';
 import {
@@ -1308,17 +1709,17 @@ const PRODUCT_QUERY = `#graphql
   ${PRODUCT_FRAGMENT}
 ` as const;
 
-```
+~~~
 
-#### Step 2.5: Add a utility route to validate the locale.
+#### Step 2.6: Add a utility route to validate the locale.
 
 Add a utility route in `$(locale).tsx` that will use `localeMatchesPrefix`
 to validate the locale from the URL params. If the locale is invalid,
 the route will throw a 404 error.
 
-##### File: [($locale).tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).tsx)
+##### File: [($locale).tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).tsx)
 
-```tsx
+~~~tsx
 import type {Route} from './+types/($locale)';
 import {localeMatchesPrefix} from '~/lib/i18n';
 
@@ -1330,15 +1731,15 @@ export async function loader({params}: Route.LoaderArgs) {
   return null;
 }
 
-```
+~~~
 
-### Step 5: app/routes/($locale).account.$.tsx
+#### Step 2.7: app/routes/($locale).account.$.tsx
 
 Fallback route for unauthenticated account pages with locale support
 
-#### File: [($locale).account.$.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.$.tsx)
+##### File: [($locale).account.$.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.$.tsx)
 
-```tsx
+~~~tsx
 import {redirect} from 'react-router';
 import type {Route} from './+types/($locale).account.$';
 
@@ -1349,30 +1750,30 @@ export async function loader({context}: Route.LoaderArgs) {
   return redirect('/account');
 }
 
-```
+~~~
 
-### Step 6: app/routes/($locale).account._index.tsx
+#### Step 2.8: app/routes/($locale).account._index.tsx
 
 Localized account dashboard redirect route
 
-#### File: [($locale).account._index.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account._index.tsx)
+##### File: [($locale).account._index.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account._index.tsx)
 
-```tsx
+~~~tsx
 import {redirect} from 'react-router';
 
 export async function loader() {
   return redirect('/account/orders');
 }
 
-```
+~~~
 
-### Step 7: app/routes/($locale).account.addresses.tsx
+#### Step 2.9: app/routes/($locale).account.addresses.tsx
 
 Customer address management page with locale-aware forms and links
 
-#### File: [($locale).account.addresses.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.addresses.tsx)
+##### File: [($locale).account.addresses.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.addresses.tsx)
 
-```tsx
+~~~tsx
 import type {CustomerAddressInput} from '@shopify/hydrogen/customer-account-api-types';
 import type {
   AddressFragment,
@@ -1890,245 +2291,15 @@ export function AddressForm({
   );
 }
 
-```
+~~~
 
-### Step 8: app/routes/($locale).account.orders.$id.tsx
-
-Individual order details page with localized currency and date formatting
-
-#### File: [($locale).account.orders.$id.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders.$id.tsx)
-
-```tsx
-import {redirect, useLoaderData} from 'react-router';
-import type {Route} from './+types/($locale).account.orders.$id';
-import {Money, Image} from '@shopify/hydrogen';
-import type {
-  OrderLineItemFullFragment,
-  OrderQuery,
-} from 'customer-accountapi.generated';
-import {CUSTOMER_ORDER_QUERY} from '~/graphql/customer-account/CustomerOrderQuery';
-
-export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Order ${data?.order?.name}`}];
-};
-
-export async function loader({params, context}: Route.LoaderArgs) {
-  if (!params.id) {
-    return redirect('/account/orders');
-  }
-
-  const orderId = atob(params.id);
-  const {data, errors}: {data: OrderQuery; errors?: Array<{message: string}>} =
-    await context.customerAccount.query(CUSTOMER_ORDER_QUERY, {
-      variables: {
-        orderId,
-        language: context.customerAccount.i18n.language,
-      },
-    });
-
-  if (errors?.length || !data?.order) {
-    throw new Error('Order not found');
-  }
-
-  const {order} = data;
-
-  // Extract line items directly from nodes array
-  const lineItems = order.lineItems.nodes;
-
-  // Extract discount applications directly from nodes array
-  const discountApplications = order.discountApplications.nodes;
-
-  // Get fulfillment status from first fulfillment node
-  const fulfillmentStatus = order.fulfillments.nodes[0]?.status ?? 'N/A';
-
-  // Get first discount value with proper type checking
-  const firstDiscount = discountApplications[0]?.value;
-
-  // Type guard for MoneyV2 discount
-  const discountValue =
-    firstDiscount?.__typename === 'MoneyV2'
-      ? (firstDiscount as Extract<
-          typeof firstDiscount,
-          {__typename: 'MoneyV2'}
-        >)
-      : null;
-
-  // Type guard for percentage discount
-  const discountPercentage =
-    firstDiscount?.__typename === 'PricingPercentageValue'
-      ? (
-          firstDiscount as Extract<
-            typeof firstDiscount,
-            {__typename: 'PricingPercentageValue'}
-          >
-        ).percentage
-      : null;
-
-  return {
-    order,
-    lineItems,
-    discountValue,
-    discountPercentage,
-    fulfillmentStatus,
-  };
-}
-
-export default function OrderRoute() {
-  const {
-    order,
-    lineItems,
-    discountValue,
-    discountPercentage,
-    fulfillmentStatus,
-  } = useLoaderData<typeof loader>();
-  return (
-    <div className="account-order">
-      <h2>Order {order.name}</h2>
-      <p>Placed on {new Date(order.processedAt!).toDateString()}</p>
-      <br />
-      <div>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">Product</th>
-              <th scope="col">Price</th>
-              <th scope="col">Quantity</th>
-              <th scope="col">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lineItems.map(
-              (lineItem: OrderLineItemFullFragment, lineItemIndex: number) => (
-                // eslint-disable-next-line react/no-array-index-key
-                <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
-              ),
-            )}
-          </tbody>
-          <tfoot>
-            {((discountValue && discountValue.amount) ||
-              discountPercentage) && (
-              <tr>
-                <th scope="row" colSpan={3}>
-                  <p>Discounts</p>
-                </th>
-                <th scope="row">
-                  <p>Discounts</p>
-                </th>
-                <td>
-                  {discountPercentage ? (
-                    <span>-{discountPercentage}% OFF</span>
-                  ) : (
-                    discountValue && <Money data={discountValue!} />
-                  )}
-                </td>
-              </tr>
-            )}
-            <tr>
-              <th scope="row" colSpan={3}>
-                <p>Subtotal</p>
-              </th>
-              <th scope="row">
-                <p>Subtotal</p>
-              </th>
-              <td>
-                <Money data={order.subtotal!} />
-              </td>
-            </tr>
-            <tr>
-              <th scope="row" colSpan={3}>
-                Tax
-              </th>
-              <th scope="row">
-                <p>Tax</p>
-              </th>
-              <td>
-                <Money data={order.totalTax!} />
-              </td>
-            </tr>
-            <tr>
-              <th scope="row" colSpan={3}>
-                Total
-              </th>
-              <th scope="row">
-                <p>Total</p>
-              </th>
-              <td>
-                <Money data={order.totalPrice!} />
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-        <div>
-          <h3>Shipping Address</h3>
-          {order?.shippingAddress ? (
-            <address>
-              <p>{order.shippingAddress.name}</p>
-              {order.shippingAddress.formatted ? (
-                <p>{order.shippingAddress.formatted}</p>
-              ) : (
-                ''
-              )}
-              {order.shippingAddress.formattedArea ? (
-                <p>{order.shippingAddress.formattedArea}</p>
-              ) : (
-                ''
-              )}
-            </address>
-          ) : (
-            <p>No shipping address defined</p>
-          )}
-          <h3>Status</h3>
-          <div>
-            <p>{fulfillmentStatus}</p>
-          </div>
-        </div>
-      </div>
-      <br />
-      <p>
-        <a target="_blank" href={order.statusPageUrl} rel="noreferrer">
-          View Order Status →
-        </a>
-      </p>
-    </div>
-  );
-}
-
-function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
-  return (
-    <tr key={lineItem.id}>
-      <td>
-        <div>
-          {lineItem?.image && (
-            <div>
-              <Image data={lineItem.image} width={96} height={96} />
-            </div>
-          )}
-          <div>
-            <p>{lineItem.title}</p>
-            <small>{lineItem.variantTitle}</small>
-          </div>
-        </div>
-      </td>
-      <td>
-        <Money data={lineItem.price!} />
-      </td>
-      <td>{lineItem.quantity}</td>
-      <td>
-        <Money data={lineItem.totalDiscount!} />
-      </td>
-    </tr>
-  );
-}
-
-```
-
-### Step 9: app/routes/($locale).account.orders._index.tsx
+#### Step 2.11: app/routes/($locale).account.orders._index.tsx
 
 Customer order history listing with locale-specific pagination
 
-#### File: [($locale).account.orders._index.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders._index.tsx)
+##### File: [($locale).account.orders._index.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders._index.tsx)
 
-```tsx
+~~~tsx
 import {
   useLoaderData,
 } from 'react-router';
@@ -2227,15 +2398,15 @@ function OrderItem({order}: {order: OrderItemFragment}) {
   );
 }
 
-```
+~~~
 
-### Step 10: app/routes/($locale).account.profile.tsx
+#### Step 2.12: app/routes/($locale).account.profile.tsx
 
 Customer profile editing form with localized field labels
 
-#### File: [($locale).account.profile.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.profile.tsx)
+##### File: [($locale).account.profile.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.profile.tsx)
 
-```tsx
+~~~tsx
 import type {CustomerFragment} from 'customer-accountapi.generated';
 import type {CustomerUpdateInput} from '@shopify/hydrogen/customer-account-api-types';
 import {CUSTOMER_UPDATE_MUTATION} from '~/graphql/customer-account/CustomerUpdateMutation';
@@ -2370,15 +2541,15 @@ export default function AccountProfile() {
   );
 }
 
-```
+~~~
 
-### Step 11: app/routes/($locale).account.tsx
+#### Step 2.13: app/routes/($locale).account.tsx
 
 Account layout wrapper with locale-aware navigation tabs
 
-#### File: [($locale).account.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.tsx)
+##### File: [($locale).account.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.tsx)
 
-```tsx
+~~~tsx
 import {
   data as remixData,
   Form,
@@ -2479,45 +2650,45 @@ function Logout() {
   );
 }
 
-```
+~~~
 
-### Step 12: app/routes/($locale).account_.authorize.tsx
+#### Step 2.14: app/routes/($locale).account_.authorize.tsx
 
 OAuth authorization callback route with locale preservation
 
-#### File: [($locale).account_.authorize.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.authorize.tsx)
+##### File: [($locale).account_.authorize.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.authorize.tsx)
 
-```tsx
+~~~tsx
 import type {Route} from './+types/($locale).account_.authorize';
 
 export async function loader({context}: Route.LoaderArgs) {
   return context.customerAccount.authorize();
 }
 
-```
+~~~
 
-### Step 13: app/routes/($locale).account_.login.tsx
+#### Step 2.15: app/routes/($locale).account_.login.tsx
 
 Customer login redirect with locale-specific return URL
 
-#### File: [($locale).account_.login.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.login.tsx)
+##### File: [($locale).account_.login.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.login.tsx)
 
-```tsx
+~~~tsx
 import type {Route} from './+types/($locale).account_.login';
 
 export async function loader({context}: Route.LoaderArgs) {
   return context.customerAccount.login();
 }
 
-```
+~~~
 
-### Step 14: app/routes/($locale).account_.logout.tsx
+#### Step 2.16: app/routes/($locale).account_.logout.tsx
 
 Logout handler that maintains locale after sign out
 
-#### File: [($locale).account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.logout.tsx)
+##### File: [($locale).account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.logout.tsx)
 
-```tsx
+~~~tsx
 import {redirect} from 'react-router';
 import type {Route} from './+types/($locale).account_.logout';
 
@@ -2530,15 +2701,15 @@ export async function action({context}: Route.ActionArgs) {
   return context.customerAccount.logout();
 }
 
-```
+~~~
 
-### Step 15: app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx
+#### Step 2.17: app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx
 
 Blog article page with locale-specific content and SEO metadata
 
-#### File: [($locale).blogs.$blogHandle.$articleHandle.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx)
+##### File: [($locale).blogs.$blogHandle.$articleHandle.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx)
 
-```tsx
+~~~tsx
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/($locale).blogs.$blogHandle.$articleHandle';
 import {Image} from '@shopify/hydrogen';
@@ -2669,15 +2840,15 @@ const ARTICLE_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-### Step 16: app/routes/($locale).blogs.$blogHandle._index.tsx
+#### Step 2.18: app/routes/($locale).blogs.$blogHandle._index.tsx
 
 Blog listing page with localized article previews and pagination
 
-#### File: [($locale).blogs.$blogHandle._index.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle._index.tsx)
+##### File: [($locale).blogs.$blogHandle._index.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle._index.tsx)
 
-```tsx
+~~~tsx
 import {
   useLoaderData,
 } from 'react-router';
@@ -2861,15 +3032,15 @@ const BLOGS_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-### Step 17: app/routes/($locale).blogs._index.tsx
+#### Step 2.19: app/routes/($locale).blogs._index.tsx
 
 All blogs overview page with locale-aware navigation links
 
-#### File: [($locale).blogs._index.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs._index.tsx)
+##### File: [($locale).blogs._index.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs._index.tsx)
 
-```tsx
+~~~tsx
 import {useLoaderData} from 'react-router';
 import {Link} from '~/components/Link';
 import type {Route} from './+types/($locale).blogs._index';
@@ -2981,186 +3152,15 @@ const BLOGS_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-### Step 19: app/routes/($locale).collections.$handle.tsx
-
-Collection page displaying products with locale-specific pricing and availability
-
-#### File: [($locale).collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.$handle.tsx)
-
-```tsx
-import {redirect, useLoaderData} from 'react-router';
-import type {Route} from './+types/($locale).collections.$handle';
-import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
-import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
-import {redirectIfHandleIsLocalized} from '~/lib/redirect';
-import {ProductItem} from '~/components/ProductItem';
-import type {ProductItemFragment} from 'storefrontapi.generated';
-
-export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
-};
-
-export async function loader(args: Route.LoaderArgs) {
-  // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
-
-  // Await the critical data required to render initial state of the page
-  const criticalData = await loadCriticalData(args);
-
-  return {...deferredData, ...criticalData};
-}
-
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- */
-async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
-  const {handle} = params;
-  const {storefront} = context;
-  const paginationVariables = getPaginationVariables(request, {
-    pageBy: 8,
-  });
-
-  if (!handle) {
-    throw redirect('/collections');
-  }
-
-  const [{collection}] = await Promise.all([
-    storefront.query(COLLECTION_QUERY, {
-      variables: {handle, ...paginationVariables},
-      // Add other queries here, so that they are loaded in parallel
-    }),
-  ]);
-
-  if (!collection) {
-    throw new Response(`Collection ${handle} not found`, {
-      status: 404,
-    });
-  }
-
-  // The API handle might be localized, so redirect to the localized handle
-  redirectIfHandleIsLocalized(request, {handle, data: collection});
-
-  return {
-    collection,
-  };
-}
-
-/**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- */
-function loadDeferredData({context}: Route.LoaderArgs) {
-  return {};
-}
-
-export default function Collection() {
-  const {collection} = useLoaderData<typeof loader>();
-
-  return (
-    <div className="collection">
-      <h1>{collection.title}</h1>
-      <p className="collection-description">{collection.description}</p>
-      <PaginatedResourceSection<ProductItemFragment>
-        connection={collection.products}
-        resourcesClassName="products-grid"
-      >
-        {({node: product, index}) => (
-          <ProductItem
-            key={product.id}
-            product={product}
-            loading={index < 8 ? 'eager' : undefined}
-          />
-        )}
-      </PaginatedResourceSection>
-      <Analytics.CollectionView
-        data={{
-          collection: {
-            id: collection.id,
-            handle: collection.handle,
-          },
-        }}
-      />
-    </div>
-  );
-}
-
-const PRODUCT_ITEM_FRAGMENT = `#graphql
-  fragment MoneyProductItem on MoneyV2 {
-    amount
-    currencyCode
-  }
-  fragment ProductItem on Product {
-    id
-    handle
-    title
-    featuredImage {
-      id
-      altText
-      url
-      width
-      height
-    }
-    priceRange {
-      minVariantPrice {
-        ...MoneyProductItem
-      }
-      maxVariantPrice {
-        ...MoneyProductItem
-      }
-    }
-  }
-` as const;
-
-// NOTE: https://shopify.dev/docs/api/storefront/2022-04/objects/collection
-const COLLECTION_QUERY = `#graphql
-  ${PRODUCT_ITEM_FRAGMENT}
-  query Collection(
-    $handle: String!
-    $country: CountryCode
-    $language: LanguageCode
-    $first: Int
-    $last: Int
-    $startCursor: String
-    $endCursor: String
-  ) @inContext(country: $country, language: $language) {
-    collection(handle: $handle) {
-      id
-      handle
-      title
-      description
-      products(
-        first: $first,
-        last: $last,
-        before: $startCursor,
-        after: $endCursor
-      ) {
-        nodes {
-          ...ProductItem
-        }
-        pageInfo {
-          hasPreviousPage
-          hasNextPage
-          endCursor
-          startCursor
-        }
-      }
-    }
-  }
-` as const;
-
-```
-
-### Step 20: app/routes/($locale).collections._index.tsx
+#### Step 2.21: app/routes/($locale).collections._index.tsx
 
 Collections listing page with localized collection names and images
 
-#### File: [($locale).collections._index.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections._index.tsx)
+##### File: [($locale).collections._index.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections._index.tsx)
 
-```tsx
+~~~tsx
 import {useLoaderData} from 'react-router';
 import {Link} from '~/components/Link';
 import type {Route} from './+types/($locale).collections._index';
@@ -3296,15 +3296,15 @@ const COLLECTIONS_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-### Step 21: app/routes/($locale).collections.all.tsx
+#### Step 2.22: app/routes/($locale).collections.all.tsx
 
 All products page with locale-based filtering and sorting
 
-#### File: [($locale).collections.all.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.all.tsx)
+##### File: [($locale).collections.all.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.all.tsx)
 
-```tsx
+~~~tsx
 import type {Route} from './+types/($locale).collections.all';
 import {
   useLoaderData,
@@ -3430,15 +3430,15 @@ const CATALOG_QUERY = `#graphql
   ${COLLECTION_ITEM_FRAGMENT}
 ` as const;
 
-```
+~~~
 
-### Step 22: app/routes/($locale).pages.$handle.tsx
+#### Step 2.23: app/routes/($locale).pages.$handle.tsx
 
 Dynamic page route for locale-specific content pages
 
-#### File: [($locale).pages.$handle.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).pages.$handle.tsx)
+##### File: [($locale).pages.$handle.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).pages.$handle.tsx)
 
-```tsx
+~~~tsx
 import {
   useLoaderData,
 } from 'react-router';
@@ -3534,15 +3534,15 @@ const PAGE_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-### Step 23: app/routes/($locale).policies.$handle.tsx
+#### Step 2.24: app/routes/($locale).policies.$handle.tsx
 
 Policy page (privacy, terms, etc.) with locale-specific legal content
 
-#### File: [($locale).policies.$handle.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies.$handle.tsx)
+##### File: [($locale).policies.$handle.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies.$handle.tsx)
 
-```tsx
+~~~tsx
 import {
   useLoaderData,
 } from 'react-router';
@@ -3640,15 +3640,15 @@ const POLICY_CONTENT_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-### Step 24: app/routes/($locale).policies._index.tsx
+#### Step 2.25: app/routes/($locale).policies._index.tsx
 
 Policies index page listing all available store policies
 
-#### File: [($locale).policies._index.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies._index.tsx)
+##### File: [($locale).policies._index.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies._index.tsx)
 
-```tsx
+~~~tsx
 import {useLoaderData} from 'react-router';
 import {Link} from '~/components/Link';
 import type {Route} from './+types/($locale).policies._index';
@@ -3720,15 +3720,15 @@ const POLICIES_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-### Step 26: app/routes/($locale).search.tsx
+#### Step 2.26: app/routes/($locale).search.tsx
 
 Search results page with locale-aware product matching and predictive search
 
-#### File: [($locale).search.tsx](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).search.tsx)
+##### File: [($locale).search.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).search.tsx)
 
-```tsx
+~~~tsx
 import {
   useLoaderData,
 } from 'react-router';
@@ -4150,7 +4150,7 @@ async function predictiveSearch({
   return {type, term, result: {items, total}};
 }
 
-```
+~~~
 
 ## Deleted Files
 

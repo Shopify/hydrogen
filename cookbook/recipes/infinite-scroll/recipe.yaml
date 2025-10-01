@@ -30,26 +30,27 @@ steps:
   - type: PATCH
     step: 1
     name: README.md
-    description: Updates README with infinite scroll documentation and implementation details
+    description: Updates README with infinite scroll documentation and
+      implementation details
     diffs:
       - file: README.md
-        patchFile: README.md.47d06f.patch
+        patchFile: README.md.db10ed.patch
   - type: PATCH
     step: 2
     name: app/routes/collections.$handle.tsx
     description: null
     diffs:
       - file: app/routes/collections.$handle.tsx
-        patchFile: collections.$handle.tsx.903c17.patch
+        patchFile: collections.$handle.tsx.f062a9.patch
   - type: PATCH
     step: 3
     name: package.json
     description: null
     diffs:
       - file: package.json
-        patchFile: package.json.cfee98.patch
+        patchFile: package.json.f30b0a.patch
 nextSteps: null
 llms:
   userQueries: []
   troubleshooting: []
-commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
+commit: 12374c8f03f82c6800000cf08e327c4db4c287bb

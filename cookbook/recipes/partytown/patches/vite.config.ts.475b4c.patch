@@ -1,0 +1,17 @@
+index a1702446..a2e3dda9 100644
+--- a/templates/skeleton/vite.config.ts
++++ b/templates/skeleton/vite.config.ts
+@@ -23,7 +23,12 @@ export default defineConfig({
+        * Include 'example-dep' in the array below.
+        * @see https://vitejs.dev/config/dep-optimization-options
+        */
+-      include: ['set-cookie-parser', 'cookie', 'react-router'],
++      include: [
++        'set-cookie-parser',
++        'cookie',
++        'react-router',
++        '@qwik.dev/partytown/react',
++      ],
+     },
+   },
+   server: {

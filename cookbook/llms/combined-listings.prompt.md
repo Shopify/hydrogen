@@ -95,9 +95,9 @@ export const combinedListingsSettings = {
 
 Create a new `combined-listings.ts` file that contains utilities and settings for handling combined listings.
 
-#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/aef8cf795ea8f68077d6fa1f1649e2791f6658a7/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
+#### File: [combined-listings.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/combined-listings/ingredients/templates/skeleton/app/lib/combined-listings.ts)
 
-```ts
+~~~ts
 // Edit these values to customize combined listings' behavior
 export const combinedListingsSettings = {
   // If true, loading the product page will redirect to the first variant
@@ -134,7 +134,7 @@ export function isCombinedListing(product: unknown) {
   );
 }
 
-```
+~~~
 
 ### Step 4: Update the ProductForm component
 
@@ -143,7 +143,7 @@ export function isCombinedListing(product: unknown) {
 
 #### File: /app/components/ProductForm.tsx
 
-```diff
+~~~diff
 @@ -11,9 +11,11 @@ import type {ProductFragment} from 'storefrontapi.generated';
  export function ProductForm({
    productOptions,
@@ -235,7 +235,7 @@ export function isCombinedListing(product: unknown) {
      </div>
    );
  }
-```
+~~~
 
 ### Step 5: Extend the ProductImage component
 
@@ -243,7 +243,7 @@ Update the `ProductImage` component to support images from both product variants
 
 #### File: /app/components/ProductImage.tsx
 
-```diff
+~~~diff
 @@ -1,10 +1,13 @@
 -import type {ProductVariantFragment} from 'storefrontapi.generated';
 +import type {
@@ -260,7 +260,7 @@ Update the `ProductImage` component to support images from both product variants
  }) {
    if (!image) {
      return <div className="product-image" />;
-```
+~~~
 
 ### Step 6: Show a range of prices for combined listings in ProductItem
 
@@ -268,7 +268,7 @@ Update `ProductItem.tsx` to show a range of prices for the combined listing pare
 
 #### File: /app/components/ProductItem.tsx
 
-```diff
+~~~diff
 @@ -6,6 +6,7 @@ import type {
    RecommendedProductFragment,
  } from 'storefrontapi.generated';
@@ -298,7 +298,7 @@ Update `ProductItem.tsx` to show a range of prices for the combined listing pare
      </Link>
    );
  }
-```
+~~~
 
 ### Step 7: (Optional) Add redirect utility to first variant of a combined listing
 
@@ -306,7 +306,7 @@ If you want to redirect automatically to the first variant of a combined listing
 
 #### File: /app/lib/redirect.ts
 
-```diff
+~~~diff
 @@ -1,4 +1,6 @@
  import {redirect} from 'react-router';
 +import type {ProductFragment} from 'storefrontapi.generated';
@@ -338,15 +338,15 @@ If you want to redirect automatically to the first variant of a combined listing
 +    throw redirect(url.toString());
 +  }
 +}
-```
+~~~
 
-### Step 7: app/routes/collections.all.tsx
+### Step 8: app/routes/collections.all.tsx
 
 
 
 #### File: /app/routes/collections.all.tsx
 
-```diff
+~~~diff
 @@ -1,11 +1,13 @@
  import type {Route} from './+types/collections.all';
 -import {
@@ -397,16 +397,16 @@ If you want to redirect automatically to the first variant of a combined listing
        nodes {
          ...CollectionItem
        }
-```
+~~~
 
-### Step 8: Update queries for combined listings
+### Step 9: Update queries for combined listings
 
 1. Add the `tags` property to the items returned by the product query.
 2. (Optional) Add the filtering query to the product query to exclude combined listings.
 
 #### File: /app/routes/_index.tsx
 
-```diff
+~~~diff
 @@ -11,6 +11,7 @@ import type {
    RecommendedProductsQuery,
  } from 'storefrontapi.generated';
@@ -468,15 +468,15 @@ If you want to redirect automatically to the first variant of a combined listing
        nodes {
          ...RecommendedProduct
        }
-```
+~~~
 
-### Step 9: (Optional) Filter out combined listings from collections pages
+### Step 10: (Optional) Filter out combined listings from collections pages
 
 Since it's not possible to directly apply query filters when retrieving collection products, you can manually filter out combined listings after they're retrieved based on their tags.
 
 #### File: /app/routes/collections.$handle.tsx
 
-```diff
+~~~diff
 @@ -5,6 +5,10 @@ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
  import {ProductItem} from '~/components/ProductItem';
@@ -532,7 +532,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
        ) {
          nodes {
            ...ProductItem
-```
+~~~
 
 ### Step 11: Update the product page
 
@@ -542,7 +542,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
 
 #### File: /app/routes/products.$handle.tsx
 
-```diff
+~~~diff
 @@ -14,7 +14,14 @@ import {
  import {ProductPrice} from '~/components/ProductPrice';
  import {ProductImage} from '~/components/ProductImage';
@@ -661,7 +661,7 @@ Since it's not possible to directly apply query filters when retrieving collecti
      options {
        name
        optionValues {
-```
+~~~
 
 ### Step 12: Update stylesheet
 
@@ -669,7 +669,7 @@ Add a class to the product item to show a range of prices for combined listings.
 
 #### File: /app/styles/app.css
 
-```diff
+~~~diff
 @@ -418,6 +418,11 @@ button.reset:hover:not(:has(> *)) {
    width: 100%;
  }
@@ -682,6 +682,6 @@ Add a class to the product item to show a range of prices for combined listings.
  /*
  * --------------------------------------------------
  * routes/products.$handle.tsx
-```
+~~~
 
 </recipe_implementation>

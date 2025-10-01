@@ -29,12 +29,12 @@ Key features:
 
 Updates README with custom cart method documentation and implementation guide
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/README.md)
 
 <details>
 
-```diff
-index c584e5370..d40091392 100644
+~~~diff
+index c584e537..d4009139 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
 @@ -1,6 +1,8 @@
@@ -129,7 +129,7 @@ index c584e5370..d40091392 100644
 -Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 +Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 \ No newline at end of file
-```
+~~~
 
 </details>
 
@@ -137,12 +137,12 @@ index c584e5370..d40091392 100644
 
 Adds variant selector functionality to cart line items for changing product options
 
-#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/templates/skeleton/app/components/CartLineItem.tsx)
+#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/components/CartLineItem.tsx)
 
 <details>
 
-```diff
-index 80e34be28..2f37ea800 100644
+~~~diff
+index 80e34be2..2f37ea80 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
 @@ -1,6 +1,15 @@
@@ -267,7 +267,7 @@ index 80e34be28..2f37ea800 100644
 +    </li>
 +  );
 +}
-```
+~~~
 
 </details>
 
@@ -275,12 +275,12 @@ index 80e34be28..2f37ea800 100644
 
 Extends HydrogenCart context with updateLineByOptions method for variant switching
 
-#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/templates/skeleton/app/lib/context.ts)
+#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/lib/context.ts)
 
 <details>
 
-```diff
-index 3989ec05e..6f7ea46fd 100644
+~~~diff
+index 692d5ae1..c2dc8b33 100644
 --- a/templates/skeleton/app/lib/context.ts
 +++ b/templates/skeleton/app/lib/context.ts
 @@ -1,6 +1,15 @@
@@ -361,7 +361,7 @@ index 3989ec05e..6f7ea46fd 100644
        },
      },
      additionalContext,
-```
+~~~
 
 </details>
 
@@ -369,12 +369,12 @@ index 3989ec05e..6f7ea46fd 100644
 
 Adds product options to cart fragments and creates PRODUCT_VARIANT_QUERY for fetching variants
 
-#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/templates/skeleton/app/lib/fragments.ts)
+#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/lib/fragments.ts)
 
 <details>
 
-```diff
-index cf35c25ea..cf79917eb 100644
+~~~diff
+index cf35c25e..cf79917e 100644
 --- a/templates/skeleton/app/lib/fragments.ts
 +++ b/templates/skeleton/app/lib/fragments.ts
 @@ -47,6 +47,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
@@ -425,7 +425,7 @@ index cf35c25ea..cf79917eb 100644
 +    }
 +  }
 +`;
-```
+~~~
 
 </details>
 
@@ -433,10 +433,10 @@ index cf35c25ea..cf79917eb 100644
 
 Implements CustomUpdateLineByOptions action handler for processing variant changes in cart
 
-#### File: [app/routes/cart.tsx](https://github.com/Shopify/hydrogen/blob/6681f92e84d42b5a6aca153fb49e31dcd8af84f6/templates/skeleton/app/routes/cart.tsx)
+#### File: [app/routes/cart.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/cart.tsx)
 
-```diff
-index f82d683fd..f08a6777e 100644
+~~~diff
+index f82d683f..f08a6777 100644
 --- a/templates/skeleton/app/routes/cart.tsx
 +++ b/templates/skeleton/app/routes/cart.tsx
 @@ -6,6 +6,10 @@ import {
@@ -472,4 +472,4 @@ index f82d683fd..f08a6777e 100644
      case CartForm.ACTIONS.LinesAdd:
        result = await cart.addLines(inputs.lines);
        break;
-```
+~~~

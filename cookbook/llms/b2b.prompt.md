@@ -86,7 +86,7 @@ with buyer information (company location + customer token) to ensure accurate B2
 
 #### File: /README.md
 
-```diff
+~~~diff
 @@ -18,6 +18,45 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
  - TypeScript and JavaScript flavors
  - Minimal setup of components and routes
@@ -133,15 +133,15 @@ with buyer information (company location + customer token) to ensure accurate B2
  ## Getting started
  
  **Requirements:**
-```
+~~~
 
-### Step 1: app/components/B2BLocationProvider.tsx
+### Step 2: app/components/B2BLocationProvider.tsx
 
 
 
-#### File: [B2BLocationProvider.tsx](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationProvider.tsx)
+#### File: [B2BLocationProvider.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationProvider.tsx)
 
-```tsx
+~~~tsx
 import {createContext, useContext, useEffect, useState, useMemo} from 'react';
 import {useFetcher} from 'react-router';
 import {type CustomerCompany} from '~/root';
@@ -193,15 +193,15 @@ export function B2BLocationProvider({children}: {children: React.ReactNode}) {
 export function useB2BLocation(): B2BLocationContextValue {
   return useContext(B2BLocationContext);
 }
-```
+~~~
 
-### Step 2: app/components/CartLineItem.tsx
+### Step 3: app/components/CartLineItem.tsx
 
 
 
 #### File: /app/components/CartLineItem.tsx
 
-```diff
+~~~diff
 @@ -76,8 +76,13 @@ export function CartLineItem({
  function CartLineQuantity({line}: {line: CartLine}) {
    if (!line || typeof line?.quantity === 'undefined') return null;
@@ -238,15 +238,15 @@ export function useB2BLocation(): B2BLocationContextValue {
          >
            <span>&#43;</span>
          </button>
-```
+~~~
 
-### Step 2: app/components/B2BLocationSelector.tsx
+### Step 4: app/components/B2BLocationSelector.tsx
 
 
 
-#### File: [B2BLocationSelector.tsx](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationSelector.tsx)
+#### File: [B2BLocationSelector.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationSelector.tsx)
 
-```tsx
+~~~tsx
 import {CartForm} from '@shopify/hydrogen';
 import type {
   CustomerCompanyLocation,
@@ -317,15 +317,15 @@ export function B2BLocationSelector() {
     </div>
   );
 }
-```
+~~~
 
-### Step 3: app/components/Header.tsx
+### Step 5: app/components/Header.tsx
 
 
 
 #### File: /app/components/Header.tsx
 
-```diff
+~~~diff
 @@ -7,6 +7,9 @@ import {
  } from '@shopify/hydrogen';
  import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
@@ -375,15 +375,15 @@ export function B2BLocationSelector() {
  const FALLBACK_HEADER_MENU = {
    id: 'gid://shopify/Menu/199655587896',
    items: [
-```
+~~~
 
-### Step 3: app/components/PriceBreaks.tsx
+### Step 6: app/components/PriceBreaks.tsx
 
 
 
-#### File: [PriceBreaks.tsx](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/PriceBreaks.tsx)
+#### File: [PriceBreaks.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/PriceBreaks.tsx)
 
-```tsx
+~~~tsx
 import {Money} from '@shopify/hydrogen';
 import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
 
@@ -423,15 +423,15 @@ export function PriceBreaks({priceBreaks}: PriceBreaksProps) {
     </>
   );
 }
-```
+~~~
 
-### Step 4: app/components/ProductForm.tsx
+### Step 7: app/components/ProductForm.tsx
 
 
 
 #### File: /app/components/ProductForm.tsx
 
-```diff
+~~~diff
 @@ -8,12 +8,15 @@ import {AddToCartButton} from './AddToCartButton';
  import {useAside} from './Aside';
  import type {ProductFragment} from 'storefrontapi.generated';
@@ -458,15 +458,15 @@ export function PriceBreaks({priceBreaks}: PriceBreaksProps) {
                    selectedVariant,
                  },
                ]
-```
+~~~
 
-### Step 4: app/components/QuantityRules.tsx
+### Step 8: app/components/QuantityRules.tsx
 
 
 
-#### File: [QuantityRules.tsx](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/QuantityRules.tsx)
+#### File: [QuantityRules.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/QuantityRules.tsx)
 
-```tsx
+~~~tsx
 import type {Maybe} from '@shopify/hydrogen/customer-account-api-types';
 
 export type QuantityRulesProps = {
@@ -511,15 +511,15 @@ export function QuantityRules({
     </>
   );
 }
-```
+~~~
 
-### Step 5: app/lib/fragments.ts
+### Step 9: app/lib/fragments.ts
 
 
 
 #### File: /app/lib/fragments.ts
 
-```diff
+~~~diff
 @@ -52,6 +52,21 @@ export const CART_QUERY_FRAGMENT = `#graphql
            name
            value
@@ -564,15 +564,15 @@ export function QuantityRules({
        }
      }
    }
-```
+~~~
 
-### Step 5: app/graphql/customer-account/CustomerLocationsQuery.ts
+### Step 10: app/graphql/customer-account/CustomerLocationsQuery.ts
 
 
 
-#### File: [CustomerLocationsQuery.ts](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/b2b/ingredients/templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts)
+#### File: [CustomerLocationsQuery.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts)
 
-```ts
+~~~ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/objects/Customer
 export const CUSTOMER_LOCATIONS_QUERY = `#graphql
   query CustomerLocations {
@@ -606,15 +606,15 @@ export const CUSTOMER_LOCATIONS_QUERY = `#graphql
     }
   }
 ` as const;
-```
+~~~
 
-### Step 6: app/root.tsx
+### Step 11: app/root.tsx
 
 
 
 #### File: /app/root.tsx
 
-```diff
+~~~diff
 @@ -16,9 +16,39 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
  import resetStyles from '~/styles/reset.css?url';
  import appStyles from '~/styles/app.css?url';
@@ -672,15 +672,15 @@ export const CUSTOMER_LOCATIONS_QUERY = `#graphql
      </Analytics.Provider>
    );
  }
-```
+~~~
 
-### Step 6: app/routes/b2blocations.tsx
+### Step 12: app/routes/b2blocations.tsx
 
 
 
-#### File: [b2blocations.tsx](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/b2b/ingredients/templates/skeleton/app/routes/b2blocations.tsx)
+#### File: [b2blocations.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/routes/b2blocations.tsx)
 
-```tsx
+~~~tsx
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/b2blocations';
 import {B2BLocationSelector} from '../components/B2BLocationSelector';
@@ -719,15 +719,15 @@ export async function loader({context}: Route.LoaderArgs) {
 export default function CartRoute() {
   return <B2BLocationSelector />;
 }
-```
+~~~
 
-### Step 7: app/routes/account_.logout.tsx
+### Step 13: app/routes/account_.logout.tsx
 
 
 
 #### File: /app/routes/account_.logout.tsx
 
-```diff
+~~~diff
 @@ -7,5 +7,10 @@ export async function loader() {
  }
  
@@ -739,15 +739,15 @@ export default function CartRoute() {
 +  });
    return context.customerAccount.logout();
  }
-```
+~~~
 
-### Step 8: app/routes/products.$handle.tsx
+### Step 14: app/routes/products.$handle.tsx
 
 
 
 #### File: /app/routes/products.$handle.tsx
 
-```diff
+~~~diff
 @@ -15,6 +15,19 @@ import {ProductPrice} from '~/components/ProductPrice';
  import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
@@ -889,6 +889,6 @@ export default function CartRoute() {
      product(handle: $handle) {
        ...Product
      }
-```
+~~~
 
 </recipe_implementation>

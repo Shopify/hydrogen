@@ -105,14 +105,14 @@ steps:
     description: Comment out customer account GraphQL configuration
     diffs:
       - file: .graphqlrc.ts
-        patchFile: .graphqlrc.ts.891c10.patch
+        patchFile: .graphqlrc.ts.dbb3fe.patch
   - type: PATCH
     step: 2
     name: README.md
     description: Update README with Express-specific setup and deployment instructions
     diffs:
       - file: README.md
-        patchFile: README.md.49f8fa.patch
+        patchFile: README.md.db10ed.patch
   - type: NEW_FILE
     step: 3
     name: app/env.ts
@@ -122,10 +122,11 @@ steps:
   - type: PATCH
     step: 4
     name: app/entry.client.tsx
-    description: Update client entry to use React Router hydration without Oxygen-specific code
+    description: Update client entry to use React Router hydration without
+      Oxygen-specific code
     diffs:
       - file: app/entry.client.tsx
-        patchFile: entry.client.tsx.11faa5.patch
+        patchFile: entry.client.tsx.0b6923.patch
   - type: NEW_FILE
     step: 5
     name: public/favicon.svg
@@ -135,10 +136,11 @@ steps:
   - type: PATCH
     step: 6
     name: app/entry.server.tsx
-    description: Replace Oxygen server rendering with Express-compatible Node.js SSR using PassThrough streams
+    description: Replace Oxygen server rendering with Express-compatible Node.js SSR
+      using PassThrough streams
     diffs:
       - file: app/entry.server.tsx
-        patchFile: entry.server.tsx.6d386f.patch
+        patchFile: entry.server.tsx.b35f11.patch
   - type: NEW_FILE
     step: 7
     name: scripts/dev.mjs
@@ -151,11 +153,12 @@ steps:
     description: Simplify root layout for Express template by removing complex components
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.8c182c.patch
+        patchFile: root.tsx.5e9998.patch
   - type: NEW_FILE
     step: 9
     name: server.mjs
-    description: Add Express server with Hydrogen context, session management, and SSR support
+    description: Add Express server with Hydrogen context, session management, and
+      SSR support
     ingredients:
       - path: templates/skeleton/server.mjs
   - type: PATCH
@@ -164,49 +167,50 @@ steps:
     description: Update routes configuration to work with Hydrogen on Express
     diffs:
       - file: app/routes.ts
-        patchFile: routes.ts.e77b9b.patch
+        patchFile: routes.ts.87938f.patch
   - type: PATCH
     step: 11
     name: app/routes/_index.tsx
     description: Simplify homepage route to basic Express example content
     diffs:
       - file: app/routes/_index.tsx
-        patchFile: _index.tsx.ee5996.patch
+        patchFile: _index.tsx.243e26.patch
   - type: PATCH
     step: 12
     name: app/routes/products.$handle.tsx
     description: Simplify product route to minimal implementation without cart functionality
     diffs:
       - file: app/routes/products.$handle.tsx
-        patchFile: products.$handle.tsx.7addea.patch
+        patchFile: products.$handle.tsx.6f2e82.patch
   - type: PATCH
     step: 13
     name: app/styles/app.css
     description: Replace skeleton styles with minimal Express template styling
     diffs:
       - file: app/styles/app.css
-        patchFile: app.css.48239a.patch
+        patchFile: app.css.881a99.patch
   - type: PATCH
     step: 14
     name: eslint.config.js
     description: Simplify ESLint configuration for Express template
     diffs:
       - file: eslint.config.js
-        patchFile: eslint.config.js.63bcba.patch
+        patchFile: eslint.config.js.e5f62b.patch
   - type: PATCH
     step: 15
     name: package.json
-    description: Update dependencies and scripts for Express server deployment (add express, nodemon, compression, remove Oxygen packages)
+    description: Update dependencies and scripts for Express server deployment (add
+      express, nodemon, compression, remove Oxygen packages)
     diffs:
       - file: package.json
-        patchFile: package.json.47be7b.patch
+        patchFile: package.json.f30b0a.patch
   - type: PATCH
     step: 16
     name: vite.config.ts
     description: Configure Vite for Express deployment with Node.js module externalization
     diffs:
       - file: vite.config.ts
-        patchFile: vite.config.ts.93b90b.patch
+        patchFile: vite.config.ts.475b4c.patch
 nextSteps: |
   - Create a .env file with your Shopify Storefront API credentials:
     PUBLIC_STOREFRONT_API_TOKEN="your-token"
@@ -240,4 +244,4 @@ llms:
     - issue: TypeScript errors about missing @react-router/node types
       solution: Run 'npm install' to ensure all dependencies including @types packages
         are installed.
-commit: b09a1214b24251dbd48cd960d9ec8079a7c68d03
+commit: 12374c8f03f82c6800000cf08e327c4db4c287bb

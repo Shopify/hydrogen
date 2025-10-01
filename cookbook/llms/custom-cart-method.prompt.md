@@ -67,11 +67,11 @@ Key features:
 
 ### Step 1: README.md
 
-
+Updates README with custom cart method documentation and implementation guide
 
 #### File: /README.md
 
-```diff
+~~~diff
 @@ -1,6 +1,8 @@
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Custom Cart Method
@@ -164,15 +164,15 @@ Key features:
 -Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 +Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 \ No newline at end of file
-```
+~~~
 
-### Step 1: app/components/CartLineItem.tsx
+### Step 2: app/components/CartLineItem.tsx
 
-
+Adds variant selector functionality to cart line items for changing product options
 
 #### File: /app/components/CartLineItem.tsx
 
-```diff
+~~~diff
 @@ -1,6 +1,15 @@
 -import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 +import type {
@@ -295,15 +295,15 @@ Key features:
 +    </li>
 +  );
 +}
-```
+~~~
 
-### Step 2: app/lib/context.ts
+### Step 3: app/lib/context.ts
 
-
+Extends HydrogenCart context with updateLineByOptions method for variant switching
 
 #### File: /app/lib/context.ts
 
-```diff
+~~~diff
 @@ -1,6 +1,15 @@
 -import {createHydrogenContext} from '@shopify/hydrogen';
 +import {
@@ -382,15 +382,15 @@ Key features:
        },
      },
      additionalContext,
-```
+~~~
 
-### Step 3: app/lib/fragments.ts
+### Step 4: app/lib/fragments.ts
 
-
+Adds product options to cart fragments and creates PRODUCT_VARIANT_QUERY for fetching variants
 
 #### File: /app/lib/fragments.ts
 
-```diff
+~~~diff
 @@ -47,6 +47,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
            title
            id
@@ -415,7 +415,7 @@ Key features:
          }
          selectedOptions {
            name
-@@ -231,3 +241,23 @@ export const FOOTER_QUERY = `#graphql
+@@ -232,3 +242,23 @@ export const FOOTER_QUERY = `#graphql
    }
    ${MENU_FRAGMENT}
  ` as const;
@@ -439,15 +439,15 @@ Key features:
 +    }
 +  }
 +`;
-```
+~~~
 
-### Step 4: app/routes/cart.tsx
+### Step 5: app/routes/cart.tsx
 
-
+Implements CustomUpdateLineByOptions action handler for processing variant changes in cart
 
 #### File: /app/routes/cart.tsx
 
-```diff
+~~~diff
 @@ -6,6 +6,10 @@ import {
  import type {Route} from './+types/cart';
  import type {CartQueryDataReturn} from '@shopify/hydrogen';
@@ -481,6 +481,6 @@ Key features:
      case CartForm.ACTIONS.LinesAdd:
        result = await cart.addLines(inputs.lines);
        break;
-```
+~~~
 
 </recipe_implementation>

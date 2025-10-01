@@ -52,7 +52,7 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx) |  |
+| [app/components/GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx) |  |
 
 ## Steps
 
@@ -60,11 +60,11 @@ _New files added to the template by this recipe._
 
 Updates README with GTM-specific documentation and setup instructions
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/README.md)
 
 <details>
 
-```diff
+~~~diff
 index c584e537..a31bfebf 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
@@ -153,7 +153,7 @@ index c584e537..a31bfebf 100644
 -Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 +Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 \ No newline at end of file
-```
+~~~
 
 </details>
 
@@ -161,9 +161,9 @@ index c584e537..a31bfebf 100644
 
 
 
-#### File: [app/entry.server.tsx](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/templates/skeleton/app/entry.server.tsx)
+#### File: [app/entry.server.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/entry.server.tsx)
 
-```diff
+~~~diff
 index 6f5c4abf..b8eb74f4 100644
 --- a/templates/skeleton/app/entry.server.tsx
 +++ b/templates/skeleton/app/entry.server.tsx
@@ -192,17 +192,17 @@ index 6f5c4abf..b8eb74f4 100644
      shop: {
        checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
        storeDomain: context.env.PUBLIC_STORE_DOMAIN,
-```
+~~~
 
 ### Step 3: app/components/GoogleTagManager.tsx
 
 
 
-#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
+#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
 
 <details>
 
-```tsx
+~~~tsx
 import {useAnalytics} from '@shopify/hydrogen';
 import {useEffect} from 'react';
 
@@ -227,7 +227,7 @@ export function GoogleTagManager() {
 
   return null;
 }
-```
+~~~
 
 </details>
 
@@ -235,11 +235,11 @@ export function GoogleTagManager() {
 
 
 
-#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/25290311dd1d135ab90bca26fb496d2b92c8631a/templates/skeleton/app/root.tsx)
+#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/root.tsx)
 
 <details>
 
-```diff
+~~~diff
 index df87425c..aa25c6d7 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
@@ -299,7 +299,7 @@ index df87425c..aa25c6d7 100644
      </Analytics.Provider>
    );
  }
-```
+~~~
 
 </details>
 

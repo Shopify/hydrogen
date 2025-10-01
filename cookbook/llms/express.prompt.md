@@ -99,11 +99,11 @@ Key changes:
 
 ### Step 1: .graphqlrc.ts
 
-
+Comment out customer account GraphQL configuration
 
 #### File: /.graphqlrc.ts
 
-```diff
+~~~diff
 @@ -17,10 +17,11 @@ export default {
        ],
      },
@@ -120,15 +120,15 @@ Key changes:
  
      // Add your own GraphQL projects here for CMS, Shopify Admin API, etc.
    },
-```
+~~~
 
-### Step 1: README.md
+### Step 2: README.md
 
-
+Update README with Express-specific setup and deployment instructions
 
 #### File: /README.md
 
-```diff
+~~~diff
 @@ -1,45 +1,89 @@
 -# Hydrogen template: Skeleton
 +# Hydrogen Express Skeleton
@@ -235,15 +235,15 @@ Key changes:
 +  - `routes/` - Application routes
 +- `build/` - Production build output (generated)
 \ No newline at end of file
-```
+~~~
 
-### Step 1: app/env.ts
+### Step 3: app/env.ts
 
+Add environment type definitions for Hydrogen on Express
 
+#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
 
-#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/b09a1214b24251dbd48cd960d9ec8079a7c68d03/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
-
-```ts
+~~~ts
 // This file extends the Hydrogen types for this project
 // The types are automatically available via @shopify/hydrogen/react-router-types
 
@@ -274,15 +274,15 @@ declare global {
 
 // Required to make this file a module and enable the augmentation
 export {};
-```
+~~~
 
-### Step 2: app/entry.client.tsx
+### Step 4: app/entry.client.tsx
 
-
+Update client entry to use React Router hydration without Oxygen-specific code
 
 #### File: /app/entry.client.tsx
 
-```diff
+~~~diff
 @@ -1,21 +1,13 @@
  import {HydratedRouter} from 'react-router/dom';
  import {startTransition, StrictMode} from 'react';
@@ -306,15 +306,15 @@ export {};
        </StrictMode>,
      );
    });
-```
+~~~
 
-### Step 2: public/favicon.svg
+### Step 5: public/favicon.svg
 
+Add Express template favicon
 
+#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
 
-#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/b09a1214b24251dbd48cd960d9ec8079a7c68d03/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
-
-```svg
+~~~svg
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
   <style>
     .stroke {
@@ -344,15 +344,15 @@ export {};
   />
 </svg>
 
-```
+~~~
 
-### Step 3: app/entry.server.tsx
+### Step 6: app/entry.server.tsx
 
-
+Replace Oxygen server rendering with Express-compatible Node.js SSR using PassThrough streams
 
 #### File: /app/entry.server.tsx
 
-```diff
+~~~diff
 @@ -1,53 +1,77 @@
 +import {PassThrough} from 'node:stream';
 +import type {EntryContext} from 'react-router';
@@ -467,15 +467,15 @@ export {};
 -}
 +}
 \ No newline at end of file
-```
+~~~
 
-### Step 3: scripts/dev.mjs
+### Step 7: scripts/dev.mjs
 
+Add development server orchestration script for Vite and nodemon
 
+#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
 
-#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/b09a1214b24251dbd48cd960d9ec8079a7c68d03/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
-
-```mjs
+~~~mjs
 #!/usr/bin/env node
 
 import {spawn} from 'child_process';
@@ -577,15 +577,15 @@ process.on('SIGTERM', () => {
   server.kill();
   process.exit(0);
 });
-```
+~~~
 
-### Step 4: app/root.tsx
+### Step 8: app/root.tsx
 
-
+Simplify root layout for Express template by removing complex components
 
 #### File: /app/root.tsx
 
-```diff
+~~~diff
 @@ -11,46 +11,20 @@ import {
    useRouteLoaderData,
  } from 'react-router';
@@ -778,15 +778,15 @@ process.on('SIGTERM', () => {
 +    }
 +  }
 +` as const;
-```
+~~~
 
-### Step 4: server.mjs
+### Step 9: server.mjs
 
+Add Express server with Hydrogen context, session management, and SSR support
 
+#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
 
-#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/b09a1214b24251dbd48cd960d9ec8079a7c68d03/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
-
-```mjs
+~~~mjs
 import {createRequestHandler} from '@react-router/express';
 import {createCookieSessionStorage} from 'react-router';
 import compression from 'compression';
@@ -1047,15 +1047,15 @@ class AppSession {
   }
 }
 
-```
+~~~
 
-### Step 5: app/routes.ts
+### Step 10: app/routes.ts
 
-
+Update routes configuration to work with Hydrogen on Express
 
 #### File: /app/routes.ts
 
-```diff
+~~~diff
 @@ -1,9 +1,8 @@
  import {flatRoutes} from '@react-router/fs-routes';
  import {type RouteConfig} from '@react-router/dev/routes';
@@ -1071,15 +1071,15 @@ class AppSession {
 +  const routes = await flatRoutes();
 +  return hydrogenRoutes([...routes]);
 +})() satisfies Promise<RouteConfig>;
-```
+~~~
 
-### Step 6: app/routes/_index.tsx
+### Step 11: app/routes/_index.tsx
 
-
+Simplify homepage route to basic Express example content
 
 #### File: /app/routes/_index.tsx
 
-```diff
+~~~diff
 @@ -1,171 +1,28 @@
 -import {
 -  Await,
@@ -1274,15 +1274,15 @@ class AppSession {
 -    }
 -  }
 -` as const;
-```
+~~~
 
-### Step 7: app/routes/products.$handle.tsx
+### Step 12: app/routes/products.$handle.tsx
 
-
+Simplify product route to minimal implementation without cart functionality
 
 #### File: /app/routes/products.$handle.tsx
 
-```diff
+~~~diff
 @@ -1,50 +1,7 @@
 -import {
 -  redirect,
@@ -1544,15 +1544,15 @@ class AppSession {
    }
 -  ${PRODUCT_FRAGMENT}
  ` as const;
-```
+~~~
 
-### Step 8: app/styles/app.css
+### Step 13: app/styles/app.css
 
-
+Replace skeleton styles with minimal Express template styling
 
 #### File: /app/styles/app.css
 
-```diff
+~~~diff
 @@ -1,574 +1,44 @@
 -:root {
 -  --aside-width: 400px;
@@ -2154,15 +2154,15 @@ class AppSession {
 -}
 +*/
 \ No newline at end of file
-```
+~~~
 
-### Step 9: eslint.config.js
+### Step 14: eslint.config.js
 
-
+Simplify ESLint configuration for Express template
 
 #### File: /eslint.config.js
 
-```diff
+~~~diff
 @@ -1,246 +1,2 @@
 -import {fixupConfigRules, fixupPluginRules} from '@eslint/compat';
 -import eslintComments from 'eslint-plugin-eslint-comments';
@@ -2413,15 +2413,15 @@ class AppSession {
 +// Minimal ESLint configuration for Express template
 +export default [];
 \ No newline at end of file
-```
+~~~
 
-### Step 10: package.json
+### Step 15: package.json
 
-
+Update dependencies and scripts for Express server deployment (add express, nodemon, compression, remove Oxygen packages)
 
 #### File: /package.json
 
-```diff
+~~~diff
 @@ -5,58 +5,51 @@
    "version": "2025.7.0",
    "type": "module",
@@ -2462,7 +2462,7 @@ class AppSession {
      "@graphql-codegen/cli": "5.0.2",
      "@react-router/dev": "7.9.2",
      "@react-router/fs-routes": "7.9.2",
-     "@shopify/cli": "3.84.1",
+     "@shopify/cli": "3.85.4",
      "@shopify/hydrogen-codegen": "^0.3.3",
 -    "@shopify/mini-oxygen": "^4.0.0",
 -    "@shopify/oxygen-workers-types": "^4.1.6",
@@ -2499,15 +2499,15 @@ class AppSession {
 +    "node": ">=20.0.0 <22.0.0"
    }
  }
-```
+~~~
 
-### Step 13: vite.config.ts
+### Step 16: vite.config.ts
 
-
+Configure Vite for Express deployment with Node.js module externalization
 
 #### File: /vite.config.ts
 
-```diff
+~~~diff
 @@ -5,13 +5,15 @@ import {reactRouter} from '@react-router/dev/vite';
  import tsconfigPaths from 'vite-tsconfig-paths';
  
@@ -2537,7 +2537,7 @@ class AppSession {
 -    allowedHosts: ['.tryhydrogen.dev'],
 -  },
  });
-```
+~~~
 
 ## Deleted Files
 

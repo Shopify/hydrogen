@@ -72,11 +72,11 @@ Key features:
 
 ### Step 1: README.md
 
-
+Updates README with infinite scroll documentation and implementation details
 
 #### File: /README.md
 
-```diff
+~~~diff
 @@ -1,6 +1,8 @@
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Infinite Scroll
@@ -161,15 +161,15 @@ Key features:
 -Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 +Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 \ No newline at end of file
-```
+~~~
 
-### Step 1: app/routes/collections.$handle.tsx
+### Step 2: app/routes/collections.$handle.tsx
 
 
 
 #### File: /app/routes/collections.$handle.tsx
 
-```diff
+~~~diff
 @@ -1,9 +1,14 @@
 -import {redirect, useLoaderData} from 'react-router';
 +import {redirect, useLoaderData, useNavigate} from 'react-router';
@@ -289,15 +289,15 @@ Key features:
  const PRODUCT_ITEM_FRAGMENT = `#graphql
    fragment MoneyProductItem on MoneyV2 {
      amount
-```
+~~~
 
-### Step 2: package.json
+### Step 3: package.json
 
 
 
 #### File: /package.json
 
-```diff
+~~~diff
 @@ -20,6 +20,7 @@
      "isbot": "^5.1.22",
      "react": "18.3.1",
@@ -306,6 +306,6 @@ Key features:
      "react-router": "7.9.2",
      "react-router-dom": "7.9.2"
    },
-```
+~~~
 
 </recipe_implementation>

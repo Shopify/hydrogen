@@ -48,10 +48,10 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/routes/account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx) |  |
-| [app/routes/account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.recover.tsx) |  |
-| [app/routes/account_.register.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.register.tsx) |  |
-| [app/routes/account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx) |  |
+| [app/routes/account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx) |  |
+| [app/routes/account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.recover.tsx) |  |
+| [app/routes/account_.register.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.register.tsx) |  |
+| [app/routes/account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx) |  |
 
 ## Steps
 
@@ -59,10 +59,10 @@ _New files added to the template by this recipe._
 
 Update README to document legacy customer account flow
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/README.md)
 
-```diff
-index c584e5370..11bb1c8cc 100644
+~~~diff
+index c584e537..11bb1c8c 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
 @@ -1,10 +1,26 @@
@@ -94,16 +94,16 @@ index c584e5370..11bb1c8cc 100644
  ## What's included
  
  - Remix
-```
+~~~
 
 ### Step 2: app/components/Header.tsx
 
 Add account link to header navigation
 
-#### File: [app/components/Header.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/templates/skeleton/app/components/Header.tsx)
+#### File: [app/components/Header.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/components/Header.tsx)
 
-```diff
-index 45b620b49..f55c41435 100644
+~~~diff
+index 45b620b4..f55c4143 100644
 --- a/templates/skeleton/app/components/Header.tsx
 +++ b/templates/skeleton/app/components/Header.tsx
 @@ -11,7 +11,8 @@ import {useAside} from '~/components/Aside';
@@ -130,17 +130,17 @@ index 45b620b49..f55c41435 100644
        </NavLink>
        <SearchToggle />
        <CartToggle cart={cart} />
-```
+~~~
 
 ### Step 3: app/routes/account_.activate.$id.$activationToken.tsx
 
 Add account activation route for email verification
 
-#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
+#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
 
 <details>
 
-```tsx
+~~~tsx
 import {Form, useActionData, data, redirect} from 'react-router';
 import type {Route} from './+types/account_.activate.$id.$activationToken';
 
@@ -294,7 +294,7 @@ const CUSTOMER_ACTIVATE_MUTATION = `#graphql
   }
 ` as const;
 
-```
+~~~
 
 </details>
 
@@ -302,10 +302,10 @@ const CUSTOMER_ACTIVATE_MUTATION = `#graphql
 
 Update PageLayout to handle account routes
 
-#### File: [app/components/PageLayout.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/templates/skeleton/app/components/PageLayout.tsx)
+#### File: [app/components/PageLayout.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/components/PageLayout.tsx)
 
-```diff
-index ed7843be8..ab1f2d0cb 100644
+~~~diff
+index ed7843be..ab1f2d0c 100644
 --- a/templates/skeleton/app/components/PageLayout.tsx
 +++ b/templates/skeleton/app/components/PageLayout.tsx
 @@ -19,7 +19,8 @@ interface PageLayoutProps {
@@ -318,17 +318,17 @@ index ed7843be8..ab1f2d0cb 100644
    publicStoreDomain: string;
    children?: React.ReactNode;
  }
-```
+~~~
 
 ### Step 5: app/routes/account_.recover.tsx
 
 Add password recovery form for forgotten passwords
 
-#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
+#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
 
 <details>
 
-```tsx
+~~~tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
 import type {Route} from './+types/account_.recover';
 
@@ -454,7 +454,7 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
   }
 ` as const;
 
-```
+~~~
 
 </details>
 
@@ -462,12 +462,12 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
 
 Add customer access token validation to root loader
 
-#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/templates/skeleton/app/root.tsx)
+#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/root.tsx)
 
 <details>
 
-```diff
-index df87425c5..aa6f51660 100644
+~~~diff
+index df87425c..aa6f5166 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
 @@ -1,5 +1,6 @@
@@ -590,7 +590,7 @@ index df87425c5..aa6f51660 100644
 +
 +  return {isLoggedIn, headers};
 +}
-```
+~~~
 
 </details>
 
@@ -598,11 +598,11 @@ index df87425c5..aa6f51660 100644
 
 Add customer registration form
 
-#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.register.tsx)
+#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.register.tsx)
 
 <details>
 
-```tsx
+~~~tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
 import type {Route} from './+types/account_.register';
 import type {CustomerCreateMutation} from 'storefrontapi.generated';
@@ -807,7 +807,7 @@ const REGISTER_LOGIN_MUTATION = `#graphql
   }
 ` as const;
 
-```
+~~~
 
 </details>
 
@@ -815,10 +815,10 @@ const REGISTER_LOGIN_MUTATION = `#graphql
 
 Convert catch-all route to use Storefront API authentication
 
-#### File: [app/routes/account.$.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/templates/skeleton/app/routes/account.$.tsx)
+#### File: [app/routes/account.$.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account.$.tsx)
 
-```diff
-index 074def2a4..6a8a24520 100644
+~~~diff
+index 074def2a..6a8a2452 100644
 --- a/templates/skeleton/app/routes/account.$.tsx
 +++ b/templates/skeleton/app/routes/account.$.tsx
 @@ -1,9 +1,9 @@
@@ -835,17 +835,17 @@ index 074def2a4..6a8a24520 100644
 +  }
 +  return redirect('/account/login');
  }
-```
+~~~
 
 ### Step 9: app/routes/account_.reset.$id.$resetToken.tsx
 
 Add password reset form with token validation
 
-#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
+#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
 
 <details>
 
-```tsx
+~~~tsx
 import {Form, useActionData, data, redirect} from 'react-router';
 import type {Route} from './+types/account_.reset.$id.$resetToken';
 
@@ -979,7 +979,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
   }
 ` as const;
 
-```
+~~~
 
 </details>
 
@@ -987,12 +987,12 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 
 Convert address management to use Storefront API mutations
 
-#### File: [app/routes/account.addresses.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/templates/skeleton/app/routes/account.addresses.tsx)
+#### File: [app/routes/account.addresses.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account.addresses.tsx)
 
 <details>
 
-```diff
-index ddfa18f3f..f61a37599 100644
+~~~diff
+index ddfa18f3..f61a3759 100644
 --- a/templates/skeleton/app/routes/account.addresses.tsx
 +++ b/templates/skeleton/app/routes/account.addresses.tsx
 @@ -1,22 +1,14 @@
@@ -1551,7 +1551,7 @@ index ddfa18f3f..f61a37599 100644
 +    }
 +  }
 +` as const;
-```
+~~~
 
 </details>
 
@@ -1559,12 +1559,12 @@ index ddfa18f3f..f61a37599 100644
 
 Convert order details page to use Storefront API queries
 
-#### File: [app/routes/account.orders.$id.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/templates/skeleton/app/routes/account.orders.$id.tsx)
+#### File: [app/routes/account.orders.$id.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account.orders.$id.tsx)
 
 <details>
 
-```diff
-index 3c2430385..52280986d 100644
+~~~diff
+index 3c243038..52280986 100644
 --- a/templates/skeleton/app/routes/account.orders.$id.tsx
 +++ b/templates/skeleton/app/routes/account.orders.$id.tsx
 @@ -1,67 +1,50 @@
@@ -1911,7 +1911,7 @@ index 3c2430385..52280986d 100644
 +    }
 +  }
 +` as const;
-```
+~~~
 
 </details>
 
@@ -1919,12 +1919,12 @@ index 3c2430385..52280986d 100644
 
 Convert orders list to use Storefront API with pagination
 
-#### File: [app/routes/account.orders._index.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/templates/skeleton/app/routes/account.orders._index.tsx)
+#### File: [app/routes/account.orders._index.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account.orders._index.tsx)
 
 <details>
 
-```diff
-index a9f479ea7..2d30caa0d 100644
+~~~diff
+index a9f479ea..2d30caa0 100644
 --- a/templates/skeleton/app/routes/account.orders._index.tsx
 +++ b/templates/skeleton/app/routes/account.orders._index.tsx
 @@ -1,222 +1,184 @@
@@ -2275,7 +2275,7 @@ index a9f479ea7..2d30caa0d 100644
 +  }
 +` as const;
 \ No newline at end of file
-```
+~~~
 
 </details>
 
@@ -2283,12 +2283,12 @@ index a9f479ea7..2d30caa0d 100644
 
 
 
-#### File: [app/routes/account.profile.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/templates/skeleton/app/routes/account.profile.tsx)
+#### File: [app/routes/account.profile.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account.profile.tsx)
 
 <details>
 
-```diff
-index 7053f7d7b..7b8c77d3a 100644
+~~~diff
+index 7053f7d7..7b8c77d3 100644
 --- a/templates/skeleton/app/routes/account.profile.tsx
 +++ b/templates/skeleton/app/routes/account.profile.tsx
 @@ -1,12 +1,12 @@
@@ -2535,7 +2535,7 @@ index 7053f7d7b..7b8c77d3a 100644
 +    }
 +  }
 +` as const;
-```
+~~~
 
 </details>
 
@@ -2543,12 +2543,12 @@ index 7053f7d7b..7b8c77d3a 100644
 
 Convert account layout to use session-based authentication
 
-#### File: [app/routes/account.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/templates/skeleton/app/routes/account.tsx)
+#### File: [app/routes/account.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account.tsx)
 
 <details>
 
-```diff
-index 46272bbd3..9f5598433 100644
+~~~diff
+index 46272bbd..9f559843 100644
 --- a/templates/skeleton/app/routes/account.tsx
 +++ b/templates/skeleton/app/routes/account.tsx
 @@ -1,45 +1,105 @@
@@ -2742,7 +2742,7 @@ index 46272bbd3..9f5598433 100644
 +  }
 +  ${CUSTOMER_FRAGMENT}
 +` as const;
-```
+~~~
 
 </details>
 
@@ -2750,12 +2750,12 @@ index 46272bbd3..9f5598433 100644
 
 Replace Customer Account API login with Storefront API form
 
-#### File: [app/routes/account_.login.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/templates/skeleton/app/routes/account_.login.tsx)
+#### File: [app/routes/account_.login.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account_.login.tsx)
 
 <details>
 
-```diff
-index 825648a14..7536e0371 100644
+~~~diff
+index 825648a1..7536e037 100644
 --- a/templates/skeleton/app/routes/account_.login.tsx
 +++ b/templates/skeleton/app/routes/account_.login.tsx
 @@ -1,7 +1,139 @@
@@ -2903,7 +2903,7 @@ index 825648a14..7536e0371 100644
 +  }
 +` as const;
 \ No newline at end of file
-```
+~~~
 
 </details>
 
@@ -2911,10 +2911,10 @@ index 825648a14..7536e0371 100644
 
 Replace Customer Account API logout with session cleanup
 
-#### File: [app/routes/account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/templates/skeleton/app/routes/account_.logout.tsx)
+#### File: [app/routes/account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account_.logout.tsx)
 
-```diff
-index 5e67cc857..d88e717d5 100644
+~~~diff
+index 5e67cc85..d88e717d 100644
 --- a/templates/skeleton/app/routes/account_.logout.tsx
 +++ b/templates/skeleton/app/routes/account_.logout.tsx
 @@ -1,11 +1,25 @@
@@ -2949,7 +2949,7 @@ index 5e67cc857..d88e717d5 100644
 +  return null;
 +}
 \ No newline at end of file
-```
+~~~
 
 ## Next steps
 

@@ -98,7 +98,7 @@ This pattern is perfect for integrating:
 
 #### File: /README.md
 
-```diff
+~~~diff
 @@ -1,6 +1,6 @@
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Skeleton with Third-party API Integration
@@ -155,16 +155,16 @@ This pattern is perfect for integrating:
  ## Setup for using Customer Account API (`/account` section)
  
  Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
-```
+~~~
 
-### Step 1: Create the third-party API client
+### Step 2: Create the third-party API client
 
 Create a new GraphQL client factory that integrates with Oxygen's caching system.
 This client handles query minification, error handling, and cache key generation.
 
-#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/f569cb38cd67aa386cfbdcd5bd0d3af9d8d321bd/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
+#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
 
-```ts
+~~~ts
 import {
   createWithCache,
   CacheLong,
@@ -227,16 +227,16 @@ function minifyQuery<T extends string>(string: T) {
     .replace(/\s+/gm, ' ') // Minify spaces
     .trim() as T;
 }
-```
+~~~
 
-### Step 2: Add the client to Hydrogen context
+### Step 3: Add the client to Hydrogen context
 
 Import the Rick and Morty client and add it to the Hydrogen context so it's available
 in all routes. Also update TypeScript declarations for proper type support.
 
 #### File: /app/lib/context.ts
 
-```diff
+~~~diff
 @@ -1,25 +1,10 @@
  import {createHydrogenContext} from '@shopify/hydrogen';
  import {AppSession} from '~/lib/session';
@@ -299,16 +299,16 @@ in all routes. Also update TypeScript declarations for proper type support.
 +  interface HydrogenAdditionalContext extends AdditionalContextType {}
 +}
 \ No newline at end of file
-```
+~~~
 
-### Step 3: Query and display third-party data
+### Step 4: Query and display third-party data
 
 Update the homepage to fetch data from the third-party API and display it alongside
 Shopify data. This demonstrates parallel data fetching and proper caching strategies.
 
 #### File: /app/routes/_index.tsx
 
-```diff
+~~~diff
 @@ -1,11 +1,7 @@
 -import {
 -  Await,
@@ -415,6 +415,6 @@ Shopify data. This demonstrates parallel data fetching and proper caching strate
  const RECOMMENDED_PRODUCTS_QUERY = `#graphql
    fragment RecommendedProduct on Product {
      id
-```
+~~~
 
 </recipe_implementation>
