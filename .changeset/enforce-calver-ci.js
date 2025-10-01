@@ -100,6 +100,9 @@ function calculateNewVersions(versions) {
     if (hasAnyMajor) {
       // Major: Sync all CalVer packages to same quarter using hydrogen's baseline
       newVersion = getNextVersion(data.hydrogenBaseline, 'major');
+    } else if (data.pkg.version === data.oldVersion) {
+      // No change: Keep current version (don't bump unchanged packages)
+      newVersion = data.pkg.version;
     } else {
       // Patch/minor: Independent versioning using package's own baseline
       newVersion = getNextVersion(data.oldVersion, bumpType);
