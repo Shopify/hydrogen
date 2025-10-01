@@ -1,5 +1,51 @@
 # @shopify/cli-hydrogen
 
+## 11.1.5
+
+### Patch Changes
+
+- Update skeleton and create-hydrogen for @shopify/cli@3.85.4 incl @shopify/cli-hydrogen@11.1.4 ([#3232](https://github.com/Shopify/hydrogen/pull/3232)) by [@juanpprieto](https://github.com/juanpprieto)
+
+## 11.1.4
+
+### Patch Changes
+
+- **What changed:** ([#3229](https://github.com/Shopify/hydrogen/pull/3229)) by [@juanpprieto](https://github.com/juanpprieto)
+
+  ## Miniflare v3 upgrade
+
+  ## CLI: Stabilized Customer Account API development flag
+
+  The `--customer-account-push` flag is now stable and ready for production use. This flag enables tunneling for local development with Customer Account API OAuth flows.
+
+  **Before:**
+
+  ```bash
+  # Flag was experimental with __unstable suffix
+  shopify hydrogen dev --customer-account-push__unstable
+  ```
+
+  **After:**
+
+  ```bash
+  # Flag is now stable
+  shopify hydrogen dev --customer-account-push
+
+  # Or use environment variable
+  SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH=true npm run dev
+  ```
+
+  This flag automatically:
+  - Creates a tunnel for your local development server
+  - Configures the Customer Account API OAuth callback URLs
+  - Enables testing of the full authentication flow locally
+
+  ## Additional changes
+  - Fix defer/streaming in development & preview
+  - Upgrade Miniflare from v2 to v4 in mini-oxygen package
+  - Add `--force-client-sourcemap` flag support to the `deploy` command
+  - Implement proper environment variable quoting for shell metacharacters in `env pull` command
+
 ## 11.1.3
 
 ### Patch Changes

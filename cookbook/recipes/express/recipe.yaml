@@ -30,13 +30,13 @@ requirements: |
   - Shopify Storefront API credentials
 ingredients:
   - path: templates/skeleton/app/env.ts
-    description: null
+    description: Environment type definitions for Express server
   - path: templates/skeleton/public/favicon.svg
-    description: null
+    description: Favicon for Express template
   - path: templates/skeleton/scripts/dev.mjs
-    description: null
+    description: Development orchestration script
   - path: templates/skeleton/server.mjs
-    description: null
+    description: Express server with Hydrogen context and SSR
 deletedFiles:
   - templates/skeleton/app/components/AddToCartButton.tsx
   - templates/skeleton/app/components/Aside.tsx
@@ -102,108 +102,108 @@ steps:
   - type: PATCH
     step: 1
     name: .graphqlrc.ts
-    description: null
+    description: Comment out customer account GraphQL configuration
     diffs:
       - file: .graphqlrc.ts
         patchFile: .graphqlrc.ts.891c10.patch
   - type: PATCH
     step: 2
     name: README.md
-    description: null
+    description: Update README with Express-specific setup and deployment instructions
     diffs:
       - file: README.md
         patchFile: README.md.49f8fa.patch
   - type: NEW_FILE
     step: 3
     name: app/env.ts
-    description: null
+    description: Add environment type definitions for Hydrogen on Express
     ingredients:
       - path: templates/skeleton/app/env.ts
   - type: PATCH
     step: 4
     name: app/entry.client.tsx
-    description: null
+    description: Update client entry to use React Router hydration without Oxygen-specific code
     diffs:
       - file: app/entry.client.tsx
         patchFile: entry.client.tsx.11faa5.patch
   - type: NEW_FILE
     step: 5
     name: public/favicon.svg
-    description: null
+    description: Add Express template favicon
     ingredients:
       - path: templates/skeleton/public/favicon.svg
   - type: PATCH
     step: 6
     name: app/entry.server.tsx
-    description: null
+    description: Replace Oxygen server rendering with Express-compatible Node.js SSR using PassThrough streams
     diffs:
       - file: app/entry.server.tsx
         patchFile: entry.server.tsx.6d386f.patch
   - type: NEW_FILE
     step: 7
     name: scripts/dev.mjs
-    description: null
+    description: Add development server orchestration script for Vite and nodemon
     ingredients:
       - path: templates/skeleton/scripts/dev.mjs
   - type: PATCH
     step: 8
     name: app/root.tsx
-    description: null
+    description: Simplify root layout for Express template by removing complex components
     diffs:
       - file: app/root.tsx
         patchFile: root.tsx.8c182c.patch
   - type: NEW_FILE
     step: 9
     name: server.mjs
-    description: null
+    description: Add Express server with Hydrogen context, session management, and SSR support
     ingredients:
       - path: templates/skeleton/server.mjs
   - type: PATCH
     step: 10
     name: app/routes.ts
-    description: null
+    description: Update routes configuration to work with Hydrogen on Express
     diffs:
       - file: app/routes.ts
         patchFile: routes.ts.e77b9b.patch
   - type: PATCH
     step: 11
     name: app/routes/_index.tsx
-    description: null
+    description: Simplify homepage route to basic Express example content
     diffs:
       - file: app/routes/_index.tsx
         patchFile: _index.tsx.ee5996.patch
   - type: PATCH
     step: 12
     name: app/routes/products.$handle.tsx
-    description: null
+    description: Simplify product route to minimal implementation without cart functionality
     diffs:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.7addea.patch
   - type: PATCH
     step: 13
     name: app/styles/app.css
-    description: null
+    description: Replace skeleton styles with minimal Express template styling
     diffs:
       - file: app/styles/app.css
         patchFile: app.css.48239a.patch
   - type: PATCH
     step: 14
     name: eslint.config.js
-    description: null
+    description: Simplify ESLint configuration for Express template
     diffs:
       - file: eslint.config.js
         patchFile: eslint.config.js.63bcba.patch
   - type: PATCH
     step: 15
     name: package.json
-    description: null
+    description: Update dependencies and scripts for Express server deployment (add express, nodemon, compression, remove Oxygen packages)
     diffs:
       - file: package.json
         patchFile: package.json.47be7b.patch
   - type: PATCH
     step: 16
     name: vite.config.ts
-    description: null
+    description: Configure Vite for Express deployment with Node.js module externalization
     diffs:
       - file: vite.config.ts
         patchFile: vite.config.ts.93b90b.patch
@@ -240,4 +240,4 @@ llms:
     - issue: TypeScript errors about missing @react-router/node types
       solution: Run 'npm install' to ensure all dependencies including @types packages
         are installed.
-commit: 5b23ad73d4955edab47be5411d5644680ab580b6
+commit: b09a1214b24251dbd48cd960d9ec8079a7c68d03

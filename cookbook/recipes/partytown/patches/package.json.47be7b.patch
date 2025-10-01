@@ -1,4 +1,4 @@
-index 8f26b422..54739b4e 100644
+index 69150ea03..aedcd3405 100644
 --- a/templates/skeleton/package.json
 +++ b/templates/skeleton/package.json
 @@ -8,12 +8,14 @@
@@ -15,6 +15,6 @@ index 8f26b422..54739b4e 100644
    "prettier": "@shopify/prettier-config",
    "dependencies": {
 +    "@qwik.dev/partytown": "^0.11.2",
-     "@shopify/hydrogen": "2025.5.0",
+     "@shopify/hydrogen": "2025.7.0",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",

@@ -1,8 +1,8 @@
-index 4da726136..4aa695eb4 100644
+index 69150ea03..d3c3594dc 100644
 --- a/templates/skeleton/package.json
 +++ b/templates/skeleton/package.json
 @@ -5,58 +5,51 @@
-   "version": "2025.5.2",
+   "version": "2025.7.0",
    "type": "module",
    "scripts": {
 -    "build": "shopify hydrogen build --codegen",
@@ -21,7 +21,7 @@ index 4da726136..4aa695eb4 100644
 +    "@react-router/express": "7.9.2",
 +    "@react-router/node": "7.9.2",
 +    "@remix-run/eslint-config": "^2.16.1",
-     "@shopify/hydrogen": "2025.5.0",
+     "@shopify/hydrogen": "2025.7.0",
 +    "compression": "^1.7.4",
 +    "cross-env": "^7.0.3",
 +    "express": "^4.19.2",
@@ -41,9 +41,9 @@ index 4da726136..4aa695eb4 100644
      "@graphql-codegen/cli": "5.0.2",
      "@react-router/dev": "7.9.2",
      "@react-router/fs-routes": "7.9.2",
-     "@shopify/cli": "3.84.1",
+     "@shopify/cli": "3.85.4",
      "@shopify/hydrogen-codegen": "^0.3.3",
--    "@shopify/mini-oxygen": "^3.2.1",
+-    "@shopify/mini-oxygen": "^4.0.0",
 -    "@shopify/oxygen-workers-types": "^4.1.6",
 -    "@shopify/prettier-config": "^1.1.2",
 -    "@total-typescript/ts-reset": "^0.6.1",

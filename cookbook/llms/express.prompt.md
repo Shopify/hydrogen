@@ -241,7 +241,7 @@ Key changes:
 
 
 
-#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
+#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/b09a1214b24251dbd48cd960d9ec8079a7c68d03/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
 
 ```ts
 // This file extends the Hydrogen types for this project
@@ -312,7 +312,7 @@ export {};
 
 
 
-#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
+#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/b09a1214b24251dbd48cd960d9ec8079a7c68d03/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
 
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
@@ -473,7 +473,7 @@ export {};
 
 
 
-#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
+#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/b09a1214b24251dbd48cd960d9ec8079a7c68d03/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
 
 ```mjs
 #!/usr/bin/env node
@@ -784,7 +784,7 @@ process.on('SIGTERM', () => {
 
 
 
-#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/5b23ad73d4955edab47be5411d5644680ab580b6/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
+#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/b09a1214b24251dbd48cd960d9ec8079a7c68d03/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
 
 ```mjs
 import {createRequestHandler} from '@react-router/express';
@@ -2423,7 +2423,7 @@ class AppSession {
 
 ```diff
 @@ -5,58 +5,51 @@
-   "version": "2025.5.2",
+   "version": "2025.7.0",
    "type": "module",
    "scripts": {
 -    "build": "shopify hydrogen build --codegen",
@@ -2442,7 +2442,7 @@ class AppSession {
 +    "@react-router/express": "7.9.2",
 +    "@react-router/node": "7.9.2",
 +    "@remix-run/eslint-config": "^2.16.1",
-     "@shopify/hydrogen": "2025.5.0",
+     "@shopify/hydrogen": "2025.7.0",
 +    "compression": "^1.7.4",
 +    "cross-env": "^7.0.3",
 +    "express": "^4.19.2",
@@ -2464,7 +2464,7 @@ class AppSession {
      "@react-router/fs-routes": "7.9.2",
      "@shopify/cli": "3.84.1",
      "@shopify/hydrogen-codegen": "^0.3.3",
--    "@shopify/mini-oxygen": "^3.2.1",
+-    "@shopify/mini-oxygen": "^4.0.0",
 -    "@shopify/oxygen-workers-types": "^4.1.6",
 -    "@shopify/prettier-config": "^1.1.2",
 -    "@total-typescript/ts-reset": "^0.6.1",
