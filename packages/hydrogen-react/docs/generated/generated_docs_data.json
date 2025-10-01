@@ -5043,14 +5043,6 @@
               {
                 "filePath": "src/analytics-types.ts",
                 "syntaxKind": "PropertySignature",
-                "name": "ccpaEnforced",
-                "value": "boolean",
-                "description": "Result of `!customerPrivacyApi.saleOfDataAllowed()`",
-                "isOptional": true
-              },
-              {
-                "filePath": "src/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
                 "name": "collectionHandle",
                 "value": "string",
                 "description": "Shopify collection handle.",
@@ -5077,14 +5069,6 @@
                 "name": "customerId",
                 "value": "string",
                 "description": "Shopify customer id in the form of `gid://shopify/Customer/<id>`.",
-                "isOptional": true
-              },
-              {
-                "filePath": "src/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "gdprEnforced",
-                "value": "boolean",
-                "description": "Result of `!(customerPrivacyApi.marketingAllowed() && customerPrivacy.analyticsProcessingAllowed())`",
                 "isOptional": true
               },
               {
@@ -5429,14 +5413,6 @@
               {
                 "filePath": "src/analytics-types.ts",
                 "syntaxKind": "PropertySignature",
-                "name": "ccpaEnforced",
-                "value": "boolean",
-                "description": "Result of `!customerPrivacyApi.saleOfDataAllowed()`",
-                "isOptional": true
-              },
-              {
-                "filePath": "src/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
                 "name": "currency",
                 "value": "CurrencyCode",
                 "description": "Currency code."
@@ -5447,14 +5423,6 @@
                 "name": "customerId",
                 "value": "string",
                 "description": "Shopify customer id in the form of `gid://shopify/Customer/<id>`.",
-                "isOptional": true
-              },
-              {
-                "filePath": "src/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "gdprEnforced",
-                "value": "boolean",
-                "description": "Result of `!(customerPrivacyApi.marketingAllowed() && customerPrivacy.analyticsProcessingAllowed())`",
                 "isOptional": true
               },
               {
