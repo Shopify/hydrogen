@@ -980,9 +980,25 @@ async function validateDependencyRemoval(
     ...packageJson.devDependencies,
   };
 
+  // Packages that are being reinstalled (removal-then-reinstall pattern to avoid conflicts)
+  // This mirrors the actual upgrade logic in upgrade.ts:upgradeNodeModules which:
+  // 1. Removes packages first (lines 877-892)
+  // 2. Then installs new versions (lines 895-912)
+  // This pattern prevents peer dependency conflicts during major migrations
+  const reinstalledDeps = {
+    ...targetRelease.dependencies,
+    ...targetRelease.devDependencies,
+  };
+
   // Check each dependency that should be removed
   const failedRemovals: string[] = [];
   for (const dep of depsToRemove) {
+    // Skip validation if package is being reinstalled (removal-then-reinstall pattern)
+    // The upgrade command removes these first, then reinstalls new versions to avoid conflicts
+    if (reinstalledDeps[dep]) {
+      continue;
+    }
+
     if (dep in allDeps) {
       failedRemovals.push(`${dep} (found with version ${allDeps[dep]})`);
     }
