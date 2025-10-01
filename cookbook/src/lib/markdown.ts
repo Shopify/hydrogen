@@ -247,13 +247,14 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
         '---',
       ].join('\n');
     case 'NOTE':
-      return [
-        format === 'shopify.dev' ? '> Note' : '> [!NOTE]',
-        block.text
-          .split('\n')
-          .map((line) => `> ${line}`)
-          .join('\n'),
-      ].join('\n');
+      if (format === 'shopify.dev') {
+        return `<Notice framed type="note" label="Note">\n${block.text}\n</Notice>`;
+      } else {
+        return [
+          '> [!NOTE]',
+          block.text.split('\n').map((line) => `> ${line}`),
+        ].join('\n');
+      }
     case 'RAW_HTML':
       return block.html;
     default:
