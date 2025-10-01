@@ -5,8 +5,31 @@ import {TEMPLATE_PATH, COOKBOOK_PATH} from './constants';
 import {loadRecipe, Recipe} from './recipe';
 import path from 'path';
 
-export function validateStepNumbering(recipe: Recipe): void {
-  console.log(`- 🔢 Checking step numbering…`);
+export function validateStepDescriptions(recipe: Recipe): void {
+  console.log(`- 📝 Checking step descriptions…`);
+
+  for (let i = 0; i < recipe.steps.length; i++) {
+    const step = recipe.steps[i];
+    const stepNum = String(step.step);
+
+    if (step.description === null) {
+      throw new Error(
+        `Step ${stepNum} (${step.name}) has null description. ` +
+          `Please provide a description for this step.`,
+      );
+    }
+
+    if (step.description === '') {
+      throw new Error(
+        `Step ${stepNum} (${step.name}) has empty description. ` +
+          `Please provide a description for this step.`,
+      );
+    }
+  }
+}
+
+export function validateStepNames(recipe: Recipe): void {
+  console.log(`- 🔢 Checking step names…`);
 
   const stepsByNumber = new Map<string, Set<string>>();
 
@@ -50,7 +73,8 @@ export function validateRecipe(params: {
     // Note: applyRecipe() will also load the recipe. This duplication is acceptable
     // for now as the performance cost is negligible (~5ms). Could be optimized by
     // passing the recipe object to applyRecipe() if needed in the future.
-    validateStepNumbering(recipe);
+    validateStepNames(recipe);
+    validateStepDescriptions(recipe);
 
     console.log(`- 🧑‍🍳 Applying recipe '${recipeTitle}'`);
     applyRecipe({

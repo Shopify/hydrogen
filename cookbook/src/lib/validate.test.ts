@@ -1,8 +1,8 @@
 import {describe, expect, it} from 'vitest';
 import {Recipe} from './recipe';
-import {validateStepNumbering} from './validate';
+import {validateStepNames, validateStepDescriptions} from './validate';
 
-describe('validateStepNumbering', () => {
+describe('validateStepNames', () => {
   it('should throw when grouped steps have identical names', () => {
     const recipe = {
       gid: 'test-gid',
@@ -17,7 +17,7 @@ describe('validateStepNumbering', () => {
       commit: 'abc123',
     } as Recipe;
 
-    expect(() => validateStepNumbering(recipe)).toThrow(
+    expect(() => validateStepNames(recipe)).toThrow(
       'Step 1 has duplicate name "Update config"',
     );
   });
@@ -36,7 +36,7 @@ describe('validateStepNumbering', () => {
       commit: 'abc123',
     } as Recipe;
 
-    expect(() => validateStepNumbering(recipe)).not.toThrow();
+    expect(() => validateStepNames(recipe)).not.toThrow();
   });
 
   it('should pass for substeps', () => {
@@ -54,7 +54,7 @@ describe('validateStepNumbering', () => {
       commit: 'abc123',
     } as Recipe;
 
-    expect(() => validateStepNumbering(recipe)).not.toThrow();
+    expect(() => validateStepNames(recipe)).not.toThrow();
   });
 
   it('should pass when multiple steps share same number but have distinct names', () => {
@@ -73,6 +73,44 @@ describe('validateStepNumbering', () => {
       commit: 'abc123',
     } as Recipe;
 
-    expect(() => validateStepNumbering(recipe)).not.toThrow();
+    expect(() => validateStepNames(recipe)).not.toThrow();
+  });
+});
+
+describe('validateStepDescriptions', () => {
+  it('should throw when step description is null', () => {
+    const recipe = {
+      gid: 'test-gid',
+      title: 'Test',
+      summary: 'Test',
+      description: 'Test',
+      ingredients: [],
+      steps: [
+        {type: 'PATCH' as const, step: 1, name: 'Step 1', description: null, diffs: []},
+      ],
+      commit: 'abc123',
+    } as Recipe;
+
+    expect(() => validateStepDescriptions(recipe)).toThrow(
+      'Step 1 (Step 1) has null description',
+    );
+  });
+
+  it('should throw when step description is empty string', () => {
+    const recipe = {
+      gid: 'test-gid',
+      title: 'Test',
+      summary: 'Test',
+      description: 'Test',
+      ingredients: [],
+      steps: [
+        {type: 'PATCH' as const, step: 1, name: 'Step 1', description: '', diffs: []},
+      ],
+      commit: 'abc123',
+    } as Recipe;
+
+    expect(() => validateStepDescriptions(recipe)).toThrow(
+      'Step 1 (Step 1) has empty description',
+    );
   });
 });
