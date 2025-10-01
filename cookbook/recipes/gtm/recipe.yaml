@@ -24,7 +24,7 @@ description: |
   3. GoogleTagManager component that subscribes to analytics events
   4. Proper nonce attributes for security compliance and compatibility with the Content Security Policy
 notes:
-  - Replace GTM-<YOUR_GTM_ID> with your actual Google Tag Manager container ID
+  - Replace `GTM-<YOUR_GTM_ID>` with your actual Google Tag Manager container ID
     in both script locations
 requirements: |
   Prerequisites:
@@ -72,7 +72,7 @@ steps:
 nextSteps: |
   After applying this recipe:
 
-  1. Replace `GTM-{'<'}YOUR_GTM_ID{'>'}` with your actual container ID in app/root.tsx (2 locations).
+  1. Replace `GTM-<YOUR_GTM_ID>` with your actual container ID in app/root.tsx (2 locations).
 
   2. Configure GTM in your Google Tag Manager dashboard:
      - Set up tags for Google Analytics 4 or other tracking services

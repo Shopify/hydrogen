@@ -58,7 +58,7 @@ export function renderRecipe(params: {
   serializeMDBlocksToFile(
     makeReadmeBlocks(recipeName, recipe, params.format),
     path.join(
-      recipeDir,
+      params.format === 'github' ? recipeDir : 'shopify.dev',
       params.format === 'github' ? RENDER_FILENAME_GITHUB : `${recipeName}.mdx`,
     ),
     params.format,
