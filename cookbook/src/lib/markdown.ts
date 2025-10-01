@@ -179,7 +179,7 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
     case 'IMAGE':
       return `![${block.alt}](${block.src})`;
     case 'CODE':
-      const code = ['```' + block.language, block.content, '```'];
+      const code = ['~~~' + block.language, block.content, '~~~'];
       if (block.collapsed) {
         switch (format) {
           case 'github':

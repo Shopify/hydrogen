@@ -71,7 +71,7 @@ Updates README with metaobjects CMS documentation and architecture overview
 
 <details>
 
-```diff
+~~~diff
 index c584e5370..927d99f1a 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
@@ -172,7 +172,7 @@ index c584e5370..927d99f1a 100644
 -Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 +Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 \ No newline at end of file
-```
+~~~
 
 </details>
 
@@ -182,7 +182,7 @@ Adds RECOMMENDED_PRODUCT_FRAGMENT for displaying product collections in metaobje
 
 #### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/templates/skeleton/app/lib/fragments.ts)
 
-```diff
+~~~diff
 index cf35c25ea..99874574c 100644
 --- a/templates/skeleton/app/lib/fragments.ts
 +++ b/templates/skeleton/app/lib/fragments.ts
@@ -212,7 +212,7 @@ index cf35c25ea..99874574c 100644
 +    }
 +  }
 +` as const;
-```
+~~~
 
 ### Step 3: app/components/EditRoute.tsx
 
@@ -222,7 +222,7 @@ Adds edit route component for managing metaobject-based content in development
 
 <details>
 
-```tsx
+~~~tsx
 import {useState, useEffect} from 'react';
 import {Link, useMatches} from 'react-router';
 
@@ -272,7 +272,7 @@ export function EditRoute({routeId}: {routeId: string}) {
   );
 }
 
-```
+~~~
 
 </details>
 
@@ -282,7 +282,7 @@ Exposes public store subdomain for metaobject queries and content management
 
 #### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/templates/skeleton/app/root.tsx)
 
-```diff
+~~~diff
 index 375fc7b04..586ac94a9 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
@@ -294,7 +294,7 @@ index 375fc7b04..586ac94a9 100644
 +    publictoreSubdomain: args.context.env.PUBLIC_STORE_DOMAIN,
    };
  }
-```
+~~~
 
 ### Step 4: app/routes/stores.$name.tsx
 
@@ -304,7 +304,7 @@ Dynamic store profile route displaying store-specific metaobject content
 
 <details>
 
-```tsx
+~~~tsx
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/stores.$name';
 
@@ -364,7 +364,7 @@ export default function Store() {
   );
 }
 
-```
+~~~
 
 </details>
 
@@ -376,7 +376,7 @@ Integrates RouteContent component to render metaobject sections on homepage
 
 <details>
 
-```diff
+~~~diff
 index 28102dbe6..27dbb95cf 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
@@ -561,7 +561,7 @@ index 28102dbe6..27dbb95cf 100644
 -    }
 -  }
 -` as const;
-```
+~~~
 
 </details>
 
@@ -573,7 +573,7 @@ Store listing page showing all stores from metaobjects with grid layout
 
 <details>
 
-```tsx
+~~~tsx
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/stores._index';
 
@@ -634,7 +634,7 @@ export default function Stores() {
   );
 }
 
-```
+~~~
 
 </details>
 
@@ -644,7 +644,7 @@ Adds Slate dependencies for rich text editing in metaobject sections
 
 #### File: [package.json](https://github.com/Shopify/hydrogen/blob/75623a5bfdd8d6f0eab0d3547860341c20d9076c/templates/skeleton/package.json)
 
-```diff
+~~~diff
 index 0ee1599a1..7939e3b36 100644
 --- a/templates/skeleton/package.json
 +++ b/templates/skeleton/package.json
@@ -659,7 +659,7 @@ index 0ee1599a1..7939e3b36 100644
    },
    "devDependencies": {
      "@eslint/compat": "^1.2.5",
-```
+~~~
 
 ### Step 8: app/sections/RouteContent.tsx
 
@@ -669,7 +669,7 @@ Main component for fetching and rendering metaobject-based route content
 
 <details>
 
-```tsx
+~~~tsx
 import {SECTIONS_FRAGMENT, Sections} from '~/sections/Sections';
 import {EditRoute} from '~/components/EditRoute';
 
@@ -705,7 +705,7 @@ export const ROUTE_CONTENT_QUERY = `#graphql
   ${SECTIONS_FRAGMENT}
 `;
 
-```
+~~~
 
 </details>
 
@@ -717,7 +717,7 @@ Section component for displaying featured product collections from metaobjects
 
 <details>
 
-```tsx
+~~~tsx
 import type {
   SectionFeaturedCollectionsFragment,
   FeaturedCollectionImageFragment,
@@ -806,7 +806,7 @@ export const SECTION_FEATURED_COLLECTIONS_FRAGMENT = `#graphql
   ${FEATURED_COLLECTION_FRAGMENT}
 `;
 
-```
+~~~
 
 </details>
 
@@ -818,7 +818,7 @@ Section component for showcasing featured products with customizable layout
 
 <details>
 
-```tsx
+~~~tsx
 import {Money, Image} from '@shopify/hydrogen';
 import {Link} from 'react-router';
 import type {SectionFeaturedProductsFragment} from 'storefrontapi.generated';
@@ -923,7 +923,7 @@ export const SECTION_FEATURED_PRODUCTS_FRAGMENT = `#graphql
   ${FEATURED_PRODUCT_FRAGMENT}
 `;
 
-```
+~~~
 
 </details>
 
@@ -935,7 +935,7 @@ Hero banner section with image, heading, and call-to-action from metaobjects
 
 <details>
 
-```tsx
+~~~tsx
 import type {ParsedMetafields} from '@shopify/hydrogen';
 import {parseSection} from '~/utils/parseSection';
 import {Link} from 'react-router';
@@ -1061,7 +1061,7 @@ export const SECTION_HERO_FRAGMENT = `#graphql
   ${MEDIA_IMAGE_FRAGMENT}
 `;
 
-```
+~~~
 
 </details>
 
@@ -1073,7 +1073,7 @@ Store profile section displaying store details, hours, and contact information
 
 <details>
 
-```tsx
+~~~tsx
 import type {ParsedMetafields} from '@shopify/hydrogen';
 import {parseSection} from '~/utils/parseSection';
 import {Link} from 'react-router';
@@ -1185,7 +1185,7 @@ export const SECTION_STORE_PROFILE_FRAGMENT = `#graphql
   ${STORE_PROFILE_FRAGMENT}
 `;
 
-```
+~~~
 
 </details>
 
@@ -1197,7 +1197,7 @@ Grid layout section for displaying multiple store locations from metaobjects
 
 <details>
 
-```tsx
+~~~tsx
 import type {ParsedMetafields} from '@shopify/hydrogen';
 import {parseSection} from '~/utils/parseSection';
 import {Link} from 'react-router';
@@ -1306,7 +1306,7 @@ export const SECTION_STORES_FRAGMENT = `#graphql
   }
   ${STORE_ITEM_FRAGMENT} `;
 
-```
+~~~
 
 </details>
 
@@ -1318,7 +1318,7 @@ Dynamic section renderer that maps metaobject types to React components
 
 <details>
 
-```tsx
+~~~tsx
 import {SECTION_HERO_FRAGMENT, SectionHero} from '~/sections/SectionHero';
 import {
   SECTION_FEATURED_PRODUCTS_FRAGMENT,
@@ -1389,7 +1389,7 @@ export const SECTIONS_FRAGMENT = `#graphql
   ${SECTION_STORE_PROFILE_FRAGMENT}
 `;
 
-```
+~~~
 
 </details>
 
@@ -1401,7 +1401,7 @@ Utility function for parsing and transforming metaobject field data
 
 <details>
 
-```ts
+~~~ts
 import type {ParsedMetafields} from '@shopify/hydrogen';
 import {parseMetafield} from '@shopify/hydrogen';
 
@@ -1535,7 +1535,7 @@ function liftEach<Section, KeysToRemove extends ReadonlyArray<PropertyKey>>(
   }, obj) as LiftEach<Section, KeysToRemove>;
 }
 
-```
+~~~
 
 </details>
 
@@ -1547,7 +1547,7 @@ Comprehensive guide for setting up metaobject definitions in Shopify admin
 
 <details>
 
-```md
+~~~md
 # Metaobjects Overview
 
 This document describes the high-level content architecture and metaobject definitions
@@ -1818,7 +1818,7 @@ export const SECTIONS_FRAGMENT = `#graphql
 `;
 ```
 
-```
+~~~
 
 </details>
 
