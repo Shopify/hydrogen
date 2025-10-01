@@ -21,8 +21,7 @@ const {
   getBumpType,
   getPackagePath,
   readPackage,
-  writePackage,
-  hasCalVerChangesets
+  writePackage
 } = require('./calver-shared.js');
 
 // Read all package.json files for CalVer packages
@@ -227,17 +226,27 @@ function validateCalVer(version) {
 
 // Main execution
 function main() {
-  // Check if any CalVer packages have changesets
-  if (!hasCalVerChangesets()) {
-    console.log('No CalVer changesets detected. Skipping CalVer enforcement.');
+  // Read current versions (after changesets has run)
+  // This compares current pkg versions against git baseline
+  const versions = readPackageVersions();
+
+  // Check if any CalVer package actually changed
+  // After changesets runs, if a package wasn't touched, oldVersion === pkg.version
+  let hasCalVerChanges = false;
+  for (const [pkgName, data] of Object.entries(versions)) {
+    if (data.pkg.version !== data.oldVersion) {
+      hasCalVerChanges = true;
+      break;
+    }
+  }
+
+  if (!hasCalVerChanges) {
+    console.log('No CalVer package changes detected. Skipping CalVer enforcement.');
     console.log('This is a semver-only release.');
     return;
   }
 
   console.log('Starting CalVer enforcement...\n');
-
-  // Read current versions (after changesets has run)
-  const versions = readPackageVersions();
 
   // Calculate new CalVer versions
   const updates = calculateNewVersions(versions);
