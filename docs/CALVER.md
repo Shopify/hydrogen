@@ -156,8 +156,10 @@ node scripts/get-latest-branch.js  // → "2025-07"
 #### 3. CalVer Enforcement
 - **`enforce-calver-ci.js`** - Production CI script (runs in GitHub Actions)
   - Skips execution when only semver packages have changesets (guard check)
-  - Uses git baseline to read original versions (before changesets corruption)
-  - Fetches from `HEAD~1` or `origin/main` to avoid using invalid semver versions
+  - Fetches individual git baselines for each CalVer package
+  - **Independent patches**: Each CalVer package can have different patch versions
+  - **Synced majors**: All CalVer packages advance to same quarter for major bumps
+  - Prevents changesets corruption (e.g., 2026.0.0 → 2025.10.0)
 - **`enforce-calver-local.js`** - Local testing with dry-run support
 
 ### CI/CD Integration
@@ -212,8 +214,12 @@ The release workflow now operates with zero manual intervention:
 
 ### CalVer Packages (YYYY.M.P format)
 - `@shopify/hydrogen`
-- `@shopify/hydrogen-react`  
+- `@shopify/hydrogen-react`
 - `skeleton` (template)
+
+**Versioning behavior**:
+- **Patches/minors**: Independent versioning allowed (e.g., hydrogen@2025.7.2, hydrogen-react@2025.7.0)
+- **Majors**: Always synchronized to same quarter (e.g., all at 2025.10.0)
 
 ### Semver Packages (X.Y.Z format)
 - `@shopify/cli-hydrogen`
@@ -456,10 +462,10 @@ Scenario B: With Bypass
 
 ## Safety Features
 
-1. **Hydrogen as Source of Truth**: All CalVer packages use hydrogen's version as baseline
-   - Prevents version inconsistencies across packages
-   - Resolves "Invalid quarter" errors caused by package drift
-   - Ensures consistent CalVer enforcement across the monorepo
+1. **Independent Patches, Synced Majors**: CalVer packages can have independent patch versions
+   - **Patches/minors**: Each package uses its own git baseline for independent versioning
+   - **Majors**: All packages use hydrogen's baseline to sync to same quarter
+   - Enables independent bug fixes while maintaining API compatibility across majors
    - **Git Baseline Protection**: Reads original versions from git history to avoid changeset corruption
 2. **Version Regression Protection**: Prevents versions from going backwards
 3. **Quarter Alignment Validation**: Ensures majors use quarters (1,4,7,10)
