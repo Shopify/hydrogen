@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.0.26
+
+### Patch Changes
+
+- Update skeleton and create-hydrogen for @shopify/cli@3.85.4 incl @shopify/cli-hydrogen@11.1.4 ([#3232](https://github.com/Shopify/hydrogen/pull/3232)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 5.0.25
 
 ### Patch Changes
