@@ -1,4 +1,4 @@
-# Express server for Hydrogen
+# Express server in Hydrogen
 
 This recipe transforms a Hydrogen skeleton template to run on a standard Node.js Express server,
 making it deployable to any Node.js hosting platform instead of Shopify Oxygen. It maintains core

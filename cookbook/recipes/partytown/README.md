@@ -1,4 +1,4 @@
-# Partytown + Google Tag Manager
+# Partytown + Google Tag Manager in Hydrogen
 
 This recipe integrates Partytown with your Hydrogen storefront to run Google Tag Manager 
 and other third-party scripts in a web worker, keeping the main thread free for critical 

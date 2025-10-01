@@ -1,4 +1,4 @@
-# Subscriptions
+# Subscriptions in Hydrogen
 
 This recipe lets you sell subscription-based products on your Hydrogen storefront by implementing [selling plan groups](https://shopify.dev/docs/api/storefront/latest/objects/SellingPlanGroup). Your customers will be able to choose between one-time purchases or recurring subscriptions for any products with available selling plans.
 

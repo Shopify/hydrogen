@@ -373,7 +373,7 @@ function makeTitle(
         [doNotEditComment(recipeName)],
       );
     case 'github':
-      return mdHeading(1, recipe.title);
+      return mdHeading(1, `${recipe.title} in Hydrogen`);
     default:
       assertNever(format);
   }

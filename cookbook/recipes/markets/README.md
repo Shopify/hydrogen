@@ -1,4 +1,4 @@
-# Markets
+# Markets in Hydrogen
 
 This recipe shows how to add support for [Shopify
 Markets](https://shopify.dev/docs/apps/build/markets) to your Hydrogen app. Markets

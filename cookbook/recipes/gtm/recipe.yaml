@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 gid: a070bb16-7f92-420a-a458-161f90242297
-title: Google Tag Manager integration in Hydrogen
+title: Google Tag Manager integration
 summary: Add Google Tag Manager to your Hydrogen storefront for advanced
   analytics and marketing tracking
 description: |

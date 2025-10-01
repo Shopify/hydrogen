@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 gid: 5e5f8934-e836-4b4c-aa60-30b5f45944f9
-title: Dynamic content with metaobjects in Hydrogen
+title: Dynamic content with metaobjects
 summary: Build a flexible CMS using Shopify metaobjects for dynamic content sections
 description: |
   This recipe creates a content management system using Shopify metaobjects.

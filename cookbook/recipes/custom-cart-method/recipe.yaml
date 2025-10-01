@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 gid: 27d7e01b-7264-44e4-ae7c-32dc8da58c46
-title: Custom cart method in Hydrogen
+title: Custom cart method
 summary: Add inline product option editing to cart items
 description: |
   This recipe implements custom cart methods in Hydrogen using the Storefront API's

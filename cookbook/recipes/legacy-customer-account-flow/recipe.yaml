@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 gid: 113d1846-1e41-44e2-a3b4-b8b11abf09c0
-title: Legacy customer account flow in Hydrogen
+title: Legacy customer account flow
 summary: Implement legacy customer account authentication using the Storefront API
 description: |
   This recipe converts a Hydrogen app from the new Customer Account API authentication

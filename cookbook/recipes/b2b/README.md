@@ -1,4 +1,4 @@
-# B2B Commerce
+# B2B Commerce in Hydrogen
 
 This recipe adds comprehensive B2B functionality to your Hydrogen storefront, enabling business customers to:
 

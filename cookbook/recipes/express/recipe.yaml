@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 gid: 99596983-f4f0-4285-8f88-9112794cb812
-title: Express server for Hydrogen
+title: Express server
 summary: Deploy Hydrogen on Node.js with Express instead of Shopify Oxygen
 description: |
   This recipe transforms a Hydrogen skeleton template to run on a standard Node.js Express server,

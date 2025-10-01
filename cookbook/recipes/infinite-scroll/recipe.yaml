@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 gid: cdd523a1-fcd9-4122-aacd-fdd2f2c050e7
-title: Infinite scroll for collections in Hydrogen
+title: Infinite scroll for collections
 summary: Add infinite scroll pagination to collection pages for seamless product
   browsing
 description: |

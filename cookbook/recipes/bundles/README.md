@@ -1,4 +1,4 @@
-# Bundles
+# Bundles in Hydrogen
 
 This recipe adds special styling for product bundles on your Hydrogen
 storefront. Customers will see badges and relevant cover images for bundles

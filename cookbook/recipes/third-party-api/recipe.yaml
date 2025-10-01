@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 gid: 3bce358d-d709-4dc8-8c4e-e0c047c17b12
-title: Third-party API queries and caching in Hydrogen
+title: Third-party API queries and caching
 summary: Add third-party GraphQL API queries with Oxygen's sub-request caching
   to your Hydrogen storefront.
 description: |

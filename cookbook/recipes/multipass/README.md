@@ -1,4 +1,4 @@
-# Multipass Authentication with Storefront API
+# Multipass Authentication with Storefront API in Hydrogen
 
 This recipe implements Shopify Plus Multipass authentication using the Storefront API instead of the Customer Account API.
 It provides session-based authentication with customer access tokens, enabling customers to maintain their logged-in
