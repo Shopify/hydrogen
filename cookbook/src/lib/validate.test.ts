@@ -555,7 +555,37 @@ describe('validateRecipe integration', () => {
   });
 
   it('should include actual values in Zod validation error messages', () => {
-    const recipeName = 'gtm';
+    const recipeName = 'test-recipe';
+    const recipeYamlPath = path.join(COOKBOOK_PATH, 'recipes', recipeName, 'recipe.yaml');
+
+    const yamlContent = `
+gid: test-gid
+title: Test
+summary: Test
+description: Test
+ingredients: []
+steps:
+  - step: "1"
+    type: PATCH
+    name: README.md
+    description: Test
+    diffs: []
+  - step: "2"
+    type: PATCH
+    name: app/root.tsx
+    description: Test
+    diffs: []
+commit: abc123
+`;
+
+    vi.spyOn(fs, 'readFileSync').mockImplementation((filePath: any) => {
+      if (filePath === recipeYamlPath) {
+        return yamlContent;
+      }
+      throw new Error(`File not found: ${filePath}`);
+    });
+
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true);
 
     const result = validateRecipe({recipeTitle: recipeName});
 
