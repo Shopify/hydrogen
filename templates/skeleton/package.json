@@ -15,11 +15,15 @@
   "prettier": "@shopify/prettier-config",
   "dependencies": {
     "@shopify/hydrogen": "2025.7.0",
+    "@react-three/drei": "^9.121.4",
+    "@react-three/fiber": "^9.0.0",
     "graphql": "^16.10.0",
     "graphql-tag": "^2.12.6",
     "isbot": "^5.1.22",
     "react": "18.3.1",
     "react-dom": "18.3.1",
+    "three": "^0.170.0",
+    "fabric": "^6.5.3",
     "react-router": "7.9.2",
     "react-router-dom": "7.9.2"
   },
@@ -54,7 +58,9 @@
     "prettier": "^3.4.2",
     "typescript": "^5.9.2",
     "vite": "^6.2.4",
-    "vite-tsconfig-paths": "^4.3.1"
+    "vite-tsconfig-paths": "^4.3.1",
+    "@tailwindcss/vite": "^4.1.6",
+    "tailwindcss": "^4.1.6"
   },
   "engines": {
     "node": ">=18.0.0"

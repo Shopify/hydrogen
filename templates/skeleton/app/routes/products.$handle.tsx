@@ -1,7 +1,4 @@
-import {
-  redirect,
-  useLoaderData,
-} from 'react-router';
+import {Link, redirect, useLoaderData} from 'react-router';
 import type {Route} from './+types/products.$handle';
 import {
   getSelectedProductOptions,
@@ -118,6 +115,12 @@ export default function Product() {
           productOptions={productOptions}
           selectedVariant={selectedVariant}
         />
+        <br />
+        <p>
+          <Link prefetch="intent" to={`/customize/${product.handle}`} className="link">
+            Personalizar camiseta
+          </Link>
+        </p>
         <br />
         <br />
         <p>
