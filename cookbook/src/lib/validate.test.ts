@@ -67,8 +67,36 @@ describe('formatValidationError', () => {
 });
 
 describe('getYamlLineNumber', () => {
+  const mockYamlContent = `# yaml-language-server: $schema=../../recipe.schema.json
+
+gid: test-gid
+title: Test Recipe
+summary: Test
+description: Test
+ingredients: []
+steps:
+  - step: 1
+    type: PATCH
+    name: README.md
+    description: Test
+    diffs: []
+  - step: 2
+    type: PATCH
+    name: app/root.tsx
+    description: Test
+    diffs: []
+commit: abc123
+`;
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('should return line number for simple field', () => {
-    const yamlPath = path.join(COOKBOOK_PATH, 'recipes', 'gtm', 'recipe.yaml');
+    const yamlPath = path.join(COOKBOOK_PATH, 'recipes', 'test', 'recipe.yaml');
+
+    vi.spyOn(fs, 'readFileSync').mockReturnValue(mockYamlContent);
+
     const lineNum = getYamlLineNumber(yamlPath, ['title']);
 
     expect(lineNum).toBeGreaterThan(0);
@@ -76,20 +104,30 @@ describe('getYamlLineNumber', () => {
   });
 
   it('should return line number for nested array element', () => {
-    const yamlPath = path.join(COOKBOOK_PATH, 'recipes', 'gtm', 'recipe.yaml');
+    const yamlPath = path.join(COOKBOOK_PATH, 'recipes', 'test', 'recipe.yaml');
+
+    vi.spyOn(fs, 'readFileSync').mockReturnValue(mockYamlContent);
+
     const lineNum = getYamlLineNumber(yamlPath, ['steps', 0, 'step']);
 
-    expect(lineNum).toBeGreaterThan(40);
+    expect(lineNum).toBeGreaterThan(8);
   });
 
   it('should return null for invalid path', () => {
-    const yamlPath = path.join(COOKBOOK_PATH, 'recipes', 'gtm', 'recipe.yaml');
+    const yamlPath = path.join(COOKBOOK_PATH, 'recipes', 'test', 'recipe.yaml');
+
+    vi.spyOn(fs, 'readFileSync').mockReturnValue(mockYamlContent);
+
     const lineNum = getYamlLineNumber(yamlPath, ['nonexistent', 'path']);
 
     expect(lineNum).toBeNull();
   });
 
   it('should return null for nonexistent file', () => {
+    vi.spyOn(fs, 'readFileSync').mockImplementation(() => {
+      throw new Error('File not found');
+    });
+
     const lineNum = getYamlLineNumber('/nonexistent/file.yaml', ['title']);
 
     expect(lineNum).toBeNull();
