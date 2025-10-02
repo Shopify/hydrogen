@@ -7,13 +7,97 @@ import {
   validateIngredientFiles,
   validateReadmeExists,
   validateLlmPromptExists,
+  getYamlLineNumber,
+  validateRecipe,
+  formatValidationError,
 } from './validate';
 import fs from 'fs';
 import path from 'path';
 import {COOKBOOK_PATH} from './constants';
+import * as recipeModule from './recipe';
+
+vi.mock('./apply', () => ({
+  applyRecipe: vi.fn(),
+}));
+
+vi.mock('child_process', () => ({
+  execSync: vi.fn(() => Buffer.from('/Users/juanp.prieto/github.com/Shopify/hydrogen')),
+}));
+
+describe('formatValidationError', () => {
+  it('should format error with line number and location', () => {
+    const error = {
+      validator: 'RecipeSchema',
+      message: 'Expected number, received string',
+      location: 'steps.0.step',
+      lineNumber: 52,
+    };
+
+    const formatted = formatValidationError(error);
+
+    expect(formatted).toContain('recipe.yaml:52');
+    expect(formatted).toContain('steps.0.step');
+    expect(formatted).toContain('RecipeSchema: Expected number, received string');
+  });
+
+  it('should format error without line number', () => {
+    const error = {
+      validator: 'validateReadmeExists',
+      message: 'README.md not found',
+      location: 'README.md',
+    };
+
+    const formatted = formatValidationError(error);
+
+    expect(formatted).not.toContain('recipe.yaml');
+    expect(formatted).toContain('README.md');
+    expect(formatted).toContain('validateReadmeExists: README.md not found');
+  });
+
+  it('should format error without location', () => {
+    const error = {
+      validator: 'validateLlmPromptExists',
+      message: 'LLM prompt file not found',
+    };
+
+    const formatted = formatValidationError(error);
+
+    expect(formatted).toContain('validateLlmPromptExists: LLM prompt file not found');
+  });
+});
+
+describe('getYamlLineNumber', () => {
+  it('should return line number for simple field', () => {
+    const yamlPath = path.join(COOKBOOK_PATH, 'recipes', 'gtm', 'recipe.yaml');
+    const lineNum = getYamlLineNumber(yamlPath, ['title']);
+
+    expect(lineNum).toBeGreaterThan(0);
+    expect(lineNum).toBeLessThan(10);
+  });
+
+  it('should return line number for nested array element', () => {
+    const yamlPath = path.join(COOKBOOK_PATH, 'recipes', 'gtm', 'recipe.yaml');
+    const lineNum = getYamlLineNumber(yamlPath, ['steps', 0, 'step']);
+
+    expect(lineNum).toBeGreaterThan(40);
+  });
+
+  it('should return null for invalid path', () => {
+    const yamlPath = path.join(COOKBOOK_PATH, 'recipes', 'gtm', 'recipe.yaml');
+    const lineNum = getYamlLineNumber(yamlPath, ['nonexistent', 'path']);
+
+    expect(lineNum).toBeNull();
+  });
+
+  it('should return null for nonexistent file', () => {
+    const lineNum = getYamlLineNumber('/nonexistent/file.yaml', ['title']);
+
+    expect(lineNum).toBeNull();
+  });
+});
 
 describe('validateStepNames', () => {
-  it('should throw when grouped steps have identical names', () => {
+  it('should return error when grouped steps have identical names', () => {
     const recipe = {
       gid: 'test-gid',
       title: 'Test',
@@ -21,18 +105,24 @@ describe('validateStepNames', () => {
       description: 'Test',
       ingredients: [],
       steps: [
-        {type: 'PATCH' as const, step: 1, name: 'Update config', diffs: []},
-        {type: 'PATCH' as const, step: 1, name: 'Update config', diffs: []},
+        {type: 'PATCH' as const, step: 1, name: 'README.md', diffs: []},
+        {type: 'PATCH' as const, step: 1, name: 'README.md', diffs: []},
       ],
       commit: 'abc123',
     } as Recipe;
 
-    expect(() => validateStepNames(recipe)).toThrow(
-      'Step 1 has duplicate name "Update config"',
-    );
+    const result = validateStepNames(recipe);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({
+      validator: 'validateStepNames',
+      message: 'Step 1 has duplicate name "README.md". Grouped steps must have distinct names.',
+      location: 'steps[1].name',
+    });
   });
 
-  it('should pass for valid sequential steps', () => {
+  it('should return valid for sequential steps', () => {
     const recipe = {
       gid: 'test-gid',
       title: 'Test',
@@ -40,16 +130,19 @@ describe('validateStepNames', () => {
       description: 'Test',
       ingredients: [],
       steps: [
-        {type: 'PATCH' as const, step: 1, name: 'Step 1', diffs: []},
-        {type: 'PATCH' as const, step: 2, name: 'Step 2', diffs: []},
+        {type: 'PATCH' as const, step: 1, name: 'README.md', diffs: []},
+        {type: 'PATCH' as const, step: 2, name: 'app/root.tsx', diffs: []},
       ],
       commit: 'abc123',
     } as Recipe;
 
-    expect(() => validateStepNames(recipe)).not.toThrow();
+    const result = validateStepNames(recipe);
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
   });
 
-  it('should pass for substeps', () => {
+  it('should return valid for substeps', () => {
     const recipe = {
       gid: 'test-gid',
       title: 'Test',
@@ -57,17 +150,20 @@ describe('validateStepNames', () => {
       description: 'Test',
       ingredients: [],
       steps: [
-        {type: 'PATCH' as const, step: 1, name: 'Step 1', diffs: []},
-        {type: 'PATCH' as const, step: 1.1, name: 'Step 1.1', diffs: []},
-        {type: 'PATCH' as const, step: 1.2, name: 'Step 1.2', diffs: []},
+        {type: 'PATCH' as const, step: 1, name: 'README.md', diffs: []},
+        {type: 'PATCH' as const, step: 1.1, name: 'app/entry.server.tsx', diffs: []},
+        {type: 'PATCH' as const, step: 1.2, name: 'app/root.tsx', diffs: []},
       ],
       commit: 'abc123',
     } as Recipe;
 
-    expect(() => validateStepNames(recipe)).not.toThrow();
+    const result = validateStepNames(recipe);
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
   });
 
-  it('should pass when multiple steps share same number but have distinct names', () => {
+  it('should return valid when multiple steps share same number but have distinct names', () => {
     const recipe = {
       gid: 'test-gid',
       title: 'Test',
@@ -83,12 +179,15 @@ describe('validateStepNames', () => {
       commit: 'abc123',
     } as Recipe;
 
-    expect(() => validateStepNames(recipe)).not.toThrow();
+    const result = validateStepNames(recipe);
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
   });
 });
 
 describe('validateStepDescriptions', () => {
-  it('should throw when step description is null', () => {
+  it('should return error when step description is null', () => {
     const recipe = {
       gid: 'test-gid',
       title: 'Test',
@@ -96,17 +195,23 @@ describe('validateStepDescriptions', () => {
       description: 'Test',
       ingredients: [],
       steps: [
-        {type: 'PATCH' as const, step: 1, name: 'Step 1', description: null, diffs: []},
+        {type: 'PATCH' as const, step: 1, name: 'README.md', description: null, diffs: []},
       ],
       commit: 'abc123',
     } as Recipe;
 
-    expect(() => validateStepDescriptions(recipe)).toThrow(
-      'Step 1 (Step 1) has null description',
-    );
+    const result = validateStepDescriptions(recipe);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({
+      validator: 'validateStepDescriptions',
+      message: 'Step 1 (README.md) has null description. Please provide a description for this step.',
+      location: 'steps[0].description',
+    });
   });
 
-  it('should throw when step description is empty string', () => {
+  it('should return error when step description is empty string', () => {
     const recipe = {
       gid: 'test-gid',
       title: 'Test',
@@ -114,14 +219,39 @@ describe('validateStepDescriptions', () => {
       description: 'Test',
       ingredients: [],
       steps: [
-        {type: 'PATCH' as const, step: 1, name: 'Step 1', description: '', diffs: []},
+        {type: 'PATCH' as const, step: 1, name: 'app/root.tsx', description: '', diffs: []},
       ],
       commit: 'abc123',
     } as Recipe;
 
-    expect(() => validateStepDescriptions(recipe)).toThrow(
-      'Step 1 (Step 1) has empty description',
-    );
+    const result = validateStepDescriptions(recipe);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({
+      validator: 'validateStepDescriptions',
+      message: 'Step 1 (app/root.tsx) has empty description. Please provide a description for this step.',
+      location: 'steps[0].description',
+    });
+  });
+
+  it('should return valid result when all descriptions are present', () => {
+    const recipe = {
+      gid: 'test-gid',
+      title: 'Test',
+      summary: 'Test',
+      description: 'Test',
+      ingredients: [],
+      steps: [
+        {type: 'PATCH' as const, step: 1, name: 'README.md', description: 'Valid description', diffs: []},
+      ],
+      commit: 'abc123',
+    } as Recipe;
+
+    const result = validateStepDescriptions(recipe);
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
   });
 });
 
@@ -138,7 +268,7 @@ describe('validatePatchFiles', () => {
     vi.restoreAllMocks();
   });
 
-  it('should throw when patch file referenced in yaml does not exist', () => {
+  it('should return error when patch file referenced in yaml does not exist', () => {
     const recipe = {
       gid: '550e8400-e29b-41d4-a716-446655440000',
       title: 'Test',
@@ -149,7 +279,7 @@ describe('validatePatchFiles', () => {
         {
           type: 'PATCH' as const,
           step: 1,
-          name: 'Update config',
+          name: 'app/root.tsx',
           description: 'Updates configuration',
           diffs: [{file: 'app/root.tsx', patchFile: 'root.tsx.abc123.patch'}],
         },
@@ -163,12 +293,17 @@ describe('validatePatchFiles', () => {
       return true;
     });
 
-    expect(() => validatePatchFiles('test-recipe', recipe)).toThrow(
-      'Patch file not found: root.tsx.abc123.patch',
-    );
+    const result = validatePatchFiles('test-recipe', recipe);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({
+      validator: 'validatePatchFiles',
+      message: 'Patch file not found: root.tsx.abc123.patch',
+    });
   });
 
-  it('should throw when patch file exists on filesystem but not referenced in yaml', () => {
+  it('should return error when patch file exists on filesystem but not referenced in yaml', () => {
     const recipe = {
       gid: '550e8400-e29b-41d4-a716-446655440000',
       title: 'Test',
@@ -184,12 +319,17 @@ describe('validatePatchFiles', () => {
       {name: 'orphaned.patch', isFile: () => true} as fs.Dirent,
     ] as fs.Dirent[]);
 
-    expect(() => validatePatchFiles('test-recipe', recipe)).toThrow(
-      'Orphaned patch file not referenced in recipe: orphaned.patch',
-    );
+    const result = validatePatchFiles('test-recipe', recipe);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({
+      validator: 'validatePatchFiles',
+      message: 'Orphaned patch file not referenced in recipe: orphaned.patch',
+    });
   });
 
-  it('should pass when all patch files are valid', () => {
+  it('should return valid when all patch files are valid', () => {
     const recipe = {
       gid: '550e8400-e29b-41d4-a716-446655440000',
       title: 'Test',
@@ -200,7 +340,7 @@ describe('validatePatchFiles', () => {
         {
           type: 'PATCH' as const,
           step: 1,
-          name: 'Update config',
+          name: 'app/root.tsx',
           description: 'Updates configuration',
           diffs: [{file: 'app/root.tsx', patchFile: 'root.tsx.abc123.patch'}],
         },
@@ -213,7 +353,10 @@ describe('validatePatchFiles', () => {
       {name: 'root.tsx.abc123.patch', isFile: () => true} as fs.Dirent,
     ] as fs.Dirent[]);
 
-    expect(() => validatePatchFiles('test-recipe', recipe)).not.toThrow();
+    const result = validatePatchFiles('test-recipe', recipe);
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
   });
 });
 
@@ -230,7 +373,7 @@ describe('validateIngredientFiles', () => {
     vi.restoreAllMocks();
   });
 
-  it('should throw when ingredient file referenced in yaml does not exist', () => {
+  it('should return error when ingredient file referenced in yaml does not exist', () => {
     const recipe = {
       gid: '550e8400-e29b-41d4-a716-446655440000',
       title: 'Test',
@@ -247,12 +390,17 @@ describe('validateIngredientFiles', () => {
       return true;
     });
 
-    expect(() => validateIngredientFiles('test-recipe', recipe)).toThrow(
-      'Ingredient file not found: templates/skeleton/app/components/Foo.tsx',
-    );
+    const result = validateIngredientFiles('test-recipe', recipe);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({
+      validator: 'validateIngredientFiles',
+      message: 'Ingredient file not found: templates/skeleton/app/components/Foo.tsx',
+    });
   });
 
-  it('should throw when ingredient file exists on filesystem but not referenced in yaml', () => {
+  it('should return error when ingredient file exists on filesystem but not referenced in yaml', () => {
     const recipe = {
       gid: '550e8400-e29b-41d4-a716-446655440000',
       title: 'Test',
@@ -280,12 +428,17 @@ describe('validateIngredientFiles', () => {
       } as fs.Dirent,
     ] as fs.Dirent[]);
 
-    expect(() => validateIngredientFiles('test-recipe', recipe)).toThrow(
-      'Orphaned ingredient file not referenced in recipe: orphaned.tsx',
-    );
+    const result = validateIngredientFiles('test-recipe', recipe);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({
+      validator: 'validateIngredientFiles',
+      message: 'Orphaned ingredient file not referenced in recipe: orphaned.tsx',
+    });
   });
 
-  it('should pass when all ingredient files are valid', () => {
+  it('should return valid when all ingredient files are valid', () => {
     const recipe = {
       gid: '550e8400-e29b-41d4-a716-446655440000',
       title: 'Test',
@@ -313,30 +466,184 @@ describe('validateIngredientFiles', () => {
       } as fs.Dirent,
     ] as fs.Dirent[]);
 
-    expect(() => validateIngredientFiles('test-recipe', recipe)).not.toThrow();
+    const result = validateIngredientFiles('test-recipe', recipe);
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
   });
 });
 
 describe('validateReadmeExists', () => {
-  it('should pass for existing recipe with README', () => {
-    expect(() => validateReadmeExists('gtm')).not.toThrow();
+  let mockExistsSync: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    mockExistsSync = vi.spyOn(fs, 'existsSync');
   });
 
-  it('should throw helpful error with render command when README missing', () => {
-    expect(() => validateReadmeExists('nonexistent-recipe')).toThrow(
-      'Run: npm run cookbook render nonexistent-recipe',
-    );
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should return valid for existing recipe with README', () => {
+    mockExistsSync.mockReturnValue(true);
+    const result = validateReadmeExists('gtm');
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it('should return error with render command when README missing', () => {
+    mockExistsSync.mockReturnValue(false);
+    const result = validateReadmeExists('nonexistent-recipe');
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({
+      validator: 'validateReadmeExists',
+      message: expect.stringContaining('Run: npm run cookbook render nonexistent-recipe'),
+    });
   });
 });
 
 describe('validateLlmPromptExists', () => {
-  it('should pass for existing recipe with LLM prompt', () => {
-    expect(() => validateLlmPromptExists('gtm')).not.toThrow();
+  let mockExistsSync: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    mockExistsSync = vi.spyOn(fs, 'existsSync');
   });
 
-  it('should throw helpful error with render command when LLM prompt missing', () => {
-    expect(() => validateLlmPromptExists('nonexistent-recipe')).toThrow(
-      'Run: npm run cookbook render nonexistent-recipe',
-    );
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should return valid for existing recipe with LLM prompt', () => {
+    mockExistsSync.mockReturnValue(true);
+    const result = validateLlmPromptExists('gtm');
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it('should return error with render command when LLM prompt missing', () => {
+    mockExistsSync.mockReturnValue(false);
+    const result = validateLlmPromptExists('nonexistent-recipe');
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({
+      validator: 'validateLlmPromptExists',
+      message: expect.stringContaining('Run: npm run cookbook render nonexistent-recipe'),
+    });
+  });
+});
+
+describe('validateRecipe integration', () => {
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  let mockExistsSync: ReturnType<typeof vi.fn>;
+  let mockReaddirSync: ReturnType<typeof vi.fn>;
+  let mockLoadRecipe: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockExistsSync = vi.spyOn(fs, 'existsSync');
+    mockReaddirSync = vi.spyOn(fs, 'readdirSync');
+    mockLoadRecipe = vi.spyOn(recipeModule, 'loadRecipe');
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should include actual values in Zod validation error messages', () => {
+    const recipeName = 'gtm';
+
+    const result = validateRecipe({recipeTitle: recipeName});
+
+    expect(result).toBe(false);
+
+    const errorOutput = consoleErrorSpy.mock.calls.map(call => call[0]).join('\n');
+
+    expect(errorOutput).toContain('Expected number, received string (actual value: "1")');
+    expect(errorOutput).toContain('Expected number, received string (actual value: "2")');
+  });
+
+  it('should collect and format all validation errors with line numbers', () => {
+    const recipeName = 'test-recipe';
+
+    const mockRecipe: Recipe = {
+      gid: '550e8400-e29b-41d4-a716-446655440000',
+      title: 'Test Recipe',
+      summary: 'Test',
+      description: 'Test',
+      ingredients: [],
+      steps: [
+        {
+          type: 'PATCH' as const,
+          step: 1,
+          name: 'README.md',
+          description: null,
+          diffs: [
+            {file: 'README.md', patchFile: 'missing.patch'},
+            {file: 'app/root.tsx', patchFile: 'root.tsx.5e9998.patch'},
+          ],
+        },
+        {
+          type: 'PATCH' as const,
+          step: 1,
+          name: 'README.md',
+          description: 'Duplicate name',
+          diffs: [],
+        },
+      ],
+      commit: 'abc123',
+    };
+
+    mockLoadRecipe.mockReturnValue(mockRecipe);
+
+    mockExistsSync.mockImplementation((filePath: fs.PathLike) => {
+      const pathStr = filePath.toString();
+      if (pathStr.endsWith('README.md')) return false;
+      if (pathStr.endsWith('.prompt.md')) return false;
+      if (pathStr.includes('patches') && pathStr.endsWith('.patch')) {
+        return pathStr.includes('root.tsx');
+      }
+      return true;
+    });
+
+    mockReaddirSync.mockImplementation((dirPath: fs.PathOrFileDescriptor) => {
+      const pathStr = dirPath.toString();
+      if (pathStr.includes('patches')) {
+        return [
+          {name: 'root.tsx.5e9998.patch', isFile: () => true},
+          {name: 'orphaned.patch', isFile: () => true},
+        ] as fs.Dirent[];
+      }
+      return [] as fs.Dirent[];
+    });
+
+    const result = validateRecipe({recipeTitle: recipeName});
+
+    expect(result).toBe(false);
+
+    const errorOutput = consoleErrorSpy.mock.calls.map(call => call[0]).join('\n');
+
+    expect(errorOutput).toContain(`Recipe '${recipeName}'`);
+    expect(errorOutput).toContain('error(s)');
+
+    expect(errorOutput).toContain('validateStepNames');
+    expect(errorOutput).toContain('duplicate name');
+
+    expect(errorOutput).toContain('validateStepDescriptions');
+    expect(errorOutput).toContain('null description');
+
+    expect(errorOutput).toContain('validatePatchFiles');
+    expect(errorOutput).toContain('Patch file not found');
+    expect(errorOutput).toContain('orphaned.patch');
+
+    expect(errorOutput).toContain('validateReadmeExists');
+    expect(errorOutput).toContain('README.md not found');
+
+    expect(errorOutput).toContain('validateLlmPromptExists');
+    expect(errorOutput).toContain('LLM prompt file not found');
   });
 });
