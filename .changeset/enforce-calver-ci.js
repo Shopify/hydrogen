@@ -25,38 +25,53 @@ const {
 } = require('./calver-shared.js');
 
 // Read all package.json files for CalVer packages
-// Uses the original version from git as baseline (before changesets corruption)
+// Fetches individual git baselines for independent patch versioning
+// Hydrogen baseline used for major sync across all CalVer packages
 function readPackageVersions() {
   const versions = {};
-  
-  // Get the original version from git (before changesets ran)
-  // This prevents using corrupted versions like 2026.0.0 that changesets might generate
-  let sourceOfTruthVersion;
+
+  // Get hydrogen's git baseline (used for major bump synchronization)
+  let hydrogenBaselineVersion;
   try {
-    // Try to get the version from the base branch (before changesets modified it)
     const gitVersion = execSync('git show HEAD~1:packages/hydrogen/package.json 2>/dev/null || git show origin/main:packages/hydrogen/package.json', {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'ignore']
     });
     const versionMatch = gitVersion.match(/"version":\s*"([^"]+)"/);
     if (versionMatch) {
-      sourceOfTruthVersion = versionMatch[1];
-      console.log(`Using original version from git: ${sourceOfTruthVersion}`);
+      hydrogenBaselineVersion = versionMatch[1];
+      console.log(`Using hydrogen baseline from git: ${hydrogenBaselineVersion}`);
     }
   } catch (error) {
-    // Fallback to current version if git command fails
     const hydrogenPath = getPackagePath('@shopify/hydrogen');
     const hydrogenPkg = readPackage(hydrogenPath);
-    sourceOfTruthVersion = hydrogenPkg.version;
-    console.log(`Using current version as fallback: ${sourceOfTruthVersion}`);
+    hydrogenBaselineVersion = hydrogenPkg.version;
+    console.log(`Using hydrogen current version as fallback: ${hydrogenBaselineVersion}`);
   }
-  
+
+  // Get each package's individual baseline for independent patch versioning
   for (const pkgName of CALVER_PACKAGES) {
     const pkgPath = getPackagePath(pkgName);
     const pkg = readPackage(pkgPath);
+
+    // Fetch this package's own git baseline
+    let packageOwnBaseline;
+    try {
+      const gitPath = pkgPath.replace(process.cwd() + '/', '');
+      const gitVersion = execSync(`git show HEAD~1:${gitPath} 2>/dev/null || git show origin/main:${gitPath}`, {
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'ignore']
+      });
+      const versionMatch = gitVersion.match(/"version":\s*"([^"]+)"/);
+      packageOwnBaseline = versionMatch ? versionMatch[1] : hydrogenBaselineVersion;
+    } catch (error) {
+      packageOwnBaseline = hydrogenBaselineVersion;
+    }
+
     versions[pkgName] = {
       path: pkgPath,
-      oldVersion: sourceOfTruthVersion, // Use original version as baseline for all packages
+      oldVersion: packageOwnBaseline,
+      hydrogenBaseline: hydrogenBaselineVersion,
       pkg,
     };
   }
@@ -81,9 +96,17 @@ function calculateNewVersions(versions) {
   for (const [pkgName, data] of Object.entries(versions)) {
     const bumpType = getBumpType(data.oldVersion, data.pkg.version);
 
-    // For major bumps, ensure all CalVer packages advance to same quarter
-    const effectiveBumpType = hasAnyMajor ? 'major' : bumpType;
-    const newVersion = getNextVersion(data.oldVersion, effectiveBumpType);
+    let newVersion;
+    if (hasAnyMajor) {
+      // Major: Sync all CalVer packages to same quarter using hydrogen's baseline
+      newVersion = getNextVersion(data.hydrogenBaseline, 'major');
+    } else if (data.pkg.version === data.oldVersion) {
+      // No change: Keep current version (don't bump unchanged packages)
+      newVersion = data.pkg.version;
+    } else {
+      // Patch/minor: Independent versioning using package's own baseline
+      newVersion = getNextVersion(data.oldVersion, bumpType);
+    }
 
     updates.push({
       name: pkgName,
@@ -226,10 +249,26 @@ function validateCalVer(version) {
 
 // Main execution
 function main() {
-  console.log('Starting CalVer enforcement...\n');
-
-  // Read current versions (after changesets has run)
+  // Get versions: oldVersion from git baseline, pkg.version from current state
   const versions = readPackageVersions();
+
+  // Skip CalVer enforcement if no CalVer packages were bumped by changesets
+  // This prevents semver-only releases (CLI, mini-oxygen) from touching CalVer packages
+  let hasCalVerChanges = false;
+  for (const [pkgName, data] of Object.entries(versions)) {
+    if (data.pkg.version !== data.oldVersion) {
+      hasCalVerChanges = true;
+      break;
+    }
+  }
+
+  if (!hasCalVerChanges) {
+    console.log('No CalVer package changes detected. Skipping CalVer enforcement.');
+    console.log('This is a semver-only release.');
+    return;
+  }
+
+  console.log('Starting CalVer enforcement...\n');
 
   // Calculate new CalVer versions
   const updates = calculateNewVersions(versions);

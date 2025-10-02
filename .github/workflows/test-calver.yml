@@ -226,27 +226,48 @@ jobs:
           echo "::group::Test 5 - Latest Branch Detection"
           echo "Expected: Correctly detect current and next release branches"
           echo ""
-          
+
+          # Calculate expected branches from actual hydrogen version
+          # This makes the test work regardless of which quarter we're in
+          HYDROGEN_VERSION=$(node -p "require('./packages/hydrogen/package.json').version")
+          CURRENT_YEAR=$(echo $HYDROGEN_VERSION | cut -d. -f1)
+          CURRENT_MAJOR=$(echo $HYDROGEN_VERSION | cut -d. -f2)
+          CURRENT_BRANCH="${CURRENT_YEAR}-$(printf '%02d' $CURRENT_MAJOR)"
+
+          # Calculate next quarter
+          case $CURRENT_MAJOR in
+            1) NEXT_QUARTER=4 ;;
+            4) NEXT_QUARTER=7 ;;
+            7) NEXT_QUARTER=10 ;;
+            10) NEXT_QUARTER=1; NEXT_YEAR=$((CURRENT_YEAR + 1)) ;;
+          esac
+          NEXT_BRANCH="${NEXT_YEAR:-$CURRENT_YEAR}-$(printf '%02d' $NEXT_QUARTER)"
+
+          echo "Current hydrogen version: $HYDROGEN_VERSION"
+          echo "Current branch (calculated): $CURRENT_BRANCH"
+          echo "Next branch (calculated): $NEXT_BRANCH"
+          echo ""
+
           # First check if there are already major changesets in the repo
           HAS_EXISTING_MAJOR=$(node .changeset/calver-shared.js has-major-changesets)
           echo "Repository has existing major changesets: $HAS_EXISTING_MAJOR"
           echo ""
-          
+
           # Store and temporarily remove existing changesets to test clean state
           if [ "$HAS_EXISTING_MAJOR" = "true" ]; then
             echo "Temporarily moving existing changesets for isolated testing..."
             mkdir -p .changeset-backup
             mv .changeset/*.md .changeset-backup/ 2>/dev/null || true
           fi
-          
+
           # Test without major changesets
           echo "Testing branch detection without major changesets:"
-          BRANCH=$(node .changeset/get-calver-version-branch.js)
+          BRANCH=$(CI=true node .changeset/get-calver-version-branch.js)
           echo "Current branch detected: $BRANCH"
-          if [ "$BRANCH" = "2025-05" ]; then
-            echo "✅ Correctly detected current branch (2025-05)"
+          if [ "$BRANCH" = "$CURRENT_BRANCH" ]; then
+            echo "✅ Correctly detected current branch ($CURRENT_BRANCH)"
           else
-            echo "❌ Branch detection failed, expected 2025-05, got $BRANCH"
+            echo "❌ Branch detection failed, expected $CURRENT_BRANCH, got $BRANCH"
             # Restore changesets before failing
             if [ "$HAS_EXISTING_MAJOR" = "true" ]; then
               mv .changeset-backup/*.md .changeset/ 2>/dev/null || true
@@ -254,7 +275,7 @@ jobs:
             fi
             exit 1
           fi
-          
+
           # Test with major changeset
           echo ""
           echo "Testing branch detection with major changeset:"
@@ -264,13 +285,13 @@ jobs:
           ---
           Test major for branch detection
           EOF
-          
-          BRANCH=$(node .changeset/get-calver-version-branch.js)
+
+          BRANCH=$(CI=true node .changeset/get-calver-version-branch.js)
           echo "Next branch detected: $BRANCH"
-          if [ "$BRANCH" = "2025-07" ]; then
-            echo "✅ Correctly detected next quarter branch (2025-07)"
+          if [ "$BRANCH" = "$NEXT_BRANCH" ]; then
+            echo "✅ Correctly detected next quarter branch ($NEXT_BRANCH)"
           else
-            echo "❌ Branch detection failed, expected 2025-07, got $BRANCH"
+            echo "❌ Branch detection failed, expected $NEXT_BRANCH, got $BRANCH"
             # Restore changesets before failing
             rm .changeset/test-major-branch.md 2>/dev/null || true
             if [ "$HAS_EXISTING_MAJOR" = "true" ]; then
@@ -279,9 +300,9 @@ jobs:
             fi
             exit 1
           fi
-          
+
           rm .changeset/test-major-branch.md
-          
+
           # Restore original changesets
           if [ "$HAS_EXISTING_MAJOR" = "true" ]; then
             echo ""
@@ -289,7 +310,7 @@ jobs:
             mv .changeset-backup/*.md .changeset/ 2>/dev/null || true
             rmdir .changeset-backup 2>/dev/null || true
           fi
-          
+
           echo "::endgroup::"
 
       - name: Test 6 - Shared Utilities CLI
@@ -430,8 +451,11 @@ jobs:
           echo "✅ Tests validate that:"
           echo "  1. CI script has valid syntax for Node.js execution"
           echo "  2. sed commands work on Linux (GNU sed)"
-          echo "  3. Patch bumps increment the third segment (2025.5.0 → 2025.5.1)"
-          echo "  4. Major bumps align to quarters (2025.5.0 → 2025.7.0 for Q3)"
-          echo "  5. CalVer packages use YYYY.M.P while semver packages use X.Y.Z"
+          echo "  3. Patch bumps increment correctly with independent versioning"
+          echo "  4. Major bumps align to quarters and sync all CalVer packages"
+          echo "  5. Branch detection works for any quarter dynamically"
+          echo "  6. Shared utilities CLI commands work correctly"
+          echo "  7. CalVer packages use YYYY.M.P while semver packages use X.Y.Z"
+          echo "  8. Full pipeline integration (semver-only and CalVer releases)"
           echo ""
           echo "All tests should produce explicit, verifiable output above."
