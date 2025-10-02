@@ -82,7 +82,8 @@
             "description": "The type of step"
           },
           "step": {
-            "type": "number",
+            "type": "string",
+            "pattern": "^\\d+(?:\\.\\d+)?$",
             "description": "The step numerical representation, with optional substep if applicable"
           },
           "name": {

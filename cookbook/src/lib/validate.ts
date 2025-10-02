@@ -123,7 +123,7 @@ export function validateStepDescriptions(recipe: Recipe): ValidationResult {
 
   for (let i = 0; i < recipe.steps.length; i++) {
     const step = recipe.steps[i];
-    const stepNum = String(step.step);
+    const stepNum = step.step;
 
     if (step.description === null) {
       errors.push({
@@ -153,7 +153,7 @@ export function validateStepNames(recipe: Recipe): ValidationResult {
 
   for (let i = 0; i < recipe.steps.length; i++) {
     const step = recipe.steps[i];
-    const stepNum = String(step.step);
+    const stepNum = step.step;
     let names = stepsByNumber.get(stepNum);
 
     if (!names) {

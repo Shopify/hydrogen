@@ -242,9 +242,9 @@ async function generateSteps(params: {
   return steps;
 }
 
-function compareSteps(a: Step, b: Step): number {
+export function compareSteps(a: Step, b: Step): number {
   function normalize(step: Step): string {
-    const expanded = isSubstep(a) ? `${step.step}` : `${step.step}.0`;
+    const expanded = isSubstep(step) ? step.step : `${step.step}.0`;
     return expanded
       .split('.')
       .map((v) => parseInt(v, 10).toString().padStart(4, '0'))

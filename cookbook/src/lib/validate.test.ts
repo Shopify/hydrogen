@@ -28,7 +28,7 @@ describe('formatValidationError', () => {
   it('should format error with line number and location', () => {
     const error = {
       validator: 'RecipeSchema',
-      message: 'Expected number, received string',
+      message: 'Expected string, received number',
       location: 'steps.0.step',
       lineNumber: 52,
     };
@@ -37,7 +37,7 @@ describe('formatValidationError', () => {
 
     expect(formatted).toContain('recipe.yaml:52');
     expect(formatted).toContain('steps.0.step');
-    expect(formatted).toContain('RecipeSchema: Expected number, received string');
+    expect(formatted).toContain('RecipeSchema: Expected string, received number');
   });
 
   it('should format error without line number', () => {
@@ -75,12 +75,12 @@ summary: Test
 description: Test
 ingredients: []
 steps:
-  - step: 1
+  - step: "1"
     type: PATCH
     name: README.md
     description: Test
     diffs: []
-  - step: 2
+  - step: "2"
     type: PATCH
     name: app/root.tsx
     description: Test
@@ -603,12 +603,12 @@ summary: Test
 description: Test
 ingredients: []
 steps:
-  - step: "1"
+  - step: 1
     type: PATCH
     name: README.md
     description: Test
     diffs: []
-  - step: "2"
+  - step: 2
     type: PATCH
     name: app/root.tsx
     description: Test
@@ -631,8 +631,8 @@ commit: abc123
 
     const errorOutput = consoleErrorSpy.mock.calls.map(call => call[0]).join('\n');
 
-    expect(errorOutput).toContain('Expected number, received string (actual value: "1")');
-    expect(errorOutput).toContain('Expected number, received string (actual value: "2")');
+    expect(errorOutput).toContain('Expected string, received number (actual value: 1)');
+    expect(errorOutput).toContain('Expected string, received number (actual value: 2)');
   });
 
   it('should collect and format all validation errors with line numbers', () => {
