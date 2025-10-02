@@ -166,10 +166,14 @@ Display to user:
 
 Branch: [branch-name]
 PR: [pr-url]
+Preview: https://pr-[pr-number].shopify-dev.shopify.io
 Packages updated: [hydrogen, hydrogen-react, or both]
 Version: [VERSION_DIR]
 
 The version dropdown will automatically show "2025-XX latest" once deployed.
+A preview environment is available at the URL above for tophatting the changes.
+
+More info: https://vault.shopify.io/posts/322603
 ```
 
 ## Error Handling
