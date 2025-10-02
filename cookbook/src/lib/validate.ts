@@ -404,6 +404,8 @@ export function validateRecipe(params: {
         return false;
       }
     } catch (e) {
+      // Ignore errors from find command (e.g., if template directory doesn't exist).
+      // This is an optional safety check; subsequent validation commands (typecheck, build) will catch any real issues.
     }
 
     const validationCommands: Command[] = [

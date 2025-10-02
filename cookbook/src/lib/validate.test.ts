@@ -1,4 +1,4 @@
-import {describe, expect, it, vi, beforeEach, afterEach} from 'vitest';
+import {describe, expect, it, vi, beforeEach, afterEach, Mock} from 'vitest';
 import {Recipe} from './recipe';
 import {
   validateStepNames,
@@ -136,18 +136,19 @@ commit: abc123
 
 describe('validateStepNames', () => {
   it('should return error when grouped steps have identical names', () => {
-    const recipe = {
+    const recipe: Recipe = {
       gid: 'test-gid',
       title: 'Test',
       summary: 'Test',
       description: 'Test',
       ingredients: [],
       steps: [
-        {type: 'PATCH' as const, step: 1, name: 'README.md', diffs: []},
-        {type: 'PATCH' as const, step: 1, name: 'README.md', diffs: []},
+        {type: 'PATCH' as const, step: '1', name: 'README.md', diffs: []},
+        {type: 'PATCH' as const, step: '1', name: 'README.md', diffs: []},
       ],
       commit: 'abc123',
-    } as Recipe;
+      llms: {userQueries: [], troubleshooting: []},
+    };
 
     const result = validateStepNames(recipe);
 
@@ -161,18 +162,19 @@ describe('validateStepNames', () => {
   });
 
   it('should return valid for sequential steps', () => {
-    const recipe = {
+    const recipe: Recipe = {
       gid: 'test-gid',
       title: 'Test',
       summary: 'Test',
       description: 'Test',
       ingredients: [],
       steps: [
-        {type: 'PATCH' as const, step: 1, name: 'README.md', diffs: []},
-        {type: 'PATCH' as const, step: 2, name: 'app/root.tsx', diffs: []},
+        {type: 'PATCH' as const, step: '1', name: 'README.md', diffs: []},
+        {type: 'PATCH' as const, step: '2', name: 'app/root.tsx', diffs: []},
       ],
       commit: 'abc123',
-    } as Recipe;
+      llms: {userQueries: [], troubleshooting: []},
+    };
 
     const result = validateStepNames(recipe);
 
@@ -181,19 +183,20 @@ describe('validateStepNames', () => {
   });
 
   it('should return valid for substeps', () => {
-    const recipe = {
+    const recipe: Recipe = {
       gid: 'test-gid',
       title: 'Test',
       summary: 'Test',
       description: 'Test',
       ingredients: [],
       steps: [
-        {type: 'PATCH' as const, step: 1, name: 'README.md', diffs: []},
-        {type: 'PATCH' as const, step: 1.1, name: 'app/entry.server.tsx', diffs: []},
-        {type: 'PATCH' as const, step: 1.2, name: 'app/root.tsx', diffs: []},
+        {type: 'PATCH' as const, step: '1', name: 'README.md', diffs: []},
+        {type: 'PATCH' as const, step: '1.1', name: 'app/entry.server.tsx', diffs: []},
+        {type: 'PATCH' as const, step: '1.2', name: 'app/root.tsx', diffs: []},
       ],
       commit: 'abc123',
-    } as Recipe;
+      llms: {userQueries: [], troubleshooting: []},
+    };
 
     const result = validateStepNames(recipe);
 
@@ -202,20 +205,21 @@ describe('validateStepNames', () => {
   });
 
   it('should return valid when multiple steps share same number but have distinct names', () => {
-    const recipe = {
+    const recipe: Recipe = {
       gid: 'test-gid',
       title: 'Test',
       summary: 'Test',
       description: 'Test',
       ingredients: [],
       steps: [
-        {type: 'PATCH' as const, step: 1, name: 'README.md', diffs: []},
-        {type: 'PATCH' as const, step: 1, name: 'app/entry.server.tsx', diffs: []},
-        {type: 'NEW_FILE' as const, step: 1, name: 'app/components/GoogleTagManager.tsx', ingredients: []},
-        {type: 'PATCH' as const, step: 2, name: 'app/root.tsx', diffs: []},
+        {type: 'PATCH' as const, step: '1', name: 'README.md', diffs: []},
+        {type: 'PATCH' as const, step: '1', name: 'app/entry.server.tsx', diffs: []},
+        {type: 'NEW_FILE' as const, step: '1', name: 'app/components/GoogleTagManager.tsx', ingredients: []},
+        {type: 'PATCH' as const, step: '2', name: 'app/root.tsx', diffs: []},
       ],
       commit: 'abc123',
-    } as Recipe;
+      llms: {userQueries: [], troubleshooting: []},
+    };
 
     const result = validateStepNames(recipe);
 
@@ -226,17 +230,18 @@ describe('validateStepNames', () => {
 
 describe('validateStepDescriptions', () => {
   it('should return error when step description is null', () => {
-    const recipe = {
+    const recipe: Recipe = {
       gid: 'test-gid',
       title: 'Test',
       summary: 'Test',
       description: 'Test',
       ingredients: [],
       steps: [
-        {type: 'PATCH' as const, step: 1, name: 'README.md', description: null, diffs: []},
+        {type: 'PATCH' as const, step: '1', name: 'README.md', description: null, diffs: []},
       ],
       commit: 'abc123',
-    } as Recipe;
+      llms: {userQueries: [], troubleshooting: []},
+    };
 
     const result = validateStepDescriptions(recipe);
 
@@ -250,17 +255,18 @@ describe('validateStepDescriptions', () => {
   });
 
   it('should return error when step description is empty string', () => {
-    const recipe = {
+    const recipe: Recipe = {
       gid: 'test-gid',
       title: 'Test',
       summary: 'Test',
       description: 'Test',
       ingredients: [],
       steps: [
-        {type: 'PATCH' as const, step: 1, name: 'app/root.tsx', description: '', diffs: []},
+        {type: 'PATCH' as const, step: '1', name: 'app/root.tsx', description: '', diffs: []},
       ],
       commit: 'abc123',
-    } as Recipe;
+      llms: {userQueries: [], troubleshooting: []},
+    };
 
     const result = validateStepDescriptions(recipe);
 
@@ -274,17 +280,18 @@ describe('validateStepDescriptions', () => {
   });
 
   it('should return valid result when all descriptions are present', () => {
-    const recipe = {
+    const recipe: Recipe = {
       gid: 'test-gid',
       title: 'Test',
       summary: 'Test',
       description: 'Test',
       ingredients: [],
       steps: [
-        {type: 'PATCH' as const, step: 1, name: 'README.md', description: 'Valid description', diffs: []},
+        {type: 'PATCH' as const, step: '1', name: 'README.md', description: 'Valid description', diffs: []},
       ],
       commit: 'abc123',
-    } as Recipe;
+      llms: {userQueries: [], troubleshooting: []},
+    };
 
     const result = validateStepDescriptions(recipe);
 
@@ -294,12 +301,12 @@ describe('validateStepDescriptions', () => {
 });
 
 describe('validatePatchFiles', () => {
-  let mockExistsSync: ReturnType<typeof vi.fn>;
-  let mockReaddirSync: ReturnType<typeof vi.fn>;
+  let mockExistsSync: Mock;
+  let mockReaddirSync: Mock;
 
   beforeEach(() => {
-    mockExistsSync = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
-    mockReaddirSync = vi.spyOn(fs, 'readdirSync').mockReturnValue([] as fs.Dirent[]);
+    mockExistsSync = vi.spyOn(fs, 'existsSync').mockReturnValue(true) as Mock;
+    mockReaddirSync = vi.spyOn(fs, 'readdirSync').mockReturnValue([]) as Mock;
   });
 
   afterEach(() => {
@@ -307,7 +314,7 @@ describe('validatePatchFiles', () => {
   });
 
   it('should return error when patch file referenced in yaml does not exist', () => {
-    const recipe = {
+    const recipe: Recipe = {
       gid: '550e8400-e29b-41d4-a716-446655440000',
       title: 'Test',
       summary: 'Test',
@@ -316,14 +323,15 @@ describe('validatePatchFiles', () => {
       steps: [
         {
           type: 'PATCH' as const,
-          step: 1,
+          step: '1',
           name: 'app/root.tsx',
           description: 'Updates configuration',
           diffs: [{file: 'app/root.tsx', patchFile: 'root.tsx.abc123.patch'}],
         },
       ],
       commit: 'abc123',
-    } as Recipe;
+      llms: {userQueries: [], troubleshooting: []},
+    };
 
     mockExistsSync.mockImplementation((filePath: fs.PathLike) => {
       const pathStr = filePath.toString();
@@ -342,7 +350,7 @@ describe('validatePatchFiles', () => {
   });
 
   it('should return error when patch file exists on filesystem but not referenced in yaml', () => {
-    const recipe = {
+    const recipe: Recipe = {
       gid: '550e8400-e29b-41d4-a716-446655440000',
       title: 'Test',
       summary: 'Test',
@@ -350,7 +358,8 @@ describe('validatePatchFiles', () => {
       ingredients: [],
       steps: [],
       commit: 'abc123',
-    } as Recipe;
+      llms: {userQueries: [], troubleshooting: []},
+    };
 
     mockExistsSync.mockReturnValue(true);
     mockReaddirSync.mockReturnValue([
@@ -368,7 +377,7 @@ describe('validatePatchFiles', () => {
   });
 
   it('should return valid when all patch files are valid', () => {
-    const recipe = {
+    const recipe: Recipe = {
       gid: '550e8400-e29b-41d4-a716-446655440000',
       title: 'Test',
       summary: 'Test',
@@ -377,14 +386,15 @@ describe('validatePatchFiles', () => {
       steps: [
         {
           type: 'PATCH' as const,
-          step: 1,
+          step: '1',
           name: 'app/root.tsx',
           description: 'Updates configuration',
           diffs: [{file: 'app/root.tsx', patchFile: 'root.tsx.abc123.patch'}],
         },
       ],
       commit: 'abc123',
-    } as Recipe;
+      llms: {userQueries: [], troubleshooting: []},
+    };
 
     mockExistsSync.mockReturnValue(true);
     mockReaddirSync.mockReturnValue([
@@ -399,12 +409,12 @@ describe('validatePatchFiles', () => {
 });
 
 describe('validateIngredientFiles', () => {
-  let mockExistsSync: ReturnType<typeof vi.fn>;
-  let mockReaddirSync: ReturnType<typeof vi.fn>;
+  let mockExistsSync: Mock;
+  let mockReaddirSync: Mock;
 
   beforeEach(() => {
-    mockExistsSync = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
-    mockReaddirSync = vi.spyOn(fs, 'readdirSync').mockReturnValue([] as fs.Dirent[]);
+    mockExistsSync = vi.spyOn(fs, 'existsSync').mockReturnValue(true) as Mock;
+    mockReaddirSync = vi.spyOn(fs, 'readdirSync').mockReturnValue([]) as Mock;
   });
 
   afterEach(() => {
@@ -412,7 +422,7 @@ describe('validateIngredientFiles', () => {
   });
 
   it('should return error when ingredient file referenced in yaml does not exist', () => {
-    const recipe = {
+    const recipe: Recipe = {
       gid: '550e8400-e29b-41d4-a716-446655440000',
       title: 'Test',
       summary: 'Test',
@@ -420,7 +430,8 @@ describe('validateIngredientFiles', () => {
       ingredients: [{path: 'templates/skeleton/app/components/Foo.tsx', description: null}],
       steps: [],
       commit: 'abc123',
-    } as Recipe;
+      llms: {userQueries: [], troubleshooting: []},
+    };
 
     mockExistsSync.mockImplementation((filePath: fs.PathLike) => {
       const pathStr = filePath.toString();
@@ -439,7 +450,7 @@ describe('validateIngredientFiles', () => {
   });
 
   it('should return error when ingredient file exists on filesystem but not referenced in yaml', () => {
-    const recipe = {
+    const recipe: Recipe = {
       gid: '550e8400-e29b-41d4-a716-446655440000',
       title: 'Test',
       summary: 'Test',
@@ -447,7 +458,8 @@ describe('validateIngredientFiles', () => {
       ingredients: [],
       steps: [],
       commit: 'abc123',
-    } as Recipe;
+      llms: {userQueries: [], troubleshooting: []},
+    };
 
     mockExistsSync.mockReturnValue(true);
 
@@ -477,7 +489,7 @@ describe('validateIngredientFiles', () => {
   });
 
   it('should return valid when all ingredient files are valid', () => {
-    const recipe = {
+    const recipe: Recipe = {
       gid: '550e8400-e29b-41d4-a716-446655440000',
       title: 'Test',
       summary: 'Test',
@@ -485,7 +497,8 @@ describe('validateIngredientFiles', () => {
       ingredients: [{path: 'templates/skeleton/app/components/Foo.tsx', description: null}],
       steps: [],
       commit: 'abc123',
-    } as Recipe;
+      llms: {userQueries: [], troubleshooting: []},
+    };
 
     mockExistsSync.mockReturnValue(true);
 
@@ -512,10 +525,10 @@ describe('validateIngredientFiles', () => {
 });
 
 describe('validateReadmeExists', () => {
-  let mockExistsSync: ReturnType<typeof vi.fn>;
+  let mockExistsSync: Mock;
 
   beforeEach(() => {
-    mockExistsSync = vi.spyOn(fs, 'existsSync');
+    mockExistsSync = vi.spyOn(fs, 'existsSync') as Mock;
   });
 
   afterEach(() => {
@@ -544,10 +557,10 @@ describe('validateReadmeExists', () => {
 });
 
 describe('validateLlmPromptExists', () => {
-  let mockExistsSync: ReturnType<typeof vi.fn>;
+  let mockExistsSync: Mock;
 
   beforeEach(() => {
-    mockExistsSync = vi.spyOn(fs, 'existsSync');
+    mockExistsSync = vi.spyOn(fs, 'existsSync') as Mock;
   });
 
   afterEach(() => {
@@ -576,16 +589,16 @@ describe('validateLlmPromptExists', () => {
 });
 
 describe('validateRecipe integration', () => {
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
-  let mockExistsSync: ReturnType<typeof vi.fn>;
-  let mockReaddirSync: ReturnType<typeof vi.fn>;
-  let mockLoadRecipe: ReturnType<typeof vi.fn>;
+  let consoleErrorSpy: Mock;
+  let mockExistsSync: Mock;
+  let mockReaddirSync: Mock;
+  let mockLoadRecipe: Mock;
 
   beforeEach(() => {
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mockExistsSync = vi.spyOn(fs, 'existsSync');
-    mockReaddirSync = vi.spyOn(fs, 'readdirSync');
-    mockLoadRecipe = vi.spyOn(recipeModule, 'loadRecipe');
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {}) as Mock;
+    mockExistsSync = vi.spyOn(fs, 'existsSync') as Mock;
+    mockReaddirSync = vi.spyOn(fs, 'readdirSync') as Mock;
+    mockLoadRecipe = vi.spyOn(recipeModule, 'loadRecipe') as Mock;
   });
 
   afterEach(() => {
@@ -647,7 +660,7 @@ commit: abc123
       steps: [
         {
           type: 'PATCH' as const,
-          step: 1,
+          step: '1',
           name: 'README.md',
           description: null,
           diffs: [
@@ -657,13 +670,14 @@ commit: abc123
         },
         {
           type: 'PATCH' as const,
-          step: 1,
+          step: '1',
           name: 'README.md',
           description: 'Duplicate name',
           diffs: [],
         },
       ],
       commit: 'abc123',
+      llms: {userQueries: [], troubleshooting: []},
     };
 
     mockLoadRecipe.mockReturnValue(mockRecipe);

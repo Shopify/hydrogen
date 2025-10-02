@@ -183,7 +183,7 @@ async function generateSteps(params: {
 
       const step: Step = {
         type: 'PATCH',
-        step: existingStep?.step ?? i,
+        step: existingStep?.step ?? String(i),
         name: existingStep?.name ?? file.replace(TEMPLATE_DIRECTORY, ''),
         description: existingDescription ?? null,
         diffs: [
@@ -218,7 +218,7 @@ async function generateSteps(params: {
 
       const step: Step = {
         type: 'NEW_FILE',
-        step: existingStep?.step ?? i,
+        step: existingStep?.step ?? String(i),
         name: existingStep?.name ?? file.path.replace(TEMPLATE_DIRECTORY, ''),
         description: existingDescription ?? file.description ?? null,
         ingredients: [

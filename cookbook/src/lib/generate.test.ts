@@ -85,9 +85,60 @@ describe('compareSteps with string step values', () => {
 
     expect(step1Items).toHaveLength(3);
     expect(step2Items).toHaveLength(1);
+
+    expect(step1Items[0].name).toBe('File C');
+    expect(step1Items[1].name).toBe('File A');
+    expect(step1Items[2].name).toBe('File B');
+
     expect(sorted.indexOf(step2Items[0])).toBeGreaterThan(
       sorted.indexOf(step1Items[2]),
     );
+  });
+
+  it('should handle steps with leading zeros correctly (treat "01" as "1")', () => {
+    const steps: Step[] = [
+      {type: 'PATCH', step: '02', name: 'Step 02', diffs: []},
+      {type: 'PATCH', step: '2', name: 'Step 2', diffs: []},
+      {type: 'PATCH', step: '1', name: 'Step 1', diffs: []},
+      {type: 'PATCH', step: '01', name: 'Step 01', diffs: []},
+    ];
+
+    const sorted = steps.sort(compareSteps);
+
+    expect(sorted[0].step).toBe('1');
+    expect(sorted[1].step).toBe('01');
+    expect(sorted[2].step).toBe('02');
+    expect(sorted[3].step).toBe('2');
+  });
+
+  it('should maintain relative order for grouped steps with different types', () => {
+    const steps: Step[] = [
+      {type: 'PATCH', step: '1', name: 'Patch C', diffs: []},
+      {type: 'NEW_FILE', step: '1', name: 'New File A', ingredients: []},
+      {type: 'INFO', step: '1', name: 'Info B'},
+      {type: 'PATCH', step: '2', name: 'Patch D', diffs: []},
+    ];
+
+    const sorted = steps.sort(compareSteps);
+
+    expect(sorted[0].name).toBe('Patch C');
+    expect(sorted[1].name).toBe('New File A');
+    expect(sorted[2].name).toBe('Info B');
+    expect(sorted[3].name).toBe('Patch D');
+  });
+
+  it('should sort substeps with decimal precision correctly', () => {
+    const steps: Step[] = [
+      {type: 'PATCH', step: '1.10', name: 'Step 1.10', diffs: []},
+      {type: 'PATCH', step: '1.2', name: 'Step 1.2', diffs: []},
+      {type: 'PATCH', step: '1.1', name: 'Step 1.1', diffs: []},
+      {type: 'PATCH', step: '1.20', name: 'Step 1.20', diffs: []},
+      {type: 'PATCH', step: '1.3', name: 'Step 1.3', diffs: []},
+    ];
+
+    const sorted = steps.sort(compareSteps);
+
+    expect(sorted.map((s) => s.step)).toEqual(['1.1', '1.2', '1.3', '1.10', '1.20']);
   });
 });
 
