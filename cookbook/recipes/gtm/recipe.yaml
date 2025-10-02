@@ -67,10 +67,8 @@ steps:
       - path: templates/skeleton/app/components/GoogleTagManager.tsx
   - type: PATCH
     step: "4"
-    name: Insert Google Tag Manager tracking code in the head and body sections.
-    description: Add the Google Tag Manager script tags to the root layout,
-      including the head script and noscript fallback in the body section with
-      proper CSP nonce support
+    name: Add GTM scripts to the app
+    description: Insert Google Tag Manager tracking code in the head and body sections.
     diffs:
       - file: app/root.tsx
         patchFile: root.tsx.5e9998.patch

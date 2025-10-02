@@ -47,109 +47,109 @@ deletedFiles: []
 steps:
   - type: PATCH
     step: "1"
-    name: README.md
-    description: Document legacy customer accounts in the README
+    name: Document legacy customer accounts in the README
+    description: Update the README file to document the legacy customer account flow.
     diffs:
       - file: README.md
         patchFile: README.md.db10ed.patch
   - type: PATCH
     step: "2"
-    name: app/components/Header.tsx
-    description: Add account link to header navigation
+    name: Add account link to header navigation
+    description: Add an account link to the header navigation.
     diffs:
       - file: app/components/Header.tsx
         patchFile: Header.tsx.e25645.patch
   - type: NEW_FILE
     step: "3"
-    name: app/routes/account_.activate.$id.$activationToken.tsx
-    description: Create account activation flow
+    name: Create account activation flow
+    description: Add an account activation route for email verification.
     ingredients:
       - path: templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx
   - type: PATCH
     step: "4"
-    name: app/components/PageLayout.tsx
-    description: Update PageLayout for legacy auth
+    name: Update PageLayout for legacy auth
+    description: Update PageLayout to handle account routes.
     diffs:
       - file: app/components/PageLayout.tsx
         patchFile: PageLayout.tsx.23e685.patch
   - type: NEW_FILE
     step: "5"
-    name: app/routes/account_.recover.tsx
-    description: Build password recovery flow
+    name: Build password recovery flow
+    description: Add a password recovery form.
     ingredients:
       - path: templates/skeleton/app/routes/account_.recover.tsx
   - type: PATCH
     step: "6"
-    name: app/root.tsx
-    description: Validate customer access tokens
+    name: Validate customer access tokens
+    description: Add customer access token validation to the root loader.
     diffs:
       - file: app/root.tsx
         patchFile: root.tsx.5e9998.patch
   - type: NEW_FILE
     step: "7"
-    name: app/routes/account_.register.tsx
-    description: Create customer registration flow
+    name: Create customer registration flow
+    description: Add a customer registration form.
     ingredients:
       - path: templates/skeleton/app/routes/account_.register.tsx
   - type: PATCH
     step: "8"
-    name: app/routes/account.$.tsx
-    description: Handle unauthenticated account routes
+    name: Handle unauthenticated account routes
+    description: Convert the catch-all route to use Storefront API authentication.
     diffs:
       - file: app/routes/account.$.tsx
         patchFile: account.$.tsx.ce5422.patch
   - type: NEW_FILE
     step: "9"
-    name: app/routes/account_.reset.$id.$resetToken.tsx
-    description: Build password reset flow
+    name: Build password reset flow
+    description: Add a password reset form with token validation.
     ingredients:
       - path: templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx
   - type: PATCH
     step: "10"
-    name: app/routes/account.addresses.tsx
-    description: Add address management
+    name: Add address management
+    description: Convert address management to use Storefront API mutations.
     diffs:
       - file: app/routes/account.addresses.tsx
         patchFile: account.addresses.tsx.cb4cc0.patch
   - type: PATCH
     step: "11"
-    name: app/routes/account.orders.$id.tsx
-    description: Show order details
+    name: Show order details
+    description: Convert the order details page to use Storefront API queries.
     diffs:
       - file: app/routes/account.orders.$id.tsx
         patchFile: account.orders.$id.tsx.4ddfdd.patch
   - type: PATCH
     step: "12"
-    name: app/routes/account.orders._index.tsx
-    description: Display order history
+    name: Display order history
+    description: Convert the orders list to use the Storefront API with pagination.
     diffs:
       - file: app/routes/account.orders._index.tsx
         patchFile: account.orders._index.tsx.4daaeb.patch
   - type: PATCH
     step: "13"
-    name: app/routes/account.profile.tsx
-    description: Build customer profile page
+    name: Build customer profile page
+    description: Convert the customer profile page to use Storefront API queries.
     diffs:
       - file: app/routes/account.profile.tsx
         patchFile: account.profile.tsx.f09d0b.patch
   - type: PATCH
     step: "14"
-    name: app/routes/account.tsx
-    description: Update account layout for session auth
+    name: Update account layout for session auth
+    description: Convert the account layout to use session-based authentication.
     diffs:
       - file: app/routes/account.tsx
         patchFile: account.tsx.f95c1e.patch
   - type: PATCH
     step: "15"
-    name: app/routes/account_.login.tsx
-    description: Create login page
+    name: Create login page
+    description: Replace the Customer Account API login with the Storefront API form.
     diffs:
       - file: app/routes/account_.login.tsx
         patchFile: account_.login.tsx.3fb3f2.patch
   - type: PATCH
     step: "16"
-    name: app/routes/account_.logout.tsx
-    description: Handle logout and session cleanup
+    name: Handle logout and session cleanup
+    description: Replace the Customer Account API logout with a session cleanup.
     diffs:
       - file: app/routes/account_.logout.tsx
         patchFile: account_.logout.tsx.a1f12e.patch
