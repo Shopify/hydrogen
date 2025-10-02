@@ -2,7 +2,12 @@ import {execSync, ExecSyncOptionsWithBufferEncoding} from 'child_process';
 import {rmSync} from 'fs';
 import fs from 'fs';
 import {applyRecipe} from './apply';
-import {TEMPLATE_PATH, COOKBOOK_PATH} from './constants';
+import {
+  TEMPLATE_PATH,
+  COOKBOOK_PATH,
+  LLMS_PATH,
+  RENDER_FILENAME_GITHUB,
+} from './constants';
 import {loadRecipe, Recipe} from './recipe';
 import path from 'path';
 
@@ -137,6 +142,31 @@ export function validateIngredientFiles(
   }
 }
 
+export function validateReadmeExists(recipeName: string): void {
+  console.log(`- 📖 Checking README.md exists…`);
+
+  const recipeDir = path.join(COOKBOOK_PATH, 'recipes', recipeName);
+  const readmePath = path.join(recipeDir, RENDER_FILENAME_GITHUB);
+
+  if (!fs.existsSync(readmePath)) {
+    throw new Error(
+      `README.md not found. Run: npm run cookbook render ${recipeName}`,
+    );
+  }
+}
+
+export function validateLlmPromptExists(recipeName: string): void {
+  console.log(`- 🤖 Checking LLM prompt exists…`);
+
+  const promptPath = path.join(LLMS_PATH, `${recipeName}.prompt.md`);
+
+  if (!fs.existsSync(promptPath)) {
+    throw new Error(
+      `LLM prompt file not found at llms/${recipeName}.prompt.md. Run: npm run cookbook render ${recipeName}`,
+    );
+  }
+}
+
 /**
  * Validate a recipe.
  * @param params - The parameters for the validation.
@@ -160,6 +190,8 @@ export function validateRecipe(params: {
     validateStepDescriptions(recipe);
     validatePatchFiles(recipeTitle, recipe);
     validateIngredientFiles(recipeTitle, recipe);
+    validateReadmeExists(recipeTitle);
+    validateLlmPromptExists(recipeTitle);
 
     console.log(`- 🧑‍🍳 Applying recipe '${recipeTitle}'`);
     applyRecipe({

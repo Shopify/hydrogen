@@ -5,12 +5,12 @@ import {
   validateStepDescriptions,
   validatePatchFiles,
   validateIngredientFiles,
+  validateReadmeExists,
+  validateLlmPromptExists,
 } from './validate';
 import fs from 'fs';
 import path from 'path';
 import {COOKBOOK_PATH} from './constants';
-
-vi.mock('fs');
 
 describe('validateStepNames', () => {
   it('should throw when grouped steps have identical names', () => {
@@ -126,11 +126,12 @@ describe('validateStepDescriptions', () => {
 });
 
 describe('validatePatchFiles', () => {
-  const mockExistsSync = vi.mocked(fs.existsSync);
-  const mockReaddirSync = vi.mocked(fs.readdirSync);
+  let mockExistsSync: ReturnType<typeof vi.fn>;
+  let mockReaddirSync: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mockExistsSync = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    mockReaddirSync = vi.spyOn(fs, 'readdirSync').mockReturnValue([] as fs.Dirent[]);
   });
 
   afterEach(() => {
@@ -217,11 +218,12 @@ describe('validatePatchFiles', () => {
 });
 
 describe('validateIngredientFiles', () => {
-  const mockExistsSync = vi.mocked(fs.existsSync);
-  const mockReaddirSync = vi.mocked(fs.readdirSync);
+  let mockExistsSync: ReturnType<typeof vi.fn>;
+  let mockReaddirSync: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mockExistsSync = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    mockReaddirSync = vi.spyOn(fs, 'readdirSync').mockReturnValue([] as fs.Dirent[]);
   });
 
   afterEach(() => {
@@ -312,5 +314,29 @@ describe('validateIngredientFiles', () => {
     ] as fs.Dirent[]);
 
     expect(() => validateIngredientFiles('test-recipe', recipe)).not.toThrow();
+  });
+});
+
+describe('validateReadmeExists', () => {
+  it('should pass for existing recipe with README', () => {
+    expect(() => validateReadmeExists('gtm')).not.toThrow();
+  });
+
+  it('should throw helpful error with render command when README missing', () => {
+    expect(() => validateReadmeExists('nonexistent-recipe')).toThrow(
+      'Run: npm run cookbook render nonexistent-recipe',
+    );
+  });
+});
+
+describe('validateLlmPromptExists', () => {
+  it('should pass for existing recipe with LLM prompt', () => {
+    expect(() => validateLlmPromptExists('gtm')).not.toThrow();
+  });
+
+  it('should throw helpful error with render command when LLM prompt missing', () => {
+    expect(() => validateLlmPromptExists('nonexistent-recipe')).toThrow(
+      'Run: npm run cookbook render nonexistent-recipe',
+    );
   });
 });
