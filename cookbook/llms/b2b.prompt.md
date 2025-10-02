@@ -68,7 +68,7 @@ with buyer information (company location + customer token) to ensure accurate B2
 
 ## Steps
 
-### Step 1: README.md
+### Step 1: Document B2B features, requirements, and implementation details in the project README
 
 
 
@@ -123,7 +123,7 @@ with buyer information (company location + customer token) to ensure accurate B2
  **Requirements:**
 ~~~
 
-### Step 2: app/components/B2BLocationProvider.tsx
+### Step 2: Create a React context provider to manage company location state across the app
 
 
 
@@ -183,7 +183,7 @@ export function useB2BLocation(): B2BLocationContextValue {
 }
 ~~~
 
-### Step 3: app/components/CartLineItem.tsx
+### Step 3: Update quantity controls to respect B2B minimum, maximum, and increment rules
 
 
 
@@ -228,7 +228,7 @@ export function useB2BLocation(): B2BLocationContextValue {
          </button>
 ~~~
 
-### Step 4: app/components/B2BLocationSelector.tsx
+### Step 4: Build a modal that lets customers choose which company location to use for pricing
 
 
 
@@ -307,7 +307,7 @@ export function B2BLocationSelector() {
 }
 ~~~
 
-### Step 5: app/components/Header.tsx
+### Step 5: Add a location selector button to the header for switching between company locations
 
 
 
@@ -365,7 +365,7 @@ export function B2BLocationSelector() {
    items: [
 ~~~
 
-### Step 6: app/components/PriceBreaks.tsx
+### Step 6: Display volume pricing tiers that show bulk purchase discounts
 
 
 
@@ -413,7 +413,7 @@ export function PriceBreaks({priceBreaks}: PriceBreaksProps) {
 }
 ~~~
 
-### Step 7: app/components/ProductForm.tsx
+### Step 7: Accept quantity parameter to support B2B minimum quantity and increment rules
 
 
 
@@ -448,7 +448,7 @@ export function PriceBreaks({priceBreaks}: PriceBreaksProps) {
                ]
 ~~~
 
-### Step 8: app/components/QuantityRules.tsx
+### Step 8: Show minimum, maximum, and increment quantity requirements for B2B products
 
 
 
@@ -501,7 +501,7 @@ export function QuantityRules({
 }
 ~~~
 
-### Step 9: app/lib/fragments.ts
+### Step 9: Add quantity rules and price breaks to cart GraphQL fragments
 
 
 
@@ -554,7 +554,7 @@ export function QuantityRules({
    }
 ~~~
 
-### Step 10: app/graphql/customer-account/CustomerLocationsQuery.ts
+### Step 10: Query company locations from the Customer Account API for B2B customers
 
 
 
@@ -596,7 +596,7 @@ export const CUSTOMER_LOCATIONS_QUERY = `#graphql
 ` as const;
 ~~~
 
-### Step 11: app/root.tsx
+### Step 11: Wrap the app with B2B location provider and add company location types
 
 
 
@@ -662,7 +662,7 @@ export const CUSTOMER_LOCATIONS_QUERY = `#graphql
  }
 ~~~
 
-### Step 12: app/routes/b2blocations.tsx
+### Step 12: Handle location selection and automatically set location if customer has only one
 
 
 
@@ -709,7 +709,7 @@ export default function CartRoute() {
 }
 ~~~
 
-### Step 13: app/routes/account_.logout.tsx
+### Step 13: Clear company location and customer data from cart when logging out
 
 
 
@@ -729,7 +729,7 @@ export default function CartRoute() {
  }
 ~~~
 
-### Step 14: app/routes/products.$handle.tsx
+### Step 14: Contextualize product queries with buyer information and display B2B pricing details
 
 
 

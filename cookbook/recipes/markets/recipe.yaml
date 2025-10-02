@@ -288,124 +288,124 @@ steps:
       - path: templates/skeleton/app/routes/($locale).tsx
   - type: NEW_FILE
     step: "2.7"
-    name: app/routes/($locale).account.$.tsx
+    name: Handle unauthenticated account pages
     description: Add a fallback route for unauthenticated account pages with locale support.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).account.$.tsx
   - type: NEW_FILE
     step: "2.8"
-    name: app/routes/($locale).account._index.tsx
+    name: Redirect to account dashboard
     description: Add a localized account dashboard redirect route.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).account._index.tsx
   - type: NEW_FILE
     step: "2.9"
-    name: app/routes/($locale).account.addresses.tsx
+    name: Add address management
     description: Add a customer address management page with locale-aware forms and links.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).account.addresses.tsx
   - type: NEW_FILE
     step: "2.10"
-    name: app/routes/($locale).account.orders.$id.tsx
+    name: Show order details
     description: Add an individual order details page with localized currency and
       date formatting.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).account.orders.$id.tsx
   - type: NEW_FILE
     step: "2.11"
-    name: app/routes/($locale).account.orders._index.tsx
+    name: Display order history
     description: Implement customer order history listing with locale-specific pagination.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).account.orders._index.tsx
   - type: NEW_FILE
     step: "2.12"
-    name: app/routes/($locale).account.profile.tsx
+    name: Build customer profile page
     description: Add a customer profile editing form with localized field labels.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).account.profile.tsx
   - type: NEW_FILE
     step: "2.13"
-    name: app/routes/($locale).account.tsx
+    name: Create account layout
     description: Add an account layout wrapper with locale-aware navigation tabs.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).account.tsx
   - type: NEW_FILE
     step: "2.14"
-    name: app/routes/($locale).account_.authorize.tsx
+    name: Handle OAuth authorization
     description: Add an OAuth authorization callback route with locale preservation.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).account_.authorize.tsx
   - type: NEW_FILE
     step: "2.15"
-    name: app/routes/($locale).account_.login.tsx
+    name: Create login redirect
     description: Add a customer login redirect with a locale-specific return URL.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).account_.login.tsx
   - type: NEW_FILE
     step: "2.16"
-    name: app/routes/($locale).account_.logout.tsx
+    name: Handle logout
     description: Add a logout handler that maintains locale after the user signs out.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).account_.logout.tsx
   - type: NEW_FILE
     step: "2.17"
-    name: app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx
+    name: Show blog articles
     description: Add a blog article page with locale-specific content and SEO metadata.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx
   - type: NEW_FILE
     step: "2.18"
-    name: app/routes/($locale).blogs.$blogHandle._index.tsx
+    name: List blog posts
     description: Add a blog listing page with localized article previews and pagination.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).blogs.$blogHandle._index.tsx
   - type: NEW_FILE
     step: "2.19"
-    name: app/routes/($locale).blogs._index.tsx
+    name: Display all blogs
     description: Add an overview page for all blogs with locale-aware navigation links.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).blogs._index.tsx
   - type: NEW_FILE
     step: "2.20"
-    name: app/routes/($locale).collections.$handle.tsx
+    name: Show collection pages
     description: Add a collection page displaying products with locale-specific
       pricing and availability.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).collections.$handle.tsx
   - type: NEW_FILE
     step: "2.21"
-    name: app/routes/($locale).collections._index.tsx
+    name: List all collections
     description: Add a collections listing page with localized collection names and images.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).collections._index.tsx
   - type: NEW_FILE
     step: "2.22"
-    name: app/routes/($locale).collections.all.tsx
+    name: Show all products
     description: Add an "All products" page with locale-based filtering and sorting.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).collections.all.tsx
   - type: NEW_FILE
     step: "2.23"
-    name: app/routes/($locale).pages.$handle.tsx
+    name: Display content pages
     description: Add a dynamic page route for locale-specific content pages.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).pages.$handle.tsx
   - type: NEW_FILE
     step: "2.24"
-    name: app/routes/($locale).policies.$handle.tsx
+    name: Show policy pages
     description: Add a policy page (privacy, terms, etc.) with locale-specific legal
       content.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).policies.$handle.tsx
   - type: NEW_FILE
     step: "2.25"
-    name: app/routes/($locale).policies._index.tsx
+    name: List all policies
     description: Add a policies index page that lists all available store policies.
     ingredients:
       - path: templates/skeleton/app/routes/($locale).policies._index.tsx
   - type: NEW_FILE
     step: "2.26"
-    name: app/routes/($locale).search.tsx
+    name: Build search functionality
     description: Add a search results page with locale-aware product matching and
       predictive search.
     ingredients:

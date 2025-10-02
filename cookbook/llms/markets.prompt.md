@@ -1333,7 +1333,7 @@ export async function loader({params}: Route.LoaderArgs) {
 
 ~~~
 
-#### Step 2.7: app/routes/($locale).account.$.tsx
+#### Step 2.7: Handle unauthenticated account pages
 
 Add a fallback route for unauthenticated account pages with locale support.
 
@@ -1352,7 +1352,7 @@ export async function loader({context}: Route.LoaderArgs) {
 
 ~~~
 
-#### Step 2.8: app/routes/($locale).account._index.tsx
+#### Step 2.8: Redirect to account dashboard
 
 Add a localized account dashboard redirect route.
 
@@ -1367,7 +1367,7 @@ export async function loader() {
 
 ~~~
 
-#### Step 2.9: app/routes/($locale).account.addresses.tsx
+#### Step 2.9: Add address management
 
 Add a customer address management page with locale-aware forms and links.
 
@@ -1893,7 +1893,7 @@ export function AddressForm({
 
 ~~~
 
-#### Step 2.10: app/routes/($locale).account.orders.$id.tsx
+#### Step 2.10: Show order details
 
 Add an individual order details page with localized currency and date formatting.
 
@@ -2123,7 +2123,7 @@ function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
 
 ~~~
 
-#### Step 2.11: app/routes/($locale).account.orders._index.tsx
+#### Step 2.11: Display order history
 
 Implement customer order history listing with locale-specific pagination.
 
@@ -2230,7 +2230,7 @@ function OrderItem({order}: {order: OrderItemFragment}) {
 
 ~~~
 
-#### Step 2.12: app/routes/($locale).account.profile.tsx
+#### Step 2.12: Build customer profile page
 
 Add a customer profile editing form with localized field labels.
 
@@ -2373,7 +2373,7 @@ export default function AccountProfile() {
 
 ~~~
 
-#### Step 2.13: app/routes/($locale).account.tsx
+#### Step 2.13: Create account layout
 
 Add an account layout wrapper with locale-aware navigation tabs.
 
@@ -2482,7 +2482,7 @@ function Logout() {
 
 ~~~
 
-#### Step 2.14: app/routes/($locale).account_.authorize.tsx
+#### Step 2.14: Handle OAuth authorization
 
 Add an OAuth authorization callback route with locale preservation.
 
@@ -2497,7 +2497,7 @@ export async function loader({context}: Route.LoaderArgs) {
 
 ~~~
 
-#### Step 2.15: app/routes/($locale).account_.login.tsx
+#### Step 2.15: Create login redirect
 
 Add a customer login redirect with a locale-specific return URL.
 
@@ -2512,7 +2512,7 @@ export async function loader({context}: Route.LoaderArgs) {
 
 ~~~
 
-#### Step 2.16: app/routes/($locale).account_.logout.tsx
+#### Step 2.16: Handle logout
 
 Add a logout handler that maintains locale after the user signs out.
 
@@ -2533,7 +2533,7 @@ export async function action({context}: Route.ActionArgs) {
 
 ~~~
 
-#### Step 2.17: app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx
+#### Step 2.17: Show blog articles
 
 Add a blog article page with locale-specific content and SEO metadata.
 
@@ -2672,7 +2672,7 @@ const ARTICLE_QUERY = `#graphql
 
 ~~~
 
-#### Step 2.18: app/routes/($locale).blogs.$blogHandle._index.tsx
+#### Step 2.18: List blog posts
 
 Add a blog listing page with localized article previews and pagination.
 
@@ -2864,7 +2864,7 @@ const BLOGS_QUERY = `#graphql
 
 ~~~
 
-#### Step 2.19: app/routes/($locale).blogs._index.tsx
+#### Step 2.19: Display all blogs
 
 Add an overview page for all blogs with locale-aware navigation links.
 
@@ -2984,7 +2984,7 @@ const BLOGS_QUERY = `#graphql
 
 ~~~
 
-#### Step 2.20: app/routes/($locale).collections.$handle.tsx
+#### Step 2.20: Show collection pages
 
 Add a collection page displaying products with locale-specific pricing and availability.
 
@@ -3155,7 +3155,7 @@ const COLLECTION_QUERY = `#graphql
 
 ~~~
 
-#### Step 2.21: app/routes/($locale).collections._index.tsx
+#### Step 2.21: List all collections
 
 Add a collections listing page with localized collection names and images.
 
@@ -3299,7 +3299,7 @@ const COLLECTIONS_QUERY = `#graphql
 
 ~~~
 
-#### Step 2.22: app/routes/($locale).collections.all.tsx
+#### Step 2.22: Show all products
 
 Add an "All products" page with locale-based filtering and sorting.
 
@@ -3433,7 +3433,7 @@ const CATALOG_QUERY = `#graphql
 
 ~~~
 
-#### Step 2.23: app/routes/($locale).pages.$handle.tsx
+#### Step 2.23: Display content pages
 
 Add a dynamic page route for locale-specific content pages.
 
@@ -3537,7 +3537,7 @@ const PAGE_QUERY = `#graphql
 
 ~~~
 
-#### Step 2.24: app/routes/($locale).policies.$handle.tsx
+#### Step 2.24: Show policy pages
 
 Add a policy page (privacy, terms, etc.) with locale-specific legal content.
 
@@ -3643,7 +3643,7 @@ const POLICY_CONTENT_QUERY = `#graphql
 
 ~~~
 
-#### Step 2.25: app/routes/($locale).policies._index.tsx
+#### Step 2.25: List all policies
 
 Add a policies index page that lists all available store policies.
 
@@ -3723,7 +3723,7 @@ const POLICIES_QUERY = `#graphql
 
 ~~~
 
-#### Step 2.26: app/routes/($locale).search.tsx
+#### Step 2.26: Build search functionality
 
 Add a search results page with locale-aware product matching and predictive search.
 

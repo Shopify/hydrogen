@@ -82,7 +82,7 @@ Technical details:
 
 ## Steps
 
-### Step 1: .graphqlrc.ts
+### Step 1: Disable customer account API
 
 Comment out customer account GraphQL configuration
 
@@ -107,7 +107,7 @@ Comment out customer account GraphQL configuration
    },
 ~~~
 
-### Step 2: README.md
+### Step 2: Update README for Express deployment
 
 Update README with Express-specific setup and deployment instructions
 
@@ -222,7 +222,7 @@ Update README with Express-specific setup and deployment instructions
 \ No newline at end of file
 ~~~
 
-### Step 3: app/env.ts
+### Step 3: Add environment type definitions
 
 Add environment type definitions for Hydrogen on Express
 
@@ -261,7 +261,7 @@ declare global {
 export {};
 ~~~
 
-### Step 4: app/entry.client.tsx
+### Step 4: Set up client-side hydration
 
 Update client entry to use React Router hydration without Oxygen-specific code
 
@@ -293,7 +293,7 @@ Update client entry to use React Router hydration without Oxygen-specific code
    });
 ~~~
 
-### Step 5: public/favicon.svg
+### Step 5: Add the Express template favicon
 
 Add Express template favicon
 
@@ -331,7 +331,7 @@ Add Express template favicon
 
 ~~~
 
-### Step 6: app/entry.server.tsx
+### Step 6: Configure server-side rendering
 
 Replace Oxygen server rendering with Express-compatible Node.js SSR using PassThrough streams
 
@@ -454,7 +454,7 @@ Replace Oxygen server rendering with Express-compatible Node.js SSR using PassTh
 \ No newline at end of file
 ~~~
 
-### Step 7: scripts/dev.mjs
+### Step 7: Set up the development server
 
 Add development server orchestration script for Vite and nodemon
 
@@ -564,7 +564,7 @@ process.on('SIGTERM', () => {
 });
 ~~~
 
-### Step 8: app/root.tsx
+### Step 8: Simplify the root layout
 
 Simplify root layout for Express template by removing complex components
 
@@ -765,7 +765,7 @@ Simplify root layout for Express template by removing complex components
 +` as const;
 ~~~
 
-### Step 9: server.mjs
+### Step 9: Create the Express server
 
 Add Express server with Hydrogen context, session management, and SSR support
 
@@ -1034,7 +1034,7 @@ class AppSession {
 
 ~~~
 
-### Step 10: app/routes.ts
+### Step 10: Configure routes for Express
 
 Update routes configuration to work with Hydrogen on Express
 
@@ -1058,7 +1058,7 @@ Update routes configuration to work with Hydrogen on Express
 +})() satisfies Promise<RouteConfig>;
 ~~~
 
-### Step 11: app/routes/_index.tsx
+### Step 11: Create a basic homepage
 
 Simplify homepage route to basic Express example content
 
@@ -1261,7 +1261,7 @@ Simplify homepage route to basic Express example content
 -` as const;
 ~~~
 
-### Step 12: app/routes/products.$handle.tsx
+### Step 12: Add a minimal product page
 
 Simplify product route to minimal implementation without cart functionality
 
@@ -1531,7 +1531,7 @@ Simplify product route to minimal implementation without cart functionality
  ` as const;
 ~~~
 
-### Step 13: app/styles/app.css
+### Step 13: Add basic styles
 
 Replace skeleton styles with minimal Express template styling
 
@@ -2141,7 +2141,7 @@ Replace skeleton styles with minimal Express template styling
 \ No newline at end of file
 ~~~
 
-### Step 14: eslint.config.js
+### Step 14: Update ESLint configuration
 
 Simplify ESLint configuration for Express template
 
@@ -2400,7 +2400,7 @@ Simplify ESLint configuration for Express template
 \ No newline at end of file
 ~~~
 
-### Step 15: package.json
+### Step 15: Install Express dependencies
 
 Update dependencies and scripts for Express server deployment (add express, nodemon, compression, remove Oxygen packages)
 
@@ -2486,7 +2486,7 @@ Update dependencies and scripts for Express server deployment (add express, node
  }
 ~~~
 
-### Step 16: vite.config.ts
+### Step 16: Configure Vite for Node.js
 
 Configure Vite for Express deployment with Node.js module externalization
 

@@ -16,7 +16,7 @@ Key features:
 
 ## Steps
 
-### Step 1: README.md
+### Step 1: Document infinite scroll in the README
 
 Update the README file with infinite scroll documentation and implementation details.
 
@@ -116,9 +116,9 @@ index c584e537..6eacfd82 100644
 
 </details>
 
-### Step 2: app/routes/collections.$handle.tsx
+### Step 2: Add infinite scroll to collections
 
-
+Implement automatic loading with Intersection Observer when users scroll to the bottom.
 
 #### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/routes/collections.$handle.tsx)
 
@@ -251,9 +251,9 @@ index c416c2b3..e6a35150 100644
 
 </details>
 
-### Step 3: package.json
+### Step 3: Install Intersection Observer library
 
-
+Add the react-intersection-observer package for viewport detection.
 
 #### File: [package.json](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/package.json)
 

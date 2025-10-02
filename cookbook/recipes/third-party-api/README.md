@@ -55,9 +55,9 @@ _New files added to the template by this recipe._
 
 ## Steps
 
-### Step 1: README.md
+### Step 1: Document third-party API integration
 
-
+Add documentation explaining how to integrate external GraphQL APIs with Oxygen caching.
 
 #### File: [README.md](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/README.md)
 

@@ -77,7 +77,7 @@ To enable cookie consent:
 
 ## Steps
 
-### Step 1: README.md
+### Step 1: Document GTM setup in the README
 
 Update the README file with GTM-specific documentation and setup instructions.
 
@@ -171,9 +171,9 @@ Update the README file with GTM-specific documentation and setup instructions.
 \ No newline at end of file
 ~~~
 
-### Step 2: app/entry.server.tsx
+### Step 2: Add GTM domains to Content Security Policy
 
-
+Configure CSP headers to allow Google Tag Manager and Analytics scripts.
 
 #### File: /app/entry.server.tsx
 
@@ -205,9 +205,9 @@ Update the README file with GTM-specific documentation and setup instructions.
        storeDomain: context.env.PUBLIC_STORE_DOMAIN,
 ~~~
 
-### Step 3: app/components/GoogleTagManager.tsx
+### Step 3: Create the analytics component
 
-
+Build a component that subscribes to Hydrogen analytics events and pushes them to GTM's dataLayer.
 
 #### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
 
@@ -238,7 +238,7 @@ export function GoogleTagManager() {
 }
 ~~~
 
-### Step 4: app/root.tsx
+### Step 4: Insert Google Tag Manager tracking code in the head and body sections.
 
 
 

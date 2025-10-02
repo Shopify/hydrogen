@@ -87,7 +87,7 @@ to match your specific content needs. See the included `guides/metaobjects/READM
 
 ## Steps
 
-### Step 1: README.md
+### Step 1: Document the metaobjects CMS
 
 Update the README file with metaobjects CMS documentation and an architecture overview.
 
@@ -193,7 +193,7 @@ Update the README file with metaobjects CMS documentation and an architecture ov
 \ No newline at end of file
 ~~~
 
-### Step 2: app/lib/fragments.ts
+### Step 2: Add product fragment for sections
 
 Add RECOMMENDED_PRODUCT_FRAGMENT for displaying product collections in metaobject sections.
 
@@ -228,7 +228,7 @@ Add RECOMMENDED_PRODUCT_FRAGMENT for displaying product collections in metaobjec
 +` as const;
 ~~~
 
-### Step 3: app/components/EditRoute.tsx
+### Step 3: Create edit route component
 
 Add the edit route component for managing metaobject-based content in development.
 
@@ -286,7 +286,7 @@ export function EditRoute({routeId}: {routeId: string}) {
 
 ~~~
 
-### Step 4: app/root.tsx
+### Step 4: Expose store subdomain
 
 Expose the public store subdomain for metaobject queries and content management.
 
@@ -303,7 +303,7 @@ Expose the public store subdomain for metaobject queries and content management.
  }
 ~~~
 
-### Step 5: app/routes/stores.$name.tsx
+### Step 5: Build store profile route
 
 Add a dynamic store profile route for displaying store-specific metaobject content.
 
@@ -371,7 +371,7 @@ export default function Store() {
 
 ~~~
 
-### Step 6: app/routes/_index.tsx
+### Step 6: Add metaobjects to homepage
 
 Integrate the `RouteContent` component to render metaobject sections on the homepage.
 
@@ -561,7 +561,7 @@ Integrate the `RouteContent` component to render metaobject sections on the home
 -` as const;
 ~~~
 
-### Step 7: app/routes/stores._index.tsx
+### Step 7: Display all stores
 
 Add a store listing page that shows all stores from metaobjects with a grid layout.
 
@@ -630,7 +630,7 @@ export default function Stores() {
 
 ~~~
 
-### Step 8: package.json
+### Step 8: Install rich text dependencies
 
 Add Slate dependencies for rich text editing in metaobject sections.
 
@@ -650,7 +650,7 @@ Add Slate dependencies for rich text editing in metaobject sections.
      "@eslint/compat": "^1.2.5",
 ~~~
 
-### Step 9: app/sections/RouteContent.tsx
+### Step 9: Create route content component
 
 Add the main component for fetching and rendering metaobject-based route content.
 
@@ -694,7 +694,7 @@ export const ROUTE_CONTENT_QUERY = `#graphql
 
 ~~~
 
-### Step 10: app/sections/SectionFeaturedCollections.tsx
+### Step 10: Build featured collections section
 
 Add a section component for displaying featured product collections from metaobjects.
 
@@ -791,7 +791,7 @@ export const SECTION_FEATURED_COLLECTIONS_FRAGMENT = `#graphql
 
 ~~~
 
-### Step 11: app/sections/SectionFeaturedProducts.tsx
+### Step 11: Build featured products section
 
 Add a section component for showcasing featured products with a customizable layout.
 
@@ -904,7 +904,7 @@ export const SECTION_FEATURED_PRODUCTS_FRAGMENT = `#graphql
 
 ~~~
 
-### Step 12: app/sections/SectionHero.tsx
+### Step 12: Build hero banner section
 
 Add a hero banner section with an image, heading, and call-to-action from metaobjects.
 
@@ -1038,7 +1038,7 @@ export const SECTION_HERO_FRAGMENT = `#graphql
 
 ~~~
 
-### Step 13: app/sections/SectionStoreProfile.tsx
+### Step 13: Build store profile section
 
 Add a store profile section that displays store details, hours, and contact information.
 
@@ -1158,7 +1158,7 @@ export const SECTION_STORE_PROFILE_FRAGMENT = `#graphql
 
 ~~~
 
-### Step 14: app/sections/SectionStores.tsx
+### Step 14: Build stores grid section
 
 Add a grid layout section for displaying multiple store locations from metaobjects.
 
@@ -1275,7 +1275,7 @@ export const SECTION_STORES_FRAGMENT = `#graphql
 
 ~~~
 
-### Step 15: app/sections/Sections.tsx
+### Step 15: Create section renderer
 
 Add a dynamic section renderer that maps metaobject types to React components.
 
@@ -1354,7 +1354,7 @@ export const SECTIONS_FRAGMENT = `#graphql
 
 ~~~
 
-### Step 16: app/utils/parseSection.ts
+### Step 16: Add section parsing utility
 
 Add a utility function for parsing and transforming metaobject field data.
 
@@ -1496,7 +1496,7 @@ function liftEach<Section, KeysToRemove extends ReadonlyArray<PropertyKey>>(
 
 ~~~
 
-### Step 17: guides/metaobjects/README.md
+### Step 17: Add setup guide
 
 A comprehensive guide for setting up metaobject definitions in the Shopify admin.
 
@@ -1775,7 +1775,7 @@ export const SECTIONS_FRAGMENT = `#graphql
 
 ~~~
 
-### Step 18: guides/metaobjects/images/definition_link.png
+### Step 18: Link field screenshot
 
 A screenshot showing the Link metaobject field configuration.
 
@@ -1783,7 +1783,7 @@ A screenshot showing the Link metaobject field configuration.
 
 ![templates/skeleton/guides/metaobjects/images/definition_link.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_link.png)
 
-### Step 19: guides/metaobjects/images/definition_section_featured_collections.png
+### Step 19: Featured collections definition screenshot
 
 A screenshot of a "Featured Collections" section metaobject definition.
 
@@ -1791,7 +1791,7 @@ A screenshot of a "Featured Collections" section metaobject definition.
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png)
 
-### Step 20: guides/metaobjects/images/definition_section_featured_products.png
+### Step 20: Featured products definition screenshot
 
 A screenshot of a "Featured Products" section metaobject definition.
 
@@ -1799,7 +1799,7 @@ A screenshot of a "Featured Products" section metaobject definition.
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png)
 
-### Step 21: guides/metaobjects/images/definition_section_hero.png
+### Step 21: Hero section definition screenshot
 
 A screenshot of a Hero section metaobject definition with image and text fields.
 
@@ -1807,7 +1807,7 @@ A screenshot of a Hero section metaobject definition with image and text fields.
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_hero.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_hero.png)
 
-### Step 22: guides/metaobjects/images/definition_section_rich_text.png
+### Step 22: Rich text section definition screenshot
 
 A screenshot of a "Richtext" section metaobject definition.
 
@@ -1815,7 +1815,7 @@ A screenshot of a "Richtext" section metaobject definition.
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png)
 
-### Step 23: guides/metaobjects/images/definition_section_store_profile.png
+### Step 23: Store profile definition screenshot
 
 A screenshot of a "Store Profile" section metaobject definition.
 
@@ -1823,7 +1823,7 @@ A screenshot of a "Store Profile" section metaobject definition.
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png)
 
-### Step 24: guides/metaobjects/images/definition_section_stores_grid.png
+### Step 24: Stores grid definition screenshot
 
 A screenshot of a "Stores Grid" section metaobject definition.
 
@@ -1831,7 +1831,7 @@ A screenshot of a "Stores Grid" section metaobject definition.
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png)
 
-### Step 25: guides/metaobjects/images/definition_store.png
+### Step 25: Store definition screenshot
 
 A screenshot of a "Store" metaobject definition with location and contact fields.
 
@@ -1839,7 +1839,7 @@ A screenshot of a "Store" metaobject definition with location and contact fields
 
 ![templates/skeleton/guides/metaobjects/images/definition_store.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_store.png)
 
-### Step 26: guides/metaobjects/images/definitions_list.png
+### Step 26: Definitions list screenshot
 
 A screenshot showing a list of all metaobject definitions in the Shopify admin.
 
@@ -1847,7 +1847,7 @@ A screenshot showing a list of all metaobject definitions in the Shopify admin.
 
 ![templates/skeleton/guides/metaobjects/images/definitions_list.png](ingredients/templates/skeleton/guides/metaobjects/images/definitions_list.png)
 
-### Step 27: guides/metaobjects/images/definiton_route.png
+### Step 27: Route definition screenshot
 
 A screenshot of a "Route" metaobject definition with a "Sections" reference field.
 

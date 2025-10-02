@@ -60,7 +60,7 @@ Key features:
 
 ## Steps
 
-### Step 1: README.md
+### Step 1: Document custom cart methods in the README
 
 Update the README file with custom cart method documentation and an implementation guide.
 
@@ -161,7 +161,7 @@ Update the README file with custom cart method documentation and an implementati
 \ No newline at end of file
 ~~~
 
-### Step 2: app/components/CartLineItem.tsx
+### Step 2: Let customers change variants directly in the cart
 
 Add variant selector functionality to cart line items for changing product options.
 
@@ -292,7 +292,7 @@ Add variant selector functionality to cart line items for changing product optio
 +}
 ~~~
 
-### Step 3: app/lib/context.ts
+### Step 3: Add updateLineByOptions method to cart context
 
 Extend HydrogenCart context with updateLineByOptions method for variant switching.
 
@@ -379,7 +379,7 @@ Extend HydrogenCart context with updateLineByOptions method for variant switchin
      additionalContext,
 ~~~
 
-### Step 4: app/lib/fragments.ts
+### Step 4: Query product options for variant selection
 
 Add product options to cart fragments and create PRODUCT_VARIANT_QUERY for fetching variants.
 
@@ -436,7 +436,7 @@ Add product options to cart fragments and create PRODUCT_VARIANT_QUERY for fetch
 +`;
 ~~~
 
-### Step 5: app/routes/cart.tsx
+### Step 5: Handle variant updates in the cart route
 
 Implement the CustomUpdateLineByOptions action handler for processing variant changes in cart.
 

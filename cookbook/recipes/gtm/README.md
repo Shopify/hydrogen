@@ -45,7 +45,7 @@ _New files added to the template by this recipe._
 
 ## Steps
 
-### Step 1: README.md
+### Step 1: Document GTM setup in the README
 
 Update the README file with GTM-specific documentation and setup instructions.
 
@@ -146,9 +146,9 @@ index c584e537..a31bfebf 100644
 
 </details>
 
-### Step 2: app/entry.server.tsx
+### Step 2: Add GTM domains to Content Security Policy
 
-
+Configure CSP headers to allow Google Tag Manager and Analytics scripts.
 
 #### File: [app/entry.server.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/entry.server.tsx)
 
@@ -183,9 +183,9 @@ index 6f5c4abf..b8eb74f4 100644
        storeDomain: context.env.PUBLIC_STORE_DOMAIN,
 ~~~
 
-### Step 3: app/components/GoogleTagManager.tsx
+### Step 3: Create the analytics component
 
-
+Build a component that subscribes to Hydrogen analytics events and pushes them to GTM's dataLayer.
 
 #### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
 
@@ -220,7 +220,7 @@ export function GoogleTagManager() {
 
 </details>
 
-### Step 4: app/root.tsx
+### Step 4: Insert Google Tag Manager tracking code in the head and body sections.
 
 
 

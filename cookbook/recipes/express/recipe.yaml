@@ -101,27 +101,27 @@ deletedFiles:
 steps:
   - type: PATCH
     step: "1"
-    name: .graphqlrc.ts
+    name: Disable customer account API
     description: Comment out customer account GraphQL configuration
     diffs:
       - file: .graphqlrc.ts
         patchFile: .graphqlrc.ts.dbb3fe.patch
   - type: PATCH
     step: "2"
-    name: README.md
+    name: Update README for Express deployment
     description: Update README with Express-specific setup and deployment instructions
     diffs:
       - file: README.md
         patchFile: README.md.db10ed.patch
   - type: NEW_FILE
     step: "3"
-    name: app/env.ts
+    name: Add environment type definitions
     description: Add environment type definitions for Hydrogen on Express
     ingredients:
       - path: templates/skeleton/app/env.ts
   - type: PATCH
     step: "4"
-    name: app/entry.client.tsx
+    name: Set up client-side hydration
     description: Update client entry to use React Router hydration without
       Oxygen-specific code
     diffs:
@@ -129,13 +129,13 @@ steps:
         patchFile: entry.client.tsx.0b6923.patch
   - type: NEW_FILE
     step: "5"
-    name: public/favicon.svg
+    name: Add the Express template favicon
     description: Add Express template favicon
     ingredients:
       - path: templates/skeleton/public/favicon.svg
   - type: PATCH
     step: "6"
-    name: app/entry.server.tsx
+    name: Configure server-side rendering
     description: Replace Oxygen server rendering with Express-compatible Node.js SSR
       using PassThrough streams
     diffs:
@@ -143,62 +143,62 @@ steps:
         patchFile: entry.server.tsx.b35f11.patch
   - type: NEW_FILE
     step: "7"
-    name: scripts/dev.mjs
+    name: Set up the development server
     description: Add development server orchestration script for Vite and nodemon
     ingredients:
       - path: templates/skeleton/scripts/dev.mjs
   - type: PATCH
     step: "8"
-    name: app/root.tsx
+    name: Simplify the root layout
     description: Simplify root layout for Express template by removing complex components
     diffs:
       - file: app/root.tsx
         patchFile: root.tsx.5e9998.patch
   - type: NEW_FILE
     step: "9"
-    name: server.mjs
+    name: Create the Express server
     description: Add Express server with Hydrogen context, session management, and
       SSR support
     ingredients:
       - path: templates/skeleton/server.mjs
   - type: PATCH
     step: "10"
-    name: app/routes.ts
+    name: Configure routes for Express
     description: Update routes configuration to work with Hydrogen on Express
     diffs:
       - file: app/routes.ts
         patchFile: routes.ts.87938f.patch
   - type: PATCH
     step: "11"
-    name: app/routes/_index.tsx
+    name: Create a basic homepage
     description: Simplify homepage route to basic Express example content
     diffs:
       - file: app/routes/_index.tsx
         patchFile: _index.tsx.243e26.patch
   - type: PATCH
     step: "12"
-    name: app/routes/products.$handle.tsx
+    name: Add a minimal product page
     description: Simplify product route to minimal implementation without cart functionality
     diffs:
       - file: app/routes/products.$handle.tsx
         patchFile: products.$handle.tsx.6f2e82.patch
   - type: PATCH
     step: "13"
-    name: app/styles/app.css
+    name: Add basic styles
     description: Replace skeleton styles with minimal Express template styling
     diffs:
       - file: app/styles/app.css
         patchFile: app.css.881a99.patch
   - type: PATCH
     step: "14"
-    name: eslint.config.js
+    name: Update ESLint configuration
     description: Simplify ESLint configuration for Express template
     diffs:
       - file: eslint.config.js
         patchFile: eslint.config.js.e5f62b.patch
   - type: PATCH
     step: "15"
-    name: package.json
+    name: Install Express dependencies
     description: Update dependencies and scripts for Express server deployment (add
       express, nodemon, compression, remove Oxygen packages)
     diffs:
@@ -206,7 +206,7 @@ steps:
         patchFile: package.json.f30b0a.patch
   - type: PATCH
     step: "16"
-    name: vite.config.ts
+    name: Configure Vite for Node.js
     description: Configure Vite for Express deployment with Node.js module externalization
     diffs:
       - file: vite.config.ts

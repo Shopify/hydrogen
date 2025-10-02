@@ -55,7 +55,7 @@ steps:
       - path: templates/skeleton/app/components/BundledVariants.tsx
   - type: PATCH
     step: "4"
-    name: Add maxVariantPrice to the product fields for RecommendedProducts
+    name: Query bundle pricing for recommended products
     description: |
       Add `maxVariantPrice` to the `RecommendedProducts` query's product fields.
     diffs:
@@ -63,8 +63,7 @@ steps:
         patchFile: _index.tsx.243e26.patch
   - type: PATCH
     step: "5"
-    name: Update the product fragment to query for bundles and display
-      BundledVariants
+    name: Show bundled products on the product page
     description: |
       1. Add the `requiresComponents` field to the `Product` fragment, which is
       used to identify bundled products.
@@ -74,7 +73,7 @@ steps:
         patchFile: products.$handle.tsx.6f2e82.patch
   - type: PATCH
     step: "6"
-    name: Update the collections fragment to query for bundles
+    name: Detect bundles in collection listings
     description: |
       Like the previous step, use the `requiresComponents` field to detect if the product item is a bundle.
     diffs:
@@ -82,7 +81,7 @@ steps:
         patchFile: collections.$handle.tsx.f062a9.patch
   - type: PATCH
     step: "7"
-    name: Update the cart fragment to query for bundles
+    name: Identify bundles in the cart
     description: |
       Use the `requiresComponents` field to determine if a cart line item is a bundle.
     diffs:
@@ -90,7 +89,7 @@ steps:
         patchFile: fragments.ts.026109.patch
   - type: PATCH
     step: "8"
-    name: Conditionally render the BundleBadge in cart line items
+    name: Show bundle badges in the cart
     description: |
       If a product is a bundle, show the `BundleBadge` component in the cart line item.
     diffs:
@@ -98,7 +97,7 @@ steps:
         patchFile: CartLineItem.tsx.2c9a50.patch
   - type: PATCH
     step: "9"
-    name: Conditionally render "Add bundle to cart" in ProductForm
+    name: Update the cart button text for bundles
     description: |
       If a product is a bundle, update the text of the product button.
     diffs:
@@ -106,7 +105,7 @@ steps:
         patchFile: ProductForm.tsx.649d3b.patch
   - type: PATCH
     step: "10"
-    name: Conditionally render the BundleBadge in ProductImage
+    name: Show bundle badges on product images
     description: |
       If a product is a bundle, show the `BundleBadge` component in the `ProductImage` component.
     diffs:
@@ -114,7 +113,7 @@ steps:
         patchFile: ProductImage.tsx.42c3b6.patch
   - type: PATCH
     step: "11"
-    name: Conditionally render the BundleBadge in ProductItem
+    name: Show bundle badges on product cards
     description: |
       If a product is a bundle, show the `BundleBadge` component in the `ProductItem` component.
     diffs:
@@ -122,7 +121,7 @@ steps:
         patchFile: ProductItem.tsx.d3223b.patch
   - type: PATCH
     step: "12"
-    name: Add a product-image class to the app stylesheet
+    name: Position bundle badges on images
     description: |
       Make sure the bundle badge is positioned relative to the product image.
     diffs:

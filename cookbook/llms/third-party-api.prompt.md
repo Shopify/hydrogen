@@ -87,9 +87,9 @@ This pattern is perfect for integrating:
 
 ## Steps
 
-### Step 1: README.md
+### Step 1: Document third-party API integration
 
-
+Add documentation explaining how to integrate external GraphQL APIs with Oxygen caching.
 
 #### File: /README.md
 

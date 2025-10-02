@@ -103,7 +103,7 @@ export function isCombinedListing(product: unknown) {
 
 </details>
 
-### Step 4: Update the ProductForm component
+### Step 4: Hide the cart button for combined listing parent products
 
 1. Update the `ProductForm` component to hide the **Add to cart** button for the parent products of combined listings and for variants' selected state.
 2. Update the `Link` component to not replace the current URL when the product is a combined listing parent product.
@@ -211,7 +211,7 @@ index 47c8f305..670d0804 100644
 
 </details>
 
-### Step 5: Extend the ProductImage component
+### Step 5: Support product and variant images
 
 Update the `ProductImage` component to support images from both product variants and the product itself.
 
@@ -280,7 +280,7 @@ index 3b0f6913..07fc73cd 100644
  }
 ~~~
 
-### Step 7: (Optional) Add redirect utility to first variant of a combined listing
+### Step 7: (Optional) Redirect to the first variant
 
 If you want to redirect automatically to the first variant of a combined listing when the parent handle is selected, add a redirect utility that's called whenever the parent handle is requested.
 
@@ -323,7 +323,7 @@ index f18c1d0d..cbffc8a4 100644
 +}
 ~~~
 
-### Step 8: app/routes/collections.all.tsx
+### Step 8: Filter combined listings from the all products page
 
 
 
@@ -389,7 +389,7 @@ index f33ce797..a0fd66d7 100644
 
 </details>
 
-### Step 9: Update queries for combined listings
+### Step 9: Filter recommended products
 
 1. Add the `tags` property to the items returned by the product query.
 2. (Optional) Add the filtering query to the product query to exclude combined listings.
@@ -538,7 +538,7 @@ index c416c2b3..b627a950 100644
 
 </details>
 
-### Step 11: Update the product page
+### Step 11: Show price ranges on product pages
 
 1. Display a range of prices for combined listings instead of the variant price.
 2. Show the featured image of the combined listing parent product instead of the variant image.
@@ -674,7 +674,7 @@ index 422a2eb9..f898702c 100644
 
 </details>
 
-### Step 12: Update stylesheet
+### Step 12: Style the price range display
 
 Add a class to the product item to show a range of prices for combined listings.
 

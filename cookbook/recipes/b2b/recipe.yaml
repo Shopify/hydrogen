@@ -40,92 +40,100 @@ deletedFiles: []
 steps:
   - type: PATCH
     step: "1"
-    name: README.md
+    name: Document B2B features, requirements, and implementation details in the
+      project README
     description: null
     diffs:
       - file: README.md
         patchFile: README.md.db10ed.patch
   - type: NEW_FILE
     step: "2"
-    name: app/components/B2BLocationProvider.tsx
+    name: Create a React context provider to manage company location state across
+      the app
     description: null
     ingredients:
       - path: templates/skeleton/app/components/B2BLocationProvider.tsx
   - type: PATCH
     step: "3"
-    name: app/components/CartLineItem.tsx
+    name: Update quantity controls to respect B2B minimum, maximum, and increment
+      rules
     description: null
     diffs:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.2c9a50.patch
   - type: NEW_FILE
     step: "4"
-    name: app/components/B2BLocationSelector.tsx
+    name: Build a modal that lets customers choose which company location to use for
+      pricing
     description: null
     ingredients:
       - path: templates/skeleton/app/components/B2BLocationSelector.tsx
   - type: PATCH
     step: "5"
-    name: app/components/Header.tsx
+    name: Add a location selector button to the header for switching between company
+      locations
     description: null
     diffs:
       - file: app/components/Header.tsx
         patchFile: Header.tsx.e25645.patch
   - type: NEW_FILE
     step: "6"
-    name: app/components/PriceBreaks.tsx
+    name: Display volume pricing tiers that show bulk purchase discounts
     description: null
     ingredients:
       - path: templates/skeleton/app/components/PriceBreaks.tsx
   - type: PATCH
     step: "7"
-    name: app/components/ProductForm.tsx
+    name: Accept quantity parameter to support B2B minimum quantity and increment
+      rules
     description: null
     diffs:
       - file: app/components/ProductForm.tsx
         patchFile: ProductForm.tsx.649d3b.patch
   - type: NEW_FILE
     step: "8"
-    name: app/components/QuantityRules.tsx
+    name: Show minimum, maximum, and increment quantity requirements for B2B products
     description: null
     ingredients:
       - path: templates/skeleton/app/components/QuantityRules.tsx
   - type: PATCH
     step: "9"
-    name: app/lib/fragments.ts
+    name: Add quantity rules and price breaks to cart GraphQL fragments
     description: null
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.026109.patch
   - type: NEW_FILE
     step: "10"
-    name: app/graphql/customer-account/CustomerLocationsQuery.ts
+    name: Query company locations from the Customer Account API for B2B customers
     description: null
     ingredients:
       - path: templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts
   - type: PATCH
     step: "11"
-    name: app/root.tsx
+    name: Wrap the app with B2B location provider and add company location types
     description: null
     diffs:
       - file: app/root.tsx
         patchFile: root.tsx.5e9998.patch
   - type: NEW_FILE
     step: "12"
-    name: app/routes/b2blocations.tsx
+    name: Handle location selection and automatically set location if customer has
+      only one
     description: null
     ingredients:
       - path: templates/skeleton/app/routes/b2blocations.tsx
   - type: PATCH
     step: "13"
-    name: app/routes/account_.logout.tsx
+    name: Clear company location and customer data from cart when logging out
     description: null
     diffs:
       - file: app/routes/account_.logout.tsx
         patchFile: account_.logout.tsx.a1f12e.patch
   - type: PATCH
     step: "14"
-    name: app/routes/products.$handle.tsx
+    name: Contextualize product queries with buyer information and display B2B
+      pricing details
     description: null
     diffs:
       - file: app/routes/products.$handle.tsx

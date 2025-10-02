@@ -44,7 +44,7 @@ deletedFiles: []
 steps:
   - type: PATCH
     step: "1"
-    name: README.md
+    name: Document GTM setup in the README
     description: Update the README file with GTM-specific documentation and setup
       instructions.
     diffs:
@@ -52,20 +52,21 @@ steps:
         patchFile: README.md.db10ed.patch
   - type: PATCH
     step: "2"
-    name: app/entry.server.tsx
-    description: null
+    name: Add GTM domains to Content Security Policy
+    description: Configure CSP headers to allow Google Tag Manager and Analytics scripts.
     diffs:
       - file: app/entry.server.tsx
         patchFile: entry.server.tsx.b35f11.patch
   - type: NEW_FILE
     step: "3"
-    name: app/components/GoogleTagManager.tsx
-    description: null
+    name: Create the analytics component
+    description: Build a component that subscribes to Hydrogen analytics events and
+      pushes them to GTM's dataLayer.
     ingredients:
       - path: templates/skeleton/app/components/GoogleTagManager.tsx
   - type: PATCH
     step: "4"
-    name: app/root.tsx
+    name: Insert Google Tag Manager tracking code in the head and body sections.
     description: null
     diffs:
       - file: app/root.tsx

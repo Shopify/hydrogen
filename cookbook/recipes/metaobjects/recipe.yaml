@@ -75,7 +75,7 @@ deletedFiles: []
 steps:
   - type: PATCH
     step: "1"
-    name: README.md
+    name: Document the metaobjects CMS
     description: Update the README file with metaobjects CMS documentation and an
       architecture overview.
     diffs:
@@ -83,7 +83,7 @@ steps:
         patchFile: README.md.db10ed.patch
   - type: PATCH
     step: "2"
-    name: app/lib/fragments.ts
+    name: Add product fragment for sections
     description: Add RECOMMENDED_PRODUCT_FRAGMENT for displaying product collections
       in metaobject sections.
     diffs:
@@ -91,14 +91,14 @@ steps:
         patchFile: fragments.ts.026109.patch
   - type: NEW_FILE
     step: "3"
-    name: app/components/EditRoute.tsx
+    name: Create edit route component
     description: Add the edit route component for managing metaobject-based content
       in development.
     ingredients:
       - path: templates/skeleton/app/components/EditRoute.tsx
   - type: PATCH
     step: "4"
-    name: app/root.tsx
+    name: Expose store subdomain
     description: Expose the public store subdomain for metaobject queries and
       content management.
     diffs:
@@ -106,14 +106,14 @@ steps:
         patchFile: root.tsx.5e9998.patch
   - type: NEW_FILE
     step: "5"
-    name: app/routes/stores.$name.tsx
+    name: Build store profile route
     description: Add a dynamic store profile route for displaying store-specific
       metaobject content.
     ingredients:
       - path: templates/skeleton/app/routes/stores.$name.tsx
   - type: PATCH
     step: "6"
-    name: app/routes/_index.tsx
+    name: Add metaobjects to homepage
     description: Integrate the `RouteContent` component to render metaobject
       sections on the homepage.
     diffs:
@@ -121,140 +121,140 @@ steps:
         patchFile: _index.tsx.243e26.patch
   - type: NEW_FILE
     step: "7"
-    name: app/routes/stores._index.tsx
+    name: Display all stores
     description: Add a store listing page that shows all stores from metaobjects
       with a grid layout.
     ingredients:
       - path: templates/skeleton/app/routes/stores._index.tsx
   - type: PATCH
     step: "8"
-    name: package.json
+    name: Install rich text dependencies
     description: Add Slate dependencies for rich text editing in metaobject sections.
     diffs:
       - file: package.json
         patchFile: package.json.f30b0a.patch
   - type: NEW_FILE
     step: "9"
-    name: app/sections/RouteContent.tsx
+    name: Create route content component
     description: Add the main component for fetching and rendering metaobject-based
       route content.
     ingredients:
       - path: templates/skeleton/app/sections/RouteContent.tsx
   - type: NEW_FILE
     step: "10"
-    name: app/sections/SectionFeaturedCollections.tsx
+    name: Build featured collections section
     description: Add a section component for displaying featured product collections
       from metaobjects.
     ingredients:
       - path: templates/skeleton/app/sections/SectionFeaturedCollections.tsx
   - type: NEW_FILE
     step: "11"
-    name: app/sections/SectionFeaturedProducts.tsx
+    name: Build featured products section
     description: Add a section component for showcasing featured products with a
       customizable layout.
     ingredients:
       - path: templates/skeleton/app/sections/SectionFeaturedProducts.tsx
   - type: NEW_FILE
     step: "12"
-    name: app/sections/SectionHero.tsx
+    name: Build hero banner section
     description: Add a hero banner section with an image, heading, and
       call-to-action from metaobjects.
     ingredients:
       - path: templates/skeleton/app/sections/SectionHero.tsx
   - type: NEW_FILE
     step: "13"
-    name: app/sections/SectionStoreProfile.tsx
+    name: Build store profile section
     description: Add a store profile section that displays store details, hours, and
       contact information.
     ingredients:
       - path: templates/skeleton/app/sections/SectionStoreProfile.tsx
   - type: NEW_FILE
     step: "14"
-    name: app/sections/SectionStores.tsx
+    name: Build stores grid section
     description: Add a grid layout section for displaying multiple store locations
       from metaobjects.
     ingredients:
       - path: templates/skeleton/app/sections/SectionStores.tsx
   - type: NEW_FILE
     step: "15"
-    name: app/sections/Sections.tsx
+    name: Create section renderer
     description: Add a dynamic section renderer that maps metaobject types to React
       components.
     ingredients:
       - path: templates/skeleton/app/sections/Sections.tsx
   - type: NEW_FILE
     step: "16"
-    name: app/utils/parseSection.ts
+    name: Add section parsing utility
     description: Add a utility function for parsing and transforming metaobject field data.
     ingredients:
       - path: templates/skeleton/app/utils/parseSection.ts
   - type: NEW_FILE
     step: "17"
-    name: guides/metaobjects/README.md
+    name: Add setup guide
     description: A comprehensive guide for setting up metaobject definitions in the
       Shopify admin.
     ingredients:
       - path: templates/skeleton/guides/metaobjects/README.md
   - type: NEW_FILE
     step: "18"
-    name: guides/metaobjects/images/definition_link.png
+    name: Link field screenshot
     description: A screenshot showing the Link metaobject field configuration.
     ingredients:
       - path: templates/skeleton/guides/metaobjects/images/definition_link.png
   - type: NEW_FILE
     step: "19"
-    name: guides/metaobjects/images/definition_section_featured_collections.png
+    name: Featured collections definition screenshot
     description: A screenshot of a "Featured Collections" section metaobject definition.
     ingredients:
       - path: templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png
   - type: NEW_FILE
     step: "20"
-    name: guides/metaobjects/images/definition_section_featured_products.png
+    name: Featured products definition screenshot
     description: A screenshot of a "Featured Products" section metaobject definition.
     ingredients:
       - path: templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png
   - type: NEW_FILE
     step: "21"
-    name: guides/metaobjects/images/definition_section_hero.png
+    name: Hero section definition screenshot
     description: A screenshot of a Hero section metaobject definition with image and
       text fields.
     ingredients:
       - path: templates/skeleton/guides/metaobjects/images/definition_section_hero.png
   - type: NEW_FILE
     step: "22"
-    name: guides/metaobjects/images/definition_section_rich_text.png
+    name: Rich text section definition screenshot
     description: A screenshot of a "Richtext" section metaobject definition.
     ingredients:
       - path: templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png
   - type: NEW_FILE
     step: "23"
-    name: guides/metaobjects/images/definition_section_store_profile.png
+    name: Store profile definition screenshot
     description: A screenshot of a "Store Profile" section metaobject definition.
     ingredients:
       - path: templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png
   - type: NEW_FILE
     step: "24"
-    name: guides/metaobjects/images/definition_section_stores_grid.png
+    name: Stores grid definition screenshot
     description: A screenshot of a "Stores Grid" section metaobject definition.
     ingredients:
       - path: templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png
   - type: NEW_FILE
     step: "25"
-    name: guides/metaobjects/images/definition_store.png
+    name: Store definition screenshot
     description: A screenshot of a "Store" metaobject definition with location and
       contact fields.
     ingredients:
       - path: templates/skeleton/guides/metaobjects/images/definition_store.png
   - type: NEW_FILE
     step: "26"
-    name: guides/metaobjects/images/definitions_list.png
+    name: Definitions list screenshot
     description: A screenshot showing a list of all metaobject definitions in the
       Shopify admin.
     ingredients:
       - path: templates/skeleton/guides/metaobjects/images/definitions_list.png
   - type: NEW_FILE
     step: "27"
-    name: guides/metaobjects/images/definiton_route.png
+    name: Route definition screenshot
     description: A screenshot of a "Route" metaobject definition with a "Sections"
       reference field.
     ingredients:

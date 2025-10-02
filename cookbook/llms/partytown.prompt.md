@@ -65,7 +65,7 @@ Key features:
 
 ## Steps
 
-### Step 1: .gitignore
+### Step 1: Ignore Partytown library files
 
 Add `public/~partytown` to ignore Partytown library files.
 
@@ -82,7 +82,7 @@ Add `public/~partytown` to ignore Partytown library files.
  .shopify
 ~~~
 
-### Step 2: app/components/PartytownGoogleTagManager.tsx
+### Step 2: Create GTM web worker component
 
 Add a GTM component that loads scripts in a web worker.
 
@@ -160,7 +160,7 @@ export function PartytownGoogleTagManager(props: {
 }
 ~~~
 
-### Step 3: README.md
+### Step 3: Document Partytown setup
 
 Document Partytown setup and configuration instructions.
 
@@ -258,7 +258,7 @@ Document Partytown setup and configuration instructions.
 \ No newline at end of file
 ~~~
 
-### Step 4: app/routes/reverse-proxy.ts
+### Step 4: Add CORS reverse proxy
 
 Reverse the proxy route for third-party scripts requiring CORS headers.
 
@@ -471,7 +471,7 @@ async function handleRequest(request: Route.LoaderArgs['request']) {
 }
 ~~~
 
-### Step 5: app/entry.server.tsx
+### Step 5: Configure CSP headers
 
 Configure the CSP headers for GTM and Google Analytics domains.
 
@@ -500,7 +500,7 @@ Configure the CSP headers for GTM and Google Analytics domains.
    const body = await renderToReadableStream(
 ~~~
 
-### Step 6: app/utils/partytown/maybeProxyRequest.ts
+### Step 6: Add URL resolver for proxying
 
 Add a URL resolver to control which scripts should be reverse-proxied.
 
@@ -543,7 +543,7 @@ export function maybeProxyRequest(url: URL, location: Location, type: string) {
 }
 ~~~
 
-### Step 7: app/root.tsx
+### Step 7: Initialize Partytown and GTM
 
 Initialize Partytown and GTM in the root layout.
 
@@ -627,7 +627,7 @@ Initialize Partytown and GTM in the root layout.
      </Analytics.Provider>
 ~~~
 
-### Step 8: app/utils/partytown/partytownAtomicHeaders.ts
+### Step 8: Enable atomic mode
 
 Add a helper utility to enable Partytown atomic mode for better performance.
 
@@ -646,7 +646,7 @@ export function partytownAtomicHeaders() {
 }
 ~~~
 
-### Step 9: package.json
+### Step 9: Install Partytown
 
 Add a Partytown dependency and npm script for copying library files.
 
@@ -672,7 +672,7 @@ Add a Partytown dependency and npm script for copying library files.
      "graphql-tag": "^2.12.6",
 ~~~
 
-### Step 10: vite.config.ts
+### Step 10: Configure Vite for Partytown
 
 Configure Vite to exclude Partytown library from build optimization.
 

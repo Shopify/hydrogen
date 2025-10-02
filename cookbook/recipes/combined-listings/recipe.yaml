@@ -63,7 +63,7 @@ steps:
       - path: templates/skeleton/app/lib/combined-listings.ts
   - type: PATCH
     step: "4"
-    name: Update the ProductForm component
+    name: Hide the cart button for combined listing parent products
     description: |
       1. Update the `ProductForm` component to hide the **Add to cart** button for the parent products of combined listings and for variants' selected state.
       2. Update the `Link` component to not replace the current URL when the product is a combined listing parent product.
@@ -72,7 +72,7 @@ steps:
         patchFile: ProductForm.tsx.649d3b.patch
   - type: PATCH
     step: "5"
-    name: Extend the ProductImage component
+    name: Support product and variant images
     description: |
       Update the `ProductImage` component to support images from both product variants and the product itself.
     diffs:
@@ -88,7 +88,7 @@ steps:
         patchFile: ProductItem.tsx.d3223b.patch
   - type: PATCH
     step: "7"
-    name: (Optional) Add redirect utility to first variant of a combined listing
+    name: (Optional) Redirect to the first variant
     description: |
       If you want to redirect automatically to the first variant of a combined listing when the parent handle is selected, add a redirect utility that's called whenever the parent handle is requested.
     diffs:
@@ -96,14 +96,14 @@ steps:
         patchFile: redirect.ts.6d9851.patch
   - type: PATCH
     step: "8"
-    name: app/routes/collections.all.tsx
+    name: Filter combined listings from the all products page
     description: null
     diffs:
       - file: app/routes/collections.all.tsx
         patchFile: collections.all.tsx.38a40d.patch
   - type: PATCH
     step: "9"
-    name: Update queries for combined listings
+    name: Filter recommended products
     description: |
       1. Add the `tags` property to the items returned by the product query.
       2. (Optional) Add the filtering query to the product query to exclude combined listings.
@@ -120,7 +120,7 @@ steps:
         patchFile: collections.$handle.tsx.f062a9.patch
   - type: PATCH
     step: "11"
-    name: Update the product page
+    name: Show price ranges on product pages
     description: |
       1. Display a range of prices for combined listings instead of the variant price.
       2. Show the featured image of the combined listing parent product instead of the variant image.
@@ -130,7 +130,7 @@ steps:
         patchFile: products.$handle.tsx.6f2e82.patch
   - type: PATCH
     step: "12"
-    name: Update stylesheet
+    name: Style the price range display
     description: |
       Add a class to the product item to show a range of prices for combined listings.
     diffs:

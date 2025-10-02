@@ -147,7 +147,7 @@ export function BundledVariants({
 
 </details>
 
-### Step 4: Add maxVariantPrice to the product fields for RecommendedProducts
+### Step 4: Query bundle pricing for recommended products
 
 Add `maxVariantPrice` to the `RecommendedProducts` query's product fields.
 
@@ -170,7 +170,7 @@ index 28102dbe..a055aa78 100644
        id
 ~~~
 
-### Step 5: Update the product fragment to query for bundles and display BundledVariants
+### Step 5: Show bundled products on the product page
 
 1. Add the `requiresComponents` field to the `Product` fragment, which is
 used to identify bundled products.
@@ -289,7 +289,7 @@ index 422a2eb9..efe0cda6 100644
 
 </details>
 
-### Step 6: Update the collections fragment to query for bundles
+### Step 6: Detect bundles in collection listings
 
 Like the previous step, use the `requiresComponents` field to detect if the product item is a bundle.
 
@@ -319,7 +319,7 @@ index c416c2b3..773ba8b6 100644
    query Collection(
 ~~~
 
-### Step 7: Update the cart fragment to query for bundles
+### Step 7: Identify bundles in the cart
 
 Use the `requiresComponents` field to determine if a cart line item is a bundle.
 
@@ -384,7 +384,7 @@ index cf35c25e..436e177f 100644
 
 </details>
 
-### Step 8: Conditionally render the BundleBadge in cart line items
+### Step 8: Show bundle badges in the cart
 
 If a product is a bundle, show the `BundleBadge` component in the cart line item.
 
@@ -435,7 +435,7 @@ index 80e34be2..8cec6ae4 100644
          <ul>
 ~~~
 
-### Step 9: Conditionally render "Add bundle to cart" in ProductForm
+### Step 9: Update the cart button text for bundles
 
 If a product is a bundle, update the text of the product button.
 
@@ -472,7 +472,7 @@ index 47c8f305..b9406e81 100644
    );
 ~~~
 
-### Step 10: Conditionally render the BundleBadge in ProductImage
+### Step 10: Show bundle badges on product images
 
 If a product is a bundle, show the `BundleBadge` component in the `ProductImage` component.
 
@@ -506,7 +506,7 @@ index 5f3ac1cc..c16b947b 100644
  }
 ~~~
 
-### Step 11: Conditionally render the BundleBadge in ProductItem
+### Step 11: Show bundle badges on product cards
 
 If a product is a bundle, show the `BundleBadge` component in the `ProductItem` component.
 
@@ -588,7 +588,7 @@ index 3b0f6913..1b6cb130 100644
 
 </details>
 
-### Step 12: Add a product-image class to the app stylesheet
+### Step 12: Position bundle badges on images
 
 Make sure the bundle badge is positioned relative to the product image.
 

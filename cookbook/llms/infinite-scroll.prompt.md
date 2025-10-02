@@ -54,7 +54,7 @@ Key features:
 
 ## Steps
 
-### Step 1: README.md
+### Step 1: Document infinite scroll in the README
 
 Update the README file with infinite scroll documentation and implementation details.
 
@@ -147,9 +147,9 @@ Update the README file with infinite scroll documentation and implementation det
 \ No newline at end of file
 ~~~
 
-### Step 2: app/routes/collections.$handle.tsx
+### Step 2: Add infinite scroll to collections
 
-
+Implement automatic loading with Intersection Observer when users scroll to the bottom.
 
 #### File: /app/routes/collections.$handle.tsx
 
@@ -275,9 +275,9 @@ Update the README file with infinite scroll documentation and implementation det
      amount
 ~~~
 
-### Step 3: package.json
+### Step 3: Install Intersection Observer library
 
-
+Add the react-intersection-observer package for viewport detection.
 
 #### File: /package.json
 

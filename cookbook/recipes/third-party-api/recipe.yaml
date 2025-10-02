@@ -54,8 +54,9 @@ deletedFiles: []
 steps:
   - type: PATCH
     step: "1"
-    name: README.md
-    description: null
+    name: Document third-party API integration
+    description: Add documentation explaining how to integrate external GraphQL APIs
+      with Oxygen caching.
     diffs:
       - file: README.md
         patchFile: README.md.db10ed.patch
