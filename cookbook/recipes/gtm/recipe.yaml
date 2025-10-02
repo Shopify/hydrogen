@@ -39,7 +39,8 @@ requirements: |
   3. Customize the banner's appearance and position as needed.
 ingredients:
   - path: templates/skeleton/app/components/GoogleTagManager.tsx
-    description: null
+    description: Analytics component that subscribes to Hydrogen events and pushes
+      them to GTM's dataLayer
 deletedFiles: []
 steps:
   - type: PATCH
@@ -67,7 +68,9 @@ steps:
   - type: PATCH
     step: "4"
     name: Insert Google Tag Manager tracking code in the head and body sections.
-    description: null
+    description: Add the Google Tag Manager script tags to the root layout,
+      including the head script and noscript fallback in the body section with
+      proper CSP nonce support
     diffs:
       - file: app/root.tsx
         patchFile: root.tsx.5e9998.patch

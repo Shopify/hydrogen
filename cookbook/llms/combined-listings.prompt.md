@@ -342,7 +342,7 @@ If you want to redirect automatically to the first variant of a combined listing
 
 ### Step 8: Filter combined listings from the all products page
 
-
+Update the "all products" collection page to filter out combined listing parent products, showing only the individual variant products instead
 
 #### File: /app/routes/collections.all.tsx
 

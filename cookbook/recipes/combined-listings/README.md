@@ -325,7 +325,7 @@ index f18c1d0d..cbffc8a4 100644
 
 ### Step 8: Filter combined listings from the all products page
 
-
+Update the "all products" collection page to filter out combined listing parent products, showing only the individual variant products instead
 
 #### File: [app/routes/collections.all.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/routes/collections.all.tsx)
 

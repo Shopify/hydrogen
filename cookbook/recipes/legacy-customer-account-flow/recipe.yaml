@@ -35,13 +35,14 @@ requirements: |
     - Welcome emails (optional)
 ingredients:
   - path: templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx
-    description: null
+    description: Customer account activation route that processes email activation tokens
   - path: templates/skeleton/app/routes/account_.recover.tsx
-    description: null
+    description: Password recovery form for requesting reset emails via Storefront API
   - path: templates/skeleton/app/routes/account_.register.tsx
-    description: null
+    description: Customer registration form with email validation and account creation
   - path: templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx
-    description: null
+    description: Password reset confirmation route that validates tokens and updates
+      passwords
 deletedFiles: []
 steps:
   - type: PATCH

@@ -28,49 +28,55 @@ requirements: |
   - Environment variable: PUBLIC_STORE_DOMAIN (your store's admin domain)
 ingredients:
   - path: templates/skeleton/app/components/EditRoute.tsx
-    description: null
+    description: Component that provides an edit link for managing metaobject-based
+      content in development mode
   - path: templates/skeleton/app/routes/stores.$name.tsx
-    description: null
+    description: Dynamic route for displaying individual store profiles with
+      metaobject content
   - path: templates/skeleton/app/routes/stores._index.tsx
-    description: null
+    description: Index route that displays a grid of all stores from metaobjects
   - path: templates/skeleton/app/sections/RouteContent.tsx
-    description: null
+    description: Main component for fetching and rendering metaobject-based route content
   - path: templates/skeleton/app/sections/SectionFeaturedCollections.tsx
-    description: null
+    description: Section component for displaying featured product collections from
+      metaobjects
   - path: templates/skeleton/app/sections/SectionFeaturedProducts.tsx
-    description: null
+    description: Section component for showcasing featured products with customizable layout
   - path: templates/skeleton/app/sections/SectionHero.tsx
-    description: null
+    description: Hero banner component with image, heading, and call-to-action from
+      metaobjects
   - path: templates/skeleton/app/sections/SectionStoreProfile.tsx
-    description: null
+    description: Section component that displays store details, hours, and contact
+      information
   - path: templates/skeleton/app/sections/SectionStores.tsx
-    description: null
+    description: Grid layout component for displaying multiple store locations
   - path: templates/skeleton/app/sections/Sections.tsx
-    description: null
+    description: Dynamic section renderer that maps metaobject types to React components
   - path: templates/skeleton/app/utils/parseSection.ts
-    description: null
+    description: Utility function for parsing and transforming metaobject field data
   - path: templates/skeleton/guides/metaobjects/README.md
-    description: null
+    description: Comprehensive setup guide for creating metaobject definitions in
+      Shopify admin
   - path: templates/skeleton/guides/metaobjects/images/definition_link.png
-    description: null
+    description: Screenshot showing Link metaobject field configuration
   - path: templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png
-    description: null
+    description: Screenshot of Featured Collections section metaobject definition
   - path: templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png
-    description: null
+    description: Screenshot of Featured Products section metaobject definition
   - path: templates/skeleton/guides/metaobjects/images/definition_section_hero.png
-    description: null
+    description: Screenshot of Hero section metaobject definition with image and text fields
   - path: templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png
-    description: null
+    description: Screenshot of Rich Text section metaobject definition
   - path: templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png
-    description: null
+    description: Screenshot of Store Profile section metaobject definition
   - path: templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png
-    description: null
+    description: Screenshot of Stores Grid section metaobject definition
   - path: templates/skeleton/guides/metaobjects/images/definition_store.png
-    description: null
+    description: Screenshot of Store metaobject definition with location and contact fields
   - path: templates/skeleton/guides/metaobjects/images/definitions_list.png
-    description: null
+    description: Screenshot showing list of all metaobject definitions in Shopify admin
   - path: templates/skeleton/guides/metaobjects/images/definiton_route.png
-    description: null
+    description: Screenshot of Route metaobject definition with Sections reference field
 deletedFiles: []
 steps:
   - type: PATCH

@@ -97,7 +97,9 @@ steps:
   - type: PATCH
     step: "8"
     name: Filter combined listings from the all products page
-    description: null
+    description: Update the "all products" collection page to filter out combined
+      listing parent products, showing only the individual variant products
+      instead
     diffs:
       - file: app/routes/collections.all.tsx
         patchFile: collections.all.tsx.38a40d.patch

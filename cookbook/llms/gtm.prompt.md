@@ -240,7 +240,7 @@ export function GoogleTagManager() {
 
 ### Step 4: Insert Google Tag Manager tracking code in the head and body sections.
 
-
+Add the Google Tag Manager script tags to the root layout, including the head script and noscript fallback in the body section with proper CSP nonce support
 
 #### File: /app/root.tsx
 
