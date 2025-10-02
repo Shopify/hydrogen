@@ -52,160 +52,161 @@ deletedFiles:
   - templates/skeleton/app/routes/account_.authorize.tsx
 steps:
   - type: PATCH
-    step: 1
+    step: '1'
     name: README.md
     description: Update README with multipass authentication documentation
     diffs:
       - file: README.md
         patchFile: README.md.db10ed.patch
   - type: NEW_FILE
-    step: 2
+    step: '2'
     name: app/components/MultipassCheckoutButton.tsx
     description: Add checkout button component that generates multipass tokens
     ingredients:
       - path: templates/skeleton/app/components/MultipassCheckoutButton.tsx
   - type: PATCH
-    step: 3
+    step: '3'
     name: app/components/CartSummary.tsx
     description: Add multipass checkout button to cart summary
     diffs:
       - file: app/components/CartSummary.tsx
         patchFile: CartSummary.tsx.335fe9.patch
   - type: NEW_FILE
-    step: 4
+    step: '4'
     name: app/lib/multipass/multipass.ts
     description: Core multipass encryption and token generation utilities
     ingredients:
       - path: templates/skeleton/app/lib/multipass/multipass.ts
   - type: PATCH
-    step: 5
+    step: '5'
     name: app/root.tsx
     description: Add session validation and token refresh logic
     diffs:
       - file: app/root.tsx
         patchFile: root.tsx.5e9998.patch
   - type: NEW_FILE
-    step: 6
+    step: '6'
     name: app/lib/multipass/multipassify.server.ts
     description: Server-side multipass token generation with ESM-compatible snake_case
     ingredients:
       - path: templates/skeleton/app/lib/multipass/multipassify.server.ts
   - type: PATCH
-    step: 7
+    step: '7'
     name: app/routes/account.$.tsx
     description: Convert catch-all account route to use Storefront API
     diffs:
       - file: app/routes/account.$.tsx
         patchFile: account.$.tsx.ce5422.patch
   - type: NEW_FILE
-    step: 8
+    step: '8'
     name: app/lib/multipass/types.ts
     description: TypeScript types for multipass functionality
     ingredients:
       - path: templates/skeleton/app/lib/multipass/types.ts
   - type: NEW_FILE
-    step: 9
+    step: '9'
     name: app/routes/account_.activate.$id.$activationToken.tsx
     description: Add customer account activation route
     ingredients:
       - path: templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx
   - type: PATCH
-    step: 10
+    step: '10'
     name: app/routes/account.addresses.tsx
     description: Convert addresses management to use Storefront API
     diffs:
       - file: app/routes/account.addresses.tsx
         patchFile: account.addresses.tsx.cb4cc0.patch
   - type: NEW_FILE
-    step: 11
+    step: '11'
     name: app/routes/account_.login.multipass.tsx
     description: Add multipass login handler route
     ingredients:
       - path: templates/skeleton/app/routes/account_.login.multipass.tsx
   - type: PATCH
-    step: 12
+    step: '12'
     name: app/routes/account.orders.$id.tsx
     description: Convert order details to use Storefront API
     diffs:
       - file: app/routes/account.orders.$id.tsx
         patchFile: account.orders.$id.tsx.4ddfdd.patch
   - type: NEW_FILE
-    step: 13
+    step: '13'
     name: app/routes/account_.recover.tsx
     description: Add password recovery route
     ingredients:
       - path: templates/skeleton/app/routes/account_.recover.tsx
   - type: PATCH
-    step: 14
+    step: '14'
     name: app/routes/account.orders._index.tsx
     description: Convert orders list to use Storefront API
     diffs:
       - file: app/routes/account.orders._index.tsx
         patchFile: account.orders._index.tsx.4daaeb.patch
   - type: NEW_FILE
-    step: 15
+    step: '15'
     name: app/routes/account_.register.tsx
     description: Add customer registration route
     ingredients:
       - path: templates/skeleton/app/routes/account_.register.tsx
   - type: PATCH
-    step: 16
+    step: '16'
     name: app/routes/account.profile.tsx
-    description: Convert customer profile management from Customer Account API to
+    description:
+      Convert customer profile management from Customer Account API to
       Storefront API
     diffs:
       - file: app/routes/account.profile.tsx
         patchFile: account.profile.tsx.f09d0b.patch
   - type: NEW_FILE
-    step: 17
+    step: '17'
     name: app/routes/account_.reset.$id.$resetToken.tsx
     description: Add password reset confirmation route
     ingredients:
       - path: templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx
   - type: PATCH
-    step: 18
+    step: '18'
     name: app/routes/account.tsx
     description: Convert account layout to use Storefront API customer data
     diffs:
       - file: app/routes/account.tsx
         patchFile: account.tsx.f95c1e.patch
   - type: PATCH
-    step: 19
+    step: '19'
     name: app/routes/account_.login.tsx
     description: Replace Customer Account API login with form-based Storefront API login
     diffs:
       - file: app/routes/account_.login.tsx
         patchFile: account_.login.tsx.3fb3f2.patch
   - type: PATCH
-    step: 20
+    step: '20'
     name: app/routes/account_.logout.tsx
     description: Implement session-based logout
     diffs:
       - file: app/routes/account_.logout.tsx
         patchFile: account_.logout.tsx.a1f12e.patch
   - type: PATCH
-    step: 21
+    step: '21'
     name: env.d.ts
     description: Add multipass secret environment variable type
     diffs:
       - file: env.d.ts
         patchFile: env.d.ts.b44b11.patch
   - type: PATCH
-    step: 22
+    step: '22'
     name: app/routes/cart.tsx
     description: Add multipass URL generation for checkout
     diffs:
       - file: app/routes/cart.tsx
         patchFile: cart.tsx.af0778.patch
   - type: PATCH
-    step: 23
+    step: '23'
     name: package.json
     description: Add crypto dependencies for multipass token generation
     diffs:
       - file: package.json
         patchFile: package.json.f30b0a.patch
   - type: PATCH
-    step: 24
+    step: '24'
     name: vite.config.ts
     description: Configure Vite for crypto polyfills
     diffs:
@@ -226,14 +227,17 @@ llms:
     - How can I maintain customer login state across checkout?
     - How do I integrate external authentication with Shopify Plus?
   troubleshooting:
-    - issue: "ReferenceError: require is not defined (snakecase-keys error)"
-      solution: The recipe includes a custom ESM-compatible snake_case implementation.
+    - issue: 'ReferenceError: require is not defined (snakecase-keys error)'
+      solution:
+        The recipe includes a custom ESM-compatible snake_case implementation.
         Ensure you're using the updated multipassify.server.ts file that doesn't
         import snakecase-keys
     - issue: PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET is undefined
-      solution: Add the Multipass secret to your environment variables. You can find
+      solution:
+        Add the Multipass secret to your environment variables. You can find
         this in your Shopify Plus admin under Settings > Checkout > Multipass
-    - issue: "TypeScript error: Property 'PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET' does
+    - issue:
+        "TypeScript error: Property 'PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET' does
         not exist on type 'Env'"
       solution: The recipe adds this type definition to env.d.ts. Run 'npm run
         typecheck' after applying all patches
@@ -242,6 +246,7 @@ llms:
         Storefront API. Check that account_.login.tsx uses the form-based login,
         not customerAccount.login()
     - issue: Multipass checkout button not appearing
-      solution: Verify that CartSummary.tsx imports and uses MultipassCheckoutButton
+      solution:
+        Verify that CartSummary.tsx imports and uses MultipassCheckoutButton
         component, and that the cart.tsx route has been patched
 commit: 12374c8f03f82c6800000cf08e327c4db4c287bb

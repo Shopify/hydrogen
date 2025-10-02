@@ -20,21 +20,21 @@ ingredients: []
 deletedFiles: []
 steps:
   - type: PATCH
-    step: 1
+    step: '1'
     name: README.md
     description: Update the README file with infinite scroll documentation and implementation details.
     diffs:
       - file: README.md
         patchFile: README.md.db10ed.patch
   - type: PATCH
-    step: 2
+    step: '2'
     name: app/routes/collections.$handle.tsx
     description: null
     diffs:
       - file: app/routes/collections.$handle.tsx
         patchFile: collections.$handle.tsx.f062a9.patch
   - type: PATCH
-    step: 3
+    step: '3'
     name: package.json
     description: null
     diffs:
