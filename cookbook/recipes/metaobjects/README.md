@@ -30,28 +30,28 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/EditRoute.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/components/EditRoute.tsx) |  |
-| [app/routes/stores.$name.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores.$name.tsx) |  |
-| [app/routes/stores._index.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores._index.tsx) |  |
-| [app/sections/RouteContent.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/RouteContent.tsx) |  |
-| [app/sections/SectionFeaturedCollections.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedCollections.tsx) |  |
-| [app/sections/SectionFeaturedProducts.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedProducts.tsx) |  |
-| [app/sections/SectionHero.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionHero.tsx) |  |
-| [app/sections/SectionStoreProfile.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStoreProfile.tsx) |  |
-| [app/sections/SectionStores.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStores.tsx) |  |
-| [app/sections/Sections.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/Sections.tsx) |  |
-| [app/utils/parseSection.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/utils/parseSection.ts) |  |
-| [guides/metaobjects/README.md](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/README.md) |  |
-| [guides/metaobjects/images/definition_link.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_link.png) |  |
-| [guides/metaobjects/images/definition_section_featured_collections.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png) |  |
-| [guides/metaobjects/images/definition_section_featured_products.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png) |  |
-| [guides/metaobjects/images/definition_section_hero.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_hero.png) |  |
-| [guides/metaobjects/images/definition_section_rich_text.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png) |  |
-| [guides/metaobjects/images/definition_section_store_profile.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png) |  |
-| [guides/metaobjects/images/definition_section_stores_grid.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png) |  |
-| [guides/metaobjects/images/definition_store.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_store.png) |  |
-| [guides/metaobjects/images/definitions_list.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definitions_list.png) |  |
-| [guides/metaobjects/images/definiton_route.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definiton_route.png) |  |
+| [app/components/EditRoute.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/components/EditRoute.tsx) |  |
+| [app/routes/stores.$name.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores.$name.tsx) |  |
+| [app/routes/stores._index.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores._index.tsx) |  |
+| [app/sections/RouteContent.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/RouteContent.tsx) |  |
+| [app/sections/SectionFeaturedCollections.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedCollections.tsx) |  |
+| [app/sections/SectionFeaturedProducts.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedProducts.tsx) |  |
+| [app/sections/SectionHero.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionHero.tsx) |  |
+| [app/sections/SectionStoreProfile.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStoreProfile.tsx) |  |
+| [app/sections/SectionStores.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStores.tsx) |  |
+| [app/sections/Sections.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/Sections.tsx) |  |
+| [app/utils/parseSection.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/utils/parseSection.ts) |  |
+| [guides/metaobjects/README.md](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/README.md) |  |
+| [guides/metaobjects/images/definition_link.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_link.png) |  |
+| [guides/metaobjects/images/definition_section_featured_collections.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png) |  |
+| [guides/metaobjects/images/definition_section_featured_products.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png) |  |
+| [guides/metaobjects/images/definition_section_hero.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_hero.png) |  |
+| [guides/metaobjects/images/definition_section_rich_text.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png) |  |
+| [guides/metaobjects/images/definition_section_store_profile.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png) |  |
+| [guides/metaobjects/images/definition_section_stores_grid.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png) |  |
+| [guides/metaobjects/images/definition_store.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_store.png) |  |
+| [guides/metaobjects/images/definitions_list.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definitions_list.png) |  |
+| [guides/metaobjects/images/definiton_route.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definiton_route.png) |  |
 
 ## Steps
 
@@ -59,7 +59,7 @@ _New files added to the template by this recipe._
 
 Update the README file with metaobjects CMS documentation and an architecture overview.
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/README.md)
 
 <details>
 
@@ -172,7 +172,7 @@ index c584e537..927d99f1 100644
 
 Add RECOMMENDED_PRODUCT_FRAGMENT for displaying product collections in metaobject sections.
 
-#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/lib/fragments.ts)
+#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/lib/fragments.ts)
 
 ~~~diff
 index cf35c25e..99874574 100644
@@ -210,7 +210,7 @@ index cf35c25e..99874574 100644
 
 Add the edit route component for managing metaobject-based content in development.
 
-#### File: [EditRoute.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/components/EditRoute.tsx)
+#### File: [EditRoute.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/components/EditRoute.tsx)
 
 <details>
 
@@ -272,7 +272,7 @@ export function EditRoute({routeId}: {routeId: string}) {
 
 Expose the public store subdomain for metaobject queries and content management.
 
-#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/root.tsx)
+#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/root.tsx)
 
 ~~~diff
 index df87425c..12434050 100644
@@ -292,7 +292,7 @@ index df87425c..12434050 100644
 
 Add a dynamic store profile route for displaying store-specific metaobject content.
 
-#### File: [stores.$name.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores.$name.tsx)
+#### File: [stores.$name.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores.$name.tsx)
 
 <details>
 
@@ -364,7 +364,7 @@ export default function Store() {
 
 Integrate the `RouteContent` component to render metaobject sections on the homepage.
 
-#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/_index.tsx)
+#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/routes/_index.tsx)
 
 <details>
 
@@ -561,7 +561,7 @@ index 28102dbe..27dbb95c 100644
 
 Add a store listing page that shows all stores from metaobjects with a grid layout.
 
-#### File: [stores._index.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores._index.tsx)
+#### File: [stores._index.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/routes/stores._index.tsx)
 
 <details>
 
@@ -634,7 +634,7 @@ export default function Stores() {
 
 Add Slate dependencies for rich text editing in metaobject sections.
 
-#### File: [package.json](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/package.json)
+#### File: [package.json](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/package.json)
 
 ~~~diff
 index e9ebd1d3..1731cce2 100644
@@ -657,7 +657,7 @@ index e9ebd1d3..1731cce2 100644
 
 Add the main component for fetching and rendering metaobject-based route content.
 
-#### File: [RouteContent.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/RouteContent.tsx)
+#### File: [RouteContent.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/RouteContent.tsx)
 
 <details>
 
@@ -705,7 +705,7 @@ export const ROUTE_CONTENT_QUERY = `#graphql
 
 Add a section component for displaying featured product collections from metaobjects.
 
-#### File: [SectionFeaturedCollections.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedCollections.tsx)
+#### File: [SectionFeaturedCollections.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedCollections.tsx)
 
 <details>
 
@@ -806,7 +806,7 @@ export const SECTION_FEATURED_COLLECTIONS_FRAGMENT = `#graphql
 
 Add a section component for showcasing featured products with a customizable layout.
 
-#### File: [SectionFeaturedProducts.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedProducts.tsx)
+#### File: [SectionFeaturedProducts.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionFeaturedProducts.tsx)
 
 <details>
 
@@ -923,7 +923,7 @@ export const SECTION_FEATURED_PRODUCTS_FRAGMENT = `#graphql
 
 Add a hero banner section with an image, heading, and call-to-action from metaobjects.
 
-#### File: [SectionHero.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionHero.tsx)
+#### File: [SectionHero.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionHero.tsx)
 
 <details>
 
@@ -1061,7 +1061,7 @@ export const SECTION_HERO_FRAGMENT = `#graphql
 
 Add a store profile section that displays store details, hours, and contact information.
 
-#### File: [SectionStoreProfile.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStoreProfile.tsx)
+#### File: [SectionStoreProfile.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStoreProfile.tsx)
 
 <details>
 
@@ -1185,7 +1185,7 @@ export const SECTION_STORE_PROFILE_FRAGMENT = `#graphql
 
 Add a grid layout section for displaying multiple store locations from metaobjects.
 
-#### File: [SectionStores.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStores.tsx)
+#### File: [SectionStores.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/SectionStores.tsx)
 
 <details>
 
@@ -1306,7 +1306,7 @@ export const SECTION_STORES_FRAGMENT = `#graphql
 
 Add a dynamic section renderer that maps metaobject types to React components.
 
-#### File: [Sections.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/Sections.tsx)
+#### File: [Sections.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/sections/Sections.tsx)
 
 <details>
 
@@ -1389,7 +1389,7 @@ export const SECTIONS_FRAGMENT = `#graphql
 
 Add a utility function for parsing and transforming metaobject field data.
 
-#### File: [parseSection.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/utils/parseSection.ts)
+#### File: [parseSection.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/app/utils/parseSection.ts)
 
 <details>
 
@@ -1535,7 +1535,7 @@ function liftEach<Section, KeysToRemove extends ReadonlyArray<PropertyKey>>(
 
 A comprehensive guide for setting up metaobject definitions in the Shopify admin.
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/README.md)
 
 <details>
 
@@ -1818,7 +1818,7 @@ export const SECTIONS_FRAGMENT = `#graphql
 
 A screenshot showing the Link metaobject field configuration.
 
-#### File: [definition_link.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_link.png)
+#### File: [definition_link.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_link.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_link.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_link.png)
 
@@ -1826,7 +1826,7 @@ A screenshot showing the Link metaobject field configuration.
 
 A screenshot of a "Featured Collections" section metaobject definition.
 
-#### File: [definition_section_featured_collections.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png)
+#### File: [definition_section_featured_collections.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_collections.png)
 
@@ -1834,7 +1834,7 @@ A screenshot of a "Featured Collections" section metaobject definition.
 
 A screenshot of a "Featured Products" section metaobject definition.
 
-#### File: [definition_section_featured_products.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png)
+#### File: [definition_section_featured_products.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_featured_products.png)
 
@@ -1842,7 +1842,7 @@ A screenshot of a "Featured Products" section metaobject definition.
 
 A screenshot of a Hero section metaobject definition with image and text fields.
 
-#### File: [definition_section_hero.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_hero.png)
+#### File: [definition_section_hero.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_hero.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_hero.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_hero.png)
 
@@ -1850,7 +1850,7 @@ A screenshot of a Hero section metaobject definition with image and text fields.
 
 A screenshot of a "Richtext" section metaobject definition.
 
-#### File: [definition_section_rich_text.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png)
+#### File: [definition_section_rich_text.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_rich_text.png)
 
@@ -1858,7 +1858,7 @@ A screenshot of a "Richtext" section metaobject definition.
 
 A screenshot of a "Store Profile" section metaobject definition.
 
-#### File: [definition_section_store_profile.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png)
+#### File: [definition_section_store_profile.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_store_profile.png)
 
@@ -1866,7 +1866,7 @@ A screenshot of a "Store Profile" section metaobject definition.
 
 A screenshot of a "Stores Grid" section metaobject definition.
 
-#### File: [definition_section_stores_grid.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png)
+#### File: [definition_section_stores_grid.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_section_stores_grid.png)
 
@@ -1874,7 +1874,7 @@ A screenshot of a "Stores Grid" section metaobject definition.
 
 A screenshot of a "Store" metaobject definition with location and contact fields.
 
-#### File: [definition_store.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_store.png)
+#### File: [definition_store.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definition_store.png)
 
 ![templates/skeleton/guides/metaobjects/images/definition_store.png](ingredients/templates/skeleton/guides/metaobjects/images/definition_store.png)
 
@@ -1882,7 +1882,7 @@ A screenshot of a "Store" metaobject definition with location and contact fields
 
 A screenshot showing a list of all metaobject definitions in the Shopify admin.
 
-#### File: [definitions_list.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definitions_list.png)
+#### File: [definitions_list.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definitions_list.png)
 
 ![templates/skeleton/guides/metaobjects/images/definitions_list.png](ingredients/templates/skeleton/guides/metaobjects/images/definitions_list.png)
 
@@ -1890,6 +1890,6 @@ A screenshot showing a list of all metaobject definitions in the Shopify admin.
 
 A screenshot of a "Route" metaobject definition with a "Sections" reference field.
 
-#### File: [definiton_route.png](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definiton_route.png)
+#### File: [definiton_route.png](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/metaobjects/ingredients/templates/skeleton/guides/metaobjects/images/definiton_route.png)
 
 ![templates/skeleton/guides/metaobjects/images/definiton_route.png](ingredients/templates/skeleton/guides/metaobjects/images/definiton_route.png)

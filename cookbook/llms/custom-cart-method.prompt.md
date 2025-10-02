@@ -1,6 +1,6 @@
 # Overview
 
-This prompt describes how to implement "Custom Cart Method" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "Custom cart method" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -34,7 +34,12 @@ Here's the custom-cart-method recipe for the base Hydrogen skeleton template:
 
 ## Description
 
-This recipe demonstrates how to implement custom cart methods in Hydrogen to enable inline editing of product options directly within the cart. Users can change product variants (size, color, etc.) without removing and re-adding items.
+This recipe implements custom cart methods in Hydrogen using the Storefront API's
+`variantBySelectedOptions` query to let customers edit product options directly
+within the cart. They'll be able to change product variants (like size and color)
+without having to remove items, select different variants, and then add them to
+the cart again. Their cart updates will happen automatically, without requiring
+a full page refresh.
 
 Key features:
 - Custom cart method `updateLineByOptions` for variant selection
@@ -42,22 +47,12 @@ Key features:
 - Automatic cart updates when options are changed
 - Full TypeScript support with proper type augmentation
 
-## Notes
-
-> [!NOTE]
-> This implementation requires GraphQL codegen to be run after applying the recipe
-
-> [!NOTE]
-> The custom cart method uses the Storefront API's variantBySelectedOptions query
-
-> [!NOTE]
-> Cart updates happen automatically on option change without page refresh
-
 ## Requirements
 
 - Basic understanding of Hydrogen cart implementation
 - Familiarity with GraphQL and TypeScript
 - Knowledge of React Router actions and forms
+- GraphQL codegen must be run after applying the recipe
 
 ## New files added to the template by this recipe
 
@@ -67,7 +62,7 @@ Key features:
 
 ### Step 1: README.md
 
-Updates README with custom cart method documentation and implementation guide
+Update the README file with custom cart method documentation and an implementation guide.
 
 #### File: /README.md
 
@@ -168,7 +163,7 @@ Updates README with custom cart method documentation and implementation guide
 
 ### Step 2: app/components/CartLineItem.tsx
 
-Adds variant selector functionality to cart line items for changing product options
+Add variant selector functionality to cart line items for changing product options.
 
 #### File: /app/components/CartLineItem.tsx
 
@@ -299,7 +294,7 @@ Adds variant selector functionality to cart line items for changing product opti
 
 ### Step 3: app/lib/context.ts
 
-Extends HydrogenCart context with updateLineByOptions method for variant switching
+Extend HydrogenCart context with updateLineByOptions method for variant switching.
 
 #### File: /app/lib/context.ts
 
@@ -386,7 +381,7 @@ Extends HydrogenCart context with updateLineByOptions method for variant switchi
 
 ### Step 4: app/lib/fragments.ts
 
-Adds product options to cart fragments and creates PRODUCT_VARIANT_QUERY for fetching variants
+Add product options to cart fragments and create PRODUCT_VARIANT_QUERY for fetching variants.
 
 #### File: /app/lib/fragments.ts
 
@@ -443,7 +438,7 @@ Adds product options to cart fragments and creates PRODUCT_VARIANT_QUERY for fet
 
 ### Step 5: app/routes/cart.tsx
 
-Implements CustomUpdateLineByOptions action handler for processing variant changes in cart
+Implement the CustomUpdateLineByOptions action handler for processing variant changes in cart.
 
 #### File: /app/routes/cart.tsx
 

@@ -1,6 +1,6 @@
 # Overview
 
-This prompt describes how to implement "Legacy Customer Account Flow" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "Legacy customer account flow" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -47,7 +47,7 @@ Here's the legacy-customer-account-flow recipe for the base Hydrogen skeleton te
 ## Description
 
 This recipe converts a Hydrogen app from the new Customer Account API authentication
-to the legacy customer account flow using the Storefront API. This is useful for stores
+to the legacy customer account flow using deprecated customer endpoints in Storefront API. This is useful for stores
 that haven't migrated to the new Customer Account API yet or need to maintain compatibility
 with existing customer authentication systems.
 
@@ -61,31 +61,21 @@ Key features:
 - Session-based authentication using customer access tokens
 - Secure server-side rendering for all account routes
 
+Technical details:
+- Customer access tokens are stored in session cookies for authentication.
+- The login/register/recover routes use the account\_ prefix to avoid layout nesting.
+- Account data routes use the `account.` prefix to inherit the account layout
+
 ## Notes
 
 > [!NOTE]
-> This uses the deprecated Storefront API customer endpoints instead of the new Customer Account API
-
-> [!NOTE]
-> Customer access tokens are stored in session cookies for authentication
-
-> [!NOTE]
-> All account routes are server-side rendered for security
-
-> [!NOTE]
-> The login/register/recover routes use the account_ prefix to avoid layout nesting
-
-> [!NOTE]
-> Account data routes use the account. prefix to inherit the account layout
-
-> [!NOTE]
-> Consider migrating to the new Customer Account API for better security and features
+> Consider migrating to the new Customer Account API for better security and features.
 
 ## Requirements
 
 - A Shopify store with customer accounts enabled (classic accounts, not new customer accounts)
 - Storefront API access with customer read/write permissions
-- Email notifications configured in Shopify admin for:
+- Email notifications configured in your Shopify admin for:
   - Account activation emails
   - Password reset emails
   - Welcome emails (optional)
@@ -101,7 +91,7 @@ Key features:
 
 ### Step 1: README.md
 
-Update README to document legacy customer account flow
+Update the README file to document the legacy customer account flow.
 
 #### File: /README.md
 
@@ -139,7 +129,7 @@ Update README to document legacy customer account flow
 
 ### Step 2: app/components/Header.tsx
 
-Add account link to header navigation
+Add an account link to the header navigation.
 
 #### File: /app/components/Header.tsx
 
@@ -172,9 +162,9 @@ Add account link to header navigation
 
 ### Step 3: app/routes/account_.activate.$id.$activationToken.tsx
 
-Add account activation route for email verification
+Add an account activation route for email verification.
 
-#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
+#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
 
 ~~~tsx
 import {Form, useActionData, data, redirect} from 'react-router';
@@ -334,7 +324,7 @@ const CUSTOMER_ACTIVATE_MUTATION = `#graphql
 
 ### Step 4: app/components/PageLayout.tsx
 
-Update PageLayout to handle account routes
+Update PageLayout to handle account routes.
 
 #### File: /app/components/PageLayout.tsx
 
@@ -353,9 +343,9 @@ Update PageLayout to handle account routes
 
 ### Step 5: app/routes/account_.recover.tsx
 
-Add password recovery form for forgotten passwords
+Add a password recovery form.
 
-#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
+#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
 
 ~~~tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -487,7 +477,7 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
 
 ### Step 6: app/root.tsx
 
-Add customer access token validation to root loader
+Add customer access token validation to the root loader.
 
 #### File: /app/root.tsx
 
@@ -616,9 +606,9 @@ Add customer access token validation to root loader
 
 ### Step 7: app/routes/account_.register.tsx
 
-Add customer registration form
+Add a customer registration form.
 
-#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.register.tsx)
+#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.register.tsx)
 
 ~~~tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -829,7 +819,7 @@ const REGISTER_LOGIN_MUTATION = `#graphql
 
 ### Step 8: app/routes/account.$.tsx
 
-Convert catch-all route to use Storefront API authentication
+Convert the catch-all route to use Storefront API authentication.
 
 #### File: /app/routes/account.$.tsx
 
@@ -852,9 +842,9 @@ Convert catch-all route to use Storefront API authentication
 
 ### Step 9: app/routes/account_.reset.$id.$resetToken.tsx
 
-Add password reset form with token validation
+Add a password reset form with token validation.
 
-#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
+#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/legacy-customer-account-flow/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
 
 ~~~tsx
 import {Form, useActionData, data, redirect} from 'react-router';
@@ -994,7 +984,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 
 ### Step 10: app/routes/account.addresses.tsx
 
-Convert address management to use Storefront API mutations
+Convert address management to use Storefront API mutations.
 
 #### File: /app/routes/account.addresses.tsx
 
@@ -1559,7 +1549,7 @@ Convert address management to use Storefront API mutations
 
 ### Step 11: app/routes/account.orders.$id.tsx
 
-Convert order details page to use Storefront API queries
+Convert the order details page to use Storefront API queries.
 
 #### File: /app/routes/account.orders.$id.tsx
 
@@ -1912,7 +1902,7 @@ Convert order details page to use Storefront API queries
 
 ### Step 12: app/routes/account.orders._index.tsx
 
-Convert orders list to use Storefront API with pagination
+Convert the orders list to use the Storefront API with pagination.
 
 #### File: /app/routes/account.orders._index.tsx
 
@@ -2269,7 +2259,7 @@ Convert orders list to use Storefront API with pagination
 
 ### Step 13: app/routes/account.profile.tsx
 
-
+Convert the customer profile page to use Storefront API queries.
 
 #### File: /app/routes/account.profile.tsx
 
@@ -2522,7 +2512,7 @@ Convert orders list to use Storefront API with pagination
 
 ### Step 14: app/routes/account.tsx
 
-Convert account layout to use session-based authentication
+Convert the account layout to use session-based authentication.
 
 #### File: /app/routes/account.tsx
 
@@ -2722,7 +2712,7 @@ Convert account layout to use session-based authentication
 
 ### Step 15: app/routes/account_.login.tsx
 
-Replace Customer Account API login with Storefront API form
+Replace the Customer Account API login with the Storefront API form.
 
 #### File: /app/routes/account_.login.tsx
 
@@ -2876,7 +2866,7 @@ Replace Customer Account API login with Storefront API form
 
 ### Step 16: app/routes/account_.logout.tsx
 
-Replace Customer Account API logout with session cleanup
+Replace the Customer Account API logout with a session cleanup.
 
 #### File: /app/routes/account_.logout.tsx
 

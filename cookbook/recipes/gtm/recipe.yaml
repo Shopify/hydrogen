@@ -43,27 +43,28 @@ ingredients:
 deletedFiles: []
 steps:
   - type: PATCH
-    step: '1'
+    step: "1"
     name: README.md
-    description: Update the README file with GTM-specific documentation and setup instructions.
+    description: Update the README file with GTM-specific documentation and setup
+      instructions.
     diffs:
       - file: README.md
         patchFile: README.md.db10ed.patch
   - type: PATCH
-    step: '2'
+    step: "2"
     name: app/entry.server.tsx
     description: null
     diffs:
       - file: app/entry.server.tsx
         patchFile: entry.server.tsx.b35f11.patch
   - type: NEW_FILE
-    step: '3'
+    step: "3"
     name: app/components/GoogleTagManager.tsx
     description: null
     ingredients:
       - path: templates/skeleton/app/components/GoogleTagManager.tsx
   - type: PATCH
-    step: '4'
+    step: "4"
     name: app/root.tsx
     description: null
     diffs:
@@ -94,4 +95,4 @@ nextSteps: |
 llms:
   userQueries: []
   troubleshooting: []
-commit: 12374c8f03f82c6800000cf08e327c4db4c287bb
+commit: 0511444a026f5b80c3927fbc2e31b1ab827cfeae

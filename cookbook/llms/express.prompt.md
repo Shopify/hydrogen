@@ -1,6 +1,6 @@
 # Overview
 
-This prompt describes how to implement "Express Server for Hydrogen" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "Express server" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -59,32 +59,17 @@ Key changes:
 - Provides production-ready server configuration
 - Keeps GraphQL codegen functionality intact
 
-## Notes
-
-> [!NOTE]
-> Requires Node.js 20+ for production deployment (less than 22.0.0)
-
-> [!NOTE]
-> Uses nodemon for development server with automatic restarts
-
-> [!NOTE]
-> Environment variables are loaded from .env file using dotenv
-
-> [!NOTE]
-> Session management is handled through Express middleware with SESSION_SECRET
-
-> [!NOTE]
-> GraphQL codegen still works with Storefront API types
-
-> [!NOTE]
-> Compatible with React Router 7.9.x
-
-> [!NOTE]
-> The .graphqlrc.ts file is preserved with customer account section commented out
+Technical details:
+- Uses nodemon for development server with automatic restarts
+- Environment variables are loaded from .env file using dotenv
+- Session management is handled through Express middleware with SESSION_SECRET
+- GraphQL codegen still works with Storefront API types
+- Compatible with React Router 7.8.x
+- The .graphqlrc.ts file is preserved with customer account section commented out
 
 ## Requirements
 
-- Node.js 18 or higher
+- Node.js 20 or higher (less than 22.0.0) for production deployment
 - npm or yarn package manager
 - Shopify Storefront API credentials
 
@@ -241,7 +226,7 @@ Update README with Express-specific setup and deployment instructions
 
 Add environment type definitions for Hydrogen on Express
 
-#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
+#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
 
 ~~~ts
 // This file extends the Hydrogen types for this project
@@ -312,7 +297,7 @@ Update client entry to use React Router hydration without Oxygen-specific code
 
 Add Express template favicon
 
-#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
+#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
 
 ~~~svg
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
@@ -473,7 +458,7 @@ Replace Oxygen server rendering with Express-compatible Node.js SSR using PassTh
 
 Add development server orchestration script for Vite and nodemon
 
-#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
+#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
 
 ~~~mjs
 #!/usr/bin/env node
@@ -784,7 +769,7 @@ Simplify root layout for Express template by removing complex components
 
 Add Express server with Hydrogen context, session management, and SSR support
 
-#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
+#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
 
 ~~~mjs
 import {createRequestHandler} from '@react-router/express';

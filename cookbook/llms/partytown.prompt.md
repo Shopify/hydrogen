@@ -48,17 +48,11 @@ Key features:
 ## Notes
 
 > [!NOTE]
-> Remember to set your GTM_CONTAINER_ID or GTM_ID environment variable
-
-> [!NOTE]
-> Run 'npm run partytown' to copy library files for production
-
-> [!NOTE]
-> TypeScript users need to manually add GTM types to env.d.ts
+> TypeScript users need to manually add GTM types to `env.d.ts`.
 
 ## Requirements
 
-- Google Tag Manager container ID
+- Google Tag Manager container ID (remember to set your `GTM_CONTAINER_ID` or `GTM_ID` environment variable)
 - Basic understanding of web workers and CSP
 - Node.js 18.0.0 or higher
 
@@ -73,7 +67,7 @@ Key features:
 
 ### Step 1: .gitignore
 
-Add public/~partytown to ignore Partytown library files
+Add `public/~partytown` to ignore Partytown library files.
 
 #### File: /.gitignore
 
@@ -90,9 +84,9 @@ Add public/~partytown to ignore Partytown library files
 
 ### Step 2: app/components/PartytownGoogleTagManager.tsx
 
-Add GTM component that loads scripts in web worker
+Add a GTM component that loads scripts in a web worker.
 
-#### File: [PartytownGoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/partytown/ingredients/templates/skeleton/app/components/PartytownGoogleTagManager.tsx)
+#### File: [PartytownGoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/partytown/ingredients/templates/skeleton/app/components/PartytownGoogleTagManager.tsx)
 
 ~~~tsx
 import {useEffect, useRef} from 'react';
@@ -168,7 +162,7 @@ export function PartytownGoogleTagManager(props: {
 
 ### Step 3: README.md
 
-Document Partytown setup and configuration instructions
+Document Partytown setup and configuration instructions.
 
 #### File: /README.md
 
@@ -266,9 +260,9 @@ Document Partytown setup and configuration instructions
 
 ### Step 4: app/routes/reverse-proxy.ts
 
-Reverse proxy route for third-party scripts requiring CORS headers
+Reverse the proxy route for third-party scripts requiring CORS headers.
 
-#### File: [reverse-proxy.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/partytown/ingredients/templates/skeleton/app/routes/reverse-proxy.ts)
+#### File: [reverse-proxy.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/partytown/ingredients/templates/skeleton/app/routes/reverse-proxy.ts)
 
 ~~~ts
 // Reverse proxies partytown libs that require CORS. Used by Partytown resolveUrl
@@ -479,7 +473,7 @@ async function handleRequest(request: Route.LoaderArgs['request']) {
 
 ### Step 5: app/entry.server.tsx
 
-Configure CSP headers for GTM and Google Analytics domains
+Configure the CSP headers for GTM and Google Analytics domains.
 
 #### File: /app/entry.server.tsx
 
@@ -508,9 +502,9 @@ Configure CSP headers for GTM and Google Analytics domains
 
 ### Step 6: app/utils/partytown/maybeProxyRequest.ts
 
-URL resolver to control which scripts should be reverse-proxied
+Add a URL resolver to control which scripts should be reverse-proxied.
 
-#### File: [maybeProxyRequest.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/maybeProxyRequest.ts)
+#### File: [maybeProxyRequest.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/maybeProxyRequest.ts)
 
 ~~~ts
 /**
@@ -551,7 +545,7 @@ export function maybeProxyRequest(url: URL, location: Location, type: string) {
 
 ### Step 7: app/root.tsx
 
-Initialize Partytown and GTM in the root layout
+Initialize Partytown and GTM in the root layout.
 
 #### File: /app/root.tsx
 
@@ -635,9 +629,9 @@ Initialize Partytown and GTM in the root layout
 
 ### Step 8: app/utils/partytown/partytownAtomicHeaders.ts
 
-Helper utility to enable Partytown atomic mode for better performance
+Add a helper utility to enable Partytown atomic mode for better performance.
 
-#### File: [partytownAtomicHeaders.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts)
+#### File: [partytownAtomicHeaders.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts)
 
 ~~~ts
 /*
@@ -654,7 +648,7 @@ export function partytownAtomicHeaders() {
 
 ### Step 9: package.json
 
-Add Partytown dependency and npm script for copying library files
+Add a Partytown dependency and npm script for copying library files.
 
 #### File: /package.json
 
@@ -680,7 +674,7 @@ Add Partytown dependency and npm script for copying library files
 
 ### Step 10: vite.config.ts
 
-Configure Vite to exclude Partytown library from build optimization
+Configure Vite to exclude Partytown library from build optimization.
 
 #### File: /vite.config.ts
 

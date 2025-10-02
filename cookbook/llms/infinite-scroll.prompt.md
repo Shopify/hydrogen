@@ -1,6 +1,6 @@
 # Overview
 
-This prompt describes how to implement "Infinite Scroll for Collections" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "Infinite scroll for collections" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -34,29 +34,13 @@ Here's the infinite-scroll recipe for the base Hydrogen skeleton template:
 
 ## Description
 
-Implements infinite scroll functionality on collection pages using intersection observer.
-Products automatically load as users scroll down, replacing traditional pagination buttons
-with a smooth, continuous browsing experience.
+This recipe implements infinite scroll functionality on collection pages using the Intersection Observer API.
 
 Key features:
-- Automatic loading when "Load more" button comes into view
-- Preserves browser history and URL state
+- Automatic loading when "Load more" button comes into view using Intersection Observer API
+- Preserves browser history and URL state (replace mode to avoid clutter)
 - Maintains scroll position during navigation
-- Optimized loading with eager/lazy image loading
-
-## Notes
-
-> [!NOTE]
-> The intersection observer triggers when the "Load more" button enters the viewport
-
-> [!NOTE]
-> Navigation updates use replace mode to avoid cluttering browser history
-
-> [!NOTE]
-> First 8 products load eagerly for faster initial render
-
-> [!NOTE]
-> Subsequent products use lazy loading to optimize performance
+- Optimized loading with eager/lazy image loading (first 8 products eager, rest lazy)
 
 ## Requirements
 
@@ -72,7 +56,7 @@ Key features:
 
 ### Step 1: README.md
 
-Updates README with infinite scroll documentation and implementation details
+Update the README file with infinite scroll documentation and implementation details.
 
 #### File: /README.md
 

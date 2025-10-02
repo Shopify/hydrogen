@@ -20,7 +20,7 @@ The recipe includes:
 4. Proper nonce attributes for security compliance and compatibility with the Content Security Policy
 
 > [!NOTE]
-> Replace GTM-<YOUR_GTM_ID> with your actual Google Tag Manager container ID in both script locations
+> Replace `GTM-<YOUR_GTM_ID>` with your actual Google Tag Manager container ID in both script locations
 
 ## Requirements
 
@@ -41,7 +41,7 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx) |  |
+| [app/components/GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx) |  |
 
 ## Steps
 
@@ -49,7 +49,7 @@ _New files added to the template by this recipe._
 
 Update the README file with GTM-specific documentation and setup instructions.
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/README.md)
 
 <details>
 
@@ -150,7 +150,7 @@ index c584e537..a31bfebf 100644
 
 
 
-#### File: [app/entry.server.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/entry.server.tsx)
+#### File: [app/entry.server.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/entry.server.tsx)
 
 ~~~diff
 index 6f5c4abf..b8eb74f4 100644
@@ -187,7 +187,7 @@ index 6f5c4abf..b8eb74f4 100644
 
 
 
-#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
+#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
 
 <details>
 
@@ -224,7 +224,7 @@ export function GoogleTagManager() {
 
 
 
-#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/root.tsx)
+#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/root.tsx)
 
 <details>
 
@@ -296,7 +296,7 @@ index df87425c..aa25c6d7 100644
 
 After applying this recipe:
 
-1. Replace `GTM-{'<'}YOUR_GTM_ID{'>'}` with your actual container ID in app/root.tsx (2 locations).
+1. Replace `GTM-<YOUR_GTM_ID>` with your actual container ID in app/root.tsx (2 locations).
 
 2. Configure GTM in your Google Tag Manager dashboard:
    - Set up tags for Google Analytics 4 or other tracking services

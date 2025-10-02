@@ -20,7 +20,7 @@ Key features:
 
 Update the README file with infinite scroll documentation and implementation details.
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/README.md)
 
 <details>
 
@@ -120,7 +120,7 @@ index c584e537..6eacfd82 100644
 
 
 
-#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/collections.$handle.tsx)
+#### File: [app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/routes/collections.$handle.tsx)
 
 <details>
 
@@ -255,7 +255,7 @@ index c416c2b3..e6a35150 100644
 
 
 
-#### File: [package.json](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/package.json)
+#### File: [package.json](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/package.json)
 
 ~~~diff
 index e9ebd1d3..e51634ee 100644

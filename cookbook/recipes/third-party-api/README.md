@@ -51,7 +51,7 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/lib/createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts) | A GraphQL client factory for third-party APIs with Oxygen caching support |
+| [app/lib/createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts) | A GraphQL client factory for third-party APIs with Oxygen caching support |
 
 ## Steps
 
@@ -59,7 +59,7 @@ _New files added to the template by this recipe._
 
 
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/README.md)
 
 <details>
 
@@ -132,7 +132,7 @@ index c584e537..4c8dcead 100644
 Create a new GraphQL client factory that integrates with Oxygen's caching system.
 This client handles query minification, error handling, and cache key generation.
 
-#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
+#### File: [createRickAndMortyClient.server.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/third-party-api/ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server.ts)
 
 <details>
 
@@ -208,7 +208,7 @@ function minifyQuery<T extends string>(string: T) {
 Import the Rick and Morty client and add it to the Hydrogen context so it's available
 in all routes. Also update TypeScript declarations for proper type support.
 
-#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/lib/context.ts)
+#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/lib/context.ts)
 
 <details>
 
@@ -287,7 +287,7 @@ index 692d5ae1..0635384a 100644
 Update the homepage to fetch data from the third-party API and display it alongside
 Shopify data. This demonstrates parallel data fetching and proper caching strategies.
 
-#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/_index.tsx)
+#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/routes/_index.tsx)
 
 <details>
 

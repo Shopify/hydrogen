@@ -16,6 +16,7 @@ description: |
   - Inline dropdown selectors for each product option in cart
   - Automatic cart updates when options are changed
   - Full TypeScript support with proper type augmentation
+notes: []
 requirements: |
   - Basic understanding of Hydrogen cart implementation
   - Familiarity with GraphQL and TypeScript
@@ -25,37 +26,42 @@ ingredients: []
 deletedFiles: []
 steps:
   - type: PATCH
-    step: '1'
+    step: "1"
     name: README.md
-    description: Update the README file with custom cart method documentation and an implementation guide.
+    description: Update the README file with custom cart method documentation and an
+      implementation guide.
     diffs:
       - file: README.md
         patchFile: README.md.db10ed.patch
   - type: PATCH
-    step: '2'
+    step: "2"
     name: app/components/CartLineItem.tsx
-    description: Add variant selector functionality to cart line items for changing product options.
+    description: Add variant selector functionality to cart line items for changing
+      product options.
     diffs:
       - file: app/components/CartLineItem.tsx
         patchFile: CartLineItem.tsx.2c9a50.patch
   - type: PATCH
-    step: '3'
+    step: "3"
     name: app/lib/context.ts
-    description: Extend HydrogenCart context with updateLineByOptions method for variant switching.
+    description: Extend HydrogenCart context with updateLineByOptions method for
+      variant switching.
     diffs:
       - file: app/lib/context.ts
         patchFile: context.ts.1877b3.patch
   - type: PATCH
-    step: '4'
+    step: "4"
     name: app/lib/fragments.ts
-    description: Add product options to cart fragments and create PRODUCT_VARIANT_QUERY for fetching variants.
+    description: Add product options to cart fragments and create
+      PRODUCT_VARIANT_QUERY for fetching variants.
     diffs:
       - file: app/lib/fragments.ts
         patchFile: fragments.ts.026109.patch
   - type: PATCH
-    step: '5'
+    step: "5"
     name: app/routes/cart.tsx
-    description: Implement the CustomUpdateLineByOptions action handler for processing variant changes in cart.
+    description: Implement the CustomUpdateLineByOptions action handler for
+      processing variant changes in cart.
     diffs:
       - file: app/routes/cart.tsx
         patchFile: cart.tsx.af0778.patch
@@ -63,4 +69,4 @@ nextSteps: null
 llms:
   userQueries: []
   troubleshooting: []
-commit: 12374c8f03f82c6800000cf08e327c4db4c287bb
+commit: 0511444a026f5b80c3927fbc2e31b1ab827cfeae

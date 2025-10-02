@@ -27,12 +27,12 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/B2BLocationProvider.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationProvider.tsx) |  |
-| [app/components/B2BLocationSelector.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationSelector.tsx) |  |
-| [app/components/PriceBreaks.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/PriceBreaks.tsx) |  |
-| [app/components/QuantityRules.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/QuantityRules.tsx) |  |
-| [app/graphql/customer-account/CustomerLocationsQuery.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts) |  |
-| [app/routes/b2blocations.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/routes/b2blocations.tsx) |  |
+| [app/components/B2BLocationProvider.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationProvider.tsx) |  |
+| [app/components/B2BLocationSelector.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationSelector.tsx) |  |
+| [app/components/PriceBreaks.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/PriceBreaks.tsx) |  |
+| [app/components/QuantityRules.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/QuantityRules.tsx) |  |
+| [app/graphql/customer-account/CustomerLocationsQuery.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts) |  |
+| [app/routes/b2blocations.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/routes/b2blocations.tsx) |  |
 
 ## Steps
 
@@ -40,7 +40,7 @@ _New files added to the template by this recipe._
 
 
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/README.md)
 
 ~~~diff
 index c584e537..e3231cba 100644
@@ -98,7 +98,7 @@ index c584e537..e3231cba 100644
 
 
 
-#### File: [B2BLocationProvider.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationProvider.tsx)
+#### File: [B2BLocationProvider.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationProvider.tsx)
 
 <details>
 
@@ -162,7 +162,7 @@ export function useB2BLocation(): B2BLocationContextValue {
 
 
 
-#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/components/CartLineItem.tsx)
+#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/components/CartLineItem.tsx)
 
 ~~~diff
 index 80e34be2..1d09318c 100644
@@ -210,7 +210,7 @@ index 80e34be2..1d09318c 100644
 
 
 
-#### File: [B2BLocationSelector.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationSelector.tsx)
+#### File: [B2BLocationSelector.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationSelector.tsx)
 
 <details>
 
@@ -293,7 +293,7 @@ export function B2BLocationSelector() {
 
 
 
-#### File: [app/components/Header.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/components/Header.tsx)
+#### File: [app/components/Header.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/components/Header.tsx)
 
 <details>
 
@@ -358,7 +358,7 @@ index 45b620b4..12f7f165 100644
 
 
 
-#### File: [PriceBreaks.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/PriceBreaks.tsx)
+#### File: [PriceBreaks.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/PriceBreaks.tsx)
 
 <details>
 
@@ -410,7 +410,7 @@ export function PriceBreaks({priceBreaks}: PriceBreaksProps) {
 
 
 
-#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/components/ProductForm.tsx)
+#### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/components/ProductForm.tsx)
 
 ~~~diff
 index 47c8f305..5e3ec2c1 100644
@@ -448,7 +448,7 @@ index 47c8f305..5e3ec2c1 100644
 
 
 
-#### File: [QuantityRules.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/QuantityRules.tsx)
+#### File: [QuantityRules.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/QuantityRules.tsx)
 
 <details>
 
@@ -505,7 +505,7 @@ export function QuantityRules({
 
 
 
-#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/lib/fragments.ts)
+#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/lib/fragments.ts)
 
 ~~~diff
 index cf35c25e..6866c19a 100644
@@ -561,7 +561,7 @@ index cf35c25e..6866c19a 100644
 
 
 
-#### File: [CustomerLocationsQuery.ts](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts)
+#### File: [CustomerLocationsQuery.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts)
 
 <details>
 
@@ -607,7 +607,7 @@ export const CUSTOMER_LOCATIONS_QUERY = `#graphql
 
 
 
-#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/root.tsx)
+#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/root.tsx)
 
 <details>
 
@@ -680,7 +680,7 @@ index df87425c..5a0fef09 100644
 
 
 
-#### File: [b2blocations.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/cookbook/recipes/b2b/ingredients/templates/skeleton/app/routes/b2blocations.tsx)
+#### File: [b2blocations.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/routes/b2blocations.tsx)
 
 <details>
 
@@ -731,7 +731,7 @@ export default function CartRoute() {
 
 
 
-#### File: [app/routes/account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/account_.logout.tsx)
+#### File: [app/routes/account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/routes/account_.logout.tsx)
 
 ~~~diff
 index 5e67cc85..6d331155 100644
@@ -754,7 +754,7 @@ index 5e67cc85..6d331155 100644
 
 
 
-#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/12374c8f03f82c6800000cf08e327c4db4c287bb/templates/skeleton/app/routes/products.$handle.tsx)
+#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/routes/products.$handle.tsx)
 
 <details>
 
