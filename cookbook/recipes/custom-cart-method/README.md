@@ -26,7 +26,7 @@ Key features:
 
 Update the README file with custom cart method documentation and an implementation guide.
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/README.md)
 
 <details>
 
@@ -134,7 +134,7 @@ index c584e537..d4009139 100644
 
 Add variant selector functionality to cart line items for changing product options.
 
-#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/components/CartLineItem.tsx)
+#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/components/CartLineItem.tsx)
 
 <details>
 
@@ -272,7 +272,7 @@ index 80e34be2..2f37ea80 100644
 
 Extend HydrogenCart context with updateLineByOptions method for variant switching.
 
-#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/lib/context.ts)
+#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/lib/context.ts)
 
 <details>
 
@@ -366,7 +366,7 @@ index 692d5ae1..c2dc8b33 100644
 
 Add product options to cart fragments and create PRODUCT_VARIANT_QUERY for fetching variants.
 
-#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/lib/fragments.ts)
+#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/lib/fragments.ts)
 
 <details>
 
@@ -430,7 +430,7 @@ index cf35c25e..cf79917e 100644
 
 Implement the CustomUpdateLineByOptions action handler for processing variant changes in cart.
 
-#### File: [app/routes/cart.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/routes/cart.tsx)
+#### File: [app/routes/cart.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/routes/cart.tsx)
 
 ~~~diff
 index f82d683f..f08a6777 100644

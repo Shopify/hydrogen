@@ -26,10 +26,10 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/PartytownGoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/partytown/ingredients/templates/skeleton/app/components/PartytownGoogleTagManager.tsx) | Component that loads GTM scripts in a web worker via Partytown |
-| [app/routes/reverse-proxy.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/partytown/ingredients/templates/skeleton/app/routes/reverse-proxy.ts) | Reverse proxy route for third-party scripts requiring CORS headers |
-| [app/utils/partytown/maybeProxyRequest.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/maybeProxyRequest.ts) | URL resolver to control which scripts should be reverse-proxied |
-| [app/utils/partytown/partytownAtomicHeaders.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts) | Helper utility to enable Partytown atomic mode for better performance |
+| [app/components/PartytownGoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/partytown/ingredients/templates/skeleton/app/components/PartytownGoogleTagManager.tsx) | Component that loads GTM scripts in a web worker via Partytown |
+| [app/routes/reverse-proxy.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/partytown/ingredients/templates/skeleton/app/routes/reverse-proxy.ts) | Reverse proxy route for third-party scripts requiring CORS headers |
+| [app/utils/partytown/maybeProxyRequest.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/maybeProxyRequest.ts) | URL resolver to control which scripts should be reverse-proxied |
+| [app/utils/partytown/partytownAtomicHeaders.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts) | Helper utility to enable Partytown atomic mode for better performance |
 
 ## Steps
 
@@ -37,7 +37,7 @@ _New files added to the template by this recipe._
 
 Add `public/~partytown` to ignore Partytown library files.
 
-#### File: [.gitignore](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/.gitignore)
+#### File: [.gitignore](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/.gitignore)
 
 ~~~diff
 index 4a0c4ce5..b47aa733 100644
@@ -57,7 +57,7 @@ index 4a0c4ce5..b47aa733 100644
 
 Add a GTM component that loads scripts in a web worker.
 
-#### File: [PartytownGoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/partytown/ingredients/templates/skeleton/app/components/PartytownGoogleTagManager.tsx)
+#### File: [PartytownGoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/partytown/ingredients/templates/skeleton/app/components/PartytownGoogleTagManager.tsx)
 
 <details>
 
@@ -139,7 +139,7 @@ export function PartytownGoogleTagManager(props: {
 
 Document Partytown setup and configuration instructions.
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/README.md)
 
 <details>
 
@@ -244,7 +244,7 @@ index c584e537..1ac3a34c 100644
 
 Reverse the proxy route for third-party scripts requiring CORS headers.
 
-#### File: [reverse-proxy.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/partytown/ingredients/templates/skeleton/app/routes/reverse-proxy.ts)
+#### File: [reverse-proxy.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/partytown/ingredients/templates/skeleton/app/routes/reverse-proxy.ts)
 
 <details>
 
@@ -461,7 +461,7 @@ async function handleRequest(request: Route.LoaderArgs['request']) {
 
 Configure the CSP headers for GTM and Google Analytics domains.
 
-#### File: [app/entry.server.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/entry.server.tsx)
+#### File: [app/entry.server.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/entry.server.tsx)
 
 ~~~diff
 index 6f5c4abf..a2443e77 100644
@@ -493,7 +493,7 @@ index 6f5c4abf..a2443e77 100644
 
 Add a URL resolver to control which scripts should be reverse-proxied.
 
-#### File: [maybeProxyRequest.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/maybeProxyRequest.ts)
+#### File: [maybeProxyRequest.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/maybeProxyRequest.ts)
 
 <details>
 
@@ -540,7 +540,7 @@ export function maybeProxyRequest(url: URL, location: Location, type: string) {
 
 Initialize Partytown and GTM in the root layout.
 
-#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/root.tsx)
+#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/root.tsx)
 
 <details>
 
@@ -631,7 +631,7 @@ index df87425c..a2b8986a 100644
 
 Add a helper utility to enable Partytown atomic mode for better performance.
 
-#### File: [partytownAtomicHeaders.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts)
+#### File: [partytownAtomicHeaders.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts)
 
 <details>
 
@@ -654,7 +654,7 @@ export function partytownAtomicHeaders() {
 
 Add a Partytown dependency and npm script for copying library files.
 
-#### File: [package.json](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/package.json)
+#### File: [package.json](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/package.json)
 
 ~~~diff
 index e9ebd1d3..deace7c0 100644
@@ -683,7 +683,7 @@ index e9ebd1d3..deace7c0 100644
 
 Configure Vite to exclude Partytown library from build optimization.
 
-#### File: [vite.config.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/vite.config.ts)
+#### File: [vite.config.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/vite.config.ts)
 
 ~~~diff
 index a1702446..a2e3dda9 100644

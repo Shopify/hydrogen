@@ -209,7 +209,7 @@ Configure CSP headers to allow Google Tag Manager and Analytics scripts.
 
 Build a component that subscribes to Hydrogen analytics events and pushes them to GTM's dataLayer.
 
-#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
+#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
 
 ~~~tsx
 import {useAnalytics} from '@shopify/hydrogen';
@@ -238,9 +238,9 @@ export function GoogleTagManager() {
 }
 ~~~
 
-### Step 4: Insert Google Tag Manager tracking code in the head and body sections.
+### Step 4: Add GTM scripts to the app
 
-Add the Google Tag Manager script tags to the root layout, including the head script and noscript fallback in the body section with proper CSP nonce support
+Insert Google Tag Manager tracking code in the head and body sections.
 
 #### File: /app/root.tsx
 

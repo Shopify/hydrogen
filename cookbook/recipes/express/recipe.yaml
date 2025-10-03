@@ -246,4 +246,4 @@ llms:
     - issue: TypeScript errors about missing @react-router/node types
       solution: Run 'npm install' to ensure all dependencies including @types packages
         are installed.
-commit: 0511444a026f5b80c3927fbc2e31b1ab827cfeae
+commit: 4f5db289f8a9beb5c46dda9416a7ae8151f7e08e

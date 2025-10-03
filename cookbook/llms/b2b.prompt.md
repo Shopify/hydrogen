@@ -127,7 +127,7 @@ Update the README file with comprehensive B2B commerce documentation, explaining
 
 Create a React context provider that manages the selected company location state and provides location switching functionality throughout the B2B application
 
-#### File: [B2BLocationProvider.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationProvider.tsx)
+#### File: [B2BLocationProvider.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationProvider.tsx)
 
 ~~~tsx
 import {createContext, useContext, useEffect, useState, useMemo} from 'react';
@@ -232,7 +232,7 @@ Update cart line item quantity controls to honor B2B quantity rules including mi
 
 Create a modal component that displays available company locations and allows B2B customers to select the appropriate location for contextualized pricing
 
-#### File: [B2BLocationSelector.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationSelector.tsx)
+#### File: [B2BLocationSelector.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationSelector.tsx)
 
 ~~~tsx
 import {CartForm} from '@shopify/hydrogen';
@@ -369,7 +369,7 @@ Add a location selector button to the site header that allows B2B customers to e
 
 Create a component that displays volume pricing breaks, showing customers the discounted prices they'll receive for bulk purchases at different quantity thresholds
 
-#### File: [PriceBreaks.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/PriceBreaks.tsx)
+#### File: [PriceBreaks.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/PriceBreaks.tsx)
 
 ~~~tsx
 import {Money} from '@shopify/hydrogen';
@@ -452,7 +452,7 @@ Update the ProductForm component to accept and handle quantity parameters that e
 
 Create a component that displays B2B quantity rules to customers, showing minimum order quantities, maximum limits, and required increments for business products
 
-#### File: [QuantityRules.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/QuantityRules.tsx)
+#### File: [QuantityRules.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/QuantityRules.tsx)
 
 ~~~tsx
 import type {Maybe} from '@shopify/hydrogen/customer-account-api-types';
@@ -558,7 +558,7 @@ Update GraphQL fragments to include quantity rules and price break data needed f
 
 Create a GraphQL query that fetches all available company locations for B2B customers from the Customer Account API
 
-#### File: [CustomerLocationsQuery.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts)
+#### File: [CustomerLocationsQuery.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/b2b/ingredients/templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts)
 
 ~~~ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/objects/Customer
@@ -666,7 +666,7 @@ Wrap the application with the B2B location provider context and add TypeScript t
 
 Create a route handler that processes location selection requests and automatically sets the location if a B2B customer only has access to one company location
 
-#### File: [b2blocations.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/b2b/ingredients/templates/skeleton/app/routes/b2blocations.tsx)
+#### File: [b2blocations.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/b2b/ingredients/templates/skeleton/app/routes/b2blocations.tsx)
 
 ~~~tsx
 import {useLoaderData} from 'react-router';

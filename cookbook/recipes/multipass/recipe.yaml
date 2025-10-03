@@ -244,4 +244,4 @@ llms:
     - issue: Multipass checkout button not appearing
       solution: Verify that CartSummary.tsx imports and uses MultipassCheckoutButton
         component, and that the cart.tsx route has been patched
-commit: 0511444a026f5b80c3927fbc2e31b1ab827cfeae
+commit: 4f5db289f8a9beb5c46dda9416a7ae8151f7e08e

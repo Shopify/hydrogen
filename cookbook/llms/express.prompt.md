@@ -226,7 +226,7 @@ Update README with Express-specific setup and deployment instructions
 
 Add environment type definitions for Hydrogen on Express
 
-#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
+#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
 
 ~~~ts
 // This file extends the Hydrogen types for this project
@@ -297,7 +297,7 @@ Update client entry to use React Router hydration without Oxygen-specific code
 
 Add Express template favicon
 
-#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
+#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
 
 ~~~svg
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
@@ -458,7 +458,7 @@ Replace Oxygen server rendering with Express-compatible Node.js SSR using PassTh
 
 Add development server orchestration script for Vite and nodemon
 
-#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
+#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
 
 ~~~mjs
 #!/usr/bin/env node
@@ -769,7 +769,7 @@ Simplify root layout for Express template by removing complex components
 
 Add Express server with Hydrogen context, session management, and SSR support
 
-#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
+#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
 
 ~~~mjs
 import {createRequestHandler} from '@react-router/express';

@@ -41,7 +41,7 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx) | Analytics component that subscribes to Hydrogen events and pushes them to GTM's dataLayer |
+| [app/components/GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx) | Analytics component that subscribes to Hydrogen events and pushes them to GTM's dataLayer |
 
 ## Steps
 
@@ -49,7 +49,7 @@ _New files added to the template by this recipe._
 
 Update the README file with GTM-specific documentation and setup instructions.
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/README.md)
 
 <details>
 
@@ -150,7 +150,7 @@ index c584e537..a31bfebf 100644
 
 Configure CSP headers to allow Google Tag Manager and Analytics scripts.
 
-#### File: [app/entry.server.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/entry.server.tsx)
+#### File: [app/entry.server.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/entry.server.tsx)
 
 ~~~diff
 index 6f5c4abf..b8eb74f4 100644
@@ -187,7 +187,7 @@ index 6f5c4abf..b8eb74f4 100644
 
 Build a component that subscribes to Hydrogen analytics events and pushes them to GTM's dataLayer.
 
-#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
+#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
 
 <details>
 
@@ -220,11 +220,11 @@ export function GoogleTagManager() {
 
 </details>
 
-### Step 4: Insert Google Tag Manager tracking code in the head and body sections.
+### Step 4: Add GTM scripts to the app
 
-Add the Google Tag Manager script tags to the root layout, including the head script and noscript fallback in the body section with proper CSP nonce support
+Insert Google Tag Manager tracking code in the head and body sections.
 
-#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/root.tsx)
+#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/root.tsx)
 
 <details>
 
