@@ -22,6 +22,8 @@ import {
 } from './markdown';
 import {isSubstep, loadRecipe, Recipe, Step} from './recipe';
 import {assertNever, getPatchesDir} from './util';
+import {handleZodErrorFromLoadRecipe} from './validate';
+import {ZodError} from 'zod';
 
 // The number of lines to collapse a diff into a details block
 const COLLAPSE_DIFF_LINES = 50;
@@ -49,9 +51,18 @@ export function renderRecipe(params: {
   }
 
   const recipeDir = path.join(COOKBOOK_PATH, 'recipes', recipeName);
+  const recipeYamlPath = path.join(recipeDir, 'recipe.yaml');
 
-  // Read and parse the recipe from the recipe manifest file
-  const recipe: Recipe = loadRecipe({directory: recipeDir});
+  let recipe: Recipe;
+  try {
+    recipe = loadRecipe({directory: recipeDir});
+  } catch (error) {
+    if (error instanceof ZodError) {
+      handleZodErrorFromLoadRecipe(error, recipeName, recipeYamlPath);
+      process.exit(1);
+    }
+    throw error;
+  }
 
   // Write the markdown file to the current directory as README.md
   serializeMDBlocksToFile(

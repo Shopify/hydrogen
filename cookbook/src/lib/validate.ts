@@ -96,7 +96,7 @@ export function formatValidationError(err: ValidationError): string {
   return `${linePrefix}${locationStr}${message}`;
 }
 
-function printValidationErrors(
+export function printValidationErrors(
   recipeName: string,
   errors: ValidationError[],
 ): void {
@@ -114,6 +114,32 @@ function printValidationErrors(
   });
 
   console.error('');
+}
+
+export function handleZodErrorFromLoadRecipe(
+  error: ZodError,
+  recipeName: string,
+  recipeYamlPath: string,
+): void {
+  const errors: ValidationError[] = error.issues.map((issue) => {
+    const lineNumber = getYamlLineNumber(recipeYamlPath, issue.path);
+    const actualValue = getYamlValue(recipeYamlPath, issue.path);
+
+    let message = issue.message;
+    if (actualValue !== null) {
+      message = `${issue.message} (actual value: ${actualValue})`;
+    }
+
+    return {
+      validator: 'RecipeSchema',
+      message,
+      location: issue.path.join('.'),
+      lineNumber: lineNumber ?? undefined,
+    };
+  });
+
+  printValidationErrors(recipeName, errors);
+  console.error(`❌ Recipe '${recipeName}' is invalid\n`);
 }
 
 export function validateStepDescriptions(recipe: Recipe): ValidationResult {
