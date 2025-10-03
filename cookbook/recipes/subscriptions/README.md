@@ -1,4 +1,4 @@
-# Subscriptions
+# Subscriptions in Hydrogen
 
 This recipe lets you sell subscription-based products on your Hydrogen storefront by implementing [selling plan groups](https://shopify.dev/docs/api/storefront/latest/objects/SellingPlanGroup). Your customers will be able to choose between one-time purchases or recurring subscriptions for any products with available selling plans.
 
@@ -20,12 +20,12 @@ _New files added to the template by this recipe._
 
 | File | Description |
 | --- | --- |
-| [app/components/SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | Displays the available subscription options on product pages. |
-| [app/graphql/customer-account/CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts) | Mutations for managing customer subscriptions. |
-| [app/graphql/customer-account/CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts) | Queries for managing customer subscriptions. |
-| [app/routes/account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx) | Subscriptions management page. |
-| [app/styles/account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css) | Subscriptions management page styles. |
-| [app/styles/selling-plan.css](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css) | Styles the `SellingPlanSelector` component. |
+| [app/components/SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx) | Displays the available subscription options on product pages. |
+| [app/graphql/customer-account/CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts) | Mutations for managing customer subscriptions. |
+| [app/graphql/customer-account/CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts) | Queries for managing customer subscriptions. |
+| [app/routes/account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx) | Subscriptions management page. |
+| [app/styles/account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css) | Subscriptions management page styles. |
+| [app/styles/selling-plan.css](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css) | Styles the `SellingPlanSelector` component. |
 
 ## Steps
 
@@ -36,16 +36,16 @@ _New files added to the template by this recipe._
 3. On the [Products](https://admin.shopify.com/products) page, open any products that will be sold as subscriptions and add the relevant subscription plans in the **Purchase options** section.
 The Hydrogen demo storefront comes pre-configured with an example subscription product with the handle `shopify-wax`.
 
-### Step 1: Update CartLineItem to display subscription details
+### Step 2: Update CartLineItem to display subscription details
 
 1. Update import paths to use absolute paths for better consistency.
 2. Extract `sellingPlanAllocation` from cart line data to access subscription information.
 3. Display the subscription plan name when items have an active selling plan.
 
-#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/templates/skeleton/app/components/CartLineItem.tsx)
+#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/components/CartLineItem.tsx)
 
-```diff
-index 80e34be28..68b054991 100644
+~~~diff
+index 80e34be2..68b05499 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
 @@ -3,8 +3,8 @@ import type {CartLayout} from '~/components/CartMain';
@@ -82,21 +82,21 @@ index 80e34be28..68b054991 100644
            {selectedOptions.map((option) => (
              <li key={option.name}>
                <small>
-```
+~~~
 
-### Step 2: Show subscription options on product pages
+### Step 3: Show subscription options on product pages
 
 In this step we'll implement the ability to display subscription options on  product pages, alongside the existing one-off purchase options.
 
-#### Step 2.1: Create a SellingPlanSelector component
+#### Step 3.1: Create a SellingPlanSelector component
 
 Create a new `SellingPlanSelector` component that displays the available subscription options for a product.
 
-##### File: [SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
+##### File: [SellingPlanSelector.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/components/SellingPlanSelector.tsx)
 
 <details>
 
-```tsx
+~~~tsx
 import type {
   ProductFragment,
   SellingPlanGroupFragment,
@@ -203,19 +203,19 @@ export function SellingPlanSelector({
   );
 }
 
-```
+~~~
 
 </details>
 
-#### Step 2.2: Add styles for the SellingPlanSelector component
+#### Step 3.2: Add styles for the SellingPlanSelector component
 
 Add styles for the `SellingPlanSelector` component.
 
-##### File: [selling-plan.css](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css)
+##### File: [selling-plan.css](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/selling-plan.css)
 
 <details>
 
-```css
+~~~css
 .selling-plan-group {
   margin-bottom: 1rem;
 }
@@ -250,22 +250,22 @@ Add styles for the `SellingPlanSelector` component.
   border-color: #fafafa; /* Equivalent to 'border-neutral-50' */
 }
 
-```
+~~~
 
 </details>
 
-#### Step 2.3: Update ProductForm to support subscriptions
+#### Step 3.3: Update ProductForm to support subscriptions
 
 1. Add conditional rendering to display subscription options alongside the standard variant selectors.
 2. Implement `SellingPlanSelector` and `SellingPlanGroup` components to handle subscription plan selection.
 3. Update `AddToCartButton` to include selling plan data when subscriptions are selected.
 
-##### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/templates/skeleton/app/components/ProductForm.tsx)
+##### File: [app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/components/ProductForm.tsx)
 
 <details>
 
-```diff
-index 47c8f3056..bea5bccee 100644
+~~~diff
+index 47c8f305..bea5bcce 100644
 --- a/templates/skeleton/app/components/ProductForm.tsx
 +++ b/templates/skeleton/app/components/ProductForm.tsx
 @@ -6,14 +6,25 @@ import type {
@@ -382,21 +382,21 @@ index 47c8f3056..bea5bccee 100644
 +    </div>
 +  );
 +}
-```
+~~~
 
 </details>
 
-#### Step 2.4: Update ProductPrice to display subscription pricing
+#### Step 3.4: Update ProductPrice to display subscription pricing
 
 1. Add a `SellingPlanPrice` function to calculate adjusted prices based on subscription plan type (fixed amount, fixed price, or percentage).
 2. Add logic to handle different price adjustment types and render the appropriate subscription price when a selling plan is selected.
 
-##### File: [app/components/ProductPrice.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/templates/skeleton/app/components/ProductPrice.tsx)
+##### File: [app/components/ProductPrice.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/components/ProductPrice.tsx)
 
 <details>
 
-```diff
-index 32460ae28..59eed1d83 100644
+~~~diff
+index 32460ae2..59eed1d8 100644
 --- a/templates/skeleton/app/components/ProductPrice.tsx
 +++ b/templates/skeleton/app/components/ProductPrice.tsx
 @@ -1,13 +1,31 @@
@@ -506,22 +506,22 @@ index 32460ae28..59eed1d83 100644
 +    </div>
 +  );
 +}
-```
+~~~
 
 </details>
 
-#### Step 2.5: Update the product page to display subscription options
+#### Step 3.5: Update the product page to display subscription options
 
 1. Add the `SellingPlanSelector` component to display subscription options on product pages.
 2. Add logic to handle pricing adjustments, maintain selection state using URL parameters, and update the add-to-cart functionality.
 3. Fetch subscription data through the updated cart GraphQL fragments.
 
-##### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/templates/skeleton/app/routes/products.$handle.tsx)
+##### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/routes/products.$handle.tsx)
 
 <details>
 
-```diff
-index 422a2eb95..79bacfbe2 100644
+~~~diff
+index 422a2eb9..79bacfbe 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
 @@ -3,6 +3,7 @@ import {
@@ -717,22 +717,22 @@ index 422a2eb95..79bacfbe2 100644
 +  ${SELLING_PLAN_GROUP_FRAGMENT}
    ${PRODUCT_VARIANT_FRAGMENT}
  ` as const;
-```
+~~~
 
 </details>
 
-### Step 3: Show subscription details in the cart
+### Step 4: Show subscription details in the cart
 
 In this step we'll implement support for showing subscription info in the cart's line items.
 
-#### Step 3.1: Add selling plan data to cart queries
+#### Step 4.1: Add selling plan data to cart queries
 
 Add `sellingPlanAllocation` field with the plan name to both the standard cart line and componentizable cart line GraphQL fragments. This ensures subscription details are fetched when querying cart data.
 
-##### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/templates/skeleton/app/lib/fragments.ts)
+##### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/lib/fragments.ts)
 
-```diff
-index cf35c25ea..6d9724498 100644
+~~~diff
+index cf35c25e..6d972449 100644
 --- a/templates/skeleton/app/lib/fragments.ts
 +++ b/templates/skeleton/app/lib/fragments.ts
 @@ -54,6 +54,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
@@ -759,21 +759,21 @@ index cf35c25ea..6d9724498 100644
    }
    fragment CartApiQuery on Cart {
      updatedAt
-```
+~~~
 
-### Step 4: Add subscription management to the account page
+### Step 5: Add subscription management to the account page
 
 In this step we'll implement support for subscription management through an account subpage that lists existing subscription contracts.
 
-#### Step 4.1: Add queries to retrieve customer subscriptions
+#### Step 5.1: Add queries to retrieve customer subscriptions
 
 Create GraphQL queries that retrieve the subscription info from the customer account client.
 
-##### File: [CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
+##### File: [CustomerSubscriptionsQuery.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsQuery.ts)
 
 <details>
 
-```ts
+~~~ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
 
 const SUBSCRIPTION_CONTRACT_FRAGMENT = `#graphql
@@ -784,12 +784,33 @@ const SUBSCRIPTION_CONTRACT_FRAGMENT = `#graphql
     billingPolicy {
       ...SubscriptionBillingPolicy
     }
+    discounts(first: 20) {
+      nodes {
+        ...SubscriptionDiscountFragment
+      }
+    }
   }
   fragment SubscriptionBillingPolicy on SubscriptionBillingPolicy {
     interval
     intervalCount {
       count
       precision
+    }
+  }
+  fragment SubscriptionDiscountFragment on SubscriptionDiscount {
+    id
+    title
+    recurringCycleLimit
+    value {
+      __typename
+      ... on SubscriptionDiscountFixedAmountValue {
+        amount {
+          amount
+        }
+      }
+      ... on SubscriptionDiscountPercentageValue {
+        percentage
+      }
     }
   }
 ` as const;
@@ -813,19 +834,19 @@ export const SUBSCRIPTIONS_CONTRACTS_QUERY = `#graphql
   ${SUBSCRIPTION_CONTRACT_FRAGMENT}
 ` as const;
 
-```
+~~~
 
 </details>
 
-#### Step 4.2: Add mutations to cancel customer subscriptions
+#### Step 5.2: Add mutations to cancel customer subscriptions
 
 Create a GraqhQL mutation to cancel an existing subscription.
 
-##### File: [CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
+##### File: [CustomerSubscriptionsMutations.ts](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/graphql/customer-account/CustomerSubscriptionsMutations.ts)
 
 <details>
 
-```ts
+~~~ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/queries/customer
 
 export const SUBSCRIPTION_CANCEL_MUTATION = `#graphql
@@ -842,20 +863,24 @@ export const SUBSCRIPTION_CANCEL_MUTATION = `#graphql
   }
 ` as const;
 
-```
+~~~
 
 </details>
 
-#### Step 4.3: Add an account subscriptions page
+#### Step 5.3: Add an account subscriptions page
 
 Create a new account subpage that lets customers manage their existing  subscriptions based on the new GraphQL queries and mutations.
 
-##### File: [account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
+##### File: [account.subscriptions.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/routes/account.subscriptions.tsx)
 
 <details>
 
-```tsx
-import type {SubscriptionBillingPolicyFragment, SubscriptionsContractsQueryQuery} from 'customer-accountapi.generated';
+~~~tsx
+import type {
+  SubscriptionBillingPolicyFragment,
+  SubscriptionDiscountFragmentFragment,
+  SubscriptionsContractsQueryQuery,
+} from 'customer-accountapi.generated';
 import {
   data,
   useActionData,
@@ -964,6 +989,19 @@ export default function AccountProfile() {
                       billingPolicy={subscription.billingPolicy}
                     />
                   </div>
+                  {subscription.discounts?.nodes &&
+                    subscription.discounts.nodes.length > 0 && (
+                      <div className="subscription-discounts">
+                        {subscription.discounts.nodes.map((discount) => (
+                          <span
+                            key={discount.id}
+                            className="subscription-discount"
+                          >
+                            {formatDiscountValue(discount)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                 </div>
                 <div className="subscription-row-actions">
                   <div
@@ -1024,18 +1062,34 @@ function SubscriptionInterval({
   );
 }
 
-```
+function formatDiscountValue(
+  discount: SubscriptionDiscountFragmentFragment,
+): string {
+  const value = discount.value;
+
+  if (value?.__typename === 'SubscriptionDiscountPercentageValue') {
+    return `${value.percentage}% off`;
+  } else if (value?.__typename === 'SubscriptionDiscountFixedAmountValue') {
+    return `$${value.amount.amount} off`;
+  } else if (discount.title) {
+    return discount.title;
+  }
+
+  return 'Discount applied';
+}
+
+~~~
 
 </details>
 
-#### Step 4.4: Add a link to the Subscriptions page in the account menu
+#### Step 5.4: Add a link to the Subscriptions page in the account menu
 
 Add a `Subscriptions` link to the account menu so customers can easily access their subscription management page.
 
-##### File: [app/routes/account.tsx](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/templates/skeleton/app/routes/account.tsx)
+##### File: [app/routes/account.tsx](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/templates/skeleton/app/routes/account.tsx)
 
-```diff
-index 46272bbd3..817cbd269 100644
+~~~diff
+index 46272bbd..817cbd26 100644
 --- a/templates/skeleton/app/routes/account.tsx
 +++ b/templates/skeleton/app/routes/account.tsx
 @@ -86,6 +86,9 @@ function AccountMenu() {
@@ -1048,17 +1102,17 @@ index 46272bbd3..817cbd269 100644
        <Logout />
      </nav>
    );
-```
+~~~
 
-#### Step 4.5: Add styles for the Subscriptions page
+#### Step 5.5: Add styles for the Subscriptions page
 
 Add styles for the Subscriptions page.
 
-##### File: [account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/0b4f01c9aa0e09332140a6a4e3114949873fb0f9/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
+##### File: [account-subscriptions.css](https://github.com/Shopify/hydrogen/blob/0511444a026f5b80c3927fbc2e31b1ab827cfeae/cookbook/recipes/subscriptions/ingredients/templates/skeleton/app/styles/account-subscriptions.css)
 
 <details>
 
-```css
+~~~css
 .account-subscriptions {
   display: flex;
   flex-direction: column;
@@ -1093,7 +1147,21 @@ Add styles for the Subscriptions page.
   color: gray;
 }
 
-```
+.subscription-discounts {
+  margin-top: 0.5rem;
+}
+
+.subscription-discount {
+  display: inline-block;
+  background-color: #f0f0f0;
+  color: #333;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  margin-right: 0.5rem;
+}
+
+~~~
 
 </details>
 

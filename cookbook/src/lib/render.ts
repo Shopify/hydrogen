@@ -3,15 +3,16 @@ import path from 'path';
 import {
   COOKBOOK_PATH,
   RENDER_FILENAME_GITHUB,
-  RENDER_FILENAME_SHOPIFY,
   TEMPLATE_DIRECTORY,
 } from './constants';
+import {isText} from 'istextorbinary';
 import {
   maybeMDBlock,
   MDBlock,
   mdCode,
   mdFrontMatter,
   mdHeading,
+  mdImage,
   mdLinkString,
   mdList,
   mdNote,
@@ -68,10 +69,8 @@ export function renderRecipe(params: {
   serializeMDBlocksToFile(
     makeReadmeBlocks(recipeName, recipe, params.format),
     path.join(
-      recipeDir,
-      params.format === 'github'
-        ? RENDER_FILENAME_GITHUB
-        : RENDER_FILENAME_SHOPIFY,
+      params.format === 'github' ? recipeDir : 'shopify.dev',
+      params.format === 'github' ? RENDER_FILENAME_GITHUB : `${recipeName}.mdx`,
     ),
     params.format,
   );
@@ -118,6 +117,7 @@ export function makeReadmeBlocks(
               const linkPrefix = hydrogenRepoFolderURL({
                 path: '',
                 hash: recipe.commit,
+                raw: false,
               });
               return mdLinkString(
                 `${linkPrefix}/templates/skeleton/${file}`,
@@ -168,6 +168,7 @@ function makeIngredients(recipe: Recipe, recipeName: string): MDBlock[] {
           hydrogenRepoRecipeBaseURL({
             recipeName,
             hash: recipe.commit,
+            raw: false,
           }) + `/ingredients/${ingredient.path}`;
         return [
           mdLinkString(link, ingredient.path.replace(TEMPLATE_DIRECTORY, '')),
@@ -233,10 +234,12 @@ export function renderStep(
       const linkPrefixRepo = hydrogenRepoFolderURL({
         path: '',
         hash: recipe.commit,
+        raw: false,
       });
       const linkPrefixRecipe = hydrogenRepoRecipeBaseURL({
         recipeName,
         hash: recipe.commit,
+        raw: false,
       });
       const link = `${linkPrefixRepo}/templates/skeleton/${diff.file}`;
 
@@ -264,12 +267,37 @@ export function renderStep(
     });
   }
 
+  function getContent(ingredient: string): MDBlock {
+    const relativePath = path.join('./', 'ingredients', ingredient);
+    const remotePath =
+      hydrogenRepoRecipeBaseURL({
+        recipeName,
+        hash: recipe.commit,
+        raw: true,
+      }) + `/ingredients/${ingredient}`;
+
+    const fullPath = path.join(
+      COOKBOOK_PATH,
+      'recipes',
+      recipeName,
+      relativePath,
+    );
+
+    if (isText(ingredient)) {
+      const content = fs.readFileSync(fullPath, 'utf8');
+      const collapsed = options.collapseDiffs === true;
+
+      return mdCode(path.extname(ingredient).slice(1), content, collapsed);
+    } else {
+      const filePath = format === 'github' ? relativePath : remotePath;
+      return mdImage(ingredient, filePath);
+    }
+  }
+
   function getIngredientFile(): MDBlock[] {
     if (step.type !== 'NEW_FILE' || step.ingredients == null) {
       return [];
     }
-
-    const collapsed = options.collapseDiffs === true;
 
     let blocks: MDBlock[] = [];
     const baseHeadingLevel = 4;
@@ -280,17 +308,8 @@ export function renderStep(
         hydrogenRepoRecipeBaseURL({
           recipeName,
           hash: recipe.commit,
+          raw: false,
         }) + `/ingredients/${ingredient}`;
-      const content = fs.readFileSync(
-        path.join(
-          COOKBOOK_PATH,
-          'recipes',
-          recipeName,
-          'ingredients',
-          ingredient,
-        ),
-        'utf8',
-      );
 
       blocks.push(
         ...(renamedFrom != null
@@ -306,7 +325,7 @@ export function renderStep(
             ' ',
           ),
         ),
-        mdCode(path.extname(ingredient).slice(1), content, collapsed),
+        getContent(ingredient),
       );
     }
     return blocks;
@@ -332,6 +351,7 @@ export function renderStep(
                 const linkPrefix = hydrogenRepoRecipeBaseURL({
                   recipeName,
                   hash: recipe.commit,
+                  raw: false,
                 });
                 return mdLinkString(
                   `${linkPrefix}/ingredients/${ingredient.path}`,
@@ -364,7 +384,7 @@ function makeTitle(
         [doNotEditComment(recipeName)],
       );
     case 'github':
-      return mdHeading(1, recipe.title);
+      return mdHeading(1, `${recipe.title} in Hydrogen`);
     default:
       assertNever(format);
   }
@@ -374,19 +394,31 @@ const HYDROGEN_REPO_BASE_URL = 'https://github.com/Shopify/hydrogen';
 const HYDROGEN_REPO_RAW_BASE_URL =
   'https://raw.githubusercontent.com/Shopify/hydrogen';
 
-function hydrogenRepoFolderURL(params: {path: string; hash: string}): string {
-  const {path, hash} = params;
+function hydrogenRepoFolderURL(params: {
+  path: string;
+  hash: string;
+  raw: boolean;
+}): string {
+  const {path, hash, raw} = params;
   const pathWithoutLeadingSlash = path.startsWith('/') ? path.slice(1) : path;
-  const url = `${HYDROGEN_REPO_BASE_URL}/blob/${hash}/${pathWithoutLeadingSlash}`;
+  const baseURL = raw
+    ? HYDROGEN_REPO_RAW_BASE_URL
+    : HYDROGEN_REPO_BASE_URL + '/blob';
+  const url = `${baseURL}/${hash}/${pathWithoutLeadingSlash}`;
   return url.replace(/\/+$/, '');
 }
 
 function hydrogenRepoRecipeBaseURL(params: {
   recipeName: string;
   hash: string;
+  raw: boolean;
 }): string {
-  const {recipeName, hash} = params;
-  return hydrogenRepoFolderURL({path: `/cookbook/recipes/${recipeName}`, hash});
+  const {recipeName, hash, raw} = params;
+  return hydrogenRepoFolderURL({
+    path: `/cookbook/recipes/${recipeName}`,
+    hash,
+    raw,
+  });
 }
 
 function doNotEditComment(recipeName: string): string {

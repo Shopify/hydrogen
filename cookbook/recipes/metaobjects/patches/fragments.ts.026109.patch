@@ -1,0 +1,29 @@
+index cf35c25e..99874574 100644
+--- a/templates/skeleton/app/lib/fragments.ts
++++ b/templates/skeleton/app/lib/fragments.ts
+@@ -232,3 +232,25 @@ export const FOOTER_QUERY = `#graphql
+   }
+   ${MENU_FRAGMENT}
+ ` as const;
++
++// @description Fragment for recommended products needed by ProductItem component
++export const RECOMMENDED_PRODUCT_FRAGMENT = `#graphql
++  fragment RecommendedProduct on Product {
++    id
++    title
++    handle
++    priceRange {
++      minVariantPrice {
++        amount
++        currencyCode
++      }
++    }
++    featuredImage {
++      id
++      url
++      altText
++      width
++      height
++    }
++  }
++` as const;
