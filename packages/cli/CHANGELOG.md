@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 11.1.6
+
+### Patch Changes
+
+- Test changeset to validate independent patches and synced majors logic for SemVer packages ([#3234](https://github.com/Shopify/hydrogen/pull/3234)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 11.1.5
 
 ### Patch Changes
