@@ -1,0 +1,104 @@
+index 422a2eb9..efe0cda6 100644
+--- a/templates/skeleton/app/routes/products.$handle.tsx
++++ b/templates/skeleton/app/routes/products.$handle.tsx
+@@ -15,6 +15,8 @@ import {ProductPrice} from '~/components/ProductPrice';
+ import {ProductImage} from '~/components/ProductImage';
+ import {ProductForm} from '~/components/ProductForm';
+ import {redirectIfHandleIsLocalized} from '~/lib/redirect';
++import type {ProductVariantComponent} from '@shopify/hydrogen/storefront-api-types';
++import {BundledVariants} from '~/components/BundledVariants';
+ 
+ export const meta: Route.MetaFunction = ({data}) => {
+   return [
+@@ -104,9 +106,12 @@ export default function Product() {
+ 
+   const {title, descriptionHtml} = product;
+ 
++  const isBundle = Boolean(product.isBundle?.requiresComponents);
++  const bundledVariants = isBundle ? product.isBundle?.components.nodes : null;
++
+   return (
+     <div className="product">
+-      <ProductImage image={selectedVariant?.image} />
++      <ProductImage image={selectedVariant?.image} isBundle={isBundle} />
+       <div className="product-main">
+         <h1>{title}</h1>
+         <ProductPrice
+@@ -117,6 +122,7 @@ export default function Product() {
+         <ProductForm
+           productOptions={productOptions}
+           selectedVariant={selectedVariant}
++          isBundle={isBundle}
+         />
+         <br />
+         <br />
+@@ -126,6 +132,14 @@ export default function Product() {
+         <br />
+         <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
+         <br />
++        {isBundle && (
++          <div>
++            <h4>Bundled Products</h4>
++            <BundledVariants
++              variants={bundledVariants as ProductVariantComponent[]}
++            />
++          </div>
++        )}
+       </div>
+       <Analytics.ProductView
+         data={{
+@@ -180,6 +194,28 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+       amount
+       currencyCode
+     }
++    requiresComponents
++    components(first: 10) {
++      nodes {
++        productVariant {
++          id
++          title
++          product {
++            handle
++          }
++        }
++        quantity
++      }
++    }
++    groupedBy(first: 10) {
++      nodes {
++        id
++        title
++        product {
++          handle
++        }
++      }
++    }
+   }
+ ` as const;
+ 
+@@ -216,6 +252,25 @@ const PRODUCT_FRAGMENT = `#graphql
+     adjacentVariants (selectedOptions: $selectedOptions) {
+       ...ProductVariant
+     }
++    # Check if the product is a bundle
++    isBundle: selectedOrFirstAvailableVariant(ignoreUnknownOptions: true, selectedOptions: { name: "", value: ""}) {
++      ...on ProductVariant {
++        requiresComponents
++        components(first: 100) {
++           nodes {
++              productVariant {
++                ...ProductVariant
++              }
++              quantity
++           }
++        }
++        groupedBy(first: 100) {
++          nodes {
++              id
++            }
++          }
++        }
++    }
+     seo {
+       description
+       title

@@ -1,0 +1,12 @@
+index df87425c..12434050 100644
+--- a/templates/skeleton/app/root.tsx
++++ b/templates/skeleton/app/root.tsx
+@@ -90,6 +90,8 @@ export async function loader(args: Route.LoaderArgs) {
+       country: args.context.storefront.i18n.country,
+       language: args.context.storefront.i18n.language,
+     },
++    // @description Add public store subdomain for metaobjects
++    publictoreSubdomain: args.context.env.PUBLIC_STORE_DOMAIN,
+   };
+ }
+ 

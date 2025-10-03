@@ -1,0 +1,26 @@
+index 9b7b86cb..c1aa68ad 100644
+--- a/templates/skeleton/app/entry.client.tsx
++++ b/templates/skeleton/app/entry.client.tsx
+@@ -1,21 +1,13 @@
+ import {HydratedRouter} from 'react-router/dom';
+ import {startTransition, StrictMode} from 'react';
+ import {hydrateRoot} from 'react-dom/client';
+-import {NonceProvider} from '@shopify/hydrogen';
+ 
+ if (!window.location.origin.includes('webcache.googleusercontent.com')) {
+   startTransition(() => {
+-    // Extract nonce from existing script tags
+-    const existingNonce = document
+-      .querySelector<HTMLScriptElement>('script[nonce]')
+-      ?.nonce;
+-
+     hydrateRoot(
+       document,
+       <StrictMode>
+-        <NonceProvider value={existingNonce}>
+-          <HydratedRouter />
+-        </NonceProvider>
++        <HydratedRouter />
+       </StrictMode>,
+     );
+   });

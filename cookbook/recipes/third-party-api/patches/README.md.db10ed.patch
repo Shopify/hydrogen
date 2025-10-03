@@ -1,0 +1,59 @@
+index c584e537..4c8dcead 100644
+--- a/templates/skeleton/README.md
++++ b/templates/skeleton/README.md
+@@ -1,6 +1,6 @@
+-# Hydrogen template: Skeleton
++# Hydrogen template: Skeleton with Third-party API Integration
+ 
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify's full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, plus an example of integrating third-party GraphQL APIs with Oxygen caching.
+ 
+ [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
+ [Get familiar with Remix](https://remix.run/docs/en/v1)
+@@ -40,6 +40,46 @@ npm run build
+ npm run dev
+ ```
+ 
++## Third-party API Integration
++
++This example demonstrates how to query third-party GraphQL APIs with Oxygen's sub-request caching. The example uses the public [Rick & Morty API](https://rickandmortyapi.com/documentation/#graphql) to show how to:
++
++1. Create a cached GraphQL client for third-party APIs
++2. Integrate the client into Hydrogen's context  
++3. Query and display data from external APIs alongside Shopify data
++
++### Key files for third-party API integration
++
++| File | Description |
++| --- | --- |
++| [`app/lib/createRickAndMortyClient.server.ts`](app/lib/createRickAndMortyClient.server.ts) | GraphQL client factory with Oxygen caching support |
++| [`app/lib/context.ts`](app/lib/context.ts) | Modified to include the third-party client in Hydrogen context |
++| [`app/routes/_index.tsx`](app/routes/_index.tsx) | Homepage demonstrating parallel queries to both Shopify and third-party APIs |
++
++### How it works
++
++The Rick & Morty client is created in the context and made available to all routes:
++
++```ts
++// In app/lib/context.ts
++const rickAndMorty = createRickAndMortyClient({
++  cache,
++  waitUntil,
++  request,
++});
++```
++
++Then you can query the third-party API in any route:
++
++```ts
++// In any route loader
++const {characters} = await context.rickAndMorty.query(CHARACTERS_QUERY, {
++  cache: CacheShort(),
++});
++```
++
++This pattern can be adapted for any third-party API integration including CMS systems, review platforms, analytics services, or custom backend APIs.
++
+ ## Setup for using Customer Account API (`/account` section)
+ 
+ Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>

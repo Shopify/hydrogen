@@ -1,0 +1,132 @@
+index c584e537..e8e03b96 100644
+--- a/templates/skeleton/README.md
++++ b/templates/skeleton/README.md
+@@ -1,13 +1,15 @@
+-# Hydrogen template: Skeleton
++# Hydrogen template: Skeleton with Multipass
+ 
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify's full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, enhanced with **Multipass authentication** for seamless checkout experiences.
+ 
+ [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
+ [Get familiar with Remix](https://remix.run/docs/en/v1)
++[Learn about Multipass](https://shopify.dev/docs/api/multipass)
+ 
+ ## What's included
+ 
+-- Remix
++### Core Hydrogen Stack
++- React Router
+ - Hydrogen
+ - Oxygen
+ - Vite
+@@ -18,11 +20,18 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
+ - TypeScript and JavaScript flavors
+ - Minimal setup of components and routes
+ 
++### Multipass Authentication (Shopify Plus)
++- Customer session persistence through checkout
++- Storefront API-based authentication (not Customer Account API)
++- Custom login, registration, and account management
++- Automatic fallback for non-Plus stores
++
+ ## Getting started
+ 
+ **Requirements:**
+ 
+ - Node.js version 18.0.0 or higher
++- Shopify store (Shopify Plus for Multipass features)
+ 
+ ```bash
+ npm create @shopify/hydrogen@latest
+@@ -40,6 +49,88 @@ npm run build
+ npm run dev
+ ```
+ 
+-## Setup for using Customer Account API (`/account` section)
++## Multipass Setup (Shopify Plus only)
+ 
+-Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
++### Requirements
++
++- Multipass is available on [Shopify Plus](https://www.shopify.com/plus) plans
++- A Shopify Multipass secret token from [**Settings > Customer accounts**](https://www.shopify.com/admin/settings/customer_accounts)
++- Ensure you have `Classic customer account` options selected to use Multipass
++
++### Configuration
++
++1. **Set environment variables** in your `.env` file:
++
++```env
++# Required for Multipass (Shopify Plus only)
++PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET=your_multipass_secret_here
++
++# Already configured by Hydrogen
++SESSION_SECRET=your_session_secret
++```
++
++2. **Dependencies** (already included):
++- `crypto-js@^4.2.0` - JavaScript library of crypto standards
++- `snakecase-keys@^9.0.2` - Convert object keys to snake case
++- `@types/crypto-js@^4.2.1` - TypeScript types for crypto-js
++
++### Key Multipass Files
++
++| File | Description |
++|------|------------|
++| [`app/components/MultipassCheckoutButton.tsx`](app/components/MultipassCheckoutButton.tsx) | Checkout button that passes customer session to checkout |
++| [`app/lib/multipass/multipass.ts`](app/lib/multipass/multipass.ts) | Client-side utility for multipass URL and token handling |
++| [`app/lib/multipass/multipassify.server.ts`](app/lib/multipass/multipassify.server.ts) | Server-side multipass token generation and parsing |
++| [`app/lib/multipass/types.ts`](app/lib/multipass/types.ts) | TypeScript types for multipass |
++| [`app/routes/account_.login.multipass.tsx`](app/routes/account_.login.multipass.tsx) | API route for multipass token generation |
++
++## Authentication System
++
++This template uses the **Storefront API** for customer authentication instead of the Customer Account API:
++
++### Account Routes
++- `/account/login` - Customer login
++- `/account/register` - New customer registration  
++- `/account/logout` - Logout
++- `/account/recover` - Password recovery
++- `/account/reset/:id/:token` - Password reset
++- `/account/activate/:id/:token` - Account activation
++- `/account` - Account dashboard
++- `/account/profile` - Edit profile
++- `/account/addresses` - Manage addresses
++- `/account/orders` - Order history
++
++### How Multipass Works
++
++1. Customer logs in using email/password
++2. Session stores `customerAccessToken`
++3. When checking out, multipass generates encrypted token
++4. Customer is automatically logged in at Shopify checkout
++
++### Fallback Behavior
++
++For non-Plus stores or when multipass isn't configured:
++- Checkout button works normally
++- Console shows: "Bypassing multipass checkout"
++- Customers use standard Shopify checkout flow
++
++## Troubleshooting
++
++### Multipass Issues
++
++**500 Error on checkout:**
++- Ensure `PRIVATE_SHOPIFY_STORE_MULTIPASS_SECRET` is set correctly
++- Verify you have a Shopify Plus plan
++- Check that Classic customer accounts are enabled
++
++**Customer not logged in at checkout:**
++- Verify customer is logged in first at `/account/login`
++- Check that multipass token generation is working
++- Ensure multipass secret hasn't expired
++
++## Learn More
++
++- [Hydrogen Documentation](https://shopify.dev/custom-storefronts/hydrogen)
++- [Multipass Documentation](https://shopify.dev/docs/api/multipass)
++- [Storefront API Authentication](https://shopify.dev/docs/api/storefront/authentication)
++- [Remix Documentation](https://remix.run/docs)

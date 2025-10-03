@@ -1,0 +1,122 @@
+index c416c2b3..e6a35150 100644
+--- a/templates/skeleton/app/routes/collections.$handle.tsx
++++ b/templates/skeleton/app/routes/collections.$handle.tsx
+@@ -1,9 +1,14 @@
+-import {redirect, useLoaderData} from 'react-router';
++import {redirect, useLoaderData, useNavigate} from 'react-router';
+ import type {Route} from './+types/collections.$handle';
+-import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
+-import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
++import {
++  getPaginationVariables,
++  Analytics,
++  Pagination,
++} from '@shopify/hydrogen';
+ import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+ import {ProductItem} from '~/components/ProductItem';
++import {useEffect} from 'react';
++import {useInView} from 'react-intersection-observer';
+ import type {ProductItemFragment} from 'storefrontapi.generated';
+ 
+ export const meta: Route.MetaFunction = ({data}) => {
+@@ -67,23 +72,41 @@ function loadDeferredData({context}: Route.LoaderArgs) {
+ 
+ export default function Collection() {
+   const {collection} = useLoaderData<typeof loader>();
++  const {ref, inView} = useInView();
+ 
+   return (
+     <div className="collection">
+       <h1>{collection.title}</h1>
+       <p className="collection-description">{collection.description}</p>
+-      <PaginatedResourceSection<ProductItemFragment>
+-        connection={collection.products}
+-        resourcesClassName="products-grid"
+-      >
+-        {({node: product, index}) => (
+-          <ProductItem
+-            key={product.id}
+-            product={product}
+-            loading={index < 8 ? 'eager' : undefined}
+-          />
++      <Pagination<ProductItemFragment> connection={collection.products}>
++        {({
++          nodes,
++          isLoading,
++          PreviousLink,
++          NextLink,
++          state,
++          nextPageUrl,
++          hasNextPage,
++        }) => (
++          <>
++            <PreviousLink>
++              {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
++            </PreviousLink>
++            <ProductsGrid
++              products={nodes}
++              inView={inView}
++              hasNextPage={hasNextPage}
++              nextPageUrl={nextPageUrl}
++              state={state}
++            />
++            <br />
++            {/* @description Add ref to NextLink for intersection observer */}
++            <NextLink ref={ref}>
++              {isLoading ? 'Loading...' : <span>Load more ↓</span>}
++            </NextLink>
++          </>
+         )}
+-      </PaginatedResourceSection>
++      </Pagination>
+       <Analytics.CollectionView
+         data={{
+           collection: {
+@@ -96,6 +119,47 @@ export default function Collection() {
+   );
+ }
+ 
++// @description ProductsGrid component with infinite scroll functionality
++function ProductsGrid({
++  products,
++  inView,
++  hasNextPage,
++  nextPageUrl,
++  state,
++}: {
++  products: ProductItemFragment[];
++  inView: boolean;
++  hasNextPage: boolean;
++  nextPageUrl: string;
++  state: any;
++}) {
++  const navigate = useNavigate();
++
++  useEffect(() => {
++    if (inView && hasNextPage) {
++      void navigate(nextPageUrl, {
++        replace: true,
++        preventScrollReset: true,
++        state,
++      });
++    }
++  }, [inView, navigate, state, nextPageUrl, hasNextPage]);
++
++  return (
++    <div className="products-grid">
++      {products.map((product, index) => {
++        return (
++          <ProductItem
++            key={product.id}
++            product={product}
++            loading={index < 8 ? 'eager' : undefined}
++          />
++        );
++      })}
++    </div>
++  );
++}
++
+ const PRODUCT_ITEM_FRAGMENT = `#graphql
+   fragment MoneyProductItem on MoneyV2 {
+     amount

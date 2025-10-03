@@ -179,7 +179,7 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
     case 'IMAGE':
       return `![${block.alt}](${block.src})`;
     case 'CODE':
-      const code = ['```' + block.language, block.content, '```'];
+      const code = ['~~~' + block.language, block.content, '~~~'];
       if (block.collapsed) {
         switch (format) {
           case 'github':
@@ -187,9 +187,9 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
           case 'shopify.dev':
             return [
               '<details>\n',
-              '{% codeblock file %}',
+              '<CodeBlock type="file">',
               ...code,
-              '{% endcodeblock %}',
+              '</CodeBlock>',
               '\n</details>',
             ].join('\n');
           default:
@@ -199,7 +199,7 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
       return code.join('\n');
     case 'SHOPIFY_CODEFILES':
       return [
-        '{% codeblock file %}',
+        '<CodeBlock type="file">',
         ...block.files.map((file) =>
           [
             '```' +
@@ -209,7 +209,7 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
             '```\n',
           ].join('\n'),
         ),
-        '{% endcodeblock %}',
+        '</CodeBlock>',
       ].join('\n');
     case 'LIST':
       return block.items.map((item) => `- ${item}`).join('\n');
@@ -247,13 +247,14 @@ export function renderMDBlock(block: MDBlock, format: RenderFormat): string {
         '---',
       ].join('\n');
     case 'NOTE':
-      return [
-        format === 'shopify.dev' ? '> Note' : '> [!NOTE]',
-        block.text
-          .split('\n')
-          .map((line) => `> ${line}`)
-          .join('\n'),
-      ].join('\n');
+      if (format === 'shopify.dev') {
+        return `<Notice framed type="note" label="Note">\n${block.text}\n</Notice>`;
+      } else {
+        return [
+          '> [!NOTE]',
+          block.text.split('\n').map((line) => `> ${line}`),
+        ].join('\n');
+      }
     case 'RAW_HTML':
       return block.html;
     default:
@@ -287,8 +288,5 @@ export function serializeMDBlocksToFile(
   let data = blocks
     .map((block) => renderMDBlock(block, format).trim())
     .join('\n\n');
-  if (format === 'shopify.dev') {
-    data = data.replace(/\{\{/g, "{{ '{{' }}");
-  }
   fs.writeFileSync(filePath, data);
 }

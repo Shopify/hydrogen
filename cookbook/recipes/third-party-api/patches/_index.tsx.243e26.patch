@@ -1,0 +1,109 @@
+index 28102dbe..618b99a0 100644
+--- a/templates/skeleton/app/routes/_index.tsx
++++ b/templates/skeleton/app/routes/_index.tsx
+@@ -1,11 +1,7 @@
+-import {
+-  Await,
+-  useLoaderData,
+-  Link,
+-} from 'react-router';
++import {Await, useLoaderData, Link} from 'react-router';
+ import type {Route} from './+types/_index';
+ import {Suspense} from 'react';
+-import {Image} from '@shopify/hydrogen';
++import {Image, CacheShort} from '@shopify/hydrogen';
+ import type {
+   FeaturedCollectionFragment,
+   RecommendedProductsQuery,
+@@ -31,13 +27,19 @@ export async function loader(args: Route.LoaderArgs) {
+  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+  */
+ async function loadCriticalData({context}: Route.LoaderArgs) {
+-  const [{collections}] = await Promise.all([
++  // @description Fetch Rick & Morty characters using the third-party GraphQL API with caching
++  const [{collections}, {characters}] = await Promise.all([
+     context.storefront.query(FEATURED_COLLECTION_QUERY),
+-    // Add other queries here, so that they are loaded in parallel
++    // @description Query third-party Rick & Morty API with Oxygen caching
++    context.rickAndMorty.query(CHARACTERS_QUERY, {
++      cache: CacheShort(),
++    }),
+   ]);
+ 
+   return {
+     featuredCollection: collections.nodes[0],
++    // @description Return Rick & Morty characters data
++    characters,
+   };
+ }
+ 
+@@ -64,12 +66,50 @@ export default function Homepage() {
+   const data = useLoaderData<typeof loader>();
+   return (
+     <div className="home">
++      {/* @description Display Rick & Morty characters from third-party API */}
++      <ThirdPartyApiExample characters={data.characters} />
+       <FeaturedCollection collection={data.featuredCollection} />
+       <RecommendedProducts products={data.recommendedProducts} />
+     </div>
+   );
+ }
+ 
++// @description Component to display Rick & Morty characters fetched from third-party API
++function ThirdPartyApiExample({characters}: {characters: any}) {
++  return (
++    <section className="third-party-api-example">
++      <h2>Rick & Morty Characters (Third-Party API Example)</h2>
++      <p>
++        This data is fetched from rickandmortyapi.com GraphQL API with Oxygen
++        caching:
++      </p>
++      <br />
++      <ul
++        style={{
++          listStyle: 'none',
++          display: 'flex',
++          flexDirection: 'column',
++          gap: '1rem',
++          flexWrap: 'wrap',
++        }}
++      >
++        {characters?.results?.map((character: any) => (
++          <li
++            key={character.id}
++            style={{
++              padding: '0.5rem',
++              border: '1px solid #ccc',
++              borderRadius: '4px',
++            }}
++          >
++            {character.name}
++          </li>
++        ))}
++      </ul>
++    </section>
++  );
++}
++
+ function FeaturedCollection({
+   collection,
+ }: {
+@@ -141,6 +181,18 @@ const FEATURED_COLLECTION_QUERY = `#graphql
+   }
+ ` as const;
+ 
++// @description GraphQL query for Rick & Morty characters from third-party API
++const CHARACTERS_QUERY = `#graphql:rickAndMorty
++  query Characters {
++    characters(page: 1) {
++      results {
++        name
++        id
++      }
++    }
++  }
++`;
++
+ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+   fragment RecommendedProduct on Product {
+     id

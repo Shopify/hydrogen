@@ -1,0 +1,32 @@
+index c584e537..11bb1c8c 100644
+--- a/templates/skeleton/README.md
++++ b/templates/skeleton/README.md
+@@ -1,10 +1,26 @@
+-# Hydrogen template: Skeleton
++# Hydrogen template: Skeleton with Legacy Customer Account Flow
+ 
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++Hydrogen is Shopify's stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify's full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen, enhanced with legacy customer account authentication flow.
+ 
+ [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
+ [Get familiar with Remix](https://remix.run/docs/en/v1)
+ 
++## Legacy Customer Account Flow
++
++🚨 **Caution**: This legacy authentication strategy will not maintain authentication between your Hydrogen storefront and checkout; for better support, use either the New Customer Accounts strategy or Multipass.
++
++This template includes the legacy customer account flow made with [Storefront API](https://shopify.dev/docs/api/storefront) which provides:
++- Full customer registration and login flow
++- Password recovery and reset functionality  
++- Account activation via email
++- Customer profile management
++- Order history and address management
++- Session-based authentication using customer access tokens
++
++**Note**: Passwordless login with [Customer Account API](https://shopify.dev/docs/api/customer) (introduced Jan 2024) is Shopify's recommended way to build headless customer experiences. Consider migrating to the new API for better security and features.
++
++🗒️ Read about the Customer Account API: [https://www.shopify.com/partners/blog/introducing-customer-account-api-for-headless-stores](https://www.shopify.com/partners/blog/introducing-customer-account-api-for-headless-stores)
++
+ ## What's included
+ 
+ - Remix

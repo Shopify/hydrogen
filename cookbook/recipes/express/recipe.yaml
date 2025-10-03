@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 gid: 99596983-f4f0-4285-8f88-9112794cb812
-title: Express Server for Hydrogen
+title: Express server
 summary: Deploy Hydrogen on Node.js with Express instead of Shopify Oxygen
 description: |
   This recipe transforms a Hydrogen skeleton template to run on a standard Node.js Express server,
@@ -15,17 +15,17 @@ description: |
   - Implements session management through Express middleware
   - Provides production-ready server configuration
   - Keeps GraphQL codegen functionality intact
-notes:
-  - Requires Node.js 20+ for production deployment (less than 22.0.0)
+
+  Technical details:
   - Uses nodemon for development server with automatic restarts
   - Environment variables are loaded from .env file using dotenv
   - Session management is handled through Express middleware with SESSION_SECRET
   - GraphQL codegen still works with Storefront API types
-  - Compatible with React Router 7.9.x
-  - The .graphqlrc.ts file is preserved with customer account section commented
-    out
+  - Compatible with React Router 7.8.x
+  - The .graphqlrc.ts file is preserved with customer account section commented out
+notes: []
 requirements: |
-  - Node.js 18 or higher
+  - Node.js 20 or higher (less than 22.0.0) for production deployment
   - npm or yarn package manager
   - Shopify Storefront API credentials
 ingredients:
@@ -100,123 +100,129 @@ deletedFiles:
   - templates/skeleton/server.ts
 steps:
   - type: PATCH
-    step: 1
-    name: .graphqlrc.ts
+    step: "1"
+    name: Disable customer account API
     description: Comment out customer account GraphQL configuration
     diffs:
       - file: .graphqlrc.ts
-        patchFile: .graphqlrc.ts.891c10.patch
+        patchFile: .graphqlrc.ts.dbb3fe.patch
   - type: PATCH
-    step: 2
-    name: README.md
+    step: "2"
+    name: Update README for Express deployment
     description: Update README with Express-specific setup and deployment instructions
     diffs:
       - file: README.md
-        patchFile: README.md.49f8fa.patch
+        patchFile: README.md.db10ed.patch
   - type: NEW_FILE
-    step: 3
-    name: app/env.ts
+    step: "3"
+    name: Add environment type definitions
     description: Add environment type definitions for Hydrogen on Express
     ingredients:
       - path: templates/skeleton/app/env.ts
   - type: PATCH
-    step: 4
-    name: app/entry.client.tsx
-    description: Update client entry to use React Router hydration without Oxygen-specific code
+    step: "4"
+    name: Set up client-side hydration
+    description: Update client entry to use React Router hydration without
+      Oxygen-specific code
     diffs:
       - file: app/entry.client.tsx
-        patchFile: entry.client.tsx.11faa5.patch
+        patchFile: entry.client.tsx.0b6923.patch
   - type: NEW_FILE
-    step: 5
-    name: public/favicon.svg
+    step: "5"
+    name: Add the Express template favicon
     description: Add Express template favicon
     ingredients:
       - path: templates/skeleton/public/favicon.svg
   - type: PATCH
-    step: 6
-    name: app/entry.server.tsx
-    description: Replace Oxygen server rendering with Express-compatible Node.js SSR using PassThrough streams
+    step: "6"
+    name: Configure server-side rendering
+    description: Replace Oxygen server rendering with Express-compatible Node.js SSR
+      using PassThrough streams
     diffs:
       - file: app/entry.server.tsx
-        patchFile: entry.server.tsx.6d386f.patch
+        patchFile: entry.server.tsx.b35f11.patch
   - type: NEW_FILE
-    step: 7
-    name: scripts/dev.mjs
+    step: "7"
+    name: Set up the development server
     description: Add development server orchestration script for Vite and nodemon
     ingredients:
       - path: templates/skeleton/scripts/dev.mjs
   - type: PATCH
-    step: 8
-    name: app/root.tsx
+    step: "8"
+    name: Simplify the root layout
     description: Simplify root layout for Express template by removing complex components
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.8c182c.patch
+        patchFile: root.tsx.5e9998.patch
   - type: NEW_FILE
-    step: 9
-    name: server.mjs
-    description: Add Express server with Hydrogen context, session management, and SSR support
+    step: "9"
+    name: Create the Express server
+    description: Add Express server with Hydrogen context, session management, and
+      SSR support
     ingredients:
       - path: templates/skeleton/server.mjs
   - type: PATCH
-    step: 10
-    name: app/routes.ts
+    step: "10"
+    name: Configure routes for Express
     description: Update routes configuration to work with Hydrogen on Express
     diffs:
       - file: app/routes.ts
-        patchFile: routes.ts.e77b9b.patch
+        patchFile: routes.ts.87938f.patch
   - type: PATCH
-    step: 11
-    name: app/routes/_index.tsx
+    step: "11"
+    name: Create a basic homepage
     description: Simplify homepage route to basic Express example content
     diffs:
       - file: app/routes/_index.tsx
-        patchFile: _index.tsx.ee5996.patch
+        patchFile: _index.tsx.243e26.patch
   - type: PATCH
-    step: 12
-    name: app/routes/products.$handle.tsx
+    step: "12"
+    name: Add a minimal product page
     description: Simplify product route to minimal implementation without cart functionality
     diffs:
       - file: app/routes/products.$handle.tsx
-        patchFile: products.$handle.tsx.7addea.patch
+        patchFile: products.$handle.tsx.6f2e82.patch
   - type: PATCH
-    step: 13
-    name: app/styles/app.css
+    step: "13"
+    name: Add basic styles
     description: Replace skeleton styles with minimal Express template styling
     diffs:
       - file: app/styles/app.css
-        patchFile: app.css.48239a.patch
+        patchFile: app.css.881a99.patch
   - type: PATCH
-    step: 14
-    name: eslint.config.js
+    step: "14"
+    name: Update ESLint configuration
     description: Simplify ESLint configuration for Express template
     diffs:
       - file: eslint.config.js
-        patchFile: eslint.config.js.63bcba.patch
+        patchFile: eslint.config.js.e5f62b.patch
   - type: PATCH
-    step: 15
-    name: package.json
-    description: Update dependencies and scripts for Express server deployment (add express, nodemon, compression, remove Oxygen packages)
+    step: "15"
+    name: Install Express dependencies
+    description: Update dependencies and scripts for Express server deployment (add
+      express, nodemon, compression, remove Oxygen packages)
     diffs:
       - file: package.json
-        patchFile: package.json.47be7b.patch
+        patchFile: package.json.f30b0a.patch
   - type: PATCH
-    step: 16
-    name: vite.config.ts
+    step: "16"
+    name: Configure Vite for Node.js
     description: Configure Vite for Express deployment with Node.js module externalization
     diffs:
       - file: vite.config.ts
-        patchFile: vite.config.ts.93b90b.patch
+        patchFile: vite.config.ts.475b4c.patch
 nextSteps: |
-  - Create a .env file with your Shopify Storefront API credentials:
+  1. Create a `.env` file with your Shopify Storefront API credentials:
+    ```
     PUBLIC_STOREFRONT_API_TOKEN="your-token"
-    PUBLIC_STORE_DOMAIN="your-store.myshopify.com" 
+    PUBLIC_STORE_DOMAIN="your-store.myshopify.com"
     PUBLIC_STOREFRONT_ID="your-storefront-id"
     SESSION_SECRET="your-session-secret-at-least-32-chars"
-  - Run 'npm install' to install Express and other Node.js dependencies
-  - Run 'npm run dev' to start the development server with hot reload
-  - For production, run 'npm run build' followed by 'npm start'
-  - Deploy to your preferred Node.js hosting platform (Heroku, AWS, Vercel, Railway, etc.)
+    ```
+  2. Run `npm install` to install Express and other Node.js dependencies
+  3. Run `npm run dev` to start the development server with hot reload
+  4. For production, run `npm run build` followed by `npm start`
+  5. Deploy to your preferred Node.js hosting platform (Heroku, AWS, Vercel, Railway, etc.)
 llms:
   userQueries:
     - How do I deploy Hydrogen to Node.js instead of Oxygen?
@@ -240,4 +246,4 @@ llms:
     - issue: TypeScript errors about missing @react-router/node types
       solution: Run 'npm install' to ensure all dependencies including @types packages
         are installed.
-commit: b09a1214b24251dbd48cd960d9ec8079a7c68d03
+commit: 0511444a026f5b80c3927fbc2e31b1ab827cfeae

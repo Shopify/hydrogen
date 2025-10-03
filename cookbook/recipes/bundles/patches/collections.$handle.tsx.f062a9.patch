@@ -1,0 +1,21 @@
+index c416c2b3..773ba8b6 100644
+--- a/templates/skeleton/app/routes/collections.$handle.tsx
++++ b/templates/skeleton/app/routes/collections.$handle.tsx
+@@ -120,10 +120,16 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
+         ...MoneyProductItem
+       }
+     }
++    # Check if the product is a bundle
++    isBundle: selectedOrFirstAvailableVariant(ignoreUnknownOptions: true, selectedOptions: { name: "", value: ""}) {
++      ...on ProductVariant {
++        requiresComponents
++      }
++    }
+   }
+ ` as const;
+ 
+-// NOTE: https://shopify.dev/docs/api/storefront/2022-04/objects/collection
++// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/collection
+ const COLLECTION_QUERY = `#graphql
+   ${PRODUCT_ITEM_FRAGMENT}
+   query Collection(
