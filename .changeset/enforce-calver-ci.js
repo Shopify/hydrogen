@@ -21,7 +21,7 @@ const {
   getBumpType,
   getPackagePath,
   readPackage,
-  writePackage
+  writePackage,
 } = require('./calver-shared.js');
 
 // Read all package.json files for CalVer packages
@@ -33,20 +33,27 @@ function readPackageVersions() {
   // Get hydrogen's git baseline (used for major bump synchronization)
   let hydrogenBaselineVersion;
   try {
-    const gitVersion = execSync('git show HEAD~1:packages/hydrogen/package.json 2>/dev/null || git show origin/main:packages/hydrogen/package.json', {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'ignore']
-    });
+    const gitVersion = execSync(
+      'git show HEAD~1:packages/hydrogen/package.json 2>/dev/null || git show origin/main:packages/hydrogen/package.json',
+      {
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'ignore'],
+      },
+    );
     const versionMatch = gitVersion.match(/"version":\s*"([^"]+)"/);
     if (versionMatch) {
       hydrogenBaselineVersion = versionMatch[1];
-      console.log(`Using hydrogen baseline from git: ${hydrogenBaselineVersion}`);
+      console.log(
+        `Using hydrogen baseline from git: ${hydrogenBaselineVersion}`,
+      );
     }
   } catch (error) {
     const hydrogenPath = getPackagePath('@shopify/hydrogen');
     const hydrogenPkg = readPackage(hydrogenPath);
     hydrogenBaselineVersion = hydrogenPkg.version;
-    console.log(`Using hydrogen current version as fallback: ${hydrogenBaselineVersion}`);
+    console.log(
+      `Using hydrogen current version as fallback: ${hydrogenBaselineVersion}`,
+    );
   }
 
   // Get each package's individual baseline for independent patch versioning
@@ -58,12 +65,17 @@ function readPackageVersions() {
     let packageOwnBaseline;
     try {
       const gitPath = pkgPath.replace(process.cwd() + '/', '');
-      const gitVersion = execSync(`git show HEAD~1:${gitPath} 2>/dev/null || git show origin/main:${gitPath}`, {
-        encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'ignore']
-      });
+      const gitVersion = execSync(
+        `git show HEAD~1:${gitPath} 2>/dev/null || git show origin/main:${gitPath}`,
+        {
+          encoding: 'utf-8',
+          stdio: ['pipe', 'pipe', 'ignore'],
+        },
+      );
       const versionMatch = gitVersion.match(/"version":\s*"([^"]+)"/);
-      packageOwnBaseline = versionMatch ? versionMatch[1] : hydrogenBaselineVersion;
+      packageOwnBaseline = versionMatch
+        ? versionMatch[1]
+        : hydrogenBaselineVersion;
     } catch (error) {
       packageOwnBaseline = hydrogenBaselineVersion;
     }
@@ -141,10 +153,7 @@ function updateChangelogs(updates) {
     let content = fs.readFileSync(changelogPath, 'utf-8');
 
     // Replace the version that changesets generated with our CalVer version
-    const regex = new RegExp(
-      `^## \\d+\\.\\d+\\.\\d+`,
-      'gm'
-    );
+    const regex = new RegExp(`^## \\d+\\.\\d+\\.\\d+`, 'gm');
     content = content.replace(regex, (match) => {
       // Only replace if it's a recent addition (first occurrence)
       return content.indexOf(match) === content.search(regex)
@@ -159,30 +168,31 @@ function updateChangelogs(updates) {
 // Get all package.json paths from packages/ and templates/ directories
 function getAllPackageJsonPaths() {
   const paths = [];
-  
+
   // Get packages directory entries
   const packagesDir = path.join(process.cwd(), 'packages');
   const packageDirs = fs.readdirSync(packagesDir);
-  
+
   for (const dir of packageDirs) {
     const pkgPath = path.join(packagesDir, dir, 'package.json');
     if (fs.existsSync(pkgPath)) {
       paths.push(pkgPath);
     }
   }
-  
+
   // Get templates directory entries
   const templatesDir = path.join(process.cwd(), 'templates');
-  const templateDirs = fs.readdirSync(templatesDir)
-    .filter(d => d !== 'TEMPLATE_GUIDELINES.md');
-  
+  const templateDirs = fs
+    .readdirSync(templatesDir)
+    .filter((d) => d !== 'TEMPLATE_GUIDELINES.md');
+
   for (const dir of templateDirs) {
     const pkgPath = path.join(templatesDir, dir, 'package.json');
     if (fs.existsSync(pkgPath)) {
       paths.push(pkgPath);
     }
   }
-  
+
   return paths;
 }
 
@@ -190,10 +200,10 @@ function getAllPackageJsonPaths() {
 function updatePackageDependencies(pkg, versionMap) {
   let modified = false;
   const depTypes = ['dependencies', 'devDependencies', 'peerDependencies'];
-  
+
   for (const depType of depTypes) {
     if (!pkg[depType]) continue;
-    
+
     for (const [depName, depVersion] of Object.entries(pkg[depType])) {
       if (versionMap[depName]) {
         // Preserve any prefix like ^, ~, or workspace:
@@ -203,7 +213,7 @@ function updatePackageDependencies(pkg, versionMap) {
       }
     }
   }
-  
+
   return modified;
 }
 
@@ -214,15 +224,15 @@ function updateInternalDependencies(updates) {
   for (const update of updates) {
     versionMap[update.name] = update.newVersion;
   }
-  
+
   // Get all package.json paths
   const packagePaths = getAllPackageJsonPaths();
-  
+
   // Update each package.json file
   for (const pkgPath of packagePaths) {
     const pkg = readPackage(pkgPath);
     const modified = updatePackageDependencies(pkg, versionMap);
-    
+
     if (modified) {
       writePackage(pkgPath, pkg);
     }
@@ -241,7 +251,9 @@ function validateCalVer(version) {
 
   // Check major is a valid quarter
   if (!QUARTERS.includes(v.major)) {
-    throw new Error(`Invalid quarter in version ${version}: ${v.major} not in [${QUARTERS}]`);
+    throw new Error(
+      `Invalid quarter in version ${version}: ${v.major} not in [${QUARTERS}]`,
+    );
   }
 
   return true;
@@ -263,7 +275,9 @@ function main() {
   }
 
   if (!hasCalVerChanges) {
-    console.log('No CalVer package changes detected. Skipping CalVer enforcement.');
+    console.log(
+      'No CalVer package changes detected. Skipping CalVer enforcement.',
+    );
     console.log('This is a semver-only release.');
     return;
   }

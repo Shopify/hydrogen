@@ -12,6 +12,8 @@ import {
 } from './markdown';
 import {renderStep} from './render';
 import {loadRecipe, Recipe} from './recipe';
+import {handleZodErrorFromLoadRecipe} from './validate';
+import {ZodError} from 'zod';
 
 function renderRecipeLLMPromptBlocks(
   recipeName: string,
@@ -119,12 +121,22 @@ export function generateLLMsFiles(recipeName: string) {
   createDirectoryIfNotExists(LLMS_PATH);
 
   const promptPath = path.join(LLMS_PATH, `${recipeName}.prompt.md`);
+  const recipeDir = path.join(COOKBOOK_PATH, 'recipes', recipeName);
+  const recipeYamlPath = path.join(recipeDir, 'recipe.yaml');
 
   console.log('Generating recipe LLM prompt');
   console.log(`- ${recipeName}`);
-  const recipe = loadRecipe({
-    directory: path.join(COOKBOOK_PATH, 'recipes', recipeName),
-  });
+
+  let recipe: Recipe;
+  try {
+    recipe = loadRecipe({directory: recipeDir});
+  } catch (error) {
+    if (error instanceof ZodError) {
+      handleZodErrorFromLoadRecipe(error, recipeName, recipeYamlPath);
+      process.exit(1);
+    }
+    throw error;
+  }
 
   const blocks = renderRecipeLLMPromptBlocks(recipeName, recipe);
 

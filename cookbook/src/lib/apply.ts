@@ -1,6 +1,7 @@
 import {execSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import {ZodError} from 'zod';
 import {
   COOKBOOK_PATH,
   REPO_ROOT,
@@ -9,6 +10,7 @@ import {
 } from './constants';
 import {loadRecipe} from './recipe';
 import {parseGitStatus} from './util';
+import {handleZodErrorFromLoadRecipe} from './validate';
 
 /**
  * Apply a recipe to the current project.
@@ -19,10 +21,20 @@ export function applyRecipe(params: {
   noCopyIngredients?: boolean;
 }): void {
   const recipeDir = path.join(COOKBOOK_PATH, 'recipes', params.recipeTitle);
+  const recipeYamlPath = path.join(recipeDir, 'recipe.yaml');
 
-  // load the recipe.json file
   console.log(`- 🍱 Loading recipe '${params.recipeTitle}'…`);
-  const recipe = loadRecipe({directory: recipeDir});
+
+  let recipe;
+  try {
+    recipe = loadRecipe({directory: recipeDir});
+  } catch (error) {
+    if (error instanceof ZodError) {
+      handleZodErrorFromLoadRecipe(error, params.recipeTitle, recipeYamlPath);
+      process.exit(1);
+    }
+    throw error;
+  }
 
   // list the ingredients in the recipe's ingredients folder as a list of flat paths (e.g. foo/bar/baz.txt)
   const ingredientsPath = path.join(recipeDir, 'ingredients');
