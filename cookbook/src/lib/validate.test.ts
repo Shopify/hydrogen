@@ -135,7 +135,7 @@ commit: abc123
 });
 
 describe('validateStepNames', () => {
-  it('should return error when grouped steps have identical names', () => {
+  it('should return error when steps have duplicate numbers', () => {
     const recipe: Recipe = {
       gid: 'test-gid',
       title: 'Test',
@@ -144,7 +144,7 @@ describe('validateStepNames', () => {
       ingredients: [],
       steps: [
         {type: 'PATCH' as const, step: '1', name: 'README.md', diffs: []},
-        {type: 'PATCH' as const, step: '1', name: 'README.md', diffs: []},
+        {type: 'PATCH' as const, step: '1', name: 'app/root.tsx', diffs: []},
       ],
       commit: 'abc123',
       llms: {userQueries: [], troubleshooting: []},
@@ -156,8 +156,8 @@ describe('validateStepNames', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toMatchObject({
       validator: 'validateStepNames',
-      message: 'Step 1 has duplicate name "README.md". Grouped steps must have distinct names.',
-      location: 'steps[1].name',
+      message: 'Duplicate step number "1". Use substeps (e.g., "1.1", "1.2") to organize related changes under step 1.',
+      location: 'steps[1].step',
     });
   });
 
@@ -204,7 +204,7 @@ describe('validateStepNames', () => {
     expect(result.errors).toHaveLength(0);
   });
 
-  it('should return valid when multiple steps share same number but have distinct names', () => {
+  it('should reject duplicate main step numbers even with different names', () => {
     const recipe: Recipe = {
       gid: 'test-gid',
       title: 'Test',
@@ -213,9 +213,61 @@ describe('validateStepNames', () => {
       ingredients: [],
       steps: [
         {type: 'PATCH' as const, step: '1', name: 'README.md', diffs: []},
-        {type: 'PATCH' as const, step: '1', name: 'app/entry.server.tsx', diffs: []},
-        {type: 'NEW_FILE' as const, step: '1', name: 'app/components/GoogleTagManager.tsx', ingredients: []},
-        {type: 'PATCH' as const, step: '2', name: 'app/root.tsx', diffs: []},
+        {type: 'PATCH' as const, step: '1', name: 'app/root.tsx', diffs: []},
+      ],
+      commit: 'abc123',
+      llms: {userQueries: [], troubleshooting: []},
+    };
+
+    const result = validateStepNames(recipe);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({
+      validator: 'validateStepNames',
+      message: 'Duplicate step number "1". Use substeps (e.g., "1.1", "1.2") to organize related changes under step 1.',
+      location: 'steps[1].step',
+    });
+  });
+
+  it('should reject duplicate substep numbers', () => {
+    const recipe: Recipe = {
+      gid: 'test-gid',
+      title: 'Test',
+      summary: 'Test',
+      description: 'Test',
+      ingredients: [],
+      steps: [
+        {type: 'PATCH' as const, step: '1.1', name: 'FileA.tsx', diffs: []},
+        {type: 'PATCH' as const, step: '1.1', name: 'FileB.tsx', diffs: []},
+      ],
+      commit: 'abc123',
+      llms: {userQueries: [], troubleshooting: []},
+    };
+
+    const result = validateStepNames(recipe);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({
+      validator: 'validateStepNames',
+      message: 'Duplicate step number "1.1". Each step must have a unique step number.',
+      location: 'steps[1].step',
+    });
+  });
+
+  it('should allow proper substep hierarchy', () => {
+    const recipe: Recipe = {
+      gid: 'test-gid',
+      title: 'Test',
+      summary: 'Test',
+      description: 'Test',
+      ingredients: [],
+      steps: [
+        {type: 'INFO' as const, step: '1', name: 'Setup configuration'},
+        {type: 'PATCH' as const, step: '1.1', name: 'README.md', diffs: []},
+        {type: 'PATCH' as const, step: '1.2', name: 'app/root.tsx', diffs: []},
+        {type: 'PATCH' as const, step: '2', name: 'package.json', diffs: []},
       ],
       commit: 'abc123',
       llms: {userQueries: [], troubleshooting: []},
@@ -225,6 +277,50 @@ describe('validateStepNames', () => {
 
     expect(result.valid).toBe(true);
     expect(result.errors).toHaveLength(0);
+  });
+
+  it('should reject "1.0" as duplicate of "1"', () => {
+    const recipe: Recipe = {
+      gid: 'test-gid',
+      title: 'Test',
+      summary: 'Test',
+      description: 'Test',
+      ingredients: [],
+      steps: [
+        {type: 'PATCH' as const, step: '1', name: 'FileA', diffs: []},
+        {type: 'PATCH' as const, step: '1.0', name: 'FileB', diffs: []},
+      ],
+      commit: 'abc123',
+      llms: {userQueries: [], troubleshooting: []},
+    };
+
+    const result = validateStepNames(recipe);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].message).toContain('Duplicate step number');
+  });
+
+  it('should reject leading zero duplicates', () => {
+    const recipe: Recipe = {
+      gid: 'test-gid',
+      title: 'Test',
+      summary: 'Test',
+      description: 'Test',
+      ingredients: [],
+      steps: [
+        {type: 'PATCH' as const, step: '1', name: 'FileA', diffs: []},
+        {type: 'PATCH' as const, step: '01', name: 'FileB', diffs: []},
+      ],
+      commit: 'abc123',
+      llms: {userQueries: [], troubleshooting: []},
+    };
+
+    const result = validateStepNames(recipe);
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].message).toContain('Duplicate step number');
   });
 });
 
@@ -713,7 +809,7 @@ commit: abc123
     expect(errorOutput).toContain('error(s)');
 
     expect(errorOutput).toContain('validateStepNames');
-    expect(errorOutput).toContain('duplicate name');
+    expect(errorOutput).toContain('Duplicate step number');
 
     expect(errorOutput).toContain('validateStepDescriptions');
     expect(errorOutput).toContain('null description');

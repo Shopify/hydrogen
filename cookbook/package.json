@@ -6,7 +6,8 @@
     "cookbook": "ts-node src/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
   },
   "dependencies": {
     "inquirer": "^12.4.2",

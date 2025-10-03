@@ -1,6 +1,5 @@
 import {execSync, ExecSyncOptionsWithBufferEncoding} from 'child_process';
-import {rmSync} from 'fs';
-import fs from 'fs';
+import fs, {rmSync} from 'fs';
 import {applyRecipe} from './apply';
 import {
   TEMPLATE_PATH,
@@ -175,27 +174,35 @@ export function validateStepNames(recipe: Recipe): ValidationResult {
   console.log(`- 🔢 Checking step names…`);
 
   const errors: ValidationError[] = [];
-  const stepsByNumber = new Map<string, Set<string>>();
+  const seenNormalizedSteps = new Map<string, number>();
+
+  function normalizeStep(stepValue: string): string {
+    const isSubstep = stepValue.includes('.');
+    const expanded = isSubstep ? stepValue : `${stepValue}.0`;
+    return expanded
+      .split('.')
+      .map((v) => parseInt(v, 10).toString().padStart(4, '0'))
+      .join('.');
+  }
 
   for (let i = 0; i < recipe.steps.length; i++) {
     const step = recipe.steps[i];
-    const stepNum = step.step;
-    let names = stepsByNumber.get(stepNum);
+    const normalized = normalizeStep(step.step);
 
-    if (!names) {
-      names = new Set();
-      stepsByNumber.set(stepNum, names);
-    }
+    if (seenNormalizedSteps.has(normalized)) {
+      const isSubstepDuplicate = step.step.includes('.');
+      const message = isSubstepDuplicate
+        ? `Duplicate step number "${step.step}". Each step must have a unique step number.`
+        : `Duplicate step number "${step.step}". Use substeps (e.g., "${step.step}.1", "${step.step}.2") to organize related changes under step ${step.step}.`;
 
-    if (names.has(step.name)) {
       errors.push({
         validator: 'validateStepNames',
-        message: `Step ${stepNum} has duplicate name "${step.name}". Grouped steps must have distinct names.`,
-        location: `steps[${i}].name`,
+        message,
+        location: `steps[${i}].step`,
       });
+    } else {
+      seenNormalizedSteps.set(normalized, i);
     }
-
-    names.add(step.name);
   }
 
   return {valid: errors.length === 0, errors};
