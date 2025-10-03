@@ -130,5 +130,5 @@ export function loadRecipe(params: {directory: string}): Recipe {
 }
 
 export function isSubstep(step: Step): boolean {
-  return `${step.step}`.includes('.');
+  return step.step.includes('.');
 }

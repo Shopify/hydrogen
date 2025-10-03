@@ -40,6 +40,7 @@
     "pre-commit:encrypt": "bash -c 'git diff --cached --name-only | grep -q \"^secrets.ejson$\" && ejson encrypt secrets.ejson && git add secrets.ejson || true'"
   },
   "workspaces": [
+    "cookbook",
     "docs/preview",
     "packages/cli",
     "packages/create-hydrogen",

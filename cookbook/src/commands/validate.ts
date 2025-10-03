@@ -59,9 +59,10 @@ async function handler(args: ValidateArgs) {
   }
 
   if (failed.length > 0) {
-    console.log('😭 Some recipes are invalid:', failed.join(', '));
+    console.log('\n😭 Some recipes are invalid:', failed.join(', '));
+    console.log('');
     process.exit(1);
   } else {
-    console.log('😋 All recipes are valid');
+    console.log('\n😋 All recipes are valid');
   }
 }
