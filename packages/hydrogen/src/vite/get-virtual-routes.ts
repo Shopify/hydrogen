@@ -59,6 +59,15 @@ export async function getVirtualRoutesV3() {
         index: false,
       },
       {
+        id: `${VIRTUAL_ROUTES_DIR}/[.]well-known.shopify.monorail.unstable.produce_batch`,
+        path: '.well-known/shopify/monorail/unstable/produce_batch',
+        file: getVirtualRoutesPath(
+          VIRTUAL_ROUTES_ROUTES_DIR_PARTS,
+          '[.]well-known.shopify.monorail.unstable.produce_batch.jsx',
+        ),
+        index: false,
+      },
+      {
         id: `${VIRTUAL_ROUTES_DIR}/index`,
         path: '',
         file: getVirtualRoutesPath(

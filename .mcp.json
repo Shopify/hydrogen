@@ -39,6 +39,10 @@
     "shopify-dev-mcp": {
       "command": "npx",
       "args": ["-y", "@shopify/dev-mcp@latest"]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest"]
     }
   }
 }
