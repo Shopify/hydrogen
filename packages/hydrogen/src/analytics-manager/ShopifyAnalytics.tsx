@@ -148,21 +148,21 @@ function prepareBasePageViewPayload(
     return;
   }
 
-  const eventPayload: ShopifyPageViewPayload = {
+  const eventPayload = {
     shopifySalesChannel: 'hydrogen',
     assetVersionId: version,
     ...payload.shop,
     hasUserConsent,
     ...getClientBrowserParameters(),
+    analyticsAllowed: customerPrivacy.analyticsProcessingAllowed(),
+    marketingAllowed: customerPrivacy.marketingAllowed(),
+    saleOfDataAllowed: customerPrivacy.saleOfDataAllowed(),
     ccpaEnforced: !customerPrivacy.saleOfDataAllowed(),
     gdprEnforced: !(
       customerPrivacy.marketingAllowed() &&
       customerPrivacy.analyticsProcessingAllowed()
     ),
-    analyticsAllowed: customerPrivacy.analyticsProcessingAllowed(),
-    marketingAllowed: customerPrivacy.marketingAllowed(),
-    saleOfDataAllowed: customerPrivacy.saleOfDataAllowed(),
-  };
+  } as ShopifyPageViewPayload;
 
   return eventPayload;
 }

@@ -13,6 +13,7 @@ import type {
   ShopifyAnalyticsPayload,
   ShopifyMonorailPayload,
   ShopifyPageViewPayload,
+  ShopifyPageViewPayloadWithPrivacyFields,
 } from './analytics-types.js';
 import {version} from '../package.json';
 
@@ -64,7 +65,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
     });
 
     it(`base payload with non-default values using hydrogenSubchannelId`, () => {
-      const pageViewPayload: ShopifyPageViewPayload = {
+      const pageViewPayload: ShopifyPageViewPayloadWithPrivacyFields = {
         ...BASE_PAYLOAD,
         shopId: 'gid://shopify/Shop/2',
         hasUserConsent: false,

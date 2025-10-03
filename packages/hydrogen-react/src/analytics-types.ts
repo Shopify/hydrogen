@@ -117,16 +117,22 @@ type ShopifyAnalyticsBase = {
   totalValue?: number;
   /** Product list. */
   products?: ShopifyAnalyticsProduct[];
-  /** Result of `!customerPrivacyApi.saleOfDataAllowed()` */
-  ccpaEnforced?: boolean;
-  /** Result of `!(customerPrivacyApi.marketingAllowed() && customerPrivacy.analyticsProcessingAllowed())`*/
-  gdprEnforced?: boolean;
   /** Result of `customerPrivacyApi.analyticsProcessingAllowed()` */
   analyticsAllowed?: boolean;
   /** Result of `customerPrivacyApi.marketingAllowed()` */
   marketingAllowed?: boolean;
   /** Result of `customerPrivacyApi.saleOfDataAllowed()` */
   saleOfDataAllowed?: boolean;
+};
+
+/**
+ * @internal
+ * Internal type that includes computed regulation-specific fields.
+ * These fields are computed by Hydrogen and sent to analytics backend.
+ */
+type ShopifyAnalyticsBaseWithPrivacyFields = ShopifyAnalyticsBase & {
+  ccpaEnforced?: boolean;
+  gdprEnforced?: boolean;
 };
 
 export type ShopifySalesChannels = keyof typeof ShopifySalesChannel;
@@ -149,6 +155,17 @@ export interface ShopifyPageViewPayload
   searchString?: string;
 }
 
+/**
+ * @internal
+ * Internal payload type with privacy fields for analytics backend.
+ */
+export type ShopifyPageViewPayloadWithPrivacyFields = Omit<
+  ShopifyPageViewPayload,
+  keyof ShopifyAnalyticsBase
+> &
+  ShopifyAnalyticsBaseWithPrivacyFields &
+  ClientBrowserParameters;
+
 export type ShopifyPageView = {
   /** Use `AnalyticsEventName.PAGE_VIEW` constant. */
   eventName: string;
@@ -161,6 +178,17 @@ export interface ShopifyAddToCartPayload
   /** Shopify cart id in the form of `gid://shopify/Cart/<id>`. */
   cartId: string;
 }
+
+/**
+ * @internal
+ * Internal payload type with privacy fields for analytics backend.
+ */
+export type ShopifyAddToCartPayloadWithPrivacyFields = Omit<
+  ShopifyAddToCartPayload,
+  keyof ShopifyAnalyticsBase
+> &
+  ShopifyAnalyticsBaseWithPrivacyFields &
+  ClientBrowserParameters;
 
 export type ShopifyAddToCart = {
   /** Use `AnalyticsEventName.ADD_TO_CART` constant. */
@@ -184,6 +212,15 @@ export type ShopifyMonorailEvent = {
 export type ShopifyAnalyticsPayload =
   | ShopifyPageViewPayload
   | ShopifyAddToCartPayload;
+
+/**
+ * @internal
+ * Internal analytics payload type with privacy fields for analytics backend.
+ */
+export type ShopifyAnalyticsPayloadWithPrivacyFields =
+  | ShopifyPageViewPayloadWithPrivacyFields
+  | ShopifyAddToCartPayloadWithPrivacyFields;
+
 export type ShopifyAnalytics = ShopifyPageView | ShopifyAddToCart;
 
 export type ShopifyCookies = {
