@@ -67,10 +67,7 @@ describe('compareSteps with string step values', () => {
     expect(sorted.map((s) => s.step)).toEqual(['1.9', '1.15', '1.100']);
   });
 
-  // Grouping feature: Multiple steps can share the same step number to organize
-  // related changes together (e.g., modifying several files as part of "Step 1").
-  // This test ensures sort maintains relative order for grouped steps.
-  it('should maintain relative order of steps with same step number (grouping)', () => {
+  it('should maintain insertion order for steps with same step number', () => {
     const steps: Step[] = [
       {type: 'PATCH', step: '1', name: 'File C', diffs: []},
       {type: 'PATCH', step: '1', name: 'File A', diffs: []},
@@ -80,22 +77,14 @@ describe('compareSteps with string step values', () => {
 
     const sorted = steps.sort(compareSteps);
 
-    const step1Items = sorted.filter((s) => s.step === '1');
-    const step2Items = sorted.filter((s) => s.step === '2');
-
-    expect(step1Items).toHaveLength(3);
-    expect(step2Items).toHaveLength(1);
-
-    expect(step1Items[0].name).toBe('File C');
-    expect(step1Items[1].name).toBe('File A');
-    expect(step1Items[2].name).toBe('File B');
-
-    expect(sorted.indexOf(step2Items[0])).toBeGreaterThan(
-      sorted.indexOf(step1Items[2]),
-    );
+    expect(sorted).toHaveLength(4);
+    expect(sorted[0].name).toBe('File C');
+    expect(sorted[1].name).toBe('File A');
+    expect(sorted[2].name).toBe('File B');
+    expect(sorted[3].name).toBe('File D');
   });
 
-  it('should handle steps with leading zeros correctly (treat "01" as "1")', () => {
+  it('should handle steps with leading zeros as numerically equivalent', () => {
     const steps: Step[] = [
       {type: 'PATCH', step: '02', name: 'Step 02', diffs: []},
       {type: 'PATCH', step: '2', name: 'Step 2', diffs: []},
@@ -111,7 +100,7 @@ describe('compareSteps with string step values', () => {
     expect(sorted[3].step).toBe('2');
   });
 
-  it('should maintain relative order for grouped steps with different types', () => {
+  it('should handle mixed step types with same step number', () => {
     const steps: Step[] = [
       {type: 'PATCH', step: '1', name: 'Patch C', diffs: []},
       {type: 'NEW_FILE', step: '1', name: 'New File A', ingredients: []},
@@ -127,7 +116,7 @@ describe('compareSteps with string step values', () => {
     expect(sorted[3].name).toBe('Patch D');
   });
 
-  it('should sort substeps with decimal precision correctly', () => {
+  it('should handle multi-digit substep numbers', () => {
     const steps: Step[] = [
       {type: 'PATCH', step: '1.10', name: 'Step 1.10', diffs: []},
       {type: 'PATCH', step: '1.2', name: 'Step 1.2', diffs: []},
@@ -171,5 +160,152 @@ describe('isSubstep with string step values', () => {
 
     expect(isSubstep(mainStep)).toBe(false);
     expect(isSubstep(subStep)).toBe(true);
+  });
+});
+
+describe('Advanced grouping and edge cases', () => {
+  it('should handle multiple separate groups with stable sort', () => {
+    const steps: Step[] = [
+      {step: '2', name: 'File2A', type: 'PATCH', diffs: []},
+      {step: '1', name: 'File1B', type: 'PATCH', diffs: []},
+      {step: '1', name: 'File1A', type: 'PATCH', diffs: []},
+      {step: '2', name: 'File2B', type: 'PATCH', diffs: []},
+    ];
+
+    const sorted = steps.sort(compareSteps);
+
+    expect(sorted).toHaveLength(4);
+    expect(sorted[0]).toMatchObject({step: '1', name: 'File1B'});
+    expect(sorted[1]).toMatchObject({step: '1', name: 'File1A'});
+    expect(sorted[2]).toMatchObject({step: '2', name: 'File2A'});
+    expect(sorted[3]).toMatchObject({step: '2', name: 'File2B'});
+  });
+
+  it('should handle interleaved groups maintaining insertion order within groups', () => {
+    const steps: Step[] = [
+      {step: '1', name: 'File1A', type: 'PATCH', diffs: []},
+      {step: '2', name: 'File2A', type: 'PATCH', diffs: []},
+      {step: '1', name: 'File1B', type: 'PATCH', diffs: []},
+      {step: '3', name: 'File3A', type: 'PATCH', diffs: []},
+      {step: '2', name: 'File2B', type: 'PATCH', diffs: []},
+    ];
+
+    const sorted = steps.sort(compareSteps);
+
+    expect(sorted).toHaveLength(5);
+    expect(sorted[0]).toMatchObject({step: '1', name: 'File1A'});
+    expect(sorted[1]).toMatchObject({step: '1', name: 'File1B'});
+    expect(sorted[2]).toMatchObject({step: '2', name: 'File2A'});
+    expect(sorted[3]).toMatchObject({step: '2', name: 'File2B'});
+    expect(sorted[4]).toMatchObject({step: '3', name: 'File3A'});
+  });
+
+  it('should sort interleaved main steps and substeps by numeric value', () => {
+    const steps: Step[] = [
+      {step: '1', name: 'MainA', type: 'PATCH', diffs: []},
+      {step: '1.1', name: 'Sub1', type: 'PATCH', diffs: []},
+      {step: '1', name: 'MainB', type: 'PATCH', diffs: []},
+      {step: '1.2', name: 'Sub2', type: 'PATCH', diffs: []},
+      {step: '1', name: 'MainC', type: 'PATCH', diffs: []},
+    ];
+
+    const sorted = steps.sort(compareSteps);
+
+    expect(sorted).toHaveLength(5);
+    expect(sorted[0]).toMatchObject({step: '1', name: 'MainA'});
+    expect(sorted[1]).toMatchObject({step: '1', name: 'MainB'});
+    expect(sorted[2]).toMatchObject({step: '1', name: 'MainC'});
+    expect(sorted[3]).toMatchObject({step: '1.1', name: 'Sub1'});
+    expect(sorted[4]).toMatchObject({step: '1.2', name: 'Sub2'});
+  });
+
+  it('should handle multiple substeps with same step number', () => {
+    const steps: Step[] = [
+      {step: '1.1', name: 'SubA', type: 'PATCH', diffs: []},
+      {step: '1.1', name: 'SubB', type: 'PATCH', diffs: []},
+      {step: '1.2', name: 'SubC', type: 'PATCH', diffs: []},
+    ];
+
+    const sorted = steps.sort(compareSteps);
+
+    expect(sorted).toHaveLength(3);
+    expect(sorted[0]).toMatchObject({step: '1.1', name: 'SubA'});
+    expect(sorted[1]).toMatchObject({step: '1.1', name: 'SubB'});
+    expect(sorted[2]).toMatchObject({step: '1.2', name: 'SubC'});
+  });
+
+  it('should treat explicit "1.0" as equivalent to "1"', () => {
+    const steps: Step[] = [
+      {step: '1.0', name: 'Explicit', type: 'PATCH', diffs: []},
+      {step: '1', name: 'Implicit', type: 'PATCH', diffs: []},
+    ];
+
+    const sorted = steps.sort(compareSteps);
+
+    expect(sorted).toHaveLength(2);
+    expect(sorted[0]).toMatchObject({step: '1.0', name: 'Explicit'});
+    expect(sorted[1]).toMatchObject({step: '1', name: 'Implicit'});
+  });
+
+  it('should handle zero step numbers', () => {
+    const steps: Step[] = [
+      {step: '0', name: 'Zero', type: 'PATCH', diffs: []},
+      {step: '1', name: 'One', type: 'PATCH', diffs: []},
+    ];
+
+    const sorted = steps.sort(compareSteps);
+
+    expect(sorted).toHaveLength(2);
+    expect(sorted[0]).toMatchObject({step: '0', name: 'Zero'});
+    expect(sorted[1]).toMatchObject({step: '1', name: 'One'});
+  });
+
+  it('should handle zero with substeps', () => {
+    const steps: Step[] = [
+      {step: '0.1', name: 'ZeroSub', type: 'PATCH', diffs: []},
+      {step: '0', name: 'Zero', type: 'PATCH', diffs: []},
+      {step: '1', name: 'One', type: 'PATCH', diffs: []},
+    ];
+
+    const sorted = steps.sort(compareSteps);
+
+    expect(sorted).toHaveLength(3);
+    expect(sorted[0]).toMatchObject({step: '0', name: 'Zero'});
+    expect(sorted[1]).toMatchObject({step: '0.1', name: 'ZeroSub'});
+    expect(sorted[2]).toMatchObject({step: '1', name: 'One'});
+  });
+
+  it('should handle very large step numbers', () => {
+    const steps: Step[] = [
+      {step: '9999', name: 'VeryLarge', type: 'PATCH', diffs: []},
+      {step: '1000', name: 'Large', type: 'PATCH', diffs: []},
+      {step: '1', name: 'Small', type: 'PATCH', diffs: []},
+    ];
+
+    const sorted = steps.sort(compareSteps);
+
+    expect(sorted).toHaveLength(3);
+    expect(sorted[0]).toMatchObject({step: '1', name: 'Small'});
+    expect(sorted[1]).toMatchObject({step: '1000', name: 'Large'});
+    expect(sorted[2]).toMatchObject({step: '9999', name: 'VeryLarge'});
+  });
+
+  it('should handle multiple files in same step number', () => {
+    const steps: Step[] = [
+      {step: '1', name: 'README.md', type: 'PATCH', diffs: []},
+      {step: '1', name: 'app/root.tsx', type: 'PATCH', diffs: []},
+      {step: '1', name: 'app/components/Header.tsx', type: 'PATCH', diffs: []},
+      {step: '2', name: 'package.json', type: 'PATCH', diffs: []},
+    ];
+
+    const sorted = steps.sort(compareSteps);
+
+    expect(sorted).toHaveLength(4);
+    expect(sorted.map(s => s.name)).toEqual([
+      'README.md',
+      'app/root.tsx',
+      'app/components/Header.tsx',
+      'package.json'
+    ]);
   });
 });
