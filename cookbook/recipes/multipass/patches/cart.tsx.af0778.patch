@@ -1,0 +1,28 @@
+index f82d683f..b84e4480 100644
+--- a/templates/skeleton/app/routes/cart.tsx
++++ b/templates/skeleton/app/routes/cart.tsx
+@@ -15,9 +15,13 @@ export const meta: Route.MetaFunction = () => {
+ export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
+ 
+ export async function action({request, context}: Route.ActionArgs) {
+-  const {cart} = context;
++  // @description Get session for multipass customer token persistence
++  const {session, cart} = context;
+ 
+-  const formData = await request.formData();
++  const [formData, customerAccessToken] = await Promise.all([
++    request.formData(),
++    session.get('customerAccessToken'),
++  ]);
+ 
+   const {action, inputs} = CartForm.getFormInput(formData);
+ 
+@@ -74,6 +78,8 @@ export async function action({request, context}: Route.ActionArgs) {
+     case CartForm.ACTIONS.BuyerIdentityUpdate: {
+       result = await cart.updateBuyerIdentity({
+         ...inputs.buyerIdentity,
++        // @description Add customer access token for multipass checkout
++        customerAccessToken: customerAccessToken?.accessToken,
+       });
+       break;
+     }
