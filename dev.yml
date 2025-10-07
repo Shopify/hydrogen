@@ -39,6 +39,15 @@ commands:
     desc: 'Add a changeset for releases'
     run: npm run changeset add
 
+  cookbook:
+    subcommands:
+      regenerate:
+        desc: 'Refresh all cookbook recipes'
+        run: cd cookbook && npm run cookbook -- regenerate
+      validate:
+        desc: 'Validate all cookbook recipes'
+        run: cd cookbook && npm run cookbook -- validate
+
   # Package-specific commands
   hydrogen:
     subcommands:
@@ -52,7 +61,7 @@ commands:
         desc: 'Build Hydrogen documentation'
         run: cd packages/hydrogen && npm run build-docs
 
-  template:
+  skeleton:
     subcommands:
       dev:
         desc: 'Run skeleton template in dev mode'
@@ -67,4 +76,3 @@ open:
   issues: # Opens GitHub issues
   docs: https://shopify.dev/docs/api/hydrogen
   hydrogen-react-docs: https://shopify.dev/docs/api/hydrogen-react
-  template: http://localhost:3000
