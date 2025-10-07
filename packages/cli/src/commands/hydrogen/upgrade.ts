@@ -1384,8 +1384,8 @@ export async function displayDevUpgradeNotice({
       relevantReleases = changelog.releases.slice(0, currentReleaseIndex);
     }
 
-    // Reverse for deduplication priority: older releases have more info.
-    // Then reverse back for display: newest version top, next version bottom.
+    // First, reverse so that during deduplication (reduce), older releases of the same version are kept.
+    // Then, reverse again after deduplication to restore chronological order for display (newest version at the top).
     const nextReleases = Object.values(
       [...relevantReleases].reverse().reduce(
         (acc, release) => {
