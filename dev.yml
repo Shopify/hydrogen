@@ -1,0 +1,81 @@
+name: hydrogen
+display_name: Hydrogen
+
+up:
+  - node: 'v20.19.5'
+
+commands:
+  # Standard development commands
+  dev:
+    desc: 'Run the dev command in all packages'
+    run: npm run dev
+
+  build:
+    desc: 'Build packages for production distribution'
+    run: npm run build
+
+  test:
+    desc: 'Run tests once'
+    run: npm run test
+    aliases: [t]
+
+  test-watch:
+    desc: 'Run tests in watch mode'
+    run: npm run test:watch
+
+  typecheck:
+    desc: 'Check source-code for invalid TypeScript'
+    run: npm run typecheck
+
+  lint:
+    desc: 'Lint the code with ESLint'
+    run: npm run lint
+
+  format:
+    desc: 'Format the code with prettier'
+    run: npm run format
+
+  changeset:
+    desc: 'Add a changeset for releases'
+    run: npm run changeset add
+
+  cookbook:
+    subcommands:
+      regenerate:
+        desc: 'Refresh all cookbook recipes'
+        run: cd cookbook && npm run cookbook -- regenerate
+      validate:
+        desc: 'Validate all cookbook recipes'
+        run: cd cookbook && npm run cookbook -- validate
+
+  # Package-specific commands
+  hydrogen:
+    subcommands:
+      dev:
+        desc: 'Run Hydrogen package in dev mode'
+        run: cd packages/hydrogen && npm run dev
+      build:
+        desc: 'Build Hydrogen package'
+        run: cd packages/hydrogen && npm run build
+      docs:
+        desc: 'Build Hydrogen documentation'
+        run: cd packages/hydrogen && npm run build-docs
+
+  skeleton:
+    subcommands:
+      dev:
+        desc: 'Run skeleton template in dev mode'
+        run: cd templates/skeleton && npm run dev
+      dev-tunnel:
+        desc: 'Run skeleton template in dev mode with tunnel'
+        run: SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH=true cd templates/skeleton && npm run dev
+      build:
+        desc: 'Build skeleton template'
+        run: cd templates/skeleton && npm run build
+
+open:
+  github: https://github.com/Shopify/hydrogen
+  pr: # Opens PR for current branch
+  issues: # Opens GitHub issues
+  docs: https://shopify.dev/docs/api/hydrogen
+  hydrogen-react-docs: https://shopify.dev/docs/api/hydrogen-react
