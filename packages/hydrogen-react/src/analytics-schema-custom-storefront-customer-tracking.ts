@@ -1,7 +1,10 @@
 import {
   ShopifyAnalyticsPayload,
+  ShopifyAnalyticsPayloadWithPrivacyFields,
   ShopifyPageViewPayload,
+  ShopifyPageViewPayloadWithPrivacyFields,
   ShopifyAddToCartPayload,
+  ShopifyAddToCartPayloadWithPrivacyFields,
   ShopifyMonorailPayload,
   ShopifyAnalyticsProduct,
   ShopifyMonorailEvent,
@@ -19,7 +22,7 @@ const PRODUCT_ADDED_TO_CART_EVENT_NAME = 'product_added_to_cart';
 const SEARCH_SUBMITTED_EVENT_NAME = 'search_submitted';
 
 function prepareAdditionalPayload(
-  payload: ShopifyPageViewPayload,
+  payload: ShopifyPageViewPayload | ShopifyPageViewPayloadWithPrivacyFields,
 ): Pick<ShopifyMonorailPayload, 'canonical_url' | 'customer_id'> {
   return {
     canonical_url: payload.canonicalUrl || payload.url,
@@ -30,7 +33,7 @@ function prepareAdditionalPayload(
 // Send the page view event to the Monorail server.
 // It also sends additional page view events based on the page type.
 export function pageView(
-  payload: ShopifyPageViewPayload,
+  payload: ShopifyPageViewPayload | ShopifyPageViewPayloadWithPrivacyFields,
 ): ShopifyMonorailEvent[] {
   const pageViewPayload = payload;
   const additionalPayload = prepareAdditionalPayload(pageViewPayload);
@@ -196,7 +199,7 @@ export function searchView(
 }
 
 export function addToCart(
-  payload: ShopifyAddToCartPayload,
+  payload: ShopifyAddToCartPayload | ShopifyAddToCartPayloadWithPrivacyFields,
 ): ShopifyMonorailEvent[] {
   const addToCartPayload = payload;
   const cartToken = parseGid(addToCartPayload.cartId);
@@ -221,8 +224,11 @@ export function addToCart(
 }
 
 function formatPayload(
-  payload: ShopifyAnalyticsPayload,
+  payload: ShopifyAnalyticsPayload | ShopifyAnalyticsPayloadWithPrivacyFields,
 ): ShopifyMonorailPayload {
+  const payloadWithPrivacy =
+    payload as ShopifyAnalyticsPayloadWithPrivacyFields;
+
   return {
     source: payload.shopifySalesChannel || ShopifySalesChannel.headless,
     asset_version_id: payload.assetVersionId || version,
@@ -244,9 +250,9 @@ function formatPayload(
     shop_id: parseInt(parseGid(payload.shopId).id),
     currency: payload.currency,
 
-    ccpa_enforced: payload.ccpaEnforced || false,
-    gdpr_enforced: payload.gdprEnforced || false,
-    gdpr_enforced_as_string: payload.gdprEnforced ? 'true' : 'false',
+    ccpa_enforced: payloadWithPrivacy.ccpaEnforced || false,
+    gdpr_enforced: payloadWithPrivacy.gdprEnforced || false,
+    gdpr_enforced_as_string: payloadWithPrivacy.gdprEnforced ? 'true' : 'false',
     analytics_allowed: payload.analyticsAllowed || false,
     marketing_allowed: payload.marketingAllowed || false,
     sale_of_data_allowed: payload.saleOfDataAllowed || false,
