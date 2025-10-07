@@ -155,8 +155,11 @@ node scripts/get-latest-branch.js  // → "2025-07"
 
 #### 3. CalVer Enforcement
 - **`enforce-calver-ci.js`** - Production CI script (runs in GitHub Actions)
-  - Uses git baseline to read original versions (before changesets corruption)
-  - Fetches from `HEAD~1` or `origin/main` to avoid using invalid semver versions
+  - Skips execution when only semver packages have changesets (guard check)
+  - Fetches individual git baselines for each CalVer package
+  - **Independent patches**: Each CalVer package can have different patch versions
+  - **Synced majors**: All CalVer packages advance to same quarter for major bumps
+  - Prevents changesets corruption (e.g., 2026.0.0 → 2025.10.0)
 - **`enforce-calver-local.js`** - Local testing with dry-run support
 
 ### CI/CD Integration
@@ -211,8 +214,12 @@ The release workflow now operates with zero manual intervention:
 
 ### CalVer Packages (YYYY.M.P format)
 - `@shopify/hydrogen`
-- `@shopify/hydrogen-react`  
+- `@shopify/hydrogen-react`
 - `skeleton` (template)
+
+**Versioning behavior**:
+- **Patches/minors**: Independent versioning allowed (e.g., hydrogen@2025.7.2, hydrogen-react@2025.7.0)
+- **Majors**: Always synchronized to same quarter (e.g., all at 2025.10.0)
 
 ### Semver Packages (X.Y.Z format)
 - `@shopify/cli-hydrogen`
@@ -455,10 +462,10 @@ Scenario B: With Bypass
 
 ## Safety Features
 
-1. **Hydrogen as Source of Truth**: All CalVer packages use hydrogen's version as baseline
-   - Prevents version inconsistencies across packages
-   - Resolves "Invalid quarter" errors caused by package drift
-   - Ensures consistent CalVer enforcement across the monorepo
+1. **Independent Patches, Synced Majors**: CalVer packages can have independent patch versions
+   - **Patches/minors**: Each package uses its own git baseline for independent versioning
+   - **Majors**: All packages use hydrogen's baseline to sync to same quarter
+   - Enables independent bug fixes while maintaining API compatibility across majors
    - **Git Baseline Protection**: Reads original versions from git history to avoid changeset corruption
 2. **Version Regression Protection**: Prevents versions from going backwards
 3. **Quarter Alignment Validation**: Ensures majors use quarters (1,4,7,10)
@@ -546,6 +553,29 @@ node .changeset/calver-shared.js has-calver-changesets
 # - CLI-only changesets → false → "[ci] release semver"
 # - Mixed changesets → true → "[ci] release 2025.5.1"
 # - CalVer-only → true → "[ci] release 2025.5.1"
+```
+
+### Issue: Semver-only releases incorrectly bump CalVer packages
+
+**Root Cause**: `enforce-calver-ci.js` ran unconditionally for all CalVer packages, even when only semver packages had changesets
+
+**Impact**: Phantom version bumps and CHANGELOG entries for hydrogen/hydrogen-react/skeleton with no actual changes
+
+**Solution**: Guard check added to skip CalVer enforcement when no CalVer changesets exist
+
+```bash
+# Create test CLI changeset
+echo -e "---\n'@shopify/cli-hydrogen': patch\n---\nTest" > .changeset/test-cli.md
+
+# Should return false (no CalVer changesets)
+node .changeset/calver-shared.js has-calver-changesets
+
+# Should skip enforcement
+node .changeset/enforce-calver-ci.js
+# Output: "No CalVer changesets detected. Skipping CalVer enforcement."
+
+# Cleanup
+rm .changeset/test-cli.md
 ```
 
 ## Migration Notes

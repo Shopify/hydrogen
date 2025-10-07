@@ -177,7 +177,7 @@ export default function App() {
       consent={data.consent}
     >
       <PageLayout {...data}>
-        <Outlet />;
+        <Outlet />
       </PageLayout>
     </Analytics.Provider>
   );

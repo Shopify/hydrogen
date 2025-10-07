@@ -3,10 +3,15 @@
   "version": "1.0.0",
   "description": "A CLI tool to generate and apply recipes to the Hydrogen skeleton template.",
   "scripts": {
-    "cookbook": "ts-node src/index.ts"
+    "cookbook": "ts-node src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
   },
   "dependencies": {
     "inquirer": "^12.4.2",
+    "istextorbinary": "9.5.0",
     "ts-node": "^10.9.2",
     "yargs": "^17.7.2",
     "zod": "^3.24.2",
@@ -16,6 +21,7 @@
     "@types/inquirer": "^9.0.9",
     "@types/node": "^22.13.4",
     "@types/yargs": "^17.0.33",
-    "typescript": "^5.0.0"
+    "typescript": "5.9.2",
+    "vitest": "^3.2.4"
   }
 }

@@ -3,7 +3,373 @@
   "version": "1",
   "releases": [
     {
-      "title": "[COMPLETE BEFORE ATTEMPTING 2025.5 UPGRADE] Bump Shopify CLI version",
+      "title": "Migrate to React Router 7 and API version 2025-07",
+      "version": "2025.7.0",
+      "date": "2025-09-17",
+      "hash": "b09a1214b24251dbd48cd960d9ec8079a7c68d03",
+      "commit": "https://github.com/Shopify/hydrogen/commit/b09a1214b24251dbd48cd960d9ec8079a7c68d03",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3166",
+      "dependencies": {
+        "@shopify/hydrogen": "2025.7.0",
+        "react-router": "7.9.2",
+        "react-router-dom": "7.9.2",
+        "react": "18.3.1",
+        "react-dom": "18.3.1"
+      },
+      "devDependencies": {
+        "@shopify/mini-oxygen": "4.0.0",
+        "@shopify/cli": "3.85.4",
+        "@react-router/dev": "7.9.2",
+        "@react-router/fs-routes": "7.9.2"
+      },
+      "removeDependencies": [
+        "@shopify/hydrogen",
+        "@shopify/remix-oxygen",
+        "@remix-run/react",
+        "@remix-run/server-runtime",
+        "react-router",
+        "react-router-dom",
+        "react",
+        "react-dom",
+        "@react-router/node"
+      ],
+      "removeDevDependencies": [
+        "@remix-run/dev",
+        "@remix-run/fs-routes",
+        "@remix-run/route-config",
+        "@react-router/fs-routes",
+        "@react-router/dev"
+      ],
+      "dependenciesMeta": {
+        "@shopify/cli": {
+          "required": true
+        },
+        "react-router": {
+          "required": true
+        },
+        "@react-router/dev": {
+          "required": true
+        },
+        "@react-router/fs-routes": {
+          "required": true
+        },
+        "@shopify/mini-oxygen": {
+          "required": true
+        },
+        "@shopify/remix-oxygen": {
+          "required": false
+        },
+        "@remix-run/react": {
+          "required": false
+        },
+        "@remix-run/server-runtime": {
+          "required": false
+        },
+        "@remix-run/dev": {
+          "required": false
+        },
+        "@remix-run/fs-routes": {
+          "required": false
+        },
+        "@remix-run/route-config": {
+          "required": false
+        }
+      },
+      "fixes": [
+        {
+          "title": "Use stable Customer Account API development flag",
+          "info": "The --customer-account-push flag is now stable. Use it to tunnel for local development with Customer Account API OAuth flows.",
+          "steps": [
+            {
+              "title": "Update command to use stable flag",
+              "info": "Remove the __unstable suffix from the customer-account-push command",
+              "code": "YGBgZGlmZgotIHNob3BpZnkgaHlkcm9nZW4gY3VzdG9tZXItYWNjb3VudC1wdXNoX191bnN0YWJsZSBbZmxhZ3NdCisgc2hvcGlmeSBoeWRyb2dlbiBjdXN0b21lci1hY2NvdW50LXB1c2ggW2ZsYWdzXQoKLy8gVGhlIC0tY3VzdG9tZXItYWNjb3VudC1wdXNoIGZsYWcgaXMgbm93IHN0YWJsZSBhbmQgbm8gbG9uZ2VyIHJlcXVpcmVzIF9fdW5zdGFibGUgc3VmZml4CmBgYAo="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3082",
+          "id": "3082-flag"
+        },
+        {
+          "title": "Fix streaming issues in development and preview",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039"
+        },
+        {
+          "title": "Remove GraphQL client development warnings",
+          "info": "Removes sourcemap warnings and stops unnecessary page reloads during development.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3108",
+          "id": "3108"
+        },
+        {
+          "title": "Handle unsupported currencies in Money component",
+          "info": "The Money component now handles unsupported currency codes like USDC from Customer Account API.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3082",
+          "id": "3082-money"
+        },
+        {
+          "title": "Fix currency code format in parseMetafield",
+          "info": "Transforms currency_code from Storefront API to currencyCode format expected by MoneyV2 type.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3072",
+          "id": "3072"
+        },
+        {
+          "title": "Fix TypeScript enum compatibility between APIs",
+          "info": "Codegen now references Storefront API's LanguageCode and CurrencyCode enums for Customer Account API types.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3139",
+          "id": "3139"
+        },
+        {
+          "title": "Add TypeScript ESLint rules for promise handling",
+          "info": "Adds TypeScript ESLint rules for promise handling to prevent deployment errors on Oxygen and Cloudflare Workers.",
+          "steps": [
+            {
+              "title": "Add promise handling rules to ESLint config",
+              "info": "Enable no-floating-promises and no-misused-promises rules. These catch unhandled promises that cause deployment failures.",
+              "code": "YGBgZGlmZgovLyBlc2xpbnQuY29uZmlnLmpzCmV4cG9ydCBkZWZhdWx0IHRzZXNsaW50LmNvbmZpZygKICB7CiAgICBydWxlczogewogICAgICAvLyAuLi4gZXhpc3RpbmcgcnVsZXMgLi4uCisgICAgICdAdHlwZXNjcmlwdC1lc2xpbnQvbm8tZmxvYXRpbmctcHJvbWlzZXMnOiAnZXJyb3InLAorICAgICAnQHR5cGVzY3JpcHQtZXNsaW50L25vLW1pc3VzZWQtcHJvbWlzZXMnOiAnZXJyb3InLAogICAgfSwKICB9LAopOwoKLy8gVGhlc2UgcnVsZXMgcHJldmVudCB1bmhhbmRsZWQgcHJvbWlzZXMgYW5kIHByb21pc2UgbWlzdXNlCi8vIEhlbHBzIGF2b2lkICdUaGUgc2NyaXB0IHdpbGwgbmV2ZXIgZ2VuZXJhdGUgYSByZXNwb25zZScgZXJyb3JzIG9uIE94eWdlbi9DbG91ZGZsYXJlIFdvcmtlcnMKYGBgCg=="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3146",
+          "id": "3146"
+        },
+        {
+          "title": "Fix environment variable quoting in env pull command",
+          "info": "Handles shell metacharacters in environment variables correctly.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3050",
+          "id": "3050"
+        },
+        {
+          "title": "Add --force-client-sourcemap flag to deploy command",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039-sourcemap"
+        },
+        {
+          "title": "Add Vite v7 exports support",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039-vite"
+        },
+        {
+          "title": "Fix and upgrade GraphiQL route",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039-graphiql"
+        },
+        {
+          "title": "Replace deprecated faker.internet.color()",
+          "info": "Uses faker.color.rgb() instead.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/2985",
+          "id": "2985"
+        }
+      ],
+      "features": [
+        {
+          "title": "Migrate to React Router 7.9.x",
+          "info": "Move your Hydrogen app to React Router 7.9.x. You'll get automatic type generation, better type safety, and new context infrastructure. This removes the @shopify/remix-oxygen package. Check the complete skeleton template for reference: https://github.com/Shopify/hydrogen/tree/main/templates/skeleton",
+          "breaking": true,
+          "steps": [
+            {
+              "title": "Run the automated migration codemod",
+              "info": "This codemod will automatically update most imports and references from Remix to React Router",
+              "code": "YGBgZGlmZgpucHggY29kZW1vZEBsYXRlc3QgcmVtaXgvMi9yZWFjdC1yb3V0ZXIvdXBncmFkZQpgYGAK"
+            },
+            {
+              "title": "Create react-router.config.ts with hydrogenPreset",
+              "info": "Create your React Router configuration file using Hydrogen's optimized preset. This enhances routing and build performance.",
+              "code": "YGBgdHlwZXNjcmlwdAovLyByZWFjdC1yb3V0ZXIuY29uZmlnLnRzCmltcG9ydCB0eXBlIHtDb25maWd9IGZyb20gIkByZWFjdC1yb3V0ZXIvZGV2L2NvbmZpZyI7CmltcG9ydCB7aHlkcm9nZW5QcmVzZXR9IGZyb20gIkBzaG9waWZ5L2h5ZHJvZ2VuL3JlYWN0LXJvdXRlci1wcmVzZXQiOwoKZXhwb3J0IGRlZmF1bHQgewogIHByZXNldHM6IFtoeWRyb2dlblByZXNldCgpXSwKfSBzYXRpc2ZpZXMgQ29uZmlnOwpgYGAK"
+            },
+            {
+              "title": "Update vite.config.ts to use React Router plugin",
+              "info": "Replace the Remix Vite plugin with React Router's plugin. Add vite-tsconfig-paths for better path resolution.",
+              "code": "YGBgZGlmZgovLyB2aXRlLmNvbmZpZy50cwppbXBvcnQge2RlZmluZUNvbmZpZ30gZnJvbSAndml0ZSc7Ci0gaW1wb3J0IHt2aXRlUGx1Z2luIGFzIHJlbWl4fSBmcm9tICdAcmVtaXgtcnVuL2Rldic7CisgaW1wb3J0IHtyZWFjdFJvdXRlcn0gZnJvbSAnQHJlYWN0LXJvdXRlci9kZXYvdml0ZSc7CmltcG9ydCB7aHlkcm9nZW59IGZyb20gJ0BzaG9waWZ5L2h5ZHJvZ2VuL3ZpdGUnOwppbXBvcnQge294eWdlbn0gZnJvbSAnQHNob3BpZnkvbWluaS1veHlnZW4vdml0ZSc7CisgaW1wb3J0IHRzY29uZmlnUGF0aHMgZnJvbSAndml0ZS10c2NvbmZpZy1wYXRocyc7CgpleHBvcnQgZGVmYXVsdCBkZWZpbmVDb25maWcoewogIHBsdWdpbnM6IFsKKyAgIGh5ZHJvZ2VuKCksCisgICBveHlnZW4oKSwKKyAgIHJlYWN0Um91dGVyKCksCisgICB0c2NvbmZpZ1BhdGhzKCkKLSAgIHJlbWl4KHsKLSAgICAgcHJlc2V0czogW2h5ZHJvZ2VuLnByZXNldCgpXSwKLSAgIH0pLAogIF0sCn0pOwpgYGAK"
+            },
+            {
+              "title": "Update tsconfig.json for React Router type generation",
+              "info": "Update your TypeScript configuration to include React Router's generated types. This optimizes type checking.",
+              "code": "YGBgZGlmZgovLyB0c2NvbmZpZy5qc29uCnsKICAiaW5jbHVkZSI6IFsKICAgICJlbnYuZC50cyIsCiAgICAiYXBwLyoqLyoudHMiLAogICAgImFwcC8qKi8qLnRzeCIsCisgICAiYXBwLyoqLyouZC50cyIsCisgICAiKi50cyIsCisgICAiKi50c3giLAorICAgIiouZC50cyIsCisgICAiLmdyYXBocWxyYy50cyIsCisgICAiLnJlYWN0LXJvdXRlci90eXBlcy8qKi8qIgotICAgIioqLyoudHMiLAotICAgIioqLyoudHN4IgogIF0sCiAgImNvbXBpbGVyT3B0aW9ucyI6IHsKICAgICJ0eXBlcyI6IFsKICAgICAgIkBzaG9waWZ5L294eWdlbi13b3JrZXJzLXR5cGVzIiwKKyAgICAgInJlYWN0LXJvdXRlciIsCisgICAgICJAc2hvcGlmeS9oeWRyb2dlbi9yZWFjdC1yb3V0ZXItdHlwZXMiLAorICAgICAidml0ZS9jbGllbnQiCi0gICAgICJAcmVtaXgtcnVuL25vZGUiLAotICAgICAidml0ZS9jbGllbnQiCiAgICBdLAorICAgInJvb3REaXJzIjogWyIuIiwgIi4vLnJlYWN0LXJvdXRlci90eXBlcyJdLAogICAgImJhc2VVcmwiOiAiLiIsCiAgICAicGF0aHMiOiB7CiAgICAgICJ+LyoiOiBbImFwcC8qIl0KICAgIH0KICB9Cn0KYGBgCg=="
+            },
+            {
+              "title": "Create app/lib/context.ts with createHydrogenRouterContext",
+              "info": "Create a new context file that exports the createHydrogenRouterContext function. This supports additional context properties and type augmentation.",
+              "code": "YGBgdHlwZXNjcmlwdAovLyBhcHAvbGliL2NvbnRleHQudHMKaW1wb3J0IHtjcmVhdGVIeWRyb2dlbkNvbnRleHR9IGZyb20gJ0BzaG9waWZ5L2h5ZHJvZ2VuJzsKaW1wb3J0IHtBcHBTZXNzaW9ufSBmcm9tICd+L2xpYi9zZXNzaW9uJzsKaW1wb3J0IHtDQVJUX1FVRVJZX0ZSQUdNRU5UfSBmcm9tICd+L2xpYi9mcmFnbWVudHMnOwoKY29uc3QgYWRkaXRpb25hbENvbnRleHQgPSB7CiAgLy8gQWRkaXRpb25hbCBjb250ZXh0IGZvciBjdXN0b20gcHJvcGVydGllcywgQ01TIGNsaWVudHMsIDNQIFNES3MsIGV0Yy4KfSBhcyBjb25zdDsKCnR5cGUgQWRkaXRpb25hbENvbnRleHRUeXBlID0gdHlwZW9mIGFkZGl0aW9uYWxDb250ZXh0OwoKZGVjbGFyZSBnbG9iYWwgewogIGludGVyZmFjZSBIeWRyb2dlbkFkZGl0aW9uYWxDb250ZXh0IGV4dGVuZHMgQWRkaXRpb25hbENvbnRleHRUeXBlIHt9Cn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBjcmVhdGVIeWRyb2dlblJvdXRlckNvbnRleHQoCiAgcmVxdWVzdDogUmVxdWVzdCwKICBlbnY6IEVudiwKICBleGVjdXRpb25Db250ZXh0OiBFeGVjdXRpb25Db250ZXh0LAopIHsKICBpZiAoIWVudj8uU0VTU0lPTl9TRUNSRVQpIHsKICAgIHRocm93IG5ldyBFcnJvcignU0VTU0lPTl9TRUNSRVQgZW52aXJvbm1lbnQgdmFyaWFibGUgaXMgbm90IHNldCcpOwogIH0KCiAgY29uc3Qgd2FpdFVudGlsID0gZXhlY3V0aW9uQ29udGV4dC53YWl0VW50aWwuYmluZChleGVjdXRpb25Db250ZXh0KTsKICBjb25zdCBbY2FjaGUsIHNlc3Npb25dID0gYXdhaXQgUHJvbWlzZS5hbGwoWwogICAgY2FjaGVzLm9wZW4oJ2h5ZHJvZ2VuJyksCiAgICBBcHBTZXNzaW9uLmluaXQocmVxdWVzdCwgW2Vudi5TRVNTSU9OX1NFQ1JFVF0pLAogIF0pOwoKICBjb25zdCBoeWRyb2dlbkNvbnRleHQgPSBjcmVhdGVIeWRyb2dlbkNvbnRleHQoCiAgICB7CiAgICAgIGVudiwKICAgICAgcmVxdWVzdCwKICAgICAgY2FjaGUsCiAgICAgIHdhaXRVbnRpbCwKICAgICAgc2Vzc2lvbiwKICAgICAgaTE4bjoge2xhbmd1YWdlOiAnRU4nLCBjb3VudHJ5OiAnVVMnfSwKICAgICAgY2FydDogewogICAgICAgIHF1ZXJ5RnJhZ21lbnQ6IENBUlRfUVVFUllfRlJBR01FTlQsCiAgICAgIH0sCiAgICB9LAogICAgYWRkaXRpb25hbENvbnRleHQsCiAgKTsKCiAgcmV0dXJuIGh5ZHJvZ2VuQ29udGV4dDsKfQpgYGAK"
+            },
+            {
+              "title": "Update server.ts to use createHydrogenRouterContext",
+              "info": "Replace @shopify/remix-oxygen with @shopify/hydrogen/oxygen. Use the new context creation function with session handling.",
+              "code": "YGBgZGlmZgovLyBzZXJ2ZXIudHMKLSBpbXBvcnQge2NyZWF0ZVJlcXVlc3RIYW5kbGVyfSBmcm9tICJAc2hvcGlmeS9yZW1peC1veHlnZW4iOworIGltcG9ydCB7Y3JlYXRlUmVxdWVzdEhhbmRsZXJ9IGZyb20gIkBzaG9waWZ5L2h5ZHJvZ2VuL294eWdlbiI7CisgaW1wb3J0IHtjcmVhdGVIeWRyb2dlblJvdXRlckNvbnRleHR9IGZyb20gIn4vbGliL2NvbnRleHQiOwoKZXhwb3J0IGRlZmF1bHQgewogIGFzeW5jIGZldGNoKHJlcXVlc3Q6IFJlcXVlc3QsIGVudjogRW52LCBleGVjdXRpb25Db250ZXh0OiBFeGVjdXRpb25Db250ZXh0KTogUHJvbWlzZTxSZXNwb25zZT4geworICAgY29uc3QgaHlkcm9nZW5Db250ZXh0ID0gYXdhaXQgY3JlYXRlSHlkcm9nZW5Sb3V0ZXJDb250ZXh0KAorICAgICByZXF1ZXN0LAorICAgICBlbnYsCisgICAgIGV4ZWN1dGlvbkNvbnRleHQsCisgICApOwoKICAgIGNvbnN0IGhhbmRsZVJlcXVlc3QgPSBjcmVhdGVSZXF1ZXN0SGFuZGxlcih7Ci0gICAgIGJ1aWxkOiBhd2FpdCBpbXBvcnQoJ3ZpcnR1YWw6cmVtaXgvc2VydmVyLWJ1aWxkJyksCisgICAgIGJ1aWxkOiBhd2FpdCBpbXBvcnQoJ3ZpcnR1YWw6cmVhY3Qtcm91dGVyL3NlcnZlci1idWlsZCcpLAogICAgICBtb2RlOiBwcm9jZXNzLmVudi5OT0RFX0VOViwKLSAgICAgZ2V0TG9hZENvbnRleHQ6ICgpID0+ICh7Li4ufSksCisgICAgIGdldExvYWRDb250ZXh0OiAoKSA9PiBoeWRyb2dlbkNvbnRleHQsCiAgICB9KTsKCiAgICBjb25zdCByZXNwb25zZSA9IGF3YWl0IGhhbmRsZVJlcXVlc3QocmVxdWVzdCk7CisKKyAgIGlmIChoeWRyb2dlbkNvbnRleHQuc2Vzc2lvbi5pc1BlbmRpbmcpIHsKKyAgICAgcmVzcG9uc2UuaGVhZGVycy5zZXQoJ1NldC1Db29raWUnLCBhd2FpdCBoeWRyb2dlbkNvbnRleHQuc2Vzc2lvbi5jb21taXQoKSk7CisgICB9CgogICAgcmV0dXJuIHJlc3BvbnNlOwogIH0KfTsKYGBgCg=="
+            },
+            {
+              "title": "Update entry.server.tsx with new context types",
+              "info": "Replace Remix types with React Router types. Use HydrogenRouterContextProvider for better type safety.",
+              "code": "YGBgZGlmZgovLyBhcHAvZW50cnkuc2VydmVyLnRzeAotIGltcG9ydCB0eXBlIHtBcHBMb2FkQ29udGV4dH0gZnJvbSAiQHNob3BpZnkvcmVtaXgtb3h5Z2VuIjsKLSBpbXBvcnQgdHlwZSB7RW50cnlDb250ZXh0fSBmcm9tICJAcmVtaXgtcnVuL3NlcnZlci1ydW50aW1lIjsKKyBpbXBvcnQgdHlwZSB7RW50cnlDb250ZXh0fSBmcm9tICJyZWFjdC1yb3V0ZXIiOwppbXBvcnQgewogIGNyZWF0ZUNvbnRlbnRTZWN1cml0eVBvbGljeSwKKyB0eXBlIEh5ZHJvZ2VuUm91dGVyQ29udGV4dFByb3ZpZGVyLAp9IGZyb20gIkBzaG9waWZ5L2h5ZHJvZ2VuIjsKCmV4cG9ydCBkZWZhdWx0IGFzeW5jIGZ1bmN0aW9uIGhhbmRsZVJlcXVlc3QoCiAgcmVxdWVzdDogUmVxdWVzdCwKICByZXNwb25zZVN0YXR1c0NvZGU6IG51bWJlciwKICByZXNwb25zZUhlYWRlcnM6IEhlYWRlcnMsCi0gcmVtaXhDb250ZXh0OiBFbnRyeUNvbnRleHQsCisgcmVhY3RSb3V0ZXJDb250ZXh0OiBFbnRyeUNvbnRleHQsCi0gY29udGV4dDogQXBwTG9hZENvbnRleHQsCisgY29udGV4dDogSHlkcm9nZW5Sb3V0ZXJDb250ZXh0UHJvdmlkZXIsCikgewogIGNvbnN0IHtub25jZSwgaGVhZGVyLCBOb25jZVByb3ZpZGVyfSA9IGNyZWF0ZUNvbnRlbnRTZWN1cml0eVBvbGljeSh7Li4ufSk7CgogIGNvbnN0IGJvZHkgPSBhd2FpdCByZW5kZXJUb1JlYWRhYmxlU3RyZWFtKAogICAgPE5vbmNlUHJvdmlkZXI+CiAgICAgIDxTZXJ2ZXJSb3V0ZXIKLSAgICAgICBjb250ZXh0PXtyZW1peENvbnRleHR9CisgICAgICAgY29udGV4dD17cmVhY3RSb3V0ZXJDb250ZXh0fQogICAgICAgIHVybD17cmVxdWVzdC51cmx9CiAgICAgICAgbm9uY2U9e25vbmNlfQogICAgICAvPgogICAgPC9Ob25jZVByb3ZpZGVyPiwKICApOwp9CmBgYAo="
+            },
+            {
+              "title": "Update entry.client.tsx with NonceProvider and HydratedRouter",
+              "info": "Replace RemixBrowser with HydratedRouter. Wrap with NonceProvider for CSP support during client-side hydration.",
+              "code": "YGBgZGlmZgovLyBhcHAvZW50cnkuY2xpZW50LnRzeAotIGltcG9ydCB7UmVtaXhCcm93c2VyfSBmcm9tICJAcmVtaXgtcnVuL3JlYWN0IjsKKyBpbXBvcnQge0h5ZHJhdGVkUm91dGVyfSBmcm9tICJyZWFjdC1yb3V0ZXIvZG9tIjsKaW1wb3J0IHtzdGFydFRyYW5zaXRpb24sIFN0cmljdE1vZGV9IGZyb20gInJlYWN0IjsKaW1wb3J0IHtoeWRyYXRlUm9vdH0gZnJvbSAicmVhY3QtZG9tL2NsaWVudCI7CisgaW1wb3J0IHtOb25jZVByb3ZpZGVyfSBmcm9tICJAc2hvcGlmeS9oeWRyb2dlbiI7CgppZiAoIXdpbmRvdy5sb2NhdGlvbi5vcmlnaW4uaW5jbHVkZXMoIndlYmNhY2hlLmdvb2dsZXVzZXJjb250ZW50LmNvbSIpKSB7CiAgc3RhcnRUcmFuc2l0aW9uKCgpID0+IHsKKyAgIGNvbnN0IGV4aXN0aW5nTm9uY2UgPSBkb2N1bWVudAorICAgICAucXVlcnlTZWxlY3RvcjxIVE1MU2NyaXB0RWxlbWVudD4oInNjcmlwdFtub25jZV0iKQorICAgICA/Lm5vbmNlOworCiAgICBoeWRyYXRlUm9vdCgKICAgICAgZG9jdW1lbnQsCiAgICAgIDxTdHJpY3RNb2RlPgotICAgICAgIDxSZW1peEJyb3dzZXIgLz4KKyAgICAgICA8Tm9uY2VQcm92aWRlciB2YWx1ZT17ZXhpc3RpbmdOb25jZX0+CisgICAgICAgICA8SHlkcmF0ZWRSb3V0ZXIgLz4KKyAgICAgICA8L05vbmNlUHJvdmlkZXI+CiAgICAgIDwvU3RyaWN0TW9kZT4sCiAgICApOwogIH0pOwp9CmBgYAo="
+            },
+            {
+              "title": "Update @shopify/remix-oxygen imports in route files",
+              "info": "Replace @shopify/remix-oxygen imports with react-router equivalents in your routes",
+              "code": "YGBgZGlmZgotIGltcG9ydCB7cmVkaXJlY3QsIHR5cGUgTG9hZGVyRnVuY3Rpb25BcmdzfSBmcm9tICJAc2hvcGlmeS9yZW1peC1veHlnZW4iOworIGltcG9ydCB7cmVkaXJlY3R9IGZyb20gInJlYWN0LXJvdXRlciI7CisgaW1wb3J0IHR5cGUge0xvYWRlckZ1bmN0aW9uQXJnc30gZnJvbSAiQHNob3BpZnkvaHlkcm9nZW4vb3h5Z2VuIjsKYGBgCg=="
+            },
+            {
+              "title": "Update @remix-run/react imports in route files",
+              "info": "Replace @remix-run/react imports with react-router equivalents in your routes",
+              "code": "YGBgZGlmZgotIGltcG9ydCB7dXNlTG9hZGVyRGF0YSwgdHlwZSBNZXRhRnVuY3Rpb259IGZyb20gIkByZW1peC1ydW4vcmVhY3QiOworIGltcG9ydCB7dXNlTG9hZGVyRGF0YX0gZnJvbSAicmVhY3Qtcm91dGVyIjsKYGBgCg=="
+            },
+            {
+              "title": "Add React Router 7 route type imports",
+              "info": "Import route-specific types from React Router 7's new type generation system",
+              "code": "YGBgZGlmZgorIGltcG9ydCB0eXBlIHtSb3V0ZX0gZnJvbSAiLi8rdHlwZXMvcm91dGUtbmFtZSI7CmBgYAo="
+            },
+            {
+              "title": "Add .react-router to .gitignore",
+              "info": "React Router 7 generates type files that should not be committed to version control",
+              "code": "YGBgZGlmZgplY2hvICIucmVhY3Qtcm91dGVyLyIgPj4gLmdpdGlnbm9yZQpgYGAK"
+            },
+            {
+              "title": "Update package.json scripts to use react-router typegen",
+              "info": "Add React Router type generation to your dev script. This automatically updates types during development.",
+              "code": "YGBgZGlmZgotICJkZXYiOiAic2hvcGlmeSBoeWRyb2dlbiBkZXYgLS1jb2RlZ2VuIiwKKyAiZGV2IjogInJlYWN0LXJvdXRlciB0eXBlZ2VuIC0td2F0Y2ggJiYgc2hvcGlmeSBoeWRyb2dlbiBkZXYgLS1jb2RlZ2VuIiwKYGBgCg=="
+            },
+            {
+              "title": "Verify your app starts and builds correctly",
+              "info": "Test that your application runs without errors after the migration",
+              "code": "YGBgZGlmZgpucG0gcnVuIGRldgpucG0gcnVuIGJ1aWxkCmBgYAo="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3141",
+          "id": "3141"
+        },
+        {
+          "title": "Update to Storefront API and Customer Account API version 2025-07",
+          "breaking": false,
+          "pr": "https://github.com/Shopify/hydrogen/pull/3082",
+          "id": "3082"
+        },
+        {
+          "title": "Add countryCode parameter to Customer Account API methods",
+          "info": "You can now pass the countryCode parameter to all Customer Account API methods for better localization support.",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Add countryCode parameter to Customer Account API method calls",
+              "info": "Pass the customer account country code to any Customer Account API method. See login method example.",
+              "code": "YGBgZGlmZgovLyBhcHAvcm91dGVzL2FjY291bnRfLmxvZ2luLnRzeCAoZXhhbXBsZSkKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGxvYWRlcih7cmVxdWVzdCwgY29udGV4dH06IFJvdXRlLkxvYWRlckFyZ3MpIHsKICByZXR1cm4gY29udGV4dC5jdXN0b21lckFjY291bnQubG9naW4oeworICAgY291bnRyeUNvZGU6IGNvbnRleHQuY3VzdG9tZXJBY2NvdW50LmkxOG4uY291bnRyeSwKICB9KTsKfQoKLy8gVGhlIGNvdW50cnlDb2RlIHBhcmFtZXRlciBpcyBub3cgYXZhaWxhYmxlIG9uIGFsbCBDdXN0b21lciBBY2NvdW50IEFQSSBtZXRob2RzCi8vIGFuZCBjYW4gYmUgcGFzc2VkIGZyb20gY29udGV4dC5jdXN0b21lckFjY291bnQuaTE4bi5jb3VudHJ5CmBgYAo="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3148",
+          "id": "3148"
+        },
+        {
+          "title": "Remove individual gift cards from cart",
+          "info": "Use the new CartForm.ACTIONS.GiftCardCodesRemove action to remove individual gift cards by their IDs. You no longer need to replace all gift cards.",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Add GiftCardCodesRemove case to cart action handler",
+              "info": "Handle the new GiftCardCodesRemove action in your cart route. This enables individual gift card removal.",
+              "code": "YGBgZGlmZgovLyBhcHAvcm91dGVzL2NhcnQudHN4CmV4cG9ydCBhc3luYyBmdW5jdGlvbiBhY3Rpb24oe3JlcXVlc3QsIGNvbnRleHR9OiBSb3V0ZS5BY3Rpb25BcmdzKSB7CiAgY29uc3Qge2NhcnR9ID0gY29udGV4dDsKICBjb25zdCBmb3JtRGF0YSA9IGF3YWl0IHJlcXVlc3QuZm9ybURhdGEoKTsKICBjb25zdCB7YWN0aW9uLCBpbnB1dHN9ID0gQ2FydEZvcm0uZ2V0Rm9ybUlucHV0KGZvcm1EYXRhKTsKCiAgc3dpdGNoIChhY3Rpb24pIHsKICAgIC8vIC4uLiBleGlzdGluZyBjYXNlcyAuLi4KKyAgIGNhc2UgQ2FydEZvcm0uQUNUSU9OUy5HaWZ0Q2FyZENvZGVzUmVtb3ZlOiB7CisgICAgIGNvbnN0IGFwcGxpZWRHaWZ0Q2FyZElkcyA9IGlucHV0cy5naWZ0Q2FyZENvZGVzIGFzIHN0cmluZ1tdOworICAgICByZXN1bHQgPSBhd2FpdCBjYXJ0LnJlbW92ZUdpZnRDYXJkQ29kZXMoYXBwbGllZEdpZnRDYXJkSWRzKTsKKyAgICAgYnJlYWs7CisgICB9CiAgfQp9CmBgYAo="
+            },
+            {
+              "title": "Add RemoveGiftCardForm component",
+              "info": "Create a new form component to handle individual gift card removal",
+              "code": "YGBgZGlmZgovLyBhcHAvY29tcG9uZW50cy9DYXJ0U3VtbWFyeS50c3gKK2Z1bmN0aW9uIFJlbW92ZUdpZnRDYXJkRm9ybSh7CisgIGdpZnRDYXJkSWQsCisgIGNoaWxkcmVuLAorfTogeworICBnaWZ0Q2FyZElkOiBzdHJpbmc7CisgIGNoaWxkcmVuOiBSZWFjdC5SZWFjdE5vZGU7Cit9KSB7CisgIHJldHVybiAoCisgICAgPENhcnRGb3JtCisgICAgICByb3V0ZT0iL2NhcnQiCisgICAgICBhY3Rpb249e0NhcnRGb3JtLkFDVElPTlMuR2lmdENhcmRDb2Rlc1JlbW92ZX0KKyAgICAgIGlucHV0cz17eworICAgICAgICBnaWZ0Q2FyZENvZGVzOiBbZ2lmdENhcmRJZF0sCisgICAgICB9fQorICAgID4KKyAgICAgIHtjaGlsZHJlbn0KKyAgICA8L0NhcnRGb3JtPgorICApOworfQpgYGAK"
+            },
+            {
+              "title": "Update CartGiftCard to display gift cards with remove buttons",
+              "info": "Render applied gift cards with individual remove buttons. This improves user experience.",
+              "code": "YGBgZGlmZgovLyBhcHAvY29tcG9uZW50cy9DYXJ0U3VtbWFyeS50c3gKZnVuY3Rpb24gQ2FydEdpZnRDYXJkKHtnaWZ0Q2FyZENvZGVzfTogey4uLn0pIHsKICByZXR1cm4gKAogICAgPGRpdj4KKyAgICAge2dpZnRDYXJkQ29kZXMgJiYgZ2lmdENhcmRDb2Rlcy5sZW5ndGggPiAwICYmICgKKyAgICAgICA8ZGw+CisgICAgICAgICA8ZHQ+QXBwbGllZCBHaWZ0IENhcmQocyk8L2R0PgorICAgICAgICAge2dpZnRDYXJkQ29kZXMubWFwKChnaWZ0Q2FyZCkgPT4gKAorICAgICAgICAgICA8UmVtb3ZlR2lmdENhcmRGb3JtIGtleT17Z2lmdENhcmQuaWR9IGdpZnRDYXJkSWQ9e2dpZnRDYXJkLmlkfT4KKyAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iY2FydC1kaXNjb3VudCI+CisgICAgICAgICAgICAgICA8Y29kZT4qKip7Z2lmdENhcmQubGFzdENoYXJhY3RlcnN9PC9jb2RlPgorICAgICAgICAgICAgICAgPE1vbmV5IGRhdGE9e2dpZnRDYXJkLmFtb3VudFVzZWR9IC8+CisgICAgICAgICAgICAgICA8YnV0dG9uIHR5cGU9InN1Ym1pdCI+UmVtb3ZlPC9idXR0b24+CisgICAgICAgICAgICAgPC9kaXY+CisgICAgICAgICAgIDwvUmVtb3ZlR2lmdENhcmRGb3JtPgorICAgICAgICAgKSl9CisgICAgICAgPC9kbD4KKyAgICAgKX0KICAgIDwvZGl2PgogICk7Cn0KYGBgCg=="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3128",
+          "id": "3128"
+        },
+        {
+          "title": "Filter customer orders by number and confirmation",
+          "info": "Filter your customer orders by order number and confirmation number using Customer Account API query parameters.",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Create app/lib/orderFilters.ts utility",
+              "info": "Create helper functions to parse URL parameters and build Customer Account API search queries.",
+              "code": "YGBgdHlwZXNjcmlwdAovLyBhcHAvbGliL29yZGVyRmlsdGVycy50cwpleHBvcnQgY29uc3QgT1JERVJfRklMVEVSX0ZJRUxEUyA9IHsKICBOQU1FOiAnbmFtZScsCiAgQ09ORklSTUFUSU9OX05VTUJFUjogJ2NvbmZpcm1hdGlvbl9udW1iZXInLAp9IGFzIGNvbnN0OwoKZXhwb3J0IGludGVyZmFjZSBPcmRlckZpbHRlclBhcmFtcyB7CiAgbmFtZT86IHN0cmluZzsKICBjb25maXJtYXRpb25OdW1iZXI/OiBzdHJpbmc7Cn0KCmZ1bmN0aW9uIHNhbml0aXplRmlsdGVyVmFsdWUodmFsdWU6IHN0cmluZyk6IHN0cmluZyB7CiAgcmV0dXJuIHZhbHVlLnJlcGxhY2UoL1teYS16QS1aMC05X1wtXS9nLCAnJyk7Cn0KCmV4cG9ydCBmdW5jdGlvbiBidWlsZE9yZGVyU2VhcmNoUXVlcnkoCiAgZmlsdGVyczogT3JkZXJGaWx0ZXJQYXJhbXMsCik6IHN0cmluZyB8IHVuZGVmaW5lZCB7CiAgY29uc3QgcXVlcnlQYXJ0czogc3RyaW5nW10gPSBbXTsKCiAgaWYgKGZpbHRlcnMubmFtZSkgewogICAgY29uc3QgY2xlYW5OYW1lID0gZmlsdGVycy5uYW1lLnJlcGxhY2UoL14jLywgJycpLnRyaW0oKTsKICAgIGNvbnN0IHNhbml0aXplZE5hbWUgPSBzYW5pdGl6ZUZpbHRlclZhbHVlKGNsZWFuTmFtZSk7CiAgICBpZiAoc2FuaXRpemVkTmFtZSkgewogICAgICBxdWVyeVBhcnRzLnB1c2goYG5hbWU6JHtzYW5pdGl6ZWROYW1lfWApOwogICAgfQogIH0KCiAgaWYgKGZpbHRlcnMuY29uZmlybWF0aW9uTnVtYmVyKSB7CiAgICBjb25zdCBjbGVhbkNvbmZpcm1hdGlvbiA9IGZpbHRlcnMuY29uZmlybWF0aW9uTnVtYmVyLnRyaW0oKTsKICAgIGNvbnN0IHNhbml0aXplZENvbmZpcm1hdGlvbiA9IHNhbml0aXplRmlsdGVyVmFsdWUoY2xlYW5Db25maXJtYXRpb24pOwogICAgaWYgKHNhbml0aXplZENvbmZpcm1hdGlvbikgewogICAgICBxdWVyeVBhcnRzLnB1c2goYGNvbmZpcm1hdGlvbl9udW1iZXI6JHtzYW5pdGl6ZWRDb25maXJtYXRpb259YCk7CiAgICB9CiAgfQoKICByZXR1cm4gcXVlcnlQYXJ0cy5sZW5ndGggPiAwID8gcXVlcnlQYXJ0cy5qb2luKCcgQU5EICcpIDogdW5kZWZpbmVkOwp9CgpleHBvcnQgZnVuY3Rpb24gcGFyc2VPcmRlckZpbHRlcnMoCiAgc2VhcmNoUGFyYW1zOiBVUkxTZWFyY2hQYXJhbXMsCik6IE9yZGVyRmlsdGVyUGFyYW1zIHsKICBjb25zdCBmaWx0ZXJzOiBPcmRlckZpbHRlclBhcmFtcyA9IHt9OwoKICBjb25zdCBuYW1lID0gc2VhcmNoUGFyYW1zLmdldChPUkRFUl9GSUxURVJfRklFTERTLk5BTUUpOwogIGlmIChuYW1lKSBmaWx0ZXJzLm5hbWUgPSBuYW1lOwoKICBjb25zdCBjb25maXJtYXRpb25OdW1iZXIgPSBzZWFyY2hQYXJhbXMuZ2V0KE9SREVSX0ZJTFRFUl9GSUVMRFMuQ09ORklSTUFUSU9OX05VTUJFUik7CiAgaWYgKGNvbmZpcm1hdGlvbk51bWJlcikgZmlsdGVycy5jb25maXJtYXRpb25OdW1iZXIgPSBjb25maXJtYXRpb25OdW1iZXI7CgogIHJldHVybiBmaWx0ZXJzOwp9CmBgYAo="
+            },
+            {
+              "title": "Update loader to parse filters and build search query",
+              "info": "Parse URL search parameters and build the Customer Account API query string.",
+              "code": "YGBgZGlmZgovLyBhcHAvcm91dGVzL2FjY291bnQub3JkZXJzLl9pbmRleC50c3gKK2ltcG9ydCB7CisgIGJ1aWxkT3JkZXJTZWFyY2hRdWVyeSwKKyAgcGFyc2VPcmRlckZpbHRlcnMsCisgIHR5cGUgT3JkZXJGaWx0ZXJQYXJhbXMsCit9IGZyb20gJ34vbGliL29yZGVyRmlsdGVycyc7CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gbG9hZGVyKHtyZXF1ZXN0LCBjb250ZXh0fTogUm91dGUuTG9hZGVyQXJncykgewogIGNvbnN0IHtjdXN0b21lckFjY291bnR9ID0gY29udGV4dDsKICBjb25zdCBwYWdpbmF0aW9uVmFyaWFibGVzID0gZ2V0UGFnaW5hdGlvblZhcmlhYmxlcyhyZXF1ZXN0LCB7CiAgICBwYWdlQnk6IDIwLAogIH0pOwoKKyBjb25zdCB1cmwgPSBuZXcgVVJMKHJlcXVlc3QudXJsKTsKKyBjb25zdCBmaWx0ZXJzID0gcGFyc2VPcmRlckZpbHRlcnModXJsLnNlYXJjaFBhcmFtcyk7CisgY29uc3QgcXVlcnkgPSBidWlsZE9yZGVyU2VhcmNoUXVlcnkoZmlsdGVycyk7CgogIGNvbnN0IHtkYXRhLCBlcnJvcnN9ID0gYXdhaXQgY3VzdG9tZXJBY2NvdW50LnF1ZXJ5KENVU1RPTUVSX09SREVSU19RVUVSWSwgewogICAgdmFyaWFibGVzOiB7CiAgICAgIC4uLnBhZ2luYXRpb25WYXJpYWJsZXMsCisgICAgIHF1ZXJ5LAogICAgICBsYW5ndWFnZTogY3VzdG9tZXJBY2NvdW50LmkxOG4ubGFuZ3VhZ2UsCiAgICB9LAogIH0pOwoKICBpZiAoZXJyb3JzPy5sZW5ndGggfHwgIWRhdGE/LmN1c3RvbWVyKSB7CiAgICB0aHJvdyBFcnJvcignQ3VzdG9tZXIgb3JkZXJzIG5vdCBmb3VuZCcpOwogIH0KCi0gcmV0dXJuIHtjdXN0b21lcjogZGF0YS5jdXN0b21lcn07CisgcmV0dXJuIHtjdXN0b21lcjogZGF0YS5jdXN0b21lciwgZmlsdGVyc307Cn0KYGBgCg=="
+            },
+            {
+              "title": "Add OrderSearchForm component",
+              "info": "Create a search form with order number and confirmation number inputs",
+              "code": "YGBgZGlmZgovLyBhcHAvcm91dGVzL2FjY291bnQub3JkZXJzLl9pbmRleC50c3gKK2ltcG9ydCB7dXNlU2VhcmNoUGFyYW1zLCB1c2VOYXZpZ2F0aW9ufSBmcm9tICdyZWFjdC1yb3V0ZXInOworaW1wb3J0IHt1c2VSZWZ9IGZyb20gJ3JlYWN0JzsKK2ltcG9ydCB7T1JERVJfRklMVEVSX0ZJRUxEU30gZnJvbSAnfi9saWIvb3JkZXJGaWx0ZXJzJzsKCitmdW5jdGlvbiBPcmRlclNlYXJjaEZvcm0oe2N1cnJlbnRGaWx0ZXJzfToge2N1cnJlbnRGaWx0ZXJzOiBPcmRlckZpbHRlclBhcmFtc30pIHsKKyAgY29uc3QgW3NlYXJjaFBhcmFtcywgc2V0U2VhcmNoUGFyYW1zXSA9IHVzZVNlYXJjaFBhcmFtcygpOworICBjb25zdCBuYXZpZ2F0aW9uID0gdXNlTmF2aWdhdGlvbigpOworICBjb25zdCBpc1NlYXJjaGluZyA9IG5hdmlnYXRpb24uc3RhdGUgIT09ICdpZGxlJyAmJiBuYXZpZ2F0aW9uLmxvY2F0aW9uPy5wYXRobmFtZT8uaW5jbHVkZXMoJ29yZGVycycpOworICBjb25zdCBmb3JtUmVmID0gdXNlUmVmPEhUTUxGb3JtRWxlbWVudD4obnVsbCk7CisKKyAgY29uc3QgaGFuZGxlU3VibWl0ID0gKGV2ZW50OiBSZWFjdC5Gb3JtRXZlbnQ8SFRNTEZvcm1FbGVtZW50PikgPT4geworICAgIGV2ZW50LnByZXZlbnREZWZhdWx0KCk7CisgICAgY29uc3QgZm9ybURhdGEgPSBuZXcgRm9ybURhdGEoZXZlbnQuY3VycmVudFRhcmdldCk7CisgICAgY29uc3QgcGFyYW1zID0gbmV3IFVSTFNlYXJjaFBhcmFtcygpOworCisgICAgY29uc3QgbmFtZSA9IGZvcm1EYXRhLmdldChPUkRFUl9GSUxURVJfRklFTERTLk5BTUUpPy50b1N0cmluZygpLnRyaW0oKTsKKyAgICBjb25zdCBjb25maXJtYXRpb25OdW1iZXIgPSBmb3JtRGF0YS5nZXQoT1JERVJfRklMVEVSX0ZJRUxEUy5DT05GSVJNQVRJT05fTlVNQkVSKT8udG9TdHJpbmcoKS50cmltKCk7CisKKyAgICBpZiAobmFtZSkgcGFyYW1zLnNldChPUkRFUl9GSUxURVJfRklFTERTLk5BTUUsIG5hbWUpOworICAgIGlmIChjb25maXJtYXRpb25OdW1iZXIpIHBhcmFtcy5zZXQoT1JERVJfRklMVEVSX0ZJRUxEUy5DT05GSVJNQVRJT05fTlVNQkVSLCBjb25maXJtYXRpb25OdW1iZXIpOworCisgICAgc2V0U2VhcmNoUGFyYW1zKHBhcmFtcyk7CisgIH07CisKKyAgcmV0dXJuICgKKyAgICA8Zm9ybSByZWY9e2Zvcm1SZWZ9IG9uU3VibWl0PXtoYW5kbGVTdWJtaXR9PgorICAgICAgPGlucHV0IHR5cGU9InNlYXJjaCIgbmFtZT17T1JERVJfRklMVEVSX0ZJRUxEUy5OQU1FfSBwbGFjZWhvbGRlcj0iT3JkZXIgIyIgZGVmYXVsdFZhbHVlPXtjdXJyZW50RmlsdGVycy5uYW1lIHx8ICcnfSAvPgorICAgICAgPGlucHV0IHR5cGU9InNlYXJjaCIgbmFtZT17T1JERVJfRklMVEVSX0ZJRUxEUy5DT05GSVJNQVRJT05fTlVNQkVSfSBwbGFjZWhvbGRlcj0iQ29uZmlybWF0aW9uICMiIGRlZmF1bHRWYWx1ZT17Y3VycmVudEZpbHRlcnMuY29uZmlybWF0aW9uTnVtYmVyIHx8ICcnfSAvPgorICAgICAgPGJ1dHRvbiB0eXBlPSJzdWJtaXQiIGRpc2FibGVkPXtpc1NlYXJjaGluZ30+e2lzU2VhcmNoaW5nID8gJ1NlYXJjaGluZycgOiAnU2VhcmNoJ308L2J1dHRvbj4KKyAgICA8L2Zvcm0+CisgICk7Cit9CmBgYAo="
+            },
+            {
+              "title": "Update Orders component to use filters and add EmptyOrders",
+              "info": "Pass filters to components and add conditional empty state messaging.",
+              "code": "YGBgZGlmZgovLyBhcHAvcm91dGVzL2FjY291bnQub3JkZXJzLl9pbmRleC50c3gKZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gT3JkZXJzKCkgewotIGNvbnN0IHtjdXN0b21lcn0gPSB1c2VMb2FkZXJEYXRhPE9yZGVyc0xvYWRlckRhdGE+KCk7CisgY29uc3Qge2N1c3RvbWVyLCBmaWx0ZXJzfSA9IHVzZUxvYWRlckRhdGE8T3JkZXJzTG9hZGVyRGF0YT4oKTsKICBjb25zdCB7b3JkZXJzfSA9IGN1c3RvbWVyOwoKICByZXR1cm4gKAogICAgPGRpdiBjbGFzc05hbWU9Im9yZGVycyI+CisgICAgIDxPcmRlclNlYXJjaEZvcm0gY3VycmVudEZpbHRlcnM9e2ZpbHRlcnN9IC8+Ci0gICAgIDxPcmRlcnNUYWJsZSBvcmRlcnM9e29yZGVyc30gLz4KKyAgICAgPE9yZGVyc1RhYmxlIG9yZGVycz17b3JkZXJzfSBmaWx0ZXJzPXtmaWx0ZXJzfSAvPgogICAgPC9kaXY+CiAgKTsKfQoKLWZ1bmN0aW9uIE9yZGVyc1RhYmxlKHtvcmRlcnN9OiB7b3JkZXJzOiBDdXN0b21lck9yZGVyc0ZyYWdtZW50WydvcmRlcnMnXX0pIHsKK2Z1bmN0aW9uIE9yZGVyc1RhYmxlKHtvcmRlcnMsIGZpbHRlcnN9OiB7b3JkZXJzOiBDdXN0b21lck9yZGVyc0ZyYWdtZW50WydvcmRlcnMnXTsgZmlsdGVyczogT3JkZXJGaWx0ZXJQYXJhbXN9KSB7CisgIGNvbnN0IGhhc0ZpbHRlcnMgPSAhIShmaWx0ZXJzLm5hbWUgfHwgZmlsdGVycy5jb25maXJtYXRpb25OdW1iZXIpOworCiAgcmV0dXJuICgKICAgIDxkaXY+CiAgICAgIHtvcmRlcnM/Lm5vZGVzLmxlbmd0aCA/ICgKICAgICAgICA8UGFnaW5hdGVkUmVzb3VyY2VTZWN0aW9uIGNvbm5lY3Rpb249e29yZGVyc30+CiAgICAgICAgICB7KHtub2RlOiBvcmRlcn0pID0+IDxPcmRlckl0ZW0ga2V5PXtvcmRlci5pZH0gb3JkZXI9e29yZGVyfSAvPn0KICAgICAgICA8L1BhZ2luYXRlZFJlc291cmNlU2VjdGlvbj4KICAgICAgKSA6ICgKLSAgICAgICA8cD5Zb3UgaGF2ZW4ndCBwbGFjZWQgYW55IG9yZGVycyB5ZXQuPC9wPgorICAgICAgIDxFbXB0eU9yZGVycyBoYXNGaWx0ZXJzPXtoYXNGaWx0ZXJzfSAvPgogICAgICApfQogICAgPC9kaXY+CiAgKTsKfQoKK2Z1bmN0aW9uIEVtcHR5T3JkZXJzKHtoYXNGaWx0ZXJzfToge2hhc0ZpbHRlcnM/OiBib29sZWFufSkgeworICByZXR1cm4gaGFzRmlsdGVycyA/ICgKKyAgICA8cD5ObyBvcmRlcnMgZm91bmQgbWF0Y2hpbmcgeW91ciBzZWFyY2guIDxMaW5rIHRvPSIvYWNjb3VudC9vcmRlcnMiPkNsZWFyIGZpbHRlcnM8L0xpbms+PC9wPgorICApIDogKAorICAgIDxwPllvdSBoYXZlbid0IHBsYWNlZCBhbnkgb3JkZXJzIHlldC48L3A+CisgICk7Cit9CmBgYAo="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3125",
+          "id": "3125"
+        },
+        {
+          "title": "Get order fulfillment status from Customer Account API",
+          "info": "You can now access fulfillmentStatus in your Order fragments for better order status tracking.",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Add fulfillmentStatus field to Order fragment",
+              "info": "Include fulfillmentStatus in your Customer Account API order queries.",
+              "code": "YGBgZGlmZgovLyBhcHAvZ3JhcGhxbC9jdXN0b21lci1hY2NvdW50L0N1c3RvbWVyT3JkZXJRdWVyeS50cwpmcmFnbWVudCBPcmRlciBvbiBPcmRlciB7CiAgaWQKICBuYW1lCiAgY29uZmlybWF0aW9uTnVtYmVyCiAgc3RhdHVzUGFnZVVybAorIGZ1bGZpbGxtZW50U3RhdHVzCiAgcHJvY2Vzc2VkQXQKICBmdWxmaWxsbWVudHMoZmlyc3Q6IDEpIHsKICAgIG5vZGVzIHsKICAgICAgc3RhdHVzCiAgICB9CiAgfQp9CmBgYAo="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039-fulfillment"
+        },
+        {
+          "title": "Use language context in Customer Account API mutations",
+          "info": "Your Customer Account API queries and mutations now support language context through the @inContext directive. This gives you proper localization.",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Add @inContext directive to all Customer Account API operations",
+              "info": "Add $language parameter and @inContext directive to your queries and mutations for localized content.",
+              "code": "YGBgZGlmZgovLyBhcHAvZ3JhcGhxbC9jdXN0b21lci1hY2NvdW50LyoudHMgKGFwcGx5IHRvIGFsbCBxdWVyaWVzIGFuZCBtdXRhdGlvbnMpCi8vIEV4YW1wbGU6IEN1c3RvbWVyRGV0YWlsc1F1ZXJ5LnRzCi0gcXVlcnkgQ3VzdG9tZXJEZXRhaWxzIHsKKyBxdWVyeSBDdXN0b21lckRldGFpbHMoJGxhbmd1YWdlOiBMYW5ndWFnZUNvZGUpIEBpbkNvbnRleHQobGFuZ3VhZ2U6ICRsYW5ndWFnZSkgewogICAgY3VzdG9tZXIgewogICAgICAuLi5DdXN0b21lcgogICAgfQogIH0KCi8vIEV4YW1wbGU6IEN1c3RvbWVyQWRkcmVzc011dGF0aW9ucy50cyAgCiAgbXV0YXRpb24gQ3VzdG9tZXJBZGRyZXNzVXBkYXRlKAogICAgJGFkZHJlc3M6IE1haWxpbmdBZGRyZXNzSW5wdXQhCiAgICAkYWRkcmVzc0lkOiBJRCEKICAgICRkZWZhdWx0QWRkcmVzczogQm9vbGVhbgorICAgJGxhbmd1YWdlOiBMYW5ndWFnZUNvZGUKLSApIHsKKyApIEBpbkNvbnRleHQobGFuZ3VhZ2U6ICRsYW5ndWFnZSkgewogICAgY3VzdG9tZXJBZGRyZXNzVXBkYXRlKC4uLikKICB9CgovLyBBcHBseSB0aGlzIHBhdHRlcm4gdG8gYWxsIEN1c3RvbWVyIEFjY291bnQgQVBJIHF1ZXJpZXMgYW5kIG11dGF0aW9uczoKLy8gLSBDdXN0b21lckRldGFpbHNRdWVyeS50cwovLyAtIEN1c3RvbWVyT3JkZXJRdWVyeS50cwovLyAtIEN1c3RvbWVyT3JkZXJzUXVlcnkudHMKLy8gLSBDdXN0b21lclVwZGF0ZU11dGF0aW9uLnRzCi8vIC0gQ3VzdG9tZXJBZGRyZXNzTXV0YXRpb25zLnRzIChhbGwgMyBtdXRhdGlvbnMpCmBgYAo="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039-incontext"
+        },
+        {
+          "title": "Defer non-critical fields with GraphQL @defer directive",
+          "info": "Your Storefront client now supports the @defer directive. Defer non-critical field loading to improve performance.",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Use @defer directive in Storefront API queries",
+              "info": "Wrap non-critical fields with @defer. This improves initial page load performance.",
+              "code": "YGBgZGlmZgovLyBhcHAvcm91dGVzL3lvdXItcm91dGUudHN4IChleGFtcGxlKQoraW1wb3J0IHtMb2FkZXJGdW5jdGlvbkFyZ3MsIHVzZUxvYWRlckRhdGF9IGZyb20gJ3JlYWN0LXJvdXRlcic7CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gbG9hZGVyKHtjb250ZXh0fTogTG9hZGVyRnVuY3Rpb25BcmdzKSB7CiAgY29uc3QgZGF0YSA9IGF3YWl0IGNvbnRleHQuc3RvcmVmcm9udC5xdWVyeSgKICAgIGAKICBxdWVyeSBQcm9kdWN0UXVlcnkoJGhhbmRsZTogU3RyaW5nKSB7CiAgICBwcm9kdWN0KGhhbmRsZTogJGhhbmRsZSkgewogICAgICBpZAogICAgICBoYW5kbGUKKyAgICAgLi4uIEBkZWZlcihsYWJlbDogImRlZmVycmVkRmllbGRzIikgeworICAgICAgIHRpdGxlCisgICAgICAgZGVzY3JpcHRpb24KKyAgICAgfQogICAgfQogIH0KYCwKICAgIHsKICAgICAgdmFyaWFibGVzOiB7CiAgICAgICAgaGFuZGxlOiAndjItc25vd2JvYXJkJywKICAgICAgfSwKICAgIH0sCiAgKTsKICByZXR1cm4gZGF0YTsKfQoKLy8gVGhlIEBkZWZlciBkaXJlY3RpdmUgYWxsb3dzIHlvdSB0byBkZWZlciBsb2FkaW5nIG9mIG5vbi1jcml0aWNhbCBmaWVsZHMKLy8gaW1wcm92aW5nIGluaXRpYWwgcGFnZSBsb2FkIHBlcmZvcm1hbmNlCmBgYAo="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/2993",
+          "id": "2993"
+        },
+        {
+          "title": "Include cdn.shopify.com by default in CSP connectSrc",
+          "info": "Improves Content Security Policy defaults for Shopify CDN resources.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3172",
+          "id": "3172"
+        },
+        {
+          "title": "Upgrade Miniflare from v2 to v3",
+          "info": "Internal MiniOxygen API refactored to work with Miniflare v3's new architecture, improving development server performance and compatibility.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3039",
+          "id": "3039"
+        }
+      ]
+    },
+    {
+      "title": "[COMPLETE BEFORE ATTEMPTING 2025.7.0 UPGRADE] Bump Shopify CLI version",
       "version": "2025.4.1",
       "hash": "e4f44954a5dc53e6dfccd1b7e96de593bbb0887a",
       "commit": "https://github.com/Shopify/hydrogen/commit/e4f44954a5dc53e6dfccd1b7e96de593bbb0887a",

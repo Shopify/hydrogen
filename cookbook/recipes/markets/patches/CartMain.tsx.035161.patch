@@ -1,0 +1,10 @@
+index 1117b68b..870f008a 100644
+--- a/templates/skeleton/app/components/CartMain.tsx
++++ b/templates/skeleton/app/components/CartMain.tsx
+@@ -1,5 +1,5 @@
+ import {useOptimisticCart} from '@shopify/hydrogen';
+-import {Link} from 'react-router';
++import {Link} from '~/components/Link';
+ import type {CartApiQueryFragment} from 'storefrontapi.generated';
+ import {useAside} from '~/components/Aside';
+ import {CartLineItem} from '~/components/CartLineItem';

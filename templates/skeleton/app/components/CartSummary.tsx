@@ -1,34 +1,16 @@
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import type {CartLayout} from '~/components/CartMain';
-import type {
-  CartWarning,
-  CartUserError,
-  MetafieldsSetUserError,
-  MetafieldDeleteUserError,
-} from '@shopify/hydrogen-react/storefront-api-types';
 import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
 import {useEffect, useRef} from 'react';
 import {useFetcher} from 'react-router';
 import type {FetcherWithComponents} from 'react-router';
-import {CartWarnings} from '~/components/CartWarnings';
-import {CartUserErrors} from '~/components/CartUserErrors';
 
 type CartSummaryProps = {
   cart: OptimisticCart<CartApiQueryFragment | null>;
   layout: CartLayout;
-  warnings?: CartWarning[];
-  userErrors?:
-    | CartUserError[]
-    | MetafieldsSetUserError[]
-    | MetafieldDeleteUserError[];
 };
 
-export function CartSummary({
-  cart,
-  layout,
-  warnings,
-  userErrors,
-}: CartSummaryProps) {
+export function CartSummary({cart, layout}: CartSummaryProps) {
   const className =
     layout === 'page' ? 'cart-summary-page' : 'cart-summary-aside';
 
@@ -47,8 +29,6 @@ export function CartSummary({
       </dl>
       <CartDiscounts discountCodes={cart?.discountCodes} />
       <CartGiftCard giftCardCodes={cart?.appliedGiftCards} />
-      <CartWarnings warnings={warnings} />
-      <CartUserErrors userErrors={userErrors} />
       <CartCheckoutActions checkoutUrl={cart?.checkoutUrl} />
     </div>
   );
@@ -125,7 +105,6 @@ function UpdateDiscountForm({
   );
 }
 
-
 function CartGiftCard({
   giftCardCodes,
 }: {
@@ -156,18 +135,13 @@ function CartGiftCard({
         <dl>
           <dt>Applied Gift Card(s)</dt>
           {giftCardCodes.map((giftCard) => (
-            <RemoveGiftCardForm
-              key={giftCard.id}
-              giftCardId={giftCard.id}
-            >
+            <RemoveGiftCardForm key={giftCard.id} giftCardId={giftCard.id}>
               <div className="cart-discount">
                 <code>***{giftCard.lastCharacters}</code>
                 &nbsp;
                 <Money data={giftCard.amountUsed} />
                 &nbsp;
-                <button type="submit">
-                  Remove
-                </button>
+                <button type="submit">Remove</button>
               </div>
             </RemoveGiftCardForm>
           ))}
@@ -188,10 +162,7 @@ function CartGiftCard({
             ref={giftCardCodeInput}
           />
           &nbsp;
-          <button
-            type="submit"
-            disabled={giftCardAddFetcher.state !== 'idle'}
-          >
+          <button type="submit" disabled={giftCardAddFetcher.state !== 'idle'}>
             Apply
           </button>
         </div>
@@ -250,3 +221,4 @@ function RemoveGiftCardForm({
     </CartForm>
   );
 }
+

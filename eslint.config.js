@@ -17,6 +17,82 @@ const compat = new FlatCompat({
   allConfig: js.configs.all,
 });
 
+// Custom inline ESLint rule to catch accidental stray single characters in JSX (eg: trailing semicolon or comma)
+const noSingleCharJsxTextRule = {
+  meta: {
+    type: 'problem',
+    docs: {
+      description: 'Disallow specific single character string literals in JSX',
+      category: 'Possible Errors',
+      recommended: true,
+    },
+    fixable: null,
+    schema: [
+      {
+        type: 'object',
+        properties: {
+          blockedChars: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            uniqueItems: true,
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
+    messages: {
+      unexpectedSingleChar:
+        'Unexpected single character "{{char}}" as JSX text. This is likely accidental. If intentional, disable this rule for this line.',
+    },
+  },
+  create(context) {
+    const options = context.options[0] || {};
+    const blockedChars = options.blockedChars || [';'];
+
+    return {
+      JSXText(node) {
+        const text = node.value;
+        if (!text || text.trim() === '') return;
+
+        const trimmedText = text.trim();
+        if (trimmedText.length === 1 && blockedChars.includes(trimmedText)) {
+          context.report({
+            node,
+            messageId: 'unexpectedSingleChar',
+            data: {char: trimmedText},
+          });
+        }
+      },
+      JSXExpressionContainer(node) {
+        if (
+          node.expression.type === 'Literal' &&
+          typeof node.expression.value === 'string'
+        ) {
+          const text = node.expression.value;
+          if (!text || text.trim() === '') return;
+
+          const trimmedText = text.trim();
+          if (trimmedText.length === 1 && blockedChars.includes(trimmedText)) {
+            context.report({
+              node: node.expression,
+              messageId: 'unexpectedSingleChar',
+              data: {char: trimmedText},
+            });
+          }
+        }
+      },
+    };
+  },
+};
+
+const localPlugin = {
+  rules: {
+    'no-single-char-jsx-text': noSingleCharJsxTextRule,
+  },
+};
+
 const lintedTSPackages = [
   'packages/hydrogen-react',
   'examples/express',
@@ -77,6 +153,7 @@ module.exports = [
       react: fixupPluginRules(react),
       'react-hooks': fixupPluginRules(reactHooks),
       'jsx-a11y': fixupPluginRules(jsxA11Y),
+      local: localPlugin,
     },
     settings: {
       'import/resolvers': {
@@ -117,6 +194,12 @@ module.exports = [
       'react/no-unescaped-entities': 'off',
       'react/jsx-no-target-blank': 'off',
       'react-hooks/exhaustive-deps': 'error',
+      'local/no-single-char-jsx-text': [
+        'error',
+        {
+          blockedChars: [';', ','], // Block semicolons and commas as they're often typos
+        },
+      ],
 
       // Node rules
       'node/shebang': 'off',

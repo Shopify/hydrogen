@@ -1,6 +1,6 @@
 # Overview
 
-This prompt describes how to implement "Google Tag Manager Integration" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "Google Tag Manager integration" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -45,42 +45,31 @@ Key features:
 - Extensible dataLayer implementation for custom events
 - Support for GTM's preview mode
 - Customer Privacy API integration
+- Support for various analytics events by subscribing to event types using the GoogleTagManager component
 
 The recipe includes:
 1. Content Security Policy updates in entry.server.tsx for GTM domains
 2. GTM script tags in the head and body sections
 3. GoogleTagManager component that subscribes to analytics events
-4. Proper nonce attributes for security compliance
+4. Proper nonce attributes for security compliance and compatibility with the Content Security Policy
 
 ## Notes
 
 > [!NOTE]
-> Replace GTM-<YOUR_GTM_ID> with your actual Google Tag Manager container ID in both script locations
-
-> [!NOTE]
-> The nonce attribute ensures compatibility with Content Security Policy
-
-> [!NOTE]
-> Additional analytics events can be added to the GoogleTagManager component by subscribing to different event types
-
-> [!NOTE]
-> Configure customer privacy settings in your Shopify admin to enable cookie consent banners
-
-> [!NOTE]
-> The CSP configuration allows GTM, Google Analytics, and related tracking domains
+> Replace `GTM-<YOUR_GTM_ID>` with your actual Google Tag Manager container ID in both script locations
 
 ## Requirements
 
 Prerequisites:
 - A Google Tag Manager account and container ID
-- Customer privacy settings configured in Shopify admin (for cookie consent)
+- Customer privacy settings configured in your Shopify admin (for cookie consent)
 - Basic understanding of GTM and dataLayer events
 - Knowledge of Shopify's analytics events
 
 To enable cookie consent:
-1. Go to Shopify admin → Settings → Customer Privacy → Cookie Banner
-2. Configure region visibility for the banner
-3. Customize appearance and position as needed
+1. In your Shopify admin, go to **Settings** → **Customer Privacy** → **Cookie Banner**.
+2. Configure region visibility for the cookie banner.
+3. Customize the banner's appearance and position as needed.
 
 ## New files added to the template by this recipe
 
@@ -88,13 +77,13 @@ To enable cookie consent:
 
 ## Steps
 
-### Step 1: README.md
+### Step 1: Document GTM setup in the README
 
-Updates README with GTM-specific documentation and setup instructions
+Update the README file with GTM-specific documentation and setup instructions.
 
 #### File: /README.md
 
-```diff
+~~~diff
 @@ -1,6 +1,6 @@
 -# Hydrogen template: Skeleton
 +# Hydrogen template: Google Tag Manager (GTM)
@@ -180,15 +169,15 @@ Updates README with GTM-specific documentation and setup instructions
 -Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 +Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 \ No newline at end of file
-```
+~~~
 
-### Step 1: app/entry.server.tsx
+### Step 2: Add GTM domains to Content Security Policy
 
-
+Configure CSP headers to allow Google Tag Manager and Analytics scripts.
 
 #### File: /app/entry.server.tsx
 
-```diff
+~~~diff
 @@ -15,6 +15,24 @@ export default async function handleRequest(
    context: HydrogenRouterContextProvider,
  ) {
@@ -214,15 +203,15 @@ Updates README with GTM-specific documentation and setup instructions
      shop: {
        checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,
        storeDomain: context.env.PUBLIC_STORE_DOMAIN,
-```
+~~~
 
-### Step 1: app/components/GoogleTagManager.tsx
+### Step 3: Create the analytics component
 
+Build a component that subscribes to Hydrogen analytics events and pushes them to GTM's dataLayer.
 
+#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
 
-#### File: [GoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/gtm/ingredients/templates/skeleton/app/components/GoogleTagManager.tsx)
-
-```tsx
+~~~tsx
 import {useAnalytics} from '@shopify/hydrogen';
 import {useEffect} from 'react';
 
@@ -247,15 +236,15 @@ export function GoogleTagManager() {
 
   return null;
 }
-```
+~~~
 
-### Step 2: app/root.tsx
+### Step 4: Add GTM scripts to the app
 
-
+Insert Google Tag Manager tracking code in the head and body sections.
 
 #### File: /app/root.tsx
 
-```diff
+~~~diff
 @@ -1,4 +1,4 @@
 -import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
 +import {Analytics, getShopAnalytics, useNonce, Script} from '@shopify/hydrogen';
@@ -303,18 +292,15 @@ export function GoogleTagManager() {
          {children}
          <ScrollRestoration nonce={nonce} />
          <Scripts nonce={nonce} />
-@@ -177,8 +202,10 @@ export default function App() {
-       consent={data.consent}
-     >
+@@ -179,6 +204,8 @@ export default function App() {
        <PageLayout {...data}>
--        <Outlet />;
-+        <Outlet />
+         <Outlet />
        </PageLayout>
 +      {/* @description Initialize Google Tag Manager analytics integration */}
 +      <GoogleTagManager />
      </Analytics.Provider>
    );
  }
-```
+~~~
 
 </recipe_implementation>

@@ -34,7 +34,7 @@ declare global {
 
 declare module 'react-router' {
   // Merge Hydrogen properties into React Router's context provider
-  interface unstable_RouterContextProvider extends HydrogenAdditionalContext {
+  interface RouterContextProvider extends HydrogenAdditionalContext {
     // Standard Hydrogen context properties from HydrogenRouterContextProvider
     storefront: HydrogenRouterContextProvider['storefront'];
     cart: HydrogenCart & HydrogenCustomCartMethods;
@@ -44,7 +44,7 @@ declare module 'react-router' {
     waitUntil: HydrogenRouterContextProvider['waitUntil'];
   }
 
-  // Also augment AppLoadContext for React Router 7.8.x type generation
+  // Also augment AppLoadContext for React Router 7.9.x type generation
   interface AppLoadContext extends HydrogenAdditionalContext {
     // Standard Hydrogen context properties from HydrogenRouterContextProvider
     storefront: HydrogenRouterContextProvider['storefront'];

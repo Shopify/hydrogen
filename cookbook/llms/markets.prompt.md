@@ -129,13 +129,13 @@ selected.
 
 In this section, we'll create utilities to handle localization and country selection, and update the core components to use these utilities.
 
-### Step 1: Update CartLineItem with locale-aware product links
+#### Step 1.1: Update CartLineItem with locale-aware product links
 
-Update cart line items to use the unified Link component for product links
+Update cart line items to use the unified Link component for product links.
 
-#### File: /app/components/CartLineItem.tsx
+##### File: /app/components/CartLineItem.tsx
 
-```diff
+~~~diff
 @@ -2,7 +2,7 @@ import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
  import type {CartLayout} from '~/components/CartMain';
  import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
@@ -145,18 +145,18 @@ Update cart line items to use the unified Link component for product links
  import {ProductPrice} from './ProductPrice';
  import {useAside} from './Aside';
  import type {CartApiQueryFragment} from 'storefrontapi.generated';
-```
+~~~
 
-#### Step 1.1: Create a CountrySelector component
+#### Step 1.2: Create a CountrySelector component
 
 Create a new `CountrySelector` component that allows users to select the locale from a dropdown of the supported locales.
 
 To handle redirects, use a `Form` that updates the cart buyer identity,
 which eventually redirects to the localized root of the app.
 
-##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
+##### File: [CountrySelector.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/CountrySelector.tsx)
 
-```tsx
+~~~tsx
 import {Form, useLocation} from 'react-router';
 import type {Locale} from '../lib/i18n';
 import {
@@ -235,9 +235,9 @@ function LocaleForm({locale}: {locale: Locale}) {
   );
 }
 
-```
+~~~
 
-#### Step 1.2: Create a unified locale-aware Link component
+#### Step 1.3: Create a unified locale-aware Link component
 
 Create a single Link component that handles both regular links and navigation links.
 This component automatically:
@@ -246,9 +246,9 @@ This component automatically:
 - Cleans invalid locale prefixes from menu URLs
 - Enables locale switching while preserving paths
 
-##### File: [Link.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
+##### File: [Link.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/components/Link.tsx)
 
-```tsx
+~~~tsx
 import type {LinkProps, NavLinkProps} from 'react-router';
 import {Link as ReactLink, NavLink as ReactNavLink} from 'react-router';
 import {useLocalizedPath, cleanPath} from '../lib/i18n';
@@ -311,22 +311,22 @@ export function Link(props: ExtendedLinkProps) {
   }
   return <ReactLink {...(restProps as LinkProps)} to={to} />;
 }
-```
+~~~
 
-#### Step 1.3: Create comprehensive i18n utilities
+#### Step 1.4: Create comprehensive i18n utilities
 
 Create a centralized i18n module that includes:
-1. `useSelectedLocale()` hook to get the current locale from route data
-2. `useLocalizedPath()` hook for intelligent path transformation
-3. `cleanPath()` function to remove invalid locale/language prefixes
-4. `findLocaleByPrefix()` to detect locales in paths
-5. `normalizePrefix()` for consistent prefix formatting
+1. The `useSelectedLocale()` hook to get the current locale from route data
+2. The `useLocalizedPath()` hook for intelligent path transformation
+3. The `cleanPath()` function to remove invalid locale/language prefixes
+4. The `findLocaleByPrefix()` function to detect locales in paths
+5. The `normalizePrefix()` function for consistent prefix formatting
 6. Locale validation utilities for route params
 7. Support for case-insensitive locale matching
 
-##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
+##### File: [i18n.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/lib/i18n.ts)
 
-```ts
+~~~ts
 import {useMatches, useLocation} from 'react-router';
 import type {
   CountryCode as CustomerCountryCode,
@@ -521,16 +521,16 @@ export function useLocalizedPath(
   return normalizePrefix(currentLocale?.pathPrefix || '') + to;
 }
 
-```
+~~~
 
-#### Step 1.4: Update ProductItem to use locale-aware Link
+#### Step 1.5: Update ProductItem to use locale-aware Link
 
 Replace standard react-router Link imports with the new unified Link component.
 This ensures all product links automatically include the correct locale prefix.
 
 ##### File: /app/components/ProductItem.tsx
 
-```diff
+~~~diff
 @@ -1,4 +1,3 @@
 -import {Link} from 'react-router';
  import {Image, Money} from '@shopify/hydrogen';
@@ -544,15 +544,15 @@ This ensures all product links automatically include the correct locale prefix.
  
  export function ProductItem({
    product,
-```
+~~~
 
-#### Step 1.5: Add the selected locale to the context
+#### Step 1.6: Add the selected locale to the context
 
 Detect the locale from the URL path, and add it to the HydrogenContext.
 
 ##### File: /app/lib/context.ts
 
-```diff
+~~~diff
 @@ -1,6 +1,7 @@
  import {createHydrogenContext} from '@shopify/hydrogen';
  import {AppSession} from '~/lib/session';
@@ -580,17 +580,18 @@ Detect the locale from the URL path, and add it to the HydrogenContext.
        cart: {
          queryFragment: CART_QUERY_FRAGMENT,
        },
-```
+~~~
 
-#### Step 1.6: Update Header with CountrySelector and locale-aware Links
+#### Step 1.7: Update Header with CountrySelector and locale-aware Links
 
-1. Add the CountrySelector component to the header navigation
-2. Update all navigation links to use the unified Link component with variant="nav"
-3. Menu URLs are automatically cleaned of invalid locale prefixes
+1. Add the `CountrySelector` component to the header navigation.
+2. Update all navigation links to use the unified `Link` component with `variant="nav"`.
+
+Menu URLs are automatically cleaned of invalid locale prefixes.
 
 ##### File: /app/components/Header.tsx
 
-```diff
+~~~diff
 @@ -1,5 +1,6 @@
  import {Suspense} from 'react';
 -import {Await, NavLink, useAsyncValue} from 'react-router';
@@ -674,9 +675,9 @@ Detect the locale from the URL path, and add it to the HydrogenContext.
        <SearchToggle />
        <CartToggle cart={cart} />
      </nav>
-```
+~~~
 
-#### Step 1.7: Add the selected locale to the root route
+#### Step 1.8: Add the selected locale to the root route
 
 1. Include the selected locale in the root route's loader data.
 2. Make sure to redirect to the 404 page if the requested locale is not supported.
@@ -685,7 +686,7 @@ when the locale changes.
 
 ##### File: /app/root.tsx
 
-```diff
+~~~diff
 @@ -77,6 +77,7 @@ export async function loader(args: Route.LoaderArgs) {
    return {
      ...deferredData,
@@ -694,43 +695,41 @@ when the locale changes.
      publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
      shop: getShopAnalytics({
        storefront,
-@@ -176,8 +177,11 @@ export default function App() {
+@@ -176,7 +177,10 @@ export default function App() {
        shop={data.shop}
        consent={data.consent}
      >
 -      <PageLayout {...data}>
--        <Outlet />;
 +      <PageLayout
 +        key={`${data.selectedLocale.language}-${data.selectedLocale.country}`}
 +        {...data}
 +      >
-+        <Outlet />
+         <Outlet />
        </PageLayout>
      </Analytics.Provider>
-   );
-```
+~~~
 
 ### Step 2: Localizing the individual routes
 
 In this section, we'll add localization to the individual routes using the language [dynamic segment](https://reactrouter.com/start/data/routing#optional-segments).
 
-### Step 2: Update CartMain with locale-aware links
+#### Step 2.1: Update CartMain with locale-aware links
 
-Replace all Link imports to use the unified locale-aware Link component for consistent navigation
+Replace all Link imports to use the unified locale-aware `Link` component for consistent navigation.
 
-#### File: /app/components/CartMain.tsx
+##### File: /app/components/CartMain.tsx
 
-```diff
+~~~diff
 @@ -1,5 +1,5 @@
  import {useOptimisticCart} from '@shopify/hydrogen';
 -import {Link} from 'react-router';
 +import {Link} from '~/components/Link';
  import type {CartApiQueryFragment} from 'storefrontapi.generated';
- import type {
-   CartWarning,
-```
+ import {useAside} from '~/components/Aside';
+ import {CartLineItem} from '~/components/CartLineItem';
+~~~
 
-#### Step 2.1: Add language dynamic segment to the desired routes
+#### Step 2.2: Add language dynamic segment to the desired routes
 
 To implement path-based localization, add a language
 dynamic segment to your localized routes (for example, renaming `routes/_index.tsx`
@@ -738,7 +737,7 @@ to `routes/($locale)._index.tsx`).
 
 For brevity, we'll focus on the home page, the cart page, and the product page in this example. In your app, you should do this for all the app routes.
 
-#### Step 2.2: Add localization to the home page
+#### Step 2.3: Add localization to the home page
 
 1. Add the dynamic segment to the home page route.
 2. Use the new `Link` component as a drop-in replacement.
@@ -746,9 +745,9 @@ For brevity, we'll focus on the home page, the cart page, and the product page i
 > [!NOTE]
 > Rename `app/routes/_index.tsx` to `app/routes/($locale)._index.tsx`.
 
-##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
+##### File: [($locale)._index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale)._index.tsx)
 
-```tsx
+~~~tsx
 import {Await, useLoaderData} from 'react-router';
 import type {Route} from './+types/($locale)._index';
 import {Suspense} from 'react';
@@ -918,18 +917,18 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-#### Step 2.3: Add localization to the cart page
+#### Step 2.4: Add localization to the cart page
 
 Add the dynamic segment to the cart page route.
 
 > [!NOTE]
 > Rename `app/routes/cart.tsx` to `app/routes/($locale).cart.tsx`.
 
-##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
+##### File: [($locale).cart.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).cart.tsx)
 
-```tsx
+~~~tsx
 import {useLoaderData, data} from 'react-router';
 import type {Route} from './+types/($locale).cart';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
@@ -1043,9 +1042,9 @@ export default function Cart() {
   );
 }
 
-```
+~~~
 
-#### Step 2.4: Add localization to the product page
+#### Step 2.5: Add localization to the product page
 
 1. Add the dynamic segment to the product page route.
 2. Update the `meta` function to also update the canonical URL to use the
@@ -1054,9 +1053,9 @@ localized prefix.
 > [!NOTE]
 > Rename `app/routes/products.$handle.tsx` to `app/routes/($locale).products.$handle.tsx`.
 
-##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
+##### File: [($locale).products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).products.$handle.tsx)
 
-```tsx
+~~~tsx
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/($locale).products.$handle';
 import {
@@ -1310,17 +1309,17 @@ const PRODUCT_QUERY = `#graphql
   ${PRODUCT_FRAGMENT}
 ` as const;
 
-```
+~~~
 
-#### Step 2.5: Add a utility route to validate the locale.
+#### Step 2.6: Add a utility route to validate the locale.
 
 Add a utility route in `$(locale).tsx` that will use `localeMatchesPrefix`
 to validate the locale from the URL params. If the locale is invalid,
 the route will throw a 404 error.
 
-##### File: [($locale).tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).tsx)
+##### File: [($locale).tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).tsx)
 
-```tsx
+~~~tsx
 import type {Route} from './+types/($locale)';
 import {localeMatchesPrefix} from '~/lib/i18n';
 
@@ -1332,15 +1331,15 @@ export async function loader({params}: Route.LoaderArgs) {
   return null;
 }
 
-```
+~~~
 
-### Step 5: app/routes/($locale).account.$.tsx
+#### Step 2.7: Handle unauthenticated account pages
 
-Fallback route for unauthenticated account pages with locale support
+Add a fallback route for unauthenticated account pages with locale support.
 
-#### File: [($locale).account.$.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.$.tsx)
+##### File: [($locale).account.$.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.$.tsx)
 
-```tsx
+~~~tsx
 import {redirect} from 'react-router';
 import type {Route} from './+types/($locale).account.$';
 
@@ -1351,30 +1350,30 @@ export async function loader({context}: Route.LoaderArgs) {
   return redirect('/account');
 }
 
-```
+~~~
 
-### Step 6: app/routes/($locale).account._index.tsx
+#### Step 2.8: Redirect to account dashboard
 
-Localized account dashboard redirect route
+Add a localized account dashboard redirect route.
 
-#### File: [($locale).account._index.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account._index.tsx)
+##### File: [($locale).account._index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account._index.tsx)
 
-```tsx
+~~~tsx
 import {redirect} from 'react-router';
 
 export async function loader() {
   return redirect('/account/orders');
 }
 
-```
+~~~
 
-### Step 7: app/routes/($locale).account.addresses.tsx
+#### Step 2.9: Add address management
 
-Customer address management page with locale-aware forms and links
+Add a customer address management page with locale-aware forms and links.
 
-#### File: [($locale).account.addresses.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.addresses.tsx)
+##### File: [($locale).account.addresses.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.addresses.tsx)
 
-```tsx
+~~~tsx
 import type {CustomerAddressInput} from '@shopify/hydrogen/customer-account-api-types';
 import type {
   AddressFragment,
@@ -1892,15 +1891,15 @@ export function AddressForm({
   );
 }
 
-```
+~~~
 
-### Step 8: app/routes/($locale).account.orders.$id.tsx
+#### Step 2.10: Show order details
 
-Individual order details page with localized currency and date formatting
+Add an individual order details page with localized currency and date formatting.
 
-#### File: [($locale).account.orders.$id.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders.$id.tsx)
+##### File: [($locale).account.orders.$id.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders.$id.tsx)
 
-```tsx
+~~~tsx
 import {redirect, useLoaderData} from 'react-router';
 import type {Route} from './+types/($locale).account.orders.$id';
 import {Money, Image} from '@shopify/hydrogen';
@@ -2122,15 +2121,15 @@ function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
   );
 }
 
-```
+~~~
 
-### Step 9: app/routes/($locale).account.orders._index.tsx
+#### Step 2.11: Display order history
 
-Customer order history listing with locale-specific pagination
+Implement customer order history listing with locale-specific pagination.
 
-#### File: [($locale).account.orders._index.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders._index.tsx)
+##### File: [($locale).account.orders._index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.orders._index.tsx)
 
-```tsx
+~~~tsx
 import {
   useLoaderData,
 } from 'react-router';
@@ -2229,15 +2228,15 @@ function OrderItem({order}: {order: OrderItemFragment}) {
   );
 }
 
-```
+~~~
 
-### Step 10: app/routes/($locale).account.profile.tsx
+#### Step 2.12: Build customer profile page
 
-Customer profile editing form with localized field labels
+Add a customer profile editing form with localized field labels.
 
-#### File: [($locale).account.profile.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.profile.tsx)
+##### File: [($locale).account.profile.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.profile.tsx)
 
-```tsx
+~~~tsx
 import type {CustomerFragment} from 'customer-accountapi.generated';
 import type {CustomerUpdateInput} from '@shopify/hydrogen/customer-account-api-types';
 import {CUSTOMER_UPDATE_MUTATION} from '~/graphql/customer-account/CustomerUpdateMutation';
@@ -2372,15 +2371,15 @@ export default function AccountProfile() {
   );
 }
 
-```
+~~~
 
-### Step 11: app/routes/($locale).account.tsx
+#### Step 2.13: Create account layout
 
-Account layout wrapper with locale-aware navigation tabs
+Add an account layout wrapper with locale-aware navigation tabs.
 
-#### File: [($locale).account.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.tsx)
+##### File: [($locale).account.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account.tsx)
 
-```tsx
+~~~tsx
 import {
   data as remixData,
   Form,
@@ -2481,45 +2480,45 @@ function Logout() {
   );
 }
 
-```
+~~~
 
-### Step 12: app/routes/($locale).account_.authorize.tsx
+#### Step 2.14: Handle OAuth authorization
 
-OAuth authorization callback route with locale preservation
+Add an OAuth authorization callback route with locale preservation.
 
-#### File: [($locale).account_.authorize.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.authorize.tsx)
+##### File: [($locale).account_.authorize.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.authorize.tsx)
 
-```tsx
+~~~tsx
 import type {Route} from './+types/($locale).account_.authorize';
 
 export async function loader({context}: Route.LoaderArgs) {
   return context.customerAccount.authorize();
 }
 
-```
+~~~
 
-### Step 13: app/routes/($locale).account_.login.tsx
+#### Step 2.15: Create login redirect
 
-Customer login redirect with locale-specific return URL
+Add a customer login redirect with a locale-specific return URL.
 
-#### File: [($locale).account_.login.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.login.tsx)
+##### File: [($locale).account_.login.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.login.tsx)
 
-```tsx
+~~~tsx
 import type {Route} from './+types/($locale).account_.login';
 
 export async function loader({context}: Route.LoaderArgs) {
   return context.customerAccount.login();
 }
 
-```
+~~~
 
-### Step 14: app/routes/($locale).account_.logout.tsx
+#### Step 2.16: Handle logout
 
-Logout handler that maintains locale after sign out
+Add a logout handler that maintains locale after the user signs out.
 
-#### File: [($locale).account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.logout.tsx)
+##### File: [($locale).account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).account_.logout.tsx)
 
-```tsx
+~~~tsx
 import {redirect} from 'react-router';
 import type {Route} from './+types/($locale).account_.logout';
 
@@ -2532,15 +2531,15 @@ export async function action({context}: Route.ActionArgs) {
   return context.customerAccount.logout();
 }
 
-```
+~~~
 
-### Step 15: app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx
+#### Step 2.17: Show blog articles
 
-Blog article page with locale-specific content and SEO metadata
+Add a blog article page with locale-specific content and SEO metadata.
 
-#### File: [($locale).blogs.$blogHandle.$articleHandle.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx)
+##### File: [($locale).blogs.$blogHandle.$articleHandle.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle.$articleHandle.tsx)
 
-```tsx
+~~~tsx
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/($locale).blogs.$blogHandle.$articleHandle';
 import {Image} from '@shopify/hydrogen';
@@ -2671,15 +2670,15 @@ const ARTICLE_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-### Step 16: app/routes/($locale).blogs.$blogHandle._index.tsx
+#### Step 2.18: List blog posts
 
-Blog listing page with localized article previews and pagination
+Add a blog listing page with localized article previews and pagination.
 
-#### File: [($locale).blogs.$blogHandle._index.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle._index.tsx)
+##### File: [($locale).blogs.$blogHandle._index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs.$blogHandle._index.tsx)
 
-```tsx
+~~~tsx
 import {
   useLoaderData,
 } from 'react-router';
@@ -2863,15 +2862,15 @@ const BLOGS_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-### Step 17: app/routes/($locale).blogs._index.tsx
+#### Step 2.19: Display all blogs
 
-All blogs overview page with locale-aware navigation links
+Add an overview page for all blogs with locale-aware navigation links.
 
-#### File: [($locale).blogs._index.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs._index.tsx)
+##### File: [($locale).blogs._index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).blogs._index.tsx)
 
-```tsx
+~~~tsx
 import {useLoaderData} from 'react-router';
 import {Link} from '~/components/Link';
 import type {Route} from './+types/($locale).blogs._index';
@@ -2983,15 +2982,15 @@ const BLOGS_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-### Step 19: app/routes/($locale).collections.$handle.tsx
+#### Step 2.20: Show collection pages
 
-Collection page displaying products with locale-specific pricing and availability
+Add a collection page displaying products with locale-specific pricing and availability.
 
-#### File: [($locale).collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.$handle.tsx)
+##### File: [($locale).collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.$handle.tsx)
 
-```tsx
+~~~tsx
 import {redirect, useLoaderData} from 'react-router';
 import type {Route} from './+types/($locale).collections.$handle';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
@@ -3154,15 +3153,15 @@ const COLLECTION_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-### Step 20: app/routes/($locale).collections._index.tsx
+#### Step 2.21: List all collections
 
-Collections listing page with localized collection names and images
+Add a collections listing page with localized collection names and images.
 
-#### File: [($locale).collections._index.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections._index.tsx)
+##### File: [($locale).collections._index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections._index.tsx)
 
-```tsx
+~~~tsx
 import {useLoaderData} from 'react-router';
 import {Link} from '~/components/Link';
 import type {Route} from './+types/($locale).collections._index';
@@ -3298,15 +3297,15 @@ const COLLECTIONS_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-### Step 21: app/routes/($locale).collections.all.tsx
+#### Step 2.22: Show all products
 
-All products page with locale-based filtering and sorting
+Add an "All products" page with locale-based filtering and sorting.
 
-#### File: [($locale).collections.all.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.all.tsx)
+##### File: [($locale).collections.all.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).collections.all.tsx)
 
-```tsx
+~~~tsx
 import type {Route} from './+types/($locale).collections.all';
 import {
   useLoaderData,
@@ -3432,15 +3431,15 @@ const CATALOG_QUERY = `#graphql
   ${COLLECTION_ITEM_FRAGMENT}
 ` as const;
 
-```
+~~~
 
-### Step 22: app/routes/($locale).pages.$handle.tsx
+#### Step 2.23: Display content pages
 
-Dynamic page route for locale-specific content pages
+Add a dynamic page route for locale-specific content pages.
 
-#### File: [($locale).pages.$handle.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).pages.$handle.tsx)
+##### File: [($locale).pages.$handle.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).pages.$handle.tsx)
 
-```tsx
+~~~tsx
 import {
   useLoaderData,
 } from 'react-router';
@@ -3536,15 +3535,15 @@ const PAGE_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-### Step 23: app/routes/($locale).policies.$handle.tsx
+#### Step 2.24: Show policy pages
 
-Policy page (privacy, terms, etc.) with locale-specific legal content
+Add a policy page (privacy, terms, etc.) with locale-specific legal content.
 
-#### File: [($locale).policies.$handle.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies.$handle.tsx)
+##### File: [($locale).policies.$handle.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies.$handle.tsx)
 
-```tsx
+~~~tsx
 import {
   useLoaderData,
 } from 'react-router';
@@ -3642,15 +3641,15 @@ const POLICY_CONTENT_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-### Step 24: app/routes/($locale).policies._index.tsx
+#### Step 2.25: List all policies
 
-Policies index page listing all available store policies
+Add a policies index page that lists all available store policies.
 
-#### File: [($locale).policies._index.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies._index.tsx)
+##### File: [($locale).policies._index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).policies._index.tsx)
 
-```tsx
+~~~tsx
 import {useLoaderData} from 'react-router';
 import {Link} from '~/components/Link';
 import type {Route} from './+types/($locale).policies._index';
@@ -3722,15 +3721,15 @@ const POLICIES_QUERY = `#graphql
   }
 ` as const;
 
-```
+~~~
 
-### Step 26: app/routes/($locale).search.tsx
+#### Step 2.26: Build search functionality
 
-Search results page with locale-aware product matching and predictive search
+Add a search results page with locale-aware product matching and predictive search.
 
-#### File: [($locale).search.tsx](https://github.com/Shopify/hydrogen/blob/147c5bdb47b2fa51d4da79cd94f5dd6c1cce2cc7/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).search.tsx)
+##### File: [($locale).search.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/markets/ingredients/templates/skeleton/app/routes/($locale).search.tsx)
 
-```tsx
+~~~tsx
 import {
   useLoaderData,
 } from 'react-router';
@@ -4152,7 +4151,7 @@ async function predictiveSearch({
   return {type, term, result: {items, total}};
 }
 
-```
+~~~
 
 ## Deleted Files
 

@@ -1,0 +1,109 @@
+index c584e537..4cecca6d 100644
+--- a/templates/skeleton/README.md
++++ b/templates/skeleton/README.md
+@@ -1,45 +1,89 @@
+-# Hydrogen template: Skeleton
++# Hydrogen Express Skeleton
+ 
+-Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
++This is a Hydrogen skeleton template configured to run with NodeJS [Express](https://expressjs.com/) instead of Shopify Oxygen. 
++
++Hydrogen is Shopify's stack for headless commerce, designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal Express setup** with basic components and routes to get started with Hydrogen on Node.js.
+ 
+ [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
+-[Get familiar with Remix](https://remix.run/docs/en/v1)
++[Get familiar with React Router](https://reactrouter.com/en/main)
+ 
+ ## What's included
+ 
+-- Remix
++- React Router 7
+ - Hydrogen
+-- Oxygen
++- Express server
+ - Vite
+-- Shopify CLI
++- TypeScript
+ - ESLint
+-- Prettier
+-- GraphQL generator
+-- TypeScript and JavaScript flavors
+ - Minimal setup of components and routes
+ 
++## Important Notes
++
++This Express setup differs from the standard Hydrogen template:
++
++1. **Cache Implementation**: Uses an in-memory cache. In production, you should implement redis, memcached, or another cache that implements the [Cache interface](https://developer.mozilla.org/en-US/docs/Web/API/Cache).
++2. **Storefront Redirect**: Does not utilize [`storefrontRedirect`](https://shopify.dev/docs/api/hydrogen/utilities/storefrontredirect) functionality.
++3. **Minimal Routes**: Only includes index and product routes. Add more routes as needed.
++
+ ## Getting started
+ 
+ **Requirements:**
+ 
+-- Node.js version 18.0.0 or higher
++- Node.js version 18.0.0 or higher (but less than 22.0.0)
++
++### Environment Setup
++
++Create a `.env` file with your Shopify store credentials:
++
++```env
++PUBLIC_STOREFRONT_API_TOKEN="your-token"
++PUBLIC_STORE_DOMAIN="your-store.myshopify.com"
++PUBLIC_STOREFRONT_ID="your-storefront-id"
++SESSION_SECRET="your-session-secret-at-least-32-chars"
++```
++
++## Local development
++
++Start the Express development server:
+ 
+ ```bash
+-npm create @shopify/hydrogen@latest
++npm run dev
+ ```
+ 
++This starts your app in development mode with hot module replacement.
++
+ ## Building for production
+ 
+ ```bash
+ npm run build
+ ```
+ 
+-## Local development
++## Production deployment
++
++Run the app in production mode:
+ 
+ ```bash
+-npm run dev
++npm start
+ ```
+ 
+-## Setup for using Customer Account API (`/account` section)
++### Deployment
+ 
+-Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
++When deploying your Express application, ensure you deploy:
++
++- `build/` directory
++- `server.mjs` file
++- `package.json` and dependencies
++- Your `.env` configuration
++
++The Express server runs on the port specified by the `PORT` environment variable (defaults to 3000).
++
++## Project Structure
++
++- `server.mjs` - Express server configuration
++- `scripts/dev.mjs` - Development server orchestration
++- `app/` - React Router application code
++  - `entry.client.tsx` - Client-side entry point
++  - `entry.server.tsx` - Server-side rendering entry point
++  - `root.tsx` - Root layout component
++  - `routes/` - Application routes
++- `build/` - Production build output (generated)
+\ No newline at end of file
