@@ -66,6 +66,9 @@ commands:
       dev:
         desc: 'Run skeleton template in dev mode'
         run: cd templates/skeleton && npm run dev
+      dev-tunnel:
+        desc: 'Run skeleton template in dev mode with tunnel'
+        run: SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH=true cd templates/skeleton && npm run dev
       build:
         desc: 'Build skeleton template'
         run: cd templates/skeleton && npm run build
