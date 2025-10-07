@@ -1,66 +1,72 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 gid: 27d7e01b-7264-44e4-ae7c-32dc8da58c46
-title: Custom Cart Method
+title: Custom cart method
 summary: Add inline product option editing to cart items
 description: |
-  This recipe demonstrates how to implement custom cart methods in Hydrogen to enable inline editing of product options directly within the cart. Users can change product variants (size, color, etc.) without removing and re-adding items.
+  This recipe implements custom cart methods in Hydrogen using the Storefront API's
+  `variantBySelectedOptions` query to let customers edit product options directly
+  within the cart. They'll be able to change product variants (like size and color)
+  without having to remove items, select different variants, and then add them to
+  the cart again. Their cart updates will happen automatically, without requiring
+  a full page refresh.
 
   Key features:
   - Custom cart method `updateLineByOptions` for variant selection
   - Inline dropdown selectors for each product option in cart
   - Automatic cart updates when options are changed
   - Full TypeScript support with proper type augmentation
-notes:
-  - This implementation requires GraphQL codegen to be run after applying the
-    recipe
-  - The custom cart method uses the Storefront API's variantBySelectedOptions
-    query
-  - Cart updates happen automatically on option change without page refresh
+notes: []
 requirements: |
   - Basic understanding of Hydrogen cart implementation
   - Familiarity with GraphQL and TypeScript
   - Knowledge of React Router actions and forms
+  - GraphQL codegen must be run after applying the recipe
 ingredients: []
 deletedFiles: []
 steps:
   - type: PATCH
-    step: '1'
-    name: README.md
-    description: Updates README with custom cart method documentation and implementation guide
+    step: "1"
+    name: Document custom cart methods in the README
+    description: Update the README file with custom cart method documentation and an
+      implementation guide.
     diffs:
       - file: README.md
-        patchFile: README.md.49f8fa.patch
+        patchFile: README.md.db10ed.patch
   - type: PATCH
-    step: '1'
-    name: app/components/CartLineItem.tsx
-    description: Adds variant selector functionality to cart line items for changing product options
+    step: "2"
+    name: Let customers change variants directly in the cart
+    description: Add variant selector functionality to cart line items for changing
+      product options.
     diffs:
       - file: app/components/CartLineItem.tsx
-        patchFile: CartLineItem.tsx.f93ff4.patch
+        patchFile: CartLineItem.tsx.2c9a50.patch
   - type: PATCH
-    step: '2'
-    name: app/lib/context.ts
-    description: Extends HydrogenCart context with updateLineByOptions method for variant switching
+    step: "3"
+    name: Add updateLineByOptions method to cart context
+    description: Extend HydrogenCart context with updateLineByOptions method for
+      variant switching.
     diffs:
       - file: app/lib/context.ts
-        patchFile: context.ts.cfd9da.patch
+        patchFile: context.ts.1877b3.patch
   - type: PATCH
-    step: '3'
-    name: app/lib/fragments.ts
-    description: Adds product options to cart fragments and creates PRODUCT_VARIANT_QUERY for fetching variants
+    step: "4"
+    name: Query product options for variant selection
+    description: Add product options to cart fragments and create
+      PRODUCT_VARIANT_QUERY for fetching variants.
     diffs:
       - file: app/lib/fragments.ts
-        patchFile: fragments.ts.18726b.patch
+        patchFile: fragments.ts.026109.patch
   - type: PATCH
-    step: '4'
-    name: app/routes/cart.tsx
-    description: Implements CustomUpdateLineByOptions action handler for processing variant changes in cart
+    step: "5"
+    name: Handle variant updates in the cart route
+    description: Implement the CustomUpdateLineByOptions action handler for
+      processing variant changes in cart.
     diffs:
       - file: app/routes/cart.tsx
-        patchFile: cart.tsx.943271.patch
+        patchFile: cart.tsx.af0778.patch
 nextSteps: null
 llms:
   userQueries: []
   troubleshooting: []
-commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
+commit: 4f5db289f8a9beb5c46dda9416a7ae8151f7e08e

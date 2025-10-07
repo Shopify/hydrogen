@@ -1,25 +1,18 @@
 # yaml-language-server: $schema=../../recipe.schema.json
 
 gid: cdd523a1-fcd9-4122-aacd-fdd2f2c050e7
-title: Infinite Scroll for Collections
+title: Infinite scroll for collections
 summary: Add infinite scroll pagination to collection pages for seamless product
   browsing
 description: |
-  Implements infinite scroll functionality on collection pages using intersection observer.
-  Products automatically load as users scroll down, replacing traditional pagination buttons
-  with a smooth, continuous browsing experience.
+  This recipe implements infinite scroll functionality on collection pages using the Intersection Observer API.
 
   Key features:
-  - Automatic loading when "Load more" button comes into view
-  - Preserves browser history and URL state
+  - Automatic loading when "Load more" button comes into view using Intersection Observer API
+  - Preserves browser history and URL state (replace mode to avoid clutter)
   - Maintains scroll position during navigation
-  - Optimized loading with eager/lazy image loading
-notes:
-  - The intersection observer triggers when the "Load more" button enters the
-    viewport
-  - Navigation updates use replace mode to avoid cluttering browser history
-  - First 8 products load eagerly for faster initial render
-  - Subsequent products use lazy loading to optimize performance
+  - Optimized loading with eager/lazy image loading (first 8 products eager, rest lazy)
+notes: []
 requirements: |
   - Basic understanding of React hooks (useEffect, custom hooks)
   - Familiarity with Shopify's Pagination component
@@ -28,28 +21,30 @@ ingredients: []
 deletedFiles: []
 steps:
   - type: PATCH
-    step: '1'
-    name: README.md
-    description: Updates README with infinite scroll documentation and implementation details
+    step: "1"
+    name: Document infinite scroll in the README
+    description: Update the README file with infinite scroll documentation and
+      implementation details.
     diffs:
       - file: README.md
-        patchFile: README.md.47d06f.patch
+        patchFile: README.md.db10ed.patch
   - type: PATCH
-    step: '2'
-    name: app/routes/collections.$handle.tsx
-    description: null
+    step: "2"
+    name: Add infinite scroll to collections
+    description: Implement automatic loading with Intersection Observer when users
+      scroll to the bottom.
     diffs:
       - file: app/routes/collections.$handle.tsx
-        patchFile: collections.$handle.tsx.903c17.patch
+        patchFile: collections.$handle.tsx.f062a9.patch
   - type: PATCH
-    step: '3'
-    name: package.json
-    description: null
+    step: "3"
+    name: Install Intersection Observer library
+    description: Add the react-intersection-observer package for viewport detection.
     diffs:
       - file: package.json
-        patchFile: package.json.cfee98.patch
+        patchFile: package.json.f30b0a.patch
 nextSteps: null
 llms:
   userQueries: []
   troubleshooting: []
-commit: 6681f92e84d42b5a6aca153fb49e31dcd8af84f6
+commit: 4f5db289f8a9beb5c46dda9416a7ae8151f7e08e

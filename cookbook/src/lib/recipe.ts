@@ -24,15 +24,8 @@ export type Diff = z.infer<typeof DiffSchema>;
 const StepSchema = z.object({
   type: z.enum(['PATCH', 'INFO', 'NEW_FILE']).describe('The type of step'),
   step: z
-    .number()
-    .or(
-      z
-        .string()
-        .regex(/^\d+(?:\.\d+)?$/)
-        .describe(
-          'The step numerical representation, with optional substep if applicable',
-        ),
-    )
+    .string()
+    .regex(/^\d+(?:\.\d+)?$/)
     .describe(
       'The step numerical representation, with optional substep if applicable',
     ),
@@ -137,5 +130,5 @@ export function loadRecipe(params: {directory: string}): Recipe {
 }
 
 export function isSubstep(step: Step): boolean {
-  return `${step.step}`.includes('.');
+  return step.step.includes('.');
 }

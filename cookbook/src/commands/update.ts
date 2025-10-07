@@ -18,6 +18,8 @@ import {
   parseReferenceBranch,
 } from '../lib/util';
 import {loadRecipe} from '../lib/recipe';
+import {handleZodErrorFromLoadRecipe} from '../lib/validate';
+import {ZodError} from 'zod';
 
 type UpdateArgs = {
   recipe: string;
@@ -61,10 +63,21 @@ async function handler(args: UpdateArgs) {
     execSync('git pull');
   }
 
-  // load the recipe
-  const {commit} = loadRecipe({
-    directory: path.join(COOKBOOK_PATH, 'recipes', recipeName),
-  });
+  const recipeDir = path.join(COOKBOOK_PATH, 'recipes', recipeName);
+  const recipeYamlPath = path.join(recipeDir, 'recipe.yaml');
+
+  let recipe;
+  try {
+    recipe = loadRecipe({directory: recipeDir});
+  } catch (error) {
+    if (error instanceof ZodError) {
+      handleZodErrorFromLoadRecipe(error, recipeName, recipeYamlPath);
+      process.exit(1);
+    }
+    throw error;
+  }
+
+  const {commit} = recipe;
 
   // checkout the repo at the recipe's commit hash
   execSync(`git checkout ${commit}`);

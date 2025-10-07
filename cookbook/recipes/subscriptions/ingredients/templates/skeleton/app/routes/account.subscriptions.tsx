@@ -1,4 +1,8 @@
-import type {SubscriptionBillingPolicyFragment, SubscriptionsContractsQueryQuery} from 'customer-accountapi.generated';
+import type {
+  SubscriptionBillingPolicyFragment,
+  SubscriptionDiscountFragmentFragment,
+  SubscriptionsContractsQueryQuery,
+} from 'customer-accountapi.generated';
 import {
   data,
   useActionData,
@@ -107,6 +111,19 @@ export default function AccountProfile() {
                       billingPolicy={subscription.billingPolicy}
                     />
                   </div>
+                  {subscription.discounts?.nodes &&
+                    subscription.discounts.nodes.length > 0 && (
+                      <div className="subscription-discounts">
+                        {subscription.discounts.nodes.map((discount) => (
+                          <span
+                            key={discount.id}
+                            className="subscription-discount"
+                          >
+                            {formatDiscountValue(discount)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                 </div>
                 <div className="subscription-row-actions">
                   <div
@@ -165,4 +182,20 @@ function SubscriptionInterval({
       {count} {getInterval()}
     </span>
   );
+}
+
+function formatDiscountValue(
+  discount: SubscriptionDiscountFragmentFragment,
+): string {
+  const value = discount.value;
+
+  if (value?.__typename === 'SubscriptionDiscountPercentageValue') {
+    return `${value.percentage}% off`;
+  } else if (value?.__typename === 'SubscriptionDiscountFixedAmountValue') {
+    return `$${value.amount.amount} off`;
+  } else if (discount.title) {
+    return discount.title;
+  }
+
+  return 'Discount applied';
 }

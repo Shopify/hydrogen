@@ -5,7 +5,7 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "2025.5.0",
+  "version": "2025.7.0",
   "license": "MIT",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
@@ -83,8 +83,9 @@
     "dist"
   ],
   "dependencies": {
-    "@shopify/hydrogen-react": "2025.5.0",
+    "@shopify/hydrogen-react": "2025.7.0",
     "content-security-policy-builder": "^2.2.0",
+    "flame-chart-js": "2.3.1",
     "isbot": "^5.1.21",
     "source-map-support": "^0.5.21",
     "type-fest": "^4.33.0",
@@ -93,8 +94,8 @@
     "@shopify/graphql-client": "1.4.1"
   },
   "devDependencies": {
-    "react-router": "7.9.1",
-    "@react-router/dev": "7.9.1",
+    "react-router": "7.9.2",
+    "@react-router/dev": "7.9.2",
     "@shopify/generate-docs": "0.16.4",
     "@shopify/hydrogen-codegen": "*",
     "@testing-library/jest-dom": "^5.17.0",
@@ -107,8 +108,8 @@
     "vitest": "^3.2.4"
   },
   "peerDependencies": {
-    "react-router": "7.9.1",
-    "@react-router/dev": "7.9.1",
+    "react-router": "7.9.2",
+    "@react-router/dev": "7.9.2",
     "react": "18.3.1",
     "vite": "^5.1.0 || ^6.2.1"
   },

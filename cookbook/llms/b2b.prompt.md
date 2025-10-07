@@ -1,6 +1,6 @@
 # Overview
 
-This prompt describes how to implement "b2b" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
+This prompt describes how to implement "B2B Commerce" in a Hydrogen storefront. Below is a "recipe" that contains the steps to apply to a basic Hydrogen skeleton template to achieve the desired outcome.
 The same logic can be applied to any other Hydrogen storefront project, adapting the implementation details to the specific needs/structure/conventions of the project, but it's up to the developer to do so.
 If there are any prerequisites, the recipe below will explain them; if the user is trying to implement the feature described in this recipe, make sure to prominently mention the prerequisites and any other preliminary instructions, as well as followups.
 If the user is asking on how to implement the feature from scratch, please first describe the feature in a general way before jumping into the implementation details.
@@ -12,7 +12,7 @@ Please note that the recipe steps below are not necessarily ordered in the way t
 
 # Summary
 
-
+Add Business-to-Business (B2B) functionality with company locations, quantity rules, and volume pricing
 
 # User Intent Recognition
 
@@ -34,7 +34,28 @@ Here's the b2b recipe for the base Hydrogen skeleton template:
 
 ## Description
 
+This recipe adds comprehensive B2B functionality to your Hydrogen storefront, enabling business customers to:
 
+- Select their company location for contextualized pricing
+- View and respect quantity rules (minimum, maximum, increment)
+- See volume-based price breaks for bulk purchases
+- Access B2B-specific pricing through contextualized GraphQL queries
+
+The implementation includes a location selector modal, quantity rule displays on product pages, 
+and cart functionality that respects B2B quantity rules. All product queries are contextualized 
+with buyer information (company location + customer token) to ensure accurate B2B pricing.
+
+## Notes
+
+> [!NOTE]
+> For production, all product queries should be contextualized with buyer information
+
+## Requirements
+
+- Shopify Plus plan with B2B enabled
+- New customer accounts activated
+- At least one B2B company with customer access configured
+- Products with quantity rules or volume pricing configured (optional but recommended for testing)
 
 ## New files added to the template by this recipe
 
@@ -47,13 +68,13 @@ Here's the b2b recipe for the base Hydrogen skeleton template:
 
 ## Steps
 
-### Step 1: README.md
+### Step 1: Document B2B features, requirements, and implementation details in the project README
 
-
+Update the README file with comprehensive B2B commerce documentation, explaining features like company locations, quantity rules, and volume pricing implementation
 
 #### File: /README.md
 
-```diff
+~~~diff
 @@ -18,6 +18,45 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
  - TypeScript and JavaScript flavors
  - Minimal setup of components and routes
@@ -100,15 +121,15 @@ Here's the b2b recipe for the base Hydrogen skeleton template:
  ## Getting started
  
  **Requirements:**
-```
+~~~
 
-### Step 1: app/components/B2BLocationProvider.tsx
+### Step 2: Create a React context provider to manage company location state across the app
 
+Create a React context provider that manages the selected company location state and provides location switching functionality throughout the B2B application
 
+#### File: [B2BLocationProvider.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationProvider.tsx)
 
-#### File: [B2BLocationProvider.tsx](https://github.com/Shopify/hydrogen/blob/1f9640d5acfd505435862b8b2317343bbce96d72/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationProvider.tsx)
-
-```tsx
+~~~tsx
 import {createContext, useContext, useEffect, useState, useMemo} from 'react';
 import {useFetcher} from 'react-router';
 import {type CustomerCompany} from '~/root';
@@ -160,15 +181,15 @@ export function B2BLocationProvider({children}: {children: React.ReactNode}) {
 export function useB2BLocation(): B2BLocationContextValue {
   return useContext(B2BLocationContext);
 }
-```
+~~~
 
-### Step 2: app/components/CartLineItem.tsx
+### Step 3: Update quantity controls to respect B2B minimum, maximum, and increment rules
 
-
+Update cart line item quantity controls to honor B2B quantity rules including minimum order quantities, maximum limits, and increment requirements
 
 #### File: /app/components/CartLineItem.tsx
 
-```diff
+~~~diff
 @@ -76,8 +76,13 @@ export function CartLineItem({
  function CartLineQuantity({line}: {line: CartLine}) {
    if (!line || typeof line?.quantity === 'undefined') return null;
@@ -205,15 +226,15 @@ export function useB2BLocation(): B2BLocationContextValue {
          >
            <span>&#43;</span>
          </button>
-```
+~~~
 
-### Step 2: app/components/B2BLocationSelector.tsx
+### Step 4: Build a modal that lets customers choose which company location to use for pricing
 
+Create a modal component that displays available company locations and allows B2B customers to select the appropriate location for contextualized pricing
 
+#### File: [B2BLocationSelector.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationSelector.tsx)
 
-#### File: [B2BLocationSelector.tsx](https://github.com/Shopify/hydrogen/blob/1f9640d5acfd505435862b8b2317343bbce96d72/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/B2BLocationSelector.tsx)
-
-```tsx
+~~~tsx
 import {CartForm} from '@shopify/hydrogen';
 import type {
   CustomerCompanyLocation,
@@ -284,15 +305,15 @@ export function B2BLocationSelector() {
     </div>
   );
 }
-```
+~~~
 
-### Step 3: app/components/Header.tsx
+### Step 5: Add a location selector button to the header for switching between company locations
 
-
+Add a location selector button to the site header that allows B2B customers to easily switch between their company's different locations
 
 #### File: /app/components/Header.tsx
 
-```diff
+~~~diff
 @@ -7,6 +7,9 @@ import {
  } from '@shopify/hydrogen';
  import type {HeaderQuery, CartApiQueryFragment} from 'storefrontapi.generated';
@@ -342,15 +363,15 @@ export function B2BLocationSelector() {
  const FALLBACK_HEADER_MENU = {
    id: 'gid://shopify/Menu/199655587896',
    items: [
-```
+~~~
 
-### Step 3: app/components/PriceBreaks.tsx
+### Step 6: Display volume pricing tiers that show bulk purchase discounts
 
+Create a component that displays volume pricing breaks, showing customers the discounted prices they'll receive for bulk purchases at different quantity thresholds
 
+#### File: [PriceBreaks.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/PriceBreaks.tsx)
 
-#### File: [PriceBreaks.tsx](https://github.com/Shopify/hydrogen/blob/1f9640d5acfd505435862b8b2317343bbce96d72/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/PriceBreaks.tsx)
-
-```tsx
+~~~tsx
 import {Money} from '@shopify/hydrogen';
 import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
 
@@ -390,15 +411,15 @@ export function PriceBreaks({priceBreaks}: PriceBreaksProps) {
     </>
   );
 }
-```
+~~~
 
-### Step 4: app/components/ProductForm.tsx
+### Step 7: Accept quantity parameter to support B2B minimum quantity and increment rules
 
-
+Update the ProductForm component to accept and handle quantity parameters that enforce B2B minimum quantities and increment rules when adding products to cart
 
 #### File: /app/components/ProductForm.tsx
 
-```diff
+~~~diff
 @@ -8,12 +8,15 @@ import {AddToCartButton} from './AddToCartButton';
  import {useAside} from './Aside';
  import type {ProductFragment} from 'storefrontapi.generated';
@@ -425,15 +446,15 @@ export function PriceBreaks({priceBreaks}: PriceBreaksProps) {
                    selectedVariant,
                  },
                ]
-```
+~~~
 
-### Step 4: app/components/QuantityRules.tsx
+### Step 8: Show minimum, maximum, and increment quantity requirements for B2B products
 
+Create a component that displays B2B quantity rules to customers, showing minimum order quantities, maximum limits, and required increments for business products
 
+#### File: [QuantityRules.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/QuantityRules.tsx)
 
-#### File: [QuantityRules.tsx](https://github.com/Shopify/hydrogen/blob/1f9640d5acfd505435862b8b2317343bbce96d72/cookbook/recipes/b2b/ingredients/templates/skeleton/app/components/QuantityRules.tsx)
-
-```tsx
+~~~tsx
 import type {Maybe} from '@shopify/hydrogen/customer-account-api-types';
 
 export type QuantityRulesProps = {
@@ -478,15 +499,15 @@ export function QuantityRules({
     </>
   );
 }
-```
+~~~
 
-### Step 5: app/lib/fragments.ts
+### Step 9: Add quantity rules and price breaks to cart GraphQL fragments
 
-
+Update GraphQL fragments to include quantity rules and price break data needed for B2B functionality in cart queries
 
 #### File: /app/lib/fragments.ts
 
-```diff
+~~~diff
 @@ -52,6 +52,21 @@ export const CART_QUERY_FRAGMENT = `#graphql
            name
            value
@@ -531,15 +552,15 @@ export function QuantityRules({
        }
      }
    }
-```
+~~~
 
-### Step 5: app/graphql/customer-account/CustomerLocationsQuery.ts
+### Step 10: Query company locations from the Customer Account API for B2B customers
 
+Create a GraphQL query that fetches all available company locations for B2B customers from the Customer Account API
 
+#### File: [CustomerLocationsQuery.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/b2b/ingredients/templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts)
 
-#### File: [CustomerLocationsQuery.ts](https://github.com/Shopify/hydrogen/blob/1f9640d5acfd505435862b8b2317343bbce96d72/cookbook/recipes/b2b/ingredients/templates/skeleton/app/graphql/customer-account/CustomerLocationsQuery.ts)
-
-```ts
+~~~ts
 // NOTE: https://shopify.dev/docs/api/customer/latest/objects/Customer
 export const CUSTOMER_LOCATIONS_QUERY = `#graphql
   query CustomerLocations {
@@ -573,15 +594,15 @@ export const CUSTOMER_LOCATIONS_QUERY = `#graphql
     }
   }
 ` as const;
-```
+~~~
 
-### Step 6: app/root.tsx
+### Step 11: Wrap the app with B2B location provider and add company location types
 
-
+Wrap the application with the B2B location provider context and add TypeScript type definitions for company location data
 
 #### File: /app/root.tsx
 
-```diff
+~~~diff
 @@ -16,9 +16,39 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
  import resetStyles from '~/styles/reset.css?url';
  import appStyles from '~/styles/app.css?url';
@@ -622,28 +643,32 @@ export const CUSTOMER_LOCATIONS_QUERY = `#graphql
  /**
   * This is important to avoid re-fetching root queries on sub-navigations
   */
-@@ -162,7 +192,11 @@ export function Layout({children}: {children?: React.ReactNode}) {
-             shop={data.shop}
-             consent={data.consent}
-           >
--            <PageLayout {...data}>{children}</PageLayout>
-+            {/* @description Wrap PageLayout with B2B location provider for company location management */}
-+            <B2BLocationProvider>
-+              <PageLayout {...data}>{children}</PageLayout>
-+              <B2BLocationSelector />
-+            </B2BLocationProvider>
-           </Analytics.Provider>
-         ) : (
-           children
-```
+@@ -176,9 +206,13 @@ export default function App() {
+       shop={data.shop}
+       consent={data.consent}
+     >
+-      <PageLayout {...data}>
+-        <Outlet />
+-      </PageLayout>
++      {/* @description Wrap PageLayout with B2B location provider for company location management */}
++      <B2BLocationProvider>
++        <PageLayout {...data}>
++          <Outlet />
++        </PageLayout>
++        <B2BLocationSelector />
++      </B2BLocationProvider>
+     </Analytics.Provider>
+   );
+ }
+~~~
 
-### Step 6: app/routes/b2blocations.tsx
+### Step 12: Handle location selection and automatically set location if customer has only one
 
+Create a route handler that processes location selection requests and automatically sets the location if a B2B customer only has access to one company location
 
+#### File: [b2blocations.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/b2b/ingredients/templates/skeleton/app/routes/b2blocations.tsx)
 
-#### File: [b2blocations.tsx](https://github.com/Shopify/hydrogen/blob/1f9640d5acfd505435862b8b2317343bbce96d72/cookbook/recipes/b2b/ingredients/templates/skeleton/app/routes/b2blocations.tsx)
-
-```tsx
+~~~tsx
 import {useLoaderData} from 'react-router';
 import type {Route} from './+types/b2blocations';
 import {B2BLocationSelector} from '../components/B2BLocationSelector';
@@ -682,15 +707,15 @@ export async function loader({context}: Route.LoaderArgs) {
 export default function CartRoute() {
   return <B2BLocationSelector />;
 }
-```
+~~~
 
-### Step 7: app/routes/account_.logout.tsx
+### Step 13: Clear company location and customer data from cart when logging out
 
-
+Update the logout process to clear B2B-specific data including selected company location and customer context from the cart session
 
 #### File: /app/routes/account_.logout.tsx
 
-```diff
+~~~diff
 @@ -7,5 +7,10 @@ export async function loader() {
  }
  
@@ -702,15 +727,15 @@ export default function CartRoute() {
 +  });
    return context.customerAccount.logout();
  }
-```
+~~~
 
-### Step 8: app/routes/products.$handle.tsx
+### Step 14: Contextualize product queries with buyer information and display B2B pricing details
 
-
+Update product queries to include buyer context (company location and customer token) and display B2B-specific pricing, quantity rules, and volume discounts on product pages
 
 #### File: /app/routes/products.$handle.tsx
 
-```diff
+~~~diff
 @@ -15,6 +15,19 @@ import {ProductPrice} from '~/components/ProductPrice';
  import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
@@ -852,6 +877,6 @@ export default function CartRoute() {
      product(handle: $handle) {
        ...Product
      }
-```
+~~~
 
 </recipe_implementation>

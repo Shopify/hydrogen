@@ -183,7 +183,7 @@ async function generateSteps(params: {
 
       const step: Step = {
         type: 'PATCH',
-        step: existingStep?.step ?? `${i}`,
+        step: existingStep?.step ?? String(i),
         name: existingStep?.name ?? file.replace(TEMPLATE_DIRECTORY, ''),
         description: existingDescription ?? null,
         diffs: [
@@ -218,7 +218,7 @@ async function generateSteps(params: {
 
       const step: Step = {
         type: 'NEW_FILE',
-        step: existingStep?.step ?? `${i}`,
+        step: existingStep?.step ?? String(i),
         name: existingStep?.name ?? file.path.replace(TEMPLATE_DIRECTORY, ''),
         description: existingDescription ?? file.description ?? null,
         ingredients: [
@@ -242,9 +242,9 @@ async function generateSteps(params: {
   return steps;
 }
 
-function compareSteps(a: Step, b: Step): number {
+export function compareSteps(a: Step, b: Step): number {
   function normalize(step: Step): string {
-    const expanded = isSubstep(a) ? `${step.step}` : `${step.step}.0`;
+    const expanded = isSubstep(step) ? step.step : `${step.step}.0`;
     return expanded
       .split('.')
       .map((v) => parseInt(v, 10).toString().padStart(4, '0'))
