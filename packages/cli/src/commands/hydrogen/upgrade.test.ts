@@ -800,6 +800,121 @@ describe('upgrade', async () => {
         },
       );
     });
+
+    it('getAvailableUpgrades correctly identifies upgrades when current version is not in changelog', async () => {
+      const mockChangelog = {
+        url: 'https://test.com',
+        version: '1',
+        releases: [
+          {
+            title: 'Latest version',
+            version: '2025.7.0',
+            hash: 'abc123',
+            commit: 'https://github.com/test',
+            pr: 'https://github.com/test',
+            dependencies: {'@shopify/hydrogen': '2025.7.0'},
+            devDependencies: {},
+            dependenciesMeta: {},
+            fixes: [],
+            features: [],
+            date: '2025-07-01',
+          },
+          {
+            title: 'Older version',
+            version: '2025.4.1',
+            hash: 'def456',
+            commit: 'https://github.com/test',
+            pr: 'https://github.com/test',
+            dependencies: {'@shopify/hydrogen': '2025.4.1'},
+            devDependencies: {},
+            dependenciesMeta: {},
+            fixes: [],
+            features: [],
+            date: '2025-04-01',
+          },
+        ] as Release[],
+      };
+
+      const currentVersion = '2025.5.0';
+      const currentDependencies = {'@shopify/hydrogen': '2025.5.0'};
+
+      const {availableUpgrades} = getAvailableUpgrades({
+        releases: mockChangelog.releases,
+        currentVersion,
+        currentDependencies,
+      });
+
+      expect(availableUpgrades).toHaveLength(1);
+      expect(availableUpgrades[0]?.version).toBe('2025.7.0');
+    });
+
+    it('displayDevUpgradeNotice shows correct versions when current version is not in changelog', async () => {
+      const mockPackageJson = {
+        dependencies: {
+          '@shopify/hydrogen': '2025.5.0',
+        },
+        devDependencies: {},
+      };
+
+      await inTemporaryHydrogenRepo(
+        async (targetPath) => {
+          await expect(
+            displayDevUpgradeNotice({targetPath}),
+          ).resolves.not.toThrow();
+
+          const output = outputMock.info();
+
+          expect(output).toMatch(/Current: 2025\.5\.0.*Latest: 2025\.7\.0/);
+
+          expect(output).toMatch(/2025\.7\.0/);
+
+          expect(output).not.toMatch(/2023\.1\.1/);
+          expect(output).not.toMatch(/2023\.1\.2/);
+          expect(output).not.toMatch(/2023\.1\.3/);
+          expect(output).not.toMatch(/2023\.1\.4/);
+          expect(output).not.toMatch(/2023\.1\.5/);
+        },
+        {
+          cleanGitRepo: false,
+          packageJson: mockPackageJson,
+        },
+      );
+    });
+
+    it('displayDevUpgradeNotice shows versions in correct order (newest first, next version last)', async () => {
+      const mockPackageJson = {
+        dependencies: {
+          '@shopify/hydrogen': '2025.1.0',
+        },
+        devDependencies: {},
+      };
+
+      await inTemporaryHydrogenRepo(
+        async (targetPath) => {
+          await expect(
+            displayDevUpgradeNotice({targetPath}),
+          ).resolves.not.toThrow();
+
+          const output = outputMock.info();
+
+          const versionLineMatches =
+            output.match(/•\s+(\d{4}\.\d+\.\d+)\s+-\s+/g) || [];
+
+          expect(versionLineMatches.length).toBeGreaterThan(1);
+
+          const firstVersionLine = versionLineMatches[0];
+          const lastVersionLine =
+            versionLineMatches[versionLineMatches.length - 1];
+
+          expect(firstVersionLine).toContain('2025.7.0');
+          expect(lastVersionLine).toMatch(/2025\.1\.[1-4]/);
+        },
+        {
+          cleanGitRepo: false,
+          packageJson: mockPackageJson,
+        },
+      );
+    });
   });
 
   describe('upgradeNodeModules', () => {

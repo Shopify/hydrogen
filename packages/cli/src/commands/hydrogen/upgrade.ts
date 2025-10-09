@@ -1369,11 +1369,23 @@ export async function displayDevUpgradeNotice({
             getAbsoluteVersion(release.version) === pinnedCurrentVersion,
         );
 
-    const relevantReleases = changelog.releases.slice(0, currentReleaseIndex);
+    let relevantReleases: Release[];
+    if (currentReleaseIndex === -1) {
+      // Current version not found in changelog. Use semver to find releases newer than current.
+      const insertionIndex = changelog.releases.findIndex((release) =>
+        semver.lte(getAbsoluteVersion(release.version), pinnedCurrentVersion),
+      );
 
-    // By reversing the releases array, we give priority to older releases
-    // for the same version. Older releases (the first one of a version) probably
-    // have more information than a newer release that only changes dependencies.
+      relevantReleases =
+        insertionIndex === -1
+          ? changelog.releases
+          : changelog.releases.slice(0, insertionIndex);
+    } else {
+      relevantReleases = changelog.releases.slice(0, currentReleaseIndex);
+    }
+
+    // First, reverse so that during deduplication (reduce), older releases of the same version are kept.
+    // Then, reverse again after deduplication to restore chronological order for display (newest version at the top).
     const nextReleases = Object.values(
       [...relevantReleases].reverse().reduce(
         (acc, release) => {
@@ -1382,7 +1394,9 @@ export async function displayDevUpgradeNotice({
         },
         {} as Record<string, string>,
       ),
-    ).slice(0, 5);
+    )
+      .reverse()
+      .slice(0, 5);
 
     let headline =
       Object.keys(uniqueAvailableUpgrades).length > 1
