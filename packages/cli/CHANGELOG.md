@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 11.1.6
+
+### Patch Changes
+
+- Fix upgrade notice showing incorrect old versions when current version is missing from changelog. The `shopify hydrogen dev` command now correctly displays available upgrades using semver comparison when the current version doesn't exist in changelog.json. ([#3251](https://github.com/Shopify/hydrogen/pull/3251)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 11.1.5
 
 ### Patch Changes
