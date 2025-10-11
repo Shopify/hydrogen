@@ -18,6 +18,17 @@ import {
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 import type {ResolvedConfig, UserConfig} from 'vite';
 
+// Extended Vite config type with React Router plugin context
+interface ExtendedResolvedConfig extends ResolvedConfig {
+  __reactRouterPluginContext?: {
+    reactRouterConfig?: {
+      future?: {
+        unstable_viteEnvironmentApi?: boolean;
+      };
+    };
+  };
+}
+
 export const REMIX_COMPILER_ERROR_MESSAGE =
   "Classic Remix Compiler projects are no longer supported, please upgrade to Vite by running 'npx shopify hydrogen setup vite'";
 
@@ -77,8 +88,21 @@ export async function getViteConfig(
   const {appDirectory, serverBuildFile, routes} =
     getReactRouterOrRemixConfigFromVite(resolvedViteConfig);
 
-  const serverOutDir = resolvedViteConfig.build.outDir;
-  const clientOutDir = serverOutDir.replace(/server$/, 'client');
+  // Check if React Router viteEnvironmentApi is enabled
+  const extendedConfig = resolvedViteConfig as ExtendedResolvedConfig;
+  const reactRouterConfig = extendedConfig.__reactRouterPluginContext?.reactRouterConfig;
+  const hasViteEnvironmentApi = reactRouterConfig?.future?.unstable_viteEnvironmentApi === true;
+
+  const baseOutDir = resolvedViteConfig.build.outDir;
+  
+  // When viteEnvironmentApi is enabled, React Router creates separate client/server directories
+  const serverOutDir = hasViteEnvironmentApi 
+    ? joinPath(baseOutDir, 'server')
+    : baseOutDir;
+  
+  const clientOutDir = hasViteEnvironmentApi
+    ? joinPath(baseOutDir, 'client') 
+    : serverOutDir.replace(/server$/, 'client');
 
   const rollupOutput = resolvedViteConfig.build.rollupOptions.output;
   const {entryFileNames} =
