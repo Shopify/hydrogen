@@ -1,6 +1,5 @@
 'use strict';
 
-var path = require('path');
 var react = require('react');
 var reactRouter = require('react-router');
 var jsxRuntime = require('react/jsx-runtime');
@@ -12,7 +11,6 @@ var cspBuilder = require('content-security-policy-builder');
 var _documentCurrentScript = typeof document !== 'undefined' ? document.currentScript : null;
 function _interopDefault (e) { return e && e.__esModule ? e : { default: e }; }
 
-var path__default = /*#__PURE__*/_interopDefault(path);
 var cspBuilder__default = /*#__PURE__*/_interopDefault(cspBuilder);
 
 var __defProp = Object.defineProperty;
@@ -28,32 +26,11 @@ var __export = (target, all) => {
 // src/vite/get-virtual-routes.ts
 var get_virtual_routes_exports = {};
 __export(get_virtual_routes_exports, {
-  VIRTUAL_ROOT: () => VIRTUAL_ROOT,
-  VIRTUAL_ROOT_ORIG: () => VIRTUAL_ROOT_ORIG,
   VIRTUAL_ROUTES_DIR: () => VIRTUAL_ROUTES_DIR,
-  VIRTUAL_ROUTES_DIR_ORIG: () => VIRTUAL_ROUTES_DIR_ORIG,
   VIRTUAL_ROUTES_DIR_PARTS: () => VIRTUAL_ROUTES_DIR_PARTS,
   VIRTUAL_ROUTES_ROUTES_DIR_PARTS: () => VIRTUAL_ROUTES_ROUTES_DIR_PARTS,
-  fileUrlToPath: () => fileUrlToPath,
-  getVirtualRoutes: () => getVirtualRoutes,
   getVirtualRoutesV3: () => getVirtualRoutesV3
 });
-function fileUrlToPath(url) {
-  if (typeof url !== "string") {
-    throw new TypeError('The "url" argument must be of type string.');
-  }
-  if (!url.startsWith("file://")) {
-    throw new TypeError("The URL must be a file URL.");
-  }
-  let path2 = url.replace(/^file:\/\/\/*/, "");
-  if (/^[a-zA-Z]:/.test(path2)) {
-    path2 = "/" + path2;
-  } else {
-    path2 = "/" + path2;
-  }
-  path2 = decodeURIComponent(path2);
-  return path2;
-}
 function getVirtualRoutesPath(pathParts, forFile) {
   const basePath = new URL("../", (typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('index.cjs', document.baseURI).href)));
   const virtualRoutesPath = pathParts.reduce((working, dirPart) => {
@@ -109,19 +86,7 @@ async function getVirtualRoutesV3() {
     }
   };
 }
-async function getVirtualRoutes() {
-  const distPath = path__default.default.dirname(fileUrlToPath((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('index.cjs', document.baseURI).href))));
-  path__default.default.join(distPath, VIRTUAL_ROUTES_DIR_ORIG);
-  return {
-    //routes,
-    root: {
-      id: VIRTUAL_ROOT_ORIG,
-      path: "",
-      file: path__default.default.join(distPath, VIRTUAL_ROOT_ORIG + ".jsx")
-    }
-  };
-}
-var VIRTUAL_ROUTES_DIR, VIRTUAL_ROUTES_ROUTES_DIR_PARTS, VIRTUAL_ROUTES_DIR_PARTS, VIRTUAL_ROOT, VIRTUAL_ROUTES_DIR_ORIG, VIRTUAL_ROOT_ORIG;
+var VIRTUAL_ROUTES_DIR, VIRTUAL_ROUTES_ROUTES_DIR_PARTS, VIRTUAL_ROUTES_DIR_PARTS;
 var init_get_virtual_routes = __esm({
   "src/vite/get-virtual-routes.ts"() {
     VIRTUAL_ROUTES_DIR = "vite/virtual-routes/routes";
@@ -131,9 +96,6 @@ var init_get_virtual_routes = __esm({
       "routes"
     ];
     VIRTUAL_ROUTES_DIR_PARTS = ["vite", "virtual-routes"];
-    VIRTUAL_ROOT = "vite/virtual-routes/virtual-root";
-    VIRTUAL_ROUTES_DIR_ORIG = "virtual-routes/routes";
-    VIRTUAL_ROOT_ORIG = "virtual-routes/virtual-root-with-layout";
   }
 });
 
@@ -3306,9 +3268,9 @@ var logSubRequestEvent = ({
     }
   });
 } ;
-function redirect(path2, options = {}) {
+function redirect(path, options = {}) {
   const headers = options.headers ? new Headers(options.headers) : new Headers({});
-  headers.set("location", path2);
+  headers.set("location", path);
   return new Response(null, { status: options.status || 302, headers });
 }
 async function refreshToken({
@@ -4280,12 +4242,12 @@ function LazyScript({
 async function hydrogenRoutes(currentRoutes) {
   const { getVirtualRoutesV3: getVirtualRoutesV32 } = await Promise.resolve().then(() => (init_get_virtual_routes(), get_virtual_routes_exports));
   const { layout, routes: virtualRoutes } = await getVirtualRoutesV32();
-  const childVirtualRoutes = virtualRoutes.map(({ path: path2, file, index, id }) => {
+  const childVirtualRoutes = virtualRoutes.map(({ path, file, index, id }) => {
     return {
       file,
       id,
       index,
-      path: path2
+      path
     };
   });
   const virtualLayout = {
@@ -4646,7 +4608,7 @@ function VariantSelector({
     }
   }
   const variants = _variants instanceof Array ? _variants : hydrogenReact.flattenConnection(_variants);
-  const { searchParams, path: path2, alreadyOnProductPage } = useVariantPath(
+  const { searchParams, path, alreadyOnProductPage } = useVariantPath(
     handle,
     productPath,
     waitForNavigation
@@ -4702,7 +4664,7 @@ function VariantSelector({
             value: value.name,
             optionValue: value,
             isAvailable: variant ? variant.availableForSale : true,
-            to: path2 + searchString,
+            to: path + searchString,
             search: searchString,
             isActive: calculatedActiveValue,
             variant
@@ -4736,7 +4698,7 @@ function useVariantPath(handle, productPath, waitForNavigation) {
     const match = /(\/[a-zA-Z]{2}-[a-zA-Z]{2}\/)/g.exec(pathname);
     const isLocalePathname = match && match.length > 0;
     productPath = productPath.startsWith("/") ? productPath.substring(1) : productPath;
-    const path2 = isLocalePathname ? `${match[0]}${productPath}/${handle}` : `/${productPath}/${handle}`;
+    const path = isLocalePathname ? `${match[0]}${productPath}/${handle}` : `/${productPath}/${handle}`;
     const searchParams = new URLSearchParams(
       // Remix doesn't update the location until pending loaders complete.
       // By default we use the destination search params to make selecting a variant
@@ -4749,8 +4711,8 @@ function useVariantPath(handle, productPath, waitForNavigation) {
       // If the current pathname matches the product page, we need to make sure
       // that we append to the current search params. Otherwise all the search
       // params can be generated new.
-      alreadyOnProductPage: path2 === pathname,
-      path: path2
+      alreadyOnProductPage: path === pathname,
+      path
     };
   }, [pathname, search, waitForNavigation, handle, productPath, navigation]);
 }

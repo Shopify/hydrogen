@@ -4069,7 +4069,7 @@ function LazyScript({
 
 // src/dev/hydrogen-routes.ts
 async function hydrogenRoutes(currentRoutes) {
-  const { getVirtualRoutesV3 } = await import('./get-virtual-routes-3EHDQRMK.js');
+  const { getVirtualRoutesV3 } = await import('./get-virtual-routes-XE7G57DS.js');
   const { layout, routes: virtualRoutes } = await getVirtualRoutesV3();
   const childVirtualRoutes = virtualRoutes.map(({ path, file, index, id }) => {
     return {

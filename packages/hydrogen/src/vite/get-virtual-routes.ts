@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 // v3_routeConfig virtual routes constants
 export const VIRTUAL_ROUTES_DIR = 'vite/virtual-routes/routes';
 export const VIRTUAL_ROUTES_ROUTES_DIR_PARTS = [
@@ -8,7 +6,6 @@ export const VIRTUAL_ROUTES_ROUTES_DIR_PARTS = [
   'routes',
 ];
 export const VIRTUAL_ROUTES_DIR_PARTS = ['vite', 'virtual-routes'];
-export const VIRTUAL_ROOT = 'vite/virtual-routes/virtual-root';
 
 function getVirtualRoutesPath(
   pathParts: Array<string>,
@@ -68,21 +65,6 @@ export async function getVirtualRoutesV3() {
     ],
     layout: {
       file: getVirtualRoutesPath(VIRTUAL_ROUTES_DIR_PARTS, 'layout.jsx'),
-    },
-  };
-}
-
-// original virtual routes constants
-export const VIRTUAL_ROUTES_DIR_ORIG = 'virtual-routes/routes';
-export const VIRTUAL_ROOT_ORIG = 'virtual-routes/virtual-root-with-layout';
-
-export async function getVirtualRoutes() {
-  return {
-    // routes,
-    root: {
-      id: VIRTUAL_ROOT_ORIG,
-      path: '',
-      file: path.join(distPath, VIRTUAL_ROOT_ORIG + '.jsx'),
     },
   };
 }

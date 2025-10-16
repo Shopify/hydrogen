@@ -4,7 +4,7 @@ async function hydrogenRoutes(currentRoutes) {
   if (env === "production") {
     return currentRoutes;
   }
-  const { getVirtualRoutesV3 } = await import("./get-virtual-routes-ZDKBFPBA.js");
+  const { getVirtualRoutesV3 } = await import("./get-virtual-routes-ZEUPNZWL.js");
   const { layout, routes: virtualRoutes } = await getVirtualRoutesV3();
   const childVirtualRoutes = virtualRoutes.map(({ path, file, index, id }) => {
     return {

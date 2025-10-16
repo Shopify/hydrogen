@@ -1,21 +1,4 @@
 // src/vite/get-virtual-routes.ts
-import path from "path";
-function fileUrlToPath(url) {
-  if (typeof url !== "string") {
-    throw new TypeError('The "url" argument must be of type string.');
-  }
-  if (!url.startsWith("file://")) {
-    throw new TypeError("The URL must be a file URL.");
-  }
-  let path2 = url.replace(/^file:\/\/\/*/, "");
-  if (/^[a-zA-Z]:/.test(path2)) {
-    path2 = "/" + path2;
-  } else {
-    path2 = "/" + path2;
-  }
-  path2 = decodeURIComponent(path2);
-  return path2;
-}
 var VIRTUAL_ROUTES_DIR = "vite/virtual-routes/routes";
 var VIRTUAL_ROUTES_ROUTES_DIR_PARTS = [
   "vite",
@@ -23,7 +6,6 @@ var VIRTUAL_ROUTES_ROUTES_DIR_PARTS = [
   "routes"
 ];
 var VIRTUAL_ROUTES_DIR_PARTS = ["vite", "virtual-routes"];
-var VIRTUAL_ROOT = "vite/virtual-routes/virtual-root";
 function getVirtualRoutesPath(pathParts, forFile) {
   const basePath = new URL("../", import.meta.url);
   const virtualRoutesPath = pathParts.reduce((working, dirPart) => {
@@ -79,28 +61,9 @@ async function getVirtualRoutesV3() {
     }
   };
 }
-var VIRTUAL_ROUTES_DIR_ORIG = "virtual-routes/routes";
-var VIRTUAL_ROOT_ORIG = "virtual-routes/virtual-root-with-layout";
-async function getVirtualRoutes() {
-  const distPath = path.dirname(fileUrlToPath(import.meta.url));
-  const virtualRoutesPath = path.join(distPath, VIRTUAL_ROUTES_DIR_ORIG);
-  return {
-    //routes,
-    root: {
-      id: VIRTUAL_ROOT_ORIG,
-      path: "",
-      file: path.join(distPath, VIRTUAL_ROOT_ORIG + ".jsx")
-    }
-  };
-}
 export {
-  VIRTUAL_ROOT,
-  VIRTUAL_ROOT_ORIG,
   VIRTUAL_ROUTES_DIR,
-  VIRTUAL_ROUTES_DIR_ORIG,
   VIRTUAL_ROUTES_DIR_PARTS,
   VIRTUAL_ROUTES_ROUTES_DIR_PARTS,
-  fileUrlToPath,
-  getVirtualRoutes,
   getVirtualRoutesV3
 };
