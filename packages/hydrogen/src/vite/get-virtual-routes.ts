@@ -1,6 +1,4 @@
-import {fileURLToPath} from 'node:url';
 import path from 'node:path';
-import {readdir} from 'node:fs/promises';
 
 // v3_routeConfig virtual routes constants
 export const VIRTUAL_ROUTES_DIR = 'vite/virtual-routes/routes';
@@ -79,30 +77,8 @@ export const VIRTUAL_ROUTES_DIR_ORIG = 'virtual-routes/routes';
 export const VIRTUAL_ROOT_ORIG = 'virtual-routes/virtual-root-with-layout';
 
 export async function getVirtualRoutes() {
-  const distPath = path.dirname(fileURLToPath(import.meta.url));
-  const virtualRoutesPath = path.join(distPath, VIRTUAL_ROUTES_DIR_ORIG);
-
-  const routes = await readdir(virtualRoutesPath, {recursive: true}).then(
-    (files) =>
-      files.map((relativeFilePath) => {
-        const absoluteFilePath = path.join(virtualRoutesPath, relativeFilePath);
-        const id = relativeFilePath
-          .replace(/\.[jt]sx?$/, '')
-          .replaceAll('\\', '/');
-        const isIndex = /(^|\/)index$/.test(id);
-        const routePath = id.replace(/(^|\/)index$/, '');
-
-        return {
-          id: `${VIRTUAL_ROUTES_DIR_ORIG}/${id}`,
-          path: routePath,
-          file: absoluteFilePath,
-          index: isIndex,
-        };
-      }),
-  );
-
   return {
-    routes,
+    // routes,
     root: {
       id: VIRTUAL_ROOT_ORIG,
       path: '',
