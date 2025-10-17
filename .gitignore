@@ -10,6 +10,7 @@ node_modules
 /test-results/
 /playwright-report/
 /playwright/.cache/
+**/dist
 # Logs
 logs
 *.log
@@ -91,6 +92,7 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
+dist
 build
 
 # public
