@@ -162,6 +162,45 @@ describe('discovery functionality', () => {
       'https://test-shop.account.myshopify.com',
     );
   });
+
+  it('replaces API version in discovered GraphQL URL', () => {
+    const storefrontDomain = 'test-shop.myshopify.com';
+    const discoveredEndpoints = {
+      graphqlApiUrl:
+        'https://test-shop.account.myshopify.com/customer/api/2024-01/graphql',
+      authorizationUrl:
+        'https://test-shop.account.myshopify.com/oauth/authorize',
+      tokenUrl: 'https://test-shop.account.myshopify.com/oauth/token',
+      logoutUrl: 'https://test-shop.account.myshopify.com/logout',
+    };
+
+    const getAccountUrl = createCustomerAccountHelper(
+      '2025-07', // Different version than discovered URL
+      shopId,
+      storefrontDomain,
+      true,
+      discoveredEndpoints,
+    );
+
+    // Should use discovered domain but replace version with the one provided
+    expect(getAccountUrl(URL_TYPE.GRAPHQL)).toBe(
+      'https://test-shop.account.myshopify.com/customer/api/2025-07/graphql',
+    );
+  });
+
+  it('handles missing storefront domain with discovery enabled', () => {
+    const getAccountUrl = createCustomerAccountHelper(
+      '2025-07',
+      shopId,
+      undefined, // no domain
+      true, // discovery enabled
+    );
+
+    // Should fall back to legacy URLs
+    expect(getAccountUrl(URL_TYPE.GRAPHQL)).toBe(
+      `${customerAccountUrl}/account/customer/api/2025-07/graphql`,
+    );
+  });
 });
 
 describe('createCustomerAccountHelperWithDiscovery', () => {
