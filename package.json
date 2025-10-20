@@ -68,7 +68,7 @@
     "@eslint/compat": "1.2.5",
     "@eslint/eslintrc": "3.2.0",
     "@eslint/js": "9.19.0",
-    "@playwright/test": "^1.40.1",
+    "@playwright/test": "^1.56.1",
     "@qwik.dev/partytown": "^0.11.2",
     "@react-router/dev": "7.9.2",
     "@react-router/fs-routes": "7.9.2",
