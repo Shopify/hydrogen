@@ -51,7 +51,12 @@ export interface CustomerAccountMutations {
 }
 
 export type LoginOptions = {
+  /**
+   * The displayed language of the login page.
+   * Note: When using third-party identity providers, this parameter is not passed to the provider.
+   */
   uiLocales?: LanguageCode;
+  /** The country code for contextualizing the login experience. */
   countryCode?: CountryCode;
 };
 
@@ -75,6 +80,9 @@ export type CustomerAccount = {
    * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:
    * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,
    * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.
+   * Note: When using third-party identity providers with headless storefronts, the `uiLocales` parameter
+   * is not passed to the identity provider during authentication callbacks. This means the third-party
+   * login interface may not automatically reflect the customer's preferred language setting.
    * */
   login: (options?: LoginOptions) => Promise<Response>;
   /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */
