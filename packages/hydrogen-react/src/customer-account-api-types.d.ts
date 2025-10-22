@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Customer Account API 2025-07
+ * Based on Customer Account API 2025-10
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -4023,12 +4023,21 @@ export type LineItemGroup = Node & {
   __typename?: 'LineItemGroup';
   /** The total price of the line item group, calculated by aggregating the current total price of its line item components. */
   currentTotalPrice?: Maybe<MoneyV2>;
+  /**
+   * Whether the group merchandise is itself deliverable.
+   * @deprecated Use `is_concrete` instead.
+   */
+  deliverable?: Maybe<Scalars['Boolean']['output']>;
   /** The discount information for the line item group. */
   discountInformation?: Maybe<Array<LineItemDiscountInformation>>;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
   /** The image of the line item group variant or the product image if the variant has no image. */
   image?: Maybe<Image>;
+  /** Whether the group represents concrete merchandise (as opposed to virtual merchandise). */
+  isConcrete?: Maybe<Scalars['Boolean']['output']>;
+  /** ID of the parent line item. */
+  parentLineItemId?: Maybe<Scalars['ID']['output']>;
   /** The number of line item groups ordered. */
   quantity: Scalars['Int']['output'];
   /** The title of the line item group. */
@@ -5627,6 +5636,8 @@ export type PaymentSchedule = Node & {
   dueAt?: Maybe<Scalars['DateTime']['output']>;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
+  /** Remaining balance to be paid or authorized by the customer for this payment schedule. */
+  totalBalance: MoneyV2;
 };
 
 /** An auto-generated type for paginating through multiple PaymentSchedules. */

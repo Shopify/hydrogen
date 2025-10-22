@@ -817,7 +817,7 @@ describe('upgrade', async () => {
             dependenciesMeta: {},
             fixes: [],
             features: [],
-            date: '2025-07-01',
+            date: '2025-10-01',
           },
           {
             title: 'Older version',
