@@ -154,4 +154,122 @@ describe('cartDeliveryAddressesUpdateDefault', () => {
       expect(functionFile).toContain('updateAddresses([])');
     });
   });
+
+  describe('edge cases', () => {
+    it('should handle address with only required fields', async () => {
+      const updateDeliveryAddresses = cartDeliveryAddressesUpdateDefault({
+        storefront: mockCreateStorefrontClient(),
+        getCartId: () => CART_ID,
+      });
+
+      const minimalAddress = {
+        selected: true,
+        address: {
+          deliveryAddress: {
+            address1: '123 Main',
+            city: 'NYC',
+            countryCode: 'US',
+            zip: '10001',
+          },
+        },
+      };
+
+      const result = await updateDeliveryAddresses([minimalAddress]);
+
+      expect(result.cart).toHaveProperty('id', CART_ID);
+    });
+
+    it('should handle address with copyFromCustomerAddressId instead of deliveryAddress', async () => {
+      const updateDeliveryAddresses = cartDeliveryAddressesUpdateDefault({
+        storefront: mockCreateStorefrontClient(),
+        getCartId: () => CART_ID,
+      });
+
+      const customerAddress = {
+        id: 'gid://shopify/CartSelectableAddress/test',
+        selected: true,
+        address: {
+          copyFromCustomerAddressId:
+            'gid://shopify/MailingAddress/123?model_name=CustomerAddress',
+        },
+      };
+
+      const result = await updateDeliveryAddresses([customerAddress]);
+
+      expect(result.cart).toHaveProperty('id', CART_ID);
+    });
+
+    it('should handle optional parameters like country and language', async () => {
+      const updateDeliveryAddresses = cartDeliveryAddressesUpdateDefault({
+        storefront: mockCreateStorefrontClient(),
+        getCartId: () => CART_ID,
+      });
+
+      const result = await updateDeliveryAddresses([], {
+        country: 'CA',
+        language: 'FR',
+      });
+
+      expect(result.cart).toHaveProperty('id', CART_ID);
+    });
+
+    it('should handle single address update', async () => {
+      const updateDeliveryAddresses = cartDeliveryAddressesUpdateDefault({
+        storefront: mockCreateStorefrontClient(),
+        getCartId: () => CART_ID,
+      });
+
+      const singleAddress = [
+        {
+          id: 'gid://shopify/CartSelectableAddress/single',
+          selected: true,
+          oneTimeUse: false,
+          address: {
+            deliveryAddress: {
+              address1: 'Single Street',
+              city: 'Solo City',
+              countryCode: 'US',
+              zip: '99999',
+            },
+          },
+        },
+      ];
+
+      const result = await updateDeliveryAddresses(singleAddress);
+
+      expect(result.cart).toHaveProperty('id', CART_ID);
+    });
+
+    it('should handle address with all optional fields', async () => {
+      const updateDeliveryAddresses = cartDeliveryAddressesUpdateDefault({
+        storefront: mockCreateStorefrontClient(),
+        getCartId: () => CART_ID,
+      });
+
+      const fullAddress = {
+        id: 'gid://shopify/CartSelectableAddress/full',
+        selected: true,
+        oneTimeUse: true,
+        validationStrategy: 'COUNTRY_CODE_ONLY' as const,
+        address: {
+          deliveryAddress: {
+            firstName: 'John',
+            lastName: 'Doe',
+            company: 'Acme Corp',
+            address1: '123 Main St',
+            address2: 'Apt 4B',
+            city: 'New York',
+            provinceCode: 'NY',
+            countryCode: 'US',
+            zip: '10001',
+            phone: '+1234567890',
+          },
+        },
+      };
+
+      const result = await updateDeliveryAddresses([fullAddress]);
+
+      expect(result.cart).toHaveProperty('id', CART_ID);
+    });
+  });
 });
