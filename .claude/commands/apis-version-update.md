@@ -93,6 +93,52 @@ Before starting, verify:
 **✅ CHECKPOINT**: Pause and ask the user to confirm before moving to the next task.
 **Summary**: Confirmed whether Cloudflare Workers compatibility date needs updating (often not required).
 
+### 3c. Update Package Version References (MUST UPDATE)
+
+**IMPORTANT**: The Hydrogen package version follows the pattern `YYYY.MAJOR.PATCH` and must match the API version.
+
+Update package version references in these files:
+
+1. **File**: `packages/hydrogen/src/version.ts`
+   - Read the file first
+   - Update: `export const LIB_VERSION = 'YYYY.MM.0';`
+   - Example: Change from `'2025.7.0'` to `'2025.10.0'`
+
+2. **File**: `packages/hydrogen/src/react-router-preset.ts`
+   - Read the file first
+   - Update all occurrences of version (6 places):
+     - JSDoc comment: "Feature Support Matrix for Hydrogen YYYY.MM.0"
+     - @version tag: `@version YYYY.MM.0`
+     - Preset name: `name: 'hydrogen-YYYY.MM.0'`
+     - Error messages (4 places): "in Hydrogen YYYY.MM.0"
+   - Example: Change all from `2025.7.0` to `2025.10.0`
+
+3. **File**: `packages/hydrogen/src/react-router-preset.test.ts`
+   - Read the file first
+   - Update all test expectations (5 places):
+     - Preset name assertion
+     - Error message expectations
+   - Example: Change all from `2025.7.0` to `2025.10.0`
+
+4. **File**: `packages/hydrogen/src/exports.test.ts`
+   - Read the file first
+   - Update preset name test expectation
+   - Example: Change from `'hydrogen-2025.7.0'` to `'hydrogen-2025.10.0'`
+
+**DO NOT UPDATE**: `packages/cli/src/commands/hydrogen/upgrade.test.ts`
+- This file contains test fixtures for the upgrade command
+- These reference historical versions and should only be updated when changelog.json is updated post-release
+- Updating prematurely will break upgrade tests
+
+**Search for other format variations:**
+```bash
+# Search for alternative version formats to ensure nothing is missed
+grep -rE "(YYYY\.07|YYYY-7|YYYY\.7\.0)" packages/ templates/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --exclude="CHANGELOG.md" --exclude-dir=generated --exclude-dir=dist
+```
+
+**✅ CHECKPOINT**: Pause and ask the user to confirm before moving to the next task.
+**Summary**: Updated package version references from YYYY.7.0 to YYYY.10.0 in version.ts, preset files, and tests (excluding upgrade.test.ts which updates post-release).
+
 ### 4. Generate Types & Build (CRITICAL SEQUENCE - REQUIRED)
 **TODO TRACKING**: Mark Step 3 complete, add and mark Step 4 as in_progress.
 
