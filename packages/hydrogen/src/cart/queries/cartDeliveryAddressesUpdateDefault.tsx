@@ -25,7 +25,8 @@ export type CartDeliveryAddressesUpdateFunction = (
  * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
  * @returns {CartDeliveryAddressUpdateFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
  *
- * @example Clear all delivery addresses (API 2025-10+)
+ * @example Clear all delivery addresses
+ * Passing an empty array clears all delivery addresses (API 2025-10+).
  * const updateAddresses = cartDeliveryAddressesUpdateDefault(cartQueryOptions);
  * await updateAddresses([]);
  *

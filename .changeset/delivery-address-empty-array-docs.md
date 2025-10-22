@@ -76,10 +76,13 @@ await cartHandler.updateDeliveryAddresses([]);
 **If you want to clear addresses:**
 
 ```typescript
-// BEFORE (workaround): Had to remove addresses individually
-const addressIds = cart.delivery.addresses.map((addr) => addr.id);
-await cartHandler.removeDeliveryAddresses(addressIds);
+// BEFORE (workaround): Had to fetch cart, extract address IDs, then remove individually
+const cart = await cartHandler.get();
+const addressIds = cart.delivery?.addresses?.map((addr) => addr.id) || [];
+if (addressIds.length > 0) {
+  await cartHandler.removeDeliveryAddresses(addressIds);
+}
 
-// AFTER (2025-10): Simply pass empty array
+// AFTER (2025-10): Simply pass empty array to update mutation
 await cartHandler.updateDeliveryAddresses([]);
 ```
