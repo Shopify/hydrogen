@@ -4,6 +4,7 @@ import {
   cartDeliveryAddressesUpdateDefault,
   CART_DELIVERY_ADDRESSES_UPDATE_MUTATION,
 } from './cartDeliveryAddressesUpdateDefault';
+import type {CountryCode} from '@shopify/hydrogen-react/storefront-api-types';
 
 describe('cartDeliveryAddressesUpdateDefault', () => {
   describe('empty array behavior (API 2025-10+)', () => {
@@ -42,7 +43,7 @@ describe('cartDeliveryAddressesUpdateDefault', () => {
           deliveryAddress: {
             address1: '123 Test Street',
             city: 'Test City',
-            countryCode: 'US',
+            countryCode: 'US' as CountryCode,
             zip: '12345',
           },
         },
@@ -67,7 +68,7 @@ describe('cartDeliveryAddressesUpdateDefault', () => {
             deliveryAddress: {
               address1: '123 Main St',
               city: 'NYC',
-              countryCode: 'US',
+              countryCode: 'US' as CountryCode,
               zip: '10001',
             },
           },
@@ -79,7 +80,7 @@ describe('cartDeliveryAddressesUpdateDefault', () => {
             deliveryAddress: {
               address1: '456 Broadway',
               city: 'NYC',
-              countryCode: 'US',
+              countryCode: 'US' as CountryCode,
               zip: '10002',
             },
           },
@@ -163,12 +164,13 @@ describe('cartDeliveryAddressesUpdateDefault', () => {
       });
 
       const minimalAddress = {
+        id: 'gid://shopify/CartSelectableAddress/minimal',
         selected: true,
         address: {
           deliveryAddress: {
             address1: '123 Main',
             city: 'NYC',
-            countryCode: 'US',
+            countryCode: 'US' as CountryCode,
             zip: '10001',
           },
         },
@@ -228,7 +230,7 @@ describe('cartDeliveryAddressesUpdateDefault', () => {
             deliveryAddress: {
               address1: 'Single Street',
               city: 'Solo City',
-              countryCode: 'US',
+              countryCode: 'US' as CountryCode,
               zip: '99999',
             },
           },
@@ -260,7 +262,7 @@ describe('cartDeliveryAddressesUpdateDefault', () => {
             address2: 'Apt 4B',
             city: 'New York',
             provinceCode: 'NY',
-            countryCode: 'US',
+            countryCode: 'US' as CountryCode,
             zip: '10001',
             phone: '+1234567890',
           },
