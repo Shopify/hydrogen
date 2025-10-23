@@ -24,7 +24,11 @@ describe('cartGiftCardCodesAddDefault', () => {
         getCartId: () => CART_ID,
       });
 
-      const result = await addGiftCardCodes(['GIFT123', 'GIFT456', 'WELCOME25']);
+      const result = await addGiftCardCodes([
+        'GIFT123',
+        'GIFT456',
+        'WELCOME25',
+      ]);
 
       expect(result.cart).toHaveProperty('id', CART_ID);
     });
