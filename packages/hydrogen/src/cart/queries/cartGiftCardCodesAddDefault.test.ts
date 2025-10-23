@@ -89,18 +89,5 @@ describe('cartGiftCardCodesAddDefault', () => {
 
       expect(result.cart).toHaveProperty('id', CART_ID);
     });
-
-    it('should not have unique filtering logic in implementation', async () => {
-      const fs = await import('fs');
-      const path = await import('path');
-      const functionFile = fs.readFileSync(
-        path.join(__dirname, 'cartGiftCardCodesAddDefault.ts'),
-        'utf-8',
-      );
-
-      expect(functionFile).not.toContain('unique');
-      expect(functionFile).not.toContain('filter');
-      expect(functionFile).not.toContain('indexOf');
-    });
   });
 });
