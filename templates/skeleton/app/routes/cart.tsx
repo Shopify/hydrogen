@@ -55,15 +55,21 @@ export async function action({request, context}: Route.ActionArgs) {
     case CartForm.ACTIONS.GiftCardCodesUpdate: {
       const formGiftCardCode = inputs.giftCardCode;
 
-      // User inputted gift card code
       const giftCardCodes = (
         formGiftCardCode ? [formGiftCardCode] : []
       ) as string[];
 
-      // Combine gift card codes already applied on cart
-      giftCardCodes.push(...inputs.giftCardCodes);
-
       result = await cart.updateGiftCardCodes(giftCardCodes);
+      break;
+    }
+    case CartForm.ACTIONS.GiftCardCodesAdd: {
+      const formGiftCardCode = inputs.giftCardCode;
+
+      const giftCardCodes = (
+        formGiftCardCode ? [formGiftCardCode] : []
+      ) as string[];
+
+      result = await cart.addGiftCardCodes(giftCardCodes);
       break;
     }
     case CartForm.ACTIONS.GiftCardCodesRemove: {
