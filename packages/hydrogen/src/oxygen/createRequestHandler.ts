@@ -3,6 +3,7 @@ import {
   type AppLoadContext,
   type ServerBuild,
 } from 'react-router';
+import {setTrackingCookies} from '../tracking';
 
 export function createRequestHandler<Context = unknown>({
   build,
@@ -42,6 +43,8 @@ export function createRequestHandler<Context = unknown>({
       : undefined;
 
     const response = await handleRequest(request, context);
+
+    setTrackingCookies(request, response);
 
     if (poweredByHeader) {
       response.headers.append('powered-by', 'Shopify, Hydrogen');
