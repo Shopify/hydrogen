@@ -1,6 +1,9 @@
 import {
   createStorefrontClient as createStorefrontUtilities,
   SHOPIFY_STOREFRONT_ID_HEADER,
+  getShopifyCookies,
+  SHOPIFY_S,
+  SHOPIFY_Y,
   getTrackingValues,
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
@@ -261,8 +264,13 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     !cookie.includes(SHOPIFY_MARKETING_COOKIE) &&
     !cookie.includes(SHOPIFY_ANALYTICS_COOKIE)
   ) {
-    defaultHeaders[SHOPIFY_VISIT_TOKEN_HEADER] = generateUUID();
-    defaultHeaders[SHOPIFY_UNIQUE_TOKEN_HEADER] = generateUUID();
+    // Use deprecated cookie values if available to support upgrading
+    // to latest Hydrogen versions without losing tracking data.
+    const cookies = getShopifyCookies(cookie);
+    defaultHeaders[SHOPIFY_VISIT_TOKEN_HEADER] =
+      cookies[SHOPIFY_Y] || generateUUID();
+    defaultHeaders[SHOPIFY_UNIQUE_TOKEN_HEADER] =
+      cookies[SHOPIFY_S] || generateUUID();
   } else if (cookie) {
     defaultHeaders['cookie'] = cookie;
   }
