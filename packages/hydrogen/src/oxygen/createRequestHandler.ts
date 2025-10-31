@@ -3,7 +3,6 @@ import {
   type AppLoadContext,
   type ServerBuild,
 } from 'react-router';
-import {setTrackingCookies} from '../tracking';
 
 export function createRequestHandler<Context = unknown>({
   build,
@@ -44,7 +43,18 @@ export function createRequestHandler<Context = unknown>({
 
     const response = await handleRequest(request, context);
 
-    setTrackingCookies(request, response);
+    // TODO: what if the user didn't pass context with storefront?
+    const trackingValues = await context?.storefront?.getTrackingValues?.();
+    console.log('TRACKING VALUES', JSON.stringify(trackingValues, null, 2));
+
+    if (trackingValues) {
+      trackingValues.cookies.forEach((cookie) =>
+        response.headers.append('set-cookie', cookie),
+      );
+      if (trackingValues.serverTiming) {
+        response.headers.append('server-timing', trackingValues.serverTiming);
+      }
+    }
 
     if (poweredByHeader) {
       response.headers.append('powered-by', 'Shopify, Hydrogen');

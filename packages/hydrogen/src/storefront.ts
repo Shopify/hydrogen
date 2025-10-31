@@ -155,6 +155,11 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
     typeof createStorefrontUtilities
   >['getStorefrontApiUrl'];
   i18n: TI18n;
+
+  getTrackingValues: () => Promise<{
+    cookies: string[];
+    serverTiming: string | null;
+  } | null>;
 };
 
 type HydrogenClientProps<TI18n> = {
@@ -272,7 +277,9 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       defaultHeaders[STOREFRONT_ACCESS_TOKEN_HEADER],
   });
 
-  async function fetchStorefrontApi<T = any>({
+  const sessionPromiseBuffer: Promise<Headers>[] = [];
+
+  async function fetchStorefrontApi<T = Response>({
     query,
     mutation,
     variables,
@@ -330,7 +337,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         }
       : undefined;
 
-    const [body, response] = await fetchWithServerCache(url, requestInit, {
+    const fetchPromise = fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions || CacheDefault(),
       cacheKey,
@@ -349,6 +356,12 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       },
       streamConfig,
     });
+
+    sessionPromiseBuffer.push(
+      fetchPromise.then(([, response]) => response.headers),
+    );
+
+    const [body, response] = await fetchPromise;
 
     const errorOptions: GraphQLErrorOptions<T> = {
       url,
@@ -471,6 +484,32 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       getShopifyDomain,
       getApiUrl: getStorefrontApiUrl,
       i18n: (i18n ?? defaultI18n) as TI18n,
+
+      getTrackingValues: async () => {
+        const currentRequestPromises = [...sessionPromiseBuffer];
+        // Disable buffering new promises
+        sessionPromiseBuffer.length = 0;
+        sessionPromiseBuffer.push = () => 0;
+
+        // Get headers from the first successful request to SFAPI.
+        const headers = await Promise.any(currentRequestPromises).catch(
+          async () => {
+            // Fallback to a fast request if there are no inflight requests:
+            const consentResponse = await fetchStorefrontApi({
+              query: 'query{consentManagement{currentCookies}}',
+            }).catch(() => null);
+            return consentResponse?.headers;
+          },
+        );
+
+        if (!headers) return null;
+
+        return {
+          cookies: headers.getSetCookie(),
+          // TODO: cleanup server timeing value to include only relevant parts?
+          serverTiming: headers.get('server-timing'),
+        };
+      },
     },
   };
 }
