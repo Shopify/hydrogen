@@ -44,15 +44,14 @@ export function createRequestHandler<Context = unknown>({
     const response = await handleRequest(request, context);
 
     // TODO: what if the user didn't pass context with storefront?
-    const trackingValues = await context?.storefront?.getTrackingValues?.();
-    console.log('TRACKING VALUES', JSON.stringify(trackingValues, null, 2));
+    const trackingHeaders = await context?.storefront?.getTrackingHeaders?.();
 
-    if (trackingValues) {
-      trackingValues.cookies.forEach((cookie) =>
+    if (trackingHeaders) {
+      trackingHeaders.cookies.forEach((cookie) =>
         response.headers.append('set-cookie', cookie),
       );
-      if (trackingValues.serverTiming) {
-        response.headers.append('server-timing', trackingValues.serverTiming);
+      if (trackingHeaders.serverTiming) {
+        response.headers.append('server-timing', trackingHeaders.serverTiming);
       }
     }
 

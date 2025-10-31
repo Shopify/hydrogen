@@ -1,6 +1,7 @@
 import {
   createStorefrontClient as createStorefrontUtilities,
   SHOPIFY_STOREFRONT_ID_HEADER,
+  getTrackingValues,
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
 import type {WritableDeep} from 'type-fest';
@@ -156,9 +157,9 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   >['getStorefrontApiUrl'];
   i18n: TI18n;
 
-  getTrackingValues: () => Promise<{
+  getTrackingHeaders: () => Promise<{
     cookies: string[];
-    serverTiming: string | null;
+    serverTiming: string;
   } | null>;
 };
 
@@ -485,7 +486,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       getApiUrl: getStorefrontApiUrl,
       i18n: (i18n ?? defaultI18n) as TI18n,
 
-      getTrackingValues: async () => {
+      getTrackingHeaders: async () => {
         const currentRequestPromises = [...sessionPromiseBuffer];
         // Disable buffering new promises
         sessionPromiseBuffer.length = 0;
@@ -504,10 +505,14 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
         if (!headers) return null;
 
+        let serverTiming = [];
+        const {_y, _s} = getTrackingValues(headers.get('server-timing') || '');
+        if (_y) serverTiming.push(`_y;desc=${_y}`);
+        if (_s) serverTiming.push(`_s;desc=${_s}`);
+
         return {
           cookies: headers.getSetCookie(),
-          // TODO: cleanup server timeing value to include only relevant parts?
-          serverTiming: headers.get('server-timing'),
+          serverTiming: serverTiming.join(', '),
         };
       },
     },
