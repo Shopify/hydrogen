@@ -1,11 +1,6 @@
 import {
   createStorefrontClient as createStorefrontUtilities,
-  getShopifyCookies,
-  SHOPIFY_S,
-  SHOPIFY_Y,
   SHOPIFY_STOREFRONT_ID_HEADER,
-  SHOPIFY_STOREFRONT_Y_HEADER,
-  SHOPIFY_STOREFRONT_S_HEADER,
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
 import type {WritableDeep} from 'type-fest';
@@ -197,6 +192,11 @@ const defaultI18n: I18nBase = {
   country: 'US' as CountryCode,
 };
 
+const SHOPIFY_ANALYTICS_COOKIE = '_shopify_analytics';
+const SHOPIFY_MARKETING_COOKIE = '_shopify_marketing';
+const SHOPIFY_VISIT_TOKEN_HEADER = 'X-Shopify-VisitToken';
+const SHOPIFY_UNIQUE_TOKEN_HEADER = 'X-Shopify-UniqueToken';
+
 /**
  *  This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/2025-07/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
  *
@@ -239,19 +239,26 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     buyerIp: storefrontHeaders?.buyerIp || '',
   });
 
+  if (storefrontHeaders?.buyerIp) {
+    defaultHeaders['X-Forwarded-For'] = storefrontHeaders.buyerIp;
+  }
+
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =
     storefrontHeaders?.requestGroupId || generateUUID();
 
   if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
 
-  if (storefrontHeaders && storefrontHeaders.cookie) {
-    const cookies = getShopifyCookies(storefrontHeaders.cookie ?? '');
+  const cookie = storefrontHeaders?.cookie ?? '';
 
-    if (cookies[SHOPIFY_Y])
-      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = cookies[SHOPIFY_Y];
-    if (cookies[SHOPIFY_S])
-      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = cookies[SHOPIFY_S];
+  if (
+    !cookie.includes(SHOPIFY_MARKETING_COOKIE) &&
+    !cookie.includes(SHOPIFY_ANALYTICS_COOKIE)
+  ) {
+    defaultHeaders[SHOPIFY_VISIT_TOKEN_HEADER] = generateUUID();
+    defaultHeaders[SHOPIFY_UNIQUE_TOKEN_HEADER] = generateUUID();
+  } else if (cookie) {
+    defaultHeaders['cookie'] = cookie;
   }
 
   // Remove any headers that are identifiable to the user or request
