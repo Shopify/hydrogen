@@ -1,4 +1,3 @@
-// @ts-ignore - worktop/cookie types not properly exported
 import {stringify} from 'worktop/cookie';
 
 export type CookieOptions = {

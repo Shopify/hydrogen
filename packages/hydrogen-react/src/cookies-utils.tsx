@@ -1,4 +1,3 @@
-// @ts-ignore - worktop/cookie types not properly exported
 import {parse} from 'worktop/cookie';
 import {ShopifyCookies} from './analytics-types.js';
 import {SHOPIFY_Y, SHOPIFY_S} from './cart-constants.js';
