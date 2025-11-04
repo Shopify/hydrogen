@@ -1,8 +1,10 @@
 import {
   createRequestHandler as createReactRouterRequestHandler,
   type AppLoadContext,
+  type RouterContextProvider,
   type ServerBuild,
 } from 'react-router';
+import {storefrontContext} from '../context-keys';
 
 export function createRequestHandler<Context = unknown>({
   build,
@@ -38,20 +40,27 @@ export function createRequestHandler<Context = unknown>({
     }
 
     const context = getLoadContext
-      ? ((await getLoadContext(request)) as AppLoadContext)
+      ? ((await getLoadContext(request)) as RouterContextProvider &
+          AppLoadContext)
       : undefined;
 
     const response = await handleRequest(request, context);
 
-    // TODO: what if the user didn't pass context with storefront?
-    const trackingHeaders = await context?.storefront?.getTrackingHeaders?.();
+    const storefront = context?.storefront || context?.get?.(storefrontContext);
 
-    if (trackingHeaders) {
-      trackingHeaders.cookies.forEach((cookie) =>
-        response.headers.append('set-cookie', cookie),
-      );
-      if (trackingHeaders.serverTiming) {
-        response.headers.append('server-timing', trackingHeaders.serverTiming);
+    if (storefront) {
+      const trackingHeaders = await storefront.getTrackingHeaders?.();
+
+      if (trackingHeaders) {
+        trackingHeaders.cookies.forEach((cookie) =>
+          response.headers.append('set-cookie', cookie),
+        );
+        if (trackingHeaders.serverTiming) {
+          response.headers.append(
+            'server-timing',
+            trackingHeaders.serverTiming,
+          );
+        }
       }
     }
 
