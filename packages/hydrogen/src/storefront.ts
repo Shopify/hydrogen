@@ -258,21 +258,21 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
 
-  const cookie = storefrontHeaders?.cookie ?? '';
+  const requestCookie = storefrontHeaders?.cookie ?? '';
 
   if (
-    !cookie.includes(SHOPIFY_MARKETING_COOKIE) &&
-    !cookie.includes(SHOPIFY_ANALYTICS_COOKIE)
+    !requestCookie.includes(SHOPIFY_MARKETING_COOKIE) &&
+    !requestCookie.includes(SHOPIFY_ANALYTICS_COOKIE)
   ) {
     // Use deprecated cookie values if available to support upgrading
     // to latest Hydrogen versions without losing tracking data.
-    const cookies = getShopifyCookies(cookie);
+    const cookies = getShopifyCookies(requestCookie);
     defaultHeaders[SHOPIFY_VISIT_TOKEN_HEADER] =
       cookies[SHOPIFY_Y] || generateUUID();
     defaultHeaders[SHOPIFY_UNIQUE_TOKEN_HEADER] =
       cookies[SHOPIFY_S] || generateUUID();
-  } else if (cookie) {
-    defaultHeaders['cookie'] = cookie;
+  } else if (requestCookie) {
+    defaultHeaders['cookie'] = requestCookie;
   }
 
   // Remove any headers that are identifiable to the user or request
@@ -513,13 +513,24 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
         if (!headers) return null;
 
-        let serverTiming = [];
+        const serverTiming = [];
         const {_y, _s} = getTrackingValues(headers.get('server-timing') || '');
         if (_y) serverTiming.push(`_y;desc=${_y}`);
         if (_s) serverTiming.push(`_s;desc=${_s}`);
 
+        const responseCookies = headers.getSetCookie();
+        if (responseCookies.length > 0) {
+          // If the request had deprecated cookies, expire them
+          // now that we've set the new ones.
+          for (const deprecatedCookie of [SHOPIFY_Y, SHOPIFY_S]) {
+            if (requestCookie.includes(`${deprecatedCookie}=`)) {
+              responseCookies.push(`${deprecatedCookie}=; Path=/; Max-Age=0`);
+            }
+          }
+        }
+
         return {
-          cookies: headers.getSetCookie(),
+          cookies: responseCookies,
           serverTiming: serverTiming.join(', '),
         };
       },
