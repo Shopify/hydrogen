@@ -4,7 +4,9 @@ import {
   getShopifyCookies,
   SHOPIFY_S,
   SHOPIFY_Y,
-  getTrackingValues,
+  getTrackingValuesFromHeader,
+  SHOPIFY_UNIQUE_TOKEN_HEADER,
+  SHOPIFY_VISIT_TOKEN_HEADER,
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
 import type {WritableDeep} from 'type-fest';
@@ -203,8 +205,6 @@ const defaultI18n: I18nBase = {
 
 const SHOPIFY_ANALYTICS_COOKIE = '_shopify_analytics';
 const SHOPIFY_MARKETING_COOKIE = '_shopify_marketing';
-const SHOPIFY_VISIT_TOKEN_HEADER = 'X-Shopify-VisitToken';
-const SHOPIFY_UNIQUE_TOKEN_HEADER = 'X-Shopify-UniqueToken';
 
 /**
  *  This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/2025-07/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
@@ -513,11 +513,6 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
         if (!headers) return null;
 
-        const serverTiming = [];
-        const {_y, _s} = getTrackingValues(headers.get('server-timing') || '');
-        if (_y) serverTiming.push(`_y;desc=${_y}`);
-        if (_s) serverTiming.push(`_s;desc=${_s}`);
-
         const responseCookies = headers.getSetCookie();
         if (responseCookies.length > 0) {
           // If the request had deprecated cookies, expire them
@@ -531,7 +526,9 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
         return {
           cookies: responseCookies,
-          serverTiming: serverTiming.join(', '),
+          serverTiming: getTrackingValuesFromHeader(
+            headers.get('server-timing') || '',
+          ),
         };
       },
     },

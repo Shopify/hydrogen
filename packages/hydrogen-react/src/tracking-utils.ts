@@ -1,14 +1,11 @@
 export const SHOPIFY_VISIT_TOKEN_HEADER = 'X-Shopify-VisitToken';
 export const SHOPIFY_UNIQUE_TOKEN_HEADER = 'X-Shopify-UniqueToken';
 
-export function getTrackingValues(serverTimingHeader?: string) {
+export function getTrackingValues() {
   let _y = '';
   let _s = '';
 
-  if (serverTimingHeader) {
-    _y = serverTimingHeader.match(/_y;desc=([^,]+)/)?.[1] || '';
-    _s = serverTimingHeader.match(/_s;desc=([^,]+)/)?.[1] || '';
-  } else if (
+  if (
     typeof window !== 'undefined' &&
     typeof window.performance !== 'undefined'
   ) {
@@ -38,5 +35,16 @@ export function getTrackingValues(serverTimingHeader?: string) {
     } catch {}
   }
 
-  return {_y, _s};
+  return {uniqueToken: _y, visitToken: _s};
+}
+
+export function getTrackingValuesFromHeader(serverTimingHeader: string) {
+  const _y = serverTimingHeader.match(/_y;desc=([^,]+)/)?.[1] || '';
+  const _s = serverTimingHeader.match(/_s;desc=([^,]+)/)?.[1] || '';
+
+  const serverTiming = [];
+  if (_y) serverTiming.push(`_y;desc=${_y}`);
+  if (_s) serverTiming.push(`_s;desc=${_s}`);
+
+  return serverTiming.join(', ');
 }
