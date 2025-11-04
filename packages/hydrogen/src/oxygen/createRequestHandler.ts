@@ -4,7 +4,7 @@ import {
   type RouterContextProvider,
   type ServerBuild,
 } from 'react-router';
-import {storefrontContext} from '../context-keys';
+import {envContext, storefrontContext} from '../context-keys';
 
 export function createRequestHandler<Context = unknown>({
   build,
@@ -47,9 +47,13 @@ export function createRequestHandler<Context = unknown>({
     const response = await handleRequest(request, context);
 
     const storefront = context?.storefront || context?.get?.(storefrontContext);
+    const env = context?.env || context?.get?.(envContext);
 
     if (storefront) {
-      const trackingHeaders = await storefront.getTrackingHeaders?.();
+      const trackingHeaders = await storefront.getTrackingHeaders?.(
+        url.hostname,
+        env?.PUBLIC_CHECKOUT_DOMAIN ?? '',
+      );
 
       if (trackingHeaders) {
         trackingHeaders.cookies.forEach((cookie) =>

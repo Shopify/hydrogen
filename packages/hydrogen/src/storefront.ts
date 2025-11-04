@@ -162,7 +162,10 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   >['getStorefrontApiUrl'];
   i18n: TI18n;
 
-  getTrackingHeaders: () => Promise<{
+  getTrackingHeaders: (
+    currentDomain: string,
+    checkoutDomain: string,
+  ) => Promise<{
     cookies: string[];
     serverTiming: string;
   } | null>;
@@ -494,7 +497,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       getApiUrl: getStorefrontApiUrl,
       i18n: (i18n ?? defaultI18n) as TI18n,
 
-      getTrackingHeaders: async () => {
+      getTrackingHeaders: async (currentDomain, checkoutDomain) => {
         const currentRequestPromises = [...sessionPromiseBuffer];
         // Disable buffering new promises
         sessionPromiseBuffer.length = 0;
@@ -513,7 +516,23 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
         if (!headers) return null;
 
-        const responseCookies = headers.getSetCookie();
+        const cookieDomainRE = /(; Domain=[^;]+|$)/i;
+
+        // checkout.hydrogen.shop => .hydrogen.shop
+        const parentDomain = getParentDomain(checkoutDomain);
+        // Determine if the current domain is different from checkout domain.
+        // This can happen when running locally in localhost for example.
+        // In that case, we can only set cookies for the current domain.
+        const isSameParent = parentDomain === getParentDomain(currentDomain);
+
+        const responseCookies = isSameParent
+          ? headers
+              .getSetCookie()
+              .map((cookie) =>
+                cookie.replace(cookieDomainRE, `; Domain=${parentDomain}`),
+              )
+          : headers.getSetCookie();
+
         if (responseCookies.length > 0) {
           // If the request had deprecated cookies, expire them
           // now that we've set the new ones.
@@ -533,6 +552,14 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       },
     },
   };
+}
+
+function getParentDomain(domain: string) {
+  return domain === 'localhost' ||
+    domain === '127.0.0.1' ||
+    domain.endsWith('.myshopify.com')
+    ? domain
+    : '.' + (domain.match(/([^.]+\.[^.]+)($|\/)/)?.[1] ?? domain);
 }
 
 const getStackOffset =
