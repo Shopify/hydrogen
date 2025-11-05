@@ -292,7 +292,24 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       defaultHeaders[STOREFRONT_ACCESS_TOKEN_HEADER],
   });
 
-  const sessionPromiseBuffer: Promise<Headers>[] = [];
+  // const sessionPromiseBuffer: Promise<Headers>[] = [];
+
+  const cookieRequestPromise = fetch(
+    getStorefrontApiUrl({storefrontApiVersion: 'unstable'}),
+    {
+      method: 'POST',
+      headers: defaultHeaders,
+      body: JSON.stringify({
+        query:
+          // Empty visitor consent to fallback to default behavior
+          'query { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
+      }),
+    },
+  ).catch(() => {
+    console.warn(
+      '[h2:warn:createStorefrontClient] Could not fetch consent cookies',
+    );
+  });
 
   async function fetchStorefrontApi<T = Response>({
     query,
@@ -372,9 +389,9 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       streamConfig,
     });
 
-    sessionPromiseBuffer.push(
-      fetchPromise.then(([, response]) => response.headers),
-    );
+    // sessionPromiseBuffer.push(
+    //   fetchPromise.then(([, response]) => response.headers),
+    // );
 
     const [body, response] = await fetchPromise;
 
@@ -501,31 +518,31 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       i18n: (i18n ?? defaultI18n) as TI18n,
 
       getTrackingHeaders: async (currentDomain, checkoutDomain) => {
-        const currentRequestPromises = [...sessionPromiseBuffer];
-        // Disable buffering new promises
-        sessionPromiseBuffer.length = 0;
-        sessionPromiseBuffer.push = () => 0;
+        // const currentRequestPromises = [...sessionPromiseBuffer];
+        // // Disable buffering new promises
+        // sessionPromiseBuffer.length = 0;
+        // sessionPromiseBuffer.push = () => 0;
 
-        // Get headers from the first successful request to SFAPI.
-        const headers = await Promise.any(currentRequestPromises).catch(
-          async () => {
-            // Fallback to a fast request if there are no inflight requests:
-            const consentResponse = await fetch(
-              getStorefrontApiUrl({storefrontApiVersion: 'unstable'}),
-              {
-                method: 'POST',
-                headers: defaultHeaders,
-                body: JSON.stringify({
-                  query:
-                    // Empty visitor consent to fallback to default infor
-                    'query { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
-                }),
-              },
-            ).catch(() => null);
+        // // Get headers from the first successful request to SFAPI.
+        // const headers = await Promise.any([]).catch(async () => {
+        //   // Fallback to a fast request if there are no inflight requests:
+        //   const consentResponse = await fetch(
+        //     getStorefrontApiUrl({storefrontApiVersion: 'unstable'}),
+        //     {
+        //       method: 'POST',
+        //       headers: defaultHeaders,
+        //       body: JSON.stringify({
+        //         query:
+        //           // Empty visitor consent to fallback to default infor
+        //           'query { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
+        //       }),
+        //     },
+        //   ).catch(() => null);
 
-            return consentResponse?.headers;
-          },
-        );
+        //   return consentResponse?.headers;
+        // });
+
+        const headers = (await cookieRequestPromise)?.headers;
 
         if (!headers) return null;
 
