@@ -252,7 +252,10 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   });
 
   if (storefrontHeaders?.buyerIp) {
-    defaultHeaders['X-Forwarded-For'] = storefrontHeaders.buyerIp;
+    defaultHeaders['x-shopify-client-ip'] = storefrontHeaders.buyerIp;
+  }
+  if (storefrontHeaders?.buyerIpSig) {
+    defaultHeaders['x-shopify-client-ip-sig'] = storefrontHeaders.buyerIpSig;
   }
 
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =
