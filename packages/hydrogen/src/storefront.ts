@@ -510,9 +510,19 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         const headers = await Promise.any(currentRequestPromises).catch(
           async () => {
             // Fallback to a fast request if there are no inflight requests:
-            const consentResponse = await fetchStorefrontApi({
-              query: 'query{consentManagement{currentCookies}}',
-            }).catch(() => null);
+            const consentResponse = await fetch(
+              getStorefrontApiUrl({storefrontApiVersion: 'unstable'}),
+              {
+                method: 'POST',
+                headers: defaultHeaders,
+                body: JSON.stringify({
+                  query:
+                    // Empty visitor consent to fallback to default infor
+                    'query { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
+                }),
+              },
+            ).catch(() => null);
+
             return consentResponse?.headers;
           },
         );
