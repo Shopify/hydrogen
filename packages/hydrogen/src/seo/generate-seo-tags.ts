@@ -14,10 +14,10 @@ export const schema = {
         throw new Error(ERROR_PREFIX.concat('`title` should be a string'));
       }
 
-      if (typeof value === 'string' && value.length > 120) {
+      if (typeof value === 'string' && value.length > 70) {
         throw new Error(
           ERROR_PREFIX.concat(
-            '`title` should not be longer than 120 characters',
+            '`title` should not be longer than 70 characters',
           ),
         );
       }
@@ -36,7 +36,7 @@ export const schema = {
       if (typeof value === 'string' && value.length > 155) {
         throw new Error(
           ERROR_PREFIX.concat(
-            '`description` should not be longer than 155 characters',
+            '`description` should not be longer than 160 characters',
           ),
         );
       }
