@@ -577,7 +577,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           cookies: responseCookies,
           serverTiming: getTrackingValuesFromHeader(
             headers.get('server-timing') || '',
-          ),
+          ).serverTiming,
         };
       },
     },

@@ -46,5 +46,9 @@ export function getTrackingValuesFromHeader(serverTimingHeader: string) {
   if (_y) serverTiming.push(`_y;desc=${_y}`);
   if (_s) serverTiming.push(`_s;desc=${_s}`);
 
-  return serverTiming.join(', ');
+  return {
+    uniqueToken: _y,
+    visitToken: _s,
+    serverTiming: serverTiming.join(', '),
+  };
 }
