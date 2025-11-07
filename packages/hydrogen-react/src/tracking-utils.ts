@@ -41,14 +41,17 @@ export function getTrackingValues() {
 export function getTrackingValuesFromHeader(serverTimingHeader: string) {
   const _y = serverTimingHeader.match(/_y;desc="?([^",]+)/)?.[1] || '';
   const _s = serverTimingHeader.match(/_s;desc="?([^",]+)/)?.[1] || '';
+  const _cmp = serverTimingHeader.match(/_cmp;desc="?([^",]+)/)?.[1] || '';
 
   const serverTiming = [];
   if (_y) serverTiming.push(`_y;desc=${_y}`);
   if (_s) serverTiming.push(`_s;desc=${_s}`);
+  if (_cmp) serverTiming.push(`_cmp;desc=${_cmp}`);
 
   return {
     uniqueToken: _y,
     visitToken: _s,
+    consent: _cmp,
     serverTiming: serverTiming.join(', '),
   };
 }

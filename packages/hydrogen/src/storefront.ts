@@ -294,22 +294,23 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
   // const sessionPromiseBuffer: Promise<Headers>[] = [];
 
-  const cookieRequestPromise = fetch(
-    getStorefrontApiUrl({storefrontApiVersion: 'unstable'}),
-    {
-      method: 'POST',
-      headers: defaultHeaders,
-      body: JSON.stringify({
-        query:
-          // Empty visitor consent to fallback to default behavior
-          'query { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
-      }),
-    },
-  ).catch(() => {
-    console.warn(
-      '[h2:warn:createStorefrontClient] Could not fetch consent cookies',
-    );
-  });
+  const cookieRequestPromise = Promise.resolve(new Response(null));
+  // const cookieRequestPromise = fetch(
+  //   getStorefrontApiUrl({storefrontApiVersion: 'unstable'}),
+  //   {
+  //     method: 'POST',
+  //     headers: defaultHeaders,
+  //     body: JSON.stringify({
+  //       query:
+  //         // Empty visitor consent to fallback to default behavior
+  //         'query { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
+  //     }),
+  //   },
+  // ).catch(() => {
+  //   console.warn(
+  //     '[h2:warn:createStorefrontClient] Could not fetch consent cookies',
+  //   );
+  // });
 
   async function fetchStorefrontApi<T = Response>({
     query,
@@ -442,6 +443,23 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           query: document,
         }),
     );
+
+    // @ts-expect-error
+    if (typeof data?.cart?.checkoutUrl === 'string') {
+      try {
+        // @ts-expect-error
+        const url = new URL(data.cart.checkoutUrl);
+        const {uniqueToken, visitToken, consent} = getTrackingValuesFromHeader(
+          response.headers.get('server-timing') || '',
+        );
+        if (uniqueToken) url.searchParams.set('tracking_unique', uniqueToken);
+        if (visitToken) url.searchParams.set('tracking_visit', visitToken);
+        if (consent) url.searchParams.set('_cs', consent);
+
+        // @ts-expect-error
+        data.cart.checkoutUrl = url.toString();
+      } catch {}
+    }
 
     return formatAPIResult(data, gqlErrors);
   }
