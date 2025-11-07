@@ -91,7 +91,7 @@ describe('getSeoMeta', () => {
     it('should warn if the title is too long', () => {
       // Given
       const input = {
-        title: 'Snowdevil'.padEnd(121, '.'), // 121 characters
+        title: 'Snowdevil'.padEnd(71, '.'), // 71 characters
       };
 
       // When
@@ -99,7 +99,7 @@ describe('getSeoMeta', () => {
 
       // Then
       expect(console.warn).toHaveBeenCalledWith(
-        'Error in SEO input: `title` should not be longer than 120 characters',
+        'Error in SEO input: `title` should not be longer than 70 characters',
       );
     });
   });
@@ -134,7 +134,7 @@ describe('getSeoMeta', () => {
     it('should warn if the description is too long', () => {
       // Given
       const input = {
-        description: ''.padEnd(156, '.'), // 156 characters
+        description: ''.padEnd(161, '.'), // 161 characters
       };
 
       // When
@@ -143,7 +143,7 @@ describe('getSeoMeta', () => {
       // Then
 
       expect(console.warn).toHaveBeenCalledWith(
-        'Error in SEO input: `description` should not be longer than 155 characters',
+        'Error in SEO input: `description` should not be longer than 160 characters',
       );
     });
   });
