@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2025.7.1
+
+### Patch Changes
+
+- Remove regulation-specific privacy fields from public API documentation. The generalized privacy fields (analyticsAllowed, marketingAllowed, saleOfDataAllowed) remain available. ([#3236](https://github.com/Shopify/hydrogen/pull/3236)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 2025.7.0
 
 ### Major Changes
