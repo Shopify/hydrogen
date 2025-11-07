@@ -294,22 +294,23 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
   // const sessionPromiseBuffer: Promise<Headers>[] = [];
 
-  const cookieRequestPromise = fetch(
-    getStorefrontApiUrl({storefrontApiVersion: 'unstable'}),
-    {
-      method: 'POST',
-      headers: defaultHeaders,
-      body: JSON.stringify({
-        query:
-          // Empty visitor consent to fallback to default behavior
-          'query { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
-      }),
-    },
-  ).catch(() => {
-    console.warn(
-      '[h2:warn:createStorefrontClient] Could not fetch consent cookies',
-    );
-  });
+  const cookieRequestPromise = Promise.resolve(new Response(null));
+  // const cookieRequestPromise = fetch(
+  //   getStorefrontApiUrl({storefrontApiVersion: 'unstable'}),
+  //   {
+  //     method: 'POST',
+  //     headers: defaultHeaders,
+  //     body: JSON.stringify({
+  //       query:
+  //         // Empty visitor consent to fallback to default behavior
+  //         'query { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
+  //     }),
+  //   },
+  // ).catch(() => {
+  //   console.warn(
+  //     '[h2:warn:createStorefrontClient] Could not fetch consent cookies',
+  //   );
+  // });
 
   async function fetchStorefrontApi<T = Response>({
     query,
