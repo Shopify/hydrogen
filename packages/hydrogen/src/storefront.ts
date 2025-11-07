@@ -443,6 +443,23 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         }),
     );
 
+    // @ts-expect-error
+    if (typeof data?.cart?.checkoutUrl === 'string') {
+      try {
+        // @ts-expect-error
+        const url = new URL(data.cart.checkoutUrl);
+        const {uniqueToken, visitToken, consent} = getTrackingValuesFromHeader(
+          response.headers.get('server-timing') || '',
+        );
+        if (uniqueToken) url.searchParams.set('tracking_unique', uniqueToken);
+        if (visitToken) url.searchParams.set('tracking_visit', visitToken);
+        if (consent) url.searchParams.set('_cs', consent);
+
+        // @ts-expect-error
+        data.cart.checkoutUrl = url.toString();
+      } catch {}
+    }
+
     return formatAPIResult(data, gqlErrors);
   }
 
