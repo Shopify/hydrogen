@@ -1,5 +1,12 @@
 # skeleton
 
+## 2025.7.1
+
+### Patch Changes
+
+- Updated dependencies [[`ee00f1025867c40d5f67fa89d4ffb215bf280e8f`](https://github.com/Shopify/hydrogen/commit/ee00f1025867c40d5f67fa89d4ffb215bf280e8f), [`5a38948133766e358c5f357f52562f6fdcfe7969`](https://github.com/Shopify/hydrogen/commit/5a38948133766e358c5f357f52562f6fdcfe7969)]:
+  - @shopify/hydrogen@2025.7.1
+
 ## 2025.7.0
 
 ### Major Changes
