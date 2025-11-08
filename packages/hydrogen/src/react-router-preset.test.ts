@@ -5,7 +5,7 @@ import type {Config as ReactRouterConfig} from '@react-router/dev/config';
 describe('hydrogenPreset', () => {
   it('should return a preset with correct name', () => {
     const preset = hydrogenPreset();
-    expect(preset.name).toBe('hydrogen-2025.7.0');
+    expect(preset.name).toBe('hydrogen-2025.10.0');
   });
 
   it('should configure React Router with Hydrogen defaults', () => {
@@ -59,7 +59,7 @@ describe('hydrogenPreset', () => {
       expect(() => {
         testResolvedConfig({basename: '/shop'});
       }).toThrow(
-        '[Hydrogen Preset] basename is not supported in Hydrogen 2025.7.0',
+        '[Hydrogen Preset] basename is not supported in Hydrogen 2025.10.0',
       );
     });
 
@@ -79,7 +79,7 @@ describe('hydrogenPreset', () => {
       expect(() => {
         testResolvedConfig({prerender: ['/about']});
       }).toThrow(
-        '[Hydrogen Preset] prerender is not supported in Hydrogen 2025.7.0',
+        '[Hydrogen Preset] prerender is not supported in Hydrogen 2025.10.0',
       );
     });
 
@@ -87,7 +87,7 @@ describe('hydrogenPreset', () => {
       expect(() => {
         testResolvedConfig({serverBundles: () => 'bundle'});
       }).toThrow(
-        '[Hydrogen Preset] serverBundles is not supported in Hydrogen 2025.7.0',
+        '[Hydrogen Preset] serverBundles is not supported in Hydrogen 2025.10.0',
       );
     });
 
@@ -95,7 +95,7 @@ describe('hydrogenPreset', () => {
       expect(() => {
         testResolvedConfig({buildEnd: async () => {}});
       }).toThrow(
-        '[Hydrogen Preset] buildEnd is not supported in Hydrogen 2025.7.0',
+        '[Hydrogen Preset] buildEnd is not supported in Hydrogen 2025.10.0',
       );
     });
 

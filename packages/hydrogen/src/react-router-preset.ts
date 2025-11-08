@@ -6,7 +6,7 @@ import type {Preset} from '@react-router/dev/config';
  * Provides optimal React Router configuration for Hydrogen applications on Oxygen.
  * Enables validated performance optimizations while ensuring CLI compatibility.
  *
- * React Router 7.9.x Feature Support Matrix for Hydrogen 2025.7.0
+ * React Router 7.9.x Feature Support Matrix for Hydrogen 2025.10.0
  *
  * +----------------------------------+----------+----------------------------------+
  * | Feature                          | Status   | Notes                            |
@@ -38,11 +38,11 @@ import type {Preset} from '@react-router/dev/config';
  * | unstable_viteEnvironmentApi      | Blocked  | CLI fallback detection used      |
  * +----------------------------------+----------+----------------------------------+
  *
- * @version 2025.7.0
+ * @version 2025.10.0
  */
 export function hydrogenPreset(): Preset {
   return {
-    name: 'hydrogen-2025.7.0',
+    name: 'hydrogen-2025.10.0',
 
     reactRouterConfig: () => ({
       appDirectory: 'app',
@@ -61,7 +61,7 @@ export function hydrogenPreset(): Preset {
     reactRouterConfigResolved: ({reactRouterConfig}) => {
       if (reactRouterConfig.basename && reactRouterConfig.basename !== '/') {
         throw new Error(
-          '[Hydrogen Preset] basename is not supported in Hydrogen 2025.7.0.\n' +
+          '[Hydrogen Preset] basename is not supported in Hydrogen 2025.10.0.\n' +
             'Reason: Requires major CLI infrastructure modernization.\n' +
             'Workaround: Use reverse proxy or CDN path rewriting for subdirectory hosting.',
         );
@@ -69,7 +69,7 @@ export function hydrogenPreset(): Preset {
 
       if (reactRouterConfig.prerender) {
         throw new Error(
-          '[Hydrogen Preset] prerender is not supported in Hydrogen 2025.7.0.\n' +
+          '[Hydrogen Preset] prerender is not supported in Hydrogen 2025.10.0.\n' +
             'Reason: React Router plugin incompatibility with Hydrogen CLI build pipeline.\n' +
             'Workaround: Use external static generation tools or server-side caching.',
         );
@@ -77,7 +77,7 @@ export function hydrogenPreset(): Preset {
 
       if (reactRouterConfig.serverBundles) {
         throw new Error(
-          '[Hydrogen Preset] serverBundles is not supported in Hydrogen 2025.7.0.\n' +
+          '[Hydrogen Preset] serverBundles is not supported in Hydrogen 2025.10.0.\n' +
             'Reason: React Router plugin manifest incompatibility with Hydrogen CLI.\n' +
             'Alternative: Route-level code splitting via unstable_splitRouteModules is enabled.',
         );
@@ -85,7 +85,7 @@ export function hydrogenPreset(): Preset {
 
       if (reactRouterConfig.buildEnd) {
         throw new Error(
-          '[Hydrogen Preset] buildEnd is not supported in Hydrogen 2025.7.0.\n' +
+          '[Hydrogen Preset] buildEnd is not supported in Hydrogen 2025.10.0.\n' +
             'Reason: Hydrogen CLI bypasses React Router buildEnd hook execution.\n' +
             'Workaround: Use external build scripts or package.json post-build hooks.',
         );
