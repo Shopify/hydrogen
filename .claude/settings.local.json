@@ -7,7 +7,12 @@
       "Bash(gh pr view:*)",
       "Bash(npm run ci:checks:*)",
       "Bash(npm run cookbook:*)",
-      "WebFetch(domain:gist.githubusercontent.com)"
+      "WebFetch(domain:shopify.dev)",
+      "mcp__browsermcp__browser_navigate",
+      "mcp__browsermcp__browser_get_console_logs",
+      "mcp__browsermcp__browser_screenshot",
+      "mcp__docs-react-router__fetch_generic_url_content",
+      "Bash(curl:*)"
     ]
   },
   "enabledMcpjsonServers": [
@@ -17,9 +22,10 @@
     "docs-vite",
     "docs-react",
     "docs-react-router",
-    "docs-remix",
     "docs-hydrogen",
     "docs-xstate",
-    "shopify-dev-mcp"
+    "shopify-dev-mcp",
+    "browsermcp",
+    "chrome-devtools"
   ]
 }
