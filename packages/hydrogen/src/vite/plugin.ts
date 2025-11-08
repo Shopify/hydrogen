@@ -6,7 +6,6 @@ import {
 } from './hydrogen-middleware.js';
 import type {HydrogenPluginOptions} from './types.js';
 import {type RequestEventPayload, emitRequestEvent} from './request-events.js';
-import {getVirtualRoutes} from './get-virtual-routes.js';
 
 // Do not import JS from here, only types
 import type {OxygenPlugin} from '~/mini-oxygen/vite/plugin.js';
