@@ -33,8 +33,8 @@ export async function setupTailwind(
     getCodeFormatOptions(rootDirectory).then((formatConfig) =>
       Promise.all([
         replaceRootLinks(appDirectory, formatConfig, {
-          name: 'tailwindCss',
-          path: `${tailwindCssPath}?url`,
+          name: 'tailwindStyles',
+          path: `~/${tailwindCssPath}?url`,
           isDefault: true,
         }),
         injectVitePlugin(rootDirectory, formatConfig, {
