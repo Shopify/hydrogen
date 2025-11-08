@@ -2,7 +2,6 @@ import {
   AnalyticsEventName,
   getClientBrowserParameters,
   sendShopifyAnalytics,
-  useShopifyCookies,
   type ShopifyPageViewPayload,
   AnalyticsPageType,
   type ShopifyAnalyticsProduct,
@@ -55,7 +54,6 @@ function getCustomerPrivacyRequired() {
 export function ShopifyAnalytics({
   consent,
   onReady,
-  domain,
 }: {
   consent: AnalyticsProviderProps['consent'];
   onReady: () => void;
@@ -78,13 +76,6 @@ export function ShopifyAnalytics({
       : storefrontAccessToken,
     onVisitorConsentCollected: () => setPrivacyReady(true),
     onReady: () => setPrivacyReady(true),
-  });
-
-  // set up shopify_Y and shopify_S cookies
-  useShopifyCookies({
-    hasUserConsent: privacyReady ? canTrack() : true, // must be initialized with true
-    domain,
-    checkoutDomain,
   });
 
   useEffect(() => {

@@ -1,11 +1,12 @@
 import {
   createStorefrontClient as createStorefrontUtilities,
+  SHOPIFY_STOREFRONT_ID_HEADER,
   getShopifyCookies,
   SHOPIFY_S,
   SHOPIFY_Y,
-  SHOPIFY_STOREFRONT_ID_HEADER,
-  SHOPIFY_STOREFRONT_Y_HEADER,
-  SHOPIFY_STOREFRONT_S_HEADER,
+  getTrackingValuesFromHeader,
+  SHOPIFY_UNIQUE_TOKEN_HEADER,
+  SHOPIFY_VISIT_TOKEN_HEADER,
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
 import type {WritableDeep} from 'type-fest';
@@ -160,6 +161,14 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
     typeof createStorefrontUtilities
   >['getStorefrontApiUrl'];
   i18n: TI18n;
+
+  getTrackingHeaders: (
+    currentDomain: string,
+    checkoutDomain: string,
+  ) => Promise<{
+    cookies: string[];
+    serverTiming: string;
+  } | null>;
 };
 
 type HydrogenClientProps<TI18n> = {
@@ -196,6 +205,9 @@ const defaultI18n: I18nBase = {
   language: 'EN' as StorefrontLanguageCode,
   country: 'US' as CountryCode,
 };
+
+const SHOPIFY_ANALYTICS_COOKIE = '_shopify_analytics';
+const SHOPIFY_MARKETING_COOKIE = '_shopify_marketing';
 
 /**
  *  This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/2025-07/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
@@ -239,19 +251,34 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     buyerIp: storefrontHeaders?.buyerIp || '',
   });
 
+  if (storefrontHeaders?.buyerIp) {
+    defaultHeaders['x-shopify-client-ip'] = storefrontHeaders.buyerIp;
+  }
+  if (storefrontHeaders?.buyerIpSig) {
+    defaultHeaders['x-shopify-client-ip-sig'] = storefrontHeaders.buyerIpSig;
+  }
+
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =
     storefrontHeaders?.requestGroupId || generateUUID();
 
   if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
 
-  if (storefrontHeaders && storefrontHeaders.cookie) {
-    const cookies = getShopifyCookies(storefrontHeaders.cookie ?? '');
+  const requestCookie = storefrontHeaders?.cookie ?? '';
 
-    if (cookies[SHOPIFY_Y])
-      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = cookies[SHOPIFY_Y];
-    if (cookies[SHOPIFY_S])
-      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = cookies[SHOPIFY_S];
+  if (
+    !requestCookie.includes(SHOPIFY_MARKETING_COOKIE) &&
+    !requestCookie.includes(SHOPIFY_ANALYTICS_COOKIE)
+  ) {
+    // Use deprecated cookie values if available to support upgrading
+    // to latest Hydrogen versions without losing tracking data.
+    const cookies = getShopifyCookies(requestCookie);
+    defaultHeaders[SHOPIFY_VISIT_TOKEN_HEADER] =
+      cookies[SHOPIFY_Y] || generateUUID();
+    defaultHeaders[SHOPIFY_UNIQUE_TOKEN_HEADER] =
+      cookies[SHOPIFY_S] || generateUUID();
+  } else if (requestCookie) {
+    defaultHeaders['cookie'] = requestCookie;
   }
 
   // Remove any headers that are identifiable to the user or request
@@ -265,7 +292,26 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       defaultHeaders[STOREFRONT_ACCESS_TOKEN_HEADER],
   });
 
-  async function fetchStorefrontApi<T = any>({
+  // const sessionPromiseBuffer: Promise<Headers>[] = [];
+
+  const cookieRequestPromise = fetch(
+    getStorefrontApiUrl({storefrontApiVersion: 'unstable'}),
+    {
+      method: 'POST',
+      headers: defaultHeaders,
+      body: JSON.stringify({
+        query:
+          // Empty visitor consent to fallback to default behavior
+          'query { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
+      }),
+    },
+  ).catch(() => {
+    console.warn(
+      '[h2:warn:createStorefrontClient] Could not fetch consent cookies',
+    );
+  });
+
+  async function fetchStorefrontApi<T = Response>({
     query,
     mutation,
     variables,
@@ -323,7 +369,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         }
       : undefined;
 
-    const [body, response] = await fetchWithServerCache(url, requestInit, {
+    const fetchPromise = fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions || CacheDefault(),
       cacheKey,
@@ -342,6 +388,12 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       },
       streamConfig,
     });
+
+    // sessionPromiseBuffer.push(
+    //   fetchPromise.then(([, response]) => response.headers),
+    // );
+
+    const [body, response] = await fetchPromise;
 
     const errorOptions: GraphQLErrorOptions<T> = {
       url,
@@ -464,8 +516,80 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       getShopifyDomain,
       getApiUrl: getStorefrontApiUrl,
       i18n: (i18n ?? defaultI18n) as TI18n,
+
+      getTrackingHeaders: async (currentDomain, checkoutDomain) => {
+        // const currentRequestPromises = [...sessionPromiseBuffer];
+        // // Disable buffering new promises
+        // sessionPromiseBuffer.length = 0;
+        // sessionPromiseBuffer.push = () => 0;
+
+        // // Get headers from the first successful request to SFAPI.
+        // const headers = await Promise.any([]).catch(async () => {
+        //   // Fallback to a fast request if there are no inflight requests:
+        //   const consentResponse = await fetch(
+        //     getStorefrontApiUrl({storefrontApiVersion: 'unstable'}),
+        //     {
+        //       method: 'POST',
+        //       headers: defaultHeaders,
+        //       body: JSON.stringify({
+        //         query:
+        //           // Empty visitor consent to fallback to default infor
+        //           'query { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
+        //       }),
+        //     },
+        //   ).catch(() => null);
+
+        //   return consentResponse?.headers;
+        // });
+
+        const headers = (await cookieRequestPromise)?.headers;
+
+        if (!headers) return null;
+
+        const cookieDomainRE = /(; Domain=[^;]+|$)/i;
+
+        // checkout.hydrogen.shop => .hydrogen.shop
+        const parentDomain = getParentDomain(checkoutDomain);
+        // Determine if the current domain is different from checkout domain.
+        // This can happen when running locally in localhost for example.
+        // In that case, we can only set cookies for the current domain.
+        const isSameParent = parentDomain === getParentDomain(currentDomain);
+
+        const responseCookies = isSameParent
+          ? headers
+              .getSetCookie()
+              .map((cookie) =>
+                cookie.replace(cookieDomainRE, `; Domain=${parentDomain}`),
+              )
+          : headers.getSetCookie();
+
+        if (responseCookies.length > 0) {
+          // If the request had deprecated cookies, expire them
+          // now that we've set the new ones.
+          for (const deprecatedCookie of [SHOPIFY_Y, SHOPIFY_S]) {
+            if (requestCookie.includes(`${deprecatedCookie}=`)) {
+              responseCookies.push(`${deprecatedCookie}=; Path=/; Max-Age=0`);
+            }
+          }
+        }
+
+        return {
+          cookies: responseCookies,
+          serverTiming: getTrackingValuesFromHeader(
+            headers.get('server-timing') || '',
+          ).serverTiming,
+        };
+      },
     },
   };
+}
+
+function getParentDomain(domain: string) {
+  return domain === 'localhost' ||
+    domain === '127.0.0.1' ||
+    domain.endsWith('.myshopify.com')
+    ? domain
+    : '.' + (domain.match(/([^.]+\.[^.]+)($|\/)/)?.[1] ?? domain);
 }
 
 const getStackOffset =

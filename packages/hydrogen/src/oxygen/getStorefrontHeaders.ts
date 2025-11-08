@@ -5,6 +5,7 @@ export function getStorefrontHeaders(request: Request): StorefrontHeaders {
   return {
     requestGroupId: headers.get('request-id'),
     buyerIp: headers.get('oxygen-buyer-ip'),
+    buyerIpSig: headers.get('x-shopify-client-ip-sig'),
     cookie: headers.get('cookie'),
     purpose: headers.get('purpose'),
   };

@@ -1,4 +1,3 @@
-import {SHOPIFY_S, SHOPIFY_Y} from './cart-constants.js';
 import type {
   ClientBrowserParameters,
   ShopifyAddToCartPayload,
@@ -8,7 +7,6 @@ import type {
 } from './analytics-types.js';
 import {AnalyticsEventName} from './analytics-constants.js';
 import {errorIfServer} from './analytics-utils.js';
-import {getShopifyCookies} from './cookies-utils.js';
 
 import {pageView as trekkiePageView} from './analytics-schema-trekkie-storefront-page-view.js';
 import {
@@ -19,6 +17,7 @@ import {
   searchView as customerSearchView,
   addToCart as customerAddToCart,
 } from './analytics-schema-custom-storefront-customer-tracking.js';
+import {getTrackingValues} from './tracking-utils.js';
 
 /**
  * Set user and session cookies and refresh the expiry time
@@ -153,11 +152,9 @@ export function getClientBrowserParameters(): ClientBrowserParameters {
   }
 
   const [navigationType, navigationApi] = getNavigationType();
-  const cookies = getShopifyCookies(document.cookie);
 
   return {
-    uniqueToken: cookies[SHOPIFY_Y],
-    visitToken: cookies[SHOPIFY_S],
+    ...getTrackingValues(),
     url: location.href,
     path: location.pathname,
     search: location.search,

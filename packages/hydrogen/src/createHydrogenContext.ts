@@ -327,6 +327,7 @@ function getStorefrontHeaders(request: CrossRuntimeRequest): StorefrontHeaders {
   return {
     requestGroupId: getHeader(request, 'request-id'),
     buyerIp: getHeader(request, 'oxygen-buyer-ip'),
+    buyerIpSig: getHeader(request, 'x-shopify-client-ip-sig'),
     cookie: getHeader(request, 'cookie'),
     purpose: getHeader(request, 'purpose'),
   };

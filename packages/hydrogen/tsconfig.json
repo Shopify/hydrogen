@@ -12,7 +12,8 @@
     ],
     "paths": {
       "@shopify/hydrogen": ["./src"],
-      "~/mini-oxygen/*": ["../mini-oxygen/src/*"]
+      "~/mini-oxygen/*": ["../mini-oxygen/src/*"],
+      "worktop/cookie": ["../../node_modules/worktop/cookie/index.d.ts"]
     }
   },
   "exclude": ["src/cart/createCartHandler.example.ts"]
