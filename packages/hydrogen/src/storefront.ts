@@ -16,6 +16,8 @@ import {
   SDK_VERSION_HEADER,
   STOREFRONT_ACCESS_TOKEN_HEADER,
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
+  SHOPIFY_UNIQUE_TOKEN_HEADER,
+  SHOPIFY_VISIT_TOKEN_HEADER,
 } from './constants';
 import {
   CacheNone,
@@ -245,13 +247,31 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
 
-  if (storefrontHeaders && storefrontHeaders.cookie) {
-    const cookies = getShopifyCookies(storefrontHeaders.cookie ?? '');
+  const requestCookie = storefrontHeaders?.cookie ?? '';
+  if (requestCookie) defaultHeaders['cookie'] = requestCookie;
 
-    if (cookies[SHOPIFY_Y])
-      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = cookies[SHOPIFY_Y];
-    if (cookies[SHOPIFY_S])
-      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = cookies[SHOPIFY_S];
+  const hasConsentCookies = /\b_shopify_essential[s]?=/.test(requestCookie);
+
+  if (!hasConsentCookies) {
+    const cookies = requestCookie
+      ? getShopifyCookies(requestCookie)
+      : undefined;
+
+    const legacyUniqueToken = cookies?.[SHOPIFY_Y];
+    const legacyVisitToken = cookies?.[SHOPIFY_S];
+
+    if (legacyUniqueToken) {
+      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = legacyUniqueToken;
+    }
+    if (legacyVisitToken) {
+      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = legacyVisitToken;
+    }
+
+    const uniqueToken = legacyUniqueToken ?? generateUUID();
+    const visitToken = legacyVisitToken ?? generateUUID();
+
+    defaultHeaders[SHOPIFY_UNIQUE_TOKEN_HEADER] = uniqueToken;
+    defaultHeaders[SHOPIFY_VISIT_TOKEN_HEADER] = visitToken;
   }
 
   // Remove any headers that are identifiable to the user or request
