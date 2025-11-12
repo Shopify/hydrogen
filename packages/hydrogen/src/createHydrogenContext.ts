@@ -38,6 +38,7 @@ import {
   sessionContext,
   waitUntilContext,
 } from './context-keys';
+import {SHOPIFY_CLIENT_IP_SIG_HEADER} from './constants';
 
 export type HydrogenContextOptions<
   TSession extends HydrogenSession = HydrogenSession,
@@ -327,6 +328,7 @@ function getStorefrontHeaders(request: CrossRuntimeRequest): StorefrontHeaders {
   return {
     requestGroupId: getHeader(request, 'request-id'),
     buyerIp: getHeader(request, 'oxygen-buyer-ip'),
+    buyerIpSig: getHeader(request, SHOPIFY_CLIENT_IP_SIG_HEADER),
     cookie: getHeader(request, 'cookie'),
     purpose: getHeader(request, 'purpose'),
   };

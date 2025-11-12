@@ -18,6 +18,8 @@ import {
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
+  SHOPIFY_CLIENT_IP_HEADER,
+  SHOPIFY_CLIENT_IP_SIG_HEADER,
 } from './constants';
 import {
   CacheNone,
@@ -240,6 +242,14 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     contentType: 'json',
     buyerIp: storefrontHeaders?.buyerIp || '',
   });
+
+  if (storefrontHeaders?.buyerIp) {
+    defaultHeaders[SHOPIFY_CLIENT_IP_HEADER] = storefrontHeaders.buyerIp;
+  }
+
+  if (storefrontHeaders?.buyerIpSig) {
+    defaultHeaders[SHOPIFY_CLIENT_IP_SIG_HEADER] = storefrontHeaders.buyerIpSig;
+  }
 
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =
     storefrontHeaders?.requestGroupId || generateUUID();
