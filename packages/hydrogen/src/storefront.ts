@@ -166,7 +166,7 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
     typeof createStorefrontUtilities
   >['getStorefrontApiUrl'];
   i18n: TI18n;
-  fetchConsent: () => Promise<{
+  fetchConsent: (options?: {force?: boolean}) => Promise<{
     cookies: string[];
     serverTiming: string;
     uniqueToken?: string;
@@ -507,7 +507,17 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       getApiUrl: getStorefrontApiUrl,
       i18n: (i18n ?? defaultI18n) as TI18n,
 
-      fetchConsent() {
+      fetchConsent(options) {
+        const {purpose, accept, fetchDest} = storefrontHeaders || {};
+        const shouldFetchConsent = Boolean(
+          purpose !== 'prefetch' &&
+            (fetchDest
+              ? fetchDest === 'document'
+              : accept?.includes('text/html')),
+        );
+
+        if (!options?.force && !shouldFetchConsent) return Promise.resolve();
+
         // Cache the consent fetch promise to avoid multiple calls.
         // This allows users to call this manually earlier if needed.
         return (cachedConsentPromise ??= fetch(
