@@ -4,6 +4,9 @@ import {
   type ServerBuild,
 } from 'react-router';
 
+/**
+ * Creates a request handler for Hydrogen apps using React Router.
+ */
 export function createRequestHandler<Context = unknown>({
   build,
   mode,
