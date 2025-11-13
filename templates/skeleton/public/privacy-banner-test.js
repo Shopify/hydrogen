@@ -1188,14 +1188,8 @@ var privacyBanner = (function (n) {
         body: JSON.stringify(Vn(e)),
         method: 'POST',
       };
-    return Promise.all([
-      fetch('https://' + a + '/api/unstable/graphql.json', {
-        ...c,
-        credentials: 'include',
-      }),
-      fetch('/api/unstable/graphql.json', c),
-    ])
-      .then(function ([n]) {
+    return fetch('https://' + a + '/api/unstable/graphql.json', c)
+      .then(function (n) {
         if (n.ok) return n.json();
         throw new Error('Server error');
       })
