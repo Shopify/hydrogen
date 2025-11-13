@@ -1,41 +1,74 @@
 export const SHOPIFY_VISIT_TOKEN_HEADER = 'X-Shopify-VisitToken';
 export const SHOPIFY_UNIQUE_TOKEN_HEADER = 'X-Shopify-UniqueToken';
 
+function extractFromPerformanceEntry(
+  entry: PerformanceNavigationTiming | PerformanceResourceTiming,
+) {
+  let uniqueToken = '';
+  let visitToken = '';
+
+  if (entry.serverTiming && Array.isArray(entry.serverTiming)) {
+    const yTiming = entry.serverTiming.find(
+      (timing: PerformanceServerTiming) => timing.name === '_y',
+    );
+    const sTiming = entry.serverTiming.find(
+      (timing: PerformanceServerTiming) => timing.name === '_s',
+    );
+
+    if (yTiming?.description) {
+      uniqueToken = yTiming.description;
+    }
+    if (sTiming?.description) {
+      visitToken = sTiming.description;
+    }
+  }
+
+  return {uniqueToken, visitToken};
+}
+
 export function getTrackingValues() {
-  let _y = '';
-  let _s = '';
+  const trackingValues = {uniqueToken: '', visitToken: ''};
 
   if (
     typeof window !== 'undefined' &&
     typeof window.performance !== 'undefined'
   ) {
     try {
-      const navigationEntries = performance.getEntriesByType('navigation');
+      // Try server-timing from fetch requests first as these are newer:
+      const resourceEntry = (
+        performance.getEntriesByType('resource') as PerformanceResourceTiming[]
+      ).findLast(
+        (entry) =>
+          entry.initiatorType === 'fetch' &&
+          entry.name ===
+            new URL(
+              '/api/unstable/graphql.json',
+              window.location.origin,
+            ).toString(),
+      );
 
-      if (navigationEntries && navigationEntries.length > 0) {
-        const navEntry = navigationEntries[0] as PerformanceNavigationTiming;
+      if (resourceEntry) {
+        Object.assign(
+          trackingValues,
+          extractFromPerformanceEntry(resourceEntry),
+        );
+      }
 
-        // Server-Timing API provides cookies from the backend in a secure way
-        if (navEntry.serverTiming && Array.isArray(navEntry.serverTiming)) {
-          const yTiming = navEntry.serverTiming.find(
-            (timing: PerformanceServerTiming) => timing.name === '_y',
-          );
-          const sTiming = navEntry.serverTiming.find(
-            (timing: PerformanceServerTiming) => timing.name === '_s',
-          );
+      if (!trackingValues.uniqueToken && !trackingValues.visitToken) {
+        // Fallback to navigation entry from full page rendering load:
+        const navigationEntries = performance.getEntriesByType(
+          'navigation',
+        )[0] as PerformanceNavigationTiming;
 
-          if (yTiming?.description) {
-            _y = yTiming.description;
-          }
-          if (sTiming?.description) {
-            _s = sTiming.description;
-          }
-        }
+        Object.assign(
+          trackingValues,
+          extractFromPerformanceEntry(navigationEntries),
+        );
       }
     } catch {}
   }
 
-  return {uniqueToken: _y, visitToken: _s};
+  return trackingValues;
 }
 
 export function getTrackingValuesFromHeader(serverTimingHeader: string) {
