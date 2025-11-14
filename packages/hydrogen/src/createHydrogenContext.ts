@@ -26,7 +26,7 @@ import type {
   StorefrontHeaders,
   HydrogenRouterContextProvider,
 } from './types';
-import {type CrossRuntimeRequest, getHeader} from './utils/request';
+import {type CrossRuntimeRequest, getStorefrontHeaders} from './utils/request';
 import {warnOnce} from './utils/warning';
 import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
 import {RouterContextProvider} from 'react-router';
@@ -38,6 +38,7 @@ import {
   sessionContext,
   waitUntilContext,
 } from './context-keys';
+import {SHOPIFY_CLIENT_IP_SIG_HEADER} from './constants';
 
 export type HydrogenContextOptions<
   TSession extends HydrogenSession = HydrogenSession,
@@ -321,15 +322,6 @@ export function createHydrogenContext<
     TEnv
   > &
     TAdditionalContext;
-}
-
-function getStorefrontHeaders(request: CrossRuntimeRequest): StorefrontHeaders {
-  return {
-    requestGroupId: getHeader(request, 'request-id'),
-    buyerIp: getHeader(request, 'oxygen-buyer-ip'),
-    cookie: getHeader(request, 'cookie'),
-    purpose: getHeader(request, 'purpose'),
-  };
 }
 
 export type HydrogenContextOptionsForDocs<

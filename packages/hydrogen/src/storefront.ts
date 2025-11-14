@@ -6,6 +6,9 @@ import {
   SHOPIFY_STOREFRONT_ID_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
+  SHOPIFY_UNIQUE_TOKEN_HEADER,
+  SHOPIFY_VISIT_TOKEN_HEADER,
+  getTrackingValuesFromHeader,
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
 import type {WritableDeep} from 'type-fest';
@@ -16,6 +19,8 @@ import {
   SDK_VERSION_HEADER,
   STOREFRONT_ACCESS_TOKEN_HEADER,
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
+  SHOPIFY_CLIENT_IP_HEADER,
+  SHOPIFY_CLIENT_IP_SIG_HEADER,
 } from './constants';
 import {
   CacheNone,
@@ -55,6 +60,7 @@ import {
   type StackInfo,
 } from './utils/callsites';
 import type {WaitUntil, StorefrontHeaders} from './types';
+import {appendHeaders, CrossRuntimeResponse} from './utils/response';
 
 export type I18nBase = {
   language: StorefrontLanguageCode | CustomerLanguageCode;
@@ -160,6 +166,14 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
     typeof createStorefrontUtilities
   >['getStorefrontApiUrl'];
   i18n: TI18n;
+  fetchConsent: (options?: {force?: boolean}) => Promise<{
+    cookies: string[];
+    serverTiming: string;
+    uniqueToken?: string;
+    visitToken?: string;
+    consent?: string;
+    setTrackingValues: (response: CrossRuntimeResponse) => void;
+  } | void>;
 };
 
 type HydrogenClientProps<TI18n> = {
@@ -239,19 +253,45 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     buyerIp: storefrontHeaders?.buyerIp || '',
   });
 
+  if (storefrontHeaders?.buyerIp) {
+    defaultHeaders[SHOPIFY_CLIENT_IP_HEADER] = storefrontHeaders.buyerIp;
+  }
+
+  if (storefrontHeaders?.buyerIpSig) {
+    defaultHeaders[SHOPIFY_CLIENT_IP_SIG_HEADER] = storefrontHeaders.buyerIpSig;
+  }
+
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =
     storefrontHeaders?.requestGroupId || generateUUID();
 
   if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
 
-  if (storefrontHeaders && storefrontHeaders.cookie) {
-    const cookies = getShopifyCookies(storefrontHeaders.cookie ?? '');
+  const requestCookie = storefrontHeaders?.cookie ?? '';
+  if (requestCookie) defaultHeaders['cookie'] = requestCookie;
 
-    if (cookies[SHOPIFY_Y])
-      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = cookies[SHOPIFY_Y];
-    if (cookies[SHOPIFY_S])
-      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = cookies[SHOPIFY_S];
+  const hasConsentCookies = /\b_shopify_essential[s]?=/.test(requestCookie);
+
+  if (!hasConsentCookies) {
+    const cookies = requestCookie
+      ? getShopifyCookies(requestCookie)
+      : undefined;
+
+    const legacyUniqueToken = cookies?.[SHOPIFY_Y];
+    const legacyVisitToken = cookies?.[SHOPIFY_S];
+
+    if (legacyUniqueToken) {
+      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = legacyUniqueToken;
+    }
+    if (legacyVisitToken) {
+      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = legacyVisitToken;
+    }
+
+    const uniqueToken = legacyUniqueToken ?? generateUUID();
+    const visitToken = legacyVisitToken ?? generateUUID();
+
+    defaultHeaders[SHOPIFY_UNIQUE_TOKEN_HEADER] = uniqueToken;
+    defaultHeaders[SHOPIFY_VISIT_TOKEN_HEADER] = visitToken;
   }
 
   // Remove any headers that are identifiable to the user or request
@@ -394,6 +434,8 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     return formatAPIResult(data, gqlErrors);
   }
 
+  let cachedConsentPromise: ReturnType<Storefront['fetchConsent']> | undefined;
+
   return {
     storefront: {
       /**
@@ -464,6 +506,58 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       getShopifyDomain,
       getApiUrl: getStorefrontApiUrl,
       i18n: (i18n ?? defaultI18n) as TI18n,
+
+      fetchConsent(options) {
+        const {purpose, accept, fetchDest} = storefrontHeaders || {};
+        const shouldFetchConsent = Boolean(
+          purpose !== 'prefetch' &&
+            (fetchDest
+              ? fetchDest === 'document'
+              : accept?.includes('text/html')),
+        );
+
+        if (!options?.force && !shouldFetchConsent) return Promise.resolve();
+
+        // Cache the consent fetch promise to avoid multiple calls.
+        // This allows users to call this manually earlier if needed.
+        return (cachedConsentPromise ??= fetch(
+          getStorefrontApiUrl({storefrontApiVersion: 'unstable'}),
+          {
+            method: 'POST',
+            headers: defaultHeaders,
+            body: JSON.stringify({
+              query:
+                // Empty visitor consent to fallback to default behavior
+                'query { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
+            }),
+          },
+        )
+          .then((response) => {
+            if (response.ok) {
+              const cookies = response.headers.getSetCookie();
+              const {serverTiming, ...values} = getTrackingValuesFromHeader(
+                response.headers.get('server-timing') ?? '',
+              );
+
+              return {
+                cookies,
+                serverTiming,
+                ...values,
+                setTrackingValues(response: CrossRuntimeResponse) {
+                  appendHeaders(response, [
+                    ['Set-cookie', cookies],
+                    ['Server-Timing', [serverTiming]],
+                  ]);
+                },
+              };
+            }
+          })
+          .catch(() => {
+            console.warn(
+              '[h2:warn:createStorefrontClient] Could not fetch consent cookies',
+            );
+          }));
+      },
     },
   };
 }

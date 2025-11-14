@@ -1,19 +1,26 @@
 import {
   createRequestHandler as createReactRouterRequestHandler,
   type AppLoadContext,
+  type RouterContextProvider,
   type ServerBuild,
 } from 'react-router';
+import {storefrontContext} from './context-keys';
 
+/**
+ * Creates a request handler for Hydrogen apps using React Router.
+ */
 export function createRequestHandler<Context = unknown>({
   build,
   mode,
   poweredByHeader = true,
   getLoadContext,
+  tracking = true,
 }: {
   build: ServerBuild;
   mode?: string;
   poweredByHeader?: boolean;
   getLoadContext?: (request: Request) => Promise<Context> | Context;
+  tracking?: boolean;
 }) {
   const handleRequest = createReactRouterRequestHandler(build, mode);
 
@@ -37,11 +44,18 @@ export function createRequestHandler<Context = unknown>({
       });
     }
 
-    const context = getLoadContext
-      ? ((await getLoadContext(request)) as AppLoadContext)
-      : undefined;
+    const context = (await getLoadContext?.(request)) as
+      | undefined
+      | (RouterContextProvider & AppLoadContext);
+
+    const storefront = context?.storefront || context?.get?.(storefrontContext);
+    const trackingPromise = tracking && storefront?.fetchConsent?.();
 
     const response = await handleRequest(request, context);
+
+    if (trackingPromise) {
+      (await trackingPromise)?.setTrackingValues(response);
+    }
 
     if (poweredByHeader) {
       response.headers.append('powered-by', 'Shopify, Hydrogen');

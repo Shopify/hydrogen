@@ -5,3 +5,5 @@ export const STOREFRONT_ACCESS_TOKEN_HEADER =
 export const SDK_VARIANT_HEADER = 'X-SDK-Variant';
 export const SDK_VARIANT_SOURCE_HEADER = 'X-SDK-Variant-Source';
 export const SDK_VERSION_HEADER = 'X-SDK-Version';
+export const SHOPIFY_CLIENT_IP_HEADER = 'X-Shopify-Client-IP';
+export const SHOPIFY_CLIENT_IP_SIG_HEADER = 'X-Shopify-Client-IP-Sig';

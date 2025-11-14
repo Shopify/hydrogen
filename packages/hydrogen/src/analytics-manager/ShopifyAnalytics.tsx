@@ -55,13 +55,12 @@ function getCustomerPrivacyRequired() {
 export function ShopifyAnalytics({
   consent,
   onReady,
-  domain,
 }: {
   consent: AnalyticsProviderProps['consent'];
   onReady: () => void;
   domain?: string;
 }) {
-  const {subscribe, register, canTrack} = useAnalytics();
+  const {subscribe, register} = useAnalytics();
   const [shopifyReady, setShopifyReady] = useState(false);
   const [privacyReady, setPrivacyReady] = useState(false);
   const init = useRef(false);
@@ -78,13 +77,6 @@ export function ShopifyAnalytics({
       : storefrontAccessToken,
     onVisitorConsentCollected: () => setPrivacyReady(true),
     onReady: () => setPrivacyReady(true),
-  });
-
-  // set up shopify_Y and shopify_S cookies
-  useShopifyCookies({
-    hasUserConsent: privacyReady ? canTrack() : true, // must be initialized with true
-    domain,
-    checkoutDomain,
   });
 
   useEffect(() => {
