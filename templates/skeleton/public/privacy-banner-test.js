@@ -1164,19 +1164,6 @@ var privacyBanner = (function (n) {
       variables: {},
     };
   }
-  function getTrackingValuesFromHeader(serverTimingHeader) {
-    const _y = serverTimingHeader.match(/_y;desc="?([^",]+)/)?.[1];
-    const _s = serverTimingHeader.match(/_s;desc="?([^",]+)/)?.[1];
-
-    const serverTiming = [];
-    if (_y) serverTiming.push(`_y;desc=${_y}`);
-    if (_s) serverTiming.push(`_s;desc=${_s}`);
-
-    return {
-      uniqueToken: _y,
-      visitToken: _s,
-    };
-  }
   function Kn(n, e, t) {
     var o = e.granular_consent,
       r =
@@ -1201,25 +1188,7 @@ var privacyBanner = (function (n) {
         body: JSON.stringify(Vn(e)),
         method: 'POST',
       };
-    return fetch('/api/unstable/graphql.json', c)
-      .then((response) => {
-        const serverTiming = response.headers.get('server-timing');
-        console.log('Server Timing:', serverTiming);
-        const trackingValues = getTrackingValuesFromHeader(serverTiming);
-        console.log('Tracking Values:', trackingValues);
-
-        return fetch('https://' + a + '/api/unstable/graphql.json', {
-          ...c,
-          credentials: 'include',
-          headers: {
-            ...c.headers,
-            'X-Shopify-VisitToken': trackingValues.visitToken,
-            'X-Shopify-UniqueToken': trackingValues.uniqueToken,
-            'Shopify-Storefront-S': trackingValues.visitToken,
-            'Shopify-Storefront-Y': trackingValues.uniqueToken,
-          },
-        });
-      })
+    return fetch('https://' + a + '/api/unstable/graphql.json', c)
       .then(function (n) {
         if (n.ok) return n.json();
         throw new Error('Server error');
