@@ -23,6 +23,10 @@ export type FetchCacheOptions<T = any> = {
 
 type SerializableResponse = [any, ResponseInit];
 
+// Exclude headers that are not safe or useful to cache
+// since they are individual to each user session/request.
+const excludedHeaders = ['set-cookie', 'server-timing'];
+
 function toSerializableResponse(
   body: any,
   response: Response,
@@ -32,7 +36,9 @@ function toSerializableResponse(
     {
       status: response.status,
       statusText: response.statusText,
-      headers: Array.from(response.headers.entries()),
+      headers: [...response.headers].filter(
+        ([key]) => !excludedHeaders.includes(key.toLowerCase()),
+      ),
     },
   ];
 }
