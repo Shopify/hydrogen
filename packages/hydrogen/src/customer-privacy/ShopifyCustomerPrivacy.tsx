@@ -115,19 +115,8 @@ export type CustomerPrivacyApiProps = {
 
 export const CONSENT_API =
   'https://cdn.shopify.com/shopifycloud/consent-tracking-api/v0.1/consent-tracking-api.js';
-export let CONSENT_API_WITH_BANNER = '/privacy-banner-test.js';
-
-if (typeof document !== 'undefined') {
-  const element = document.querySelector(
-    '[href^="https://cdn.shopify.com/oxygen-v2"]',
-  );
-  if (element instanceof HTMLElement) {
-    const prefix = element.getAttribute('href')?.match(/^(.*?)\/assets\//)?.[1];
-    if (prefix) {
-      CONSENT_API_WITH_BANNER = prefix + CONSENT_API_WITH_BANNER;
-    }
-  }
-}
+export const CONSENT_API_WITH_BANNER =
+  'https://cdn.shopify.com/shopifycloud/privacy-banner/storefront-banner.js';
 
 function logMissingConfig(fieldName: string) {
   // eslint-disable-next-line no-console
