@@ -1,9 +1,10 @@
-import {useLoadScript} from '@shopify/hydrogen-react';
+import {getTrackingValues, useLoadScript} from '@shopify/hydrogen-react';
 import {
   CountryCode,
   LanguageCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {useEffect, useMemo, useRef, useState} from 'react';
+import {useRevalidator} from 'react-router';
 
 export type ConsentStatus = boolean | undefined;
 
@@ -133,6 +134,9 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     ...consentConfig
   } = props;
 
+  const {revalidate} = useRevalidator();
+  const initialTrackingValues = useMemo(getTrackingValues, []);
+
   // Load the Shopify customer privacy API with or without the privacy banner
   // NOTE: We no longer use the status because we need `ready` to be not when the script is loaded
   // but instead when both `privacyBanner` (optional) and customerPrivacy are loaded in the window
@@ -186,6 +190,19 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     const consentCollectedHandler = (
       event: CustomEvent<VisitorConsentCollected>,
     ) => {
+      const latestTrackingValues = getTrackingValues();
+      if (
+        initialTrackingValues.visitToken !== latestTrackingValues.visitToken ||
+        initialTrackingValues.uniqueToken !== latestTrackingValues.uniqueToken
+      ) {
+        // Tracking has changed: revalidate data to get updated checkoutUrl.
+        revalidate().catch(() => {
+          console.warn(
+            '[h2:warn:useCustomerPrivacy] Revalidation failed after consent change.',
+          );
+        });
+      }
+
       if (onVisitorConsentCollected) {
         onVisitorConsentCollected(event.detail);
       }
