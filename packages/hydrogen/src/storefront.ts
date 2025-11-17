@@ -61,6 +61,7 @@ import {
 } from './utils/callsites';
 import type {WaitUntil, StorefrontHeaders} from './types';
 import {appendHeaders, CrossRuntimeResponse} from './utils/response';
+import {getSafePathname, SFAPI_RE} from './utils/request';
 
 export type I18nBase = {
   language: StorefrontLanguageCode | CustomerLanguageCode;
@@ -166,6 +167,12 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
     typeof createStorefrontUtilities
   >['getStorefrontApiUrl'];
   i18n: TI18n;
+  getHeaders: () => Record<string, string>;
+  isStorefrontUrl: (request: {url?: string}) => boolean;
+  forward: (
+    request: Request,
+    options?: Omit<StorefrontCommonExtraParams, 'displayName'>,
+  ) => Promise<Response>;
   fetchConsent: (options?: {force?: boolean}) => Promise<{
     cookies: string[];
     serverTiming: string;
@@ -503,9 +510,36 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       generateCacheControlHeader,
       getPublicTokenHeaders,
       getPrivateTokenHeaders,
+      getHeaders: () => ({...defaultHeaders}),
       getShopifyDomain,
       getApiUrl: getStorefrontApiUrl,
       i18n: (i18n ?? defaultI18n) as TI18n,
+
+      /**
+       * Checks if the request is targeting the Storefront API endpoint.
+       */
+      isStorefrontUrl(request) {
+        return SFAPI_RE.test(getSafePathname(request.url ?? ''));
+      },
+      /**
+       * Forwards the request to the Storefront API.
+       */
+      async forward(request, options) {
+        const storefrontApiVersion =
+          options?.storefrontApiVersion ??
+          getSafePathname(request.url).match(SFAPI_RE)?.[1];
+
+        const response = await fetch(
+          getStorefrontApiUrl({storefrontApiVersion}),
+          {
+            method: request.method,
+            body: request.body,
+            headers: {...defaultHeaders, ...options?.headers},
+          },
+        );
+
+        return new Response(response.body, response);
+      },
 
       fetchConsent(options) {
         const {purpose, accept, fetchDest} = storefrontHeaders || {};

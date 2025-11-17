@@ -43,3 +43,14 @@ export function getStorefrontHeaders(
     fetchDest: getHeader(request, 'sec-fetch-dest'),
   };
 }
+
+// Regular expression to match Storefront API GraphQL endpoint paths.
+export const SFAPI_RE = /^\/api\/(unstable|20\d{2}-\d{2})\/graphql\.json$/;
+
+export const getSafePathname = (url: string) => {
+  try {
+    return new URL(url, 'http://e.c').pathname;
+  } catch {
+    return '/';
+  }
+};
