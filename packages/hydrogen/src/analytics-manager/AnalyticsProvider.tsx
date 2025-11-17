@@ -79,7 +79,7 @@ export type AnalyticsProviderProps = {
   consent: Consent;
   /** @deprecated Disable throwing errors when required props are missing. */
   disableThrowOnError?: boolean;
-  /** @deprecated The domain scope of the cookie set with `useShopifyCookies`. **/
+  /** The domain scope of the cookie set with `useShopifyCookies`. **/
   cookieDomain?: string;
 };
 
@@ -294,6 +294,7 @@ function AnalyticsProvider({
   consent,
   customData = {},
   shop: shopProp = null,
+  cookieDomain,
 }: AnalyticsProviderProps): JSX.Element {
   const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
@@ -388,6 +389,7 @@ function AnalyticsProvider({
               customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
             );
           }}
+          domain={cookieDomain}
         />
       )}
       {!!shop && <PerfKit shop={shop} />}
