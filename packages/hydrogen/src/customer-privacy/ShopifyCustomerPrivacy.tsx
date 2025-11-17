@@ -164,10 +164,16 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       );
     }
 
+    const commonAncestorDomain = parseStoreDomain(checkoutDomain);
+
     const config: CustomerPrivacyConsentConfig = {
-      checkoutRootDomain: checkoutDomain,
+      // Request to self-domain now that we proxy requests to SFAPI:
+      checkoutRootDomain: window.location.host,
+      // Prefix with a dot to ensure this domain is different from checkoutRootDomain.
+      // This will ensure old cookies are set for a cross-subdomain checkout setup
+      // so that we keep backward compatibility until new cookies are rolled out.
+      storefrontRootDomain: commonAncestorDomain && '.' + commonAncestorDomain,
       storefrontAccessToken,
-      storefrontRootDomain: parseStoreDomain(checkoutDomain),
       country: consentConfig.country,
       locale: consentConfig.locale,
     };
