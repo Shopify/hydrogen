@@ -112,8 +112,11 @@ describe('createHydrogenContext', () => {
       const mockStorefrontHeaders = {
         requestGroupId: 'requestGroupId value',
         buyerIp: 'buyerIp value',
+        buyerIpSig: 'buyerIpSig value',
         cookie: 'cookie value',
         purpose: 'purpose value',
+        accept: 'accept value',
+        fetchDest: 'fetchDest value',
       };
 
       createHydrogenContext({
@@ -147,8 +150,11 @@ describe('createHydrogenContext', () => {
       const mockeStorefrontHeaders = {
         requestGroupId: 'requestGroupId value',
         buyerIp: 'buyerIp value',
+        buyerIpSig: 'buyerIpSig value',
         cookie: 'cookie value',
         purpose: 'purpose',
+        accept: 'accept',
+        fetchDest: 'fetchDest',
       };
 
       createHydrogenContext({
