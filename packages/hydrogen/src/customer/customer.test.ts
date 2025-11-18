@@ -8,6 +8,11 @@ if (!globalThis.crypto) {
   globalThis.crypto = crypto as any;
 }
 
+// Mock the discovery module to prevent actual discovery fetch calls in tests
+vi.mock('./discovery', () => ({
+  discoverCustomerAccountEndpoints: vi.fn(),
+}));
+
 vi.mock('./BadRequest', () => {
   return {
     BadRequest: class BadRequest {
@@ -60,7 +65,17 @@ const mockBuyerSession = {
 };
 
 describe('customer', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Mock discovery endpoints for all tests
+    const {discoverCustomerAccountEndpoints} = await import('./discovery');
+    vi.mocked(discoverCustomerAccountEndpoints).mockResolvedValue({
+      graphqlApiUrl:
+        'https://shopify.com/1/account/customer/api/2025-07/graphql',
+      authorizationUrl: 'https://shopify.com/authentication/1/oauth/authorize',
+      tokenUrl: 'https://shopify.com/authentication/1/oauth/token',
+      logoutUrl: 'https://shopify.com/authentication/1/logout',
+    });
+
     session = {
       commit: vi.fn(() => Promise.resolve('cookie')),
       get: vi.fn(() => {
@@ -83,6 +98,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request: new Request('https://localhost'),
           waitUntil: vi.fn(),
         });
@@ -128,6 +144,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request: new Request(origin),
           waitUntil: vi.fn(),
           authUrl,
@@ -153,6 +170,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request: new Request(origin),
           waitUntil: vi.fn(),
           authUrl,
@@ -178,6 +196,7 @@ describe('customer', () => {
             session,
             customerAccountId: 'customerAccountId',
             shopId: '1',
+            storefrontDomain: 'test-shop.myshopify.com',
             request: new Request(origin),
             waitUntil: vi.fn(),
             language: 'FR',
@@ -196,6 +215,7 @@ describe('customer', () => {
             session,
             customerAccountId: 'customerAccountId',
             shopId: '1',
+            storefrontDomain: 'test-shop.myshopify.com',
             request: new Request(origin),
             waitUntil: vi.fn(),
           });
@@ -215,6 +235,7 @@ describe('customer', () => {
             session,
             customerAccountId: 'customerAccountId',
             shopId: '1',
+            storefrontDomain: 'test-shop.myshopify.com',
             request: new Request(origin),
             waitUntil: vi.fn(),
             language: 'IT',
@@ -238,6 +259,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request: new Request(origin),
           waitUntil: vi.fn(),
         });
@@ -257,6 +279,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request: new Request(origin),
           waitUntil: vi.fn(),
         });
@@ -278,6 +301,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request: new Request(origin),
           waitUntil: vi.fn(),
         });
@@ -295,6 +319,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request: new Request(origin),
           waitUntil: vi.fn(),
         });
@@ -321,6 +346,7 @@ describe('customer', () => {
             session,
             customerAccountId: 'customerAccountId',
             shopId: '1',
+            storefrontDomain: 'test-shop.myshopify.com',
             request: new Request(origin),
             waitUntil: vi.fn(),
           });
@@ -356,6 +382,7 @@ describe('customer', () => {
             session,
             customerAccountId: 'customerAccountId',
             shopId: '1',
+            storefrontDomain: 'test-shop.myshopify.com',
             request: new Request(origin),
             waitUntil: vi.fn(),
           });
@@ -386,6 +413,7 @@ describe('customer', () => {
             session,
             customerAccountId: 'customerAccountId',
             shopId: '1',
+            storefrontDomain: 'test-shop.myshopify.com',
             request: new Request(origin),
             waitUntil: vi.fn(),
           });
@@ -413,6 +441,7 @@ describe('customer', () => {
             session,
             customerAccountId: 'customerAccountId',
             shopId: '1',
+            storefrontDomain: 'test-shop.myshopify.com',
             request: new Request(origin),
             waitUntil: vi.fn(),
           });
@@ -445,6 +474,7 @@ describe('customer', () => {
             session: mockSession,
             customerAccountId: 'customerAccountId',
             shopId: '1',
+            storefrontDomain: 'test-shop.myshopify.com',
             request: new Request(origin),
             waitUntil: vi.fn(),
           });
@@ -476,6 +506,7 @@ describe('customer', () => {
             session: mockSession,
             customerAccountId: 'customerAccountId',
             shopId: '1',
+            storefrontDomain: 'test-shop.myshopify.com',
             request: new Request(origin),
             waitUntil: vi.fn(),
           });
@@ -510,6 +541,7 @@ describe('customer', () => {
             session: mockSession,
             customerAccountId: 'customerAccountId',
             shopId: '1',
+            storefrontDomain: 'test-shop.myshopify.com',
             request: new Request(origin),
             waitUntil: vi.fn(),
           });
@@ -538,6 +570,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request,
           waitUntil: vi.fn(),
         });
@@ -564,6 +597,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request,
           waitUntil: vi.fn(),
         });
@@ -587,6 +621,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request,
           waitUntil: vi.fn(),
         });
@@ -606,6 +641,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request: new Request('https://localhost'),
           waitUntil: vi.fn(),
         });
@@ -632,6 +668,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request,
           waitUntil: vi.fn(),
         });
@@ -658,6 +695,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request,
           waitUntil: vi.fn(),
         });
@@ -681,6 +719,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request,
           waitUntil: vi.fn(),
         });
@@ -700,6 +739,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request: new Request('https://localhost'),
           waitUntil: vi.fn(),
         });
@@ -723,6 +763,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request: new Request('https://localhost'),
           waitUntil: vi.fn(),
         });
@@ -737,6 +778,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request: new Request('https://localhost?state=nomatch&code=code'),
           waitUntil: vi.fn(),
         });
@@ -751,6 +793,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request: new Request('https://localhost?state=state&code=code'),
           waitUntil: vi.fn(),
         });
@@ -765,6 +808,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request: new Request('https://localhost?state=state&code=code'),
           waitUntil: vi.fn(),
         });
@@ -793,6 +837,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request: new Request('https://localhost?state=state&code=code'),
           waitUntil: vi.fn(),
         });
@@ -841,6 +886,7 @@ describe('customer', () => {
           session,
           customerAccountId: 'customerAccountId',
           shopId: '1',
+          storefrontDomain: 'test-shop.myshopify.com',
           request: new Request('https://localhost?state=state&code=code'),
           waitUntil: vi.fn(),
         });
@@ -881,6 +927,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -893,6 +940,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -907,9 +955,9 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
-        useDiscovery: false,
       });
 
       (session.get as any).mockImplementation(() => ({
@@ -932,6 +980,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -952,6 +1001,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -966,6 +1016,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -980,9 +1031,9 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
-        useDiscovery: false,
       });
 
       (session.get as any).mockImplementation(() => ({
@@ -1005,6 +1056,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -1025,6 +1077,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost/account/orders'),
         waitUntil: vi.fn(),
       });
@@ -1045,6 +1098,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost/account/orders'),
         waitUntil: vi.fn(),
       });
@@ -1058,6 +1112,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost/account/orders'),
         waitUntil: vi.fn(),
         customAuthStatusHandler,
@@ -1076,6 +1131,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost/account/orders.data'),
         waitUntil: vi.fn(),
       });
@@ -1096,6 +1152,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost/account/_root.data'),
         waitUntil: vi.fn(),
       });
@@ -1116,6 +1173,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost/_root.data'),
         waitUntil: vi.fn(),
       });
@@ -1138,6 +1196,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -1162,6 +1221,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost/account/orders/123'),
         waitUntil: vi.fn(),
       });
@@ -1183,6 +1243,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost/account/orders'),
         waitUntil: vi.fn(),
         customAuthStatusHandler,
@@ -1203,6 +1264,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -1222,6 +1284,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });
@@ -1241,6 +1304,7 @@ describe('customer', () => {
         session,
         customerAccountId: 'customerAccountId',
         shopId: '1',
+        storefrontDomain: 'test-shop.myshopify.com',
         request: new Request('https://localhost'),
         waitUntil: vi.fn(),
       });

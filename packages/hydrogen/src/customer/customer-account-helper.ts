@@ -16,16 +16,10 @@ export enum URL_TYPE {
 export function createCustomerAccountHelper(
   customerApiVersion: string,
   shopId: string,
-  storefrontDomain?: string,
-  useDiscovery = true,
-  discovered?: DiscoveredEndpoints | null,
+  storefrontDomain: string,
+  discovered: DiscoveredEndpoints,
 ) {
   return function getCustomerAccountUrl(urlType: URL_TYPE): string {
-    // If discovery is disabled or no storefront domain is provided, use legacy fallback URLs
-    if (!useDiscovery || !storefrontDomain || !discovered) {
-      return getLegacyUrl(urlType, shopId, customerApiVersion);
-    }
-
     switch (urlType) {
       case URL_TYPE.CA_BASE_URL:
         return new URL(discovered.graphqlApiUrl).origin;
@@ -61,67 +55,19 @@ export function createCustomerAccountHelper(
   };
 }
 
-function getLegacyUrl(
-  urlType: URL_TYPE,
-  shopId: string,
-  customerApiVersion?: string,
-): string {
-  const customerAccountUrl = `https://shopify.com/${shopId}`;
-  const customerAccountAuthUrl = `https://shopify.com/authentication/${shopId}`;
-
-  switch (urlType) {
-    case URL_TYPE.CA_BASE_URL:
-      return customerAccountUrl;
-    case URL_TYPE.CA_BASE_AUTH_URL:
-      return customerAccountAuthUrl;
-    case URL_TYPE.GRAPHQL:
-      return `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
-    case URL_TYPE.AUTH:
-      return `${customerAccountAuthUrl}/oauth/authorize`;
-    case URL_TYPE.LOGIN_SCOPE:
-      return shopId
-        ? 'openid email customer-account-api:full'
-        : 'openid email https://api.customers.com/auth/customer.graphql';
-    case URL_TYPE.TOKEN_EXCHANGE:
-      return `${customerAccountAuthUrl}/oauth/token`;
-    case URL_TYPE.LOGOUT:
-      return `${customerAccountAuthUrl}/logout`;
-    default:
-      throw new Error(`Unknown URL type: ${urlType}`);
-  }
-}
-
 export async function createCustomerAccountHelperWithDiscovery(
   customerApiVersion: string,
   shopId: string,
   storefrontDomain: string,
-  useDiscovery = true,
 ): Promise<(urlType: URL_TYPE) => string> {
-  let discoveredEndpoints: DiscoveredEndpoints | null = null;
+  const discoveredEndpoints =
+    await discoverCustomerAccountEndpoints(storefrontDomain);
 
-  if (useDiscovery && storefrontDomain) {
-    try {
-      discoveredEndpoints =
-        await discoverCustomerAccountEndpoints(storefrontDomain);
-
-      if (
-        discoveredEndpoints &&
-        Object.values(discoveredEndpoints).some(Boolean)
-      ) {
-        console.log(
-          `[h2:info:discovery] Successfully discovered Customer Account endpoints for ${storefrontDomain}`,
-        );
-      }
-    } catch (error) {
-      console.warn(
-        `[h2:warn:discovery] Discovery failed for ${storefrontDomain}, falling back to legacy URLs:`,
-        error,
-      );
-      discoveredEndpoints = null; // Ensure fallback behavior
-    }
-  } else if (useDiscovery && !storefrontDomain) {
-    console.warn(
-      '[h2:warn:discovery] Discovery is enabled but no storefront domain provided, using legacy URLs',
+  if (!discoveredEndpoints) {
+    throw new Error(
+      `[h2:error:discovery] Failed to discover Customer Account endpoints for ${storefrontDomain}. ` +
+        `Endpoint discovery is required for Customer Account API. ` +
+        `Ensure your storefront domain is correctly configured and the discovery endpoints are accessible.`,
     );
   }
 
@@ -129,7 +75,6 @@ export async function createCustomerAccountHelperWithDiscovery(
     customerApiVersion,
     shopId,
     storefrontDomain,
-    useDiscovery && Boolean(discoveredEndpoints),
     discoveredEndpoints,
   );
 }

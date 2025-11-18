@@ -65,7 +65,6 @@ async function fetchWithTimeout(
 
     return response;
   } catch (error) {
-    console.warn(`[h2:warn:discovery] fetchWithTimeout failed: ${error}`);
     clearTimeout(timeoutId);
     throw error;
   }
@@ -73,7 +72,7 @@ async function fetchWithTimeout(
 
 export async function discoverOpenIdConfiguration(
   storefrontDomain: string,
-): Promise<OpenIdConfiguration | null> {
+): Promise<OpenIdConfiguration> {
   const cacheKey = getCacheKey(storefrontDomain);
   const cached = discoveryCache.get(cacheKey)?.openid;
 
@@ -83,53 +82,24 @@ export async function discoverOpenIdConfiguration(
 
   const discoveryUrl = `https://${storefrontDomain}/.well-known/openid-configuration`;
 
-  try {
-    const response = await fetchWithTimeout(discoveryUrl);
+  const response = await fetchWithTimeout(discoveryUrl);
+  const config = (await response.json()) as OpenIdConfiguration;
 
-    if (!response.ok) {
-      console.warn(
-        `[h2:warn:discovery] OpenID configuration discovery failed for ${discoveryUrl}: ${response.status}`,
-      );
-      return null;
-    }
+  const existingCache = discoveryCache.get(cacheKey) || {};
+  discoveryCache.set(cacheKey, {
+    ...existingCache,
+    openid: {
+      config,
+      timestamp: Date.now(),
+    },
+  });
 
-    const config = (await response.json()) as OpenIdConfiguration;
-
-    // Validate required fields
-    if (
-      !config.authorization_endpoint ||
-      !config.token_endpoint ||
-      !config.end_session_endpoint
-    ) {
-      console.warn(
-        `[h2:warn:discovery] Invalid OpenID configuration for ${discoveryUrl}: missing required endpoints`,
-      );
-      return null;
-    }
-
-    // Update cache
-    const existingCache = discoveryCache.get(cacheKey) || {};
-    discoveryCache.set(cacheKey, {
-      ...existingCache,
-      openid: {
-        config,
-        timestamp: Date.now(),
-      },
-    });
-
-    return config;
-  } catch (error) {
-    console.warn(
-      `[h2:warn:discovery] OpenID configuration discovery failed for ${discoveryUrl}:`,
-      error,
-    );
-    return null;
-  }
+  return config;
 }
 
 export async function discoverCustomerAccountApi(
   storefrontDomain: string,
-): Promise<CustomerAccountApiConfiguration | null> {
+): Promise<CustomerAccountApiConfiguration> {
   const cacheKey = getCacheKey(storefrontDomain);
   const cached = discoveryCache.get(cacheKey)?.customerApi;
 
@@ -137,45 +107,19 @@ export async function discoverCustomerAccountApi(
     return cached!.config;
   }
   const discoveryUrl = `https://${storefrontDomain}/.well-known/customer-account-api`;
+  const response = await fetchWithTimeout(discoveryUrl);
+  const config = (await response.json()) as CustomerAccountApiConfiguration;
 
-  try {
-    const response = await fetchWithTimeout(discoveryUrl);
+  const existingCache = discoveryCache.get(cacheKey) || {};
+  discoveryCache.set(cacheKey, {
+    ...existingCache,
+    customerApi: {
+      config,
+      timestamp: Date.now(),
+    },
+  });
 
-    if (!response.ok) {
-      console.warn(
-        `[h2:warn:discovery] Customer Account API discovery failed for ${discoveryUrl}: ${response.status}`,
-      );
-      return null;
-    }
-
-    const config = (await response.json()) as CustomerAccountApiConfiguration;
-
-    // Validate required fields
-    if (!config.graphql_api || !config.mcp_api) {
-      console.warn(
-        `[h2:warn:discovery] Invalid Customer Account API configuration for ${discoveryUrl}: missing required endpoints`,
-      );
-      return null;
-    }
-
-    // Update cache
-    const existingCache = discoveryCache.get(cacheKey) || {};
-    discoveryCache.set(cacheKey, {
-      ...existingCache,
-      customerApi: {
-        config,
-        timestamp: Date.now(),
-      },
-    });
-
-    return config;
-  } catch (error) {
-    console.warn(
-      `[h2:warn:discovery] Customer Account API discovery failed for ${discoveryUrl}:`,
-      error,
-    );
-    return null;
-  }
+  return config;
 }
 
 export function clearDiscoveryCache(storefrontDomain?: string): void {
@@ -188,48 +132,18 @@ export function clearDiscoveryCache(storefrontDomain?: string): void {
 
 export async function discoverCustomerAccountEndpoints(
   storefrontDomain: string,
-): Promise<DiscoveredEndpoints | null> {
-  if (!storefrontDomain) {
-    console.warn(
-      '[h2:warn:discovery] No storefront domain provided for endpoint discovery',
-    );
-    return null;
-  }
+): Promise<DiscoveredEndpoints> {
+  const [openidConfig, customerApiConfig] = await Promise.all([
+    discoverOpenIdConfiguration(storefrontDomain),
+    discoverCustomerAccountApi(storefrontDomain),
+  ]);
 
-  try {
-    const [openidConfig, customerApiConfig] = await Promise.all([
-      discoverOpenIdConfiguration(storefrontDomain),
-      discoverCustomerAccountApi(storefrontDomain),
-    ]);
+  const endpoints = {
+    graphqlApiUrl: customerApiConfig.graphql_api,
+    authorizationUrl: openidConfig.authorization_endpoint,
+    tokenUrl: openidConfig.token_endpoint,
+    logoutUrl: openidConfig.end_session_endpoint,
+  };
 
-    // All-or-nothing validation: if either discovery fails, return null
-    if (!openidConfig || !customerApiConfig) {
-      console.warn(
-        `[h2:warn:discovery] Incomplete discovery for ${storefrontDomain}. ` +
-          `OpenID: ${!!openidConfig}, CustomerAPI: ${!!customerApiConfig}. ` +
-          `Falling back to legacy URLs.`,
-      );
-      return null;
-    }
-
-    // Now safe - both configs are guaranteed to exist
-    const endpoints = {
-      graphqlApiUrl: customerApiConfig.graphql_api,
-      authorizationUrl: openidConfig.authorization_endpoint,
-      tokenUrl: openidConfig.token_endpoint,
-      logoutUrl: openidConfig.end_session_endpoint,
-    };
-
-    console.log(
-      `[h2:info:discovery] Successfully discovered Customer Account endpoints for ${storefrontDomain}`,
-    );
-
-    return endpoints;
-  } catch (error) {
-    console.warn(
-      `[h2:warn:discovery] Failed to discover Customer Account endpoints for ${storefrontDomain}:`,
-      error,
-    );
-    return null;
-  }
+  return endpoints;
 }

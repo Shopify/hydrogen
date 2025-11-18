@@ -100,7 +100,6 @@ export function createCustomerAccountClient({
   authorizePath = '/account/authorize',
   defaultRedirectPath = '/account',
   language,
-  useDiscovery = true,
   storefrontDomain,
 }: CustomerAccountOptions): CustomerAccount {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
@@ -136,42 +135,41 @@ export function createCustomerAccountClient({
     redirectUrl: authUrl,
   });
 
-  // Extract storefront domain from request if not provided
-  const resolvedStorefrontDomain = storefrontDomain || requestUrl.hostname;
-
-  // For now, use the synchronous helper but with a lazy discovery promise
+  // Lazy discovery promise - only runs once
   let getCustomerAccountUrlPromise: Promise<
     (urlType: URL_TYPE) => string
   > | null = null;
 
-  const getCustomerAccountUrl = (urlType: URL_TYPE): string => {
-    return createCustomerAccountHelper(
-      customerApiVersion,
-      shopId,
-      resolvedStorefrontDomain,
-      useDiscovery,
-    )(urlType);
-  };
+  // Cache for synchronous access after first discovery
+  let cachedHelper: ((urlType: URL_TYPE) => string) | null = null;
 
   const getCustomerAccountUrlAsync = async (
     urlType: URL_TYPE,
   ): Promise<string> => {
-    if (!useDiscovery || !resolvedStorefrontDomain) {
-      // Fallsback to legacy helper
-      return getCustomerAccountUrl(urlType);
-    }
-
     if (!getCustomerAccountUrlPromise) {
       getCustomerAccountUrlPromise = createCustomerAccountHelperWithDiscovery(
         customerApiVersion,
         shopId,
-        resolvedStorefrontDomain,
-        useDiscovery,
-      );
+        storefrontDomain,
+      ).then((helper) => {
+        cachedHelper = helper; // Cache for sync access
+        return helper;
+      });
     }
 
     const helper = await getCustomerAccountUrlPromise;
     return helper(urlType);
+  };
+
+  const getCustomerAccountUrl = (urlType: URL_TYPE): string => {
+    if (!cachedHelper) {
+      throw new Error(
+        '[h2:error:customerAccount] Cannot synchronously access Customer Account URLs before discovery completes. ' +
+          'Use async methods (login, logout, query, mutate) which handle discovery automatically, ' +
+          'or call an async method first to ensure discovery has completed.',
+      );
+    }
+    return cachedHelper(urlType);
   };
 
   const ifInvalidCredentialThrowError = createIfInvalidCredentialThrowError(

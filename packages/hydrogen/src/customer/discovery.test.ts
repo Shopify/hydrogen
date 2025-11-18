@@ -25,8 +25,6 @@ describe('discovery utilities', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clearDiscoveryCache();
-    vi.spyOn(console, 'log').mockImplementation(() => {});
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -63,24 +61,21 @@ describe('discovery utilities', () => {
       );
     });
 
-    it('returns null when endpoint is not found', async () => {
+    it('returns response when endpoint is not found', async () => {
+      const emptyResponse = {};
       fetch.mockResolvedValueOnce(
-        createFetchResponse({}, {ok: false, status: 404}),
+        createFetchResponse(emptyResponse, {ok: false, status: 404}),
       );
 
       const result = await discoverOpenIdConfiguration(
         'test-shop.myshopify.com',
       );
-      expect(result).toBeNull();
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('OpenID configuration discovery failed'),
-      );
+      expect(result).toEqual(emptyResponse);
     });
 
-    it('returns null when configuration is invalid', async () => {
+    it('returns configuration even when incomplete', async () => {
       const invalidConfig = {
         issuer: 'https://test-shop.account.myshopify.com',
-        // missing required endpoints
       };
 
       fetch.mockResolvedValueOnce(
@@ -90,23 +85,15 @@ describe('discovery utilities', () => {
       const result = await discoverOpenIdConfiguration(
         'test-shop.myshopify.com',
       );
-      expect(result).toBeNull();
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid OpenID configuration'),
-      );
+      expect(result).toEqual(invalidConfig);
     });
 
-    it('handles network errors gracefully', async () => {
+    it('throws on network errors', async () => {
       fetch.mockRejectedValueOnce(new Error('Network error'));
 
-      const result = await discoverOpenIdConfiguration(
-        'test-shop.myshopify.com',
-      );
-      expect(result).toBeNull();
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('OpenID configuration discovery failed'),
-        expect.any(Error),
-      );
+      await expect(
+        discoverOpenIdConfiguration('test-shop.myshopify.com'),
+      ).rejects.toThrow('Network error');
     });
 
     it('caches successful results', async () => {
@@ -157,7 +144,7 @@ describe('discovery utilities', () => {
       expect(fetch).toHaveBeenCalledTimes(1);
     });
 
-    it('handles malformed JSON gracefully', async () => {
+    it('throws on malformed JSON', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.reject(new Error('Invalid JSON')),
@@ -165,27 +152,17 @@ describe('discovery utilities', () => {
         status: 200,
       } as any);
 
-      const result = await discoverOpenIdConfiguration(
-        'test-shop.myshopify.com',
-      );
-      expect(result).toBeNull();
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('OpenID configuration discovery failed'),
-        expect.any(Error),
-      );
+      await expect(
+        discoverOpenIdConfiguration('test-shop.myshopify.com'),
+      ).rejects.toThrow('Invalid JSON');
     });
 
-    it('handles fetch timeout properly', async () => {
+    it('throws on fetch timeout', async () => {
       fetch.mockRejectedValueOnce(new Error('Timeout'));
 
-      const result = await discoverOpenIdConfiguration(
-        'test-shop.myshopify.com',
-      );
-      expect(result).toBeNull();
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('OpenID configuration discovery failed'),
-        expect.any(Error),
-      );
+      await expect(
+        discoverOpenIdConfiguration('test-shop.myshopify.com'),
+      ).rejects.toThrow('Timeout');
     });
   });
 
@@ -218,26 +195,23 @@ describe('discovery utilities', () => {
       );
     });
 
-    it('returns null when endpoint is not found', async () => {
+    it('returns response when endpoint is not found', async () => {
       fetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
+        json: () => Promise.resolve({}),
       } as Response);
 
       const result = await discoverCustomerAccountApi(
         'test-shop.myshopify.com',
       );
-      expect(result).toBeNull();
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Customer Account API discovery failed'),
-      );
+      expect(result).toEqual({});
     });
 
-    it('returns null when configuration is invalid', async () => {
+    it('returns configuration even when incomplete', async () => {
       const invalidConfig = {
         graphql_api:
           'https://test-shop.account.myshopify.com/customer/api/graphql',
-        // missing mcp_api
       };
 
       fetch.mockResolvedValueOnce({
@@ -248,10 +222,7 @@ describe('discovery utilities', () => {
       const result = await discoverCustomerAccountApi(
         'test-shop.myshopify.com',
       );
-      expect(result).toBeNull();
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid Customer Account API configuration'),
-      );
+      expect(result).toEqual(invalidConfig);
     });
   });
 
@@ -292,14 +263,9 @@ describe('discovery utilities', () => {
         tokenUrl: mockOpenIdConfig.token_endpoint,
         logoutUrl: mockOpenIdConfig.end_session_endpoint,
       });
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Successfully discovered Customer Account endpoints',
-        ),
-      );
     });
 
-    it('handles partial discovery gracefully', async () => {
+    it('returns result with undefined values on partial discovery', async () => {
       const mockOpenIdConfig = {
         issuer: 'https://test-shop.account.myshopify.com',
         authorization_endpoint:
@@ -318,45 +284,46 @@ describe('discovery utilities', () => {
         .mockResolvedValueOnce({
           ok: false,
           status: 404,
+          json: () => Promise.resolve({}),
         } as Response);
 
       const result = await discoverCustomerAccountEndpoints(
         'test-shop.myshopify.com',
       );
-      // With all-or-nothing approach, partial discovery returns null
-      expect(result).toBeNull();
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Incomplete discovery'),
-      );
+      expect(result).toEqual({
+        graphqlApiUrl: undefined,
+        authorizationUrl: mockOpenIdConfig.authorization_endpoint,
+        tokenUrl: mockOpenIdConfig.token_endpoint,
+        logoutUrl: mockOpenIdConfig.end_session_endpoint,
+      });
     });
 
-    it('returns null when no domain is provided', async () => {
-      const result = await discoverCustomerAccountEndpoints('');
-      expect(result).toBeNull();
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('No storefront domain provided'),
-      );
+    it('throws when no domain is provided', async () => {
+      await expect(discoverCustomerAccountEndpoints('')).rejects.toThrow();
     });
 
-    it('returns null when all discovery fails', async () => {
+    it('returns result with undefined values when all discovery fails', async () => {
       fetch
         .mockResolvedValueOnce({
           ok: false,
           status: 404,
+          json: () => Promise.resolve({}),
         } as Response)
         .mockResolvedValueOnce({
           ok: false,
           status: 404,
+          json: () => Promise.resolve({}),
         } as Response);
 
       const result = await discoverCustomerAccountEndpoints(
         'test-shop.myshopify.com',
       );
-      // With all-or-nothing approach, complete failure returns null
-      expect(result).toBeNull();
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Incomplete discovery'),
-      );
+      expect(result).toEqual({
+        graphqlApiUrl: undefined,
+        authorizationUrl: undefined,
+        tokenUrl: undefined,
+        logoutUrl: undefined,
+      });
     });
 
     it('handles concurrent discovery requests efficiently', async () => {

@@ -27,6 +27,7 @@ export default {
       customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,
       /* Shop Id */
       shopId: env.SHOP_ID,
+      storefrontDomain: env.PUBLIC_STOREFRONT_DOMAIN,
       request,
       session,
     });

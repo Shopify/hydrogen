@@ -169,10 +169,8 @@ export type CustomerAccountOptions = {
   unstableB2b?: boolean;
   /** Localization data. */
   language?: LanguageCode;
-  /** Enable dynamic discovery of Customer Account endpoints using .well-known endpoints on the storefront domain. When enabled, Customer Account API endpoints will be discovered dynamically instead of using hardcoded shopify.com URLs. Defaults to true. */
-  useDiscovery?: boolean;
-  /** The storefront domain to use for endpoint discovery. If not provided, it will be extracted from the request URL. This should be the domain where your Shopify store is hosted (e.g., 'mystore.myshopify.com' or 'shop.example.com'). */
-  storefrontDomain?: string;
+  /** The storefront domain to use for endpoint discovery. Customer Account API endpoints are dynamically discovered using .well-known endpoints. If not provided, the domain will be extracted from the request URL. This should be the domain where your Shopify store is hosted (e.g., 'mystore.myshopify.com' or 'shop.example.com'). */
+  storefrontDomain: string;
 };
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */
