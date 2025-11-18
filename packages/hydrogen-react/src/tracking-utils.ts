@@ -31,6 +31,8 @@ let cachedTrackingValues: {uniqueToken: string; visitToken: string} | null =
 
 export function getTrackingValues() {
   const trackingValues = {uniqueToken: '', visitToken: ''};
+  const hasFoundTrackingValues = () =>
+    Boolean(trackingValues.uniqueToken || trackingValues.visitToken);
 
   if (
     typeof window !== 'undefined' &&
@@ -60,14 +62,14 @@ export function getTrackingValues() {
       // Resource entries have a limited buffer and are removed over time.
       // Cache the latest values for future calls if we find them.
       // A cached resource entry is always newer than a navigation entry.
-      if (trackingValues.uniqueToken || trackingValues.visitToken) {
+      if (hasFoundTrackingValues()) {
         cachedTrackingValues = trackingValues;
       } else if (cachedTrackingValues) {
         // Fallback to cached values from previous calls:
         Object.assign(trackingValues, cachedTrackingValues);
       }
 
-      if (!trackingValues.uniqueToken && !trackingValues.visitToken) {
+      if (!hasFoundTrackingValues()) {
         // Fallback to navigation entry from full page rendering load:
         const navigationEntries = performance.getEntriesByType(
           'navigation',
@@ -79,6 +81,15 @@ export function getTrackingValues() {
         );
       }
     } catch {}
+  }
+
+  // Fallback to deprecated cookies to support transitioning:
+  if (!hasFoundTrackingValues() && typeof document !== 'undefined') {
+    const cookie = document.cookie || '';
+    Object.assign(trackingValues, {
+      uniqueToken: cookie.match(/_y=([^;]+)/)?.[1] || '',
+      visitToken: cookie.match(/_s=([^;]+)/)?.[1] || '',
+    });
   }
 
   return trackingValues;
