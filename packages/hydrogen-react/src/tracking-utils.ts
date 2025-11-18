@@ -26,6 +26,9 @@ function extractFromPerformanceEntry(
   return {uniqueToken, visitToken};
 }
 
+let cachedTrackingValues: {uniqueToken: string; visitToken: string} | null =
+  null;
+
 export function getTrackingValues() {
   const trackingValues = {uniqueToken: '', visitToken: ''};
 
@@ -54,6 +57,16 @@ export function getTrackingValues() {
         );
       }
 
+      // Resource entries have a limited buffer and are removed over time.
+      // Cache the latest values for future calls if we find them.
+      // A cached resource entry is always newer than a navigation entry.
+      if (trackingValues.uniqueToken || trackingValues.visitToken) {
+        cachedTrackingValues = trackingValues;
+      } else if (cachedTrackingValues) {
+        // Fallback to cached values from previous calls:
+        Object.assign(trackingValues, cachedTrackingValues);
+      }
+
       if (!trackingValues.uniqueToken && !trackingValues.visitToken) {
         // Fallback to navigation entry from full page rendering load:
         const navigationEntries = performance.getEntriesByType(
@@ -75,11 +88,13 @@ export function getTrackingValuesFromHeader(serverTimingHeader: string) {
   const _y = serverTimingHeader.match(/_y;desc="?([^",]+)/)?.[1];
   const _s = serverTimingHeader.match(/_s;desc="?([^",]+)/)?.[1];
   const _cmp = serverTimingHeader.match(/_cmp;desc="?([^",]+)/)?.[1];
+  const _ny = serverTimingHeader.match(/_ny;desc="?([^",]+)/)?.[1];
 
   const serverTiming = [];
   if (_y) serverTiming.push(`_y;desc=${_y}`);
   if (_s) serverTiming.push(`_s;desc=${_s}`);
   if (_cmp) serverTiming.push(`_cmp;desc=${_cmp}`);
+  if (_ny) serverTiming.push(`_ny;desc=${_ny}`);
 
   return {
     uniqueToken: _y,
