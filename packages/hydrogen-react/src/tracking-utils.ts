@@ -91,8 +91,8 @@ export function getTrackingValues() {
   if (!hasFoundTrackingValues() && typeof document !== 'undefined') {
     const cookie = document.cookie || '';
     Object.assign(trackingValues, {
-      uniqueToken: cookie.match(/_y=([^;]+)/)?.[1] || '',
-      visitToken: cookie.match(/_s=([^;]+)/)?.[1] || '',
+      uniqueToken: cookie.match(/\b_y=([^;]+)/)?.[1] || '',
+      visitToken: cookie.match(/\b_s=([^;]+)/)?.[1] || '',
     });
   }
 
@@ -100,21 +100,20 @@ export function getTrackingValues() {
 }
 
 export function getTrackingValuesFromHeader(serverTimingHeader: string) {
-  const _y = serverTimingHeader.match(/_y;desc="?([^",]+)/)?.[1];
-  const _s = serverTimingHeader.match(/_s;desc="?([^",]+)/)?.[1];
-  const _cmp = serverTimingHeader.match(/_cmp;desc="?([^",]+)/)?.[1];
-  const _ny = serverTimingHeader.match(/_ny;desc="?([^",]+)/)?.[1];
+  const values = new Map<string, string>();
+  const re = /\b(_y|_s|_cmp|_ny);desc="?([^",]+)"?/g;
 
-  const serverTiming = [];
-  if (_y) serverTiming.push(`_y;desc=${_y}`);
-  if (_s) serverTiming.push(`_s;desc=${_s}`);
-  if (_cmp) serverTiming.push(`_cmp;desc=${_cmp}`);
-  if (_ny) serverTiming.push(`_ny;desc=${_ny}`);
+  let match;
+  while ((match = re.exec(serverTimingHeader)) !== null) {
+    values.set(match[1], match[2]);
+  }
 
   return {
-    uniqueToken: _y,
-    visitToken: _s,
-    consent: _cmp,
-    serverTiming: serverTiming.join(', '),
+    uniqueToken: values.get('_y'),
+    visitToken: values.get('_s'),
+    consent: values.get('_cmp'),
+    serverTiming: [...values]
+      .map(([key, value]) => `${key};desc=${value}`)
+      .join(', '),
   };
 }
