@@ -26,8 +26,12 @@ function extractFromPerformanceEntry(
   return {uniqueToken, visitToken};
 }
 
-let cachedTrackingValues: {uniqueToken: string; visitToken: string} | null =
-  null;
+export const cachedTrackingValues: {
+  current: null | {
+    uniqueToken: string;
+    visitToken: string;
+  };
+} = {current: null};
 
 export function getTrackingValues() {
   const trackingValues = {uniqueToken: '', visitToken: ''};
@@ -63,10 +67,10 @@ export function getTrackingValues() {
       // Cache the latest values for future calls if we find them.
       // A cached resource entry is always newer than a navigation entry.
       if (hasFoundTrackingValues()) {
-        cachedTrackingValues = trackingValues;
-      } else if (cachedTrackingValues) {
+        cachedTrackingValues.current = trackingValues;
+      } else if (cachedTrackingValues.current) {
         // Fallback to cached values from previous calls:
-        Object.assign(trackingValues, cachedTrackingValues);
+        Object.assign(trackingValues, cachedTrackingValues.current);
       }
 
       if (!hasFoundTrackingValues()) {
