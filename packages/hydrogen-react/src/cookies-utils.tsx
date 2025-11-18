@@ -59,6 +59,10 @@ export function hexTime(): string {
   return output.padStart(8, '0');
 }
 
+/**
+ * Gets the values of _shopify_y and _shopify_s cookies from the provided cookie string.
+ * @deprecated Use getTrackingValues instead.
+ */
 export function getShopifyCookies(cookies: string): ShopifyCookies {
   const cookieData = parse(cookies);
   return {

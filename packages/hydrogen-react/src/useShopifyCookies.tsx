@@ -2,7 +2,8 @@ import {useEffect} from 'react';
 // @ts-ignore - worktop/cookie types not properly exported
 import {stringify} from 'worktop/cookie';
 import {SHOPIFY_Y, SHOPIFY_S} from './cart-constants.js';
-import {buildUUID, getShopifyCookies} from './cookies-utils.js';
+import {buildUUID} from './cookies-utils.js';
+import {getTrackingValues} from './tracking-utils.js';
 
 const longTermLength = 60 * 60 * 24 * 360 * 1; // ~1 year expiry
 const shortTermLength = 60 * 30; // 30 mins
@@ -30,8 +31,9 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
     domain = '',
     checkoutDomain = '',
   } = options || {};
+
   useEffect(() => {
-    const cookies = getShopifyCookies(document.cookie);
+    const trackingValues = getTrackingValues();
 
     /**
      * Setting cookie with domain
@@ -72,13 +74,13 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
     if (hasUserConsent) {
       setCookie(
         SHOPIFY_Y,
-        cookies[SHOPIFY_Y] || buildUUID(),
+        trackingValues.uniqueToken || buildUUID(),
         longTermLength,
         domainWithLeadingDot,
       );
       setCookie(
         SHOPIFY_S,
-        cookies[SHOPIFY_S] || buildUUID(),
+        trackingValues.visitToken || buildUUID(),
         shortTermLength,
         domainWithLeadingDot,
       );

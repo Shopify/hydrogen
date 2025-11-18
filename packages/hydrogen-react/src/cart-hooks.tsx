@@ -8,11 +8,13 @@ import {
   SHOPIFY_STOREFRONT_ID_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
-  SHOPIFY_Y,
-  SHOPIFY_S,
 } from './cart-constants.js';
 import type {StorefrontApiResponseOkPartial} from './storefront-api-response.types.js';
-import {getShopifyCookies} from './cookies-utils.js';
+import {
+  getTrackingValues,
+  SHOPIFY_UNIQUE_TOKEN_HEADER,
+  SHOPIFY_VISIT_TOKEN_HEADER,
+} from './tracking-utils.js';
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function useCartFetch() {
@@ -33,9 +35,11 @@ export function useCartFetch() {
       }
 
       // Find Shopify cookies
-      const cookieData = getShopifyCookies(document.cookie);
-      headers[SHOPIFY_STOREFRONT_Y_HEADER] = cookieData[SHOPIFY_Y];
-      headers[SHOPIFY_STOREFRONT_S_HEADER] = cookieData[SHOPIFY_S];
+      const trackingValues = getTrackingValues();
+      headers[SHOPIFY_STOREFRONT_Y_HEADER] = trackingValues.uniqueToken;
+      headers[SHOPIFY_UNIQUE_TOKEN_HEADER] = trackingValues.uniqueToken;
+      headers[SHOPIFY_STOREFRONT_S_HEADER] = trackingValues.visitToken;
+      headers[SHOPIFY_VISIT_TOKEN_HEADER] = trackingValues.visitToken;
 
       return fetch(getStorefrontApiUrl(), {
         method: 'POST',
