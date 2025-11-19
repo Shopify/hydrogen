@@ -73,8 +73,8 @@ export function getTrackingValues(): TrackingValues {
   if (!hasFoundTrackingValues() && typeof document !== 'undefined') {
     const cookie = document.cookie || '';
     Object.assign(trackingValues, {
-      uniqueToken: cookie.match(/\b_y=([^;]+)/)?.[1] || '',
-      visitToken: cookie.match(/\b_s=([^;]+)/)?.[1] || '',
+      uniqueToken: cookie.match(/\b_shopify_y=([^;]+)/)?.[1] || '',
+      visitToken: cookie.match(/\b_shopify_s=([^;]+)/)?.[1] || '',
     });
   }
 

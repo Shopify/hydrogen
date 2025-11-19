@@ -120,7 +120,7 @@ describe('tracking-utils', () => {
         navigation: [createNavigationEntry()],
       });
       vi.stubGlobal('document', {
-        cookie: '_y=legacy-unique; _s=legacy-visit',
+        cookie: '_shopify_y=legacy-unique; _shopify_s=legacy-visit',
       } as unknown as Document);
 
       expect(getTrackingValues()).toEqual({
