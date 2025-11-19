@@ -38,7 +38,6 @@ import {
   sessionContext,
   waitUntilContext,
 } from './context-keys';
-import {SHOPIFY_CLIENT_IP_SIG_HEADER} from './constants';
 
 export type HydrogenContextOptions<
   TSession extends HydrogenSession = HydrogenSession,
