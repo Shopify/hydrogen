@@ -1,39 +1,22 @@
 export const SHOPIFY_VISIT_TOKEN_HEADER = 'X-Shopify-VisitToken';
 export const SHOPIFY_UNIQUE_TOKEN_HEADER = 'X-Shopify-UniqueToken';
 
-function extractFromPerformanceEntry(
-  entry: PerformanceNavigationTiming | PerformanceResourceTiming,
-) {
-  let uniqueToken = '';
-  let visitToken = '';
+type TrackingValues = {
+  uniqueToken: string;
+  visitToken: string;
+};
 
-  if (entry.serverTiming && Array.isArray(entry.serverTiming)) {
-    const yTiming = entry.serverTiming.find(
-      (timing: PerformanceServerTiming) => timing.name === '_y',
-    );
-    const sTiming = entry.serverTiming.find(
-      (timing: PerformanceServerTiming) => timing.name === '_s',
-    );
-
-    if (yTiming?.description) {
-      uniqueToken = yTiming.description;
-    }
-    if (sTiming?.description) {
-      visitToken = sTiming.description;
-    }
-  }
-
-  return {uniqueToken, visitToken};
-}
-
+// Cache values to avoid losing them when performance
+// entries are cleared from the buffer over time.
 export const cachedTrackingValues: {
-  current: null | {
-    uniqueToken: string;
-    visitToken: string;
-  };
+  current: null | TrackingValues;
 } = {current: null};
 
-export function getTrackingValues() {
+/**
+ * Retrieves session tracking values for analytics
+ * and marketing from the browser environment.
+ */
+export function getTrackingValues(): TrackingValues {
   const trackingValues = {uniqueToken: '', visitToken: ''};
   const hasFoundTrackingValues = () =>
     Boolean(trackingValues.uniqueToken || trackingValues.visitToken);
@@ -43,17 +26,16 @@ export function getTrackingValues() {
     typeof window.performance !== 'undefined'
   ) {
     try {
+      const sfapiEndpointRE = new RegExp(
+        `^${window.location.origin}/api/(unstable|2\\d{3}-\\d{2})/graphql\\.json$`,
+      );
+
       // Try server-timing from fetch requests first as these are newer:
       const resourceEntry = (
         performance.getEntriesByType('resource') as PerformanceResourceTiming[]
       ).findLast(
         (entry) =>
-          entry.initiatorType === 'fetch' &&
-          entry.name ===
-            new URL(
-              '/api/unstable/graphql.json',
-              window.location.origin,
-            ).toString(),
+          entry.initiatorType === 'fetch' && sfapiEndpointRE.test(entry.name),
       );
 
       if (resourceEntry) {
@@ -99,7 +81,17 @@ export function getTrackingValues() {
   return trackingValues;
 }
 
-export function getTrackingValuesFromHeader(serverTimingHeader: string) {
+type TrackingValuesForServerTiming = Partial<TrackingValues> & {
+  consent?: string;
+  serverTiming: string;
+};
+
+/**
+ * Parses tracking values from a Server-Timing header string.
+ */
+export function getTrackingValuesFromHeader(
+  serverTimingHeader: string,
+): TrackingValuesForServerTiming {
   const values = new Map<string, string>();
   const re = /\b(_y|_s|_cmp|_ny);desc="?([^",]+)"?/g;
 
@@ -116,4 +108,29 @@ export function getTrackingValuesFromHeader(serverTimingHeader: string) {
       .map(([key, value]) => `${key};desc=${value}`)
       .join(', '),
   };
+}
+
+function extractFromPerformanceEntry(
+  entry: PerformanceNavigationTiming | PerformanceResourceTiming,
+) {
+  let uniqueToken = '';
+  let visitToken = '';
+
+  if (entry.serverTiming && Array.isArray(entry.serverTiming)) {
+    const yTiming = entry.serverTiming.find(
+      (timing: PerformanceServerTiming) => timing.name === '_y',
+    );
+    const sTiming = entry.serverTiming.find(
+      (timing: PerformanceServerTiming) => timing.name === '_s',
+    );
+
+    if (yTiming?.description) {
+      uniqueToken = yTiming.description;
+    }
+    if (sTiming?.description) {
+      visitToken = sTiming.description;
+    }
+  }
+
+  return {uniqueToken, visitToken};
 }
