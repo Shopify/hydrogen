@@ -5,6 +5,8 @@ import {
   getTrackingValuesFromHeader,
 } from './tracking-utils.js';
 
+const testOrigin = 'https://shop.myshopify.com';
+
 describe('tracking-utils', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -40,7 +42,7 @@ describe('tracking-utils', () => {
       stubPerformanceAPI({
         resource: [
           createResourceEntry({
-            name: 'https://shop.myshopify.com/other-endpoint',
+            name: `${testOrigin}/other-endpoint`,
             unique: 'ignored-unique',
             visit: 'ignored-visit',
           }),
@@ -67,7 +69,7 @@ describe('tracking-utils', () => {
       const mockGetEntries = stubPerformanceAPI({
         resource: [
           createResourceEntry({
-            name: 'https://shop.myshopify.com/other-endpoint',
+            name: `${testOrigin}/other-endpoint`,
             unique: 'resource-ignored',
             visit: 'resource-ignored',
           }),
@@ -111,7 +113,7 @@ describe('tracking-utils', () => {
       stubPerformanceAPI({
         resource: [
           createResourceEntry({
-            name: 'https://shop.myshopify.com/other-endpoint',
+            name: `${testOrigin}/other-endpoint`,
             unique: 'resource-ignored',
             visit: 'resource-ignored',
           }),
@@ -151,7 +153,7 @@ function stubPerformanceAPI({
   const mockPerformance = {getEntriesByType} as unknown as Performance;
 
   vi.stubGlobal('window', {
-    location: {origin: 'https://shop.myshopify.com'},
+    location: {origin: testOrigin},
     performance: mockPerformance,
   } as unknown as Window & typeof globalThis);
   vi.stubGlobal('performance', mockPerformance);
@@ -159,34 +161,9 @@ function stubPerformanceAPI({
   return getEntriesByType;
 }
 
-function createResourceEntry({
-  name = 'https://shop.myshopify.com/api/unstable/graphql.json',
-  unique,
-  visit,
-}: {
-  name?: string;
-  unique?: string;
-  visit?: string;
-} = {}) {
-  const serverTiming = [
-    unique ? {name: '_y', description: unique} : null,
-    visit ? {name: '_s', description: visit} : null,
-  ].filter(Boolean) as PerformanceServerTiming[];
+type EntryOptions = {unique?: string; visit?: string};
 
-  return {
-    initiatorType: 'fetch',
-    name,
-    serverTiming,
-  } as unknown as PerformanceResourceTiming;
-}
-
-function createNavigationEntry({
-  unique,
-  visit,
-}: {
-  unique?: string;
-  visit?: string;
-} = {}) {
+function createNavigationEntry({unique, visit}: EntryOptions = {}) {
   const serverTiming = [
     unique ? {name: '_y', description: unique} : null,
     visit ? {name: '_s', description: visit} : null,
@@ -195,4 +172,16 @@ function createNavigationEntry({
   return {
     serverTiming,
   } as unknown as PerformanceNavigationTiming;
+}
+
+function createResourceEntry({
+  name = `${testOrigin}/api/unstable/graphql.json`,
+  unique,
+  visit,
+}: EntryOptions & {name?: string} = {}) {
+  return {
+    ...createNavigationEntry({unique, visit}),
+    initiatorType: 'fetch',
+    name,
+  } as unknown as PerformanceResourceTiming;
 }
