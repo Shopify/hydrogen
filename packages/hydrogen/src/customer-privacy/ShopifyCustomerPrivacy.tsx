@@ -176,7 +176,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       // Prefix with a dot to ensure this domain is different from checkoutRootDomain.
       // This will ensure old cookies are set for a cross-subdomain checkout setup
       // so that we keep backward compatibility until new cookies are rolled out.
-      storefrontRootDomain: commonAncestorDomain && '.' + commonAncestorDomain,
+      storefrontRootDomain: commonAncestorDomain ? '.' + commonAncestorDomain : undefined
       storefrontAccessToken,
       country: consentConfig.country,
       locale: consentConfig.locale,
