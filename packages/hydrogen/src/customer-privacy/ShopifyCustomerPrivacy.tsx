@@ -176,14 +176,16 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       // Prefix with a dot to ensure this domain is different from checkoutRootDomain.
       // This will ensure old cookies are set for a cross-subdomain checkout setup
       // so that we keep backward compatibility until new cookies are rolled out.
-      storefrontRootDomain: commonAncestorDomain ? '.' + commonAncestorDomain : undefined
+      storefrontRootDomain: commonAncestorDomain
+        ? '.' + commonAncestorDomain
+        : undefined,
       storefrontAccessToken,
       country: consentConfig.country,
       locale: consentConfig.locale,
     };
 
     return config;
-  }, [consentConfig, parseStoreDomain, logMissingConfig]);
+  }, [consentConfig, logMissingConfig]);
 
   // settings event listeners for visitorConsentCollected
   useEffect(() => {
@@ -407,7 +409,7 @@ function useApisLoaded({
 function parseStoreDomain(checkoutDomain: string) {
   if (typeof window === 'undefined') return;
 
-  const host = window.document.location.host;
+  const host = window.location.host;
   const checkoutDomainParts = checkoutDomain.split('.').reverse();
   const currentDomainParts = host.split('.').reverse();
   const sameDomainParts: Array<string> = [];
@@ -417,7 +419,7 @@ function parseStoreDomain(checkoutDomain: string) {
     }
   });
 
-  return sameDomainParts.reverse().join('.');
+  return sameDomainParts.reverse().join('.') || undefined;
 }
 
 /**
