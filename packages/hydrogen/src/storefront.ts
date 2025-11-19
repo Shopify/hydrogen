@@ -168,7 +168,7 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   >['getStorefrontApiUrl'];
   i18n: TI18n;
   getHeaders: () => Record<string, string>;
-  isStorefrontUrl: (request: {url?: string}) => boolean;
+  isStorefrontApiUrl: (request: {url?: string}) => boolean;
   forward: (
     request: Request,
     options?: Omit<StorefrontCommonExtraParams, 'displayName'>,
@@ -518,7 +518,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       /**
        * Checks if the request is targeting the Storefront API endpoint.
        */
-      isStorefrontUrl(request) {
+      isStorefrontApiUrl(request) {
         return SFAPI_RE.test(getSafePathname(request.url ?? ''));
       },
       /**

@@ -15,14 +15,14 @@ export function createRequestHandler<Context = unknown>({
   poweredByHeader = true,
   getLoadContext,
   tracking = true,
-  storefrontForwarding = true,
+  proxyStandardRoutes = true,
 }: {
   build: ServerBuild;
   mode?: string;
   poweredByHeader?: boolean;
   getLoadContext?: (request: Request) => Promise<Context> | Context;
   tracking?: boolean;
-  storefrontForwarding?: boolean;
+  proxyStandardRoutes?: boolean;
 }) {
   const handleRequest = createReactRouterRequestHandler(build, mode);
 
@@ -52,8 +52,10 @@ export function createRequestHandler<Context = unknown>({
 
     const storefront = context?.storefront || context?.get?.(storefrontContext);
 
-    if (storefrontForwarding && storefront?.isStorefrontUrl(request)) {
-      return storefront.forward(request);
+    if (proxyStandardRoutes) {
+      if (storefront?.isStorefrontApiUrl(request)) {
+        return storefront.forward(request);
+      }
     }
 
     const trackingPromise = tracking && storefront?.fetchConsent?.();
