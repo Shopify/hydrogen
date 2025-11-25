@@ -5,8 +5,11 @@ import {
   type ServerBuild,
 } from 'react-router';
 import {storefrontContext} from './context-keys';
-import {HYDROGEN_SFAPI_PROXY_KEY} from './constants';
-import {appendServerTimingHeader} from './utils/response';
+import {
+  HYDROGEN_SFAPI_PROXY_KEY,
+  HYDROGEN_SERVER_TRACKING_KEY,
+} from './constants';
+import {appendServerTimingHeader} from './utils/server-timing';
 import {
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
@@ -72,6 +75,7 @@ export function createRequestHandler<Context = unknown>({
 
     if (tracking) {
       (await trackingPromise)?.setTrackingValues(response);
+      appendServerTimingHeader(response, {[HYDROGEN_SERVER_TRACKING_KEY]: '1'});
     } else if (storefront) {
       // Even with backend tracking disabled in this handler,
       // forward any existing tokens to the browser since it might need them.

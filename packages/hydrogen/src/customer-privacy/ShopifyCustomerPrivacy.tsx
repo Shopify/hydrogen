@@ -5,7 +5,7 @@ import {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {useRevalidator} from 'react-router';
-import {HYDROGEN_SFAPI_PROXY_KEY} from '../constants';
+import {isSfapiProxyEnabled} from '../utils/server-timing';
 
 export type ConsentStatus = boolean | undefined;
 
@@ -130,21 +130,6 @@ function logMissingConfig(fieldName: string) {
   // eslint-disable-next-line no-console
   console.error(
     `[h2:error:useCustomerPrivacy] Unable to setup Customer Privacy API: Missing consent.${fieldName} configuration.`,
-  );
-}
-
-/**
- * Hydrogen server sets this server timing key when the SFAPI proxy is enabled.
- */
-function isSfapiProxyEnabled() {
-  if (typeof window === 'undefined') return false;
-
-  const navigationEntry = window.performance?.getEntriesByType?.(
-    'navigation',
-  )[0] as PerformanceNavigationTiming;
-
-  return !!navigationEntry?.serverTiming?.some(
-    (entry) => entry.name === HYDROGEN_SFAPI_PROXY_KEY,
   );
 }
 

@@ -8,3 +8,4 @@ export const SDK_VERSION_HEADER = 'X-SDK-Version';
 export const SHOPIFY_CLIENT_IP_HEADER = 'X-Shopify-Client-IP';
 export const SHOPIFY_CLIENT_IP_SIG_HEADER = 'X-Shopify-Client-IP-Sig';
 export const HYDROGEN_SFAPI_PROXY_KEY = '_sfapi_proxy';
+export const HYDROGEN_SERVER_TRACKING_KEY = '_server_tracking';

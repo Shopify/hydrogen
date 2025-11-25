@@ -45,6 +45,11 @@ import {
 import type {Storefront} from '../storefront';
 import {PerfKit} from './PerfKit';
 import {errorOnce, warnOnce} from '../utils/warning';
+import {
+  isSfapiProxyEnabled,
+  hasBackendFetchedTracking,
+} from '../utils/server-timing';
+import {getTrackingValues} from '@shopify/hydrogen-react';
 
 export type ShopAnalytics = {
   /** The shop ID. */
@@ -291,6 +296,47 @@ function messageOnError(field: string, envVar: string) {
   return `[h2:error:Analytics.Provider] - ${field} is required. Make sure ${envVar} is defined in your environment variables. See https://h2o.fyi/analytics/consent to learn how to setup environment variables in the Shopify admin.`;
 }
 
+/**
+ * Fetches consent from the browser by making a request to the SFAPI proxy.
+ * This replicates what the server does in storefront.fetchTrackingValues().
+ */
+async function fetchTrackingValuesFromBrowser(
+  storefrontAccessToken?: string,
+): Promise<void> {
+  // This might come from server-timing or old cookies:
+  const initialValues = getTrackingValues();
+
+  const response = await fetch('/api/unstable/graphql.json', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(storefrontAccessToken && {
+        'X-Shopify-Storefront-Access-Token': storefrontAccessToken,
+      }),
+      ...(initialValues.visitToken || initialValues.uniqueToken
+        ? {
+            'X-Shopify-VisitToken': initialValues.visitToken,
+            'X-Shopify-UniqueToken': initialValues.uniqueToken,
+          }
+        : undefined),
+    },
+    body: JSON.stringify({
+      query:
+        'query { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
+    }),
+  });
+
+  // Consume the body to complete the request and
+  // ensure server-timing is available in performance API
+  await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch consent from browser: ${response.status} ${response.statusText}`,
+    );
+  }
+}
+
 function AnalyticsProvider({
   canTrack: customCanTrack,
   cart: currentCart,
@@ -300,7 +346,6 @@ function AnalyticsProvider({
   shop: shopProp = null,
   cookieDomain,
 }: AnalyticsProviderProps): JSX.Element {
-  const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
   const [analyticsLoaded, setAnalyticsLoaded] = useState(
     customCanTrack ? true : false,
@@ -309,6 +354,38 @@ function AnalyticsProvider({
   const [canTrack, setCanTrack] = useState<() => boolean>(
     customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
   );
+  const [cookiesReady, setCookiesReady] = useState(false);
+  const hasFetchedTrackingValues = useRef(false);
+
+  // Check if backend fetched consent, otherwise fetch from browser
+  useEffect(() => {
+    async function ensureTrackingValues() {
+      // React runs effects twice in dev mode, avoid double fetching
+      if (hasFetchedTrackingValues.current) return;
+      hasFetchedTrackingValues.current = true;
+
+      if (hasBackendFetchedTracking() || !isSfapiProxyEnabled()) {
+        // Backend did the work, or proxy is disabled.
+        setCookiesReady(true);
+        return;
+      }
+
+      // Fetch consent from browser via proxy
+      try {
+        await fetchTrackingValuesFromBrowser(consent.storefrontAccessToken);
+      } catch (error) {
+        warnOnce(
+          '[h2:warn:AnalyticsProvider] Failed to fetch consent from browser: ' +
+            (error instanceof Error ? error.message : String(error)),
+        );
+      } finally {
+        // Proceed even on errors, degraded tracking is better than no app
+        setCookiesReady(true);
+      }
+    }
+
+    ensureTrackingValues();
+  }, []);
 
   // eslint-disable-next-line no-extra-boolean-cast
   if (!!shop) {
@@ -383,11 +460,10 @@ function AnalyticsProvider({
       {!!shop && !!currentCart && (
         <CartAnalytics cart={currentCart} setCarts={setCarts} />
       )}
-      {!!shop && consent.checkoutDomain && (
+      {!!shop && consent.checkoutDomain && cookiesReady && (
         <ShopifyAnalytics
           consent={consent}
           onReady={() => {
-            listenerSet.current = true;
             setAnalyticsLoaded(true);
             setCanTrack(
               customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
@@ -396,7 +472,7 @@ function AnalyticsProvider({
           domain={cookieDomain}
         />
       )}
-      {!!shop && <PerfKit shop={shop} />}
+      {!!shop && cookiesReady && <PerfKit shop={shop} />}
     </AnalyticsContext.Provider>
   );
 }
