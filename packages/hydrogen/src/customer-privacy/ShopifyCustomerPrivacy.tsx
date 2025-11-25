@@ -5,6 +5,7 @@ import {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {useRevalidator} from 'react-router';
+import {HYDROGEN_SFAPI_PROXY_KEY} from '../constants';
 
 export type ConsentStatus = boolean | undefined;
 
@@ -112,6 +113,12 @@ export type CustomerPrivacyApiProps = {
   onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;
   /** Callback to be call when customer privacy api is ready. */
   onReady?: () => void;
+  /**
+   * Domain to use for requesting customer privacy to Storefront API.
+   * Defaults to same-domain if the standard route proxy is enabled in Hydrogen server,
+   * or the provided checkout domain otherwise.
+   */
+  storefrontApiDomain?: string;
 };
 
 export const CONSENT_API =
@@ -123,6 +130,21 @@ function logMissingConfig(fieldName: string) {
   // eslint-disable-next-line no-console
   console.error(
     `[h2:error:useCustomerPrivacy] Unable to setup Customer Privacy API: Missing consent.${fieldName} configuration.`,
+  );
+}
+
+/**
+ * Hydrogen server sets this server timing key when the SFAPI proxy is enabled.
+ */
+function isSfapiProxyEnabled() {
+  if (typeof window === 'undefined') return false;
+
+  const navigationEntry = window.performance?.getEntriesByType?.(
+    'navigation',
+  )[0] as PerformanceNavigationTiming;
+
+  return !!navigationEntry?.serverTiming?.some(
+    (entry) => entry.name === HYDROGEN_SFAPI_PROXY_KEY,
   );
 }
 
@@ -152,7 +174,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   });
 
   const config = useMemo(() => {
-    const {checkoutDomain, storefrontAccessToken} = consentConfig;
+    const {checkoutDomain = '', storefrontAccessToken} = consentConfig;
 
     if (!checkoutDomain) logMissingConfig('checkoutDomain');
     if (!storefrontAccessToken) logMissingConfig('storefrontAccessToken');
@@ -169,10 +191,15 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     }
 
     const commonAncestorDomain = parseStoreDomain(checkoutDomain);
+    const sfapiDomain =
+      props.storefrontApiDomain ??
+      // Check if standard route proxy is enabled in Hydrogen server
+      // to use it instead of doing a cross-origin request to checkout.
+      (isSfapiProxyEnabled() ? window.location.host : checkoutDomain);
 
     const config: CustomerPrivacyConsentConfig = {
-      // Request to self-domain now that we proxy requests to SFAPI:
-      checkoutRootDomain: window.location.host,
+      // This domain is used to send requests to SFAPI for setting and getting consent.
+      checkoutRootDomain: sfapiDomain,
       // Prefix with a dot to ensure this domain is different from checkoutRootDomain.
       // This will ensure old cookies are set for a cross-subdomain checkout setup
       // so that we keep backward compatibility until new cookies are rolled out.

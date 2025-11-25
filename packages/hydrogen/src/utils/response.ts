@@ -43,3 +43,14 @@ export function appendHeaders(
     }
   }
 }
+
+export function appendServerTimingHeader(
+  response: CrossRuntimeResponse,
+  values: Record<string, string>,
+) {
+  const headerValues = Object.entries(values)
+    .map(([key, value]) => (value ? `${key};desc=${value}` : undefined))
+    .filter(Boolean);
+
+  appendHeader(response, 'Server-Timing', headerValues.join(', '));
+}

@@ -173,7 +173,7 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
     request: Request,
     options?: Omit<StorefrontCommonExtraParams, 'displayName'>,
   ) => Promise<Response>;
-  fetchConsent: (options?: {force?: boolean}) => Promise<{
+  fetchTrackingValues: (options?: {force?: boolean}) => Promise<{
     cookies: string[];
     serverTiming: string;
     uniqueToken?: string;
@@ -441,7 +441,9 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     return formatAPIResult(data, gqlErrors);
   }
 
-  let cachedConsentPromise: ReturnType<Storefront['fetchConsent']> | undefined;
+  let cachedConsentPromise:
+    | ReturnType<Storefront['fetchTrackingValues']>
+    | undefined;
 
   return {
     storefront: {
@@ -541,7 +543,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         return new Response(response.body, response);
       },
 
-      fetchConsent(options) {
+      fetchTrackingValues(options) {
         const {purpose, accept, fetchDest} = storefrontHeaders || {};
         const shouldFetchConsent = Boolean(
           purpose !== 'prefetch' &&

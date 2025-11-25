@@ -60,7 +60,11 @@ export type ShopAnalytics = {
 export type Consent = Partial<
   Pick<
     CustomerPrivacyApiProps,
-    'checkoutDomain' | 'storefrontAccessToken' | 'withPrivacyBanner' | 'country'
+    | 'checkoutDomain'
+    | 'storefrontApiDomain'
+    | 'storefrontAccessToken'
+    | 'withPrivacyBanner'
+    | 'country'
   >
 > & {language?: LanguageCode}; // the privacyBanner SDKs refers to "language" as "locale" :(
 
