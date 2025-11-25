@@ -18,7 +18,12 @@ import {
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function useCartFetch() {
-  const {storefrontId, getPublicTokenHeaders, getStorefrontApiUrl} = useShop();
+  const {
+    storefrontId,
+    getPublicTokenHeaders,
+    getStorefrontApiUrl,
+    sameDomainForStorefrontApi,
+  } = useShop();
 
   return useCallback(
     <ReturnDataGeneric,>({
@@ -34,12 +39,15 @@ export function useCartFetch() {
         headers[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
       }
 
-      // Find Shopify cookies
-      const trackingValues = getTrackingValues();
-      headers[SHOPIFY_STOREFRONT_Y_HEADER] = trackingValues.uniqueToken;
-      headers[SHOPIFY_UNIQUE_TOKEN_HEADER] = trackingValues.uniqueToken;
-      headers[SHOPIFY_STOREFRONT_S_HEADER] = trackingValues.visitToken;
-      headers[SHOPIFY_VISIT_TOKEN_HEADER] = trackingValues.visitToken;
+      if (!sameDomainForStorefrontApi) {
+        // If we are in cross-domain mode, add tracking headers manually.
+        // Otherwise, for same-domain we rely on the browser to attach cookies automatically.
+        const trackingValues = getTrackingValues();
+        headers[SHOPIFY_STOREFRONT_Y_HEADER] = trackingValues.uniqueToken;
+        headers[SHOPIFY_UNIQUE_TOKEN_HEADER] = trackingValues.uniqueToken;
+        headers[SHOPIFY_STOREFRONT_S_HEADER] = trackingValues.visitToken;
+        headers[SHOPIFY_VISIT_TOKEN_HEADER] = trackingValues.visitToken;
+      }
 
       return fetch(getStorefrontApiUrl(), {
         method: 'POST',
@@ -61,7 +69,12 @@ export function useCartFetch() {
           };
         });
     },
-    [getPublicTokenHeaders, storefrontId, getStorefrontApiUrl],
+    [
+      getPublicTokenHeaders,
+      storefrontId,
+      getStorefrontApiUrl,
+      sameDomainForStorefrontApi,
+    ],
   );
 }
 

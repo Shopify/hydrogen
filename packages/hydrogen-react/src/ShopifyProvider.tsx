@@ -25,6 +25,23 @@ const ShopifyContext = createContext<ShopifyContextValue>(
 );
 
 /**
+ * Hydrogen server sets this server timing key when the SFAPI proxy is enabled.
+ * Read it automatically in the browser for apps using frontend cart in full-stack Hydrogen,
+ * but don't export this utility yet since we don't want to make this a public convention.
+ */
+function isSfapiProxyEnabled() {
+  if (typeof window === 'undefined') return false;
+
+  const navigationEntry = window.performance?.getEntriesByType?.(
+    'navigation',
+  )[0] as PerformanceNavigationTiming;
+
+  return !!navigationEntry?.serverTiming?.some(
+    (entry) => entry.name === '_sfapi_proxy',
+  );
+}
+
+/**
  * The `<ShopifyProvider/>` component enables use of the `useShop()` hook. The component should wrap your app.
  */
 export function ShopifyProvider({
@@ -50,6 +67,9 @@ export function ShopifyProvider({
   }
 
   const finalConfig = useMemo<ShopifyContextValue>(() => {
+    const sameDomainForStorefrontApi =
+      shopifyConfig.sameDomainForStorefrontApi ?? isSfapiProxyEnabled();
+
     function getShopifyDomain(overrideProps?: {storeDomain?: string}): string {
       const domain = overrideProps?.storeDomain ?? shopifyConfig.storeDomain;
       return domain.includes('://') ? domain : `https://${domain}`;
@@ -57,6 +77,7 @@ export function ShopifyProvider({
 
     return {
       ...shopifyConfig,
+      sameDomainForStorefrontApi,
       getPublicTokenHeaders(overrideProps): Record<string, string> {
         return getPublicTokenHeadersRaw(
           overrideProps.contentType,
@@ -66,9 +87,14 @@ export function ShopifyProvider({
       },
       getShopifyDomain,
       getStorefrontApiUrl(overrideProps): string {
-        const finalDomainUrl = getShopifyDomain({
-          storeDomain: overrideProps?.storeDomain ?? shopifyConfig.storeDomain,
-        });
+        const finalDomainUrl =
+          sameDomainForStorefrontApi && typeof window !== 'undefined'
+            ? window.location.origin
+            : getShopifyDomain({
+                storeDomain:
+                  overrideProps?.storeDomain ?? shopifyConfig.storeDomain,
+              });
+
         return `${finalDomainUrl}${
           finalDomainUrl.endsWith('/') ? '' : '/'
         }api/${
@@ -114,6 +140,11 @@ export interface ShopifyProviderBase {
    * `ISO 369` language codes supported by Shopify.
    */
   languageIsoCode: LanguageCode;
+  /**
+   * Uses the current window.location.origin for Storefront API requests.
+   * This requires setting up a proxy for Storefront API requests in your domain.
+   */
+  sameDomainForStorefrontApi?: boolean;
 }
 
 /**
