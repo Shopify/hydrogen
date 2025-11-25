@@ -130,16 +130,94 @@ describe('tracking-utils', () => {
         visitToken: 'legacy-visit',
       });
     });
+
+    describe('cross-origin support with backup matching', () => {
+      it('prioritizes primary same-domain matches over unrelated domains', () => {
+        // Tests that algorithm continues searching for primary match
+        // even after finding a backup match
+        stubPerformanceAPI(
+          {
+            resource: [
+              createResourceEntry({
+                name: 'https://mystore.myshopify.com/api/2024-01/graphql.json',
+                unique: 'cross-domain-unique',
+                visit: 'cross-domain-visit',
+              }),
+              createResourceEntry({
+                name: 'https://mystore.com/api/unstable/graphql.json',
+                unique: 'primary-unique',
+                visit: 'primary-visit',
+              }),
+            ],
+          },
+          'https://mystore.com',
+        );
+
+        // Should use primary match even though backup is newer
+        expect(getTrackingValues()).toEqual({
+          uniqueToken: 'primary-unique',
+          visitToken: 'primary-visit',
+        });
+      });
+
+      it('prioritizes primary subdomain matches over unrelated domains', () => {
+        stubPerformanceAPI(
+          {
+            resource: [
+              createResourceEntry({
+                name: 'https://mystore.myshopify.com/api/2024-01/graphql.json',
+                unique: 'cross-domain-unique',
+                visit: 'cross-domain-visit',
+              }),
+              createResourceEntry({
+                name: 'https://checkout.mystore.com/api/2024-01/graphql.json',
+                unique: 'subdomain-unique',
+                visit: 'subdomain-visit',
+              }),
+            ],
+          },
+          'https://mystore.com',
+        );
+
+        expect(getTrackingValues()).toEqual({
+          uniqueToken: 'subdomain-unique',
+          visitToken: 'subdomain-visit',
+        });
+      });
+
+      it('finds unrelated cross-domain SFAPI matches as last resort', () => {
+        stubPerformanceAPI(
+          {
+            resource: [
+              createResourceEntry({
+                name: 'https://mystore.myshopify.com/api/2024-01/graphql.json',
+                unique: 'cross-domain-unique',
+                visit: 'cross-domain-visit',
+              }),
+            ],
+          },
+          'https://mystore.com',
+        );
+
+        expect(getTrackingValues()).toEqual({
+          uniqueToken: 'cross-domain-unique',
+          visitToken: 'cross-domain-visit',
+        });
+      });
+    });
   });
 });
 
-function stubPerformanceAPI({
-  resource = [],
-  navigation = [],
-}: {
-  resource?: PerformanceResourceTiming[];
-  navigation?: PerformanceNavigationTiming[];
-} = {}) {
+function stubPerformanceAPI(
+  {
+    resource = [],
+    navigation = [],
+  }: {
+    resource?: PerformanceResourceTiming[];
+    navigation?: PerformanceNavigationTiming[];
+  } = {},
+  origin: string = testOrigin,
+) {
   const getEntriesByType = vi.fn((type: string) => {
     if (type === 'resource') {
       return resource ?? [];
@@ -152,8 +230,9 @@ function stubPerformanceAPI({
 
   const mockPerformance = {getEntriesByType} as unknown as Performance;
 
+  const url = new URL(origin);
   vi.stubGlobal('window', {
-    location: {origin: testOrigin},
+    location: {origin, hostname: url.hostname, host: url.host},
     performance: mockPerformance,
   } as unknown as Window & typeof globalThis);
   vi.stubGlobal('performance', mockPerformance);

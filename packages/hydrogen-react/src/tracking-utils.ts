@@ -26,17 +26,45 @@ export function getTrackingValues(): TrackingValues {
     typeof window.performance !== 'undefined'
   ) {
     try {
-      const sfapiEndpointRE = new RegExp(
-        `^${window.location.origin}/api/(unstable|2\\d{3}-\\d{2})/graphql\\.json$`,
-      );
+      // RE to match SFAPI pathnames and extract the host.
+      // E.g. "https://checkout.mystore.com/api/.../graphql.json" => "checkout.mystore.com"
+      const sfapiRE =
+        /^https?:\/\/([^/]+)\/api\/(?:unstable|2\d{3}-\d{2})\/graphql\.json(?:$|\?)/;
 
-      // Try server-timing from fetch requests first as these are newer:
-      const resourceEntry = (
-        performance.getEntriesByType('resource') as PerformanceResourceTiming[]
-      ).findLast(
-        (entry) =>
-          entry.initiatorType === 'fetch' && sfapiEndpointRE.test(entry.name),
-      );
+      // Search backwards through resource entries to find the most recent match
+      // Priority 1: Same origin SFAPI request
+      // Priority 2: Any SFAPI request (different origin, but still SFAPI)
+      const entries = performance.getEntriesByType(
+        'resource',
+      ) as PerformanceResourceTiming[];
+
+      let primaryMatch: PerformanceResourceTiming | undefined;
+      let backupMatch: PerformanceResourceTiming | undefined;
+
+      for (let i = entries.length - 1; i >= 0; i--) {
+        const entry = entries[i];
+
+        if (entry.initiatorType !== 'fetch') continue;
+
+        const currentHost = window.location.host;
+        const matchedHost = entry.name.match(sfapiRE)?.[1];
+        if (!matchedHost) continue;
+
+        if (
+          // Exact same host
+          matchedHost === currentHost ||
+          // Subdomain of current host
+          matchedHost.endsWith(`.${currentHost}`)
+        ) {
+          primaryMatch = entry;
+          break;
+        } else if (!backupMatch) {
+          backupMatch = entry;
+          // Don't break - keep looking for primary match
+        }
+      }
+
+      const resourceEntry = primaryMatch || backupMatch;
 
       if (resourceEntry) {
         Object.assign(
