@@ -173,7 +173,11 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
     request: Request,
     options?: Omit<StorefrontCommonExtraParams, 'displayName'>,
   ) => Promise<Response>;
-  fetchTrackingValues: (options?: {force?: boolean}) => Promise<{
+  setCollectedSubrequestHeaders: (response: CrossRuntimeResponse) => void;
+  fetchTrackingValues: (
+    options?: {force?: boolean},
+    useShopId?: boolean,
+  ) => Promise<{
     cookies: string[];
     serverTiming: string;
     uniqueToken?: string;
@@ -301,6 +305,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     defaultHeaders[SHOPIFY_VISIT_TOKEN_HEADER] = visitToken;
   }
 
+  const collectedSubrequestHeaders = {
+    serverTiming: null as null | string,
+    setCookie: null as null | string[],
+  };
+
   // Remove any headers that are identifiable to the user or request
   const cacheKeyHeader = JSON.stringify({
     'content-type': defaultHeaders['content-type'],
@@ -388,6 +397,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         purpose: storefrontHeaders?.purpose,
       },
       streamConfig,
+      onRawHeaders: (headers) => {
+        collectedSubrequestHeaders.setCookie ??= headers.getSetCookie();
+        collectedSubrequestHeaders.serverTiming ??=
+          headers.get('server-timing');
+      },
     });
 
     const errorOptions: GraphQLErrorOptions<T> = {
@@ -541,6 +555,16 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         );
 
         return new Response(response.body, response);
+      },
+
+      setCollectedSubrequestHeaders: (response: CrossRuntimeResponse) => {
+        const {setCookie, serverTiming} = collectedSubrequestHeaders;
+        if (setCookie && serverTiming) {
+          appendHeaders(response, [
+            ['Set-Cookie', setCookie],
+            ['Server-Timing', [serverTiming]],
+          ]);
+        }
       },
 
       fetchTrackingValues(options) {

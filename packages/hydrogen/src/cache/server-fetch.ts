@@ -19,6 +19,7 @@ export type FetchCacheOptions<T = any> = {
     query: string;
     variables: Record<string, unknown>;
   };
+  onRawHeaders?: (headers: Headers) => void;
 };
 
 type SerializableResponse = [any, ResponseInit];
@@ -63,6 +64,7 @@ export async function fetchWithServerCache<T = unknown>(
     waitUntil,
     debugInfo,
     streamConfig,
+    onRawHeaders,
   }: FetchCacheOptions,
 ): Promise<readonly [T, Response]> {
   if (!cacheOptions && (!requestInit.method || requestInit.method === 'GET')) {
@@ -81,6 +83,7 @@ export async function fetchWithServerCache<T = unknown>(
             options: RequestInit | undefined,
           ) => {
             rawResponse = await fetch(url, options);
+            onRawHeaders?.(rawResponse.headers);
             return rawResponse;
           },
           headers: requestInit.headers as Record<string, string>,
@@ -109,7 +112,10 @@ export async function fetchWithServerCache<T = unknown>(
           rawResponse!,
         );
       }
+
       const response = await fetch(url, requestInit);
+      onRawHeaders?.(response.headers);
+
       if (!response.ok) {
         // Skip caching and consuming the response body
         return response;

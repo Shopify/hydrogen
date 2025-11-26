@@ -74,6 +74,7 @@ export function createRequestHandler<Context = unknown>({
     const response = await handleRequest(request, context);
 
     if (tracking) {
+      storefront?.setCollectedSubrequestHeaders(response);
       (await trackingPromise)?.setTrackingValues(response);
       appendServerTimingHeader(response, {[HYDROGEN_SERVER_TRACKING_KEY]: '1'});
     } else if (storefront) {
