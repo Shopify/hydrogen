@@ -34,6 +34,16 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
 
   useEffect(() => {
     const trackingValues = getTrackingValues();
+    if (
+      (
+        trackingValues.uniqueToken ||
+        trackingValues.visitToken ||
+        ''
+      ).startsWith('00000000-')
+    ) {
+      // Skip writing cookies when tracking values signal we don't have consent yet
+      return;
+    }
 
     /**
      * Setting cookie with domain
@@ -43,7 +53,7 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
      */
 
     // Use override domain or current host
-    let currentDomain = domain || window.document.location.host;
+    let currentDomain = domain || window.location.host;
 
     if (checkoutDomain) {
       const checkoutDomainParts = checkoutDomain.split('.').reverse();
