@@ -1,9 +1,5 @@
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {
-  cachedTrackingValues,
-  getTrackingValues,
-  getTrackingValuesFromHeader,
-} from './tracking-utils.js';
+import {cachedTrackingValues, getTrackingValues} from './tracking-utils.js';
 
 const testOrigin = 'https://shop.myshopify.com';
 
@@ -11,30 +7,6 @@ describe('tracking-utils', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     cachedTrackingValues.current = null;
-  });
-
-  describe('getTrackingValuesFromHeader', () => {
-    it('returns empty values when header is empty', () => {
-      expect(getTrackingValuesFromHeader('')).toEqual({
-        uniqueToken: undefined,
-        visitToken: undefined,
-        consent: undefined,
-        serverTiming: '',
-      });
-    });
-
-    it('parses tokens and consent information from the header value', () => {
-      const header =
-        '_y;desc="unique-token", _unused;desc="unused", _s;desc="visit-token", _cmp;desc="opt-in", _ny;desc=ny-value';
-
-      expect(getTrackingValuesFromHeader(header)).toEqual({
-        uniqueToken: 'unique-token',
-        visitToken: 'visit-token',
-        consent: 'opt-in',
-        serverTiming:
-          '_y;desc=unique-token, _s;desc=visit-token, _cmp;desc=opt-in, _ny;desc=ny-value',
-      });
-    });
   });
 
   describe('getTrackingValues', () => {
