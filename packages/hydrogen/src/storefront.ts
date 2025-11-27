@@ -174,17 +174,6 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
     options?: Omit<StorefrontCommonExtraParams, 'displayName'>,
   ) => Promise<Response>;
   setCollectedSubrequestHeaders: (response: CrossRuntimeResponse) => void;
-  fetchTrackingValues: (
-    options?: {force?: boolean},
-    useShopId?: boolean,
-  ) => Promise<{
-    cookies: string[];
-    serverTiming: string;
-    uniqueToken?: string;
-    visitToken?: string;
-    consent?: string;
-    setTrackingValues: (response: CrossRuntimeResponse) => void;
-  } | void>;
 };
 
 type HydrogenClientProps<TI18n> = {
@@ -455,10 +444,6 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     return formatAPIResult(data, gqlErrors);
   }
 
-  let cachedConsentPromise:
-    | ReturnType<Storefront['fetchTrackingValues']>
-    | undefined;
-
   return {
     storefront: {
       /**
@@ -565,58 +550,6 @@ export function createStorefrontClient<TI18n extends I18nBase>(
             ['Server-Timing', [serverTiming]],
           ]);
         }
-      },
-
-      fetchTrackingValues(options) {
-        const {purpose, accept, fetchDest} = storefrontHeaders || {};
-        const shouldFetchConsent = Boolean(
-          purpose !== 'prefetch' &&
-            (fetchDest
-              ? fetchDest === 'document'
-              : accept?.includes('text/html')),
-        );
-
-        if (!options?.force && !shouldFetchConsent) return Promise.resolve();
-
-        // Cache the consent fetch promise to avoid multiple calls.
-        // This allows users to call this manually earlier if needed.
-        return (cachedConsentPromise ??= fetch(
-          getStorefrontApiUrl({storefrontApiVersion: 'unstable'}),
-          {
-            method: 'POST',
-            headers: defaultHeaders,
-            body: JSON.stringify({
-              query:
-                // Empty visitor consent to fallback to default behavior
-                'query { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
-            }),
-          },
-        )
-          .then((response) => {
-            if (response.ok) {
-              const cookies = response.headers.getSetCookie();
-              const {serverTiming, ...values} = getTrackingValuesFromHeader(
-                response.headers.get('server-timing') ?? '',
-              );
-
-              return {
-                cookies,
-                serverTiming,
-                ...values,
-                setTrackingValues(response: CrossRuntimeResponse) {
-                  appendHeaders(response, [
-                    ['Set-cookie', cookies],
-                    ['Server-Timing', [serverTiming]],
-                  ]);
-                },
-              };
-            }
-          })
-          .catch(() => {
-            console.warn(
-              '[h2:warn:createStorefrontClient] Could not fetch consent cookies',
-            );
-          }));
       },
     },
   };
