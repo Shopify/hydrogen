@@ -304,7 +304,7 @@ async function fetchTrackingValuesFromBrowser(
   storefrontAccessToken?: string,
 ): Promise<void> {
   // This might come from server-timing or old cookies:
-  const initialValues = getTrackingValues();
+  const {uniqueToken, visitToken} = getTrackingValues();
 
   const response = await fetch('/api/unstable/graphql.json', {
     method: 'POST',
@@ -313,10 +313,10 @@ async function fetchTrackingValuesFromBrowser(
       ...(storefrontAccessToken && {
         'X-Shopify-Storefront-Access-Token': storefrontAccessToken,
       }),
-      ...(initialValues.visitToken || initialValues.uniqueToken
+      ...(visitToken || uniqueToken
         ? {
-            'X-Shopify-VisitToken': initialValues.visitToken,
-            'X-Shopify-UniqueToken': initialValues.uniqueToken,
+            'X-Shopify-VisitToken': visitToken,
+            'X-Shopify-UniqueToken': uniqueToken,
           }
         : undefined),
     },
@@ -359,32 +359,28 @@ function AnalyticsProvider({
 
   // Check if backend fetched consent, otherwise fetch from browser
   useEffect(() => {
-    async function ensureTrackingValues() {
-      // React runs effects twice in dev mode, avoid double fetching
-      if (hasFetchedTrackingValues.current) return;
-      hasFetchedTrackingValues.current = true;
+    // React runs effects twice in dev mode, avoid double fetching
+    if (hasFetchedTrackingValues.current) return;
+    hasFetchedTrackingValues.current = true;
 
-      if (hasBackendFetchedTracking() || !isSfapiProxyEnabled()) {
-        // Backend did the work, or proxy is disabled.
-        setCookiesReady(true);
-        return;
-      }
+    if (hasBackendFetchedTracking() || !isSfapiProxyEnabled()) {
+      // Backend did the work, or proxy is disabled.
+      setCookiesReady(true);
+      return;
+    }
 
-      // Fetch consent from browser via proxy
-      try {
-        await fetchTrackingValuesFromBrowser(consent.storefrontAccessToken);
-      } catch (error) {
+    // Fetch consent from browser via proxy
+    fetchTrackingValuesFromBrowser(consent.storefrontAccessToken)
+      .catch((error) => {
         warnOnce(
           '[h2:warn:AnalyticsProvider] Failed to fetch consent from browser: ' +
             (error instanceof Error ? error.message : String(error)),
         );
-      } finally {
+      })
+      .finally(() => {
         // Proceed even on errors, degraded tracking is better than no app
         setCookiesReady(true);
-      }
-    }
-
-    ensureTrackingValues();
+      });
   }, []);
 
   // eslint-disable-next-line no-extra-boolean-cast

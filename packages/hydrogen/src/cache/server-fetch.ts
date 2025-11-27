@@ -19,6 +19,7 @@ export type FetchCacheOptions<T = any> = {
     query: string;
     variables: Record<string, unknown>;
   };
+  /** Called when fresh raw headers are received (skipped on cache hits) */
   onRawHeaders?: (headers: Headers) => void;
 };
 

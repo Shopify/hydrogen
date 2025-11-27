@@ -8,7 +8,6 @@ import {
   SHOPIFY_STOREFRONT_S_HEADER,
   SHOPIFY_UNIQUE_TOKEN_HEADER,
   SHOPIFY_VISIT_TOKEN_HEADER,
-  getTrackingValuesFromHeader,
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
 import type {WritableDeep} from 'type-fest';
@@ -21,6 +20,7 @@ import {
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
   SHOPIFY_CLIENT_IP_HEADER,
   SHOPIFY_CLIENT_IP_SIG_HEADER,
+  HYDROGEN_SERVER_TRACKING_KEY,
 } from './constants';
 import {
   CacheNone,
@@ -60,8 +60,14 @@ import {
   type StackInfo,
 } from './utils/callsites';
 import type {WaitUntil, StorefrontHeaders} from './types';
-import {appendHeaders, CrossRuntimeResponse} from './utils/response';
+import {appendHeader, CrossRuntimeResponse} from './utils/response';
 import {getSafePathname, SFAPI_RE} from './utils/request';
+import {
+  appendServerTimingHeader,
+  extractServerTimingHeader,
+  TrackedTimingsRecord,
+} from './utils/server-timing';
+import {_} from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js';
 
 export type I18nBase = {
   language: StorefrontLanguageCode | CustomerLanguageCode;
@@ -271,6 +277,8 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   if (requestCookie) defaultHeaders['cookie'] = requestCookie;
 
   const hasConsentCookies = /\b_shopify_essential[s]?=/.test(requestCookie);
+  let uniqueToken: string | undefined;
+  let visitToken: string | undefined;
 
   if (!hasConsentCookies) {
     const cookies = requestCookie
@@ -287,17 +295,19 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = legacyVisitToken;
     }
 
-    const uniqueToken = legacyUniqueToken ?? generateUUID();
-    const visitToken = legacyVisitToken ?? generateUUID();
+    uniqueToken = legacyUniqueToken ?? generateUUID();
+    visitToken = legacyVisitToken ?? generateUUID();
 
     defaultHeaders[SHOPIFY_UNIQUE_TOKEN_HEADER] = uniqueToken;
     defaultHeaders[SHOPIFY_VISIT_TOKEN_HEADER] = visitToken;
   }
 
-  const collectedSubrequestHeaders = {
-    serverTiming: null as null | string,
-    setCookie: null as null | string[],
-  };
+  let collectedSubrequestHeaders:
+    | undefined
+    | {
+        serverTiming: string;
+        setCookie: string[];
+      };
 
   // Remove any headers that are identifiable to the user or request
   const cacheKeyHeader = JSON.stringify({
@@ -387,9 +397,10 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       },
       streamConfig,
       onRawHeaders: (headers) => {
-        collectedSubrequestHeaders.setCookie ??= headers.getSetCookie();
-        collectedSubrequestHeaders.serverTiming ??=
-          headers.get('server-timing');
+        collectedSubrequestHeaders ??= {
+          setCookie: headers.getSetCookie(),
+          serverTiming: headers.get('server-timing') ?? '',
+        };
       },
     });
 
@@ -543,12 +554,28 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       },
 
       setCollectedSubrequestHeaders: (response: CrossRuntimeResponse) => {
-        const {setCookie, serverTiming} = collectedSubrequestHeaders;
-        if (setCookie && serverTiming) {
-          appendHeaders(response, [
-            ['Set-Cookie', setCookie],
-            ['Server-Timing', [serverTiming]],
-          ]);
+        // Forward cookies
+        if (collectedSubrequestHeaders) {
+          for (const value of collectedSubrequestHeaders.setCookie) {
+            appendHeader(response, 'Set-Cookie', value);
+          }
+        }
+
+        // Forward tracking values via server-timing from subrequests,
+        // and fallback to the ones generated in the current request.
+        appendServerTimingHeader(response, {
+          _y: uniqueToken,
+          _s: visitToken,
+          ...(collectedSubrequestHeaders &&
+            extractServerTimingHeader(collectedSubrequestHeaders.serverTiming)),
+        } satisfies TrackedTimingsRecord);
+
+        // Indicate that the tracking work was done in the server
+        // to skip an extra request from the browser.
+        if (collectedSubrequestHeaders?.setCookie.length) {
+          appendServerTimingHeader(response, {
+            [HYDROGEN_SERVER_TRACKING_KEY]: '1',
+          });
         }
       },
     },

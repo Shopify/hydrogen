@@ -5,15 +5,8 @@ import {
   type ServerBuild,
 } from 'react-router';
 import {storefrontContext} from './context-keys';
-import {
-  HYDROGEN_SFAPI_PROXY_KEY,
-  HYDROGEN_SERVER_TRACKING_KEY,
-} from './constants';
+import {HYDROGEN_SFAPI_PROXY_KEY} from './constants';
 import {appendServerTimingHeader} from './utils/server-timing';
-import {
-  SHOPIFY_UNIQUE_TOKEN_HEADER,
-  SHOPIFY_VISIT_TOKEN_HEADER,
-} from '@shopify/hydrogen-react';
 
 /**
  * Creates a request handler for Hydrogen apps using React Router.
@@ -61,39 +54,21 @@ export function createRequestHandler<Context = unknown>({
 
     const storefront = context?.storefront || context?.get?.(storefrontContext);
 
-    if (proxyStandardRoutes) {
-      if (storefront?.isStorefrontApiUrl(request)) {
+    if (storefront && proxyStandardRoutes) {
+      if (storefront.isStorefrontApiUrl(request)) {
         return storefront.forward(request);
       }
     }
 
-    const trackingPromise = tracking
-      ? storefront?.fetchTrackingValues?.()
-      : undefined;
-
     const response = await handleRequest(request, context);
 
-    if (tracking) {
-      storefront?.setCollectedSubrequestHeaders(response);
-      (await trackingPromise)?.setTrackingValues(response);
-      appendServerTimingHeader(response, {[HYDROGEN_SERVER_TRACKING_KEY]: '1'});
-    } else if (storefront) {
-      // Even with backend tracking disabled in this handler,
-      // forward any existing tokens to the browser since it might need them.
-      const {
-        [SHOPIFY_UNIQUE_TOKEN_HEADER]: _y,
-        [SHOPIFY_VISIT_TOKEN_HEADER]: _s,
-      } = storefront.getHeaders();
-
-      if (_y && _s) {
-        appendServerTimingHeader(response, {_y, _s});
+    if (storefront && proxyStandardRoutes) {
+      if (tracking) {
+        storefront.setCollectedSubrequestHeaders(response);
       }
-    }
 
-    if (proxyStandardRoutes) {
-      if (storefront) {
-        appendServerTimingHeader(response, {[HYDROGEN_SFAPI_PROXY_KEY]: '1'});
-      }
+      // TODO: assume SFAPI proxy is available in future major version
+      appendServerTimingHeader(response, {[HYDROGEN_SFAPI_PROXY_KEY]: '1'});
     }
 
     if (poweredByHeader) {

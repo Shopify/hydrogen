@@ -13,12 +13,14 @@ export function appendHeader(
   header: string,
   value: string,
 ) {
-  if ('headers' in response) {
-    response.headers.append(header, value);
-  } else if ('appendHeader' in response) {
-    response.appendHeader(header, value);
-  } else {
-    throw new Error('Unsupported response object');
+  if (value) {
+    if ('headers' in response) {
+      response.headers.append(header, value);
+    } else if ('appendHeader' in response) {
+      response.appendHeader(header, value);
+    } else {
+      throw new Error('Unsupported response object');
+    }
   }
 }
 
@@ -39,7 +41,7 @@ export function appendHeaders(
 
   for (const [header, values] of headers) {
     for (const value of values) {
-      append(header, value);
+      if (value) append(header, value);
     }
   }
 }
