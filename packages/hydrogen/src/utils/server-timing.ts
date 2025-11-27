@@ -2,7 +2,6 @@ import {
   HYDROGEN_SFAPI_PROXY_KEY,
   HYDROGEN_SERVER_TRACKING_KEY,
 } from '../constants';
-import {appendHeader, CrossRuntimeResponse} from './response';
 
 function buildServerTimingHeader(values: Record<string, string | undefined>) {
   return Object.entries(values)
@@ -12,14 +11,14 @@ function buildServerTimingHeader(values: Record<string, string | undefined>) {
 }
 
 export function appendServerTimingHeader(
-  response: CrossRuntimeResponse,
+  response: {headers: Headers},
   values: string | Parameters<typeof buildServerTimingHeader>[0],
 ) {
   const header =
     typeof values === 'string' ? values : buildServerTimingHeader(values);
 
   if (header) {
-    appendHeader(response, 'Server-Timing', header);
+    response.headers.append('Server-Timing', header);
   }
 }
 

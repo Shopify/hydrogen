@@ -109,35 +109,6 @@ export function getTrackingValues(): TrackingValues {
   return trackingValues;
 }
 
-type TrackingValuesForServerTiming = Partial<TrackingValues> & {
-  consent?: string;
-  serverTiming: string;
-};
-
-/**
- * Parses tracking values from a Server-Timing header string.
- */
-export function getTrackingValuesFromHeader(
-  serverTimingHeader: string,
-): TrackingValuesForServerTiming {
-  const values = new Map<string, string>();
-  const re = /\b(_y|_s|_cmp|_ny);desc="?([^",]+)"?/g;
-
-  let match;
-  while ((match = re.exec(serverTimingHeader)) !== null) {
-    values.set(match[1], match[2]);
-  }
-
-  return {
-    uniqueToken: values.get('_y'),
-    visitToken: values.get('_s'),
-    consent: values.get('_cmp'),
-    serverTiming: [...values]
-      .map(([key, value]) => `${key};desc=${value}`)
-      .join(', '),
-  };
-}
-
 function extractFromPerformanceEntry(
   entry: PerformanceNavigationTiming | PerformanceResourceTiming,
 ) {

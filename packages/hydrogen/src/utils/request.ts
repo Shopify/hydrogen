@@ -37,10 +37,8 @@ export function getStorefrontHeaders(
     buyerIp: getHeader(request, 'oxygen-buyer-ip'),
     buyerIpSig: getHeader(request, SHOPIFY_CLIENT_IP_SIG_HEADER),
     cookie: getHeader(request, 'cookie'),
-    accept: getHeader(request, 'accept'),
     // sec-purpose is added by browsers automatically when using link/prefetch or Speculation Rules
     purpose: getHeader(request, 'sec-purpose') || getHeader(request, 'purpose'),
-    fetchDest: getHeader(request, 'sec-fetch-dest'),
   };
 }
 

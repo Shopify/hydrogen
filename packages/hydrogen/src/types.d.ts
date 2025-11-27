@@ -75,10 +75,6 @@ export type StorefrontHeaders = {
   cookie: string | null;
   /** The sec-purpose or purpose header value */
   purpose: string | null;
-  /** The MIME types the client accepts */
-  accept: string | null;
-  /** The sec-fetch-dest header value */
-  fetchDest: string | null;
 };
 
 export interface HydrogenRouterContextProvider<

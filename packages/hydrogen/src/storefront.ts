@@ -60,7 +60,6 @@ import {
   type StackInfo,
 } from './utils/callsites';
 import type {WaitUntil, StorefrontHeaders} from './types';
-import {appendHeader, CrossRuntimeResponse} from './utils/response';
 import {getSafePathname, SFAPI_RE} from './utils/request';
 import {
   appendServerTimingHeader,
@@ -179,7 +178,7 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
     request: Request,
     options?: Pick<StorefrontCommonExtraParams, 'storefrontApiVersion'>,
   ) => Promise<Response>;
-  setCollectedSubrequestHeaders: (response: CrossRuntimeResponse) => void;
+  setCollectedSubrequestHeaders: (response: {headers: Headers}) => void;
 };
 
 type HydrogenClientProps<TI18n> = {
@@ -577,11 +576,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         return new Response(response.body, response);
       },
 
-      setCollectedSubrequestHeaders: (response: CrossRuntimeResponse) => {
+      setCollectedSubrequestHeaders: (response: {headers: Headers}) => {
         // Forward cookies
         if (collectedSubrequestHeaders) {
           for (const value of collectedSubrequestHeaders.setCookie) {
-            appendHeader(response, 'Set-Cookie', value);
+            response.headers.append('Set-Cookie', value);
           }
         }
 
