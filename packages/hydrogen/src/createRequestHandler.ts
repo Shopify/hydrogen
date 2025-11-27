@@ -68,7 +68,14 @@ export function createRequestHandler<Context = unknown>({
       }
 
       // TODO: assume SFAPI proxy is available in future major version
-      appendServerTimingHeader(response, {[HYDROGEN_SFAPI_PROXY_KEY]: '1'});
+      // Signal that SFAPI proxy is enabled for document requests
+      const fetchDest = request.headers.get('sec-fetch-dest');
+      if (
+        (fetchDest && fetchDest === 'document') ||
+        request.headers.get('accept') === 'text/html'
+      ) {
+        appendServerTimingHeader(response, {[HYDROGEN_SFAPI_PROXY_KEY]: '1'});
+      }
     }
 
     if (poweredByHeader) {

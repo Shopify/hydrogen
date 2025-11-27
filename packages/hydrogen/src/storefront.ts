@@ -177,7 +177,7 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   isStorefrontApiUrl: (request: {url?: string}) => boolean;
   forward: (
     request: Request,
-    options?: Omit<StorefrontCommonExtraParams, 'displayName'>,
+    options?: Pick<StorefrontCommonExtraParams, 'storefrontApiVersion'>,
   ) => Promise<Response>;
   setCollectedSubrequestHeaders: (response: CrossRuntimeResponse) => void;
 };
@@ -541,15 +541,39 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           options?.storefrontApiVersion ??
           getSafePathname(request.url).match(SFAPI_RE)?.[1];
 
+        // Forward only a selected set of headers to the Storefront API
+        // to avoid getting 403 errors due to unexpected headers.
+        const forwardedHeaders = new Headers(
+          [
+            'accept',
+            'accept-language',
+            'content-type',
+            'content-length',
+            'cookie',
+            'user-agent',
+            STOREFRONT_ACCESS_TOKEN_HEADER,
+            SHOPIFY_UNIQUE_TOKEN_HEADER,
+            SHOPIFY_VISIT_TOKEN_HEADER,
+            SHOPIFY_CLIENT_IP_HEADER,
+            SHOPIFY_CLIENT_IP_SIG_HEADER,
+            SHOPIFY_STOREFRONT_ID_HEADER,
+            STOREFRONT_REQUEST_GROUP_ID_HEADER,
+          ].map((key) => [
+            key,
+            request.headers.get(key) ?? defaultHeaders[key],
+          ]),
+        );
+
         const response = await fetch(
           getStorefrontApiUrl({storefrontApiVersion}),
           {
             method: request.method,
             body: request.body,
-            headers: {...defaultHeaders, ...options?.headers},
+            headers: forwardedHeaders,
           },
         );
 
+        // Create a new response to allow modifying headers
         return new Response(response.body, response);
       },
 
