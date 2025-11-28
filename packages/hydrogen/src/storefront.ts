@@ -543,10 +543,16 @@ export function createStorefrontClient<TI18n extends I18nBase>(
             (key) => request.headers.get(key),
             [
               'accept',
+              'accept-encoding',
               'accept-language',
+              // Access-Control headers are used for CORS preflight requests.
+              'access-control-request-headers',
+              'access-control-request-method',
               'content-type',
               'content-length',
               'cookie',
+              'origin',
+              'referer',
               'user-agent',
               STOREFRONT_ACCESS_TOKEN_HEADER,
               SHOPIFY_UNIQUE_TOKEN_HEADER,
@@ -564,6 +570,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
             ],
           ),
         ]);
+
+        if (storefrontHeaders?.buyerIp) {
+          // Good for proxies to inform about the original client IP
+          forwardedHeaders.set('x-forwarded-for', storefrontHeaders.buyerIp);
+        }
 
         const storefrontApiVersion =
           options?.storefrontApiVersion ??
