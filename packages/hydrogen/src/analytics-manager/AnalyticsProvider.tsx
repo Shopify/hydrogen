@@ -49,7 +49,12 @@ import {
   isSfapiProxyEnabled,
   hasBackendFetchedTracking,
 } from '../utils/server-timing';
-import {getTrackingValues} from '@shopify/hydrogen-react';
+import {STOREFRONT_ACCESS_TOKEN_HEADER} from '../constants';
+import {
+  getTrackingValues,
+  SHOPIFY_UNIQUE_TOKEN_HEADER,
+  SHOPIFY_VISIT_TOKEN_HEADER,
+} from '@shopify/hydrogen-react';
 
 export type ShopAnalytics = {
   /** The shop ID. */
@@ -303,7 +308,12 @@ function messageOnError(field: string, envVar: string) {
 async function fetchTrackingValuesFromBrowser(
   storefrontAccessToken?: string,
 ): Promise<void> {
-  // This might come from server-timing or old cookies:
+  // These values might come from server-timing or old cookies.
+  // If consent cannot be initially assumed, these tokens
+  // will be dropped in SFAPI and it will return a mock token
+  // starting with '00000000-'.
+  // However, if consent can be assumed initially, these tokens
+  // will be used to create proper cookies and continue our flow.
   const {uniqueToken, visitToken} = getTrackingValues();
 
   const response = await fetch('/api/unstable/graphql.json', {
@@ -311,18 +321,19 @@ async function fetchTrackingValuesFromBrowser(
     headers: {
       'Content-Type': 'application/json',
       ...(storefrontAccessToken && {
-        'X-Shopify-Storefront-Access-Token': storefrontAccessToken,
+        [STOREFRONT_ACCESS_TOKEN_HEADER]: storefrontAccessToken,
       }),
       ...(visitToken || uniqueToken
         ? {
-            'X-Shopify-VisitToken': visitToken,
-            'X-Shopify-UniqueToken': uniqueToken,
+            [SHOPIFY_VISIT_TOKEN_HEADER]: visitToken,
+            [SHOPIFY_UNIQUE_TOKEN_HEADER]: uniqueToken,
           }
         : undefined),
     },
     body: JSON.stringify({
       query:
-        'query { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
+        // TODO: update to a faster query when available
+        'query ensureCookies { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
     }),
   });
 
