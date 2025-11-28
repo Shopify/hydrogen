@@ -358,6 +358,15 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
                   customerPrivacy: customCustomerPrivacy,
                 };
 
+                // Consent-tracking-api assumes consent if it doesn't have anything to work with.
+                // Since we have fetched the tracking values already, we set its cachedConsent here.
+                // This is a workaround until consent-tracking-api knows how to read server-timing for us.
+                const trackingValues = getTrackingValues();
+                if (trackingValues.consent) {
+                  // @ts-expect-error Internal property
+                  customCustomerPrivacy.cachedConsent = trackingValues.consent;
+                }
+
                 setLoaded.customerPrivacy();
                 emitCustomerPrivacyApiLoaded();
               }

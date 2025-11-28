@@ -4,6 +4,7 @@ export const SHOPIFY_UNIQUE_TOKEN_HEADER = 'X-Shopify-UniqueToken';
 type TrackingValues = {
   uniqueToken: string;
   visitToken: string;
+  consent: string;
 };
 
 // Cache values to avoid losing them when performance
@@ -17,7 +18,7 @@ export const cachedTrackingValues: {
  * and marketing from the browser environment.
  */
 export function getTrackingValues(): TrackingValues {
-  const trackingValues = {uniqueToken: '', visitToken: ''};
+  const trackingValues = {uniqueToken: '', visitToken: '', consent: ''};
   const hasFoundTrackingValues = () =>
     Boolean(trackingValues.uniqueToken || trackingValues.visitToken);
 
@@ -114,6 +115,7 @@ function extractFromPerformanceEntry(
 ) {
   let uniqueToken = '';
   let visitToken = '';
+  let consent = '';
 
   if (entry.serverTiming && Array.isArray(entry.serverTiming)) {
     const yTiming = entry.serverTiming.find(
@@ -122,6 +124,9 @@ function extractFromPerformanceEntry(
     const sTiming = entry.serverTiming.find(
       (timing: PerformanceServerTiming) => timing.name === '_s',
     );
+    const consentTiming = entry.serverTiming.find(
+      (timing: PerformanceServerTiming) => timing.name === '_cmp',
+    );
 
     if (yTiming?.description) {
       uniqueToken = yTiming.description;
@@ -129,7 +134,10 @@ function extractFromPerformanceEntry(
     if (sTiming?.description) {
       visitToken = sTiming.description;
     }
+    if (consentTiming?.description) {
+      consent = consentTiming.description;
+    }
   }
 
-  return {uniqueToken, visitToken};
+  return {uniqueToken, visitToken, consent};
 }
