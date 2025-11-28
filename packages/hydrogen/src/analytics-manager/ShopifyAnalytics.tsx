@@ -77,7 +77,7 @@ export function ShopifyAnalytics({
       ? 'abcdefghijklmnopqrstuvwxyz123456'
       : storefrontAccessToken,
     onVisitorConsentCollected: () => setPrivacyReady(true),
-    onReady: () => setPrivacyReady(true),
+    onReady: () => !consent.withPrivacyBanner && setPrivacyReady(true),
   });
 
   // set up shopify_Y and shopify_S cookies
