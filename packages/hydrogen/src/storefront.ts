@@ -60,7 +60,7 @@ import {
   type StackInfo,
 } from './utils/callsites';
 import type {WaitUntil, StorefrontHeaders} from './types';
-import {getSafePathname, SFAPI_RE} from './utils/request';
+import {extractHeaders, getSafePathname, SFAPI_RE} from './utils/request';
 import {
   appendServerTimingHeader,
   extractServerTimingHeader,
@@ -536,42 +536,40 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        * Forwards the request to the Storefront API.
        */
       async forward(request, options) {
+        const forwardedHeaders = new Headers([
+          // Forward only a selected set of headers to the Storefront API
+          // to avoid getting 403 errors due to unexpected headers.
+          ...extractHeaders(
+            (key) => request.headers.get(key),
+            [
+              'accept',
+              'accept-language',
+              'content-type',
+              'content-length',
+              'cookie',
+              'user-agent',
+              STOREFRONT_ACCESS_TOKEN_HEADER,
+              SHOPIFY_UNIQUE_TOKEN_HEADER,
+              SHOPIFY_VISIT_TOKEN_HEADER,
+            ],
+          ),
+          // Add some headers to help with geolocalization and debugging
+          ...extractHeaders(
+            (key) => defaultHeaders[key],
+            [
+              SHOPIFY_CLIENT_IP_HEADER,
+              SHOPIFY_CLIENT_IP_SIG_HEADER,
+              SHOPIFY_STOREFRONT_ID_HEADER,
+              STOREFRONT_REQUEST_GROUP_ID_HEADER,
+            ],
+          ),
+        ]);
+
         const storefrontApiVersion =
           options?.storefrontApiVersion ??
           getSafePathname(request.url).match(SFAPI_RE)?.[1];
 
-        const forwardedHeaders = new Headers([
-          // Forward only a selected set of headers to the Storefront API
-          // to avoid getting 403 errors due to unexpected headers.
-          ...[
-            'accept',
-            'accept-language',
-            'content-type',
-            'content-length',
-            'cookie',
-            'user-agent',
-            STOREFRONT_ACCESS_TOKEN_HEADER,
-            SHOPIFY_UNIQUE_TOKEN_HEADER,
-            SHOPIFY_VISIT_TOKEN_HEADER,
-          ].reduce<[string, string][]>((acc, key) => {
-            const forwardedValue = request.headers.get(key);
-            if (forwardedValue) acc.push([key, forwardedValue]);
-            return acc;
-          }, []),
-          // Add some headers to help with geolocalization
-          ...[
-            SHOPIFY_CLIENT_IP_HEADER,
-            SHOPIFY_CLIENT_IP_SIG_HEADER,
-            SHOPIFY_STOREFRONT_ID_HEADER,
-            STOREFRONT_REQUEST_GROUP_ID_HEADER,
-          ].reduce<[string, string][]>((acc, key) => {
-            const extraHeader = defaultHeaders[key];
-            if (extraHeader) acc.push([key, extraHeader]);
-            return acc;
-          }, []),
-        ]);
-
-        const response = await fetch(
+        const sfapiResponse = await fetch(
           getStorefrontApiUrl({storefrontApiVersion}),
           {
             method: request.method,
@@ -581,7 +579,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         );
 
         // Create a new response to allow modifying headers
-        return new Response(response.body, response);
+        return new Response(sfapiResponse.body, sfapiResponse);
       },
 
       setCollectedSubrequestHeaders: (response: {headers: Headers}) => {

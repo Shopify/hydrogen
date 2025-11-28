@@ -52,3 +52,14 @@ export const getSafePathname = (url: string) => {
     return '/';
   }
 };
+
+export function extractHeaders(
+  extract: (key: string) => string | undefined | null,
+  keys: string[],
+) {
+  return keys.reduce<[string, string][]>((acc, key) => {
+    const forwardedValue = extract(key);
+    if (forwardedValue) acc.push([key, forwardedValue]);
+    return acc;
+  }, []);
+}
