@@ -350,6 +350,7 @@ function AnalyticsProvider({
   const [analyticsLoaded, setAnalyticsLoaded] = useState(
     customCanTrack ? true : false,
   );
+  const [consentCollected, setConsentCollected] = useState(false);
   const [carts, setCarts] = useState<Carts>({cart: null, prevCart: null});
   const [canTrack, setCanTrack] = useState<() => boolean>(
     customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
@@ -391,6 +392,8 @@ function AnalyticsProvider({
         '[h2:error:Analytics.Provider] - Mock shop is used. Analytics will not work properly.',
       );
     } else {
+      // TODO: we likely don't need checkout domain if SFAPI proxy is enabled
+      // but keep it for backward compatibility for now until we have checkout URL params.
       if (!consent.checkoutDomain) {
         const errorMsg = messageOnError(
           'consent.checkoutDomain',
@@ -456,7 +459,7 @@ function AnalyticsProvider({
       {!!shop && !!currentCart && (
         <CartAnalytics cart={currentCart} setCarts={setCarts} />
       )}
-      {!!shop && consent.checkoutDomain && cookiesReady && (
+      {!!shop && cookiesReady && (
         <ShopifyAnalytics
           consent={consent}
           onReady={() => {
@@ -464,11 +467,15 @@ function AnalyticsProvider({
             setCanTrack(
               customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
             );
+
+            // Delay loading PerfKit until consent is collected
+            // so that it reads updated tracking values from old cookies.
+            setConsentCollected(true);
           }}
           domain={cookieDomain}
         />
       )}
-      {!!shop && cookiesReady && <PerfKit shop={shop} />}
+      {!!shop && consentCollected && <PerfKit shop={shop} />}
     </AnalyticsContext.Provider>
   );
 }

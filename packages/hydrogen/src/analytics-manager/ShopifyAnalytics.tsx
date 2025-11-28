@@ -76,8 +76,10 @@ export function ShopifyAnalytics({
     storefrontAccessToken: !storefrontAccessToken
       ? 'abcdefghijklmnopqrstuvwxyz123456'
       : storefrontAccessToken,
-    onVisitorConsentCollected: () => setPrivacyReady(true),
+    // If we use privacy banner, we should wait until consent is collected.
+    // Otherwise, we can consider privacy ready immediately:
     onReady: () => !consent.withPrivacyBanner && setPrivacyReady(true),
+    onVisitorConsentCollected: () => setPrivacyReady(true),
   });
 
   // set up shopify_Y and shopify_S cookies

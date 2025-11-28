@@ -48,18 +48,13 @@ export type SetConsentHeadlessParams = VisitorConsent &
   doesMerchantSupportGranularConsent
   firstPartyMarketingAllowed
   getCCPAConsent
-  getRegulation
-  getShopPrefs
   getTrackingConsent
-  isRegulationEnforced
   marketingAllowed
   preferencesProcessingAllowed
   saleOfDataAllowed
   saleOfDataRegion
-  setCCPAConsent
   setTrackingConsent
   shouldShowBanner
-  shouldShowCCPABanner
   shouldShowGDPRBanner
   thirdPartyMarketingAllowed
 **/
@@ -73,6 +68,7 @@ export type OriginalCustomerPrivacy = {
     consent: SetConsentHeadlessParams,
     callback: (data: {error: string} | undefined) => void,
   ) => void;
+  shouldShowBanner: () => boolean;
 };
 
 export type CustomerPrivacy = Omit<
@@ -218,6 +214,32 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       }
 
       if (onVisitorConsentCollected) {
+        const customerPrivacy = getCustomerPrivacy();
+        if (customerPrivacy?.shouldShowBanner()) {
+          // This type is plain wrong:
+          const consentValues =
+            customerPrivacy.currentVisitorConsent() as unknown as Record<
+              keyof VisitorConsent,
+              string
+            >;
+
+          if (consentValues) {
+            // Mimic Privacy Banner SDK behavior to detect no-interaction:
+            const NO_VALUE = '';
+            const noInteraction =
+              consentValues.marketing === NO_VALUE &&
+              consentValues.analytics === NO_VALUE &&
+              consentValues.preferences === NO_VALUE;
+
+            if (noInteraction) {
+              // The banner is being shown but the user has not interacted yet.
+              // The fact that this event has been fired before interaction
+              // is likely a bug in Privacy Banner SDK. We ignore this event for now.
+              return;
+            }
+          }
+        }
+
         onVisitorConsentCollected(event.detail);
       }
     };
@@ -324,6 +346,8 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
                 // overwrite the tracking consent method
                 customCustomerPrivacy = {
                   ...customerPrivacy,
+                  // Note: this method is not used by the privacy-banner,
+                  // it bundles its own setTrackingConsent.
                   setTrackingConsent: overrideCustomerPrivacySetTrackingConsent(
                     {customerPrivacy, config},
                   ),
