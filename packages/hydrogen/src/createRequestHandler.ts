@@ -7,6 +7,39 @@ import {
 import {storefrontContext} from './context-keys';
 import {HYDROGEN_SFAPI_PROXY_KEY} from './constants';
 import {appendServerTimingHeader} from './utils/server-timing';
+import {warnOnce} from './utils/warning';
+
+type CreateRequestHandlerOptions<Context = unknown> = {
+  /** React Router's server build */
+  build: ServerBuild;
+  /** React Router's mode */
+  mode?: string;
+  /**
+   * Function to provide the load context for each request.
+   * It must contain Hydrogen's storefront client instance
+   * for other Hydrogen utilities to work properly.
+   */
+  getLoadContext?: (request: Request) => Promise<Context> | Context;
+  /**
+   * Whether to include the `powered-by` header in responses
+   * @default true
+   */
+  poweredByHeader?: boolean;
+  /**
+   * Collect tracking information from subrequests such as cookies
+   * and forward them to the browser. Disable this if you are not
+   * using Hydrogen's built-in analytics.
+   * @default true
+   */
+  tracking?: boolean;
+  /**
+   * Whether to proxy standard routes such as `/api/.../graphql.json` (Storefront API).
+   * You can disable this if you are handling these routes yourself. Ensure that
+   * the proxy works if you rely on Hydrogen's built-in behaviors such as analytics.
+   * @default true
+   */
+  proxyStandardRoutes?: boolean;
+};
 
 /**
  * Creates a request handler for Hydrogen apps using React Router.
@@ -18,14 +51,7 @@ export function createRequestHandler<Context = unknown>({
   getLoadContext,
   tracking = true,
   proxyStandardRoutes = true,
-}: {
-  build: ServerBuild;
-  mode?: string;
-  poweredByHeader?: boolean;
-  getLoadContext?: (request: Request) => Promise<Context> | Context;
-  tracking?: boolean;
-  proxyStandardRoutes?: boolean;
-}) {
+}: CreateRequestHandlerOptions<Context>) {
   const handleRequest = createReactRouterRequestHandler(build, mode);
 
   return async (request: Request) => {
@@ -54,10 +80,21 @@ export function createRequestHandler<Context = unknown>({
 
     const storefront = context?.storefront || context?.get?.(storefrontContext);
 
-    if (storefront && proxyStandardRoutes) {
-      if (storefront.isStorefrontApiUrl(request)) {
+    if (proxyStandardRoutes) {
+      if (!storefront) {
+        // TODO: this should throw error in future major version
+        warnOnce(
+          '[h2:createRequestHandler] Storefront instance is required to proxy standard routes.',
+        );
+      }
+
+      if (storefront?.isStorefrontApiUrl(request)) {
         return storefront.forward(request);
       }
+    } else {
+      warnOnce(
+        '[h2:createRequestHandler] Standard route proxying is disabled. This may affect Hydrogen behavior.',
+      );
     }
 
     const response = await handleRequest(request, context);
