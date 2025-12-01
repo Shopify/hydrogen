@@ -21,12 +21,14 @@ describe('tracking-utils', () => {
           createResourceEntry({
             unique: 'resource-unique',
             visit: 'resource-visit',
+            consent: 'resource-consent',
           }),
         ],
         navigation: [
           createNavigationEntry({
             unique: 'nav-unique-ignored',
             visit: 'nav-visit-ignored',
+            consent: 'nav-consent-ignored',
           }),
         ],
       });
@@ -34,6 +36,7 @@ describe('tracking-utils', () => {
       expect(getTrackingValues()).toEqual({
         uniqueToken: 'resource-unique',
         visitToken: 'resource-visit',
+        consent: 'resource-consent',
       });
     });
 
@@ -48,13 +51,18 @@ describe('tracking-utils', () => {
           createResourceEntry(),
         ],
         navigation: [
-          createNavigationEntry({unique: 'nav-unique', visit: 'nav-visit'}),
+          createNavigationEntry({
+            unique: 'nav-unique',
+            visit: 'nav-visit',
+            consent: 'nav-consent',
+          }),
         ],
       });
 
       expect(getTrackingValues()).toEqual({
         uniqueToken: 'nav-unique',
         visitToken: 'nav-visit',
+        consent: 'nav-consent',
       });
       expect(mockGetEntries).toHaveBeenNthCalledWith(1, 'resource');
       expect(mockGetEntries).toHaveBeenNthCalledWith(2, 'navigation');
@@ -65,6 +73,7 @@ describe('tracking-utils', () => {
         createResourceEntry({
           unique: 'cached-unique',
           visit: 'cached-visit',
+          consent: 'cached-consent',
         }),
       ];
       const mockGetEntries = stubPerformanceAPI({resource: resourceEntries});
@@ -72,11 +81,13 @@ describe('tracking-utils', () => {
       expect(getTrackingValues()).toEqual({
         uniqueToken: 'cached-unique',
         visitToken: 'cached-visit',
+        consent: 'cached-consent',
       });
       resourceEntries.splice(0);
       expect(getTrackingValues()).toEqual({
         uniqueToken: 'cached-unique',
         visitToken: 'cached-visit',
+        consent: 'cached-consent',
       });
       expect(mockGetEntries).toHaveBeenCalledTimes(2);
     });
@@ -100,6 +111,7 @@ describe('tracking-utils', () => {
       expect(getTrackingValues()).toEqual({
         uniqueToken: 'legacy-unique',
         visitToken: 'legacy-visit',
+        consent: '',
       });
     });
 
@@ -114,11 +126,13 @@ describe('tracking-utils', () => {
                 name: 'https://mystore.myshopify.com/api/2024-01/graphql.json',
                 unique: 'cross-domain-unique',
                 visit: 'cross-domain-visit',
+                consent: 'cross-domain-consent',
               }),
               createResourceEntry({
                 name: 'https://mystore.com/api/unstable/graphql.json',
                 unique: 'primary-unique',
                 visit: 'primary-visit',
+                consent: 'primary-consent',
               }),
             ],
           },
@@ -129,6 +143,7 @@ describe('tracking-utils', () => {
         expect(getTrackingValues()).toEqual({
           uniqueToken: 'primary-unique',
           visitToken: 'primary-visit',
+          consent: 'primary-consent',
         });
       });
 
@@ -140,11 +155,13 @@ describe('tracking-utils', () => {
                 name: 'https://mystore.myshopify.com/api/2024-01/graphql.json',
                 unique: 'cross-domain-unique',
                 visit: 'cross-domain-visit',
+                consent: 'cross-domain-consent',
               }),
               createResourceEntry({
                 name: 'https://checkout.mystore.com/api/2024-01/graphql.json',
                 unique: 'subdomain-unique',
                 visit: 'subdomain-visit',
+                consent: 'subdomain-consent',
               }),
             ],
           },
@@ -154,6 +171,7 @@ describe('tracking-utils', () => {
         expect(getTrackingValues()).toEqual({
           uniqueToken: 'subdomain-unique',
           visitToken: 'subdomain-visit',
+          consent: 'subdomain-consent',
         });
       });
 
@@ -165,6 +183,7 @@ describe('tracking-utils', () => {
                 name: 'https://mystore.myshopify.com/api/2024-01/graphql.json',
                 unique: 'cross-domain-unique',
                 visit: 'cross-domain-visit',
+                consent: 'cross-domain-consent',
               }),
             ],
           },
@@ -174,6 +193,7 @@ describe('tracking-utils', () => {
         expect(getTrackingValues()).toEqual({
           uniqueToken: 'cross-domain-unique',
           visitToken: 'cross-domain-visit',
+          consent: 'cross-domain-consent',
         });
       });
     });
@@ -212,12 +232,13 @@ function stubPerformanceAPI(
   return getEntriesByType;
 }
 
-type EntryOptions = {unique?: string; visit?: string};
+type EntryOptions = {unique?: string; visit?: string; consent?: string};
 
-function createNavigationEntry({unique, visit}: EntryOptions = {}) {
+function createNavigationEntry({unique, visit, consent}: EntryOptions = {}) {
   const serverTiming = [
     unique ? {name: '_y', description: unique} : null,
     visit ? {name: '_s', description: visit} : null,
+    consent ? {name: '_cmp', description: consent} : null,
   ].filter(Boolean) as PerformanceServerTiming[];
 
   return {
@@ -229,9 +250,10 @@ function createResourceEntry({
   name = `${testOrigin}/api/unstable/graphql.json`,
   unique,
   visit,
+  consent,
 }: EntryOptions & {name?: string} = {}) {
   return {
-    ...createNavigationEntry({unique, visit}),
+    ...createNavigationEntry({unique, visit, consent}),
     initiatorType: 'fetch',
     name,
   } as unknown as PerformanceResourceTiming;
