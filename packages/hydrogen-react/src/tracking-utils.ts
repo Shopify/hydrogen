@@ -101,8 +101,16 @@ export function getTrackingValues(): TrackingValues {
   }
 
   // Fallback to deprecated cookies to support transitioning:
-  if (!hasFoundTrackingValues() && typeof document !== 'undefined') {
-    const cookie = document.cookie || '';
+  if (!hasFoundTrackingValues()) {
+    const cookie =
+      // Read from arguments to avoid declaring parameters in this function signature.
+      // This logic is only used internally and will be deprecated.
+      typeof arguments[0] === 'string'
+        ? arguments[0]
+        : typeof document !== 'undefined'
+          ? document.cookie
+          : '';
+
     Object.assign(trackingValues, {
       uniqueToken: cookie.match(/\b_shopify_y=([^;]+)/)?.[1] || '',
       visitToken: cookie.match(/\b_shopify_s=([^;]+)/)?.[1] || '',

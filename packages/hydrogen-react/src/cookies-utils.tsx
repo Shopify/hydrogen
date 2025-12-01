@@ -1,7 +1,6 @@
-// @ts-ignore - worktop/cookie types not properly exported
-import {parse} from 'worktop/cookie';
 import {ShopifyCookies} from './analytics-types.js';
 import {SHOPIFY_Y, SHOPIFY_S} from './cart-constants.js';
+import {getTrackingValues} from './tracking-utils.js';
 
 const tokenHash = 'xxxx-4xxx-xxxx-xxxxxxxxxxxx';
 
@@ -64,9 +63,11 @@ export function hexTime(): string {
  * @deprecated Use getTrackingValues instead.
  */
 export function getShopifyCookies(cookies: string): ShopifyCookies {
-  const cookieData = parse(cookies);
+  // @ts-expect-error - Undeclared argument type
+  const trackingValues = getTrackingValues(cookies);
+
   return {
-    [SHOPIFY_Y]: cookieData[SHOPIFY_Y] || '',
-    [SHOPIFY_S]: cookieData[SHOPIFY_S] || '',
+    [SHOPIFY_Y]: trackingValues.uniqueToken,
+    [SHOPIFY_S]: trackingValues.visitToken,
   };
 }

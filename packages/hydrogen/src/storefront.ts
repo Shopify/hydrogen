@@ -1,8 +1,5 @@
 import {
   createStorefrontClient as createStorefrontUtilities,
-  getShopifyCookies,
-  SHOPIFY_S,
-  SHOPIFY_Y,
   SHOPIFY_STOREFRONT_ID_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
@@ -280,12 +277,8 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   let visitToken: string | undefined;
 
   if (!hasConsentCookies) {
-    const cookies = requestCookie
-      ? getShopifyCookies(requestCookie)
-      : undefined;
-
-    const legacyUniqueToken = cookies?.[SHOPIFY_Y];
-    const legacyVisitToken = cookies?.[SHOPIFY_S];
+    const legacyUniqueToken = requestCookie.match(/\b_shopify_y=([^;]+)/)?.[1];
+    const legacyVisitToken = requestCookie.match(/\b_shopify_s=([^;]+)/)?.[1];
 
     if (legacyUniqueToken) {
       defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = legacyUniqueToken;
