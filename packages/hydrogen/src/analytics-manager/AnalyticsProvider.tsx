@@ -5,7 +5,6 @@ import {
   useMemo,
   createContext,
   useContext,
-  useRef,
 } from 'react';
 import {type CartReturn} from '../cart/queries/cart-types';
 import {
@@ -45,16 +44,6 @@ import {
 import type {Storefront} from '../storefront';
 import {PerfKit} from './PerfKit';
 import {errorOnce, warnOnce} from '../utils/warning';
-import {
-  isSfapiProxyEnabled,
-  hasBackendFetchedTracking,
-} from '../utils/server-timing';
-import {STOREFRONT_ACCESS_TOKEN_HEADER} from '../constants';
-import {
-  getTrackingValues,
-  SHOPIFY_UNIQUE_TOKEN_HEADER,
-  SHOPIFY_VISIT_TOKEN_HEADER,
-} from '@shopify/hydrogen-react';
 
 export type ShopAnalytics = {
   /** The shop ID. */
@@ -71,7 +60,7 @@ export type Consent = Partial<
   Pick<
     CustomerPrivacyApiProps,
     | 'checkoutDomain'
-    | 'storefrontApiDomain'
+    | 'storefrontApiSameDomain'
     | 'storefrontAccessToken'
     | 'withPrivacyBanner'
     | 'country'
@@ -301,53 +290,6 @@ function messageOnError(field: string, envVar: string) {
   return `[h2:error:Analytics.Provider] - ${field} is required. Make sure ${envVar} is defined in your environment variables. See https://h2o.fyi/analytics/consent to learn how to setup environment variables in the Shopify admin.`;
 }
 
-/**
- * Fetches consent from the browser by making a request to the SFAPI proxy.
- * This replicates what the server does in storefront.fetchTrackingValues().
- */
-async function fetchTrackingValuesFromBrowser(
-  storefrontAccessToken?: string,
-): Promise<void> {
-  // These values might come from server-timing or old cookies.
-  // If consent cannot be initially assumed, these tokens
-  // will be dropped in SFAPI and it will return a mock token
-  // starting with '00000000-'.
-  // However, if consent can be assumed initially, these tokens
-  // will be used to create proper cookies and continue our flow.
-  const {uniqueToken, visitToken} = getTrackingValues();
-
-  const response = await fetch('/api/unstable/graphql.json', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(storefrontAccessToken && {
-        [STOREFRONT_ACCESS_TOKEN_HEADER]: storefrontAccessToken,
-      }),
-      ...(visitToken || uniqueToken
-        ? {
-            [SHOPIFY_VISIT_TOKEN_HEADER]: visitToken,
-            [SHOPIFY_UNIQUE_TOKEN_HEADER]: uniqueToken,
-          }
-        : undefined),
-    },
-    body: JSON.stringify({
-      query:
-        // TODO: update to a faster query when available
-        'query ensureCookies { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
-    }),
-  });
-
-  // Consume the body to complete the request and
-  // ensure server-timing is available in performance API
-  await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch consent from browser: ${response.status} ${response.statusText}`,
-    );
-  }
-}
-
 function AnalyticsProvider({
   canTrack: customCanTrack,
   cart: currentCart,
@@ -366,34 +308,6 @@ function AnalyticsProvider({
   const [canTrack, setCanTrack] = useState<() => boolean>(
     customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
   );
-  const [cookiesReady, setCookiesReady] = useState(false);
-  const hasFetchedTrackingValues = useRef(false);
-
-  // Check if backend fetched consent, otherwise fetch from browser
-  useEffect(() => {
-    // React runs effects twice in dev mode, avoid double fetching
-    if (hasFetchedTrackingValues.current) return;
-    hasFetchedTrackingValues.current = true;
-
-    if (hasBackendFetchedTracking() || !isSfapiProxyEnabled()) {
-      // Backend did the work, or proxy is disabled.
-      setCookiesReady(true);
-      return;
-    }
-
-    // Fetch consent from browser via proxy
-    fetchTrackingValuesFromBrowser(consent.storefrontAccessToken)
-      .catch((error) => {
-        warnOnce(
-          '[h2:warn:AnalyticsProvider] Failed to fetch consent from browser: ' +
-            (error instanceof Error ? error.message : String(error)),
-        );
-      })
-      .finally(() => {
-        // Proceed even on errors, degraded tracking is better than no app
-        setCookiesReady(true);
-      });
-  }, []);
 
   // eslint-disable-next-line no-extra-boolean-cast
   if (!!shop) {
@@ -470,7 +384,7 @@ function AnalyticsProvider({
       {!!shop && !!currentCart && (
         <CartAnalytics cart={currentCart} setCarts={setCarts} />
       )}
-      {!!shop && cookiesReady && (
+      {!!shop && (
         <ShopifyAnalytics
           consent={consent}
           onReady={() => {

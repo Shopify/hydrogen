@@ -87,6 +87,10 @@ export function ShopifyAnalytics({
     hasUserConsent: privacyReady ? canTrack() : true, // must be initialized with true
     domain,
     checkoutDomain,
+    // Already done inside useCustomerPrivacy
+    fetchTrackingValues: false,
+    // Avoid creating local cookies too early
+    ignoreDeprecatedCookies: !privacyReady,
   });
 
   useEffect(() => {
