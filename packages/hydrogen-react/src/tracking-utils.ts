@@ -1,4 +1,6 @@
+/* Storefront API header for VisitToken */
 export const SHOPIFY_VISIT_TOKEN_HEADER = 'X-Shopify-VisitToken';
+/* Storefront API header for UniqueToken */
 export const SHOPIFY_UNIQUE_TOKEN_HEADER = 'X-Shopify-UniqueToken';
 
 type TrackingValues = {
@@ -117,25 +119,19 @@ function extractFromPerformanceEntry(
   let visitToken = '';
   let consent = '';
 
-  if (entry.serverTiming && Array.isArray(entry.serverTiming)) {
-    const yTiming = entry.serverTiming.find(
-      (timing: PerformanceServerTiming) => timing.name === '_y',
-    );
-    const sTiming = entry.serverTiming.find(
-      (timing: PerformanceServerTiming) => timing.name === '_s',
-    );
-    const consentTiming = entry.serverTiming.find(
-      (timing: PerformanceServerTiming) => timing.name === '_cmp',
-    );
+  if (entry.serverTiming) {
+    for (const {name, description} of entry.serverTiming) {
+      if (!name || !description) continue;
 
-    if (yTiming?.description) {
-      uniqueToken = yTiming.description;
-    }
-    if (sTiming?.description) {
-      visitToken = sTiming.description;
-    }
-    if (consentTiming?.description) {
-      consent = consentTiming.description;
+      if (name === '_y') {
+        uniqueToken = description;
+      } else if (name === '_s') {
+        visitToken = description;
+      } else if (name === '_cmp') {
+        consent = description;
+      }
+
+      if (uniqueToken && visitToken && consent) break;
     }
   }
 
