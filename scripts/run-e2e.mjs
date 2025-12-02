@@ -14,6 +14,7 @@ function parseArgs(args) {
     headed: false,
     matrix: null,
     port: null,
+    customerAccountPush: false,
   };
   const playwrightArgs = [];
 
@@ -32,6 +33,8 @@ function parseArgs(args) {
       customFlags.port = arg.split('=')[1];
     } else if (arg === '--port') {
       customFlags.port = args[++i];
+    } else if (arg === '--customer-account-push') {
+      customFlags.customerAccountPush = true;
     } else {
       playwrightArgs.push(arg);
     }
@@ -47,6 +50,8 @@ function buildEnv(customFlags) {
   if (customFlags.smoke) env.SMOKE_TEST = 'true';
   if (customFlags.matrix) env.MATRIX_MODE = customFlags.matrix;
   if (customFlags.port) env.E2E_PORT = customFlags.port;
+  if (customFlags.customerAccountPush)
+    env.E2E_CUSTOMER_ACCOUNT_PUSH = 'true';
 
   return env;
 }

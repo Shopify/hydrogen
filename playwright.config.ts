@@ -4,20 +4,24 @@ import {defineConfig} from '@playwright/test';
 const isSmoke =
   process.env.SMOKE_TEST === 'true' ||
   process.argv.some((arg) => arg.includes('e2e/smoke'));
+const isCustomerAccountPush = process.env.E2E_CUSTOMER_ACCOUNT_PUSH === 'true';
 
 // Determine test directory based on smoke flag
-const testDir = isSmoke ? './e2e/smoke' : './e2e';
+const testDir = isSmoke
+  ? './e2e/smoke'
+  : isCustomerAccountPush
+    ? './e2e/cookies' // TODO: make this more generic
+    : './e2e';
 
-const e2ePort = process.env.E2E_PORT || '3100';
-const baseURL = `http://localhost:${e2ePort}`;
+const e2ePort = (process.env.E2E_PORT ??= '3100');
 
 export default defineConfig({
-  // Configure test directory based on smoke flag
   testDir,
 
-  // Base URL for all tests
+  globalSetup: require.resolve('./e2e/global-setup.mjs'),
+
   use: {
-    baseURL,
+    baseURL: `http://localhost:${e2ePort}`,
   },
 
   // No retries for now
@@ -25,16 +29,4 @@ export default defineConfig({
 
   // Use list reporter for clear output
   reporter: 'list',
-
-  // Automatically start dev server before tests
-  webServer: {
-    command: 'cd templates/skeleton && npm run dev',
-    url: baseURL,
-    timeout: 60 * 1000,
-    reuseExistingServer: !process.env.CI,
-    env: {
-      // Hydrogen CLI reads port from SHOPIFY_HYDROGEN_FLAG_PORT env var
-      SHOPIFY_HYDROGEN_FLAG_PORT: e2ePort,
-    },
-  },
 });
