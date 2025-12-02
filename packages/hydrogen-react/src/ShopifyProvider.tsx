@@ -32,13 +32,17 @@ const ShopifyContext = createContext<ShopifyContextValue>(
 function isSfapiProxyEnabled() {
   if (typeof window === 'undefined') return false;
 
-  const navigationEntry = window.performance?.getEntriesByType?.(
-    'navigation',
-  )[0] as PerformanceNavigationTiming;
+  try {
+    const navigationEntry = window.performance?.getEntriesByType?.(
+      'navigation',
+    )[0] as PerformanceNavigationTiming;
 
-  return !!navigationEntry?.serverTiming?.some(
-    (entry) => entry.name === '_sfapi_proxy',
-  );
+    return !!navigationEntry?.serverTiming?.some(
+      (entry) => entry.name === '_sfapi_proxy',
+    );
+  } catch (e) {
+    return false;
+  }
 }
 
 /**

@@ -50,11 +50,15 @@ export function extractServerTimingHeader(
 function hasServerTiming(key: string): boolean {
   if (typeof window === 'undefined') return false;
 
-  const navigationEntry = window.performance.getEntriesByType(
-    'navigation',
-  )[0] as PerformanceNavigationTiming;
+  try {
+    const navigationEntry = window.performance.getEntriesByType(
+      'navigation',
+    )[0] as PerformanceNavigationTiming;
 
-  return !!navigationEntry?.serverTiming?.some((entry) => entry.name === key);
+    return !!navigationEntry?.serverTiming?.some((entry) => entry.name === key);
+  } catch (e) {
+    return false;
+  }
 }
 
 /**
