@@ -60,7 +60,7 @@ export type Consent = Partial<
   Pick<
     CustomerPrivacyApiProps,
     | 'checkoutDomain'
-    | 'storefrontApiSameDomain'
+    | 'sameDomainForStorefrontApi'
     | 'storefrontAccessToken'
     | 'withPrivacyBanner'
     | 'country'

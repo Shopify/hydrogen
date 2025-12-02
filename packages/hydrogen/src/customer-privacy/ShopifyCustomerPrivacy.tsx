@@ -117,7 +117,7 @@ export type CustomerPrivacyApiProps = {
    * Whether consent libraries can use same-domain requests to the Storefront API.
    * Defaults to true if the standard route proxy is enabled in Hydrogen server.
    */
-  storefrontApiSameDomain?: boolean;
+  sameDomainForStorefrontApi?: boolean;
 };
 
 export const CONSENT_API =
@@ -141,12 +141,12 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     storefrontAccessToken,
     country,
     locale,
-    storefrontApiSameDomain,
+    sameDomainForStorefrontApi,
   } = props;
 
   const hasSfapiProxy = useMemo(
-    () => storefrontApiSameDomain ?? isSfapiProxyEnabled(),
-    [storefrontApiSameDomain],
+    () => sameDomainForStorefrontApi ?? isSfapiProxyEnabled(),
+    [sameDomainForStorefrontApi],
   );
 
   const fetchTrackingValues = useMemo(
