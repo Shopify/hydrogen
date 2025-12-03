@@ -64,7 +64,7 @@ class DevServer {
           tunnelUrl = output.match(/(https:\/\/[^\s]+)/)?.[1];
         }
 
-        if (!started && output.includes('─ success ─')) {
+        if (!started && output.includes('success')) {
           started = true;
           clearTimeout(timeout);
           this.capturedUrl = tunnelUrl || localUrl;
