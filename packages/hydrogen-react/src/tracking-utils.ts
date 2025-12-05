@@ -29,20 +29,23 @@ export function getTrackingValues(): TrackingValues {
     typeof window.performance !== 'undefined'
   ) {
     try {
-      // RE to match SFAPI pathnames and extract the host.
-      // E.g. "https://checkout.mystore.com/api/.../graphql.json" => "checkout.mystore.com"
-      const sfapiRE =
-        /^https?:\/\/([^/]+)\/api\/(?:unstable|2\d{3}-\d{2})\/graphql\.json(?:$|\?)/;
+      // RE to extract host and optionally match SFAPI pathname.
+      // Group 1: host (e.g. "checkout.mystore.com")
+      // Group 2: SFAPI path if present (e.g. "/api/2024-01/graphql.json")
+      const resourceRE =
+        /^https?:\/\/([^/]+)(\/api\/(?:unstable|2\d{3}-\d{2})\/graphql\.json(?=$|\?))?/;
 
-      // Search backwards through resource entries to find the most recent match
-      // Priority 1: Same origin SFAPI request
-      // Priority 2: Any SFAPI request (different origin, but still SFAPI)
+      // Search backwards through resource entries to find the most recent match.
+      // Match criteria (first one with _y and _s values wins):
+      // - Same origin (exact host match) with tracking values, OR
+      // - Subdomain + SFAPI path with tracking values
       const entries = performance.getEntriesByType(
         'resource',
       ) as PerformanceResourceTiming[];
 
-      let primaryMatch: PerformanceResourceTiming | undefined;
-      let backupMatch: PerformanceResourceTiming | undefined;
+      let matchedValues:
+        | ReturnType<typeof extractFromPerformanceEntry>
+        | undefined;
 
       for (let i = entries.length - 1; i >= 0; i--) {
         const entry = entries[i];
@@ -50,30 +53,28 @@ export function getTrackingValues(): TrackingValues {
         if (entry.initiatorType !== 'fetch') continue;
 
         const currentHost = window.location.host;
-        const matchedHost = entry.name.match(sfapiRE)?.[1];
-        if (!matchedHost) continue;
+        const match = entry.name.match(resourceRE);
+        if (!match) continue;
 
-        if (
-          // Exact same host
+        const [, matchedHost, sfapiPath] = match;
+
+        const isMatch =
+          // Same origin (exact host match)
           matchedHost === currentHost ||
-          // Subdomain of current host
-          matchedHost.endsWith(`.${currentHost}`)
-        ) {
-          primaryMatch = entry;
-          break;
-        } else if (!backupMatch) {
-          backupMatch = entry;
-          // Don't break - keep looking for primary match
+          // Subdomain with SFAPI path
+          (sfapiPath && matchedHost?.endsWith(`.${currentHost}`));
+
+        if (isMatch) {
+          const values = extractFromPerformanceEntry(entry);
+          if (values.uniqueToken && values.visitToken) {
+            matchedValues = values;
+            break;
+          }
         }
       }
 
-      const resourceEntry = primaryMatch || backupMatch;
-
-      if (resourceEntry) {
-        Object.assign(
-          trackingValues,
-          extractFromPerformanceEntry(resourceEntry),
-        );
+      if (matchedValues) {
+        Object.assign(trackingValues, matchedValues);
       }
 
       // Resource entries have a limited buffer and are removed over time.
@@ -127,8 +128,12 @@ function extractFromPerformanceEntry(
   let visitToken = '';
   let consent = '';
 
-  if (entry.serverTiming) {
-    for (const {name, description} of entry.serverTiming) {
+  const serverTiming = entry.serverTiming;
+  // Quick check: we need at least 3 entries
+  if (serverTiming && serverTiming.length >= 3) {
+    // Iterate backwards since our headers are typically at the end
+    for (let i = serverTiming.length - 1; i >= 0; i--) {
+      const {name, description} = serverTiming[i];
       if (!name || !description) continue;
 
       if (name === '_y') {

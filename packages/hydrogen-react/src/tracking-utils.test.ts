@@ -15,8 +15,7 @@ describe('tracking-utils', () => {
         resource: [
           createResourceEntry({
             name: `${testOrigin}/other-endpoint`,
-            unique: 'ignored-unique',
-            visit: 'ignored-visit',
+            // No tokens - should be ignored even though same origin
           }),
           createResourceEntry({
             unique: 'resource-unique',
@@ -40,13 +39,39 @@ describe('tracking-utils', () => {
       });
     });
 
+    it('returns tokens from non-SFAPI same-origin requests that have tracking values', () => {
+      stubPerformanceAPI({
+        resource: [
+          createResourceEntry({
+            name: `${testOrigin}/other/path/update-my-cart`,
+            unique: 'other-path-unique',
+            visit: 'other-path-visit',
+            consent: 'other-path-consent',
+          }),
+        ],
+        navigation: [
+          createNavigationEntry({
+            unique: 'nav-unique-ignored',
+            visit: 'nav-visit-ignored',
+            consent: 'nav-consent-ignored',
+          }),
+        ],
+      });
+
+      // Should match same-origin request regardless of path if it has _y and _s
+      expect(getTrackingValues()).toEqual({
+        uniqueToken: 'other-path-unique',
+        visitToken: 'other-path-visit',
+        consent: 'other-path-consent',
+      });
+    });
+
     it('falls back to navigation performance entries when no resource tokens are found', () => {
       const mockGetEntries = stubPerformanceAPI({
         resource: [
           createResourceEntry({
             name: `${testOrigin}/other-endpoint`,
-            unique: 'resource-ignored',
-            visit: 'resource-ignored',
+            // No tokens - should be ignored
           }),
           createResourceEntry(),
         ],
@@ -97,8 +122,7 @@ describe('tracking-utils', () => {
         resource: [
           createResourceEntry({
             name: `${testOrigin}/other-endpoint`,
-            unique: 'resource-ignored',
-            visit: 'resource-ignored',
+            // No tokens - should be ignored
           }),
           createResourceEntry(),
         ],
@@ -115,48 +139,69 @@ describe('tracking-utils', () => {
       });
     });
 
-    describe('cross-origin support with backup matching', () => {
-      it('prioritizes primary same-domain matches over unrelated domains', () => {
-        // Tests that algorithm continues searching for primary match
-        // even after finding a backup match
+    describe('cross-origin matching', () => {
+      it('matches the most recent entry with values (same-origin wins when newer)', () => {
         stubPerformanceAPI(
           {
             resource: [
               createResourceEntry({
-                name: 'https://mystore.myshopify.com/api/2024-01/graphql.json',
-                unique: 'cross-domain-unique',
-                visit: 'cross-domain-visit',
-                consent: 'cross-domain-consent',
+                name: 'https://checkout.mystore.com/api/2024-01/graphql.json',
+                unique: 'subdomain-unique',
+                visit: 'subdomain-visit',
+                consent: 'subdomain-consent',
               }),
               createResourceEntry({
-                name: 'https://mystore.com/api/unstable/graphql.json',
-                unique: 'primary-unique',
-                visit: 'primary-visit',
-                consent: 'primary-consent',
+                name: 'https://mystore.com/any-path',
+                unique: 'same-origin-unique',
+                visit: 'same-origin-visit',
+                consent: 'same-origin-consent',
               }),
             ],
           },
           'https://mystore.com',
         );
 
-        // Should use primary match even though backup is newer
+        // Most recent match (same-origin) wins
         expect(getTrackingValues()).toEqual({
-          uniqueToken: 'primary-unique',
-          visitToken: 'primary-visit',
-          consent: 'primary-consent',
+          uniqueToken: 'same-origin-unique',
+          visitToken: 'same-origin-visit',
+          consent: 'same-origin-consent',
         });
       });
 
-      it('prioritizes primary subdomain matches over unrelated domains', () => {
+      it('matches the most recent entry with values (subdomain wins when newer)', () => {
         stubPerformanceAPI(
           {
             resource: [
               createResourceEntry({
-                name: 'https://mystore.myshopify.com/api/2024-01/graphql.json',
-                unique: 'cross-domain-unique',
-                visit: 'cross-domain-visit',
-                consent: 'cross-domain-consent',
+                name: 'https://mystore.com/any-path',
+                unique: 'same-origin-unique',
+                visit: 'same-origin-visit',
+                consent: 'same-origin-consent',
               }),
+              createResourceEntry({
+                name: 'https://checkout.mystore.com/api/2024-01/graphql.json',
+                unique: 'subdomain-unique',
+                visit: 'subdomain-visit',
+                consent: 'subdomain-consent',
+              }),
+            ],
+          },
+          'https://mystore.com',
+        );
+
+        // Most recent match (subdomain SFAPI) wins
+        expect(getTrackingValues()).toEqual({
+          uniqueToken: 'subdomain-unique',
+          visitToken: 'subdomain-visit',
+          consent: 'subdomain-consent',
+        });
+      });
+
+      it('matches subdomain SFAPI requests with tracking values', () => {
+        stubPerformanceAPI(
+          {
+            resource: [
               createResourceEntry({
                 name: 'https://checkout.mystore.com/api/2024-01/graphql.json',
                 unique: 'subdomain-unique',
@@ -175,7 +220,37 @@ describe('tracking-utils', () => {
         });
       });
 
-      it('finds unrelated cross-domain SFAPI matches as last resort', () => {
+      it('ignores subdomain requests without SFAPI path', () => {
+        stubPerformanceAPI(
+          {
+            resource: [
+              createResourceEntry({
+                name: 'https://checkout.mystore.com/some-other-path',
+                unique: 'ignored-unique',
+                visit: 'ignored-visit',
+                consent: 'ignored-consent',
+              }),
+            ],
+            navigation: [
+              createNavigationEntry({
+                unique: 'nav-unique',
+                visit: 'nav-visit',
+                consent: 'nav-consent',
+              }),
+            ],
+          },
+          'https://mystore.com',
+        );
+
+        // Subdomain without SFAPI path should be ignored
+        expect(getTrackingValues()).toEqual({
+          uniqueToken: 'nav-unique',
+          visitToken: 'nav-visit',
+          consent: 'nav-consent',
+        });
+      });
+
+      it('ignores unrelated cross-domain requests even with SFAPI path', () => {
         stubPerformanceAPI(
           {
             resource: [
@@ -186,14 +261,80 @@ describe('tracking-utils', () => {
                 consent: 'cross-domain-consent',
               }),
             ],
+            navigation: [
+              createNavigationEntry({
+                unique: 'nav-unique',
+                visit: 'nav-visit',
+                consent: 'nav-consent',
+              }),
+            ],
           },
           'https://mystore.com',
         );
 
+        // Unrelated cross-domain (not a subdomain) should be ignored
         expect(getTrackingValues()).toEqual({
-          uniqueToken: 'cross-domain-unique',
-          visitToken: 'cross-domain-visit',
-          consent: 'cross-domain-consent',
+          uniqueToken: 'nav-unique',
+          visitToken: 'nav-visit',
+          consent: 'nav-consent',
+        });
+      });
+
+      it('ignores cross-domain non-SFAPI requests even with tracking values', () => {
+        stubPerformanceAPI(
+          {
+            resource: [
+              createResourceEntry({
+                name: 'https://other-domain.com/some-path',
+                unique: 'ignored-unique',
+                visit: 'ignored-visit',
+                consent: 'ignored-consent',
+              }),
+            ],
+            navigation: [
+              createNavigationEntry({
+                unique: 'nav-unique',
+                visit: 'nav-visit',
+                consent: 'nav-consent',
+              }),
+            ],
+          },
+          'https://mystore.com',
+        );
+
+        // Should fall back to navigation because cross-domain non-SFAPI is ignored
+        expect(getTrackingValues()).toEqual({
+          uniqueToken: 'nav-unique',
+          visitToken: 'nav-visit',
+          consent: 'nav-consent',
+        });
+      });
+
+      it('requires tracking values for subdomain SFAPI match', () => {
+        stubPerformanceAPI(
+          {
+            resource: [
+              createResourceEntry({
+                name: 'https://checkout.mystore.com/api/2024-01/graphql.json',
+                // No tokens - should be ignored even with SFAPI path
+              }),
+            ],
+            navigation: [
+              createNavigationEntry({
+                unique: 'nav-unique',
+                visit: 'nav-visit',
+                consent: 'nav-consent',
+              }),
+            ],
+          },
+          'https://mystore.com',
+        );
+
+        // Subdomain SFAPI without tokens should fall back to navigation
+        expect(getTrackingValues()).toEqual({
+          uniqueToken: 'nav-unique',
+          visitToken: 'nav-visit',
+          consent: 'nav-consent',
         });
       });
     });
