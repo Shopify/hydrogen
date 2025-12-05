@@ -91,10 +91,6 @@ export function createRequestHandler<Context = unknown>({
       if (storefront?.isStorefrontApiUrl(request)) {
         return storefront.forward(request);
       }
-    } else {
-      warnOnce(
-        '[h2:createRequestHandler] Standard route proxying is disabled. This may affect Hydrogen behavior.',
-      );
     }
 
     const response = await handleRequest(request, context);

@@ -203,7 +203,6 @@ async function fetchTrackingValuesFromBrowser(
 type CoreShopifyCookiesOptions = {
   storefrontAccessToken?: string;
   fetchTrackingValues?: boolean;
-  storefrontApiDomain?: string;
   checkoutDomain?: string;
 };
 

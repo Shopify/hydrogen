@@ -63,7 +63,6 @@ import {
   extractServerTimingHeader,
   TrackedTimingsRecord,
 } from './utils/server-timing';
-import {_} from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js';
 
 export type I18nBase = {
   language: StorefrontLanguageCode | CustomerLanguageCode;
@@ -170,11 +169,23 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   >['getStorefrontApiUrl'];
   i18n: TI18n;
   getHeaders: () => Record<string, string>;
+  /**
+   * Checks if the request URL matches the Storefront API GraphQL endpoint.
+   */
   isStorefrontApiUrl: (request: {url?: string}) => boolean;
+  /**
+   * Forwards the request to the Storefront API.
+   * It reads the API version from the request URL.
+   */
   forward: (
     request: Request,
     options?: Pick<StorefrontCommonExtraParams, 'storefrontApiVersion'>,
   ) => Promise<Response>;
+  /**
+   * Sets the collected subrequest headers in the response.
+   * Useful to forward the cookies and server-timing headers
+   * from server subrequests to the browser.
+   */
   setCollectedSubrequestHeaders: (response: {headers: Headers}) => void;
 };
 
