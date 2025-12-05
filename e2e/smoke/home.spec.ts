@@ -1,4 +1,6 @@
-import {test, expect} from '@playwright/test';
+import {test, expect, setTestStore} from '../fixtures';
+
+setTestStore('mockShop');
 
 test.describe('Home Page', () => {
   test('should display hero image, product grid, and no console errors', async ({

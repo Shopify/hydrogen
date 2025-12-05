@@ -1,7 +1,6 @@
 import {defineConfig} from '@playwright/test';
 
-export default defineConfig<{getUrl: () => string}>({
-  globalSetup: require.resolve('./e2e/global-setup.mjs'),
+export default defineConfig({
   testMatch: /\.spec\.ts$/,
   retries: 0,
   reporter: 'list',

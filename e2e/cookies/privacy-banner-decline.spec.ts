@@ -1,4 +1,4 @@
-import {test, expect} from '@playwright/test';
+import {setTestStore, test, expect} from '../fixtures';
 import {
   PRIVACY_BANNER_DIALOG_ID,
   DECLINE_BUTTON_ID,
@@ -10,6 +10,8 @@ import {
   waitForConsentResponse,
   waitForPerfKit,
 } from './utils';
+
+setTestStore('defaultConsentDisallowed_cookiesEnabled');
 
 test.describe('Privacy Banner - Decline Flow', () => {
   test('should not set analytics cookies or make analytics requests when user declines consent', async ({
@@ -30,7 +32,7 @@ test.describe('Privacy Banner - Decline Flow', () => {
     });
 
     // 1. Navigate to main page
-    await page.goto(process.env.BASE_URL!);
+    await page.goto('/');
 
     // Wait for the page to hydrate and initial requests to settle
     await page.waitForLoadState('networkidle');

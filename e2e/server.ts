@@ -1,46 +1,56 @@
-import {spawn} from 'child_process';
-import path from 'path';
-import {fileURLToPath} from 'url';
+import {spawn} from 'node:child_process';
+import path from 'node:path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+type DevServerOptions = {
+  port?: number;
+  projectPath?: string;
+  customerAccountPush?: boolean;
+  envFile?: string;
+};
 
-class DevServer {
-  constructor(options = {}) {
-    this.process = null;
-    this.port = options.port ?? 3000;
+export class DevServer {
+  id: number;
+  process: ReturnType<typeof spawn> | undefined;
+  port: number;
+  projectPath: string;
+  customerAccountPush: boolean;
+  capturedUrl: string | undefined;
+  envFile?: string;
+
+  constructor(id: number, options: DevServerOptions = {}) {
+    this.id = id;
+    this.port = options.port ?? 3100;
     this.projectPath =
       options.projectPath ?? path.join(__dirname, '../templates/skeleton');
     this.customerAccountPush = options.customerAccountPush ?? false;
-    this.capturedUrl = null;
+    this.envFile = options.envFile;
   }
 
   getUrl() {
     return this.capturedUrl || `http://localhost:${this.port}`;
   }
 
-  async start() {
+  start() {
     if (this.process) {
       throw new Error('Server is already running');
     }
 
     return new Promise((resolve, reject) => {
-      const mode = this.customerAccountPush ? 'tunnel mode' : 'localhost mode';
-      console.log(
-        `Starting dev server in ${mode} at port ${this.port} from ${this.projectPath}`,
-      );
-
-      const args = ['run', 'dev'];
+      const args = ['run', 'dev', '--'];
       if (this.customerAccountPush) {
-        args.push('--', '--customer-account-push');
+        args.push('--customer-account-push');
+      }
+
+      if (this.envFile) {
+        args.push('--env-file', this.envFile);
       }
 
       this.process = spawn('npm', args, {
         cwd: this.projectPath,
         env: {
           ...process.env,
-          SHOPIFY_HYDROGEN_FLAG_PORT: this.port.toString(),
           NODE_ENV: 'development',
+          SHOPIFY_HYDROGEN_FLAG_PORT: this.port.toString(),
         },
         stdio: ['pipe', 'pipe', 'pipe'],
       });
@@ -53,10 +63,10 @@ class DevServer {
         }
       }, 30000);
 
-      let localUrl;
-      let tunnelUrl;
+      let localUrl: string | undefined;
+      let tunnelUrl: string | undefined;
 
-      const handleOutput = (output) => {
+      const handleOutput = (output: string) => {
         if (!localUrl) {
           localUrl = output.match(/(http:\/\/localhost:\d+)/)?.[1];
         }
@@ -68,7 +78,9 @@ class DevServer {
           started = true;
           clearTimeout(timeout);
           this.capturedUrl = tunnelUrl || localUrl;
-          console.log(`[dev-server]: ✓ Captured URL: ${this.capturedUrl}`);
+          console.log(
+            `[dev-server ${this.id}]: ✓ Captured URL: ${this.capturedUrl}`,
+          );
           // Give the tunnel a bit more time to ensure everything is ready
           setTimeout(resolve, tunnelUrl ? 5000 : 500);
         }
@@ -101,7 +113,7 @@ class DevServer {
       if (this.process.stdout) {
         this.process.stdout.on('data', (data) => {
           const output = data.toString();
-          !started && console.log(output);
+          // !started && console.log(output);
           handleOutput(output);
         });
       }
@@ -109,7 +121,7 @@ class DevServer {
       if (this.process.stderr) {
         this.process.stderr.on('data', (data) => {
           const output = data.toString();
-          !started && console.log(output);
+          // !started && console.log(output);
           handleOutput(output);
         });
       }
@@ -128,38 +140,20 @@ class DevServer {
     });
   }
 
-  async stop() {
-    if (!this.process) {
-      return;
-    }
-
+  stop() {
     return new Promise((resolve) => {
-      console.log('Stopping dev server...');
+      if (!this.process) return resolve(false);
 
       this.process.on('exit', () => {
-        this.process = null;
-        resolve();
+        this.process = undefined;
+        resolve(true);
       });
 
       this.process.kill('SIGTERM');
 
       setTimeout(() => {
-        if (this.process) {
-          this.process.kill('SIGKILL');
-        }
+        this.process?.kill('SIGKILL');
       }, 5000);
     });
-  }
-}
-
-export async function startDevServer(options) {
-  const server = new DevServer(options);
-  await server.start();
-  return server;
-}
-
-export async function stopDevServer(server) {
-  if (server && typeof server.stop === 'function') {
-    await server.stop();
   }
 }

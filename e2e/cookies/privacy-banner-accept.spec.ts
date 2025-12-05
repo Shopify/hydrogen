@@ -1,4 +1,4 @@
-import {test, expect} from '@playwright/test';
+import {setTestStore, test, expect} from '../fixtures';
 import {
   PRIVACY_BANNER_DIALOG_ID,
   ACCEPT_BUTTON_ID,
@@ -10,6 +10,8 @@ import {
   waitForConsentResponse,
   waitForPerfKit,
 } from './utils';
+
+setTestStore('defaultConsentDisallowed_cookiesEnabled');
 
 test.describe('Privacy Banner - Accept Flow', () => {
   test('should set analytics cookies and make analytics requests when user accepts consent', async ({
@@ -33,7 +35,7 @@ test.describe('Privacy Banner - Accept Flow', () => {
     });
 
     // 1. Navigate to main page
-    await page.goto(process.env.BASE_URL!);
+    await page.goto('/');
 
     // Wait for the page to hydrate and initial requests to settle
     await page.waitForLoadState('networkidle');
