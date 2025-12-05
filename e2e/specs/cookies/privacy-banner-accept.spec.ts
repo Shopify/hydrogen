@@ -153,7 +153,15 @@ test.describe('Privacy Banner - Accept Flow', () => {
       'Server-timing _s after cart mutation should match session value',
     ).toBe(updatedServerTimingValues._s);
 
-    // 14. Reload the page and verify state is preserved
+    // 14. Verify checkout URLs in cart drawer contain tracking params
+    // TODO: Re-enable once checkout URL tracking params (y, s) are working in Shopify
+    // await storefront.verifyCheckoutUrlTrackingParams(
+    //   updatedServerTimingValues._y!,
+    //   updatedServerTimingValues._s!,
+    //   'in cart drawer after adding to cart',
+    // );
+
+    // 15. Reload the page and verify state is preserved
     await storefront.reload();
 
     // Verify privacy banner does NOT show up on reload (consent was saved)

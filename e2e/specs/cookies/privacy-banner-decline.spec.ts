@@ -72,7 +72,12 @@ test.describe('Privacy Banner - Decline Flow', () => {
     // Verify still no analytics requests after cart action
     storefront.expectNoAnalyticsRequests();
 
-    // 12. Reload the page to verify persistence
+    // 12. Verify checkout URLs in cart drawer do NOT contain tracking params
+    await storefront.expectNoCheckoutUrlTrackingParams(
+      'in cart drawer after declining consent',
+    );
+
+    // 13. Reload the page to verify persistence
     await storefront.reload();
 
     // Verify privacy banner does NOT show up on reload (consent was saved)

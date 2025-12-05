@@ -339,7 +339,7 @@ export class StorefrontPage {
   }
 
   /**
-   * Click the "Add to cart" button
+   * Click the "Add to cart" button and wait for cart drawer with checkout URL
    */
   async addToCart() {
     const addToCartButton = this.page.locator(
@@ -347,6 +347,114 @@ export class StorefrontPage {
     );
     await expect(addToCartButton).toBeVisible({timeout: 10000});
     await addToCartButton.click();
+
+    // Wait for cart drawer to appear
+    const cartDrawer = this.page.locator('.overlay.expanded');
+    await expect(cartDrawer).toBeVisible({timeout: 5000});
+
+    // Wait for checkout link to appear in the drawer (needs cart mutation response)
+    const checkoutLink = this.page.locator(
+      '.overlay.expanded a[href*="checkout"], .overlay.expanded a[href*="/cart/c/"]',
+    );
+    await expect(checkoutLink).toBeVisible({timeout: 10000});
+
+    await this.page.waitForLoadState('networkidle');
+  }
+
+  /**
+   * Get checkout URLs from the page (links containing /cart/c/ or checkout)
+   */
+  async getCheckoutUrls(): Promise<string[]> {
+    // Look for links in the cart drawer that go to checkout
+    return this.page.evaluate(() => {
+      // First try /cart/c/ pattern (Shopify checkout URLs)
+      let links = document.querySelectorAll('a[href*="/cart/c/"]');
+      if (links.length === 0) {
+        // Fallback: look for any checkout links in the cart drawer
+        links = document.querySelectorAll(
+          '.overlay.expanded a[href*="checkout"], .overlay.expanded a[href*="/cart/c"]',
+        );
+      }
+      return Array.from(links).map((link) => link.getAttribute('href') || '');
+    });
+  }
+
+  /**
+   * Verify checkout URLs contain tracking params (y and s) with expected values
+   */
+  async verifyCheckoutUrlTrackingParams(
+    expectedY: string,
+    expectedS: string,
+    context: string,
+  ) {
+    const checkoutUrls = await this.getCheckoutUrls();
+
+    expect(
+      checkoutUrls.length,
+      `Should have checkout URLs ${context}`,
+    ).toBeGreaterThan(0);
+
+    for (const url of checkoutUrls) {
+      const urlObj = new URL(url, this.page.url());
+      const yParam = urlObj.searchParams.get('y');
+      const sParam = urlObj.searchParams.get('s');
+
+      expect(yParam, `Checkout URL should have 'y' param ${context}`).toBe(
+        expectedY,
+      );
+      expect(sParam, `Checkout URL should have 's' param ${context}`).toBe(
+        expectedS,
+      );
+    }
+
+    return checkoutUrls;
+  }
+
+  /**
+   * Verify checkout URLs do NOT contain tracking params (y and s)
+   * Used when consent is declined
+   */
+  async expectNoCheckoutUrlTrackingParams(context: string) {
+    const checkoutUrls = await this.getCheckoutUrls();
+
+    expect(
+      checkoutUrls.length,
+      `Should have checkout URLs ${context}`,
+    ).toBeGreaterThan(0);
+
+    // It's okay if there are no checkout URLs
+    for (const url of checkoutUrls) {
+      const urlObj = new URL(url, this.page.url());
+      const yParam = urlObj.searchParams.get('y');
+      const sParam = urlObj.searchParams.get('s');
+
+      expect(
+        yParam,
+        `Checkout URL should NOT have 'y' param ${context}`,
+      ).toBeNull();
+      expect(
+        sParam,
+        `Checkout URL should NOT have 's' param ${context}`,
+      ).toBeNull();
+    }
+  }
+
+  /**
+   * Navigate to the cart page
+   */
+  async navigateToCart() {
+    // Close any open overlays/drawers first (like cart drawer)
+    const closeButton = this.page.locator(
+      'button[aria-label="Close"], .overlay button.close',
+    );
+    if (await closeButton.isVisible().catch(() => false)) {
+      await closeButton.click();
+      await this.page.waitForTimeout(300);
+    }
+
+    // Navigate directly to cart page
+    await this.page.goto('/cart');
+    await this.page.waitForLoadState('networkidle');
     await this.page.waitForLoadState('networkidle');
   }
 
