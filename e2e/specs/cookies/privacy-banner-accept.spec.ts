@@ -112,13 +112,26 @@ test.describe('Privacy Banner - Accept Flow', () => {
       'after consent',
     );
 
-    // 9. Navigate to a product and add to cart to verify server-timing persists
+    // 9. Finalize perf-kit metrics before navigation (triggers LCP finalization)
+    await storefront.finalizePerfKitMetrics();
+
+    // 10. Navigate to a product (this triggers perf-kit to send metrics via visibility change)
     await storefront.navigateToFirstProduct();
 
-    // Add to cart
+    // 11. Verify perf-kit payload contains correct tracking values
+    // Wait a moment for perf-kit to send its metrics after visibility change
+    await storefront.page.waitForTimeout(500);
+
+    storefront.verifyPerfKitRequests(
+      updatedServerTimingValues._y!,
+      updatedServerTimingValues._s!,
+      'after navigation',
+    );
+
+    // 12. Add to cart
     await storefront.addToCart();
 
-    // Verify server-timing values after cart mutation match the session values
+    // 13. Verify server-timing values after cart mutation match the session values
     const serverTimingAfterCart = await storefront.getServerTimingValues(true);
 
     expect(
@@ -140,7 +153,7 @@ test.describe('Privacy Banner - Accept Flow', () => {
       'Server-timing _s after cart mutation should match session value',
     ).toBe(updatedServerTimingValues._s);
 
-    // 10. Reload the page and verify state is preserved
+    // 14. Reload the page and verify state is preserved
     await storefront.reload();
 
     // Verify privacy banner does NOT show up on reload (consent was saved)

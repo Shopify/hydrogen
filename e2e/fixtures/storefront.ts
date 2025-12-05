@@ -16,7 +16,8 @@ export const ANALYTICS_COOKIES = [
 
 // URL patterns for network request tracking
 export const PERF_KIT_URL = 'cdn.shopify.com/shopifycloud/perf-kit';
-export const MONORAIL_URL = 'produce_batch';
+export const MONORAIL_BATCH_URL = '/produce_batch'; // Shopify Analytics batch endpoint
+export const MONORAIL_PRODUCE_URL = '/v1/produce'; // Perf-kit endpoint (note: /v1/produce won't match /produce_batch)
 export const GRAPHQL_URL = 'graphql.json';
 
 // Mock value pattern for declined consent (all zeros with a 5)
@@ -32,11 +33,15 @@ export interface MonorailPayload {
   deprecated_visit_token?: string;
   uniqToken?: string;
   visitToken?: string;
+  // Perf-kit specific fields
+  session_token?: string;
+  micro_session_id?: string;
 }
 
 export interface AnalyticsRequest {
   url: string;
   postData?: string;
+  initiator?: string; // Script URL that initiated the request
 }
 
 /**
@@ -48,6 +53,7 @@ export class StorefrontPage {
   readonly context: BrowserContext;
   readonly analyticsRequests: AnalyticsRequest[] = [];
   readonly perfKitRequests: string[] = [];
+  private requestInitiators: Map<string, string> = new Map();
 
   constructor(page: Page) {
     this.page = page;
@@ -56,18 +62,53 @@ export class StorefrontPage {
   }
 
   private setupRequestTracking() {
+    // Use CDP to track request initiators (which script initiated the request)
+    this.page.context().on('page', async (newPage) => {
+      await this.setupCDPTracking(newPage);
+    });
+    // Also set up for the current page
+    this.setupCDPTracking(this.page).catch(() => {
+      // Ignore errors if CDP isn't available
+    });
+
     this.page.on('request', (request) => {
       const url = request.url();
-      if (url.includes(MONORAIL_URL)) {
+      // Track /produce_batch (Shopify Analytics) and /v1/produce (Perf-kit)
+      if (
+        url.includes(MONORAIL_BATCH_URL) ||
+        url.includes(MONORAIL_PRODUCE_URL)
+      ) {
         this.analyticsRequests.push({
           url,
           postData: request.postData() || undefined,
+          initiator: this.requestInitiators.get(url),
         });
       }
       if (url.includes(PERF_KIT_URL)) {
         this.perfKitRequests.push(url);
       }
     });
+  }
+
+  private async setupCDPTracking(page: Page) {
+    try {
+      const cdp = await page.context().newCDPSession(page);
+      await cdp.send('Network.enable');
+
+      cdp.on('Network.requestWillBeSent', (event: any) => {
+        const url = event.request.url;
+        // Extract initiator URL from the stack trace or URL
+        const initiatorUrl =
+          event.initiator?.url ||
+          event.initiator?.stack?.callFrames?.[0]?.url ||
+          '';
+        if (initiatorUrl) {
+          this.requestInitiators.set(url, initiatorUrl);
+        }
+      });
+    } catch {
+      // CDP might not be available in all browsers
+    }
   }
 
   /**
@@ -187,10 +228,12 @@ export class StorefrontPage {
       (c) =>
         c.name === '_shopify_essential' || c.name === '_shopify_essentials',
     );
+
     expect(
       essentialCookie,
       '_shopify_essential(s) cookie should be present',
     ).toBeDefined();
+
     return essentialCookie;
   }
 
@@ -357,40 +400,109 @@ export class StorefrontPage {
   }
 
   /**
-   * Verify that Monorail analytics requests contain the correct tracking values
+   * Verify that Monorail batch analytics requests contain the correct tracking values.
+   * These are requests to /produce_batch (Shopify Analytics), not /v1/produce (Perf-kit).
    */
   verifyMonorailRequests(
     expectedY: string,
     expectedS: string,
     context: string,
   ) {
-    for (const request of this.analyticsRequests) {
-      if (request.postData) {
-        const payload = JSON.parse(request.postData) as {
-          events?: Array<{payload: MonorailPayload}>;
-        };
+    // Filter for batch requests only (not perf-kit /v1/produce requests)
+    const batchRequests = this.analyticsRequests.filter(
+      (req) => req.url.includes(MONORAIL_BATCH_URL) && req.postData,
+    );
 
-        if (payload.events) {
-          for (const event of payload.events) {
-            const eventPayload = event.payload;
+    for (const request of batchRequests) {
+      const payload = JSON.parse(request.postData!) as {
+        events?: Array<{payload: MonorailPayload}>;
+      };
 
-            const uniqueToken =
-              eventPayload.unique_token || eventPayload.uniqToken;
-            expect(
-              uniqueToken,
-              `Monorail unique_token ${context} should match _y value`,
-            ).toBe(expectedY);
+      if (payload.events) {
+        for (const event of payload.events) {
+          const eventPayload = event.payload;
 
-            const visitToken =
-              eventPayload.deprecated_visit_token || eventPayload.visitToken;
-            expect(
-              visitToken,
-              `Monorail visit_token ${context} should match _s value`,
-            ).toBe(expectedS);
-          }
+          const uniqueToken =
+            eventPayload.unique_token || eventPayload.uniqToken;
+          expect(
+            uniqueToken,
+            `Monorail unique_token ${context} should match _y value`,
+          ).toBe(expectedY);
+
+          const visitToken =
+            eventPayload.deprecated_visit_token || eventPayload.visitToken;
+          expect(
+            visitToken,
+            `Monorail visit_token ${context} should match _s value`,
+          ).toBe(expectedS);
         }
       }
     }
+  }
+
+  /**
+   * Trigger perf-kit to finalize its metrics by clicking on the page
+   * and waiting for metrics to be processed. This finalizes LCP measurement.
+   */
+  async finalizePerfKitMetrics() {
+    // Click on the page body to finalize LCP measurement
+    await this.page.click('body');
+    // Wait for metrics to be processed
+    await this.page.waitForTimeout(100);
+  }
+
+  /**
+   * Verify that perf-kit Monorail requests contain the correct tracking values.
+   * Perf-kit sends to /v1/produce (not /produce_batch) with unique_token and session_token.
+   * Also verifies that the request was initiated by the perf-kit script.
+   */
+  verifyPerfKitRequests(expectedY: string, expectedS: string, context: string) {
+    // Filter for perf-kit specific requests:
+    // 1. URL contains /v1/produce but not /produce_batch
+    // 2. Has post data
+    // 3. Initiated by perf-kit script (if CDP tracking is available)
+    const perfKitProduceRequests = this.analyticsRequests.filter(
+      (req) =>
+        req.url.includes(MONORAIL_PRODUCE_URL) &&
+        !req.url.includes(MONORAIL_BATCH_URL) &&
+        req.postData &&
+        // Verify initiator is perf-kit (if available)
+        req.initiator?.includes('perf-kit'),
+    );
+
+    let foundPerfKitPayload = false;
+
+    for (const request of perfKitProduceRequests) {
+      const payload = JSON.parse(request.postData!) as {
+        payload?: MonorailPayload;
+      };
+
+      // Perf-kit sends unique_token and session_token in the payload
+      foundPerfKitPayload = true;
+
+      // Verify the request was initiated by perf-kit if initiator is available
+      expect(
+        request.initiator,
+        `Request ${context} should be initiated by perf-kit script`,
+      ).toContain('perf-kit');
+
+      expect(
+        payload.payload?.unique_token,
+        `Perf-kit unique_token ${context} should match _y value`,
+      ).toBe(expectedY);
+
+      expect(
+        payload.payload?.session_token,
+        `Perf-kit session_token ${context} should match _s value`,
+      ).toBe(expectedS);
+    }
+
+    expect(
+      foundPerfKitPayload,
+      `At least one perf-kit Monorail request ${context} should be found`,
+    ).toBe(true);
+
+    return foundPerfKitPayload;
   }
 
   /**

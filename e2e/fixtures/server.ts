@@ -83,7 +83,7 @@ export class DevServer {
           clearTimeout(timeout);
           this.capturedUrl = tunnelUrl || localUrl;
           console.log(
-            `[dev-server ${this.id}] Server started on ${this.capturedUrl} [${this.storeKey}]`,
+            `[test-server ${this.id}] Server started on ${this.capturedUrl} [${this.storeKey}]`,
           );
           // Give the tunnel a bit more time to ensure everything is ready
           setTimeout(resolve, tunnelUrl ? 5000 : 0);
@@ -147,7 +147,7 @@ export class DevServer {
   stop() {
     return new Promise((resolve) => {
       if (!this.process) return resolve(false);
-      console.log(`[dev-server ${this.id}] Stopping server...`);
+      console.log(`[test-server ${this.id}] Stopping server...`);
 
       this.process.on('exit', () => {
         this.process = undefined;
