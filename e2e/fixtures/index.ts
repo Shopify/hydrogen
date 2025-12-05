@@ -1,9 +1,11 @@
-import {test as base, expect} from '@playwright/test';
+import {test as base} from '@playwright/test';
 import {DevServer} from './server';
 import path from 'node:path';
 import {stat} from 'node:fs/promises';
+import {StorefrontPage} from './storefront';
 
 export * from '@playwright/test';
+export * from './storefront';
 
 let baseUrl = '';
 let testStoreKey: TestStoreKey = 'mockShop';
@@ -12,26 +14,28 @@ export const setTestStore = async (_testStoreKey: TestStoreKey) => {
   testStoreKey = _testStoreKey;
 };
 
-export const test = base.extend<{}, {forEachWorker: void}>({
-  // eslint-disable-next-line no-empty-pattern
+export const test = base.extend<
+  {storefront: StorefrontPage},
+  {forEachWorker: void}
+>({
   baseURL: async ({}, use) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(baseUrl);
   },
+  storefront: async ({page}, use) => {
+    const storefront = new StorefrontPage(page);
+    await use(storefront);
+  },
   forEachWorker: [
-    // eslint-disable-next-line no-empty-pattern
     async ({}, runTests) => {
       const workerIndex = test.info().workerIndex;
       // This code runs before all the tests in the worker process.
       // console.log(`Starting test worker ${workerIndex}`);
 
-      console.log(
-        `[Worker ${workerIndex}] Starting dev server for ${testStoreKey}...`,
-      );
-
       const testStoreEnvFile = await getTestStoreEnvFile(testStoreKey);
 
-      const server = new DevServer(workerIndex, {
+      const server = new DevServer({
+        id: workerIndex,
+        storeKey: testStoreKey,
         customerAccountPush: false,
         envFile: testStoreEnvFile,
       });
@@ -39,8 +43,6 @@ export const test = base.extend<{}, {forEachWorker: void}>({
       await server.start();
 
       baseUrl = server.getUrl();
-
-      console.log(`[Worker ${workerIndex}] Server ready at: ${baseUrl}`);
 
       await runTests();
       // This code runs after all the tests in the worker process.
@@ -60,7 +62,7 @@ const TEST_STORE_KEYS = [
 type TestStoreKey = (typeof TEST_STORE_KEYS)[number];
 
 async function getTestStoreEnvFile(key: TestStoreKey) {
-  const filepath = path.resolve(__dirname, `envs/.env.${key}`);
+  const filepath = path.resolve(__dirname, `../envs/.env.${key}`);
   await stat(filepath); // Ensure the file exists
   return filepath;
 }

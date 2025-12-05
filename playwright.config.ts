@@ -7,11 +7,11 @@ export default defineConfig({
   projects: [
     {
       name: 'smoke',
-      testDir: './e2e/smoke',
+      testDir: './e2e/specs/smoke',
     },
     {
       name: 'cookies',
-      testDir: './e2e/cookies',
+      testDir: './e2e/specs/cookies',
     },
   ],
 });

@@ -2,26 +2,30 @@ import {spawn} from 'node:child_process';
 import path from 'node:path';
 
 type DevServerOptions = {
+  id?: number;
   port?: number;
   projectPath?: string;
   customerAccountPush?: boolean;
   envFile?: string;
+  storeKey?: string;
 };
 
 export class DevServer {
-  id: number;
   process: ReturnType<typeof spawn> | undefined;
   port: number;
   projectPath: string;
   customerAccountPush: boolean;
-  capturedUrl: string | undefined;
+  capturedUrl?: string;
+  id?: number;
   envFile?: string;
+  storeKey?: string;
 
-  constructor(id: number, options: DevServerOptions = {}) {
-    this.id = id;
+  constructor(options: DevServerOptions = {}) {
+    this.id = options.id;
+    this.storeKey = options.storeKey;
     this.port = options.port ?? 3100;
     this.projectPath =
-      options.projectPath ?? path.join(__dirname, '../templates/skeleton');
+      options.projectPath ?? path.join(__dirname, '../../templates/skeleton');
     this.customerAccountPush = options.customerAccountPush ?? false;
     this.envFile = options.envFile;
   }
@@ -32,7 +36,7 @@ export class DevServer {
 
   start() {
     if (this.process) {
-      throw new Error('Server is already running');
+      throw new Error(`Server ${this.id} is already running`);
     }
 
     return new Promise((resolve, reject) => {
@@ -59,7 +63,7 @@ export class DevServer {
       const timeout = setTimeout(() => {
         if (!started) {
           this.stop();
-          reject(new Error('Server failed to start within timeout'));
+          reject(new Error(`Server ${this.id} failed to start within timeout`));
         }
       }, 30000);
 
@@ -79,10 +83,10 @@ export class DevServer {
           clearTimeout(timeout);
           this.capturedUrl = tunnelUrl || localUrl;
           console.log(
-            `[dev-server ${this.id}]: ✓ Captured URL: ${this.capturedUrl}`,
+            `[dev-server ${this.id}] Server started on ${this.capturedUrl} [${this.storeKey}]`,
           );
           // Give the tunnel a bit more time to ensure everything is ready
-          setTimeout(resolve, tunnelUrl ? 5000 : 500);
+          setTimeout(resolve, tunnelUrl ? 5000 : 0);
         }
 
         if (
@@ -134,7 +138,7 @@ export class DevServer {
       this.process.on('exit', (code) => {
         if (!started) {
           clearTimeout(timeout);
-          reject(new Error(`Server exited with code ${code}`));
+          reject(new Error(`Server ${this.id} exited with code ${code}`));
         }
       });
     });
@@ -143,6 +147,7 @@ export class DevServer {
   stop() {
     return new Promise((resolve) => {
       if (!this.process) return resolve(false);
+      console.log(`[dev-server ${this.id}] Stopping server...`);
 
       this.process.on('exit', () => {
         this.process = undefined;

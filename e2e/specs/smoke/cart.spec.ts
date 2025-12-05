@@ -1,4 +1,4 @@
-import {setTestStore, test, expect} from '../fixtures';
+import {setTestStore, test, expect} from '../../fixtures';
 
 setTestStore('mockShop');
 
