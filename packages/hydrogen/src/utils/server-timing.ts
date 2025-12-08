@@ -22,15 +22,17 @@ export function appendServerTimingHeader(
   }
 }
 
-const trackedTimings = ['_y', '_s', '_cmp', '_ny'] as const;
+const trackedTimings = ['_y', '_s', '_cmp'] as const;
 
 type TrackedTimingKeys = (typeof trackedTimings)[number];
 export type TrackedTimingsRecord = Partial<Record<TrackedTimingKeys, string>>;
 
 export function extractServerTimingHeader(
-  serverTimingHeader: string,
+  serverTimingHeader?: string,
 ): TrackedTimingsRecord {
   const values: TrackedTimingsRecord = {};
+  if (!serverTimingHeader) return values;
+
   const re = new RegExp(
     `\\b(${trackedTimings.join('|')});desc="?([^",]+)"?`,
     'g',

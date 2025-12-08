@@ -605,18 +605,26 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           }
         }
 
+        const serverTiming = extractServerTimingHeader(
+          collectedSubrequestHeaders?.serverTiming,
+        );
+
         // Forward tracking values via server-timing from subrequests,
         // and fallback to the ones generated in the current request.
         appendServerTimingHeader(response, {
           _y: uniqueToken,
           _s: visitToken,
-          ...(collectedSubrequestHeaders &&
-            extractServerTimingHeader(collectedSubrequestHeaders.serverTiming)),
+          ...serverTiming,
         } satisfies TrackedTimingsRecord);
 
         // Indicate that the tracking work was done in the server
         // to skip an extra request from the browser.
-        if (collectedSubrequestHeaders?.setCookie.length) {
+        if (
+          collectedSubrequestHeaders?.setCookie.length &&
+          serverTiming?._y &&
+          serverTiming?._s &&
+          serverTiming?._cmp
+        ) {
           appendServerTimingHeader(response, {
             [HYDROGEN_SERVER_TRACKING_KEY]: '1',
           });
