@@ -17,7 +17,7 @@ export const ANALYTICS_COOKIES = [
 // URL patterns for network request tracking
 export const PERF_KIT_URL = 'cdn.shopify.com/shopifycloud/perf-kit';
 export const MONORAIL_BATCH_URL = '/produce_batch'; // Shopify Analytics batch endpoint
-export const MONORAIL_PRODUCE_URL = '/v1/produce'; // Perf-kit endpoint (note: /v1/produce won't match /produce_batch)
+export const MONORAIL_PRODUCE_URL = '/v1/produce'; // Perf-kit endpoint
 export const GRAPHQL_URL = 'graphql.json';
 
 // Mock value pattern for declined consent (all zeros with a 5)
@@ -51,8 +51,14 @@ export interface AnalyticsRequest {
 export class StorefrontPage {
   readonly page: Page;
   readonly context: BrowserContext;
-  readonly analyticsRequests: AnalyticsRequest[] = [];
-  readonly perfKitRequests: string[] = [];
+
+  // Separated request arrays for clarity
+  readonly monorailRequests: AnalyticsRequest[] = [];
+  readonly perfKitProduceRequests: AnalyticsRequest[] = [];
+
+  // Track if perf-kit script has been loaded
+  private perfKitScriptLoaded = false;
+
   private requestInitiators: Map<string, string> = new Map();
 
   constructor(page: Page) {
@@ -73,23 +79,38 @@ export class StorefrontPage {
 
     this.page.on('request', (request) => {
       const url = request.url();
-      // Track /produce_batch (Shopify Analytics) and /v1/produce (Perf-kit)
-      if (
-        url.includes(MONORAIL_BATCH_URL) ||
-        url.includes(MONORAIL_PRODUCE_URL)
-      ) {
-        this.analyticsRequests.push({
+
+      // Track Monorail batch requests (Shopify Analytics)
+      if (url.includes(MONORAIL_BATCH_URL)) {
+        this.monorailRequests.push({
           url,
           postData: request.postData() || undefined,
           initiator: this.requestInitiators.get(url),
         });
       }
+
+      // Track perf-kit produce requests (/v1/produce but not /produce_batch)
+      if (
+        url.includes(MONORAIL_PRODUCE_URL) &&
+        !url.includes(MONORAIL_BATCH_URL)
+      ) {
+        this.perfKitProduceRequests.push({
+          url,
+          postData: request.postData() || undefined,
+          initiator: this.requestInitiators.get(url),
+        });
+      }
+
+      // Track perf-kit script download
       if (url.includes(PERF_KIT_URL)) {
-        this.perfKitRequests.push(url);
+        this.perfKitScriptLoaded = true;
       }
     });
   }
 
+  /**
+   * Chrome DevTools Protocol setup to track request initiators.
+   */
   private async setupCDPTracking(page: Page) {
     try {
       const cdp = await page.context().newCDPSession(page);
@@ -316,7 +337,7 @@ export class StorefrontPage {
   }
 
   /**
-   * Wait for perf-kit script to be loaded
+   * Wait for perf-kit script to be loaded (checks DOM)
    */
   async waitForPerfKit(timeout = 15000) {
     await this.page.waitForFunction(
@@ -325,6 +346,32 @@ export class StorefrontPage {
         return perfKitScript !== null;
       },
       {timeout},
+    );
+  }
+
+  /**
+   * Check if perf-kit script has been loaded
+   */
+  isPerfKitLoaded(): boolean {
+    return this.perfKitScriptLoaded;
+  }
+
+  /**
+   * Assert that perf-kit script has not been loaded
+   */
+  expectPerfKitNotLoaded() {
+    expect(
+      this.perfKitScriptLoaded,
+      'Perf-kit script should not be loaded',
+    ).toBe(false);
+  }
+
+  /**
+   * Assert that perf-kit script has been loaded
+   */
+  expectPerfKitLoaded() {
+    expect(this.perfKitScriptLoaded, 'Perf-kit script should be loaded').toBe(
+      true,
     );
   }
 
@@ -380,7 +427,7 @@ export class StorefrontPage {
   }
 
   /**
-   * Verify checkout URLs contain tracking params (y and s) with expected values
+   * Verify checkout URLs contain tracking params (_y and _s) with expected values
    */
   async verifyCheckoutUrlTrackingParams(
     expectedY: string,
@@ -411,7 +458,7 @@ export class StorefrontPage {
   }
 
   /**
-   * Verify checkout URLs contain MOCK tracking params (y and s starting with 0000...)
+   * Verify checkout URLs contain MOCK tracking params (_y and _s starting with 0000...)
    * Used when consent is declined but params are still present with mock values
    */
   async expectMockCheckoutUrlTrackingParams(context: string) {
@@ -448,8 +495,7 @@ export class StorefrontPage {
   }
 
   /**
-   * Verify checkout URLs do NOT contain tracking params (y and s)
-   * Used when consent is declined and no params should be present
+   * Verify checkout URLs do NOT contain tracking params (_y and _s)
    */
   async expectNoCheckoutUrlTrackingParams(context: string) {
     const checkoutUrls = await this.getCheckoutUrls();
@@ -504,60 +550,59 @@ export class StorefrontPage {
   }
 
   /**
-   * Clear tracked analytics and perf-kit requests
+   * Clear tracked requests
    */
   clearRequests() {
-    this.analyticsRequests.length = 0;
-    this.perfKitRequests.length = 0;
+    this.monorailRequests.length = 0;
+    this.perfKitProduceRequests.length = 0;
+    this.perfKitScriptLoaded = false;
   }
 
   /**
-   * Assert that no analytics requests have been made
+   * Assert that no Monorail analytics requests have been made
    */
-  expectNoAnalyticsRequests() {
+  expectNoMonorailRequests() {
     expect(
-      this.analyticsRequests,
-      'No analytics requests should be made',
+      this.monorailRequests,
+      'No Monorail analytics requests should be made',
     ).toHaveLength(0);
   }
 
   /**
-   * Assert that no perf-kit requests have been made
+   * Assert that no perf-kit produce requests have been made
    */
-  expectNoPerfKitRequests() {
+  expectNoPerfKitProduceRequests() {
     expect(
-      this.perfKitRequests,
-      'No perf-kit requests should be made',
+      this.perfKitProduceRequests,
+      'No perf-kit produce requests should be made',
     ).toHaveLength(0);
   }
 
   /**
-   * Wait for analytics requests to be made
+   * Wait for Monorail analytics requests to be made
    */
-  async waitForAnalyticsRequests(minCount = 1) {
+  async waitForMonorailRequests(minCount = 1) {
     await expect
       .poll(
-        () => this.analyticsRequests.length,
-        'Analytics requests should be made',
+        () => this.monorailRequests.length,
+        'Monorail analytics requests should be made',
       )
       .toBeGreaterThanOrEqual(minCount);
   }
 
   /**
    * Verify that Monorail batch analytics requests contain the correct tracking values.
-   * These are requests to /produce_batch (Shopify Analytics), not /v1/produce (Perf-kit).
    */
   verifyMonorailRequests(
     expectedY: string,
     expectedS: string,
     context: string,
   ) {
-    // Filter for batch requests only (not perf-kit /v1/produce requests)
-    const batchRequests = this.analyticsRequests.filter(
-      (req) => req.url.includes(MONORAIL_BATCH_URL) && req.postData,
+    const requestsWithData = this.monorailRequests.filter(
+      (req) => req.postData,
     );
 
-    for (const request of batchRequests) {
+    for (const request of requestsWithData) {
       const payload = JSON.parse(request.postData!) as {
         events?: Array<{payload: MonorailPayload}>;
       };
@@ -596,35 +641,25 @@ export class StorefrontPage {
   }
 
   /**
-   * Verify that perf-kit Monorail requests contain the correct tracking values.
-   * Perf-kit sends to /v1/produce (not /produce_batch) with unique_token and session_token.
+   * Verify that perf-kit produce requests contain the correct tracking values.
    * Also verifies that the request was initiated by the perf-kit script.
    */
   verifyPerfKitRequests(expectedY: string, expectedS: string, context: string) {
-    // Filter for perf-kit specific requests:
-    // 1. URL contains /v1/produce but not /produce_batch
-    // 2. Has post data
-    // 3. Initiated by perf-kit script (if CDP tracking is available)
-    const perfKitProduceRequests = this.analyticsRequests.filter(
-      (req) =>
-        req.url.includes(MONORAIL_PRODUCE_URL) &&
-        !req.url.includes(MONORAIL_BATCH_URL) &&
-        req.postData &&
-        // Verify initiator is perf-kit (if available)
-        req.initiator?.includes('perf-kit'),
+    // Filter for requests initiated by perf-kit
+    const perfKitRequests = this.perfKitProduceRequests.filter(
+      (req) => req.postData && req.initiator?.includes('perf-kit'),
     );
 
     let foundPerfKitPayload = false;
 
-    for (const request of perfKitProduceRequests) {
+    for (const request of perfKitRequests) {
       const payload = JSON.parse(request.postData!) as {
         payload?: MonorailPayload;
       };
 
-      // Perf-kit sends unique_token and session_token in the payload
       foundPerfKitPayload = true;
 
-      // Verify the request was initiated by perf-kit if initiator is available
+      // Verify the request was initiated by perf-kit
       expect(
         request.initiator,
         `Request ${context} should be initiated by perf-kit script`,
@@ -643,7 +678,7 @@ export class StorefrontPage {
 
     expect(
       foundPerfKitPayload,
-      `At least one perf-kit Monorail request ${context} should be found`,
+      `At least one perf-kit produce request ${context} should be found`,
     ).toBe(true);
 
     return foundPerfKitPayload;

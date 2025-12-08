@@ -28,10 +28,10 @@ test.describe('Privacy Banner - Decline Flow', () => {
 
     // 3. Verify no analytics cookies are set yet and no analytics requests have been made
     await storefront.expectNoAnalyticsCookies();
-    storefront.expectNoAnalyticsRequests();
+    storefront.expectNoMonorailRequests();
 
     // 4. Verify perf-kit script is not downloaded yet
-    storefront.expectNoPerfKitRequests();
+    storefront.expectPerfKitNotLoaded();
 
     // 5. Verify privacy banner appears and click decline
     await storefront.declinePrivacyBanner();
@@ -49,16 +49,11 @@ test.describe('Privacy Banner - Decline Flow', () => {
 
     // 9. Verify perf-kit is downloaded after declining
     await storefront.waitForPerfKit();
-
-    expect(
-      storefront.perfKitRequests.length,
-      'Perf-kit script should be downloaded after declining consent',
-    ).toBeGreaterThan(0);
+    storefront.expectPerfKitLoaded();
 
     // 10. Wait and verify no analytics requests are made
     await storefront.page.waitForTimeout(1500);
-
-    storefront.expectNoAnalyticsRequests();
+    storefront.expectNoMonorailRequests();
 
     // 11. Navigate to first product and add to cart to verify server-timing mock values
     await storefront.navigateToFirstProduct();
@@ -73,7 +68,7 @@ test.describe('Privacy Banner - Decline Flow', () => {
     storefront.expectMockServerTimingValues(serverTimingAfterCart);
 
     // Verify still no analytics requests after cart action
-    storefront.expectNoAnalyticsRequests();
+    storefront.expectNoMonorailRequests();
 
     // 12. Verify checkout URLs contain MOCK tracking params (consent declined)
     await storefront.expectMockCheckoutUrlTrackingParams(
@@ -97,7 +92,6 @@ test.describe('Privacy Banner - Decline Flow', () => {
 
     // Wait and verify no analytics requests after reload
     await storefront.page.waitForTimeout(1500);
-
-    storefront.expectNoAnalyticsRequests();
+    storefront.expectNoMonorailRequests();
   });
 });

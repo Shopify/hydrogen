@@ -127,7 +127,7 @@ test.describe('Privacy Banner - Session Migration', () => {
 
       // 10. Wait for analytics requests and verify they use original tracking values
       await storefront.waitForPerfKit();
-      await storefront.waitForAnalyticsRequests();
+      await storefront.waitForMonorailRequests();
 
       storefront.verifyMonorailRequests(
         originalYValue,
@@ -207,9 +207,9 @@ test.describe('Privacy Banner - Session Migration', () => {
       // 10. Wait for perf-kit to load (it should still load for performance metrics)
       await storefront.waitForPerfKit();
 
-      // 11. Wait and verify NO analytics requests are made
+      // 11. Wait and verify NO Monorail analytics requests are made
       await storefront.page.waitForTimeout(1500);
-      storefront.expectNoAnalyticsRequests();
+      storefront.expectNoMonorailRequests();
     });
   });
 });

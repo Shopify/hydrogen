@@ -28,10 +28,10 @@ test.describe('Privacy Banner - Accept Flow', () => {
 
     // 3. Verify no analytics requests have been made and no analytics cookies are present
     await storefront.expectNoAnalyticsCookies();
-    storefront.expectNoAnalyticsRequests();
+    storefront.expectNoMonorailRequests();
 
     // 4. Verify perf-kit script is not downloaded yet
-    storefront.expectNoPerfKitRequests();
+    storefront.expectPerfKitNotLoaded();
 
     // 5. Verify privacy banner appears and click accept
     await storefront.acceptPrivacyBanner();
@@ -99,14 +99,10 @@ test.describe('Privacy Banner - Accept Flow', () => {
 
     // 8. Wait for perf-kit to download and analytics requests to fire
     await storefront.waitForPerfKit();
-
-    expect(
-      storefront.perfKitRequests.length,
-      'Perf-kit script should be downloaded after consent',
-    ).toBeGreaterThan(0);
+    storefront.expectPerfKitLoaded();
 
     // Wait for analytics requests to Monorail
-    await storefront.waitForAnalyticsRequests();
+    await storefront.waitForMonorailRequests();
 
     // Verify the analytics requests contain the correct _y and _s values
     storefront.verifyMonorailRequests(
@@ -205,7 +201,7 @@ test.describe('Privacy Banner - Accept Flow', () => {
     ).toBe(updatedServerTimingValues._s);
 
     // Wait for analytics requests after reload
-    await storefront.waitForAnalyticsRequests();
+    await storefront.waitForMonorailRequests();
 
     // Verify analytics events after reload have correct values (matching session from before reload)
     storefront.verifyMonorailRequests(

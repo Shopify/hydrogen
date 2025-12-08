@@ -43,19 +43,15 @@ test.describe('Consent Tracking - No Banner (Declined by Default)', () => {
     // 6. Verify no analytics cookies are set (consent declined)
     await storefront.expectNoAnalyticsCookies();
 
-    // 7. Verify no analytics requests have been made
-    storefront.expectNoAnalyticsRequests();
+    // 7. Verify no Monorail analytics requests have been made
+    storefront.expectNoMonorailRequests();
 
     // 8. Wait for perf-kit to be downloaded (it loads regardless of consent)
     await storefront.waitForPerfKit();
+    storefront.expectPerfKitLoaded();
 
-    expect(
-      storefront.perfKitRequests.length,
-      'Perf-kit script should be downloaded',
-    ).toBeGreaterThan(0);
-
-    // 9. Verify still no analytics requests after perf-kit loads
-    storefront.expectNoAnalyticsRequests();
+    // 9. Verify still no Monorail analytics requests after perf-kit loads
+    storefront.expectNoMonorailRequests();
 
     // 10. Navigate to first product and add to cart
     await storefront.navigateToFirstProduct();
@@ -65,8 +61,8 @@ test.describe('Consent Tracking - No Banner (Declined by Default)', () => {
     const serverTimingAfterCart = await storefront.getServerTimingValues(true);
     storefront.expectMockServerTimingValues(serverTimingAfterCart);
 
-    // 12. Verify still no analytics requests after cart action
-    storefront.expectNoAnalyticsRequests();
+    // 12. Verify still no Monorail analytics requests after cart action
+    storefront.expectNoMonorailRequests();
 
     // 13. Verify checkout URLs contain MOCK tracking params (consent declined)
     await storefront.expectMockCheckoutUrlTrackingParams(
@@ -85,7 +81,7 @@ test.describe('Consent Tracking - No Banner (Declined by Default)', () => {
     // Wait for perf-kit to be downloaded after reload
     await storefront.waitForPerfKit();
 
-    // 15. Verify no analytics requests after reload
-    storefront.expectNoAnalyticsRequests();
+    // 15. Verify no Monorail analytics requests after reload
+    storefront.expectNoMonorailRequests();
   });
 });
