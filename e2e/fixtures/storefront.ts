@@ -669,42 +669,6 @@ export class StorefrontPage {
   }
 
   /**
-   * Mock consent response to simulate different consent regions
-   * @param consentType - 'allowed' for consent allowed by default, 'required' for consent required
-   * @returns A function to stop mocking
-   */
-  async mockConsentResponse(consentType: 'allowed' | 'required') {
-    const handler = async (route: any) => {
-      const request = route.request();
-      const postData = request.postData();
-
-      if (postData && postData.includes('consentManagement')) {
-        // Return mock response based on consent type
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            data: {
-              consentManagement: {
-                region: consentType === 'allowed' ? 'US' : 'EU',
-                consentRequired: consentType === 'required',
-              },
-            },
-          }),
-        });
-      } else {
-        await route.continue();
-      }
-    };
-
-    await this.page.route(`**/${GRAPHQL_URL}`, handler);
-
-    return async () => {
-      await this.page.unroute(`**/${GRAPHQL_URL}`, handler);
-    };
-  }
-
-  /**
    * Set the `withPrivacyBanner` value by intercepting the Hydrogen JS bundle.
    * This injects code to directly set the value before Hydrogen's default check.
    * Unlike HTML document interception, this preserves server-timing headers since they come
@@ -722,7 +686,7 @@ export class StorefrontPage {
       // Modified: consent.withPrivacyBanner = true/false; if (consent.withPrivacyBanner === void 0) { ...
       body = body.replace(
         /if\s*\(consent\.withPrivacyBanner\s*===\s*void 0\)/g,
-        `consent.withPrivacyBanner = ${enable}; if (consent.withPrivacyBanner === void 0)`,
+        `consent.withPrivacyBanner = ${enable}; $&`,
       );
 
       await route.fulfill({
