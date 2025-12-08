@@ -16,13 +16,11 @@ export const cachedTrackingValues: {
 } = {current: null};
 
 /**
- * Retrieves session tracking values for analytics
+ * Retrieves user session tracking values for analytics
  * and marketing from the browser environment.
  */
 export function getTrackingValues(): TrackingValues {
-  const trackingValues = {uniqueToken: '', visitToken: '', consent: ''};
-  const hasFoundTrackingValues = () =>
-    Boolean(trackingValues.uniqueToken || trackingValues.visitToken);
+  let trackingValues: TrackingValues | undefined;
 
   if (
     typeof window !== 'undefined' &&
@@ -43,9 +41,7 @@ export function getTrackingValues(): TrackingValues {
         'resource',
       ) as PerformanceResourceTiming[];
 
-      let matchedValues:
-        | ReturnType<typeof extractFromPerformanceEntry>
-        | undefined;
+      let matchedValues: ReturnType<typeof extractFromPerformanceEntry>;
 
       for (let i = entries.length - 1; i >= 0; i--) {
         const entry = entries[i];
@@ -66,7 +62,7 @@ export function getTrackingValues(): TrackingValues {
 
         if (isMatch) {
           const values = extractFromPerformanceEntry(entry);
-          if (values.uniqueToken && values.visitToken) {
+          if (values) {
             matchedValues = values;
             break;
           }
@@ -74,48 +70,46 @@ export function getTrackingValues(): TrackingValues {
       }
 
       if (matchedValues) {
-        Object.assign(trackingValues, matchedValues);
+        trackingValues = matchedValues;
       }
 
       // Resource entries have a limited buffer and are removed over time.
       // Cache the latest values for future calls if we find them.
       // A cached resource entry is always newer than a navigation entry.
-      if (hasFoundTrackingValues()) {
+      if (trackingValues) {
         cachedTrackingValues.current = trackingValues;
       } else if (cachedTrackingValues.current) {
         // Fallback to cached values from previous calls:
-        Object.assign(trackingValues, cachedTrackingValues.current);
+        trackingValues = cachedTrackingValues.current;
       }
 
-      if (!hasFoundTrackingValues()) {
+      if (!trackingValues) {
         // Fallback to navigation entry from full page rendering load:
         const navigationEntries = performance.getEntriesByType(
           'navigation',
         )[0] as PerformanceNavigationTiming;
 
-        Object.assign(
-          trackingValues,
-          extractFromPerformanceEntry(navigationEntries),
-        );
+        trackingValues = extractFromPerformanceEntry(navigationEntries);
       }
     } catch {}
   }
 
   // Fallback to deprecated cookies to support transitioning:
-  if (!hasFoundTrackingValues()) {
+  if (!trackingValues) {
     const cookie =
       // Read from arguments to avoid declaring parameters in this function signature.
-      // This logic is only used internally and will be deprecated.
+      // This logic is only used internally from `getShopifyCookies` and will be deprecated.
       typeof arguments[0] === 'string'
         ? arguments[0]
         : typeof document !== 'undefined'
           ? document.cookie
           : '';
 
-    Object.assign(trackingValues, {
+    trackingValues = {
       uniqueToken: cookie.match(/\b_shopify_y=([^;]+)/)?.[1] || '',
       visitToken: cookie.match(/\b_shopify_s=([^;]+)/)?.[1] || '',
-    });
+      consent: cookie.match(/\b_tracking_consent=([^;]+)/)?.[1] || '',
+    };
   }
 
   return trackingValues;
@@ -126,10 +120,11 @@ function extractFromPerformanceEntry(
 ) {
   let uniqueToken = '';
   let visitToken = '';
+  /* Represents the consent given by the user or the default region consent configured in Admin */
   let consent = '';
 
   const serverTiming = entry.serverTiming;
-  // Quick check: we need at least 3 entries
+  // Quick check: we need at least 3 entries (_y, _s, _cmp)
   if (serverTiming && serverTiming.length >= 3) {
     // Iterate backwards since our headers are typically at the end
     for (let i = serverTiming.length - 1; i >= 0; i--) {
@@ -148,5 +143,7 @@ function extractFromPerformanceEntry(
     }
   }
 
-  return {uniqueToken, visitToken, consent};
+  return uniqueToken && visitToken && consent
+    ? {uniqueToken, visitToken, consent}
+    : undefined;
 }

@@ -36,8 +36,15 @@ type UseShopifyCookiesOptions = CoreShopifyCookiesOptions & {
 /**
  * Sets the `shopify_y` and `shopify_s` cookies in the browser based on user consent
  * for backward compatibility support.
+ *
  * If `fetchTrackingValues` is true, it makes a request to Storefront API
- * to fetch or refresh core cookies and tracking values.
+ * to fetch or refresh Shopiy analytics and marketing cookies and tracking values.
+ * Generally speaking, this should only be needed if you're not using Hydrogen's
+ * built-in analytics components and hooks that already handle this automatically.
+ * For example, set it to `true` if you are using `hydrogen-react` only with
+ * a different framework and still need to make a same-domain request to
+ * Storefront API to set cookies.
+ *
  * @returns `true` when cookies are set and ready.
  */
 export function useShopifyCookies(options?: UseShopifyCookiesOptions): boolean {
