@@ -6,6 +6,9 @@ test.describe('Privacy Banner - Accept Flow', () => {
   test('should set analytics cookies and make analytics requests when user accepts consent', async ({
     storefront,
   }) => {
+    // Enable privacy banner via JS bundle interception (preserves server-timing)
+    await storefront.setWithPrivacyBanner(true);
+
     // 1. Navigate to main page
     await storefront.goto('/');
 

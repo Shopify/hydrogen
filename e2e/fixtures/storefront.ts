@@ -703,4 +703,33 @@ export class StorefrontPage {
       await this.page.unroute(`**/${GRAPHQL_URL}`, handler);
     };
   }
+
+  /**
+   * Set the `withPrivacyBanner` value by intercepting the Hydrogen JS bundle.
+   * This injects code to directly set the value before Hydrogen's default check.
+   * Unlike HTML document interception, this preserves server-timing headers since they come
+   * from the document response, not from JS files.
+   * @param enable - Whether to enable (true) or disable (false) the privacy banner
+   */
+  async setWithPrivacyBanner(enable: boolean) {
+    // Intercept the Hydrogen development bundle
+    await this.page.route('**/@fs/**/hydrogen/dist/**/*.js', async (route) => {
+      const response = await route.fetch();
+      let body = await response.text();
+
+      // Inject code to set withPrivacyBanner BEFORE the default check:
+      // Original: if (consent.withPrivacyBanner === void 0) { ...
+      // Modified: consent.withPrivacyBanner = true/false; if (consent.withPrivacyBanner === void 0) { ...
+      body = body.replace(
+        /if\s*\(consent\.withPrivacyBanner\s*===\s*void 0\)/g,
+        `consent.withPrivacyBanner = ${enable}; if (consent.withPrivacyBanner === void 0)`,
+      );
+
+      await route.fulfill({
+        status: response.status(),
+        headers: response.headers(),
+        body,
+      });
+    });
+  }
 }

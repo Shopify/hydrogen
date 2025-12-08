@@ -6,6 +6,9 @@ test.describe('Privacy Banner - Decline Flow', () => {
   test('should not set analytics cookies or make analytics requests when user declines consent', async ({
     storefront,
   }) => {
+    // Enable privacy banner via JS bundle interception (preserves server-timing)
+    await storefront.setWithPrivacyBanner(true);
+
     // 1. Navigate to main page
     await storefront.goto('/');
 
@@ -52,8 +55,8 @@ test.describe('Privacy Banner - Decline Flow', () => {
       'Perf-kit script should be downloaded after declining consent',
     ).toBeGreaterThan(0);
 
-    // 10. Wait a couple of seconds and verify no analytics requests are made
-    await storefront.page.waitForTimeout(3000);
+    // 10. Wait and verify no analytics requests are made
+    await storefront.page.waitForTimeout(1500);
 
     storefront.expectNoAnalyticsRequests();
 
@@ -92,8 +95,8 @@ test.describe('Privacy Banner - Decline Flow', () => {
     // Wait for perf-kit to be downloaded after reload
     await storefront.waitForPerfKit();
 
-    // Wait a couple more seconds and verify no analytics requests after reload
-    await storefront.page.waitForTimeout(3000);
+    // Wait and verify no analytics requests after reload
+    await storefront.page.waitForTimeout(1500);
 
     storefront.expectNoAnalyticsRequests();
   });

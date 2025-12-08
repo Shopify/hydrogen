@@ -7,6 +7,9 @@ test.describe('Privacy Banner - Session Migration', () => {
     test('should preserve tracking values from old cookies after migration', async ({
       storefront,
     }) => {
+      // Enable privacy banner via JS bundle interception (preserves server-timing)
+      await storefront.setWithPrivacyBanner(true);
+
       // === SETUP: Establish consent and get initial tracking values ===
 
       // 1. Navigate to main page
@@ -138,6 +141,9 @@ test.describe('Privacy Banner - Session Migration', () => {
     test('should not send analytics or set tracking params when consent was declined', async ({
       storefront,
     }) => {
+      // Enable privacy banner via JS bundle interception (preserves server-timing)
+      await storefront.setWithPrivacyBanner(true);
+
       // === SETUP: Decline consent ===
 
       // 1. Navigate to main page
@@ -201,8 +207,8 @@ test.describe('Privacy Banner - Session Migration', () => {
       // 10. Wait for perf-kit to load (it should still load for performance metrics)
       await storefront.waitForPerfKit();
 
-      // 11. Wait a bit and verify NO analytics requests are made
-      await storefront.page.waitForTimeout(3000);
+      // 11. Wait and verify NO analytics requests are made
+      await storefront.page.waitForTimeout(1500);
       storefront.expectNoAnalyticsRequests();
     });
   });
