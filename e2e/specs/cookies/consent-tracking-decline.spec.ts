@@ -68,8 +68,8 @@ test.describe('Consent Tracking - No Banner (Declined by Default)', () => {
     // 12. Verify still no analytics requests after cart action
     storefront.expectNoAnalyticsRequests();
 
-    // 13. Verify checkout URLs do NOT contain tracking params
-    await storefront.expectNoCheckoutUrlTrackingParams(
+    // 13. Verify checkout URLs contain MOCK tracking params (consent declined)
+    await storefront.expectMockCheckoutUrlTrackingParams(
       'in cart drawer with consent declined by default',
     );
 

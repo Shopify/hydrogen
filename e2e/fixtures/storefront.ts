@@ -396,13 +396,13 @@ export class StorefrontPage {
 
     for (const url of checkoutUrls) {
       const urlObj = new URL(url, this.page.url());
-      const yParam = urlObj.searchParams.get('y');
-      const sParam = urlObj.searchParams.get('s');
+      const yParam = urlObj.searchParams.get('_y');
+      const sParam = urlObj.searchParams.get('_s');
 
-      expect(yParam, `Checkout URL should have 'y' param ${context}`).toBe(
+      expect(yParam, `Checkout URL should have '_y' param ${context}`).toBe(
         expectedY,
       );
-      expect(sParam, `Checkout URL should have 's' param ${context}`).toBe(
+      expect(sParam, `Checkout URL should have '_s' param ${context}`).toBe(
         expectedS,
       );
     }
@@ -411,8 +411,45 @@ export class StorefrontPage {
   }
 
   /**
+   * Verify checkout URLs contain MOCK tracking params (y and s starting with 0000...)
+   * Used when consent is declined but params are still present with mock values
+   */
+  async expectMockCheckoutUrlTrackingParams(context: string) {
+    const checkoutUrls = await this.getCheckoutUrls();
+
+    expect(
+      checkoutUrls.length,
+      `Should have checkout URLs ${context}`,
+    ).toBeGreaterThan(0);
+
+    for (const url of checkoutUrls) {
+      const urlObj = new URL(url, this.page.url());
+      const yParam = urlObj.searchParams.get('_y');
+      const sParam = urlObj.searchParams.get('_s');
+
+      expect(
+        yParam,
+        `Checkout URL should have '_y' param ${context}`,
+      ).not.toBeNull();
+      expect(
+        sParam,
+        `Checkout URL should have '_s' param ${context}`,
+      ).not.toBeNull();
+
+      expect(
+        MOCK_VALUE_PATTERN.test(yParam!),
+        `Checkout URL '_y' param should be mock value ${context}, got: ${yParam}`,
+      ).toBe(true);
+      expect(
+        MOCK_VALUE_PATTERN.test(sParam!),
+        `Checkout URL '_s' param should be mock value ${context}, got: ${sParam}`,
+      ).toBe(true);
+    }
+  }
+
+  /**
    * Verify checkout URLs do NOT contain tracking params (y and s)
-   * Used when consent is declined
+   * Used when consent is declined and no params should be present
    */
   async expectNoCheckoutUrlTrackingParams(context: string) {
     const checkoutUrls = await this.getCheckoutUrls();
@@ -422,19 +459,18 @@ export class StorefrontPage {
       `Should have checkout URLs ${context}`,
     ).toBeGreaterThan(0);
 
-    // It's okay if there are no checkout URLs
     for (const url of checkoutUrls) {
       const urlObj = new URL(url, this.page.url());
-      const yParam = urlObj.searchParams.get('y');
-      const sParam = urlObj.searchParams.get('s');
+      const yParam = urlObj.searchParams.get('_y');
+      const sParam = urlObj.searchParams.get('_s');
 
       expect(
         yParam,
-        `Checkout URL should NOT have 'y' param ${context}`,
+        `Checkout URL should NOT have '_y' param ${context}`,
       ).toBeNull();
       expect(
         sParam,
-        `Checkout URL should NOT have 's' param ${context}`,
+        `Checkout URL should NOT have '_s' param ${context}`,
       ).toBeNull();
     }
   }
