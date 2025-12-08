@@ -602,29 +602,36 @@ export class StorefrontPage {
       (req) => req.postData,
     );
 
+    expect(
+      requestsWithData.length,
+      `Monorail requests with data ${context}`,
+    ).toBeGreaterThan(0);
+
     for (const request of requestsWithData) {
       const payload = JSON.parse(request.postData!) as {
         events?: Array<{payload: MonorailPayload}>;
       };
 
-      if (payload.events) {
-        for (const event of payload.events) {
-          const eventPayload = event.payload;
+      expect(
+        payload.events,
+        `Monorail request payload should be present ${context}`,
+      ).toBeDefined();
 
-          const uniqueToken =
-            eventPayload.unique_token || eventPayload.uniqToken;
-          expect(
-            uniqueToken,
-            `Monorail unique_token ${context} should match _y value`,
-          ).toBe(expectedY);
+      for (const event of payload.events!) {
+        const eventPayload = event.payload;
 
-          const visitToken =
-            eventPayload.deprecated_visit_token || eventPayload.visitToken;
-          expect(
-            visitToken,
-            `Monorail visit_token ${context} should match _s value`,
-          ).toBe(expectedS);
-        }
+        const uniqueToken = eventPayload.unique_token || eventPayload.uniqToken;
+        expect(
+          uniqueToken,
+          `Monorail unique_token ${context} should match _y value`,
+        ).toBe(expectedY);
+
+        const visitToken =
+          eventPayload.deprecated_visit_token || eventPayload.visitToken;
+        expect(
+          visitToken,
+          `Monorail visit_token ${context} should match _s value`,
+        ).toBe(expectedS);
       }
     }
   }

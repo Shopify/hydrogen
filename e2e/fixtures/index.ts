@@ -57,6 +57,7 @@ export const test = base.extend<
 const TEST_STORE_KEYS = [
   'mockShop',
   'defaultConsentDisallowed_cookiesEnabled',
+  'defaultConsentAllowed_cookiesEnabled',
 ] as const;
 
 type TestStoreKey = (typeof TEST_STORE_KEYS)[number];

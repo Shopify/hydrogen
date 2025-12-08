@@ -1,5 +1,4 @@
 import {setTestStore, test, expect} from '../../fixtures';
-import {MOCK_VALUE_PATTERN} from '../../fixtures/storefront';
 
 setTestStore('defaultConsentDisallowed_cookiesEnabled');
 
