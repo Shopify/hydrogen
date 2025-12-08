@@ -8,10 +8,27 @@ export * from '@playwright/test';
 export * from './storefront';
 
 let baseUrl = '';
-let testStoreKey: TestStoreKey = 'mockShop';
 
-export const setTestStore = async (_testStoreKey: TestStoreKey) => {
-  testStoreKey = _testStoreKey;
+export const setTestStore = async (testStoreKey: TestStoreKey) => {
+  let server: DevServer;
+
+  base.beforeAll(async () => {
+    const testStoreEnvFile = await getTestStoreEnvFile(testStoreKey);
+
+    server = new DevServer({
+      storeKey: testStoreKey,
+      customerAccountPush: false,
+      envFile: testStoreEnvFile,
+    });
+
+    await server.start();
+
+    baseUrl = server.getUrl();
+  });
+
+  base.afterAll(async () => {
+    await server?.stop();
+  });
 };
 
 export const test = base.extend<
@@ -25,33 +42,6 @@ export const test = base.extend<
     const storefront = new StorefrontPage(page);
     await use(storefront);
   },
-  forEachWorker: [
-    async ({}, runTests) => {
-      const workerIndex = test.info().workerIndex;
-      // This code runs before all the tests in the worker process.
-      // console.log(`Starting test worker ${workerIndex}`);
-
-      const testStoreEnvFile = await getTestStoreEnvFile(testStoreKey);
-
-      const server = new DevServer({
-        id: workerIndex,
-        storeKey: testStoreKey,
-        customerAccountPush: false,
-        envFile: testStoreEnvFile,
-      });
-
-      await server.start();
-
-      baseUrl = server.getUrl();
-
-      await runTests();
-      // This code runs after all the tests in the worker process.
-      // console.log(`Stopping test worker ${workerIndex}`);
-
-      await server.stop();
-    },
-    {scope: 'worker', auto: true},
-  ],
 });
 
 const TEST_STORE_KEYS = [

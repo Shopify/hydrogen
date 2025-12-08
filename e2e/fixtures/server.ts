@@ -65,7 +65,7 @@ export class DevServer {
           this.stop();
           reject(new Error(`Server ${this.id} failed to start within timeout`));
         }
-      }, 30000);
+      }, 60000);
 
       let localUrl: string | undefined;
       let tunnelUrl: string | undefined;
@@ -82,6 +82,14 @@ export class DevServer {
           started = true;
           clearTimeout(timeout);
           this.capturedUrl = tunnelUrl || localUrl;
+          const port = this.capturedUrl?.match(/:(\d+)/)?.[1];
+          if (port) {
+            this.port = parseInt(port, 10);
+          }
+          if (!this.id) {
+            this.id =
+              this.port || parseInt((Math.random() * 1000).toFixed(0), 10);
+          }
           console.log(
             `[test-server ${this.id}] Server started on ${this.capturedUrl} [${this.storeKey}]`,
           );
