@@ -178,5 +178,93 @@ test.describe('Consent Tracking - Auto-Allowed (Consent Allowed by Default)', ()
       navigationServerTiming._s!,
       'after reload',
     );
+
+    // === MIGRATION: Test upgrade from old cookies ===
+
+    // 12. Remove HTTP-only cookies but keep old _shopify_y/_shopify_s
+    await storefront.removeHttpOnlyCookies();
+
+    // Verify HTTP-only cookies are removed
+    const analyticsAfterRemoval =
+      await storefront.getCookie('_shopify_analytics');
+    const marketingAfterRemoval =
+      await storefront.getCookie('_shopify_marketing');
+
+    expect(
+      analyticsAfterRemoval,
+      '_shopify_analytics should be removed',
+    ).toBeUndefined();
+    expect(
+      marketingAfterRemoval,
+      '_shopify_marketing should be removed',
+    ).toBeUndefined();
+
+    // Verify old tracking cookies are still present
+    const yAfterRemoval = await storefront.getCookie('_shopify_y');
+    const sAfterRemoval = await storefront.getCookie('_shopify_s');
+
+    expect(yAfterRemoval, '_shopify_y should still exist').toBeDefined();
+    expect(sAfterRemoval, '_shopify_s should still exist').toBeDefined();
+    expect(yAfterRemoval!.value, '_shopify_y value should be unchanged').toBe(
+      navigationServerTiming._y,
+    );
+    expect(sAfterRemoval!.value, '_shopify_s value should be unchanged').toBe(
+      navigationServerTiming._s,
+    );
+
+    // Clear tracked requests before migration reload
+    storefront.clearRequests();
+
+    // 13. Reload to trigger migration
+    await storefront.page.reload();
+    await storefront.page.waitForLoadState('networkidle');
+
+    // 14. Verify tracking values are preserved after migration
+    const serverTimingAfterMigration = await storefront.getServerTimingValues();
+
+    expect(
+      serverTimingAfterMigration._y,
+      'Server-timing _y after migration should match original value',
+    ).toBe(navigationServerTiming._y);
+    expect(
+      serverTimingAfterMigration._s,
+      'Server-timing _s after migration should match original value',
+    ).toBe(navigationServerTiming._s);
+
+    // 15. Verify HTTP-only cookies are recreated with original values
+    const {
+      shopifyY: yAfterMigration,
+      shopifyS: sAfterMigration,
+      shopifyAnalytics: analyticsAfterMigration,
+      shopifyMarketing: marketingAfterMigration,
+    } = await storefront.expectAnalyticsCookiesPresent();
+
+    expect(
+      analyticsAfterMigration,
+      '_shopify_analytics should be recreated after migration',
+    ).toBeDefined();
+    expect(
+      marketingAfterMigration,
+      '_shopify_marketing should be recreated after migration',
+    ).toBeDefined();
+
+    // Cookie values should match original tracking values
+    expect(
+      yAfterMigration!.value,
+      '_shopify_y should keep original value after migration',
+    ).toBe(navigationServerTiming._y);
+    expect(
+      sAfterMigration!.value,
+      '_shopify_s should keep original value after migration',
+    ).toBe(navigationServerTiming._s);
+
+    // 16. Wait for analytics and verify they use original tracking values
+    await storefront.waitForMonorailRequests();
+
+    storefront.verifyMonorailRequests(
+      navigationServerTiming._y!,
+      navigationServerTiming._s!,
+      'after migration',
+    );
   });
 });
