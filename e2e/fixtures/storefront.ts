@@ -6,6 +6,11 @@ export const PRIVACY_BANNER_DIALOG_ID = 'shopify-pc__banner';
 export const ACCEPT_BUTTON_ID = 'shopify-pc__banner__btn-accept';
 export const DECLINE_BUTTON_ID = 'shopify-pc__banner__btn-decline';
 
+// Privacy Preferences element IDs
+export const PRIVACY_PREFS_DIALOG_ID = 'shopify-pc__prefs__dialog';
+export const PREFS_ACCEPT_BUTTON_ID = 'shopify-pc__prefs__header-accept';
+export const PREFS_DECLINE_BUTTON_ID = 'shopify-pc__prefs__header-decline';
+
 // Cookies that require consent
 export const ANALYTICS_COOKIES = [
   '_shopify_analytics',
@@ -329,6 +334,83 @@ export class StorefrontPage {
     await declineButton.click();
 
     await expect(banner).not.toBeVisible();
+    const response = await responsePromise;
+    expect(response.ok(), 'Consent request should succeed').toBe(true);
+
+    await this.page.waitForLoadState('networkidle');
+    return response;
+  }
+
+  /**
+   * Get the privacy preferences dialog locator
+   */
+  getPrivacyPreferencesDialog() {
+    return this.page.locator(`#${PRIVACY_PREFS_DIALOG_ID}`);
+  }
+
+  /**
+   * Assert that privacy preferences dialog is visible
+   */
+  async expectPrivacyPreferencesVisible(timeout = 20000) {
+    const dialog = this.getPrivacyPreferencesDialog();
+    await expect(dialog).toBeVisible({timeout});
+    return dialog;
+  }
+
+  /**
+   * Open privacy preferences dialog via window.privacyBanner.showPreferences()
+   */
+  async openPrivacyPreferences() {
+    // Wait for the privacy banner API to be available
+    await this.page.waitForFunction(
+      () => {
+        const privacyBanner = (window as any).privacyBanner;
+        return privacyBanner?.showPreferences !== undefined;
+      },
+      {timeout: 10000},
+    );
+
+    // Call showPreferences to open the dialog
+    await this.page.evaluate(() => {
+      const privacyBanner = (window as any).privacyBanner;
+      privacyBanner.showPreferences();
+    });
+
+    // Wait for the preferences dialog to appear
+    await this.expectPrivacyPreferencesVisible();
+  }
+
+  /**
+   * Accept consent in the privacy preferences dialog
+   */
+  async acceptInPreferences() {
+    const dialog = await this.expectPrivacyPreferencesVisible();
+    const responsePromise = this.waitForConsentResponse();
+
+    const acceptButton = this.page.locator(`#${PREFS_ACCEPT_BUTTON_ID}`);
+    await expect(acceptButton).toBeVisible();
+    await acceptButton.click();
+
+    await expect(dialog).not.toBeVisible();
+    const response = await responsePromise;
+    expect(response.ok(), 'Consent request should succeed').toBe(true);
+
+    await this.page.waitForLoadState('networkidle');
+    return response;
+  }
+
+  /**
+   * Decline consent in the privacy preferences dialog
+   */
+  async declineInPreferences() {
+    const dialog = await this.expectPrivacyPreferencesVisible();
+    const responsePromise = this.waitForConsentResponse();
+
+    const declineButton = this.page.locator(`#${PREFS_DECLINE_BUTTON_ID}`);
+    await expect(declineButton).toBeVisible();
+    await declineButton.click();
+
+    await expect(dialog).not.toBeVisible();
     const response = await responsePromise;
     expect(response.ok(), 'Consent request should succeed').toBe(true);
 
@@ -684,8 +766,13 @@ export class StorefrontPage {
   expectRealServerTimingValues(values: ServerTimingValues) {
     expect(values._y, 'Y value should be present').toBeTruthy();
     expect(values._s, 'S value should be present').toBeTruthy();
-    expect(values._y, 'Y value should be a real UUID').not.toMatch(/^0+[-0]/);
-    expect(values._s, 'S value should be a real UUID').not.toMatch(/^0+[-0]/);
+    // Mock values match MOCK_VALUE_PATTERN: /^0+[-0]*5/ (zeros followed by 5)
+    expect(values._y, 'Y value should not be a mock value').not.toMatch(
+      MOCK_VALUE_PATTERN,
+    );
+    expect(values._s, 'S value should not be a mock value').not.toMatch(
+      MOCK_VALUE_PATTERN,
+    );
   }
 
   /**
