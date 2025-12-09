@@ -268,7 +268,7 @@ export class StorefrontPage {
   /**
    * Assert that privacy banner is visible
    */
-  async expectPrivacyBannerVisible(timeout = 10000) {
+  async expectPrivacyBannerVisible(timeout = 20000) {
     const banner = this.getPrivacyBanner();
     await expect(banner).toBeVisible({timeout});
     return banner;

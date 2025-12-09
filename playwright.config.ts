@@ -16,5 +16,10 @@ export default defineConfig({
       name: 'new-cookies',
       testDir: './e2e/specs/new-cookies',
     },
+    {
+      // TODO: remove once new cookies are rolled out
+      name: 'old-cookies',
+      testDir: './e2e/specs/old-cookies',
+    },
   ],
 });
