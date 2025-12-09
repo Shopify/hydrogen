@@ -21,6 +21,8 @@ const TEST_STORE_KEYS = [
   'mockShop',
   'defaultConsentDisallowed_cookiesEnabled',
   'defaultConsentAllowed_cookiesEnabled',
+  'defaultConsentDisallowed_cookiesDisabled',
+  'defaultConsentAllowed_cookiesDisabled',
 ] as const;
 
 type TestStoreKey = (typeof TEST_STORE_KEYS)[number];
