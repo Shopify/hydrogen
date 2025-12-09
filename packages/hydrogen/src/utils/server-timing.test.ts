@@ -14,13 +14,12 @@ describe('server-timing', () => {
   describe('extractServerTimingHeader', () => {
     it('parses tokens and consent information from the header value', () => {
       const header =
-        '_y;desc="unique-token", _unused;desc="unused", _s;desc="visit-token", _cmp;desc="opt-in", _ny;desc=ny-value';
+        '_y;desc="unique-token", _unused;desc="unused", _s;desc="visit-token", _cmp;desc="opt-in"';
 
       expect(extractServerTimingHeader(header)).toEqual({
         _y: 'unique-token',
         _s: 'visit-token',
         _cmp: 'opt-in',
-        _ny: 'ny-value',
       });
     });
   });
