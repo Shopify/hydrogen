@@ -283,11 +283,13 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   const requestCookie = storefrontHeaders?.cookie ?? '';
   if (requestCookie) defaultHeaders['cookie'] = requestCookie;
 
-  const hasConsentCookies = /\b_shopify_essential[s]?=/.test(requestCookie);
+  const hasCoreCookies = /\b_shopify_(analytics|marketing)=/.test(
+    requestCookie,
+  );
   let uniqueToken: string | undefined;
   let visitToken: string | undefined;
 
-  if (!hasConsentCookies) {
+  if (!hasCoreCookies) {
     const legacyUniqueToken = requestCookie.match(/\b_shopify_y=([^;]+)/)?.[1];
     const legacyVisitToken = requestCookie.match(/\b_shopify_s=([^;]+)/)?.[1];
 
@@ -609,18 +611,30 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           collectedSubrequestHeaders?.serverTiming,
         );
 
+        const isDocumentResponse = response.headers
+          .get('content-type')
+          ?.startsWith('text/html');
+
+        // Only fallback to generated tokens for HTML responses.
+        // This ensures that non-HTML responses (e.g. JSON, React Router streaming)
+        // don't get unexpected _y/_s values.
+        const fallbackValues = isDocumentResponse
+          ? ({_y: uniqueToken, _s: visitToken} satisfies TrackedTimingsRecord)
+          : undefined;
+
         // Forward tracking values via server-timing from subrequests,
         // and fallback to the ones generated in the current request.
         appendServerTimingHeader(response, {
-          _y: uniqueToken,
-          _s: visitToken,
+          ...fallbackValues,
           ...serverTiming,
         } satisfies TrackedTimingsRecord);
 
         // Indicate that the tracking work was done in the server
         // to skip an extra request from the browser.
         if (
-          collectedSubrequestHeaders?.setCookie.length &&
+          isDocumentResponse &&
+          collectedSubrequestHeaders &&
+          collectedSubrequestHeaders.setCookie.length > 1 &&
           serverTiming?._y &&
           serverTiming?._s &&
           serverTiming?._cmp

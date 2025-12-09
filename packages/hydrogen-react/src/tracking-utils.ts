@@ -89,7 +89,9 @@ export function getTrackingValues(): TrackingValues {
           'navigation',
         )[0] as PerformanceNavigationTiming;
 
-        trackingValues = extractFromPerformanceEntry(navigationEntries);
+        // Navigation entries might omit consent when the Hydrogen server generates it.
+        // In this case, we skip consent requirement and only extract _y and _s values.
+        trackingValues = extractFromPerformanceEntry(navigationEntries, false);
       }
     } catch {}
   }
@@ -117,6 +119,7 @@ export function getTrackingValues(): TrackingValues {
 
 function extractFromPerformanceEntry(
   entry: PerformanceNavigationTiming | PerformanceResourceTiming,
+  isConsentRequired = true,
 ) {
   let uniqueToken = '';
   let visitToken = '';
@@ -143,7 +146,7 @@ function extractFromPerformanceEntry(
     }
   }
 
-  return uniqueToken && visitToken && consent
+  return uniqueToken && visitToken && (isConsentRequired ? consent : true)
     ? {uniqueToken, visitToken, consent}
     : undefined;
 }
