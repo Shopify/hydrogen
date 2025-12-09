@@ -25,14 +25,22 @@ const TEST_STORE_KEYS = [
 
 type TestStoreKey = (typeof TEST_STORE_KEYS)[number];
 
-export const setTestStore = async (testStore: TestStoreKey) => {
+export const setTestStore = async (
+  testStore: TestStoreKey | `https://${string}`,
+) => {
+  const isLocal = !testStore.startsWith('https://');
   let server: DevServer | null = null;
 
   test.use({
     baseURL: async ({}, use) => {
-      await use(server?.getUrl());
+      await use(isLocal ? server?.getUrl() : testStore);
     },
   });
+
+  if (!isLocal) {
+    console.log(`Using test store: ${testStore}`);
+    return;
+  }
 
   test.afterAll(async () => {
     await server?.stop();
