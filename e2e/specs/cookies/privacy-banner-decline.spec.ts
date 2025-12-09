@@ -71,7 +71,7 @@ test.describe('Privacy Banner - Decline Flow', () => {
     storefront.expectNoMonorailRequests();
 
     // 12. Verify checkout URLs contain MOCK tracking params (consent declined)
-    await storefront.expectMockCheckoutUrlTrackingParams(
+    await storefront.expectNoCheckoutUrlTrackingParams(
       'in cart drawer after declining consent',
     );
 
