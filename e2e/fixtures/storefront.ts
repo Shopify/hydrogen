@@ -26,7 +26,7 @@ export const MONORAIL_PRODUCE_URL = '/v1/produce'; // Perf-kit endpoint
 export const GRAPHQL_URL = 'graphql.json';
 
 // Mock value pattern for declined consent (all zeros with a 5)
-export const MOCK_VALUE_PATTERN = /^0+[-0]*5/;
+export const MOCK_VALUE_PATTERN = /^00000000\-0000\-0000\-5000\-000000000000$/;
 
 export interface ServerTimingValues {
   _y?: string;
