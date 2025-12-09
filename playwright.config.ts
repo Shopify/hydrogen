@@ -13,8 +13,8 @@ export default defineConfig({
       testDir: './e2e/specs/smoke',
     },
     {
-      name: 'cookies',
-      testDir: './e2e/specs/cookies',
+      name: 'new-cookies',
+      testDir: './e2e/specs/new-cookies',
     },
   ],
 });
