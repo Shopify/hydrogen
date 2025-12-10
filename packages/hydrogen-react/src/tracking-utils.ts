@@ -1,6 +1,6 @@
-/* Storefront API header for VisitToken */
+/** Storefront API header for VisitToken */
 export const SHOPIFY_VISIT_TOKEN_HEADER = 'X-Shopify-VisitToken';
-/* Storefront API header for UniqueToken */
+/** Storefront API header for UniqueToken */
 export const SHOPIFY_UNIQUE_TOKEN_HEADER = 'X-Shopify-UniqueToken';
 
 type TrackingValues = {
