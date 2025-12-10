@@ -42,11 +42,15 @@ export function useCartFetch() {
       if (!sameDomainForStorefrontApi) {
         // If we are in cross-domain mode, add tracking headers manually.
         // Otherwise, for same-domain we rely on the browser to attach cookies automatically.
-        const trackingValues = getTrackingValues();
-        headers[SHOPIFY_STOREFRONT_Y_HEADER] = trackingValues.uniqueToken;
-        headers[SHOPIFY_UNIQUE_TOKEN_HEADER] = trackingValues.uniqueToken;
-        headers[SHOPIFY_STOREFRONT_S_HEADER] = trackingValues.visitToken;
-        headers[SHOPIFY_VISIT_TOKEN_HEADER] = trackingValues.visitToken;
+        const {uniqueToken, visitToken} = getTrackingValues();
+        if (uniqueToken) {
+          headers[SHOPIFY_STOREFRONT_Y_HEADER] = uniqueToken;
+          headers[SHOPIFY_UNIQUE_TOKEN_HEADER] = uniqueToken;
+        }
+        if (visitToken) {
+          headers[SHOPIFY_STOREFRONT_S_HEADER] = visitToken;
+          headers[SHOPIFY_VISIT_TOKEN_HEADER] = visitToken;
+        }
       }
 
       return fetch(getStorefrontApiUrl(), {
