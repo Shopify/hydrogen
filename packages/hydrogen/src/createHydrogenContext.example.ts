@@ -1,13 +1,18 @@
-import {createHydrogenContext} from '@shopify/hydrogen';
+import {
+  createHydrogenContext,
+  createRequestHandler,
+  type HydrogenSession,
+} from '@shopify/hydrogen';
 // @ts-expect-error
 import * as reactRouterBuild from 'virtual:react-router/server-build';
 import {
-  createRequestHandler,
   createCookieSessionStorage,
-} from '@shopify/remix-oxygen';
+  type SessionStorage,
+  type Session,
+} from 'react-router';
 
 export default {
-  async fetch(request, env, executionContext) {
+  async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
     const waitUntil = executionContext.waitUntil.bind(executionContext);
     const [cache, session] = await Promise.all([
       caches.open('hydrogen'),
@@ -31,7 +36,7 @@ export default {
       build: reactRouterBuild,
       mode: process.env.NODE_ENV,
       /* Inject the customer account client in the Remix context */
-      getLoadContext: () => ({...hydrogenContext}),
+      getLoadContext: () => hydrogenContext,
     });
 
     const response = await handleRequest(request);
@@ -44,10 +49,15 @@ export default {
   },
 };
 
-class AppSession {
-  isPending = false;
+class AppSession implements HydrogenSession {
+  public isPending = false;
 
-  static async init(request, secrets) {
+  constructor(
+    private sessionStorage: SessionStorage,
+    private session: Session,
+  ) {}
+
+  static async init(request: Request, secrets: string[]) {
     const storage = createCookieSessionStorage({
       cookie: {
         name: 'session',
@@ -63,7 +73,7 @@ class AppSession {
     return new this(storage, session);
   }
 
-  get(key) {
+  get(key: string) {
     return this.session.get(key);
   }
 
@@ -71,16 +81,16 @@ class AppSession {
     return this.sessionStorage.destroySession(this.session);
   }
 
-  flash(key, value) {
+  flash(key: string, value: any) {
     this.session.flash(key, value);
   }
 
-  unset(key) {
+  unset(key: string) {
     this.isPending = true;
     this.session.unset(key);
   }
 
-  set(key, value) {
+  set(key: string, value: any) {
     this.isPending = true;
     this.session.set(key, value);
   }

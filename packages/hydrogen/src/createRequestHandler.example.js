@@ -1,15 +1,9 @@
-import {createHydrogenContext, type HydrogenSession} from '@shopify/hydrogen';
-// @ts-expect-error
+import {createHydrogenContext, createRequestHandler} from '@shopify/hydrogen';
+import {createCookieSessionStorage} from 'react-router';
 import * as reactRouterBuild from 'virtual:react-router/server-build';
-import {
-  createRequestHandler,
-  createCookieSessionStorage,
-  type SessionStorage,
-  type Session,
-} from '@shopify/remix-oxygen';
 
 export default {
-  async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
+  async fetch(request, env, executionContext) {
     const waitUntil = executionContext.waitUntil.bind(executionContext);
     const [cache, session] = await Promise.all([
       caches.open('hydrogen'),
@@ -18,22 +12,22 @@ export default {
 
     /* Create context objects required to use Hydrogen with your credentials and options */
     const hydrogenContext = createHydrogenContext({
-      /* Environment variables from the fetch function */
       env,
-      /* Request object from the fetch function */
       request,
-      /* Cache API instance */
       cache,
-      /* Runtime utility in serverless environments */
       waitUntil,
       session,
     });
 
+    /**
+     * Create a request handler with Hydrogen utilities.
+     * This handler automatically proxies Storefront API requests
+     * and collects tracking information for analytics.
+     */
     const handleRequest = createRequestHandler({
       build: reactRouterBuild,
       mode: process.env.NODE_ENV,
-      /* Inject the customer account client in the Remix context */
-      getLoadContext: () => ({...hydrogenContext}),
+      getLoadContext: () => hydrogenContext,
     });
 
     const response = await handleRequest(request);
@@ -46,15 +40,10 @@ export default {
   },
 };
 
-class AppSession implements HydrogenSession {
-  public isPending = false;
+class AppSession {
+  isPending = false;
 
-  constructor(
-    private sessionStorage: SessionStorage,
-    private session: Session,
-  ) {}
-
-  static async init(request: Request, secrets: string[]) {
+  static async init(request, secrets) {
     const storage = createCookieSessionStorage({
       cookie: {
         name: 'session',
@@ -70,7 +59,7 @@ class AppSession implements HydrogenSession {
     return new this(storage, session);
   }
 
-  get(key: string) {
+  get(key) {
     return this.session.get(key);
   }
 
@@ -78,16 +67,16 @@ class AppSession implements HydrogenSession {
     return this.sessionStorage.destroySession(this.session);
   }
 
-  flash(key: string, value: any) {
+  flash(key, value) {
     this.session.flash(key, value);
   }
 
-  unset(key: string) {
+  unset(key) {
     this.isPending = true;
     this.session.unset(key);
   }
 
-  set(key: string, value: any) {
+  set(key, value) {
     this.isPending = true;
     this.session.set(key, value);
   }

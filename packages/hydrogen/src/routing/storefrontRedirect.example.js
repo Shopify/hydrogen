@@ -4,7 +4,7 @@ import * as reactRouterBuild from 'virtual:react-router/server-build';
 import {
   createRequestHandler,
   getStorefrontHeaders,
-} from '@shopify/remix-oxygen';
+} from '@shopify/hydrogen/oxygen';
 
 export default {
   async fetch(request, env, executionContext) {
