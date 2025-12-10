@@ -29,6 +29,9 @@ export function getDebugHeaders(request?: CrossRuntimeRequest) {
   };
 }
 
+/**
+ * Extracts relevant Storefront headers from the given Oxygen request.
+ */
 export function getStorefrontHeaders(
   request: CrossRuntimeRequest,
 ): StorefrontHeaders {
@@ -42,7 +45,7 @@ export function getStorefrontHeaders(
   };
 }
 
-// Regular expression to match Storefront API GraphQL endpoint paths.
+/** Regular expression to match Storefront API GraphQL endpoint paths */
 export const SFAPI_RE = /^\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
 
 export const getSafePathname = (url: string) => {

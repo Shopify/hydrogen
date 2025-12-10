@@ -150,8 +150,6 @@ describe('createHydrogenContext', () => {
         buyerIpSig: 'buyerIpSig value',
         cookie: 'cookie value',
         purpose: 'purpose',
-        accept: 'accept',
-        fetchDest: 'fetchDest',
       };
 
       createHydrogenContext({

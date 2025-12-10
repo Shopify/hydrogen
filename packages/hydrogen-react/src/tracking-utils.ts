@@ -4,8 +4,11 @@ export const SHOPIFY_VISIT_TOKEN_HEADER = 'X-Shopify-VisitToken';
 export const SHOPIFY_UNIQUE_TOKEN_HEADER = 'X-Shopify-UniqueToken';
 
 type TrackingValues = {
+  /** Identifier for the unique user. Equivalent to the deprecated _shopify_y cookie */
   uniqueToken: string;
+  /** Identifier for the current visit. Equivalent to the deprecated _shopify_s cookie */
   visitToken: string;
+  /** Represents the consent given by the user or the default region consent configured in Admin */
   consent: string;
 };
 
@@ -20,6 +23,19 @@ export const cachedTrackingValues: {
  * and marketing from the browser environment.
  */
 export function getTrackingValues(): TrackingValues {
+  // Overall behavior: Tracking values are returned in Server-Timing headers from
+  // Storefront API responses, and we want to find and return these tracking values.
+  //
+  // Search recent fetches for SFAPI requests matching either: same origin (proxy case)
+  // or a subdomain of the current host (eg: checkout subdomain, if there is no proxy).
+  // We consider SF API-like endpoints (/api/.../graphql.json) on subdomains, as well as
+  // any same-origin request. The reason for the latter is that Hydrogen server collects
+  // tracking values and returns them in any non-cached response, not just direct SF API
+  // responses. For example, a cart mutation in a server action could return tracking values.
+  //
+  // If we didn't find tracking values in fetch requests, we fall back to checking cached values,
+  // then the initial page navigation entry, and finally the deprecated `_shopify_s` and `_shopify_y`.
+
   let trackingValues: TrackingValues | undefined;
 
   if (
@@ -36,7 +52,7 @@ export function getTrackingValues(): TrackingValues {
       // Search backwards through resource entries to find the most recent match.
       // Match criteria (first one with _y and _s values wins):
       // - Same origin (exact host match) with tracking values, OR
-      // - Subdomain + SFAPI path with tracking values
+      // - Subdomain + SFAPI pathname with tracking values
       const entries = performance.getEntriesByType(
         'resource',
       ) as PerformanceResourceTiming[];
@@ -120,10 +136,9 @@ export function getTrackingValues(): TrackingValues {
 function extractFromPerformanceEntry(
   entry: PerformanceNavigationTiming | PerformanceResourceTiming,
   isConsentRequired = true,
-) {
+): TrackingValues | undefined {
   let uniqueToken = '';
   let visitToken = '';
-  /* Represents the consent given by the user or the default region consent configured in Admin */
   let consent = '';
 
   const serverTiming = entry.serverTiming;
@@ -139,6 +154,8 @@ function extractFromPerformanceEntry(
       } else if (name === '_s') {
         visitToken = description;
       } else if (name === '_cmp') {
+        // _cmp (consent management platform) holds the consent value
+        // used by consent-tracking-api and privacy-banner scripts.
         consent = description;
       }
 

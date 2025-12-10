@@ -3,7 +3,7 @@ import {
   extractServerTimingHeader,
   appendServerTimingHeader,
   isSfapiProxyEnabled,
-  hasBackendFetchedTracking,
+  hasServerReturnedTrackingValues,
 } from './server-timing';
 import {
   HYDROGEN_SERVER_TRACKING_KEY,
@@ -58,7 +58,7 @@ describe('server-timing', () => {
     });
 
     it('detects if backend fetched tracking is present', () => {
-      expect(hasBackendFetchedTracking()).toBe(false);
+      expect(hasServerReturnedTrackingValues()).toBe(false);
 
       vi.stubGlobal('window', {
         performance: {
@@ -68,7 +68,7 @@ describe('server-timing', () => {
         },
       });
 
-      expect(hasBackendFetchedTracking()).toBe(true);
+      expect(hasServerReturnedTrackingValues()).toBe(true);
     });
   });
 });

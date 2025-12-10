@@ -8,7 +8,7 @@ import {useRevalidator} from 'react-router';
 import {useLoadScript} from '@shopify/hydrogen-react/load-script';
 import {
   isSfapiProxyEnabled,
-  hasBackendFetchedTracking,
+  hasServerReturnedTrackingValues,
 } from '../utils/server-timing';
 
 export type ConsentStatus = boolean | undefined;
@@ -144,23 +144,28 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     sameDomainForStorefrontApi,
   } = props;
 
+  /** Determine if SF API proxy is enabled in Hydrogen server */
   const hasSfapiProxy = useMemo(
     () => sameDomainForStorefrontApi ?? isSfapiProxyEnabled(),
     [sameDomainForStorefrontApi],
   );
 
-  const fetchTrackingValues = useMemo(
-    () => hasSfapiProxy && !hasBackendFetchedTracking(),
+  /**
+   * Determine if we need to fetch tracking values from the browser.
+   * This can happen if the server did not collect this information already (e.g. subrequests were cached).
+   */
+  const fetchTrackingValuesFromBrowser = useMemo(
+    () => hasSfapiProxy && !hasServerReturnedTrackingValues(),
     [hasSfapiProxy],
   );
 
   const cookiesReady = useShopifyCookies({
-    fetchTrackingValues,
+    fetchTrackingValues: fetchTrackingValuesFromBrowser,
     storefrontAccessToken,
     ignoreDeprecatedCookies: true,
   });
 
-  // Check if backend fetched consent, otherwise fetch from browser
+  // Store initial tracking values to compare later
   const initialTrackingValues = useMemo(getTrackingValues, [cookiesReady]);
   const {revalidate} = useRevalidator();
 
@@ -204,6 +209,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       // Prefix with a dot to ensure this domain is different from checkoutRootDomain.
       // This will ensure old cookies are set for a cross-subdomain checkout setup
       // so that we keep backward compatibility until new cookies are rolled out.
+      // Once consent-tracking-api is updated to not rely on cookies anymore, we can remove this.
       storefrontRootDomain: commonAncestorDomain
         ? '.' + commonAncestorDomain
         : undefined,
@@ -231,7 +237,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
         initialTrackingValues.visitToken !== latestTrackingValues.visitToken ||
         initialTrackingValues.uniqueToken !== latestTrackingValues.uniqueToken
       ) {
-        // Tracking has changed: revalidate data to get updated checkoutUrl.
+        // Tracking has changed: revalidate data to get updated cart.checkoutUrl with new params.
         revalidate().catch(() => {
           console.warn(
             '[h2:warn:useCustomerPrivacy] Revalidation failed after consent change.',

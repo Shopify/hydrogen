@@ -31,7 +31,7 @@ type CreateRequestHandlerOptions<Context = unknown> = {
    * using Hydrogen's built-in analytics.
    * @default true
    */
-  tracking?: boolean;
+  collectTrackingInformation?: boolean;
   /**
    * Whether to proxy standard routes such as `/api/.../graphql.json` (Storefront API).
    * You can disable this if you are handling these routes yourself. Ensure that
@@ -49,10 +49,15 @@ export function createRequestHandler<Context = unknown>({
   mode,
   poweredByHeader = true,
   getLoadContext,
-  tracking = true,
+  collectTrackingInformation = true,
   proxyStandardRoutes = true,
 }: CreateRequestHandlerOptions<Context>) {
   const handleRequest = createReactRouterRequestHandler(build, mode);
+
+  const appendPoweredByHeader = poweredByHeader
+    ? (response: Response) =>
+        response.headers.append('powered-by', 'Shopify, Hydrogen')
+    : undefined;
 
   return async (request: Request) => {
     const method = request.method;
@@ -89,19 +94,23 @@ export function createRequestHandler<Context = unknown>({
       }
 
       if (storefront?.isStorefrontApiUrl(request)) {
-        return storefront.forward(request);
+        const response = await storefront.forward(request);
+        appendPoweredByHeader?.(response);
+        return response;
       }
     }
 
     const response = await handleRequest(request, context);
 
     if (storefront && proxyStandardRoutes) {
-      if (tracking) {
+      if (collectTrackingInformation) {
         storefront.setCollectedSubrequestHeaders(response);
       }
 
       // TODO: assume SFAPI proxy is available in future major version
-      // Signal that SFAPI proxy is enabled for document requests
+      // Signal that SFAPI proxy is enabled for document requests.
+      // Note: sec-fetch-dest is automatically added by modern browsers,
+      // but we also check the Accept header for other clients.
       const fetchDest = request.headers.get('sec-fetch-dest');
       if (
         (fetchDest && fetchDest === 'document') ||
@@ -111,9 +120,7 @@ export function createRequestHandler<Context = unknown>({
       }
     }
 
-    if (poweredByHeader) {
-      response.headers.append('powered-by', 'Shopify, Hydrogen');
-    }
+    appendPoweredByHeader?.(response);
 
     return response;
   };

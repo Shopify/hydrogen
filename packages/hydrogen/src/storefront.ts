@@ -283,16 +283,19 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   const requestCookie = storefrontHeaders?.cookie ?? '';
   if (requestCookie) defaultHeaders['cookie'] = requestCookie;
 
-  const hasCoreCookies = /\b_shopify_(analytics|marketing)=/.test(
-    requestCookie,
-  );
   let uniqueToken: string | undefined;
   let visitToken: string | undefined;
 
-  if (!hasCoreCookies) {
+  // If new cookies are not present, we need to check legacy cookies
+  // or generate new tokens, which we pass in the headers. This ensures
+  // we track the current session and SFAPI creates new cookies with
+  // the given tokens for subsequent requests.
+  if (!/\b_shopify_(analytics|marketing)=/.test(requestCookie)) {
     const legacyUniqueToken = requestCookie.match(/\b_shopify_y=([^;]+)/)?.[1];
     const legacyVisitToken = requestCookie.match(/\b_shopify_s=([^;]+)/)?.[1];
 
+    // These legacy headers might not be needed since they are already
+    // passed via cookies, but it's better to be explicit just in case.
     if (legacyUniqueToken) {
       defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = legacyUniqueToken;
     }
@@ -300,6 +303,9 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = legacyVisitToken;
     }
 
+    // Use legacy tokens if available for session migration, or generate
+    // new ones and set them in the new headers to let SFAPI create
+    // cookies and track the subrequests made in this session.
     uniqueToken = legacyUniqueToken ?? generateUUID();
     visitToken = legacyVisitToken ?? generateUUID();
 
@@ -402,6 +408,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       },
       streamConfig,
       onRawHeaders: (headers) => {
+        // Set this the first time we get a fresh response (cache miss)
+        // to increase the chance of returning it from the main server response.
+        // Note: a server response needs its headers set at the time of sending,
+        // while the body can be streamed later. Therefore, this value here
+        // might not be used if subrequests are not over before the main response is sent.
         collectedSubrequestHeaders ??= {
           setCookie: headers.getSetCookie(),
           serverTiming: headers.get('server-timing') ?? '',
@@ -617,7 +628,9 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
         // Only fallback to generated tokens for HTML responses.
         // This ensures that non-HTML responses (e.g. JSON, React Router streaming)
-        // don't get unexpected _y/_s values.
+        // don't get unexpected _y/_s values. These values might be used by the
+        // browser to set cookies and track the user session if consent is allowed
+        // by default in their store settings (otherwise these values are dropped).
         const fallbackValues = isDocumentResponse
           ? ({_y: uniqueToken, _s: visitToken} satisfies TrackedTimingsRecord)
           : undefined;
@@ -629,16 +642,25 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           ...serverTiming,
         } satisfies TrackedTimingsRecord);
 
-        // Indicate that the tracking work was done in the server
-        // to skip an extra request from the browser.
+        // Optimization: We set this flag to indicate that the tracking work was done
+        // in the server to skip an extra request from the browser. Conditions:
+        // If any of these conditions are not met, the browser will perform
+        // a request to the SFAPI proxy to get all the necessary cookies and values.
         if (
           isDocumentResponse &&
           collectedSubrequestHeaders &&
+          // _shopify_essential cookie is always set, but we need more than that
           collectedSubrequestHeaders.setCookie.length > 1 &&
           serverTiming?._y &&
           serverTiming?._s &&
           serverTiming?._cmp
         ) {
+          // For all SF API requests (that aren't from cache), we expect _y and _s values, as well as the
+          // _shopify_essential cookie to be returned. Even if we get responses from SF API requests that
+          // are cache misses, we still may not get the _cmp value and the _shopify_marketing and _shopify_analytics cookies.
+          // Therefore, even if we had >=1 non-cache hit SF API request, we may still need to make the browser
+          // SF API request to the `consentManagement` endpoint in the SF API, which will give us the _cmp value
+          // and set the _shopify_marketing and _shopify_analytics cookies if they are missing.
           appendServerTimingHeader(response, {
             [HYDROGEN_SERVER_TRACKING_KEY]: '1',
           });

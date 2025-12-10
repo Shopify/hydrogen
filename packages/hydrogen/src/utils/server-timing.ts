@@ -10,6 +10,9 @@ function buildServerTimingHeader(values: Record<string, string | undefined>) {
     .join(', ');
 }
 
+/**
+ * Creates a Server-Timing header from the given values and appends it to the response.
+ */
 export function appendServerTimingHeader(
   response: {headers: Headers},
   values: string | Parameters<typeof buildServerTimingHeader>[0],
@@ -22,6 +25,7 @@ export function appendServerTimingHeader(
   }
 }
 
+// In order: unique token, visit token, and consent
 const trackedTimings = ['_y', '_s', '_cmp'] as const;
 
 type TrackedTimingKeys = (typeof trackedTimings)[number];
@@ -49,7 +53,7 @@ export function extractServerTimingHeader(
 /**
  * Checks if a specific server-timing header is present in the navigation entry.
  */
-function hasServerTiming(key: string): boolean {
+function hasServerTimingInNavigationEntry(key: string): boolean {
   if (typeof window === 'undefined') return false;
 
   try {
@@ -68,13 +72,13 @@ function hasServerTiming(key: string): boolean {
  * _sfapi_proxy server-timing header in the navigation entry.
  */
 export function isSfapiProxyEnabled(): boolean {
-  return hasServerTiming(HYDROGEN_SFAPI_PROXY_KEY);
+  return hasServerTimingInNavigationEntry(HYDROGEN_SFAPI_PROXY_KEY);
 }
 
 /**
  * Checks if the backend already fetched tracking values by looking for
  * the _server_tracking server-timing header in the navigation entry.
  */
-export function hasBackendFetchedTracking(): boolean {
-  return hasServerTiming(HYDROGEN_SERVER_TRACKING_KEY);
+export function hasServerReturnedTrackingValues(): boolean {
+  return hasServerTimingInNavigationEntry(HYDROGEN_SERVER_TRACKING_KEY);
 }

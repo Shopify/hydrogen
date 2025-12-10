@@ -31,8 +31,6 @@ describe('createStorefrontClient', () => {
     buyerIpSig: 'sig',
     purpose: 'test',
     cookie: '_shopify_y=123; other=456; _shopify_s=789',
-    accept: 'text/html',
-    fetchDest: 'document',
   };
 
   describe('validation errors', () => {

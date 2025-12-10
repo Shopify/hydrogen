@@ -45,6 +45,9 @@ type UseShopifyCookiesOptions = CoreShopifyCookiesOptions & {
  * a different framework and still need to make a same-domain request to
  * Storefront API to set cookies.
  *
+ * If `ignoreDeprecatedCookies` is true, it skips setting the deprecated cookies entirely.
+ * Useful when you only want to use the newer tracking values and not rely on the deprecated ones.
+ *
  * @returns `true` when cookies are set and ready.
  */
 export function useShopifyCookies(options?: UseShopifyCookiesOptions): boolean {
@@ -64,6 +67,8 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): boolean {
   });
 
   useEffect(() => {
+    // Skip setting JS cookies until http-only cookies and server-timing
+    // are ready so that we have values synced in JS and http-only cookies.
     if (ignoreDeprecatedCookies || !coreCookiesReady) return;
 
     /**
@@ -187,7 +192,8 @@ async function fetchTrackingValuesFromBrowser(
       },
       body: JSON.stringify({
         query:
-          // TODO: update to a faster query when available
+          // This query ensures we get _cmp (consent) server-timing header, which is not available in other queries.
+          // This value can be passed later to consent-tracking-api and privacy-banner scripts to avoid extra requests.
           'query ensureCookies { consentManagement { cookies(visitorConsent:{}) { cookieDomain } } }',
       }),
     },
@@ -213,6 +219,11 @@ type CoreShopifyCookiesOptions = {
   checkoutDomain?: string;
 };
 
+/**
+ * Gets http-only cookies from Storefront API via same-origin fetch request.
+ * Falls back to checkout domain if provided to at least obtain the tracking
+ * values via server-timing headers.
+ */
 function useCoreShopifyCookies({
   checkoutDomain,
   storefrontAccessToken,
@@ -236,7 +247,8 @@ function useCoreShopifyCookies({
     fetchTrackingValuesFromBrowser(storefrontAccessToken)
       .catch((error) =>
         checkoutDomain
-          ? // Retry with checkout domain if available
+          ? // Retry with checkout domain if available to at least
+            // get the server-timing values for tracking.
             fetchTrackingValuesFromBrowser(
               storefrontAccessToken,
               checkoutDomain,
@@ -245,7 +257,7 @@ function useCoreShopifyCookies({
       )
       .catch((error) => {
         console.warn(
-          '[h2:warn:AnalyticsProvider] Failed to fetch consent from browser: ' +
+          '[h2:warn:useShopifyCookies] Failed to fetch tracking values from browser: ' +
             (error instanceof Error ? error.message : String(error)),
         );
       })
