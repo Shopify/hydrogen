@@ -1,15 +1,15 @@
 import {
   createCustomerAccountClient,
+  createRequestHandler,
   type HydrogenSession,
 } from '@shopify/hydrogen';
-// @ts-expect-error
-import * as reactRouterBuild from 'virtual:react-router/server-build';
 import {
-  createRequestHandler,
   createCookieSessionStorage,
   type SessionStorage,
   type Session,
-} from '@shopify/remix-oxygen';
+} from 'react-router';
+// @ts-expect-error
+import * as reactRouterBuild from 'virtual:react-router/server-build';
 
 export default {
   async fetch(

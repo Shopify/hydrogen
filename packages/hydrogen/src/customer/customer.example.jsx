@@ -1,10 +1,9 @@
-import {createCustomerAccountClient} from '@shopify/hydrogen';
-// @ts-expect-error
-import * as reactRouterBuild from 'virtual:react-router/server-build';
 import {
+  createCustomerAccountClient,
   createRequestHandler,
-  createCookieSessionStorage,
-} from '@shopify/remix-oxygen';
+} from '@shopify/hydrogen';
+import {createCookieSessionStorage} from 'react-router';
+import * as reactRouterBuild from 'virtual:react-router/server-build';
 
 export default {
   async fetch(request, env, executionContext) {
