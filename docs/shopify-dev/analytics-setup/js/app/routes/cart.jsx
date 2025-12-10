@@ -1,6 +1,5 @@
-import {useLoaderData} from '@remix-run/react';
+import {useLoaderData, data} from 'react-router';
 import {CartForm, Analytics} from '@shopify/hydrogen';
-import {data} from '@shopify/remix-oxygen';
 import {CartMain} from '~/components/CartMain';
 
 /**
@@ -122,9 +121,9 @@ export default function Cart() {
   );
 }
 
-/** @template T @typedef {import('@remix-run/react').MetaFunction<T>} MetaFunction */
-/** @template T @typedef {import('@remix-run/react').HeadersFunction<T>} HeadersFunction */
+/** @template T @typedef {import('react-router').MetaFunction<T>} MetaFunction */
+/** @template T @typedef {import('react-router').HeadersFunction<T>} HeadersFunction */
 /** @typedef {import('@shopify/hydrogen').CartQueryDataReturn} CartQueryDataReturn */
-/** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
-/** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof action>} ActionReturnData */
-/** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */
+/** @typedef {import('react-router').LoaderFunctionArgs} LoaderFunctionArgs */
+/** @typedef {import('react-router').SerializeFrom<typeof action>} ActionReturnData */
+/** @typedef {import('react-router').SerializeFrom<typeof loader>} LoaderReturnData */
