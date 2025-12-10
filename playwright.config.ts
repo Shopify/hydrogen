@@ -4,7 +4,7 @@ export default defineConfig({
   testMatch: /\.spec\.ts$/,
   retries: 0,
   reporter: 'list',
-  // Run one worker per file to ensure test isolation with different store configs
+  workers: 1,
   fullyParallel: true,
   timeout: 60 * 1000,
   projects: [
