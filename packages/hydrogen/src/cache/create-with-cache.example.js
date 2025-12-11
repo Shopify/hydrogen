@@ -1,8 +1,10 @@
 // In your app's `server.ts` file:
 import * as reactRouterBuild from 'virtual:react-router/server-build';
-import {createWithCache, CacheLong} from '@shopify/hydrogen';
-// Use another `createRequestHandler` if deploying off oxygen
-import {createRequestHandler} from '@shopify/hydrogen/oxygen';
+import {
+  createWithCache,
+  CacheLong,
+  createRequestHandler,
+} from '@shopify/hydrogen';
 
 export default {
   async fetch(request, env, executionContext) {

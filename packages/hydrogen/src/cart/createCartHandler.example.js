@@ -3,8 +3,8 @@ import {
   createCartHandler,
   cartGetIdDefault,
   cartSetIdDefault,
+  createRequestHandler,
 } from '@shopify/hydrogen';
-import {createRequestHandler} from '@shopify/hydrogen/oxygen';
 import * as reactRouterBuild from 'virtual:react-router/server-build';
 
 export default {
