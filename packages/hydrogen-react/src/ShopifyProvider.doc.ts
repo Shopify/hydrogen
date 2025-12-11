@@ -12,7 +12,7 @@ const data: ReferenceEntityTemplateSchema = {
     },
   ],
   description:
-    "The `ShopifyProvider` component wraps your entire app and provides functionality for many components, hooks, and utilities. The `ShopifyProvider` component also provides localization data for the app. You should place it in your app's entry point component.",
+    "The `ShopifyProvider` component wraps your entire app and provides functionality for many components, hooks, and utilities. The `ShopifyProvider` component also provides localization data for the app. You should place it in your app's entry point component. When `sameDomainForStorefrontApi` is enabled, Storefront API requests use the current origin, which requires a proxy setup.",
   type: 'component',
   defaultExample: {
     description: 'I am the default example',

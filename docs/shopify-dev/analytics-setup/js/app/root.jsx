@@ -1,5 +1,5 @@
 import {
-  useNonce
+  useNonce,
   // [START import]
   getShopAnalytics,
   Analytics,
@@ -14,7 +14,7 @@ import {
   useRouteLoaderData,
   ScrollRestoration,
   isRouteErrorResponse,
-} from '@remix-run/react';
+} from 'react-router';
 import favicon from '~/assets/favicon.svg';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
@@ -235,6 +235,6 @@ export function ErrorBoundary() {
 
 /** @typedef {LoaderReturnData} RootLoader */
 
-/** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
-/** @typedef {import('@remix-run/react').ShouldRevalidateFunction} ShouldRevalidateFunction */
-/** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */
+/** @typedef {import('react-router').LoaderFunctionArgs} LoaderFunctionArgs */
+/** @typedef {import('react-router').ShouldRevalidateFunction} ShouldRevalidateFunction */
+/** @typedef {import('react-router').SerializeFrom<typeof loader>} LoaderReturnData */

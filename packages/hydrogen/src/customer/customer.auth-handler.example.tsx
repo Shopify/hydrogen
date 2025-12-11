@@ -1,12 +1,16 @@
 // Example: Custom session implementation in server.ts
 // This shows how to use a custom session class with Hydrogen
-import {createHydrogenContext, type HydrogenSession} from '@shopify/hydrogen';
-import {createRequestHandler} from '@shopify/remix-oxygen';
+import {
+  createHydrogenContext,
+  createRequestHandler,
+  type HydrogenSession,
+} from '@shopify/hydrogen';
 import {
   createCookieSessionStorage,
   type SessionStorage,
   type Session,
-} from '@shopify/remix-oxygen';
+} from 'react-router';
+import * as reactRouterBuild from 'virtual:react-router/server-build';
 
 // In server.ts
 export default {
@@ -25,8 +29,7 @@ export default {
     });
 
     const handleRequest = createRequestHandler({
-      // @ts-expect-error
-      build: await import('virtual:react-router/server-build'),
+      build: reactRouterBuild,
       mode: process.env.NODE_ENV,
       getLoadContext: () => hydrogenContext,
     });

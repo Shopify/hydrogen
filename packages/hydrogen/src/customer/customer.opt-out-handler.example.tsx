@@ -1,15 +1,14 @@
 import {
   createCustomerAccountClient,
+  createRequestHandler,
   type HydrogenSession,
 } from '@shopify/hydrogen';
-// @ts-expect-error
-import * as reactRouterBuild from 'virtual:react-router/server-build';
 import {
-  createRequestHandler,
   createCookieSessionStorage,
   type SessionStorage,
   type Session,
-} from '@shopify/remix-oxygen';
+} from 'react-router';
+import * as reactRouterBuild from 'virtual:react-router/server-build';
 
 // In server.ts
 export default {
@@ -115,8 +114,8 @@ import {
   useRouteError,
   isRouteErrorResponse,
   useLocation,
+  type LoaderFunctionArgs,
 } from 'react-router';
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 
 export async function loader({context}: LoaderFunctionArgs) {
   if (!(await context.customerAccount.isLoggedIn())) {

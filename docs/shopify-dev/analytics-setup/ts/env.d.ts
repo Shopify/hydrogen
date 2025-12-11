@@ -1,5 +1,4 @@
 /// <reference types="vite/client" />
-/// <reference types="@shopify/remix-oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
 // Enhance TypeScript's built-in typings.
@@ -19,16 +18,16 @@ declare global {
   const process: {env: {NODE_ENV: 'production' | 'development'}};
 
   interface Env extends HydrogenEnv {
-    // declare additional Env parameter use in the fetch handler and Remix loader context here
+    // declare additional Env parameter use in the fetch handler and React Router loader context here
   }
 }
 
-declare module '@shopify/remix-oxygen' {
+declare module 'react-router' {
   interface AppLoadContext extends HydrogenContext<AppSession> {
-    // declare additional Remix loader context here
+    // declare additional React Router loader context here
   }
 
   interface SessionData extends HydrogenSessionData {
-    // declare local additions to the Remix session data here
+    // declare local additions to the session data here
   }
 }
