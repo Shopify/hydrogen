@@ -114,7 +114,7 @@ export function createRequestHandler<Context = unknown>({
       const fetchDest = request.headers.get('sec-fetch-dest');
       if (
         (fetchDest && fetchDest === 'document') ||
-        request.headers.get('accept') === 'text/html'
+        request.headers.get('accept')?.includes('text/html')
       ) {
         appendServerTimingHeader(response, {[HYDROGEN_SFAPI_PROXY_KEY]: '1'});
       }
