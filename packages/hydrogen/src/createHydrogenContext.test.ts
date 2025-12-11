@@ -9,7 +9,6 @@ import {
 } from './cart/createCartHandler';
 import {cartGetIdDefault} from './cart/cartGetIdDefault';
 import {cartSetIdDefault} from './cart/cartSetIdDefault';
-import type {CustomerAccount} from './customer/types';
 import type {HydrogenSession} from './types';
 
 vi.mock('./storefront', async () => ({
@@ -104,6 +103,7 @@ describe('createHydrogenContext', () => {
       const mockStorefrontHeaders = {
         requestGroupId: 'requestGroupId value',
         buyerIp: 'buyerIp value',
+        buyerIpSig: 'buyerIpSig value',
         cookie: 'cookie value',
         purpose: 'purpose value',
       };
@@ -139,6 +139,7 @@ describe('createHydrogenContext', () => {
       const mockeStorefrontHeaders = {
         requestGroupId: 'requestGroupId value',
         buyerIp: 'buyerIp value',
+        buyerIpSig: 'buyerIpSig value',
         cookie: 'cookie value',
         purpose: 'purpose',
       };

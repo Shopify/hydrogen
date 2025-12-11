@@ -1,25 +1,12 @@
-/// <reference types="@shopify/hydrogen" />
 import {
   createRequestHandler as createReactRouterRequestHandler,
   type AppLoadContext,
   type unstable_RouterContextProvider as RouterContextProvider,
   type ServerBuild,
 } from 'react-router';
-import {createEventLogger} from './event-logger';
-
-const originalErrorToString = Error.prototype.toString;
-Error.prototype.toString = function () {
-  return this.stack || originalErrorToString.call(this);
-};
-
-/** Key used to signal that the SFAPI proxy is enabled via server-timing header */
-const HYDROGEN_SFAPI_PROXY_KEY = '_sfapi_proxy';
-
-type Storefront = {
-  isStorefrontApiUrl: (request: {url?: string}) => boolean;
-  forward: (request: Request) => Promise<Response>;
-  setCollectedSubrequestHeaders: (response: {headers: Headers}) => void;
-};
+import {HYDROGEN_SFAPI_PROXY_KEY} from './constants';
+import {appendServerTimingHeader} from './utils/server-timing';
+import {warnOnce} from './utils/warning';
 
 type CreateRequestHandlerOptions<Context = unknown> = {
   /** React Router's server build */
@@ -27,16 +14,16 @@ type CreateRequestHandlerOptions<Context = unknown> = {
   /** React Router's mode */
   mode?: string;
   /**
-   * Whether to include the `powered-by` header in responses
-   * @default true
-   */
-  poweredByHeader?: boolean;
-  /**
    * Function to provide the load context for each request.
    * It must contain Hydrogen's storefront client instance
    * for other Hydrogen utilities to work properly.
    */
   getLoadContext?: (request: Request) => Promise<Context> | Context;
+  /**
+   * Whether to include the `powered-by` header in responses
+   * @default true
+   */
+  poweredByHeader?: boolean;
   /**
    * Collect tracking information from subrequests such as cookies
    * and forward them to the browser. Disable this if you are not
@@ -53,28 +40,9 @@ type CreateRequestHandlerOptions<Context = unknown> = {
   proxyStandardRoutes?: boolean;
 };
 
-function appendServerTimingHeader(
-  response: {headers: Headers},
-  values: Record<string, string | undefined>,
-) {
-  const header = Object.entries(values)
-    .map(([key, value]) => (value ? `${key};desc=${value}` : undefined))
-    .filter(Boolean)
-    .join(', ');
-
-  if (header) {
-    response.headers.append('Server-Timing', header);
-  }
-}
-
-const warnings = new Set<string>();
-function warnOnce(message: string) {
-  if (!warnings.has(message)) {
-    console.warn(message);
-    warnings.add(message);
-  }
-}
-
+/**
+ * Creates a request handler for Hydrogen apps using React Router.
+ */
 export function createRequestHandler<Context = unknown>({
   build,
   mode,
@@ -114,7 +82,7 @@ export function createRequestHandler<Context = unknown>({
       | undefined
       | (RouterContextProvider & AppLoadContext);
 
-    const storefront = context?.storefront as Storefront | undefined;
+    const storefront = context?.storefront;
 
     if (proxyStandardRoutes) {
       if (!storefront) {
@@ -130,15 +98,6 @@ export function createRequestHandler<Context = unknown>({
         return response;
       }
     }
-
-    if (process.env.NODE_ENV === 'development' && context) {
-      // Store logger in globalThis so it can be accessed from the worker.
-      // The global property must be different from the binding name,
-      // otherwise Miniflare throws an error when accessing it.
-      globalThis.__H2O_LOG_EVENT ??= createEventLogger(context);
-    }
-
-    const startTime = Date.now();
 
     const response = await handleRequest(request, context);
 
@@ -162,40 +121,6 @@ export function createRequestHandler<Context = unknown>({
 
     appendPoweredByHeader?.(response);
 
-    if (process.env.NODE_ENV === 'development') {
-      globalThis.__H2O_LOG_EVENT?.({
-        eventType: 'request',
-        url: request.url,
-        requestId: request.headers.get('request-id'),
-        purpose: request.headers.get('purpose'),
-        startTime,
-        responseInit: {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Array.from(response.headers.entries()),
-        } satisfies ResponseInit,
-      });
-    }
-
     return response;
-  };
-}
-
-type StorefrontHeaders = {
-  requestGroupId: string | null;
-  buyerIp: string | null;
-  buyerIpSig: string | null;
-  cookie: string | null;
-  purpose: string | null;
-};
-
-export function getStorefrontHeaders(request: Request): StorefrontHeaders {
-  const headers = request.headers;
-  return {
-    requestGroupId: headers.get('request-id'),
-    buyerIp: headers.get('oxygen-buyer-ip'),
-    buyerIpSig: headers.get('X-Shopify-Client-IP-Sig'),
-    cookie: headers.get('cookie'),
-    purpose: headers.get('sec-purpose') || headers.get('purpose'),
   };
 }
