@@ -402,7 +402,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         // while the body can be streamed later. Therefore, this value here
         // might not be used if subrequests are not over before the main response is sent.
         collectedSubrequestHeaders ??= {
-          setCookie: headers.getSetCookie(),
+          // `getSetCookie` may not be available in all environments (e.g., classic Remix compiler)
+          setCookie:
+            typeof headers.getSetCookie === 'function'
+              ? headers.getSetCookie()
+              : [],
           serverTiming: headers.get('server-timing') ?? '',
         };
       },
