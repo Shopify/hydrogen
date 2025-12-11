@@ -810,24 +810,27 @@ export class StorefrontPage {
    * @param enable - Whether to enable (true) or disable (false) the privacy banner
    */
   async setWithPrivacyBanner(enable: boolean) {
-    // Intercept the Hydrogen development bundle
-    await this.page.route('**/@fs/**/hydrogen/dist/**/*.js', async (route) => {
-      const response = await route.fetch();
-      let body = await response.text();
+    // Intercept the Hydrogen development bundle (Vite pre-bundled deps path)
+    await this.page.route(
+      '**/node_modules/.vite/deps/@shopify_hydrogen.js*',
+      async (route) => {
+        const response = await route.fetch();
+        let body = await response.text();
 
-      // Inject code to set withPrivacyBanner BEFORE the default check:
-      // Original: if (consent.withPrivacyBanner === void 0) { ...
-      // Modified: consent.withPrivacyBanner = true/false; if (consent.withPrivacyBanner === void 0) { ...
-      body = body.replace(
-        /if\s*\(consent\.withPrivacyBanner\s*===\s*void 0\)/g,
-        `consent.withPrivacyBanner = ${enable}; $&`,
-      );
+        // Inject code to set withPrivacyBanner BEFORE the default check:
+        // Original: if (consent.withPrivacyBanner === void 0) { ...
+        // Modified: consent.withPrivacyBanner = true/false; if (consent.withPrivacyBanner === void 0) { ...
+        body = body.replace(
+          /if\s*\(consent\.withPrivacyBanner\s*===\s*void 0\)/g,
+          `consent.withPrivacyBanner = ${enable}; $&`,
+        );
 
-      await route.fulfill({
-        status: response.status(),
-        headers: response.headers(),
-        body,
-      });
-    });
+        await route.fulfill({
+          status: response.status(),
+          headers: response.headers(),
+          body,
+        });
+      },
+    );
   }
 }
