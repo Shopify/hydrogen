@@ -187,6 +187,7 @@ export function createRequestHandler<Context = unknown>({
 type StorefrontHeaders = {
   requestGroupId: string | null;
   buyerIp: string | null;
+  buyerIpSig: string | null;
   cookie: string | null;
   purpose: string | null;
 };
@@ -196,6 +197,7 @@ export function getStorefrontHeaders(request: Request): StorefrontHeaders {
   return {
     requestGroupId: headers.get('request-id'),
     buyerIp: headers.get('oxygen-buyer-ip'),
+    buyerIpSig: headers.get('X-Shopify-Client-IP-Sig'),
     cookie: headers.get('cookie'),
     purpose: headers.get('purpose'),
   };
