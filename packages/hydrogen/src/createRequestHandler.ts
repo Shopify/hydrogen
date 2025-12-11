@@ -1,23 +1,23 @@
-/// <reference types="@shopify/hydrogen" />
 import {
   createRequestHandler as createRemixRequestHandler,
   type AppLoadContext,
   type ServerBuild,
 } from '@remix-run/server-runtime';
-import {createEventLogger} from './event-logger';
-
-const originalErrorToString = Error.prototype.toString;
-Error.prototype.toString = function () {
-  return this.stack || originalErrorToString.call(this);
-};
-
-/** Server-Timing header key to signal that the SFAPI proxy is enabled */
-const HYDROGEN_SFAPI_PROXY_KEY = '_sfapi_proxy';
+import {HYDROGEN_SFAPI_PROXY_KEY} from './constants';
 
 type CreateRequestHandlerOptions<Context = unknown> = {
   build: ServerBuild;
   mode?: string;
+  /**
+   * Whether to include the `powered-by` header in responses
+   * @default true
+   */
   poweredByHeader?: boolean;
+  /**
+   * Function to provide the load context for each request.
+   * It must contain Hydrogen's storefront client instance
+   * for other Hydrogen utilities to work properly.
+   */
   getLoadContext?: (request: Request) => Promise<Context> | Context;
   /**
    * Whether to proxy standard routes such as `/api/.../graphql.json` (Storefront API).
@@ -28,6 +28,9 @@ type CreateRequestHandlerOptions<Context = unknown> = {
   proxyStorefrontApiRequests?: boolean;
 };
 
+/**
+ * Creates a request handler for Hydrogen apps using Remix.
+ */
 export function createRequestHandler<Context = unknown>({
   build,
   mode,
@@ -78,15 +81,6 @@ export function createRequestHandler<Context = unknown>({
       return response;
     }
 
-    if (process.env.NODE_ENV === 'development' && context) {
-      // Store logger in globalThis so it can be accessed from the worker.
-      // The global property must be different from the binding name,
-      // otherwise Miniflare throws an error when accessing it.
-      globalThis.__H2O_LOG_EVENT ??= createEventLogger(context);
-    }
-
-    const startTime = Date.now();
-
     const response = await handleRequest(request, context);
 
     appendPoweredByHeader?.(response);
@@ -110,45 +104,13 @@ export function createRequestHandler<Context = unknown>({
       }
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      globalThis.__H2O_LOG_EVENT?.({
-        eventType: 'request',
-        url: request.url,
-        requestId: request.headers.get('request-id'),
-        purpose: request.headers.get('purpose'),
-        startTime,
-        responseInit: {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Array.from(response.headers.entries()),
-        } satisfies ResponseInit,
-      });
-    }
-
     return response;
-  };
-}
-
-type StorefrontHeaders = {
-  requestGroupId: string | null;
-  buyerIp: string | null;
-  cookie: string | null;
-  purpose: string | null;
-};
-
-export function getStorefrontHeaders(request: Request): StorefrontHeaders {
-  const headers = request.headers;
-  return {
-    requestGroupId: headers.get('request-id'),
-    buyerIp: headers.get('oxygen-buyer-ip'),
-    cookie: headers.get('cookie'),
-    purpose: headers.get('purpose'),
   };
 }
 
 /**
  * Minimal storefront interface needed for proxy functionality.
- * The full Storefront type is defined in @shopify/hydrogen.
+ * The full Storefront type is defined in ./storefront.ts.
  */
 type StorefrontForProxy = {
   isStorefrontApiUrl: (request: {url?: string}) => boolean;
