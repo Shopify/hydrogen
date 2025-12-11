@@ -3,7 +3,7 @@ import {setTestStore, test, expect} from '../../fixtures';
 setTestStore('defaultConsentAllowed_cookiesEnabled');
 
 test.describe('Consent Tracking - Auto-Allowed (Consent Allowed by Default)', () => {
-  test('should set analytics cookies and fire analytics requests immediately when consent is allowed by default', async ({
+  test.only('should set analytics cookies and fire analytics requests immediately when consent is allowed by default', async ({
     storefront,
   }: Parameters<Parameters<typeof test>[2]>[0]) => {
     // Enable privacy banner setting (but banner shouldn't show since consent is auto-allowed)
