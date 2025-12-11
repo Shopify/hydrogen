@@ -1,5 +1,4 @@
 import {storefrontRedirect, createStorefrontClient} from '@shopify/hydrogen';
-// @ts-expect-error
 import * as reactRouterBuild from 'virtual:react-router/server-build';
 import {
   createRequestHandler,

@@ -1,7 +1,7 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'getShopifyCookies',
+  name: 'getTrackingValues',
   category: 'utilities',
   isVisualComponent: false,
   related: [
@@ -13,13 +13,13 @@ const data: ReferenceEntityTemplateSchema = {
     },
     {
       subtitle: 'Utility',
-      name: 'getTrackingValues',
-      url: '/api/hydrogen-react/utilities/getTrackingValues',
+      name: 'getShopifyCookies',
+      url: '/api/hydrogen-react/utilities/getShopifyCookies',
       type: 'gear',
     },
   ],
   description:
-    'Parses cookie string and returns Shopify cookies. For tracking values, consider using `getTrackingValues` instead, which reads from modern Shopify cookies.',
+    'Retrieves user session tracking values for analytics and marketing from the browser environment. It reads from `server-timing` headers in Storefront API responses and falls back to deprecated cookies for backward compatibility.',
   type: 'utility',
   defaultExample: {
     description: 'I am the default example',
@@ -27,12 +27,12 @@ const data: ReferenceEntityTemplateSchema = {
       tabs: [
         {
           title: 'JavaScript',
-          code: './get-shopify-cookies.example.jsx',
+          code: './tracking-utils.example.jsx',
           language: 'jsx',
         },
         {
           title: 'TypeScript',
-          code: './get-shopify-cookies.example.tsx',
+          code: './tracking-utils.example.tsx',
           language: 'tsx',
         },
       ],
@@ -41,15 +41,10 @@ const data: ReferenceEntityTemplateSchema = {
   },
   definitions: [
     {
-      title: 'getShopifyCookies',
-      type: 'GetShopifyCookiesGeneratedType',
+      title: 'getTrackingValues',
+      type: 'GetTrackingValuesGeneratedType',
       description:
-        "If the Shopify cookies doesn't exist, this method will return empty string for each missing cookie.",
-    },
-    {
-      title: 'ShopifyCookies',
-      type: 'ShopifyCookies',
-      description: 'Shopify cookies names',
+        'Returns an object containing `uniqueToken`, `visitToken`, and `consent` values.',
     },
   ],
 };

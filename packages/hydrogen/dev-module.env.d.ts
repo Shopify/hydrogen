@@ -1,6 +1,9 @@
 /**
  * This file is used to provide types for doc examples.
  * Do not place here types needed for the library itself.
+ * Note: since this file has a top-level import/export, it is treated
+ * as a module. Therefore, we can only augment existing global types
+ * but cannot declare new ambient modules here. Use dev-ambient.env.d.ts for that.
  */
 
 import type {HydrogenContext} from './src/index';

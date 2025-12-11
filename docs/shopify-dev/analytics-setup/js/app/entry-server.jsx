@@ -1,4 +1,4 @@
-import {RemixServer} from '@remix-run/react';
+import {ServerRouter} from 'react-router';
 import {isbot} from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
 import {createContentSecurityPolicy} from '@shopify/hydrogen';
@@ -30,7 +30,7 @@ export default async function handleRequest(
 
   const body = await renderToReadableStream(
     <NonceProvider>
-      <RemixServer context={remixContext} url={request.url} nonce={nonce} />
+      <ServerRouter context={remixContext} url={request.url} nonce={nonce} />
     </NonceProvider>,
     {
       nonce,
@@ -56,5 +56,5 @@ export default async function handleRequest(
   });
 }
 
-/** @typedef {import('@shopify/remix-oxygen').EntryContext} EntryContext */
-/** @typedef {import('@shopify/remix-oxygen').AppLoadContext} AppLoadContext */
+/** @typedef {import('react-router').EntryContext} EntryContext */
+/** @typedef {import('react-router').AppLoadContext} AppLoadContext */

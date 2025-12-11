@@ -1,31 +1,33 @@
-import {
-  createCustomerAccountClient,
-  createRequestHandler,
-} from '@shopify/hydrogen';
+import {createHydrogenContext, createRequestHandler} from '@shopify/hydrogen';
 import {createCookieSessionStorage} from 'react-router';
 import * as reactRouterBuild from 'virtual:react-router/server-build';
 
 export default {
   async fetch(request, env, executionContext) {
-    const session = await AppSession.init(request, [env.SESSION_SECRET]);
+    const waitUntil = executionContext.waitUntil.bind(executionContext);
+    const [cache, session] = await Promise.all([
+      caches.open('hydrogen'),
+      AppSession.init(request, [env.SESSION_SECRET]),
+    ]);
 
-    /* Create a Customer API client with your credentials and options */
-    const customerAccount = createCustomerAccountClient({
-      /* Runtime utility in serverless environments */
-      waitUntil: (p) => executionContext.waitUntil(p),
-      /* Public Customer Account API token for your store */
-      customerAccountId: env.PUBLIC_CUSTOMER_ACCOUNT_ID,
-      /* Shop Id */
-      shopId: env.SHOP_ID,
+    /* Create context objects required to use Hydrogen with your credentials and options */
+    const hydrogenContext = createHydrogenContext({
+      env,
       request,
+      cache,
+      waitUntil,
       session,
     });
 
+    /**
+     * Create a request handler with Hydrogen utilities.
+     * This handler automatically proxies Storefront API requests
+     * and collects tracking information for analytics.
+     */
     const handleRequest = createRequestHandler({
       build: reactRouterBuild,
       mode: process.env.NODE_ENV,
-      /* Inject the customer account client in the Remix context */
-      getLoadContext: () => ({customerAccount}),
+      getLoadContext: () => hydrogenContext,
     });
 
     const response = await handleRequest(request);

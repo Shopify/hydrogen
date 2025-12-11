@@ -1,7 +1,13 @@
-import {type MetaFunction, useLoaderData} from '@remix-run/react';
+import {
+  type MetaFunction,
+  useLoaderData,
+  data,
+  type LoaderFunctionArgs,
+  type ActionFunctionArgs,
+  type HeadersFunction,
+} from 'react-router';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm, Analytics} from '@shopify/hydrogen';
-import {data, type LoaderFunctionArgs, type ActionFunctionArgs, type HeadersFunction} from '@shopify/remix-oxygen';
 import {CartMain} from '~/components/CartMain';
 
 export const meta: MetaFunction = () => {

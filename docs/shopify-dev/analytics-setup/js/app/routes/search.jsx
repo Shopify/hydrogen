@@ -1,4 +1,4 @@
-import {useLoaderData} from '@remix-run/react';
+import {useLoaderData} from 'react-router';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {SearchForm} from '~/components/SearchForm';
 import {SearchResults} from '~/components/SearchResults';
@@ -413,9 +413,9 @@ async function predictiveSearch({request, context}) {
   return {type, term, result: {items, total}};
 }
 
-/** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
-/** @typedef {import('@shopify/remix-oxygen').ActionFunctionArgs} ActionFunctionArgs */
-/** @template T @typedef {import('@remix-run/react').MetaFunction<T>} MetaFunction */
+/** @typedef {import('react-router').LoaderFunctionArgs} LoaderFunctionArgs */
+/** @typedef {import('react-router').ActionFunctionArgs} ActionFunctionArgs */
+/** @template T @typedef {import('react-router').MetaFunction<T>} MetaFunction */
 /** @typedef {import('~/lib/search').RegularSearchReturn} RegularSearchReturn */
 /** @typedef {import('~/lib/search').PredictiveSearchReturn} PredictiveSearchReturn */
-/** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */
+/** @typedef {import('react-router').SerializeFrom<typeof loader>} LoaderReturnData */

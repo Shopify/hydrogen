@@ -125,3 +125,35 @@ export function createRequestHandler<Context = unknown>({
     return response;
   };
 }
+
+export type CreateRequestHandlerOptionsForDocs = {
+  /** React Router's server build */
+  build: ServerBuild;
+  /** React Router's mode */
+  mode?: string;
+  /**
+   * Function to provide the load context for each request.
+   * It must contain Hydrogen's storefront client instance
+   * for other Hydrogen utilities to work properly.
+   */
+  getLoadContext?: (request: Request) => Promise<unknown> | unknown;
+  /**
+   * Whether to include the `powered-by` header in responses.
+   * @default true
+   */
+  poweredByHeader?: boolean;
+  /**
+   * Collect tracking information from subrequests such as cookies
+   * and forward them to the browser. Disable this if you are not
+   * using Hydrogen's built-in analytics.
+   * @default true
+   */
+  collectTrackingInformation?: boolean;
+  /**
+   * Whether to proxy standard routes such as `/api/.../graphql.json` (Storefront API).
+   * You can disable this if you are handling these routes yourself. Ensure that
+   * the proxy works if you rely on Hydrogen's built-in behaviors such as analytics.
+   * @default true
+   */
+  proxyStandardRoutes?: boolean;
+};

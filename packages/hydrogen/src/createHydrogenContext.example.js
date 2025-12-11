@@ -1,10 +1,6 @@
-import {createHydrogenContext} from '@shopify/hydrogen';
-// @ts-expect-error
+import {createHydrogenContext, createRequestHandler} from '@shopify/hydrogen';
 import * as reactRouterBuild from 'virtual:react-router/server-build';
-import {
-  createRequestHandler,
-  createCookieSessionStorage,
-} from '@shopify/remix-oxygen';
+import {createCookieSessionStorage} from 'react-router';
 
 export default {
   async fetch(request, env, executionContext) {
@@ -31,7 +27,7 @@ export default {
       build: reactRouterBuild,
       mode: process.env.NODE_ENV,
       /* Inject the customer account client in the Remix context */
-      getLoadContext: () => ({...hydrogenContext}),
+      getLoadContext: () => hydrogenContext,
     });
 
     const response = await handleRequest(request);

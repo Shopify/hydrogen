@@ -1,5 +1,5 @@
 import {Analytics} from '@shopify/hydrogen';
-import {type LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import {type LoaderFunctionArgs} from 'react-router';
 import {useLoaderData} from 'react-router';
 
 export async function loader({request}: LoaderFunctionArgs) {
