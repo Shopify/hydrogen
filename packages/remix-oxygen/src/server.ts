@@ -71,7 +71,7 @@ type CreateRequestHandlerOptions<Context = unknown> = {
    * the proxy works if you rely on Hydrogen's built-in behaviors such as analytics.
    * @default true
    */
-  proxyStorefrontApiRequests?: boolean;
+  proxyStandardRoutes?: boolean;
 };
 
 export function createRequestHandler<Context = unknown>({
@@ -80,7 +80,7 @@ export function createRequestHandler<Context = unknown>({
   poweredByHeader = true,
   getLoadContext,
   collectTrackingInformation = true,
-  proxyStorefrontApiRequests = true,
+  proxyStandardRoutes = true,
 }: CreateRequestHandlerOptions<Context>) {
   const handleRequest = createRemixRequestHandler(build, mode);
 
@@ -118,7 +118,7 @@ export function createRequestHandler<Context = unknown>({
       context as {storefront?: StorefrontForProxy} | undefined
     )?.storefront;
 
-    if (proxyStorefrontApiRequests) {
+    if (proxyStandardRoutes) {
       if (!storefront) {
         // TODO: this should throw error in future major version
         warnOnce(
@@ -145,7 +145,7 @@ export function createRequestHandler<Context = unknown>({
 
     const response = await handleRequest(request, context);
 
-    if (storefront && proxyStorefrontApiRequests) {
+    if (storefront && proxyStandardRoutes) {
       if (collectTrackingInformation) {
         storefront.setCollectedSubrequestHeaders(response);
       }
