@@ -1,4 +1,6 @@
-import {test, expect} from '@playwright/test';
+import {setTestStore, test, expect} from '../../fixtures';
+
+setTestStore('mockShop');
 
 test.describe('Cart Functionality', () => {
   test('should add first product to cart and verify cart updates', async ({

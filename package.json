@@ -35,8 +35,10 @@
     "changeset": "changeset",
     "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/*/dist && rimraf templates/*/.cache",
     "check": "npm run build && npm run lint && npm run typecheck && npm run test",
-    "e2e": "node scripts/run-e2e.js",
-    "e2e:smoke": "node scripts/run-e2e.js --smoke",
+    "e2e": "playwright test",
+    "e2e:old-cookies": "playwright test --project=old-cookies",
+    "e2e:new-cookies": "playwright test --project=new-cookies",
+    "e2e:smoke": "playwright test --project=smoke",
     "pre-commit:encrypt": "bash -c 'git diff --cached --name-only | grep -q \"^secrets.ejson$\" && ejson encrypt secrets.ejson && git add secrets.ejson || true'"
   },
   "workspaces": [
@@ -68,7 +70,7 @@
     "@eslint/compat": "1.2.5",
     "@eslint/eslintrc": "3.2.0",
     "@eslint/js": "9.19.0",
-    "@playwright/test": "^1.40.1",
+    "@playwright/test": "^1.57.0",
     "@qwik.dev/partytown": "^0.11.2",
     "@react-router/dev": "7.9.2",
     "@react-router/fs-routes": "7.9.2",

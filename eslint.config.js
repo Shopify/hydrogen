@@ -400,4 +400,15 @@ module.exports = [
     files: ['packages/hydrogen/**/*.tsx', 'packages/hydrogen/**/*.ts'],
     rules: {'react-hooks/exhaustive-deps': 'off'},
   },
+
+  // E2E tests configuration
+  {
+    files: ['e2e/**/*.ts'],
+    rules: {
+      // Playwright fixtures use empty destructuring patterns
+      'no-empty-pattern': 'off',
+      // Playwright's `use` function in fixtures triggers this rule incorrectly
+      'react-hooks/rules-of-hooks': 'off',
+    },
+  },
 ];

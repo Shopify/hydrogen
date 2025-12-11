@@ -1,33 +1,25 @@
 import {defineConfig} from '@playwright/test';
 
-// Check for smoke test environment variable or if running smoke tests specifically
-const isSmoke =
-  process.env.SMOKE_TEST === 'true' ||
-  process.argv.some((arg) => arg.includes('e2e/smoke'));
-
-// Determine test directory based on smoke flag
-const testDir = isSmoke ? './e2e/smoke' : './e2e';
-
 export default defineConfig({
-  // Configure test directory based on smoke flag
-  testDir,
-
-  // Base URL for all tests
-  use: {
-    baseURL: 'http://localhost:3000',
-  },
-
-  // No retries for now
+  testMatch: /\.spec\.ts$/,
   retries: 0,
-
-  // Use list reporter for clear output
   reporter: 'list',
-
-  // Automatically start dev server before tests
-  webServer: {
-    command: 'cd templates/skeleton && npm run dev',
-    url: 'http://localhost:3000',
-    timeout: 60 * 1000,
-    reuseExistingServer: !process.env.CI,
-  },
+  workers: 1,
+  fullyParallel: true,
+  timeout: 60 * 1000,
+  projects: [
+    {
+      name: 'smoke',
+      testDir: './e2e/specs/smoke',
+    },
+    {
+      name: 'new-cookies',
+      testDir: './e2e/specs/new-cookies',
+    },
+    {
+      // TODO: remove once new cookies are rolled out
+      name: 'old-cookies',
+      testDir: './e2e/specs/old-cookies',
+    },
+  ],
 });

@@ -1,6 +1,5 @@
 // Virtual entry point for the app
-import {storefrontRedirect} from '@shopify/hydrogen';
-import {createRequestHandler} from '@shopify/hydrogen/oxygen';
+import {createRequestHandler, storefrontRedirect} from '@shopify/hydrogen';
 import {createHydrogenRouterContext} from '~/lib/context';
 
 /**
@@ -20,8 +19,8 @@ export default {
       );
 
       /**
-       * Create a Remix request handler and pass
-       * Hydrogen's Storefront client to the loader context.
+       * Create a Hydrogen request handler that internally
+       * delegates to React Router for routing and rendering.
        */
       const handleRequest = createRequestHandler({
         // eslint-disable-next-line import/no-unresolved
