@@ -1,4 +1,4 @@
-import {describe, beforeAll, expect, it, vi} from 'vitest';
+import {describe, beforeAll, beforeEach, expect, it, vi} from 'vitest';
 import {render, screen, act} from '@testing-library/react';
 import {
   Analytics,
@@ -90,12 +90,26 @@ const CART_DATA_3 = {
 
 // Mock the useLocation hook to return a different path each time to simulate page navigation
 let pathCount = 1;
-vi.mock('react-router', () => ({
-  useLocation: () => ({
-    pathname: `/example/path/${pathCount++}`,
-    search: '',
-  }),
-}));
+const revalidateMock = vi.fn<() => Promise<void>>(() => Promise.resolve());
+
+vi.mock('react-router', async (importOriginal) => {
+  const actual = (await importOriginal()) as typeof import('react-router');
+
+  return {
+    ...actual,
+    useLocation: () => ({
+      pathname: `/example/path/${pathCount++}`,
+      search: '',
+      state: '',
+      key: '',
+      hash: '',
+    }),
+    useRevalidator: () => ({
+      revalidate: revalidateMock,
+      state: 'idle',
+    }),
+  };
+});
 
 // Avoid downloading the PerfKit script in tests
 vi.mock('./PerfKit', () => ({
@@ -103,6 +117,11 @@ vi.mock('./PerfKit', () => ({
 }));
 
 describe('<Analytics.Provider />', () => {
+  beforeEach(() => {
+    revalidateMock.mockClear();
+    pathCount = 1;
+  });
+
   beforeAll(() => {
     global.document.cookie = `_cmp_a=%7B%22purposes%22%3A%7B%22p%22%3Afalse%2C%22a%22%3Afalse%2C%22m%22%3Afalse%2C%22t%22%3Atrue%7D%2C%22display_banner%22%3Afalse%2C%22sale_of_data_region%22%3Afalse%7D`;
     global.document.cookie = `_tracking_consent=%7B%22con%22%3A%7B%22CMP%22%3A%7B%22a%22%3A%22%22%2C%22m%22%3A%22%22%2C%22p%22%3A%22%22%2C%22s%22%3A%22%22%7D%7D%2C%22v%22%3A%222.1%22%2C%22region%22%3A%22CAON%22%2C%22reg%22%3A%22%22%7D`;

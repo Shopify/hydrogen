@@ -1,3 +1,6 @@
+import {SHOPIFY_CLIENT_IP_SIG_HEADER} from '../constants';
+import type {StorefrontHeaders} from '../types';
+
 export type CrossRuntimeRequest = {
   url?: string;
   method?: string;
@@ -24,4 +27,42 @@ export function getDebugHeaders(request?: CrossRuntimeRequest) {
     requestId: request ? getHeader(request, 'request-id') : undefined,
     purpose: request ? getHeader(request, 'purpose') : undefined,
   };
+}
+
+/**
+ * Extracts relevant Storefront headers from the given Oxygen request.
+ */
+export function getStorefrontHeaders(
+  request: CrossRuntimeRequest,
+): StorefrontHeaders {
+  return {
+    requestGroupId: getHeader(request, 'request-id'),
+    buyerIp: getHeader(request, 'oxygen-buyer-ip'),
+    buyerIpSig: getHeader(request, SHOPIFY_CLIENT_IP_SIG_HEADER),
+    cookie: getHeader(request, 'cookie'),
+    // sec-purpose is added by browsers automatically when using link/prefetch or Speculation Rules
+    purpose: getHeader(request, 'sec-purpose') || getHeader(request, 'purpose'),
+  };
+}
+
+/** Regular expression to match Storefront API GraphQL endpoint paths */
+export const SFAPI_RE = /^\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
+
+export const getSafePathname = (url: string) => {
+  try {
+    return new URL(url, 'http://e.c').pathname;
+  } catch {
+    return '/';
+  }
+};
+
+export function extractHeaders(
+  extract: (key: string) => string | undefined | null,
+  keys: string[],
+) {
+  return keys.reduce<[string, string][]>((acc, key) => {
+    const forwardedValue = extract(key);
+    if (forwardedValue) acc.push([key, forwardedValue]);
+    return acc;
+  }, []);
 }
