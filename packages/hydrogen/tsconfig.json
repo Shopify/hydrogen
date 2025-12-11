@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src", "dev.env.d.ts"],
+  "include": ["src", "dev-module.env.d.ts", "dev-ambient.env.d.ts"],
   "compilerOptions": {
     "jsx": "react-jsx",
     "types": [
