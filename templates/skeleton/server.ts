@@ -3,8 +3,7 @@
 // @ts-ignore
 // eslint-disable-next-line import/no-unresolved
 import * as remixBuild from 'virtual:remix/server-build';
-import {storefrontRedirect} from '@shopify/hydrogen';
-import {createRequestHandler} from '@shopify/remix-oxygen';
+import {storefrontRedirect, createRequestHandler} from '@shopify/hydrogen';
 import {createAppLoadContext} from '~/lib/context';
 
 /**
@@ -31,6 +30,7 @@ export default {
         build: remixBuild,
         mode: process.env.NODE_ENV,
         getLoadContext: () => appLoadContext,
+        proxyStandardRoutes: true,
       });
 
       const response = await handleRequest(request);
