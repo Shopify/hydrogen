@@ -1,5 +1,4 @@
 // In your app's `server.ts` file:
-// @ts-expect-error
 import * as reactRouterBuild from 'virtual:react-router/server-build';
 import {createWithCache, CacheLong} from '@shopify/hydrogen';
 // Use another `createRequestHandler` if deploying off oxygen

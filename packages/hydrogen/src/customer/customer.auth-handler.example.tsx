@@ -10,6 +10,7 @@ import {
   type SessionStorage,
   type Session,
 } from 'react-router';
+import * as reactRouterBuild from 'virtual:react-router/server-build';
 
 // In server.ts
 export default {
@@ -28,8 +29,7 @@ export default {
     });
 
     const handleRequest = createRequestHandler({
-      // @ts-expect-error
-      build: await import('virtual:react-router/server-build'),
+      build: reactRouterBuild,
       mode: process.env.NODE_ENV,
       getLoadContext: () => hydrogenContext,
     });

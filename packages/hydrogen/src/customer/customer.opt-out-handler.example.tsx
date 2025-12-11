@@ -8,7 +8,6 @@ import {
   type SessionStorage,
   type Session,
 } from 'react-router';
-// @ts-expect-error
 import * as reactRouterBuild from 'virtual:react-router/server-build';
 
 // In server.ts

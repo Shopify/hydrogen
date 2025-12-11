@@ -4,10 +4,7 @@ import {
   cartGetIdDefault,
   cartSetIdDefault,
 } from '@shopify/hydrogen';
-import {
-  createRequestHandler,
-  getStorefrontHeaders,
-} from '@shopify/hydrogen/oxygen';
+import {createRequestHandler} from '@shopify/hydrogen/oxygen';
 import * as reactRouterBuild from 'virtual:react-router/server-build';
 
 export default {
