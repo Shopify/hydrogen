@@ -14,11 +14,57 @@ Error.prototype.toString = function () {
 /** Server-Timing header key to signal that the SFAPI proxy is enabled */
 const HYDROGEN_SFAPI_PROXY_KEY = '_sfapi_proxy';
 
+let hasWarnedAboutStorefront = false;
+
+function warnOnce(message: string) {
+  if (!hasWarnedAboutStorefront) {
+    hasWarnedAboutStorefront = true;
+    console.warn(message);
+  }
+}
+
+function buildServerTimingHeader(values: Record<string, string | undefined>) {
+  return Object.entries(values)
+    .map(([key, value]) => (value ? `${key};desc=${value}` : undefined))
+    .filter(Boolean)
+    .join(', ');
+}
+
+function appendServerTimingHeader(
+  response: {headers: Headers},
+  values: string | Record<string, string | undefined>,
+) {
+  const header =
+    typeof values === 'string' ? values : buildServerTimingHeader(values);
+
+  if (header) {
+    response.headers.append('Server-Timing', header);
+  }
+}
+
 type CreateRequestHandlerOptions<Context = unknown> = {
+  /** Remix's server build */
   build: ServerBuild;
+  /** Remix's mode */
   mode?: string;
-  poweredByHeader?: boolean;
+  /**
+   * Function to provide the load context for each request.
+   * It must contain Hydrogen's storefront client instance
+   * for other Hydrogen utilities to work properly.
+   */
   getLoadContext?: (request: Request) => Promise<Context> | Context;
+  /**
+   * Whether to include the `powered-by` header in responses
+   * @default true
+   */
+  poweredByHeader?: boolean;
+  /**
+   * Collect tracking information from subrequests such as cookies
+   * and forward them to the browser. Disable this if you are not
+   * using Hydrogen's built-in analytics.
+   * @default true
+   */
+  collectTrackingInformation?: boolean;
   /**
    * Whether to proxy standard routes such as `/api/.../graphql.json` (Storefront API).
    * You can disable this if you are handling these routes yourself. Ensure that
@@ -33,6 +79,7 @@ export function createRequestHandler<Context = unknown>({
   mode,
   poweredByHeader = true,
   getLoadContext,
+  collectTrackingInformation = true,
   proxyStorefrontApiRequests = true,
 }: CreateRequestHandlerOptions<Context>) {
   const handleRequest = createRemixRequestHandler(build, mode);
@@ -71,11 +118,20 @@ export function createRequestHandler<Context = unknown>({
       context as {storefront?: StorefrontForProxy} | undefined
     )?.storefront;
 
-    // Proxy Storefront API requests
-    if (proxyStorefrontApiRequests && storefront?.isStorefrontApiUrl(request)) {
-      const response = await storefront.forward(request);
-      appendPoweredByHeader?.(response);
-      return response;
+    if (proxyStorefrontApiRequests) {
+      if (!storefront) {
+        // TODO: this should throw error in future major version
+        warnOnce(
+          '[h2:createRequestHandler] Storefront instance is required to proxy standard routes.',
+        );
+      }
+
+      // Proxy Storefront API requests
+      if (storefront?.isStorefrontApiUrl(request)) {
+        const response = await storefront.forward(request);
+        appendPoweredByHeader?.(response);
+        return response;
+      }
     }
 
     if (process.env.NODE_ENV === 'development' && context) {
@@ -89,12 +145,12 @@ export function createRequestHandler<Context = unknown>({
 
     const response = await handleRequest(request, context);
 
-    appendPoweredByHeader?.(response);
+    if (storefront && proxyStorefrontApiRequests) {
+      if (collectTrackingInformation) {
+        storefront.setCollectedSubrequestHeaders(response);
+      }
 
-    // Collect tracking headers from storefront subrequests
-    if (proxyStorefrontApiRequests && storefront) {
-      storefront.setCollectedSubrequestHeaders(response);
-
+      // TODO: assume SFAPI proxy is available in future major version
       // Signal that SFAPI proxy is enabled for document requests.
       // Note: sec-fetch-dest is automatically added by modern browsers,
       // but we also check the Accept header for other clients.
@@ -103,12 +159,11 @@ export function createRequestHandler<Context = unknown>({
         (fetchDest && fetchDest === 'document') ||
         request.headers.get('accept')?.includes('text/html')
       ) {
-        response.headers.append(
-          'Server-Timing',
-          `${HYDROGEN_SFAPI_PROXY_KEY};desc=1`,
-        );
+        appendServerTimingHeader(response, {[HYDROGEN_SFAPI_PROXY_KEY]: '1'});
       }
     }
+
+    appendPoweredByHeader?.(response);
 
     if (process.env.NODE_ENV === 'development') {
       globalThis.__H2O_LOG_EVENT?.({
