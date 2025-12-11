@@ -1,7 +1,7 @@
 index 6c972c78..fa805477 100644
 --- a/templates/skeleton/eslint.config.js
 +++ b/templates/skeleton/eslint.config.js
-@@ -1,246 +1,2 @@
+@@ -1,247 +1,2 @@
 -import {fixupConfigRules, fixupPluginRules} from '@eslint/compat';
 -import eslintComments from 'eslint-plugin-eslint-comments';
 -import react from 'eslint-plugin-react';
@@ -215,6 +215,7 @@ index 6c972c78..fa805477 100644
 -      '@typescript-eslint/no-floating-promises': 'error',
 -      '@typescript-eslint/no-misused-promises': 'error',
 -      'react/prop-types': 'off',
+-      'import/no-unresolved': ['error', {ignore: ['^virtual:']}],
 -    },
 -  },
 -  {
