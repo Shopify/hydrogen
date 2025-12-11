@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.json",
   "include": ["src", "dev-module.env.d.ts", "dev-ambient.env.d.ts"],
   "compilerOptions": {
+    "noEmit": true,
     "jsx": "react-jsx",
     "types": [
       "node",
