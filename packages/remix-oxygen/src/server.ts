@@ -199,7 +199,8 @@ export function getStorefrontHeaders(request: Request): StorefrontHeaders {
     buyerIp: headers.get('oxygen-buyer-ip'),
     buyerIpSig: headers.get('X-Shopify-Client-IP-Sig'),
     cookie: headers.get('cookie'),
-    purpose: headers.get('purpose'),
+    // sec-purpose is added by browsers automatically when using link/prefetch or Speculation Rules
+    purpose: headers.get('sec-purpose') || headers.get('purpose'),
   };
 }
 
