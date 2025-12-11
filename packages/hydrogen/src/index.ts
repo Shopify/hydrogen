@@ -145,6 +145,7 @@ export {
   getClientBrowserParameters,
   getProductOptions,
   getShopifyCookies,
+  getTrackingValues,
   Image,
   IMAGE_FRAGMENT,
   isOptionValueCombinationInEncodedVariant,
