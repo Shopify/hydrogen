@@ -68,6 +68,7 @@ export {
   createHydrogenContext,
   type HydrogenContext,
 } from './createHydrogenContext';
+export {createRequestHandler} from './createRequestHandler';
 export {createContentSecurityPolicy, useNonce} from './csp/csp';
 export {Script} from './csp/Script';
 export {createCustomerAccountClient} from './customer/customer';
@@ -144,6 +145,7 @@ export {
   getClientBrowserParameters,
   getProductOptions,
   getShopifyCookies,
+  getTrackingValues,
   Image,
   IMAGE_FRAGMENT,
   isOptionValueCombinationInEncodedVariant,

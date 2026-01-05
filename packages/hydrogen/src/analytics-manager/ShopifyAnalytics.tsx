@@ -23,7 +23,7 @@ import type {
   CartLineUpdatePayload,
   SearchViewPayload,
 } from './AnalyticsView';
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {
   CartLine,
   ComponentizableCartLine,
@@ -64,6 +64,7 @@ export function ShopifyAnalytics({
   const {subscribe, register, canTrack} = useAnalytics();
   const [shopifyReady, setShopifyReady] = useState(false);
   const [privacyReady, setPrivacyReady] = useState(false);
+  const [collectedConsent, setCollectedConsent] = useState('');
   const init = useRef(false);
   const {checkoutDomain, storefrontAccessToken, language} = consent;
   const {ready: shopifyAnalyticsReady} = register('Internal_Shopify_Analytics');
@@ -76,15 +77,35 @@ export function ShopifyAnalytics({
     storefrontAccessToken: !storefrontAccessToken
       ? 'abcdefghijklmnopqrstuvwxyz123456'
       : storefrontAccessToken,
-    onVisitorConsentCollected: () => setPrivacyReady(true),
-    onReady: () => setPrivacyReady(true),
+    // If we use privacy banner, we should wait until consent is collected.
+    // Otherwise, we can consider privacy ready immediately:
+    onReady: () => !consent.withPrivacyBanner && setPrivacyReady(true),
+    onVisitorConsentCollected: (consent) => {
+      try {
+        // Store consent to refresh local cookies after it changes
+        setCollectedConsent(JSON.stringify(consent));
+      } catch (e) {}
+
+      setPrivacyReady(true);
+    },
   });
+
+  const hasUserConsent = useMemo(
+    // must be initialized with true to avoid removing cookies too early
+    () => (privacyReady ? canTrack() : true),
+    // Make this value depend on collectedConsent to re-run `canTrack()` when consent changes
+    [privacyReady, canTrack, collectedConsent],
+  );
 
   // set up shopify_Y and shopify_S cookies
   useShopifyCookies({
-    hasUserConsent: privacyReady ? canTrack() : true, // must be initialized with true
+    hasUserConsent,
     domain,
     checkoutDomain,
+    // Already done inside useCustomerPrivacy
+    fetchTrackingValues: false,
+    // Avoid creating local cookies too early
+    ignoreDeprecatedCookies: !privacyReady,
   });
 
   useEffect(() => {
@@ -148,21 +169,21 @@ function prepareBasePageViewPayload(
     return;
   }
 
-  const eventPayload: ShopifyPageViewPayload = {
+  const eventPayload = {
     shopifySalesChannel: 'hydrogen',
     assetVersionId: version,
     ...payload.shop,
     hasUserConsent,
     ...getClientBrowserParameters(),
+    analyticsAllowed: customerPrivacy.analyticsProcessingAllowed(),
+    marketingAllowed: customerPrivacy.marketingAllowed(),
+    saleOfDataAllowed: customerPrivacy.saleOfDataAllowed(),
     ccpaEnforced: !customerPrivacy.saleOfDataAllowed(),
     gdprEnforced: !(
       customerPrivacy.marketingAllowed() &&
       customerPrivacy.analyticsProcessingAllowed()
     ),
-    analyticsAllowed: customerPrivacy.analyticsProcessingAllowed(),
-    marketingAllowed: customerPrivacy.marketingAllowed(),
-    saleOfDataAllowed: customerPrivacy.saleOfDataAllowed(),
-  };
+  } as ShopifyPageViewPayload;
 
   return eventPayload;
 }

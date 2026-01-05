@@ -5,7 +5,6 @@ import {
   useMemo,
   createContext,
   useContext,
-  useRef,
 } from 'react';
 import {type CartReturn} from '../cart/queries/cart-types';
 import {
@@ -60,7 +59,11 @@ export type ShopAnalytics = {
 export type Consent = Partial<
   Pick<
     CustomerPrivacyApiProps,
-    'checkoutDomain' | 'storefrontAccessToken' | 'withPrivacyBanner' | 'country'
+    | 'checkoutDomain'
+    | 'sameDomainForStorefrontApi'
+    | 'storefrontAccessToken'
+    | 'withPrivacyBanner'
+    | 'country'
   >
 > & {language?: LanguageCode}; // the privacyBanner SDKs refers to "language" as "locale" :(
 
@@ -296,11 +299,11 @@ function AnalyticsProvider({
   shop: shopProp = null,
   cookieDomain,
 }: AnalyticsProviderProps): JSX.Element {
-  const listenerSet = useRef(false);
   const {shop} = useShopAnalytics(shopProp);
   const [analyticsLoaded, setAnalyticsLoaded] = useState(
     customCanTrack ? true : false,
   );
+  const [consentCollected, setConsentCollected] = useState(false);
   const [carts, setCarts] = useState<Carts>({cart: null, prevCart: null});
   const [canTrack, setCanTrack] = useState<() => boolean>(
     customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
@@ -314,6 +317,8 @@ function AnalyticsProvider({
         '[h2:error:Analytics.Provider] - Mock shop is used. Analytics will not work properly.',
       );
     } else {
+      // TODO: we likely don't need checkout domain if SFAPI proxy is enabled
+      // but keep it for backward compatibility for now until we have checkout URL params.
       if (!consent.checkoutDomain) {
         const errorMsg = messageOnError(
           'consent.checkoutDomain',
@@ -379,20 +384,23 @@ function AnalyticsProvider({
       {!!shop && !!currentCart && (
         <CartAnalytics cart={currentCart} setCarts={setCarts} />
       )}
-      {!!shop && consent.checkoutDomain && (
+      {!!shop && (
         <ShopifyAnalytics
           consent={consent}
           onReady={() => {
-            listenerSet.current = true;
             setAnalyticsLoaded(true);
             setCanTrack(
               customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
             );
+
+            // Delay loading PerfKit until consent is collected
+            // so that it reads updated tracking values from old cookies.
+            setConsentCollected(true);
           }}
           domain={cookieDomain}
         />
       )}
-      {!!shop && <PerfKit shop={shop} />}
+      {!!shop && consentCollected && <PerfKit shop={shop} />}
     </AnalyticsContext.Provider>
   );
 }
