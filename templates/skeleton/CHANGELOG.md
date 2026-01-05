@@ -1,5 +1,13 @@
 # skeleton
 
+## 2024.10.3
+
+### Patch Changes
+
+- Updated dependencies [[`3d303287`](https://github.com/Shopify/hydrogen/commit/3d303287757c21353225a714c5534d073e32bcf8), [`3d303287`](https://github.com/Shopify/hydrogen/commit/3d303287757c21353225a714c5534d073e32bcf8), [`3d303287`](https://github.com/Shopify/hydrogen/commit/3d303287757c21353225a714c5534d073e32bcf8)]:
+  - @shopify/hydrogen@2024.10.2
+  - @shopify/remix-oxygen@2.1.0
+
 ## 2024.10.2
 
 ### Patch Changes
