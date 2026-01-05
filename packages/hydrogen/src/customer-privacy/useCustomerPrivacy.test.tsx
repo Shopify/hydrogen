@@ -6,6 +6,18 @@ import {
   CONSENT_API_WITH_BANNER,
 } from './ShopifyCustomerPrivacy.js';
 
+// Mock useRevalidator from @remix-run/react
+vi.mock('@remix-run/react', async () => {
+  const actual =
+    await vi.importActual<typeof import('@remix-run/react')>(
+      '@remix-run/react',
+    );
+  return {
+    ...actual,
+    useRevalidator: () => ({revalidate: vi.fn()}),
+  };
+});
+
 let html: HTMLHtmlElement;
 let head: HTMLHeadElement;
 let body: HTMLBodyElement;

@@ -60,9 +60,11 @@ export type StorefrontHeaders = {
   requestGroupId: string | null;
   /** The IP address of the client. */
   buyerIp: string | null;
+  /** The signature of the client's IP address for verification. */
+  buyerIpSig: string | null;
   /** The cookie header from the client  */
   cookie: string | null;
-  /** The purpose header value for debugging */
+  /** The sec-purpose or purpose header value */
   purpose: string | null;
 };
 
