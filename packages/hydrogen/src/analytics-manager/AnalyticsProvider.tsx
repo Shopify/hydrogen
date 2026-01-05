@@ -76,7 +76,7 @@ export type AnalyticsProviderProps = {
   canTrack?: () => boolean;
   /** An optional custom payload to pass to all events. e.g language/locale/currency. */
   customData?: Record<string, unknown>;
-  /** The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/utilities/getshopanalytics). */
+  /** The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/2025-04/utilities/getshopanalytics). */
   shop: Promise<ShopAnalytics | null> | ShopAnalytics | null;
   /** The customer privacy consent configuration and options. */
   consent: Consent;
@@ -436,7 +436,7 @@ function useShopAnalytics(shopProp: AnalyticsProviderProps['shop']): {
 
 type ShopAnalyticsProps = {
   /**
-   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/utilities/createstorefrontclient).
+   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/2025-04/utilities/createstorefrontclient).
    */
   storefront: Storefront;
   /**
@@ -506,7 +506,7 @@ export type AnalyticsContextValueForDoc<UserCart> = {
   prevCart?: UserCart | DefaultCart;
   /** A function to publish an analytics event. */
   publish?: AnalyticsContextPublishForDoc;
-  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/hooks/useanalytics#example-useanalytics.register). */
+  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/2025-04/hooks/useanalytics#example-useanalytics.register). */
   register?: (key: string) => {ready: () => void};
   /** The shop configuration required to publish events to Shopify. */
   shop?: Promise<ShopAnalytics | null> | ShopAnalytics | null;
