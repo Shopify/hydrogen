@@ -89,12 +89,14 @@ const CART_DATA_3 = {
 } as CartReturn;
 
 // Mock the useLocation hook to return a different path each time to simulate page navigation
+// Also mock useRevalidator which is used by useCustomerPrivacy
 let pathCount = 1;
 vi.mock('@remix-run/react', () => ({
   useLocation: () => ({
     pathname: `/example/path/${pathCount++}`,
     search: '',
   }),
+  useRevalidator: () => ({revalidate: vi.fn()}),
 }));
 
 // Avoid downloading the PerfKit script in tests

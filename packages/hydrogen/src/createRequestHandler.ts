@@ -1,46 +1,11 @@
-/// <reference types="@shopify/hydrogen" />
 import {
   createRequestHandler as createRemixRequestHandler,
   type AppLoadContext,
   type ServerBuild,
 } from '@remix-run/server-runtime';
-import {createEventLogger} from './event-logger';
-
-const originalErrorToString = Error.prototype.toString;
-Error.prototype.toString = function () {
-  return this.stack || originalErrorToString.call(this);
-};
-
-/** Server-Timing header key to signal that the SFAPI proxy is enabled */
-const HYDROGEN_SFAPI_PROXY_KEY = '_sfapi_proxy';
-
-let hasWarnedAboutStorefront = false;
-
-function warnOnce(message: string) {
-  if (!hasWarnedAboutStorefront) {
-    hasWarnedAboutStorefront = true;
-    console.warn(message);
-  }
-}
-
-function buildServerTimingHeader(values: Record<string, string | undefined>) {
-  return Object.entries(values)
-    .map(([key, value]) => (value ? `${key};desc=${value}` : undefined))
-    .filter(Boolean)
-    .join(', ');
-}
-
-function appendServerTimingHeader(
-  response: {headers: Headers},
-  values: string | Record<string, string | undefined>,
-) {
-  const header =
-    typeof values === 'string' ? values : buildServerTimingHeader(values);
-
-  if (header) {
-    response.headers.append('Server-Timing', header);
-  }
-}
+import {HYDROGEN_SFAPI_PROXY_KEY} from './constants';
+import {appendServerTimingHeader} from './utils/server-timing';
+import {warnOnce} from './utils/warning';
 
 type CreateRequestHandlerOptions<Context = unknown> = {
   /** Remix's server build */
@@ -74,6 +39,9 @@ type CreateRequestHandlerOptions<Context = unknown> = {
   proxyStandardRoutes?: boolean;
 };
 
+/**
+ * Creates a request handler for Hydrogen apps using Remix.
+ */
 export function createRequestHandler<Context = unknown>({
   build,
   mode,
@@ -134,15 +102,6 @@ export function createRequestHandler<Context = unknown>({
       }
     }
 
-    if (process.env.NODE_ENV === 'development' && context) {
-      // Store logger in globalThis so it can be accessed from the worker.
-      // The global property must be different from the binding name,
-      // otherwise Miniflare throws an error when accessing it.
-      globalThis.__H2O_LOG_EVENT ??= createEventLogger(context);
-    }
-
-    const startTime = Date.now();
-
     const response = await handleRequest(request, context);
 
     if (storefront && proxyStandardRoutes) {
@@ -165,48 +124,13 @@ export function createRequestHandler<Context = unknown>({
 
     appendPoweredByHeader?.(response);
 
-    if (process.env.NODE_ENV === 'development') {
-      globalThis.__H2O_LOG_EVENT?.({
-        eventType: 'request',
-        url: request.url,
-        requestId: request.headers.get('request-id'),
-        purpose: request.headers.get('purpose'),
-        startTime,
-        responseInit: {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Array.from(response.headers.entries()),
-        } satisfies ResponseInit,
-      });
-    }
-
     return response;
-  };
-}
-
-type StorefrontHeaders = {
-  requestGroupId: string | null;
-  buyerIp: string | null;
-  buyerIpSig: string | null;
-  cookie: string | null;
-  purpose: string | null;
-};
-
-export function getStorefrontHeaders(request: Request): StorefrontHeaders {
-  const headers = request.headers;
-  return {
-    requestGroupId: headers.get('request-id'),
-    buyerIp: headers.get('oxygen-buyer-ip'),
-    buyerIpSig: headers.get('X-Shopify-Client-IP-Sig'),
-    cookie: headers.get('cookie'),
-    // sec-purpose is added by browsers automatically when using link/prefetch or Speculation Rules
-    purpose: headers.get('sec-purpose') || headers.get('purpose'),
   };
 }
 
 /**
  * Minimal storefront interface needed for proxy functionality.
- * The full Storefront type is defined in @shopify/hydrogen.
+ * The full Storefront type is defined in ./storefront.ts.
  */
 type StorefrontForProxy = {
   isStorefrontApiUrl: (request: {url?: string}) => boolean;

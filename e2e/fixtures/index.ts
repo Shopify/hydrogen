@@ -1,0 +1,67 @@
+import {test as base} from '@playwright/test';
+import {DevServer} from './server';
+import path from 'node:path';
+import {stat} from 'node:fs/promises';
+import {StorefrontPage} from './storefront';
+
+export * from '@playwright/test';
+export * from './storefront';
+
+export const test = base.extend<
+  {storefront: StorefrontPage},
+  {forEachWorker: void}
+>({
+  storefront: async ({page}, use) => {
+    const storefront = new StorefrontPage(page);
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    await use(storefront);
+  },
+});
+
+const TEST_STORE_KEYS = [
+  'mockShop',
+  'defaultConsentDisallowed_cookiesEnabled',
+  'defaultConsentAllowed_cookiesEnabled',
+  'defaultConsentDisallowed_cookiesDisabled',
+  'defaultConsentAllowed_cookiesDisabled',
+] as const;
+
+type TestStoreKey = (typeof TEST_STORE_KEYS)[number];
+
+export const setTestStore = async (
+  testStore: TestStoreKey | `https://${string}`,
+) => {
+  const isLocal = !testStore.startsWith('https://');
+  let server: DevServer | null = null;
+
+  test.use({
+    // eslint-disable-next-line no-empty-pattern
+    baseURL: async ({}, use) => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      await use(isLocal ? server?.getUrl() : testStore);
+    },
+  });
+
+  if (!isLocal) {
+    console.log(`Using test store: ${testStore}`);
+    return;
+  }
+
+  test.afterAll(async () => {
+    await server?.stop();
+  });
+
+  // eslint-disable-next-line no-empty-pattern
+  test.beforeAll(async ({}) => {
+    const filepath = path.resolve(__dirname, `../envs/.env.${testStore}`);
+    await stat(filepath); // Ensure the file exists
+
+    server = new DevServer({
+      storeKey: testStore,
+      customerAccountPush: false,
+      envFile: filepath,
+    });
+
+    await server.start();
+  });
+};
