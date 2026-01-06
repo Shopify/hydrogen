@@ -209,6 +209,10 @@ export async function runDev({
   const viteServer = await vite.createServer({
     root,
     clearScreen: false,
+    // In unit tests, node_modules is a symlink. Avoid writing .vite cache inside it.
+    cacheDir: process.env.SHOPIFY_UNIT_TEST
+      ? joinPath(root, '.vite')
+      : undefined,
     customLogger: process.env.SHOPIFY_UNIT_TEST
       ? Object.assign(vite.createLogger(), {
           info: (msg: string) => collectLog('info', msg),

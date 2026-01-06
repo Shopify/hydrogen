@@ -211,6 +211,7 @@ export default [
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-misused-promises': 'error',
       'react/prop-types': 'off',
+      'import/no-unresolved': ['error', {ignore: ['^virtual:']}],
     },
   },
   {
