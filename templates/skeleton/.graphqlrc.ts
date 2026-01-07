@@ -4,9 +4,8 @@ import {getSchema} from '@shopify/hydrogen-codegen';
 /**
  * GraphQL Config
  * @see https://the-guild.dev/graphql/config/docs/user/usage
- * @type {IGraphQLConfig}
  */
-export default {
+const graphqlConfig: IGraphQLConfig = {
   projects: {
     default: {
       schema: getSchema('storefront'),
@@ -24,4 +23,6 @@ export default {
 
     // Add your own GraphQL projects here for CMS, Shopify Admin API, etc.
   },
-} as IGraphQLConfig;
+};
+
+export default graphqlConfig;
