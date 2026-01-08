@@ -1,4 +1,4 @@
-import {defineConfig} from '@playwright/test';
+import {defineConfig, devices} from '@playwright/test';
 
 const isCI = !!process.env.CI;
 
@@ -16,18 +16,43 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   projects: [
+    // Smoke tests - Chromium only
     {
       name: 'smoke',
       testDir: './e2e/specs/smoke',
+      use: {...devices['Desktop Chrome']},
     },
+    // New cookies tests - all browsers
     {
-      name: 'new-cookies',
+      name: 'new-cookies-chromium',
       testDir: './e2e/specs/new-cookies',
+      use: {...devices['Desktop Chrome']},
     },
     {
-      // TODO: remove once new cookies are rolled out
-      name: 'old-cookies',
+      name: 'new-cookies-firefox',
+      testDir: './e2e/specs/new-cookies',
+      use: {...devices['Desktop Firefox']},
+    },
+    {
+      name: 'new-cookies-webkit',
+      testDir: './e2e/specs/new-cookies',
+      use: {...devices['Desktop Safari']},
+    },
+    // Old cookies tests - all browsers (TODO: remove once new cookies rolled out)
+    {
+      name: 'old-cookies-chromium',
       testDir: './e2e/specs/old-cookies',
+      use: {...devices['Desktop Chrome']},
+    },
+    {
+      name: 'old-cookies-firefox',
+      testDir: './e2e/specs/old-cookies',
+      use: {...devices['Desktop Firefox']},
+    },
+    {
+      name: 'old-cookies-webkit',
+      testDir: './e2e/specs/old-cookies',
+      use: {...devices['Desktop Safari']},
     },
   ],
 });
