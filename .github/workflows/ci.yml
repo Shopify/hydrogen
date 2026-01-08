@@ -125,8 +125,8 @@ jobs:
       - name: 📦 Build packages and templates
         run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:all
 
-      - name: 🎭 Install Playwright Chromium
-        run: npx playwright install chromium --with-deps
+      - name: 🎭 Install Playwright Browsers
+        run: npx playwright install chromium firefox webkit --with-deps
 
       - name: 🧪 Run E2E tests
         run: npx playwright test --workers=1
