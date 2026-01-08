@@ -20,10 +20,10 @@ describe('hydrogenPreset', () => {
       ssr: true,
       future: {
         v8_middleware: true,
+        v8_splitRouteModules: true,
+        v8_viteEnvironmentApi: false,
         unstable_optimizeDeps: true,
-        unstable_splitRouteModules: true,
         unstable_subResourceIntegrity: false,
-        unstable_viteEnvironmentApi: false,
       },
     });
   });
@@ -42,11 +42,11 @@ describe('hydrogenPreset', () => {
           serverBundles: undefined,
           buildEnd: undefined,
           future: {
-            unstable_subResourceIntegrity: false,
-            unstable_middleware: true,
+            v8_middleware: true,
+            v8_splitRouteModules: true,
+            v8_viteEnvironmentApi: false,
             unstable_optimizeDeps: true,
-            unstable_splitRouteModules: true,
-            unstable_viteEnvironmentApi: false,
+            unstable_subResourceIntegrity: false,
           },
           ...overrides,
         } as unknown as Parameters<
@@ -103,11 +103,11 @@ describe('hydrogenPreset', () => {
       expect(() => {
         testResolvedConfig({
           future: {
-            unstable_subResourceIntegrity: true,
-            unstable_middleware: true,
+            v8_middleware: true,
+            v8_splitRouteModules: true,
+            v8_viteEnvironmentApi: false,
             unstable_optimizeDeps: true,
-            unstable_splitRouteModules: true,
-            unstable_viteEnvironmentApi: false,
+            unstable_subResourceIntegrity: true,
           },
         });
       }).toThrow(
@@ -119,11 +119,11 @@ describe('hydrogenPreset', () => {
       expect(() => {
         testResolvedConfig({
           future: {
-            unstable_subResourceIntegrity: false,
-            unstable_middleware: true,
+            v8_middleware: true,
+            v8_splitRouteModules: true,
+            v8_viteEnvironmentApi: false,
             unstable_optimizeDeps: true,
-            unstable_splitRouteModules: true,
-            unstable_viteEnvironmentApi: false,
+            unstable_subResourceIntegrity: false,
           },
         });
       }).not.toThrow();
@@ -145,8 +145,8 @@ describe('hydrogenPreset', () => {
 
       // Verify all performance flags are enabled
       expect(config?.future?.v8_middleware).toBe(true);
+      expect(config?.future?.v8_splitRouteModules).toBe(true);
       expect(config?.future?.unstable_optimizeDeps).toBe(true);
-      expect(config?.future?.unstable_splitRouteModules).toBe(true);
     });
 
     it('should disable incompatible features', () => {
@@ -157,7 +157,7 @@ describe('hydrogenPreset', () => {
 
       // Verify incompatible features are disabled
       expect(config?.future?.unstable_subResourceIntegrity).toBe(false);
-      expect(config?.future?.unstable_viteEnvironmentApi).toBe(false);
+      expect(config?.future?.v8_viteEnvironmentApi).toBe(false);
     });
 
     it('should configure SSR correctly', () => {
