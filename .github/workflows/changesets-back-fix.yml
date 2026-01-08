@@ -5,7 +5,7 @@ on:
     # Add calver branches - Do not add current calver branch
     # Example: If we are currently on 2023-07, do not add 2023-07
     branches:
-      - 2025-01
+      - 2025-05
 
 concurrency:
   group: changeset-${{ github.head_ref }}
