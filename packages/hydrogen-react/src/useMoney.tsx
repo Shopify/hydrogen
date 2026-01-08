@@ -13,13 +13,13 @@ import type {
 // The APIs may have different CurrencyCode enums
 /**
  * Supports MoneyV2 from both Storefront API and Customer Account API.
- * The APIs may have different CurrencyCode enums (e.g., Customer Account API added USDC in 2025-07, but Storefront API doesn't support USDC in 2025-07).
+ * The APIs may have different CurrencyCode enums (e.g., Customer Account API added USDC in 2025-10, but Storefront API doesn't support USDC in 2025-10).
  * This union type ensures useMoney works with data from either API.
  */
 type MoneyV2 = StorefrontApiMoneyV2 | CustomerAccountApiMoneyV2;
 
 /**
- * Supports CurrencyCode from both Storefront API and Customer Account API. The APIs may have different CurrencyCode enums (e.g., Customer Account API added USDC in 2025-07, but Storefront API doesn't support USDC in 2025-07).
+ * Supports CurrencyCode from both Storefront API and Customer Account API. The APIs may have different CurrencyCode enums (e.g., Customer Account API added USDC in 2025-10, but Storefront API doesn't support USDC in 2025-10).
  * This union type ensures useMoney works with data from either API.
  */
 type CurrencyCode = StorefrontApiCurrencyCode | CustomerAccountApiCurrencyCode;
@@ -73,8 +73,8 @@ export type UseMoneyValue = {
 };
 
 /**
- * The `useMoney` hook takes a [MoneyV2 object from the Storefront API](https://shopify.dev/docs/api/storefront/2025-07/objects/MoneyV2)
- * or a [MoneyV2 object from the Customer Account API](https://shopify.dev/docs/api/customer/2025-07/objects/moneyv2) and returns a
+ * The `useMoney` hook takes a [MoneyV2 object from the Storefront API](https://shopify.dev/docs/api/storefront/2025-10/objects/MoneyV2)
+ * or a [MoneyV2 object from the Customer Account API](https://shopify.dev/docs/api/customer/2025-10/objects/moneyv2) and returns a
  * default-formatted string of the amount with the correct currency indicator, along with some of the parts provided by
  * [Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat).
  * Uses `locale` from `ShopifyProvider`
