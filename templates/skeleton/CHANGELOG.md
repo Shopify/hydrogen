@@ -1,5 +1,37 @@
 # skeleton
 
+## 2025.7.1
+
+### Patch Changes
+
+- Update React Router to 7.12.0 with stabilized future flags ([#3346](https://github.com/Shopify/hydrogen/pull/3346)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  This release uses React Router's newly stabilized future flags (`v8_splitRouteModules`, `v8_middleware`) instead of their unstable counterparts
+
+- Moved server build in `server.ts` from a dynamic import to a static import to speed up first rendering during local development (2s => 200ms). ([#3331](https://github.com/Shopify/hydrogen/pull/3331)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+  // server.ts
+
+  +import * as serverBuild from 'virtual:react-router/server-build';
+
+        const handleRequest = createRequestHandler({
+  -        build: await import('virtual:react-router/server-build'),
+  +        build: serverBuild,
+  ```
+
+  Updated ESLint config to allow `virtual:` imports:
+
+  ```diff
+  // eslint.config.js
+
+  rules: {
+  +      'import/no-unresolved': ['error', {ignore: ['^virtual:']}],
+  ```
+
+- Updated dependencies [[`264e13349168f17cc1f096c84135d13d38cfc8df`](https://github.com/Shopify/hydrogen/commit/264e13349168f17cc1f096c84135d13d38cfc8df), [`6d5e3d371e7e02e15be17029a0f34daae53a978e`](https://github.com/Shopify/hydrogen/commit/6d5e3d371e7e02e15be17029a0f34daae53a978e), [`ee00f1025867c40d5f67fa89d4ffb215bf280e8f`](https://github.com/Shopify/hydrogen/commit/ee00f1025867c40d5f67fa89d4ffb215bf280e8f), [`5a38948133766e358c5f357f52562f6fdcfe7969`](https://github.com/Shopify/hydrogen/commit/5a38948133766e358c5f357f52562f6fdcfe7969), [`264e13349168f17cc1f096c84135d13d38cfc8df`](https://github.com/Shopify/hydrogen/commit/264e13349168f17cc1f096c84135d13d38cfc8df)]:
+  - @shopify/hydrogen@2025.7.1
+
 ## 2025.7.0
 
 ### Major Changes

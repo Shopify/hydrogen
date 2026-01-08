@@ -1,5 +1,13 @@
 # @shopify/remix-oxygen
 
+## 3.0.2
+
+### Patch Changes
+
+- Update React Router to 7.12.0 with stabilized future flags ([#3346](https://github.com/Shopify/hydrogen/pull/3346)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  This release uses React Router's newly stabilized future flags (`v8_splitRouteModules`, `v8_middleware`) instead of their unstable counterparts
+
 ## 3.0.1
 
 ### Patch Changes
