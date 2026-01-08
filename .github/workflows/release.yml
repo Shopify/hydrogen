@@ -51,6 +51,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
+          node-version: 24 # Needed for npm@11 for Trusted Publishing
 
       - name: Install the packages
         run: npm ci --legacy-peer-deps
@@ -114,9 +115,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upgrade npm for OIDC Trusted Publishing
-        run: npm install -g npm@latest
-
       - name: Test OIDC Token
         if: env.latest == 'true'
         run: |
@@ -167,6 +165,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
+          node-version: 24 # Needed for npm@11 for Trusted Publishing
 
       - name: Install the packages
         run: npm ci
@@ -207,10 +206,6 @@ jobs:
         if: steps.version.outputs.NEXT_VERSION
         run: npm run build
 
-      - name: Upgrade npm for OIDC Trusted Publishing
-        if: steps.version.outputs.NEXT_VERSION
-        run: npm install -g npm@latest
-
       - name: Test OIDC Token
         if: steps.version.outputs.NEXT_VERSION
         run: |
@@ -248,6 +243,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
+          node-version: 24 # Needed for npm@11 for Trusted Publishing
 
       - name: Install the packages
         run: npm ci --legacy-peer-deps
@@ -257,9 +253,6 @@ jobs:
 
       - name: Build the dist code
         run: npm run build
-
-      - name: Upgrade npm for OIDC Trusted Publishing
-        run: npm install -g npm@latest
 
       - name: Test OIDC Token
         run: |
