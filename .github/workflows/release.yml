@@ -28,6 +28,9 @@ jobs:
     name: Production Release
     runs-on: ubuntu-latest
     if: github.repository_owner == 'shopify' && github.ref_name == 'main'
+    permissions:
+      contents: write # enable pushing changes to the origin
+      id-token: write # enable generation of an ID token for publishing
     outputs:
       published: ${{ steps.changesets.outputs.published }}
       publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
@@ -111,6 +114,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upgrade npm for OIDC Trusted Publishing
+        run: npm install -g npm@latest
+
+      - name: Test OIDC Token
+        if: env.latest == 'true'
+        run: |
+          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm" | jq -r '.value')
+          [ -n "$TOKEN" ] && echo "✅ OIDC working" || exit 1
+
       - name: Create Release Pull Request or Publish (for latest release)
         if: env.latest == 'true'
         id: changesets
@@ -135,6 +148,9 @@ jobs:
       github.repository_owner == 'shopify' &&
       github.ref_name == 'main' &&
       !startsWith(github.event.head_commit.message, '[ci] release')
+    permissions:
+      contents: write # enable pushing changes to the origin
+      id-token: write # enable generation of an ID token for publishing
     outputs:
       NEXT_VERSION: ${{ steps.version.outputs.NEXT_VERSION }}
     steps:
@@ -191,6 +207,17 @@ jobs:
         if: steps.version.outputs.NEXT_VERSION
         run: npm run build
 
+      - name: Upgrade npm for OIDC Trusted Publishing
+        if: steps.version.outputs.NEXT_VERSION
+        run: npm install -g npm@latest
+
+      - name: Test OIDC Token
+        if: steps.version.outputs.NEXT_VERSION
+        run: |
+          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm" | jq -r '.value')
+          [ -n "$TOKEN" ] && echo "✅ OIDC working" || exit 1
+
       - name: Publish to npm
         if: steps.version.outputs.NEXT_VERSION
         run: npm run changeset -- publish --tag next
@@ -204,6 +231,9 @@ jobs:
     name: Back-fix Release
     runs-on: ubuntu-latest
     if: github.repository_owner == 'shopify' && github.ref_name != 'main'
+    permissions:
+      contents: write # enable pushing changes to the origin
+      id-token: write # enable generation of an ID token for publishing
     steps:
       - name: Checkout the code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -227,6 +257,15 @@ jobs:
 
       - name: Build the dist code
         run: npm run build
+
+      - name: Upgrade npm for OIDC Trusted Publishing
+        run: npm install -g npm@latest
+
+      - name: Test OIDC Token
+        run: |
+          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=npm" | jq -r '.value')
+          [ -n "$TOKEN" ] && echo "✅ OIDC working" || exit 1
 
       - name: Create Back-fix Release Pull Request or Publish (for back-fix release)
         id: changesets
