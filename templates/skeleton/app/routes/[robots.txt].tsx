@@ -103,7 +103,6 @@ Disallow: /search
 Allow: /search/
 Disallow: /search/?*
 Disallow: /apple-app-site-association
-Disallow: /.well-known/shopify/monorail
 ${sitemapUrl ? `Sitemap: ${sitemapUrl}` : ''}`;
 }
 
