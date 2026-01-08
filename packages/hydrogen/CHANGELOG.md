@@ -1,5 +1,27 @@
 # @shopify/hydrogen
 
+## 2025.7.1
+
+### Patch Changes
+
+- This version adds support for the new cookie system in Shopify (`_shopify_analytics` and `_shopify_marketing` http-only cookies). It is backward compatible and still supports the deprecated `_shopify_y` and `_shopify_s` cookies. ([#3309](https://github.com/Shopify/hydrogen/pull/3309)) by [@frandiox](https://github.com/frandiox)
+  - `createRequestHandler` can now be used for every Hydrogen app, not only the ones deployed to Oxygen. It is now exported from `@shopify/hydrogen`.
+  - A new Storefront API proxy is now available in Hydrogen's `createRequestHandler`. This will be used to obtain http-only cookies from Storefront API. In general, it should be transparent but it can be disabled with the `proxyStandardRoutes` option.
+  - `Analytics.Provider` component and `useCustomerPrivacy` hook now make a request internally to the mentioned proxy to obtain cookies in the storefront domain.
+
+- Update React Router to 7.12.0 with stabilized future flags ([#3346](https://github.com/Shopify/hydrogen/pull/3346)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  This release uses React Router's newly stabilized future flags (`v8_splitRouteModules`, `v8_middleware`) instead of their unstable counterparts
+
+- Remove regulation-specific privacy fields from public API documentation. The generalized privacy fields (analyticsAllowed, marketingAllowed, saleOfDataAllowed) remain available. ([#3236](https://github.com/Shopify/hydrogen/pull/3236)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Ensure Hydrogen SEO recommendations match Shopify Admin ([#3303](https://github.com/Shopify/hydrogen/pull/3303)) by [@michael-land](https://github.com/michael-land)
+
+- Fixed a number of issues related to irregular behaviors between Privacy Banner and Hydrogen's analytics events. ([#3309](https://github.com/Shopify/hydrogen/pull/3309)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`ee00f1025867c40d5f67fa89d4ffb215bf280e8f`](https://github.com/Shopify/hydrogen/commit/ee00f1025867c40d5f67fa89d4ffb215bf280e8f), [`264e13349168f17cc1f096c84135d13d38cfc8df`](https://github.com/Shopify/hydrogen/commit/264e13349168f17cc1f096c84135d13d38cfc8df)]:
+  - @shopify/hydrogen-react@2025.7.1
+
 ## 2025.7.0
 
 ### Major Changes
