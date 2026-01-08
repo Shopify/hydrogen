@@ -23,7 +23,7 @@ const REACT_ROUTER_PACKAGES: ReactRouterPackage[] = [
   '@react-router/fs-routes',
 ];
 
-const EXPECTED_VERSION = '7.9.2';
+const EXPECTED_VERSION = '7.12.0';
 
 /**
  * Checks if the installed React Router packages are compatible with Hydrogen's requirements
@@ -113,7 +113,7 @@ export async function checkReactRouterVersions(appPath: string): Promise<void> {
     renderWarning({
       headline: 'React Router version mismatch detected',
       body: [
-        'Hydrogen requires React Router 7.9.x for proper functionality.',
+        'Hydrogen requires React Router 7.12.0 for proper functionality.',
         '',
         'Version mismatches found:',
         mismatchList,
