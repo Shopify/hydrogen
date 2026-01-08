@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Customer Account API 2025-07
+ * Based on Customer Account API 2025-10
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -1111,7 +1111,7 @@ export type ContactPermissionLocationScopeType =
   /** The contact has permission on only one location. */
   | 'ONE';
 
-/** Details for count of elements. */
+/** A numeric count with precision information indicating whether the count is exact or an estimate. */
 export type Count = {
   __typename?: 'Count';
   /** The count of elements. */
@@ -2534,8 +2534,6 @@ export type CustomerMailingAddressInput = {
   phone?: InputMaybe<Scalars['String']['input']>;
   /** The customer's unique phone number, formatted using E.164 standard. For example, _+16135551111_. */
   phoneNumber?: InputMaybe<Scalars['String']['input']>;
-  /** The two-letter code for the country of the address. */
-  territoryCode?: InputMaybe<Scalars['String']['input']>;
   /** The zip or postal code of the address. */
   zip?: InputMaybe<Scalars['String']['input']>;
   /**
@@ -4023,12 +4021,21 @@ export type LineItemGroup = Node & {
   __typename?: 'LineItemGroup';
   /** The total price of the line item group, calculated by aggregating the current total price of its line item components. */
   currentTotalPrice?: Maybe<MoneyV2>;
+  /**
+   * Whether the group merchandise is itself deliverable.
+   * @deprecated Use `is_concrete` instead.
+   */
+  deliverable?: Maybe<Scalars['Boolean']['output']>;
   /** The discount information for the line item group. */
   discountInformation?: Maybe<Array<LineItemDiscountInformation>>;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
   /** The image of the line item group variant or the product image if the variant has no image. */
   image?: Maybe<Image>;
+  /** Whether the group represents concrete merchandise (as opposed to virtual merchandise). */
+  isConcrete?: Maybe<Scalars['Boolean']['output']>;
+  /** ID of the parent line item. */
+  parentLineItemId?: Maybe<Scalars['ID']['output']>;
   /** The number of line item groups ordered. */
   quantity: Scalars['Int']['output'];
   /** The title of the line item group. */
@@ -4315,10 +4322,7 @@ export type MetafieldsSetUserErrorCode =
   /** The input value is too short. */
   | 'TOO_SHORT';
 
-/**
- * A collection of monetary values in their respective currencies. Typically used in the context of multi-currency pricing and transactions,
- * when an amount in the shop's currency is converted to the customer's currency of choice (the presentment currency).
- */
+/** A collection of monetary values in their respective currencies. Used throughout the API for multi-currency pricing and transactions, when an amount in the shop's currency is converted to the customer's currency of choice. The `presentmentMoney` field contains the amount in the customer's selected currency. The `shopMoney` field contains the equivalent in the shop's base currency. */
 export type MoneyBag = {
   __typename?: 'MoneyBag';
   /** Amount in presentment currency. */
@@ -4327,7 +4331,7 @@ export type MoneyBag = {
   shopMoney: MoneyV2;
 };
 
-/** A precise monetary value and its associated currency. For example, 12.99 USD. */
+/** A precise monetary value and its associated currency. Combines a decimal amount with a three-letter currency code to express prices, costs, and other financial values throughout the API. For example, 12.99 USD. */
 export type MoneyV2 = {
   __typename?: 'MoneyV2';
   /**
@@ -5627,6 +5631,8 @@ export type PaymentSchedule = Node & {
   dueAt?: Maybe<Scalars['DateTime']['output']>;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
+  /** Remaining balance to be paid or authorized by the customer for this payment schedule. */
+  totalBalance: MoneyV2;
 };
 
 /** An auto-generated type for paginating through multiple PaymentSchedules. */
@@ -6324,7 +6330,13 @@ export type ReturnLineItemTypeEdge = {
   node: ReturnLineItem | UnverifiedReturnLineItem;
 };
 
-/** The reason for returning the item. */
+/**
+ * The reason for returning the item.
+ *
+ * > **Deprecated**: This enum is deprecated in favor of `ReturnReasonDefinition`.
+ * > Use `returnReasonDefinitionId` in input objects and `returnReasonDefinition` in return line items instead.
+ * > This enum will be removed in a future API version.
+ */
 export type ReturnReason =
   /** The color of the item didn't meet expectations. */
   | 'COLOR'
@@ -7633,8 +7645,6 @@ export type SubscriptionDeliveryMethodShipping = {
 
 /** The input fields for a shipping delivery method. */
 export type SubscriptionDeliveryMethodShippingInput = {
-  /** The address to ship to. */
-  address?: InputMaybe<CustomerMailingAddressInput>;
   /** The address to ship to. */
   shippingAddress?: InputMaybe<CustomerAddressInput>;
 };
@@ -9365,7 +9375,11 @@ export type UserErrorsStripeFinancialConnectionsSessionUserErrorsCode =
 /** The configuration used for Payment Wallets. */
 export type WalletPaymentConfig = ApplePayWalletConfig | GooglePayWalletConfig;
 
-/** A weight, which includes a numeric value and a unit of measurement. */
+/**
+ * A weight measurement with its numeric value and unit. Used throughout the API, for example in shipping calculations, delivery conditions, order line items, and inventory measurements.
+ *
+ * The weight combines a decimal value with a standard unit of measurement to ensure consistent weight handling across different regional systems.
+ */
 export type Weight = {
   __typename?: 'Weight';
   /** The unit of measurement for `value`. */
