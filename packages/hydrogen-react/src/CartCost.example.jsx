@@ -7,9 +7,6 @@ export default function CartTotals() {
         Subtotal: <CartCost amountType="subtotal" />
       </div>
       <div>
-        Tax: <CartCost amountType="tax" />
-      </div>
-      <div>
         Total: <CartCost />
       </div>
     </>
