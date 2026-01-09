@@ -20,24 +20,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Job 1: Check if the workflow should proceed (authorization + branch pattern)
-  check-authorization:
-    name: Check authorization
+  dispatch-docs-sync:
+    name: Dispatch docs sync to shopify-dev
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    # Only run for Shopify org, and only for org members/owners (not external collaborators)
-    if: |
-      github.repository_owner == 'shopify' &&
-      (github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'OWNER')
-    outputs:
-      branch_valid: ${{ steps.check-branch.outputs.matches }}
+    timeout-minutes: 10
+    if: github.repository_owner == 'shopify'
     steps:
-      - name: Log authorization
-        run: |
-          echo "PR author: ${{ github.event.pull_request.user.login }}"
-          echo "Author association: ${{ github.event.pull_request.author_association }}"
-          echo "Author is authorized (MEMBER or OWNER)"
-
       - name: Check if base branch matches calver pattern
         id: check-branch
         run: |
@@ -46,24 +34,18 @@ jobs:
             echo "Branch '$BASE_BRANCH' matches calver pattern"
             echo "matches=true" >> $GITHUB_OUTPUT
           else
-            echo "Branch '$BASE_BRANCH' does not match calver pattern (e.g., 2025-07), workflow will end"
+            echo "Branch '$BASE_BRANCH' does not match calver pattern (e.g., 2025-07), skipping"
             echo "matches=false" >> $GITHUB_OUTPUT
           fi
 
-  # Job 2: Only runs if authorized and branch is valid - otherwise skipped entirely
-  dispatch-docs-sync:
-    name: Dispatch docs sync to shopify-dev
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: check-authorization
-    if: needs.check-authorization.outputs.branch_valid == 'true'
-    steps:
       - name: Checkout repository
+        if: steps.check-branch.outputs.matches == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Get changed files
+        if: steps.check-branch.outputs.matches == 'true'
         id: changed-files
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -101,7 +83,7 @@ jobs:
           fi
 
       - name: Dispatch to shopify-dev
-        if: steps.changed-files.outputs.has_changes == 'true'
+        if: steps.check-branch.outputs.matches == 'true' && steps.changed-files.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
           SOURCE_BRANCH: ${{ github.event.pull_request.base.ref }}
