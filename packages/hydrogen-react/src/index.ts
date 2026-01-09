@@ -75,6 +75,11 @@ export type {
 } from './storefront-api-response.types.js';
 export type {StorefrontClientProps} from './storefront-client.js';
 export {createStorefrontClient} from './storefront-client.js';
+export {
+  getTrackingValues,
+  SHOPIFY_UNIQUE_TOKEN_HEADER,
+  SHOPIFY_VISIT_TOKEN_HEADER,
+} from './tracking-utils.js';
 export {useMoney} from './useMoney.js';
 export {useSelectedOptionInUrlParam} from './useSelectedOptionInUrlParam.js';
 export {useShopifyCookies} from './useShopifyCookies.js';

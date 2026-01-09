@@ -24,7 +24,7 @@ import type {
   HydrogenSession,
   StorefrontHeaders,
 } from './types';
-import {type CrossRuntimeRequest, getHeader} from './utils/request';
+import {type CrossRuntimeRequest, getStorefrontHeaders} from './utils/request';
 import {warnOnce} from './utils/warning';
 import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
 
@@ -241,15 +241,6 @@ export function createHydrogenContext<
     env,
     waitUntil,
     session,
-  };
-}
-
-function getStorefrontHeaders(request: CrossRuntimeRequest): StorefrontHeaders {
-  return {
-    requestGroupId: getHeader(request, 'request-id'),
-    buyerIp: getHeader(request, 'oxygen-buyer-ip'),
-    cookie: getHeader(request, 'cookie'),
-    purpose: getHeader(request, 'purpose'),
   };
 }
 

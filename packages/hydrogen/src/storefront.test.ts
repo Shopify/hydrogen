@@ -28,6 +28,7 @@ describe('createStorefrontClient', () => {
   const storefrontHeaders = {
     requestGroupId: '123',
     buyerIp: '::1',
+    buyerIpSig: 'sig',
     purpose: 'test',
     cookie: '_shopify_y=123; other=456; _shopify_s=789',
   };
