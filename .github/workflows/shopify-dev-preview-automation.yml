@@ -3,7 +3,6 @@
 # in PRs targeting calver branches (e.g., 2025-07).
 #
 # The shopify-dev repository will then sync these docs files for preview.
-# Only run for Shopify org (secrets not available to forks anyway)
 
 name: Shopify Dev Docs Sync
 
@@ -21,12 +20,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  dispatch-docs-sync:
-    name: Dispatch docs sync to shopify-dev
+  # Job 1: Check if the workflow should proceed (authorization + branch pattern)
+  check-authorization:
+    name: Check authorization
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    # Only run for Shopify org (secrets not available to forks anyway)
+    timeout-minutes: 5
     if: github.repository_owner == 'shopify'
+    outputs:
+      authorized: ${{ steps.check-author.outputs.is_member }}
+      branch_valid: ${{ steps.check-branch.outputs.matches }}
     steps:
       - name: Check if PR author is Shopify org member
         id: check-author
@@ -43,13 +45,21 @@ jobs:
           if [ "$HTTP_STATUS" -eq 204 ]; then
             echo "Author '$AUTHOR' is a Shopify org member"
             echo "is_member=true" >> $GITHUB_OUTPUT
+          elif [ "$HTTP_STATUS" -eq 404 ]; then
+            echo "Author '$AUTHOR' is not a Shopify org member, workflow will end"
+            echo "is_member=false" >> $GITHUB_OUTPUT
+          elif [ "$HTTP_STATUS" -eq 401 ] || [ "$HTTP_STATUS" -eq 403 ]; then
+            echo "::warning::Auth failed checking org membership - token may lack 'read:org' scope (HTTP $HTTP_STATUS)"
+            echo "is_member=false" >> $GITHUB_OUTPUT
+          elif [ "$HTTP_STATUS" -eq 302 ]; then
+            echo "::warning::Redirect received - token likely lacks 'read:org' scope (HTTP $HTTP_STATUS)"
+            echo "is_member=false" >> $GITHUB_OUTPUT
           else
-            echo "Author '$AUTHOR' is NOT a Shopify org member (HTTP $HTTP_STATUS), skipping dispatch"
+            echo "::warning::Unexpected response checking org membership (HTTP $HTTP_STATUS)"
             echo "is_member=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Check if base branch matches calver pattern
-        if: steps.check-author.outputs.is_member == 'true'
         id: check-branch
         run: |
           BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
@@ -57,18 +67,24 @@ jobs:
             echo "Branch '$BASE_BRANCH' matches calver pattern"
             echo "matches=true" >> $GITHUB_OUTPUT
           else
-            echo "Branch '$BASE_BRANCH' does not match calver pattern, skipping"
+            echo "Branch '$BASE_BRANCH' does not match calver pattern (e.g., 2025-07), workflow will end"
             echo "matches=false" >> $GITHUB_OUTPUT
           fi
 
+  # Job 2: Only runs if authorized and branch is valid - otherwise skipped entirely
+  dispatch-docs-sync:
+    name: Dispatch docs sync to shopify-dev
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: check-authorization
+    if: needs.check-authorization.outputs.authorized == 'true' && needs.check-authorization.outputs.branch_valid == 'true'
+    steps:
       - name: Checkout repository
-        if: steps.check-author.outputs.is_member == 'true' && steps.check-branch.outputs.matches == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Get changed files
-        if: steps.check-author.outputs.is_member == 'true' && steps.check-branch.outputs.matches == 'true'
         id: changed-files
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -106,7 +122,7 @@ jobs:
           fi
 
       - name: Dispatch to shopify-dev
-        if: steps.check-author.outputs.is_member == 'true' && steps.check-branch.outputs.matches == 'true' && steps.changed-files.outputs.has_changes == 'true'
+        if: steps.changed-files.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
           SOURCE_BRANCH: ${{ github.event.pull_request.base.ref }}
