@@ -5,7 +5,7 @@
     "subCategory": "analytics",
     "isVisualComponent": false,
     "related": [],
-    "description": "Publishes a `cart_viewed` event to the `Analytics.Provider` component.",
+    "description": "Pyublishes a `cart_viewed` event to the `Analytics.Provider` component.",
     "type": "component",
     "defaultExample": {
       "description": "This is the default example",
