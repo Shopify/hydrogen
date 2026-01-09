@@ -1,0 +1,127 @@
+# This workflow dispatches a docs sync event to shopify-dev when generated docs files change.
+# It monitors changes to generated_docs_data.json and generated_static_pages.json files
+# in PRs targeting calver branches (e.g., 2025-07).
+#
+# The shopify-dev repository will then sync these docs files for preview.
+
+name: Shopify Dev Docs Sync
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'packages/hydrogen/docs/generated/generated_docs_data.json'
+      - 'packages/hydrogen-react/docs/generated/generated_docs_data.json'
+      - 'packages/hydrogen/docs/generated/generated_static_pages.json'
+      - 'packages/hydrogen-react/docs/generated/generated_static_pages.json'
+
+concurrency:
+  group: shopify-dev-docs-sync-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  dispatch-docs-sync:
+    name: Dispatch docs sync to shopify-dev
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Only run for Shopify org, non-draft PRs, and when base branch matches calver pattern
+    if: github.repository_owner == 'shopify' && !github.event.pull_request.draft
+    steps:
+      - name: Check if base branch matches calver pattern
+        id: check-branch
+        run: |
+          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+          if [[ "$BASE_BRANCH" =~ ^[0-9]{4}-[0-9]{2}$ ]]; then
+            echo "Branch '$BASE_BRANCH' matches calver pattern"
+            echo "matches=true" >> $GITHUB_OUTPUT
+          else
+            echo "Branch '$BASE_BRANCH' does not match calver pattern, skipping"
+            echo "matches=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout repository
+        if: steps.check-branch.outputs.matches == 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        if: steps.check-branch.outputs.matches == 'true'
+        id: changed-files
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Define the files we're monitoring
+          MONITORED_FILES=(
+            "packages/hydrogen/docs/generated/generated_docs_data.json"
+            "packages/hydrogen-react/docs/generated/generated_docs_data.json"
+            "packages/hydrogen/docs/generated/generated_static_pages.json"
+            "packages/hydrogen-react/docs/generated/generated_static_pages.json"
+          )
+
+          # Get the list of changed files in this PR using explicit SHAs (more robust than branch names)
+          echo "Comparing $BASE_SHA...$HEAD_SHA"
+          CHANGED_FILES=$(git diff --name-only "$BASE_SHA"..."$HEAD_SHA")
+
+          # Filter to only include our monitored files
+          MATCHING_FILES=()
+          for file in "${MONITORED_FILES[@]}"; do
+            if echo "$CHANGED_FILES" | grep -q "^${file}$"; then
+              MATCHING_FILES+=("$file")
+            fi
+          done
+
+          # Convert to JSON array
+          if [ ${#MATCHING_FILES[@]} -eq 0 ]; then
+            echo "No monitored files changed"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            JSON_ARRAY=$(printf '%s\n' "${MATCHING_FILES[@]}" | jq -R . | jq -s -c .)
+            echo "Changed files: $JSON_ARRAY"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "files=$JSON_ARRAY" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Dispatch to shopify-dev
+        if: steps.check-branch.outputs.matches == 'true' && steps.changed-files.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+          SOURCE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          CHANGED_FILES: ${{ steps.changed-files.outputs.files }}
+        run: |
+          # Build the payload
+          PAYLOAD=$(jq -n \
+            --arg source_repo "Shopify/hydrogen" \
+            --arg source_branch "$SOURCE_BRANCH" \
+            --argjson source_pr_number "$PR_NUMBER" \
+            --argjson changed_files "$CHANGED_FILES" \
+            '{
+              event_type: "templated-api-docs-sync",
+              client_payload: {
+                source_repo: $source_repo,
+                source_branch: $source_branch,
+                source_pr_number: $source_pr_number,
+                changed_files: $changed_files
+              }
+            }')
+
+          echo "Dispatching to shopify-dev with payload:"
+          echo "$PAYLOAD" | jq .
+
+          # Send the dispatch request
+          HTTP_STATUS=$(curl -s -o response.txt -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/Shopify/shopify-dev/dispatches \
+            -d "$PAYLOAD")
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "Successfully dispatched docs sync event to shopify-dev (HTTP $HTTP_STATUS)"
+          else
+            echo "Failed to dispatch docs sync event (HTTP $HTTP_STATUS)"
+            cat response.txt
+            exit 1
+          fi
