@@ -8,15 +8,22 @@ import {
   SHOPIFY_STOREFRONT_ID_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
-  SHOPIFY_Y,
-  SHOPIFY_S,
 } from './cart-constants.js';
 import type {StorefrontApiResponseOkPartial} from './storefront-api-response.types.js';
-import {getShopifyCookies} from './cookies-utils.js';
+import {
+  getTrackingValues,
+  SHOPIFY_UNIQUE_TOKEN_HEADER,
+  SHOPIFY_VISIT_TOKEN_HEADER,
+} from './tracking-utils.js';
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function useCartFetch() {
-  const {storefrontId, getPublicTokenHeaders, getStorefrontApiUrl} = useShop();
+  const {
+    storefrontId,
+    getPublicTokenHeaders,
+    getStorefrontApiUrl,
+    sameDomainForStorefrontApi,
+  } = useShop();
 
   return useCallback(
     <ReturnDataGeneric,>({
@@ -32,10 +39,19 @@ export function useCartFetch() {
         headers[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
       }
 
-      // Find Shopify cookies
-      const cookieData = getShopifyCookies(document.cookie);
-      headers[SHOPIFY_STOREFRONT_Y_HEADER] = cookieData[SHOPIFY_Y];
-      headers[SHOPIFY_STOREFRONT_S_HEADER] = cookieData[SHOPIFY_S];
+      if (!sameDomainForStorefrontApi) {
+        // If we are in cross-domain mode, add tracking headers manually.
+        // Otherwise, for same-domain we rely on the browser to attach cookies automatically.
+        const {uniqueToken, visitToken} = getTrackingValues();
+        if (uniqueToken) {
+          headers[SHOPIFY_STOREFRONT_Y_HEADER] = uniqueToken;
+          headers[SHOPIFY_UNIQUE_TOKEN_HEADER] = uniqueToken;
+        }
+        if (visitToken) {
+          headers[SHOPIFY_STOREFRONT_S_HEADER] = visitToken;
+          headers[SHOPIFY_VISIT_TOKEN_HEADER] = visitToken;
+        }
+      }
 
       return fetch(getStorefrontApiUrl(), {
         method: 'POST',
@@ -57,7 +73,12 @@ export function useCartFetch() {
           };
         });
     },
-    [getPublicTokenHeaders, storefrontId, getStorefrontApiUrl],
+    [
+      getPublicTokenHeaders,
+      storefrontId,
+      getStorefrontApiUrl,
+      sameDomainForStorefrontApi,
+    ],
   );
 }
 

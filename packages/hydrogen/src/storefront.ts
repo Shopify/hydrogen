@@ -1,11 +1,10 @@
 import {
   createStorefrontClient as createStorefrontUtilities,
-  getShopifyCookies,
-  SHOPIFY_S,
-  SHOPIFY_Y,
   SHOPIFY_STOREFRONT_ID_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
+  SHOPIFY_UNIQUE_TOKEN_HEADER,
+  SHOPIFY_VISIT_TOKEN_HEADER,
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
 import type {WritableDeep} from 'type-fest';
@@ -16,6 +15,9 @@ import {
   SDK_VERSION_HEADER,
   STOREFRONT_ACCESS_TOKEN_HEADER,
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
+  SHOPIFY_CLIENT_IP_HEADER,
+  SHOPIFY_CLIENT_IP_SIG_HEADER,
+  HYDROGEN_SERVER_TRACKING_KEY,
 } from './constants';
 import {
   CacheNone,
@@ -54,6 +56,12 @@ import {
   type StackInfo,
 } from './utils/callsites';
 import type {WaitUntil, StorefrontHeaders} from './types';
+import {extractHeaders, getSafePathname, SFAPI_RE} from './utils/request';
+import {
+  appendServerTimingHeader,
+  extractServerTimingHeader,
+  TrackedTimingsRecord,
+} from './utils/server-timing';
 
 export type I18nBase = {
   language: LanguageCode;
@@ -159,6 +167,25 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
     typeof createStorefrontUtilities
   >['getStorefrontApiUrl'];
   i18n: TI18n;
+  getHeaders: () => Record<string, string>;
+  /**
+   * Checks if the request URL matches the Storefront API GraphQL endpoint.
+   */
+  isStorefrontApiUrl: (request: {url?: string}) => boolean;
+  /**
+   * Forwards the request to the Storefront API.
+   * It reads the API version from the request URL.
+   */
+  forward: (
+    request: Request,
+    options?: Pick<StorefrontCommonExtraParams, 'storefrontApiVersion'>,
+  ) => Promise<Response>;
+  /**
+   * Sets the collected subrequest headers in the response.
+   * Useful to forward the cookies and server-timing headers
+   * from server subrequests to the browser.
+   */
+  setCollectedSubrequestHeaders: (response: {headers: Headers}) => void;
 };
 
 type HydrogenClientProps<TI18n> = {
@@ -235,20 +262,59 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     buyerIp: storefrontHeaders?.buyerIp || '',
   });
 
+  if (storefrontHeaders?.buyerIp) {
+    defaultHeaders[SHOPIFY_CLIENT_IP_HEADER] = storefrontHeaders.buyerIp;
+  }
+
+  if (storefrontHeaders?.buyerIpSig) {
+    defaultHeaders[SHOPIFY_CLIENT_IP_SIG_HEADER] = storefrontHeaders.buyerIpSig;
+  }
+
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =
     storefrontHeaders?.requestGroupId || generateUUID();
 
   if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
 
-  if (storefrontHeaders && storefrontHeaders.cookie) {
-    const cookies = getShopifyCookies(storefrontHeaders.cookie ?? '');
+  const requestCookie = storefrontHeaders?.cookie ?? '';
+  if (requestCookie) defaultHeaders['cookie'] = requestCookie;
 
-    if (cookies[SHOPIFY_Y])
-      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = cookies[SHOPIFY_Y];
-    if (cookies[SHOPIFY_S])
-      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = cookies[SHOPIFY_S];
+  let uniqueToken: string | undefined;
+  let visitToken: string | undefined;
+
+  // If new cookies are not present, we need to check legacy cookies
+  // or generate new tokens, which we pass in the headers. This ensures
+  // we track the current session and SFAPI creates new cookies with
+  // the given tokens for subsequent requests.
+  if (!/\b_shopify_(analytics|marketing)=/.test(requestCookie)) {
+    const legacyUniqueToken = requestCookie.match(/\b_shopify_y=([^;]+)/)?.[1];
+    const legacyVisitToken = requestCookie.match(/\b_shopify_s=([^;]+)/)?.[1];
+
+    // These legacy headers might not be needed since they are already
+    // passed via cookies, but it's better to be explicit just in case.
+    if (legacyUniqueToken) {
+      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = legacyUniqueToken;
+    }
+    if (legacyVisitToken) {
+      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = legacyVisitToken;
+    }
+
+    // Use legacy tokens if available for session migration, or generate
+    // new ones and set them in the new headers to let SFAPI create
+    // cookies and track the subrequests made in this session.
+    uniqueToken = legacyUniqueToken ?? generateUUID();
+    visitToken = legacyVisitToken ?? generateUUID();
+
+    defaultHeaders[SHOPIFY_UNIQUE_TOKEN_HEADER] = uniqueToken;
+    defaultHeaders[SHOPIFY_VISIT_TOKEN_HEADER] = visitToken;
   }
+
+  let collectedSubrequestHeaders:
+    | undefined
+    | {
+        serverTiming: string;
+        setCookie: string[];
+      };
 
   // Remove any headers that are identifiable to the user or request
   const cacheKeyHeader = JSON.stringify({
@@ -325,6 +391,21 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         stackInfo,
         graphql: graphqlData,
         purpose: storefrontHeaders?.purpose,
+      },
+      onRawHeaders: (headers) => {
+        // Set this the first time we get a fresh response (cache miss)
+        // to increase the chance of returning it from the main server response.
+        // Note: a server response needs its headers set at the time of sending,
+        // while the body can be streamed later. Therefore, this value here
+        // might not be used if subrequests are not over before the main response is sent.
+        collectedSubrequestHeaders ??= {
+          // `getSetCookie` may not be available in all environments (e.g., classic Remix compiler)
+          setCookie:
+            typeof headers.getSetCookie === 'function'
+              ? headers.getSetCookie()
+              : [],
+          serverTiming: headers.get('server-timing') ?? '',
+        };
       },
     });
 
@@ -435,9 +516,134 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       generateCacheControlHeader,
       getPublicTokenHeaders,
       getPrivateTokenHeaders,
+      getHeaders: () => ({...defaultHeaders}),
       getShopifyDomain,
       getApiUrl: getStorefrontApiUrl,
       i18n: (i18n ?? defaultI18n) as TI18n,
+
+      /**
+       * Checks if the request is targeting the Storefront API endpoint.
+       */
+      isStorefrontApiUrl(request) {
+        return SFAPI_RE.test(getSafePathname(request.url ?? ''));
+      },
+      /**
+       * Forwards the request to the Storefront API.
+       */
+      async forward(request, options) {
+        const forwardedHeaders = new Headers([
+          // Forward only a selected set of headers to the Storefront API
+          // to avoid getting 403 errors due to unexpected headers.
+          ...extractHeaders(
+            (key) => request.headers.get(key),
+            [
+              'accept',
+              'accept-encoding',
+              'accept-language',
+              // Access-Control headers are used for CORS preflight requests.
+              'access-control-request-headers',
+              'access-control-request-method',
+              'content-type',
+              'content-length',
+              'cookie',
+              'origin',
+              'referer',
+              'user-agent',
+              STOREFRONT_ACCESS_TOKEN_HEADER,
+              SHOPIFY_UNIQUE_TOKEN_HEADER,
+              SHOPIFY_VISIT_TOKEN_HEADER,
+            ],
+          ),
+          // Add some headers to help with geolocalization and debugging
+          ...extractHeaders(
+            (key) => defaultHeaders[key],
+            [
+              SHOPIFY_CLIENT_IP_HEADER,
+              SHOPIFY_CLIENT_IP_SIG_HEADER,
+              SHOPIFY_STOREFRONT_ID_HEADER,
+              STOREFRONT_REQUEST_GROUP_ID_HEADER,
+            ],
+          ),
+        ]);
+
+        if (storefrontHeaders?.buyerIp) {
+          // Good for proxies to inform about the original client IP
+          forwardedHeaders.set('x-forwarded-for', storefrontHeaders.buyerIp);
+        }
+
+        const storefrontApiVersion =
+          options?.storefrontApiVersion ??
+          getSafePathname(request.url).match(SFAPI_RE)?.[1];
+
+        const sfapiResponse = await fetch(
+          getStorefrontApiUrl({storefrontApiVersion}),
+          {
+            method: request.method,
+            body: request.body,
+            headers: forwardedHeaders,
+          },
+        );
+
+        // Create a new response to allow modifying headers
+        return new Response(sfapiResponse.body, sfapiResponse);
+      },
+
+      setCollectedSubrequestHeaders: (response: {headers: Headers}) => {
+        // Forward cookies
+        if (collectedSubrequestHeaders) {
+          for (const value of collectedSubrequestHeaders.setCookie) {
+            response.headers.append('Set-Cookie', value);
+          }
+        }
+
+        const serverTiming = extractServerTimingHeader(
+          collectedSubrequestHeaders?.serverTiming,
+        );
+
+        const isDocumentResponse = response.headers
+          .get('content-type')
+          ?.startsWith('text/html');
+
+        // Only fallback to generated tokens for HTML responses.
+        // This ensures that non-HTML responses (e.g. JSON, Remix streaming)
+        // don't get unexpected _y/_s values. These values might be used by the
+        // browser to set cookies and track the user session if consent is allowed
+        // by default in their store settings (otherwise these values are dropped).
+        const fallbackValues = isDocumentResponse
+          ? ({_y: uniqueToken, _s: visitToken} satisfies TrackedTimingsRecord)
+          : undefined;
+
+        // Forward tracking values via server-timing from subrequests,
+        // and fallback to the ones generated in the current request.
+        appendServerTimingHeader(response, {
+          ...fallbackValues,
+          ...serverTiming,
+        } satisfies TrackedTimingsRecord);
+
+        // Optimization: We set this flag to indicate that the tracking work was done
+        // in the server to skip an extra request from the browser. Conditions:
+        // If any of these conditions are not met, the browser will perform
+        // a request to the SFAPI proxy to get all the necessary cookies and values.
+        if (
+          isDocumentResponse &&
+          collectedSubrequestHeaders &&
+          // _shopify_essential cookie is always set, but we need more than that
+          collectedSubrequestHeaders.setCookie.length > 1 &&
+          serverTiming?._y &&
+          serverTiming?._s &&
+          serverTiming?._cmp
+        ) {
+          // For all SF API requests (that aren't from cache), we expect _y and _s values, as well as the
+          // _shopify_essential cookie to be returned. Even if we get responses from SF API requests that
+          // are cache misses, we still may not get the _cmp value and the _shopify_marketing and _shopify_analytics cookies.
+          // Therefore, even if we had >=1 non-cache hit SF API request, we may still need to make the browser
+          // SF API request to the `consentManagement` endpoint in the SF API, which will give us the _cmp value
+          // and set the _shopify_marketing and _shopify_analytics cookies if they are missing.
+          appendServerTimingHeader(response, {
+            [HYDROGEN_SERVER_TRACKING_KEY]: '1',
+          });
+        }
+      },
     },
   };
 }

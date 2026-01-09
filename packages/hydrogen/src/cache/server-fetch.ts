@@ -14,7 +14,13 @@ export type FetchCacheOptions = {
   waitUntil?: WaitUntil;
   returnType?: 'json' | 'text' | 'arrayBuffer' | 'blob';
   debugInfo?: DebugOptions;
+  /** Called when fresh raw headers are received (skipped on cache hits) */
+  onRawHeaders?: (headers: Headers) => void;
 };
+
+// Exclude headers that are not safe or useful to cache
+// since they are individual to each user session/request.
+const excludedHeaders = ['set-cookie', 'server-timing'];
 
 function toSerializableResponse(body: any, response: Response) {
   return [
@@ -22,7 +28,9 @@ function toSerializableResponse(body: any, response: Response) {
     {
       status: response.status,
       statusText: response.statusText,
-      headers: Array.from(response.headers.entries()),
+      headers: [...response.headers].filter(
+        ([key]) => !excludedHeaders.includes(key.toLowerCase()),
+      ),
     },
   ] satisfies [any, ResponseInit];
 }
@@ -52,6 +60,7 @@ export async function fetchWithServerCache(
     waitUntil,
     returnType = 'json',
     debugInfo,
+    onRawHeaders,
   }: FetchCacheOptions = {},
 ): Promise<readonly [any, Response]> {
   if (!cacheOptions && (!requestInit.method || requestInit.method === 'GET')) {
@@ -62,6 +71,8 @@ export async function fetchWithServerCache(
     cacheKey,
     async () => {
       const response = await fetch(url, requestInit);
+      onRawHeaders?.(response.headers);
+
       let data;
 
       try {
