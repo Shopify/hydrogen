@@ -90,7 +90,7 @@ const CART_DATA_3 = {
 
 // Mock the useLocation hook to return a different path each time to simulate page navigation
 let pathCount = 1;
-const revalidateMock = vi.fn<() => Promise<void>>(() => Promise.resolve());
+const revalidateMock = vi.fn<[], Promise<void>>(() => Promise.resolve());
 
 vi.mock('react-router', async (importOriginal) => {
   const actual = (await importOriginal()) as typeof import('react-router');

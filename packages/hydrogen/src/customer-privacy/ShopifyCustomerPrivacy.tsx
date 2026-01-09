@@ -1,11 +1,14 @@
-import {getTrackingValues, useShopifyCookies} from '@shopify/hydrogen-react';
 import {
   CountryCode,
   LanguageCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {useRevalidator} from 'react-router';
-import {useLoadScript} from '@shopify/hydrogen-react';
+import {
+  useLoadScript,
+  getTrackingValues,
+  useShopifyCookies,
+} from '@shopify/hydrogen-react';
 import {
   isSfapiProxyEnabled,
   hasServerReturnedTrackingValues,

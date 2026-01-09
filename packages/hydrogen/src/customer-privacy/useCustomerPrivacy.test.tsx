@@ -6,7 +6,7 @@ import {
   CONSENT_API_WITH_BANNER,
 } from './ShopifyCustomerPrivacy.js';
 
-const revalidateMock = vi.fn<() => Promise<void>>(() => Promise.resolve());
+const revalidateMock = vi.fn<[], Promise<void>>(() => Promise.resolve());
 
 vi.mock('react-router', async (importOriginal) => {
   const actual = (await importOriginal()) as typeof import('react-router');
