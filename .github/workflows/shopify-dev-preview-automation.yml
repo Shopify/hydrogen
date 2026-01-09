@@ -24,8 +24,8 @@ jobs:
     name: Dispatch docs sync to shopify-dev
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Only run for Shopify org, non-draft PRs, and when base branch matches calver pattern
-    if: github.repository_owner == 'shopify' && !github.event.pull_request.draft
+    # Only run for Shopify org (secrets not available to forks anyway)
+    if: github.repository_owner == 'shopify'
     steps:
       - name: Check if base branch matches calver pattern
         id: check-branch
