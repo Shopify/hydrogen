@@ -3,6 +3,7 @@
 # in PRs targeting calver branches (e.g., 2025-07).
 #
 # The shopify-dev repository will then sync these docs files for preview.
+# Only run for Shopify org (secrets not available to forks anyway)
 
 name: Shopify Dev Docs Sync
 
@@ -27,7 +28,28 @@ jobs:
     # Only run for Shopify org (secrets not available to forks anyway)
     if: github.repository_owner == 'shopify'
     steps:
+      - name: Check if PR author is Shopify org member
+        id: check-author
+        env:
+          GH_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          # Check org membership via GitHub API (returns 204 if member, 404 if not)
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/orgs/Shopify/members/$AUTHOR")
+
+          if [ "$HTTP_STATUS" -eq 204 ]; then
+            echo "Author '$AUTHOR' is a Shopify org member"
+            echo "is_member=true" >> $GITHUB_OUTPUT
+          else
+            echo "Author '$AUTHOR' is NOT a Shopify org member (HTTP $HTTP_STATUS), skipping dispatch"
+            echo "is_member=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Check if base branch matches calver pattern
+        if: steps.check-author.outputs.is_member == 'true'
         id: check-branch
         run: |
           BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
@@ -40,13 +62,13 @@ jobs:
           fi
 
       - name: Checkout repository
-        if: steps.check-branch.outputs.matches == 'true'
+        if: steps.check-author.outputs.is_member == 'true' && steps.check-branch.outputs.matches == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Get changed files
-        if: steps.check-branch.outputs.matches == 'true'
+        if: steps.check-author.outputs.is_member == 'true' && steps.check-branch.outputs.matches == 'true'
         id: changed-files
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -84,7 +106,7 @@ jobs:
           fi
 
       - name: Dispatch to shopify-dev
-        if: steps.check-branch.outputs.matches == 'true' && steps.changed-files.outputs.has_changes == 'true'
+        if: steps.check-author.outputs.is_member == 'true' && steps.check-branch.outputs.matches == 'true' && steps.changed-files.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
           SOURCE_BRANCH: ${{ github.event.pull_request.base.ref }}
