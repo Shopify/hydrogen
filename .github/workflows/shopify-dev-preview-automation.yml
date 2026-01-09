@@ -25,39 +25,18 @@ jobs:
     name: Check authorization
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: github.repository_owner == 'shopify'
+    # Only run for Shopify org, and only for org members/owners (not external collaborators)
+    if: |
+      github.repository_owner == 'shopify' &&
+      (github.event.pull_request.author_association == 'MEMBER' || github.event.pull_request.author_association == 'OWNER')
     outputs:
-      authorized: ${{ steps.check-author.outputs.is_member }}
       branch_valid: ${{ steps.check-branch.outputs.matches }}
     steps:
-      - name: Check if PR author is Shopify org member
-        id: check-author
-        env:
-          GH_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
-          AUTHOR: ${{ github.event.pull_request.user.login }}
+      - name: Log authorization
         run: |
-          # Check org membership via GitHub API (returns 204 if member, 404 if not)
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: token $GH_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/orgs/Shopify/members/$AUTHOR")
-
-          if [ "$HTTP_STATUS" -eq 204 ]; then
-            echo "Author '$AUTHOR' is a Shopify org member"
-            echo "is_member=true" >> $GITHUB_OUTPUT
-          elif [ "$HTTP_STATUS" -eq 404 ]; then
-            echo "Author '$AUTHOR' is not a Shopify org member, workflow will end"
-            echo "is_member=false" >> $GITHUB_OUTPUT
-          elif [ "$HTTP_STATUS" -eq 401 ] || [ "$HTTP_STATUS" -eq 403 ]; then
-            echo "::warning::Auth failed checking org membership - token may lack 'read:org' scope (HTTP $HTTP_STATUS)"
-            echo "is_member=false" >> $GITHUB_OUTPUT
-          elif [ "$HTTP_STATUS" -eq 302 ]; then
-            echo "::warning::Redirect received - token likely lacks 'read:org' scope (HTTP $HTTP_STATUS)"
-            echo "is_member=false" >> $GITHUB_OUTPUT
-          else
-            echo "::warning::Unexpected response checking org membership (HTTP $HTTP_STATUS)"
-            echo "is_member=false" >> $GITHUB_OUTPUT
-          fi
+          echo "PR author: ${{ github.event.pull_request.user.login }}"
+          echo "Author association: ${{ github.event.pull_request.author_association }}"
+          echo "Author is authorized (MEMBER or OWNER)"
 
       - name: Check if base branch matches calver pattern
         id: check-branch
@@ -77,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: check-authorization
-    if: needs.check-authorization.outputs.authorized == 'true' && needs.check-authorization.outputs.branch_valid == 'true'
+    if: needs.check-authorization.outputs.branch_valid == 'true'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
