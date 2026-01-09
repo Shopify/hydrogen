@@ -26,6 +26,21 @@ jobs:
     timeout-minutes: 10
     if: github.repository_owner == 'shopify'
     steps:
+      - name: Debug context values
+        run: |
+          echo "=== Debug Info ==="
+          echo "repository_owner: ${{ github.repository_owner }}"
+          echo "author_association: ${{ github.event.pull_request.author_association }}"
+          echo "PR author: ${{ github.event.pull_request.user.login }}"
+          echo "=================="
+
+      - name: Check author authorization
+        if: github.event.pull_request.author_association != 'MEMBER' && github.event.pull_request.author_association != 'OWNER'
+        run: |
+          echo "Author association '${{ github.event.pull_request.author_association }}' is not MEMBER or OWNER"
+          echo "Only org members can trigger docs sync"
+          exit 1
+
       - name: Check if base branch matches calver pattern
         id: check-branch
         run: |
