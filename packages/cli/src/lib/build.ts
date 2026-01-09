@@ -6,9 +6,8 @@ import {execAsync} from './process.js';
 
 // Avoid using fileURLToPath here to prevent backslashes nightmare on Windows
 const monorepoPackagesPath = new URL('../../..', import.meta.url).pathname;
-export const isHydrogenMonorepo = monorepoPackagesPath.endsWith(
-  '/hydrogen/packages/',
-);
+// Check for /packages/ suffix to support worktrees (e.g., worktrees-hydrogen/branch-name/packages/)
+export const isHydrogenMonorepo = /\/packages\/?$/.test(monorepoPackagesPath);
 export const hydrogenPackagesPath = isHydrogenMonorepo
   ? monorepoPackagesPath
   : undefined;
