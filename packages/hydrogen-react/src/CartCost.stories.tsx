@@ -15,12 +15,6 @@ const Template: Story<{amountType: CartCostProps['amountType']}> = (props) => {
       <div>
         cart.cost.totalAmount will be in the <CartCost amountType="subtotal" />
       </div>
-      <div>
-        cart.cost.totalAmount will be in the <CartCost amountType="tax" />
-      </div>
-      <div>
-        cart.cost.totalAmount will be in the <CartCost amountType="duty" />
-      </div>
       <hr />
       <CartCost {...props} />
     </CartProvider>
