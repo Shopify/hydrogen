@@ -5,6 +5,9 @@
 # For more information, see:
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
+# Hydrogen config file requires review from developer-tools team
+templates/demo-store/hydrogen.config.ts @Shopify/developer-tools
+
 # Default owner for everything in the repo
 # The @Shopify/headless team will be requested for review on all PRs
 * @Shopify/headless
