@@ -67,7 +67,7 @@ jobs:
           # Filter to only include our monitored files
           MATCHING_FILES=()
           for file in "${MONITORED_FILES[@]}"; do
-            if echo "$CHANGED_FILES" | grep -q "^${file}$"; then
+            if echo "$CHANGED_FILES" | grep -Fxq "$file"; then
               MATCHING_FILES+=("$file")
             fi
           done
