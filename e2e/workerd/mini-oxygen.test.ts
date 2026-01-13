@@ -233,18 +233,32 @@ describe('Hydrogen module workerd compatibility', () => {
                   headers: { 'content-type': 'application/json' }
                 });
               } catch (error) {
-                // URL errors are acceptable - they happen because the virtual
-                // routes directory structure doesn't exist in the test environment.
-                // Node.js API errors (require, fs, path, etc.) would have failed
-                // during module load, not here.
-                const isAcceptableError = error.message.includes('Invalid URL') ||
-                  error.message.includes('URL');
+                // CRITICAL: Check for Node.js API errors FIRST - these MUST fail the test
+                const nodeJsGlobals = ['Buffer', 'process', '__dirname', '__filename', 'global', 'module', 'exports'];
+                const isNodeJsError =
+                  error.message.includes('Cannot find module') ||
+                  error.message.includes('require is not defined') ||
+                  (error.message.includes('is not defined') &&
+                   nodeJsGlobals.some(g => error.message.includes(g)));
+
+                if (isNodeJsError) {
+                  return new Response(JSON.stringify({
+                    success: false,
+                    exports,
+                    error: error.message,
+                    errorType: 'nodejs_api_error'
+                  }), { status: 500, headers: { 'content-type': 'application/json' } });
+                }
+
+                // URL construction errors are acceptable - they happen because
+                // import.meta.url points to temp directory, not the actual package
+                const isAcceptableError = error.message === 'Invalid URL string.';
 
                 return new Response(JSON.stringify({
                   success: isAcceptableError,
                   exports,
                   error: error.message,
-                  errorType: isAcceptableError ? 'url_error' : 'unexpected_error'
+                  errorType: isAcceptableError ? 'url_construction_error' : 'unexpected_error'
                 }), {
                   status: isAcceptableError ? 200 : 500,
                   headers: { 'content-type': 'application/json' }
