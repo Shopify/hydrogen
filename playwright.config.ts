@@ -8,12 +8,11 @@ export default defineConfig({
   reporter: isCI ? 'html' : 'list',
   workers: 1,
   fullyParallel: true,
-  timeout: 60 * 1000,
+  timeout: 30 * 1000,
   use: {
-    // Capture screenshot on failure
     screenshot: 'only-on-failure',
-    // Record trace on first retry (helps debug flaky tests)
-    trace: 'on-first-retry',
+    video: 'on',
+    trace: 'on',
   },
   projects: [
     {
