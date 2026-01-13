@@ -3,16 +3,19 @@
   "version": "1",
   "releases": [
     {
-      "title": "New Shopify cookie system and analytics improvements",
-      "version": "",
-      "date": "",
-      "hash": "",
-      "commit": "",
-      "pr": "",
+      "title": "New Shopify cookie system, React Router 7.12, and analytics improvements",
+      "version": "2025.7.1",
+      "date": "2026-01-08",
+      "hash": "67a817cc843d1be3c0ef5515b9a4b6b9e940b6fe",
+      "commit": "https://github.com/Shopify/hydrogen/commit/67a817cc843d1be3c0ef5515b9a4b6b9e940b6fe",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3237",
       "dependencies": {
-        "@shopify/hydrogen": ""
+        "@shopify/hydrogen": "2025.7.1",
+        "react-router": "7.12.0"
       },
-      "devDependencies": {},
+      "devDependencies": {
+        "@react-router/dev": "7.12.0"
+      },
       "fixes": [
         {
           "title": "Fix upgrade notice showing incorrect versions",
@@ -75,6 +78,25 @@
           ],
           "pr": "https://github.com/Shopify/hydrogen/pull/3331",
           "id": "3331"
+        },
+        {
+          "title": "React Router 7.12 stabilized APIs",
+          "info": "React Router 7.12 stabilizes several previously unstable APIs. The following future flags in `react-router.config.ts` have been renamed:\n\n- `future.unstable_splitRouteModules` → `future.v8_splitRouteModules`\n- `future.unstable_viteEnvironmentApi` → `future.v8_viteEnvironmentApi`\n\nIf you're using these flags, update your config to use the new names.",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Update fetcher reset calls",
+              "info": "The `fetcher.unstable_reset()` method is now stable as `fetcher.reset()`. Update any usages in your code.",
+              "code": "YGBgZGlmZgotIGZldGNoZXIudW5zdGFibGVfcmVzZXQoKQorIGZldGNoZXIucmVzZXQoKQpgYGAK"
+            },
+            {
+              "title": "Update RouterProvider onError prop",
+              "info": "The `unstable_onError` prop on `<RouterProvider>` and `<HydratedRouter>` is now stable as `onError`. Update any usages in your code.",
+              "code": "YGBgZGlmZgovLyBGb3IgUm91dGVyUHJvdmlkZXIKLSA8Um91dGVyUHJvdmlkZXIgdW5zdGFibGVfb25FcnJvcj17aGFuZGxlRXJyb3J9IC8+CisgPFJvdXRlclByb3ZpZGVyIG9uRXJyb3I9e2hhbmRsZUVycm9yfSAvPgoKLy8gRm9yIEh5ZHJhdGVkUm91dGVyCi0gPEh5ZHJhdGVkUm91dGVyIHVuc3RhYmxlX29uRXJyb3I9e2hhbmRsZUVycm9yfSAvPgorIDxIeWRyYXRlZFJvdXRlciBvbkVycm9yPXtoYW5kbGVFcnJvcn0gLz4KYGBgCg=="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3346",
+          "id": "3346"
         }
       ]
     },
