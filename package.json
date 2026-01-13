@@ -28,7 +28,11 @@
     "version:next": "node scripts/changeset-version-next.mjs",
     "changeset": "changeset",
     "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/*/dist && rimraf templates/*/.cache",
-    "check": "npm run build && npm run lint && npm run typecheck && npm run test"
+    "check": "npm run build && npm run lint && npm run typecheck && npm run test",
+    "e2e": "playwright test",
+    "e2e:old-cookies": "playwright test --project=old-cookies",
+    "e2e:new-cookies": "playwright test --project=new-cookies",
+    "e2e:smoke": "playwright test --project=smoke"
   },
   "workspaces": [
     "docs/preview",
