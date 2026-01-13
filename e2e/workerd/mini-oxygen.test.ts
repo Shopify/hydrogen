@@ -187,6 +187,94 @@ describe('MiniOxygen Worker Runtime', () => {
   });
 });
 
+describe('Hydrogen module workerd compatibility', () => {
+  it('loads get-virtual-routes module without Node.js API errors', async () => {
+    const hydrogenDistPath = path.resolve(
+      __dirname,
+      '../../packages/hydrogen/dist/vite',
+    );
+    let moduleCode = await readFile(
+      path.join(hydrogenDistPath, 'get-virtual-routes.js'),
+      'utf-8',
+    );
+
+    // Remove the export statement since we'll inline the code
+    // and add our own default export
+    moduleCode = moduleCode.replace(/^export\s*\{[^}]*\};?\s*$/gm, '');
+
+    await withFixtures(
+      async ({writeFixture}) => {
+        // Inline the module code into the worker entry point
+        // since withFixtures only loads a single module.
+        // The test verifies the module loads in workerd without Node.js API errors.
+        // Runtime errors (like invalid URL paths) are acceptable since they prove
+        // the module loaded - workerd would fail during module evaluation if
+        // Node.js APIs like 'fs' or 'path' were used.
+        const workerCode = `
+          ${moduleCode}
+
+          export default {
+            async fetch(request) {
+              // Test 1: Verify exports are defined (module loaded successfully)
+              const exports = {
+                hasVirtualRoutesDir: typeof VIRTUAL_ROUTES_DIR === 'string',
+                hasGetVirtualRoutesV3: typeof getVirtualRoutesV3 === 'function',
+              };
+
+              // Test 2: Try calling the function. URL errors are acceptable
+              // (they prove the code executed), but Node.js API errors are not.
+              try {
+                const routes = await getVirtualRoutesV3();
+                return new Response(JSON.stringify({
+                  success: true,
+                  exports,
+                  routes
+                }), {
+                  headers: { 'content-type': 'application/json' }
+                });
+              } catch (error) {
+                // URL errors are acceptable - they happen because the virtual
+                // routes directory structure doesn't exist in the test environment.
+                // Node.js API errors (require, fs, path, etc.) would have failed
+                // during module load, not here.
+                const isAcceptableError = error.message.includes('Invalid URL') ||
+                  error.message.includes('URL');
+
+                return new Response(JSON.stringify({
+                  success: isAcceptableError,
+                  exports,
+                  error: error.message,
+                  errorType: isAcceptableError ? 'url_error' : 'unexpected_error'
+                }), {
+                  status: isAcceptableError ? 200 : 500,
+                  headers: { 'content-type': 'application/json' }
+                });
+              }
+            }
+          }
+        `;
+        await writeFixture('dist/worker/index.js', workerCode);
+      },
+      async ({fetch}) => {
+        const response = await fetch('/');
+        const data = await response.json();
+
+        // Module should have loaded and exports should be defined
+        expect(data.exports.hasVirtualRoutesDir).toBe(true);
+        expect(data.exports.hasGetVirtualRoutesV3).toBe(true);
+        expect(data.success).toBe(true);
+
+        // If we got routes (full success), verify their structure
+        if (data.routes) {
+          expect(data.routes).toHaveProperty('routes');
+          expect(data.routes).toHaveProperty('layout');
+          expect(Array.isArray(data.routes.routes)).toBe(true);
+        }
+      },
+    );
+  });
+});
+
 // -- Test utilities:
 
 type WriteFixture = (filename: string, content: string) => Promise<void>;
