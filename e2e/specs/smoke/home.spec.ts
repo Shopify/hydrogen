@@ -29,7 +29,7 @@ test.describe('Home Page', () => {
       .first();
     await expect(recommendedProducts).toBeVisible();
 
-    const productItems = page.locator('.product-item');
+    const productItems = page.locator('.recommended-product');
     await expect(productItems.first()).toBeVisible();
 
     expect(consoleErrors).toHaveLength(0);
