@@ -6,6 +6,20 @@ import {
   CONSENT_API_WITH_BANNER,
 } from './ShopifyCustomerPrivacy.js';
 
+const revalidateMock = vi.fn<[], Promise<void>>(() => Promise.resolve());
+
+vi.mock('react-router', async (importOriginal) => {
+  const actual = (await importOriginal()) as typeof import('react-router');
+
+  return {
+    ...actual,
+    useRevalidator: () => ({
+      revalidate: revalidateMock,
+      state: 'idle',
+    }),
+  };
+});
+
 let html: HTMLHtmlElement;
 let head: HTMLHeadElement;
 let body: HTMLBodyElement;
@@ -18,6 +32,8 @@ const CUSTOMER_PRIVACY_PROPS = {
 
 describe(`useCustomerPrivacy`, () => {
   beforeEach(() => {
+    revalidateMock.mockClear();
+
     html = document.createElement('html');
     head = document.createElement('head');
     body = document.createElement('body');
