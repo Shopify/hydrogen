@@ -1,14 +1,20 @@
-index 825648a1..7536e037 100644
 --- a/templates/skeleton/app/routes/account_.login.tsx
 +++ b/templates/skeleton/app/routes/account_.login.tsx
-@@ -1,7 +1,139 @@
+@@ -1,13 +1,139 @@
 +import {Form, Link, useActionData, data, redirect} from 'react-router';
  import type {Route} from './+types/account_.login';
  
 -export async function loader({request, context}: Route.LoaderArgs) {
+-  const url = new URL(request.url);
+-  const acrValues = url.searchParams.get('acr_values') || undefined;
+-  const loginHint = url.searchParams.get('login_hint') || undefined;
+-
 -  return context.customerAccount.login({
 -    countryCode: context.storefront.i18n.country,
+-    acrValues,
+-    loginHint,
 -  });
+-}
 +type ActionResponse = {
 +  error: string | null;
 +};
@@ -22,7 +28,7 @@ index 825648a1..7536e037 100644
 +    return redirect('/account');
 +  }
 +  return {};
- }
++}
 +
 +export async function action({request, context}: Route.ActionArgs) {
 +  const {session, storefront} = context;
@@ -145,4 +151,3 @@ index 825648a1..7536e037 100644
 +    }
 +  }
 +` as const;
-\ No newline at end of file
