@@ -375,6 +375,13 @@ export function createCustomerAccountClient({
 
       if (options?.loginHint) {
         loginUrl.searchParams.append('login_hint', options.loginHint);
+
+        if (options?.loginHintMode) {
+          loginUrl.searchParams.append(
+            'login_hint_mode',
+            options.loginHintMode,
+          );
+        }
       }
 
       const verifier = generateCodeVerifier();
