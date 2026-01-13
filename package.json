@@ -37,6 +37,7 @@
     "check": "npm run build && npm run lint && npm run typecheck && npm run test",
     "e2e": "node scripts/run-e2e.js",
     "e2e:smoke": "node scripts/run-e2e.js --smoke",
+    "e2e:workerd": "vitest run --config e2e/workerd/vitest.config.ts",
     "pre-commit:encrypt": "bash -c 'git diff --cached --name-only | grep -q \"^secrets.ejson$\" && ejson encrypt secrets.ejson && git add secrets.ejson || true'"
   },
   "workspaces": [

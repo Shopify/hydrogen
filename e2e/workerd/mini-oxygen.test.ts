@@ -3,9 +3,12 @@ import {mkdir, writeFile, readFile, rm as remove} from 'node:fs/promises';
 import {temporaryDirectoryTask} from 'tempy';
 import {it, vi, describe, expect} from 'vitest';
 import {transformWithEsbuild} from 'vite';
-import {buildAssetsUrl} from './assets.js';
-import {createMiniOxygen, type MiniOxygenOptions} from './index.js';
-import {findPort} from '../common/find-port.js';
+import {buildAssetsUrl} from '../../packages/mini-oxygen/src/worker/assets.js';
+import {
+  createMiniOxygen,
+  type MiniOxygenOptions,
+} from '../../packages/mini-oxygen/src/worker/index.js';
+import {findPort} from '../../packages/mini-oxygen/src/common/find-port.js';
 
 describe('MiniOxygen Worker Runtime', () => {
   it('receives HTML from test worker', async () => {
@@ -75,13 +78,11 @@ describe('MiniOxygen Worker Runtime', () => {
         await writeHandler(() => new Response('ok'));
       },
       async ({fetch, fetchAsset}) => {
-        // Check asset server:
         const asset = await (await fetchAsset('/star.svg')).text();
         expect(asset).toEqual(
           '<svg><polygon points="100,10 40,198 190,78 10,78 160,198" style="fill:gold;"/></svg>',
         );
 
-        // Check asset proxy:
         const response = await fetch('/star.svg');
         const result = await response.text();
 
@@ -137,7 +138,6 @@ describe('MiniOxygen Worker Runtime', () => {
       async ({fetch, reloadMiniOxygen, miniOxygenOptions}) => {
         const spy = vi.spyOn(console, 'error').mockImplementation((error) => {
           // Hide logs
-          // console.debug(error.stack);
         });
 
         const response = await fetch('/');
@@ -147,53 +147,38 @@ describe('MiniOxygen Worker Runtime', () => {
           (result as string).startsWith('Error: test'),
         );
 
-        // console.error from workerd is asynchronous
-        await vi.waitFor(
-          () => expect(spy.mock.calls.length).toBeGreaterThan(1), // At least 2 calls
+        await vi.waitFor(() =>
+          expect(spy.mock.calls.length).toBeGreaterThan(1),
         );
 
-        // Note: Logs come in random order due to the fact that
-        // workerd logs are ingested using the Inspector protocol,
-        // which is based on WebSockets. We can't guarantee the order
-        // until we start using stdio for logging.
-
-        // console.error with stack:
         expect(spy, 'Logged with sourcemaps').toHaveBeenCalledWith(
           expect.objectContaining({
             stack: expect.stringMatching(
-              // Shows `doStuff` and the offending line by mapping
-              // the minified code with sourcemaps:
               /Error: test\nthrow new Error\("test"\);\n.*at doStuff \(/s,
             ),
           }),
         );
 
-        // Thrown error is also logged
         expect(spy).toHaveBeenCalledWith(new Error('test'));
 
         spy.mockClear();
-
-        // -- Test without sourcemaps:
 
         await remove(miniOxygenOptions.sourceMapPath!, {force: true});
         await reloadMiniOxygen();
 
         await fetch('/');
-        await vi.waitFor(
-          () => expect(spy.mock.calls.length).toBeGreaterThan(1), // At least 2 calls
+        await vi.waitFor(() =>
+          expect(spy.mock.calls.length).toBeGreaterThan(1),
         );
 
-        // console.error with stack:
         expect(spy, 'Logged without sourcemaps').toHaveBeenCalledWith(
           expect.objectContaining({
             stack: expect.stringMatching(
-              // Doesn't show `doStuff` because it's minified
               /Error: test\n\s+at \w .*at Object\.fetch/s,
             ),
           }),
         );
 
-        // Thrown error is also logged
         expect(spy).toHaveBeenCalledWith(new Error('test'));
 
         spy.mockRestore();
@@ -212,7 +197,7 @@ type WithFixturesSetupParams = {
   writeHandler: (
     handler: (
       request: Request,
-      env: Record<string, any>,
+      env: Record<string, unknown>,
       executionContext: ExecutionContext,
     ) => Response | Promise<Response>,
     options?: {sourcemap: boolean},
@@ -314,7 +299,6 @@ function withFixtures(
         Object.assign(testWorker, options);
 
         if (Array.isArray(testWorker.modules)) {
-          // Reload contents
           testWorker.modules[0].contents = await readFile(
             absoluteBundlePath,
             'utf-8',
