@@ -53,6 +53,8 @@ export interface CustomerAccountMutations {
 export type LoginOptions = {
   uiLocales?: LanguageCode;
   countryCode?: CountryCode;
+  acrValues?: string;
+  loginHint?: string;
 };
 
 export type LogoutOptions = {
