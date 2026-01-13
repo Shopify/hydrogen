@@ -369,6 +369,14 @@ export function createCustomerAccountClient({
         loginUrl.searchParams.append('region_country', options.countryCode);
       }
 
+      if (options?.acrValues) {
+        loginUrl.searchParams.append('acr_values', options.acrValues);
+      }
+
+      if (options?.loginHint) {
+        loginUrl.searchParams.append('login_hint', options.loginHint);
+      }
+
       const verifier = generateCodeVerifier();
       const challenge = await generateCodeChallenge(verifier);
 

@@ -312,6 +312,107 @@ describe('customer', () => {
       });
     });
 
+    describe('acrValues', () => {
+      it('Redirects to the customer account api login url with acrValues as param', async () => {
+        const origin = 'https://something-good.com';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(origin),
+          waitUntil: vi.fn(),
+        });
+
+        const response = await customer.login({
+          acrValues: 'provider:google',
+        });
+        const url = new URL(response.headers.get('location')!);
+
+        expect(url.searchParams.get('acr_values')).toBe('provider:google');
+      });
+
+      it('Does not include acr_values param when acrValues is not provided', async () => {
+        const origin = 'https://something-good.com';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(origin),
+          waitUntil: vi.fn(),
+        });
+
+        const response = await customer.login();
+        const url = new URL(response.headers.get('location')!);
+
+        expect(url.searchParams.get('acr_values')).toBeNull();
+      });
+    });
+
+    describe('loginHint', () => {
+      it('Redirects to the customer account api login url with loginHint as param', async () => {
+        const origin = 'https://something-good.com';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(origin),
+          waitUntil: vi.fn(),
+        });
+
+        const response = await customer.login({
+          loginHint: 'user@example.com',
+        });
+        const url = new URL(response.headers.get('location')!);
+
+        expect(url.searchParams.get('login_hint')).toBe('user@example.com');
+      });
+
+      it('Includes loginHint with other login options', async () => {
+        const origin = 'https://something-good.com';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(origin),
+          waitUntil: vi.fn(),
+        });
+
+        const response = await customer.login({
+          uiLocales: 'FR',
+          countryCode: 'CA',
+          acrValues: 'provider:google',
+          loginHint: 'user@example.com',
+        });
+        const url = new URL(response.headers.get('location')!);
+
+        expect(url.searchParams.get('ui_locales')).toBe('fr');
+        expect(url.searchParams.get('region_country')).toBe('CA');
+        expect(url.searchParams.get('acr_values')).toBe('provider:google');
+        expect(url.searchParams.get('login_hint')).toBe('user@example.com');
+      });
+
+      it('Does not include login_hint param when loginHint is not provided', async () => {
+        const origin = 'https://something-good.com';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request(origin),
+          waitUntil: vi.fn(),
+        });
+
+        const response = await customer.login();
+        const url = new URL(response.headers.get('location')!);
+
+        expect(url.searchParams.get('login_hint')).toBeNull();
+      });
+    });
+
     describe('logout', () => {
       describe('using new auth url when shopId is present in env', () => {
         it('Redirects to the customer account api logout url', async () => {
