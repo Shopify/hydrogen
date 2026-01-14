@@ -1,0 +1,290 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+      # To do a back-fix of a past CalVer branch, update this to the relevant branch
+      # Example: If we are currently on 2025-07, add 2025-01 here to do a back-fix
+      # release for the 2025-01 CalVer branch
+      - 2025-04
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write # Required for npm OIDC Trusted Publishing
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================
+  # PRODUCTION RELEASE (push to main, changesets)
+  # ============================================
+  release:
+    name: Production Release
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'shopify' && github.ref_name == 'main'
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
+      # A JSON array to present the published packages. The format is [{"name": "@xx/xx", "version": "1.2.0"}, {"name": "@xx/xy", "version": "0.8.9"}]
+      publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
+      latest: ${{ env.latest }}
+      latestBranch: ${{ env.latestBranch }}
+    steps:
+      - name: Flags
+        id: flags
+        run: |
+          # IMPORTANT: Update this latestBranch whenever we move to a new major version:
+          echo "latestBranch=2025-04" >> $GITHUB_ENV
+          echo "latest=${{ github.ref_name == 'main' }}" >> $GITHUB_ENV
+
+      - name: Checkout the code
+        uses: actions/checkout@v4
+        # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24 # Required for npm@11 OIDC Trusted Publishing
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Install the packages
+        run: npm ci --legacy-peer-deps
+
+      - name: Build the dist code
+        run: npm run build
+
+      - name: Create Release Pull Request or Publish (for latest release)
+        if: env.latest == 'true'
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: npm run version
+          publish: npm run changeset publish
+          # we use the commit message in next release workflow file. This avoid a next release when an actual release is happening
+          commit: '[ci] release ${{ env.latestBranch }}'
+          title: '[ci] release ${{ env.latestBranch }}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+          NPM_TOKEN: '' # Empty string forces OIDC authentication
+
+  # ============================================
+  # NEXT RELEASE (snapshot releases on main)
+  # ============================================
+  next-release:
+    name: ⏭️ Next Release
+    runs-on: ubuntu-latest
+    # don't run if a commit message with [ci] release is present. The release workflow will do the release
+    if: github.repository_owner == 'shopify' && github.ref_name == 'main' && !startsWith(github.event.head_commit.message, '[ci] release')
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    outputs:
+      NEXT_VERSION: ${{ steps.version.outputs.NEXT_VERSION }}
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24 # Required for npm@11 OIDC Trusted Publishing
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Install the packages
+        run: npm ci
+
+      - name: Format release with Prettier
+        run: npm run format
+
+      - name: 🕵️ Check for changes
+        id: version
+        run: |
+          # get latest commit sha
+          SHA=$(git rev-parse HEAD)
+          # get first 7 characters of sha
+          SHORT_SHA=${SHA::7}
+          NEXT_VERSION=next-${SHORT_SHA}
+          # set output so it can be used in other jobs
+          echo "NEXT_VERSION=${NEXT_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: 🏗 Build CLI
+        if: steps.version.outputs.NEXT_VERSION
+        run: npm run build
+
+      - name: ⤴️ Update version
+        if: steps.version.outputs.NEXT_VERSION
+        run: |
+          git config user.email "hydrogen@shopify.com"
+          git config user.name "Hydrogen Bot"
+          git checkout -B next/${{ steps.version.outputs.NEXT_VERSION }}
+          # using changeset snapshot releases, this sets the version to 0.0.0-{tag}-DATETIMESTAMP where tag=next-SHORT_SHA
+          # as an example this results in a next release as following 0.0.0-next-1686a75-20230313113149 with a next tag
+          npm run version:next
+          npm run changeset -- version --snapshot ${{steps.version.outputs.NEXT_VERSION}}
+          npm run version:post
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏗 Build
+        if: steps.version.outputs.NEXT_VERSION
+        run: npm run build
+
+      - name: Publish to npm
+        if: steps.version.outputs.NEXT_VERSION
+        run: npm run changeset -- publish --tag next
+        env:
+          NPM_TOKEN: '' # Empty string forces OIDC authentication
+
+  # ============================================
+  # BACK-FIX RELEASE (push to calver branches)
+  # ============================================
+  backfix-release:
+    name: Back-fix changelog PR or Release
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'shopify' && github.ref_name != 'main'
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+        # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24 # Required for npm@11 OIDC Trusted Publishing
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Install the packages
+        run: npm ci --legacy-peer-deps
+
+      - name: Format release with Prettier
+        run: npm run format
+
+      - name: Build the dist code
+        run: npm run build
+
+      - name: Create Back-fix Release Pull Request or Publish (for back-fix release)
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: npm run version
+          publish: npm run changeset -- publish --tag ${{ github.ref_name }}
+          commit: '[ci] back-fix release ${{ github.ref_name }}'
+          title: '[ci] back-fix release ${{ github.ref_name }}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+          NPM_TOKEN: '' # Empty string forces OIDC authentication
+
+  # ============================================
+  # COMPILE TEMPLATES (after production release publishes)
+  # ============================================
+  compile:
+    needs: release
+    # Only compile templates if a release was published, and we're on the "latest" release branch
+    if: needs.release.outputs.published == 'true' && needs.release.outputs.latest == 'true'
+    runs-on: ubuntu-latest
+    name: Compile the typescript templates and push them to main
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Install the packages
+        run: npm install --frozen-lockfile --ignore-engines
+
+      - name: Build the dist code
+        run: npm run build
+
+      - name: Compile skeleton
+        run: |
+          node scripts/compile-template-for-dist.mjs skeleton
+          (cd templates/skeleton-js && npm i --package-lock-only --workspaces false)
+          (cd templates/skeleton-ts && npm i --package-lock-only --workspaces false)
+
+      - name: Update templates in the dist branch
+        run: |
+          git add .
+          git status
+          git config user.email "hydrogen@shopify.com"
+          git config user.name "Hydrogen Bot"
+          git show-ref
+          git commit -m "Update templates for dist"
+          git push origin HEAD:dist --force
+  # sync_latest:
+  #   needs: changelog
+  #   # Only update package-lock.json if a release was published, and we're on the "latest" release branch
+  #   if: needs.changelog.outputs.published == 'true' && needs.changelog.outputs.latest == 'true'
+  #   runs-on: ubuntu-latest
+  #   name: Sync latest to version branch
+  #   steps:
+  #     - name: Checkout the code
+  #       uses: actions/checkout@v4
+
+  #     - name: Update package-lock.json
+  #       run: npm install --package-lock-only --ignore-engines
+
+  # TODO: Figure out how to push to protected branch
+  # - name: Push commit to main branch
+  #   run: |
+  #     git add .
+  #     git status
+  #     git config user.email "hydrogen@shopify.com"
+  #     git config user.name "Hydrogen Bot"
+  #     git show-ref
+  #     git commit -m "[ci] Update package-lock.json"
+  #     git push origin HEAD:main
+
+  # - name: Sync latest to version branch
+  #   run: |
+  #     git config user.email "hydrogen@shopify.com"
+  #     git config user.name "Hydrogen Bot"
+  #     git show-ref
+  #     git commit -m "[ci] release ${{ needs.changelog.outputs.latestBranch }}"
+  #     git push origin main:${{ needs.changelog.outputs.latestBranch }} --force
+
+  slack_announcement:
+    needs: release
+    # Only announce if a release was published, and we're on the "latest" release branch
+    if: needs.release.outputs.published == 'true' && needs.release.outputs.latest == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      # Extract the Hydrogen version from published packages
+      - name: Extract Hydrogen version
+        id: extract_version
+        run: |
+          PACKAGES='${{ needs.release.outputs.publishedPackages }}'
+          HYDROGEN_VERSION=$(echo $PACKAGES | jq -r '.[] | select(.name == "@shopify/hydrogen") | .version')
+          echo "HYDROGEN_VERSION=$HYDROGEN_VERSION" >> $GITHUB_ENV
+
+      - name: Post release announcement on Partner Slack
+        # Only post if a Hydrogen version was included in the release
+        if: env.HYDROGEN_VERSION != ''
+        id: slack
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: ${{ secrets.SLACK_NOTIFICATION_URL }}
+          method: 'POST'
+          customHeaders: '{"Content-Type": "application/json"}'
+          data: '{"version": "${{ env.HYDROGEN_VERSION }}"}'
