@@ -9,6 +9,15 @@
       "hash": "67a817cc843d1be3c0ef5515b9a4b6b9e940b6fe",
       "commit": "https://github.com/Shopify/hydrogen/commit/67a817cc843d1be3c0ef5515b9a4b6b9e940b6fe",
       "pr": "https://github.com/Shopify/hydrogen/pull/3237",
+      "removeDependencies": [
+        "@shopify/hydrogen",
+        "react-router",
+        "react-router-dom"
+      ],
+      "removeDevDependencies": [
+        "@react-router/dev",
+        "@react-router/fs-routes"
+      ],
       "dependencies": {
         "@shopify/hydrogen": "2025.7.1",
         "react-router": "7.12.0",
