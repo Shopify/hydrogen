@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 2.1.0
+
+### Minor Changes
+
+- Support Shopify's new consolidated cookie architecture. Adds built-in Storefront API proxy support to `createRequestHandler`. ([#3342](https://github.com/Shopify/hydrogen/pull/3342)) by [@kdaviduik](https://github.com/kdaviduik)
+
 ## 2.0.9
 
 ### Patch Changes
