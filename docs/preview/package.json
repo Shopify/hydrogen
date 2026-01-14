@@ -8,7 +8,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@remix-run/node": "^2.16.1",
+    "@remix-run/node": "^2.17.2",
     "@remix-run/react": "^2.16.1",
     "@remix-run/serve": "^2.16.1",
     "he": "^1.2.0",
