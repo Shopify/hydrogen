@@ -55,6 +55,7 @@ export type LoginOptions = {
   countryCode?: CountryCode;
   acrValues?: string;
   loginHint?: string;
+  loginHintMode?: string;
 };
 
 export type LogoutOptions = {
