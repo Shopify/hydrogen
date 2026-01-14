@@ -1,4 +1,3 @@
-import {SHOPIFY_S, SHOPIFY_Y} from './cart-constants.js';
 import type {
   ClientBrowserParameters,
   ShopifyAddToCartPayload,
@@ -8,7 +7,7 @@ import type {
 } from './analytics-types.js';
 import {AnalyticsEventName} from './analytics-constants.js';
 import {errorIfServer} from './analytics-utils.js';
-import {getShopifyCookies} from './cookies-utils.js';
+import {getTrackingValues} from './tracking-utils.js';
 
 import {pageView as trekkiePageView} from './analytics-schema-trekkie-storefront-page-view.js';
 import {
@@ -153,11 +152,11 @@ export function getClientBrowserParameters(): ClientBrowserParameters {
   }
 
   const [navigationType, navigationApi] = getNavigationType();
-  const cookies = getShopifyCookies(document.cookie);
+  const trackingValues = getTrackingValues();
 
   return {
-    uniqueToken: cookies[SHOPIFY_Y],
-    visitToken: cookies[SHOPIFY_S],
+    uniqueToken: trackingValues.uniqueToken,
+    visitToken: trackingValues.visitToken,
     url: location.href,
     path: location.pathname,
     search: location.search,
