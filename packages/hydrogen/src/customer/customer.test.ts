@@ -1,6 +1,10 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import type {HydrogenSession, HydrogenSessionData} from '../types';
-import {createCustomerAccountClient, getMaybeUILocales} from './customer';
+import {
+  createCustomerAccountClient,
+  getMaybeUILocales,
+  getMaybeLocale,
+} from './customer';
 import {BUYER_SESSION_KEY, CUSTOMER_ACCOUNT_SESSION_KEY} from './constants';
 import crypto from 'node:crypto';
 
@@ -171,7 +175,7 @@ describe('customer', () => {
       });
 
       describe('locales', () => {
-        it('Redirects to the customer account api login url with uiLocales as param (i18n in the constructor)', async () => {
+        it('Redirects to the customer account api login url with locale as param (language in the constructor)', async () => {
           const origin = 'https://something-good.com';
 
           const customer = createCustomerAccountClient({
@@ -186,10 +190,11 @@ describe('customer', () => {
           const response = await customer.login();
           const url = new URL(response.headers.get('location')!);
 
-          expect(url.searchParams.get('ui_locales')).toBe('fr');
+          expect(url.searchParams.get('locale')).toBe('fr');
+          expect(url.searchParams.get('ui_locales')).toBeNull();
         });
 
-        it('Redirects to the customer account api login url with uiLocales as param (uiLocales in the param)', async () => {
+        it('Redirects to the customer account api login url with locale as param (locale option)', async () => {
           const origin = 'https://something-good.com';
 
           const customer = createCustomerAccountClient({
@@ -201,14 +206,15 @@ describe('customer', () => {
           });
 
           const response = await customer.login({
-            uiLocales: 'FR',
+            locale: 'fr',
           });
           const url = new URL(response.headers.get('location')!);
 
-          expect(url.searchParams.get('ui_locales')).toBe('fr');
+          expect(url.searchParams.get('locale')).toBe('fr');
+          expect(url.searchParams.get('ui_locales')).toBeNull();
         });
 
-        it('Redirects to the customer account api login url with uiLocales as param (override)', async () => {
+        it('Redirects to the customer account api login url with locale as param (locale option overrides language)', async () => {
           const origin = 'https://something-good.com';
 
           const customer = createCustomerAccountClient({
@@ -221,11 +227,53 @@ describe('customer', () => {
           });
 
           const response = await customer.login({
+            locale: 'fr',
+          });
+          const url = new URL(response.headers.get('location')!);
+
+          expect(url.searchParams.get('locale')).toBe('fr');
+          expect(url.searchParams.get('ui_locales')).toBeNull();
+        });
+
+        it('Redirects to the customer account api login url with ui_locales as param (uiLocales option, no language)', async () => {
+          const origin = 'https://something-good.com';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+          });
+
+          const response = await customer.login({
             uiLocales: 'FR',
           });
           const url = new URL(response.headers.get('location')!);
 
           expect(url.searchParams.get('ui_locales')).toBe('fr');
+          expect(url.searchParams.get('locale')).toBeNull();
+        });
+
+        it('locale takes precedence over uiLocales when both are provided', async () => {
+          const origin = 'https://something-good.com';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request(origin),
+            waitUntil: vi.fn(),
+          });
+
+          const response = await customer.login({
+            locale: 'de',
+            uiLocales: 'FR',
+          });
+          const url = new URL(response.headers.get('location')!);
+
+          expect(url.searchParams.get('locale')).toBe('de');
+          expect(url.searchParams.get('ui_locales')).toBeNull();
         });
       });
     });
@@ -1507,5 +1555,99 @@ describe('getMaybeUILocales', () => {
       uiLocalesOverride: null,
     });
     expect(dutch).toBe('nl');
+  });
+});
+
+describe('getMaybeLocale', () => {
+  it('returns null if no language is provided', () => {
+    const locale = getMaybeLocale({
+      contextLanguage: null,
+      localeOverride: null,
+    });
+    expect(locale).toBeNull();
+  });
+
+  it('returns lowercase for regular languages', () => {
+    expect(getMaybeLocale({contextLanguage: 'EN', localeOverride: null})).toBe(
+      'en',
+    );
+    expect(getMaybeLocale({contextLanguage: 'FR', localeOverride: null})).toBe(
+      'fr',
+    );
+    expect(getMaybeLocale({contextLanguage: 'DE', localeOverride: null})).toBe(
+      'de',
+    );
+    expect(getMaybeLocale({contextLanguage: 'JA', localeOverride: null})).toBe(
+      'ja',
+    );
+    expect(getMaybeLocale({contextLanguage: 'KO', localeOverride: null})).toBe(
+      'ko',
+    );
+  });
+
+  it('returns language-country format for regional languages', () => {
+    expect(
+      getMaybeLocale({contextLanguage: 'PT_BR', localeOverride: null}),
+    ).toBe('pt-BR');
+    expect(
+      getMaybeLocale({contextLanguage: 'PT_PT', localeOverride: null}),
+    ).toBe('pt-PT');
+    expect(
+      getMaybeLocale({contextLanguage: 'ZH_CN', localeOverride: null}),
+    ).toBe('zh-CN');
+    expect(
+      getMaybeLocale({contextLanguage: 'ZH_TW', localeOverride: null}),
+    ).toBe('zh-TW');
+  });
+
+  it('uses localeOverride when provided', () => {
+    expect(getMaybeLocale({contextLanguage: 'EN', localeOverride: 'fr'})).toBe(
+      'fr',
+    );
+    expect(
+      getMaybeLocale({contextLanguage: 'EN', localeOverride: 'zh-CN'}),
+    ).toBe('zh-CN');
+  });
+
+  it('uses localeOverride even when contextLanguage is null', () => {
+    expect(getMaybeLocale({contextLanguage: null, localeOverride: 'fr'})).toBe(
+      'fr',
+    );
+    expect(
+      getMaybeLocale({contextLanguage: null, localeOverride: 'pt-BR'}),
+    ).toBe('pt-BR');
+  });
+
+  it('falls back to contextLanguage when localeOverride is null', () => {
+    expect(getMaybeLocale({contextLanguage: 'DE', localeOverride: null})).toBe(
+      'de',
+    );
+    expect(
+      getMaybeLocale({contextLanguage: 'ZH_TW', localeOverride: null}),
+    ).toBe('zh-TW');
+  });
+
+  it('normalizes localeOverride format', () => {
+    // Uppercase to lowercase
+    expect(getMaybeLocale({contextLanguage: null, localeOverride: 'FR'})).toBe(
+      'fr',
+    );
+    expect(getMaybeLocale({contextLanguage: null, localeOverride: 'EN'})).toBe(
+      'en',
+    );
+    // Underscore to hyphen with proper casing
+    expect(
+      getMaybeLocale({contextLanguage: null, localeOverride: 'ZH_CN'}),
+    ).toBe('zh-CN');
+    expect(
+      getMaybeLocale({contextLanguage: null, localeOverride: 'PT_BR'}),
+    ).toBe('pt-BR');
+    // Already correct format stays the same
+    expect(
+      getMaybeLocale({contextLanguage: null, localeOverride: 'zh-CN'}),
+    ).toBe('zh-CN');
+    expect(
+      getMaybeLocale({contextLanguage: null, localeOverride: 'pt-BR'}),
+    ).toBe('pt-BR');
   });
 });

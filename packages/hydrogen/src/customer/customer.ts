@@ -357,12 +357,23 @@ export function createCustomerAccountClient({
       loginUrl.searchParams.append('state', state);
       loginUrl.searchParams.append('nonce', nonce);
 
-      const uiLocales = getMaybeUILocales({
+      const locale = getMaybeLocale({
         contextLanguage: language ?? null,
-        uiLocalesOverride: options?.uiLocales ?? null,
+        localeOverride: options?.locale ?? null,
       });
-      if (uiLocales != null) {
-        loginUrl.searchParams.append('ui_locales', uiLocales);
+
+      if (locale != null) {
+        // If locale is set, use locale and skip ui_locales (ui_locales may be deprecated in the future)
+        loginUrl.searchParams.append('locale', locale);
+      } else {
+        // Fall back to ui_locales if locale is not set
+        const uiLocales = getMaybeUILocales({
+          contextLanguage: language ?? null,
+          uiLocalesOverride: options?.uiLocales ?? null,
+        });
+        if (uiLocales != null) {
+          loginUrl.searchParams.append('ui_locales', uiLocales);
+        }
       }
 
       if (options?.countryCode) {
@@ -665,4 +676,47 @@ const regionalLanguageOverrides: Partial<Record<LanguageCode, LanguageCode>> = {
 
 function maybeEnforceRegionalVariant(language: LanguageCode): LanguageCode {
   return regionalLanguageOverrides[language] ?? language;
+}
+
+/**
+ * This function returns a locale string for the login URL.
+ * Supported locales: en, fr, cs, da, de, el, es, fi, hi, hr, hu, id, it, ja, ko, lt, ms, nb, nl, pl,
+ * pt-BR, pt-PT, ro, ru, sk, sl, sv, th, tr, vi, zh-CN, zh-TW
+ *
+ * If localeOverride is provided, it takes precedence and is normalized via toLocaleString.
+ * If contextLanguage is provided (LanguageCode), it is converted to locale format.
+ * If none are provided, returns null.
+ */
+export function getMaybeLocale(params: {
+  contextLanguage: LanguageCode | null;
+  localeOverride: string | null;
+}): string | null {
+  // localeOverride takes precedence, normalize it via toLocaleString
+  if (params.localeOverride != null) {
+    return toLocaleString(params.localeOverride);
+  }
+
+  // Convert contextLanguage (LanguageCode) to locale format
+  if (params.contextLanguage != null) {
+    return toLocaleString(params.contextLanguage);
+  }
+
+  return null;
+}
+
+function toLocaleString(language: string): string {
+  // Convert to lowercase and replace underscore with hyphen
+  // e.g., PT_BR -> pt-br, ZH_CN -> zh-cn, EN -> en, pt-BR -> pt-br
+  const base = language.toLowerCase().replaceAll('_', '-');
+  const tokens = base.split('-');
+  const langToken = tokens[0];
+  const regionToken = tokens[1];
+
+  if (regionToken) {
+    // Has region: PT_BR -> pt-BR, zh-cn -> zh-CN, pt-BR -> pt-BR, etc.
+    return `${langToken}-${regionToken.toUpperCase()}`;
+  }
+
+  // No region: EN -> en, FR -> fr, DE -> de
+  return langToken;
 }
