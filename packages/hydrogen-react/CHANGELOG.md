@@ -1,5 +1,13 @@
 # @shopify/hydrogen-react
 
+## 2024.7.7
+
+### Patch Changes
+
+- New export `getTrackingValues` to obtain information for analytics and marketing. Use this instead of `getShopifyCookies` (which is now deprecated). ([#3355](https://github.com/Shopify/hydrogen/pull/3355)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  `useShopifyCookies` now accepts a `fetchTrackingValues` parameter that can be used to make a Storefront API request and obtain Shopify http-only cookies, `_shopify_analytics` and `_shopify_marketing` (which replace the deprecated `_shopify_y` and `_shopify_s` cookies).
+
 ## 2024.7.6
 
 ### Patch Changes
