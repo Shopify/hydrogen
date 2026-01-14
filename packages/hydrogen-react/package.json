@@ -179,8 +179,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/shopify/hydrogen.git",
+    "url": "https://github.com/Shopify/hydrogen.git",
     "directory": "packages/hydrogen-react"
   },
-  "bugs": "https://github.com/shopify/hydrogen/issues"
+  "bugs": "https://github.com/Shopify/hydrogen/issues"
 }
