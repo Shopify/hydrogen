@@ -129,6 +129,7 @@ export {
   flattenConnection,
   getClientBrowserParameters,
   getShopifyCookies,
+  getTrackingValues,
   Image,
   IMAGE_FRAGMENT,
   MediaFile,
@@ -172,7 +173,7 @@ export {
   createHydrogenContext,
   type HydrogenContext,
 } from './createHydrogenContext';
-
+export {createRequestHandler} from './createRequestHandler';
 export {
   getSitemapIndex as unstable__getSitemapIndex,
   getSitemap as unstable__getSitemap,

@@ -1,9 +1,18 @@
-import {useLoadScript} from '@shopify/hydrogen-react';
+import {
+  getTrackingValues,
+  useLoadScript,
+  useShopifyCookies,
+} from '@shopify/hydrogen-react';
 import {
   CountryCode,
   LanguageCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {useEffect, useMemo, useRef, useState} from 'react';
+import {useRevalidator} from '@remix-run/react';
+import {
+  isSfapiProxyEnabled,
+  hasServerReturnedTrackingValues,
+} from '../utils/server-timing';
 
 export type ConsentStatus = boolean | undefined;
 
@@ -46,18 +55,13 @@ export type SetConsentHeadlessParams = VisitorConsent &
   doesMerchantSupportGranularConsent
   firstPartyMarketingAllowed
   getCCPAConsent
-  getRegulation
-  getShopPrefs
   getTrackingConsent
-  isRegulationEnforced
   marketingAllowed
   preferencesProcessingAllowed
   saleOfDataAllowed
   saleOfDataRegion
-  setCCPAConsent
   setTrackingConsent
   shouldShowBanner
-  shouldShowCCPABanner
   shouldShowGDPRBanner
   thirdPartyMarketingAllowed
 **/
@@ -71,6 +75,7 @@ export type OriginalCustomerPrivacy = {
     consent: SetConsentHeadlessParams,
     callback: (data: {error: string} | undefined) => void,
   ) => void;
+  shouldShowBanner: () => boolean;
 };
 
 export type CustomerPrivacy = Omit<
@@ -111,10 +116,15 @@ export type CustomerPrivacyApiProps = {
   onVisitorConsentCollected?: (consent: VisitorConsentCollected) => void;
   /** Callback to be call when customer privacy api is ready. */
   onReady?: () => void;
+  /**
+   * Whether consent libraries can use same-domain requests to the Storefront API.
+   * Defaults to true if the standard route proxy is enabled in Hydrogen server.
+   */
+  sameDomainForStorefrontApi?: boolean;
 };
 
 export const CONSENT_API =
-  'https://cdn.shopify.com/shopifycloud/consent-tracking-api/v0.1/consent-tracking-api.js';
+  'https://cdn.shopify.com/shopifycloud/consent-tracking-api/v0.2/consent-tracking-api.js';
 export const CONSENT_API_WITH_BANNER =
   'https://cdn.shopify.com/shopifycloud/privacy-banner/storefront-banner.js';
 
@@ -130,8 +140,37 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     withPrivacyBanner = true,
     onVisitorConsentCollected,
     onReady,
-    ...consentConfig
+    checkoutDomain,
+    storefrontAccessToken,
+    country,
+    locale,
+    sameDomainForStorefrontApi,
   } = props;
+
+  /** Determine if SF API proxy is enabled in Hydrogen server */
+  const hasSfapiProxy = useMemo(
+    () => sameDomainForStorefrontApi ?? isSfapiProxyEnabled(),
+    [sameDomainForStorefrontApi],
+  );
+
+  /**
+   * Determine if we need to fetch tracking values from the browser.
+   * This can happen if the server did not collect this information already (e.g. subrequests were cached).
+   */
+  const fetchTrackingValuesFromBrowser = useMemo(
+    () => hasSfapiProxy && !hasServerReturnedTrackingValues(),
+    [hasSfapiProxy],
+  );
+
+  const cookiesReady = useShopifyCookies({
+    fetchTrackingValues: fetchTrackingValuesFromBrowser,
+    storefrontAccessToken,
+    ignoreDeprecatedCookies: true,
+  });
+
+  // Store initial tracking values to compare later
+  const initialTrackingValues = useMemo(getTrackingValues, [cookiesReady]);
+  const {revalidate} = useRevalidator();
 
   // Load the Shopify customer privacy API with or without the privacy banner
   // NOTE: We no longer use the status because we need `ready` to be not when the script is loaded
@@ -142,14 +181,9 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     },
   });
 
-  const {observing, setLoaded} = useApisLoaded({
-    withPrivacyBanner,
-    onLoaded: onReady,
-  });
+  const {observing, setLoaded, apisLoaded} = useApisLoaded({withPrivacyBanner});
 
   const config = useMemo(() => {
-    const {checkoutDomain, storefrontAccessToken} = consentConfig;
-
     if (!checkoutDomain) logMissingConfig('checkoutDomain');
     if (!storefrontAccessToken) logMissingConfig('storefrontAccessToken');
 
@@ -164,23 +198,79 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       );
     }
 
+    const commonAncestorDomain = parseStoreDomain(checkoutDomain);
+    const sfapiDomain =
+      // Check if standard route proxy is enabled in Hydrogen server
+      // to use it instead of doing a cross-origin request to checkout.
+      hasSfapiProxy && typeof window !== 'undefined'
+        ? window.location.host
+        : checkoutDomain;
+
     const config: CustomerPrivacyConsentConfig = {
-      checkoutRootDomain: checkoutDomain,
+      // This domain is used to send requests to SFAPI for setting and getting consent.
+      checkoutRootDomain: sfapiDomain,
+      // Prefix with a dot to ensure this domain is different from checkoutRootDomain.
+      // This will ensure old cookies are set for a cross-subdomain checkout setup
+      // so that we keep backward compatibility until new cookies are rolled out.
+      // Once consent-tracking-api is updated to not rely on cookies anymore, we can remove this.
+      storefrontRootDomain: commonAncestorDomain
+        ? '.' + commonAncestorDomain
+        : undefined,
       storefrontAccessToken,
-      storefrontRootDomain: parseStoreDomain(checkoutDomain),
-      country: consentConfig.country,
-      locale: consentConfig.locale,
+      country,
+      locale,
     };
 
     return config;
-  }, [consentConfig, parseStoreDomain, logMissingConfig]);
+  }, [
+    logMissingConfig,
+    checkoutDomain,
+    storefrontAccessToken,
+    country,
+    locale,
+  ]);
 
   // settings event listeners for visitorConsentCollected
   useEffect(() => {
     const consentCollectedHandler = (
       event: CustomEvent<VisitorConsentCollected>,
     ) => {
+      const latestTrackingValues = getTrackingValues();
+      if (
+        initialTrackingValues.visitToken !== latestTrackingValues.visitToken ||
+        initialTrackingValues.uniqueToken !== latestTrackingValues.uniqueToken
+      ) {
+        // Tracking has changed: revalidate data to get updated cart.checkoutUrl with new params.
+        revalidate();
+      }
+
       if (onVisitorConsentCollected) {
+        const customerPrivacy = getCustomerPrivacy();
+        if (customerPrivacy?.shouldShowBanner()) {
+          // This type is plain wrong:
+          const consentValues =
+            customerPrivacy.currentVisitorConsent() as unknown as Record<
+              keyof VisitorConsent,
+              string
+            >;
+
+          if (consentValues) {
+            // Mimic Privacy Banner SDK behavior to detect no-interaction:
+            const NO_VALUE = '';
+            const noInteraction =
+              consentValues.marketing === NO_VALUE &&
+              consentValues.analytics === NO_VALUE &&
+              consentValues.preferences === NO_VALUE;
+
+            if (noInteraction) {
+              // The banner is being shown but the user has not interacted yet.
+              // The fact that this event has been fired before interaction
+              // is likely a bug in Privacy Banner SDK. We ignore this event for now.
+              return;
+            }
+          }
+        }
+
         onVisitorConsentCollected(event.detail);
       }
     };
@@ -219,20 +309,14 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
           'showPreferences' in value &&
           'loadBanner' in value
         ) {
-          const privacyBanner = value as PrivacyBanner;
-
-          // auto load the banner if applicable
-          privacyBanner.loadBanner(config);
-
           // overwrite the privacyBanner methods
           customPrivacyBanner = overridePrivacyBannerMethods({
-            privacyBanner,
+            privacyBanner: value as PrivacyBanner,
             config,
           });
 
           // set the loaded state for the privacyBanner
           setLoaded.privacyBanner();
-          emitCustomerPrivacyApiLoaded();
         }
       },
     };
@@ -287,6 +371,8 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
                 // overwrite the tracking consent method
                 customCustomerPrivacy = {
                   ...customerPrivacy,
+                  // Note: this method is not used by the privacy-banner,
+                  // it bundles its own setTrackingConsent.
                   setTrackingConsent: overrideCustomerPrivacySetTrackingConsent(
                     {customerPrivacy, config},
                   ),
@@ -298,7 +384,6 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
                 };
 
                 setLoaded.customerPrivacy();
-                emitCustomerPrivacyApiLoaded();
               }
             },
           });
@@ -310,6 +395,34 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     overrideCustomerPrivacySetTrackingConsent,
     setLoaded.customerPrivacy,
   ]);
+
+  useEffect(() => {
+    if (!apisLoaded || !cookiesReady) return;
+
+    const customerPrivacy = getCustomerPrivacy();
+    // @ts-expect-error Internal property
+    if (customerPrivacy && !customerPrivacy.cachedConsent) {
+      // Consent-tracking-api assumes consent if it doesn't have anything to work with.
+      // Since we have fetched the tracking values already, we set its cachedConsent here.
+      // This is a workaround until consent-tracking-api knows how to read server-timing for us.
+      const trackingValues = getTrackingValues();
+      if (trackingValues.consent) {
+        // @ts-expect-error Internal property
+        customerPrivacy.cachedConsent = trackingValues.consent;
+      }
+    }
+
+    if (withPrivacyBanner) {
+      const privacyBanner = getPrivacyBanner();
+      if (privacyBanner) {
+        // auto load the banner if applicable
+        privacyBanner.loadBanner(config);
+      }
+    }
+
+    emitCustomerPrivacyApiLoaded();
+    onReady?.();
+  }, [apisLoaded, cookiesReady]);
 
   // return the customerPrivacy and privacyBanner (optional) modified APIs
   const result = {
@@ -334,23 +447,17 @@ function emitCustomerPrivacyApiLoaded() {
   document.dispatchEvent(event);
 }
 
-function useApisLoaded({
-  withPrivacyBanner,
-  onLoaded,
-}: {
-  withPrivacyBanner: boolean;
-  onLoaded?: () => void;
-}) {
+function useApisLoaded({withPrivacyBanner}: {withPrivacyBanner: boolean}) {
   // used to help run the watchers only once
   const observing = useRef({customerPrivacy: false, privacyBanner: false});
 
   // [customerPrivacy, privacyBanner]
-  const [apisLoaded, setApisLoaded] = useState(
+  const [apisLoadedArray, setApisLoaded] = useState(
     withPrivacyBanner ? [false, false] : [false],
   );
 
   // combined loaded state for both APIs
-  const loaded = apisLoaded.every(Boolean);
+  const apisLoaded = apisLoadedArray.every(Boolean);
 
   const setLoaded = {
     customerPrivacy: () => {
@@ -368,14 +475,7 @@ function useApisLoaded({
     },
   };
 
-  useEffect(() => {
-    if (loaded && onLoaded) {
-      // both APIs are loaded in the window
-      onLoaded();
-    }
-  }, [loaded, onLoaded]);
-
-  return {observing, setLoaded};
+  return {observing, setLoaded, apisLoaded};
 }
 
 /**
@@ -384,7 +484,7 @@ function useApisLoaded({
 function parseStoreDomain(checkoutDomain: string) {
   if (typeof window === 'undefined') return;
 
-  const host = window.document.location.host;
+  const host = window.location.host;
   const checkoutDomainParts = checkoutDomain.split('.').reverse();
   const currentDomainParts = host.split('.').reverse();
   const sameDomainParts: Array<string> = [];
@@ -394,7 +494,7 @@ function parseStoreDomain(checkoutDomain: string) {
     }
   });
 
-  return sameDomainParts.reverse().join('.');
+  return sameDomainParts.reverse().join('.') || undefined;
 }
 
 /**
