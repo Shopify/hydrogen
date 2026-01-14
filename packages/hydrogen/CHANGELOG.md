@@ -1,5 +1,20 @@
 # @shopify/hydrogen
 
+## 2024.7.10
+
+### Patch Changes
+
+- This version adds support for the new cookie system in Shopify (`_shopify_analytics` and `_shopify_marketing` http-only cookies). It is backward compatible and still supports the deprecated `_shopify_y` and `_shopify_s` cookies. ([#3355](https://github.com/Shopify/hydrogen/pull/3355)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  - `createRequestHandler` can now be used for every Hydrogen app, not only the ones deployed to Oxygen. It is now exported from `@shopify/hydrogen`.
+  - A new Storefront API proxy is now available in Hydrogen's `createRequestHandler`. This will be used to obtain http-only cookies from Storefront API. In general, it should be transparent but it can be disabled with the `proxyStandardRoutes` option.
+  - `Analytics.Provider` component and `useCustomerPrivacy` hook now make a request internally to the mentioned proxy to obtain cookies in the storefront domain.
+
+- Fixed a number of issues related to irregular behaviors between Privacy Banner and Hydrogen's analytics events. ([#3355](https://github.com/Shopify/hydrogen/pull/3355)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Updated dependencies [[`c64e8e25`](https://github.com/Shopify/hydrogen/commit/c64e8e25de5f3e27aa61bbe98d2277bc4a3bc56c)]:
+  - @shopify/hydrogen-react@2024.7.7
+
 ## 2024.7.9
 
 ### Patch Changes
