@@ -19,13 +19,13 @@ const data: ReferenceEntityTemplateSchema = {
     },
     {
       subtitle: 'Utility',
-      name: 'getShopifyCookies',
-      url: '/api/hydrogen-react/utilities/getShopifyCookies',
+      name: 'getTrackingValues',
+      url: '/api/hydrogen-react/utilities/getTrackingValues',
       type: 'gear',
     },
   ],
   description:
-    'Sets Shopify user and session cookies and refreshes the expiry time.',
+    'Sets Shopify user and session cookies and refreshes the expiry time. Returns `true` when cookies are ready.',
   type: 'hooks',
   defaultExample: {
     description: 'I am the default example',
@@ -50,7 +50,7 @@ const data: ReferenceEntityTemplateSchema = {
       title: 'useShopifyCookies',
       type: 'UseShopifyCookiesGeneratedType',
       description:
-        'Manages Shopify cookies. If `hasUserConsent` option is false, Shopify cookies will be removed.',
+        'Manages Shopify cookies. If `hasUserConsent` option is false, deprecated cookies will be removed. Returns `true` when cookies are ready.',
     },
   ],
 };

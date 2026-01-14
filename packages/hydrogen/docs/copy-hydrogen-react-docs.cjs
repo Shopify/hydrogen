@@ -16,6 +16,7 @@ const docsToCopy = [
   'flattenConnection',
   'getClientBrowserParameters',
   'getShopifyCookies',
+  'getTrackingValues',
   'parseMetafield',
   'sendShopifyAnalytics',
   'storefrontApiCustomScalars',
@@ -49,6 +50,12 @@ async function copyFiles() {
     );
     if (!docData) {
       throw new Error(`Could not find doc "${doc}" in Hydrogen React docs`);
+    }
+
+    // Avoid duplicates if doc already exists in hydrogen docs
+    const existingIndex = hydrogenDocsData.findIndex((d) => d.name === doc);
+    if (existingIndex !== -1) {
+      hydrogenDocsData[existingIndex] = updatePaths(docData);
     } else {
       hydrogenDocsData.push(updatePaths(docData));
     }
