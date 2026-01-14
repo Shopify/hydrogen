@@ -32,6 +32,8 @@ export default {
         build: remixBuild,
         mode: process.env.NODE_ENV,
         getLoadContext: () => appLoadContext,
+        proxyStandardRoutes: false,
+        collectTrackingInformation: false,
       });
 
       const response = await handleRequest(request);
