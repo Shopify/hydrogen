@@ -8,7 +8,7 @@ export default defineConfig({
   reporter: isCI ? 'html' : 'list',
   workers: 1,
   fullyParallel: true,
-  timeout: 30 * 1000,
+  timeout: 20 * 1000,
   use: {
     screenshot: 'only-on-failure',
     video: 'on',
