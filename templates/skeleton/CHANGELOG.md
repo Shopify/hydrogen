@@ -1,5 +1,13 @@
 # skeleton
 
+## 2025.1.8
+
+### Patch Changes
+
+- Updated dependencies [[`f4250ab5`](https://github.com/Shopify/hydrogen/commit/f4250ab58565c21a6bb26b32062a382fef815fa6), [`f4250ab5`](https://github.com/Shopify/hydrogen/commit/f4250ab58565c21a6bb26b32062a382fef815fa6), [`f4250ab5`](https://github.com/Shopify/hydrogen/commit/f4250ab58565c21a6bb26b32062a382fef815fa6)]:
+  - @shopify/hydrogen@2025.1.5
+  - @shopify/remix-oxygen@2.1.0
+
 ## 2025.1.7
 
 ### Patch Changes
