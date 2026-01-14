@@ -376,7 +376,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "measurement",
                 "value": "PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>",
-                "description": "A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2025-01/objects/unitpricemeasurement).",
+                "description": "A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2025-04/objects/unitpricemeasurement).",
                 "isOptional": true
               },
               {
@@ -655,7 +655,7 @@
             "filePath": "src/CartProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartProviderProps",
-            "value": "{\n  /** Any `ReactNode` elements. */\n  children: React.ReactNode;\n  /**  Maximum number of cart lines to fetch. Defaults to 250 cart lines. */\n  numCartLines?: number;\n  /** A callback that is invoked when the process to create a cart begins, but before the cart is created in the Storefront API. */\n  onCreate?: () => void;\n  /** A callback that is invoked when the process to add a line item to the cart begins, but before the line item is added to the Storefront API. */\n  onLineAdd?: () => void;\n  /** A callback that is invoked when the process to remove a line item to the cart begins, but before the line item is removed from the Storefront API. */\n  onLineRemove?: () => void;\n  /** A callback that is invoked when the process to update a line item in the cart begins, but before the line item is updated in the Storefront API. */\n  onLineUpdate?: () => void;\n  /** A callback that is invoked when the process to add or update a note in the cart begins, but before the note is added or updated in the Storefront API. */\n  onNoteUpdate?: () => void;\n  /** A callback that is invoked when the process to update the buyer identity begins, but before the buyer identity is updated in the Storefront API. */\n  onBuyerIdentityUpdate?: () => void;\n  /** A callback that is invoked when the process to update the cart attributes begins, but before the attributes are updated in the Storefront API. */\n  onAttributesUpdate?: () => void;\n  /** A callback that is invoked when the process to update the cart discount codes begins, but before the discount codes are updated in the Storefront API. */\n  onDiscountCodesUpdate?: () => void;\n  /** A callback that is invoked when the process to create a cart completes */\n  onCreateComplete?: () => void;\n  /** A callback that is invoked when the process to add a line item to the cart completes */\n  onLineAddComplete?: () => void;\n  /** A callback that is invoked when the process to remove a line item to the cart completes */\n  onLineRemoveComplete?: () => void;\n  /** A callback that is invoked when the process to update a line item in the cart completes */\n  onLineUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to add or update a note in the cart completes */\n  onNoteUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to update the buyer identity completes */\n  onBuyerIdentityUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to update the cart attributes completes */\n  onAttributesUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to update the cart discount codes completes */\n  onDiscountCodesUpdateComplete?: () => void;\n  /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/2025-01/objects/cart). */\n  data?: PartialDeep<CartType, {recurseIntoArrays: true}>;\n  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2025-01/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */\n  cartFragment?: string;\n  /** A customer access token that's accessible on the server if there's a customer login. */\n  customerAccessToken?: CartBuyerIdentityInput['customerAccessToken'];\n  /** The ISO country code for i18n. */\n  countryCode?: CountryCode;\n  /** The ISO language code for i18n. */\n  languageCode?: LanguageCode;\n}",
+            "value": "{\n  /** Any `ReactNode` elements. */\n  children: React.ReactNode;\n  /**  Maximum number of cart lines to fetch. Defaults to 250 cart lines. */\n  numCartLines?: number;\n  /** A callback that is invoked when the process to create a cart begins, but before the cart is created in the Storefront API. */\n  onCreate?: () => void;\n  /** A callback that is invoked when the process to add a line item to the cart begins, but before the line item is added to the Storefront API. */\n  onLineAdd?: () => void;\n  /** A callback that is invoked when the process to remove a line item to the cart begins, but before the line item is removed from the Storefront API. */\n  onLineRemove?: () => void;\n  /** A callback that is invoked when the process to update a line item in the cart begins, but before the line item is updated in the Storefront API. */\n  onLineUpdate?: () => void;\n  /** A callback that is invoked when the process to add or update a note in the cart begins, but before the note is added or updated in the Storefront API. */\n  onNoteUpdate?: () => void;\n  /** A callback that is invoked when the process to update the buyer identity begins, but before the buyer identity is updated in the Storefront API. */\n  onBuyerIdentityUpdate?: () => void;\n  /** A callback that is invoked when the process to update the cart attributes begins, but before the attributes are updated in the Storefront API. */\n  onAttributesUpdate?: () => void;\n  /** A callback that is invoked when the process to update the cart discount codes begins, but before the discount codes are updated in the Storefront API. */\n  onDiscountCodesUpdate?: () => void;\n  /** A callback that is invoked when the process to create a cart completes */\n  onCreateComplete?: () => void;\n  /** A callback that is invoked when the process to add a line item to the cart completes */\n  onLineAddComplete?: () => void;\n  /** A callback that is invoked when the process to remove a line item to the cart completes */\n  onLineRemoveComplete?: () => void;\n  /** A callback that is invoked when the process to update a line item in the cart completes */\n  onLineUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to add or update a note in the cart completes */\n  onNoteUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to update the buyer identity completes */\n  onBuyerIdentityUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to update the cart attributes completes */\n  onAttributesUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to update the cart discount codes completes */\n  onDiscountCodesUpdateComplete?: () => void;\n  /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/2025-04/objects/cart). */\n  data?: PartialDeep<CartType, {recurseIntoArrays: true}>;\n  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2025-04/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */\n  cartFragment?: string;\n  /** A customer access token that's accessible on the server if there's a customer login. */\n  customerAccessToken?: CartBuyerIdentityInput['customerAccessToken'];\n  /** The ISO country code for i18n. */\n  countryCode?: CountryCode;\n  /** The ISO language code for i18n. */\n  languageCode?: LanguageCode;\n}",
             "description": "",
             "members": [
               {
@@ -663,7 +663,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "cartFragment",
                 "value": "string",
-                "description": "A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2025-01/objects/cart) for all queries and mutations. A default value is used if no argument is provided.",
+                "description": "A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2025-04/objects/cart) for all queries and mutations. A default value is used if no argument is provided.",
                 "isOptional": true
               },
               {
@@ -694,7 +694,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialDeep<CartType, {recurseIntoArrays: true}>",
-                "description": "An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/2025-01/objects/cart).",
+                "description": "An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/2025-04/objects/cart).",
                 "isOptional": true
               },
               {
@@ -1289,7 +1289,7 @@
             "filePath": "src/Image.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "HydrogenImageBaseProps",
-            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-01/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n}",
+            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-04/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n}",
             "description": "",
             "members": [
               {
@@ -1326,7 +1326,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialDeep<ImageType, {recurseIntoArrays: true}>",
-                "description": "Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-01/objects/Image) object. Must be an Image object.",
+                "description": "Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-04/objects/Image) object. Must be an Image object.",
                 "isOptional": true,
                 "examples": [
                   {
@@ -3732,7 +3732,7 @@
             "filePath": "src/Image.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "HydrogenImageBaseProps",
-            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-01/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n}",
+            "value": "{\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-04/objects/Image) object. Must be an Image object.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: Loader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n}",
             "description": "",
             "members": [
               {
@@ -3769,7 +3769,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialDeep<ImageType, {recurseIntoArrays: true}>",
-                "description": "Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-01/objects/Image) object. Must be an Image object.",
+                "description": "Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2025-04/objects/Image) object. Must be an Image object.",
                 "isOptional": true,
                 "examples": [
                   {
@@ -3957,7 +3957,7 @@
             "filePath": "src/ModelViewer.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ModelViewerBaseProps",
-            "value": "{\n  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2025-01/objects/model3d). */\n  data: PartialDeep<Model3d, {recurseIntoArrays: true}>;\n  /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */\n  onError?: (event: Event) => void;\n  /** The callback to invoke when the `load` event is triggered. Refer to [load in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-load). */\n  onLoad?: (event: Event) => void;\n  /** The callback to invoke when the 'preload' event is triggered. Refer to [preload in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-preload). */\n  onPreload?: (event: Event) => void;\n  /** The callback to invoke when the 'model-visibility' event is triggered. Refer to [model-visibility in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-modelVisibility). */\n  onModelVisibility?: (event: Event) => void;\n  /** The callback to invoke when the 'progress' event is triggered. Refer to [progress in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-progress). */\n  onProgress?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-status' event is triggered. Refer to [ar-status in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arStatus). */\n  onArStatus?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-tracking' event is triggered. Refer to [ar-tracking in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arTracking). */\n  onArTracking?: (event: Event) => void;\n  /** The callback to invoke when the 'quick-look-button-tapped' event is triggered. Refer to [quick-look-button-tapped in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-quickLookButtonTapped). */\n  onQuickLookButtonTapped?: (event: Event) => void;\n  /** The callback to invoke when the 'camera-change' event is triggered. Refer to [camera-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-stagingandcameras-events-cameraChange). */\n  onCameraChange?: (event: Event) => void;\n  /** The callback to invoke when the 'environment-change' event is triggered. Refer to [environment-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-lightingandenv-events-environmentChange).  */\n  onEnvironmentChange?: (event: Event) => void;\n  /**  The callback to invoke when the 'play' event is triggered. Refer to [play in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-play). */\n  onPlay?: (event: Event) => void;\n  /**  The callback to invoke when the 'pause' event is triggered. Refer to [pause in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-pause). */\n  onPause?: (event: Event) => void;\n  /** The callback to invoke when the 'scene-graph-ready' event is triggered. Refer to [scene-graph-ready in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-scenegraph-events-sceneGraphReady). */\n  onSceneGraphReady?: (event: Event) => void;\n}",
+            "value": "{\n  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2025-04/objects/model3d). */\n  data: PartialDeep<Model3d, {recurseIntoArrays: true}>;\n  /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */\n  onError?: (event: Event) => void;\n  /** The callback to invoke when the `load` event is triggered. Refer to [load in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-load). */\n  onLoad?: (event: Event) => void;\n  /** The callback to invoke when the 'preload' event is triggered. Refer to [preload in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-preload). */\n  onPreload?: (event: Event) => void;\n  /** The callback to invoke when the 'model-visibility' event is triggered. Refer to [model-visibility in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-modelVisibility). */\n  onModelVisibility?: (event: Event) => void;\n  /** The callback to invoke when the 'progress' event is triggered. Refer to [progress in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-progress). */\n  onProgress?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-status' event is triggered. Refer to [ar-status in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arStatus). */\n  onArStatus?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-tracking' event is triggered. Refer to [ar-tracking in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arTracking). */\n  onArTracking?: (event: Event) => void;\n  /** The callback to invoke when the 'quick-look-button-tapped' event is triggered. Refer to [quick-look-button-tapped in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-quickLookButtonTapped). */\n  onQuickLookButtonTapped?: (event: Event) => void;\n  /** The callback to invoke when the 'camera-change' event is triggered. Refer to [camera-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-stagingandcameras-events-cameraChange). */\n  onCameraChange?: (event: Event) => void;\n  /** The callback to invoke when the 'environment-change' event is triggered. Refer to [environment-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-lightingandenv-events-environmentChange).  */\n  onEnvironmentChange?: (event: Event) => void;\n  /**  The callback to invoke when the 'play' event is triggered. Refer to [play in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-play). */\n  onPlay?: (event: Event) => void;\n  /**  The callback to invoke when the 'pause' event is triggered. Refer to [pause in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-pause). */\n  onPause?: (event: Event) => void;\n  /** The callback to invoke when the 'scene-graph-ready' event is triggered. Refer to [scene-graph-ready in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-scenegraph-events-sceneGraphReady). */\n  onSceneGraphReady?: (event: Event) => void;\n}",
             "description": "",
             "members": [
               {
@@ -3965,7 +3965,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialDeep<Model3d, {recurseIntoArrays: true}>",
-                "description": "An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2025-01/objects/model3d)."
+                "description": "An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2025-04/objects/model3d)."
               },
               {
                 "filePath": "src/ModelViewer.tsx",
@@ -4139,7 +4139,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "measurement",
                 "value": "PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>",
-                "description": "A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2025-01/objects/unitpricemeasurement).",
+                "description": "A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2025-04/objects/unitpricemeasurement).",
                 "isOptional": true
               },
               {
@@ -4167,7 +4167,7 @@
                 "isOptional": true
               }
             ],
-            "value": "export interface MoneyPropsBase<ComponentGeneric extends React.ElementType> {\n  /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */\n  as?: ComponentGeneric;\n  /** An object with fields that correspond to the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2). */\n  data: PartialDeep<MoneyV2, {recurseIntoArrays: true}>;\n  /** Whether to remove the currency symbol from the output. */\n  withoutCurrency?: boolean;\n  /** Whether to remove trailing zeros (fractional money) from the output. */\n  withoutTrailingZeros?: boolean;\n  /** A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2025-01/objects/unitpricemeasurement). */\n  measurement?: PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>;\n  /** Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`. */\n  measurementSeparator?: ReactNode;\n}"
+            "value": "export interface MoneyPropsBase<ComponentGeneric extends React.ElementType> {\n  /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */\n  as?: ComponentGeneric;\n  /** An object with fields that correspond to the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2). */\n  data: PartialDeep<MoneyV2, {recurseIntoArrays: true}>;\n  /** Whether to remove the currency symbol from the output. */\n  withoutCurrency?: boolean;\n  /** Whether to remove trailing zeros (fractional money) from the output. */\n  withoutTrailingZeros?: boolean;\n  /** A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2025-04/objects/unitpricemeasurement). */\n  measurement?: PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>;\n  /** Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`. */\n  measurementSeparator?: ReactNode;\n}"
           }
         }
       }
@@ -4547,12 +4547,12 @@
             "tabs": [
               {
                 "title": "JavaScript",
-                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2025-01\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
+                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2025-04\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
                 "language": "jsx"
               },
               {
                 "title": "TypeScript",
-                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2025-01\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}: {variantId: string}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
+                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    &lt;ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2025-04\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    &gt;\n      &lt;AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" /&gt;\n    &lt;/ShopifyProvider&gt;\n  );\n}\n\nexport function AddVariantQuantity1({variantId}: {variantId: string}) {\n  return &lt;ShopPayButton variantIds={[variantId]} /&gt;;\n}\n",
                 "language": "tsx"
               }
             ],
@@ -4752,6 +4752,14 @@
               {
                 "filePath": "src/ShopifyProvider.tsx",
                 "syntaxKind": "PropertySignature",
+                "name": "sameDomainForStorefrontApi",
+                "value": "boolean",
+                "description": "Uses the current window.location.origin for Storefront API requests. This requires setting up a proxy for Storefront API requests in your domain.",
+                "isOptional": true
+              },
+              {
+                "filePath": "src/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
                 "name": "storeDomain",
                 "value": "string",
                 "description": "The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`)."
@@ -4838,7 +4846,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialDeep<VideoType, {recurseIntoArrays: true}>",
-                "description": "An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2025-01/objects/video)."
+                "description": "An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2025-04/objects/video)."
               },
               {
                 "filePath": "src/Video.tsx",
@@ -4857,7 +4865,7 @@
                 "isOptional": true
               }
             ],
-            "value": "export interface VideoProps {\n  /** An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2025-01/objects/video). */\n  data: PartialDeep<VideoType, {recurseIntoArrays: true}>;\n  /** An object of image size options for the video's `previewImage`. Uses `shopifyImageLoader` to generate the `poster` URL. */\n  previewImageOptions?: Parameters<typeof shopifyLoader>[0];\n  /** Props that will be passed to the `video` element's `source` children elements. */\n  sourceProps?: HTMLAttributes<HTMLSourceElement> & {\n    'data-testid'?: string;\n  };\n}"
+            "value": "export interface VideoProps {\n  /** An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2025-04/objects/video). */\n  data: PartialDeep<VideoType, {recurseIntoArrays: true}>;\n  /** An object of image size options for the video's `previewImage`. Uses `shopifyImageLoader` to generate the `poster` URL. */\n  previewImageOptions?: Parameters<typeof shopifyLoader>[0];\n  /** Props that will be passed to the `video` element's `source` children elements. */\n  sourceProps?: HTMLAttributes<HTMLSourceElement> & {\n    'data-testid'?: string;\n  };\n}"
           },
           "LoaderParams": {
             "filePath": "src/Image.tsx",
@@ -6018,7 +6026,7 @@
               "name": "ClientBrowserParameters",
               "value": "ClientBrowserParameters"
             },
-            "value": "export function getClientBrowserParameters(): ClientBrowserParameters {\n  if (errorIfServer('getClientBrowserParameters')) {\n    return {\n      uniqueToken: '',\n      visitToken: '',\n      url: '',\n      path: '',\n      search: '',\n      referrer: '',\n      title: '',\n      userAgent: '',\n      navigationType: '',\n      navigationApi: '',\n    };\n  }\n\n  const [navigationType, navigationApi] = getNavigationType();\n  const cookies = getShopifyCookies(document.cookie);\n\n  return {\n    uniqueToken: cookies[SHOPIFY_Y],\n    visitToken: cookies[SHOPIFY_S],\n    url: location.href,\n    path: location.pathname,\n    search: location.search,\n    referrer: document.referrer,\n    title: document.title,\n    userAgent: navigator.userAgent,\n    navigationType,\n    navigationApi,\n  };\n}"
+            "value": "export function getClientBrowserParameters(): ClientBrowserParameters {\n  if (errorIfServer('getClientBrowserParameters')) {\n    return {\n      uniqueToken: '',\n      visitToken: '',\n      url: '',\n      path: '',\n      search: '',\n      referrer: '',\n      title: '',\n      userAgent: '',\n      navigationType: '',\n      navigationApi: '',\n    };\n  }\n\n  const [navigationType, navigationApi] = getNavigationType();\n  const trackingValues = getTrackingValues();\n\n  return {\n    uniqueToken: trackingValues.uniqueToken,\n    visitToken: trackingValues.visitToken,\n    url: location.href,\n    path: location.pathname,\n    search: location.search,\n    referrer: document.referrer,\n    title: document.title,\n    userAgent: navigator.userAgent,\n    navigationType,\n    navigationApi,\n  };\n}"
           },
           "ClientBrowserParameters": {
             "filePath": "src/analytics-types.ts",
@@ -6113,9 +6121,15 @@
         "name": "useShopifyCookies",
         "url": "/api/hydrogen-react/hooks/useShopifyCookies",
         "type": "tool"
+      },
+      {
+        "subtitle": "Utility",
+        "name": "getTrackingValues",
+        "url": "/api/hydrogen-react/utilities/getTrackingValues",
+        "type": "gear"
       }
     ],
-    "description": "Parses cookie string and returns Shopify cookies.",
+    "description": "Parses cookie string and returns Shopify cookies. For tracking values, consider using `getTrackingValues` instead, which reads from modern Shopify cookies.",
     "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
@@ -6144,7 +6158,7 @@
           "GetShopifyCookiesGeneratedType": {
             "filePath": "src/cookies-utils.tsx",
             "name": "GetShopifyCookiesGeneratedType",
-            "description": "",
+            "description": "Gets the values of _shopify_y and _shopify_s cookies from the provided cookie string.",
             "params": [
               {
                 "name": "cookies",
@@ -6159,7 +6173,7 @@
               "name": "ShopifyCookies",
               "value": "ShopifyCookies"
             },
-            "value": "export function getShopifyCookies(cookies: string): ShopifyCookies {\n  const cookieData = parse(cookies);\n  return {\n    [SHOPIFY_Y]: cookieData[SHOPIFY_Y] || '',\n    [SHOPIFY_S]: cookieData[SHOPIFY_S] || '',\n  };\n}"
+            "value": "export function getShopifyCookies(cookies: string): ShopifyCookies {\n  const trackingValues = getTrackingValues(cookies);\n\n  return {\n    [SHOPIFY_Y]: trackingValues.uniqueToken,\n    [SHOPIFY_S]: trackingValues.visitToken,\n  };\n}"
           },
           "ShopifyCookies": {
             "filePath": "src/analytics-types.ts",
@@ -6420,7 +6434,7 @@
       {
         "name": "isOptionValueCombinationInEncodedVariant",
         "type": "utility",
-        "url": "/docs/api/hydrogen/2025-01/utilities/isOptionValueCombinationInEncodedVariant"
+        "url": "/docs/api/hydrogen/2025-04/utilities/isOptionValueCombinationInEncodedVariant"
       }
     ],
     "description": "Decodes an encoded option value string into an array of option value combinations.",
@@ -6451,7 +6465,7 @@
             "params": [
               {
                 "name": "encodedVariantField",
-                "description": "Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2025-01/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2025-01/objects/Product#field-encodedvariantavailability)",
+                "description": "Encoded option value string from the Storefront API, e.g. [product.encodedVariantExistence](/docs/api/storefront/2025-04/objects/Product#field-encodedvariantexistence) or [product.encodedVariantAvailability](/docs/api/storefront/2025-04/objects/Product#field-encodedvariantavailability)",
                 "value": "string",
                 "filePath": "src/optionValueDecoder.ts"
               }
@@ -6483,7 +6497,7 @@
       {
         "name": "decodeEncodedVariant",
         "type": "utility",
-        "url": "/docs/api/hydrogen/2025-01/utilities/decodeEncodedVariant"
+        "url": "/docs/api/hydrogen/2025-04/utilities/decodeEncodedVariant"
       }
     ],
     "description": "\n    Determines whether an option value combination is present in an encoded option value string.\n\n`targetOptionValueCombination` - Indices of option values to look up in the encoded option value string. A partial set of indices may be passed to determine whether a node or any children is present. For example, if a product has 3 options, passing `[0]` will return true if any option value combination for the first option's option value is present in the encoded string.\n  ",
@@ -6713,7 +6727,7 @@
         "tabs": [
           {
             "title": "Client Example in NextJS",
-            "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const client = createStorefrontClient({\n  storeDomain: 'https://{store-name}.myshopify.com',\n  storefrontApiVersion: '2025-01',\n  privateStorefrontToken: '{private token for server-side requests}',\n});\n\n// in another file where you need to make queries, for example in NextJS server-side:\n\n// a Storefront API query\nconst GRAPHQL_QUERY = `\n  query {\n    shop {\n      name\n    }\n  }\n`;\n\n// make the request\nexport async function getServerSideProps() {\n  // Get the Storefront API url\n  const response = await fetch(client.getStorefrontApiUrl(), {\n    body: JSON.stringify({\n      query: GRAPHQL_QUERY,\n    }),\n    // Generate the headers using the private token. Additionally, you can pass in the buyer's IP address from the request object to help prevent bad actors from overloading your store.\n    headers: client.getPrivateTokenHeaders({buyerIp: '...'}),\n    method: 'POST',\n  });\n\n  if (!response.ok) {\n    throw new Error(response.statusText);\n  }\n\n  const json = await response.json();\n\n  return {props: json};\n}\n",
+            "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const client = createStorefrontClient({\n  storeDomain: 'https://{store-name}.myshopify.com',\n  storefrontApiVersion: '2025-04',\n  privateStorefrontToken: '{private token for server-side requests}',\n});\n\n// in another file where you need to make queries, for example in NextJS server-side:\n\n// a Storefront API query\nconst GRAPHQL_QUERY = `\n  query {\n    shop {\n      name\n    }\n  }\n`;\n\n// make the request\nexport async function getServerSideProps() {\n  // Get the Storefront API url\n  const response = await fetch(client.getStorefrontApiUrl(), {\n    body: JSON.stringify({\n      query: GRAPHQL_QUERY,\n    }),\n    // Generate the headers using the private token. Additionally, you can pass in the buyer's IP address from the request object to help prevent bad actors from overloading your store.\n    headers: client.getPrivateTokenHeaders({buyerIp: '...'}),\n    method: 'POST',\n  });\n\n  if (!response.ok) {\n    throw new Error(response.statusText);\n  }\n\n  const json = await response.json();\n\n  return {props: json};\n}\n",
             "language": "js"
           }
         ],
@@ -6868,6 +6882,105 @@
       }
     },
     "definitions": []
+  },
+  {
+    "name": "getTrackingValues",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "subtitle": "Hook",
+        "name": "useShopifyCookies",
+        "url": "/api/hydrogen-react/hooks/useShopifyCookies",
+        "type": "tool"
+      },
+      {
+        "subtitle": "Utility",
+        "name": "getShopifyCookies",
+        "url": "/api/hydrogen-react/utilities/getShopifyCookies",
+        "type": "gear"
+      }
+    ],
+    "description": "Retrieves user session tracking values for analytics and marketing from the browser environment. It reads from `server-timing` headers in Storefront API responses and falls back to deprecated cookies for backward compatibility.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {getTrackingValues} from '@shopify/hydrogen-react';\n\nexport function sendCustomAnalyticsEvent(eventName) {\n  const {uniqueToken, visitToken} = getTrackingValues();\n\n  // Use tracking values in your custom analytics implementation\n  fetch('/api/analytics', {\n    method: 'POST',\n    body: JSON.stringify({\n      event: eventName,\n      uniqueToken,\n      visitToken,\n    }),\n  });\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {getTrackingValues} from '@shopify/hydrogen-react';\n\nexport function sendCustomAnalyticsEvent(eventName: string) {\n  const {uniqueToken, visitToken} = getTrackingValues();\n\n  // Use tracking values in your custom analytics implementation\n  fetch('/api/analytics', {\n    method: 'POST',\n    body: JSON.stringify({\n      event: eventName,\n      uniqueToken,\n      visitToken,\n    }),\n  });\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "getTrackingValues",
+        "description": "Returns an object containing `uniqueToken`, `visitToken`, and `consent` values.",
+        "type": "GetTrackingValuesGeneratedType",
+        "typeDefinitions": {
+          "GetTrackingValuesGeneratedType": {
+            "filePath": "src/tracking-utils.ts",
+            "name": "GetTrackingValuesGeneratedType",
+            "description": "Retrieves user session tracking values for analytics and marketing from the browser environment.",
+            "params": [
+              {
+                "name": "cookieString",
+                "description": "Optional cookie string to parse for deprecated cookie fallback.\nUsed internally by getShopifyCookies for backward compatibility.",
+                "value": "string",
+                "isOptional": true,
+                "filePath": "src/tracking-utils.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "src/tracking-utils.ts",
+              "description": "",
+              "name": "TrackingValues",
+              "value": "TrackingValues"
+            },
+            "value": "export function getTrackingValues(cookieString?: string): TrackingValues {\n  // Overall behavior: Tracking values are returned in Server-Timing headers from\n  // Storefront API responses, and we want to find and return these tracking values.\n  //\n  // Search recent fetches for SFAPI requests matching either: same origin (proxy case)\n  // or a subdomain of the current host (eg: checkout subdomain, if there is no proxy).\n  // We consider SF API-like endpoints (/api/.../graphql.json) on subdomains, as well as\n  // any same-origin request. The reason for the latter is that Hydrogen server collects\n  // tracking values and returns them in any non-cached response, not just direct SF API\n  // responses. For example, a cart mutation in a server action could return tracking values.\n  //\n  // If we didn't find tracking values in fetch requests, we fall back to checking cached values,\n  // then the initial page navigation entry, and finally the deprecated `_shopify_s` and `_shopify_y`.\n\n  let trackingValues: TrackingValues | undefined;\n\n  if (\n    typeof window !== 'undefined' &&\n    typeof window.performance !== 'undefined'\n  ) {\n    try {\n      // RE to extract host and optionally match SFAPI pathname.\n      // Group 1: host (e.g. \"checkout.mystore.com\")\n      // Group 2: SFAPI path if present (e.g. \"/api/2024-01/graphql.json\")\n      const resourceRE =\n        /^https?:\\/\\/([^/]+)(\\/api\\/(?:unstable|2\\d{3}-\\d{2})\\/graphql\\.json(?=$|\\?))?/;\n\n      // Search backwards through resource entries to find the most recent match.\n      // Match criteria (first one with _y and _s values wins):\n      // - Same origin (exact host match) with tracking values, OR\n      // - Subdomain + SFAPI pathname with tracking values\n      const entries = performance.getEntriesByType(\n        'resource',\n      ) as PerformanceResourceTiming[];\n\n      let matchedValues: ReturnType<typeof extractFromPerformanceEntry>;\n\n      for (let i = entries.length - 1; i >= 0; i--) {\n        const entry = entries[i];\n\n        if (entry.initiatorType !== 'fetch') continue;\n\n        const currentHost = window.location.host;\n        const match = entry.name.match(resourceRE);\n        if (!match) continue;\n\n        const [, matchedHost, sfapiPath] = match;\n\n        const isMatch =\n          // Same origin (exact host match)\n          matchedHost === currentHost ||\n          // Subdomain with SFAPI path\n          (sfapiPath && matchedHost?.endsWith(`.${currentHost}`));\n\n        if (isMatch) {\n          const values = extractFromPerformanceEntry(entry);\n          if (values) {\n            matchedValues = values;\n            break;\n          }\n        }\n      }\n\n      if (matchedValues) {\n        trackingValues = matchedValues;\n      }\n\n      // Resource entries have a limited buffer and are removed over time.\n      // Cache the latest values for future calls if we find them.\n      // A cached resource entry is always newer than a navigation entry.\n      if (trackingValues) {\n        cachedTrackingValues.current = trackingValues;\n      } else if (cachedTrackingValues.current) {\n        // Fallback to cached values from previous calls:\n        trackingValues = cachedTrackingValues.current;\n      }\n\n      if (!trackingValues) {\n        // Fallback to navigation entry from full page rendering load:\n        const navigationEntries = performance.getEntriesByType(\n          'navigation',\n        )[0] as PerformanceNavigationTiming;\n\n        // Navigation entries might omit consent when the Hydrogen server generates it.\n        // In this case, we skip consent requirement and only extract _y and _s values.\n        trackingValues = extractFromPerformanceEntry(navigationEntries, false);\n      }\n    } catch {}\n  }\n\n  // Fallback to deprecated cookies to support transitioning:\n  if (!trackingValues) {\n    const cookie =\n      typeof cookieString === 'string'\n        ? cookieString\n        : typeof document !== 'undefined'\n          ? document.cookie\n          : '';\n\n    trackingValues = {\n      uniqueToken: cookie.match(/\\b_shopify_y=([^;]+)/)?.[1] || '',\n      visitToken: cookie.match(/\\b_shopify_s=([^;]+)/)?.[1] || '',\n      consent: cookie.match(/\\b_tracking_consent=([^;]+)/)?.[1] || '',\n    };\n  }\n\n  return trackingValues;\n}"
+          },
+          "TrackingValues": {
+            "filePath": "src/tracking-utils.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "TrackingValues",
+            "value": "{\n  /** Identifier for the unique user. Equivalent to the deprecated _shopify_y cookie */\n  uniqueToken: string;\n  /** Identifier for the current visit. Equivalent to the deprecated _shopify_s cookie */\n  visitToken: string;\n  /** Represents the consent given by the user or the default region consent configured in Admin */\n  consent: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "src/tracking-utils.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "consent",
+                "value": "string",
+                "description": "Represents the consent given by the user or the default region consent configured in Admin"
+              },
+              {
+                "filePath": "src/tracking-utils.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "uniqueToken",
+                "value": "string",
+                "description": "Identifier for the unique user. Equivalent to the deprecated _shopify_y cookie"
+              },
+              {
+                "filePath": "src/tracking-utils.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "visitToken",
+                "value": "string",
+                "description": "Identifier for the current visit. Equivalent to the deprecated _shopify_s cookie"
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   {
     "name": "useCart",
@@ -7149,7 +7262,7 @@
           "UseCartLineGeneratedType": {
             "filePath": "src/CartLineProvider.tsx",
             "name": "UseCartLineGeneratedType",
-            "description": "The `useCartLine` hook provides access to the [CartLine object](https://shopify.dev/api/storefront/2025-01/objects/cartline) from the Storefront API. It must be a descendent of a `CartProvider` component.",
+            "description": "The `useCartLine` hook provides access to the [CartLine object](https://shopify.dev/api/storefront/2025-04/objects/cartline) from the Storefront API. It must be a descendent of a `CartProvider` component.",
             "params": [],
             "returns": {
               "filePath": "src/CartLineProvider.tsx",
@@ -7770,6 +7883,14 @@
               {
                 "filePath": "src/ShopifyProvider.tsx",
                 "syntaxKind": "PropertySignature",
+                "name": "sameDomainForStorefrontApi",
+                "value": "boolean",
+                "description": "Uses the current window.location.origin for Storefront API requests. This requires setting up a proxy for Storefront API requests in your domain.",
+                "isOptional": true
+              },
+              {
+                "filePath": "src/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
                 "name": "storeDomain",
                 "value": "string",
                 "description": "The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`)."
@@ -7888,12 +8009,12 @@
       },
       {
         "subtitle": "Utility",
-        "name": "getShopifyCookies",
-        "url": "/api/hydrogen-react/utilities/getShopifyCookies",
+        "name": "getTrackingValues",
+        "url": "/api/hydrogen-react/utilities/getTrackingValues",
         "type": "gear"
       }
     ],
-    "description": "Sets Shopify user and session cookies and refreshes the expiry time.",
+    "description": "Sets Shopify user and session cookies and refreshes the expiry time. Returns `true` when cookies are ready.",
     "type": "hooks",
     "defaultExample": {
       "description": "I am the default example",
@@ -7901,12 +8022,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import * as React from 'react';\nimport {useShopifyCookies} from '@shopify/hydrogen-react';\n\nexport default function App({Component, pageProps}) {\n  useShopifyCookies({hasUserConsent: false});\n\n  return &lt;Component {...pageProps} /&gt;;\n}\n",
+            "code": "import * as React from 'react';\nimport {useShopifyCookies} from '@shopify/hydrogen-react';\n\nexport default function App({Component, pageProps}) {\n  // Returns true when cookies are ready\n  const cookiesReady = useShopifyCookies({hasUserConsent: true});\n\n  if (!cookiesReady) {\n    return null;\n  }\n\n  return &lt;Component {...pageProps} /&gt;;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import * as React from 'react';\nimport {useShopifyCookies} from '@shopify/hydrogen-react';\n\nexport default function App({Component, pageProps}) {\n  useShopifyCookies({hasUserConsent: false});\n\n  return &lt;Component {...pageProps} /&gt;;\n}\n",
+            "code": "import * as React from 'react';\nimport {useShopifyCookies} from '@shopify/hydrogen-react';\n\nexport default function App({\n  Component,\n  pageProps,\n}: {\n  Component: React.ComponentType;\n  pageProps: object;\n}) {\n  // Returns true when cookies are ready\n  const cookiesReady = useShopifyCookies({hasUserConsent: true});\n\n  if (!cookiesReady) {\n    return null;\n  }\n\n  return &lt;Component {...pageProps} /&gt;;\n}\n",
             "language": "tsx"
           }
         ],
@@ -7916,13 +8037,13 @@
     "definitions": [
       {
         "title": "useShopifyCookies",
-        "description": "Manages Shopify cookies. If `hasUserConsent` option is false, Shopify cookies will be removed.",
+        "description": "Manages Shopify cookies. If `hasUserConsent` option is false, deprecated cookies will be removed. Returns `true` when cookies are ready.",
         "type": "UseShopifyCookiesGeneratedType",
         "typeDefinitions": {
           "UseShopifyCookiesGeneratedType": {
             "filePath": "src/useShopifyCookies.tsx",
             "name": "UseShopifyCookiesGeneratedType",
-            "description": "",
+            "description": "Sets the `shopify_y` and `shopify_s` cookies in the browser based on user consent for backward compatibility support.\n\nIf `fetchTrackingValues` is true, it makes a request to Storefront API to fetch or refresh Shopiy analytics and marketing cookies and tracking values. Generally speaking, this should only be needed if you're not using Hydrogen's built-in analytics components and hooks that already handle this automatically. For example, set it to `true` if you are using `hydrogen-react` only with a different framework and still need to make a same-domain request to Storefront API to set cookies.\n\nIf `ignoreDeprecatedCookies` is true, it skips setting the deprecated cookies entirely. Useful when you only want to use the newer tracking values and not rely on the deprecated ones.",
             "params": [
               {
                 "name": "options",
@@ -7934,17 +8055,24 @@
             ],
             "returns": {
               "filePath": "src/useShopifyCookies.tsx",
-              "description": "",
-              "name": "void",
-              "value": "void"
+              "description": "`true` when cookies are set and ready.",
+              "name": "boolean",
+              "value": "boolean"
             },
-            "value": "export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {\n  const {\n    hasUserConsent = false,\n    domain = '',\n    checkoutDomain = '',\n  } = options || {};\n  useEffect(() => {\n    const cookies = getShopifyCookies(document.cookie);\n\n    /**\n     * Setting cookie with domain\n     *\n     * If no domain is provided, the cookie will be set for the current host.\n     * For Shopify, we need to ensure this domain is set with a leading dot.\n     */\n\n    // Use override domain or current host\n    let currentDomain = domain || window.document.location.host;\n\n    if (checkoutDomain) {\n      const checkoutDomainParts = checkoutDomain.split('.').reverse();\n      const currentDomainParts = currentDomain.split('.').reverse();\n      const sameDomainParts: Array<string> = [];\n      checkoutDomainParts.forEach((part, index) => {\n        if (part === currentDomainParts[index]) {\n          sameDomainParts.push(part);\n        }\n      });\n\n      currentDomain = sameDomainParts.reverse().join('.');\n    }\n\n    // Reset domain if localhost\n    if (/^localhost/.test(currentDomain)) currentDomain = '';\n\n    // Shopify checkout only consumes cookies set with leading dot domain\n    const domainWithLeadingDot = currentDomain\n      ? /^\\./.test(currentDomain)\n        ? currentDomain\n        : `.${currentDomain}`\n      : '';\n\n    /**\n     * Set user and session cookies and refresh the expiry time\n     */\n    if (hasUserConsent) {\n      setCookie(\n        SHOPIFY_Y,\n        cookies[SHOPIFY_Y] || buildUUID(),\n        longTermLength,\n        domainWithLeadingDot,\n      );\n      setCookie(\n        SHOPIFY_S,\n        cookies[SHOPIFY_S] || buildUUID(),\n        shortTermLength,\n        domainWithLeadingDot,\n      );\n    } else {\n      setCookie(SHOPIFY_Y, '', 0, domainWithLeadingDot);\n      setCookie(SHOPIFY_S, '', 0, domainWithLeadingDot);\n    }\n  }, [options, hasUserConsent, domain, checkoutDomain]);\n}"
+            "value": "export function useShopifyCookies(options?: UseShopifyCookiesOptions): boolean {\n  const {\n    hasUserConsent,\n    domain = '',\n    checkoutDomain = '',\n    storefrontAccessToken,\n    fetchTrackingValues,\n    ignoreDeprecatedCookies = false,\n  } = options || {};\n\n  const coreCookiesReady = useCoreShopifyCookies({\n    storefrontAccessToken,\n    fetchTrackingValues,\n    checkoutDomain,\n  });\n\n  useEffect(() => {\n    // Skip setting JS cookies until http-only cookies and server-timing\n    // are ready so that we have values synced in JS and http-only cookies.\n    if (ignoreDeprecatedCookies || !coreCookiesReady) return;\n\n    /**\n     * Setting cookie with domain\n     *\n     * If no domain is provided, the cookie will be set for the current host.\n     * For Shopify, we need to ensure this domain is set with a leading dot.\n     */\n\n    // Use override domain or current host\n    let currentDomain = domain || window.location.host;\n\n    if (checkoutDomain) {\n      const checkoutDomainParts = checkoutDomain.split('.').reverse();\n      const currentDomainParts = currentDomain.split('.').reverse();\n      const sameDomainParts: Array<string> = [];\n      checkoutDomainParts.forEach((part, index) => {\n        if (part === currentDomainParts[index]) {\n          sameDomainParts.push(part);\n        }\n      });\n\n      currentDomain = sameDomainParts.reverse().join('.');\n    }\n\n    // Reset domain if localhost\n    if (/^localhost/.test(currentDomain)) currentDomain = '';\n\n    // Shopify checkout only consumes cookies set with leading dot domain\n    const domainWithLeadingDot = currentDomain\n      ? /^\\./.test(currentDomain)\n        ? currentDomain\n        : `.${currentDomain}`\n      : '';\n\n    /**\n     * Set user and session cookies and refresh the expiry time\n     */\n    if (hasUserConsent) {\n      const trackingValues = getTrackingValues();\n      if (\n        (\n          trackingValues.uniqueToken ||\n          trackingValues.visitToken ||\n          ''\n        ).startsWith('00000000-')\n      ) {\n        // Skip writing cookies when tracking values signal we don't have consent yet\n        return;\n      }\n\n      setCookie(\n        SHOPIFY_Y,\n        trackingValues.uniqueToken || buildUUID(),\n        longTermLength,\n        domainWithLeadingDot,\n      );\n      setCookie(\n        SHOPIFY_S,\n        trackingValues.visitToken || buildUUID(),\n        shortTermLength,\n        domainWithLeadingDot,\n      );\n    } else {\n      setCookie(SHOPIFY_Y, '', 0, domainWithLeadingDot);\n      setCookie(SHOPIFY_S, '', 0, domainWithLeadingDot);\n    }\n  }, [\n    coreCookiesReady,\n    hasUserConsent,\n    domain,\n    checkoutDomain,\n    ignoreDeprecatedCookies,\n  ]);\n\n  return coreCookiesReady;\n}"
           },
           "UseShopifyCookiesOptions": {
             "filePath": "src/useShopifyCookies.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "UseShopifyCookiesOptions",
-            "value": "{\n  /**\n   * If set to `false`, Shopify cookies will be removed.\n   * If set to `true`, Shopify unique user token cookie will have cookie expiry of 1 year.\n   * Defaults to false.\n   **/\n  hasUserConsent?: boolean;\n  /**\n   * The domain scope of the cookie. Defaults to empty string.\n   **/\n  domain?: string;\n  /**\n   * The checkout domain of the shop. Defaults to empty string. If set, the cookie domain will check if it can be set with the checkout domain.\n   */\n  checkoutDomain?: string;\n}",
+            "value": "CoreShopifyCookiesOptions & {\n  /**\n   * If set to `false`, Shopify cookies will be removed.\n   * If set to `true`, Shopify unique user token cookie will have cookie expiry of 1 year.\n   * Defaults to false.\n   **/\n  hasUserConsent?: boolean;\n  /**\n   * The domain scope of the cookie. Defaults to empty string.\n   **/\n  domain?: string;\n  /**\n   * The checkout domain of the shop. Defaults to empty string. If set, the cookie domain will check if it can be set with the checkout domain.\n   */\n  checkoutDomain?: string;\n  /**\n   * If set to `true`, it skips modifying the deprecated shopify_y and shopify_s cookies.\n   */\n  ignoreDeprecatedCookies?: boolean;\n}",
+            "description": ""
+          },
+          "CoreShopifyCookiesOptions": {
+            "filePath": "src/useShopifyCookies.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CoreShopifyCookiesOptions",
+            "value": "{\n  storefrontAccessToken?: string;\n  fetchTrackingValues?: boolean;\n  checkoutDomain?: string;\n}",
             "description": "",
             "members": [
               {
@@ -7952,23 +8080,23 @@
                 "syntaxKind": "PropertySignature",
                 "name": "checkoutDomain",
                 "value": "string",
-                "description": "The checkout domain of the shop. Defaults to empty string. If set, the cookie domain will check if it can be set with the checkout domain.",
+                "description": "",
                 "isOptional": true
               },
               {
                 "filePath": "src/useShopifyCookies.tsx",
                 "syntaxKind": "PropertySignature",
-                "name": "domain",
-                "value": "string",
-                "description": "The domain scope of the cookie. Defaults to empty string.",
-                "isOptional": true
-              },
-              {
-                "filePath": "src/useShopifyCookies.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "hasUserConsent",
+                "name": "fetchTrackingValues",
                 "value": "boolean",
-                "description": "If set to `false`, Shopify cookies will be removed. If set to `true`, Shopify unique user token cookie will have cookie expiry of 1 year. Defaults to false.",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "src/useShopifyCookies.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontAccessToken",
+                "value": "string",
+                "description": "",
                 "isOptional": true
               }
             ]
