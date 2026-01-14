@@ -3,6 +3,115 @@
   "version": "1",
   "releases": [
     {
+      "title": "New Shopify cookie system, React Router 7.12, and analytics improvements",
+      "version": "2025.7.1",
+      "date": "2026-01-08",
+      "hash": "67a817cc843d1be3c0ef5515b9a4b6b9e940b6fe",
+      "commit": "https://github.com/Shopify/hydrogen/commit/67a817cc843d1be3c0ef5515b9a4b6b9e940b6fe",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3237",
+      "removeDependencies": [
+        "@shopify/hydrogen",
+        "react-router",
+        "react-router-dom"
+      ],
+      "removeDevDependencies": [
+        "@react-router/dev",
+        "@react-router/fs-routes"
+      ],
+      "dependencies": {
+        "@shopify/hydrogen": "2025.7.1",
+        "react-router": "7.12.0",
+        "react-router-dom": "7.12.0"
+      },
+      "devDependencies": {
+        "@react-router/dev": "7.12.0",
+        "@react-router/fs-routes": "7.12.0"
+      },
+      "fixes": [
+        {
+          "title": "Fix upgrade notice showing incorrect versions",
+          "info": "The shopify hydrogen dev command now correctly displays available upgrades using semver comparison when the current version doesn't exist in changelog.json.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3251",
+          "id": "3251"
+        },
+        {
+          "title": "Ensure SEO recommendations match Shopify Admin",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3303",
+          "id": "3303"
+        },
+        {
+          "title": "Fix Privacy Banner and analytics event issues",
+          "info": "Fixed irregular behaviors between Privacy Banner and Hydrogen's analytics events.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3309",
+          "id": "3309-privacy"
+        },
+        {
+          "title": "Remove regulation-specific privacy fields from public API",
+          "info": "The generalized privacy fields (analyticsAllowed, marketingAllowed, saleOfDataAllowed) remain available.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3236",
+          "id": "3236"
+        }
+      ],
+      "features": [
+        {
+          "title": "Migrate to Shopify's new cookie system",
+          "info": "Hydrogen now supports Shopify's new `_shopify_analytics` and `_shopify_marketing` http-only cookies while keeping the deprecated `_shopify_y` and `_shopify_s` cookies working as long as they remain active. This keeps analytics and privacy behavior aligned with Shopify Admin while preserving backward compatibility.",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Understand the new cookie model and compatibility story",
+              "info": "Shopify is deprecating `_shopify_y` and `_shopify_s` in favor of `_shopify_analytics` and `_shopify_marketing`, which are http-only cookies set via the Storefront API on your storefront domain. Hydrogen now reads and writes these cookies through a Storefront API proxy while still honoring the legacy cookies when present. You don't need to migrate values manually, but you must ensure that requests flow through the proxy so cookies are set before analytics run."
+            },
+            {
+              "title": "Set up a Storefront API proxy for your deployment",
+              "info": "Depending on how you host your app, you must ensure Storefront API calls go through a proxy on your storefront domain.",
+              "code": "IyMjIFJlYWN0IFJvdXRlciArIEh5ZHJvZ2VuIG9uIE94eWdlbgoKSWYgeW91IHNjYWZmb2xkZWQgZnJvbSB0aGUgZGVmYXVsdCBIeWRyb2dlbiBza2VsZXRvbiBhbmQgZGVwbG95IHRvIE94eWdlbiwgdGhlIGBjcmVhdGVSZXF1ZXN0SGFuZGxlcmAgdXRpbGl0eSBmcm9tIGBAc2hvcGlmeS9oeWRyb2dlbi9veHlnZW5gIChub3cgYWxzbyBleHBvcnRlZCBmcm9tIGBAc2hvcGlmeS9oeWRyb2dlbmApIGFscmVhZHkgc2V0cyB1cCBhIFN0b3JlZnJvbnQgQVBJIHByb3h5IG9uIHRoZSBzYW1lIGRvbWFpbiBhcyB5b3VyIHN0b3JlZnJvbnQuCgoqKkluIG1vc3QgY2FzZXMsIG5vIGNoYW5nZXMgYXJlIHJlcXVpcmVkKio7IGp1c3QgY29uZmlybSB5b3VyIHNlcnZlciBlbnRyeSBzdGlsbCB1c2VzIGl0OgoKYGBgdHMKLy8gc2VydmVyLnRzIChPeHlnZW4pCmltcG9ydCB7Y3JlYXRlUmVxdWVzdEhhbmRsZXIsIGNyZWF0ZUh5ZHJvZ2VuQ29udGV4dH0gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4nOwoKZXhwb3J0IGRlZmF1bHQgewogIGFzeW5jIGZldGNoKHJlcXVlc3QsIGVudikgewogICAgY29uc3QgaHlkcm9nZW5Db250ZXh0ID0gY3JlYXRlSHlkcm9nZW5Db250ZXh0KHsKICAgICAgZW52LAogICAgICByZXF1ZXN0LAogICAgICAvKiAuLi4gKi8KICAgIH0pOwoKICAgIGNvbnN0IGhhbmRsZVJlcXVlc3QgPSBjcmVhdGVSZXF1ZXN0SGFuZGxlcih7CiAgICAgIC8qIC4uLiAqLwogICAgICBnZXRMb2FkQ29udGV4dDogKCkgPT4gaHlkcm9nZW5Db250ZXh0LAogICAgICAvLyBBbHRlcm5hdGl2ZWx5LCBwYXNzIGF0IGxlYXN0IHN0b3JlZnJvbnQgY2xpZW50OgogICAgICAvLyBnZXRMb2FkQ29udGV4dDogKCkgPT4gKHtzdG9yZWZyb250OiBjcmVhdGVTdG9yZWZyb250Q2xpZW50KC4uLil9KQogICAgfSk7CgogICAgcmV0dXJuIGhhbmRsZVJlcXVlc3QocmVxdWVzdCk7CiAgfSwKfTsKYGBgCgpLZWVwIHVzaW5nIGA8QW5hbHl0aWNzLlByb3ZpZGVyPmAgY29tcG9uZW50IG9yIGB1c2VDdXN0b21lclByaXZhY3lgIGhvb2sgdG8gZ2V0IGNvb2tpZXMgaW4gdGhlIGJyb3dzZXIgYXV0b21hdGljYWxseS4KCkZvciBhIGZ1bGwgZXhhbXBsZSwgcmVmZXIgdG8gb3VyIFtza2VsZXRvbiB0ZW1wbGF0ZV0oaHR0cHM6Ly9naXRodWIuY29tL1Nob3BpZnkvaHlkcm9nZW4vYmxvYi9tYWluL3RlbXBsYXRlcy9za2VsZXRvbi9zZXJ2ZXIudHMpLgoKIyMjIFJlYWN0IFJvdXRlciArIEh5ZHJvZ2VuIG9uIG90aGVyIGhvc3RzCgojIyMjIEhvc3RzIHRoYXQgc3VwcG9ydCBXZWIgRmV0Y2ggQVBJIChSZXF1ZXN0L1Jlc3BvbnNlKQoKT24gaG9zdHMgdGhhdCBzdXBwb3J0IHRoZSBzdGFuZGFyZCBXZWIgRmV0Y2ggQVBJIChXb3JrZXJzLXN0eWxlIGVudmlyb25tZW50cyksIGltcG9ydCBgY3JlYXRlUmVxdWVzdEhhbmRsZXJgIGZyb20gYEBzaG9waWZ5L2h5ZHJvZ2VuYCAoaW5zdGVhZCBvZiBgcmVhY3Qtcm91dGVyYCkgYW5kIHJvdXRlIHJlcXVlc3RzIHRocm91Z2ggaXQ6CgpgYGB0cwppbXBvcnQge2NyZWF0ZVJlcXVlc3RIYW5kbGVyLCBjcmVhdGVIeWRyb2dlbkNvbnRleHR9IGZyb20gJ0BzaG9waWZ5L2h5ZHJvZ2VuJzsKCmNvbnN0IGh5ZHJvZ2VuQ29udGV4dCA9IGNyZWF0ZUh5ZHJvZ2VuQ29udGV4dCh7CiAgLyogLi4uICovCn0pOwoKY29uc3QgaGFuZGxlUmVxdWVzdCA9IGNyZWF0ZVJlcXVlc3RIYW5kbGVyKHsKICAvKiAuLi4gKi8KICBnZXRMb2FkQ29udGV4dDogKCkgPT4gaHlkcm9nZW5Db250ZXh0LAp9KTsKYGBgCgojIyMjIE5vZGUuanMgYW5kIG90aGVyIGhvc3RzCgpGb3IgTm9kZS1saWtlIGVudmlyb25tZW50cywgYWRhcHQgTm9kZSByZXF1ZXN0cyB0byBGZXRjaCB3aXRoIFtgQHJlbWl4LXJ1bi9ub2RlLWZldGNoLXNlcnZlcmBdKGh0dHBzOi8vd3d3Lm5wbWpzLmNvbS9wYWNrYWdlL0ByZW1peC1ydW4vbm9kZS1mZXRjaC1zZXJ2ZXIpLCB0aGVuIGRlbGVnYXRlIHRvIEh5ZHJvZ2VuJ3MgaGFuZGxlcjoKCmBgYHRzCmltcG9ydCB7Y3JlYXRlUmVxdWVzdEhhbmRsZXIsIGNyZWF0ZUh5ZHJvZ2VuQ29udGV4dH0gZnJvbSAnQHNob3BpZnkvaHlkcm9nZW4nOwppbXBvcnQge2NyZWF0ZVJlcXVlc3RMaXN0ZW5lcn0gZnJvbSAnQHJlbWl4LXJ1bi9ub2RlLWZldGNoLXNlcnZlcic7CmltcG9ydCBodHRwIGZyb20gJ2h0dHAnOwoKY29uc3QgaGFuZGxlTm9kZVJlcXVlc3QgPSBjcmVhdGVSZXF1ZXN0TGlzdGVuZXIoKHJlcXVlc3QpID0+IHsKICBjb25zdCBoeWRyb2dlbkNvbnRleHQgPSBjcmVhdGVIeWRyb2dlbkNvbnRleHQoewogICAgLyogLi4uICovCiAgfSk7CgogIGNvbnN0IGhhbmRsZVdlYlJlcXVlc3QgPSBjcmVhdGVSZXF1ZXN0SGFuZGxlcih7CiAgICAvKiAuLi4gKi8KICAgIGdldExvYWRDb250ZXh0OiAoKSA9PiBoeWRyb2dlbkNvbnRleHQsCiAgfSk7CgogIHJldHVybiBoYW5kbGVXZWJSZXF1ZXN0KHJlcXVlc3QpOwp9KTsKCmh0dHAuY3JlYXRlU2VydmVyKGhhbmRsZU5vZGVSZXF1ZXN0KTsKYGBgCgpBbHRlcm5hdGl2ZWx5LCBpZiB5b3UgY2FuJ3QgZGVsZWdhdGUgdG8gSHlkcm9nZW4ncyBgY3JlYXRlUmVxdWVzdEhhbmRsZXJgLCB5b3UgY2FuIHByb3ZpZGUgYSBjdXN0b20gU3RvcmVmcm9udCBBUEkgcHJveHkgaW4geW91ciBzZXJ2ZXIuIFNlZSBbSHlkcm9nZW4ncyBpbXBsZW1lbnRhdGlvbl0oaHR0cHM6Ly9naXRodWIuY29tL1Nob3BpZnkvaHlkcm9nZW4vYmxvYi8yNzA2NmEyODU3NzQ4NGY0MDYyMjIxMTZhOTU5ZWI0NjNkMjU1Njg1L3BhY2thZ2VzL2h5ZHJvZ2VuL3NyYy9zdG9yZWZyb250LnRzI0w1NDYtTDYxMSkgYXMgYSByZWZlcmVuY2UuIEluIHRoaXMgY2FzZSwgZW5zdXJlIHlvdSBtYW51YWxseSBwYXNzIGBzYW1lRG9tYWluRm9yU3RvcmVmcm9udEFwaTogdHJ1ZWAgaW4gdGhlIGBjb25zZW50YCBvYmplY3QgZm9yIGA8QW5hbHl0aWNzLlByb3ZpZGVyPmAgb3IgYXMgYSBwcm9wIHRvIHRoZSBgdXNlQ3VzdG9tZXJQcml2YWN5YCBob29rLgo="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3309",
+          "id": "3309"
+        },
+        {
+          "title": "Improve development cold start time with static server build import",
+          "info": "Moved server build in server.ts from a dynamic import to a static import to speed up first rendering during local development (2s => 200ms).",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Update server.ts to use static import",
+              "info": "Replace the dynamic import with a static import at the top of the file.",
+              "code": "YGBgZGlmZgovLyBzZXJ2ZXIudHMKCitpbXBvcnQgKiBhcyBzZXJ2ZXJCdWlsZCBmcm9tICd2aXJ0dWFsOnJlYWN0LXJvdXRlci9zZXJ2ZXItYnVpbGQnOwoKY29uc3QgaGFuZGxlUmVxdWVzdCA9IGNyZWF0ZVJlcXVlc3RIYW5kbGVyKHsKLSAgYnVpbGQ6IGF3YWl0IGltcG9ydCgndmlydHVhbDpyZWFjdC1yb3V0ZXIvc2VydmVyLWJ1aWxkJyksCisgIGJ1aWxkOiBzZXJ2ZXJCdWlsZCwKICAgbW9kZTogcHJvY2Vzcy5lbnYuTk9ERV9FTlYsCiAgIGdldExvYWRDb250ZXh0OiAoKSA9PiBoeWRyb2dlbkNvbnRleHQsCn0pOwoKLy8gVGhpcyBjaGFuZ2UgaW1wcm92ZXMgY29sZCBzdGFydCB0aW1lIGluIGRldmVsb3BtZW50ICgycyA9PiAyMDBtcykKYGBgCg=="
+            },
+            {
+              "title": "Update ESLint config to allow virtual: imports",
+              "info": "Add the virtual: prefix to the import/no-unresolved ignore list.",
+              "code": "YGBgZGlmZgovLyBlc2xpbnQuY29uZmlnLmpzCgpydWxlczogeworICAnaW1wb3J0L25vLXVucmVzb2x2ZWQnOiBbJ2Vycm9yJywge2lnbm9yZTogWydedmlydHVhbDonXX1dLAp9CgovLyBBbGxvd3MgdmlydHVhbDogaW1wb3J0cyB1c2VkIGJ5IFJlYWN0IFJvdXRlcgpgYGAK"
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3331",
+          "id": "3331"
+        },
+        {
+          "title": "React Router 7.12 stabilized APIs",
+          "info": "React Router 7.12 stabilizes several previously unstable APIs. The following future flags in `react-router.config.ts` have been renamed:\n\n- `future.unstable_splitRouteModules` → `future.v8_splitRouteModules`\n- `future.unstable_viteEnvironmentApi` → `future.v8_viteEnvironmentApi`\n\nIf you're using these flags, update your config to use the new names.",
+          "breaking": false,
+          "steps": [
+            {
+              "title": "Update fetcher reset calls",
+              "info": "The `fetcher.unstable_reset()` method is now stable as `fetcher.reset()`. Update any usages in your code.",
+              "code": "YGBgZGlmZgotIGZldGNoZXIudW5zdGFibGVfcmVzZXQoKQorIGZldGNoZXIucmVzZXQoKQpgYGAK"
+            },
+            {
+              "title": "Update RouterProvider onError prop",
+              "info": "The `unstable_onError` prop on `<RouterProvider>` and `<HydratedRouter>` is now stable as `onError`. Update any usages in your code.",
+              "code": "YGBgZGlmZgovLyBGb3IgUm91dGVyUHJvdmlkZXIKLSA8Um91dGVyUHJvdmlkZXIgdW5zdGFibGVfb25FcnJvcj17aGFuZGxlRXJyb3J9IC8+CisgPFJvdXRlclByb3ZpZGVyIG9uRXJyb3I9e2hhbmRsZUVycm9yfSAvPgoKLy8gRm9yIEh5ZHJhdGVkUm91dGVyCi0gPEh5ZHJhdGVkUm91dGVyIHVuc3RhYmxlX29uRXJyb3I9e2hhbmRsZUVycm9yfSAvPgorIDxIeWRyYXRlZFJvdXRlciBvbkVycm9yPXtoYW5kbGVFcnJvcn0gLz4KYGBgCg=="
+            }
+          ],
+          "pr": "https://github.com/Shopify/hydrogen/pull/3346",
+          "id": "3346"
+        }
+      ]
+    },
+    {
       "title": "Migrate to React Router 7 and API version 2025-07",
       "version": "2025.7.0",
       "date": "2025-09-17",
