@@ -1,6 +1,6 @@
 --- a/templates/skeleton/app/routes/account_.login.tsx
 +++ b/templates/skeleton/app/routes/account_.login.tsx
-@@ -1,13 +1,139 @@
+@@ -1,17 +1,139 @@
 +import {Form, Link, useActionData, data, redirect} from 'react-router';
  import type {Route} from './+types/account_.login';
  
@@ -8,11 +8,15 @@
 -  const url = new URL(request.url);
 -  const acrValues = url.searchParams.get('acr_values') || undefined;
 -  const loginHint = url.searchParams.get('login_hint') || undefined;
+-  const loginHintMode = url.searchParams.get('login_hint_mode') || undefined;
+-  const locale = url.searchParams.get('locale') || undefined;
 -
 -  return context.customerAccount.login({
 -    countryCode: context.storefront.i18n.country,
 -    acrValues,
 -    loginHint,
+-    loginHintMode,
+-    locale,
 -  });
 -}
 +type ActionResponse = {
