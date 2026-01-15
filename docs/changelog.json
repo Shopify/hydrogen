@@ -478,7 +478,7 @@
       ]
     },
     {
-      "title": "New Shopify cookie system and analytics improvements",
+      "title": "[ONLY USE IF YOU ARE CURRENTLY ON 2025.5.0; ELSE SKIP TO >=2025.7.0 UPGRADE] New Shopify cookie system and analytics improvements",
       "version": "2025.5.1",
       "date": "2026-01-13",
       "hash": "37373ce4903c32a215e7f1d22066634c7a909bab",
