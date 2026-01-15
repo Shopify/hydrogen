@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@react-router/dev": "7.12.0",
+    "esbuild": "^0.24.0",
     "@types/diff": "^5.0.2",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/prettier": "^2.7.2",
