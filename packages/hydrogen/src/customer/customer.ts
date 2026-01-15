@@ -360,20 +360,11 @@ export function createCustomerAccountClient({
       const locale = getMaybeLocale({
         contextLanguage: language ?? null,
         localeOverride: options?.locale ?? null,
+        uiLocalesOverride: options?.uiLocales ?? null,
       });
 
       if (locale != null) {
-        // If locale is set, use locale and skip ui_locales (ui_locales may be deprecated in the future)
         loginUrl.searchParams.append('locale', locale);
-      } else {
-        // Fall back to ui_locales if locale is not set
-        const uiLocales = getMaybeUILocales({
-          contextLanguage: language ?? null,
-          uiLocalesOverride: options?.uiLocales ?? null,
-        });
-        if (uiLocales != null) {
-          loginUrl.searchParams.append('ui_locales', uiLocales);
-        }
       }
 
       if (options?.countryCode) {
@@ -683,20 +674,25 @@ function maybeEnforceRegionalVariant(language: LanguageCode): LanguageCode {
  * Supported locales: en, fr, cs, da, de, el, es, fi, hi, hr, hu, id, it, ja, ko, lt, ms, nb, nl, pl,
  * pt-BR, pt-PT, ro, ru, sk, sl, sv, th, tr, vi, zh-CN, zh-TW
  *
- * If localeOverride is provided, it takes precedence and is normalized via toLocaleString.
- * If contextLanguage is provided (LanguageCode), it is converted to locale format.
+ * Priority order: localeOverride > uiLocalesOverride > contextLanguage
  * If none are provided, returns null.
  */
 export function getMaybeLocale(params: {
   contextLanguage: LanguageCode | null;
   localeOverride: string | null;
+  uiLocalesOverride: LanguageCode | null;
 }): string | null {
-  // localeOverride takes precedence, normalize it via toLocaleString
+  // localeOverride takes highest precedence
   if (params.localeOverride != null) {
     return toLocaleString(params.localeOverride);
   }
 
-  // Convert contextLanguage (LanguageCode) to locale format
+  // uiLocalesOverride takes second precedence
+  if (params.uiLocalesOverride != null) {
+    return toLocaleString(params.uiLocalesOverride);
+  }
+
+  // contextLanguage is the fallback
   if (params.contextLanguage != null) {
     return toLocaleString(params.contextLanguage);
   }

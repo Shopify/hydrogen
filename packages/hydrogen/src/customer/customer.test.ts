@@ -235,7 +235,7 @@ describe('customer', () => {
           expect(url.searchParams.get('ui_locales')).toBeNull();
         });
 
-        it('Redirects to the customer account api login url with ui_locales as param (uiLocales option, no language)', async () => {
+        it('Redirects to the customer account api login url with locale as param (uiLocales option, no language)', async () => {
           const origin = 'https://something-good.com';
 
           const customer = createCustomerAccountClient({
@@ -251,8 +251,7 @@ describe('customer', () => {
           });
           const url = new URL(response.headers.get('location')!);
 
-          expect(url.searchParams.get('ui_locales')).toBe('fr');
-          expect(url.searchParams.get('locale')).toBeNull();
+          expect(url.searchParams.get('locale')).toBe('fr');
         });
 
         it('locale takes precedence over uiLocales when both are provided', async () => {
@@ -298,7 +297,7 @@ describe('customer', () => {
         expect(url.searchParams.get('region_country')).toBe('US');
       });
 
-      it('Includes both uiLocales and countryCode when both are provided', async () => {
+      it('Includes both locale and countryCode when both are provided', async () => {
         const origin = 'https://something-good.com';
 
         const customer = createCustomerAccountClient({
@@ -315,7 +314,7 @@ describe('customer', () => {
         });
         const url = new URL(response.headers.get('location')!);
 
-        expect(url.searchParams.get('ui_locales')).toBe('fr');
+        expect(url.searchParams.get('locale')).toBe('fr');
         expect(url.searchParams.get('region_country')).toBe('CA');
       });
 
@@ -437,7 +436,7 @@ describe('customer', () => {
         });
         const url = new URL(response.headers.get('location')!);
 
-        expect(url.searchParams.get('ui_locales')).toBe('fr');
+        expect(url.searchParams.get('locale')).toBe('fr');
         expect(url.searchParams.get('region_country')).toBe('CA');
         expect(url.searchParams.get('acr_values')).toBe('provider:google');
         expect(url.searchParams.get('login_hint')).toBe('user@example.com');
@@ -523,7 +522,7 @@ describe('customer', () => {
         });
         const url = new URL(response.headers.get('location')!);
 
-        expect(url.searchParams.get('ui_locales')).toBe('fr');
+        expect(url.searchParams.get('locale')).toBe('fr');
         expect(url.searchParams.get('region_country')).toBe('CA');
         expect(url.searchParams.get('acr_values')).toBe('provider:google');
         expect(url.searchParams.get('login_hint')).toBe('user@example.com');
@@ -1563,91 +1562,203 @@ describe('getMaybeLocale', () => {
     const locale = getMaybeLocale({
       contextLanguage: null,
       localeOverride: null,
+      uiLocalesOverride: null,
     });
     expect(locale).toBeNull();
   });
 
   it('returns lowercase for regular languages', () => {
-    expect(getMaybeLocale({contextLanguage: 'EN', localeOverride: null})).toBe(
-      'en',
-    );
-    expect(getMaybeLocale({contextLanguage: 'FR', localeOverride: null})).toBe(
-      'fr',
-    );
-    expect(getMaybeLocale({contextLanguage: 'DE', localeOverride: null})).toBe(
-      'de',
-    );
-    expect(getMaybeLocale({contextLanguage: 'JA', localeOverride: null})).toBe(
-      'ja',
-    );
-    expect(getMaybeLocale({contextLanguage: 'KO', localeOverride: null})).toBe(
-      'ko',
-    );
+    expect(
+      getMaybeLocale({
+        contextLanguage: 'EN',
+        localeOverride: null,
+        uiLocalesOverride: null,
+      }),
+    ).toBe('en');
+    expect(
+      getMaybeLocale({
+        contextLanguage: 'FR',
+        localeOverride: null,
+        uiLocalesOverride: null,
+      }),
+    ).toBe('fr');
+    expect(
+      getMaybeLocale({
+        contextLanguage: 'DE',
+        localeOverride: null,
+        uiLocalesOverride: null,
+      }),
+    ).toBe('de');
+    expect(
+      getMaybeLocale({
+        contextLanguage: 'JA',
+        localeOverride: null,
+        uiLocalesOverride: null,
+      }),
+    ).toBe('ja');
+    expect(
+      getMaybeLocale({
+        contextLanguage: 'KO',
+        localeOverride: null,
+        uiLocalesOverride: null,
+      }),
+    ).toBe('ko');
   });
 
   it('returns language-country format for regional languages', () => {
     expect(
-      getMaybeLocale({contextLanguage: 'PT_BR', localeOverride: null}),
+      getMaybeLocale({
+        contextLanguage: 'PT_BR',
+        localeOverride: null,
+        uiLocalesOverride: null,
+      }),
     ).toBe('pt-BR');
     expect(
-      getMaybeLocale({contextLanguage: 'PT_PT', localeOverride: null}),
+      getMaybeLocale({
+        contextLanguage: 'PT_PT',
+        localeOverride: null,
+        uiLocalesOverride: null,
+      }),
     ).toBe('pt-PT');
     expect(
-      getMaybeLocale({contextLanguage: 'ZH_CN', localeOverride: null}),
+      getMaybeLocale({
+        contextLanguage: 'ZH_CN',
+        localeOverride: null,
+        uiLocalesOverride: null,
+      }),
     ).toBe('zh-CN');
     expect(
-      getMaybeLocale({contextLanguage: 'ZH_TW', localeOverride: null}),
+      getMaybeLocale({
+        contextLanguage: 'ZH_TW',
+        localeOverride: null,
+        uiLocalesOverride: null,
+      }),
     ).toBe('zh-TW');
   });
 
-  it('uses localeOverride when provided', () => {
-    expect(getMaybeLocale({contextLanguage: 'EN', localeOverride: 'fr'})).toBe(
-      'fr',
-    );
+  it('uses localeOverride when provided (highest priority)', () => {
     expect(
-      getMaybeLocale({contextLanguage: 'EN', localeOverride: 'zh-CN'}),
+      getMaybeLocale({
+        contextLanguage: 'EN',
+        localeOverride: 'fr',
+        uiLocalesOverride: 'DE',
+      }),
+    ).toBe('fr');
+    expect(
+      getMaybeLocale({
+        contextLanguage: 'EN',
+        localeOverride: 'zh-CN',
+        uiLocalesOverride: 'JA',
+      }),
     ).toBe('zh-CN');
   });
 
-  it('uses localeOverride even when contextLanguage is null', () => {
-    expect(getMaybeLocale({contextLanguage: null, localeOverride: 'fr'})).toBe(
-      'fr',
-    );
+  it('uses uiLocalesOverride when localeOverride is null (second priority)', () => {
     expect(
-      getMaybeLocale({contextLanguage: null, localeOverride: 'pt-BR'}),
-    ).toBe('pt-BR');
+      getMaybeLocale({
+        contextLanguage: 'EN',
+        localeOverride: null,
+        uiLocalesOverride: 'FR',
+      }),
+    ).toBe('fr');
+    expect(
+      getMaybeLocale({
+        contextLanguage: 'EN',
+        localeOverride: null,
+        uiLocalesOverride: 'ZH_CN',
+      }),
+    ).toBe('zh-CN');
   });
 
-  it('falls back to contextLanguage when localeOverride is null', () => {
-    expect(getMaybeLocale({contextLanguage: 'DE', localeOverride: null})).toBe(
-      'de',
-    );
+  it('falls back to contextLanguage when both overrides are null', () => {
     expect(
-      getMaybeLocale({contextLanguage: 'ZH_TW', localeOverride: null}),
+      getMaybeLocale({
+        contextLanguage: 'DE',
+        localeOverride: null,
+        uiLocalesOverride: null,
+      }),
+    ).toBe('de');
+    expect(
+      getMaybeLocale({
+        contextLanguage: 'ZH_TW',
+        localeOverride: null,
+        uiLocalesOverride: null,
+      }),
     ).toBe('zh-TW');
   });
 
   it('normalizes localeOverride format', () => {
     // Uppercase to lowercase
-    expect(getMaybeLocale({contextLanguage: null, localeOverride: 'FR'})).toBe(
-      'fr',
-    );
-    expect(getMaybeLocale({contextLanguage: null, localeOverride: 'EN'})).toBe(
-      'en',
-    );
+    expect(
+      getMaybeLocale({
+        contextLanguage: null,
+        localeOverride: 'FR',
+        uiLocalesOverride: null,
+      }),
+    ).toBe('fr');
+    expect(
+      getMaybeLocale({
+        contextLanguage: null,
+        localeOverride: 'EN',
+        uiLocalesOverride: null,
+      }),
+    ).toBe('en');
     // Underscore to hyphen with proper casing
     expect(
-      getMaybeLocale({contextLanguage: null, localeOverride: 'ZH_CN'}),
+      getMaybeLocale({
+        contextLanguage: null,
+        localeOverride: 'ZH_CN',
+        uiLocalesOverride: null,
+      }),
     ).toBe('zh-CN');
     expect(
-      getMaybeLocale({contextLanguage: null, localeOverride: 'PT_BR'}),
+      getMaybeLocale({
+        contextLanguage: null,
+        localeOverride: 'PT_BR',
+        uiLocalesOverride: null,
+      }),
     ).toBe('pt-BR');
     // Already correct format stays the same
     expect(
-      getMaybeLocale({contextLanguage: null, localeOverride: 'zh-CN'}),
+      getMaybeLocale({
+        contextLanguage: null,
+        localeOverride: 'zh-CN',
+        uiLocalesOverride: null,
+      }),
     ).toBe('zh-CN');
     expect(
-      getMaybeLocale({contextLanguage: null, localeOverride: 'pt-BR'}),
+      getMaybeLocale({
+        contextLanguage: null,
+        localeOverride: 'pt-BR',
+        uiLocalesOverride: null,
+      }),
     ).toBe('pt-BR');
+  });
+
+  it('respects priority order: localeOverride > uiLocalesOverride > contextLanguage', () => {
+    // All three provided - localeOverride wins
+    expect(
+      getMaybeLocale({
+        contextLanguage: 'EN',
+        localeOverride: 'fr',
+        uiLocalesOverride: 'DE',
+      }),
+    ).toBe('fr');
+    // Only uiLocalesOverride and contextLanguage - uiLocalesOverride wins
+    expect(
+      getMaybeLocale({
+        contextLanguage: 'EN',
+        localeOverride: null,
+        uiLocalesOverride: 'DE',
+      }),
+    ).toBe('de');
+    // Only contextLanguage - contextLanguage is used
+    expect(
+      getMaybeLocale({
+        contextLanguage: 'EN',
+        localeOverride: null,
+        uiLocalesOverride: null,
+      }),
+    ).toBe('en');
   });
 });
