@@ -1,10 +1,1 @@
-# This file specifies the code owners for the Shopify/hydrogen repository.
-# Code owners are automatically requested for review when someone opens a pull request
-# that modifies code that they own.
-#
-# For more information, see:
-# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
-
-# Default owner for everything in the repo
-# The @Shopify/developer-tools team will be requested for review on all PRs
-* @Shopify/developer-tools
+* @Shopify/developer-platforms
