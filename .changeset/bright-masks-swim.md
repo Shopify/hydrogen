@@ -8,7 +8,12 @@ Adds a new optional `locale` parameter to the `customerAccount.login()` method. 
 
 Supported locale values: `en`, `fr`, `cs`, `da`, `de`, `el`, `es`, `fi`, `hi`, `hr`, `hu`, `id`, `it`, `ja`, `ko`, `lt`, `ms`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`, `ro`, `ru`, `sk`, `sl`, `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`.
 
-The `locale` parameter takes precedence over `uiLocales`. When `locale` is set (either via the `locale` option or derived from the `language` configuration), the `ui_locales` parameter will not be appended to the login URL. The `uiLocales` option will only be used as a fallback when `locale` is not set.
+The locale is determined by the following priority order:
+1. `locale` option (highest priority)
+2. `uiLocales` option
+3. `language` configuration in `createCustomerAccountClient`
+
+All locale sources now produce the `locale` query parameter instead of `ui_locales`.
 
 ### Usage
 
@@ -36,5 +41,5 @@ The locale value is normalized automatically:
 
 ### Migration
 
-This is a non-breaking change. Existing implementations using `uiLocales` will continue to work.
+This is a non-breaking change. Existing implementations using `uiLocales` will continue to work, but the login URL will now use the `locale` parameter instead of `ui_locales`.
 
