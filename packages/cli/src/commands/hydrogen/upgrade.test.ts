@@ -864,7 +864,7 @@ describe('upgrade', async () => {
 
           const output = outputMock.info();
 
-          expect(output).toMatch(/Current: 2025\.5\.0.*Latest: 2025\.7\.0/);
+          expect(output).toMatch(/Current: 2025\.5\.0.*Latest: 2025\.7\.1/);
 
           expect(output).toMatch(/2025\.7\.0/);
 
@@ -906,7 +906,7 @@ describe('upgrade', async () => {
           const lastVersionLine =
             versionLineMatches[versionLineMatches.length - 1];
 
-          expect(firstVersionLine).toContain('2025.7.0');
+          expect(firstVersionLine).toContain('2025.7.1');
           expect(lastVersionLine).toMatch(/2025\.1\.[1-4]/);
         },
         {
