@@ -100,8 +100,8 @@ Hydrogen uses a sophisticated automated release system built on Changesets, GitH
 
 1. **Developer Actions**
    - **Create changesets**: Run `npm run changeset add` for any PR with code changes
-   - **Skeleton changes**: MUST include `@shopify/cli-hydrogen` in the changeset
-     - This ensures the CLI bundles the latest skeleton template
+   - **Skeleton changes**: MUST include all three packages in changeset: `skeleton`, `@shopify/cli-hydrogen`, AND `@shopify/create-hydrogen`
+     - See [Quick Reference: Contributing to Skeleton or CLI](#quick-reference-contributing-to-skeleton-or-cli) for details
      - Without this, new projects will scaffold with outdated templates
    - **Write PR descriptions**: Include clear explanations of changes
    - **Request snapshot builds**: Comment `/snapit` on PR to test changes
@@ -208,37 +208,101 @@ The skeleton template is the default starter template for new Hydrogen projects:
 
 When developers run `npm create @shopify/hydrogen@latest`:
 
-1. **Package Resolution**
-   - npm resolves `@shopify/create-hydrogen` package
-   - This package calls the `hydrogen init` command from `@shopify/cli-hydrogen`
+1. **Default behavior**: Uses the skeleton template bundled inside `@shopify/create-hydrogen`
+   - No network fetch required—the template is pre-bundled at build time
+   - This is why `create-hydrogen` must be bumped when skeleton changes
 
-2. **Template Fetching**
-   - Downloads the latest Hydrogen release tarball from GitHub
-   - Uses GitHub API: `https://api.github.com/repos/shopify/hydrogen/releases/latest`
-   - Extracts the skeleton template from the tarball
-   - Falls back to local template if running within Hydrogen monorepo
+2. **Custom templates** (`--template` flag): Downloads from GitHub
+   - Uses GitHub API to fetch the specified template
+   - Supports community templates and alternative starters
 
-3. **Template Compilation** (during release)
-   - On production releases, templates are compiled to the `dist` branch
-   - Creates both TypeScript (`skeleton-ts`) and JavaScript (`skeleton-js`) versions
-   - The `dist` branch serves as a stable source for templates
+<details>
+<summary>Technical Details: The Bundling Chain</summary>
 
-### Critical: Skeleton Changes Require CLI Updates
+During a Hydrogen release, templates are bundled through this chain:
 
-**When modifying the skeleton template, you MUST**:
-1. Create a changeset that includes BOTH:
-   - The skeleton template changes
-   - A version bump for `@shopify/cli-hydrogen`
-2. This ensures the CLI contains a snapshot of the latest skeleton in its `dist/assets/templates` directory
-3. Without this, newly scaffolded projects will use an outdated skeleton template
+```
+templates/skeleton/
+    ↓ bundled into
+@shopify/cli-hydrogen (dist/assets/templates/)
+    ↓ bundled into
+@shopify/create-hydrogen (bundles cli-hydrogen at build time)
+    ↓ published to npm
+npm create @shopify/hydrogen@latest
+```
 
-**Why this matters**: The `@shopify/cli-hydrogen` package bundles the skeleton template. If you don't bump its version when changing the skeleton, the CLI will continue distributing the old template version.
+The `dist` branch also receives compiled templates for alternative distribution methods.
 
-### CLI Release Coordination (Circular Dependency)
+</details>
 
-The CLI system has an inherent circular dependency that requires careful coordination:
+### Quick Reference: Contributing to Skeleton or CLI
 
-**The Circular Dependency Problem**:
+#### I'm Updating the Skeleton Template
+
+**Required changeset packages:**
+- `skeleton` — the source you changed
+- `@shopify/cli-hydrogen` — bundles skeleton into its dist
+- `@shopify/create-hydrogen` — bundles cli-hydrogen into its dist
+
+⚠️ **Important**: When you run `npm run changeset add`, it only shows packages with
+actual code changes. You must **manually select** cli-hydrogen and create-hydrogen
+even though you didn't change their code. Alternatively, manually add those lines
+to the changeset file after creation.
+
+**Example changeset:**
+```md
+---
+"skeleton": patch
+"@shopify/cli-hydrogen": patch
+"@shopify/create-hydrogen": patch
+---
+
+Update skeleton template with [description of your changes]
+```
+
+**Canonical example**: See [PR #3232](https://github.com/Shopify/hydrogen/pull/3232) for a complete skeleton update with proper changeset.
+
+<details>
+<summary>Why all three packages?</summary>
+
+The skeleton template is bundled through a chain:
+1. `skeleton` → source code lives in `templates/skeleton/`
+2. `@shopify/cli-hydrogen` → copies skeleton to `dist/assets/templates/` during build
+3. `@shopify/create-hydrogen` → bundles cli-hydrogen (and its templates) at build time
+
+If you only bump `skeleton`, the npm packages won't rebuild with your changes.
+If you only bump `cli-hydrogen`, the `create-hydrogen` package won't include the updated CLI.
+All three must be bumped to ensure `npm create @shopify/hydrogen@latest` gets your changes.
+
+</details>
+
+#### I'm Updating the CLI (cli-hydrogen)
+
+**Scenario A: CLI-only change (no scaffolding impact)**
+- Just bump `@shopify/cli-hydrogen`
+- Examples: bug fixes in existing commands, new flags for existing commands
+
+**Scenario B: Change affects newly scaffolded projects**
+- Bump both `@shopify/cli-hydrogen` and `@shopify/create-hydrogen`
+- Examples: new commands users need immediately, changes to init behavior
+
+<details>
+<summary>When does a CLI change affect scaffolding?</summary>
+
+Ask yourself: "If someone scaffolds a new project tomorrow, will they need this change?"
+
+- **Yes** → bump both `cli-hydrogen` and `create-hydrogen`
+- **No** → just bump `cli-hydrogen`
+
+Most CLI changes (bug fixes, improvements to existing commands) don't affect scaffolding.
+New features that users would want in fresh projects do affect scaffolding.
+
+</details>
+
+### Understanding the Circular Dependency
+
+The CLI system has an inherent circular dependency, but it's manageable:
+
 ```
 @shopify/cli-hydrogen (bundles skeleton)
     ↓ is included in
@@ -249,26 +313,27 @@ skeleton template's devDependencies
 @shopify/cli-hydrogen (circular!)
 ```
 
-**Release Process to Handle This**:
+**The circular dependency exists but is manageable:**
 
-1. **First Release**:
-   - Release `@shopify/cli-hydrogen` with new features/fixes
-   - Trigger `@shopify/cli` release to include updated `cli-hydrogen`
-   - Problem: The skeleton bundled in `cli-hydrogen` still references the OLD `@shopify/cli` version
+We break the cycle with a simple rule: skeleton changes → bump all three packages (skeleton, cli-hydrogen, create-hydrogen). This ensures the release includes everything needed.
 
-2. **Second Release Required**:
-   - Update skeleton's `package.json` to use new `@shopify/cli` version
-   - Create another changeset bumping `@shopify/cli-hydrogen`
-   - Release again so future `cli-hydrogen` bundles the updated skeleton
+**Skeleton's CLI Version (Maintenance Note):**
 
-**Example Timeline**:
-- Day 1: Release `@shopify/cli-hydrogen@8.1.0` with new command
-- Day 2: `@shopify/cli@3.80.0` released with updated hydrogen plugin
-- Day 3: Update skeleton to use `@shopify/cli@~3.80.0`
-- Day 4: Release `@shopify/cli-hydrogen@8.1.1` with updated skeleton
-- Result: New projects now have access to the new command
+The skeleton's `@shopify/cli` version should be periodically updated, but:
 
-**Key Takeaways**:
-- This process often requires TWO cli-hydrogen releases for complete updates
-- The circular dependency makes the process complex but is currently unavoidable
-- Always check that skeleton's CLI version matches the features available in cli-hydrogen
+- **Don't create a PR just to bump the CLI version** — this does NOT warrant a new Hydrogen release on its own
+- **Dependabot handles CLI version updates** — Dependabot automatically creates PRs when new `@shopify/cli` versions are available. Review and merge these PRs as part of regular maintenance (they'll be bundled into the next release with other changes)
+- Bumping the CLI version immediately after a cli-hydrogen release is unnecessary
+
+<details>
+<summary>Why CLI version bumps in the skeleton don't need immediate releases</summary>
+
+The CLI is a devDependency, not runtime code. If skeleton was bundled with
+`@shopify/cli@3.80.0` which included `cli-hydrogen@X`, immediately releasing again
+with `@shopify/cli@3.80.1` (containing `cli-hydrogen@X+1`) provides no benefit—
+the skeleton code itself hasn't changed.
+
+Users can update their CLI version after scaffolding. The skeleton's CLI version
+is a starting point, not a strict requirement.
+
+</details>
