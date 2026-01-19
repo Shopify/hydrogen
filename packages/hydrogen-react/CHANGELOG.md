@@ -1,5 +1,14 @@
 # @shopify/hydrogen-react
 
+## 2025.10.0
+
+### Minor Changes
+
+- Add React 19 support while maintaining React 18 compatibility ([#3348](https://github.com/Shopify/hydrogen/pull/3348)) by [@kdaviduik](https://github.com/kdaviduik)
+  - Updated Hydrogen peerDependencies to accept React ^18.3.1 or non-CVE-containing React 19 versions
+
+  Users can now upgrade their Hydrogen projects to React 19 without npm peer dependency conflicts. Existing React 18 projects continue to work without changes.
+
 ## 2025.7.1
 
 ### Patch Changes
