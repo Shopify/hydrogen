@@ -27,4 +27,15 @@ describe('cartDeliveryAddressesUpdateDefault', () => {
     expect(result.cart).toHaveProperty('id', CART_ID);
     expect(result.userErrors?.[0]).toContain(cartFragment);
   });
+
+  it('should erase all addresses when passing an empty array', async () => {
+    const updateDeliveryAddresses = cartDeliveryAddressesUpdateDefault({
+      storefront: mockCreateStorefrontClient(),
+      getCartId: () => CART_ID,
+    });
+
+    const result = await updateDeliveryAddresses([]);
+
+    expect(result.cart).toHaveProperty('id', CART_ID);
+  });
 });
