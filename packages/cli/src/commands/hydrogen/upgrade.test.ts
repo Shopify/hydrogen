@@ -817,7 +817,7 @@ describe('upgrade', async () => {
             dependenciesMeta: {},
             fixes: [],
             features: [],
-            date: '2025-07-01',
+            date: '2025-10-01',
           },
           {
             title: 'Older version',
@@ -907,7 +907,7 @@ describe('upgrade', async () => {
             versionLineMatches[versionLineMatches.length - 1];
 
           expect(firstVersionLine).toContain('2025.7.1');
-          expect(lastVersionLine).toMatch(/2025\.1\.[1-4]/);
+          expect(lastVersionLine).toMatch(/2025\.4\.[1-2]/);
         },
         {
           cleanGitRepo: false,
