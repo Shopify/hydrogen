@@ -249,6 +249,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
           quantity: line.quantity,
           merchandiseId: line.merchandiseId,
           sellingPlanId: line.sellingPlanId,
+          parent: line.parent,
         };
       });
 
