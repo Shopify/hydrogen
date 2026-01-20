@@ -6,6 +6,7 @@ import {AddToCartButton} from './AddToCartButton.js';
 import {getProduct, getVariant} from './ProductProvider.test.helpers.js';
 import {getCartMock} from './CartProvider.test.helpers.js';
 import userEvent from '@testing-library/user-event';
+import {CartLineParentInput} from './storefront-api-types.js';
 
 const mockLinesAdd = vi.fn();
 
@@ -89,6 +90,32 @@ describe('<AddToCartButton/>', () => {
       expect(mockLinesAdd).toHaveBeenCalledWith([
         expect.objectContaining({
           merchandiseId: id,
+        }),
+      ]);
+    });
+
+    it('calls linesAdd with parent when adding a child line item', async () => {
+      const id = '123';
+      const parent: CartLineParentInput = {
+        lineId: 'gid://shopify/CartLine/parent-456',
+      };
+      const user = userEvent.setup();
+
+      render(
+        <MockWrapper>
+          <AddToCartButton variantId={id} parent={parent}>
+            Add warranty
+          </AddToCartButton>
+        </MockWrapper>,
+      );
+
+      await act(async () => await user.click(screen.getByRole('button')));
+
+      expect(mockLinesAdd).toHaveBeenCalledTimes(1);
+      expect(mockLinesAdd).toHaveBeenCalledWith([
+        expect.objectContaining({
+          merchandiseId: id,
+          parent,
         }),
       ]);
     });

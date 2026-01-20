@@ -24,10 +24,7 @@ export type ValidationResult = {
   errors: ValidationError[];
 };
 
-function getYamlNode(
-  yamlPath: string,
-  errorPath: (string | number)[],
-): any {
+function getYamlNode(yamlPath: string, errorPath: (string | number)[]): any {
   try {
     const content = fs.readFileSync(yamlPath, 'utf8');
     const doc = YAML.parseDocument(content, {keepSourceTokens: true});
@@ -41,7 +38,10 @@ function getYamlNode(
 
       if (typeof segment === 'number' && Array.isArray(node?.items)) {
         node = node.items[segment];
-      } else if (typeof segment === 'string' && typeof node?.get === 'function') {
+      } else if (
+        typeof segment === 'string' &&
+        typeof node?.get === 'function'
+      ) {
         node = node.get(segment, true);
       } else {
         return null;
@@ -63,8 +63,7 @@ export function getYamlLineNumber(
     const node = getYamlNode(yamlPath, errorPath);
 
     if (node?.range?.[0] != null) {
-      const lineNumber =
-        content.substring(0, node.range[0]).split('\n').length;
+      const lineNumber = content.substring(0, node.range[0]).split('\n').length;
       return lineNumber;
     }
 
@@ -74,7 +73,10 @@ export function getYamlLineNumber(
   }
 }
 
-function getYamlValue(yamlPath: string, errorPath: (string | number)[]): string | null {
+function getYamlValue(
+  yamlPath: string,
+  errorPath: (string | number)[],
+): string | null {
   try {
     const node = getYamlNode(yamlPath, errorPath);
     if (node == null) return null;
@@ -385,55 +387,67 @@ export function validateRecipe(params: {
     }
 
     const preFlightResults = [
-      ...(recipe ? [
-        validateStepNames(recipe),
-        validateStepDescriptions(recipe),
-        validatePatchFiles(recipeTitle, recipe),
-        validateIngredientFiles(recipeTitle, recipe),
-      ] : []),
+      ...(recipe
+        ? [
+            validateStepNames(recipe),
+            validateStepDescriptions(recipe),
+            validatePatchFiles(recipeTitle, recipe),
+            validateIngredientFiles(recipeTitle, recipe),
+          ]
+        : []),
       validateReadmeExists(recipeTitle),
       validateLlmPromptExists(recipeTitle),
     ];
 
     allErrors.push(...preFlightResults.flatMap((r) => r.errors));
 
-  if (allErrors.length > 0) {
-    const errorsWithLines = allErrors.map((err) => {
-      if (err.lineNumber) return err;
-      if (!err.location) return err;
+    if (allErrors.length > 0) {
+      const errorsWithLines = allErrors.map((err) => {
+        if (err.lineNumber) return err;
+        if (!err.location) return err;
 
-      const pathSegments = err.location
-        .replace(/\[/g, '.')
-        .replace(/\]/g, '')
-        .split('.')
-        .filter(Boolean);
+        const pathSegments = err.location
+          .replace(/\[/g, '.')
+          .replace(/\]/g, '')
+          .split('.')
+          .filter(Boolean);
 
-      const lineNumber = getYamlLineNumber(recipeYamlPath, pathSegments);
-      return {...err, lineNumber: lineNumber ?? undefined};
-    });
+        const lineNumber = getYamlLineNumber(recipeYamlPath, pathSegments);
+        return {...err, lineNumber: lineNumber ?? undefined};
+      });
 
-    printValidationErrors(recipeTitle, errorsWithLines);
-    return false;
-  }
+      printValidationErrors(recipeTitle, errorsWithLines);
+      return false;
+    }
 
-  console.log(`- 🧑‍🍳 Applying recipe '${recipeTitle}'`);
+    console.log(`- 🧑‍🍳 Applying recipe '${recipeTitle}'`);
     applyRecipe({
       recipeTitle,
     });
 
     try {
-      const conflictFiles = execSync(`find ${TEMPLATE_PATH} -name "*.orig" -o -name "*.rej"`, {
-        encoding: 'utf-8',
-        stdio: 'pipe'
-      }).trim().split('\n').filter(Boolean);
+      const conflictFiles = execSync(
+        `find ${TEMPLATE_PATH} -name "*.orig" -o -name "*.rej"`,
+        {
+          encoding: 'utf-8',
+          stdio: 'pipe',
+        },
+      )
+        .trim()
+        .split('\n')
+        .filter(Boolean);
 
       if (conflictFiles.length > 0) {
         console.error(`\n❌ Conflict files detected in template directory:`);
-        conflictFiles.forEach(file => {
+        conflictFiles.forEach((file) => {
           console.error(`   - ${file}`);
         });
-        console.error(`\nThese files will cause TypeScript errors during validation.`);
-        console.error(`Please resolve patch conflicts before running validation.`);
+        console.error(
+          `\nThese files will cause TypeScript errors during validation.`,
+        );
+        console.error(
+          `Please resolve patch conflicts before running validation.`,
+        );
         return false;
       }
     } catch (e) {
