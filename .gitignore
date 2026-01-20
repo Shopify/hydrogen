@@ -148,3 +148,6 @@ examples/express/build
 
 # tsup bundled config files
 **/tsup.config.bundled_*.mjs
+
+# CalVer temp file (created by detect-calver-bump-type.js, consumed by enforce-calver-ci.js)
+.changeset/.calver-bump-type
