@@ -7,6 +7,7 @@ import {
   type BaseButtonProps,
 } from './BaseButton.js';
 import * as React from 'react';
+import {CartLineParentInput} from './storefront-api-types.js';
 
 export interface AddToCartButtonPropsBase {
   /** An array of cart line attributes that belong to the item being added to the cart. */
@@ -20,6 +21,8 @@ export interface AddToCartButtonPropsBase {
   quantity?: number;
   /** The text that is announced by the screen reader when the item is being added to the cart. Used for accessibility purposes only and not displayed on the page. */
   accessibleAddingToCartLabel?: string;
+  /** The parent line item of the item being added to the cart. Used for nested cart lines. */
+  parent?: CartLineParentInput;
   /** The selling plan ID of the subscription variant */
   sellingPlanId?: string;
 }
@@ -43,6 +46,7 @@ export function AddToCartButton<AsType extends React.ElementType = 'button'>(
     onClick,
     children,
     accessibleAddingToCartLabel,
+    parent,
     ...passthroughProps
   } = props;
   const {status, linesAdd} = useCart();
@@ -69,10 +73,11 @@ export function AddToCartButton<AsType extends React.ElementType = 'button'>(
         quantity,
         merchandiseId: variantId || '',
         attributes,
+        parent,
         sellingPlanId,
       },
     ]);
-  }, [linesAdd, quantity, variantId, attributes, sellingPlanId]);
+  }, [linesAdd, quantity, variantId, attributes, sellingPlanId, parent]);
 
   return (
     <>

@@ -54,6 +54,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
         }
       }
     }
+    parentRelationship {
+      parent {
+        id
+      }
+    }
   }
   fragment CartLineComponent on ComponentizableCartLine {
     id
@@ -103,6 +108,9 @@ export const CART_QUERY_FRAGMENT = `#graphql
           value
         }
       }
+    }
+    lineComponents {
+      ...CartLine
     }
   }
   fragment CartApiQuery on Cart {

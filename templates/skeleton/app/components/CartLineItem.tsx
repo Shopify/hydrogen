@@ -1,69 +1,92 @@
 import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
-import type {CartLayout} from '~/components/CartMain';
+import type {CartLayout, LineItemChildrenMap} from '~/components/CartMain';
 import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
 import {Link} from 'react-router';
 import {ProductPrice} from './ProductPrice';
 import {useAside} from './Aside';
-import type {CartApiQueryFragment} from 'storefrontapi.generated';
+import type {
+  CartApiQueryFragment,
+  CartLineFragment,
+} from 'storefrontapi.generated';
 
-type CartLine = OptimisticCartLine<CartApiQueryFragment>;
+export type CartLine = OptimisticCartLine<CartApiQueryFragment>;
 
 /**
  * A single line item in the cart. It displays the product image, title, price.
  * It also provides controls to update the quantity or remove the line item.
+ * If the line is a parent line that has child components (like warranties or gift wrapping), they are
+ * rendered nested below the parent line.
  */
 export function CartLineItem({
   layout,
   line,
+  childrenMap,
 }: {
   layout: CartLayout;
   line: CartLine;
+  childrenMap: LineItemChildrenMap;
 }) {
   const {id, merchandise} = line;
   const {product, title, image, selectedOptions} = merchandise;
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
   const {close} = useAside();
+  const lineItemChildren = childrenMap[id];
 
   return (
     <li key={id} className="cart-line">
-      {image && (
-        <Image
-          alt={title}
-          aspectRatio="1/1"
-          data={image}
-          height={100}
-          loading="lazy"
-          width={100}
-        />
-      )}
+      <div className="cart-line-inner">
+        {image && (
+          <Image
+            alt={title}
+            aspectRatio="1/1"
+            data={image}
+            height={100}
+            loading="lazy"
+            width={100}
+          />
+        )}
 
-      <div>
-        <Link
-          prefetch="intent"
-          to={lineItemUrl}
-          onClick={() => {
-            if (layout === 'aside') {
-              close();
-            }
-          }}
-        >
-          <p>
-            <strong>{product.title}</strong>
-          </p>
-        </Link>
-        <ProductPrice price={line?.cost?.totalAmount} />
-        <ul>
-          {selectedOptions.map((option) => (
-            <li key={option.name}>
-              <small>
-                {option.name}: {option.value}
-              </small>
-            </li>
+        <div>
+          <Link
+            prefetch="intent"
+            to={lineItemUrl}
+            onClick={() => {
+              if (layout === 'aside') {
+                close();
+              }
+            }}
+          >
+            <p>
+              <strong>{product.title}</strong>
+            </p>
+          </Link>
+          <ProductPrice price={line?.cost?.totalAmount} />
+          <ul>
+            {selectedOptions.map((option) => (
+              <li key={option.name}>
+                <small>
+                  {option.name}: {option.value}
+                </small>
+              </li>
+            ))}
+          </ul>
+          <CartLineQuantity line={line} />
+        </div>
+      </div>
+
+      {lineItemChildren ? (
+        <ul className="cart-line-children">
+          {lineItemChildren.map((childLine) => (
+            <CartLineItem
+              childrenMap={childrenMap}
+              key={childLine.id}
+              line={childLine}
+              layout={layout}
+            />
           ))}
         </ul>
-        <CartLineQuantity line={line} />
-      </div>
+      ) : null}
     </li>
   );
 }

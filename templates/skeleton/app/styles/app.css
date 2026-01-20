@@ -250,8 +250,11 @@ button.reset:hover:not(:has(> *)) {
 }
 
 .cart-line {
-  display: flex;
   padding: 0.75rem 0;
+}
+
+.cart-line-inner {
+  display: flex;
 }
 
 .cart-line img {
@@ -275,6 +278,11 @@ button.reset:hover:not(:has(> *)) {
 
 .cart-line-quantity {
   display: flex;
+}
+
+/* Child line components (warranties, gift wrapping, etc.) */
+.cart-line-children {
+  padding-left: 2rem;
 }
 
 .cart-discount {

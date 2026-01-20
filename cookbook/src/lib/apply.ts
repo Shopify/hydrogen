@@ -110,8 +110,8 @@ export function applyRecipe(params: {
 
   // apply the patches to the template directory
   console.log(`- 🥣 Applying steps…`);
-  const conflictFiles: {orig: string[], rej: string[]} = {orig: [], rej: []};
-  
+  const conflictFiles: {orig: string[]; rej: string[]} = {orig: [], rej: []};
+
   for (let i = 0; i < recipe.steps.length; i++) {
     const step = recipe.steps[i];
     if (step.diffs == null || step.diffs.length === 0) {
@@ -122,31 +122,40 @@ export function applyRecipe(params: {
       console.log(`  - 🩹 Patching ${diff.file} with ${diff.patchFile}…`);
       const patchPath = path.join(recipeDir, 'patches', diff.patchFile);
       const destPath = path.join(TEMPLATE_PATH, diff.file);
-      
+
       try {
         execSync(`patch '${destPath}' '${patchPath}'`, {stdio: 'inherit'});
       } catch (error) {
-        console.error(`  ⚠️  Patch command failed or returned non-zero exit code`);
+        console.error(
+          `  ⚠️  Patch command failed or returned non-zero exit code`,
+        );
       }
-      
+
       // Check for conflict files
       const origPath = `${destPath}.orig`;
       const rejPath = `${destPath}.rej`;
-      
+
       if (fs.existsSync(origPath)) {
         console.error(`  ⚠️  Backup file created: ${path.basename(origPath)}`);
         conflictFiles.orig.push(origPath);
       }
-      
+
       if (fs.existsSync(rejPath)) {
         console.error(`  ❌ Patch rejected: ${path.basename(rejPath)}`);
         conflictFiles.rej.push(rejPath);
-        
+
         // Show the contents of the .rej file to help with debugging
         try {
           const rejContent = fs.readFileSync(rejPath, 'utf-8');
-          console.error(`\n  === Rejected hunks from ${path.basename(diff.file)} ===`);
-          console.error(rejContent.split('\n').map(line => `  | ${line}`).join('\n'));
+          console.error(
+            `\n  === Rejected hunks from ${path.basename(diff.file)} ===`,
+          );
+          console.error(
+            rejContent
+              .split('\n')
+              .map((line) => `  | ${line}`)
+              .join('\n'),
+          );
           console.error(`  === End rejected hunks ===\n`);
         } catch (e) {
           // Ignore if we can't read the file
@@ -154,34 +163,44 @@ export function applyRecipe(params: {
       }
     }
   }
-  
+
   if (conflictFiles.orig.length > 0 || conflictFiles.rej.length > 0) {
     console.error(`\n❌ PATCH CONFLICTS DETECTED!\n`);
-    
+
     if (conflictFiles.orig.length > 0) {
       console.error(`📝 Backup files created (.orig):`);
-      console.error(`   These indicate patches that applied with offset or fuzz.`);
-      conflictFiles.orig.forEach(file => {
+      console.error(
+        `   These indicate patches that applied with offset or fuzz.`,
+      );
+      conflictFiles.orig.forEach((file) => {
         console.error(`   - ${file}`);
       });
       console.error('');
     }
-    
+
     if (conflictFiles.rej.length > 0) {
       console.error(`🚫 Rejected patches (.rej):`);
-      console.error(`   These patches could not be applied to the current code.`);
-      conflictFiles.rej.forEach(file => {
+      console.error(
+        `   These patches could not be applied to the current code.`,
+      );
+      conflictFiles.rej.forEach((file) => {
         console.error(`   - ${file}`);
       });
       console.error('');
     }
-    
+
     console.error(`📋 To resolve:`);
-    console.error(`   1. Review the .orig and .rej files to understand the conflicts`);
+    console.error(
+      `   1. Review the .orig and .rej files to understand the conflicts`,
+    );
     console.error(`   2. Manually apply the necessary changes`);
     console.error(`   3. Delete the .orig and .rej files when resolved`);
-    console.error(`   4. Consider regenerating the recipe patches if the codebase has changed significantly`);
-    
-    throw new Error('Patch conflicts detected. Please resolve conflicts before proceeding.');
+    console.error(
+      `   4. Consider regenerating the recipe patches if the codebase has changed significantly`,
+    );
+
+    throw new Error(
+      'Patch conflicts detected. Please resolve conflicts before proceeding.',
+    );
   }
 }
