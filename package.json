@@ -108,7 +108,7 @@
     "zod-to-json-schema": "^3.24.6"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.19.0"
   },
   "gitHooks": {
     "pre-commit": "lint-staged && npm run pre-commit:encrypt"
@@ -130,7 +130,8 @@
   },
   "overrides": {
     "@oclif/core": "3.26.5",
-    "@shopify/cli-kit": "3.80.4"
+    "@shopify/cli-kit": "3.80.4",
+    "vite": "^7.0.0"
   },
   "optionalDependencies": {
     "@ast-grep/napi-linux-x64-gnu": "0.34.1",
