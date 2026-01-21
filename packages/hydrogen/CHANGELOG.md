@@ -1,5 +1,80 @@
 # @shopify/hydrogen
 
+## 2025.7.3
+
+### Minor Changes
+
+- Add React 19 support while maintaining React 18 compatibility ([#3391](https://github.com/Shopify/hydrogen/pull/3391)) by [@kdaviduik](https://github.com/kdaviduik)
+  - Updated Hydrogen peerDependencies to accept React ^18.3.1 or non-CVE-containing React 19 versions
+
+  Users can now upgrade their Hydrogen projects to React 19 without npm peer dependency conflicts. Existing React 18 projects continue to work without changes.
+
+### Patch Changes
+
+- Add `locale` parameter to Customer Account login ([#3391](https://github.com/Shopify/hydrogen/pull/3391)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  Adds a new optional `locale` parameter to the `customerAccount.login()` method. This parameter sets the `locale` query parameter on the OAuth authorization URL to control the language of the login page.
+
+  Supported locale values: `en`, `fr`, `cs`, `da`, `de`, `el`, `es`, `fi`, `hi`, `hr`, `hu`, `id`, `it`, `ja`, `ko`, `lt`, `ms`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`, `ro`, `ru`, `sk`, `sl`, `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`.
+
+  The locale is determined by the following priority order:
+  1. `locale` option (highest priority)
+  2. `uiLocales` option
+  3. `language` configuration in `createCustomerAccountClient`
+
+  All locale sources now produce the `locale` query parameter instead of `ui_locales`.
+
+  ### Usage
+
+  ```tsx
+  // Using locale option directly
+  await context.customerAccount.login({
+    locale: 'fr',
+  });
+
+  // Using locale with regional variant
+  await context.customerAccount.login({
+    locale: 'zh-CN',
+  });
+
+  // locale takes precedence over uiLocales
+  await context.customerAccount.login({
+    locale: 'de',
+    uiLocales: 'FR', // This will be ignored
+  });
+  ```
+
+  The locale value is normalized automatically:
+  - Lowercase languages: `'FR'` → `'fr'`
+  - Regional variants: `'ZH_CN'` or `'zh-cn'` → `'zh-CN'`
+
+  ### Migration
+
+  This is a non-breaking change. Existing implementations using `uiLocales` will continue to work, but the login URL will now use the `locale` parameter instead of `ui_locales`.
+
+- Add `loginHintMode` parameter to Customer Account login ([#3391](https://github.com/Shopify/hydrogen/pull/3391)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  Adds a new optional `loginHintMode` parameter to the `customerAccount.login()` method. When provided along with `loginHint`, it's passed as the `login_hint_mode` query parameter to the OAuth authorization URL. The only supported value is `'submit'`. This parameter is ignored if `loginHint` is not provided.
+
+  When set to `'submit'` along with `loginHint`, the login form will automatically submit with the provided email, skipping the email input step.
+
+  ### Usage
+
+  ```tsx
+  // Auto-submit with a known email
+  await context.customerAccount.login({
+    loginHint: 'customer@example.com',
+    loginHintMode: 'submit',
+  });
+  ```
+
+  ### Migration
+
+  This is a non-breaking change. The parameter is optional and existing implementations will continue to work without modification.
+
+- Updated dependencies [[`7c077f5f21a595c0355873ac8073b716dfeaf4d0`](https://github.com/Shopify/hydrogen/commit/7c077f5f21a595c0355873ac8073b716dfeaf4d0)]:
+  - @shopify/hydrogen-react@2025.8.0
+
 ## 2025.7.2
 
 ### Patch Changes
