@@ -23,6 +23,39 @@ const {
   readPackage,
   writePackage,
 } = require('./calver-shared.js');
+const {CALVER_BUMP_FILE} = require('./detect-calver-bump-type.js');
+
+/**
+ * Reads the pre-computed CalVer bump type from the temp file.
+ * This file is created by detect-calver-bump-type.js BEFORE changeset version runs.
+ *
+ * Returns 'major', 'patch', or null if no CalVer changesets were detected.
+ */
+function readPreComputedBumpType() {
+  try {
+    if (fs.existsSync(CALVER_BUMP_FILE)) {
+      const bumpType = fs.readFileSync(CALVER_BUMP_FILE, 'utf-8').trim();
+      console.log(`Pre-computed CalVer bump type: ${bumpType}`);
+      return bumpType;
+    }
+  } catch (error) {
+    console.log(`Could not read pre-computed bump type: ${error.message}`);
+  }
+  return null;
+}
+
+/**
+ * Cleans up the temp file after use.
+ */
+function cleanupBumpTypeFile() {
+  try {
+    if (fs.existsSync(CALVER_BUMP_FILE)) {
+      fs.unlinkSync(CALVER_BUMP_FILE);
+    }
+  } catch (error) {
+    // Ignore cleanup errors
+  }
+}
 
 // Read all package.json files for CalVer packages
 // Fetches individual git baselines for independent patch versioning
@@ -91,33 +124,54 @@ function readPackageVersions() {
 }
 
 // Calculate new CalVer versions based on changeset bumps
-function calculateNewVersions(versions) {
+// preComputedBumpType: The bump type detected from changesets BEFORE they were consumed.
+//   - 'major' means at least one CalVer package had a major changeset
+//   - 'patch' means changesets were minor or patch (both treated the same in CalVer)
+//   - null means no CalVer changesets were found (fallback to version comparison)
+function calculateNewVersions(versions, preComputedBumpType) {
   const updates = [];
-  let hasAnyMajor = false;
 
-  // First pass: determine if any package needs major bump
-  for (const [pkgName, data] of Object.entries(versions)) {
-    const bumpType = getBumpType(data.oldVersion, data.pkg.version);
-    if (bumpType === 'major') {
-      hasAnyMajor = true;
-      break;
-    }
+  // Use pre-computed bump type to determine if this is a major release.
+  // This fixes the bug where `getBumpType()` incorrectly infers 'major' when
+  // changesets does a semver minor bump (e.g., 2025.7.2 → 2025.8.0).
+  const hasAnyMajor = preComputedBumpType === 'major';
+
+  if (preComputedBumpType) {
+    console.log(
+      `Using pre-computed bump type: ${preComputedBumpType} (hasAnyMajor=${hasAnyMajor})`,
+    );
+  } else {
+    console.log(
+      'No pre-computed bump type found, falling back to version comparison',
+    );
   }
 
-  // Second pass: calculate new versions
   for (const [pkgName, data] of Object.entries(versions)) {
-    const bumpType = getBumpType(data.oldVersion, data.pkg.version);
+    // Determine if this package was changed by changesets
+    const wasChanged = data.pkg.version !== data.oldVersion;
+
+    // For the bump type used in versioning, prefer the pre-computed type
+    // since version comparison is unreliable after changesets runs
+    let effectiveBumpType;
+    if (!wasChanged) {
+      effectiveBumpType = null;
+    } else if (preComputedBumpType) {
+      effectiveBumpType = preComputedBumpType;
+    } else {
+      effectiveBumpType = getBumpType(data.oldVersion, data.pkg.version);
+    }
 
     let newVersion;
     if (hasAnyMajor) {
       // Major: Sync all CalVer packages to same quarter using hydrogen's baseline
       newVersion = getNextVersion(data.hydrogenBaseline, 'major');
-    } else if (data.pkg.version === data.oldVersion) {
+    } else if (!wasChanged) {
       // No change: Keep current version (don't bump unchanged packages)
       newVersion = data.pkg.version;
     } else {
       // Patch/minor: Independent versioning using package's own baseline
-      newVersion = getNextVersion(data.oldVersion, bumpType);
+      // Both 'minor' and 'patch' result in incrementing within the quarter
+      newVersion = getNextVersion(data.oldVersion, 'patch');
     }
 
     updates.push({
@@ -125,7 +179,7 @@ function calculateNewVersions(versions) {
       path: data.path,
       pkg: data.pkg,
       oldVersion: data.oldVersion,
-      bumpType,
+      bumpType: effectiveBumpType,
       newVersion,
     });
   }
@@ -261,6 +315,10 @@ function validateCalVer(version) {
 
 // Main execution
 function main() {
+  // Read the pre-computed bump type FIRST (before any other processing)
+  // This file was created by detect-calver-bump-type.js before changesets ran
+  const preComputedBumpType = readPreComputedBumpType();
+
   // Get versions: oldVersion from git baseline, pkg.version from current state
   const versions = readPackageVersions();
 
@@ -279,13 +337,14 @@ function main() {
       'No CalVer package changes detected. Skipping CalVer enforcement.',
     );
     console.log('This is a semver-only release.');
+    cleanupBumpTypeFile();
     return;
   }
 
   console.log('Starting CalVer enforcement...\n');
 
-  // Calculate new CalVer versions
-  const updates = calculateNewVersions(versions);
+  // Calculate new CalVer versions using the pre-computed bump type
+  const updates = calculateNewVersions(versions, preComputedBumpType);
 
   // Validate all new versions
   for (const update of updates) {
@@ -300,6 +359,9 @@ function main() {
 
   // Update internal dependencies
   updateInternalDependencies(updates);
+
+  // Clean up the temp file
+  cleanupBumpTypeFile();
 
   console.log('\nCalVer enforcement complete ✅');
 }
