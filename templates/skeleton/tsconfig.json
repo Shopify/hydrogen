@@ -32,7 +32,9 @@
       "vite/client"
     ],
     "paths": {
-      "~/*": ["app/*"]
+      "~/*": ["app/*"],
+      "@shopify/hydrogen": ["../../packages/hydrogen/src"],
+      "@shopify/hydrogen/*": ["../../packages/hydrogen/src/*"]
     },
     "noEmit": true,
     "rootDirs": [".", "./.react-router/types"],
