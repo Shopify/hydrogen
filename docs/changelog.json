@@ -3,6 +3,33 @@
   "version": "1",
   "releases": [
     {
+      "title": "Customer account authentication enhancements and build fixes",
+      "version": "2025.7.2",
+      "date": "2026-01-13",
+      "hash": "bc50a2d8e0c03c62dde1980de87502efb8dd2a44",
+      "commit": "https://github.com/Shopify/hydrogen/pull/3361/commits/bc50a2d8e0c03c62dde1980de87502efb8dd2a44",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3361",
+      "dependencies": {
+        "@shopify/hydrogen": "2025.7.2"
+      },
+      "fixes": [
+        {
+          "title": "Fix build failures in Cloudflare Workers and Mini-Oxygen environments",
+          "info": "Resolved build failures caused by Node.js-specific imports in the virtual routes module. Builds now succeed in Cloudflare Workers and Mini-Oxygen environments.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3267",
+          "id": "3267"
+        }
+      ],
+      "features": [
+        {
+          "title": "Add authentication control parameters to customer account login",
+          "info": "Added two new optional parameters to the `customerAccount.login()` method:\n\n- `acrValues`: Specifies Authentication Context Class Reference values for requesting specific authentication methods or identity providers (e.g., `'provider:google'` for social login)\n- `loginHint`: Pre-populates the login form with an email address to streamline the login experience\n\nBoth parameters are optional and non-breaking. Existing implementations continue to work without modification.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3363",
+          "id": "3363"
+        }
+      ]
+    },
+    {
       "title": "New Shopify cookie system, React Router 7.12, and analytics improvements",
       "version": "2025.7.1",
       "date": "2026-01-08",
