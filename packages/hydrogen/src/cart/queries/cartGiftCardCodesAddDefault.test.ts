@@ -1,3 +1,8 @@
+/**
+ * TODO: These tests are placeholders that verify mock returns, not actual API behavior.
+ * They should be improved in a follow-up PR to test real integration scenarios.
+ * See PR #3284 for context.
+ */
 import {describe, it, expect} from 'vitest';
 import {CART_ID, mockCreateStorefrontClient} from '../cart-test-helper';
 import {

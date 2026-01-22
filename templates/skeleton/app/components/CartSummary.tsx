@@ -196,37 +196,6 @@ function AddGiftCardForm({
   );
 }
 
-function UpdateGiftCardForm({
-  giftCardCodes,
-  saveAppliedCode,
-  fetcherKey,
-  children,
-}: {
-  giftCardCodes?: string[];
-  saveAppliedCode?: (code: string) => void;
-  fetcherKey?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <CartForm
-      fetcherKey={fetcherKey}
-      route="/cart"
-      action={CartForm.ACTIONS.GiftCardCodesUpdate}
-      inputs={{
-        giftCardCodes: giftCardCodes || [],
-      }}
-    >
-      {(fetcher: FetcherWithComponents<any>) => {
-        const code = fetcher.formData?.get('giftCardCode');
-        if (code && saveAppliedCode) {
-          saveAppliedCode(code as string);
-        }
-        return children;
-      }}
-    </CartForm>
-  );
-}
-
 function RemoveGiftCardForm({
   giftCardId,
   children,

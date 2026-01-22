@@ -26,7 +26,7 @@ const data: ReferenceEntityTemplateSchema = {
     'Creates a function that adds gift card codes to a cart without replacing existing ones',
   type: 'utility',
   defaultExample: {
-    description: 'This is the default example',
+    description: 'Add gift card codes to a cart using the default cart fragment',
     codeblock: {
       tabs: [
         {
