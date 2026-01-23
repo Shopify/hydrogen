@@ -87,6 +87,7 @@ describe('<CartForm />', () => {
       DeliveryAddressesRemove: 'DeliveryAddressesRemove',
       DiscountCodesUpdate: 'DiscountCodesUpdate',
       GiftCardCodesUpdate: 'GiftCardCodesUpdate',
+      GiftCardCodesAdd: 'GiftCardCodesAdd',
       GiftCardCodesRemove: 'GiftCardCodesRemove',
       LinesAdd: 'LinesAdd',
       LinesUpdate: 'LinesUpdate',
