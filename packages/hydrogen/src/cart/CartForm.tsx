@@ -245,6 +245,20 @@ type CartDeliveryAddressesUpdateRequire = {
   } & OtherFormData;
 };
 
+type CartDeliveryAddressesReplaceProps = {
+  action: 'DeliveryAddressesReplace';
+  inputs?: {
+    addresses: Array<CartSelectableAddressInput>;
+  } & OtherFormData;
+};
+
+type CartDeliveryAddressesReplaceRequire = {
+  action: 'DeliveryAddressesReplace';
+  inputs: {
+    addresses: Array<CartSelectableAddressInput>;
+  } & OtherFormData;
+};
+
 type CartCustomProps = {
   action: `Custom${string}`;
   inputs?: Record<string, unknown>;
@@ -289,6 +303,7 @@ type CartActionInputProps =
   | CartDeliveryAddressesAddProps
   | CartDeliveryAddressesRemoveProps
   | CartDeliveryAddressesUpdateProps
+  | CartDeliveryAddressesReplaceProps
   | CartCustomProps;
 
 export type CartActionInput =
@@ -308,6 +323,7 @@ export type CartActionInput =
   | CartDeliveryAddressesAddRequire
   | CartDeliveryAddressesRemoveRequire
   | CartDeliveryAddressesUpdateRequire
+  | CartDeliveryAddressesReplaceRequire
   | CartCustomRequire;
 
 type CartFormProps = CartActionInputProps & CartFormCommonProps;
@@ -356,6 +372,7 @@ CartForm.ACTIONS = {
   DeliveryAddressesAdd: 'DeliveryAddressesAdd',
   DeliveryAddressesUpdate: 'DeliveryAddressesUpdate',
   DeliveryAddressesRemove: 'DeliveryAddressesRemove',
+  DeliveryAddressesReplace: 'DeliveryAddressesReplace',
 } as const;
 
 function getFormInput(formData: FormData): CartActionInput {
