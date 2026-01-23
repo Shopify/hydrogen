@@ -65,6 +65,10 @@ import {
   type CartDeliveryAddressesUpdateFunction,
   cartDeliveryAddressesUpdateDefault,
 } from './queries/cartDeliveryAddressesUpdateDefault';
+import {
+  type CartDeliveryAddressesReplaceFunction,
+  cartDeliveryAddressesReplaceDefault,
+} from './queries/cartDeliveryAddressesReplaceDefault';
 import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
 
 export type CartHandlerOptions = {
@@ -179,6 +183,32 @@ export type HydrogenCart = {
   */
   updateDeliveryAddresses: ReturnType<
     typeof cartDeliveryAddressesUpdateDefault
+  >;
+  /**
+   * Replaces all delivery addresses on the cart.
+   *
+   * This function sends a mutation to the storefront API to replace all delivery addresses on the cart
+   * with the provided addresses. It returns the result of the mutation, including any errors that occurred.
+   *
+   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
+   * @returns {CartDeliveryAddressesReplaceFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
+   *
+   * @example
+   * const result = await cart.replaceDeliveryAddresses([
+   *   {
+   *     address: {
+   *       deliveryAddress: {
+   *         address1: '123 Main St',
+   *         city: 'Anytown',
+   *         countryCode: 'US'
+   *       }
+   *     },
+   *     selected: true
+   *   }
+   * ], { someOptionalParam: 'value' });
+   */
+  replaceDeliveryAddresses: ReturnType<
+    typeof cartDeliveryAddressesReplaceDefault
   >;
 };
 
@@ -310,6 +340,8 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     addDeliveryAddresses: cartDeliveryAddressesAddDefault(mutateOptions),
     removeDeliveryAddresses: cartDeliveryAddressesRemoveDefault(mutateOptions),
     updateDeliveryAddresses: cartDeliveryAddressesUpdateDefault(mutateOptions),
+    replaceDeliveryAddresses:
+      cartDeliveryAddressesReplaceDefault(mutateOptions),
   };
 
   if ('customMethods' in options) {
@@ -408,6 +440,10 @@ export type HydrogenCartForDocs = {
    * Update cart delivery addresses.
    */
   updateDeliveryAddresses?: CartDeliveryAddressesUpdateFunction;
+  /**
+   * Replace all delivery addresses on the cart.
+   */
+  replaceDeliveryAddresses?: CartDeliveryAddressesReplaceFunction;
   /**
    * Updates additional information (attributes) in the cart.
    */
