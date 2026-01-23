@@ -1,4 +1,5 @@
 import type {
+  Article,
   Collection,
   CurrencyCode,
   GenericFile,
@@ -44,6 +45,7 @@ export function parseMetafield<ReturnGeneric>(
         parsedValue: metafield.value === 'true',
       } as ReturnGeneric;
 
+    case 'article_reference':
     case 'collection_reference':
     case 'file_reference':
     case 'page_reference':
@@ -156,6 +158,7 @@ export function parseMetafield<ReturnGeneric>(
         parsedValue: Number(metafield.value),
       } as ReturnGeneric;
 
+    case 'list.article_reference':
     case 'list.collection_reference':
     case 'list.file_reference':
     case 'list.page_reference':
@@ -197,6 +200,7 @@ export function parseJSON(json: string): unknown {
 
 // taken from https://shopify.dev/apps/metafields/types
 export const allMetafieldTypesArray = [
+  'article_reference',
   'boolean',
   'collection_reference',
   'color',
@@ -219,6 +223,7 @@ export const allMetafieldTypesArray = [
   'volume',
   'weight',
   // list metafields
+  'list.article_reference',
   'list.collection_reference',
   'list.color',
   'list.date',
@@ -250,6 +255,8 @@ export type MetafieldTypeTypes = (typeof allMetafieldTypesArray)[number];
  * `parsedMetafield.parsedValue`'s type is now `boolean`
  */
 export type ParsedMetafields<ExtraTypeGeneric = void> = {
+  /** A Metafield that's been parsed, with a `parsedValue` of an `Article` object (as defined by the Storefront API) */
+  article_reference: Simplify<ArticleParsedRefMetafield>;
   /** A Metafield that's been parsed, with a `parsedValue` of `boolean` */
   boolean: Simplify<BooleanParsedMetafield>;
   /** A Metafield that's been parsed, with a `parsedValue` of a `Collection` object (as defined by the Storefront API) */
@@ -299,6 +306,8 @@ export type ParsedMetafields<ExtraTypeGeneric = void> = {
   /** A Metafield that's been parsed, with a `parsedValue` of type `Measurement` */
   weight: Simplify<MeasurementParsedMetafield>;
   // list metafields
+  /** A Metafield that's been parsed, with a `parsedValue` of an array of `Article` objects (as defined by the Storefront API) */
+  'list.article_reference': Simplify<ArticleListParsedRefMetafield>;
   /** A Metafield that's been parsed, with a `parsedValue` of an array of `Collection` objects (as defined by the Storefront API) */
   'list.collection_reference': Simplify<CollectionListParsedRefMetafield>;
   /** A Metafield that's been parsed, with a `parsedValue` of an array of strings */
@@ -385,6 +394,11 @@ type NumberParsedMetafield = MetafieldBaseType & {
   parsedValue: number | null;
 };
 
+type ArticleParsedRefMetafield = MetafieldBaseType & {
+  type: 'article_reference';
+  parsedValue: Article | null;
+};
+
 type PageParsedRefMetafield = MetafieldBaseType & {
   type: 'page_reference';
   parsedValue: Page | null;
@@ -408,6 +422,11 @@ type RichTextParsedMetafield = MetafieldBaseType & {
 type VariantParsedRefMetafield = MetafieldBaseType & {
   type: 'variant_reference';
   parsedValue: ProductVariant | null;
+};
+
+type ArticleListParsedRefMetafield = MetafieldBaseType & {
+  type: 'list.article_reference';
+  parsedValue: Array<Article> | null;
 };
 
 type CollectionListParsedRefMetafield = MetafieldBaseType & {
