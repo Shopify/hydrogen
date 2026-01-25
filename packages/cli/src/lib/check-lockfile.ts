@@ -29,12 +29,17 @@ function missingLockfileWarning(shouldExit: boolean) {
   }
 }
 
+interface FoundPackageManager {
+  packageManager: PackageManager;
+  foundLockfile: string;
+}
+
 function multipleLockfilesWarning(
-  packageManagers: PackageManager[],
+  foundManagers: FoundPackageManager[],
   shouldExit: boolean,
 ) {
-  const lockfileList = packageManagers.map(({name, lockfile}) => {
-    return `${lockfile} (created by ${name})`;
+  const lockfileList = foundManagers.map(({packageManager, foundLockfile}) => {
+    return `${foundLockfile} (created by ${packageManager.name})`;
   });
 
   const headline = 'Multiple lockfiles found';
@@ -76,22 +81,29 @@ export async function checkLockfileStatus(
 ) {
   if (isHydrogenMonorepo && !process.env.SHOPIFY_UNIT_TEST) return;
 
-  const foundPackageManagers: PackageManager[] = [];
+  const foundManagers: FoundPackageManager[] = [];
   for (const packageManager of packageManagers) {
-    if (await fileExists(resolvePath(directory, packageManager.lockfile))) {
-      foundPackageManagers.push(packageManager);
+    const allLockfiles = [
+      packageManager.lockfile,
+      ...(packageManager.alternativeLockfiles || []),
+    ];
+    for (const lockfile of allLockfiles) {
+      if (await fileExists(resolvePath(directory, lockfile))) {
+        foundManagers.push({packageManager, foundLockfile: lockfile});
+        break;
+      }
     }
   }
 
-  if (foundPackageManagers.length === 0) {
+  if (foundManagers.length === 0) {
     return missingLockfileWarning(shouldExit);
   }
 
-  if (foundPackageManagers.length > 1) {
-    return multipleLockfilesWarning(foundPackageManagers, shouldExit);
+  if (foundManagers.length > 1) {
+    return multipleLockfilesWarning(foundManagers, shouldExit);
   }
 
-  const lockfile = foundPackageManagers[0]!.lockfile;
+  const lockfile = foundManagers[0]!.foundLockfile;
   const ignoredLockfile = await checkIfIgnoredInGitRepository(directory, [
     lockfile,
   ]).catch(() => {

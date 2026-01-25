@@ -33,6 +33,26 @@ describe('checkLockfileStatus()', () => {
       });
     });
 
+    it('detects bun.lock (text-based lockfile)', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await writeFile(joinPath(tmpDir, 'bun.lock'), '');
+
+        await checkLockfileStatus(tmpDir);
+
+        expect(outputMock.warn()).toBe('');
+      });
+    });
+
+    it('detects bun.lockb (binary lockfile)', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await writeFile(joinPath(tmpDir, 'bun.lockb'), '');
+
+        await checkLockfileStatus(tmpDir);
+
+        expect(outputMock.warn()).toBe('');
+      });
+    });
+
     describe('and it is being ignored by Git', () => {
       beforeEach(() => {
         vi.mocked(checkIgnoreMock).mockResolvedValue(['package-lock.json']);
