@@ -23,6 +23,7 @@ const TEST_STORE_KEYS = [
   'defaultConsentAllowed_cookiesEnabled',
   'defaultConsentDisallowed_cookiesDisabled',
   'defaultConsentAllowed_cookiesDisabled',
+  'hydrogenPreviewStorefront',
 ] as const;
 
 type TestStoreKey = (typeof TEST_STORE_KEYS)[number];
