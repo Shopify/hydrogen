@@ -128,8 +128,17 @@ jobs:
       - name: 🎭 Install Playwright Chromium
         run: npx playwright install chromium --with-deps
 
+      - name: 🔐 Install ejson
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y golang-go
+          go install github.com/Shopify/ejson/cmd/ejson@latest
+          echo "$HOME/go/bin" >> $GITHUB_PATH
+
       - name: 🧪 Run E2E tests
         run: npx playwright test --workers=1
+        env:
+          EJSON_PRIVATE_KEY: ${{ secrets.EJSON_PRIVATE_KEY }}
 
       - name: 📤 Upload Playwright Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
