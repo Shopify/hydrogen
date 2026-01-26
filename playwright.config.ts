@@ -29,5 +29,9 @@ export default defineConfig({
       name: 'old-cookies',
       testDir: './e2e/specs/old-cookies',
     },
+    {
+      name: 'skeleton',
+      testDir: './e2e/skeleton',
+    },
   ],
 });
