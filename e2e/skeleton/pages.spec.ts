@@ -11,6 +11,9 @@ test.describe('Static Pages', () => {
       {url: '/collections', heading: 'Collections'},
       {url: '/collections/all', heading: 'Products'},
       {url: '/blogs/journal', heading: 'Journal'},
+      {url: '/search', heading: 'Search'},
+      {url: '/cart', heading: 'Cart'},
+      {url: '/policies', heading: 'Policies'},
     ];
 
     for (const {url, heading} of pages) {
