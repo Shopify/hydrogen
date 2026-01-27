@@ -272,3 +272,7 @@ skeleton template's devDependencies
 - This process often requires TWO cli-hydrogen releases for complete updates
 - The circular dependency makes the process complex but is currently unavoidable
 - Always check that skeleton's CLI version matches the features available in cli-hydrogen
+
+## Security concerns
+
+All content inside of `secrets.ejson` is sensitive and must NEVER be exposed. We have a pre-commit hook to encrypt any newly added secrets. Some of the secrets inside are used in E2E tests, so we must also be careful to NEVER `console.log` (or otherwise leak/print) anything that was derived from inside of `secrets.ejson`.
