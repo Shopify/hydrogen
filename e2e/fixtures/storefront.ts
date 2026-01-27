@@ -481,13 +481,11 @@ export class StorefrontPage {
     const cartDrawer = this.page.locator('.overlay.expanded');
     await expect(cartDrawer).toBeVisible({timeout: 5000});
 
-    // Wait for checkout link to appear in the drawer (needs cart mutation response)
+    // Wait for checkout link to appear in the drawer (proves cart mutation completed)
     const checkoutLink = this.page.locator(
       '.overlay.expanded a[href*="checkout"], .overlay.expanded a[href*="/cart/c/"]',
     );
     await expect(checkoutLink).toBeVisible({timeout: 10000});
-
-    await this.page.waitForLoadState('networkidle');
   }
 
   /**
@@ -582,13 +580,15 @@ export class StorefrontPage {
     );
     if (await closeButton.isVisible().catch(() => false)) {
       await closeButton.click();
-      await this.page.waitForTimeout(300);
+      // Wait for overlay to actually close rather than magic timeout
+      await expect(closeButton).not.toBeVisible({timeout: 5000});
     }
 
-    // Navigate directly to cart page
+    // Navigate directly to cart page and wait for page content
     await this.page.goto('/cart');
-    await this.page.waitForLoadState('networkidle');
-    await this.page.waitForLoadState('networkidle');
+    // Wait for Cart heading to be visible (unambiguous indicator page loaded)
+    const cartHeading = this.page.locator('h1:has-text("Cart")');
+    await expect(cartHeading).toBeVisible({timeout: 10000});
   }
 
   /**
@@ -829,5 +829,290 @@ export class StorefrontPage {
         body,
       });
     });
+  }
+
+  // ─────────────────────────────────────────────────
+  // Gift Card Helper Methods
+  // ─────────────────────────────────────────────────
+
+  /**
+   * Apply a gift card code to the cart.
+   * Uses 3-phase waiting to prevent race conditions:
+   * 1. Wait for the specific cart API response (not just networkidle)
+   * 2. Wait for input to clear (indicates response arrived)
+   * 3. Wait for the card to appear in applied list
+   *
+   * @returns The last 4 characters (uppercase) and amount applied
+   */
+  async applyGiftCard(
+    code: string,
+  ): Promise<{lastChars: string; amount: string}> {
+    // Use :visible filter to target only the visible input (cart page, not drawer)
+    const input = this.page.locator('input[name="giftCardCode"]:visible');
+    const applyButton = this.page.locator(
+      'input[name="giftCardCode"]:visible ~ button[type="submit"]',
+    );
+
+    await expect(input).toBeVisible({timeout: 5000});
+    await input.fill(code);
+
+    // Phase 1: Wait for the specific cart API response (more reliable than networkidle)
+    const responsePromise = this.page.waitForResponse(
+      (response) =>
+        response.url().includes('/cart') &&
+        response.request().method() === 'POST',
+      {timeout: 15000},
+    );
+    await applyButton.click();
+    await responsePromise;
+
+    // Phase 2: Wait for input to clear (indicates fetcher.data arrived and component re-rendered)
+    await expect(input).toHaveValue('', {timeout: 10000});
+
+    // Phase 3: Wait for the card to appear in applied list
+    const lastChars = code.slice(-4).toUpperCase();
+    await this.expectGiftCardApplied(lastChars);
+
+    // Get the amount for the newly applied card
+    const amount = await this.getAppliedCardAmount(lastChars);
+
+    return {lastChars, amount};
+  }
+
+  /**
+   * Remove a specific gift card by its last 4 characters.
+   * Waits for removal confirmation before returning.
+   */
+  async removeGiftCard(lastCharacters: string): Promise<void> {
+    const upperLastChars = lastCharacters.toUpperCase();
+    const cardLocator = this.page.locator(
+      `code:has-text("***${upperLastChars}"):visible`,
+    );
+
+    await expect(cardLocator).toBeVisible({timeout: 5000});
+
+    // Find the Remove button within the same parent form
+    const removeButton = cardLocator
+      .locator('xpath=ancestor::form')
+      .locator('button:has-text("Remove")');
+
+    // Ensure button is visible and clickable before clicking
+    await expect(removeButton).toBeVisible({timeout: 5000});
+
+    // Wait for the specific cart API response
+    const responsePromise = this.page.waitForResponse(
+      (response) =>
+        response.url().includes('/cart') &&
+        response.request().method() === 'POST',
+      {timeout: 15000},
+    );
+    await removeButton.click();
+    await responsePromise;
+
+    // Wait for card to disappear
+    await this.expectGiftCardRemoved(upperLastChars);
+  }
+
+  /**
+   * Remove all applied gift cards from the cart.
+   */
+  async removeAllGiftCards(): Promise<void> {
+    const cards = await this.getAppliedGiftCards();
+
+    for (const card of cards) {
+      await this.removeGiftCard(card.lastChars);
+    }
+  }
+
+  /**
+   * Get list of all currently applied gift cards.
+   */
+  async getAppliedGiftCards(): Promise<
+    Array<{lastChars: string; amount: string}>
+  > {
+    // Use has-text with the *** prefix and :visible to avoid drawer duplicates
+    const cardLocators = this.page.locator('code:has-text("***"):visible');
+    const count = await cardLocators.count();
+
+    const cards: Array<{lastChars: string; amount: string}> = [];
+
+    for (let i = 0; i < count; i++) {
+      const codeText = await cardLocators.nth(i).textContent();
+      if (!codeText) continue;
+
+      // Normalize to uppercase to match applyGiftCard() convention
+      const lastChars = codeText.replace('***', '').toUpperCase();
+      const amount = await this.getAppliedCardAmount(lastChars);
+      cards.push({lastChars, amount});
+    }
+
+    return cards;
+  }
+
+  /**
+   * Get the amount for a specific applied gift card.
+   * The DOM structure has the amount as a sibling of the code element within the same parent.
+   */
+  private async getAppliedCardAmount(lastCharacters: string): Promise<string> {
+    const upperLastChars = lastCharacters.toUpperCase();
+    const codeElement = this.page.locator(
+      `code:has-text("***${upperLastChars}"):visible`,
+    );
+
+    // Get the parent container that holds both code and amount
+    const parent = codeElement.locator('xpath=..');
+
+    // The amount is a sibling element containing a dollar sign (not the code or button)
+    // Look for any element with text matching a money pattern like "$10.00"
+    const amountElement = parent.locator(':scope > *').filter({
+      hasText: /^\$[\d,.]+$/,
+    });
+
+    await expect(amountElement).toBeAttached({timeout: 5000});
+    const amountText = await amountElement.textContent();
+    return amountText?.trim() || '';
+  }
+
+  /**
+   * Fill and submit a gift card code without waiting for success.
+   * Use for testing error scenarios (invalid codes, duplicates, etc.)
+   * where the standard applyGiftCard() waiting pattern doesn't apply.
+   */
+  async tryApplyGiftCardCode(code: string): Promise<void> {
+    // Use :visible filter to target only the visible input (cart page, not drawer)
+    const input = this.page.locator('input[name="giftCardCode"]:visible');
+    const applyButton = this.page.locator(
+      'input[name="giftCardCode"]:visible ~ button[type="submit"]',
+    );
+
+    await expect(input).toBeVisible({timeout: 5000});
+    await input.fill(code);
+
+    // Wait for the cart API response (may be success or error)
+    const responsePromise = this.page.waitForResponse(
+      (response) =>
+        response.url().includes('/cart') &&
+        response.request().method() === 'POST',
+      {timeout: 15000},
+    );
+    await applyButton.click();
+    await responsePromise;
+  }
+
+  /**
+   * Assert that a gift card is visible in the applied cards list.
+   */
+  async expectGiftCardApplied(
+    lastCharacters: string,
+    timeout = 10000,
+  ): Promise<void> {
+    const upperLastChars = lastCharacters.toUpperCase();
+    const cardLocator = this.page.locator(
+      `code:has-text("***${upperLastChars}"):visible`,
+    );
+    await expect(cardLocator).toBeVisible({timeout});
+  }
+
+  /**
+   * Assert that a gift card is NOT visible in the applied cards list.
+   */
+  async expectGiftCardRemoved(
+    lastCharacters: string,
+    timeout = 10000,
+  ): Promise<void> {
+    const upperLastChars = lastCharacters.toUpperCase();
+    const cardLocator = this.page.locator(
+      `code:has-text("***${upperLastChars}"):visible`,
+    );
+    await expect(cardLocator).not.toBeVisible({timeout});
+  }
+
+  /**
+   * Assert that a gift card error message is displayed.
+   * Polls for error visibility to handle various error UI implementations (toast, alert, inline).
+   */
+  async expectGiftCardError(
+    expectedPattern: RegExp,
+    timeout = 10000,
+  ): Promise<void> {
+    // Look for common error patterns: [role="alert"], .error, aria-invalid, etc.
+    const errorSelectors = [
+      '[role="alert"]',
+      '[aria-live="polite"]',
+      '[aria-live="assertive"]',
+      '.error',
+      '.gift-card-error',
+      'form:has(input[name="giftCardCode"]) .error-message',
+    ];
+
+    await expect
+      .poll(
+        async () => {
+          for (const selector of errorSelectors) {
+            const element = this.page.locator(selector);
+            if (await element.isVisible().catch(() => false)) {
+              const text = await element.textContent();
+              if (text && expectedPattern.test(text)) {
+                return true;
+              }
+            }
+          }
+          return false;
+        },
+        {
+          message: `Expected gift card error matching ${expectedPattern}`,
+          timeout,
+        },
+      )
+      .toBe(true);
+  }
+
+  // ─────────────────────────────────────────────────
+  // Checkout Navigation Methods
+  // ─────────────────────────────────────────────────
+
+  /**
+   * Click the checkout button and wait for navigation to the Shopify checkout page.
+   * Returns the checkout page for further assertions.
+   */
+  async navigateToCheckout(): Promise<void> {
+    const checkoutLink = this.page.locator(
+      'a[href*="/cart/c/"]:visible, a:has-text("Checkout"):visible',
+    );
+    await expect(checkoutLink).toBeVisible({timeout: 10000});
+
+    // Click and wait for navigation to checkout domain
+    await Promise.all([
+      this.page.waitForURL(/checkout/, {timeout: 30000}),
+      checkoutLink.first().click(),
+    ]);
+
+    // Wait for checkout page to load
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
+  /**
+   * Verify that applied gift cards appear on the Shopify checkout page.
+   * Searches for gift card entries in the order summary section.
+   *
+   * @param expectedLastChars - Array of last 4 characters of gift card codes to verify
+   */
+  async expectGiftCardsInCheckout(expectedLastChars: string[]): Promise<void> {
+    for (const lastChars of expectedLastChars) {
+      const upperLastChars = lastChars.toUpperCase();
+
+      // Shopify checkout shows gift cards in various formats:
+      // - "Gift card ending in XXXX"
+      // - "•••• XXXX"
+      // - Just the last 4 digits in a discount section
+      const giftCardLocator = this.page.locator(
+        `text=/${upperLastChars}/i`,
+      );
+
+      await expect(
+        giftCardLocator.first(),
+        `Gift card ending in ${upperLastChars} should appear in checkout`,
+      ).toBeVisible({timeout: 15000});
+    }
   }
 }
