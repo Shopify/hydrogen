@@ -31,7 +31,7 @@ export default defineConfig({
     },
     {
       name: 'skeleton',
-      testDir: './e2e/skeleton',
+      testDir: './e2e/specs/skeleton',
     },
   ],
 });
