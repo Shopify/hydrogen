@@ -50,6 +50,10 @@ import {
   cartGiftCardCodesUpdateDefault,
 } from './queries/cartGiftCardCodeUpdateDefault';
 import {
+  type CartGiftCardCodesAddFunction,
+  cartGiftCardCodesAddDefault,
+} from './queries/cartGiftCardCodesAddDefault';
+import {
   type CartGiftCardCodesRemoveFunction,
   cartGiftCardCodesRemoveDefault,
 } from './queries/cartGiftCardCodesRemoveDefault';
@@ -94,6 +98,7 @@ export type HydrogenCart = {
   removeLines: ReturnType<typeof cartLinesRemoveDefault>;
   updateDiscountCodes: ReturnType<typeof cartDiscountCodesUpdateDefault>;
   updateGiftCardCodes: ReturnType<typeof cartGiftCardCodesUpdateDefault>;
+  addGiftCardCodes: ReturnType<typeof cartGiftCardCodesAddDefault>;
   removeGiftCardCodes: ReturnType<typeof cartGiftCardCodesRemoveDefault>;
   updateBuyerIdentity: ReturnType<typeof cartBuyerIdentityUpdateDefault>;
   updateNote: ReturnType<typeof cartNoteUpdateDefault>;
@@ -274,6 +279,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
           )
         : await cartCreate({giftCardCodes}, optionalParams);
     },
+    addGiftCardCodes: cartGiftCardCodesAddDefault(mutateOptions),
     removeGiftCardCodes: cartGiftCardCodesRemoveDefault(mutateOptions),
     updateBuyerIdentity: async (buyerIdentity, optionalParams) => {
       return cartId || optionalParams?.cartId
@@ -425,6 +431,10 @@ export type HydrogenCartForDocs = {
    * Updates gift card codes in the cart.
    */
   updateGiftCardCodes?: CartGiftCardCodesUpdateFunction;
+  /**
+   * Adds gift card codes to the cart without replacing existing ones.
+   */
+  addGiftCardCodes?: CartGiftCardCodesAddFunction;
   /**
    * Removes gift card codes from the cart.
    */
