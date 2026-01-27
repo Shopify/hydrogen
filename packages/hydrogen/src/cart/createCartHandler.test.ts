@@ -58,6 +58,7 @@ describe('createCartHandler', () => {
     expect(cart).toHaveProperty('addDeliveryAddresses');
     expect(cart).toHaveProperty('removeDeliveryAddresses');
     expect(cart).toHaveProperty('updateDeliveryAddresses');
+    expect(cart).toHaveProperty('replaceDeliveryAddresses');
   });
 
   it('can add custom methods', () => {
