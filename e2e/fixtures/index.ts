@@ -6,6 +6,7 @@ import {StorefrontPage} from './storefront';
 
 export * from '@playwright/test';
 export * from './storefront';
+export {getTestSecrets, getRequiredSecret} from './test-secrets';
 
 export const test = base.extend<
   {storefront: StorefrontPage},
@@ -23,6 +24,7 @@ const TEST_STORE_KEYS = [
   'defaultConsentAllowed_cookiesEnabled',
   'defaultConsentDisallowed_cookiesDisabled',
   'defaultConsentAllowed_cookiesDisabled',
+  'hydrogenPreviewStorefront'
 ] as const;
 
 type TestStoreKey = (typeof TEST_STORE_KEYS)[number];
