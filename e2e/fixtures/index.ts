@@ -6,6 +6,7 @@ import {StorefrontPage} from './storefront';
 
 export * from '@playwright/test';
 export * from './storefront';
+export {getTestSecrets, getRequiredSecret} from './test-secrets';
 
 export const test = base.extend<
   {storefront: StorefrontPage},
