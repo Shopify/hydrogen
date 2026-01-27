@@ -14,6 +14,7 @@ export const packageManagers: PackageManager[] = [
   {
     name: 'npm',
     lockfile: 'package-lock.json',
+    alternativeLockfiles: ['npm-shrinkwrap.json'],
     installCommand: 'npm ci',
   },
   {

@@ -33,23 +33,46 @@ describe('checkLockfileStatus()', () => {
       });
     });
 
-    it('detects bun.lock (text-based lockfile)', async () => {
+    it('detects npm-shrinkwrap.json (alternative npm lockfile)', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        await writeFile(joinPath(tmpDir, 'bun.lock'), '');
+        // Create npm-shrinkwrap.json alongside another lockfile to trigger multiple lockfile warning
+        await writeFile(joinPath(tmpDir, 'npm-shrinkwrap.json'), '');
+        await writeFile(joinPath(tmpDir, 'yarn.lock'), '');
 
         await checkLockfileStatus(tmpDir);
 
-        expect(outputMock.warn()).toBe('');
+        // Verify the warning shows npm-shrinkwrap.json (not package-lock.json)
+        expect(outputMock.warn()).toMatch(
+          /npm-shrinkwrap\.json \(created by npm\)/is,
+        );
       });
     });
 
-    it('detects bun.lockb (binary lockfile)', async () => {
+    it('detects bun.lock (text-based lockfile) and shows correct name in warnings', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        await writeFile(joinPath(tmpDir, 'bun.lockb'), '');
+        // Create bun.lock alongside another lockfile to trigger multiple lockfile warning
+        await writeFile(joinPath(tmpDir, 'bun.lock'), '');
+        await writeFile(joinPath(tmpDir, 'package-lock.json'), '');
 
         await checkLockfileStatus(tmpDir);
 
-        expect(outputMock.warn()).toBe('');
+        // Verify the warning shows bun.lock (not bun.lockb)
+        expect(outputMock.warn()).toMatch(/bun\.lock \(created by bun\)/is);
+        expect(outputMock.warn()).not.toMatch(/bun\.lockb/is);
+      });
+    });
+
+    it('detects bun.lockb (binary lockfile) and shows correct name in warnings', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        // Create bun.lockb alongside another lockfile to trigger multiple lockfile warning
+        await writeFile(joinPath(tmpDir, 'bun.lockb'), '');
+        await writeFile(joinPath(tmpDir, 'package-lock.json'), '');
+
+        await checkLockfileStatus(tmpDir);
+
+        // Verify the warning shows bun.lockb (not bun.lock)
+        expect(outputMock.warn()).toMatch(/bun\.lockb \(created by bun\)/is);
+        expect(outputMock.warn()).not.toMatch(/bun\.lock \(created by bun\)/is);
       });
     });
 
