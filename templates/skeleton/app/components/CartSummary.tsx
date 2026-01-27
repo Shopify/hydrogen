@@ -149,8 +149,7 @@ function CartGiftCard({
       )}
 
       {/* Show an input to apply a gift card */}
-      <UpdateGiftCardForm
-        giftCardCodes={appliedGiftCardCodes.current}
+      <AddGiftCardForm
         saveAppliedCode={saveAppliedCode}
         fetcherKey="gift-card-add"
       >
@@ -166,18 +165,16 @@ function CartGiftCard({
             Apply
           </button>
         </div>
-      </UpdateGiftCardForm>
+      </AddGiftCardForm>
     </div>
   );
 }
 
-function UpdateGiftCardForm({
-  giftCardCodes,
+function AddGiftCardForm({
   saveAppliedCode,
   fetcherKey,
   children,
 }: {
-  giftCardCodes?: string[];
   saveAppliedCode?: (code: string) => void;
   fetcherKey?: string;
   children: React.ReactNode;
@@ -186,10 +183,7 @@ function UpdateGiftCardForm({
     <CartForm
       fetcherKey={fetcherKey}
       route="/cart"
-      action={CartForm.ACTIONS.GiftCardCodesUpdate}
-      inputs={{
-        giftCardCodes: giftCardCodes || [],
-      }}
+      action={CartForm.ACTIONS.GiftCardCodesAdd}
     >
       {(fetcher: FetcherWithComponents<any>) => {
         const code = fetcher.formData?.get('giftCardCode');
