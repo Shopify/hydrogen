@@ -17,6 +17,10 @@ export default defineConfig({
   },
   projects: [
     {
+      name: 'skeleton',
+      testDir: './e2e/specs/skeleton',
+    },
+    {
       name: 'smoke',
       testDir: './e2e/specs/smoke',
     },
