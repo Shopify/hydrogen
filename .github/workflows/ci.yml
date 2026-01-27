@@ -136,7 +136,7 @@ jobs:
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
       - name: 🧪 Run E2E tests
-        run: npx playwright test --workers=1
+        run: npx playwright test
         env:
           EJSON_PRIVATE_KEY: ${{ secrets.EJSON_PRIVATE_KEY }}
 
