@@ -2,6 +2,69 @@ name: 🚀 CI
 on: [pull_request]
 
 jobs:
+  check-node-version:
+    name: 🔧 Node version sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Validate .nvmrc matches dev.yml
+        run: |
+          NVMRC_VERSION=$(tr -d 'v\n' < .nvmrc)
+          DEV_YML_RAW=$(grep "node:" dev.yml | grep -oE "'v?[^']+'" | tr -d "'" | head -1)
+          DEV_YML_VERSION=$(echo "$DEV_YML_RAW" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+
+          if [ -z "$NVMRC_VERSION" ]; then
+            echo "::error::Could not parse version from .nvmrc"
+            exit 1
+          fi
+
+          if [ -z "$DEV_YML_RAW" ]; then
+            echo "::error::Could not find node: directive in dev.yml"
+            exit 1
+          fi
+
+          if [ -z "$DEV_YML_VERSION" ]; then
+            echo "::error::dev.yml must specify a FULL Node version (X.Y.Z format)"
+            echo ""
+            echo "Found: '$DEV_YML_RAW'"
+            echo "Expected format: 'vX.Y.Z' (e.g., 'v20.19.5')"
+            echo ""
+            echo "The Shopify 'dev' tool requires a specific installable version,"
+            echo "not just a major version like 'v20'. Nix needs the exact version"
+            echo "to fetch from its package cache."
+            exit 1
+          fi
+
+          NVMRC_MAJOR=$(echo "$NVMRC_VERSION" | cut -d. -f1)
+          DEV_YML_MAJOR=$(echo "$DEV_YML_VERSION" | cut -d. -f1)
+
+          if [ "$NVMRC_MAJOR" != "$DEV_YML_MAJOR" ]; then
+            echo "::error::Node version mismatch between .nvmrc and dev.yml"
+            echo ""
+            echo "┌─────────────────────────────────────────────────────────────────┐"
+            echo "│  IMPORTANT: This is NOT a configuration oversight!              │"
+            echo "│                                                                 │"
+            echo "│  The Shopify 'dev' tool CANNOT read from .nvmrc - it requires   │"
+            echo "│  an explicit version. These files serve different tools:        │"
+            echo "│    • .nvmrc  → used by nvm (flexible major version like 'v20')  │"
+            echo "│    • dev.yml → used by dev tool (needs exact version 'v20.x.x') │"
+            echo "│                                                                 │"
+            echo "│  Both files MUST be updated TOGETHER when changing Node version.│"
+            echo "└─────────────────────────────────────────────────────────────────┘"
+            echo ""
+            echo "Current state:"
+            echo "  .nvmrc major version:  v$NVMRC_MAJOR"
+            echo "  dev.yml major version: v$DEV_YML_MAJOR"
+            echo ""
+            echo "To fix: Update both files to use the same Node major version."
+            exit 1
+          fi
+
+          echo "✅ Node versions in sync (major version: v$NVMRC_MAJOR)"
+
   lint:
     name: ⬣ ESLint
     runs-on: ubuntu-latest

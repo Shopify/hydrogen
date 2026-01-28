@@ -2,12 +2,20 @@ name: hydrogen
 display_name: Hydrogen
 
 up:
-  - node: 'v20.19.5'
+  - node: 'v20.19.5' # .nvmrc uses 'v20' for nvm flexibility; dev tool needs specific version
+  - custom:
+      name: Build packages
+      met?: npm run build
+      meet: 'true'
 
 commands:
+  server:
+    desc: 'Run the skeleton template dev server'
+    run: npm run build && npm run dev:app
+
   # Standard development commands
-  dev:
-    desc: 'Run the dev command in all packages'
+  watch:
+    desc: 'Run a server to watch for changes in any packages and automatically rebuild when changes are saved'
     run: npm run dev
 
   build:
