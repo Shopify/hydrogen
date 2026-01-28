@@ -55,7 +55,8 @@ export const CART_GIFT_CARD_CODE_UPDATE_MUTATION = (
     $giftCardCodes: [String!]!
     $language: LanguageCode
     $country: CountryCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartGiftCardCodesUpdate(cartId: $cartId, giftCardCodes: $giftCardCodes) {
       cart {
         ...CartApiMutation

@@ -46,7 +46,8 @@ export const CART_LINES_REMOVE_MUTATION = (
     $lineIds: [ID!]!
     $language: LanguageCode
     $country: CountryCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
       cart {
         ...CartApiMutation

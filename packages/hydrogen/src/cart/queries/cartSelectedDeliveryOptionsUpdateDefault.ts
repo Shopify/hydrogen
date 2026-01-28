@@ -45,7 +45,8 @@ export const CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION = (
     $selectedDeliveryOptions: [CartSelectedDeliveryOptionInput!]!
     $language: LanguageCode
     $country: CountryCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartSelectedDeliveryOptionsUpdate(cartId: $cartId, selectedDeliveryOptions: $selectedDeliveryOptions) {
       cart {
         ...CartApiMutation

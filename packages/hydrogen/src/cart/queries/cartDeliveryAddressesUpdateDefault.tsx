@@ -87,7 +87,8 @@ export const CART_DELIVERY_ADDRESSES_UPDATE_MUTATION = (
     $addresses: [CartSelectableAddressUpdateInput!]!,
     $country: CountryCode = ZZ
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartDeliveryAddressesUpdate(addresses: $addresses, cartId: $cartId) {
       cart {
         ...CartApiMutation
