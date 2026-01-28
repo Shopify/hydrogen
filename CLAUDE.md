@@ -13,7 +13,7 @@ Hydrogen uses a sophisticated automated release system built on Changesets, GitH
    - If changes affect `packages/*/src/**` or `packages/*/package.json`, a changeset is required
    - Run `npm run changeset add` to create a changeset file **(MANUAL)**
    - Changeset specifies which packages are affected and version bump type (patch/minor/major)
-   - These changesets go into Hydrogen's changelog, and are also used to generate upgrade instructions. **Write the changeset as if the audience is a merchant building with Hydrogen.** These changesets go into Hydrogen's changelog, and are also used to generate upgrade instructions.
+   - These changesets go into Hydrogen's changelog, and are also used to generate upgrade instructions. **Write the changeset as if the audience is a merchant building with Hydrogen.**
 
 2. **On merge to main, TWO parallel processes occur:**
 
