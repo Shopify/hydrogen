@@ -15,6 +15,25 @@ Run the following commands to get started working on Hydrogen.
 | `npm run dev`                                   | Runs the `dev` command in all packages        |
 | `npm run build`                                 | `build`s packages for production distribution |
 
+### Shopify Contributors
+
+If you have access to Shopify's `dev` CLI tool, you can use these commands instead:
+
+| Command      | Description                                                |
+| ------------ | ---------------------------------------------------------- |
+| `dev up`     | Sets up the development environment (installs dependencies and builds packages) |
+| `dev server` | Starts the skeleton template dev server                    |
+| `dev watch`  | Starts a server to automatically rebuild changes in packages upon saving |
+
+
+> **Note:** When running `dev up`, if prompted about git hooks, select **"no"** to preserve the existing Husky hooks configuration. The project uses Husky for pre-commit hooks, and overriding this would disable important checks.
+
+Run `dev` in the repository root to see all available commands.
+
+#### dev server vs dev watch?
+
+If you just want to make changes in the skeleton template, `dev up && dev server` is enough. If you are ALSO making changes inside `packages/*` while running the skeleton template, then you should also run `dev watch` alongside `dev server` so that any changes to packages will get automatically rebuilt and used in the skeleton template. If you don't run `dev watch`, then any changes inside `packages/*` will require you to restart the dev server (which will do a rebuild first) in order to be applied to the skeleton template.
+
 ## Context
 
 Hydrogen is a monorepo built with [Turborepo](https://turbo.build/) and consists of the following workspaces:

@@ -13,6 +13,10 @@ Hydrogen is Shopify's stack for headless commerce. It provides a set of tools, u
 
  </div>
 
+## Contributing to Hydrogen
+
+[Read our contributing guide](CONTRIBUTING.md)
+
 ## Hydrogen Legacy v1
 
 Hydrogen legacy v1 has been moved [to a separate repo](https://github.com/Shopify/hydrogen-v1) and the [docs can be found here](https://shopify.github.io/hydrogen-v1/tutorials/getting-started).
@@ -63,10 +67,6 @@ For example, if you're using Storefront API or Customer Account API version `202
 If the Storefront API or Customer Account API version updates include breaking changes, then Hydrogen and hydrogen-react may also include breaking changes. Because the API versions are updated every three months, breaking changes could occur every three months.
 
 Learn more about API [release schedules](https://shopify.dev/api/usage/versioning#release-schedule) at Shopify.
-
-## Contributing to Hydrogen
-
-[Read our contributing guide](CONTRIBUTING.md)
 
 ## Other handy links
 
