@@ -76,16 +76,24 @@ export function CartLineItem({
       </div>
 
       {lineItemChildren ? (
-        <ul className="cart-line-children">
-          {lineItemChildren.map((childLine) => (
-            <CartLineItem
-              childrenMap={childrenMap}
-              key={childLine.id}
-              line={childLine}
-              layout={layout}
-            />
-          ))}
-        </ul>
+        <div>
+          <p id="cart-line-children" className="sr-only">
+            Line items with {product.title}
+          </p>
+          <ul
+            aria-labelledby="cart-line-children"
+            className="cart-line-children"
+          >
+            {lineItemChildren.map((childLine) => (
+              <CartLineItem
+                childrenMap={childrenMap}
+                key={childLine.id}
+                line={childLine}
+                layout={layout}
+              />
+            ))}
+          </ul>
+        </div>
       ) : null}
     </li>
   );
