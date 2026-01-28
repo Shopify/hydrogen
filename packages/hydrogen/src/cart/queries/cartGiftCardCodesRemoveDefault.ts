@@ -43,7 +43,8 @@ export const CART_GIFT_CARD_CODES_REMOVE_MUTATION = (
     $appliedGiftCardIds: [ID!]!
     $language: LanguageCode
     $country: CountryCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartGiftCardCodesRemove(cartId: $cartId, appliedGiftCardIds: $appliedGiftCardIds) {
       cart {
         ...CartApiMutation

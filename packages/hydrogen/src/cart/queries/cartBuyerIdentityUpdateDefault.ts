@@ -57,7 +57,8 @@ export const CART_BUYER_IDENTITY_UPDATE_MUTATION = (
     $buyerIdentity: CartBuyerIdentityInput!
     $language: LanguageCode
     $country: CountryCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
       cart {
         ...CartApiMutation
