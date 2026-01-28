@@ -31,6 +31,7 @@ export function cartMetafieldDeleteDefault(
           ownerId,
           key,
         },
+        ...optionalParams,
       },
     });
     return formatAPIResult(
@@ -49,7 +50,10 @@ export function cartMetafieldDeleteDefault(
 export const CART_METAFIELD_DELETE_MUTATION = () => `#graphql
   mutation cartMetafieldDelete(
     $input: CartMetafieldDeleteInput!
-  ) {
+    $language: LanguageCode
+    $country: CountryCode
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartMetafieldDelete(input: $input) {
       userErrors {
         code

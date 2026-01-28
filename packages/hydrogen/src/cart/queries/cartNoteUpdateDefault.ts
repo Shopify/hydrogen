@@ -43,7 +43,8 @@ export const CART_NOTE_UPDATE_MUTATION = (
     $note: String!
     $language: LanguageCode
     $country: CountryCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartNoteUpdate(cartId: $cartId, note: $note) {
       cart {
         ...CartApiMutation

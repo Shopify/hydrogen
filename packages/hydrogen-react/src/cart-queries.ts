@@ -5,7 +5,13 @@ export const CartLineAdd = (cartFragment: string): string => /* GraphQL */ `
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  )
+  @inContext(
+    country: $country
+    language: $language
+    visitorConsent: $visitorConsent
+  ) {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
       cart {
         ...CartFragment
@@ -22,7 +28,13 @@ export const CartCreate = (cartFragment: string): string => /* GraphQL */ `
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  )
+  @inContext(
+    country: $country
+    language: $language
+    visitorConsent: $visitorConsent
+  ) {
     cartCreate(input: $input) {
       cart {
         ...CartFragment
@@ -40,7 +52,13 @@ export const CartLineRemove = (cartFragment: string): string => /* GraphQL */ `
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  )
+  @inContext(
+    country: $country
+    language: $language
+    visitorConsent: $visitorConsent
+  ) {
     cartLinesRemove(cartId: $cartId, lineIds: $lines) {
       cart {
         ...CartFragment
@@ -58,7 +76,13 @@ export const CartLineUpdate = (cartFragment: string): string => /* GraphQL */ `
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  )
+  @inContext(
+    country: $country
+    language: $language
+    visitorConsent: $visitorConsent
+  ) {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
       cart {
         ...CartFragment
@@ -76,7 +100,13 @@ export const CartNoteUpdate = (cartFragment: string): string => /* GraphQL */ `
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  )
+  @inContext(
+    country: $country
+    language: $language
+    visitorConsent: $visitorConsent
+  ) {
     cartNoteUpdate(cartId: $cartId, note: $note) {
       cart {
         ...CartFragment
@@ -96,7 +126,13 @@ export const CartBuyerIdentityUpdate = (
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  )
+  @inContext(
+    country: $country
+    language: $language
+    visitorConsent: $visitorConsent
+  ) {
     cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
       cart {
         ...CartFragment
@@ -116,7 +152,13 @@ export const CartAttributesUpdate = (
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  )
+  @inContext(
+    country: $country
+    language: $language
+    visitorConsent: $visitorConsent
+  ) {
     cartAttributesUpdate(attributes: $attributes, cartId: $cartId) {
       cart {
         ...CartFragment
@@ -136,7 +178,13 @@ export const CartDiscountCodesUpdate = (
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  )
+  @inContext(
+    country: $country
+    language: $language
+    visitorConsent: $visitorConsent
+  ) {
     cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
       cart {
         ...CartFragment
@@ -153,7 +201,13 @@ export const CartQuery = (cartFragment: string): string => /* GraphQL */ `
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  )
+  @inContext(
+    country: $country
+    language: $language
+    visitorConsent: $visitorConsent
+  ) {
     cart(id: $id) {
       ...CartFragment
     }
