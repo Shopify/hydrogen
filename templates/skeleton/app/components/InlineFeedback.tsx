@@ -16,12 +16,7 @@ export function InlineFeedback({
   const icon = type === 'error' ? '✕' : '⚠';
 
   return (
-    <div
-      className={`inline-feedback inline-feedback--${type}`}
-      role="alert"
-      aria-live="polite"
-      aria-atomic="true"
-    >
+    <div className={`inline-feedback inline-feedback--${type}`} role="status">
       <span className="inline-feedback-icon" aria-hidden="true">
         {icon}
       </span>
