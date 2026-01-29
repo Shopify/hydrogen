@@ -3,7 +3,6 @@ import type {CartLayout} from '~/components/CartMain';
 import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
 import {useEffect, useRef} from 'react';
 import {useFetcher} from 'react-router';
-import type {FetcherWithComponents} from 'react-router';
 
 type CartSummaryProps = {
   cart: OptimisticCart<CartApiQueryFragment | null>;
@@ -110,27 +109,17 @@ function CartGiftCard({
 }: {
   giftCardCodes: CartApiQueryFragment['appliedGiftCards'] | undefined;
 }) {
-  const appliedGiftCardCodes = useRef<string[]>([]);
   const giftCardCodeInput = useRef<HTMLInputElement>(null);
   const giftCardAddFetcher = useFetcher({key: 'gift-card-add'});
 
-  // Clear the gift card code input after the gift card is added
   useEffect(() => {
     if (giftCardAddFetcher.data) {
       giftCardCodeInput.current!.value = '';
     }
   }, [giftCardAddFetcher.data]);
 
-  function saveAppliedCode(code: string) {
-    const formattedCode = code.replace(/\s/g, ''); // Remove spaces
-    if (!appliedGiftCardCodes.current.includes(formattedCode)) {
-      appliedGiftCardCodes.current.push(formattedCode);
-    }
-  }
-
   return (
     <div>
-      {/* Display applied gift cards with individual remove buttons */}
       {giftCardCodes && giftCardCodes.length > 0 && (
         <dl>
           <dt>Applied Gift Card(s)</dt>
@@ -148,12 +137,7 @@ function CartGiftCard({
         </dl>
       )}
 
-      {/* Show an input to apply a gift card */}
-      <UpdateGiftCardForm
-        giftCardCodes={appliedGiftCardCodes.current}
-        saveAppliedCode={saveAppliedCode}
-        fetcherKey="gift-card-add"
-      >
+      <AddGiftCardForm fetcherKey="gift-card-add">
         <div>
           <input
             type="text"
@@ -166,19 +150,15 @@ function CartGiftCard({
             Apply
           </button>
         </div>
-      </UpdateGiftCardForm>
+      </AddGiftCardForm>
     </div>
   );
 }
 
-function UpdateGiftCardForm({
-  giftCardCodes,
-  saveAppliedCode,
+function AddGiftCardForm({
   fetcherKey,
   children,
 }: {
-  giftCardCodes?: string[];
-  saveAppliedCode?: (code: string) => void;
   fetcherKey?: string;
   children: React.ReactNode;
 }) {
@@ -186,18 +166,9 @@ function UpdateGiftCardForm({
     <CartForm
       fetcherKey={fetcherKey}
       route="/cart"
-      action={CartForm.ACTIONS.GiftCardCodesUpdate}
-      inputs={{
-        giftCardCodes: giftCardCodes || [],
-      }}
+      action={CartForm.ACTIONS.GiftCardCodesAdd}
     >
-      {(fetcher: FetcherWithComponents<any>) => {
-        const code = fetcher.formData?.get('giftCardCode');
-        if (code && saveAppliedCode) {
-          saveAppliedCode(code as string);
-        }
-        return children;
-      }}
+      {children}
     </CartForm>
   );
 }
@@ -221,4 +192,3 @@ function RemoveGiftCardForm({
     </CartForm>
   );
 }
-
