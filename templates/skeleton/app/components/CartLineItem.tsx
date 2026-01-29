@@ -2,13 +2,10 @@ import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import type {CartLayout, LineItemChildrenMap} from '~/components/CartMain';
 import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
-import {Link} from 'react-router';
+import {href, Link, useFetcher, type FetcherWithComponents} from 'react-router';
 import {ProductPrice} from './ProductPrice';
 import {useAside} from './Aside';
-import type {
-  CartApiQueryFragment,
-  CartLineFragment,
-} from 'storefrontapi.generated';
+import type {CartApiQueryFragment} from 'storefrontapi.generated';
 
 export type CartLine = OptimisticCartLine<CartApiQueryFragment>;
 
@@ -98,13 +95,13 @@ export function CartLineItem({
  */
 function CartLineQuantity({line}: {line: CartLine}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
+
   const {id: lineId, quantity, isOptimistic} = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
   const nextQuantity = Number((quantity + 1).toFixed(0));
-
   return (
     <div className="cart-line-quantity">
-      <small>Quantity: {quantity} &nbsp;&nbsp;</small>
+      <span>Quantity: &nbsp;&nbsp;</span>
       <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
         <button
           aria-label="Decrease quantity"
@@ -115,6 +112,8 @@ function CartLineQuantity({line}: {line: CartLine}) {
           <span>&#8722; </span>
         </button>
       </CartLineUpdateButton>
+      &nbsp;
+      <CartLineQuantityInput disabled={!!isOptimistic} line={line} />
       &nbsp;
       <CartLineUpdateButton lines={[{id: lineId, quantity: nextQuantity}]}>
         <button
@@ -155,6 +154,67 @@ function CartLineRemoveButton({
         Remove
       </button>
     </CartForm>
+  );
+}
+
+function isKeyboardEvent(
+  e: React.ChangeEvent<HTMLInputElement>,
+): e is typeof e & {nativeEvent: InputEvent} {
+  if (e.nativeEvent instanceof InputEvent) {
+    if (
+      e.nativeEvent.inputType === 'insertText' ||
+      e.nativeEvent.inputType === 'deleteContentBackward' ||
+      e.nativeEvent.inputType === 'deleteContentForward'
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+async function submitQuantity(
+  e: React.ChangeEvent<HTMLInputElement>,
+  fetcher: FetcherWithComponents<any>,
+  line: CartLine,
+) {
+  const value = e.target.valueAsNumber;
+  const formData = new FormData();
+  formData.set(
+    CartForm.INPUT_NAME,
+    JSON.stringify({
+      action: CartForm.ACTIONS.LinesUpdate,
+      inputs: {lines: [{id: line.id, quantity: value}]},
+    }),
+  );
+  await fetcher.submit(formData, {method: 'post', action: href('/cart')});
+}
+
+function CartLineQuantityInput({
+  line,
+  disabled,
+}: {
+  line: CartLine;
+  disabled: boolean;
+}) {
+  const fetcher = useFetcher({key: getUpdateKey([line.id])});
+
+  return (
+    <input
+      aria-label="Quantity"
+      min={1}
+      className="cart-line-quantity-input"
+      disabled={disabled}
+      key={line.quantity}
+      type="number"
+      defaultValue={line.quantity}
+      onChange={(e) => {
+        if (isKeyboardEvent(e)) return;
+        void submitQuantity(e, fetcher, line);
+      }}
+      onBlur={(e) => {
+        void submitQuantity(e, fetcher, line);
+      }}
+    />
   );
 }
 

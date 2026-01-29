@@ -4,6 +4,7 @@ import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {useAside} from '~/components/Aside';
 import {CartLineItem, type CartLine} from '~/components/CartLineItem';
 import {CartSummary} from './CartSummary';
+import {CartWarnings} from './CartWarnings';
 
 export type CartLayout = 'page' | 'aside';
 
@@ -52,6 +53,7 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
   return (
     <div className={className}>
       <CartEmpty hidden={linesCount} layout={layout} />
+      <CartWarnings />
       <div className="cart-details">
         <div aria-labelledby="cart-lines">
           <ul>
