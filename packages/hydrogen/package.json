@@ -86,10 +86,6 @@
     "@shopify/hydrogen-react": "2025.7.2",
     "content-security-policy-builder": "^2.2.0",
     "flame-chart-js": "2.3.1",
-    "isbot": "^5.1.21",
-    "source-map-support": "^0.5.21",
-    "type-fest": "^4.33.0",
-    "use-resize-observer": "^9.1.0",
     "worktop": "^0.7.3",
     "@shopify/graphql-client": "1.4.1"
   },
