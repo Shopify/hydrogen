@@ -9,7 +9,7 @@ on:
       # To do a back-fix of a past CalVer branch, update this to the relevant branch
       # Example: If we are currently on 2025-07, add 2025-01 here to do a back-fix
       # release for the 2025-01 CalVer branch
-      - 2025-01
+      - 2025-07
 
 concurrency:
   group: release-${{ github.ref_name }}
