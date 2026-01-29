@@ -53,8 +53,11 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
     <div className={className}>
       <CartEmpty hidden={linesCount} layout={layout} />
       <div className="cart-details">
-        <div aria-labelledby="cart-lines">
-          <ul>
+        <p id="cart-lines" className="sr-only">
+          Line items
+        </p>
+        <div>
+          <ul aria-labelledby="cart-lines">
             {(cart?.lines?.nodes ?? []).map((line) => {
               // we do not render non-parent lines at the root of the cart
               if (
