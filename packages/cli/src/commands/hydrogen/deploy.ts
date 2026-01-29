@@ -291,15 +291,21 @@ export async function runDeploy(
       if (changedFiles) {
         errorMessage += `:\n\n${changedFiles.trimEnd()}`;
 
-        packageManagers.forEach(({name, lockfile, installCommand}) => {
-          if (changedFiles.includes(lockfile)) {
-            nextSteps.push([
-              `If you are using ${name}, try running`,
-              {command: installCommand},
-              `to avoid changes to ${lockfile}.`,
-            ]);
-          }
-        });
+        packageManagers.forEach(
+          ({name, lockfile, alternativeLockfiles, installCommand}) => {
+            const allLockfiles = [lockfile, ...(alternativeLockfiles || [])];
+            const changedLockfile = allLockfiles.find((lf) =>
+              changedFiles.includes(lf),
+            );
+            if (changedLockfile) {
+              nextSteps.push([
+                `If you are using ${name}, try running`,
+                {command: installCommand},
+                `to avoid changes to ${changedLockfile}.`,
+              ]);
+            }
+          },
+        );
       }
 
       throw new AbortError(errorMessage, null, nextSteps);
