@@ -65,7 +65,8 @@ export const CART_DELIVERY_ADDRESSES_REMOVE_MUTATION = (
     $addressIds: [ID!]!,
     $country: CountryCode = ZZ
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartDeliveryAddressesRemove(addressIds: $addressIds, cartId: $cartId) {
       cart {
         ...CartApiMutation

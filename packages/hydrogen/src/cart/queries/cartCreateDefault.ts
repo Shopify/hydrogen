@@ -53,7 +53,8 @@ export const CART_CREATE_MUTATION = (
     $input: CartInput!
     $country: CountryCode = ZZ
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartCreate(input: $input) {
       cart {
         ...CartApiMutation

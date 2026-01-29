@@ -32,7 +32,7 @@ export function cartMetafieldsSetDefault(
       };
       errors: StorefrontApiErrors;
     }>(CART_METAFIELD_SET_MUTATION(), {
-      variables: {metafields: metafieldsWithOwnerId},
+      variables: {metafields: metafieldsWithOwnerId, ...optionalParams},
     });
 
     return formatAPIResult(
@@ -53,7 +53,8 @@ export const CART_METAFIELD_SET_MUTATION = () => `#graphql
     $metafields: [CartMetafieldsSetInput!]!
     $language: LanguageCode
     $country: CountryCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartMetafieldsSet(metafields: $metafields) {
       userErrors {
         code

@@ -47,7 +47,8 @@ export const CART_LINES_UPDATE_MUTATION = (
     $lines: [CartLineUpdateInput!]!
     $language: LanguageCode
     $country: CountryCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
       cart {
         ...CartApiMutation

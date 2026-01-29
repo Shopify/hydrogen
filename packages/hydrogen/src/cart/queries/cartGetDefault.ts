@@ -5,6 +5,7 @@ import type {
   Cart,
   CountryCode,
   LanguageCode,
+  VisitorConsent,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
 type CartGetProps = {
@@ -28,6 +29,20 @@ type CartGetProps = {
    * @default 100
    */
   numCartLines?: number;
+  /**
+   * Visitor consent preferences for the Storefront API's @inContext directive.
+   *
+   * **Most Hydrogen storefronts do NOT need this.** If you're using Hydrogen's
+   * analytics provider or Shopify's Customer Privacy API (including third-party
+   * consent services integrated with it), consent is handled automatically.
+   *
+   * This option exists for Storefront API parity and is primarily intended for
+   * non-Hydrogen integrations like Checkout Kit that manage consent outside
+   * Shopify's standard consent flow.
+   *
+   * When provided, consent is encoded into the cart's checkoutUrl via the _cs parameter.
+   */
+  visitorConsent?: VisitorConsent;
 };
 
 export type CartGetFunction = (
@@ -77,7 +92,8 @@ const CART_QUERY = (cartFragment = DEFAULT_CART_FRAGMENT) => `#graphql
     $numCartLines: Int = 100
     $country: CountryCode = ZZ
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cart(id: $cartId) {
       ...CartApiQuery
     }

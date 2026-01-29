@@ -28,6 +28,7 @@ export function cartAttributesUpdateDefault(
       variables: {
         cartId: optionalParams?.cartId || options.getCartId(),
         attributes,
+        ...optionalParams,
       },
     });
     return formatAPIResult(cartAttributesUpdate, errors);
@@ -40,7 +41,10 @@ export const CART_ATTRIBUTES_UPDATE_MUTATION = (
   mutation cartAttributesUpdate(
     $cartId: ID!
     $attributes: [AttributeInput!]!
-  ) {
+    $language: LanguageCode
+    $country: CountryCode
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartAttributesUpdate(cartId: $cartId, attributes: $attributes) {
       cart {
         ...CartApiMutation
