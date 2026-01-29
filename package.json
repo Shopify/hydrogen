@@ -1,6 +1,6 @@
 {
   "name": "hydrogen",
-  "packageManager": "npm@10.9.2",
+  "packageManager": "npm@11.6.2",
   "private": true,
   "sideEffects": false,
   "scripts": {
@@ -108,7 +108,8 @@
     "zod-to-json-schema": "^3.24.6"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "^22 || ^24",
+    "npm": ">=11.6.2"
   },
   "gitHooks": {
     "pre-commit": "lint-staged && npm run pre-commit:encrypt"

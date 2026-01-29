@@ -75,7 +75,7 @@ index e9ebd1d3..00a7b42d 100644
      "vite-tsconfig-paths": "^4.3.1"
    },
    "engines": {
--    "node": ">=18.0.0"
+-    "node": "^22 || ^24",
 +    "node": ">=20.0.0 <22.0.0"
    }
  }
