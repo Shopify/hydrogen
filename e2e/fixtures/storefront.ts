@@ -893,7 +893,7 @@ export class StorefrontPage {
     for (let i = 0; i < count; i++) {
       const codeText = await discountCodeElements.nth(i).textContent();
       if (codeText) {
-        codes.push(codeText.trim());
+        codes.push(codeText.trim().toUpperCase());
       }
     }
 
