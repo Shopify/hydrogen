@@ -60,9 +60,9 @@ describe('build', () => {
 
     const output = outputMock.output();
     expect(output).toMatch(expectedBundlePath);
-    expect(output).toMatch('building for productio');
+    expect(output).toMatch('building client environment for production');
     expect(output).toMatch('dist/client/assets/root-');
-    expect(output).toMatch('building SSR bundle for productio');
+    expect(output).toMatch('building ssr environment for production');
     expect(
       fileExists(joinPath(tmpDir, expectedBundlePath)),
     ).resolves.toBeTruthy();

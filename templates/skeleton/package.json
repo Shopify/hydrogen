@@ -54,7 +54,7 @@
     "graphql-config": "^5.0.3",
     "prettier": "^3.4.2",
     "typescript": "^5.9.2",
-    "vite": "^6.2.4",
+    "vite": "^7.0.0",
     "vite-tsconfig-paths": "^4.3.1"
   },
   "engines": {
