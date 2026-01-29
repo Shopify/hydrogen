@@ -1,5 +1,43 @@
 # skeleton
 
+## 2025.10.0
+
+### Major Changes
+
+- Update Storefront API and Customer Account API to version 2025-10 ([#3352](https://github.com/Shopify/hydrogen/pull/3352)) by [@fredericoo](https://github.com/fredericoo)
+
+### Patch Changes
+
+- Add support for nested cart line items (warranties, gift wrapping, etc.) ([#3398](https://github.com/Shopify/hydrogen/pull/3398)) by [@fredericoo](https://github.com/fredericoo)
+
+  Storefront API 2025-10 introduces `parentRelationship` on cart line items, enabling parent-child relationships for add-ons. This update displays nested line items in the cart.
+
+  ### Changes
+  - Updates GraphQL fragments to include `parentRelationship` and `lineComponents` fields
+  - Updates `CartMain` and `CartLineItem` to render child line items with visual hierarchy
+
+  ### Note
+
+  This update focuses on **displaying** nested line items. To add both a product and its child (e.g., warranty) in a single action:
+
+  ```tsx
+  <AddToCartButton
+    lines={[
+      {merchandiseId: 'gid://shopify/ProductVariant/laptop-456', quantity: 1},
+      {
+        merchandiseId: 'gid://shopify/ProductVariant/warranty-123',
+        quantity: 1,
+        parent: {merchandiseId: 'gid://shopify/ProductVariant/laptop-456'},
+      },
+    ]}
+  >
+    Add to Cart with Warranty
+  </AddToCartButton>
+  ```
+
+- Updated dependencies [[`cd653456fbd1e7e1ab1f6fecff04c89a74b6cad9`](https://github.com/Shopify/hydrogen/commit/cd653456fbd1e7e1ab1f6fecff04c89a74b6cad9), [`24d26ad94e90ab0a859c274838f7f31e75a7808c`](https://github.com/Shopify/hydrogen/commit/24d26ad94e90ab0a859c274838f7f31e75a7808c), [`13a6f8987ea20d33a30a9c0329d7c11528b892ea`](https://github.com/Shopify/hydrogen/commit/13a6f8987ea20d33a30a9c0329d7c11528b892ea), [`403c1f5b6e266c3dfad30f7cfed229e3304570b0`](https://github.com/Shopify/hydrogen/commit/403c1f5b6e266c3dfad30f7cfed229e3304570b0)]:
+  - @shopify/hydrogen@2026.0.0
+
 ## 2025.7.3
 
 ### Patch Changes
