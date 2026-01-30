@@ -1,6 +1,4 @@
-import {ProductVariant} from '@shopify/hydrogen/storefront-api-types';
 import {setTestStore, test, expect} from '../../fixtures';
-import {CART_QUERY_FRAGMENT} from '../../../templates/skeleton/app/lib/fragments';
 
 setTestStore('hydrogenPreviewStorefront');
 
