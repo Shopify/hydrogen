@@ -55,19 +55,13 @@ export function useCartFeedback() {
   }, [fetchers, fetcherDataMap]);
 
   const feedback: {
-    errors: Map<string, NonNullable<CartActionData['errors']>[number]>;
     warnings: Map<string, NonNullable<CartActionData['warnings']>[number]>;
     userErrors: Map<string, NonNullable<CartActionData['userErrors']>[number]>;
-  } = {errors: new Map(), warnings: new Map(), userErrors: new Map()};
+  } = {warnings: new Map(), userErrors: new Map()};
   for (const fetcherData of fetcherDataMap.values()) {
     if (fetcherData.warnings) {
       for (const warning of fetcherData.warnings) {
         feedback.warnings.set(warning.code, warning);
-      }
-    }
-    if (fetcherData.errors) {
-      for (const error of fetcherData.errors) {
-        feedback.errors.set(error.path?.join('.') ?? '_root', error);
       }
     }
     if (fetcherData.userErrors) {
@@ -77,7 +71,6 @@ export function useCartFeedback() {
     }
   }
   return {
-    errors: Array.from(feedback.errors.values()),
     warnings: Array.from(feedback.warnings.values()),
     userErrors: Array.from(feedback.userErrors.values()),
   };
