@@ -32,6 +32,7 @@ export function CartLineItem({
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
   const {close} = useAside();
   const lineItemChildren = childrenMap[id];
+  const childrenLabelId = `cart-line-children-${id}`;
 
   return (
     <li key={id} className="cart-line">
@@ -77,13 +78,10 @@ export function CartLineItem({
 
       {lineItemChildren ? (
         <div>
-          <p id="cart-line-children" className="sr-only">
+          <p id={childrenLabelId} className="sr-only">
             Line items with {product.title}
           </p>
-          <ul
-            aria-labelledby="cart-line-children"
-            className="cart-line-children"
-          >
+          <ul aria-labelledby={childrenLabelId} className="cart-line-children">
             {lineItemChildren.map((childLine) => (
               <CartLineItem
                 childrenMap={childrenMap}
