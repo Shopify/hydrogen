@@ -178,6 +178,7 @@ async function submitQuantity(
   line: CartLine,
 ) {
   const value = e.target.valueAsNumber;
+  if (Number.isNaN(value) || value < 1) return;
   const formData = new FormData();
   formData.set(
     CartForm.INPUT_NAME,
