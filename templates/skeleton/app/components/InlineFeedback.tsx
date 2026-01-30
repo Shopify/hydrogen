@@ -6,7 +6,6 @@ interface InlineFeedbackProps {
 
 /**
  * An accessible inline feedback component for warnings and errors.
- * Uses role="alert" to announce changes to assistive technology.
  */
 export function InlineFeedback({
   type = 'warning',
