@@ -67,7 +67,9 @@ function CartDiscounts({
             <div className="cart-discount">
               <code>{codes?.join(', ')}</code>
               &nbsp;
-              <button>Remove</button>
+              <button type="submit" aria-label="Remove discount">
+                Remove
+              </button>
             </div>
           </UpdateDiscountForm>
         </div>
@@ -76,9 +78,19 @@ function CartDiscounts({
       {/* Show an input to apply a discount */}
       <UpdateDiscountForm discountCodes={codes}>
         <div>
-          <input type="text" name="discountCode" placeholder="Discount code" />
+          <label htmlFor="discount-code-input" className="sr-only">
+            Discount code
+          </label>
+          <input
+            id="discount-code-input"
+            type="text"
+            name="discountCode"
+            placeholder="Discount code"
+          />
           &nbsp;
-          <button type="submit">Apply</button>
+          <button type="submit" aria-label="Apply discount code">
+            Apply
+          </button>
         </div>
       </UpdateDiscountForm>
     </div>
@@ -215,4 +227,3 @@ function RemoveGiftCardForm({
     </CartForm>
   );
 }
-
