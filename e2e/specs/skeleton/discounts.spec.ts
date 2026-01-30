@@ -99,6 +99,7 @@ test.describe('Discount codes', () => {
   test('Rejects invalid discount code', async ({storefront}) => {
     await storefront.tryApplyDiscountCode(inactiveDiscountCode);
 
+    // TODO: Add error display/help text, and appropriate testing.
     const appliedCodes = await storefront.getAppliedDiscountCodes();
     expect(appliedCodes).not.toContain(inactiveDiscountCode);
   });
