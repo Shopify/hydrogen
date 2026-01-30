@@ -24,35 +24,31 @@ export function useCartFeedback() {
   const fetchers = useFetchers();
 
   useEffect(() => {
-    let changed = false;
-    let newFetcherDataMap = new Map(fetcherDataMap);
+    setFetcherDataMap((prevMap) => {
+      let changed = false;
+      const newMap = new Map(prevMap);
 
-    for (const fetcher of fetchers) {
-      if (!isCartFetcher(fetcher)) continue;
+      for (const fetcher of fetchers) {
+        if (!isCartFetcher(fetcher)) continue;
 
-      switch (fetcher.state) {
-        case 'submitting':
-          newFetcherDataMap = new Map();
-          changed = true;
-          break;
-        case 'loading':
-          if (
-            fetcher.data &&
-            fetcher.data !== newFetcherDataMap.get(fetcher.key)
-          ) {
-            changed = true;
-            newFetcherDataMap.set(fetcher.key, fetcher.data);
-          }
-          break;
-        default:
-          break;
+        switch (fetcher.state) {
+          case 'submitting':
+            if (prevMap.size > 0) {
+              return new Map(); // Clear on new submission
+            }
+            break;
+          case 'loading':
+            if (fetcher.data && fetcher.data !== prevMap.get(fetcher.key)) {
+              changed = true;
+              newMap.set(fetcher.key, fetcher.data);
+            }
+            break;
+        }
       }
-    }
 
-    if (changed) {
-      setFetcherDataMap(newFetcherDataMap);
-    }
-  }, [fetchers, fetcherDataMap]);
+      return changed ? newMap : prevMap;
+    });
+  }, [fetchers]);
 
   const feedback: {
     warnings: Map<string, NonNullable<CartActionData['warnings']>[number]>;
