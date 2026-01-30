@@ -830,4 +830,137 @@ export class StorefrontPage {
       });
     });
   }
+
+  /**
+   * Apply a discount code via form submission.
+   */
+  async applyDiscountCode(code: string): Promise<{code: string}> {
+    const input = this.page.locator('input[name="discountCode"]:visible');
+    const applyButton = input
+      .locator('..')
+      .getByRole('button', {name: 'Apply discount code'});
+
+    await expect(input).toBeVisible({timeout: 5000});
+    await input.fill(code);
+
+    const responsePromise = this.page.waitForResponse(
+      (response) =>
+        response.url().includes('/cart') &&
+        response.request().method() === 'POST',
+      {timeout: 15000},
+    );
+    await applyButton.click();
+    await responsePromise;
+
+    const upperCode = code.toUpperCase();
+    await this.expectDiscountCodeApplied(upperCode);
+
+    return {code: upperCode};
+  }
+
+  /**
+   * Remove applied discount code.
+   */
+  async removeDiscountCode(): Promise<void> {
+    const removeButton = this.page
+      .locator('button[aria-label="Remove discount"]:visible')
+      .first();
+
+    await expect(removeButton).toBeVisible({timeout: 5000});
+
+    const responsePromise = this.page.waitForResponse(
+      (response) =>
+        response.url().includes('/cart') &&
+        response.request().method() === 'POST',
+      {timeout: 15000},
+    );
+    await removeButton.click();
+    await responsePromise;
+
+    await expect(removeButton).not.toBeVisible({timeout: 10000});
+  }
+
+  /**
+   * Get applied discount codes.
+   */
+  async getAppliedDiscountCodes(): Promise<string[]> {
+    const discountCodeElements = this.page.locator(
+      '.cart-discount code:visible',
+    );
+    const count = await discountCodeElements.count();
+
+    const codes: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const codeText = await discountCodeElements.nth(i).textContent();
+      if (codeText) {
+        codes.push(codeText.trim().toUpperCase());
+      }
+    }
+
+    return codes;
+  }
+
+  /**
+   * Try applying discount code (for error testing).
+   */
+  async tryApplyDiscountCode(code: string): Promise<void> {
+    const input = this.page.locator('input[name="discountCode"]:visible');
+    const applyButton = input
+      .locator('..')
+      .getByRole('button', {name: 'Apply discount code'});
+
+    await expect(input).toBeVisible({timeout: 5000});
+    await input.fill(code);
+
+    const responsePromise = this.page.waitForResponse(
+      (response) =>
+        response.url().includes('/cart') &&
+        response.request().method() === 'POST',
+      {timeout: 15000},
+    );
+    await applyButton.click();
+    await responsePromise;
+  }
+
+  /**
+   * Assert discount code is visible.
+   */
+  async expectDiscountCodeApplied(
+    code: string,
+    timeout = 10000,
+  ): Promise<void> {
+    const upperCode = code.toUpperCase();
+    const codeLocator = this.page.locator(
+      `.cart-discount code:has-text("${upperCode}"):visible`,
+    );
+    await expect(codeLocator).toBeVisible({timeout});
+  }
+
+  /**
+   * Assert discount code is not visible.
+   */
+  async expectDiscountCodeRemoved(
+    code: string,
+    timeout = 10000,
+  ): Promise<void> {
+    const upperCode = code.toUpperCase();
+    const codeLocator = this.page.locator(
+      `.cart-discount code:has-text("${upperCode}"):visible`,
+    );
+    await expect(codeLocator).not.toBeVisible({timeout});
+  }
+
+  /**
+   * Get cart subtotal amount as a number.
+   */
+  async getCartSubtotal(): Promise<number> {
+    const subtotalDd = this.page.locator('.cart-subtotal dd:visible');
+
+    await expect(subtotalDd).toBeVisible({timeout: 5000});
+    const subtotalText = await subtotalDd.textContent();
+
+    if (!subtotalText) return 0;
+
+    return parseFloat(subtotalText.replace(/[$,]/g, ''));
+  }
 }
