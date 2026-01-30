@@ -1,5 +1,151 @@
 # @shopify/hydrogen
 
+## 2025.10.0
+
+### Major Changes
+
+- Update Storefront API and Customer Account API to version 2025-10 ([#3352](https://github.com/Shopify/hydrogen/pull/3352)) by [@fredericoo](https://github.com/fredericoo)
+
+### Minor Changes
+
+- Add `cartDeliveryAddressesReplaceDefault` to handle the new `cartDeliveryAddressesReplace` Storefront API mutation (2025-10) ([#3406](https://github.com/Shopify/hydrogen/pull/3406)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  This new mutation replaces all delivery addresses on a cart in a single operation.
+
+  **Usage via cart handler:**
+
+  ```typescript
+  const result = await cart.replaceDeliveryAddresses([
+    {
+      address: {
+        deliveryAddress: {
+          address1: '123 Main St',
+          city: 'Anytown',
+          countryCode: 'US',
+        },
+      },
+      selected: true,
+    },
+  ]);
+  ```
+
+  **Usage via CartForm:**
+
+  ```tsx
+  <CartForm action={CartForm.ACTIONS.DeliveryAddressesReplace}>
+    {/* form inputs */}
+  </CartForm>
+  ```
+
+- Add `cartGiftCardCodesAdd` mutation ([#3401](https://github.com/Shopify/hydrogen/pull/3401)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  ## New Feature: cartGiftCardCodesAdd
+
+  Adds gift card codes without replacing existing ones.
+
+  **Before (2025-07):**
+
+  ```typescript
+  const codes = ['EXISTING1', 'EXISTING2'];
+  await cart.updateGiftCardCodes(['EXISTING1', 'EXISTING2', 'NEW_CODE']);
+  ```
+
+  **After (2025-10):**
+
+  ```typescript
+  await cart.addGiftCardCodes(['NEW_CODE']);
+  ```
+
+  ## Verified API Behavior
+
+  | Scenario                         | Behavior                                |
+  | -------------------------------- | --------------------------------------- |
+  | Valid gift card code             | Applied successfully                    |
+  | UPPERCASE code                   | Works (API is case-insensitive)         |
+  | Duplicate code in same call      | Idempotent - applied once, no error     |
+  | Re-applying already applied code | Idempotent - no error, no duplicate     |
+  | Multiple different codes         | All applied successfully                |
+  | Invalid code                     | Silently rejected (no error surfaced)   |
+  | Code with whitespace             | Rejected (API does not trim whitespace) |
+  | Empty input                      | Graceful no-op                          |
+
+  **Note:** The API handles duplicate gift card codes gracefully - submitting an already-applied code results in silent success (idempotent behavior), not an error. No `DUPLICATE_GIFT_CARD` error code exists.
+
+  **Note on whitespace:** The API does NOT trim whitespace from codes. Ensure codes are trimmed before submission if accepting user input.
+
+  ## API Reference
+
+  **New method:**
+  - `cart.addGiftCardCodes(codes)` - Appends codes to cart
+  - `CartForm.ACTIONS.GiftCardCodesAdd` - Form action
+
+  ## Skeleton Template Changes
+
+  The skeleton template has been updated to use the new `cartGiftCardCodesAdd` mutation:
+  - Removed `UpdateGiftCardForm` component from `CartSummary.tsx`
+  - Added `AddGiftCardForm` component using `CartForm.ACTIONS.GiftCardCodesAdd`
+
+  If you customized the gift card form in your project, you may want to migrate to the new `Add` action for simpler code.
+
+  ## Usage
+
+  ```typescript
+  import {CartForm} from '@shopify/hydrogen';
+
+  <CartForm action={CartForm.ACTIONS.GiftCardCodesAdd} inputs={{giftCardCodes: ['CODE1', 'CODE2']}}>
+    <button>Add Gift Cards</button>
+  </CartForm>
+  ```
+
+  Or with createCartHandler:
+
+  ```typescript
+  const cart = createCartHandler({storefront, getCartId, setCartId});
+  await cart.addGiftCardCodes(['SUMMER2025', 'WELCOME10']);
+  ```
+
+- Add `visitorConsent` support to `@inContext` directive for Storefront API parity ([#3408](https://github.com/Shopify/hydrogen/pull/3408)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  **Note: Most Hydrogen storefronts do NOT need this feature.**
+
+  This API addition provides Storefront API 2025-10 parity for the `visitorConsent` parameter in `@inContext` directives. However, if you're using Hydrogen's analytics provider or Shopify's Customer Privacy API (including third-party consent services integrated with it), consent is already handled automatically and you don't need to use this.
+
+  This feature is primarily intended for Checkout Kit and other non-Hydrogen integrations that manage consent outside of Shopify's standard consent flow.
+
+  **What it does:**
+  When explicitly provided, `visitorConsent` encodes buyer consent preferences (analytics, marketing, preferences, saleOfData) into the cart's `checkoutUrl` via the `_cs` parameter.
+
+### Patch Changes
+
+- `cart.updateDeliveryAddresses` mutation now clears all delivery addresses when passed an empty array ([#3393](https://github.com/Shopify/hydrogen/pull/3393)) by [@fredericoo](https://github.com/fredericoo)
+
+  ## Breaking Behavior Change in Storefront API 2025-10
+
+  The `cartDeliveryAddressesUpdate` mutation now clears all delivery addresses when passed an empty array. This behavior was undefined in previous API versions.
+
+  ## What Changed
+
+  **Before (API ≤ 2025-07):**
+  Passing an empty array did not update any addresses, essentially a no-op.
+
+  **After (API ≥ 2025-10):**
+  Passing an empty array explicitly clears all delivery addresses from the cart.
+
+  ## Usage
+
+  ```typescript
+  context.cart.updateDeliveryAddresses([]);
+  ```
+
+  ## Migration
+
+  If you are relying on `cart.updateDeliveryAddresses([])` in your codebase, verify if the new behavior is compatible with your expectations.
+
+  Otherwise, no migration is required.
+
+- Updated dependencies [[`0e61522871fd7500b9cbfa5d15db685deab4c802`](https://github.com/Shopify/hydrogen/commit/0e61522871fd7500b9cbfa5d15db685deab4c802), [`cd653456fbd1e7e1ab1f6fecff04c89a74b6cad9`](https://github.com/Shopify/hydrogen/commit/cd653456fbd1e7e1ab1f6fecff04c89a74b6cad9), [`b79b6fc39cdd28e3c73240c4f5e53339feb49561`](https://github.com/Shopify/hydrogen/commit/b79b6fc39cdd28e3c73240c4f5e53339feb49561), [`38f8a79625838a9cd4520b20c0db2e5d331f7d26`](https://github.com/Shopify/hydrogen/commit/38f8a79625838a9cd4520b20c0db2e5d331f7d26)]:
+  - @shopify/hydrogen-react@2026.0.0
+
 ## 2025.7.3
 
 ### Minor Changes
