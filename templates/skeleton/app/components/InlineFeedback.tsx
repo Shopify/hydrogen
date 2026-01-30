@@ -4,18 +4,33 @@ interface InlineFeedbackProps {
   description?: string;
 }
 
+const FEEDBACK_PROPS: Record<
+  NonNullable<InlineFeedbackProps['type']>,
+  {icon: string; role: string}
+> = {
+  warning: {
+    icon: '⚠',
+    role: 'status',
+  },
+  error: {
+    icon: '✕',
+    role: 'alert',
+  },
+};
+
 /**
  * An accessible inline feedback component for warnings and errors.
+ * Uses role="status" for warnings and role="alert" for errors.
  */
 export function InlineFeedback({
   type = 'warning',
   title,
   description,
 }: InlineFeedbackProps) {
-  const icon = type === 'error' ? '✕' : '⚠';
+  const {icon, role} = FEEDBACK_PROPS[type];
 
   return (
-    <div className={`inline-feedback inline-feedback--${type}`} role="status">
+    <div className={`inline-feedback inline-feedback--${type}`} role={role}>
       <span className="inline-feedback-icon" aria-hidden="true">
         {icon}
       </span>
