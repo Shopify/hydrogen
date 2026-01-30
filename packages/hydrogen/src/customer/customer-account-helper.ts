@@ -1,3 +1,8 @@
+import {
+  discoverCustomerAccountEndpoints,
+  type DiscoveredEndpoints,
+} from './discovery';
+
 export enum URL_TYPE {
   CA_BASE_URL = 'CA_BASE_URL',
   CA_BASE_AUTH_URL = 'CA_BASE_AUTH_URL',
@@ -11,28 +16,65 @@ export enum URL_TYPE {
 export function createCustomerAccountHelper(
   customerApiVersion: string,
   shopId: string,
+  storefrontDomain: string,
+  discovered: DiscoveredEndpoints,
 ) {
-  const customerAccountUrl = `https://shopify.com/${shopId}`;
-  const customerAccountAuthUrl = `https://shopify.com/authentication/${shopId}`;
-
   return function getCustomerAccountUrl(urlType: URL_TYPE): string {
     switch (urlType) {
       case URL_TYPE.CA_BASE_URL:
-        return customerAccountUrl;
+        return new URL(discovered.graphqlApiUrl).origin;
+
       case URL_TYPE.CA_BASE_AUTH_URL:
-        return customerAccountAuthUrl;
+        return new URL(discovered.authorizationUrl).origin;
+
       case URL_TYPE.GRAPHQL:
-        return `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`;
+        if (customerApiVersion)
+          return discovered.graphqlApiUrl.replace(
+            /\/api\/[^\/]+\//,
+            `/api/${customerApiVersion}/`,
+          );
+        return discovered.graphqlApiUrl;
+
       case URL_TYPE.AUTH:
-        return `${customerAccountAuthUrl}/oauth/authorize`;
+        return discovered.authorizationUrl;
+
       case URL_TYPE.LOGIN_SCOPE:
         return shopId
           ? 'openid email customer-account-api:full'
           : 'openid email https://api.customers.com/auth/customer.graphql';
+
       case URL_TYPE.TOKEN_EXCHANGE:
-        return `${customerAccountAuthUrl}/oauth/token`;
+        return discovered.tokenUrl;
+
       case URL_TYPE.LOGOUT:
-        return `${customerAccountAuthUrl}/logout`;
+        return discovered.logoutUrl;
+
+      default:
+        throw new Error(`Unknown URL type: ${urlType}`);
     }
   };
+}
+
+export async function createCustomerAccountHelperWithDiscovery(
+  customerApiVersion: string,
+  shopId: string,
+  storefrontDomain: string,
+): Promise<(urlType: URL_TYPE) => string> {
+  const discoveredEndpoints =
+    await discoverCustomerAccountEndpoints(storefrontDomain);
+
+  if (!discoveredEndpoints) {
+    throw new Error(
+      `[h2:error:discovery] Failed to discover Customer Account endpoints for ${storefrontDomain}. ` +
+        `Endpoint discovery is required for Customer Account API. ` +
+        `Ensure your storefront domain is correctly configured and the discovery endpoints are accessible.`,
+    );
+  }
+
+  return createCustomerAccountHelper(
+    customerApiVersion,
+    shopId,
+    storefrontDomain,
+    discoveredEndpoints,
+  );
 }
