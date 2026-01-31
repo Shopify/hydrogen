@@ -28,7 +28,7 @@
     "dist"
   ],
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.19.0"
   },
   "exports": {
     ".": {
@@ -74,7 +74,7 @@
     "vitest": "^3.2.4"
   },
   "peerDependencies": {
-    "vite": "^6.2.1"
+    "vite": "^7.0.0"
   },
   "peerDependenciesMeta": {
     "vite": {
