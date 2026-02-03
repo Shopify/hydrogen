@@ -2,11 +2,19 @@ import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import type {CartLayout, LineItemChildrenMap} from '~/components/CartMain';
 import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
-import {href, Link, useFetcher, type FetcherWithComponents} from 'react-router';
+import {
+  href,
+  Link,
+  useActionData,
+  useFetcher,
+  type FetcherWithComponents,
+} from 'react-router';
 import {ProductPrice} from './ProductPrice';
 import {useAside} from './Aside';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
+import type {action as cartAction} from '~/routes/cart';
 
+type CartActionResponse = Awaited<typeof useActionData<typeof cartAction>>;
 export type CartLine = OptimisticCartLine<CartApiQueryFragment>;
 
 /**
@@ -174,7 +182,7 @@ function isKeyboardEvent(
 
 async function submitQuantity(
   e: React.ChangeEvent<HTMLInputElement>,
-  fetcher: FetcherWithComponents<any>,
+  fetcher: FetcherWithComponents<CartActionResponse>,
   line: CartLine,
 ) {
   const value = e.target.valueAsNumber;
