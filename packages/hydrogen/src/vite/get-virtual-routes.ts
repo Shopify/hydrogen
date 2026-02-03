@@ -17,10 +17,13 @@ function getVirtualRoutesPath(
   }, basePath);
 
   // Getting rid of the drive path (ie. '/C:/') in windows
-  return new URL(forFile, virtualRoutesPath).pathname.replace(
+  const pathname = new URL(forFile, virtualRoutesPath).pathname.replace(
     /^\/[a-zA-Z]:\//,
     '/',
   );
+
+  // Decode URI components to handle spaces and special characters in file paths
+  return decodeURIComponent(pathname);
 }
 
 export async function getVirtualRoutesV3() {

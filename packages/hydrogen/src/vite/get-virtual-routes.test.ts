@@ -29,4 +29,16 @@ describe('virtual routes', () => {
       ]),
     });
   });
+
+  it('handles file paths with spaces correctly', async () => {
+    const result = await getVirtualRoutesV3();
+
+    result.routes.forEach((route) => {
+      expect(route.file).not.toContain('%20');
+      expect(route.file).not.toContain('%');
+    });
+
+    expect(result.layout.file).not.toContain('%20');
+    expect(result.layout.file).not.toContain('%');
+  });
 });
