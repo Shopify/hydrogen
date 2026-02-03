@@ -13,6 +13,7 @@ import {ProductPrice} from './ProductPrice';
 import {useAside} from './Aside';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import type {action as cartAction} from '~/routes/cart';
+import {useEffect, useRef} from 'react';
 
 type CartActionResponse = Awaited<typeof useActionData<typeof cartAction>>;
 export type CartLine = OptimisticCartLine<CartApiQueryFragment>;
@@ -165,7 +166,7 @@ function CartLineRemoveButton({
   );
 }
 
-function isKeyboardEvent(
+function isTextChangingEvent(
   e: React.ChangeEvent<HTMLInputElement>,
 ): e is typeof e & {nativeEvent: InputEvent} {
   if (e.nativeEvent instanceof InputEvent) {
@@ -177,6 +178,7 @@ function isKeyboardEvent(
       return true;
     }
   }
+
   return false;
 }
 
@@ -206,18 +208,23 @@ function CartLineQuantityInput({
   disabled: boolean;
 }) {
   const fetcher = useFetcher({key: getUpdateKey([line.id])});
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!inputRef.current) return;
+    inputRef.current.value = line.quantity.toString();
+  }, [line.quantity]);
 
   return (
     <input
+      ref={inputRef}
       aria-label="Quantity"
       min={1}
       className="cart-line-quantity-input"
       disabled={disabled}
-      key={line.quantity}
       type="number"
       defaultValue={line.quantity}
       onChange={(e) => {
-        if (isKeyboardEvent(e)) return;
+        if (isTextChangingEvent(e)) return;
         void submitQuantity(e, fetcher, line);
       }}
       onBlur={(e) => {
