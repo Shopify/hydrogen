@@ -52,7 +52,7 @@ The `Readme.md` files in the directories of individual packages and templates co
 
 ## Formatting and Linting
 
-The Hydrogen monorepo provides commands for linting and formatting, and uses [Yorkie](https://github.com/yyx990803/yorkie) to run checks on staged commits automatically.
+The Hydrogen monorepo provides commands for linting and formatting, and uses [Husky](https://typicode.github.io/husky) to run checks on staged commits automatically.
 
 | Command             | Description                               |
 | ------------------- | ----------------------------------------- |
