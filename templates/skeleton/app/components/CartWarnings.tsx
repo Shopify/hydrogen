@@ -86,9 +86,9 @@ export function CartWarnings() {
           title={warning.message}
         />
       ))}
-      {feedback.userErrors.map((userError) => (
+      {feedback.userErrors.map((userError, index) => (
         <InlineFeedback
-          key={userError.code}
+          key={userError.code ?? `_root-${index}`}
           type="error"
           title={userError.message}
         />
