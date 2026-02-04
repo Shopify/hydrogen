@@ -1,10 +1,12 @@
+import type {Route} from './+types/[.]well-known.ucp';
 import {normalizeUrl} from '@shopify/hydrogen';
-import {LoaderFunctionArgs, redirect} from 'react-router';
+import {redirect} from 'react-router';
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context}: Route.LoaderArgs) {
   const url = new URL(
     '/.well-known/ucp',
     normalizeUrl(context.env.PUBLIC_STORE_DOMAIN),
   );
+
   return redirect(url.toString());
 }
