@@ -11,6 +11,8 @@ export const PRIVACY_PREFS_DIALOG_ID = 'shopify-pc__prefs__dialog';
 export const PREFS_ACCEPT_BUTTON_ID = 'shopify-pc__prefs__header-accept';
 export const PREFS_DECLINE_BUTTON_ID = 'shopify-pc__prefs__header-decline';
 
+const CART_ID_PREFIX = 'gid://shopify/Cart/';
+
 // Cookies that require consent
 export const ANALYTICS_COOKIES = [
   '_shopify_analytics',
@@ -831,6 +833,27 @@ export class StorefrontPage {
     });
   }
 
+  async getCartId() {
+    const cartId = await this.getCookie('cart');
+    return cartId?.value
+      ? `${CART_ID_PREFIX}${decodeURIComponent(cartId.value)}`
+      : undefined;
+  }
+
+  async setCartId(cartId: string) {
+    if (cartId.startsWith(CART_ID_PREFIX)) {
+      cartId = cartId.replace(CART_ID_PREFIX, '');
+    }
+    await this.context.addCookies([
+      {
+        name: 'cart',
+        value: encodeURIComponent(cartId),
+        url: this.page.url(),
+        httpOnly: false,
+        secure: false,
+      },
+    ]);
+  }
   /**
    * Apply a discount code via form submission.
    */
