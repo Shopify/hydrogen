@@ -69,6 +69,15 @@ export async function getVirtualRoutesV3() {
         index: false,
       },
       {
+        id: `${VIRTUAL_ROUTES_DIR}/[.]well-known/ucp`,
+        path: '.well-known/ucp',
+        file: getVirtualRoutesPath(
+          VIRTUAL_ROUTES_ROUTES_DIR_PARTS,
+          '[.]well-known.ucp.jsx',
+        ),
+        index: false,
+      },
+      {
         id: `${VIRTUAL_ROUTES_DIR}/index`,
         path: '',
         file: getVirtualRoutesPath(
