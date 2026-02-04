@@ -7,7 +7,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'Creates a function that accepts an array of delivery address IDs [ID](/docs/api/storefront/2025-10/scalars/ID) to remove from a cart',
+    'Creates a function that accepts an array of delivery address IDs [ID](/docs/api/storefront/2026-01/scalars/ID) to remove from a cart',
   type: 'utility',
   defaultExample: {
     description: 'This is the default example',

@@ -174,7 +174,7 @@ export const CartDiscountCodesUpdate = (
 ): string => /* GraphQL */ `
   mutation CartDiscountCodesUpdate(
     $cartId: ID!
-    $discountCodes: [String!]
+    $discountCodes: [String!]!
     $numCartLines: Int = 250
     $country: CountryCode = ZZ
     $language: LanguageCode

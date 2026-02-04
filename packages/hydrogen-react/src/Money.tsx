@@ -17,13 +17,13 @@ type MoneyV2 = StorefrontApiMoneyV2 | CustomerAccountApiMoneyV2;
 export interface MoneyPropsBase<ComponentGeneric extends React.ElementType> {
   /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */
   as?: ComponentGeneric;
-  /** An object with fields that correspond to the [Storefront API's MoneyV2 object](https://shopify.dev/docs/api/storefront/2025-10/objects/MoneyV2) or [Customer Account API's MoneyV2 object](https://shopify.dev/docs/api/customer/2025-10/objects/moneyv2). */
+  /** An object with fields that correspond to the [Storefront API's MoneyV2 object](https://shopify.dev/docs/api/storefront/2026-01/objects/MoneyV2) or [Customer Account API's MoneyV2 object](https://shopify.dev/docs/api/customer/2026-01/objects/moneyv2). */
   data: PartialDeep<MoneyV2, {recurseIntoArrays: true}>;
   /** Whether to remove the currency symbol from the output. */
   withoutCurrency?: boolean;
   /** Whether to remove trailing zeros (fractional money) from the output. */
   withoutTrailingZeros?: boolean;
-  /** A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2025-10/objects/unitpricemeasurement). */
+  /** A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2026-01/objects/unitpricemeasurement). */
   measurement?: PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>;
   /** Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`. */
   measurementSeparator?: ReactNode;
@@ -40,8 +40,8 @@ export type MoneyProps<ComponentGeneric extends React.ElementType> =
       : React.ComponentPropsWithoutRef<ComponentGeneric>);
 
 /**
- * The `Money` component renders a string of the [Storefront API's MoneyV2 object](https://shopify.dev/docs/api/storefront/2025-10/objects/MoneyV2)
- * or the [Customer Account API's MoneyV2 object](https://shopify.dev/docs/api/customer/2025-10/objects/moneyv2)
+ * The `Money` component renders a string of the [Storefront API's MoneyV2 object](https://shopify.dev/docs/api/storefront/2026-01/objects/MoneyV2)
+ * or the [Customer Account API's MoneyV2 object](https://shopify.dev/docs/api/customer/2026-01/objects/moneyv2)
  * according to the `locale` in the `ShopifyProvider` component.
  * &nbsp;
  * @see {@link https://shopify.dev/api/hydrogen/components/money}
