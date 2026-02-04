@@ -242,6 +242,9 @@ jobs:
 
   validate_recipes:
     name: ⬣ Validate Recipes
+    # TEMPORARILY DISABLED: Recipe system is being re-evaluated.
+    # Remove this line to re-enable.
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
