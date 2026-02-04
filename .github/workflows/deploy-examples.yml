@@ -19,6 +19,9 @@ permissions:
 jobs:
   deploy:
     name: Deploy Recipe to Oxygen
+    # TEMPORARILY DISABLED: Recipe system is being re-evaluated.
+    # Remove this line to re-enable.
+    if: false
     timeout-minutes: 30
     runs-on: ubuntu-latest
     strategy:
