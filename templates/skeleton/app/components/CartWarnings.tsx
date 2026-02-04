@@ -13,9 +13,7 @@ type CartActionData = NonNullable<
   ReturnType<typeof useActionData<typeof cartAction>>
 >;
 /** Returns the errors and warnings from the cart fetchers
- *  Normalizes the errors to provide better UX.
- *
- *  Errors are normalized by path, warnings are normalized by code.
+ *  Groups errors and warnings by code to provide better UX.
  */
 export function useCartFeedback() {
   const [fetcherDataMap, setFetcherDataMap] = useState<
