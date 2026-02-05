@@ -43,6 +43,9 @@ jobs:
         # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
         with:
           fetch-depth: 0
+          # Use PAT to ensure CI workflows trigger on the release PR
+          # Events from GITHUB_TOKEN don't trigger workflows (security feature)
+          token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -233,6 +236,9 @@ jobs:
         # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
         with:
           fetch-depth: 0
+          # Use PAT to ensure CI workflows trigger on the release PR
+          # Events from GITHUB_TOKEN don't trigger workflows (security feature)
+          token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
