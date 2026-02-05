@@ -183,12 +183,18 @@ function isTextChangingEvent(
 }
 
 async function submitQuantity(
-  e: React.ChangeEvent<HTMLInputElement>,
+  e:
+    | React.ChangeEvent<HTMLInputElement>
+    | React.KeyboardEvent<HTMLInputElement>,
   fetcher: FetcherWithComponents<CartActionResponse>,
   line: CartLine,
 ) {
-  const value = e.target.valueAsNumber;
-  if (Number.isNaN(value) || value < 1) return;
+  let value = e.currentTarget.valueAsNumber;
+  /** we revert to a valid value if it was invalid */
+  if (Number.isNaN(value) || value < 1) {
+    e.currentTarget.value = line.quantity.toString();
+    value = line.quantity;
+  }
   const formData = new FormData();
   formData.set(
     CartForm.INPUT_NAME,
@@ -223,6 +229,9 @@ function CartLineQuantityInput({
       disabled={disabled}
       type="number"
       defaultValue={line.quantity}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') void submitQuantity(e, fetcher, line);
+      }}
       onChange={(e) => {
         if (isTextChangingEvent(e)) return;
         void submitQuantity(e, fetcher, line);
