@@ -14,13 +14,8 @@ import {setTestStore, test, expect, getRequiredSecret} from '../../fixtures';
 
 setTestStore('hydrogenPreviewStorefront');
 
-let giftCardCode1: string;
-let giftCardCode2: string;
-
-test.beforeAll(() => {
-  giftCardCode1 = getRequiredSecret('gift_card_code_1');
-  giftCardCode2 = getRequiredSecret('gift_card_code_2');
-});
+const giftCardCode1 = getRequiredSecret('gift_card_code_1').toUpperCase();
+const giftCardCode2 = getRequiredSecret('gift_card_code_2').toUpperCase();
 
 test.beforeEach(async ({storefront, context}) => {
   // Clear cookies for fresh session
@@ -33,7 +28,9 @@ test.beforeEach(async ({storefront, context}) => {
 
 test.describe('Gift Card Functionality', () => {
   test.describe('Core Functionality', () => {
-    test('should apply a single gift card and verify it appears', async ({storefront}) => {
+    test('should apply a single gift card and verify it appears', async ({
+      storefront,
+    }) => {
       const card = await storefront.applyGiftCard(giftCardCode1);
 
       const appliedCards = await storefront.getAppliedGiftCards();
@@ -93,7 +90,9 @@ test.describe('Gift Card Functionality', () => {
       expect(appliedCards.length).toBe(0);
     });
 
-    test('should persist gift cards after page reload', async ({storefront}) => {
+    test('should persist gift cards after page reload', async ({
+      storefront,
+    }) => {
       const card1 = await storefront.applyGiftCard(giftCardCode1);
       await storefront.expectGiftCardApplied(card1.lastChars);
 
