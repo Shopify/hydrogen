@@ -8,7 +8,7 @@
       "date": "2026-01-30",
       "hash": "87eb365ba4e9ec60ebb303d074f6254d4e3b0144",
       "commit": "https://github.com/Shopify/hydrogen/commit/87eb365ba4e9ec60ebb303d074f6254d4e3b0144",
-      "pr": "https://github.com/Shopify/hydrogen/commit/87eb365ba4e9ec60ebb303d074f6254d4e3b0144",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3421",
       "dependencies": {
         "@shopify/hydrogen": "2025.10.0"
       },
