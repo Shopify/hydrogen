@@ -38,7 +38,7 @@
           "id": "3407"
         },
         {
-          "title": "Document cartDeliveryAddressesUpdate empty array behavior",
+          "title": "BREAKING: cartDeliveryAddressesUpdate empty array behavior",
           "info": "In Storefront API 2025-10+, passing an empty array to cart.updateDeliveryAddresses() now clears all delivery addresses. Previous API versions treated empty arrays as no-op.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3393",
           "id": "3393"
