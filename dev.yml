@@ -3,6 +3,8 @@ display_name: Hydrogen
 
 up:
   - node: 'v20.19.5' # .nvmrc uses 'v20' for nvm flexibility; dev tool needs specific version
+  - packages:
+    - ejson
   - custom:
       name: Build packages
       met?: npm run build
