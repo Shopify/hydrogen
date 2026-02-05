@@ -72,7 +72,7 @@
         },
         {
           "title": "Add visitorConsent support to @inContext directive",
-          "info": "Provides Storefront API 2025-10 parity for visitorConsent parameter in @inContext directives. Note: Most Hydrogen storefronts don't need this feature as consent is handled automatically by Hydrogen's analytics provider or Shopify's Customer Privacy API. Primarily intended for Checkout Kit and non-Hydrogen integrations managing consent outside Shopify's standard flow.",
+          "info": "Provides Storefront API 2025-10 parity for visitorConsent parameter in @inContext directives. Note: Most Hydrogen storefronts don't need this feature as consent is handled automatically by Hydrogen's analytics provider or Shopify's Customer Privacy API. The visitorConsent @inContext parameter is primarily intended for Checkout Kit and non-Hydrogen integrations managing consent outside Shopify's standard flow.",
           "pr": "https://github.com/Shopify/hydrogen/commit/38f8a796",
           "id": "3415"
         },
