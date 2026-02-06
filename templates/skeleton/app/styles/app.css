@@ -24,6 +24,27 @@ img {
 
 /*
 * --------------------------------------------------
+* components/MockShopNotice
+* --------------------------------------------------
+*/
+.mock-shop-notice {
+  background: var(--color-light);
+  border: 1px solid var(--color-dark);
+  border-radius: 8px;
+  margin: 1rem 0;
+  padding: 1rem;
+}
+
+.mock-shop-notice p {
+  margin: 0 0 0.5rem;
+}
+
+.mock-shop-notice p:last-child {
+  margin-bottom: 0;
+}
+
+/*
+* --------------------------------------------------
 * components/Aside
 * --------------------------------------------------
 */

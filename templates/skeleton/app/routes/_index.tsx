@@ -1,8 +1,4 @@
-import {
-  Await,
-  useLoaderData,
-  Link,
-} from 'react-router';
+import {Await, useLoaderData, Link} from 'react-router';
 import type {Route} from './+types/_index';
 import {Suspense} from 'react';
 import {Image} from '@shopify/hydrogen';
@@ -11,6 +7,7 @@ import type {
   RecommendedProductsQuery,
 } from 'storefrontapi.generated';
 import {ProductItem} from '~/components/ProductItem';
+import {MockShopNotice} from '~/components/MockShopNotice';
 
 export const meta: Route.MetaFunction = () => {
   return [{title: 'Hydrogen | Home'}];
@@ -37,6 +34,7 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
   ]);
 
   return {
+    isShopLinked: process.env.PUBLIC_STORE_DOMAIN !== undefined,
     featuredCollection: collections.nodes[0],
   };
 }
@@ -64,6 +62,7 @@ export default function Homepage() {
   const data = useLoaderData<typeof loader>();
   return (
     <div className="home">
+      {data.isShopLinked ? 'linked' : <MockShopNotice />}
       <FeaturedCollection collection={data.featuredCollection} />
       <RecommendedProducts products={data.recommendedProducts} />
     </div>
