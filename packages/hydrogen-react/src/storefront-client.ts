@@ -89,8 +89,6 @@ export function createStorefrontClient({
       const domain = getShopifyDomain(overrideProps);
       const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');
 
-      if (isMockShop(domain)) return apiUrl;
-
       return `${apiUrl}/${
         overrideProps?.storefrontApiVersion ?? storefrontApiVersion
       }/graphql.json`;

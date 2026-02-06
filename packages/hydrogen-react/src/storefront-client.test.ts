@@ -121,7 +121,9 @@ describe(`createStorefrontClient`, () => {
         generateConfig({storeDomain: 'mock.shop'}),
       );
 
-      expect(client.getStorefrontApiUrl()).toBe(`https://mock.shop/api`);
+      expect(client.getStorefrontApiUrl()).toBe(
+        `https://mock.shop/api/${SFAPI_VERSION}/graphql.json`,
+      );
     });
   });
 
