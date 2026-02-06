@@ -1,4 +1,4 @@
-import type {Page, BrowserContext} from '@playwright/test';
+import type {Page, BrowserContext, Locator} from '@playwright/test';
 import {expect} from '@playwright/test';
 
 // Privacy Banner element IDs
@@ -802,6 +802,179 @@ export class StorefrontPage {
       '_shopify_essential',
       '_shopify_essentials',
     ]);
+  }
+
+  // ============================================================================
+  // Cart Line Item Helpers
+  // ============================================================================
+
+  /**
+   * Returns all visible cart line items. Uses visibility filter to avoid
+   * matching hidden elements in the cart drawer when on the cart page.
+   */
+  getCartLineItems(): Locator {
+    return this.page.locator('li.cart-line:visible');
+  }
+
+  /**
+   * Returns a specific visible cart line item by index.
+   */
+  getCartLineItemByIndex(index: number): Locator {
+    return this.page.locator('li.cart-line:visible').nth(index);
+  }
+
+  /**
+   * Returns the cart drawer dialog (uses semantic role selector).
+   */
+  getCartDrawer(): Locator {
+    return this.page.getByRole('dialog');
+  }
+
+  /**
+   * Returns the visible empty cart message (uses regex to handle curly apostrophe U+2019).
+   * Scoped to visible .cart-main to avoid matching hidden drawer content.
+   */
+  getCartEmptyMessage(): Locator {
+    return this.page
+      .locator('.cart-main:visible')
+      .getByText(/Looks like you haven.t added anything yet/);
+  }
+
+  /**
+   * Returns the checkout button/link.
+   */
+  getCheckoutButton(): Locator {
+    return this.page.getByRole('link', {name: /Continue to Checkout/i});
+  }
+
+  /**
+   * Opens the cart aside drawer by clicking the cart badge in the header.
+   */
+  async openCartAside(): Promise<void> {
+    const cartLink = this.page
+      .getByRole('banner')
+      .getByRole('link', {name: /cart/i});
+    await cartLink.click();
+    await expect(this.getCartDrawer()).toBeVisible({timeout: 5000});
+  }
+
+  /**
+   * Closes the cart aside drawer.
+   */
+  async closeCartAside(): Promise<void> {
+    const closeButton = this.getCartDrawer().getByRole('button', {
+      name: 'Close',
+    });
+    if (await closeButton.isVisible()) {
+      await closeButton.click();
+      await expect(this.getCartDrawer()).not.toBeVisible();
+    }
+  }
+
+  /**
+   * Gets the cart badge count from the header.
+   */
+  async getCartBadgeCount(): Promise<number> {
+    const cartLink = this.page
+      .getByRole('banner')
+      .getByRole('link', {name: /cart/i});
+    const text = await cartLink.textContent();
+    const match = text?.match(/\d+/);
+    return match ? parseInt(match[0], 10) : 0;
+  }
+
+  /**
+   * Extracts the quantity number from a line item.
+   */
+  async getLineItemQuantity(lineItem: Locator): Promise<number> {
+    const quantityText = await lineItem
+      .locator('small')
+      .filter({hasText: 'Quantity:'})
+      .textContent();
+    const match = quantityText?.match(/Quantity:\s*(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  /**
+   * Increases quantity and waits for the quantity text to actually change.
+   * Uses expect.poll to wait for the effect, not just button re-enablement.
+   */
+  async increaseLineItemQuantity(lineItem: Locator): Promise<void> {
+    const currentQuantity = await this.getLineItemQuantity(lineItem);
+    const increaseButton = lineItem.getByRole('button', {
+      name: 'Increase quantity',
+    });
+
+    await expect(increaseButton).toBeEnabled({timeout: 5000});
+    await increaseButton.click();
+
+    await expect
+      .poll(() => this.getLineItemQuantity(lineItem), {timeout: 10000})
+      .toBe(currentQuantity + 1);
+  }
+
+  /**
+   * Decreases quantity and waits for the quantity text to actually change.
+   */
+  async decreaseLineItemQuantity(lineItem: Locator): Promise<void> {
+    const currentQuantity = await this.getLineItemQuantity(lineItem);
+    const decreaseButton = lineItem.getByRole('button', {
+      name: 'Decrease quantity',
+    });
+
+    await expect(decreaseButton).toBeEnabled({timeout: 5000});
+    await decreaseButton.click();
+
+    await expect
+      .poll(() => this.getLineItemQuantity(lineItem), {timeout: 10000})
+      .toBe(currentQuantity - 1);
+  }
+
+  /**
+   * Removes a line item and waits for it to disappear.
+   */
+  async removeLineItem(lineItem: Locator): Promise<void> {
+    const removeButton = lineItem.getByRole('button', {name: 'Remove'});
+    await expect(removeButton).toBeEnabled({timeout: 5000});
+    await removeButton.click();
+    await expect(lineItem).not.toBeVisible({timeout: 10000});
+  }
+
+  /**
+   * Extracts subtotal as a number (removes currency formatting).
+   * Handles multiple currency formats like "$1,234.56" or "1.234,56 €".
+   * Uses :visible to match only the current context (drawer or page).
+   */
+  async getSubtotalAmount(): Promise<number> {
+    const subtotalElement = this.page.locator('.cart-subtotal:visible dd');
+    const text = await subtotalElement.textContent();
+    if (!text) return 0;
+
+    // For US format ($1,234.56): remove commas, keep decimal point
+    // For EU format (1.234,56 €): swap comma/dot
+    const cleaned = text.replace(/[^\d.,]/g, '');
+    // Detect format: if last separator is comma, it's EU format
+    const lastCommaIndex = cleaned.lastIndexOf(',');
+    const lastDotIndex = cleaned.lastIndexOf('.');
+
+    let numericString: string;
+    if (lastCommaIndex > lastDotIndex) {
+      // EU format: 1.234,56 -> 1234.56
+      numericString = cleaned.replace(/\./g, '').replace(',', '.');
+    } else {
+      // US format: 1,234.56 -> 1234.56
+      numericString = cleaned.replace(/,/g, '');
+    }
+
+    return parseFloat(numericString) || 0;
+  }
+
+  /**
+   * Clears all cookies to reset cart and session state.
+   * Cart state is stored in a cookie, so clearing cookies resets the cart.
+   */
+  async clearAllCookies(): Promise<void> {
+    await this.context.clearCookies();
   }
 
   /**
