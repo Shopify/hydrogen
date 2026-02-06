@@ -2,34 +2,19 @@
 
 ## Test Isolation
 
-### Cart State Management
-To clear cart state between tests, **clear ALL cookies**. Cart state is stored in a cookie, so there's no need to individually remove line items, discounts, etc. Clearing all cookies provides complete test isolation.
+Playwright automatically provides test isolation - each test runs in its own browser context with isolated storage, cookies, and state. You generally don't need to manually clear cookies or storage between tests.
 
-```typescript
-test.afterEach(async ({storefront}) => {
-  await storefront.clearAllCookies();
-});
-```
-
-For maximum isolation, consider clearing cookies in both `beforeEach` and `afterEach`:
-```typescript
-test.beforeEach(async ({storefront}) => {
-  await storefront.clearAllCookies();
-});
-
-test.afterEach(async ({storefront}) => {
-  await storefront.clearAllCookies();
-});
-```
+**Exception:** If you need to clear state within a single test (e.g., testing empty cart after clearing), do so explicitly in that test.
 
 ## Test Organization
 
-### Shared Setup in beforeEach
-Prefer putting statements shared at the start of ALL tests in a file into a `beforeEach` hook rather than repeating them in each test:
+### Test Setup Strategy
+
+Per [Playwright best practices](https://playwright.dev/docs/best-practices#make-tests-as-isolated-as-possible): Use `beforeEach` hooks to eliminate repetitive setup steps while maintaining test isolation.
 
 ```typescript
-// GOOD: Shared setup in beforeEach
-test.describe('Cart Operations', () => {
+// GOOD: Use beforeEach for shared setup
+test.describe('Quantity Management', () => {
   test.beforeEach(async ({storefront}) => {
     await storefront.goto('/');
     await storefront.navigateToFirstProduct();
@@ -37,18 +22,27 @@ test.describe('Cart Operations', () => {
   });
 
   test('increases quantity', async ({storefront}) => {
-    // Test starts with item already in cart
+    const firstItem = storefront.getCartLineItemByIndex(0);
+    await storefront.increaseLineItemQuantity(firstItem);
+    expect(await storefront.getLineItemQuantity(firstItem)).toBe(2);
   });
 });
 
-// AVOID: Repeating setup in each test
-test.describe('Cart Operations', () => {
-  test('increases quantity', async ({storefront}) => {
-    await storefront.goto('/');  // Repeated
-    await storefront.navigateToFirstProduct();  // Repeated
-    await storefront.addToCart();  // Repeated
-    // ...
-  });
+// ACCEPTABLE: Duplicate simple 1-2 line setups when it improves clarity
+test('adds item to empty cart', async ({storefront}) => {
+  await storefront.goto('/');
+  await storefront.navigateToFirstProduct();
+  await storefront.addToCart();
+
+  await expect(storefront.getCartLineItems()).toHaveCount(1);
+});
+
+// AVOID: Repeating 3+ lines in every test
+test('increases quantity', async ({storefront}) => {
+  await storefront.goto('/');  // Repeated
+  await storefront.navigateToFirstProduct();  // Repeated
+  await storefront.addToCart();  // Repeated
+  // Use beforeEach instead
 });
 ```
 
@@ -58,37 +52,42 @@ test.describe('Cart Operations', () => {
 Always choose selectors based on **DOM elements and semantic structure**, NOT CSS classes or styles. Tests should reflect how a user perceives and interacts with the page.
 
 **Priority order for selectors:**
-1. Role + accessible name: `getByRole('button', {name: 'Add to cart'})`
-2. Role + landmark: `getByRole('banner').getByRole('link', {name: /cart/i})`
-3. Text content: `getByText('Continue to Checkout')`
-4. Test IDs (when necessary): `getByTestId('cart-drawer')`
-5. CSS classes (last resort, for entities only): `locator('li.cart-line:visible')`
+1. **Role + accessible name** (preferred): `getByRole('button', {name: 'Add to cart'})`
+2. **Role + landmark**: `getByRole('banner').getByRole('link', {name: /cart/i})`
+3. **Text content**: `getByText('Continue to Checkout')`
+4. **Test IDs** (when semantic selectors aren't possible): `getByTestId('cart-drawer')`
+5. **CSS classes** (last resort only): Only when semantic selectors are impractical
+
+**Always try role-based selectors first.** Only use CSS classes when:
+- The element has no semantic role
+- Multiple similar elements need disambiguation
+- Role-based selectors would be overly complex
 
 ### Write Tests from User Perspective
-Write tests based on how a user would perceive events happening, not based on technical implementation details.
+Write tests based on how a user would perceive events, not implementation details.
 
 ```typescript
 // GOOD: Wait for user-visible state change
 await storefront.addGiftCard('GIFT123');
-await expect(giftCardInput).toHaveValue('');  // Input cleared means success
-await expect(applyButton).toBeEnabled();  // Button re-enabled means ready
+await expect(giftCardInput).toHaveValue('');  // Input cleared = success
+await expect(applyButton).toBeEnabled();  // Button enabled = ready
 
-// AVOID: Waiting for network requests
+// AVOID: Waiting for network requests (implementation detail)
 await storefront.addGiftCard('GIFT123');
-await page.waitForResponse(resp => resp.url().includes('cart'));  // Implementation detail
+await page.waitForResponse(resp => resp.url().includes('cart'));
 ```
 
 ### Waiting for State Changes
-When an action triggers a state change, wait for the **visible effect** rather than the underlying mechanism:
+Wait for the **visible effect** rather than the underlying mechanism:
 
 ```typescript
-// GOOD: Wait for quantity text to change
+// GOOD: Wait for actual data change
 await increaseButton.click();
 await expect.poll(() => getLineItemQuantity(item)).toBe(2);
 
-// AVOID: Just waiting for button to be re-enabled
+// AVOID: Waiting for button state (re-enables before data updates)
 await increaseButton.click();
-await expect(increaseButton).toBeEnabled();  // Button might re-enable before quantity updates
+await expect(increaseButton).toBeEnabled();
 ```
 
 ## Running Tests
@@ -130,16 +129,27 @@ async increaseLineItemQuantity(lineItem) {
 ```
 
 ### Visibility-Aware Locators
-The skeleton template has both a cart drawer (aside) and a cart page. Both contain similar elements but only one is visible at a time. Use `:visible` pseudo-selector to match only the current context:
+The skeleton template has both a cart drawer (aside) and a cart page. Both contain similar elements but only one is visible at a time.
 
 ```typescript
-// GOOD: Only matches visible elements
+// GOOD: Role-based selectors with chaining for specificity
 getCartLineItems() {
-  return this.page.locator('li.cart-line:visible');
+  return this.page.getByRole('list', {name: /cart|line items/i}).getByRole('listitem');
 }
 
-// AVOID: May match hidden elements in drawer when on cart page
+getCheckoutButton() {
+  return this.page.getByRole('button', {name: /checkout/i});
+}
+
+// ACCEPTABLE: Test IDs when semantic selectors need disambiguation
 getCartLineItems() {
-  return this.page.locator('li.cart-line');
+  return this.page.getByTestId('cart-line-items').getByRole('listitem');
+}
+
+// AVOID: CSS selectors (DOM can change, leading to flaky tests)
+getCartLineItems() {
+  return this.page.locator('li.cart-line:visible');  // Not resilient
 }
 ```
+
+**Why avoid CSS?** Per [Playwright docs](https://playwright.dev/docs/locators), CSS selectors are "not recommended as the DOM can often change leading to non resilient tests." Use role-based selectors that reflect how users perceive the page.
