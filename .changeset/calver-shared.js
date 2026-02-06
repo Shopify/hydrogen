@@ -16,6 +16,10 @@ const CALVER_PACKAGES = [
   'skeleton',
 ];
 
+// Packages whose major bumps trigger cross-package CalVer synchronization.
+// skeleton is excluded because its major bumps are independent (template-only).
+const CALVER_SYNC_PACKAGES = ['@shopify/hydrogen', '@shopify/hydrogen-react'];
+
 // Parse version string into components
 function parseVersion(version) {
   const match = version.match(/^(\d{4})\.(\d+)\.(\d+)(?:\.(\d+))?/);
@@ -88,20 +92,23 @@ function versionToBranchName(year, major) {
 // Check if there are major changesets for CalVer packages
 function hasMajorChangesets() {
   const changesetDir = path.join(process.cwd(), '.changeset');
-  
+
   try {
     const files = fs.readdirSync(changesetDir);
-    
+
     for (const file of files) {
       if (!file.endsWith('.md') || file === 'README.md') continue;
-      
+
       const filePath = path.join(changesetDir, file);
       const content = fs.readFileSync(filePath, 'utf-8');
-      
-      // Check for major bumps in any CalVer package
-      for (const pkg of CALVER_PACKAGES) {
+
+      // Only sync-eligible packages trigger cross-package major bumps
+      for (const pkg of CALVER_SYNC_PACKAGES) {
         // Check for both single and double quotes (changesets can use either)
-        if (content.includes(`"${pkg}": major`) || content.includes(`'${pkg}': major`)) {
+        if (
+          content.includes(`"${pkg}": major`) ||
+          content.includes(`'${pkg}': major`)
+        ) {
           return true;
         }
       }
@@ -110,29 +117,34 @@ function hasMajorChangesets() {
     // If we can't read changesets, assume no major bump
     return false;
   }
-  
+
   return false;
 }
 
 // Check if there are any changesets for CalVer packages (any bump type)
 function hasCalVerChangesets() {
   const changesetDir = path.join(process.cwd(), '.changeset');
-  
+
   try {
     const files = fs.readdirSync(changesetDir);
-    
+
     for (const file of files) {
       if (!file.endsWith('.md') || file === 'README.md') continue;
-      
+
       const filePath = path.join(changesetDir, file);
       const content = fs.readFileSync(filePath, 'utf-8');
-      
+
       // Check for any bumps (patch, minor, major) in CalVer packages
       for (const pkg of CALVER_PACKAGES) {
         // Check for both single and double quotes (changesets can use either)
-        if (content.includes(`"${pkg}": patch`) || content.includes(`'${pkg}': patch`) ||
-            content.includes(`"${pkg}": minor`) || content.includes(`'${pkg}': minor`) ||
-            content.includes(`"${pkg}": major`) || content.includes(`'${pkg}': major`)) {
+        if (
+          content.includes(`"${pkg}": patch`) ||
+          content.includes(`'${pkg}': patch`) ||
+          content.includes(`"${pkg}": minor`) ||
+          content.includes(`'${pkg}': minor`) ||
+          content.includes(`"${pkg}": major`) ||
+          content.includes(`'${pkg}': major`)
+        ) {
           return true;
         }
       }
@@ -141,7 +153,7 @@ function hasCalVerChangesets() {
     // If we can't read changesets, assume no CalVer changesets
     return false;
   }
-  
+
   return false;
 }
 
@@ -189,7 +201,7 @@ function getAllPackagePaths() {
     .map((dir) => path.join(process.cwd(), 'packages', dir, 'package.json'))
     .concat(path.join(process.cwd(), 'templates/skeleton/package.json'))
     .filter((p) => fs.existsSync(p));
-  
+
   return packages;
 }
 
@@ -231,7 +243,7 @@ function updateInternalDependencies(updates, dryRun = false) {
 // Update CHANGELOG headers after version changes
 function updateChangelogs(updates, dryRun = false) {
   const updatedChangelogs = [];
-  
+
   Object.entries(updates).forEach(([pkgName, update]) => {
     const pkgDir = path.dirname(getPackagePath(pkgName));
     const changelogPath = path.join(pkgDir, 'CHANGELOG.md');
@@ -239,12 +251,16 @@ function updateChangelogs(updates, dryRun = false) {
     if (fs.existsSync(changelogPath)) {
       let changelog = fs.readFileSync(changelogPath, 'utf-8');
       // Replace the version header that changesets just created with CalVer version
-      const changesetVersionEscaped = (update.changesetVersion || update.changeset || update.from).replace(/\./g, '\\.');
+      const changesetVersionEscaped = (
+        update.changesetVersion ||
+        update.changeset ||
+        update.from
+      ).replace(/\./g, '\\.');
       const newChangelog = changelog.replace(
         new RegExp(`^## ${changesetVersionEscaped}$`, 'm'),
         `## ${update.to}`,
       );
-      
+
       if (newChangelog !== changelog) {
         if (!dryRun) {
           fs.writeFileSync(changelogPath, newChangelog);
@@ -253,14 +269,14 @@ function updateChangelogs(updates, dryRun = false) {
       }
     }
   });
-  
+
   return updatedChangelogs;
 }
 
 // CLI interface for bash scripts
 if (require.main === module) {
-  const [,, command, ...args] = process.argv;
-  
+  const [, , command, ...args] = process.argv;
+
   try {
     switch (command) {
       case 'get-next':
@@ -297,6 +313,7 @@ Commands:
 module.exports = {
   QUARTERS,
   CALVER_PACKAGES,
+  CALVER_SYNC_PACKAGES,
   parseVersion,
   getNextVersion,
   getBumpType,
@@ -310,5 +327,5 @@ module.exports = {
   validateUpdates,
   getAllPackagePaths,
   updateInternalDependencies,
-  updateChangelogs
+  updateChangelogs,
 };
