@@ -4,16 +4,6 @@ setTestStore('hydrogenPreviewStorefront');
 
 test.describe('Cart', () => {
   test.describe('Line Items', () => {
-    // Clear ALL cookies before AND after each test for isolation on shared store.
-    // Cart state is stored in a cookie, and clearing all ensures complete isolation.
-    test.beforeEach(async ({storefront}) => {
-      await storefront.clearAllCookies();
-    });
-
-    test.afterEach(async ({storefront}) => {
-      await storefront.clearAllCookies();
-    });
-
     test.describe('Adding Items', () => {
       test('adds item to cart and opens aside drawer', async ({storefront}) => {
         await storefront.goto('/');
