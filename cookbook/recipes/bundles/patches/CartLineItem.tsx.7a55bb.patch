@@ -1,4 +1,4 @@
-index 63a0ecd9..8c11b327 100644
+index 63a0ecd9..22b2d90f 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
 @@ -9,6 +9,7 @@ import type {
@@ -17,8 +17,23 @@ index 63a0ecd9..8c11b327 100644
    const lineItemChildren = childrenMap[id];
    const childrenLabelId = `cart-line-children-${id}`;
  
-@@ -61,6 +63,7 @@ export function CartLineItem({
-             <p>
+@@ -48,8 +50,9 @@ export function CartLineItem({
+           />
+         )}
+ 
+-        <div>
++        <div style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
+           <Link
++            style={{position: 'relative'}}
+             prefetch="intent"
+             to={lineItemUrl}
+             onClick={() => {
+@@ -58,9 +61,10 @@ export function CartLineItem({
+               }
+             }}
+           >
+-            <p>
++            <p style={{maxWidth: '60%'}}>
                <strong>{product.title}</strong>
              </p>
 +            {isBundle ? <BundleBadge /> : null}

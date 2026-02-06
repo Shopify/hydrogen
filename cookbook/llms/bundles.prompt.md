@@ -81,7 +81,7 @@ In this recipe, we'll use the [Shopify Bundles app](https://apps.shopify.com/sho
 
 Create a new BundleBadge component to be displayed on bundle product listings.
 
-#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
+#### File: [BundleBadge.tsx](https://github.com/Shopify/hydrogen/blob/d46c8864aea059cac7dda4871a565f76a04b1495/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundleBadge.tsx)
 
 ~~~tsx
 export function BundleBadge() {
@@ -108,7 +108,7 @@ export function BundleBadge() {
 
 Create a new `BundledVariants` component that wraps the variants of a bundle product in a single product listing.
 
-#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
+#### File: [BundledVariants.tsx](https://github.com/Shopify/hydrogen/blob/d46c8864aea059cac7dda4871a565f76a04b1495/cookbook/recipes/bundles/ingredients/templates/skeleton/app/components/BundledVariants.tsx)
 
 ~~~tsx
 import {Link} from 'react-router';
@@ -362,8 +362,8 @@ Use the `requiresComponents` field to determine if a cart line item is a bundle.
 +        }
        }
      }
-   }
-@@ -102,6 +115,28 @@ export const CART_QUERY_FRAGMENT = `#graphql
+     parentRelationship {
+@@ -107,6 +120,28 @@ export const CART_QUERY_FRAGMENT = `#graphql
            name
            value
          }
@@ -391,7 +391,7 @@ Use the `requiresComponents` field to determine if a cart line item is a bundle.
 +        }
        }
      }
-   }
+     lineComponents {
 ~~~
 
 ### Step 8: Show bundle badges in the cart
@@ -401,45 +401,45 @@ If a product is a bundle, show the `BundleBadge` component in the cart line item
 #### File: /app/components/CartLineItem.tsx
 
 ~~~diff
-@@ -6,6 +6,7 @@ import {Link} from 'react-router';
- import {ProductPrice} from './ProductPrice';
- import {useAside} from './Aside';
- import type {CartApiQueryFragment} from 'storefrontapi.generated';
+@@ -9,6 +9,7 @@ import type {
+   CartApiQueryFragment,
+   CartLineFragment,
+ } from 'storefrontapi.generated';
 +import {BundleBadge} from '~/components/BundleBadge';
  
- type CartLine = OptimisticCartLine<CartApiQueryFragment>;
+ export type CartLine = OptimisticCartLine<CartApiQueryFragment>;
  
-@@ -24,6 +25,7 @@ export function CartLineItem({
+@@ -31,6 +32,7 @@ export function CartLineItem({
    const {product, title, image, selectedOptions} = merchandise;
    const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
    const {close} = useAside();
 +  const isBundle = Boolean(line.merchandise.requiresComponents);
+   const lineItemChildren = childrenMap[id];
+   const childrenLabelId = `cart-line-children-${id}`;
  
-   return (
-     <li key={id} className="cart-line">
-@@ -38,8 +40,9 @@ export function CartLineItem({
-         />
-       )}
+@@ -48,8 +50,9 @@ export function CartLineItem({
+           />
+         )}
  
--      <div>
-+      <div style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
-         <Link
-+          style={{position: 'relative'}}
-           prefetch="intent"
-           to={lineItemUrl}
-           onClick={() => {
-@@ -48,9 +51,10 @@ export function CartLineItem({
-             }
-           }}
-         >
--          <p>
-+          <p style={{maxWidth: '60%'}}>
-             <strong>{product.title}</strong>
-           </p>
-+          {isBundle ? <BundleBadge /> : null}
-         </Link>
-         <ProductPrice price={line?.cost?.totalAmount} />
-         <ul>
+-        <div>
++        <div style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
+           <Link
++            style={{position: 'relative'}}
+             prefetch="intent"
+             to={lineItemUrl}
+             onClick={() => {
+@@ -58,9 +61,10 @@ export function CartLineItem({
+               }
+             }}
+           >
+-            <p>
++            <p style={{maxWidth: '60%'}}>
+               <strong>{product.title}</strong>
+             </p>
++            {isBundle ? <BundleBadge /> : null}
+           </Link>
+           <ProductPrice price={line?.cost?.totalAmount} />
+           <ul>
 ~~~
 
 ### Step 9: Update the cart button text for bundles
@@ -589,7 +589,7 @@ Make sure the bundle badge is positioned relative to the product image.
 #### File: /app/styles/app.css
 
 ~~~diff
-@@ -435,6 +435,10 @@ button.reset:hover:not(:has(> *)) {
+@@ -455,6 +455,10 @@ button.reset:hover:not(:has(> *)) {
    margin-top: 0;
  }
  
