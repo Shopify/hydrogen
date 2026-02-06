@@ -34,7 +34,7 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
   ]);
 
   return {
-    isShopLinked: process.env.PUBLIC_STORE_DOMAIN !== undefined,
+    isShopLinked: context.env.PUBLIC_STORE_DOMAIN !== undefined,
     featuredCollection: collections.nodes[0],
   };
 }
@@ -62,7 +62,7 @@ export default function Homepage() {
   const data = useLoaderData<typeof loader>();
   return (
     <div className="home">
-      {data.isShopLinked ? 'linked' : <MockShopNotice />}
+      {data.isShopLinked ? null : <MockShopNotice />}
       <FeaturedCollection collection={data.featuredCollection} />
       <RecommendedProducts products={data.recommendedProducts} />
     </div>
