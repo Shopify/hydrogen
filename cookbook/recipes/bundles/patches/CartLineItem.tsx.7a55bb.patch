@@ -1,0 +1,27 @@
+index 63a0ecd9..8c11b327 100644
+--- a/templates/skeleton/app/components/CartLineItem.tsx
++++ b/templates/skeleton/app/components/CartLineItem.tsx
+@@ -9,6 +9,7 @@ import type {
+   CartApiQueryFragment,
+   CartLineFragment,
+ } from 'storefrontapi.generated';
++import {BundleBadge} from '~/components/BundleBadge';
+ 
+ export type CartLine = OptimisticCartLine<CartApiQueryFragment>;
+ 
+@@ -31,6 +32,7 @@ export function CartLineItem({
+   const {product, title, image, selectedOptions} = merchandise;
+   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
+   const {close} = useAside();
++  const isBundle = Boolean(line.merchandise.requiresComponents);
+   const lineItemChildren = childrenMap[id];
+   const childrenLabelId = `cart-line-children-${id}`;
+ 
+@@ -61,6 +63,7 @@ export function CartLineItem({
+             <p>
+               <strong>{product.title}</strong>
+             </p>
++            {isBundle ? <BundleBadge /> : null}
+           </Link>
+           <ProductPrice price={line?.cost?.totalAmount} />
+           <ul>
