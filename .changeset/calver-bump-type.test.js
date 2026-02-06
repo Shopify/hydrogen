@@ -14,7 +14,11 @@
 
 const fs = require('fs');
 const path = require('path');
-const {getNextVersion, parseVersion} = require('./calver-shared.js');
+const {
+  getNextVersion,
+  parseVersion,
+  hasMajorChangesets,
+} = require('./calver-shared.js');
 const {
   detectBumpType,
   writeBumpType,
@@ -216,6 +220,90 @@ Test non-CalVer package
   console.log('\nTest 7: No changesets should return null');
   result = detectBumpType();
   assertEqual(result, null, 'No changesets returns null');
+
+  cleanupTestChangesets();
+
+  console.log(
+    '\nTest 8: skeleton major alone should return "patch" (not "major")',
+  );
+  createTestChangeset(
+    'skeleton-major',
+    `---
+'skeleton': major
+---
+
+Skeleton major bump
+`,
+  );
+  result = detectBumpType();
+  assertEqual(result, 'patch', 'skeleton major returns patch');
+
+  cleanupTestChangesets();
+
+  console.log(
+    '\nTest 9: skeleton major + hydrogen patch should return "patch"',
+  );
+  createTestChangeset(
+    'skeleton-major',
+    `---
+'skeleton': major
+---
+
+Skeleton major bump
+`,
+  );
+  createTestChangeset(
+    'hydrogen-patch',
+    `---
+'@shopify/hydrogen': patch
+---
+
+Hydrogen patch bump
+`,
+  );
+  result = detectBumpType();
+  assertEqual(result, 'patch', 'skeleton major + hydrogen patch returns patch');
+
+  cleanupTestChangesets();
+
+  console.log(
+    '\nTest 10: skeleton major + hydrogen major should return "major"',
+  );
+  createTestChangeset(
+    'skeleton-major',
+    `---
+'skeleton': major
+---
+
+Skeleton major bump
+`,
+  );
+  createTestChangeset(
+    'hydrogen-major',
+    `---
+'@shopify/hydrogen': major
+---
+
+Hydrogen major bump
+`,
+  );
+  result = detectBumpType();
+  assertEqual(result, 'major', 'skeleton major + hydrogen major returns major');
+
+  cleanupTestChangesets();
+
+  console.log('\nTest 11: hydrogen-react major alone should return "major"');
+  createTestChangeset(
+    'react-major',
+    `---
+'@shopify/hydrogen-react': major
+---
+
+React major bump
+`,
+  );
+  result = detectBumpType();
+  assertEqual(result, 'major', 'hydrogen-react major returns major');
 }
 
 function testVersionCalculation() {
@@ -257,7 +345,11 @@ Minor feature addition
   );
 
   const detectedBumpType = detectBumpType();
-  assertEqual(detectedBumpType, 'patch', 'Detected bump type is patch (not major)');
+  assertEqual(
+    detectedBumpType,
+    'patch',
+    'Detected bump type is patch (not major)',
+  );
 
   const currentVersion = '2025.7.2';
   const newVersion = getNextVersion(currentVersion, detectedBumpType);
@@ -270,6 +362,165 @@ Minor feature addition
   assert(
     newVersion !== '2025.10.0',
     'Version is NOT incorrectly advanced to next quarter (2025.10.0)',
+  );
+
+  cleanupTestChangesets();
+}
+
+function testHasMajorChangesets() {
+  console.log('\n🔍 Testing hasMajorChangesets()...\n');
+
+  cleanupTestChangesets();
+
+  console.log('Test 1: skeleton major alone should return false');
+  createTestChangeset(
+    'skeleton-major',
+    `---
+'skeleton': major
+---
+
+Skeleton major bump
+`,
+  );
+  let result = hasMajorChangesets();
+  assertEqual(result, false, 'skeleton major returns false');
+
+  cleanupTestChangesets();
+
+  console.log('\nTest 2: hydrogen major alone should return true');
+  createTestChangeset(
+    'hydrogen-major',
+    `---
+'@shopify/hydrogen': major
+---
+
+Hydrogen major bump
+`,
+  );
+  result = hasMajorChangesets();
+  assertEqual(result, true, 'hydrogen major returns true');
+
+  cleanupTestChangesets();
+
+  console.log('\nTest 3: hydrogen-react major alone should return true');
+  createTestChangeset(
+    'react-major',
+    `---
+'@shopify/hydrogen-react': major
+---
+
+React major bump
+`,
+  );
+  result = hasMajorChangesets();
+  assertEqual(result, true, 'hydrogen-react major returns true');
+
+  cleanupTestChangesets();
+
+  console.log('\nTest 4: skeleton major + hydrogen major should return true');
+  createTestChangeset(
+    'skeleton-major',
+    `---
+'skeleton': major
+---
+
+Skeleton major bump
+`,
+  );
+  createTestChangeset(
+    'hydrogen-major',
+    `---
+'@shopify/hydrogen': major
+---
+
+Hydrogen major bump
+`,
+  );
+  result = hasMajorChangesets();
+  assertEqual(result, true, 'skeleton major + hydrogen major returns true');
+
+  cleanupTestChangesets();
+
+  console.log('\nTest 5: no changesets should return false');
+  result = hasMajorChangesets();
+  assertEqual(result, false, 'no changesets returns false');
+}
+
+function testSkeletonMajorBugScenario() {
+  console.log('\n🐛 Testing PR #3451 skeleton-major bug scenario...\n');
+
+  console.log(
+    'Scenario: skeleton:major + hydrogen:patch should NOT bump hydrogen to next quarter',
+  );
+
+  cleanupTestChangesets();
+  createTestChangeset(
+    'api-version',
+    `---
+'skeleton': major
+---
+
+Update to new API version
+`,
+  );
+  createTestChangeset(
+    'hydrogen-fix',
+    `---
+'@shopify/hydrogen': patch
+---
+
+Fix a bug in hydrogen
+`,
+  );
+
+  const detectedBumpType = detectBumpType();
+  assertEqual(
+    detectedBumpType,
+    'patch',
+    'Detected bump type is patch (not major)',
+  );
+
+  const hasMajor = hasMajorChangesets();
+  assertEqual(hasMajor, false, 'hasMajorChangesets() returns false');
+
+  const currentVersion = '2025.10.3';
+  const newVersion = getNextVersion(currentVersion, detectedBumpType);
+  assertEqual(
+    newVersion,
+    '2025.10.4',
+    `hydrogen stays in quarter: ${currentVersion} → ${newVersion}`,
+  );
+
+  assert(
+    newVersion !== '2026.1.0',
+    'hydrogen is NOT incorrectly advanced to 2026.1.0',
+  );
+
+  cleanupTestChangesets();
+
+  console.log(
+    '\nScenario 2: Single file with skeleton:major + hydrogen:patch in same frontmatter',
+  );
+
+  createTestChangeset(
+    'combined-api-version',
+    `---
+'skeleton': major
+'@shopify/hydrogen': patch
+---
+
+API version update with skeleton major and hydrogen patch in one changeset
+`,
+  );
+
+  const combinedBumpType = detectBumpType();
+  assertEqual(combinedBumpType, 'patch', 'Single-file combined returns patch');
+
+  const combinedHasMajor = hasMajorChangesets();
+  assertEqual(
+    combinedHasMajor,
+    false,
+    'Single-file combined hasMajorChangesets is false',
   );
 
   cleanupTestChangesets();
@@ -294,9 +545,13 @@ function testWriteAndCleanup() {
 }
 
 function main() {
-  console.log('═══════════════════════════════════════════════════════════════');
+  console.log(
+    '═══════════════════════════════════════════════════════════════',
+  );
   console.log(' CalVer Bump Type Detection Tests');
-  console.log('═══════════════════════════════════════════════════════════════');
+  console.log(
+    '═══════════════════════════════════════════════════════════════',
+  );
 
   backupExistingChangesets();
 
@@ -304,15 +559,21 @@ function main() {
     testDetectBumpType();
     testVersionCalculation();
     testBugScenario();
+    testHasMajorChangesets();
+    testSkeletonMajorBugScenario();
     testWriteAndCleanup();
   } finally {
     cleanupTestChangesets();
     restoreBackedUpChangesets();
   }
 
-  console.log('\n═══════════════════════════════════════════════════════════════');
+  console.log(
+    '\n═══════════════════════════════════════════════════════════════',
+  );
   console.log(` Results: ${testsPassed} passed, ${testsFailed} failed`);
-  console.log('═══════════════════════════════════════════════════════════════\n');
+  console.log(
+    '═══════════════════════════════════════════════════════════════\n',
+  );
 
   if (testsFailed > 0) {
     process.exit(1);
