@@ -127,8 +127,14 @@
     ]
   },
   "overrides": {
-    "@oclif/core": "3.26.5",
-    "@shopify/cli-kit": "3.80.4"
+    "@oclif/core": "4.5.3",
+    "@shopify/cli-kit": "3.90.0",
+    "@shopify/oxygen-cli": {
+      "@shopify/cli-kit": "3.90.0"
+    },
+    "@shopify/plugin-cloudflare": {
+      "@shopify/cli-kit": "3.90.0"
+    }
   },
   "optionalDependencies": {
     "@ast-grep/napi-linux-x64-gnu": "0.34.1",

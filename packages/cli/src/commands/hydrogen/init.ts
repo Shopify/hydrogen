@@ -1,5 +1,6 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
+import type {FlagInput} from '@oclif/core/parser';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {
   commonFlags,
@@ -21,7 +22,7 @@ const FLAG_MAP = {f: 'force'} as Record<string, string>;
 export default class Init extends Command {
   static descriptionWithMarkdown = 'Creates a new Hydrogen storefront.';
   static description = 'Creates a new Hydrogen storefront.';
-  static flags = {
+  static flags: FlagInput = {
     ...commonFlags.force,
     path: Flags.string({
       description: 'The path to the directory of the new Hydrogen storefront.',
@@ -67,10 +68,10 @@ export default class Init extends Command {
       hidden: true,
       options: ['npm', 'yarn', 'pnpm', 'unknown'],
     }),
-  };
+  } satisfies FlagInput;
 
   async run(): Promise<void> {
-    const {flags} = await this.parse(Init);
+    const {flags} = await this.parse();
     await runInit(flagsToCamelObject(flags) as InitOptions);
   }
 }

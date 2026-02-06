@@ -8,6 +8,7 @@ node_modules
 .cache
 **/.shopify
 /test-results/
+/test-project-*/
 /playwright-report/
 /playwright/.cache/
 **/dist

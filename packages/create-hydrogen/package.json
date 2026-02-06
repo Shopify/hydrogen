@@ -24,7 +24,8 @@
   "devDependencies": {
     "execa": "^8.0.1",
     "tempy": "3.1.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "yoga-wasm-web": "^0.3.3"
   },
   "bin": "dist/create-app.js",
   "files": [
