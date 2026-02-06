@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2025.10.1
+
+### Patch Changes
+
+- Fixed bug where file paths containing spaces were causing errors with virtual routes by decoding URL-encoded paths ([#3436](https://github.com/Shopify/hydrogen/pull/3436)) by [@itsjustriley](https://github.com/itsjustriley)
+
 ## 2025.10.0
 
 ### Major Changes
