@@ -1,4 +1,4 @@
-index 80e34be2..2f37ea80 100644
+index 63a0ecd9..e7f101e2 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
 @@ -1,6 +1,15 @@
@@ -7,7 +7,7 @@ index 80e34be2..2f37ea80 100644
 +  CartLineUpdateInput,
 +  SelectedOption,
 +} from '@shopify/hydrogen/storefront-api-types';
- import type {CartLayout} from '~/components/CartMain';
+ import type {CartLayout, LineItemChildrenMap} from '~/components/CartMain';
 -import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
 +import {
 +  CartForm,
@@ -19,23 +19,60 @@ index 80e34be2..2f37ea80 100644
  import {useVariantUrl} from '~/lib/variants';
  import {Link} from 'react-router';
  import {ProductPrice} from './ProductPrice';
-@@ -54,13 +63,8 @@ export function CartLineItem({
-         </Link>
-         <ProductPrice price={line?.cost?.totalAmount} />
-         <ul>
--          {selectedOptions.map((option) => (
--            <li key={option.name}>
--              <small>
--                {option.name}: {option.value}
--              </small>
--            </li>
--          ))}
-+          {/* @description Add inline product option editing in cart */}
-+          <CartLineUpdateByOptionsForm line={line} />
-         </ul>
-         <CartLineQuantity line={line} />
-       </div>
-@@ -166,3 +170,87 @@ function CartLineUpdateButton({
+@@ -48,32 +57,26 @@ export function CartLineItem({
+           />
+         )}
+ 
+-        <div>
+-          <Link
+-            prefetch="intent"
+-            to={lineItemUrl}
+-            onClick={() => {
+-              if (layout === 'aside') {
+-                close();
+-              }
+-            }}
+-          >
+-            <p>
+-              <strong>{product.title}</strong>
+-            </p>
+-          </Link>
+-          <ProductPrice price={line?.cost?.totalAmount} />
+-          <ul>
+-            {selectedOptions.map((option) => (
+-              <li key={option.name}>
+-                <small>
+-                  {option.name}: {option.value}
+-                </small>
+-              </li>
+-            ))}
+-          </ul>
+-          <CartLineQuantity line={line} />
+-        </div>
++        <div>
++          <Link
++            prefetch="intent"
++            to={lineItemUrl}
++            onClick={() => {
++              if (layout === 'aside') {
++                close();
++              }
++            }}
++          >
++            <p>
++              <strong>{product.title}</strong>
++            </p>
++          </Link>
++          <ProductPrice price={line?.cost?.totalAmount} />
++          <ul>
++            {/* @description Add inline product option editing in cart */}
++            <CartLineUpdateByOptionsForm line={line} />
++          </ul>
++          <CartLineQuantity line={line} />
++        </div>
+ 
+       {lineItemChildren ? (
+@@ -195,3 +198,87 @@ function CartLineUpdateButton({
  function getUpdateKey(lineIds: string[]) {
    return [CartForm.ACTIONS.LinesUpdate, ...lineIds].join('-');
  }
