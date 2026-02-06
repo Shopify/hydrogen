@@ -40,7 +40,8 @@
     "e2e:old-cookies": "playwright test --project=old-cookies",
     "e2e:new-cookies": "playwright test --project=new-cookies",
     "e2e:smoke": "playwright test --project=smoke",
-    "pre-commit:encrypt": "bash -c 'git diff --cached --name-only | grep -q \"^secrets.ejson$\" && ejson encrypt secrets.ejson && git add secrets.ejson || true'"
+    "pre-commit:encrypt": "bash -c 'git diff --cached --name-only | grep -q \"^secrets.ejson$\" && ejson encrypt secrets.ejson && git add secrets.ejson || true'",
+    "prepare": "husky"
   },
   "workspaces": [
     "cookbook",
@@ -104,14 +105,11 @@
     "tsup": "^8.4.0",
     "turbo": "2.3.4",
     "typescript": "5.9.2",
-    "yorkie": "^2.0.0",
+    "husky": "^9.0.0",
     "zod-to-json-schema": "^3.24.6"
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "gitHooks": {
-    "pre-commit": "lint-staged && npm run pre-commit:encrypt"
   },
   "lint-staged": {
     "*.{js,jsx}": [
@@ -129,8 +127,14 @@
     ]
   },
   "overrides": {
-    "@oclif/core": "3.26.5",
-    "@shopify/cli-kit": "3.80.4"
+    "@oclif/core": "4.5.3",
+    "@shopify/cli-kit": "3.90.0",
+    "@shopify/oxygen-cli": {
+      "@shopify/cli-kit": "3.90.0"
+    },
+    "@shopify/plugin-cloudflare": {
+      "@shopify/cli-kit": "3.90.0"
+    }
   },
   "optionalDependencies": {
     "@ast-grep/napi-linux-x64-gnu": "0.34.1",

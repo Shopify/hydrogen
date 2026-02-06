@@ -1,5 +1,5 @@
-import {type LinksFunction} from '@remix-run/node';
 import {
+  type LinksFunction,
   Links,
   Meta,
   NavLink,
@@ -8,7 +8,7 @@ import {
   ScrollRestoration,
   useLoaderData,
   useParams,
-} from '@remix-run/react';
+} from 'react-router';
 import stylesheet from '~/tailwind.css?url';
 import {Fragment, useCallback, useState} from 'react';
 import he from 'he';

@@ -8,6 +8,7 @@ node_modules
 .cache
 **/.shopify
 /test-results/
+/test-project-*/
 /playwright-report/
 /playwright/.cache/
 **/dist
@@ -151,3 +152,6 @@ examples/express/build
 
 # CalVer temp file (created by detect-calver-bump-type.js, consumed by enforce-calver-ci.js)
 .changeset/.calver-bump-type
+
+# Husky auto-generated internals (defense in depth - also ignored via .husky/_/.gitignore)
+.husky/_/

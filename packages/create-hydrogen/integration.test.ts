@@ -19,14 +19,18 @@ describe('create-hydrogen', () => {
     ).resolves.toBeTruthy();
 
     await temporaryDirectoryTask(async (tmpDir) => {
-      const processPromise = execa('node', [
-        bin,
-        '--quickstart',
-        '--no-install-deps',
-        '--no-shortcut',
-        '--path',
-        tmpDir,
-      ]);
+      const processPromise = execa(
+        'node',
+        [
+          bin,
+          '--quickstart',
+          '--no-install-deps',
+          '--no-shortcut',
+          '--path',
+          tmpDir,
+        ],
+        {all: true},
+      );
 
       await expect(processPromise, 'create-app process').resolves.toBeTruthy();
 
@@ -36,7 +40,8 @@ describe('create-hydrogen', () => {
 
       // Replace the temporary directory with a placeholder to avoid snapshot noise.
       // The directory can wrap to a new line, so we can't use a simple string replace.
-      const output = (await processPromise).stdout
+      const processResult = await processPromise;
+      const output = (processResult.all ?? processResult.stdout ?? '')
         .replace(/^.*╭/ims, '╭')
         .replace(/Run `.*$/s, 'Run `<redacted-command-for-test>`');
 
