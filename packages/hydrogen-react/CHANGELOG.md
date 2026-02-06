@@ -1,6 +1,6 @@
 # @shopify/hydrogen-react
 
-## 2025.10.0
+## 2026.1.0
 
 ### Major Changes
 
