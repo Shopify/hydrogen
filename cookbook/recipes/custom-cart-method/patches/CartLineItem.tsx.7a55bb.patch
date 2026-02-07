@@ -1,7 +1,7 @@
-index 63a0ecd9..e7f101e2 100644
+index 63a0ecd9..4cf22223 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
-@@ -1,6 +1,15 @@
+@@ -1,6 +1,13 @@
 -import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 +import type {
 +  CartLineUpdateInput,
@@ -13,32 +13,14 @@ index 63a0ecd9..e7f101e2 100644
 +  CartForm,
 +  Image,
 +  type OptimisticCartLine,
-+  VariantSelector,
-+  type VariantOption,
 +} from '@shopify/hydrogen';
  import {useVariantUrl} from '~/lib/variants';
  import {Link} from 'react-router';
  import {ProductPrice} from './ProductPrice';
-@@ -48,32 +57,26 @@ export function CartLineItem({
-           />
-         )}
- 
--        <div>
--          <Link
--            prefetch="intent"
--            to={lineItemUrl}
--            onClick={() => {
--              if (layout === 'aside') {
--                close();
--              }
--            }}
--          >
--            <p>
--              <strong>{product.title}</strong>
--            </p>
--          </Link>
--          <ProductPrice price={line?.cost?.totalAmount} />
--          <ul>
+@@ -64,13 +71,8 @@ export function CartLineItem({
+           </Link>
+           <ProductPrice price={line?.cost?.totalAmount} />
+           <ul>
 -            {selectedOptions.map((option) => (
 -              <li key={option.name}>
 -                <small>
@@ -46,42 +28,50 @@ index 63a0ecd9..e7f101e2 100644
 -                </small>
 -              </li>
 -            ))}
--          </ul>
--          <CartLineQuantity line={line} />
--        </div>
-+        <div>
-+          <Link
-+            prefetch="intent"
-+            to={lineItemUrl}
-+            onClick={() => {
-+              if (layout === 'aside') {
-+                close();
-+              }
-+            }}
-+          >
-+            <p>
-+              <strong>{product.title}</strong>
-+            </p>
-+          </Link>
-+          <ProductPrice price={line?.cost?.totalAmount} />
-+          <ul>
 +            {/* @description Add inline product option editing in cart */}
 +            <CartLineUpdateByOptionsForm line={line} />
-+          </ul>
-+          <CartLineQuantity line={line} />
-+        </div>
- 
-       {lineItemChildren ? (
-@@ -195,3 +198,87 @@ function CartLineUpdateButton({
- function getUpdateKey(lineIds: string[]) {
-   return [CartForm.ACTIONS.LinesUpdate, ...lineIds].join('-');
+           </ul>
+           <CartLineQuantity line={line} />
+         </div>
+@@ -185,6 +187,115 @@ function CartLineUpdateButton({
+   );
  }
+ 
++/** Option shape for cart line option selects */
++type CartLineOption = {
++  name: string;
++  values: Array<{value: string; isAvailable: boolean}>;
++};
++
++function getCartLineProductOptions(
++  product: CartLine['merchandise']['product'] & {
++    options?: Array<{
++      name: string;
++      optionValues?: Array<{name: string}>;
++      values?: Array<{name: string}>;
++    }>;
++  },
++): CartLineOption[] {
++  const options = product?.options ?? [];
++  return options.map((option) => {
++    const optionValues =
++      option.optionValues ?? (option as {values?: Array<{name: string}>}).values ?? [];
++    return {
++      name: option.name,
++      values: optionValues.map((v) => ({
++        value: v.name,
++        isAvailable: true,
++      })),
++    };
++  });
++}
 +
 +// @description Component for updating cart line item options
 +function CartLineUpdateByOptionsForm({line}: {line: CartLine}) {
 +  const {
 +    merchandise: {product, selectedOptions},
 +  } = line;
++  const productOptions = getCartLineProductOptions(product);
 +
 +  return (
 +    <CartForm
@@ -98,23 +88,18 @@ index 63a0ecd9..e7f101e2 100644
 +    >
 +      {(fetcher) => (
 +        <>
-+          <VariantSelector
-+            handle={product.handle}
-+            options={product.options}
-+            variants={[]}
-+          >
-+            {({option}) => (
-+              <LineItemOptions
-+                option={option}
-+                selectedOptions={selectedOptions}
-+                onChange={(event) => {
-+                  void fetcher.submit(event.currentTarget.form, {
-+                    method: 'POST',
-+                  });
-+                }}
-+              />
-+            )}
-+          </VariantSelector>
++          {productOptions.map((option) => (
++            <LineItemOptions
++              key={option.name}
++              option={option}
++              selectedOptions={selectedOptions}
++              onChange={(event) => {
++                void fetcher.submit(event.currentTarget.form, {
++                  method: 'POST',
++                });
++              }}
++            />
++          ))}
 +          <noscript>
 +            <button type="submit">Update</button>
 +          </noscript>
@@ -129,7 +114,7 @@ index 63a0ecd9..e7f101e2 100644
 +  selectedOptions,
 +  onChange,
 +}: {
-+  option: VariantOption;
++  option: CartLineOption;
 +  selectedOptions: SelectedOption[];
 +  onChange: React.ChangeEventHandler<HTMLSelectElement>;
 +}) {
@@ -160,3 +145,7 @@ index 63a0ecd9..e7f101e2 100644
 +    </li>
 +  );
 +}
++
+ /**
+  * Returns a unique key for the update action. This is used to make sure actions modifying the same line
+  * items are not run concurrently, but cancel each other. For example, if the user clicks "Increase quantity"
