@@ -235,7 +235,7 @@ Update README with multipass authentication documentation
 
 Add checkout button component that generates multipass tokens
 
-#### File: [MultipassCheckoutButton.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/multipass/ingredients/templates/skeleton/app/components/MultipassCheckoutButton.tsx)
+#### File: [MultipassCheckoutButton.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/components/MultipassCheckoutButton.tsx)
 
 ~~~tsx
 import React, {useCallback} from 'react';
@@ -285,9 +285,9 @@ Add multipass checkout button to cart summary
 #### File: /app/components/CartSummary.tsx
 
 ~~~diff
-@@ -5,6 +5,9 @@ import {useEffect, useRef} from 'react';
+@@ -4,6 +4,9 @@ import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
+ import {useEffect, useRef} from 'react';
  import {useFetcher} from 'react-router';
- import type {FetcherWithComponents} from 'react-router';
  
 +// @description Import MultipassCheckoutButton for Shopify Plus multipass checkout
 +import {MultipassCheckoutButton} from '~/components/MultipassCheckoutButton';
@@ -295,7 +295,7 @@ Add multipass checkout button to cart summary
  type CartSummaryProps = {
    cart: OptimisticCart<CartApiQueryFragment | null>;
    layout: CartLayout;
-@@ -39,9 +42,10 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
+@@ -38,9 +41,10 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
  
    return (
      <div>
@@ -314,7 +314,7 @@ Add multipass checkout button to cart summary
 
 Core multipass encryption and token generation utilities
 
-#### File: [multipass.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipass.ts)
+#### File: [multipass.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipass.ts)
 
 ~~~ts
 import type {
@@ -464,7 +464,7 @@ Add session validation and token refresh logic
 
 Server-side multipass token generation with ESM-compatible snake_case
 
-#### File: [multipassify.server.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipassify.server.ts)
+#### File: [multipassify.server.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/multipassify.server.ts)
 
 ~~~ts
 import CryptoJS from 'crypto-js';
@@ -671,7 +671,7 @@ Convert catch-all account route to use Storefront API
 
 TypeScript types for multipass functionality
 
-#### File: [types.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/types.ts)
+#### File: [types.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/lib/multipass/types.ts)
 
 ~~~ts
 /*
@@ -749,7 +749,7 @@ export interface MultipassTokenResponseType {
 
 Add customer account activation route
 
-#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
+#### File: [account_.activate.$id.$activationToken.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.activate.$id.$activationToken.tsx)
 
 ~~~tsx
 import {Form, useActionData, data, redirect} from 'react-router';
@@ -1447,7 +1447,7 @@ Convert addresses management to use Storefront API
 
 Add multipass login handler route
 
-#### File: [account_.login.multipass.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.login.multipass.tsx)
+#### File: [account_.login.multipass.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.login.multipass.tsx)
 
 ~~~tsx
 import {data as remixData, redirect} from 'react-router';
@@ -2118,7 +2118,7 @@ Convert order details to use Storefront API
 
 Add password recovery route
 
-#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
+#### File: [account_.recover.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.recover.tsx)
 
 ~~~tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -2607,7 +2607,7 @@ Convert orders list to use Storefront API
 
 Add customer registration route
 
-#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.register.tsx)
+#### File: [account_.register.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.register.tsx)
 
 ~~~tsx
 import {Form, Link, useActionData, data, redirect} from 'react-router';
@@ -3073,7 +3073,7 @@ Convert customer profile management from Customer Account API to Storefront API
 
 Add password reset confirmation route
 
-#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
+#### File: [account_.reset.$id.$resetToken.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/multipass/ingredients/templates/skeleton/app/routes/account_.reset.$id.$resetToken.tsx)
 
 ~~~tsx
 import {data, Form, redirect, useActionData} from 'react-router';
@@ -3410,154 +3410,6 @@ Convert account layout to use Storefront API customer data
 +` as const;
 ~~~
 
-### Step 19: app/routes/account_.login.tsx
-
-Replace Customer Account API login with form-based Storefront API login
-
-#### File: /app/routes/account_.login.tsx
-
-~~~diff
-@@ -1,7 +1,134 @@
-+import {Form, Link, useActionData, data, redirect} from 'react-router';
- import type {Route} from './+types/account_.login';
- 
--export async function loader({request, context}: Route.LoaderArgs) {
--  return context.customerAccount.login({
--    countryCode: context.storefront.i18n.country,
--  });
-+type ActionResponse = {
-+  error: string | null;
-+};
-+
-+export const meta: Route.MetaFunction = () => {
-+  return [{title: 'Login'}];
-+};
-+
-+export async function loader({context}: Route.LoaderArgs) {
-+  if (await context.session.get('customerAccessToken')) {
-+    return redirect('/account');
-+  }
-+  return {};
- }
-+
-+export async function action({request, context}: Route.ActionArgs) {
-+  const {session, storefront} = context;
-+
-+  if (request.method !== 'POST') {
-+    return data({error: 'Method not allowed'}, {status: 405});
-+  }
-+
-+  try {
-+    const form = await request.formData();
-+    const email = String(form.has('email') ? form.get('email') : '');
-+    const password = String(form.has('password') ? form.get('password') : '');
-+    const validInputs = Boolean(email && password);
-+
-+    if (!validInputs) {
-+      throw new Error('Please provide both an email and a password.');
-+    }
-+
-+    const {customerAccessTokenCreate} = await storefront.mutate(
-+      LOGIN_MUTATION,
-+      {
-+        variables: {
-+          input: {email, password},
-+        },
-+      },
-+    );
-+
-+    if (!customerAccessTokenCreate?.customerAccessToken?.accessToken) {
-+      throw new Error(customerAccessTokenCreate?.customerUserErrors[0].message);
-+    }
-+
-+    const {customerAccessToken} = customerAccessTokenCreate;
-+    session.set('customerAccessToken', customerAccessToken);
-+
-+    return redirect('/account');
-+  } catch (error: unknown) {
-+    if (error instanceof Error) {
-+      return data({error: error.message}, {status: 400});
-+    }
-+    return data({error}, {status: 400});
-+  }
-+}
-+
-+export default function Login() {
-+  const data = useActionData<ActionResponse>();
-+  const error = data?.error || null;
-+
-+  return (
-+    <div className="login">
-+      <h1>Sign in.</h1>
-+      <Form method="POST">
-+        <fieldset>
-+          <label htmlFor="email">Email address</label>
-+          <input
-+            id="email"
-+            name="email"
-+            type="email"
-+            autoComplete="email"
-+            required
-+            placeholder="Email address"
-+            aria-label="Email address"
-+            // eslint-disable-next-line jsx-a11y/no-autofocus
-+            autoFocus
-+          />
-+          <label htmlFor="password">Password</label>
-+          <input
-+            id="password"
-+            name="password"
-+            type="password"
-+            autoComplete="current-password"
-+            placeholder="Password"
-+            aria-label="Password"
-+            minLength={8}
-+            required
-+          />
-+        </fieldset>
-+        {error ? (
-+          <p>
-+            <mark>
-+              <small>{error}</small>
-+            </mark>
-+          </p>
-+        ) : (
-+          <br />
-+        )}
-+        <button type="submit">Sign in</button>
-+      </Form>
-+      <br />
-+      <div>
-+        <p>
-+          <Link to="/account/recover">Forgot password →</Link>
-+        </p>
-+        <p>
-+          <Link to="/account/register">Register →</Link>
-+        </p>
-+      </div>
-+    </div>
-+  );
-+}
-+
-+// NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customeraccesstokencreate
-+const LOGIN_MUTATION = `#graphql
-+  mutation login($input: CustomerAccessTokenCreateInput!) {
-+    customerAccessTokenCreate(input: $input) {
-+      customerUserErrors {
-+        code
-+        field
-+        message
-+      }
-+      customerAccessToken {
-+        accessToken
-+        expiresAt
-+      }
-+    }
-+  }
-+` as const;
-+
-~~~
-
 ### Step 20: app/routes/account_.logout.tsx
 
 Implement session-based logout
@@ -3641,7 +3493,7 @@ Add multipass URL generation for checkout
  
    const {action, inputs} = CartForm.getFormInput(formData);
  
-@@ -74,6 +78,8 @@ export async function action({request, context}: Route.ActionArgs) {
+@@ -70,6 +74,8 @@ export async function action({request, context}: Route.ActionArgs) {
      case CartForm.ACTIONS.BuyerIdentityUpdate: {
        result = await cart.updateBuyerIdentity({
          ...inputs.buyerIdentity,
@@ -3662,7 +3514,7 @@ Add crypto dependencies for multipass token generation
 @@ -15,6 +15,7 @@
    "prettier": "@shopify/prettier-config",
    "dependencies": {
-     "@shopify/hydrogen": "2025.7.0",
+     "@shopify/hydrogen": "2025.10.0",
 +    "crypto-js": "^4.2.0",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
