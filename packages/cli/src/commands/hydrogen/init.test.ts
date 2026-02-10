@@ -9,7 +9,7 @@ import {
   afterAll,
 } from 'vitest';
 import {runInit} from './init.js';
-import {exec} from '@shopify/cli-kit/node/system';
+import {captureOutput, exec} from '@shopify/cli-kit/node/system';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {
   fileExists,
@@ -92,7 +92,9 @@ describe('init', () => {
       // Use timestamp to ensure unique directory name
       tmpDir = path.join(
         projectRootDir,
-        `test-project-init-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        `test-project-init-${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(7)}`,
       );
       mkdirSync(tmpDir);
 
@@ -102,6 +104,7 @@ describe('init', () => {
           quickstart: true,
           language: 'ts',
           styling: 'none',
+          installDeps: true,
         }),
       ).resolves.not.toThrow();
     }, 60000); // 60 second timeout for init
