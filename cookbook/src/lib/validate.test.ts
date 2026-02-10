@@ -21,7 +21,9 @@ vi.mock('./apply', () => ({
 }));
 
 vi.mock('child_process', () => ({
-  execSync: vi.fn(() => Buffer.from('/Users/juanp.prieto/github.com/Shopify/hydrogen')),
+  execSync: vi.fn(() =>
+    Buffer.from('/Users/juanp.prieto/github.com/Shopify/hydrogen'),
+  ),
 }));
 
 describe('formatValidationError', () => {
@@ -37,7 +39,9 @@ describe('formatValidationError', () => {
 
     expect(formatted).toContain('recipe.yaml:52');
     expect(formatted).toContain('steps.0.step');
-    expect(formatted).toContain('RecipeSchema: Expected string, received number');
+    expect(formatted).toContain(
+      'RecipeSchema: Expected string, received number',
+    );
   });
 
   it('should format error without line number', () => {
@@ -62,7 +66,9 @@ describe('formatValidationError', () => {
 
     const formatted = formatValidationError(error);
 
-    expect(formatted).toContain('validateLlmPromptExists: LLM prompt file not found');
+    expect(formatted).toContain(
+      'validateLlmPromptExists: LLM prompt file not found',
+    );
   });
 });
 
@@ -156,7 +162,8 @@ describe('validateStepNames', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toMatchObject({
       validator: 'validateStepNames',
-      message: 'Duplicate step number "1". Use substeps (e.g., "1.1", "1.2") to organize related changes under step 1.',
+      message:
+        'Duplicate step number "1". Use substeps (e.g., "1.1", "1.2") to organize related changes under step 1.',
       location: 'steps[1].step',
     });
   });
@@ -191,7 +198,12 @@ describe('validateStepNames', () => {
       ingredients: [],
       steps: [
         {type: 'PATCH' as const, step: '1', name: 'README.md', diffs: []},
-        {type: 'PATCH' as const, step: '1.1', name: 'app/entry.server.tsx', diffs: []},
+        {
+          type: 'PATCH' as const,
+          step: '1.1',
+          name: 'app/entry.server.tsx',
+          diffs: [],
+        },
         {type: 'PATCH' as const, step: '1.2', name: 'app/root.tsx', diffs: []},
       ],
       commit: 'abc123',
@@ -225,7 +237,8 @@ describe('validateStepNames', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toMatchObject({
       validator: 'validateStepNames',
-      message: 'Duplicate step number "1". Use substeps (e.g., "1.1", "1.2") to organize related changes under step 1.',
+      message:
+        'Duplicate step number "1". Use substeps (e.g., "1.1", "1.2") to organize related changes under step 1.',
       location: 'steps[1].step',
     });
   });
@@ -251,7 +264,8 @@ describe('validateStepNames', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toMatchObject({
       validator: 'validateStepNames',
-      message: 'Duplicate step number "1.1". Each step must have a unique step number.',
+      message:
+        'Duplicate step number "1.1". Each step must have a unique step number.',
       location: 'steps[1].step',
     });
   });
@@ -333,7 +347,13 @@ describe('validateStepDescriptions', () => {
       description: 'Test',
       ingredients: [],
       steps: [
-        {type: 'PATCH' as const, step: '1', name: 'README.md', description: null, diffs: []},
+        {
+          type: 'PATCH' as const,
+          step: '1',
+          name: 'README.md',
+          description: null,
+          diffs: [],
+        },
       ],
       commit: 'abc123',
       llms: {userQueries: [], troubleshooting: []},
@@ -345,7 +365,8 @@ describe('validateStepDescriptions', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toMatchObject({
       validator: 'validateStepDescriptions',
-      message: 'Step 1 (README.md) has null description. Please provide a description for this step.',
+      message:
+        'Step 1 (README.md) has null description. Please provide a description for this step.',
       location: 'steps[0].description',
     });
   });
@@ -358,7 +379,13 @@ describe('validateStepDescriptions', () => {
       description: 'Test',
       ingredients: [],
       steps: [
-        {type: 'PATCH' as const, step: '1', name: 'app/root.tsx', description: '', diffs: []},
+        {
+          type: 'PATCH' as const,
+          step: '1',
+          name: 'app/root.tsx',
+          description: '',
+          diffs: [],
+        },
       ],
       commit: 'abc123',
       llms: {userQueries: [], troubleshooting: []},
@@ -370,7 +397,8 @@ describe('validateStepDescriptions', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toMatchObject({
       validator: 'validateStepDescriptions',
-      message: 'Step 1 (app/root.tsx) has empty description. Please provide a description for this step.',
+      message:
+        'Step 1 (app/root.tsx) has empty description. Please provide a description for this step.',
       location: 'steps[0].description',
     });
   });
@@ -383,7 +411,13 @@ describe('validateStepDescriptions', () => {
       description: 'Test',
       ingredients: [],
       steps: [
-        {type: 'PATCH' as const, step: '1', name: 'README.md', description: 'Valid description', diffs: []},
+        {
+          type: 'PATCH' as const,
+          step: '1',
+          name: 'README.md',
+          description: 'Valid description',
+          diffs: [],
+        },
       ],
       commit: 'abc123',
       llms: {userQueries: [], troubleshooting: []},
@@ -523,7 +557,9 @@ describe('validateIngredientFiles', () => {
       title: 'Test',
       summary: 'Test',
       description: 'Test',
-      ingredients: [{path: 'templates/skeleton/app/components/Foo.tsx', description: null}],
+      ingredients: [
+        {path: 'templates/skeleton/app/components/Foo.tsx', description: null},
+      ],
       steps: [],
       commit: 'abc123',
       llms: {userQueries: [], troubleshooting: []},
@@ -541,7 +577,8 @@ describe('validateIngredientFiles', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toMatchObject({
       validator: 'validateIngredientFiles',
-      message: 'Ingredient file not found: templates/skeleton/app/components/Foo.tsx',
+      message:
+        'Ingredient file not found: templates/skeleton/app/components/Foo.tsx',
     });
   });
 
@@ -580,7 +617,8 @@ describe('validateIngredientFiles', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toMatchObject({
       validator: 'validateIngredientFiles',
-      message: 'Orphaned ingredient file not referenced in recipe: orphaned.tsx',
+      message:
+        'Orphaned ingredient file not referenced in recipe: orphaned.tsx',
     });
   });
 
@@ -590,7 +628,9 @@ describe('validateIngredientFiles', () => {
       title: 'Test',
       summary: 'Test',
       description: 'Test',
-      ingredients: [{path: 'templates/skeleton/app/components/Foo.tsx', description: null}],
+      ingredients: [
+        {path: 'templates/skeleton/app/components/Foo.tsx', description: null},
+      ],
       steps: [],
       commit: 'abc123',
       llms: {userQueries: [], troubleshooting: []},
@@ -605,13 +645,41 @@ describe('validateIngredientFiles', () => {
       'ingredients',
     );
 
-    mockReaddirSync.mockReturnValue([
-      {
-        path: path.join(ingredientsDir, 'templates', 'skeleton', 'app', 'components'),
-        name: 'Foo.tsx',
-        isFile: () => true,
-      } as fs.Dirent,
-    ] as fs.Dirent[]);
+    // Mock readdirSync to simulate nested directory structure
+    mockReaddirSync.mockImplementation((dirPath: fs.PathOrFileDescriptor) => {
+      const pathStr = dirPath.toString();
+
+      if (pathStr === ingredientsDir) {
+        return [
+          {name: 'templates', isFile: () => false, isDirectory: () => true},
+        ] as fs.Dirent[];
+      } else if (pathStr === path.join(ingredientsDir, 'templates')) {
+        return [
+          {name: 'skeleton', isFile: () => false, isDirectory: () => true},
+        ] as fs.Dirent[];
+      } else if (
+        pathStr === path.join(ingredientsDir, 'templates', 'skeleton')
+      ) {
+        return [
+          {name: 'app', isFile: () => false, isDirectory: () => true},
+        ] as fs.Dirent[];
+      } else if (
+        pathStr === path.join(ingredientsDir, 'templates', 'skeleton', 'app')
+      ) {
+        return [
+          {name: 'components', isFile: () => false, isDirectory: () => true},
+        ] as fs.Dirent[];
+      } else if (
+        pathStr ===
+        path.join(ingredientsDir, 'templates', 'skeleton', 'app', 'components')
+      ) {
+        return [
+          {name: 'Foo.tsx', isFile: () => true, isDirectory: () => false},
+        ] as fs.Dirent[];
+      }
+
+      return [] as fs.Dirent[];
+    });
 
     const result = validateIngredientFiles('test-recipe', recipe);
 
@@ -647,7 +715,9 @@ describe('validateReadmeExists', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toMatchObject({
       validator: 'validateReadmeExists',
-      message: expect.stringContaining('Run: npm run cookbook render nonexistent-recipe'),
+      message: expect.stringContaining(
+        'Run: npm run cookbook render nonexistent-recipe',
+      ),
     });
   });
 });
@@ -679,7 +749,9 @@ describe('validateLlmPromptExists', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toMatchObject({
       validator: 'validateLlmPromptExists',
-      message: expect.stringContaining('Run: npm run cookbook render nonexistent-recipe'),
+      message: expect.stringContaining(
+        'Run: npm run cookbook render nonexistent-recipe',
+      ),
     });
   });
 });
@@ -691,7 +763,9 @@ describe('validateRecipe integration', () => {
   let mockLoadRecipe: Mock;
 
   beforeEach(() => {
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {}) as Mock;
+    consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {}) as Mock;
     mockExistsSync = vi.spyOn(fs, 'existsSync') as Mock;
     mockReaddirSync = vi.spyOn(fs, 'readdirSync') as Mock;
     mockLoadRecipe = vi.spyOn(recipeModule, 'loadRecipe') as Mock;
@@ -703,7 +777,12 @@ describe('validateRecipe integration', () => {
 
   it('should include actual values in Zod validation error messages', () => {
     const recipeName = 'test-recipe';
-    const recipeYamlPath = path.join(COOKBOOK_PATH, 'recipes', recipeName, 'recipe.yaml');
+    const recipeYamlPath = path.join(
+      COOKBOOK_PATH,
+      'recipes',
+      recipeName,
+      'recipe.yaml',
+    );
 
     const yamlContent = `
 gid: test-gid
@@ -738,10 +817,16 @@ commit: abc123
 
     expect(result).toBe(false);
 
-    const errorOutput = consoleErrorSpy.mock.calls.map(call => call[0]).join('\n');
+    const errorOutput = consoleErrorSpy.mock.calls
+      .map((call) => call[0])
+      .join('\n');
 
-    expect(errorOutput).toContain('Expected string, received number (actual value: 1)');
-    expect(errorOutput).toContain('Expected string, received number (actual value: 2)');
+    expect(errorOutput).toContain(
+      'Expected string, received number (actual value: 1)',
+    );
+    expect(errorOutput).toContain(
+      'Expected string, received number (actual value: 2)',
+    );
   });
 
   it('should collect and format all validation errors with line numbers', () => {
@@ -803,7 +888,9 @@ commit: abc123
 
     expect(result).toBe(false);
 
-    const errorOutput = consoleErrorSpy.mock.calls.map(call => call[0]).join('\n');
+    const errorOutput = consoleErrorSpy.mock.calls
+      .map((call) => call[0])
+      .join('\n');
 
     expect(errorOutput).toContain(`Recipe '${recipeName}'`);
     expect(errorOutput).toContain('error(s)');
