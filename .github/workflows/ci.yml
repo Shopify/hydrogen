@@ -211,6 +211,75 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
+  test_scaffolding:
+    name: ⬣ Scaffolding tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: ci-scaffolding-${{ matrix.pm }}-${{ github.ref }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        pm: [npm, pnpm, yarn, bun]
+        include:
+          - pm: npm
+            lockfile: package-lock.json
+          - pm: pnpm
+            lockfile: pnpm-lock.yaml
+            setup: |
+              npm i -g pnpm@9
+          - pm: yarn
+            lockfile: yarn.lock
+          - pm: bun
+            lockfile: bun.lock
+            setup: |
+              npm i -g bun
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: 📦 Setup ${{ matrix.pm }}
+        if: matrix.setup
+        run: ${{ matrix.setup }}
+
+      - name: 📥 Install dependencies
+        run: |
+          npm ci
+          npm rebuild
+
+      - name: 📦 Build packages
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:pkg
+
+      - name: 🧪 Scaffold with ${{ matrix.pm }}
+        run: |
+          node packages/create-hydrogen/dist/create-app.js \
+            --path "$RUNNER_TEMP/h2-test-${{ matrix.pm }}" \
+            --language ts \
+            --mock-shop \
+            --install-deps \
+            --no-git \
+            --package-manager ${{ matrix.pm }} \
+            --no-shortcut \
+            --routes \
+            --markets none \
+            --styling none
+
+      - name: ✅ Verify lockfile
+        run: test -f "$RUNNER_TEMP/h2-test-${{ matrix.pm }}/${{ matrix.lockfile }}"
+
+      - name: ✅ Verify app builds
+        run: |
+          cd "$RUNNER_TEMP/h2-test-${{ matrix.pm }}"
+          npm run build
+
   test_unit:
     name: ⬣ Unit tests
     runs-on: ubuntu-latest

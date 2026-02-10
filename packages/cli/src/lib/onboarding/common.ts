@@ -467,7 +467,7 @@ export async function handleCssStrategy(
 /**
  * Prompts the user to choose whether to install dependencies and which package manager to use.
  * It infers the package manager used for creating the project and uses that as the default.
- * @returns The chosen pacakge manager and a function that optionally installs dependencies.
+ * @returns The chosen package manager and a function that optionally installs dependencies.
  */
 export async function handleDependencies(
   projectDir: string,
@@ -507,6 +507,8 @@ export async function handleDependencies(
         cancellationMessage: 'No',
         abortSignal: controller.signal,
       });
+    } else {
+      actualPackageManager = detectedPackageManager;
     }
   }
 

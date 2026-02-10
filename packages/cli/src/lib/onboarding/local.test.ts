@@ -10,6 +10,7 @@ import {setupTemplate} from './index.js';
 import {getSkeletonSourceDir} from '../build.js';
 import {basename} from '@shopify/cli-kit/node/path';
 import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
+import {installNodeModules} from '@shopify/cli-kit/node/node-package-manager';
 import {execAsync} from '../process.js';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 
@@ -356,6 +357,25 @@ describe('local templates', () => {
             expect.stringContaining('Setup markets support using domains'),
             expect.stringContaining('Scaffold Storefront'),
           ]),
+        );
+      });
+    });
+  });
+
+  describe('package manager', () => {
+    it('uses the specified package manager when installDeps is true', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await setupTemplate({
+          path: tmpDir,
+          git: false,
+          language: 'ts',
+          mockShop: true,
+          installDeps: true,
+          packageManager: 'pnpm',
+        });
+
+        expect(installNodeModules).toHaveBeenCalledWith(
+          expect.objectContaining({packageManager: 'pnpm'}),
         );
       });
     });
