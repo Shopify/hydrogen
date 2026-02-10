@@ -86,7 +86,7 @@ Add `public/~partytown` to ignore Partytown library files.
 
 Add a GTM component that loads scripts in a web worker.
 
-#### File: [PartytownGoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/partytown/ingredients/templates/skeleton/app/components/PartytownGoogleTagManager.tsx)
+#### File: [PartytownGoogleTagManager.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/components/PartytownGoogleTagManager.tsx)
 
 ~~~tsx
 import {useEffect, useRef} from 'react';
@@ -262,7 +262,7 @@ Document Partytown setup and configuration instructions.
 
 Reverse the proxy route for third-party scripts requiring CORS headers.
 
-#### File: [reverse-proxy.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/partytown/ingredients/templates/skeleton/app/routes/reverse-proxy.ts)
+#### File: [reverse-proxy.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/routes/reverse-proxy.ts)
 
 ~~~ts
 // Reverse proxies partytown libs that require CORS. Used by Partytown resolveUrl
@@ -504,7 +504,7 @@ Configure the CSP headers for GTM and Google Analytics domains.
 
 Add a URL resolver to control which scripts should be reverse-proxied.
 
-#### File: [maybeProxyRequest.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/maybeProxyRequest.ts)
+#### File: [maybeProxyRequest.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/maybeProxyRequest.ts)
 
 ~~~ts
 /**
@@ -631,7 +631,7 @@ Initialize Partytown and GTM in the root layout.
 
 Add a helper utility to enable Partytown atomic mode for better performance.
 
-#### File: [partytownAtomicHeaders.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts)
+#### File: [partytownAtomicHeaders.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/partytown/ingredients/templates/skeleton/app/utils/partytown/partytownAtomicHeaders.ts)
 
 ~~~ts
 /*
@@ -667,7 +667,7 @@ Add a Partytown dependency and npm script for copying library files.
    "prettier": "@shopify/prettier-config",
    "dependencies": {
 +    "@qwik.dev/partytown": "^0.11.2",
-     "@shopify/hydrogen": "2025.7.0",
+     "@shopify/hydrogen": "2025.10.0",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
 ~~~

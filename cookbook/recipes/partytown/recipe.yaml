@@ -38,7 +38,7 @@ steps:
     description: Add `public/~partytown` to ignore Partytown library files.
     diffs:
       - file: .gitignore
-        patchFile: .gitignore.0c7440.patch
+        patchFile: .gitignore.829639.patch
   - type: NEW_FILE
     step: "2"
     name: Create GTM web worker component
@@ -51,7 +51,7 @@ steps:
     description: Document Partytown setup and configuration instructions.
     diffs:
       - file: README.md
-        patchFile: README.md.db10ed.patch
+        patchFile: README.md.533419.patch
   - type: NEW_FILE
     step: "4"
     name: Add CORS reverse proxy
@@ -64,7 +64,7 @@ steps:
     description: Configure the CSP headers for GTM and Google Analytics domains.
     diffs:
       - file: app/entry.server.tsx
-        patchFile: entry.server.tsx.b35f11.patch
+        patchFile: entry.server.tsx.3f7fcb.patch
   - type: NEW_FILE
     step: "6"
     name: Add URL resolver for proxying
@@ -77,7 +77,7 @@ steps:
     description: Initialize Partytown and GTM in the root layout.
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.5e9998.patch
+        patchFile: root.tsx.ca3339.patch
   - type: NEW_FILE
     step: "8"
     name: Enable atomic mode
@@ -91,14 +91,14 @@ steps:
     description: Add a Partytown dependency and npm script for copying library files.
     diffs:
       - file: package.json
-        patchFile: package.json.f30b0a.patch
+        patchFile: package.json.073a52.patch
   - type: PATCH
     step: "10"
     name: Configure Vite for Partytown
     description: Configure Vite to exclude Partytown library from build optimization.
     diffs:
       - file: vite.config.ts
-        patchFile: vite.config.ts.475b4c.patch
+        patchFile: vite.config.ts.a3d046.patch
 nextSteps: |
   After applying this recipe:
 
@@ -133,4 +133,4 @@ nextSteps: |
 llms:
   userQueries: []
   troubleshooting: []
-commit: 4f5db289f8a9beb5c46dda9416a7ae8151f7e08e
+commit: 14d09107663313bae8eac3c701b90a7bc49819e4
