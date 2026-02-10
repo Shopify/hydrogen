@@ -7,8 +7,7 @@
       "Bash(gh pr view:*)",
       "Bash(npm run ci:checks:*)",
       "Bash(npm run cookbook:*)",
-      "WebFetch(domain:gist.githubusercontent.com)",
-      "Bash(shadowenv exec -- pnpm view:*)"
+      "WebFetch(domain:gist.githubusercontent.com)"
     ]
   },
   "enabledMcpjsonServers": [
