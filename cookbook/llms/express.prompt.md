@@ -89,7 +89,7 @@ Comment out customer account GraphQL configuration
 #### File: /.graphqlrc.ts
 
 ~~~diff
-@@ -17,10 +17,11 @@ export default {
+@@ -17,10 +17,11 @@ const graphqlConfig: IGraphQLConfig = {
        ],
      },
  
@@ -226,7 +226,7 @@ Update README with Express-specific setup and deployment instructions
 
 Add environment type definitions for Hydrogen on Express
 
-#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
+#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
 
 ~~~ts
 // This file extends the Hydrogen types for this project
@@ -297,7 +297,7 @@ Update client entry to use React Router hydration without Oxygen-specific code
 
 Add Express template favicon
 
-#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
+#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
 
 ~~~svg
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
@@ -458,7 +458,7 @@ Replace Oxygen server rendering with Express-compatible Node.js SSR using PassTh
 
 Add development server orchestration script for Vite and nodemon
 
-#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
+#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
 
 ~~~mjs
 #!/usr/bin/env node
@@ -769,9 +769,10 @@ Simplify root layout for Express template by removing complex components
 
 Add Express server with Hydrogen context, session management, and SSR support
 
-#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
+#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
 
 ~~~mjs
+import 'dotenv/config';
 import {createRequestHandler} from '@react-router/express';
 import {createCookieSessionStorage} from 'react-router';
 import compression from 'compression';
@@ -779,7 +780,6 @@ import express from 'express';
 import morgan from 'morgan';
 import {createHydrogenContext, InMemoryCache} from '@shopify/hydrogen';
 
-// Don't capture process.env too early - it needs to be accessed after dotenv loads
 const getEnv = () => process.env;
 
 let vite;
@@ -813,6 +813,13 @@ if (vite) {
   );
 }
 app.use(express.static('build/client', {maxAge: '1h'}));
+
+// Serve public folder (favicon, etc.) so requests don't hit the React Router catch-all
+app.use(express.static('public', {maxAge: '1d'}));
+// Browsers often request /favicon.ico by default; serve our SVG favicon for that request
+app.get('/favicon.ico', (_req, res) => {
+  res.redirect(302, '/favicon.svg');
+});
 
 // Create the request handler
 app.all('*', async (req, res, next) => {
@@ -1538,7 +1545,7 @@ Replace skeleton styles with minimal Express template styling
 #### File: /app/styles/app.css
 
 ~~~diff
-@@ -1,574 +1,44 @@
+@@ -1,594 +1,44 @@
 -:root {
 -  --aside-width: 400px;
 -  --cart-aside-summary-height-with-discount: 300px;
@@ -1595,14 +1602,9 @@ Replace skeleton styles with minimal Express template styling
 -}
 -
 -aside header h3 {
-+body {
-+  padding: 0;
-   margin: 0;
-+  background: rgb(245, 245, 241);
-+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-+    Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
- }
- 
+-  margin: 0;
+-}
+-
 -aside header .close {
 -  font-weight: bold;
 -  opacity: 0.8;
@@ -1629,15 +1631,24 @@ Replace skeleton styles with minimal Express template styling
 -}
 -
 -aside p:last-child {
-+h1,
-+h2,
-+p {
-   margin: 0;
-+  padding: 0;
- }
- 
+-  margin: 0;
+-}
+-
 -aside li {
 -  margin-bottom: 0.125rem;
+-}
+-
+-.sr-only {
+-  position: absolute;
+-  width: 1px;
+-  height: 1px;
++body {
+   padding: 0;
+-  margin: -1px;
+-  overflow: hidden;
+-  clip-path: inset(50%);
+-  white-space: nowrap;
+-  border-width: 0;
 -}
 -
 -.overlay {
@@ -1694,14 +1705,22 @@ Replace skeleton styles with minimal Express template styling
 -}
 -
 -button.reset > * {
--  margin: 0;
--}
--
+   margin: 0;
++  background: rgb(245, 245, 241);
++  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
++    Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+ }
+ 
 -button.reset:not(:has(> *)) {
 -  height: 1.5rem;
 -  line-height: 1.5rem;
--}
--
++h1,
++h2,
++p {
++  margin: 0;
++  padding: 0;
+ }
+ 
 -button.reset:hover:not(:has(> *)) {
 -  text-decoration: underline;
 -  cursor: pointer;
@@ -1800,8 +1819,11 @@ Replace skeleton styles with minimal Express template styling
 -}
 -
 -.cart-line {
--  display: flex;
 -  padding: 0.75rem 0;
+-}
+-
+-.cart-line-inner {
+-  display: flex;
 -}
 -
 -.cart-line img {
@@ -1825,6 +1847,11 @@ Replace skeleton styles with minimal Express template styling
 -
 -.cart-line-quantity {
 -  display: flex;
+-}
+-
+-/* Child line components (warranties, gift wrapping, etc.) */
+-.cart-line-children {
+-  padding-left: 2rem;
 -}
 -
 -.cart-discount {
@@ -2044,10 +2071,9 @@ Replace skeleton styles with minimal Express template styling
  }
  
  /*
- * --------------------------------------------------
+-* --------------------------------------------------
 -* routes/blog._index.tsx
-+* Express template styling
- * --------------------------------------------------
+-* --------------------------------------------------
 -*/
 -.blog-grid {
 -  display: grid;
@@ -2137,8 +2163,10 @@ Replace skeleton styles with minimal Express template styling
 -  gap: 0.75rem;
 -  flex-wrap: wrap;
 -}
-+*/
-\ No newline at end of file
++ * --------------------------------------------------
++ * Express template styling
++ * --------------------------------------------------
++ */
 ~~~
 
 ### Step 14: Update ESLint configuration
@@ -2148,7 +2176,7 @@ Simplify ESLint configuration for Express template
 #### File: /eslint.config.js
 
 ~~~diff
-@@ -1,246 +1,2 @@
+@@ -1,247 +1,2 @@
 -import {fixupConfigRules, fixupPluginRules} from '@eslint/compat';
 -import eslintComments from 'eslint-plugin-eslint-comments';
 -import react from 'eslint-plugin-react';
@@ -2362,6 +2390,7 @@ Simplify ESLint configuration for Express template
 -      '@typescript-eslint/no-floating-promises': 'error',
 -      '@typescript-eslint/no-misused-promises': 'error',
 -      'react/prop-types': 'off',
+-      'import/no-unresolved': ['error', {ignore: ['^virtual:']}],
 -    },
 -  },
 -  {
@@ -2407,8 +2436,8 @@ Update dependencies and scripts for Express server deployment (add express, node
 #### File: /package.json
 
 ~~~diff
-@@ -5,58 +5,51 @@
-   "version": "2025.7.0",
+@@ -5,59 +5,52 @@
+   "version": "2025.10.0",
    "type": "module",
    "scripts": {
 -    "build": "shopify hydrogen build --codegen",
@@ -2424,10 +2453,10 @@ Update dependencies and scripts for Express server deployment (add express, node
    },
    "prettier": "@shopify/prettier-config",
    "dependencies": {
-+    "@react-router/express": "7.9.2",
-+    "@react-router/node": "7.9.2",
++    "@react-router/express": "7.12.0",
++    "@react-router/node": "7.12.0",
 +    "@remix-run/eslint-config": "^2.16.1",
-     "@shopify/hydrogen": "2025.7.0",
+     "@shopify/hydrogen": "2025.10.0",
 +    "compression": "^1.7.4",
 +    "cross-env": "^7.0.3",
 +    "express": "^4.19.2",
@@ -2437,16 +2466,16 @@ Update dependencies and scripts for Express server deployment (add express, node
 +    "morgan": "^1.10.0",
      "react": "18.3.1",
      "react-dom": "18.3.1",
-     "react-router": "7.9.2",
-     "react-router-dom": "7.9.2"
+     "react-router": "7.12.0",
+     "react-router-dom": "7.12.0"
    },
    "devDependencies": {
 -    "@eslint/compat": "^1.2.5",
 -    "@eslint/eslintrc": "^3.2.0",
      "@eslint/js": "^9.18.0",
      "@graphql-codegen/cli": "5.0.2",
-     "@react-router/dev": "7.9.2",
-     "@react-router/fs-routes": "7.9.2",
+     "@react-router/dev": "7.12.0",
+     "@react-router/fs-routes": "7.12.0",
      "@shopify/cli": "3.85.4",
      "@shopify/hydrogen-codegen": "^0.3.3",
 -    "@shopify/mini-oxygen": "^4.0.0",
@@ -2471,8 +2500,9 @@ Update dependencies and scripts for Express server deployment (add express, node
 -    "eslint-plugin-react": "^7.37.4",
 -    "eslint-plugin-react-hooks": "^5.1.0",
 -    "globals": "^15.14.0",
--    "prettier": "^3.4.2",
 +    "dotenv": "^16.0.3",
+     "graphql-config": "^5.0.3",
+-    "prettier": "^3.4.2",
 +    "nodemon": "^2.0.22",
 +    "npm-run-all": "^4.1.5",
      "typescript": "^5.9.2",
