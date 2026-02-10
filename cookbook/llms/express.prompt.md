@@ -2437,7 +2437,7 @@ Update dependencies and scripts for Express server deployment (add express, node
 
 ~~~diff
 @@ -5,59 +5,52 @@
-   "version": "2025.10.0",
+   "version": "2026.1.0",
    "type": "module",
    "scripts": {
 -    "build": "shopify hydrogen build --codegen",
@@ -2456,7 +2456,7 @@ Update dependencies and scripts for Express server deployment (add express, node
 +    "@react-router/express": "7.12.0",
 +    "@react-router/node": "7.12.0",
 +    "@remix-run/eslint-config": "^2.16.1",
-     "@shopify/hydrogen": "2025.10.0",
+     "@shopify/hydrogen": "2026.1.0",
 +    "compression": "^1.7.4",
 +    "cross-env": "^7.0.3",
 +    "express": "^4.19.2",
