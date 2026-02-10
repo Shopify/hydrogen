@@ -1,0 +1,26 @@
+index 63a0ecd9..748dfef7 100644
+--- a/templates/skeleton/app/components/CartLineItem.tsx
++++ b/templates/skeleton/app/components/CartLineItem.tsx
+@@ -27,7 +27,8 @@ export function CartLineItem({
+   line: CartLine;
+   childrenMap: LineItemChildrenMap;
+ }) {
+-  const {id, merchandise} = line;
++  // Get the selling plan allocation
++  const {id, merchandise, sellingPlanAllocation} = line;
+   const {product, title, image, selectedOptions} = merchandise;
+   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
+   const {close} = useAside();
+@@ -64,6 +65,12 @@ export function CartLineItem({
+           </Link>
+           <ProductPrice price={line?.cost?.totalAmount} />
+           <ul>
++            {/* Optionally render the selling plan name if available */}
++            {sellingPlanAllocation && (
++              <li key={sellingPlanAllocation.sellingPlan.name}>
++                <small>{sellingPlanAllocation.sellingPlan.name}</small>
++              </li>
++            )}
+             {selectedOptions.map((option) => (
+               <li key={option.name}>
+                 <small>

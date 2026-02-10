@@ -13,9 +13,21 @@ Use this prompt when you need to **apply a Hydrogen Cookbook recipe** to the ske
 
 ---
 
+## Before running cookbook commands
+
+**Run all cookbook commands from the `cookbook/` directory.** If you are at the project root, change into the cookbook first:
+
+```bash
+cd cookbook
+```
+
+Then run `validate` and `apply` from there (see steps below).
+
+---
+
 ## Step 1: Validate the recipe
 
-From the **repository root** (where `package.json` and `cookbook/` live):
+From the **cookbook directory** (`cookbook/`):
 
 ```bash
 npm run cookbook -- validate --recipe <RECIPE_NAME>
@@ -30,7 +42,7 @@ Example: `npm run cookbook -- validate --recipe multipass`
 
 ## Step 2: Apply the recipe
 
-From the **repository root**:
+From the **cookbook directory** (`cookbook/`):
 
 ```bash
 npm run cookbook -- apply --recipe <RECIPE_NAME>
@@ -129,11 +141,12 @@ Use a short table if helpful, e.g.:
 
 ## Example flow (metaobjects, one failure)
 
-1. `npm run cookbook -- validate --recipe metaobjects` → passes.
-2. `npm run cookbook -- apply --recipe metaobjects` → finishes but reports backup/rejections.
-3. Find: `templates/skeleton/app/lib/fragments.ts.orig` (no .rej).
-4. Read `cookbook/recipes/metaobjects/patches/fragments.ts.026109.patch`: adds `RECOMMENDED_PRODUCT_FRAGMENT` at end of `fragments.ts`.
-5. Compare: current `fragments.ts` already contains that fragment → no code change; delete `fragments.ts.orig`.
-6. Summary: “Metaobjects apply left one artifact: fragments.ts.orig. Current fragments.ts already had RECOMMENDED_PRODUCT_FRAGMENT. Deleted fragments.ts.orig. No .rej. Recipe apply is complete.”
+1. `cd cookbook` (if at project root).
+2. `npm run cookbook -- validate --recipe metaobjects` → passes.
+3. `npm run cookbook -- apply --recipe metaobjects` → finishes but reports backup/rejections.
+4. Find: `templates/skeleton/app/lib/fragments.ts.orig` (no .rej).
+5. Read `cookbook/recipes/metaobjects/patches/fragments.ts.026109.patch`: adds `RECOMMENDED_PRODUCT_FRAGMENT` at end of `fragments.ts`.
+6. Compare: current `fragments.ts` already contains that fragment → no code change; delete `fragments.ts.orig`.
+7. Summary: “Metaobjects apply left one artifact: fragments.ts.orig. Current fragments.ts already had RECOMMENDED_PRODUCT_FRAGMENT. Deleted fragments.ts.orig. No .rej. Recipe apply is complete.”
 
 Use this prompt so an LLM can reliably validate, apply, fix, and summarize Cookbook recipe runs against the latest skeleton.

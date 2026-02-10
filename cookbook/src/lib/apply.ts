@@ -9,7 +9,7 @@ import {
   TEMPLATE_PATH,
 } from './constants';
 import {loadRecipe} from './recipe';
-import {parseGitStatus} from './util';
+import {listFilesRecursively, parseGitStatus} from './util';
 import {handleZodErrorFromLoadRecipe} from './validate';
 
 /**
@@ -39,14 +39,7 @@ export function applyRecipe(params: {
   // list the ingredients in the recipe's ingredients folder as a list of flat paths (e.g. foo/bar/baz.txt)
   const ingredientsPath = path.join(recipeDir, 'ingredients');
   const fsIngredients = fs.existsSync(ingredientsPath)
-    ? fs
-        .readdirSync(ingredientsPath, {recursive: true, withFileTypes: true})
-        .filter((ingredient) => ingredient.isFile())
-        .map((ingredient) =>
-          path
-            .join(ingredient.path, ingredient.name)
-            .replace(path.join(recipeDir, 'ingredients') + '/', ''),
-        )
+    ? listFilesRecursively(ingredientsPath)
     : [];
 
   // if the template directory contains modified files, exit with an error

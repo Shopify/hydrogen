@@ -8,6 +8,7 @@ import {
   RENDER_FILENAME_GITHUB,
 } from './constants';
 import {loadRecipe, Recipe} from './recipe';
+import {listFilesRecursively} from './util';
 import path from 'path';
 import YAML from 'yaml';
 import {ZodError} from 'zod';
@@ -286,20 +287,8 @@ export function validateIngredientFiles(
   }
 
   if (fs.existsSync(ingredientsDir)) {
-    const fsIngredientEntries = fs.readdirSync(ingredientsDir, {
-      recursive: true,
-      withFileTypes: true,
-    });
-
-    for (let i = 0; i < fsIngredientEntries.length; i++) {
-      const entry = fsIngredientEntries[i];
-      if (!entry.isFile()) continue;
-
-      const relativePath = path
-        .join(entry.path, entry.name)
-        .replace(ingredientsDir + path.sep, '')
-        .replace(/\\/g, '/');
-
+    const fsIngredientPaths = listFilesRecursively(ingredientsDir);
+    for (const relativePath of fsIngredientPaths) {
       if (!referencedIngredients.has(relativePath)) {
         errors.push({
           validator: 'validateIngredientFiles',
