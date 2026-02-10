@@ -267,7 +267,7 @@ export default function Addresses() {
       <div>
         <div>
           <legend>Create address</legend>
-          <NewAddressForm />
+          <NewAddressForm key={addresses.nodes.length} />
         </div>
         <br />
         <hr />
