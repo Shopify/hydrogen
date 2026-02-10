@@ -278,7 +278,7 @@ jobs:
       - name: ✅ Verify app builds
         run: |
           cd "$RUNNER_TEMP/h2-test-${{ matrix.pm }}"
-          npm run build
+          ${{ matrix.pm }} run build
 
   test_unit:
     name: ⬣ Unit tests
