@@ -3514,7 +3514,7 @@ Add crypto dependencies for multipass token generation
 @@ -15,6 +15,7 @@
    "prettier": "@shopify/prettier-config",
    "dependencies": {
-     "@shopify/hydrogen": "2025.10.0",
+     "@shopify/hydrogen": "2026.1.0",
 +    "crypto-js": "^4.2.0",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
