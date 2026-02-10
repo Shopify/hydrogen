@@ -667,7 +667,7 @@ Add a Partytown dependency and npm script for copying library files.
    "prettier": "@shopify/prettier-config",
    "dependencies": {
 +    "@qwik.dev/partytown": "^0.11.2",
-     "@shopify/hydrogen": "2025.10.0",
+     "@shopify/hydrogen": "2026.1.0",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",
 ~~~
