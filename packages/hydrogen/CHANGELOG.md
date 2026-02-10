@@ -1,5 +1,30 @@
 # @shopify/hydrogen
 
+## 2026.1.0
+
+### Major Changes
+
+- Updated to Storefront API 2026-01 and Customer Account API 2026-01. ([#3434](https://github.com/Shopify/hydrogen/pull/3434)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  This is a quarterly API version update aligned with Shopify's API release schedule.
+
+  **Action Required**: The `cartDiscountCodesUpdate` mutation now requires the `discountCodes` argument. If you have custom cart discount code logic, verify your mutations include this field.
+
+  Review the changelogs for other changes that may affect your storefront:
+  - [Storefront API 2026-01 changelog](https://shopify.dev/changelog?filter=api&api_version=2026-01&api_type=storefront-graphql)
+  - [Customer Account API 2026-01 changelog](https://shopify.dev/changelog?filter=api&api_version=2026-01&api_type=customer-account-graphql)
+
+### Patch Changes
+
+- Updated dependencies [[`d46c8864aea059cac7dda4871a565f76a04b1495`](https://github.com/Shopify/hydrogen/commit/d46c8864aea059cac7dda4871a565f76a04b1495)]:
+  - @shopify/hydrogen-react@2026.0.0
+
+## 2025.10.1
+
+### Patch Changes
+
+- Fixed bug where file paths containing spaces were causing errors with virtual routes by decoding URL-encoded paths ([#3436](https://github.com/Shopify/hydrogen/pull/3436)) by [@itsjustriley](https://github.com/itsjustriley)
+
 ## 2025.10.0
 
 ### Major Changes
