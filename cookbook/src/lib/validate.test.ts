@@ -645,41 +645,19 @@ describe('validateIngredientFiles', () => {
       'ingredients',
     );
 
-    // Mock readdirSync to simulate nested directory structure
-    mockReaddirSync.mockImplementation((dirPath: fs.PathOrFileDescriptor) => {
-      const pathStr = dirPath.toString();
-
-      if (pathStr === ingredientsDir) {
-        return [
-          {name: 'templates', isFile: () => false, isDirectory: () => true},
-        ] as fs.Dirent[];
-      } else if (pathStr === path.join(ingredientsDir, 'templates')) {
-        return [
-          {name: 'skeleton', isFile: () => false, isDirectory: () => true},
-        ] as fs.Dirent[];
-      } else if (
-        pathStr === path.join(ingredientsDir, 'templates', 'skeleton')
-      ) {
-        return [
-          {name: 'app', isFile: () => false, isDirectory: () => true},
-        ] as fs.Dirent[];
-      } else if (
-        pathStr === path.join(ingredientsDir, 'templates', 'skeleton', 'app')
-      ) {
-        return [
-          {name: 'components', isFile: () => false, isDirectory: () => true},
-        ] as fs.Dirent[];
-      } else if (
-        pathStr ===
-        path.join(ingredientsDir, 'templates', 'skeleton', 'app', 'components')
-      ) {
-        return [
-          {name: 'Foo.tsx', isFile: () => true, isDirectory: () => false},
-        ] as fs.Dirent[];
-      }
-
-      return [] as fs.Dirent[];
-    });
+    mockReaddirSync.mockReturnValue([
+      {
+        path: path.join(
+          ingredientsDir,
+          'templates',
+          'skeleton',
+          'app',
+          'components',
+        ),
+        name: 'Foo.tsx',
+        isFile: () => true,
+      } as fs.Dirent,
+    ] as fs.Dirent[]);
 
     const result = validateIngredientFiles('test-recipe', recipe);
 
