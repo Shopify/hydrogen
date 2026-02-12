@@ -143,6 +143,7 @@
     "@types/jest": "^29.5.14",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^3.2.4",
+    "babel-plugin-react-compiler": "^1.0.0",
     "cpy-cli": "^5.0.0",
     "eslint": "9.19.0",
     "eslint-config-prettier": "10.0.1",
@@ -177,9 +178,10 @@
     "@xstate/fsm": "2.0.0",
     "@xstate/react": "3.2.1",
     "graphql": "^16.10.0",
+    "react-compiler-runtime": "^1.0.0",
+    "type-fest": "^4.33.0",
     "use-isomorphic-layout-effect": "1.2.1",
     "use-sync-external-store": "1.6.0",
-    "type-fest": "^4.33.0",
     "worktop": "^0.7.3"
   },
   "repository": {

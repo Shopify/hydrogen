@@ -103,7 +103,13 @@ export default defineConfig(({mode, isSsrBuild}) => {
       __HYDROGEN_DEV__: mode === 'devbuild' || mode === 'test',
       __HYDROGEN_TEST__: mode === 'test',
     },
-    plugins: [react()],
+    plugins: [
+      react({
+        babel: {
+          plugins: [['babel-plugin-react-compiler', {target: '18'}]],
+        },
+      }),
+    ],
     test: {
       globals: true,
       environment: 'happy-dom',
