@@ -10,6 +10,11 @@ up:
       met?: npm run build
       meet: 'true'
 
+# So the Shopify CLI loads the local @shopify/cli-hydrogen plugin when running
+# commands (e.g. skeleton dev → shopify hydrogen dev) instead of the bundled one.
+env:
+  SHOPIFY_CLI_ENV: development
+
 commands:
   server:
     desc: 'Run the skeleton template dev server'
