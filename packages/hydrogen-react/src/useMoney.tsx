@@ -73,8 +73,8 @@ export type UseMoneyValue = {
 };
 
 /**
- * The `useMoney` hook takes a [MoneyV2 object from the Storefront API](https://shopify.dev/docs/api/storefront/2025-10/objects/MoneyV2)
- * or a [MoneyV2 object from the Customer Account API](https://shopify.dev/docs/api/customer/2025-10/objects/moneyv2) and returns a
+ * The `useMoney` hook takes a [MoneyV2 object from the Storefront API](https://shopify.dev/docs/api/storefront/2026-01/objects/MoneyV2)
+ * or a [MoneyV2 object from the Customer Account API](https://shopify.dev/docs/api/customer/2026-01/objects/moneyv2) and returns a
  * default-formatted string of the amount with the correct currency indicator, along with some of the parts provided by
  * [Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat).
  * Uses `locale` from `ShopifyProvider`

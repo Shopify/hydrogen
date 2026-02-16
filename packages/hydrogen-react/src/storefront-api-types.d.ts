@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Storefront API 2025-10
+ * Based on Storefront API 2026-01
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -1335,6 +1335,8 @@ export type CartErrorCode =
   | 'BUYER_CANNOT_PURCHASE_FOR_COMPANY_LOCATION'
   /** The cart is too large to save. */
   | 'CART_TOO_LARGE'
+  /** The specified gift card recipient is invalid. */
+  | 'GIFT_CARD_RECIPIENT_INVALID'
   /** The input value is invalid. */
   | 'INVALID'
   /** Company location not found or not allowed. */
@@ -1379,6 +1381,8 @@ export type CartErrorCode =
   | 'NOTE_TOO_LONG'
   /** Only one delivery address can be selected. */
   | 'ONLY_ONE_DELIVERY_ADDRESS_CAN_BE_SELECTED'
+  /** Cannot reference existing parent lines by variant_id. */
+  | 'PARENT_LINE_INVALID_REFERENCE'
   /** Parent line nesting is too deep or circular. */
   | 'PARENT_LINE_NESTING_TOO_DEEP'
   /** Parent line not found. */
@@ -1533,7 +1537,12 @@ export type CartInput = {
   note?: InputMaybe<Scalars['String']['input']>;
 };
 
-/** The input fields for a cart metafield value to set. */
+/**
+ * The input fields for a cart metafield value to set.
+ *
+ * Cart metafields will be copied to order metafields at order creation time if there is a matching order metafield definition with the [`cart to order copyable`](https://shopify.dev/docs/apps/build/metafields/use-metafield-capabilities#cart-to-order-copyable) capability enabled.
+ *
+ */
 export type CartInputMetafieldInput = {
   /** The key name of the metafield. */
   key: Scalars['String']['input'];
@@ -3295,6 +3304,8 @@ export type Customer = HasMetafields & {
   acceptsMarketing: Scalars['Boolean']['output'];
   /** A list of addresses for the customer. */
   addresses: MailingAddressConnection;
+  /** The URL of the customer's avatar image. */
+  avatarUrl?: Maybe<Scalars['String']['output']>;
   /** The date and time when the customer was created. */
   createdAt: Scalars['DateTime']['output'];
   /** The customer’s default address. */
@@ -3319,6 +3330,8 @@ export type Customer = HasMetafields & {
   orders: OrderConnection;
   /** The customer’s phone number. */
   phone?: Maybe<Scalars['String']['output']>;
+  /** The social login provider associated with the customer. */
+  socialLoginProvider?: Maybe<SocialLoginProvider>;
   /**
    * A comma separated list of tags that have been added to the customer.
    * Additional access scope required: unauthenticated_read_customer_tags.
@@ -5442,12 +5455,23 @@ export type Mutation = {
   cartLinesRemove?: Maybe<CartLinesRemovePayload>;
   /** Updates one or more merchandise lines on a cart. */
   cartLinesUpdate?: Maybe<CartLinesUpdatePayload>;
-  /** Deletes a cart metafield. */
+  /**
+   * Deletes a cart metafield.
+   *
+   * > Note:
+   * > This mutation won't trigger [Shopify Functions](https://shopify.dev/docs/api/functions). The changes won't be available to Shopify Functions until the buyer goes to checkout or performs another cart interaction that triggers the functions.
+   *
+   */
   cartMetafieldDelete?: Maybe<CartMetafieldDeletePayload>;
   /**
    * Sets cart metafield values. Cart metafield values will be set regardless if they were previously created or not.
    *
    * Allows a maximum of 25 cart metafields to be set at a time.
+   *
+   * Cart metafields will be copied to order metafields at order creation time if there is a matching order metafield definition with the [`cart to order copyable`](https://shopify.dev/docs/apps/build/metafields/use-metafield-capabilities#cart-to-order-copyable) capability enabled.
+   *
+   * > Note:
+   * > This mutation won't trigger [Shopify Functions](https://shopify.dev/docs/api/functions). The changes won't be available to Shopify Functions until the buyer goes to checkout or performs another cart interaction that triggers the functions.
    *
    */
   cartMetafieldsSet?: Maybe<CartMetafieldsSetPayload>;
@@ -5590,7 +5614,7 @@ export type MutationCartDeliveryAddressesUpdateArgs = {
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartDiscountCodesUpdateArgs = {
   cartId: Scalars['ID']['input'];
-  discountCodes?: InputMaybe<Array<Scalars['String']['input']>>;
+  discountCodes: Array<Scalars['String']['input']>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
@@ -8127,6 +8151,8 @@ export type Shop = HasMetafields &
     __typename?: 'Shop';
     /** The shop's branding configuration. */
     brand?: Maybe<Brand>;
+    /** Translations for customer accounts. */
+    customerAccountTranslations?: Maybe<Array<Translation>>;
     /** The URL for the customer account (only present if shop has a customer account vanity domain). */
     customerAccountUrl?: Maybe<Scalars['String']['output']>;
     /** A description of the shop. */
@@ -8155,6 +8181,8 @@ export type Shop = HasMetafields &
     shipsToCountries: Array<CountryCode>;
     /** The Shop Pay Installments pricing information for the shop. */
     shopPayInstallmentsPricing?: Maybe<ShopPayInstallmentsPricing>;
+    /** The social login providers for customer accounts. */
+    socialLoginProviders: Array<SocialLoginProvider>;
     /** The shop’s subscription policy. */
     subscriptionPolicy?: Maybe<ShopPolicyWithDefault>;
     /** The shop’s terms of service. */
@@ -8716,6 +8744,13 @@ export type SitemapType =
   /** Products present in the sitemap. */
   | 'PRODUCT';
 
+/** A social login provider for customer accounts. */
+export type SocialLoginProvider = {
+  __typename?: 'SocialLoginProvider';
+  /** The handle of the social login provider. */
+  handle: Scalars['String']['output'];
+};
+
 /**
  * The availability of a product variant at a particular location.
  * Local pick-up must be enabled in the  store's shipping settings, otherwise this will return an empty result.
@@ -8971,6 +9006,15 @@ export type TaxonomyMetafieldFilter = {
 export type Trackable = {
   /** URL parameters to be added to a page URL to track the origin of on-site search traffic for [analytics reporting](https://help.shopify.com/manual/reports-and-analytics/shopify-reports/report-types/default-reports/behaviour-reports). Returns a result when accessed through the [search](https://shopify.dev/docs/api/storefront/current/queries/search) or [predictiveSearch](https://shopify.dev/docs/api/storefront/current/queries/predictiveSearch) queries, otherwise returns null. */
   trackingParameters?: Maybe<Scalars['String']['output']>;
+};
+
+/** Translation represents a translation of a key-value pair. */
+export type Translation = {
+  __typename?: 'Translation';
+  /** The key of the translation. */
+  key: Scalars['String']['output'];
+  /** The value of the translation. */
+  value: Scalars['String']['output'];
 };
 
 /**

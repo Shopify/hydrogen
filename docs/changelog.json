@@ -3,6 +3,88 @@
   "version": "1",
   "releases": [
     {
+      "title": "Storefront API 2025-10, React 19 support, and new cart mutations",
+      "version": "2025.10.0",
+      "date": "2026-01-30",
+      "hash": "87eb365ba4e9ec60ebb303d074f6254d4e3b0144",
+      "commit": "https://github.com/Shopify/hydrogen/commit/87eb365ba4e9ec60ebb303d074f6254d4e3b0144",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3421",
+      "dependencies": {
+        "@shopify/hydrogen": "2025.10.0"
+      },
+      "devDependencies": {
+        "graphql-config": "^5.0.3"
+      },
+      "removeDependencies": [
+        "@shopify/hydrogen"
+      ],
+      "fixes": [
+        {
+          "title": "Add OAuth query parameter support to login route",
+          "info": "The skeleton template's login route now reads OAuth parameters from the URL and forwards them to customerAccount.login(). Supported parameters include acr_values (direct users to specific login method), login_hint (pre-fill email), login_hint_mode (auto-submit with submit value), and locale (display language).",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3388",
+          "id": "3388"
+        },
+        {
+          "title": "Add locale and loginHintMode parameters to Customer Account login",
+          "info": "Added optional locale parameter to control login page language (supports en, fr, es, de, ja, zh-CN, and more), and loginHintMode parameter that when set to 'submit' with loginHint auto-submits the login form.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3386",
+          "id": "3386"
+        },
+        {
+          "title": "Add article_reference metafield type support",
+          "info": "New metafield types introduced in Storefront API 2025-10 allowing merchants to reference blog articles in metafields.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3407",
+          "id": "3407"
+        },
+        {
+          "title": "BREAKING: cartDeliveryAddressesUpdate empty array behavior",
+          "info": "In Storefront API 2025-10+, passing an empty array to cart.updateDeliveryAddresses() now clears all delivery addresses. Previous API versions treated empty arrays as no-op.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3393",
+          "id": "3393"
+        }
+      ],
+      "features": [
+        {
+          "title": "Update Storefront API and Customer Account API to 2025-10",
+          "info": "Major API version update from 2025-07 to 2025-10. Includes new mutations (cartGiftCardCodesAdd, cartDeliveryAddressesReplace), new metafield types (article_reference), and behavior changes (empty array in delivery address updates).",
+          "breaking": true,
+          "pr": "https://github.com/Shopify/hydrogen/pull/3352",
+          "id": "3352"
+        },
+        {
+          "title": "Add cartGiftCardCodesAdd mutation",
+          "info": "New mutation to add gift card codes without replacing existing ones. Simplifies gift card management compared to updateGiftCardCodes which required passing all existing codes. The API handles duplicates gracefully with idempotent behavior.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3401",
+          "id": "3401"
+        },
+        {
+          "title": "Add cartDeliveryAddressesReplace mutation",
+          "info": "New mutation to replace all delivery addresses on a cart in a single operation. Available via cart.replaceDeliveryAddresses() method or CartForm.ACTIONS.DeliveryAddressesReplace action.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3406",
+          "id": "3406"
+        },
+        {
+          "title": "Add React 19 support",
+          "info": "Hydrogen and Hydrogen React now support React 19 while maintaining React 18 compatibility. Updated peerDependencies to accept React ^18.3.1 or non-CVE-containing React 19 versions.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3348",
+          "id": "3348"
+        },
+        {
+          "title": "Add visitorConsent support to @inContext directive",
+          "info": "Provides Storefront API 2025-10 parity for visitorConsent parameter in @inContext directives. Note: Most Hydrogen storefronts don't need this feature as consent is handled automatically by Hydrogen's analytics provider or Shopify's Customer Privacy API. The visitorConsent @inContext parameter is primarily intended for Checkout Kit and non-Hydrogen integrations managing consent outside Shopify's standard flow.",
+          "pr": "https://github.com/Shopify/hydrogen/commit/38f8a796",
+          "id": "3415"
+        },
+        {
+          "title": "Add parent prop to AddToCartButton for nested cart lines",
+          "info": "The AddToCartButton component now accepts an optional parent prop to add items as children of an existing cart line. Enables adding warranties, gift wrapping, or other add-ons associated with a parent product. Supports both parentLineId and merchandiseId references.",
+          "pr": "https://github.com/Shopify/hydrogen/commit/0e615228",
+          "id": "3414"
+        }
+      ]
+    },
+    {
       "title": "New Shopify cookie system, React Router 7.12, and analytics improvements",
       "version": "2025.7.1",
       "date": "2026-01-08",

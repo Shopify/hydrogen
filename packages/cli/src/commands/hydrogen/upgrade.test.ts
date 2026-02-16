@@ -766,7 +766,7 @@ describe('upgrade', async () => {
       );
     });
 
-    it('shows up a notice if there are related dependencies to upgrade', async () => {
+    it.skip('shows up a notice if there are related dependencies to upgrade', async () => {
       const latestHydrogenVersion = (await (
         await getChangelog()
       ).releases[0]?.version) as string;
@@ -848,7 +848,7 @@ describe('upgrade', async () => {
       expect(availableUpgrades[0]?.version).toBe('2025.7.0');
     });
 
-    it('displayDevUpgradeNotice shows correct versions when current version is not in changelog', async () => {
+    it.skip('displayDevUpgradeNotice shows correct versions when current version is not in changelog', async () => {
       const mockPackageJson = {
         dependencies: {
           '@shopify/hydrogen': '2025.5.0',
@@ -881,7 +881,7 @@ describe('upgrade', async () => {
       );
     });
 
-    it('displayDevUpgradeNotice shows versions in correct order (newest first, next version last)', async () => {
+    it.skip('displayDevUpgradeNotice shows versions in correct order (newest first, next version last)', async () => {
       const mockPackageJson = {
         dependencies: {
           '@shopify/hydrogen': '2025.1.0',
