@@ -318,10 +318,7 @@ export async function setupLocalStarterTemplate(
     options.i18n,
   );
 
-  const {setupRoutes} = await handleRouteGeneration(
-    controller,
-    options.routes ?? true, // TODO: Remove default value when multi-select UI component is available
-  );
+  const {setupRoutes} = handleRouteGeneration(controller);
 
   setupSummary.i18n = i18nStrategy;
   backgroundWorkPromise = backgroundWorkPromise.then(async () => {
