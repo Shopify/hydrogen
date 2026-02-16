@@ -13,7 +13,7 @@ import {ProductPrice} from './ProductPrice';
 import {useAside} from './Aside';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import type {action as cartAction} from '~/routes/cart';
-import {useEffect, useRef} from 'react';
+import {useCallback, useEffect, useMemo, useRef} from 'react';
 
 type CartActionResponse = Awaited<typeof useActionData<typeof cartAction>>;
 export type CartLine = OptimisticCartLine<CartApiQueryFragment>;
@@ -182,30 +182,6 @@ function isTextChangingEvent(
   return false;
 }
 
-async function submitQuantity(
-  e:
-    | React.ChangeEvent<HTMLInputElement>
-    | React.KeyboardEvent<HTMLInputElement>,
-  fetcher: FetcherWithComponents<CartActionResponse>,
-  line: CartLine,
-) {
-  let value = e.currentTarget.valueAsNumber;
-  /** we revert to a valid value if it was invalid */
-  if (Number.isNaN(value) || value < 1) {
-    e.currentTarget.value = line.quantity.toString();
-    value = line.quantity;
-  }
-  const formData = new FormData();
-  formData.set(
-    CartForm.INPUT_NAME,
-    JSON.stringify({
-      action: CartForm.ACTIONS.LinesUpdate,
-      inputs: {lines: [{id: line.id, quantity: value}]},
-    }),
-  );
-  await fetcher.submit(formData, {method: 'post', action: href('/cart')});
-}
-
 function CartLineQuantityInput({
   line,
   disabled,
@@ -215,6 +191,37 @@ function CartLineQuantityInput({
 }) {
   const fetcher = useFetcher({key: getUpdateKey([line.id])});
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const submitQuantity = useMemo(() => {
+    let lastSubmittedValue: number = line.quantity;
+    return async function submitQuantity(
+      e:
+        | React.ChangeEvent<HTMLInputElement>
+        | React.KeyboardEvent<HTMLInputElement>,
+      fetcher: FetcherWithComponents<CartActionResponse>,
+      line: CartLine,
+    ) {
+      let value = e.currentTarget.valueAsNumber;
+      /** we revert to a valid value if it was invalid */
+      if (Number.isNaN(value) || value < 1) {
+        e.currentTarget.value = line.quantity.toString();
+        value = line.quantity;
+      }
+      /** we don't submit the same value twice */
+      if (value === lastSubmittedValue) return;
+      const formData = new FormData();
+      lastSubmittedValue = value;
+      formData.set(
+        CartForm.INPUT_NAME,
+        JSON.stringify({
+          action: CartForm.ACTIONS.LinesUpdate,
+          inputs: {lines: [{id: line.id, quantity: value}]},
+        }),
+      );
+      await fetcher.submit(formData, {method: 'post', action: href('/cart')});
+    };
+  }, [line.quantity]);
+
   useEffect(() => {
     if (!inputRef.current) return;
     inputRef.current.value = line.quantity.toString();
@@ -230,7 +237,9 @@ function CartLineQuantityInput({
       type="number"
       defaultValue={line.quantity}
       onKeyDown={(e) => {
-        if (e.key === 'Enter') void submitQuantity(e, fetcher, line);
+        if (e.key === 'Enter') {
+          void submitQuantity(e, fetcher, line);
+        }
       }}
       onChange={(e) => {
         if (isTextChangingEvent(e)) return;
