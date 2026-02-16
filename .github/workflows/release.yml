@@ -45,7 +45,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
@@ -124,7 +124,7 @@ jobs:
       - name: Create Release Pull Request or Publish (for latest release)
         if: env.latest == 'true'
         id: changesets
-        uses: changesets/action@06245a4e0a36c064a573d4150030f5ec548e4fcc # v1.4.10
+        uses: changesets/action@c48e67d110a68bc90ccf1098e9646092baacaa87 # v1.6.0
         with:
           version: npm run version
           publish: npm run changeset publish
@@ -158,7 +158,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
@@ -235,7 +235,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
@@ -259,7 +259,7 @@ jobs:
 
       - name: Create Back-fix Release Pull Request or Publish (for back-fix release)
         id: changesets
-        uses: changesets/action@06245a4e0a36c064a573d4150030f5ec548e4fcc # v1.4.10
+        uses: changesets/action@c48e67d110a68bc90ccf1098e9646092baacaa87 # v1.6.0
         with:
           version: npm run version
           publish: npm run changeset -- publish --tag ${{ github.ref_name }}

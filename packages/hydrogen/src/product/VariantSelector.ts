@@ -36,7 +36,7 @@ export type VariantOptionValue = {
 };
 
 /**
- * @deprecated VariantSelector will be deprecated and removed in the next major version 2025-07
+ * @deprecated VariantSelector will be deprecated and removed in the next major version 2025-10
  * Please use [getProductOptions](https://shopify.dev/docs/api/hydrogen/latest/utilities/getproductoptions),
  * [getSelectedProductOptions](https://shopify.dev/docs/api/hydrogen/latest/utilities/getselectedproductoptions),
  * [getAdjacentAndFirstAvailableVariants](https://shopify.dev/docs/api/hydrogen/latest/utilities/getadjacentandfirstavailablevariants) utils instead.
@@ -46,9 +46,9 @@ export type VariantOptionValue = {
 type VariantSelectorProps = {
   /** The product handle for all of the variants */
   handle: string;
-  /** Product options from the [Storefront API](/docs/api/storefront/2025-07/objects/ProductOption). Make sure both `name` and `values` are a part of your query. */
+  /** Product options from the [Storefront API](/docs/api/storefront/2026-01/objects/ProductOption). Make sure both `name` and `values` are a part of your query. */
   options: Array<PartialProductOption> | undefined;
-  /** Product variants from the [Storefront API](/docs/api/storefront/2025-07/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */
+  /** Product variants from the [Storefront API](/docs/api/storefront/2026-01/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */
   variants?:
     | PartialDeep<ProductVariantConnection>
     | Array<PartialDeep<ProductVariant>>;
@@ -62,7 +62,7 @@ type VariantSelectorProps = {
 };
 
 /**
- * @deprecated VariantSelector will be deprecated and removed in the next major version 2025-07
+ * @deprecated VariantSelector will be deprecated and removed in the next major version 2025-10
  * Please use [getProductOptions](https://shopify.dev/docs/api/hydrogen/latest/utilities/getproductoptions),
  * [getSelectedProductOptions](https://shopify.dev/docs/api/hydrogen/latest/utilities/getselectedproductoptions),
  * [getAdjacentAndFirstAvailableVariants](https://shopify.dev/docs/api/hydrogen/latest/utilities/getadjacentandfirstavailablevariants) utils instead.

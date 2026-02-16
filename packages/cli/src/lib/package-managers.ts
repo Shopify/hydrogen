@@ -6,6 +6,7 @@ import {
 export interface PackageManager {
   name: Name;
   lockfile: Lockfile;
+  alternativeLockfiles?: string[];
   installCommand: string;
 }
 
@@ -13,6 +14,7 @@ export const packageManagers: PackageManager[] = [
   {
     name: 'npm',
     lockfile: 'package-lock.json',
+    alternativeLockfiles: ['npm-shrinkwrap.json'],
     installCommand: 'npm ci',
   },
   {
@@ -28,6 +30,7 @@ export const packageManagers: PackageManager[] = [
   {
     name: 'bun',
     lockfile: 'bun.lockb',
+    alternativeLockfiles: ['bun.lock'],
     installCommand: 'bun install --frozen-lockfile',
   },
 ];

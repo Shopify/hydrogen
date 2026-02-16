@@ -1,5 +1,98 @@
 # skeleton
 
+## 2026.1.0
+
+### Major Changes
+
+- Updated to Storefront API 2026-01 and Customer Account API 2026-01. ([#3434](https://github.com/Shopify/hydrogen/pull/3434)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  This is a quarterly API version update aligned with Shopify's API release schedule.
+
+  **Action Required**: The `cartDiscountCodesUpdate` mutation now requires the `discountCodes` argument. If you have custom cart discount code logic, verify your mutations include this field.
+
+  Review the changelogs for other changes that may affect your storefront:
+  - [Storefront API 2026-01 changelog](https://shopify.dev/changelog?filter=api&api_version=2026-01&api_type=storefront-graphql)
+  - [Customer Account API 2026-01 changelog](https://shopify.dev/changelog?filter=api&api_version=2026-01&api_type=customer-account-graphql)
+
+### Patch Changes
+
+- Updated dependencies [[`d46c8864aea059cac7dda4871a565f76a04b1495`](https://github.com/Shopify/hydrogen/commit/d46c8864aea059cac7dda4871a565f76a04b1495)]:
+  - @shopify/hydrogen@2026.0.0
+
+## 2025.10.1
+
+### Major Changes
+
+- Update Storefront API and Customer Account API to version 2025-10 ([#3430](https://github.com/Shopify/hydrogen/pull/3430)) by [@kdaviduik](https://github.com/kdaviduik)
+
+### Patch Changes
+
+- Add support for Bun's text-based lockfile (`bun.lock`) introduced in Bun 1.2, and npm's shrinkwrap lockfile (`npm-shrinkwrap.json`), as alternatives to their respective primary lockfiles (`bun.lockb` and `package-lock.json`). ([#3430](https://github.com/Shopify/hydrogen/pull/3430)) by [@kdaviduik](https://github.com/kdaviduik)
+
+- Add `cartGiftCardCodesAdd` mutation ([#3430](https://github.com/Shopify/hydrogen/pull/3430)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  ## New Feature: cartGiftCardCodesAdd
+
+  The skeleton template has been updated to use the new `cartGiftCardCodesAdd` mutation:
+  - Removed `UpdateGiftCardForm` component from `CartSummary.tsx`
+  - Added `AddGiftCardForm` component using `CartForm.ACTIONS.GiftCardCodesAdd`
+
+  If you customized the gift card form in your project, you may want to migrate to the new `Add` action for simpler code.
+
+  ## Usage
+
+  ```typescript
+  import {CartForm} from '@shopify/hydrogen';
+
+  <CartForm action={CartForm.ACTIONS.GiftCardCodesAdd} inputs={{giftCardCodes: ['CODE1', 'CODE2']}}>
+    <button>Add Gift Cards</button>
+  </CartForm>
+  ```
+
+  Or with createCartHandler:
+
+  ```typescript
+  const cart = createCartHandler({storefront, getCartId, setCartId});
+  await cart.addGiftCardCodes(['SUMMER2025', 'WELCOME10']);
+  ```
+
+- Add support for nested cart line items (warranties, gift wrapping, etc.) ([#3430](https://github.com/Shopify/hydrogen/pull/3430)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  Storefront API 2025-10 introduces `parentRelationship` on cart line items, enabling parent-child relationships for add-ons. This update displays nested line items in the cart.
+
+  ### Changes
+  - Updates GraphQL fragments to include `parentRelationship` and `lineComponents` fields
+  - Updates `CartMain` and `CartLineItem` to render child line items with visual hierarchy
+
+  ### Note
+
+  This update focuses on **displaying** nested line items. To add both a product and its child (e.g., warranty) in a single action:
+
+  ```tsx
+  <AddToCartButton
+    lines={[
+      {merchandiseId: 'gid://shopify/ProductVariant/laptop-456', quantity: 1},
+      {
+        merchandiseId: 'gid://shopify/ProductVariant/warranty-123',
+        quantity: 1,
+        parent: {merchandiseId: 'gid://shopify/ProductVariant/laptop-456'},
+      },
+    ]}
+  >
+    Add to Cart with Warranty
+  </AddToCartButton>
+  ```
+
+- Updated dependencies [[`722915130410086bc7af22215ba57ee77aa14156`](https://github.com/Shopify/hydrogen/commit/722915130410086bc7af22215ba57ee77aa14156)]:
+  - @shopify/hydrogen@2025.10.1
+
+## 2025.10.0
+
+### Patch Changes
+
+- Updated dependencies [[`cd653456fbd1e7e1ab1f6fecff04c89a74b6cad9`](https://github.com/Shopify/hydrogen/commit/cd653456fbd1e7e1ab1f6fecff04c89a74b6cad9), [`24d26ad94e90ab0a859c274838f7f31e75a7808c`](https://github.com/Shopify/hydrogen/commit/24d26ad94e90ab0a859c274838f7f31e75a7808c), [`13a6f8987ea20d33a30a9c0329d7c11528b892ea`](https://github.com/Shopify/hydrogen/commit/13a6f8987ea20d33a30a9c0329d7c11528b892ea), [`403c1f5b6e266c3dfad30f7cfed229e3304570b0`](https://github.com/Shopify/hydrogen/commit/403c1f5b6e266c3dfad30f7cfed229e3304570b0), [`38f8a79625838a9cd4520b20c0db2e5d331f7d26`](https://github.com/Shopify/hydrogen/commit/38f8a79625838a9cd4520b20c0db2e5d331f7d26)]:
+  - @shopify/hydrogen@2026.0.0
+
 ## 2025.7.3
 
 ### Patch Changes

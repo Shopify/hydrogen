@@ -17,7 +17,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const {CALVER_PACKAGES} = require('./calver-shared.js');
+const {CALVER_PACKAGES, CALVER_SYNC_PACKAGES} = require('./calver-shared.js');
 
 const CALVER_BUMP_FILE = path.join(__dirname, '.calver-bump-type');
 
@@ -48,16 +48,21 @@ function detectBumpType() {
     const content = fs.readFileSync(filePath, 'utf-8');
 
     for (const pkg of CALVER_PACKAGES) {
+      const canTriggerMajorSync = CALVER_SYNC_PACKAGES.includes(pkg);
+
       if (
-        content.includes(`"${pkg}": major`) ||
-        content.includes(`'${pkg}': major`)
+        canTriggerMajorSync &&
+        (content.includes(`"${pkg}": major`) ||
+          content.includes(`'${pkg}': major`))
       ) {
         hasMajor = true;
       } else if (
         content.includes(`"${pkg}": minor`) ||
         content.includes(`'${pkg}': minor`) ||
         content.includes(`"${pkg}": patch`) ||
-        content.includes(`'${pkg}': patch`)
+        content.includes(`'${pkg}': patch`) ||
+        content.includes(`"${pkg}": major`) ||
+        content.includes(`'${pkg}': major`)
       ) {
         hasMinorOrPatch = true;
       }

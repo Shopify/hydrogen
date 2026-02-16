@@ -2,12 +2,27 @@ name: hydrogen
 display_name: Hydrogen
 
 up:
-  - node: 'v24.13.0' # to be kept in sync with .nvmrc
+  - node: 'v24.13.0' # .nvmrc uses 'v24' for nvm flexibility; dev tool needs specific version
+  - packages:
+      - ejson
+  - custom:
+      name: Build packages
+      met?: npm run build
+      meet: 'true'
+
+# So the Shopify CLI loads the local @shopify/cli-hydrogen plugin when running
+# commands (e.g. skeleton dev → shopify hydrogen dev) instead of the bundled one.
+env:
+  SHOPIFY_CLI_ENV: development
 
 commands:
+  server:
+    desc: 'Run the skeleton template dev server'
+    run: npm run build && npm run dev:app
+
   # Standard development commands
-  dev:
-    desc: 'Run the dev command in all packages'
+  watch:
+    desc: 'Run a server to watch for changes in any packages and automatically rebuild when changes are saved'
     run: npm run dev
 
   build:

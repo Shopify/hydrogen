@@ -45,10 +45,11 @@ export const CART_DISCOUNT_CODE_UPDATE_MUTATION = (
 ) => `#graphql
   mutation cartDiscountCodesUpdate(
     $cartId: ID!
-    $discountCodes: [String!]
+    $discountCodes: [String!]!
     $language: LanguageCode
     $country: CountryCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
       ... @defer {
         cart {

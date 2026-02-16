@@ -16,22 +16,29 @@ export type CartGiftCardCodesUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
+/**
+ * Updates (replaces) gift card codes in the cart.
+ *
+ * To add codes without replacing, use `cartGiftCardCodesAdd` (API 2025-10+).
+ *
+ * @param {CartQueryOptions} options - Cart query options including storefront client and cart fragment.
+ * @returns {CartGiftCardCodesUpdateFunction} - Function accepting gift card codes array and optional parameters.
+ *
+ * @example Replace all gift card codes
+ * const updateGiftCardCodes = cartGiftCardCodesUpdateDefault({ storefront, getCartId });
+ * await updateGiftCardCodes(['SUMMER2025', 'WELCOME10']);
+ */
 export function cartGiftCardCodesUpdateDefault(
   options: CartQueryOptions,
 ): CartGiftCardCodesUpdateFunction {
   return async (giftCardCodes, optionalParams) => {
-    // Ensure the gift card codes are unique
-    const uniqueCodes = giftCardCodes.filter((value, index, array) => {
-      return array.indexOf(value) === index;
-    });
-
     const {cartGiftCardCodesUpdate, errors} = await options.storefront.mutate<{
       cartGiftCardCodesUpdate: CartQueryData;
       errors: StorefrontApiErrors;
     }>(CART_GIFT_CARD_CODE_UPDATE_MUTATION(options.cartFragment), {
       variables: {
         cartId: options.getCartId(),
-        giftCardCodes: uniqueCodes,
+        giftCardCodes,
         ...optionalParams,
       },
     });
@@ -48,7 +55,8 @@ export const CART_GIFT_CARD_CODE_UPDATE_MUTATION = (
     $giftCardCodes: [String!]!
     $language: LanguageCode
     $country: CountryCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartGiftCardCodesUpdate(cartId: $cartId, giftCardCodes: $giftCardCodes) {
       cart {
         ...CartApiMutation

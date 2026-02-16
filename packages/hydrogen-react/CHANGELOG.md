@@ -1,5 +1,81 @@
 # @shopify/hydrogen-react
 
+## 2026.1.0
+
+### Major Changes
+
+- Updated to Storefront API 2026-01 and Customer Account API 2026-01. ([#3434](https://github.com/Shopify/hydrogen/pull/3434)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  This is a quarterly API version update aligned with Shopify's API release schedule.
+
+  **Action Required**: The `cartDiscountCodesUpdate` mutation now requires the `discountCodes` argument. If you have custom cart discount code logic, verify your mutations include this field.
+
+  Review the changelogs for other changes that may affect your storefront:
+  - [Storefront API 2026-01 changelog](https://shopify.dev/changelog?filter=api&api_version=2026-01&api_type=storefront-graphql)
+  - [Customer Account API 2026-01 changelog](https://shopify.dev/changelog?filter=api&api_version=2026-01&api_type=customer-account-graphql)
+
+## 2025.10.0
+
+### Major Changes
+
+- Update Storefront API and Customer Account API to version 2025-10 ([#3352](https://github.com/Shopify/hydrogen/pull/3352)) by [@fredericoo](https://github.com/fredericoo)
+
+### Minor Changes
+
+- Add `visitorConsent` support to `@inContext` directive for Storefront API parity ([#3408](https://github.com/Shopify/hydrogen/pull/3408)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  **Note: Most Hydrogen storefronts do NOT need this feature.**
+
+  This API addition provides Storefront API 2025-10 parity for the `visitorConsent` parameter in `@inContext` directives. However, if you're using Hydrogen's analytics provider or Shopify's Customer Privacy API (including third-party consent services integrated with it), consent is already handled automatically and you don't need to use this.
+
+  This feature is primarily intended for Checkout Kit and other non-Hydrogen integrations that manage consent outside of Shopify's standard consent flow.
+
+  **What it does:**
+  When explicitly provided, `visitorConsent` encodes buyer consent preferences (analytics, marketing, preferences, saleOfData) into the cart's `checkoutUrl` via the `_cs` parameter.
+
+### Patch Changes
+
+- Add `parent` prop to `AddToCartButton` for nested cart lines ([#3398](https://github.com/Shopify/hydrogen/pull/3398)) by [@fredericoo](https://github.com/fredericoo)
+
+  The `AddToCartButton` component now accepts an optional `parent` prop, allowing you to add items as children of an existing cart line. This enables adding warranties, gift wrapping, or other add-ons that should be associated with a parent product.
+
+  ### Usage
+
+  ```tsx
+  import {AddToCartButton} from '@shopify/hydrogen-react';
+
+  // Add a warranty as a child of an existing cart line (by line ID)
+  <AddToCartButton
+    variantId="gid://shopify/ProductVariant/warranty-123"
+    parent={{parentLineId: 'gid://shopify/CartLine/parent-456'}}
+  >
+    Add Extended Warranty
+  </AddToCartButton>
+
+  // Add a warranty as a child of a cart line (by merchandise ID)
+  // Useful when you know the product variant but not the cart line ID
+  <AddToCartButton
+    variantId="gid://shopify/ProductVariant/warranty-123"
+    parent={{merchandiseId: 'gid://shopify/ProductVariant/laptop-456'}}
+  >
+    Add Extended Warranty
+  </AddToCartButton>
+  ```
+
+  ### Type
+
+  ```ts
+  interface AddToCartButtonPropsBase {
+    // ... existing props
+    /** The parent line item of the item being added to the cart. Used for nested cart lines. */
+    parent?: CartLineParentInput;
+  }
+  ```
+
+- Add support for `article_reference` and `list.article_reference` metafield types ([#3407](https://github.com/Shopify/hydrogen/pull/3407)) by [@kdaviduik](https://github.com/kdaviduik)
+
+  These new metafield types were introduced in Storefront API 2025-10, allowing merchants to reference blog articles in metafields.
+
 ## 2025.7.2
 
 ### Minor Changes

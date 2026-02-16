@@ -20,15 +20,18 @@ export type CartDeliveryAddressesUpdateFunction = (
 /**
  * Updates delivery addresses in the cart.
  *
- * This function sends a mutation to the storefront API to update one or more delivery addresses in the cart.
- * It returns the result of the mutation, including any errors that occurred.
+ * Pass an empty array to clear all delivery addresses from the cart.
  *
  * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
  * @returns {CartDeliveryAddressUpdateFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
  *
- * @example
+ * @example Clear all delivery addresses
  * const updateAddresses = cartDeliveryAddressesUpdateDefault(cartQueryOptions);
- * const result = await updateAddresses([
+ * await updateAddresses([]);
+ *
+ * @example Update specific delivery addresses
+ * const updateAddresses = cartDeliveryAddressesUpdateDefault(cartQueryOptions);
+ * await updateAddresses([
     {
       "address": {
         "copyFromCustomerAddressId": "gid://shopify/<objectName>/10079785100",
@@ -84,7 +87,8 @@ export const CART_DELIVERY_ADDRESSES_UPDATE_MUTATION = (
     $addresses: [CartSelectableAddressUpdateInput!]!,
     $country: CountryCode = ZZ
     $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
+    $visitorConsent: VisitorConsent
+  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
     cartDeliveryAddressesUpdate(addresses: $addresses, cartId: $cartId) {
       cart {
         ...CartApiMutation

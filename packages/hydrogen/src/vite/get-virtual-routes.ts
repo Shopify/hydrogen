@@ -7,20 +7,35 @@ export const VIRTUAL_ROUTES_ROUTES_DIR_PARTS = [
 ];
 export const VIRTUAL_ROUTES_DIR_PARTS = ['vite', 'virtual-routes'];
 
-function getVirtualRoutesPath(
+/**
+ * @internal
+ * Exported for testing only.
+ */
+export function createVirtualRoutesPath(
+  baseUrl: string,
   pathParts: Array<string>,
   forFile: string,
 ): string {
-  const basePath = new URL('../', import.meta.url);
+  const basePath = new URL('../', baseUrl);
   const virtualRoutesPath = pathParts.reduce((working, dirPart) => {
     return new URL(`${dirPart}/`, working);
   }, basePath);
 
   // Getting rid of the drive path (ie. '/C:/') in windows
-  return new URL(forFile, virtualRoutesPath).pathname.replace(
+  const pathname = new URL(forFile, virtualRoutesPath).pathname.replace(
     /^\/[a-zA-Z]:\//,
     '/',
   );
+
+  // Decode URI components to handle spaces and special characters in file paths
+  return decodeURIComponent(pathname);
+}
+
+function getVirtualRoutesPath(
+  pathParts: Array<string>,
+  forFile: string,
+): string {
+  return createVirtualRoutesPath(import.meta.url, pathParts, forFile);
 }
 
 export async function getVirtualRoutesV3() {

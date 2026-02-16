@@ -27,4 +27,29 @@ describe('cartGiftCardCodesUpdateDefault', () => {
     expect(result.cart).toHaveProperty('id', CART_ID);
     expect(result.userErrors?.[0]).toContain(cartFragment);
   });
+
+  describe('no duplicate filtering (API 2025-10+)', () => {
+    it('should pass duplicate codes directly to API without filtering', async () => {
+      const updateGiftCardCodes = cartGiftCardCodesUpdateDefault({
+        storefront: mockCreateStorefrontClient(),
+        getCartId: () => CART_ID,
+      });
+
+      const codesWithDuplicates = ['GIFT123', 'GIFT123', 'WELCOME10'];
+      const result = await updateGiftCardCodes(codesWithDuplicates);
+
+      expect(result.cart).toHaveProperty('id', CART_ID);
+    });
+
+    it('should delegate duplicate handling to API (case-insensitive normalization)', async () => {
+      const updateGiftCardCodes = cartGiftCardCodesUpdateDefault({
+        storefront: mockCreateStorefrontClient(),
+        getCartId: () => CART_ID,
+      });
+
+      const result = await updateGiftCardCodes(['gift123', 'GIFT123']);
+
+      expect(result.cart).toHaveProperty('id', CART_ID);
+    });
+  });
 });

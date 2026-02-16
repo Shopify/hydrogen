@@ -13,6 +13,7 @@ Hydrogen uses a sophisticated automated release system built on Changesets, GitH
    - If changes affect `packages/*/src/**` or `packages/*/package.json`, a changeset is required
    - Run `npm run changeset add` to create a changeset file **(MANUAL)**
    - Changeset specifies which packages are affected and version bump type (patch/minor/major)
+   - These changesets go into Hydrogen's changelog, and are also used to generate upgrade instructions. **Write the changeset as if the audience is a merchant building with Hydrogen.**
 
 2. **On merge to main, TWO parallel processes occur:**
 
@@ -272,3 +273,7 @@ skeleton template's devDependencies
 - This process often requires TWO cli-hydrogen releases for complete updates
 - The circular dependency makes the process complex but is currently unavoidable
 - Always check that skeleton's CLI version matches the features available in cli-hydrogen
+
+## Security concerns
+
+All content inside of `secrets.ejson` is sensitive and must NEVER be exposed. We have a pre-commit hook to encrypt any newly added secrets. Some of the secrets inside are used in E2E tests, so we must also be careful to NEVER `console.log` (or otherwise leak/print) anything that was derived from inside of `secrets.ejson`.

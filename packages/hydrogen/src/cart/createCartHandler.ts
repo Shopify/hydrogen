@@ -50,6 +50,10 @@ import {
   cartGiftCardCodesUpdateDefault,
 } from './queries/cartGiftCardCodeUpdateDefault';
 import {
+  type CartGiftCardCodesAddFunction,
+  cartGiftCardCodesAddDefault,
+} from './queries/cartGiftCardCodesAddDefault';
+import {
   type CartGiftCardCodesRemoveFunction,
   cartGiftCardCodesRemoveDefault,
 } from './queries/cartGiftCardCodesRemoveDefault';
@@ -65,6 +69,10 @@ import {
   type CartDeliveryAddressesUpdateFunction,
   cartDeliveryAddressesUpdateDefault,
 } from './queries/cartDeliveryAddressesUpdateDefault';
+import {
+  type CartDeliveryAddressesReplaceFunction,
+  cartDeliveryAddressesReplaceDefault,
+} from './queries/cartDeliveryAddressesReplaceDefault';
 import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
 
 export type CartHandlerOptions = {
@@ -94,6 +102,7 @@ export type HydrogenCart = {
   removeLines: ReturnType<typeof cartLinesRemoveDefault>;
   updateDiscountCodes: ReturnType<typeof cartDiscountCodesUpdateDefault>;
   updateGiftCardCodes: ReturnType<typeof cartGiftCardCodesUpdateDefault>;
+  addGiftCardCodes: ReturnType<typeof cartGiftCardCodesAddDefault>;
   removeGiftCardCodes: ReturnType<typeof cartGiftCardCodesRemoveDefault>;
   updateBuyerIdentity: ReturnType<typeof cartBuyerIdentityUpdateDefault>;
   updateNote: ReturnType<typeof cartNoteUpdateDefault>;
@@ -180,6 +189,32 @@ export type HydrogenCart = {
   updateDeliveryAddresses: ReturnType<
     typeof cartDeliveryAddressesUpdateDefault
   >;
+  /**
+   * Replaces all delivery addresses on the cart.
+   *
+   * This function sends a mutation to the storefront API to replace all delivery addresses on the cart
+   * with the provided addresses. It returns the result of the mutation, including any errors that occurred.
+   *
+   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
+   * @returns {CartDeliveryAddressesReplaceFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
+   *
+   * @example
+   * const result = await cart.replaceDeliveryAddresses([
+   *   {
+   *     address: {
+   *       deliveryAddress: {
+   *         address1: '123 Main St',
+   *         city: 'Anytown',
+   *         countryCode: 'US'
+   *       }
+   *     },
+   *     selected: true
+   *   }
+   * ], { someOptionalParam: 'value' });
+   */
+  replaceDeliveryAddresses: ReturnType<
+    typeof cartDeliveryAddressesReplaceDefault
+  >;
 };
 
 export type HydrogenCartCustom<
@@ -249,6 +284,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
           quantity: line.quantity,
           merchandiseId: line.merchandiseId,
           sellingPlanId: line.sellingPlanId,
+          parent: line.parent,
         };
       });
 
@@ -274,6 +310,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
           )
         : await cartCreate({giftCardCodes}, optionalParams);
     },
+    addGiftCardCodes: cartGiftCardCodesAddDefault(mutateOptions),
     removeGiftCardCodes: cartGiftCardCodesRemoveDefault(mutateOptions),
     updateBuyerIdentity: async (buyerIdentity, optionalParams) => {
       return cartId || optionalParams?.cartId
@@ -310,6 +347,8 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     addDeliveryAddresses: cartDeliveryAddressesAddDefault(mutateOptions),
     removeDeliveryAddresses: cartDeliveryAddressesRemoveDefault(mutateOptions),
     updateDeliveryAddresses: cartDeliveryAddressesUpdateDefault(mutateOptions),
+    replaceDeliveryAddresses:
+      cartDeliveryAddressesReplaceDefault(mutateOptions),
   };
 
   if ('customMethods' in options) {
@@ -409,6 +448,10 @@ export type HydrogenCartForDocs = {
    */
   updateDeliveryAddresses?: CartDeliveryAddressesUpdateFunction;
   /**
+   * Replace all delivery addresses on the cart.
+   */
+  replaceDeliveryAddresses?: CartDeliveryAddressesReplaceFunction;
+  /**
    * Updates additional information (attributes) in the cart.
    */
   updateAttributes?: CartAttributesUpdateFunction;
@@ -425,6 +468,10 @@ export type HydrogenCartForDocs = {
    * Updates gift card codes in the cart.
    */
   updateGiftCardCodes?: CartGiftCardCodesUpdateFunction;
+  /**
+   * Adds gift card codes to the cart without replacing existing ones.
+   */
+  addGiftCardCodes?: CartGiftCardCodesAddFunction;
   /**
    * Removes gift card codes from the cart.
    */

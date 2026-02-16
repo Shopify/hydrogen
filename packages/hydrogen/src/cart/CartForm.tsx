@@ -87,6 +87,20 @@ type CartGiftCardCodesUpdateRequire = {
   } & OtherFormData;
 };
 
+type CartGiftCardCodesAddProps = {
+  action: 'GiftCardCodesAdd';
+  inputs?: {
+    giftCardCodes: string[];
+  } & OtherFormData;
+};
+
+type CartGiftCardCodesAddRequire = {
+  action: 'GiftCardCodesAdd';
+  inputs: {
+    giftCardCodes: string[];
+  } & OtherFormData;
+};
+
 type CartGiftCardCodesRemoveProps = {
   action: 'GiftCardCodesRemove';
   inputs?: {
@@ -245,6 +259,20 @@ type CartDeliveryAddressesUpdateRequire = {
   } & OtherFormData;
 };
 
+type CartDeliveryAddressesReplaceProps = {
+  action: 'DeliveryAddressesReplace';
+  inputs?: {
+    addresses: Array<CartSelectableAddressInput>;
+  } & OtherFormData;
+};
+
+type CartDeliveryAddressesReplaceRequire = {
+  action: 'DeliveryAddressesReplace';
+  inputs: {
+    addresses: Array<CartSelectableAddressInput>;
+  } & OtherFormData;
+};
+
 type CartCustomProps = {
   action: `Custom${string}`;
   inputs?: Record<string, unknown>;
@@ -278,6 +306,7 @@ type CartActionInputProps =
   | CartCreateProps
   | CartDiscountCodesUpdateProps
   | CartGiftCardCodesUpdateProps
+  | CartGiftCardCodesAddProps
   | CartGiftCardCodesRemoveProps
   | CartLinesAddProps
   | CartLinesUpdateProps
@@ -289,6 +318,7 @@ type CartActionInputProps =
   | CartDeliveryAddressesAddProps
   | CartDeliveryAddressesRemoveProps
   | CartDeliveryAddressesUpdateProps
+  | CartDeliveryAddressesReplaceProps
   | CartCustomProps;
 
 export type CartActionInput =
@@ -297,6 +327,7 @@ export type CartActionInput =
   | CartCreateRequire
   | CartDiscountCodesUpdateRequire
   | CartGiftCardCodesUpdateRequire
+  | CartGiftCardCodesAddRequire
   | CartGiftCardCodesRemoveRequire
   | CartLinesAddRequire
   | CartLinesUpdateRequire
@@ -308,6 +339,7 @@ export type CartActionInput =
   | CartDeliveryAddressesAddRequire
   | CartDeliveryAddressesRemoveRequire
   | CartDeliveryAddressesUpdateRequire
+  | CartDeliveryAddressesReplaceRequire
   | CartCustomRequire;
 
 type CartFormProps = CartActionInputProps & CartFormCommonProps;
@@ -345,6 +377,7 @@ CartForm.ACTIONS = {
   Create: 'Create',
   DiscountCodesUpdate: 'DiscountCodesUpdate',
   GiftCardCodesUpdate: 'GiftCardCodesUpdate',
+  GiftCardCodesAdd: 'GiftCardCodesAdd',
   GiftCardCodesRemove: 'GiftCardCodesRemove',
   LinesAdd: 'LinesAdd',
   LinesRemove: 'LinesRemove',
@@ -356,6 +389,7 @@ CartForm.ACTIONS = {
   DeliveryAddressesAdd: 'DeliveryAddressesAdd',
   DeliveryAddressesUpdate: 'DeliveryAddressesUpdate',
   DeliveryAddressesRemove: 'DeliveryAddressesRemove',
+  DeliveryAddressesReplace: 'DeliveryAddressesReplace',
 } as const;
 
 function getFormInput(formData: FormData): CartActionInput {
