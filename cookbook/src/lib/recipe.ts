@@ -99,7 +99,7 @@ export const RecipeSchema = z.object({
         .default([]),
     })
     .optional()
-    .default({}),
+    .default({userQueries: [], troubleshooting: []}),
 });
 
 export type Recipe = z.infer<typeof RecipeSchema>;

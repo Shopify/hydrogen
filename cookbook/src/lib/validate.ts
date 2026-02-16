@@ -123,8 +123,9 @@ export function handleZodErrorFromLoadRecipe(
   recipeYamlPath: string,
 ): void {
   const errors: ValidationError[] = error.issues.map((issue) => {
-    const lineNumber = getYamlLineNumber(recipeYamlPath, issue.path);
-    const actualValue = getYamlValue(recipeYamlPath, issue.path);
+    const issuePath = issue.path as (string | number)[];
+    const lineNumber = getYamlLineNumber(recipeYamlPath, issuePath);
+    const actualValue = getYamlValue(recipeYamlPath, issuePath);
 
     let message = issue.message;
     if (actualValue !== null) {
@@ -366,8 +367,9 @@ export function validateRecipe(params: {
     } catch (error) {
       if (error instanceof ZodError) {
         error.issues.forEach((issue) => {
-          const lineNumber = getYamlLineNumber(recipeYamlPath, issue.path);
-          const actualValue = getYamlValue(recipeYamlPath, issue.path);
+          const issuePath = issue.path as (string | number)[];
+          const lineNumber = getYamlLineNumber(recipeYamlPath, issuePath);
+          const actualValue = getYamlValue(recipeYamlPath, issuePath);
 
           let message = issue.message;
           if (actualValue !== null) {

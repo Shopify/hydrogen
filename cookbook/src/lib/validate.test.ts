@@ -28,7 +28,7 @@ describe('formatValidationError', () => {
   it('should format error with line number and location', () => {
     const error = {
       validator: 'RecipeSchema',
-      message: 'Expected string, received number',
+      message: 'Invalid input: expected string, received number',
       location: 'steps.0.step',
       lineNumber: 52,
     };
@@ -37,7 +37,7 @@ describe('formatValidationError', () => {
 
     expect(formatted).toContain('recipe.yaml:52');
     expect(formatted).toContain('steps.0.step');
-    expect(formatted).toContain('RecipeSchema: Expected string, received number');
+    expect(formatted).toContain('RecipeSchema: Invalid input: expected string, received number');
   });
 
   it('should format error without line number', () => {
@@ -740,8 +740,8 @@ commit: abc123
 
     const errorOutput = consoleErrorSpy.mock.calls.map(call => call[0]).join('\n');
 
-    expect(errorOutput).toContain('Expected string, received number (actual value: 1)');
-    expect(errorOutput).toContain('Expected string, received number (actual value: 2)');
+    expect(errorOutput).toContain('Invalid input: expected string, received number (actual value: 1)');
+    expect(errorOutput).toContain('Invalid input: expected string, received number (actual value: 2)');
   });
 
   it('should collect and format all validation errors with line numbers', () => {
