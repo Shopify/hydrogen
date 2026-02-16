@@ -49,10 +49,35 @@ const cartMockWithLine = {
   lines: {edges: [{node: getCartLineMock()}]},
 };
 
+function createMockLocalStorage(): Storage {
+  const store: Record<string, string> = {};
+  return {
+    getItem: vi.fn((key: string) => store[key] ?? null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      Object.keys(store).forEach((key) => delete store[key]);
+    }),
+    get length() {
+      return Object.keys(store).length;
+    },
+    key: vi.fn((index: number) => Object.keys(store)[index] ?? null),
+  };
+}
+
 describe('<CartProvider />', () => {
   beforeEach(() => {
     mockUseCartActions.mockClear();
     mockUseCartFetch.mockClear();
+    Object.defineProperty(window, 'localStorage', {
+      value: createMockLocalStorage(),
+      writable: true,
+      configurable: true,
+    });
     vi.spyOn(window.localStorage, 'getItem').mockReturnValue('');
   });
 

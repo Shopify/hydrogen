@@ -6,7 +6,7 @@ type ModelViewerProps = React.ComponentPropsWithoutRef<typeof ModelViewer>;
 
 const Template: Story<ModelViewerProps> = (props) => <ModelViewer {...props} />;
 
-export const Default = Template.bind({});
+export const Default: Story<ModelViewerProps> = Template.bind({});
 Default.args = {
   data: {
     sources: [

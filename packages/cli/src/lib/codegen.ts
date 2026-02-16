@@ -309,7 +309,7 @@ export async function generateDefaultConfig(
 
     return Boolean(
       schema.endsWith(baseSfapiSchema) ||
-        (baseCaapiSchema && schema.endsWith(baseCaapiSchema)),
+      (baseCaapiSchema && schema.endsWith(baseCaapiSchema)),
     );
   };
 
