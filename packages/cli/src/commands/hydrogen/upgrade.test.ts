@@ -2,10 +2,7 @@ import {createRequire} from 'node:module';
 import {tmpdir} from 'node:os';
 import {mkdtemp, rm} from 'node:fs/promises';
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {
-  writeFile,
-  fileExists,
-} from '@shopify/cli-kit/node/fs';
+import {writeFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {
   renderSelectPrompt,
@@ -182,9 +179,13 @@ async function inTemporaryHydrogenRepo(
       await exec('git', ['add', 'package.json'], {cwd: tmpDir});
 
       if (process.env.SHOPIFY_UNIT_TEST || process.env.CI) {
-        await exec('git', ['config', '--local', 'user.email', 'test@hydrogen.shop'], {
-          cwd: tmpDir,
-        });
+        await exec(
+          'git',
+          ['config', '--local', 'user.email', 'test@hydrogen.shop'],
+          {
+            cwd: tmpDir,
+          },
+        );
         await exec('git', ['config', '--local', 'user.name', 'Hydrogen Test'], {
           cwd: tmpDir,
         });
