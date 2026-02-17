@@ -212,29 +212,41 @@ jobs:
           retention-days: 30
 
   test_scaffolding:
-    name: ⬣ Scaffolding tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    name: ⬣ Scaffolding tests (${{ matrix.os }} / ${{ matrix.pm }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     concurrency:
-      group: ci-scaffolding-${{ matrix.pm }}-${{ github.ref }}
+      group: ci-scaffolding-${{ matrix.os }}-${{ matrix.pm }}-${{ github.ref }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
-        pm: [npm, pnpm, yarn, bun]
         include:
-          - pm: npm
+          # Full package manager matrix on Linux
+          - os: ubuntu-latest
+            pm: npm
             lockfile: package-lock.json
-          - pm: pnpm
+          - os: ubuntu-latest
+            pm: pnpm
             lockfile: pnpm-lock.yaml
-            setup: |
-              npm i -g pnpm@9
-          - pm: yarn
+            setup: npm i -g pnpm@9
+          - os: ubuntu-latest
+            pm: yarn
             lockfile: yarn.lock
-          - pm: bun
+          - os: ubuntu-latest
+            pm: bun
             lockfile: bun.lock
-            setup: |
-              npm i -g bun
+            setup: npm i -g bun
+          
+          # Smoke test on macOS (npm only)
+          - os: macos-latest
+            pm: npm
+            lockfile: package-lock.json
+          
+          # Smoke test on Windows (npm only)
+          - os: windows-latest
+            pm: npm
+            lockfile: package-lock.json
     steps:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -249,6 +261,7 @@ jobs:
       - name: 📦 Setup ${{ matrix.pm }}
         if: matrix.setup
         run: ${{ matrix.setup }}
+        shell: bash
 
       - name: 📥 Install dependencies
         run: |
@@ -261,7 +274,7 @@ jobs:
       - name: 🧪 Scaffold with ${{ matrix.pm }}
         run: |
           node packages/create-hydrogen/dist/create-app.js \
-            --path "$RUNNER_TEMP/h2-test-${{ matrix.pm }}" \
+            --path "${{ runner.temp }}/h2-test-${{ matrix.pm }}" \
             --language ts \
             --mock-shop \
             --install-deps \
@@ -271,14 +284,17 @@ jobs:
             --routes \
             --markets none \
             --styling none
+        shell: bash
 
       - name: ✅ Verify lockfile
-        run: test -f "$RUNNER_TEMP/h2-test-${{ matrix.pm }}/${{ matrix.lockfile }}"
+        run: test -f "${{ runner.temp }}/h2-test-${{ matrix.pm }}/${{ matrix.lockfile }}"
+        shell: bash
 
       - name: ✅ Verify app builds
         run: |
-          cd "$RUNNER_TEMP/h2-test-${{ matrix.pm }}"
+          cd "${{ runner.temp }}/h2-test-${{ matrix.pm }}"
           ${{ matrix.pm }} run build
+        shell: bash
 
   test_unit:
     name: ⬣ Unit tests
