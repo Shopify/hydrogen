@@ -1,9 +1,11 @@
-import {describe, it, expect, vi} from 'vitest';
+import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {checkRemixVersions} from './remix-version-check.js';
 import {cwd} from '@shopify/cli-kit/node/path';
 
 const requireMock = vi.fn();
+const resolveMock = vi.fn();
+
 vi.mock('node:module', async () => {
   const {createRequire} =
     await vi.importActual<typeof import('node:module')>('node:module');
@@ -11,17 +13,33 @@ vi.mock('node:module', async () => {
   return {
     createRequire: (url: string) => {
       const actualRequire = createRequire(url);
-      requireMock.mockImplementation((mod: string) => actualRequire(mod));
-      const require = requireMock as unknown as typeof actualRequire;
-      require.resolve = actualRequire.resolve.bind(actualRequire);
+      const mockRequire = (mod: string) => {
+        return requireMock(mod, actualRequire);
+      };
+      mockRequire.resolve = (mod: string, options?: any) => {
+        return resolveMock(mod, options, actualRequire);
+      };
 
-      return require;
+      return mockRequire as unknown as typeof actualRequire;
     },
   };
 });
 
 describe('remix-version-check', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('does nothing when versions are in sync', () => {
+    // Mock that no Remix packages are found (simulating React Router setup)
+    resolveMock.mockImplementation((_mod, _options, actualRequire) => {
+      throw new Error('Cannot find module');
+    });
+
+    requireMock.mockImplementation((mod, actualRequire) => {
+      return actualRequire(mod);
+    });
+
     const outputMock = mockAndCaptureOutput();
     checkRemixVersions(cwd());
 
@@ -30,6 +48,21 @@ describe('remix-version-check', () => {
 
   it('warns when versions are out of sync', () => {
     const expectedVersion = '42.0.0-test';
+
+    // Mock Remix packages with version 2.0.0 (which won't match 42.0.0-test)
+    resolveMock.mockImplementation((mod, _options, actualRequire) => {
+      if (mod.includes('@remix-run/') && mod.includes('/package.json')) {
+        return `/fake/path/node_modules/${mod}`;
+      }
+      return actualRequire.resolve(mod);
+    });
+
+    requireMock.mockImplementation((mod, actualRequire) => {
+      if (mod.includes('@remix-run/') && mod.includes('/package.json')) {
+        return {version: '2.0.0'};
+      }
+      return actualRequire(mod);
+    });
 
     const outputMock = mockAndCaptureOutput();
     checkRemixVersions(cwd(), expectedVersion);
