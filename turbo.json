@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/turbo/schema.json",
   "globalEnv": ["SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK"],
-  "ui": "tui",
+  "ui": "stream",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

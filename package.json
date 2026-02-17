@@ -13,7 +13,7 @@
     "decrypt": "ejson decrypt secrets.ejson",
     "dev": "pnpm run dev:pkg",
     "dev:pkg": "turbo dev --parallel --filter=./packages/*",
-    "dev:app": "pnpm --dir templates/skeleton run dev --",
+    "dev:app": "turbo dev --filter=skeleton",
     "docs:build": "turbo run build-docs",
     "docs:preview": "turbo run preview-docs",
     "encrypt": "ejson encrypt secrets.ejson",
