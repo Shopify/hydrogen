@@ -20,7 +20,7 @@ vi.mock('node:module', async () => {
         return resolveMock(mod, options, actualRequire);
       };
 
-      return mockRequire as unknown as typeof actualRequire;
+      return mockRequire as typeof actualRequire;
     },
   };
 });
