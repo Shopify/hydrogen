@@ -4,6 +4,7 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
+    "prepare": "husky",
     "build": "npm run build:pkg",
     "build:pkg": "turbo build --parallel --filter=./packages/*",
     "build:templates": "turbo build --parallel --filter=./templates/*",
@@ -104,13 +105,10 @@
     "tsup": "^8.4.0",
     "turbo": "2.3.4",
     "typescript": "5.9.2",
-    "yorkie": "^2.0.0"
+    "husky": "^9.1.7"
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "gitHooks": {
-    "pre-commit": "lint-staged && npm run pre-commit:encrypt"
   },
   "lint-staged": {
     "*.{js,jsx}": [
@@ -132,7 +130,11 @@
     "@shopify/cli-kit": "3.80.4",
     "form-data": ">=4.0.4",
     "@types/node": "^22.12.0",
-    "vite": "^6.2.1"
+    "vite": "^6.2.1",
+    "tar": "^7.5.9",
+    "estree-util-value-to-estree": "^3.3.3",
+    "cookie": "^0.7.0",
+    "prismjs": "^1.30.0"
   },
   "optionalDependencies": {
     "@ast-grep/napi-linux-x64-gnu": "0.34.1",
