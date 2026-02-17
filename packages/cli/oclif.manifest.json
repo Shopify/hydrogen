@@ -1048,13 +1048,6 @@
           "allowNo": true,
           "type": "boolean"
         },
-        "routes": {
-          "description": "Generate routes for all pages.",
-          "env": "SHOPIFY_HYDROGEN_FLAG_ROUTES",
-          "name": "routes",
-          "allowNo": true,
-          "type": "boolean"
-        },
         "git": {
           "description": "Init Git and create initial commits.",
           "env": "SHOPIFY_HYDROGEN_FLAG_GIT",
@@ -1063,7 +1056,7 @@
           "type": "boolean"
         },
         "quickstart": {
-          "description": "Scaffolds a new Hydrogen project with a set of sensible defaults. Equivalent to `shopify hydrogen init --path hydrogen-quickstart --mock-shop --language js --shortcut --routes --markets none`",
+          "description": "Scaffolds a new Hydrogen project with a set of sensible defaults. Equivalent to `shopify hydrogen init --path hydrogen-quickstart --mock-shop --language js --shortcut --markets none`",
           "env": "SHOPIFY_HYDROGEN_FLAG_QUICKSTART",
           "name": "quickstart",
           "allowNo": false,
