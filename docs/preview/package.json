@@ -31,10 +31,5 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "overrides": {
-    "tar": "^7.5.9",
-    "estree-util-value-to-estree": "^3.3.3",
-    "prismjs": "^1.30.0"
   }
 }
