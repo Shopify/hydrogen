@@ -19,7 +19,7 @@
   "scripts": {
     "build": "tsup --clean",
     "dev": "tsup --watch",
-    "prepack": "npm run build",
+    "prepack": "pnpm run build",
     "typecheck": "tsc --noEmit"
   },
   "exports": {

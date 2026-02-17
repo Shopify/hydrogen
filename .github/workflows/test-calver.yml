@@ -23,7 +23,7 @@ name: Test CalVer Scripts
 # - Creates temporary copies and reverts all changes automatically
 # - Test changesets are created and deleted within each test
 # - No permanent modifications to any files
-# - No npm publishing or actual releases triggered
+# - No pnpm publishing or actual releases triggered
 # - Tests validate current repository state without assumptions about changeset presence
 
 on:
@@ -52,10 +52,10 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 18
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Test 1 - Validate Script Syntax
         run: |
@@ -84,13 +84,13 @@ jobs:
           echo ""
           
           # Create test file
-          echo '{"version": "npm run version:changeset && node .changeset/enforce-calver-ci.js && npm run version:post && npm run format"}' > test.json
+          echo '{"version": "pnpm run version:changeset && node .changeset/enforce-calver-ci.js && pnpm run version:post && pnpm run format"}' > test.json
           echo "Created test file with content:"
           cat test.json
           echo ""
           
           # Test GNU sed (should work on Linux without .tmp extension)
-          sed -i 's/"version": "npm run version:changeset && node \.changeset\/enforce-calver-ci\.js && npm run version:post && npm run format"/"version": "changeset version"/' test.json
+          sed -i 's/"version": "pnpm run version:changeset && node \.changeset\/enforce-calver-ci\.js && pnpm run version:post && pnpm run format"/"version": "changeset version"/' test.json
           
           echo "After sed replacement:"
           cat test.json

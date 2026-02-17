@@ -48,12 +48,12 @@ jobs:
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
           node-version: 24 # Needed for npm@11 for Trusted Publishing
 
       - name: Install the packages
-        run: npm ci --legacy-peer-deps
+        run: pnpm install --frozen-lockfile
 
       - name: Detect latest branch and version
         id: flags
@@ -91,7 +91,7 @@ jobs:
           fi
 
       - name: Build the dist code
-        run: npm run build
+        run: pnpm run build
 
       - name: Check for major protection bypass
         if: env.latest == 'true'
@@ -126,8 +126,8 @@ jobs:
         id: changesets
         uses: changesets/action@c48e67d110a68bc90ccf1098e9646092baacaa87 # v1.6.0
         with:
-          version: npm run version
-          publish: npm run changeset publish
+          version: pnpm run version
+          publish: pnpm run changeset publish
           # we use the commit message in next release workflow file. This avoid a next release when an actual release is happening
           commit: '[ci] release ${{ env.latestVersion }}'
           title: '[ci] release ${{ env.latestVersion }}'
@@ -161,15 +161,15 @@ jobs:
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
           node-version: 24 # Needed for npm@11 for Trusted Publishing
 
       - name: Install the packages
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Format release with Prettier
-        run: npm run format
+        run: pnpm run format
 
       - name: 🕵️ Check for changes
         id: version
@@ -184,7 +184,7 @@ jobs:
 
       - name: 🏗 Build CLI
         if: steps.version.outputs.NEXT_VERSION
-        run: npm run build
+        run: pnpm run build
 
       - name: ⤴️ Update version
         if: steps.version.outputs.NEXT_VERSION
@@ -194,15 +194,15 @@ jobs:
           git checkout -B next/${{ steps.version.outputs.NEXT_VERSION }}
           # using changeset snapshot releases, this sets the version to 0.0.0-{tag}-DATETIMESTAMP where tag=next-SHORT_SHA
           # as an example this results in a next release as following 0.0.0-next-1686a75-20230313113149 with a next tag
-          npm run version:next
-          npm run changeset -- version --snapshot ${{ steps.version.outputs.NEXT_VERSION }}
-          npm run version:post
+          pnpm run version:next
+          pnpm run changeset -- version --snapshot ${{ steps.version.outputs.NEXT_VERSION }}
+          pnpm run version:post
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 🏗 Build
         if: steps.version.outputs.NEXT_VERSION
-        run: npm run build
+        run: pnpm run build
 
       - name: Test OIDC Token
         if: steps.version.outputs.NEXT_VERSION
@@ -213,7 +213,7 @@ jobs:
 
       - name: Publish to npm
         if: steps.version.outputs.NEXT_VERSION
-        run: npm run changeset -- publish --tag next
+        run: pnpm run changeset -- publish --tag next
         env:
           NPM_TOKEN: '' # Empty string forces OIDC authentication
 
@@ -238,18 +238,18 @@ jobs:
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
           node-version: 24 # Needed for npm@11 for Trusted Publishing
 
       - name: Install the packages
-        run: npm ci --legacy-peer-deps
+        run: pnpm install --frozen-lockfile
 
       - name: Format release with Prettier
-        run: npm run format
+        run: pnpm run format
 
       - name: Build the dist code
-        run: npm run build
+        run: pnpm run build
 
       - name: Test OIDC Token
         run: |
@@ -261,8 +261,8 @@ jobs:
         id: changesets
         uses: changesets/action@c48e67d110a68bc90ccf1098e9646092baacaa87 # v1.6.0
         with:
-          version: npm run version
-          publish: npm run changeset -- publish --tag ${{ github.ref_name }}
+          version: pnpm run version
+          publish: pnpm run changeset -- publish --tag ${{ github.ref_name }}
           commit: '[ci] back-fix release ${{ github.ref_name }}'
           title: '[ci] back-fix release ${{ github.ref_name }}'
         env:
@@ -283,16 +283,16 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Install the packages
-        run: npm install --frozen-lockfile --ignore-engines
+        run: pnpm install --frozen-lockfile --ignore-engines
 
       - name: Build the dist code
-        run: npm run build
+        run: pnpm run build
 
       - name: Compile skeleton
         run: |
           node scripts/compile-template-for-dist.mjs skeleton
-          (cd templates/skeleton-js && npm i --package-lock-only --workspaces false)
-          (cd templates/skeleton-ts && npm i --package-lock-only --workspaces false)
+          (cd templates/skeleton-js && pnpm install --lockfile-only --ignore-workspace)
+          (cd templates/skeleton-ts && pnpm install --lockfile-only --ignore-workspace)
 
       - name: Update templates in the dist branch
         run: |

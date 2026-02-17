@@ -103,7 +103,7 @@
     "dist/*/node_modules/use-sync-external-store/shim/with-selector.*js"
   ],
   "scripts": {
-    "build-docs": "sh ./docs/build-docs.sh && npm run format",
+    "build-docs": "sh ./docs/build-docs.sh && pnpm run format",
     "clean-dist": "rimraf ./dist",
     "dev": "run-s dev:demo",
     "dev:story": "ladle serve",
@@ -121,13 +121,13 @@
     "build:tsc:es": "tsc --emitDeclarationOnly --project tsconfig.typeoutput.json",
     "copy-api-types": "cpy './src/storefront-api-types.d.ts' './src/customer-account-api-types.d.ts' ./dist/types/ --flat",
     "format": "prettier --write \"{src,docs}/**/*\" --ignore-unknown",
-    "graphql-types": "graphql-codegen --config codegen.ts && npm run format",
+    "graphql-types": "graphql-codegen --config codegen.ts && pnpm run format",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
     "typecheck": "run-p typecheck:*",
     "typecheck:code": "tsc --noEmit",
     "typecheck:examples": "tsc --noEmit --project tsconfig.examples.json",
-    "preview-docs": "npm run dev --prefix ../../docs/preview"
+    "preview-docs": "pnpm --dir ../../docs/preview run dev"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.4.0",

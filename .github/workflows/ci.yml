@@ -80,16 +80,16 @@ jobs:
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
 
       - name: 📥 Install dependencies
         run: |
-          npm ci
-          npm rebuild
+          pnpm install --frozen-lockfile
+          pnpm rebuild
 
       - name: 🔬 Lint
-        run: npm run lint
+        run: pnpm run lint
 
   format:
     name: ⬣ Prettier
@@ -106,16 +106,16 @@ jobs:
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
 
       - name: 📥 Install dependencies
         run: |
-          npm ci
-          npm rebuild
+          pnpm install --frozen-lockfile
+          pnpm rebuild
 
       - name: 🔬 Check Formatting
-        run: npm run format:check
+        run: pnpm run format:check
 
   typecheck:
     name: Typescript
@@ -132,13 +132,13 @@ jobs:
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
 
       - name: 📥 Install dependencies
         run: |
-          npm ci
-          npm rebuild
+          pnpm install --frozen-lockfile
+          pnpm rebuild
 
       # Enabling the turbo cache causes deployments to fail intermittently.
       # The build step fails with dependency issues. More investigation needed.
@@ -154,13 +154,13 @@ jobs:
       #       turbo-${{ github.job }}-${{ github.ref_name }}-
 
       - name: 📦 Build packages and templates
-        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:all
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run build:all
 
       - name: ✅ Typecheck
-        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run typecheck
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run typecheck
 
       - name: 🧑‍💻 CLI manifest check
-        run: 'test -z "$(git status --porcelain "packages/cli/oclif.manifest.json" )" || { echo -e "Run npm generate:manifest in packages/cli before pushing new commands or flags. Diff here:\n\n$(git diff)" ; exit 1; }'
+        run: 'test -z "$(git status --porcelain "packages/cli/oclif.manifest.json" )" || { echo -e "Run pnpm --dir packages/cli run generate:manifest before pushing new commands or flags. Diff here:\n\n$(git diff)" ; exit 1; }'
 
   test_e2e:
     name: ⬣ E2E tests
@@ -177,19 +177,19 @@ jobs:
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
 
       - name: 📥 Install dependencies
         run: |
-          npm ci
-          npm rebuild
+          pnpm install --frozen-lockfile
+          pnpm rebuild
 
       - name: 📦 Build packages and templates
-        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:all
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run build:all
 
       - name: 🎭 Install Playwright Chromium
-        run: npx playwright install chromium --with-deps
+        run: pnpm exec playwright install chromium --with-deps
 
       - name: 🔐 Install ejson
         run: |
@@ -199,7 +199,7 @@ jobs:
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
       - name: 🧪 Run E2E tests
-        run: npx playwright test --workers=1
+        run: pnpm exec playwright test --workers=1
         env:
           EJSON_PRIVATE_KEY: ${{ secrets.EJSON_PRIVATE_KEY }}
 
@@ -226,19 +226,19 @@ jobs:
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
 
       - name: 📥 Install dependencies
         run: |
-          npm ci
-          npm rebuild
+          pnpm install --frozen-lockfile
+          pnpm rebuild
 
       - name: 📦 Build packages and templates
-        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:all
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run build:all
 
       - name: 🔬 Test
-        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run test
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run test
 
   validate_recipes:
     name: ⬣ Validate Recipes
@@ -258,27 +258,27 @@ jobs:
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
 
       - name: 📥 Install dependencies
         run: |
-          npm ci
-          npm rebuild
+          pnpm install --frozen-lockfile
+          pnpm rebuild
 
       - name: 📦 Build packages
-        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:pkg
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run build:pkg
 
       - name: 📥 Install dependencies (cookbook)
         working-directory: cookbook
         run: |
-          npm ci
-          npm rebuild
+          pnpm install --frozen-lockfile
+          pnpm rebuild
 
       - name: 📝 Validate schema
         working-directory: cookbook
-        run: npm run cookbook -- schema && git diff --exit-code recipe.schema.json
+        run: pnpm run cookbook -- schema && git diff --exit-code recipe.schema.json
 
       - name: 🧐 Validate Recipes
         working-directory: cookbook
-        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run cookbook -- validate
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run cookbook -- validate

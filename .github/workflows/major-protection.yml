@@ -26,7 +26,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '22'
-      - run: npm ci --legacy-peer-deps
+      - run: pnpm install --frozen-lockfile
       - run: node .changeset/check-major-protection.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

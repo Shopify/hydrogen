@@ -1,0 +1,11 @@
+packages:
+  - cookbook
+  - docs/preview
+  - packages/cli
+  - packages/create-hydrogen
+  - packages/hydrogen-codegen
+  - packages/hydrogen-react
+  - packages/hydrogen
+  - packages/mini-oxygen
+  - packages/remix-oxygen
+  - templates/skeleton

@@ -21,11 +21,11 @@
     "dev": "tsup --watch ./src --watch ../../node_modules/@shopify/hydrogen-react/dist/browser-prod/index.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "prepack": "npm run build",
+    "prepack": "pnpm run build",
     "test:watch": "vitest",
-    "build-docs": "sh ./docs/build-docs.sh && npm run format",
+    "build-docs": "sh ./docs/build-docs.sh && pnpm run format",
     "format": "prettier --write \"{src,docs}/**/*\" --ignore-unknown",
-    "preview-docs": "npm run dev --prefix ../../docs/preview"
+    "preview-docs": "pnpm --dir ../../docs/preview run dev"
   },
   "exports": {
     ".": {
