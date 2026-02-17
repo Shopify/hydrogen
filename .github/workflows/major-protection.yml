@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v6
         with:
-          node-version-file: '.nvmrc'
+          node-version: '22'
       - run: npm ci --legacy-peer-deps
       - run: node .changeset/check-major-protection.js
         env:
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v6
         with:
-          node-version-file: '.nvmrc'
+          node-version: '22'
       - run: node .changeset/process-major-version-bypass.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
