@@ -58,7 +58,7 @@
   ],
   "prettier": "@shopify/prettier-config",
   "dependencies": {
-    "@shopify/cli-hydrogen": "*",
+    "@shopify/cli-hydrogen": "workspace:*",
     "nested-error-stacks": "^2.1.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",

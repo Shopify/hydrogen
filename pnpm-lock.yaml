@@ -17,8 +17,8 @@ importers:
   .:
     dependencies:
       '@shopify/cli-hydrogen':
-        specifier: '*'
-        version: 11.1.9(@graphql-codegen/cli@5.0.7(@types/node@22.19.11)(enquirer@2.4.1)(graphql@16.12.0)(typescript@5.9.2))(@react-router/dev@7.12.0(@react-router/serve@7.13.0(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))(yaml@2.8.2))(@shopify/hydrogen-codegen@0.3.3(graphql@16.12.0))(@shopify/mini-oxygen@4.0.0(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2)))(graphql-config@5.1.5(@types/node@22.19.11)(graphql@16.12.0)(typescript@5.9.2))(graphql@16.12.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))
+        specifier: workspace:*
+        version: link:packages/cli
       nested-error-stacks:
         specifier: ^2.1.1
         version: 2.1.1
@@ -282,11 +282,11 @@ importers:
         specifier: 3.80.4
         version: 3.80.4(@types/react@18.3.28)
       '@shopify/hydrogen-codegen':
-        specifier: ^0.3.3
-        version: 0.3.3(graphql@16.12.0)
+        specifier: workspace:*
+        version: link:../hydrogen-codegen
       '@shopify/mini-oxygen':
-        specifier: ^4.0.0
-        version: 4.0.0(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))
+        specifier: workspace:*
+        version: link:../mini-oxygen
       '@shopify/oxygen-cli':
         specifier: 4.6.18
         version: 4.6.18(@oclif/core@3.26.5)(@shopify/cli-kit@3.80.4(@types/react@18.3.28))(graphql@16.12.0)
@@ -344,7 +344,7 @@ importers:
     devDependencies:
       '@react-router/dev':
         specifier: 7.12.0
-        version: 7.12.0(@react-router/serve@7.13.0(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))(yaml@2.8.2)
+        version: 7.12.0(@react-router/serve@7.13.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))(yaml@2.8.2)
       '@types/diff':
         specifier: ^5.0.2
         version: 5.2.3
@@ -404,8 +404,8 @@ importers:
         specifier: 1.4.1
         version: 1.4.1
       '@shopify/hydrogen-react':
-        specifier: 2026.1.0
-        version: 2026.1.0(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.172.0)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))
+        specifier: workspace:*
+        version: link:../hydrogen-react
       content-security-policy-builder:
         specifier: ^2.2.0
         version: 2.3.0
@@ -438,8 +438,8 @@ importers:
         specifier: 0.16.4
         version: 0.16.4
       '@shopify/hydrogen-codegen':
-        specifier: '*'
-        version: 0.3.3(graphql@16.12.0)
+        specifier: workspace:*
+        version: link:../hydrogen-codegen
       '@testing-library/jest-dom':
         specifier: ^5.17.0
         version: 5.17.0
@@ -723,8 +723,8 @@ importers:
   templates/skeleton:
     dependencies:
       '@shopify/hydrogen':
-        specifier: 2026.1.0
-        version: 2026.1.0(@react-router/dev@7.12.0(@react-router/serve@7.13.0(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))(yaml@2.8.2))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(three@0.172.0)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))
+        specifier: workspace:*
+        version: link:../../packages/hydrogen
       graphql:
         specifier: ^16.10.0
         version: 16.12.0
@@ -769,11 +769,11 @@ importers:
         specifier: 3.85.4
         version: 3.85.4
       '@shopify/hydrogen-codegen':
-        specifier: ^0.3.3
-        version: 0.3.3(graphql@16.12.0)
+        specifier: workspace:*
+        version: link:../../packages/hydrogen-codegen
       '@shopify/mini-oxygen':
-        specifier: ^4.0.0
-        version: 4.0.0(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))
+        specifier: workspace:*
+        version: link:../../packages/mini-oxygen
       '@shopify/oxygen-workers-types':
         specifier: ^4.1.6
         version: 4.2.0
@@ -2742,31 +2742,6 @@ packages:
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
-  '@shopify/cli-hydrogen@11.1.9':
-    resolution: {integrity: sha512-L6iFXc8wDOMqBMCkCiJjcKQhMNXVlWCI1IQwyLss/i16WnkhFJ12tzmeIPYYNLicBCqTepsEbAL+wAr4bivAAg==, tarball: https://registry.npmjs.org/@shopify/cli-hydrogen/-/cli-hydrogen-11.1.9.tgz}
-    engines: {node: '>=18.0.0'}
-    hasBin: true
-    peerDependencies:
-      '@graphql-codegen/cli': ^5.0.2
-      '@react-router/dev': 7.12.0
-      '@shopify/hydrogen-codegen': ^0.3.3
-      '@shopify/mini-oxygen': ^4.0.0
-      graphql-config: ^5.0.3
-      vite: ^6.2.1
-    peerDependenciesMeta:
-      '@graphql-codegen/cli':
-        optional: true
-      '@react-router/dev':
-        optional: true
-      '@shopify/hydrogen-codegen':
-        optional: true
-      '@shopify/mini-oxygen':
-        optional: true
-      graphql-config:
-        optional: true
-      vite:
-        optional: true
-
   '@shopify/cli-kit@3.80.4':
     resolution: {integrity: sha512-Wqlroq9oynIwTqc51Y4IIHosYNSwTgFmJE4eG7d+NDN94jTH5FbcPp/J0q4vD1kruoeHNu2fEplnuzfUWv/lQg==, tarball: https://registry.npmjs.org/@shopify/cli-kit/-/cli-kit-3.80.4.tgz}
     engines: {node: ^18.20.0 || >=20.10.0}
@@ -2785,48 +2760,11 @@ packages:
   '@shopify/graphql-client@1.4.1':
     resolution: {integrity: sha512-/w4Uchx8ueI8gwmJd1ZbbIGndsjfMEFlzmay3P7rya5zj7K308xne/ggIvWDweueIut2qf1A8lI58xQl9Pu22w==, tarball: https://registry.npmjs.org/@shopify/graphql-client/-/graphql-client-1.4.1.tgz}
 
-  '@shopify/graphql-codegen@0.0.2':
-    resolution: {integrity: sha512-DScSpsQ+ucv6Y4cujXa5ye9r4lZ6Jl7S+90iyfxEgeTW6HVh/0b9PDcSCJ4T1EONc7kmvCx1dd83tTvCmc7X7A==, tarball: https://registry.npmjs.org/@shopify/graphql-codegen/-/graphql-codegen-0.0.2.tgz}
-    engines: {node: '>=18'}
-    peerDependencies:
-      graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-
   '@shopify/graphql-codegen@0.1.0':
     resolution: {integrity: sha512-G3sSesLj7Czt/J2Bj+XlQ8u4pkfQEt32hsjoS3UGZlf1eAiVw0aBBddp+NI5HqBAi0gM/f7GLRAhG3kktPhZmA==, tarball: https://registry.npmjs.org/@shopify/graphql-codegen/-/graphql-codegen-0.1.0.tgz}
     engines: {node: '>=18'}
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-
-  '@shopify/hydrogen-codegen@0.3.3':
-    resolution: {integrity: sha512-Kqtea44dALwjgd+O4bSskBj/zTJXwfAnkBU9jkBwMqcEGvoz0y3TCUcAxdBtJNI07vt6LTzmXmNU9dbql1HDzQ==, tarball: https://registry.npmjs.org/@shopify/hydrogen-codegen/-/hydrogen-codegen-0.3.3.tgz}
-
-  '@shopify/hydrogen-react@2026.1.0':
-    resolution: {integrity: sha512-rlj6CNlOAy2k6vHd+FuC6N0e/RkHzZ07kuQCxP9f+rqmSap3OztV8RaKX7UpRt56bvP2NI9GHnhDg5JfJEMhug==, tarball: https://registry.npmjs.org/@shopify/hydrogen-react/-/hydrogen-react-2026.1.0.tgz}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      react: ^18.3.1 || ~19.0.3 || ~19.1.4 || ^19.2.3
-      react-dom: ^18.3.1 || ~19.0.3 || ~19.1.4 || ^19.2.3
-      vite: ^6.2.1
-
-  '@shopify/hydrogen@2026.1.0':
-    resolution: {integrity: sha512-KMWI5FdkkMgIGtSObDGLLWapZvlnv4XDnKsTZD4TP1UpjEvTJKvzTYKlYKFNvzS/CY/OpEFVewgLiFlDo2diZA==, tarball: https://registry.npmjs.org/@shopify/hydrogen/-/hydrogen-2026.1.0.tgz}
-    peerDependencies:
-      '@react-router/dev': 7.12.0
-      react: ^18.3.1 || ~19.0.3 || ~19.1.4 || ^19.2.3
-      react-router: 7.12.0
-      vite: ^6.2.1
-    peerDependenciesMeta:
-      vite:
-        optional: true
-
-  '@shopify/mini-oxygen@4.0.0':
-    resolution: {integrity: sha512-8zOi8vffUJQUWbxpvnhF/InCPKpR4D982PSNIFeMcNQLIp0O+jktJ8hH1VwXBzranNCw/WqLhyAKO4NQ8LWJzQ==, tarball: https://registry.npmjs.org/@shopify/mini-oxygen/-/mini-oxygen-4.0.0.tgz}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      vite: ^6.2.1
-    peerDependenciesMeta:
-      vite:
-        optional: true
 
   '@shopify/oxygen-cli@4.6.18':
     resolution: {integrity: sha512-LxJUkHL1Oudxy712XHTBd1se3Gq2w+/FYVyj5rAmyiNSFfbXD3zHWHjB5zbeeFjbRIPhbJW3OgRjJgn7VIo8EA==, tarball: https://registry.npmjs.org/@shopify/oxygen-cli/-/oxygen-cli-4.6.18.tgz}
@@ -3748,10 +3686,6 @@ packages:
 
   bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
-
-  body-parser@1.20.3:
-    resolution: {integrity: sha512-7rAxByjUMqQ3/bHJy7D6OGXvx/MMc4IqBn/X0fcM1QUcAItpZrBEYhWGem+tzXH90c+G01ypMcYJBO9Y30203g==}
-    engines: {node: '>= 0.8', npm: 1.2.8000 || >= 1.4.16}
 
   body-parser@1.20.4:
     resolution: {integrity: sha512-ZTgYYLMOXY9qKU/57FAo8F+HA2dGX7bqGc71txDRC1rS4frdFI5R7NhluHxH6M0YItAP0sHB4uqAOcYKxO6uGA==}
@@ -5407,10 +5341,6 @@ packages:
   http-errors@1.8.1:
     resolution: {integrity: sha512-Kpk9Sm7NmI+RHhnj6OIWDI1d6fIoFAtFt9RLaTMRlg/8w49juAStsrBgp0Dp4OdxdVbRIeKhtCUvoi/RuAhO4g==}
     engines: {node: '>= 0.6'}
-
-  http-errors@2.0.0:
-    resolution: {integrity: sha512-FtwrG/euBzaEjYeRqOgly7G0qviiXoJWnvEH2Z1plBdXgbyjv34pHTSb9zoeHMyDy33+DWy5Wt9Wo+TURtOYSQ==}
-    engines: {node: '>= 0.8'}
 
   http-errors@2.0.1:
     resolution: {integrity: sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ==}
@@ -7175,10 +7105,6 @@ packages:
     resolution: {integrity: sha512-KTqnxsgGiQ6ZAzZCVlJH5eOjSnvlyEgx1m8bkRJfOhmGRqfo5KLvmAlACQkrjEtOQ4B7wF9TdSLIs9O90MX9xA==}
     engines: {node: '>=16.0.0'}
 
-  qs@6.13.0:
-    resolution: {integrity: sha512-+38qI9SOr8tfZ4QmJNplMUxqjbe7LKvvZgWdExBOmd+egZTtjLB67Gu0HRX3u/XOq7UU2Nx6nsjvS16Z9uwfpg==}
-    engines: {node: '>=0.6'}
-
   qs@6.14.2:
     resolution: {integrity: sha512-V/yCWTTF7VJ9hIh18Ugr2zhJMP01MY7c5kh4J870L7imm6/DIzBsNLTXzMwUA3yZ5b/KBqLx8Kp3uRvd7xSe3Q==}
     engines: {node: '>=0.6'}
@@ -7200,10 +7126,6 @@ packages:
   range-parser@1.2.1:
     resolution: {integrity: sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==}
     engines: {node: '>= 0.6'}
-
-  raw-body@2.5.2:
-    resolution: {integrity: sha512-8zGqypfENjCIqGhgXToC8aB2r7YrBX+AQAfIPs/Mlk+BtPTztOvTS01NRW/3Eh60J+a48lt8qsCzirQ6loCVfA==}
-    engines: {node: '>= 0.8'}
 
   raw-body@2.5.3:
     resolution: {integrity: sha512-s4VSOf6yN0rvbRZGxs8Om5CWj6seneMwK3oDb4lWDH0UPhWcxwOWw5+qk24bxq87szX1ydrwylIOp2uG1ojUpA==}
@@ -7753,10 +7675,6 @@ packages:
     resolution: {integrity: sha512-OpZ3zP+jT1PI7I8nemJX4AKmAX070ZkYPVWV/AaKTJl+tXCTGyVdC1a4SL8RUQYEwk/f34ZX8UTykN68FwrqAA==}
     engines: {node: '>= 0.6'}
 
-  statuses@2.0.1:
-    resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
-    engines: {node: '>= 0.8'}
-
   statuses@2.0.2:
     resolution: {integrity: sha512-DvEy55V3DB7uknRo+4iOGT5fP1slR8wQohVdknigZPMpMstaKJQWhwiYBACJE3Ul2pTnATihhBYnRhZQHGBiRw==}
     engines: {node: '>= 0.8'}
@@ -8283,10 +8201,6 @@ packages:
 
   undici@7.21.0:
     resolution: {integrity: sha512-Hn2tCQpoDt1wv23a68Ctc8Cr/BHpUSfaPYrkajTXOS9IKpxVRx/X5m1K2YkbK2ipgZgxXSgsUinl3x+2YdSSfg==}
-    engines: {node: '>=20.18.1'}
-
-  undici@7.5.0:
-    resolution: {integrity: sha512-NFQG741e8mJ0fLQk90xKxFdaSM7z4+IQpAgsFI36bCDY9Z2+aXXZjVy2uUksMouWfMI9+w5ejOq5zYYTBCQJDQ==}
     engines: {node: '>=20.18.1'}
 
   unicorn-magic@0.3.0:
@@ -10734,6 +10648,56 @@ snapshots:
       - tsx
       - yaml
 
+  '@react-router/dev@7.12.0(@react-router/serve@7.13.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))(yaml@2.8.2)':
+    dependencies:
+      '@babel/core': 7.29.0
+      '@babel/generator': 7.29.1
+      '@babel/parser': 7.29.0
+      '@babel/plugin-syntax-jsx': 7.28.6(@babel/core@7.29.0)
+      '@babel/preset-typescript': 7.28.5(@babel/core@7.29.0)
+      '@babel/traverse': 7.29.0
+      '@babel/types': 7.29.0
+      '@react-router/node': 7.12.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)
+      '@remix-run/node-fetch-server': 0.9.0
+      arg: 5.0.2
+      babel-dead-code-elimination: 1.0.12
+      chokidar: 4.0.3
+      dedent: 1.7.1
+      es-module-lexer: 1.7.0
+      exit-hook: 2.2.1
+      isbot: 5.1.35
+      jsesc: 3.0.2
+      lodash: 4.17.23
+      p-map: 7.0.4
+      pathe: 1.1.2
+      picocolors: 1.1.1
+      pkg-types: 2.3.0
+      prettier: 3.8.1
+      react-refresh: 0.14.2
+      react-router: 7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      semver: 7.7.4
+      tinyglobby: 0.2.15
+      valibot: 1.2.0(typescript@5.9.2)
+      vite: 6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2)
+      vite-node: 3.2.4(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2)
+    optionalDependencies:
+      '@react-router/serve': 7.13.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)
+      typescript: 5.9.2
+    transitivePeerDependencies:
+      - '@types/node'
+      - babel-plugin-macros
+      - jiti
+      - less
+      - lightningcss
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - tsx
+      - yaml
+
   '@react-router/dev@7.13.0(@react-router/serve@7.13.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))(yaml@2.8.2)':
     dependencies:
       '@babel/core': 7.29.0
@@ -10819,6 +10783,13 @@ snapshots:
     dependencies:
       '@mjackson/node-fetch-server': 0.2.0
       react-router: 7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+    optionalDependencies:
+      typescript: 5.9.2
+
+  '@react-router/node@7.12.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)':
+    dependencies:
+      '@mjackson/node-fetch-server': 0.2.0
+      react-router: 7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     optionalDependencies:
       typescript: 5.9.2
 
@@ -10953,46 +10924,6 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
-  '@shopify/cli-hydrogen@11.1.9(@graphql-codegen/cli@5.0.7(@types/node@22.19.11)(enquirer@2.4.1)(graphql@16.12.0)(typescript@5.9.2))(@react-router/dev@7.12.0(@react-router/serve@7.13.0(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))(yaml@2.8.2))(@shopify/hydrogen-codegen@0.3.3(graphql@16.12.0))(@shopify/mini-oxygen@4.0.0(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2)))(graphql-config@5.1.5(@types/node@22.19.11)(graphql@16.12.0)(typescript@5.9.2))(graphql@16.12.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))':
-    dependencies:
-      '@ast-grep/napi': 0.34.1
-      '@oclif/core': 3.26.5
-      '@shopify/cli-kit': 3.80.4(@types/react@18.3.28)
-      '@shopify/oxygen-cli': 4.6.18(@oclif/core@3.26.5)(@shopify/cli-kit@3.80.4(@types/react@18.3.28))(graphql@16.12.0)
-      '@shopify/plugin-cloudflare': 3.90.1(@types/react@18.3.28)
-      ansi-escapes: 6.2.1
-      chokidar: 3.5.3
-      cli-truncate: 4.0.0
-      diff: 5.2.2
-      get-east-asian-width: 1.4.0
-      get-port: 7.1.0
-      gunzip-maybe: 1.4.2
-      prettier: 2.8.8
-      semver: 7.7.4
-      source-map: 0.7.6
-      source-map-support: 0.5.21
-      tar-fs: 2.1.4
-      tempy: 3.0.0
-      ts-morph: 20.0.0
-      use-resize-observer: 9.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-    optionalDependencies:
-      '@graphql-codegen/cli': 5.0.7(@types/node@22.19.11)(enquirer@2.4.1)(graphql@16.12.0)(typescript@5.9.2)
-      '@react-router/dev': 7.12.0(@react-router/serve@7.13.0(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))(yaml@2.8.2)
-      '@shopify/hydrogen-codegen': 0.3.3(graphql@16.12.0)
-      '@shopify/mini-oxygen': 4.0.0(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))
-      graphql-config: 5.1.5(@types/node@22.19.11)(graphql@16.12.0)(typescript@5.9.2)
-      vite: 6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2)
-    transitivePeerDependencies:
-      - '@types/react'
-      - bufferutil
-      - encoding
-      - graphql
-      - react
-      - react-devtools-core
-      - react-dom
-      - supports-color
-      - utf-8-validate
-
   '@shopify/cli-kit@3.80.4(@types/react@18.3.28)':
     dependencies:
       '@apidevtools/json-schema-ref-parser': 11.7.3
@@ -11081,17 +11012,6 @@ snapshots:
 
   '@shopify/graphql-client@1.4.1': {}
 
-  '@shopify/graphql-codegen@0.0.2(graphql@16.12.0)':
-    dependencies:
-      '@graphql-codegen/add': 5.0.3(graphql@16.12.0)
-      '@graphql-codegen/typescript': 4.1.6(graphql@16.12.0)
-      '@graphql-codegen/typescript-operations': 4.6.1(graphql@16.12.0)
-      graphql: 16.12.0
-      type-fest: 4.41.0
-    transitivePeerDependencies:
-      - encoding
-      - graphql-sock
-
   '@shopify/graphql-codegen@0.1.0(graphql@16.12.0)':
     dependencies:
       '@graphql-codegen/add': 5.0.3(graphql@16.12.0)
@@ -11102,74 +11022,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - graphql-sock
-
-  '@shopify/hydrogen-codegen@0.3.3(graphql@16.12.0)':
-    dependencies:
-      '@shopify/graphql-codegen': 0.0.2(graphql@16.12.0)
-    transitivePeerDependencies:
-      - encoding
-      - graphql
-      - graphql-sock
-
-  '@shopify/hydrogen-react@2026.1.0(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.172.0)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))':
-    dependencies:
-      '@google/model-viewer': 4.1.0(three@0.172.0)
-      '@xstate/fsm': 2.0.0
-      '@xstate/react': 3.2.1(@types/react@18.3.28)(@xstate/fsm@2.0.0)(react@18.3.1)
-      graphql: 16.12.0
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-      type-fest: 4.41.0
-      use-isomorphic-layout-effect: 1.2.1(@types/react@18.3.28)(react@18.3.1)
-      use-sync-external-store: 1.6.0(react@18.3.1)
-      vite: 6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2)
-      worktop: 0.7.3
-    transitivePeerDependencies:
-      - '@types/react'
-      - three
-      - xstate
-
-  '@shopify/hydrogen@2026.1.0(@react-router/dev@7.12.0(@react-router/serve@7.13.0(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))(yaml@2.8.2))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(three@0.172.0)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))':
-    dependencies:
-      '@react-router/dev': 7.12.0(@react-router/serve@7.13.0(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))(yaml@2.8.2)
-      '@shopify/graphql-client': 1.4.1
-      '@shopify/hydrogen-react': 2026.1.0(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.172.0)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))
-      content-security-policy-builder: 2.3.0
-      flame-chart-js: 2.3.1
-      isbot: 5.1.35
-      react: 18.3.1
-      react-router: 7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      source-map-support: 0.5.21
-      type-fest: 4.41.0
-      use-resize-observer: 9.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      worktop: 0.7.3
-    optionalDependencies:
-      vite: 6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2)
-    transitivePeerDependencies:
-      - '@types/react'
-      - react-dom
-      - three
-      - xstate
-
-  '@shopify/mini-oxygen@4.0.0(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))':
-    dependencies:
-      '@mjackson/node-fetch-server': 0.7.0
-      body-parser: 1.20.3
-      connect: 3.7.0
-      get-port: 7.1.0
-      miniflare: 3.20250310.1
-      mrmime: 2.0.0
-      source-map: 0.7.6
-      source-map-support: 0.5.21
-      stack-trace: 1.0.0-pre2
-      undici: 7.5.0
-      ws: 8.19.0
-    optionalDependencies:
-      vite: 6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2)
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
 
   '@shopify/oxygen-cli@4.6.18(@oclif/core@3.26.5)(@shopify/cli-kit@3.80.4(@types/react@18.3.28))(graphql@16.12.0)':
     dependencies:
@@ -12229,23 +12081,6 @@ snapshots:
       buffer: 5.7.1
       inherits: 2.0.4
       readable-stream: 3.6.2
-
-  body-parser@1.20.3:
-    dependencies:
-      bytes: 3.1.2
-      content-type: 1.0.5
-      debug: 2.6.9
-      depd: 2.0.0
-      destroy: 1.2.0
-      http-errors: 2.0.0
-      iconv-lite: 0.4.24
-      on-finished: 2.4.1
-      qs: 6.13.0
-      raw-body: 2.5.2
-      type-is: 1.6.18
-      unpipe: 1.0.0
-    transitivePeerDependencies:
-      - supports-color
 
   body-parser@1.20.4:
     dependencies:
@@ -14343,14 +14178,6 @@ snapshots:
       statuses: 1.5.0
       toidentifier: 1.0.1
 
-  http-errors@2.0.0:
-    dependencies:
-      depd: 2.0.0
-      inherits: 2.0.4
-      setprototypeof: 1.2.0
-      statuses: 2.0.1
-      toidentifier: 1.0.1
-
   http-errors@2.0.1:
     dependencies:
       depd: 2.0.0
@@ -16384,10 +16211,6 @@ snapshots:
 
   pvutils@1.1.5: {}
 
-  qs@6.13.0:
-    dependencies:
-      side-channel: 1.1.0
-
   qs@6.14.2:
     dependencies:
       side-channel: 1.1.0
@@ -16405,13 +16228,6 @@ snapshots:
   quick-lru@5.1.1: {}
 
   range-parser@1.2.1: {}
-
-  raw-body@2.5.2:
-    dependencies:
-      bytes: 3.1.2
-      http-errors: 2.0.0
-      iconv-lite: 0.4.24
-      unpipe: 1.0.0
 
   raw-body@2.5.3:
     dependencies:
@@ -17080,8 +16896,6 @@ snapshots:
 
   statuses@1.5.0: {}
 
-  statuses@2.0.1: {}
-
   statuses@2.0.2: {}
 
   std-env@3.10.0: {}
@@ -17626,8 +17440,6 @@ snapshots:
       '@fastify/busboy': 2.1.1
 
   undici@7.21.0: {}
-
-  undici@7.5.0: {}
 
   unicorn-magic@0.3.0: {}
 
