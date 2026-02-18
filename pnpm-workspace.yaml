@@ -9,3 +9,6 @@ packages:
   - packages/mini-oxygen
   - packages/remix-oxygen
   - templates/skeleton
+
+catalog:
+  '@types/node': '^22'

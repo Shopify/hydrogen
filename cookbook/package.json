@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.9",
-    "@types/node": "^22.13.4",
+    "@types/node": "catalog:",
     "@types/yargs": "^17.0.33",
     "typescript": "5.9.2",
     "vitest": "^3.2.4"

@@ -24,6 +24,10 @@ type PnpmPackResult = {
   filename: string;
 };
 
+function hasReplaceableProtocol(version: string) {
+  return version.startsWith('workspace:') || version.startsWith('catalog:');
+}
+
 export async function getPackedTemplatePackageJson(sourceTemplateDir: string) {
   const tempDir = await mkdtemp(join(tmpdir(), 'hydrogen-template-pack-'));
 
@@ -84,7 +88,7 @@ export async function replaceWorkspaceProtocolVersions({
     if (!targetDeps) continue;
 
     for (const [name, version] of Object.entries(targetDeps)) {
-      if (!version.startsWith('workspace:')) continue;
+      if (!hasReplaceableProtocol(version)) continue;
 
       const packedVersion = packedManifest[section]?.[name];
       if (!packedVersion) {
