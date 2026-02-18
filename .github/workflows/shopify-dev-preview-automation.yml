@@ -1,0 +1,150 @@
+# This workflow dispatches a docs sync event to shopify-dev when generated docs files change.
+# It monitors changes to generated docs files in PRs.
+#
+# The shopify-dev repository will then sync these docs files for preview.
+
+name: Shopify Dev Docs Sync
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, closed]
+    paths:
+      - 'packages/hydrogen/docs/generated/generated_docs_data.json'
+      - 'packages/hydrogen-react/docs/generated/generated_docs_data.json'
+      - 'packages/hydrogen/docs/generated/generated_static_pages.json'
+      - 'packages/hydrogen-react/docs/generated/generated_static_pages.json'
+
+concurrency:
+  group: shopify-dev-docs-sync-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  dispatch-docs-sync:
+    name: Dispatch docs sync to shopify-dev
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.repository_owner == 'Shopify'
+    steps:
+      - name: Check if base branch matches calver pattern
+        id: check-branch
+        run: |
+          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+          if [[ "$BASE_BRANCH" =~ ^[0-9]{4}-[0-9]{2}$ ]]; then
+            echo "Branch '$BASE_BRANCH' matches calver pattern"
+            echo "matches=true" >> $GITHUB_OUTPUT
+          else
+            echo "Branch '$BASE_BRANCH' does not match calver pattern (e.g., 2025-07), skipping"
+            echo "matches=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout repository
+        if: steps.check-branch.outputs.matches == 'true' && github.event.action != 'closed'
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          fetch-depth: 0
+
+      # Generate GitHub App token
+      - name: Create GitHub App Token
+        if: steps.check-branch.outputs.matches == 'true'
+        id: app-token
+        uses: actions/create-github-app-token@af35edadc00be37caa72ed9f3e6d5f7801bfdf09 # v1.11.7
+        with:
+          app-id: ${{ secrets.SHOPIFY_DEV_DOCS_SYNC_APP_ID }}
+          private-key: ${{ secrets.SHOPIFY_DEV_DOCS_SYNC_APP_PRIVATE_KEY }}
+          owner: Shopify
+          repositories: |
+            shopify-dev
+
+      - name: Get changed files
+        id: changed-files
+        if: steps.check-branch.outputs.matches == 'true' && github.event.action != 'closed'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Define the files we're monitoring
+          MONITORED_FILES=(
+            "packages/hydrogen/docs/generated/generated_docs_data.json"
+            "packages/hydrogen-react/docs/generated/generated_docs_data.json"
+            "packages/hydrogen/docs/generated/generated_static_pages.json"
+            "packages/hydrogen-react/docs/generated/generated_static_pages.json"
+          )
+
+          # Get the list of changed files in this PR using explicit SHAs
+          echo "Comparing $BASE_SHA...$HEAD_SHA"
+          CHANGED_FILES=$(git diff --name-only "$BASE_SHA"..."$HEAD_SHA")
+
+          # Filter to only include our monitored files
+          MATCHING_FILES=()
+          for file in "${MONITORED_FILES[@]}"; do
+            if echo "$CHANGED_FILES" | grep -Fxq "$file"; then
+              MATCHING_FILES+=("$file")
+            fi
+          done
+
+          # Convert to JSON array
+          if [ ${#MATCHING_FILES[@]} -eq 0 ]; then
+            echo "No monitored files changed"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            JSON_ARRAY=$(printf '%s\n' "${MATCHING_FILES[@]}" | jq -R . | jq -s -c .)
+            echo "Changed files: $JSON_ARRAY"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "files=$JSON_ARRAY" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Dispatch to shopify-dev
+        if: steps.check-branch.outputs.matches == 'true' && (github.event.action == 'closed' || steps.changed-files.outputs.has_changes == 'true')
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          SOURCE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          SOURCE_REF: ${{ github.event.pull_request.head.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          CHANGED_FILES: ${{ steps.changed-files.outputs.files }}
+        run: |
+          # Determine action based on PR event
+          if [ "${{ github.event.action }}" = "closed" ]; then
+            ACTION="close"
+            CHANGED_FILES='[]'
+          else
+            ACTION="sync"
+          fi
+
+          # Build the payload
+          PAYLOAD=$(jq -n \
+            --arg action "$ACTION" \
+            --arg source_repo "Shopify/hydrogen" \
+            --arg source_branch "$SOURCE_BRANCH" \
+            --arg source_ref "$SOURCE_REF" \
+            --argjson source_pr_number "$PR_NUMBER" \
+            --argjson changed_files "$CHANGED_FILES" \
+            '{
+              event_type: "templated-api-docs-sync",
+              client_payload: {
+                action: $action,
+                source_repo: $source_repo,
+                source_branch: $source_branch,
+                source_ref: $source_ref,
+                source_pr_number: $source_pr_number,
+                changed_files: $changed_files
+              }
+            }')
+
+          echo "Dispatching to shopify-dev with payload:"
+          echo "$PAYLOAD" | jq .
+
+          # Send the dispatch request
+          HTTP_STATUS=$(curl -s -o response.txt -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/Shopify/shopify-dev/dispatches \
+            -d "$PAYLOAD")
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "Successfully dispatched docs $ACTION event to shopify-dev (HTTP $HTTP_STATUS)"
+          else
+            echo "Failed to dispatch docs $ACTION event (HTTP $HTTP_STATUS)"
+            cat response.txt
+            exit 1
+          fi
