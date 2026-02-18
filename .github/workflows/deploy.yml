@@ -16,18 +16,18 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.16.1
+          run_install: false
+
       - name: ⎔ Setup node
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: '22'
           cache: 'pnpm'
           cache-dependency-path: 'pnpm-lock.yaml'
-
-      - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.16.1
-          run_install: false
 
       - name: Cache node modules
         id: cache-pnpm
