@@ -1,6 +1,6 @@
 import path from 'node:path';
 import {defineConfig} from 'vite';
-import {vitePlugin as remix} from '@remix-run/dev';
+import {reactRouter} from '@react-router/dev/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import tailwindcss from '@tailwindcss/vite';
 
@@ -17,15 +17,7 @@ if (!GEN_DOCS_PATH && INIT_CWD === process.env.PWD) {
 
 export default defineConfig({
   plugins: [
-    remix({
-      ignoredRouteFiles: ['**/.*'],
-      future: {
-        v3_fetcherPersist: false,
-        v3_relativeSplatPath: false,
-        v3_throwAbortReason: false,
-        v3_singleFetch: true,
-      },
-    }),
+    reactRouter(),
     tsconfigPaths(),
     tailwindcss(),
     {

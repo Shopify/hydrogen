@@ -4,6 +4,7 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
+    "prepare": "husky",
     "build": "npm run build:pkg",
     "build:pkg": "turbo build --parallel --filter=./packages/*",
     "build:templates": "turbo build --parallel --filter=./templates/*",
@@ -35,6 +36,7 @@
     "version:next": "node scripts/changeset-version-next.mjs",
     "changeset": "changeset",
     "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/*/dist && rimraf templates/*/.cache",
+    "nuke": "rimraf packages/*/node_modules templates/*/node_modules apps/*/node_modules .turbo node_modules/.cache/turbo packages/*/.turbo packages/*/dist",
     "check": "npm run build && npm run lint && npm run typecheck && npm run test",
     "e2e": "playwright test",
     "e2e:old-cookies": "playwright test --project=old-cookies",
@@ -104,14 +106,11 @@
     "tsup": "^8.4.0",
     "turbo": "2.3.4",
     "typescript": "5.9.2",
-    "yorkie": "^2.0.0"
+    "husky": "^9.1.7"
   },
   "engines": {
     "node": "^22 || ^24",
     "npm": ">=11.6.2"
-  },
-  "gitHooks": {
-    "pre-commit": "lint-staged && npm run pre-commit:encrypt"
   },
   "lint-staged": {
     "*.{js,jsx}": [
@@ -133,7 +132,8 @@
     "@shopify/cli-kit": "3.80.4",
     "form-data": ">=4.0.4",
     "@types/node": "^22.12.0",
-    "vite": "^6.2.1"
+    "vite": "^6.2.1",
+    "cookie": "^0.7.0"
   },
   "optionalDependencies": {
     "@ast-grep/napi-linux-x64-gnu": "0.34.1",
