@@ -1,6 +1,5 @@
-import type {LoaderFunctionArgs} from '@remix-run/node';
-import {json} from '@remix-run/node';
-import {useLoaderData, useMatches} from '@remix-run/react';
+import type {LoaderFunctionArgs} from 'react-router';
+import {useLoaderData, useMatches} from 'react-router';
 import {marked} from 'marked';
 import {useState} from 'react';
 
@@ -30,7 +29,7 @@ export default function Index() {
     : null;
 
   const props = typeDef
-    ? typeDef.members ?? typeDef.params ?? typeDef.value
+    ? (typeDef.members ?? typeDef.params ?? typeDef.value)
     : null;
 
   return (
