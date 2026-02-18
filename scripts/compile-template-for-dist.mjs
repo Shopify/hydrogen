@@ -1,6 +1,7 @@
 import {resolve} from 'path';
 import fs from 'fs-extra';
 import {transpileProject} from '../packages/cli/dist/lib/transpile/index.js';
+import {replaceWorkspaceProtocolVersions} from '../packages/cli/dist/lib/template-pack.js';
 
 (async () => {
   const [template, ...flags] = process.argv.slice(2);
@@ -12,6 +13,14 @@ import {transpileProject} from '../packages/cli/dist/lib/transpile/index.js';
 
   await createNewApp(templateDir, tsTemplateDir, true);
   await createNewApp(templateDir, jsTemplateDir, false);
+  await replaceWorkspaceProtocolVersions({
+    sourceTemplateDir: templateDir,
+    targetTemplateDir: tsTemplateDir,
+  });
+  await replaceWorkspaceProtocolVersions({
+    sourceTemplateDir: templateDir,
+    targetTemplateDir: jsTemplateDir,
+  });
   if (!shouldKeepOriginalTemplate) {
     fs.removeSync(templateDir);
   }

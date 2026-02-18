@@ -10,6 +10,7 @@ import {
   renderSelectPrompt,
   renderConfirmationPrompt,
   renderTasks,
+  renderInfo,
 } from '@shopify/cli-kit/node/ui';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {type PackageJson} from '@shopify/cli-kit/node/node-package-manager';
@@ -51,6 +52,7 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
     renderTasks: vi.fn(() => Promise.resolve()),
     renderSelectPrompt: vi.fn(() => Promise.resolve()),
     renderConfirmationPrompt: vi.fn(() => Promise.resolve(false)),
+    renderInfo: vi.fn(original.renderInfo),
   };
 });
 
@@ -744,6 +746,33 @@ describe('upgrade', async () => {
   });
 
   describe('displayDevUpgradeNotice', () => {
+    it('shows a monorepo notice when Hydrogen uses workspace protocol', async () => {
+      await inTemporaryHydrogenRepo(
+        async (targetPath) => {
+          await expect(
+            displayDevUpgradeNotice({targetPath}),
+          ).resolves.not.toThrow();
+
+          expect(renderInfo).toHaveBeenCalledWith(
+            expect.objectContaining({
+              headline: 'Using monorepo @shopify/hydrogen dependency',
+            }),
+          );
+          expect(outputMock.warn()).toBe('');
+        },
+        {
+          cleanGitRepo: false,
+          packageJson: {
+            ...OUTDATED_HYDROGEN_PACKAGE_JSON,
+            dependencies: {
+              ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
+              '@shopify/hydrogen': 'workspace:*',
+            },
+          },
+        },
+      );
+    });
+
     it('shows up a notice if Hydrogen is outdated', async () => {
       await inTemporaryHydrogenRepo(
         async (targetPath) => {
