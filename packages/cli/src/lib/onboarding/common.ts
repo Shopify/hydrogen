@@ -89,7 +89,7 @@ export const LANGUAGES = {
   js: 'JavaScript',
   ts: 'TypeScript',
 } as const;
-type Language = keyof typeof LANGUAGES;
+export type Language = keyof typeof LANGUAGES;
 
 export async function handleI18n(
   controller: AbortController,

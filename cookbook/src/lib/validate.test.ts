@@ -30,7 +30,7 @@ describe('formatValidationError', () => {
   it('should format error with line number and location', () => {
     const error = {
       validator: 'RecipeSchema',
-      message: 'Expected string, received number',
+      message: 'Invalid input: expected string, received number',
       location: 'steps.0.step',
       lineNumber: 52,
     };
@@ -40,7 +40,7 @@ describe('formatValidationError', () => {
     expect(formatted).toContain('recipe.yaml:52');
     expect(formatted).toContain('steps.0.step');
     expect(formatted).toContain(
-      'RecipeSchema: Expected string, received number',
+      'RecipeSchema: Invalid input: expected string, received number',
     );
   });
 
@@ -800,10 +800,10 @@ commit: abc123
       .join('\n');
 
     expect(errorOutput).toContain(
-      'Expected string, received number (actual value: 1)',
+      'Invalid input: expected string, received number (actual value: 1)',
     );
     expect(errorOutput).toContain(
-      'Expected string, received number (actual value: 2)',
+      'Invalid input: expected string, received number (actual value: 2)',
     );
   });
 
