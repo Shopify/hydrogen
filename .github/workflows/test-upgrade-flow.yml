@@ -50,6 +50,12 @@ jobs:
           node-version: '22'
           cache: 'pnpm'
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.16.1
+          run_install: false
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 

@@ -52,6 +52,12 @@ jobs:
           cache-dependency-path: 'pnpm-lock.yaml'
           node-version: 24 # Needed for npm@11 for Trusted Publishing
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.16.1
+          run_install: false
+
       - name: Install the packages
         run: pnpm install --frozen-lockfile
 
@@ -165,6 +171,12 @@ jobs:
           cache-dependency-path: 'pnpm-lock.yaml'
           node-version: 24 # Needed for npm@11 for Trusted Publishing
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.16.1
+          run_install: false
+
       - name: Install the packages
         run: pnpm install --frozen-lockfile
 
@@ -242,6 +254,12 @@ jobs:
           cache-dependency-path: 'pnpm-lock.yaml'
           node-version: 24 # Needed for npm@11 for Trusted Publishing
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.16.1
+          run_install: false
+
       - name: Install the packages
         run: pnpm install --frozen-lockfile
 
@@ -281,6 +299,19 @@ jobs:
     steps:
       - name: Checkout the code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+          node-version: 24
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.16.1
+          run_install: false
 
       - name: Install the packages
         run: pnpm install --frozen-lockfile --ignore-engines
