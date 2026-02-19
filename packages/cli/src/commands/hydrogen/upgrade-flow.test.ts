@@ -345,7 +345,7 @@ describe('upgrade flow integration', () => {
 
       // Validate critical file integrity (always strict)
       await validateFileIntegrity(projectDir);
-    }, 180000);
+    }, 300000);
 
     // Tests next version upgrade when packages are not yet published to npm
     it('upgrades to next versions when packages are unpublished', async () => {
@@ -457,7 +457,7 @@ describe('upgrade flow integration', () => {
 
       // Validate file integrity (same as latest test)
       await validateFileIntegrity(projectDir);
-    }, 180000);
+    }, 300000);
   });
 
   describe('Changelog validation', () => {

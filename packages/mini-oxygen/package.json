@@ -21,7 +21,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
-    "prepack": "npm run build",
+    "prepack": "pnpm run build",
     "test": "NODE_OPTIONS=--experimental-vm-modules vitest run --test-timeout=60000"
   },
   "files": [
@@ -63,7 +63,7 @@
     "@types/body-parser": "1.19.5",
     "@types/connect": "^3.4.38",
     "@types/eventsource": "^1.1.15",
-    "@types/node": "^22.12.0",
+    "@types/node": "catalog:",
     "@types/source-map-support": "^0.5.10",
     "@types/stack-trace": "^0.0.33",
     "@types/ws": "^8.5.14",

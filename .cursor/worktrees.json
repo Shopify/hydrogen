@@ -1,3 +1,3 @@
 {
-  "setup-worktree": ["npm ci"]
+  "setup-worktree": ["pnpm install --frozen-lockfile"]
 }

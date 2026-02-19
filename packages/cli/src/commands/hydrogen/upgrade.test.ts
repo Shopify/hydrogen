@@ -8,6 +8,7 @@ import {
   renderSelectPrompt,
   renderConfirmationPrompt,
   renderTasks,
+  renderInfo,
 } from '@shopify/cli-kit/node/ui';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {type PackageJson} from '@shopify/cli-kit/node/node-package-manager';
@@ -49,6 +50,7 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
     renderTasks: vi.fn(() => Promise.resolve()),
     renderSelectPrompt: vi.fn(() => Promise.resolve()),
     renderConfirmationPrompt: vi.fn(() => Promise.resolve(false)),
+    renderInfo: vi.fn(original.renderInfo),
   };
 });
 
@@ -507,22 +509,28 @@ describe('upgrade', async () => {
       ).toHaveLength(0);
 
       const depName = Object.keys(latestRelease.dependencies)[0]!;
-      const devDepName = Object.keys(latestRelease.devDependencies)[0]!;
+
+      // Find a release with non-empty devDependencies (not all releases have them)
+      const releaseWithDevDeps = releases.find(
+        (r) => Object.keys(r.devDependencies).length > 0,
+      )!;
+      const devDepName = Object.keys(releaseWithDevDeps.devDependencies)[0]!;
 
       // Copy of latest release, no changes
+      const currentDeps: Record<string, string> = {
+        [depName]: latestRelease.dependencies[depName]!,
+      };
+      if (latestRelease.devDependencies[devDepName]) {
+        currentDeps[devDepName] = latestRelease.devDependencies[devDepName]!;
+      }
+
       expect(
         getAvailableUpgrades({
           currentVersion: latestRelease.version,
-          currentDependencies: {
-            [depName]: latestRelease.dependencies[depName]!,
-            [devDepName]: latestRelease.devDependencies[devDepName]!,
-          },
+          currentDependencies: currentDeps,
           releases: [{...latestRelease}, ...releases],
         }).availableUpgrades,
       ).toHaveLength(0);
-
-      // Test with a unique version number to ensure the upgrade is detected
-      // This ensures the test works regardless of whether the changelog has duplicates
 
       // Copy of latest release but with increased patch version of a dependency
       // and a unique version number to avoid duplicate filtering
@@ -549,10 +557,13 @@ describe('upgrade', async () => {
       // Also use a unique version to avoid duplicate filtering
       const upgradedDevRelease = {
         ...latestRelease,
-        version: '9999.99.98', // Different unique version
+        version: TEST_VERSION_DEV_DEPENDENCY_UPGRADE,
         devDependencies: {
           ...latestRelease.devDependencies,
-          ...increasePatchVersion(devDepName, latestRelease.devDependencies),
+          [devDepName]: releaseWithDevDeps.devDependencies[devDepName]!.replace(
+            /\.(\d+)$/,
+            (_, p) => `.${Number(p) + 1}`,
+          ),
         },
       };
 
@@ -560,7 +571,7 @@ describe('upgrade', async () => {
         getAvailableUpgrades({
           currentVersion: latestRelease.version,
           currentDependencies: {
-            [devDepName]: latestRelease.devDependencies[devDepName]!,
+            [devDepName]: releaseWithDevDeps.devDependencies[devDepName]!,
           },
           releases: [upgradedDevRelease, ...releases],
         }).availableUpgrades,
@@ -765,6 +776,33 @@ describe('upgrade', async () => {
   });
 
   describe('displayDevUpgradeNotice', () => {
+    it('shows a monorepo notice when Hydrogen uses workspace protocol', async () => {
+      await inTemporaryHydrogenRepo(
+        async (targetPath) => {
+          await expect(
+            displayDevUpgradeNotice({targetPath}),
+          ).resolves.not.toThrow();
+
+          expect(renderInfo).toHaveBeenCalledWith(
+            expect.objectContaining({
+              headline: 'Using monorepo @shopify/hydrogen dependency',
+            }),
+          );
+          expect(outputMock.warn()).toBe('');
+        },
+        {
+          cleanGitRepo: false,
+          packageJson: {
+            ...OUTDATED_HYDROGEN_PACKAGE_JSON,
+            dependencies: {
+              ...OUTDATED_HYDROGEN_PACKAGE_JSON.dependencies,
+              '@shopify/hydrogen': 'workspace:*',
+            },
+          },
+        },
+      );
+    });
+
     it('shows up a notice if Hydrogen is outdated', async () => {
       await inTemporaryHydrogenRepo(
         async (targetPath) => {

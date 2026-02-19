@@ -8,6 +8,7 @@ import {
   ASSETS_STARTER_DIR,
   getSkeletonSourceDir,
 } from './src/lib/build';
+import {replaceWorkspaceProtocolVersions} from './src/lib/template-pack';
 
 // Cleanup dist folder before buid/dev.
 rmSync('./dist', {recursive: true, force: true});
@@ -51,6 +52,10 @@ export default defineConfig([
         recursive: true,
         filter: (filepath: string) =>
           !/node_modules|\.shopify|\.cache|\.turbo|build|dist/gi.test(filepath),
+      });
+      await replaceWorkspaceProtocolVersions({
+        sourceTemplateDir: getSkeletonSourceDir(),
+        targetTemplateDir: starterOutDir,
       });
 
       console.log(

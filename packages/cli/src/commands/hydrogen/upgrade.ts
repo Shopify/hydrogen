@@ -1329,6 +1329,15 @@ export async function displayDevUpgradeNotice({
       appPath,
     });
 
+    /** We notify and exit early if the project is using the workspace protocol for @shopify/hydrogen */
+    if (currentVersion.startsWith('workspace:')) {
+      renderInfo({
+        headline: 'Using monorepo @shopify/hydrogen dependency',
+        body: 'This project uses the workspace protocol for @shopify/hydrogen, so upgrade notices are skipped during local monorepo development.',
+      });
+      return;
+    }
+
     const isPrerelease = semver.prerelease(currentVersion);
 
     if (isPrerelease || /^[a-z]+$/i.test(currentVersion)) {

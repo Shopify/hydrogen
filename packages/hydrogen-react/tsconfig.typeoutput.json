@@ -1,6 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "include": ["src/**/*", "globals.d.ts"],
+  "compilerOptions": {
+    // Declaration builds should not require test-only type packages.
+    "types": []
+  },
   "exclude": [
     // when generating types for the library, only include these files instead of the tests/stories/examples
     "src/**/*.test.tsx",
