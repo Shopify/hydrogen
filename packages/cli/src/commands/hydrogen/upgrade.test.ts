@@ -1,10 +1,8 @@
 import {createRequire} from 'node:module';
+import {tmpdir} from 'node:os';
+import {mkdtemp, rm} from 'node:fs/promises';
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {
-  inTemporaryDirectory,
-  writeFile,
-  fileExists,
-} from '@shopify/cli-kit/node/fs';
+import {writeFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {
   renderSelectPrompt,
@@ -138,7 +136,20 @@ const REACT_ROUTER_RELEASE = {
 } satisfies Release;
 
 /**
- * Creates a temporary directory with a git repo and a package.json
+ * Creates a temporary directory in OS temp (not in repo)
+ */
+async function inTemporaryDirectory(cb: (tmpDir: string) => Promise<void>) {
+  const tmpDir = await mkdtemp(joinPath(tmpdir(), 'hydrogen-test-'));
+
+  try {
+    await cb(tmpDir);
+  } finally {
+    await rm(tmpDir, {recursive: true, force: true});
+  }
+}
+
+/**
+ * Creates a temporary directory in OS temp (not in repo) with a git repo and a package.json
  */
 async function inTemporaryHydrogenRepo(
   cb: (tmpDir: string) => Promise<void>,
@@ -150,7 +161,10 @@ async function inTemporaryHydrogenRepo(
     packageJson?: PackageJson;
   } = {cleanGitRepo: true},
 ) {
-  return inTemporaryDirectory(async (tmpDir) => {
+  // Create temp directory in OS temp folder, not in the repo
+  const tmpDir = await mkdtemp(joinPath(tmpdir(), 'hydrogen-test-'));
+
+  try {
     // init the git repo
     await exec('git', ['init'], {cwd: tmpDir});
 
@@ -167,10 +181,14 @@ async function inTemporaryHydrogenRepo(
       await exec('git', ['add', 'package.json'], {cwd: tmpDir});
 
       if (process.env.SHOPIFY_UNIT_TEST || process.env.CI) {
-        await exec('git', ['config', 'user.email', 'test@hydrogen.shop'], {
-          cwd: tmpDir,
-        });
-        await exec('git', ['config', 'user.name', 'Hydrogen Test'], {
+        await exec(
+          'git',
+          ['config', '--local', 'user.email', 'test@hydrogen.shop'],
+          {
+            cwd: tmpDir,
+          },
+        );
+        await exec('git', ['config', '--local', 'user.name', 'Hydrogen Test'], {
           cwd: tmpDir,
         });
       }
@@ -178,7 +196,10 @@ async function inTemporaryHydrogenRepo(
     }
 
     await cb(tmpDir);
-  });
+  } finally {
+    // Clean up: remove the temporary directory
+    await rm(tmpDir, {recursive: true, force: true});
+  }
 }
 
 function increasePatchVersion(depName: string, deps: Record<string, string>) {
