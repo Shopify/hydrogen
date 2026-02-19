@@ -24,6 +24,7 @@
     "@react-router/dev": "7.12.0",
     "@types/diff": "^5.0.2",
     "@types/gunzip-maybe": "^1.4.0",
+    "@types/node": "catalog:",
     "@types/prettier": "^2.7.2",
     "@types/source-map-support": "^0.5.10",
     "@types/tar-fs": "^2.0.1",
