@@ -110,9 +110,7 @@ export function getSkeletonNodeModules(): string {
 }
 
 export async function getRepoNodeModules() {
-  // In the monorepo, use the skeleton's node_modules which has all necessary
-  // dependencies as direct entries. This ensures proper resolution with both
-  // npm (flat) and pnpm (symlinked) node_modules structures.
+  // In the monorepo, use the skeleton's node_modules for consistent dep resolution.
   if (isHydrogenMonorepo) {
     return getSkeletonNodeModules();
   }
