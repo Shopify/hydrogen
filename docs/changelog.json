@@ -3,6 +3,74 @@
   "version": "1",
   "releases": [
     {
+      "title": "Storefront API 2026-01 and Customer Account API 2026-01",
+      "version": "2026.1.0",
+      "date": "2026-02-09",
+      "hash": "14d09107663313bae8eac3c701b90a7bc49819e4",
+      "commit": "https://github.com/Shopify/hydrogen/pull/3453/commits/14d09107663313bae8eac3c701b90a7bc49819e4",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3453",
+      "dependencies": {
+        "@shopify/hydrogen": "2026.1.0"
+      },
+      "devDependencies": {},
+      "removeDependencies": [
+        "@shopify/hydrogen"
+      ],
+      "fixes": [],
+      "features": [
+        {
+          "title": "Update Storefront API and Customer Account API to 2026-01",
+          "info": "Quarterly API version update from 2025-10 to 2026-01. The cartDiscountCodesUpdate mutation now requires the discountCodes argument — if you have custom cart discount code logic, verify your mutations include this field.",
+          "breaking": true,
+          "pr": "https://github.com/Shopify/hydrogen/pull/3434",
+          "id": "3434"
+        }
+      ]
+    },
+    {
+      "title": "CLI lockfile improvements and bug fix",
+      "version": "2025.10.1",
+      "date": "2026-02-06",
+      "hash": "0723a6fba40e4d41e7569ac00175b51c959a408d",
+      "commit": "https://github.com/Shopify/hydrogen/pull/3451/commits/0723a6fba40e4d41e7569ac00175b51c959a408d",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3451",
+      "dependencies": {
+        "@shopify/hydrogen": "2025.10.1"
+      },
+      "devDependencies": {},
+      "removeDependencies": [
+        "@shopify/hydrogen"
+      ],
+      "fixes": [
+        {
+          "title": "Fix virtual routes failing when file paths contain spaces",
+          "info": "File paths containing spaces were causing errors with virtual routes due to URL-encoded path segments not being decoded.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3436",
+          "id": "3436"
+        },
+        {
+          "title": "Update skeleton template to use cartGiftCardCodesAdd mutation",
+          "info": "The skeleton template now uses the new cartGiftCardCodesAdd mutation, replacing the UpdateGiftCardForm component with a simpler AddGiftCardForm using CartForm.ACTIONS.GiftCardCodesAdd. If you customized the gift card form in your project, you may want to migrate to the new Add action for simpler code.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3401",
+          "id": "3401"
+        },
+        {
+          "title": "Add nested cart line items display to skeleton template",
+          "info": "The skeleton template now displays nested cart line items (warranties, gift wrapping, etc.) using the parentRelationship and lineComponents fields from Storefront API 2025-10. Updates CartMain and CartLineItem to render child line items with visual hierarchy.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3398",
+          "id": "3398"
+        }
+      ],
+      "features": [
+        {
+          "title": "Add support for Bun and npm shrinkwrap lockfiles",
+          "info": "The CLI now recognizes Bun's text-based lockfile (bun.lock) introduced in Bun 1.2 and npm's shrinkwrap lockfile (npm-shrinkwrap.json) as alternatives to their respective primary lockfiles (bun.lockb and package-lock.json).",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3405",
+          "id": "3405"
+        }
+      ]
+    },
+    {
       "title": "Storefront API 2025-10, React 19 support, and new cart mutations",
       "version": "2025.10.0",
       "date": "2026-01-30",
