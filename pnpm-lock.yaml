@@ -4,6 +4,21 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@types/react':
+      specifier: ^18.3.28
+      version: 18.3.28
+    '@types/react-dom':
+      specifier: ^18.3.7
+      version: 18.3.7
+    react:
+      specifier: ^18.3.1
+      version: 18.3.1
+    react-dom:
+      specifier: ^18.3.1
+      version: 18.3.1
+
 overrides:
   '@oclif/core': 3.26.5
   '@shopify/cli-kit': 3.80.4
@@ -221,10 +236,10 @@ importers:
         specifier: ^9.1.0
         version: 9.1.6
       react:
-        specifier: 18.3.1
+        specifier: 'catalog:'
         version: 18.3.1
       react-dom:
-        specifier: 18.3.1
+        specifier: 'catalog:'
         version: 18.3.1(react@18.3.1)
       react-router:
         specifier: ^7.13.0
@@ -249,10 +264,10 @@ importers:
         specifier: ^1.2.1
         version: 1.2.3
       '@types/react':
-        specifier: ^18.2.20
+        specifier: 'catalog:'
         version: 18.3.28
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: 'catalog:'
         version: 18.3.7(@types/react@18.3.28)
       '@types/react-syntax-highlighter':
         specifier: ^15.5.7
@@ -344,7 +359,7 @@ importers:
     devDependencies:
       '@react-router/dev':
         specifier: 7.12.0
-        version: 7.12.0(@react-router/serve@7.13.0(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))(yaml@2.8.2)
+        version: 7.12.0(@react-router/serve@7.13.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))(yaml@2.8.2)
       '@types/diff':
         specifier: ^5.0.2
         version: 5.2.3
@@ -459,7 +474,7 @@ importers:
         specifier: ^20.0.0
         version: 20.6.1
       react:
-        specifier: 18.3.1
+        specifier: 'catalog:'
         version: 18.3.1
       react-router:
         specifier: 7.12.0
@@ -562,6 +577,12 @@ importers:
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
+      '@types/react':
+        specifier: 'catalog:'
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.4
         version: 4.7.0(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))
@@ -617,10 +638,10 @@ importers:
         specifier: ^4.1.5
         version: 4.1.5
       react:
-        specifier: 18.3.1
+        specifier: 'catalog:'
         version: 18.3.1
       react-dom:
-        specifier: 18.3.1
+        specifier: 'catalog:'
         version: 18.3.1(react@18.3.1)
       rimraf:
         specifier: ^6.0.1
@@ -741,10 +762,10 @@ importers:
         specifier: ^5.1.22
         version: 5.1.35
       react:
-        specifier: 18.3.1
+        specifier: 'catalog:'
         version: 18.3.1
       react-dom:
-        specifier: 18.3.1
+        specifier: 'catalog:'
         version: 18.3.1(react@18.3.1)
       react-router:
         specifier: 7.12.0
@@ -793,10 +814,10 @@ importers:
         specifier: ^9.6.1
         version: 9.6.1
       '@types/react':
-        specifier: ^18.2.22
+        specifier: 'catalog:'
         version: 18.3.28
       '@types/react-dom':
-        specifier: ^18.2.7
+        specifier: 'catalog:'
         version: 18.3.7(@types/react@18.3.28)
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.21.0
@@ -10654,6 +10675,56 @@ snapshots:
       - tsx
       - yaml
 
+  '@react-router/dev@7.12.0(@react-router/serve@7.13.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))(yaml@2.8.2)':
+    dependencies:
+      '@babel/core': 7.29.0
+      '@babel/generator': 7.29.1
+      '@babel/parser': 7.29.0
+      '@babel/plugin-syntax-jsx': 7.28.6(@babel/core@7.29.0)
+      '@babel/preset-typescript': 7.28.5(@babel/core@7.29.0)
+      '@babel/traverse': 7.29.0
+      '@babel/types': 7.29.0
+      '@react-router/node': 7.12.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)
+      '@remix-run/node-fetch-server': 0.9.0
+      arg: 5.0.2
+      babel-dead-code-elimination: 1.0.12
+      chokidar: 4.0.3
+      dedent: 1.7.1
+      es-module-lexer: 1.7.0
+      exit-hook: 2.2.1
+      isbot: 5.1.35
+      jsesc: 3.0.2
+      lodash: 4.17.23
+      p-map: 7.0.4
+      pathe: 1.1.2
+      picocolors: 1.1.1
+      pkg-types: 2.3.0
+      prettier: 3.8.1
+      react-refresh: 0.14.2
+      react-router: 7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      semver: 7.7.4
+      tinyglobby: 0.2.15
+      valibot: 1.2.0(typescript@5.9.2)
+      vite: 6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2)
+      vite-node: 3.2.4(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2)
+    optionalDependencies:
+      '@react-router/serve': 7.13.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)
+      typescript: 5.9.2
+    transitivePeerDependencies:
+      - '@types/node'
+      - babel-plugin-macros
+      - jiti
+      - less
+      - lightningcss
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - tsx
+      - yaml
+
   '@react-router/dev@7.13.0(@react-router/serve@7.13.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.2))(yaml@2.8.2)':
     dependencies:
       '@babel/core': 7.29.0
@@ -10739,6 +10810,13 @@ snapshots:
     dependencies:
       '@mjackson/node-fetch-server': 0.2.0
       react-router: 7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+    optionalDependencies:
+      typescript: 5.9.2
+
+  '@react-router/node@7.12.0(react-router@7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)':
+    dependencies:
+      '@mjackson/node-fetch-server': 0.2.0
+      react-router: 7.13.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     optionalDependencies:
       typescript: 5.9.2
 
