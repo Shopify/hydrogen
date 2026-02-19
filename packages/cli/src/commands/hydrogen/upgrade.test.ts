@@ -509,22 +509,28 @@ describe('upgrade', async () => {
       ).toHaveLength(0);
 
       const depName = Object.keys(latestRelease.dependencies)[0]!;
-      const devDepName = Object.keys(latestRelease.devDependencies)[0]!;
+
+      // Find a release with non-empty devDependencies (not all releases have them)
+      const releaseWithDevDeps = releases.find(
+        (r) => Object.keys(r.devDependencies).length > 0,
+      )!;
+      const devDepName = Object.keys(releaseWithDevDeps.devDependencies)[0]!;
 
       // Copy of latest release, no changes
+      const currentDeps: Record<string, string> = {
+        [depName]: latestRelease.dependencies[depName]!,
+      };
+      if (latestRelease.devDependencies[devDepName]) {
+        currentDeps[devDepName] = latestRelease.devDependencies[devDepName]!;
+      }
+
       expect(
         getAvailableUpgrades({
           currentVersion: latestRelease.version,
-          currentDependencies: {
-            [depName]: latestRelease.dependencies[depName]!,
-            [devDepName]: latestRelease.devDependencies[devDepName]!,
-          },
+          currentDependencies: currentDeps,
           releases: [{...latestRelease}, ...releases],
         }).availableUpgrades,
       ).toHaveLength(0);
-
-      // Test with a unique version number to ensure the upgrade is detected
-      // This ensures the test works regardless of whether the changelog has duplicates
 
       // Copy of latest release but with increased patch version of a dependency
       // and a unique version number to avoid duplicate filtering
@@ -551,10 +557,13 @@ describe('upgrade', async () => {
       // Also use a unique version to avoid duplicate filtering
       const upgradedDevRelease = {
         ...latestRelease,
-        version: '9999.99.98', // Different unique version
+        version: TEST_VERSION_DEV_DEPENDENCY_UPGRADE,
         devDependencies: {
           ...latestRelease.devDependencies,
-          ...increasePatchVersion(devDepName, latestRelease.devDependencies),
+          [devDepName]: releaseWithDevDeps.devDependencies[devDepName]!.replace(
+            /\.(\d+)$/,
+            (_, p) => `.${Number(p) + 1}`,
+          ),
         },
       };
 
@@ -562,7 +571,7 @@ describe('upgrade', async () => {
         getAvailableUpgrades({
           currentVersion: latestRelease.version,
           currentDependencies: {
-            [devDepName]: latestRelease.devDependencies[devDepName]!,
+            [devDepName]: releaseWithDevDeps.devDependencies[devDepName]!,
           },
           releases: [upgradedDevRelease, ...releases],
         }).availableUpgrades,

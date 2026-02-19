@@ -110,12 +110,13 @@ export function getSkeletonNodeModules(): string {
 }
 
 export async function getRepoNodeModules() {
-  const {stdout} = await execAsync('npm root');
-  let nodeModulesPath = stdout.trim();
-
-  if (!nodeModulesPath && isHydrogenMonorepo) {
-    nodeModulesPath = joinPath(dirname(monorepoPackagesPath), 'node_modules');
+  // In the monorepo, use the skeleton's node_modules which has all necessary
+  // dependencies as direct entries. This ensures proper resolution with both
+  // npm (flat) and pnpm (symlinked) node_modules structures.
+  if (isHydrogenMonorepo) {
+    return getSkeletonNodeModules();
   }
 
-  return nodeModulesPath;
+  const {stdout} = await execAsync('npm root');
+  return stdout.trim();
 }
