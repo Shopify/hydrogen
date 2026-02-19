@@ -127,16 +127,6 @@
       "prettier --write"
     ]
   },
-  "pnpm": {
-    "overrides": {
-      "@oclif/core": "3.26.5",
-      "@shopify/cli-kit": "3.80.4",
-      "form-data": ">=4.0.4",
-      "@types/node": "catalog:",
-      "vite": "^6.2.1",
-      "cookie": "^0.7.0"
-    }
-  },
   "optionalDependencies": {
     "@ast-grep/napi-linux-x64-gnu": "0.34.1",
     "@rollup/rollup-linux-x64-gnu": "^4.34.9"
