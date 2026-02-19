@@ -47,7 +47,6 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
         with:
-          version: 10.16.1
           run_install: false
 
       - name: Setup Node.js
