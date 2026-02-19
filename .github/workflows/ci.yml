@@ -266,12 +266,6 @@ jobs:
       - name: 📦 Build packages
         run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:pkg
 
-      - name: 📥 Install dependencies (cookbook)
-        working-directory: cookbook
-        run: |
-          npm ci
-          npm rebuild
-
       - name: 📝 Validate schema
         working-directory: cookbook
         run: npm run cookbook -- schema && git diff --exit-code recipe.schema.json
