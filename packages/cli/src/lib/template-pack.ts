@@ -28,7 +28,7 @@ function hasReplaceableProtocol(version: string) {
   return version.startsWith('workspace:') || version.startsWith('catalog:');
 }
 
-export async function getPackedTemplatePackageJson(sourceTemplateDir: string) {
+async function getPackedTemplatePackageJson(sourceTemplateDir: string) {
   const tempDir = await mkdtemp(join(tmpdir(), 'hydrogen-template-pack-'));
 
   try {
@@ -70,19 +70,13 @@ export async function getPackedTemplatePackageJson(sourceTemplateDir: string) {
   }
 }
 
-export async function replaceWorkspaceProtocolVersions({
-  sourceTemplateDir,
-  targetTemplateDir,
+function replaceWorkspaceProtocolVersionsInPackageJson({
+  packedManifest,
+  targetPackageJson,
 }: {
-  sourceTemplateDir: string;
-  targetTemplateDir: string;
+  packedManifest: PackageJsonWithDeps;
+  targetPackageJson: PackageJsonWithDeps;
 }) {
-  const packedManifest = await getPackedTemplatePackageJson(sourceTemplateDir);
-  const targetPackageJsonPath = join(targetTemplateDir, 'package.json');
-  const targetPackageJson = JSON.parse(
-    await readFile(targetPackageJsonPath, 'utf8'),
-  ) as PackageJsonWithDeps;
-
   for (const section of DEPENDENCY_SECTIONS) {
     const targetDeps = targetPackageJson[section];
     if (!targetDeps) continue;
@@ -100,6 +94,25 @@ export async function replaceWorkspaceProtocolVersions({
       targetDeps[name] = packedVersion;
     }
   }
+}
+
+export async function replaceWorkspaceProtocolVersions({
+  sourceTemplateDir,
+  targetTemplateDir,
+}: {
+  sourceTemplateDir: string;
+  targetTemplateDir: string;
+}) {
+  const packedManifest = await getPackedTemplatePackageJson(sourceTemplateDir);
+  const targetPackageJsonPath = join(targetTemplateDir, 'package.json');
+  const targetPackageJson = JSON.parse(
+    await readFile(targetPackageJsonPath, 'utf8'),
+  ) as PackageJsonWithDeps;
+
+  replaceWorkspaceProtocolVersionsInPackageJson({
+    packedManifest,
+    targetPackageJson,
+  });
 
   await writeFile(
     targetPackageJsonPath,
