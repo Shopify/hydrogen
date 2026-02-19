@@ -11,16 +11,18 @@ import {replaceWorkspaceProtocolVersions} from '../packages/cli/dist/lib/templat
   const tsTemplateDir = `${templateDir}-ts`;
   const jsTemplateDir = `${templateDir}-js`;
 
-  await createNewApp(templateDir, tsTemplateDir, true);
-  await createNewApp(templateDir, jsTemplateDir, false);
-  await replaceWorkspaceProtocolVersions({
-    sourceTemplateDir: templateDir,
-    targetTemplateDir: tsTemplateDir,
-  });
-  await replaceWorkspaceProtocolVersions({
-    sourceTemplateDir: templateDir,
-    targetTemplateDir: jsTemplateDir,
-  });
+  await Promise.all([
+    prepareTemplateVariant({
+      sourceTemplateDir: templateDir,
+      targetTemplateDir: tsTemplateDir,
+      useTypeScript: true,
+    }),
+    prepareTemplateVariant({
+      sourceTemplateDir: templateDir,
+      targetTemplateDir: jsTemplateDir,
+      useTypeScript: false,
+    }),
+  ]);
   if (!shouldKeepOriginalTemplate) {
     fs.removeSync(templateDir);
   }
@@ -34,6 +36,18 @@ async function createNewApp(srcDir, destDir, useTypeScript) {
   if (!useTypeScript) {
     await transpileProject(destDir);
   }
+}
+
+async function prepareTemplateVariant({
+  sourceTemplateDir,
+  targetTemplateDir,
+  useTypeScript,
+}) {
+  await createNewApp(sourceTemplateDir, targetTemplateDir, useTypeScript);
+  await replaceWorkspaceProtocolVersions({
+    sourceTemplateDir,
+    targetTemplateDir,
+  });
 }
 
 function removeUnwantedFiles(dir) {
