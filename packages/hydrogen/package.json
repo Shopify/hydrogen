@@ -100,6 +100,7 @@
     "@shopify/hydrogen-codegen": "workspace:*",
     "@testing-library/jest-dom": "^6.6.3",
     "@types/node": "catalog:",
+    "@types/react": "catalog:",
     "@testing-library/react": "^14.0.0",
     "@types/source-map-support": "^0.5.10",
     "formdata-polyfill": "^4.0.10",
