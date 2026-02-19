@@ -746,6 +746,9 @@ importers:
 
   packages/remix-oxygen:
     devDependencies:
+      '@shopify/hydrogen':
+        specifier: workspace:*
+        version: link:../hydrogen
       '@shopify/oxygen-workers-types':
         specifier: ^4.1.6
         version: 4.2.0
