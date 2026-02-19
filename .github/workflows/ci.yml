@@ -92,7 +92,6 @@ jobs:
       - name: 📥 Install dependencies
         run: |
           pnpm install --frozen-lockfile
-          pnpm rebuild
 
       - name: 🔬 Lint
         run: pnpm run lint
@@ -124,7 +123,6 @@ jobs:
       - name: 📥 Install dependencies
         run: |
           pnpm install --frozen-lockfile
-          pnpm rebuild
 
       - name: 🔬 Check Formatting
         run: pnpm run format:check
@@ -156,7 +154,6 @@ jobs:
       - name: 📥 Install dependencies
         run: |
           pnpm install --frozen-lockfile
-          pnpm rebuild
 
       # Enabling the turbo cache causes deployments to fail intermittently.
       # The build step fails with dependency issues. More investigation needed.
@@ -207,7 +204,6 @@ jobs:
       - name: 📥 Install dependencies
         run: |
           pnpm install --frozen-lockfile
-          pnpm rebuild
 
       - name: 📦 Build packages and templates
         run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run build:all
@@ -262,7 +258,6 @@ jobs:
       - name: 📥 Install dependencies
         run: |
           pnpm install --frozen-lockfile
-          pnpm rebuild
 
       - name: 📦 Build packages and templates
         run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run build:all
@@ -300,7 +295,6 @@ jobs:
       - name: 📥 Install dependencies
         run: |
           pnpm install --frozen-lockfile
-          pnpm rebuild
 
       - name: 📦 Build packages
         run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run build:pkg
@@ -309,7 +303,6 @@ jobs:
         working-directory: cookbook
         run: |
           pnpm install --frozen-lockfile
-          pnpm rebuild
 
       - name: 📝 Validate schema
         working-directory: cookbook
