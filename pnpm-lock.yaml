@@ -384,6 +384,9 @@ importers:
       devtools-protocol:
         specifier: ^0.0.1177611
         version: 0.0.1177611
+      esbuild:
+        specifier: ^0.25.0
+        version: 0.25.12
       fast-glob:
         specifier: ^3.2.12
         version: 3.3.3
