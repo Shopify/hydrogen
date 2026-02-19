@@ -19,6 +19,18 @@ jobs:
       - name: Checkout current branch
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+          node-version: 24
+
       - name: Force snapshot changeset
         run: |
           printf -- "---\n'@shopify/hydrogen': patch\n'@shopify/remix-oxygen': patch\n'@shopify/cli-hydrogen': patch\n'@shopify/create-hydrogen': patch\n---\n\nForce snapshot build.\n" > .changeset/force-snapshot-build.md
