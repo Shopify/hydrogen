@@ -8,7 +8,6 @@
       "node",
       "vite/client",
       "vitest/globals",
-      "jest",
       "@testing-library/jest-dom"
     ],
     "paths": {
