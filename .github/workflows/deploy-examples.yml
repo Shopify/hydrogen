@@ -2,7 +2,7 @@
 #! oxygen_storefront_id: 1000014888
 
 name: Deploy Recipe Examples
-on: 
+on:
   push:
     branches: [main]
   pull_request:
@@ -26,10 +26,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        recipes:
-          [
+        recipes: [
             {name: 'metaobjects', token: '1000014928'},
-            {name: 'third-party-api', token: '1000014929'},  # Replaces third-party-queries-caching
+            {name: 'third-party-api', token: '1000014929'}, # Replaces third-party-queries-caching
             {name: 'custom-cart-method', token: '1000014930'},
             {name: 'legacy-customer-account-flow', token: '1000022490'},
           ]
@@ -37,7 +36,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
         with:
           version: 10.16.1
           run_install: false
@@ -61,47 +60,47 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
-      
+
       - name: 📥 Install dependencies (root)
         run: pnpm install --frozen-lockfile
-      
+
       - name: 📦 Build packages
         run: |
           CI=true pnpm run build:pkg
-      
+
       - name: 📥 Install dependencies (cookbook)
         working-directory: cookbook
         run: pnpm install --frozen-lockfile
-      
+
       - name: 🍳 Apply recipe to skeleton
         working-directory: cookbook
         run: |
           echo "Applying recipe: ${{ matrix.recipes.name }}"
           pnpm run cookbook -- apply --recipe ${{ matrix.recipes.name }}
-      
+
       - name: 📥 Install dependencies (skeleton with recipe)
         working-directory: templates/skeleton
         run: |
           # Install in the monorepo context to use workspace packages
           pnpm install --frozen-lockfile
-      
+
       - name: 📝 Generate GraphQL types
         working-directory: templates/skeleton
         run: |
           pnpm run codegen
-      
+
       - name: 🔨 Build skeleton with recipe
         working-directory: templates/skeleton
         run: |
           SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run build
-      
+
       - name: 🚀 Deploy to Oxygen
         id: deploy
         working-directory: templates/skeleton
         run: |
           pnpm exec shopify hydrogen deploy --force --no-lockfile-check --token=$OXYGEN_DEPLOYMENT_TOKEN_${{ matrix.recipes.token }}
         env:
-          SHOPIFY_HYDROGEN_FLAG_METADATA_DESCRIPTION: "Recipe: ${{ matrix.recipes.name }} - ${{ github.event.head_commit.message }}"
+          SHOPIFY_HYDROGEN_FLAG_METADATA_DESCRIPTION: 'Recipe: ${{ matrix.recipes.name }} - ${{ github.event.head_commit.message }}'
           OXYGEN_DEPLOYMENT_TOKEN_1000014888: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014888 }}
           OXYGEN_DEPLOYMENT_TOKEN_1000022490: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000022490 }}
           OXYGEN_DEPLOYMENT_TOKEN_1000014892: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000014892 }}

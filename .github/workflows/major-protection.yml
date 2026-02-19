@@ -11,8 +11,8 @@ jobs:
   check-protection:
     # Only run protection on PRs targeting main or calver release branches
     if: |
-      github.event_name == 'pull_request' && 
-      (github.event.pull_request.base.ref == 'main' || 
+      github.event_name == 'pull_request' &&
+      (github.event.pull_request.base.ref == 'main' ||
        startsWith(github.event.pull_request.base.ref, '20'))
     runs-on: ubuntu-latest
     permissions:
@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: '22'
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
         with:
           version: 10.16.1
           run_install: false
@@ -54,8 +54,8 @@ jobs:
 
   handle-bypass:
     if: |
-      github.event_name == 'issue_comment' && 
-      github.event.issue.pull_request && 
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request &&
       contains(github.event.comment.body, '/bypass-major-safeguard')
     runs-on: ubuntu-latest
     permissions:
