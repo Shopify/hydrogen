@@ -547,9 +547,7 @@ describe('upgrade', async () => {
     it('finds upgrade when a devDependency has a higher patch version', async () => {
       const {releases} = await getChangelog();
       const releaseWithDevDeps = releases.find(
-        (r) =>
-          r.devDependencies &&
-          Object.keys(r.devDependencies).length > 0,
+        (r) => r.devDependencies && Object.keys(r.devDependencies).length > 0,
       );
       if (!releaseWithDevDeps?.devDependencies) {
         throw new Error(
