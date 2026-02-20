@@ -4,6 +4,26 @@ import fs from 'fs';
 import path from 'path';
 import {COOKBOOK_PATH, REPO_ROOT, TEMPLATE_PATH} from './constants';
 
+/**
+ * List all files in a directory recursively. Returns paths relative to dir.
+ * Used instead of readdirSync(..., {recursive: true}) because Dirent.path is
+ * only available in Node 20.1+.
+ */
+export function listFilesRecursively(dir: string, baseDir: string = dir): string[] {
+  const entries = fs.readdirSync(dir, {withFileTypes: true});
+  const result: string[] = [];
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    const relativePath = path.relative(baseDir, fullPath);
+    if (entry.isFile()) {
+      result.push(relativePath.replace(/\\/g, '/'));
+    } else if (entry.isDirectory()) {
+      result.push(...listFilesRecursively(fullPath, baseDir));
+    }
+  }
+  return result;
+}
+
 export function createDirectoryIfNotExists(dir: string) {
   try {
     fs.mkdirSync(dir, {recursive: true});

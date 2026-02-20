@@ -12,16 +12,17 @@ export const meta: Route.MetaFunction = ({data}) => {
 };
 
 export async function loader({params, context}: Route.LoaderArgs) {
+  const {customerAccount} = context;
   if (!params.id) {
     return redirect('/account/orders');
   }
 
   const orderId = atob(params.id);
   const {data, errors}: {data: OrderQuery; errors?: Array<{message: string}>} =
-    await context.customerAccount.query(CUSTOMER_ORDER_QUERY, {
+    await customerAccount.query(CUSTOMER_ORDER_QUERY, {
       variables: {
         orderId,
-        language: context.customerAccount.i18n.language,
+        language: customerAccount.i18n.language,
       },
     });
 
@@ -84,6 +85,9 @@ export default function OrderRoute() {
     <div className="account-order">
       <h2>Order {order.name}</h2>
       <p>Placed on {new Date(order.processedAt!).toDateString()}</p>
+      {order.confirmationNumber && (
+        <p>Confirmation: {order.confirmationNumber}</p>
+      )}
       <br />
       <div>
         <table>
@@ -96,12 +100,10 @@ export default function OrderRoute() {
             </tr>
           </thead>
           <tbody>
-            {lineItems.map(
-              (lineItem: OrderLineItemFullFragment, lineItemIndex: number) => (
-                // eslint-disable-next-line react/no-array-index-key
-                <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
-              ),
-            )}
+            {lineItems.map((lineItem, lineItemIndex) => (
+              // eslint-disable-next-line react/no-array-index-key
+              <OrderLineRow key={lineItemIndex} lineItem={lineItem} />
+            ))}
           </tbody>
           <tfoot>
             {((discountValue && discountValue.amount) ||

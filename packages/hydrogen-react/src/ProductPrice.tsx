@@ -103,7 +103,5 @@ export function ProductPrice<
 // This is only for documentation purposes, and it is not used in the code.
 export interface ProductPricePropsForDocs<
   AsType extends React.ElementType = 'div',
->
-  extends
-    Omit<MoneyPropsBase<AsType>, 'data' | 'measurement'>,
+> extends Omit<MoneyPropsBase<AsType>, 'data' | 'measurement'>,
     ProductPriceProps {}

@@ -95,7 +95,7 @@ export async function action({request, context}: Route.ActionArgs) {
               variables: {
                 address,
                 defaultAddress,
-                language: context.customerAccount.i18n.language,
+                language: customerAccount.i18n.language,
               },
             },
           );
@@ -145,7 +145,7 @@ export async function action({request, context}: Route.ActionArgs) {
                 address,
                 addressId: decodeURIComponent(addressId),
                 defaultAddress,
-                language: context.customerAccount.i18n.language,
+                language: customerAccount.i18n.language,
               },
             },
           );
@@ -193,7 +193,7 @@ export async function action({request, context}: Route.ActionArgs) {
             {
               variables: {
                 addressId: decodeURIComponent(addressId),
-                language: context.customerAccount.i18n.language,
+                language: customerAccount.i18n.language,
               },
             },
           );

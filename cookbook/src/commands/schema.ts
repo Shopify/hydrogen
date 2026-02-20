@@ -20,6 +20,6 @@ async function handler(_: SchemaArgs) {
 
   fs.writeFileSync(
     path.join(COOKBOOK_PATH, 'recipe.schema.json'),
-    JSON.stringify(jsonSchema, null, 2),
+    JSON.stringify(jsonSchema, null, 2) + '\n',
   );
 }

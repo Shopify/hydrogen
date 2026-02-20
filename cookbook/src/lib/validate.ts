@@ -296,8 +296,9 @@ export function validateIngredientFiles(
       const entry = fsIngredientEntries[i];
       if (!entry.isFile()) continue;
 
+      const entryParentPath = entry.parentPath ?? entry.path;
       const relativePath = path
-        .join(entry.path, entry.name)
+        .join(entryParentPath, entry.name)
         .replace(ingredientsDir + path.sep, '')
         .replace(/\\/g, '/');
 

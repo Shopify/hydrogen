@@ -1,9 +1,11 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
     "gid": {
       "type": "string",
       "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
       "description": "The unique identifier of the recipe"
     },
     "title": {
@@ -19,23 +21,16 @@
       "description": "The description of the recipe"
     },
     "notes": {
+      "description": "The notes of the recipe",
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "The notes of the recipe"
+      }
     },
     "requirements": {
       "anyOf": [
         {
-          "anyOf": [
-            {
-              "not": {}
-            },
-            {
-              "type": "string"
-            }
-          ]
+          "type": "string"
         },
         {
           "type": "null"
@@ -53,11 +48,15 @@
             "description": "The path of the ingredient"
           },
           "description": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "The description of the ingredient"
+            "description": "The description of the ingredient",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -91,20 +90,25 @@
             "description": "The name of the step"
           },
           "description": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "The description of the step"
+            "description": "The description of the step",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "notes": {
+            "description": "The notes of the step",
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "description": "The notes of the step"
+            }
           },
           "ingredients": {
+            "description": "The ingredients of the step",
             "type": "array",
             "items": {
               "type": "object",
@@ -114,18 +118,18 @@
                   "description": "The path of the ingredient"
                 },
                 "renamedFrom": {
-                  "type": "string",
-                  "description": "The file that was renamed from"
+                  "description": "The file that was renamed from",
+                  "type": "string"
                 }
               },
               "required": [
                 "path"
               ],
               "additionalProperties": false
-            },
-            "description": "The ingredients of the step"
+            }
           },
           "diffs": {
+            "description": "The diffs of the step",
             "type": "array",
             "items": {
               "type": "object",
@@ -144,8 +148,7 @@
                 "patchFile"
               ],
               "additionalProperties": false
-            },
-            "description": "The diffs of the step"
+            }
           }
         },
         "required": [
@@ -158,23 +161,16 @@
       "description": "The steps of the recipe"
     },
     "deletedFiles": {
+      "description": "The deleted files of the recipe",
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "The deleted files of the recipe"
+      }
     },
     "nextSteps": {
       "anyOf": [
         {
-          "anyOf": [
-            {
-              "not": {}
-            },
-            {
-              "type": "string"
-            }
-          ]
+          "type": "string"
         },
         {
           "type": "null"
@@ -187,17 +183,23 @@
       "description": "The commit hash the recipe is based on"
     },
     "llms": {
+      "default": {
+        "userQueries": [],
+        "troubleshooting": []
+      },
       "type": "object",
       "properties": {
         "userQueries": {
+          "default": [],
+          "description": "The user queries of the recipe",
           "type": "array",
           "items": {
             "type": "string"
-          },
-          "description": "The user queries of the recipe",
-          "default": []
+          }
         },
         "troubleshooting": {
+          "default": [],
+          "description": "The troubleshooting of the recipe",
           "type": "array",
           "items": {
             "type": "object",
@@ -216,13 +218,14 @@
               "solution"
             ],
             "additionalProperties": false
-          },
-          "description": "The troubleshooting of the recipe",
-          "default": []
+          }
         }
       },
-      "additionalProperties": false,
-      "default": {}
+      "required": [
+        "userQueries",
+        "troubleshooting"
+      ],
+      "additionalProperties": false
     }
   },
   "required": [
@@ -232,8 +235,8 @@
     "description",
     "ingredients",
     "steps",
-    "commit"
+    "commit",
+    "llms"
   ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "additionalProperties": false
 }

@@ -89,7 +89,9 @@ async function handler(args: UpdateArgs) {
 
   execSync(`git checkout -b ${applyBranch}`);
   execSync(`git add .`, {cwd: REPO_ROOT});
-  execSync(`git commit -m "Update ${recipeName}"`, {cwd: REPO_ROOT});
+  execSync(`git commit --no-verify -m "Update ${recipeName}"`, {
+    cwd: REPO_ROOT,
+  });
 
   // merge the reference branch into the apply branch
   let mergeOk = false;
@@ -119,7 +121,7 @@ async function handler(args: UpdateArgs) {
 
     execSync(`git add .`, {cwd: REPO_ROOT});
     execSync(
-      `git commit --allow-empty -m "Merge ${applyBranch} into ${parsedReferenceBranch.branch}"`,
+      `git commit --no-verify --allow-empty -m "Merge ${applyBranch} into ${parsedReferenceBranch.branch}"`,
       {
         cwd: REPO_ROOT,
       },
@@ -168,7 +170,9 @@ async function handler(args: UpdateArgs) {
 
     // commit the changes
     execSync(`git add .`, {cwd: REPO_ROOT});
-    execSync(`git commit -m "Update ${recipeName}"`, {cwd: REPO_ROOT});
+    execSync(`git commit --no-verify -m "Update ${recipeName}"`, {
+      cwd: REPO_ROOT,
+    });
 
     // checkout the main branch
     execSync(`git checkout ${parsedReferenceBranch.branch}`);

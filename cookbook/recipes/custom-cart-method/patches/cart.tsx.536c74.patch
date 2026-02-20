@@ -1,4 +1,4 @@
-index f82d683f..f08a6777 100644
+index bb143b40..9fc582d9 100644
 --- a/templates/skeleton/app/routes/cart.tsx
 +++ b/templates/skeleton/app/routes/cart.tsx
 @@ -6,6 +6,10 @@ import {

@@ -26,7 +26,7 @@ Key features:
 
 Update the README file with custom cart method documentation and an implementation guide.
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/templates/skeleton/README.md)
 
 <details>
 
@@ -134,12 +134,12 @@ index c584e537..d4009139 100644
 
 Add variant selector functionality to cart line items for changing product options.
 
-#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/components/CartLineItem.tsx)
+#### File: [app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/templates/skeleton/app/components/CartLineItem.tsx)
 
 <details>
 
 ~~~diff
-index 80e34be2..2f37ea80 100644
+index 63a0ecd9..e7f101e2 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
 @@ -1,6 +1,15 @@
@@ -148,7 +148,7 @@ index 80e34be2..2f37ea80 100644
 +  CartLineUpdateInput,
 +  SelectedOption,
 +} from '@shopify/hydrogen/storefront-api-types';
- import type {CartLayout} from '~/components/CartMain';
+ import type {CartLayout, LineItemChildrenMap} from '~/components/CartMain';
 -import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
 +import {
 +  CartForm,
@@ -160,23 +160,60 @@ index 80e34be2..2f37ea80 100644
  import {useVariantUrl} from '~/lib/variants';
  import {Link} from 'react-router';
  import {ProductPrice} from './ProductPrice';
-@@ -54,13 +63,8 @@ export function CartLineItem({
-         </Link>
-         <ProductPrice price={line?.cost?.totalAmount} />
-         <ul>
--          {selectedOptions.map((option) => (
--            <li key={option.name}>
--              <small>
--                {option.name}: {option.value}
--              </small>
--            </li>
--          ))}
+@@ -48,32 +57,26 @@ export function CartLineItem({
+           />
+         )}
+ 
+-        <div>
+-          <Link
+-            prefetch="intent"
+-            to={lineItemUrl}
+-            onClick={() => {
+-              if (layout === 'aside') {
+-                close();
+-              }
+-            }}
+-          >
+-            <p>
+-              <strong>{product.title}</strong>
+-            </p>
+-          </Link>
+-          <ProductPrice price={line?.cost?.totalAmount} />
+-          <ul>
+-            {selectedOptions.map((option) => (
+-              <li key={option.name}>
+-                <small>
+-                  {option.name}: {option.value}
+-                </small>
+-              </li>
+-            ))}
+-          </ul>
+-          <CartLineQuantity line={line} />
+-        </div>
++      <div>
++        <Link
++          prefetch="intent"
++          to={lineItemUrl}
++          onClick={() => {
++            if (layout === 'aside') {
++              close();
++            }
++          }}
++        >
++          <p>
++            <strong>{product.title}</strong>
++          </p>
++        </Link>
++        <ProductPrice price={line?.cost?.totalAmount} />
++        <ul>
 +          {/* @description Add inline product option editing in cart */}
 +          <CartLineUpdateByOptionsForm line={line} />
-         </ul>
-         <CartLineQuantity line={line} />
++        </ul>
++        <CartLineQuantity line={line} />
        </div>
-@@ -166,3 +170,87 @@ function CartLineUpdateButton({
+ 
+       {lineItemChildren ? (
+@@ -195,3 +198,87 @@ function CartLineUpdateButton({
  function getUpdateKey(lineIds: string[]) {
    return [CartForm.ACTIONS.LinesUpdate, ...lineIds].join('-');
  }
@@ -272,7 +309,7 @@ index 80e34be2..2f37ea80 100644
 
 Extend HydrogenCart context with updateLineByOptions method for variant switching.
 
-#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/lib/context.ts)
+#### File: [app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/templates/skeleton/app/lib/context.ts)
 
 <details>
 
@@ -366,12 +403,12 @@ index 692d5ae1..c2dc8b33 100644
 
 Add product options to cart fragments and create PRODUCT_VARIANT_QUERY for fetching variants.
 
-#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/lib/fragments.ts)
+#### File: [app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/templates/skeleton/app/lib/fragments.ts)
 
 <details>
 
 ~~~diff
-index cf35c25e..cf79917e 100644
+index f6b6b2a3..f17ca267 100644
 --- a/templates/skeleton/app/lib/fragments.ts
 +++ b/templates/skeleton/app/lib/fragments.ts
 @@ -47,6 +47,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
@@ -386,7 +423,7 @@ index cf35c25e..cf79917e 100644
          }
          selectedOptions {
            name
-@@ -97,6 +102,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
+@@ -102,6 +107,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
            title
            id
            vendor
@@ -398,7 +435,7 @@ index cf35c25e..cf79917e 100644
          }
          selectedOptions {
            name
-@@ -232,3 +242,23 @@ export const FOOTER_QUERY = `#graphql
+@@ -240,3 +250,23 @@ export const FOOTER_QUERY = `#graphql
    }
    ${MENU_FRAGMENT}
  ` as const;
@@ -430,10 +467,10 @@ index cf35c25e..cf79917e 100644
 
 Implement the CustomUpdateLineByOptions action handler for processing variant changes in cart.
 
-#### File: [app/routes/cart.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/routes/cart.tsx)
+#### File: [app/routes/cart.tsx](https://github.com/Shopify/hydrogen/blob/b3b560bf02bf00032ffc4bc055b0c1c57b0f0a5c/templates/skeleton/app/routes/cart.tsx)
 
 ~~~diff
-index f82d683f..f08a6777 100644
+index bb143b40..9fc582d9 100644
 --- a/templates/skeleton/app/routes/cart.tsx
 +++ b/templates/skeleton/app/routes/cart.tsx
 @@ -6,6 +6,10 @@ import {

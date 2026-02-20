@@ -1,7 +1,7 @@
-index 62df7710..44994a7c 100644
+index b1b5e85a..9fefa34a 100644
 --- a/templates/skeleton/.graphqlrc.ts
 +++ b/templates/skeleton/.graphqlrc.ts
-@@ -17,10 +17,11 @@ export default {
+@@ -17,10 +17,11 @@ const graphqlConfig: IGraphQLConfig = {
        ],
      },
  

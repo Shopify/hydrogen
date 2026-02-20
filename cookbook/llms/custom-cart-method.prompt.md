@@ -168,50 +168,77 @@ Add variant selector functionality to cart line items for changing product optio
 #### File: /app/components/CartLineItem.tsx
 
 ~~~diff
-@@ -1,6 +1,15 @@
+@@ -1,6 +1,13 @@
 -import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 +import type {
 +  CartLineUpdateInput,
 +  SelectedOption,
 +} from '@shopify/hydrogen/storefront-api-types';
- import type {CartLayout} from '~/components/CartMain';
+ import type {CartLayout, LineItemChildrenMap} from '~/components/CartMain';
 -import {CartForm, Image, type OptimisticCartLine} from '@shopify/hydrogen';
 +import {
 +  CartForm,
 +  Image,
 +  type OptimisticCartLine,
-+  VariantSelector,
-+  type VariantOption,
 +} from '@shopify/hydrogen';
  import {useVariantUrl} from '~/lib/variants';
  import {Link} from 'react-router';
  import {ProductPrice} from './ProductPrice';
-@@ -54,13 +63,8 @@ export function CartLineItem({
-         </Link>
-         <ProductPrice price={line?.cost?.totalAmount} />
-         <ul>
--          {selectedOptions.map((option) => (
--            <li key={option.name}>
--              <small>
--                {option.name}: {option.value}
--              </small>
--            </li>
--          ))}
-+          {/* @description Add inline product option editing in cart */}
-+          <CartLineUpdateByOptionsForm line={line} />
-         </ul>
-         <CartLineQuantity line={line} />
-       </div>
-@@ -166,3 +170,87 @@ function CartLineUpdateButton({
- function getUpdateKey(lineIds: string[]) {
-   return [CartForm.ACTIONS.LinesUpdate, ...lineIds].join('-');
+@@ -64,13 +71,8 @@ export function CartLineItem({
+           </Link>
+           <ProductPrice price={line?.cost?.totalAmount} />
+           <ul>
+-            {selectedOptions.map((option) => (
+-              <li key={option.name}>
+-                <small>
+-                  {option.name}: {option.value}
+-                </small>
+-              </li>
+-            ))}
++            {/* @description Add inline product option editing in cart */}
++            <CartLineUpdateByOptionsForm line={line} />
+           </ul>
+           <CartLineQuantity line={line} />
+         </div>
+@@ -185,6 +187,115 @@ function CartLineUpdateButton({
+   );
  }
+ 
++/** Option shape for cart line option selects */
++type CartLineOption = {
++  name: string;
++  values: Array<{value: string; isAvailable: boolean}>;
++};
++
++function getCartLineProductOptions(
++  product: CartLine['merchandise']['product'] & {
++    options?: Array<{
++      name: string;
++      optionValues?: Array<{name: string}>;
++      values?: Array<{name: string}>;
++    }>;
++  },
++): CartLineOption[] {
++  const options = product?.options ?? [];
++  return options.map((option) => {
++    const optionValues =
++      option.optionValues ?? (option as {values?: Array<{name: string}>}).values ?? [];
++    return {
++      name: option.name,
++      values: optionValues.map((v) => ({
++        value: v.name,
++        isAvailable: true,
++      })),
++    };
++  });
++}
 +
 +// @description Component for updating cart line item options
 +function CartLineUpdateByOptionsForm({line}: {line: CartLine}) {
 +  const {
 +    merchandise: {product, selectedOptions},
 +  } = line;
++  const productOptions = getCartLineProductOptions(product);
 +
 +  return (
 +    <CartForm
@@ -228,23 +255,18 @@ Add variant selector functionality to cart line items for changing product optio
 +    >
 +      {(fetcher) => (
 +        <>
-+          <VariantSelector
-+            handle={product.handle}
-+            options={product.options}
-+            variants={[]}
-+          >
-+            {({option}) => (
-+              <LineItemOptions
-+                option={option}
-+                selectedOptions={selectedOptions}
-+                onChange={(event) => {
-+                  void fetcher.submit(event.currentTarget.form, {
-+                    method: 'POST',
-+                  });
-+                }}
-+              />
-+            )}
-+          </VariantSelector>
++          {productOptions.map((option) => (
++            <LineItemOptions
++              key={option.name}
++              option={option}
++              selectedOptions={selectedOptions}
++              onChange={(event) => {
++                void fetcher.submit(event.currentTarget.form, {
++                  method: 'POST',
++                });
++              }}
++            />
++          ))}
 +          <noscript>
 +            <button type="submit">Update</button>
 +          </noscript>
@@ -259,7 +281,7 @@ Add variant selector functionality to cart line items for changing product optio
 +  selectedOptions,
 +  onChange,
 +}: {
-+  option: VariantOption;
++  option: CartLineOption;
 +  selectedOptions: SelectedOption[];
 +  onChange: React.ChangeEventHandler<HTMLSelectElement>;
 +}) {
@@ -290,6 +312,10 @@ Add variant selector functionality to cart line items for changing product optio
 +    </li>
 +  );
 +}
++
+ /**
+  * Returns a unique key for the update action. This is used to make sure actions modifying the same line
+  * items are not run concurrently, but cancel each other. For example, if the user clicks "Increase quantity"
 ~~~
 
 ### Step 3: Add updateLineByOptions method to cart context
@@ -386,31 +412,42 @@ Add product options to cart fragments and create PRODUCT_VARIANT_QUERY for fetch
 #### File: /app/lib/fragments.ts
 
 ~~~diff
-@@ -47,6 +47,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
+@@ -40,13 +40,19 @@ export const CART_QUERY_FRAGMENT = `#graphql
+           altText
+           width
+           height
+-
+         }
+         product {
+           handle
            title
            id
            vendor
 +          # @description Add product options for variant selection
 +          options {
 +            name
-+            values
++            optionValues {
++              name
++            }
 +          }
          }
          selectedOptions {
            name
-@@ -97,6 +102,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
+@@ -102,6 +108,13 @@ export const CART_QUERY_FRAGMENT = `#graphql
            title
            id
            vendor
 +          # @description Add product options for variant selection
 +          options {
 +            name
-+            values
++            optionValues {
++              name
++            }
 +          }
          }
          selectedOptions {
            name
-@@ -232,3 +242,23 @@ export const FOOTER_QUERY = `#graphql
+@@ -240,3 +253,23 @@ export const FOOTER_QUERY = `#graphql
    }
    ${MENU_FRAGMENT}
  ` as const;

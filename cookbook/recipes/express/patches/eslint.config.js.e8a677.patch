@@ -1,4 +1,4 @@
-index 6c972c78..fa805477 100644
+index 8bfe5484..fa805477 100644
 --- a/templates/skeleton/eslint.config.js
 +++ b/templates/skeleton/eslint.config.js
 @@ -1,247 +1,2 @@

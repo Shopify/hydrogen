@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import {createRequestHandler} from '@react-router/express';
 import {createCookieSessionStorage} from 'react-router';
 import compression from 'compression';
@@ -5,7 +6,6 @@ import express from 'express';
 import morgan from 'morgan';
 import {createHydrogenContext, InMemoryCache} from '@shopify/hydrogen';
 
-// Don't capture process.env too early - it needs to be accessed after dotenv loads
 const getEnv = () => process.env;
 
 let vite;
@@ -39,6 +39,13 @@ if (vite) {
   );
 }
 app.use(express.static('build/client', {maxAge: '1h'}));
+
+// Serve public folder (favicon, etc.) so requests don't hit the React Router catch-all
+app.use(express.static('public', {maxAge: '1d'}));
+// Browsers often request /favicon.ico by default; serve our SVG favicon for that request
+app.get('/favicon.ico', (_req, res) => {
+  res.redirect(302, '/favicon.svg');
+});
 
 // Create the request handler
 app.all('*', async (req, res, next) => {
