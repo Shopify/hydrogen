@@ -1,7 +1,7 @@
-index cbe697e4..7bcc3c94 100644
+index 499d1301..8a30c5ba 100644
 --- a/templates/skeleton/app/styles/app.css
 +++ b/templates/skeleton/app/styles/app.css
-@@ -418,6 +418,11 @@ button.reset:hover:not(:has(> *)) {
+@@ -438,6 +438,11 @@ button.reset:hover:not(:has(> *)) {
    width: 100%;
  }
  

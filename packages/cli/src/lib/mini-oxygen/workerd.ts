@@ -47,8 +47,9 @@ export async function startWorkerdServer({
   async function handleCustomerAccountSchema() {
     // Request coming from /graphiql
     const require = createRequire(import.meta.url);
-    const filePath =
-      require.resolve('@shopify/hydrogen/customer-account.schema.json');
+    const filePath = require.resolve(
+      '@shopify/hydrogen/customer-account.schema.json',
+    );
 
     return new Response(createFileReadStream(filePath), {
       headers: {'Content-Type': 'application/json'},

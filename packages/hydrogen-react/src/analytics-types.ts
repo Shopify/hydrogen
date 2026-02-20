@@ -139,7 +139,8 @@ export type ShopifySalesChannels = keyof typeof ShopifySalesChannel;
 export type AnalyticsEventNames = keyof typeof AnalyticsEventName;
 
 export interface ShopifyPageViewPayload
-  extends ShopifyAnalyticsBase, ClientBrowserParameters {
+  extends ShopifyAnalyticsBase,
+    ClientBrowserParameters {
   /** Canonical url. */
   canonicalUrl?: string;
   /** Shopify page type. */
@@ -172,7 +173,8 @@ export type ShopifyPageView = {
 };
 
 export interface ShopifyAddToCartPayload
-  extends ShopifyAnalyticsBase, ClientBrowserParameters {
+  extends ShopifyAnalyticsBase,
+    ClientBrowserParameters {
   /** Shopify cart id in the form of `gid://shopify/Cart/<id>`. */
   cartId: string;
 }

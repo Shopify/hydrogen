@@ -1,31 +1,42 @@
-index cf35c25e..cf79917e 100644
+index f6b6b2a3..a289365b 100644
 --- a/templates/skeleton/app/lib/fragments.ts
 +++ b/templates/skeleton/app/lib/fragments.ts
-@@ -47,6 +47,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
+@@ -40,13 +40,19 @@ export const CART_QUERY_FRAGMENT = `#graphql
+           altText
+           width
+           height
+-
+         }
+         product {
+           handle
            title
            id
            vendor
 +          # @description Add product options for variant selection
 +          options {
 +            name
-+            values
++            optionValues {
++              name
++            }
 +          }
          }
          selectedOptions {
            name
-@@ -97,6 +102,11 @@ export const CART_QUERY_FRAGMENT = `#graphql
+@@ -102,6 +108,13 @@ export const CART_QUERY_FRAGMENT = `#graphql
            title
            id
            vendor
 +          # @description Add product options for variant selection
 +          options {
 +            name
-+            values
++            optionValues {
++              name
++            }
 +          }
          }
          selectedOptions {
            name
-@@ -232,3 +242,23 @@ export const FOOTER_QUERY = `#graphql
+@@ -240,3 +253,23 @@ export const FOOTER_QUERY = `#graphql
    }
    ${MENU_FRAGMENT}
  ` as const;

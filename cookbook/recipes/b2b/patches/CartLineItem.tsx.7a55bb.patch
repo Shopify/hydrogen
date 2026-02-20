@@ -1,7 +1,7 @@
-index 80e34be2..1d09318c 100644
+index 63a0ecd9..ad9c4313 100644
 --- a/templates/skeleton/app/components/CartLineItem.tsx
 +++ b/templates/skeleton/app/components/CartLineItem.tsx
-@@ -76,8 +76,13 @@ export function CartLineItem({
+@@ -105,8 +105,13 @@ export function CartLineItem({
  function CartLineQuantity({line}: {line: CartLine}) {
    if (!line || typeof line?.quantity === 'undefined') return null;
    const {id: lineId, quantity, isOptimistic} = line;
@@ -17,7 +17,7 @@ index 80e34be2..1d09318c 100644
  
    return (
      <div className="cart-line-quantity">
-@@ -85,7 +90,7 @@ function CartLineQuantity({line}: {line: CartLine}) {
+@@ -114,7 +119,7 @@ function CartLineQuantity({line}: {line: CartLine}) {
        <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
          <button
            aria-label="Decrease quantity"
@@ -26,7 +26,7 @@ index 80e34be2..1d09318c 100644
            name="decrease-quantity"
            value={prevQuantity}
          >
-@@ -98,7 +103,9 @@ function CartLineQuantity({line}: {line: CartLine}) {
+@@ -127,7 +132,9 @@ function CartLineQuantity({line}: {line: CartLine}) {
            aria-label="Increase quantity"
            name="increase-quantity"
            value={nextQuantity}

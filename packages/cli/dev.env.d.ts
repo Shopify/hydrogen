@@ -12,11 +12,8 @@ declare module 'react-router' {
   /**
    * Declare local additions to the Remix loader context.
    */
-  export interface AppLoadContext extends HydrogenContext<
-    HydrogenSession,
-    undefined,
-    I18nLocale
-  > {}
+  export interface AppLoadContext
+    extends HydrogenContext<HydrogenSession, undefined, I18nLocale> {}
 
   // TODO: remove this once we've migrated to `Route.LoaderArgs` instead for our loaders
   interface LoaderFunctionArgs {

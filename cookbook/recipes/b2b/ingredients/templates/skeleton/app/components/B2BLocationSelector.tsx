@@ -1,3 +1,4 @@
+import React from 'react';
 import {CartForm} from '@shopify/hydrogen';
 import type {
   CustomerCompanyLocation,
@@ -43,7 +44,7 @@ export function B2BLocationSelector() {
                       aria-label={`Select B2B location: ${location.name}`}
                       onClick={(event) => {
                         setModalOpen(false);
-                        fetcher.submit(event.currentTarget.form, {
+                        void fetcher.submit(event.currentTarget.form, {
                           method: 'POST',
                         });
                       }}
