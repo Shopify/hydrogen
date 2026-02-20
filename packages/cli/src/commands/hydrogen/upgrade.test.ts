@@ -494,77 +494,128 @@ describe('upgrade', async () => {
       );
     });
 
-    it('it finds outdated dependencies', async () => {
+    it('reports no upgrade when current dependencies match latest', async () => {
       const {releases} = await getChangelog();
       const latestRelease = releases[0]!;
+      const releasesFromLatest = releases;
 
       expect(
         getAvailableUpgrades({
           currentVersion: latestRelease.version,
           currentDependencies: {},
-          releases,
+          releases: releasesFromLatest,
         }).availableUpgrades,
       ).toHaveLength(0);
+    });
 
-      const depName = Object.keys(latestRelease.dependencies)[0]!;
-      const devDepName = Object.keys(latestRelease.devDependencies)[0]!;
+    it('finds upgrade when a dependency has a higher patch version', async () => {
+      const {releases} = await getChangelog();
+      const releaseWithDeps = releases.find(
+        (r) => r.dependencies && Object.keys(r.dependencies).length > 0,
+      );
+      if (!releaseWithDeps?.dependencies) {
+        throw new Error(
+          'Changelog has no release with dependencies for this test',
+        );
+      }
 
-      // Copy of latest release, no changes
-      expect(
-        getAvailableUpgrades({
-          currentVersion: latestRelease.version,
-          currentDependencies: {
-            [depName]: latestRelease.dependencies[depName]!,
-            [devDepName]: latestRelease.devDependencies[devDepName]!,
-          },
-          releases: [{...latestRelease}, ...releases],
-        }).availableUpgrades,
-      ).toHaveLength(0);
+      const latestIndex = releases.indexOf(releaseWithDeps);
+      const releasesFromLatest =
+        latestIndex >= 0 ? releases.slice(latestIndex) : releases;
+      const depName = Object.keys(releaseWithDeps.dependencies)[0]!;
 
-      // Test with a unique version number to ensure the upgrade is detected
-      // This ensures the test works regardless of whether the changelog has duplicates
-
-      // Copy of latest release but with increased patch version of a dependency
-      // and a unique version number to avoid duplicate filtering
       const upgradedRelease = {
-        ...latestRelease,
+        ...releaseWithDeps,
         version: TEST_VERSION_DEPENDENCY_UPGRADE,
         dependencies: {
-          ...latestRelease.dependencies,
-          ...increasePatchVersion(depName, latestRelease.dependencies),
+          ...releaseWithDeps.dependencies,
+          ...increasePatchVersion(depName, releaseWithDeps.dependencies),
         },
       };
 
       expect(
         getAvailableUpgrades({
-          currentVersion: latestRelease.version,
+          currentVersion: releaseWithDeps.version,
           currentDependencies: {
-            [depName]: latestRelease.dependencies[depName]!,
+            [depName]: releaseWithDeps.dependencies[depName]!,
           },
-          releases: [upgradedRelease, ...releases],
+          releases: [upgradedRelease, ...releasesFromLatest],
         }).availableUpgrades,
       ).toHaveLength(1);
+    });
 
-      // Copy of latest release but with increased patch version of a dev-dependency
-      // Also use a unique version to avoid duplicate filtering
+    it('finds upgrade when a devDependency has a higher patch version', async () => {
+      const {releases} = await getChangelog();
+      const releaseWithDevDeps = releases.find(
+        (r) =>
+          r.devDependencies &&
+          Object.keys(r.devDependencies).length > 0,
+      );
+      if (!releaseWithDevDeps?.devDependencies) {
+        throw new Error(
+          'Changelog has no release with devDependencies for this test',
+        );
+      }
+
+      const latestIndex = releases.indexOf(releaseWithDevDeps);
+      const releasesFromLatest =
+        latestIndex >= 0 ? releases.slice(latestIndex) : releases;
+      const devDepName = Object.keys(releaseWithDevDeps.devDependencies)[0]!;
+
       const upgradedDevRelease = {
-        ...latestRelease,
-        version: '9999.99.98', // Different unique version
+        ...releaseWithDevDeps,
+        version: TEST_VERSION_DEV_DEPENDENCY_UPGRADE,
         devDependencies: {
-          ...latestRelease.devDependencies,
-          ...increasePatchVersion(devDepName, latestRelease.devDependencies),
+          ...releaseWithDevDeps.devDependencies,
+          ...increasePatchVersion(
+            devDepName,
+            releaseWithDevDeps.devDependencies,
+          ),
         },
       };
 
       expect(
         getAvailableUpgrades({
-          currentVersion: latestRelease.version,
+          currentVersion: releaseWithDevDeps.version,
           currentDependencies: {
-            [devDepName]: latestRelease.devDependencies[devDepName]!,
+            [devDepName]: releaseWithDevDeps.devDependencies[devDepName]!,
           },
-          releases: [upgradedDevRelease, ...releases],
+          releases: [upgradedDevRelease, ...releasesFromLatest],
         }).availableUpgrades,
       ).toHaveLength(1);
+    });
+
+    it('reports no upgrade when both dependency and devDependency match latest', async () => {
+      const {releases} = await getChangelog();
+      const releaseWithBoth = releases.find(
+        (r) =>
+          r.dependencies &&
+          Object.keys(r.dependencies).length > 0 &&
+          r.devDependencies &&
+          Object.keys(r.devDependencies).length > 0,
+      );
+      if (!releaseWithBoth?.dependencies || !releaseWithBoth?.devDependencies) {
+        throw new Error(
+          'Changelog has no release with both dependencies and devDependencies for this test',
+        );
+      }
+
+      const latestIndex = releases.indexOf(releaseWithBoth);
+      const releasesFromLatest =
+        latestIndex >= 0 ? releases.slice(latestIndex) : releases;
+      const depName = Object.keys(releaseWithBoth.dependencies)[0]!;
+      const devDepName = Object.keys(releaseWithBoth.devDependencies)[0]!;
+
+      expect(
+        getAvailableUpgrades({
+          currentVersion: releaseWithBoth.version,
+          currentDependencies: {
+            [depName]: releaseWithBoth.dependencies[depName]!,
+            [devDepName]: releaseWithBoth.devDependencies[devDepName]!,
+          },
+          releases: [{...releaseWithBoth}, ...releasesFromLatest],
+        }).availableUpgrades,
+      ).toHaveLength(0);
     });
   });
 
