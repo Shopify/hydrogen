@@ -1,5 +1,16 @@
 # @shopify/cli-hydrogen
 
+## 11.1.10
+
+### Patch Changes
+
+- Updated `prettier` from v2 to v3. ([#3461](https://github.com/Shopify/hydrogen/pull/3461)) by [@fredericoo](https://github.com/fredericoo)
+
+- Fixed an issue where users without addresses could not add the first one ([#3456](https://github.com/Shopify/hydrogen/pull/3456)) by [@fredericoo](https://github.com/fredericoo)
+
+- Updated dependencies [[`ff93a1daf2207e52e1f8331f9ff2ccd1f9b7fed6`](https://github.com/Shopify/hydrogen/commit/ff93a1daf2207e52e1f8331f9ff2ccd1f9b7fed6)]:
+  - @shopify/mini-oxygen@4.0.1
+
 ## 11.1.9
 
 ### Patch Changes
