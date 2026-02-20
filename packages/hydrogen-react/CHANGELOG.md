@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2026.1.1
+
+### Patch Changes
+
+- Updated transitive dependencies (`form-data`, `vite`) to resolve known vulnerabilities. ([#3461](https://github.com/Shopify/hydrogen/pull/3461)) by [@fredericoo](https://github.com/fredericoo)
+
 ## 2026.1.0
 
 ### Major Changes
