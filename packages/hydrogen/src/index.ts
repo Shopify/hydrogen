@@ -127,6 +127,7 @@ export type {
   HydrogenSession,
   HydrogenSessionData,
 } from './types';
+export {normalizeUrl} from './vite/virtual-routes/lib/normalize-url';
 export type {
   ClientBrowserParameters,
   MappedProductOptions,
