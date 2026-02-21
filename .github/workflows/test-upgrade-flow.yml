@@ -3,28 +3,23 @@
 # Purpose:
 # This workflow validates that the Hydrogen CLI upgrade command works correctly when
 # changelog.json is modified. It ensures that users can successfully upgrade their
-# Hydrogen projects to new versions without encountering dependency conflicts or
-# runtime errors.
+# Hydrogen projects to new versions without encountering dependency conflicts.
 #
 # What it tests:
-# 1. Dynamic version detection from local changelog.json
-# 2. Scaffolds a historical Hydrogen project from git history
-# 3. Runs the actual `hydrogen upgrade` command with the latest version
-# 4. Validates that npm install succeeds without dependency conflicts
-# 5. Verifies the dev server starts without import/module errors
-# 6. Makes HTTP requests to ensure the app serves HTML without errors
+# 1. Validates changelog.json schema and structure
+# 2. Scaffolds a project simulating the previous release version
+# 3. Runs the actual `hydrogen upgrade` command to the latest version
+# 4. Validates all dependencies and devDependencies are upgraded correctly
+# 5. Validates dependencies are removed when specified (e.g., removeDependencies)
+# 6. Verifies upgrade guide markdown is generated when release has manual steps
+# 7. Validates npm install succeeds without dependency conflicts
+# 8. Validates the project builds successfully (skipped when manual steps are required)
 #
 # When it runs:
 # - On push/PR when docs/changelog.json is modified
 # - Manual trigger via workflow_dispatch
 #
-# Key validations:
-# - No npm dependency resolution errors (ERESOLVE, peer deps, etc.)
-# - No missing module or import errors during runtime
-# - Dev server successfully serves pages
-# - Build and typecheck commands succeed
-#
-# This is critical for ensuring new releases don't break the upgrade path for users.
+# This is critical for ensuring new changelog entries work correctly before release.
 
 name: Test Upgrade Flow
 
@@ -40,6 +35,7 @@ on:
 jobs:
   test-upgrade-flow:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -63,9 +59,3 @@ jobs:
         env:
           FORCE_CHANGELOG_SOURCE: local
           SHOPIFY_HYDROGEN_FLAG_FORCE: 1
-
-      - name: Report test results
-        if: always()
-        run: |
-          echo "✅ Upgrade flow tests completed"
-          echo "These tests verify dynamic version detection from changelog.json"
