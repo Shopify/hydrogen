@@ -5,6 +5,7 @@ import yargs from 'yargs/yargs';
 import * as commands from './commands';
 
 const cli = yargs(process.argv.slice(2))
+  .command(commands.affectedRecipes)
   .command(commands.generate)
   .command(commands.render)
   .command(commands.apply)
