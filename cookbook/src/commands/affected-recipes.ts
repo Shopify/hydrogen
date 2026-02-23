@@ -1,5 +1,5 @@
-import {CommandModule} from 'yargs';
-import {getAffectedRecipes} from '../lib/dependency-graph';
+import { CommandModule } from 'yargs';
+import { getAffectedRecipes } from '../lib/dependency-graph';
 
 type AffectedRecipesArgs = {
   files: string[];
@@ -21,7 +21,7 @@ export const affectedRecipes: CommandModule<{}, AffectedRecipesArgs> = {
       default: false,
     },
   },
-  handler({files, json}) {
+  handler({ files, json }) {
     const affected = getAffectedRecipes(files as string[]);
 
     if (json) {

@@ -3,6 +3,7 @@ export {apply} from './apply';
 export {generate} from './generate';
 export {regenerate} from './regenerate';
 export {render} from './render';
+export {skeletonFiles} from './skeleton-files';
 export {update} from './update';
 export {validate} from './validate';
 export {schema} from './schema';

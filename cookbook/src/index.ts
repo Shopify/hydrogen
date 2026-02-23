@@ -11,6 +11,7 @@ const cli = yargs(process.argv.slice(2))
   .command(commands.apply)
   .command(commands.validate)
   .command(commands.regenerate)
+  .command(commands.skeletonFiles)
   .command(commands.update)
   .command(commands.schema);
 
