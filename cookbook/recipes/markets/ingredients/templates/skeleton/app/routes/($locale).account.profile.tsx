@@ -52,7 +52,7 @@ export async function action({request, context}: Route.ActionArgs) {
       {
         variables: {
           customer,
-          language: context.customerAccount.i18n.language,
+          language: customerAccount.i18n.language,
         },
       },
     );

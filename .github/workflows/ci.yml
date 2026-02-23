@@ -262,9 +262,6 @@ jobs:
 
   validate_recipes:
     name: ⬣ Validate Recipes
-    # TEMPORARILY DISABLED: Recipe system is being re-evaluated.
-    # Remove this line to re-enable.
-    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
@@ -292,11 +289,6 @@ jobs:
 
       - name: 📦 Build packages
         run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run build:pkg
-
-      - name: 📥 Install dependencies (cookbook)
-        working-directory: cookbook
-        run: |
-          pnpm install --frozen-lockfile
 
       - name: 📝 Validate schema
         working-directory: cookbook

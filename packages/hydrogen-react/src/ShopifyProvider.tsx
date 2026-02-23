@@ -160,7 +160,8 @@ export interface ShopifyProviderProps extends ShopifyProviderBase {
 }
 
 export interface ShopifyContextValue
-  extends ShopifyProviderBase, ShopifyContextReturn {}
+  extends ShopifyProviderBase,
+    ShopifyContextReturn {}
 
 type ShopifyContextReturn = {
   /**

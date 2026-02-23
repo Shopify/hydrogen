@@ -1,4 +1,4 @@
-index cf35c25e..6866c19a 100644
+index f6b6b2a3..ac961801 100644
 --- a/templates/skeleton/app/lib/fragments.ts
 +++ b/templates/skeleton/app/lib/fragments.ts
 @@ -52,6 +52,21 @@ export const CART_QUERY_FRAGMENT = `#graphql
@@ -22,8 +22,8 @@ index cf35c25e..6866c19a 100644
 +        }
        }
      }
-   }
-@@ -102,6 +117,21 @@ export const CART_QUERY_FRAGMENT = `#graphql
+     parentRelationship {
+@@ -107,6 +122,21 @@ export const CART_QUERY_FRAGMENT = `#graphql
            name
            value
          }
@@ -44,4 +44,4 @@ index cf35c25e..6866c19a 100644
 +        }
        }
      }
-   }
+     lineComponents {
