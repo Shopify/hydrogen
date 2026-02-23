@@ -23,10 +23,15 @@ echo "⚠️  Skeleton changes detected. The following recipes may need updating
 echo ""
 while IFS= read -r recipe; do
   echo "  - $recipe"
-  echo "    cd cookbook && npm run cookbook -- update --recipe $recipe"
   echo ""
 done <<< "$AFFECTED"
-echo "  To skip this warning: git commit --no-verify"
+echo "  After committing your skeleton changes, run the following to update affected recipes:"
+while IFS= read -r recipe; do
+  echo "    cd cookbook && npm run cookbook -- update --recipe $recipe"
+done <<< "$AFFECTED"
+echo ""
+echo "  Note: the update command requires a clean working tree — run it after committing."
+echo "  To skip this skeleton changes warning: git commit --no-verify"
 echo ""
 
 exit 0
