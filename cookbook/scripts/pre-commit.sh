@@ -27,10 +27,10 @@ while IFS= read -r recipe; do
 done <<< "$AFFECTED"
 echo "  After committing your skeleton changes, run the following to update affected recipes:"
 while IFS= read -r recipe; do
-  echo "    cd cookbook && npm run cookbook -- update --recipe $recipe"
+  echo "    cd cookbook && npm run cookbook -- regenerate --recipe $recipe --format github"
 done <<< "$AFFECTED"
 echo ""
-echo "  Note: the update command requires a clean working tree — run it after committing."
+echo "  Note: the regenerate command requires a clean working tree — run it after committing."
 echo "  To skip this skeleton changes warning: git commit --no-verify"
 echo ""
 
