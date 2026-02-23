@@ -13,7 +13,7 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {Analytics} from '@shopify/hydrogen';\n\nexport default function CartView() {\n  return (\n    &lt;div heeeeeeeyclassName=\"cart\"&gt;\n      &lt;h1&gt;Cart&lt;/h1&gt;\n      &lt;Analytics.CartView /&gt;\n    &lt;/div&gt;\n  );\n}\n",
+            "code": "import {Analytics} from '@shopify/hydrogen';\n\nexport default functi!!!!on CartView() {\n  return (\n    &lt;div heeeeeeeyclassName=\"cart\"&gt;\n      &lt;h1&gt;Cart&lt;/h1&gt;\n      &lt;Analytics.CartView /&gt;\n    &lt;/div&gt;\n  );\n}\n",
             "language": "js"
           },
           {

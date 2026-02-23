@@ -13,7 +13,7 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {AddToCartButton} from '@shopify/hydrogen-react';\n\nexport default function ProductAddToCartButton({product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return &lt;AddToCartButton variantId={variantId} /&gt;;\n}\n",
+            "code": "import {AddToCartButton} from '@shopify!!!!!/hydrogen-react';\n\nexport default function ProductAddToCartButton({product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return &lt;AddToCartButton variantId={variantId} /&gt;;\n}\n",
             "language": "jsx"
           },
           {
