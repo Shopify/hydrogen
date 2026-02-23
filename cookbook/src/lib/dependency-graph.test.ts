@@ -1,5 +1,9 @@
 import {describe, expect, it, vi, beforeEach} from 'vitest';
-import {getAffectedRecipes, getSkeletonFiles} from './dependency-graph';
+import {
+  getAffectedRecipes,
+  getSkeletonFileMap,
+  getSkeletonFiles,
+} from './dependency-graph';
 
 vi.mock('./util', () => ({listRecipes: vi.fn()}));
 vi.mock('./recipe', () => ({loadRecipe: vi.fn()}));
@@ -313,5 +317,91 @@ describe('getSkeletonFiles', () => {
       );
 
     expect(getSkeletonFiles()).toEqual(['templates/skeleton/app/root.tsx']);
+  });
+});
+
+describe('getSkeletonFileMap', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns empty map when there are no recipes', () => {
+    mockListRecipes.mockReturnValue([]);
+    expect(getSkeletonFileMap()).toEqual(new Map());
+  });
+
+  it('maps each file to the recipes that reference it', () => {
+    mockListRecipes.mockReturnValue(['recipe-a', 'recipe-b']);
+    mockLoadRecipe
+      .mockReturnValueOnce(
+        makeRecipe({
+          diffs: [{file: 'app/root.tsx', patchFile: 'root.tsx.abc.patch'}],
+        }),
+      )
+      .mockReturnValueOnce(
+        makeRecipe({
+          diffs: [{file: 'app/root.tsx', patchFile: 'root.tsx.def.patch'}],
+          ingredients: [{path: 'templates/skeleton/app/components/Foo.tsx'}],
+        }),
+      );
+
+    const result = getSkeletonFileMap();
+
+    expect(result.get('templates/skeleton/app/root.tsx')).toEqual([
+      'recipe-a',
+      'recipe-b',
+    ]);
+    expect(result.get('templates/skeleton/app/components/Foo.tsx')).toEqual([
+      'recipe-b',
+    ]);
+  });
+
+  it('returns entries sorted alphabetically by file path', () => {
+    mockListRecipes.mockReturnValue(['recipe-a']);
+    mockLoadRecipe.mockReturnValue(
+      makeRecipe({
+        diffs: [
+          {file: 'app/server.ts', patchFile: 'server.ts.abc.patch'},
+          {file: 'app/root.tsx', patchFile: 'root.tsx.abc.patch'},
+        ],
+      }),
+    );
+
+    expect([...getSkeletonFileMap().keys()]).toEqual([
+      'templates/skeleton/app/root.tsx',
+      'templates/skeleton/app/server.ts',
+    ]);
+  });
+
+  it('filters to specified recipe names when provided', () => {
+    mockLoadRecipe.mockReturnValue(
+      makeRecipe({
+        diffs: [{file: 'app/root.tsx', patchFile: 'root.tsx.abc.patch'}],
+      }),
+    );
+
+    getSkeletonFileMap(['recipe-a']);
+
+    expect(mockLoadRecipe).toHaveBeenCalledTimes(1);
+    expect(mockListRecipes).not.toHaveBeenCalled();
+  });
+
+  it('skips recipes that fail to load', () => {
+    mockListRecipes.mockReturnValue(['bad-recipe', 'good-recipe']);
+    mockLoadRecipe
+      .mockImplementationOnce(() => {
+        throw new Error('YAML parse error');
+      })
+      .mockReturnValueOnce(
+        makeRecipe({
+          diffs: [{file: 'app/root.tsx', patchFile: 'root.tsx.abc.patch'}],
+        }),
+      );
+
+    const result = getSkeletonFileMap();
+    expect(result.get('templates/skeleton/app/root.tsx')).toEqual([
+      'good-recipe',
+    ]);
+    expect(result.has('bad-recipe')).toBe(false);
   });
 });

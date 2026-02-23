@@ -4,13 +4,22 @@ import {loadRecipe} from './recipe';
 import {listRecipes} from './util';
 
 /**
- * Collect all repo-relative skeleton file paths referenced by the given
- * recipes (or all recipes if none specified). Returns a sorted, deduplicated
- * list, e.g. ["templates/skeleton/app/root.tsx", …].
+ * Collect all skeleton files referenced by the given recipes (or all recipes
+ * if none specified) and map each file to the recipes that touch it.
+ * Returns a Map sorted by file path, e.g.:
+ *   "templates/skeleton/app/root.tsx" → ["b2b", "multipass"]
  */
-export function getSkeletonFiles(recipeNames?: string[]): string[] {
+export function getSkeletonFileMap(
+  recipeNames?: string[],
+): Map<string, string[]> {
   const names = recipeNames ?? listRecipes();
-  const files = new Set<string>();
+  const fileMap = new Map<string, string[]>();
+
+  const addFile = (file: string, recipeName: string) => {
+    const recipes = fileMap.get(file) ?? [];
+    recipes.push(recipeName);
+    fileMap.set(file, recipes);
+  };
 
   for (const recipeName of names) {
     const recipeDir = path.join(COOKBOOK_PATH, 'recipes', recipeName);
@@ -21,24 +30,39 @@ export function getSkeletonFiles(recipeNames?: string[]): string[] {
       continue;
     }
 
+    // Patch targets are stored relative to the template root (e.g. "app/root.tsx").
+    // Normalise to repo-relative by prepending the template directory prefix.
     for (const step of recipe.steps) {
       if (step.diffs) {
         for (const diff of step.diffs) {
-          files.add(`${TEMPLATE_DIRECTORY}${diff.file}`);
+          addFile(`${TEMPLATE_DIRECTORY}${diff.file}`, recipeName);
         }
       }
     }
 
+    // Ingredient paths are already repo-relative (e.g. "templates/skeleton/app/routes/…")
     for (const ingredient of recipe.ingredients) {
-      files.add(ingredient.path);
+      addFile(ingredient.path, recipeName);
     }
 
+    // Deleted-file paths are also repo-relative
     for (const deleted of recipe.deletedFiles ?? []) {
-      files.add(deleted);
+      addFile(deleted, recipeName);
     }
   }
 
-  return Array.from(files).sort();
+  return new Map(
+    Array.from(fileMap.entries()).sort((a, b) => a[0].localeCompare(b[0])),
+  );
+}
+
+/**
+ * Collect all repo-relative skeleton file paths referenced by the given
+ * recipes (or all recipes if none specified). Returns a sorted, deduplicated
+ * list, e.g. ["templates/skeleton/app/root.tsx", …].
+ */
+export function getSkeletonFiles(recipeNames?: string[]): string[] {
+  return Array.from(getSkeletonFileMap(recipeNames).keys()) as string[];
 }
 
 /**
@@ -64,8 +88,6 @@ export function getAffectedRecipes(changedFiles: string[]): string[] {
 
     const recipeFiles = new Set<string>();
 
-    // Patch targets are stored relative to the template root (e.g. "app/root.tsx").
-    // Normalise to repo-relative by prepending the template directory prefix.
     for (const step of recipe.steps) {
       if (step.diffs) {
         for (const diff of step.diffs) {
@@ -74,12 +96,10 @@ export function getAffectedRecipes(changedFiles: string[]): string[] {
       }
     }
 
-    // Ingredient paths are already repo-relative (e.g. "templates/skeleton/app/routes/…")
     for (const ingredient of recipe.ingredients) {
       recipeFiles.add(ingredient.path);
     }
 
-    // Deleted-file paths are also repo-relative
     for (const deleted of recipe.deletedFiles ?? []) {
       recipeFiles.add(deleted);
     }

@@ -1,5 +1,5 @@
 import {CommandModule} from 'yargs';
-import {getSkeletonFiles} from '../lib/dependency-graph';
+import {getSkeletonFileMap} from '../lib/dependency-graph';
 
 type SkeletonFilesArgs = {
   recipe: string[];
@@ -19,19 +19,20 @@ export const skeletonFiles: CommandModule<{}, SkeletonFilesArgs> = {
     },
     json: {
       type: 'boolean',
-      description: 'Output as JSON array instead of newline-separated paths',
+      description: 'Output as JSON object instead of formatted text',
       default: false,
     },
   },
   handler({recipe, json}) {
-    const files = getSkeletonFiles(recipe.length > 0 ? recipe : undefined);
+    const fileMap = getSkeletonFileMap(recipe.length > 0 ? recipe : undefined);
 
     if (json) {
-      console.log(JSON.stringify(files));
+      const obj = Object.fromEntries(fileMap);
+      console.log(JSON.stringify(obj, null, 2));
     } else {
-      for (const file of files) {
-        console.log(file);
-      }
+      fileMap.forEach((recipes, file) => {
+        console.log(`${file} -> [${recipes.join(', ')}]`);
+      });
     }
   },
 };

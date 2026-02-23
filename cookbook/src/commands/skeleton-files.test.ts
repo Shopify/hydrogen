@@ -1,11 +1,11 @@
 import {describe, expect, it, vi, beforeEach} from 'vitest';
 import {skeletonFiles} from './skeleton-files';
 
-vi.mock('../lib/dependency-graph', () => ({getSkeletonFiles: vi.fn()}));
+vi.mock('../lib/dependency-graph', () => ({getSkeletonFileMap: vi.fn()}));
 
-import {getSkeletonFiles} from '../lib/dependency-graph';
+import {getSkeletonFileMap} from '../lib/dependency-graph';
 
-const mockGetSkeletonFiles = vi.mocked(getSkeletonFiles);
+const mockGetSkeletonFileMap = vi.mocked(getSkeletonFileMap);
 
 const handler = skeletonFiles.handler as (args: {
   recipe: string[];
@@ -18,56 +18,62 @@ describe('skeleton-files command handler', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
-  it('passes undefined to getSkeletonFiles when no --recipe flags given', () => {
-    mockGetSkeletonFiles.mockReturnValue([]);
+  it('passes undefined to getSkeletonFileMap when no --recipe flags given', () => {
+    mockGetSkeletonFileMap.mockReturnValue(new Map());
 
     handler({recipe: [], json: false});
 
-    expect(mockGetSkeletonFiles).toHaveBeenCalledWith(undefined);
+    expect(mockGetSkeletonFileMap).toHaveBeenCalledWith(undefined);
   });
 
-  it('passes recipe names array to getSkeletonFiles when --recipe flags given', () => {
-    mockGetSkeletonFiles.mockReturnValue([]);
+  it('passes recipe names array to getSkeletonFileMap when --recipe flags given', () => {
+    mockGetSkeletonFileMap.mockReturnValue(new Map());
 
     handler({recipe: ['multipass', 'b2b'], json: false});
 
-    expect(mockGetSkeletonFiles).toHaveBeenCalledWith(['multipass', 'b2b']);
+    expect(mockGetSkeletonFileMap).toHaveBeenCalledWith(['multipass', 'b2b']);
   });
 
-  it('prints one file path per line by default', () => {
-    mockGetSkeletonFiles.mockReturnValue([
-      'templates/skeleton/app/root.tsx',
-      'templates/skeleton/app/server.ts',
-    ]);
+  it('prints "file -> [recipes]" format by default', () => {
+    mockGetSkeletonFileMap.mockReturnValue(
+      new Map([
+        ['templates/skeleton/app/root.tsx', ['multipass', 'b2b']],
+        ['templates/skeleton/app/server.ts', ['gtm']],
+      ]),
+    );
 
     handler({recipe: [], json: false});
 
     expect(console.log).toHaveBeenCalledTimes(2);
     expect(console.log).toHaveBeenNthCalledWith(
       1,
-      'templates/skeleton/app/root.tsx',
+      'templates/skeleton/app/root.tsx -> [multipass, b2b]',
     );
     expect(console.log).toHaveBeenNthCalledWith(
       2,
-      'templates/skeleton/app/server.ts',
+      'templates/skeleton/app/server.ts -> [gtm]',
     );
   });
 
-  it('prints JSON array when --json flag is set', () => {
-    const files = [
-      'templates/skeleton/app/root.tsx',
-      'templates/skeleton/app/server.ts',
-    ];
-    mockGetSkeletonFiles.mockReturnValue(files);
+  it('prints JSON object when --json flag is set', () => {
+    mockGetSkeletonFileMap.mockReturnValue(
+      new Map([['templates/skeleton/app/root.tsx', ['multipass', 'b2b']]]),
+    );
 
     handler({recipe: [], json: true});
 
     expect(console.log).toHaveBeenCalledTimes(1);
-    expect(console.log).toHaveBeenCalledWith(JSON.stringify(files));
+    expect(console.log).toHaveBeenCalledWith(
+      JSON.stringify(
+        {'templates/skeleton/app/root.tsx': ['multipass', 'b2b']},
+        null,
+        2,
+      ),
+    );
   });
 
   it('produces no output when no files are referenced', () => {
-    mockGetSkeletonFiles.mockReturnValue([]);
+    mockGetSkeletonFileMap.mockReturnValue(new Map());
 
     handler({recipe: [], json: false});
 
