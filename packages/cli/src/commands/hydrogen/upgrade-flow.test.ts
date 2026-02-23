@@ -1,9 +1,8 @@
-import {describe, it, expect, vi} from 'vitest';
-import {mkdtemp, readFile, writeFile} from 'node:fs/promises';
+import {describe, it, expect, vi, afterEach} from 'vitest';
+import {readFile, writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
-import {tmpdir} from 'node:os';
+import {inTemporaryDirectory} from '@shopify/cli-kit/node/fs';
 import {exec} from '@shopify/cli-kit/node/system';
-import {execAsync} from '../../lib/process.js';
 import * as upgradeModule from './upgrade.js';
 
 vi.mock('@shopify/cli-kit/node/ui', async () => {
@@ -25,6 +24,10 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
     renderInfo: vi.fn(() => {}),
     renderSuccess: vi.fn(() => {}),
   };
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 async function arePackagesPublished(
@@ -113,155 +116,182 @@ describe('upgrade flow', () => {
     const {published, missing} = await arePackagesPublished(packagesToCheck);
 
     if (!published) {
-      console.log(
-        `⏭️  Skipping test: Required packages not yet published to npm:`,
+      throw new Error(
+        `Required packages not yet published to npm: ${missing.join(', ')}. ` +
+          `This test must pass with real published packages. ` +
+          `Either the packages haven't been released yet, or there's a typo in changelog.json.`,
       );
-      console.log(`   Missing: ${missing.join(', ')}`);
-      console.log(
-        `   This is expected if changelog.json was updated before the Version PR was merged.`,
-      );
-      return;
     }
 
-    const projectDir = await scaffoldHistoricalProject(fromVersion);
+    await inTemporaryDirectory(async (tempDir) => {
+      const projectDir = await scaffoldProjectAtVersion(
+        tempDir,
+        fromVersion,
+        previousRelease,
+      );
 
-    const initialPackageJson = JSON.parse(
-      await readFile(join(projectDir, 'package.json'), 'utf8'),
-    );
-    const initialHydrogenVersion =
-      initialPackageJson.dependencies?.['@shopify/hydrogen'];
+      const initialPackageJson = JSON.parse(
+        await readFile(join(projectDir, 'package.json'), 'utf8'),
+      );
+      const initialHydrogenVersion =
+        initialPackageJson.dependencies?.['@shopify/hydrogen'];
 
-    expect(
-      initialHydrogenVersion === fromVersion ||
-        initialHydrogenVersion === `^${fromVersion}`,
-    ).toBe(true);
-
-    process.env.FORCE_CHANGELOG_SOURCE = 'local';
-    process.env.SHOPIFY_HYDROGEN_FLAG_FORCE = '1';
-    process.env.CI = '1';
-
-    await upgradeModule.runUpgrade({
-      appPath: projectDir,
-      version: toVersion,
-      force: true,
-    });
-
-    const upgradedPackageJson = JSON.parse(
-      await readFile(join(projectDir, 'package.json'), 'utf8'),
-    );
-    const upgradedHydrogenVersion =
-      upgradedPackageJson.dependencies?.['@shopify/hydrogen'];
-
-    expect(
-      upgradedHydrogenVersion === toVersion ||
-        upgradedHydrogenVersion === `^${toVersion}`,
-    ).toBe(true);
-
-    for (const [dep, expectedVersion] of Object.entries(
-      latestRelease.dependencies,
-    )) {
-      const actualVersion = upgradedPackageJson.dependencies?.[dep];
       expect(
-        actualVersion,
-        `dependency ${dep} should be present after upgrade`,
-      ).toBeDefined();
-      expect(
-        actualVersion === expectedVersion ||
-          actualVersion === `^${expectedVersion}` ||
-          actualVersion === `~${expectedVersion}` ||
-          actualVersion.includes(String(expectedVersion)),
-        `dependency ${dep} version mismatch: expected ${expectedVersion}, got ${actualVersion}`,
+        initialHydrogenVersion === fromVersion ||
+          initialHydrogenVersion === `^${fromVersion}`,
       ).toBe(true);
-    }
 
-    for (const [dep, expectedVersion] of Object.entries(
-      latestRelease.devDependencies,
-    )) {
-      const actualVersion = upgradedPackageJson.devDependencies?.[dep];
-      expect(
-        actualVersion,
-        `devDependency ${dep} should be present after upgrade`,
-      ).toBeDefined();
-      expect(
-        actualVersion === expectedVersion ||
-          actualVersion === `^${expectedVersion}` ||
-          actualVersion === `~${expectedVersion}` ||
-          actualVersion.includes(String(expectedVersion)),
-        `devDependency ${dep} version mismatch: expected ${expectedVersion}, got ${actualVersion}`,
-      ).toBe(true);
-    }
+      vi.stubEnv('FORCE_CHANGELOG_SOURCE', 'local');
+      vi.stubEnv('SHOPIFY_HYDROGEN_FLAG_FORCE', '1');
+      vi.stubEnv('CI', '1');
 
-    if (latestRelease.removeDependencies) {
-      for (const dep of latestRelease.removeDependencies) {
-        const isReinstalled =
-          dep in latestRelease.dependencies ||
-          dep in latestRelease.devDependencies;
-
-        if (!isReinstalled) {
-          expect(upgradedPackageJson.dependencies?.[dep]).toBeUndefined();
-          expect(upgradedPackageJson.devDependencies?.[dep]).toBeUndefined();
-        }
-      }
-    }
-
-    if (latestRelease.removeDevDependencies) {
-      for (const dep of latestRelease.removeDevDependencies) {
-        const isReinstalled =
-          dep in latestRelease.dependencies ||
-          dep in latestRelease.devDependencies;
-
-        if (!isReinstalled) {
-          expect(upgradedPackageJson.dependencies?.[dep]).toBeUndefined();
-          expect(upgradedPackageJson.devDependencies?.[dep]).toBeUndefined();
-        }
-      }
-    }
-
-    const hasUpgradeSteps =
-      latestRelease.features?.some((f) => f.steps && f.steps.length > 0) ||
-      latestRelease.fixes?.some((f) => f.steps && f.steps.length > 0);
-
-    const guideFile = join(
-      projectDir,
-      '.hydrogen',
-      `upgrade-${fromVersion}-to-${toVersion}.md`,
-    );
-
-    if (hasUpgradeSteps) {
-      const guideContent = await readFile(guideFile, 'utf8');
-      expect(guideContent).toContain(
-        `# Hydrogen upgrade guide: ${fromVersion} to ${toVersion}`,
-      );
-      expect(guideContent.length).toBeGreaterThan(100);
-    } else {
-      await expect(readFile(guideFile, 'utf8')).rejects.toThrow();
-    }
-
-    await exec('npm', ['install'], {cwd: projectDir});
-
-    if (!hasUpgradeSteps) {
-      await exec('npm', ['run', 'build'], {
-        cwd: projectDir,
-        env: {...process.env, NODE_ENV: 'production'},
+      await upgradeModule.runUpgrade({
+        appPath: projectDir,
+        version: toVersion,
+        force: true,
       });
-    }
-  }, 180000);
+
+      const upgradedPackageJson = JSON.parse(
+        await readFile(join(projectDir, 'package.json'), 'utf8'),
+      );
+      const upgradedHydrogenVersion =
+        upgradedPackageJson.dependencies?.['@shopify/hydrogen'];
+
+      expect(
+        upgradedHydrogenVersion === toVersion ||
+          upgradedHydrogenVersion === `^${toVersion}`,
+      ).toBe(true);
+
+      for (const [dep, expectedVersion] of Object.entries(
+        latestRelease.dependencies,
+      )) {
+        const actualVersion = upgradedPackageJson.dependencies?.[dep];
+        expect(
+          actualVersion,
+          `dependency ${dep} should be present after upgrade`,
+        ).toBeDefined();
+        expect(
+          actualVersion === expectedVersion ||
+            actualVersion === `^${expectedVersion}` ||
+            actualVersion === `~${expectedVersion}` ||
+            actualVersion.includes(String(expectedVersion)),
+          `dependency ${dep} version mismatch: expected ${expectedVersion}, got ${actualVersion}`,
+        ).toBe(true);
+      }
+
+      for (const [dep, expectedVersion] of Object.entries(
+        latestRelease.devDependencies,
+      )) {
+        const actualVersion = upgradedPackageJson.devDependencies?.[dep];
+        expect(
+          actualVersion,
+          `devDependency ${dep} should be present after upgrade`,
+        ).toBeDefined();
+        expect(
+          actualVersion === expectedVersion ||
+            actualVersion === `^${expectedVersion}` ||
+            actualVersion === `~${expectedVersion}` ||
+            actualVersion.includes(String(expectedVersion)),
+          `devDependency ${dep} version mismatch: expected ${expectedVersion}, got ${actualVersion}`,
+        ).toBe(true);
+      }
+
+      if (latestRelease.removeDependencies) {
+        for (const dep of latestRelease.removeDependencies) {
+          const isReinstalled =
+            dep in latestRelease.dependencies ||
+            dep in latestRelease.devDependencies;
+
+          if (!isReinstalled) {
+            expect(upgradedPackageJson.dependencies?.[dep]).toBeUndefined();
+            expect(upgradedPackageJson.devDependencies?.[dep]).toBeUndefined();
+          }
+        }
+      }
+
+      if (latestRelease.removeDevDependencies) {
+        for (const dep of latestRelease.removeDevDependencies) {
+          const isReinstalled =
+            dep in latestRelease.dependencies ||
+            dep in latestRelease.devDependencies;
+
+          if (!isReinstalled) {
+            expect(upgradedPackageJson.dependencies?.[dep]).toBeUndefined();
+            expect(upgradedPackageJson.devDependencies?.[dep]).toBeUndefined();
+          }
+        }
+      }
+
+      const hasUpgradeSteps =
+        latestRelease.features?.some((f) => f.steps && f.steps.length > 0) ||
+        latestRelease.fixes?.some((f) => f.steps && f.steps.length > 0);
+
+      const guideFile = join(
+        projectDir,
+        '.hydrogen',
+        `upgrade-${fromVersion}-to-${toVersion}.md`,
+      );
+
+      if (hasUpgradeSteps) {
+        const guideContent = await readFile(guideFile, 'utf8');
+        expect(guideContent).toContain(
+          `# Hydrogen upgrade guide: ${fromVersion} to ${toVersion}`,
+        );
+        expect(guideContent.length).toBeGreaterThan(100);
+      } else {
+        await expect(readFile(guideFile, 'utf8')).rejects.toThrow();
+      }
+
+      await exec('npm', ['install'], {cwd: projectDir});
+
+      // Projects with manual upgrade steps (e.g. codemods, config changes) may not build
+      // until those steps are applied by the developer, so we only validate the build
+      // for releases that can be applied purely through dependency changes.
+      if (!hasUpgradeSteps) {
+        await exec('npm', ['run', 'build'], {
+          cwd: projectDir,
+          env: {...process.env, NODE_ENV: 'production'},
+        });
+      }
+    });
+  }, 600000);
 });
 
-async function scaffoldHistoricalProject(version: string): Promise<string> {
-  const tempDir = await mkdtemp(join(tmpdir(), 'hydrogen-upgrade-test-'));
+async function scaffoldProjectAtVersion(
+  tempDir: string,
+  version: string,
+  release: {
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  },
+): Promise<string> {
   const projectDir = join(tempDir, 'test-project');
 
   const repoRoot = join(process.cwd(), '../../');
   const skeletonPath = join(repoRoot, 'templates/skeleton');
 
-  await execAsync(`cp -r ${skeletonPath} ${projectDir}`);
+  await exec('cp', ['-r', skeletonPath, projectDir], {cwd: tempDir});
 
   const packageJsonPath = join(projectDir, 'package.json');
   const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
 
   packageJson.version = version;
-  packageJson.dependencies['@shopify/hydrogen'] = version;
+
+  if (release.dependencies) {
+    for (const [dep, ver] of Object.entries(release.dependencies)) {
+      if (packageJson.dependencies) {
+        packageJson.dependencies[dep] = ver;
+      }
+    }
+  }
+
+  if (release.devDependencies) {
+    for (const [dep, ver] of Object.entries(release.devDependencies)) {
+      if (packageJson.devDependencies) {
+        packageJson.devDependencies[dep] = ver;
+      }
+    }
+  }
 
   await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
