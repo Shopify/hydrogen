@@ -1,9 +1,13 @@
+import fs from 'fs';
+import path from 'path';
 import {CommandModule} from 'yargs';
+import {REPO_ROOT} from '../lib/constants';
 import {getSkeletonFileMap} from '../lib/dependency-graph';
 
 type SkeletonFilesArgs = {
   recipe: string[];
   json: boolean;
+  existingOnly: boolean;
 };
 
 export const skeletonFiles: CommandModule<{}, SkeletonFilesArgs> = {
@@ -22,9 +26,22 @@ export const skeletonFiles: CommandModule<{}, SkeletonFilesArgs> = {
       description: 'Output as JSON object instead of formatted text',
       default: false,
     },
+    'existing-only': {
+      type: 'boolean',
+      description: 'Only show files that currently exist in the skeleton',
+      default: false,
+    },
   },
-  handler({recipe, json}) {
-    const fileMap = getSkeletonFileMap(recipe.length > 0 ? recipe : undefined);
+  handler({recipe, json, existingOnly}) {
+    let fileMap = getSkeletonFileMap(recipe.length > 0 ? recipe : undefined);
+
+    if (existingOnly) {
+      fileMap = new Map(
+        Array.from(fileMap.entries()).filter(([file]) =>
+          fs.existsSync(path.join(REPO_ROOT, file)),
+        ),
+      );
+    }
 
     if (json) {
       const obj = Object.fromEntries(fileMap);
