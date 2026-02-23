@@ -464,9 +464,11 @@ export class StorefrontPage {
    */
   async navigateToFirstProduct() {
     const productLink = this.page.locator('a[href*="/products/"]').first();
-    await expect(productLink).toBeVisible();
-    await productLink.click();
-    await this.page.waitForLoadState('networkidle');
+    await expect(productLink).toBeVisible({timeout: 10000});
+    await Promise.all([
+      this.page.waitForURL(/.*\/products\/.+/, {timeout: 10000}),
+      productLink.click(),
+    ]);
   }
 
   /**
@@ -578,18 +580,15 @@ export class StorefrontPage {
    * Navigate to the cart page
    */
   async navigateToCart() {
-    // Close any open overlays/drawers first (like cart drawer)
-    const closeButton = this.page.locator(
-      'button[aria-label="Close"], .overlay button.close',
-    );
-    if (await closeButton.isVisible().catch(() => false)) {
-      await closeButton.click();
-      await this.page.waitForTimeout(300);
-    }
+    await this.closeCartAside();
 
-    // Navigate directly to cart page
-    await this.page.goto('/cart');
-    await this.page.waitForLoadState('networkidle');
+    // Extract locale from current URL to preserve it
+    const currentUrl = new URL(this.page.url());
+    const pathPrefix =
+      currentUrl.pathname.match(/^\/[A-Z]{2}-[A-Z]{2}/)?.[0] || '';
+    const targetUrl = `${pathPrefix}/cart`;
+
+    await this.page.goto(targetUrl);
     await this.page.waitForLoadState('networkidle');
   }
 

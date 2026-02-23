@@ -1,0 +1,25 @@
+index dc473b..000000 100644
+--- a/templates/skeleton/app/components/CountrySelector.tsx
++++ b/templates/skeleton/app/components/CountrySelector.tsx
+@@ -16,8 +16,10 @@ export function CountrySelector() {
+       : 'Country';
+ 
+   return (
+-    <details style={{position: 'relative', cursor: 'pointer'}}>
+-      <summary>{label}</summary>
++    <details style={{position: 'relative', cursor: 'pointer'}} aria-label="Country selector">
++      <summary aria-label={`Current locale: ${label}`}>
++        {label}
++      </summary>
+       <div
+         style={{
+           position: 'absolute',
+@@ -69,7 +71,7 @@ function LocaleForm({locale}: {locale: Locale}) {
+         name="cartFormInput"
+         value={JSON.stringify(variables)}
+       />
+-      <button type="submit">
++      <button type="submit" aria-label={`Switch to ${locale.language}-${locale.country}`}>
+         {locale.language}-{locale.country}
+       </button>
+     </Form>

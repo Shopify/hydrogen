@@ -1,0 +1,22 @@
+index 6e553f..000000 100644
+--- a/templates/skeleton/app/components/AddToCartButton.tsx
++++ b/templates/skeleton/app/components/AddToCartButton.tsx
+@@ -1,5 +1,6 @@
+ import {type FetcherWithComponents} from 'react-router';
+ import {CartForm, type OptimisticCartLineInput} from '@shopify/hydrogen';
++import {useLocalizedPath} from '~/lib/i18n';
+ 
+ export function AddToCartButton({
+   analytics,
+@@ -14,8 +15,10 @@ export function AddToCartButton({
+   lines: Array<OptimisticCartLineInput>;
+   onClick?: () => void;
+ }) {
++  const cartRoute = useLocalizedPath('/cart');
++
+   return (
+-    <CartForm route="/cart" inputs={{lines}} action={CartForm.ACTIONS.LinesAdd}>
++    <CartForm route={cartRoute} inputs={{lines}} action={CartForm.ACTIONS.LinesAdd}>
+       {(fetcher: FetcherWithComponents<any>) => (
+         <>
+           <input

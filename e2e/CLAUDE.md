@@ -1,5 +1,14 @@
 # E2E Testing Guidelines
 
+## Test Projects
+
+The E2E test suite is organized into several projects:
+
+- **`skeleton`**: Tests for the base skeleton template behavior
+- **`recipes`**: Tests for cookbook recipes (see `specs/recipes/README.md`)
+- **`smoke`**: Quick sanity checks for critical paths
+- **`new-cookies`** / **`old-cookies`**: Cookie consent behavior tests
+
 ## Test Isolation
 
 Playwright automatically provides test isolation - each test runs in its own browser context with isolated storage, cookies, and state. You generally don't need to manually clear cookies or storage between tests.
