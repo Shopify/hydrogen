@@ -206,7 +206,7 @@ export async function runUpgrade({
     });
 
     // Get an aggregate list of features and fixes included in the upgrade versions range
-    cumulativeRelease = getCummulativeRelease({
+    cumulativeRelease = getCumulativeRelease({
       availableUpgrades,
       currentVersion,
       currentDependencies,
@@ -559,7 +559,7 @@ export async function getSelectedRelease({
 /**
  * Gets an aggregate list of features and fixes included in the upgrade versions range
  */
-export function getCummulativeRelease({
+export function getCumulativeRelease({
   availableUpgrades,
   selectedRelease,
   currentVersion,

@@ -18,7 +18,7 @@ import {
   displayConfirmation,
   getAbsoluteVersion,
   getAvailableUpgrades,
-  getCummulativeRelease,
+  getCumulativeRelease,
   getHydrogenVersion,
   getPackageVersion,
   getSelectedRelease,
@@ -761,7 +761,7 @@ describe('upgrade', async () => {
     });
   });
 
-  describe('getCummulativeRelease', () => {
+  describe('getCumulativeRelease', () => {
     it('returns the correct fixes and features for a release range thats outdated', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
@@ -782,20 +782,20 @@ describe('upgrade', async () => {
 
           // testing from 2023.1.6 (outdated) to 2023.4.1
           const {features, fixes, removeDependencies, removeDevDependencies} =
-            getCummulativeRelease({
+            getCumulativeRelease({
               availableUpgrades,
               ...current,
               // @ts-ignore - we know this release version exists
               selectedRelease,
             });
 
-          expect(features).toMatchObject(CUMMLATIVE_RELEASE.features);
-          expect(fixes).toMatchObject(CUMMLATIVE_RELEASE.fixes);
+          expect(features).toMatchObject(CUMULATIVE_RELEASE.features);
+          expect(fixes).toMatchObject(CUMULATIVE_RELEASE.fixes);
           expect(removeDependencies).toMatchObject(
-            CUMMLATIVE_RELEASE.removeDependencies,
+            CUMULATIVE_RELEASE.removeDependencies,
           );
           expect(removeDevDependencies).toMatchObject(
-            CUMMLATIVE_RELEASE.removeDevDependencies,
+            CUMULATIVE_RELEASE.removeDevDependencies,
           );
         },
         {
@@ -824,7 +824,7 @@ describe('upgrade', async () => {
           );
 
           const {removeDependencies, removeDevDependencies} =
-            getCummulativeRelease({
+            getCumulativeRelease({
               availableUpgrades,
               ...current,
               // @ts-ignore - we know this release version exists
@@ -874,13 +874,11 @@ describe('upgrade', async () => {
       });
       const from = makeRelease('2025.5.0');
 
-      const {removeDependencies, removeDevDependencies} = getCummulativeRelease(
-        {
-          availableUpgrades: [target, intermediate, from],
-          selectedRelease: target,
-          currentVersion: '2025.5.0',
-        },
-      );
+      const {removeDependencies, removeDevDependencies} = getCumulativeRelease({
+        availableUpgrades: [target, intermediate, from],
+        selectedRelease: target,
+        currentVersion: '2025.5.0',
+      });
 
       expect(removeDependencies).toContain('@shopify/remix-oxygen');
       expect(removeDependencies).toContain('@remix-run/react');
@@ -915,7 +913,7 @@ describe('upgrade', async () => {
       });
       const from = makeRelease('2025.5.0');
 
-      const {removeDependencies} = getCummulativeRelease({
+      const {removeDependencies} = getCumulativeRelease({
         availableUpgrades: [target, intermediate, from],
         selectedRelease: target,
         currentVersion: '2025.5.0',
@@ -949,7 +947,7 @@ describe('upgrade', async () => {
       });
       const from = makeRelease('2025.5.0');
 
-      const {removeDependencies} = getCummulativeRelease({
+      const {removeDependencies} = getCumulativeRelease({
         availableUpgrades: [target, intermediate, from],
         selectedRelease: target,
         currentVersion: '2025.5.0',
@@ -974,7 +972,7 @@ describe('upgrade', async () => {
 
           await expect(
             displayConfirmation({
-              cumulativeRelease: CUMMLATIVE_RELEASE,
+              cumulativeRelease: CUMULATIVE_RELEASE,
               selectedRelease,
             }),
           ).resolves.toEqual(false);
@@ -982,7 +980,7 @@ describe('upgrade', async () => {
           const info = outputMock.info();
           expect(info).toMatch('Included in this upgrade');
 
-          [...CUMMLATIVE_RELEASE.features, ...CUMMLATIVE_RELEASE.fixes].forEach(
+          [...CUMULATIVE_RELEASE.features, ...CUMULATIVE_RELEASE.fixes].forEach(
             (feat) =>
               // Cut the string to avoid matching the banner
               expect(info).toMatch(feat.title.slice(0, 15)),
@@ -1524,8 +1522,8 @@ describe('upgrade', async () => {
   });
 });
 
-// cummlative result when upgrading from 2023.1.6 (outdated) to 2023.4.1
-const CUMMLATIVE_RELEASE = {
+// cumulative result when upgrading from 2023.1.6 (outdated) to 2023.4.1
+const CUMULATIVE_RELEASE = {
   fixes: [
     {
       title: 'Add a default Powered-By: Shopify-Hydrogen header',
