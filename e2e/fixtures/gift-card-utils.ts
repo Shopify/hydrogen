@@ -6,36 +6,38 @@ export class GiftCardUtil {
   async applyCode(code: string) {
     const input = this.page.getByRole('textbox', {name: 'Gift card code'});
     await input.fill(code);
-    await this.page.getByRole('button', {name: 'Apply gift card code'}).click();
+    const applyButton = this.page.getByRole('button', {
+      name: 'Apply gift card code',
+    });
+    await applyButton.click();
+    await expect(applyButton).toBeEnabled();
     await expect(input).toHaveValue('');
   }
 
-  async tryApplyCode(code: string) {
-    const input = this.page.getByRole('textbox', {name: 'Gift card code'});
-    await input.fill(code);
-    await this.page.getByRole('button', {name: 'Apply gift card code'}).click();
-  }
-
   async assertAppliedCard(lastFourChars: string) {
-    const giftCards = this.page.getByLabel('Applied Gift Card(s)');
+    const giftCards = this.page.getByRole('region', {name: 'Gift cards'});
     await expect(
-      giftCards.getByRole('group').filter({hasText: `***${lastFourChars}`}),
+      giftCards.locator('dd').filter({hasText: `***${lastFourChars}`}),
     ).toBeVisible();
   }
 
   async removeCard(lastFourChars: string) {
-    const giftCards = this.page.getByLabel('Applied Gift Card(s)');
-    const cardGroup = giftCards
-      .getByRole('group')
+    const giftCards = this.page.getByRole('region', {name: 'Gift cards'});
+    const cardElement = giftCards
+      .locator('dd')
       .filter({hasText: `***${lastFourChars}`});
-    await cardGroup.getByRole('button', {name: 'Remove gift card'}).click();
+    await cardElement
+      .getByRole('button', {
+        name: `Remove gift card ending in ${lastFourChars}`,
+      })
+      .click();
   }
 
   async assertCardRemoved(lastFourChars: string) {
-    const giftCards = this.page.getByLabel('Applied Gift Card(s)');
+    const giftCards = this.page.getByRole('region', {name: 'Gift cards'});
     await expect(
-      giftCards.getByRole('group').filter({hasText: `***${lastFourChars}`}),
-    ).not.toBeVisible();
+      giftCards.locator('dd').filter({hasText: `***${lastFourChars}`}),
+    ).toHaveCount(0);
   }
 
   async assertCardCodeNotPresent(lastFourChars: string) {
@@ -43,7 +45,14 @@ export class GiftCardUtil {
   }
 
   async assertNoGiftCards() {
-    const giftCards = this.page.getByLabel('Applied Gift Card(s)');
-    await expect(giftCards.getByRole('group')).not.toBeVisible();
+    await expect(this.page.getByText('Applied Gift Card(s)')).toHaveCount(0);
+  }
+
+  async assertCardHasAmount(lastFourChars: string, pattern?: RegExp) {
+    const giftCards = this.page.getByRole('region', {name: 'Gift cards'});
+    const cardElement = giftCards
+      .locator('dd')
+      .filter({hasText: `***${lastFourChars}`});
+    await expect(cardElement).toContainText(pattern || /[$\d]/);
   }
 }

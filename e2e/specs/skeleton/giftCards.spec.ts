@@ -73,16 +73,11 @@ test.describe('Gift Cards', () => {
       await giftCard.assertAppliedCard(GIFT_CARD_1_LAST_4);
     });
 
-    test('displays gift card amount when applied', async ({page, giftCard}) => {
+    test('displays gift card amount when applied', async ({giftCard}) => {
       await giftCard.applyCode(GIFT_CARD_1);
       await giftCard.assertAppliedCard(GIFT_CARD_1_LAST_4);
 
-      const giftCards = page.getByLabel('Applied Gift Card(s)');
-      const cardGroup = giftCards
-        .getByRole('group')
-        .filter({hasText: `***${GIFT_CARD_1_LAST_4}`});
-
-      await expect(cardGroup).toContainText(/[$\d]/);
+      await giftCard.assertCardHasAmount(GIFT_CARD_1_LAST_4);
     });
 
     test('shows applied gift cards in checkout', async ({page, giftCard}) => {
@@ -106,13 +101,11 @@ test.describe('Gift Cards', () => {
       await giftCard.applyCode(GIFT_CARD_1);
       await giftCard.assertAppliedCard(GIFT_CARD_1_LAST_4);
 
-      await giftCard.tryApplyCode(GIFT_CARD_1);
+      await giftCard.applyCode(GIFT_CARD_1);
 
-      const giftCards = page.getByLabel('Applied Gift Card(s)');
+      const giftCards = page.getByRole('region', {name: 'Gift cards'});
       await expect(
-        giftCards
-          .getByRole('group')
-          .filter({hasText: `***${GIFT_CARD_1_LAST_4}`}),
+        giftCards.locator('dd').filter({hasText: `***${GIFT_CARD_1_LAST_4}`}),
       ).toHaveCount(1);
     });
 
@@ -131,8 +124,10 @@ test.describe('Gift Cards', () => {
     });
 
     test('does not add invalid gift card', async ({giftCard}) => {
+      // Note: the skeleton template shows no error message for invalid codes -
+      // the form clears silently. this is a known UX gap.
       const invalidCode = 'INVALID-CODE-12345';
-      await giftCard.tryApplyCode(invalidCode);
+      await giftCard.applyCode(invalidCode);
 
       await giftCard.assertNoGiftCards();
     });
