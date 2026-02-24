@@ -87,6 +87,7 @@ test.describe('Discount codes', () => {
   });
 
   test('Rejects invalid discount code', async ({discount}) => {
+    // TODO: when user-facing errors rendered, assert error appears
     await discount.applyCode(INACTIVE_DISCOUNT_CODE);
 
     await discount.assertNoDiscounts();
