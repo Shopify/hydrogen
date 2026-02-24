@@ -608,15 +608,43 @@ export function getCumulativeRelease({
   const features = upgradingReleases.flatMap((r) => r.features);
   const fixes = upgradingReleases.flatMap((r) => r.fixes);
 
-  // Track deps that are re-added anywhere in the upgrade range.
-  // A dep removed in one release but re-added in another (e.g. react-router
+  // Track deps that are re-added after being removed in the upgrade range.
+  // A dep removed in one release but re-added in a later release (e.g. react-router
   // renamed/upgraded) should not appear in the cumulative removal list.
-  const reinstalledDeps = new Set(
-    upgradingReleases.flatMap((r) => [
-      ...Object.keys(r.dependencies),
-      ...Object.keys(r.devDependencies),
-    ]),
-  );
+  // This must be order-sensitive: a dep existing early then removed later shouldn't
+  // be treated as "reinstalled" just because it existed before the removal.
+  const removedAt = new Map<string, number>();
+
+  upgradingReleases.forEach((release, i) => {
+    release.removeDependencies?.forEach((dep) => {
+      removedAt.set(dep, i);
+    });
+    release.removeDevDependencies?.forEach((dep) => {
+      removedAt.set(dep, i);
+    });
+  });
+
+  const reinstalledDeps = new Set<string>();
+
+  for (let i = 0; i < upgradingReleases.length; i++) {
+    const release = upgradingReleases[i];
+
+    if (!release) continue;
+
+    Object.keys(release.dependencies).forEach((dep) => {
+      const removalI = removedAt.get(dep);
+      if (removalI !== undefined && i >= removalI) {
+        reinstalledDeps.add(dep);
+      }
+    });
+
+    Object.keys(release.devDependencies).forEach((dep) => {
+      const removalI = removedAt.get(dep);
+      if (removalI !== undefined && i >= removalI) {
+        reinstalledDeps.add(dep);
+      }
+    });
+  }
 
   const removeDependencies = [
     ...new Set(
