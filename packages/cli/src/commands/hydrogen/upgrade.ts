@@ -608,14 +608,17 @@ export function getCumulativeRelease({
   const features = upgradingReleases.flatMap((r) => r.features);
   const fixes = upgradingReleases.flatMap((r) => r.fixes);
 
+  const releasesByVersion = [...upgradingReleases].sort((a, b) =>
+    semver.compare(a.version, b.version),
+  );
+
   // Track deps that are re-added after being removed in the upgrade range.
   // A dep removed in one release but re-added in a later release (e.g. react-router
   // renamed/upgraded) should not appear in the cumulative removal list.
-  // This must be order-sensitive: a dep existing early then removed later shouldn't
-  // be treated as "reinstalled" just because it existed before the removal.
+  // Use chronological ordering so this is independent from changelog input order.
   const removedAt = new Map<string, number>();
 
-  upgradingReleases.forEach((release, i) => {
+  releasesByVersion.forEach((release, i) => {
     release.removeDependencies?.forEach((dep) => {
       removedAt.set(dep, i);
     });
@@ -626,8 +629,8 @@ export function getCumulativeRelease({
 
   const reinstalledDeps = new Set<string>();
 
-  for (let i = 0; i < upgradingReleases.length; i++) {
-    const release = upgradingReleases[i];
+  for (let i = 0; i < releasesByVersion.length; i++) {
+    const release = releasesByVersion[i];
 
     if (!release) continue;
 
@@ -651,7 +654,7 @@ export function getCumulativeRelease({
 
   const removeDependencies = [
     ...new Set(
-      upgradingReleases
+      releasesByVersion
         .flatMap((r) => r.removeDependencies ?? [])
         .filter((dep) => !reinstalledDeps.has(dep)),
     ),
@@ -659,7 +662,7 @@ export function getCumulativeRelease({
 
   const removeDevDependencies = [
     ...new Set(
-      upgradingReleases
+      releasesByVersion
         .flatMap((r) => r.removeDevDependencies ?? [])
         .filter((dep) => !reinstalledDeps.has(dep)),
     ),

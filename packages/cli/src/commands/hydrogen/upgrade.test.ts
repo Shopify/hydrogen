@@ -958,7 +958,7 @@ describe('upgrade', async () => {
       ).toHaveLength(1);
     });
 
-    it('includes removals for dependencies that exist early and are removed later without being re-added', () => {
+    it('includes removals when an intermediate release has a dep and a later intermediate release removes it', () => {
       const makeRelease = (version: string, overrides: Partial<Release> = {}) =>
         ({
           version,
@@ -975,11 +975,11 @@ describe('upgrade', async () => {
         }) as Release;
 
       // Scenario: upgrading from 2025.5.0 → 2025.10.0
-      // remix exists in 2025.5.0, is removed in 2025.7.0, never re-added
-      // Should be included in cumulative removals (order-sensitive behavior)
-      const releaseWithRemix = makeRelease('2025.5.0', {
+      // remix exists in an intermediate release (2025.6.0), is removed in 2025.7.0,
+      // and is never re-added. It should be included in cumulative removals.
+      const intermediateWithRemix = makeRelease('2025.6.0', {
         dependencies: {
-          '@shopify/hydrogen': '2025.5.0',
+          '@shopify/hydrogen': '2025.6.0',
           remix: '4.0.0',
         },
       });
@@ -992,7 +992,7 @@ describe('upgrade', async () => {
         availableUpgrades: [
           targetRelease,
           releaseRemovingRemix,
-          releaseWithRemix,
+          intermediateWithRemix,
         ],
         selectedRelease: targetRelease,
         currentVersion: '2025.5.0',
