@@ -78,6 +78,8 @@ type ChangeLog = {
 export type CumulativeRelease = {
   features: Array<ReleaseItem>;
   fixes: Array<ReleaseItem>;
+  removeDependencies: string[];
+  removeDevDependencies: string[];
 };
 
 const INSTRUCTIONS_FOLDER = '.hydrogen';
@@ -231,6 +233,8 @@ export async function runUpgrade({
     selectedRelease,
     currentDependencies,
     targetVersion,
+    cumulativeRemoveDependencies: cumulativeRelease.removeDependencies,
+    cumulativeRemoveDevDependencies: cumulativeRelease.removeDevDependencies,
   });
   await validateUpgrade({
     appPath,
@@ -568,13 +572,19 @@ export function getCummulativeRelease({
 }): CumulativeRelease {
   const currentPinnedVersion = getAbsoluteVersion(currentVersion);
 
-  if (!availableUpgrades?.length) {
-    return {features: [], fixes: []};
-  }
+  const empty: CumulativeRelease = {
+    features: [],
+    fixes: [],
+    removeDependencies: [],
+    removeDevDependencies: [],
+  };
+
+  if (!availableUpgrades?.length) return empty;
 
   // For synthetic next releases, return features/fixes directly
   if (selectedRelease.dependencies?.['@shopify/hydrogen'] === 'next') {
     return {
+      ...empty,
       features: selectedRelease.features || [],
       fixes: selectedRelease.fixes || [],
     };
@@ -595,14 +605,36 @@ export function getCummulativeRelease({
     return hasOutdatedDependencies({release, currentDependencies});
   });
 
-  return upgradingReleases.reduce(
-    (acc, release) => {
-      acc.features = [...acc.features, ...release.features];
-      acc.fixes = [...acc.fixes, ...release.fixes];
-      return acc;
-    },
-    {features: [], fixes: []} as CumulativeRelease,
+  const features = upgradingReleases.flatMap((r) => r.features);
+  const fixes = upgradingReleases.flatMap((r) => r.fixes);
+
+  // Track deps that are re-added anywhere in the upgrade range.
+  // A dep removed in one release but re-added in another (e.g. react-router
+  // renamed/upgraded) should not appear in the cumulative removal list.
+  const reinstalledDeps = new Set(
+    upgradingReleases.flatMap((r) => [
+      ...Object.keys(r.dependencies),
+      ...Object.keys(r.devDependencies),
+    ]),
   );
+
+  const removeDependencies = [
+    ...new Set(
+      upgradingReleases
+        .flatMap((r) => r.removeDependencies ?? [])
+        .filter((dep) => !reinstalledDeps.has(dep)),
+    ),
+  ];
+
+  const removeDevDependencies = [
+    ...new Set(
+      upgradingReleases
+        .flatMap((r) => r.removeDevDependencies ?? [])
+        .filter((dep) => !reinstalledDeps.has(dep)),
+    ),
+  ];
+
+  return {features, fixes, removeDependencies, removeDevDependencies};
 }
 
 /**
@@ -865,18 +897,23 @@ export async function upgradeNodeModules({
   selectedRelease,
   currentDependencies,
   targetVersion,
+  cumulativeRemoveDependencies = selectedRelease.removeDependencies ?? [],
+  cumulativeRemoveDevDependencies = selectedRelease.removeDevDependencies ?? [],
 }: {
   appPath: string;
   selectedRelease: Release;
   currentDependencies: Record<string, string>;
   targetVersion?: string;
+  cumulativeRemoveDependencies?: string[];
+  cumulativeRemoveDevDependencies?: string[];
 }) {
   const tasks: Array<{title: string; task: () => Promise<void>}> = [];
 
-  // Remove deprecated dependencies first if specified
+  // Cumulative removals cover intermediate releases (multi-version jumps).
+  // Defaults to the target release's own removals when not upgrading across multiple versions.
   const depsToRemove = [
-    ...(selectedRelease.removeDependencies || []),
-    ...(selectedRelease.removeDevDependencies || []),
+    ...cumulativeRemoveDependencies,
+    ...cumulativeRemoveDevDependencies,
   ].filter((dep) => dep in currentDependencies);
 
   if (depsToRemove.length > 0) {
