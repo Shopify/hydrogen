@@ -86,9 +86,8 @@ export function setupHydrogenMiddleware(
       // so we serve it from here.
 
       const require = createRequire(import.meta.url);
-      const filePath = require.resolve(
-        '@shopify/hydrogen/customer-account.schema.json',
-      );
+      const filePath =
+        require.resolve('@shopify/hydrogen/customer-account.schema.json');
 
       res.writeHead(200, {'Content-Type': 'application/json'});
       createReadStream(filePath).pipe(res);
