@@ -762,6 +762,21 @@ describe('upgrade', async () => {
   });
 
   describe('getCumulativeRelease', () => {
+    const makeRelease = (version: string, overrides: Partial<Release> = {}) =>
+      ({
+        version,
+        hash: 'abc',
+        commit: 'https://github.com/Shopify/hydrogen/commit/abc',
+        pr: 'https://github.com/Shopify/hydrogen/pull/1',
+        date: '2025-01-01',
+        title: '',
+        dependencies: {'@shopify/hydrogen': version},
+        devDependencies: {},
+        features: [],
+        fixes: [],
+        ...overrides,
+      }) as Release;
+
     it('returns the correct fixes and features for a release range thats outdated', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
@@ -791,10 +806,10 @@ describe('upgrade', async () => {
 
           expect(features).toMatchObject(CUMULATIVE_RELEASE.features);
           expect(fixes).toMatchObject(CUMULATIVE_RELEASE.fixes);
-          expect(removeDependencies).toMatchObject(
+          expect(removeDependencies).toEqual(
             CUMULATIVE_RELEASE.removeDependencies,
           );
-          expect(removeDevDependencies).toMatchObject(
+          expect(removeDevDependencies).toEqual(
             CUMULATIVE_RELEASE.removeDevDependencies,
           );
         },
@@ -818,16 +833,23 @@ describe('upgrade', async () => {
             releases,
           });
 
-          // 2025.7.0 is the release that drops @shopify/remix-oxygen and Remix packages
+          // 2025.7.0 is the React Router migration release that drops @shopify/remix-oxygen and Remix packages.
+          // This test ensures cumulative dependency removal works for the actual migration scenario.
+          // If the migration release version ever changes, update this version string.
           const selectedRelease = releases.find(
             (release) => release.version === '2025.7.0',
           );
+
+          if (!selectedRelease) {
+            throw new Error(
+              'Test setup: 2025.7.0 not found in changelog - is this fixture stale?',
+            );
+          }
 
           const {removeDependencies, removeDevDependencies} =
             getCumulativeRelease({
               availableUpgrades,
               ...current,
-              // @ts-ignore - we know this release version exists
               selectedRelease,
             });
 
@@ -849,21 +871,6 @@ describe('upgrade', async () => {
     });
 
     it('accumulates removeDependencies from intermediate releases', () => {
-      const makeRelease = (version: string, overrides: Partial<Release> = {}) =>
-        ({
-          version,
-          hash: 'abc',
-          commit: 'https://github.com/Shopify/hydrogen/commit/abc',
-          pr: 'https://github.com/Shopify/hydrogen/pull/1',
-          date: '2025-01-01',
-          title: '',
-          dependencies: {'@shopify/hydrogen': version},
-          devDependencies: {},
-          features: [],
-          fixes: [],
-          ...overrides,
-        }) as Release;
-
       // Simulates: user on 2025.5.0, upgrading to 2025.10.0.
       // 2025.7.0 removes @shopify/remix-oxygen (a breaking migration).
       // 2025.10.0 is the target and knows nothing about remix-oxygen.
@@ -886,21 +893,6 @@ describe('upgrade', async () => {
     });
 
     it('excludes removeDependencies for deps that are re-added in any release', () => {
-      const makeRelease = (version: string, overrides: Partial<Release> = {}) =>
-        ({
-          version,
-          hash: 'abc',
-          commit: 'https://github.com/Shopify/hydrogen/commit/abc',
-          pr: 'https://github.com/Shopify/hydrogen/pull/1',
-          date: '2025-01-01',
-          title: '',
-          dependencies: {'@shopify/hydrogen': version},
-          devDependencies: {},
-          features: [],
-          fixes: [],
-          ...overrides,
-        }) as Release;
-
       // react-router is removed (old Remix version) AND re-added at a new version
       // in the same release — it should not appear in cumulative removeDependencies.
       const target = makeRelease('2025.10.0');
@@ -924,21 +916,6 @@ describe('upgrade', async () => {
     });
 
     it('deduplicates removeDependencies listed in multiple releases', () => {
-      const makeRelease = (version: string, overrides: Partial<Release> = {}) =>
-        ({
-          version,
-          hash: 'abc',
-          commit: 'https://github.com/Shopify/hydrogen/commit/abc',
-          pr: 'https://github.com/Shopify/hydrogen/pull/1',
-          date: '2025-01-01',
-          title: '',
-          dependencies: {'@shopify/hydrogen': version},
-          devDependencies: {},
-          features: [],
-          fixes: [],
-          ...overrides,
-        }) as Release;
-
       const target = makeRelease('2025.10.0', {
         removeDependencies: ['@shopify/remix-oxygen'],
       });
@@ -959,21 +936,6 @@ describe('upgrade', async () => {
     });
 
     it('includes removals when an intermediate release has a dep and a later intermediate release removes it', () => {
-      const makeRelease = (version: string, overrides: Partial<Release> = {}) =>
-        ({
-          version,
-          hash: 'abc',
-          commit: 'https://github.com/Shopify/hydrogen/commit/abc',
-          pr: 'https://github.com/Shopify/hydrogen/pull/1',
-          date: '2025-01-01',
-          title: '',
-          dependencies: {'@shopify/hydrogen': version},
-          devDependencies: {},
-          features: [],
-          fixes: [],
-          ...overrides,
-        }) as Release;
-
       // Scenario: upgrading from 2025.5.0 → 2025.10.0
       // remix exists in an intermediate release (2025.6.0), is removed in 2025.7.0,
       // and is never re-added. It should be included in cumulative removals.
@@ -1002,21 +964,6 @@ describe('upgrade', async () => {
     });
 
     it('handles releases that omit dependencies maps', () => {
-      const makeRelease = (version: string, overrides: Partial<Release> = {}) =>
-        ({
-          version,
-          hash: 'abc',
-          commit: 'https://github.com/Shopify/hydrogen/commit/abc',
-          pr: 'https://github.com/Shopify/hydrogen/pull/1',
-          date: '2025-01-01',
-          title: '',
-          dependencies: {'@shopify/hydrogen': version},
-          devDependencies: {},
-          features: [],
-          fixes: [],
-          ...overrides,
-        }) as Release;
-
       const targetRelease = makeRelease('2025.10.0');
       const releaseWithoutDependencyMaps = {
         ...makeRelease('2025.7.0', {
@@ -1041,21 +988,6 @@ describe('upgrade', async () => {
     });
 
     it('includes removal when package moves from devDependencies to dependencies', () => {
-      const makeRelease = (version: string, overrides: Partial<Release> = {}) =>
-        ({
-          version,
-          hash: 'abc',
-          commit: 'https://github.com/Shopify/hydrogen/commit/abc',
-          pr: 'https://github.com/Shopify/hydrogen/pull/1',
-          date: '2025-01-01',
-          title: '',
-          dependencies: {'@shopify/hydrogen': version},
-          devDependencies: {},
-          features: [],
-          fixes: [],
-          ...overrides,
-        }) as Release;
-
       // Scenario: typescript is removed from devDependencies, then re-added as a regular dependency
       // The removal from devDependencies should still appear in removeDevDependencies
       const targetRelease = makeRelease('2025.10.0', {
@@ -1081,21 +1013,6 @@ describe('upgrade', async () => {
     });
 
     it('includes removal when package moves from dependencies to devDependencies', () => {
-      const makeRelease = (version: string, overrides: Partial<Release> = {}) =>
-        ({
-          version,
-          hash: 'abc',
-          commit: 'https://github.com/Shopify/hydrogen/commit/abc',
-          pr: 'https://github.com/Shopify/hydrogen/pull/1',
-          date: '2025-01-01',
-          title: '',
-          dependencies: {'@shopify/hydrogen': version},
-          devDependencies: {},
-          features: [],
-          fixes: [],
-          ...overrides,
-        }) as Release;
-
       // Scenario: lodash is removed from dependencies, then re-added as a devDependency
       // The removal from dependencies should still appear in removeDependencies
       const targetRelease = makeRelease('2025.10.0', {
@@ -1551,7 +1468,7 @@ describe('upgrade', async () => {
       const {releases} = await getChangelog();
 
       const selectedRelease = Object.create(
-        // @ts-ignore - we know this release version exists
+        // @ts-expect-error - we know this release version exists
         releases.find((release) => release.version === '2023.10.0'),
       ) as (typeof releases)[0];
 
@@ -1607,7 +1524,7 @@ describe('upgrade', async () => {
         '@shopify/hydrogen@2023.10.0',
         '@shopify/remix-oxygen@2.0.0',
         `typescript@${getAbsoluteVersion(
-          // @ts-ignore - we know this release version exists
+          // @ts-expect-error - we know this release version exists
           selectedRelease.devDependencies.typescript,
         )}`,
       ];
@@ -1668,7 +1585,7 @@ describe('upgrade', async () => {
         '@shopify/cli-hydrogen@6.0.0',
         '@shopify/remix-oxygen@2.0.0',
         `typescript@${getAbsoluteVersion(
-          // @ts-ignore - we know this release version exists
+          // @ts-expect-error - we know this release version exists
           selectedRelease.devDependencies.typescript,
         )}`,
       ];

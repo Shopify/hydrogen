@@ -581,7 +581,9 @@ export function getCumulativeRelease({
 
   if (!availableUpgrades?.length) return empty;
 
-  // For synthetic next releases, return features/fixes directly
+  // For synthetic next releases, return features/fixes directly without accumulation.
+  // Synthetic "next" releases are constructed from the latest real release and already
+  // carry all necessary removals, so no additional accumulation is needed.
   if (selectedRelease.dependencies?.['@shopify/hydrogen'] === 'next') {
     return {
       ...empty,
@@ -622,6 +624,8 @@ export function getCumulativeRelease({
   const removedDepsAt = new Map<string, number>();
   const removedDevDepsAt = new Map<string, number>();
 
+  // Last-write-wins: If a dep is removed in multiple releases, the map stores the *last* removal index.
+  // This ensures that a re-addition between two removal occurrences won't suppress the later removal.
   releasesByVersion.forEach((release, i) => {
     release.removeDependencies?.forEach((dep) => {
       removedDepsAt.set(dep, i);
@@ -931,6 +935,11 @@ export function buildUpgradeCommandArgs({
 
 /**
  * Installs the new Hydrogen dependencies
+ *
+ * When upgrading across multiple versions, callers should pass cumulative removal lists
+ * from `getCumulativeRelease()` to ensure dependencies removed in intermediate releases
+ * are properly cleaned up. The defaults fall back to the target release's own removal
+ * lists, which only provides single-release behavior and may miss intermediate removals.
  */
 export async function upgradeNodeModules({
   appPath,
