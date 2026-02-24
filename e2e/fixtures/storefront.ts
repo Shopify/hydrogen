@@ -580,15 +580,18 @@ export class StorefrontPage {
    * Navigate to the cart page
    */
   async navigateToCart() {
-    await this.closeCartAside();
+    // Close any open overlays/drawers first (like cart drawer)
+    const closeButton = this.page.locator(
+      'button[aria-label="Close"], .overlay button.close',
+    );
+    if (await closeButton.isVisible().catch(() => false)) {
+      await closeButton.click();
+      await this.page.waitForTimeout(300);
+    }
 
-    // Extract locale from current URL to preserve it
-    const currentUrl = new URL(this.page.url());
-    const pathPrefix =
-      currentUrl.pathname.match(/^\/[A-Z]{2}-[A-Z]{2}/)?.[0] || '';
-    const targetUrl = `${pathPrefix}/cart`;
-
-    await this.page.goto(targetUrl);
+    // Navigate directly to cart page
+    await this.page.goto('/cart');
+    await this.page.waitForLoadState('networkidle');
     await this.page.waitForLoadState('networkidle');
   }
 

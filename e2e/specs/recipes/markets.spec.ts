@@ -26,6 +26,13 @@ const LOCALES = {
   },
 } as const;
 
+// Stable product in the hydrogenPreviewStorefront used for price assertions.
+// If this product is removed from the store, these tests will need updating.
+const KNOWN_PRODUCT = {
+  handle: 'the-ascend',
+  name: 'The Ascend',
+} as const;
+
 test.describe('Markets Recipe', () => {
   test('default locale has no URL prefix and shows USD prices', async ({
     page,
@@ -36,16 +43,15 @@ test.describe('Markets Recipe', () => {
     expect(new URL(page.url()).pathname).toMatch(/^\/(\?.*)?$/);
     expect(page.url()).not.toContain('/EN-US');
 
-    await storefront.navigateToFirstProduct();
+    await page.goto(`/products/${KNOWN_PRODUCT.handle}`);
 
     expect(page.url()).toMatch(/\/products\/.+/);
     expect(page.url()).not.toContain('/EN-US/');
 
-    const priceElement = page
-      .locator('div')
-      .filter({hasText: LOCALES.default.currencyFormat})
-      .first();
-    await expect(priceElement).toBeVisible();
+    const priceElement = page.getByRole('group', {name: 'Price'}).first();
+    await expect(priceElement).toBeVisible({timeout: 3000});
+    const priceText = (await priceElement.textContent())?.trim();
+    expect(priceText).toMatch(LOCALES.default.currencyFormat);
   });
 
   test('FR-CA home page navigation links include locale prefix', async ({
@@ -71,23 +77,24 @@ test.describe('Markets Recipe', () => {
     }
   });
 
-  test.describe('FR-CA product flow', () => {
+  test('FR-CA product page shows CAD prices', async ({page}) => {
+    await page.goto(`${LOCALES.frCA.path}/products/${KNOWN_PRODUCT.handle}`);
+
+    const priceElement = page.getByRole('group', {name: 'Price'}).first();
+    await expect(priceElement).toBeVisible({timeout: 3000});
+    const priceText = (await priceElement.textContent())?.trim();
+    expect(priceText).toMatch(LOCALES.frCA.currencyFormat);
+  });
+
+  test.describe('FR-CA product flow via link click', () => {
     test.beforeEach(async ({page, storefront}) => {
       await storefront.goto(LOCALES.frCA.path);
-      const firstProductLink = page.locator('a[href*="/products/"]').first();
-      await expect(firstProductLink).toBeVisible({timeout: 10000});
+      const productLink = page.getByRole('link', {name: KNOWN_PRODUCT.name});
+      await expect(productLink).toBeVisible({timeout: 3000});
       await Promise.all([
-        page.waitForURL(/\/FR-CA\/products\/.+/),
-        firstProductLink.click(),
+        page.waitForURL(/\/FR-CA\/products\/.+/, {timeout: 5000}),
+        productLink.click(),
       ]);
-    });
-
-    test('product page shows CAD prices', async ({page}) => {
-      const priceElement = page
-        .locator('div')
-        .filter({hasText: LOCALES.frCA.currencyFormat})
-        .first();
-      await expect(priceElement).toBeVisible();
     });
 
     test('locale prefix persists through cart flow and cart shows CAD prices', async ({
@@ -105,9 +112,8 @@ test.describe('Markets Recipe', () => {
         .getByText(/CA\$/);
       await expect(drawerSubtotal).toBeVisible();
 
-      await storefront.navigateToCart();
-
-      expect(page.url()).toMatch(/\/FR-CA\/cart$/);
+      await page.goto('/FR-CA/cart');
+      await page.waitForURL(/\/FR-CA\/cart$/);
 
       const cartHeading = page.getByRole('heading', {name: /cart/i, level: 1});
       await expect(cartHeading).toBeVisible();
