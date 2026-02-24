@@ -150,22 +150,10 @@ function CartGiftCard({
   const removeButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const previousCardIdsRef = useRef<string[]>([]);
   const giftCardAddFetcher = useFetcher({key: 'gift-card-add'});
-  const [announcement, setAnnouncement] = useState('');
   const [removedCardIndex, setRemovedCardIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (giftCardAddFetcher.data) {
-      const data = giftCardAddFetcher.data as {
-        errors?: Array<{message: string}>;
-        cart?: {appliedGiftCards?: Array<{id: string}>};
-      };
-
-      if (data.errors && data.errors.length > 0) {
-        setAnnouncement('Gift card code is invalid');
-      } else {
-        setAnnouncement('Gift card applied successfully');
-      }
-
       if (giftCardCodeInput.current !== null) {
         giftCardCodeInput.current.value = '';
       }
@@ -191,7 +179,6 @@ function CartGiftCard({
         giftCardCodeInput.current.focus();
       }
 
-      setAnnouncement('Gift card removed');
       setRemovedCardIndex(null);
     }
 
@@ -207,15 +194,6 @@ function CartGiftCard({
 
   return (
     <section aria-label="Gift cards">
-      <div
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        className="sr-only"
-      >
-        {announcement}
-      </div>
-
       {giftCardCodes && giftCardCodes.length > 0 && (
         <dl>
           <dt id={giftCardHeadingId}>Applied Gift Card(s)</dt>

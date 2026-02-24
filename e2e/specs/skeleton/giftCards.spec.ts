@@ -127,10 +127,9 @@ test.describe('Gift Cards', () => {
 
     test('does not add invalid gift card', async ({giftCard}) => {
       // Note: the skeleton template shows no error message for invalid codes -
-      // the form clears silently. this is a known UX gap.
+      // the form clears silently. This is a known UX gap.
       const invalidCode = 'INVALID-CODE-12345';
       await giftCard.applyCode(invalidCode);
-
       await giftCard.assertNoGiftCards();
     });
   });
