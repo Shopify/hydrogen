@@ -1000,6 +1000,45 @@ describe('upgrade', async () => {
 
       expect(removeDependencies).toContain('remix');
     });
+
+    it('handles releases that omit dependencies maps', () => {
+      const makeRelease = (version: string, overrides: Partial<Release> = {}) =>
+        ({
+          version,
+          hash: 'abc',
+          commit: 'https://github.com/Shopify/hydrogen/commit/abc',
+          pr: 'https://github.com/Shopify/hydrogen/pull/1',
+          date: '2025-01-01',
+          title: '',
+          dependencies: {'@shopify/hydrogen': version},
+          devDependencies: {},
+          features: [],
+          fixes: [],
+          ...overrides,
+        }) as Release;
+
+      const targetRelease = makeRelease('2025.10.0');
+      const releaseWithoutDependencyMaps = {
+        ...makeRelease('2025.7.0', {
+          removeDependencies: ['@shopify/remix-oxygen'],
+        }),
+        dependencies: undefined,
+        devDependencies: undefined,
+      } as unknown as Release;
+      const fromRelease = makeRelease('2025.5.0');
+
+      const {removeDependencies} = getCumulativeRelease({
+        availableUpgrades: [
+          targetRelease,
+          releaseWithoutDependencyMaps,
+          fromRelease,
+        ],
+        selectedRelease: targetRelease,
+        currentVersion: '2025.5.0',
+      });
+
+      expect(removeDependencies).toContain('@shopify/remix-oxygen');
+    });
   });
 
   describe('displayConfirmation', () => {

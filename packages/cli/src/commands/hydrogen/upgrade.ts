@@ -631,14 +631,17 @@ export function getCumulativeRelease({
 
     if (!release) continue;
 
-    Object.keys(release.dependencies).forEach((dep) => {
+    const dependencies = release.dependencies ?? {};
+    const devDependencies = release.devDependencies ?? {};
+
+    Object.keys(dependencies).forEach((dep) => {
       const removalI = removedAt.get(dep);
       if (removalI !== undefined && i >= removalI) {
         reinstalledDeps.add(dep);
       }
     });
 
-    Object.keys(release.devDependencies).forEach((dep) => {
+    Object.keys(devDependencies).forEach((dep) => {
       const removalI = removedAt.get(dep);
       if (removalI !== undefined && i >= removalI) {
         reinstalledDeps.add(dep);
