@@ -45,7 +45,7 @@ test.describe('Gift Cards', () => {
       await giftCard.removeCard(GIFT_CARD_1_LAST_4);
 
       await giftCard.assertCardRemoved(GIFT_CARD_1_LAST_4);
-      await giftCard.assertCardCodeNotVisible(GIFT_CARD_1_LAST_4);
+      await giftCard.assertCardCodeNotPresent(GIFT_CARD_1_LAST_4);
       await giftCard.assertAppliedCard(GIFT_CARD_2_LAST_4);
     });
 
@@ -55,11 +55,11 @@ test.describe('Gift Cards', () => {
 
       await giftCard.removeCard(GIFT_CARD_1_LAST_4);
       await giftCard.assertCardRemoved(GIFT_CARD_1_LAST_4);
-      await giftCard.assertCardCodeNotVisible(GIFT_CARD_1_LAST_4);
+      await giftCard.assertCardCodeNotPresent(GIFT_CARD_1_LAST_4);
 
       await giftCard.removeCard(GIFT_CARD_2_LAST_4);
       await giftCard.assertCardRemoved(GIFT_CARD_2_LAST_4);
-      await giftCard.assertCardCodeNotVisible(GIFT_CARD_2_LAST_4);
+      await giftCard.assertCardCodeNotPresent(GIFT_CARD_2_LAST_4);
 
       await giftCard.assertNoGiftCards();
     });
@@ -123,7 +123,7 @@ test.describe('Gift Cards', () => {
 
       await giftCard.removeCard(GIFT_CARD_1_LAST_4);
       await giftCard.assertCardRemoved(GIFT_CARD_1_LAST_4);
-      await giftCard.assertCardCodeNotVisible(GIFT_CARD_1_LAST_4);
+      await giftCard.assertCardCodeNotPresent(GIFT_CARD_1_LAST_4);
 
       const uppercaseCode = GIFT_CARD_1.toUpperCase();
       await giftCard.applyCode(uppercaseCode);

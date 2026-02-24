@@ -38,7 +38,7 @@ export class GiftCardUtil {
     ).not.toBeVisible();
   }
 
-  async assertCardCodeNotVisible(lastFourChars: string) {
+  async assertCardCodeNotPresent(lastFourChars: string) {
     await expect(this.page.getByText(`***${lastFourChars}`)).toHaveCount(0);
   }
 
