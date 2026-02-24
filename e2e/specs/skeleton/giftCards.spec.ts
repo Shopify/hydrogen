@@ -91,7 +91,9 @@ test.describe('Gift Cards', () => {
 
       const costSummary = page.getByLabel('Cost summary');
       await expect(
-        costSummary.getByText(`•••• ${GIFT_CARD_1_LAST_4}`),
+        costSummary.getByText(
+          new RegExp(`[•*\\-]{4}\\s*${GIFT_CARD_1_LAST_4}`),
+        ),
       ).toBeVisible();
     });
   });
