@@ -13,12 +13,13 @@ const PRODUCT_HANDLE = 'the-element';
 const UNIT_PRICE = '$749.95';
 const DISCOUNTED_PRICE = '$739.95';
 
-test.beforeEach(async ({page, cart}) => {
+test.beforeEach(async ({page, cart, discount}) => {
   await page.goto(`/products/${PRODUCT_HANDLE}`);
 
   await cart.addItem(PRODUCT_NAME);
   await cart.closeCartAside();
   await cart.navigateToCartPage();
+  await discount.assertNoDiscounts();
 });
 
 test.describe('Discount codes', () => {
@@ -51,6 +52,7 @@ test.describe('Discount codes', () => {
     await discount.removeCode();
 
     await discount.assertNoDiscounts();
+    await discount.assertCodeNotInDOM(ACTIVE_DISCOUNT_CODE);
   });
 
   test('Persists discount after page reload', async ({page, discount}) => {
@@ -77,6 +79,7 @@ test.describe('Discount codes', () => {
     await discount.assertAppliedCode(ACTIVE_DISCOUNT_CODE);
 
     await discount.removeCode();
+    await discount.assertCodeNotInDOM(ACTIVE_DISCOUNT_CODE);
 
     const uppercaseCode = ACTIVE_DISCOUNT_CODE.toUpperCase();
     await discount.applyCode(uppercaseCode);
@@ -87,6 +90,7 @@ test.describe('Discount codes', () => {
     await discount.applyCode(INACTIVE_DISCOUNT_CODE);
 
     await discount.assertNoDiscounts();
+    await discount.assertCodeNotInDOM(INACTIVE_DISCOUNT_CODE);
   });
 
   test('Handles empty code submission', async ({discount}) => {
@@ -100,7 +104,7 @@ test.describe('Discount codes', () => {
 
     await discount.applyCode(ACTIVE_DISCOUNT_CODE);
 
-    const discounts = page.getByLabel('Discounts');
+    const discounts = page.getByLabel('Cart page').getByLabel('Discounts');
     await expect(discounts.getByRole('group')).toHaveCount(1);
   });
 });

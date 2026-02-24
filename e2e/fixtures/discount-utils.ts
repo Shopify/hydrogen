@@ -10,7 +10,7 @@ export class DiscountUtil {
   }
 
   async assertAppliedCode(code: string) {
-    const discounts = this.page.getByLabel('Discounts');
+    const discounts = this.page.getByLabel('Cart page').getByLabel('Discounts');
     await expect(
       discounts.getByRole('group').filter({hasText: code}),
     ).toBeVisible();
@@ -23,5 +23,10 @@ export class DiscountUtil {
   async assertNoDiscounts() {
     const discounts = this.page.getByLabel('Cart page').getByLabel('Discounts');
     await expect(discounts.getByRole('group')).not.toBeVisible();
+  }
+
+  async assertCodeNotInDOM(code: string) {
+    const discounts = this.page.getByText(code);
+    await expect(discounts).not.toBeVisible();
   }
 }
