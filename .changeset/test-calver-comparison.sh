@@ -283,15 +283,15 @@ cp package.json package.json.backup
 
 # Replace the version script to use raw changeset instead of CalVer script
 if command -v perl >/dev/null 2>&1; then
-    perl -i -pe 's/"version": "npm run version:changeset && node \.changeset\/enforce-calver-ci\.js && npm run version:post && npm run format"/"version": "changeset version"/' package.json
+    perl -i -pe 's/"version": "pnpm run version:changeset && node \.changeset\/enforce-calver-ci\.js && pnpm run version:post && pnpm run format"/"version": "changeset version"/' package.json
 else
     # Use portable sed syntax that works on both macOS and Linux
     if sed --version 2>/dev/null | grep -q GNU; then
         # GNU sed (Linux)
-        sed -i 's/"version": "npm run version:changeset && node \.changeset\/enforce-calver-ci\.js && npm run version:post && npm run format"/"version": "changeset version"/' package.json
+        sed -i 's/"version": "pnpm run version:changeset && node \.changeset\/enforce-calver-ci\.js && pnpm run version:post && pnpm run format"/"version": "changeset version"/' package.json
     else
         # BSD sed (macOS)
-        sed -i.tmp 's/"version": "npm run version:changeset && node \.changeset\/enforce-calver-ci\.js && npm run version:post && npm run format"/"version": "changeset version"/' package.json
+        sed -i.tmp 's/"version": "pnpm run version:changeset && node \.changeset\/enforce-calver-ci\.js && pnpm run version:post && pnpm run format"/"version": "changeset version"/' package.json
         rm -f package.json.tmp 2>/dev/null || true
     fi
 fi
@@ -312,7 +312,7 @@ else
 fi
 
 # Run standard changeset (now using raw changeset without CalVer)
-npm run version > /dev/null 2>&1 || true
+pnpm run version > /dev/null 2>&1 || true
 
 # Restore original package.json
 mv package.json.backup package.json

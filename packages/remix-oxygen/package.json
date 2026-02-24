@@ -19,7 +19,7 @@
   "scripts": {
     "build": "tsup --clean",
     "dev": "tsup --watch",
-    "prepack": "npm run build",
+    "prepack": "pnpm run build",
     "typecheck": "tsc --noEmit"
   },
   "exports": {
@@ -46,6 +46,8 @@
   ],
   "devDependencies": {
     "@shopify/oxygen-workers-types": "^4.1.6",
+    "@shopify/hydrogen": "workspace:*",
+    "@types/node": "catalog:",
     "react-router": "7.12.0"
   },
   "peerDependencies": {

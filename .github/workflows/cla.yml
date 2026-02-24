@@ -17,7 +17,7 @@ jobs:
       || (github.event.pull_request
         && !github.event.pull_request.merged
         && !contains(github.event.commits.*.message, '[ci] release')
-        && !contains(github.event.commits.*.message, '[ci] Update package-lock.json')
+        && !contains(github.event.commits.*.message, '[ci] Update pnpm-lock.yaml')
       )
     steps:
       - uses: Shopify/shopify-cla-action@v1

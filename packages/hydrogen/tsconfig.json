@@ -1,16 +1,15 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src", "dev-module.env.d.ts", "dev-ambient.env.d.ts"],
+  "include": [
+    "src",
+    "dev-module.env.d.ts",
+    "dev-ambient.env.d.ts",
+    "vitest.setup.ts"
+  ],
   "compilerOptions": {
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": [
-      "node",
-      "vite/client",
-      "vitest/globals",
-      "jest",
-      "@testing-library/jest-dom"
-    ],
+    "types": ["node", "vite/client", "vitest/globals"],
     "paths": {
       "@shopify/hydrogen": ["./src"],
       "~/mini-oxygen/*": ["../mini-oxygen/src/*"]
