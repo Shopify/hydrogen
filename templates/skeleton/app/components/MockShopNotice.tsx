@@ -15,20 +15,6 @@ export function MockShopNotice() {
           terminal.
         </p>
       </div>
-      <footer>
-        <p className="small">
-          Learn more about{' '}
-          <a
-            className="link"
-            target="_blank"
-            rel="noreferrer noopener"
-            href="https://shopify.dev/docs/custom-storefronts/hydrogen/environment-variables"
-          >
-            editing environment variables
-          </a>
-          .
-        </p>
-      </footer>
     </section>
   );
 }
