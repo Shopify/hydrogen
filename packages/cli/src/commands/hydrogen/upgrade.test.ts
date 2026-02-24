@@ -2097,6 +2097,48 @@ describe('--version=next functionality', () => {
 
       expect(result.version).toBe('2025.7.0');
     });
+
+    it('preserves dependency removals in cumulative release for synthetic next upgrades', async () => {
+      const latestRelease = {
+        title: 'Latest release',
+        version: '2025.7.0',
+        hash: 'abc123',
+        commit: 'https://github.com/test' as `https://${string}`,
+        pr: 'https://github.com/test' as `https://${string}`,
+        date: '2025-09-17',
+        dependencies: {
+          '@shopify/hydrogen': '2025.7.0',
+          'react-router': '7.9.2',
+        },
+        devDependencies: {
+          '@shopify/mini-oxygen': '4.0.0',
+        },
+        removeDependencies: ['@remix-run/react'],
+        removeDevDependencies: ['@remix-run/dev'],
+        fixes: [],
+        features: [],
+      } as Release;
+
+      const selectedRelease = await getSelectedRelease({
+        targetVersion: 'next',
+        availableUpgrades: [latestRelease],
+        currentVersion: '2025.4.0',
+        currentDependencies: {'@shopify/hydrogen': '2025.4.0'},
+      });
+
+      const cumulativeRelease = getCumulativeRelease({
+        availableUpgrades: [latestRelease],
+        selectedRelease,
+        currentVersion: '2025.4.0',
+      });
+
+      expect(cumulativeRelease.removeDependencies).toEqual([
+        '@remix-run/react',
+      ]);
+      expect(cumulativeRelease.removeDevDependencies).toEqual([
+        '@remix-run/dev',
+      ]);
+    });
   });
 
   describe('buildUpgradeCommandArgs with --version=next', () => {

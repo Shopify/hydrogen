@@ -587,6 +587,8 @@ export function getCumulativeRelease({
       ...empty,
       features: selectedRelease.features || [],
       fixes: selectedRelease.fixes || [],
+      removeDependencies: selectedRelease.removeDependencies ?? [],
+      removeDevDependencies: selectedRelease.removeDevDependencies ?? [],
     };
   }
 
