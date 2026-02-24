@@ -8,7 +8,7 @@
  */
 
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
-import {readFile, writeFile} from 'node:fs/promises';
+import {readFile, unlink, writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {exec} from '@shopify/cli-kit/node/system';
 import {inTemporaryDirectory} from '@shopify/cli-kit/node/fs';
@@ -764,19 +764,40 @@ async function scaffoldProjectAtVersion(
     }
   }
 
+  const archivePath = join(tempDir, 'skeleton.tar');
+
   try {
-    await execAsync(
-      `git archive ${commit} -- templates/skeleton | tar -x -C ${tempDir} --exclude='templates/skeleton/.cursor'`,
+    await exec(
+      'git',
+      [
+        'archive',
+        '--format=tar',
+        commit,
+        '--output',
+        archivePath,
+        '--',
+        'templates/skeleton',
+      ],
       {
         cwd: repoRoot,
       },
     );
+    await exec('tar', [
+      '-x',
+      '-f',
+      archivePath,
+      '-C',
+      tempDir,
+      '--exclude=templates/skeleton/.cursor',
+    ]);
   } catch (error) {
     throw new Error(
       `Failed to extract skeleton template from commit ${commit} (version ${skeletonVersion}).\n` +
         `This might indicate the commit doesn't exist or templates/skeleton path doesn't exist in that commit.\n` +
         `Original error: ${(error as Error).message}`,
     );
+  } finally {
+    await unlink(archivePath).catch(() => {});
   }
 
   const skeletonPath = join(tempDir, 'templates/skeleton');
