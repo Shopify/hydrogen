@@ -26,7 +26,7 @@ export class DiscountUtil {
   }
 
   async assertCodeNotVisible(code: string) {
-    const discounts = this.page.getByText(code).first();
-    await expect(discounts).not.toBeVisible();
+    const discounts = this.page.getByText(code);
+    await expect(discounts).toHaveCount(0);
   }
 }
