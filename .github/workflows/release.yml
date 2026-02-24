@@ -129,7 +129,7 @@ jobs:
       - name: Create Release Pull Request or Publish (for latest release)
         if: env.latest == 'true'
         id: changesets
-        uses: changesets/action@c48e67d110a68bc90ccf1098e9646092baacaa87 # v1.6.0
+        uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1.7.0
         with:
           version: pnpm run version
           publish: pnpm run changeset publish
@@ -274,7 +274,7 @@ jobs:
 
       - name: Create Back-fix Release Pull Request or Publish (for back-fix release)
         id: changesets
-        uses: changesets/action@c48e67d110a68bc90ccf1098e9646092baacaa87 # v1.6.0
+        uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1.7.0
         with:
           version: pnpm run version
           publish: pnpm run changeset -- publish --tag ${{ github.ref_name }}
