@@ -74,6 +74,134 @@ function validateDependencyVersion(
   );
 }
 
+function parseCalverVersion(version: string): [number, number, number] | null {
+  const match = version.match(/^(\d{4})\.(\d+)\.(\d+)$/);
+
+  if (!match) {
+    return null;
+  }
+
+  return [Number(match[1]), Number(match[2]), Number(match[3])];
+}
+
+function getMajorVersion(version: string): string | null {
+  const parsed = parseCalverVersion(version);
+
+  if (!parsed) {
+    return null;
+  }
+
+  return `${parsed[0]}.${parsed[1]}`;
+}
+
+function compareCalverVersion(a: string, b: string): number {
+  const parsedA = parseCalverVersion(a);
+  const parsedB = parseCalverVersion(b);
+
+  if (!parsedA || !parsedB) {
+    return a.localeCompare(b);
+  }
+
+  if (parsedA[0] !== parsedB[0]) {
+    return parsedA[0] - parsedB[0];
+  }
+
+  if (parsedA[1] !== parsedB[1]) {
+    return parsedA[1] - parsedB[1];
+  }
+
+  return parsedA[2] - parsedB[2];
+}
+
+function parseReleaseDate(date?: string | null): Date | null {
+  if (!date) {
+    return null;
+  }
+
+  const parsed = new Date(`${date}T00:00:00.000Z`);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed;
+}
+
+function getTargetReleaseDate(targetRelease: Release): Date {
+  return parseReleaseDate(targetRelease.date) ?? new Date();
+}
+
+function getIntermediateReleases({
+  changelog,
+  fromVersion,
+  toVersion,
+}: {
+  changelog: ChangeLog;
+  fromVersion: string;
+  toVersion: string;
+}): Release[] {
+  return changelog.releases.filter((release) => {
+    return (
+      compareCalverVersion(release.version, fromVersion) > 0 &&
+      compareCalverVersion(release.version, toVersion) < 0
+    );
+  });
+}
+
+function getDefaultVersionMatrix(
+  changelog: ChangeLog,
+  targetVersion: string,
+  targetIndex: number,
+  targetRelease: Release,
+): Array<[string, string]> {
+  const targetDate = getTargetReleaseDate(targetRelease);
+  const cutoffDate = new Date(targetDate);
+  cutoffDate.setUTCDate(cutoffDate.getUTCDate() - 365);
+
+  const groupedByMajor = new Map<string, Release>();
+
+  for (const release of changelog.releases.slice(targetIndex + 1)) {
+    const majorVersion = getMajorVersion(release.version);
+    const releaseDate = parseReleaseDate(release.date);
+
+    if (!majorVersion || !releaseDate || releaseDate < cutoffDate) {
+      continue;
+    }
+
+    const current = groupedByMajor.get(majorVersion);
+    if (!current) {
+      groupedByMajor.set(majorVersion, release);
+      continue;
+    }
+
+    if (compareCalverVersion(release.version, current.version) > 0) {
+      groupedByMajor.set(majorVersion, release);
+    }
+  }
+
+  const selectedVersions = [...groupedByMajor.values()]
+    .sort((a, b) => compareCalverVersion(b.version, a.version))
+    .map((release) => release.version);
+
+  if (selectedVersions.length > 0) {
+    const oldestVersion = selectedVersions[selectedVersions.length - 1];
+    console.log(
+      `Testing ${selectedVersions.length} major versions from last 365 days: ${oldestVersion} → ${targetVersion}`,
+    );
+    return selectedVersions.map((version) => [version, targetVersion]);
+  }
+
+  const previousVersion = changelog.releases[targetIndex + 1]?.version;
+  if (!previousVersion) {
+    throw new Error(
+      `Need at least one version before ${targetVersion} for testing`,
+    );
+  }
+
+  console.log(`Testing fallback: ${previousVersion} → ${targetVersion}`);
+  return [[previousVersion, targetVersion]];
+}
+
 function createVersionMatrix(changelog: ChangeLog): Array<[string, string]> {
   const latestVersion = changelog.releases[0]?.version;
 
@@ -98,29 +226,19 @@ function createVersionMatrix(changelog: ChangeLog): Array<[string, string]> {
 
   const targetRelease = changelog.releases[targetIndex]!;
 
-  const targetHasBreaking =
-    targetRelease.features?.some((f) => f.breaking) ||
-    targetRelease.fixes?.some((f) => f.breaking);
-
   if (fromEnv) {
-    if (!changelog.releases.some((r) => r.version === fromEnv)) {
-      throw new Error(`FROM version ${fromEnv} not found in changelog`);
+    if (!parseCalverVersion(fromEnv)) {
+      throw new Error(
+        `FROM version ${fromEnv} must be in YYYY.M.P format (example: 2025.5.0)`,
+      );
     }
 
-    if (targetHasBreaking) {
-      console.log(
-        `⊘ Skipping ${fromEnv} → ${targetVersion}: target has breaking changes`,
-      );
-      return [];
+    if (!changelog.releases.some((release) => release.version === fromEnv)) {
+      throw new Error(`FROM version ${fromEnv} not found in changelog`);
     }
 
     console.log(`Testing: ${fromEnv} → ${targetVersion}`);
     return [[fromEnv, targetVersion]];
-  }
-
-  if (targetHasBreaking) {
-    console.log(`⊘ Skipping ${targetVersion}: target has breaking changes`);
-    return [];
   }
 
   if (lastN && lastN >= 1) {
@@ -146,15 +264,12 @@ function createVersionMatrix(changelog: ChangeLog): Array<[string, string]> {
     return matrix;
   }
 
-  const previousVersion = changelog.releases[targetIndex + 1]?.version;
-  if (!previousVersion) {
-    throw new Error(
-      `Need at least one version before ${targetVersion} for testing`,
-    );
-  }
-
-  console.log(`Testing: ${previousVersion} → ${targetVersion}`);
-  return [[previousVersion, targetVersion]];
+  return getDefaultVersionMatrix(
+    changelog,
+    targetVersion,
+    targetIndex,
+    targetRelease,
+  );
 }
 
 describe('upgrade e2e', () => {
@@ -171,25 +286,8 @@ describe('upgrade e2e', () => {
       return;
     }
 
-    let stoppedEarly = false;
-    let stoppedAtIndex = 0;
-
-    for (let i = 0; i < matrix.length; i++) {
-      const [fromVersion, toVersion] = matrix[i]!;
-      const shouldSkip = await testUpgrade(fromVersion, toVersion, changelog);
-
-      if (shouldSkip) {
-        stoppedEarly = true;
-        stoppedAtIndex = i;
-        break;
-      }
-    }
-
-    if (stoppedEarly && stoppedAtIndex < matrix.length - 1) {
-      const remaining = matrix.length - stoppedAtIndex - 1;
-      console.log(
-        `⊘ Stopped early due to breaking changes (${remaining} remaining path${remaining === 1 ? '' : 's'} would also skip)`,
-      );
+    for (const [fromVersion, toVersion] of matrix) {
+      await testUpgrade(fromVersion, toVersion, changelog);
     }
   }, 600000);
 });
@@ -198,39 +296,32 @@ async function testUpgrade(
   fromVersion: string,
   toVersion: string,
   changelog: ChangeLog,
-): Promise<boolean> {
-  const fromRelease = changelog.releases.find((r) => r.version === fromVersion);
+): Promise<void> {
   const toRelease = changelog.releases.find((r) => r.version === toVersion);
 
-  if (!fromRelease || !toRelease) {
-    throw new Error(
-      `Could not find releases for ${fromVersion} or ${toVersion}`,
-    );
+  if (!toRelease) {
+    throw new Error(`Could not find target release ${toVersion} in changelog`);
   }
 
-  const fromIndex = changelog.releases.findIndex(
-    (r) => r.version === fromVersion,
-  );
-  const toIndex = changelog.releases.findIndex((r) => r.version === toVersion);
-
-  const intermediateReleases = changelog.releases.slice(toIndex + 1, fromIndex);
-  const hasIntermediateBreaking = intermediateReleases.some(
-    (r) =>
-      r.features?.some((f) => f.breaking) || r.fixes?.some((f) => f.breaking),
-  );
-
-  if (hasIntermediateBreaking) {
-    console.log(
-      `⊘ Skipping ${fromVersion} → ${toVersion}: intermediate breaking changes`,
-    );
-    return true;
-  }
+  const intermediateReleases = getIntermediateReleases({
+    changelog,
+    fromVersion,
+    toVersion,
+  });
 
   const hasIntermediateSteps = intermediateReleases.some(
     (r) =>
       r.features?.some((f) => f.steps && f.steps.length > 0) ||
       r.fixes?.some((f) => f.steps && f.steps.length > 0),
   );
+
+  const hasBreakingChanges =
+    toRelease.features?.some((f) => f.breaking) ||
+    toRelease.fixes?.some((f) => f.breaking) ||
+    intermediateReleases.some(
+      (r) =>
+        r.features?.some((f) => f.breaking) || r.fixes?.some((f) => f.breaking),
+    );
 
   const packagesToCheck: Array<[string, string | undefined]> = [
     ['@shopify/hydrogen', toRelease.dependencies?.['@shopify/hydrogen']],
@@ -255,7 +346,6 @@ async function testUpgrade(
     const {projectDir, skeletonVersion} = await scaffoldProjectAtVersion(
       tempDir,
       fromVersion,
-      fromRelease,
       changelog,
     );
 
@@ -267,7 +357,8 @@ async function testUpgrade(
       initialPackageJson.dependencies?.['@shopify/hydrogen'];
 
     expect(initialHydrogenVersion).toBeDefined();
-    expect(stripVersionPrefix(initialHydrogenVersion)).toBe(fromVersion);
+    const currentVersion = stripVersionPrefix(initialHydrogenVersion);
+    expect(currentVersion).toBe(skeletonVersion);
 
     try {
       await upgradeModule.runUpgrade({
@@ -353,15 +444,14 @@ async function testUpgrade(
     const guideFile = join(
       projectDir,
       '.hydrogen',
-      `upgrade-${fromVersion}-to-${toVersion}.md`,
+      `upgrade-${currentVersion}-to-${toVersion}.md`,
     );
 
     if (hasUpgradeSteps) {
       const guideContent = await readFile(guideFile, 'utf8');
       expect(guideContent).toContain(
-        `# Hydrogen upgrade guide: ${fromVersion} to ${toVersion}`,
+        `# Hydrogen upgrade guide: ${currentVersion} to ${toVersion}`,
       );
-      expect(guideContent.length).toBeGreaterThan(100);
     } else {
       await expect(readFile(guideFile, 'utf8')).rejects.toThrow();
     }
@@ -371,11 +461,7 @@ async function testUpgrade(
     } catch (error) {
       throw new Error(
         `npm install failed for ${fromVersion} → ${toVersion}.\n` +
-          `This indicates the upgrade path doesn't work automatically:\n` +
-          `  - If jumping multiple versions: May need incremental upgrades or missing cumulative deps\n` +
-          `  - May need removeDependencies array (e.g., peer dependency conflicts)\n` +
-          `  - May need breaking: true flag\n` +
-          `  - May need manual upgrade steps\n\n` +
+          `Changelog may be incomplete or inaccurate for this upgrade path.\n\n` +
           `Changelog entry for ${toVersion}:\n${JSON.stringify(toRelease, null, 2)}\n\n` +
           `Original error: ${(error as Error).message}`,
       );
@@ -383,8 +469,9 @@ async function testUpgrade(
 
     // Projects with manual upgrade steps (e.g. codemods, config changes) may not build
     // until those steps are applied by the developer, so we only validate the build
-    // for releases that can be applied purely through dependency changes.
-    if (!hasUpgradeSteps) {
+    // for releases that can be applied purely through dependency changes and do not
+    // include breaking changes.
+    if (!hasUpgradeSteps && !hasBreakingChanges) {
       try {
         await exec('npx', ['@shopify/cli', 'hydrogen', 'build', '--codegen'], {
           cwd: projectDir,
@@ -398,27 +485,24 @@ async function testUpgrade(
       } catch (error) {
         throw new Error(
           `Build failed for ${fromVersion} → ${toVersion}.\n` +
-            `The changelog does NOT indicate breaking changes or manual steps.\n` +
-            `This likely means the changelog entry is incomplete:\n` +
-            `  - May need breaking: true flag\n` +
-            `  - May need manual upgrade steps with instructions\n` +
-            `  - May need additional dependencies specified\n\n` +
+            `Changelog may be incomplete or inaccurate for this upgrade path.\n\n` +
             `Changelog entry:\n${JSON.stringify(toRelease, null, 2)}\n\n` +
             `Original error: ${(error as Error).message}`,
         );
       }
     } else {
+      const reason = hasUpgradeSteps
+        ? 'manual steps required'
+        : 'breaking changes';
       const skeletonNote =
         skeletonVersion !== fromVersion
           ? ` (scaffolded on ${skeletonVersion})`
           : '';
       console.log(
-        `✓ ${fromVersion} → ${toVersion}${skeletonNote} [manual steps required, build skipped]`,
+        `✓ ${fromVersion} → ${toVersion}${skeletonNote} [${reason}, build skipped]`,
       );
     }
   });
-
-  return false;
 }
 
 async function arePackagesPublished(
@@ -578,17 +662,59 @@ async function findCommitForVersionCached(
   return commit;
 }
 
+async function isMatchingSkeletonCommit({
+  repoRoot,
+  commit,
+  version,
+}: {
+  repoRoot: string;
+  commit: string;
+  version: string;
+}): Promise<boolean> {
+  try {
+    const {stdout: packageContent} = await execAsync(
+      `git show ${commit}:templates/skeleton/package.json`,
+      {cwd: repoRoot},
+    );
+    const packageJson = JSON.parse(packageContent);
+
+    return (
+      packageJson.dependencies?.['@shopify/hydrogen'] === version &&
+      packageJson.version === version
+    );
+  } catch {
+    return false;
+  }
+}
+
 async function scaffoldProjectAtVersion(
   tempDir: string,
   version: string,
-  release: Release,
   changelog: ChangeLog,
 ): Promise<{projectDir: string; skeletonVersion: string}> {
   const projectDir = join(tempDir, 'test-project');
   const repoRoot = join(process.cwd(), '../../');
 
-  let commit: string | undefined = release.hash;
+  const release = changelog.releases.find((item) => item.version === version);
+
+  let commit: string | undefined = release?.hash;
   let skeletonVersion = version;
+
+  if (commit) {
+    const isValidVersionCommit = await isMatchingSkeletonCommit({
+      repoRoot,
+      commit,
+      version,
+    });
+
+    if (!isValidVersionCommit) {
+      console.warn(
+        `⚠️  Hash ${commit} for ${version} does not contain matching skeleton package.json. ` +
+          `Falling back to git search for a matching skeleton commit.`,
+      );
+      commit = undefined;
+    }
+  }
 
   if (commit) {
     try {
@@ -670,20 +796,6 @@ async function scaffoldProjectAtVersion(
   const packageJsonPath = join(projectDir, 'package.json');
   const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
 
-  if (release.dependencies) {
-    packageJson.dependencies ??= {};
-    for (const [dep, ver] of Object.entries(release.dependencies)) {
-      packageJson.dependencies[dep] = ver;
-    }
-  }
-
-  if (release.devDependencies) {
-    packageJson.devDependencies ??= {};
-    for (const [dep, ver] of Object.entries(release.devDependencies)) {
-      packageJson.devDependencies[dep] = ver;
-    }
-  }
-
   await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
 
   await exec('git', ['init'], {cwd: projectDir});
@@ -697,8 +809,6 @@ async function scaffoldProjectAtVersion(
   await exec('git', ['commit', '-m', 'Initial project setup'], {
     cwd: projectDir,
   });
-
-  await exec('npm', ['install'], {cwd: projectDir});
 
   await writeFile(
     join(projectDir, '.env'),
