@@ -21,11 +21,11 @@
     "dev": "tsup --watch ./src --watch ../../node_modules/@shopify/hydrogen-react/dist/browser-prod/index.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "prepack": "npm run build",
+    "prepack": "pnpm run build",
     "test:watch": "vitest",
-    "build-docs": "sh ./docs/build-docs.sh && npm run format",
+    "build-docs": "sh ./docs/build-docs.sh && pnpm run format",
     "format": "prettier --write \"{src,docs}/**/*\" --ignore-unknown",
-    "preview-docs": "npm run dev --prefix ../../docs/preview"
+    "preview-docs": "pnpm --dir ../../docs/preview run dev"
   },
   "exports": {
     ".": {
@@ -83,7 +83,7 @@
     "dist"
   ],
   "dependencies": {
-    "@shopify/hydrogen-react": "2026.1.0",
+    "@shopify/hydrogen-react": "workspace:*",
     "content-security-policy-builder": "^2.2.0",
     "flame-chart-js": "2.3.1",
     "isbot": "^5.1.21",
@@ -97,13 +97,18 @@
     "react-router": "7.12.0",
     "@react-router/dev": "7.12.0",
     "@shopify/generate-docs": "0.16.4",
-    "@shopify/hydrogen-codegen": "*",
-    "@testing-library/jest-dom": "^5.17.0",
+    "@shopify/hydrogen-codegen": "workspace:*",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@testing-library/react": "^14.0.0",
     "@types/source-map-support": "^0.5.10",
     "formdata-polyfill": "^4.0.10",
-    "happy-dom": "^17.0.0",
-    "react": "18.3.1",
+    "graphql": "^16.12.0",
+    "happy-dom": "^20.0.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "schema-dts": "^1.1.2",
     "vitest": "^3.2.4"
   },

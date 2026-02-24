@@ -10,7 +10,7 @@
 # 1. Dynamic version detection from local changelog.json
 # 2. Scaffolds a historical Hydrogen project from git history
 # 3. Runs the actual `hydrogen upgrade` command with the latest version
-# 4. Validates that npm install succeeds without dependency conflicts
+# 4. Validates that pnpm install succeeds without dependency conflicts
 # 5. Verifies the dev server starts without import/module errors
 # 6. Makes HTTP requests to ensure the app serves HTML without errors
 #
@@ -19,7 +19,7 @@
 # - Manual trigger via workflow_dispatch
 #
 # Key validations:
-# - No npm dependency resolution errors (ERESOLVE, peer deps, etc.)
+# - No pnpm dependency resolution errors (ERESOLVE, peer deps, etc.)
 # - No missing module or import errors during runtime
 # - Dev server successfully serves pages
 # - Build and typecheck commands succeed
@@ -44,22 +44,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        with:
+          run_install: false
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version: '22'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build packages
-        run: npm run build:pkg
+        run: pnpm run build:pkg
 
       - name: Run upgrade flow tests
         run: |
           cd packages/cli
-          npm test upgrade-flow.test.ts
+          pnpm test upgrade-flow.test.ts
         env:
           FORCE_CHANGELOG_SOURCE: local
           SHOPIFY_HYDROGEN_FLAG_FORCE: 1

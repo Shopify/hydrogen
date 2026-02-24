@@ -3,10 +3,10 @@
     "allow": [
       "WebFetch(domain:github.com)",
       "Bash(gh run view:*)",
-      "Bash(npm test:*)",
+      "Bash(pnpm test:*)",
       "Bash(gh pr view:*)",
-      "Bash(npm run ci:checks:*)",
-      "Bash(npm run cookbook:*)",
+      "Bash(pnpm run ci:checks:*)",
+      "Bash(pnpm run cookbook:*)",
       "WebFetch(domain:gist.githubusercontent.com)"
     ]
   },

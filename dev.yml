@@ -2,12 +2,12 @@ name: hydrogen
 display_name: Hydrogen
 
 up:
-  - node: 'v20.19.5' # .nvmrc uses 'v20' for nvm flexibility; dev tool needs specific version
+  - node: 'v24.13.0' # .nvmrc uses 'v24' for nvm flexibility; dev tool needs specific version
   - packages:
-    - ejson
+      - ejson
   - custom:
       name: Build packages
-      met?: npm run build
+      met?: pnpm run build
       meet: 'true'
 
 # So the Shopify CLI loads the local @shopify/cli-hydrogen plugin when running
@@ -18,75 +18,75 @@ env:
 commands:
   server:
     desc: 'Run the skeleton template dev server'
-    run: npm run build && npm run dev:app
+    run: pnpm run build && pnpm run dev:app
 
   # Standard development commands
   watch:
     desc: 'Run a server to watch for changes in any packages and automatically rebuild when changes are saved'
-    run: npm run dev
+    run: pnpm run dev
 
   build:
     desc: 'Build packages for production distribution'
-    run: npm run build
+    run: pnpm run build
 
   test:
     desc: 'Run tests once'
-    run: npm run test
+    run: pnpm run test
     aliases: [t]
 
   test-watch:
     desc: 'Run tests in watch mode'
-    run: npm run test:watch
+    run: pnpm run test:watch
 
   typecheck:
     desc: 'Check source-code for invalid TypeScript'
-    run: npm run typecheck
+    run: pnpm run typecheck
 
   lint:
     desc: 'Lint the code with ESLint'
-    run: npm run lint
+    run: pnpm run lint
 
   format:
     desc: 'Format the code with prettier'
-    run: npm run format
+    run: pnpm run format
 
   changeset:
     desc: 'Add a changeset for releases'
-    run: npm run changeset add
+    run: pnpm run changeset add
 
   cookbook:
     subcommands:
       regenerate:
         desc: 'Refresh all cookbook recipes'
-        run: cd cookbook && npm run cookbook -- regenerate
+        run: pnpm --dir cookbook run cookbook -- regenerate
       validate:
         desc: 'Validate all cookbook recipes'
-        run: cd cookbook && npm run cookbook -- validate
+        run: pnpm --dir cookbook run cookbook -- validate
 
   # Package-specific commands
   hydrogen:
     subcommands:
       dev:
         desc: 'Run Hydrogen package in dev mode'
-        run: cd packages/hydrogen && npm run dev
+        run: pnpm --dir packages/hydrogen run dev
       build:
         desc: 'Build Hydrogen package'
-        run: cd packages/hydrogen && npm run build
+        run: pnpm --dir packages/hydrogen run build
       docs:
         desc: 'Build Hydrogen documentation'
-        run: cd packages/hydrogen && npm run build-docs
+        run: pnpm --dir packages/hydrogen run build-docs
 
   skeleton:
     subcommands:
       dev:
         desc: 'Run skeleton template in dev mode'
-        run: cd templates/skeleton && npm run dev
+        run: pnpm --dir templates/skeleton run dev
       dev-tunnel:
         desc: 'Run skeleton template in dev mode with tunnel'
-        run: SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH=true cd templates/skeleton && npm run dev
+        run: SHOPIFY_HYDROGEN_FLAG_CUSTOMER_ACCOUNT_PUSH=true pnpm --dir templates/skeleton run dev
       build:
         desc: 'Build skeleton template'
-        run: cd templates/skeleton && npm run build
+        run: pnpm --dir templates/skeleton run build
 
 open:
   github: https://github.com/Shopify/hydrogen

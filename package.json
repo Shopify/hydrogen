@@ -1,18 +1,19 @@
 {
   "name": "hydrogen",
-  "packageManager": "npm@10.9.2",
+  "packageManager": "pnpm@10.16.1",
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "npm run build:pkg",
+    "prepare": "husky",
+    "build": "pnpm run build:pkg",
     "build:pkg": "turbo build --parallel --filter=./packages/*",
     "build:templates": "turbo build --parallel --filter=./templates/*",
-    "build:all": "npm run build:pkg && npm run build:templates",
+    "build:all": "pnpm run build:pkg && pnpm run build:templates",
     "ci:checks": "turbo run lint test format:check typecheck",
     "decrypt": "ejson decrypt secrets.ejson",
-    "dev": "npm run dev:pkg",
+    "dev": "pnpm run dev:pkg",
     "dev:pkg": "turbo dev --parallel --filter=./packages/*",
-    "dev:app": "cd templates/skeleton && npm run dev --",
+    "dev:app": "turbo dev --filter=skeleton",
     "docs:build": "turbo run build-docs",
     "docs:preview": "turbo run preview-docs",
     "encrypt": "ejson encrypt secrets.ejson",
@@ -27,15 +28,16 @@
     "test:calver:dry": "node .changeset/enforce-calver-local.js --dry-run",
     "test:calver:branch": "node .changeset/get-calver-version-branch.js",
     "test:calver:bump": "node .changeset/calver-bump-type.test.js",
-    "version": "node .changeset/detect-calver-bump-type.js && npm run version:changeset && node .changeset/enforce-calver-ci.js && npm run version:post && npm run format",
+    "version": "node .changeset/detect-calver-bump-type.js && pnpm run version:changeset && node .changeset/enforce-calver-ci.js && pnpm run version:post && pnpm run format",
     "version:changeset": "changeset version",
-    "version:post": "npm run version:hydrogen && npm run version:cli",
+    "version:post": "pnpm run version:hydrogen && pnpm run version:cli",
     "version:hydrogen": "node -p \"'export const LIB_VERSION = \\'' + require('./packages/hydrogen/package.json').version + '\\';'\" > packages/hydrogen/src/version.ts",
-    "version:cli": "cd packages/cli && npm run generate:manifest",
+    "version:cli": "pnpm --dir packages/cli run generate:manifest",
     "version:next": "node scripts/changeset-version-next.mjs",
     "changeset": "changeset",
     "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/*/dist && rimraf templates/*/.cache",
-    "check": "npm run build && npm run lint && npm run typecheck && npm run test",
+    "nuke": "rimraf packages/*/node_modules templates/*/node_modules apps/*/node_modules .turbo node_modules/.cache/turbo packages/*/.turbo packages/*/dist",
+    "check": "pnpm run build && pnpm run lint && pnpm run typecheck && pnpm run test",
     "e2e": "playwright test",
     "e2e:old-cookies": "playwright test --project=old-cookies",
     "e2e:new-cookies": "playwright test --project=new-cookies",
@@ -56,7 +58,7 @@
   ],
   "prettier": "@shopify/prettier-config",
   "dependencies": {
-    "@shopify/cli-hydrogen": "*",
+    "@shopify/cli-hydrogen": "workspace:*",
     "nested-error-stacks": "^2.1.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -96,28 +98,26 @@
     "eslint-plugin-tsdoc": "0.4.0",
     "fast-fifo": "1.3.2",
     "globals": "^15.14.0",
+    "husky": "^9.1.7",
     "inquirer": "^12.9.6",
     "lint-staged": "^10.5.4",
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
     "tiny-invariant": "^1.3.3",
     "tsup": "^8.4.0",
-    "turbo": "2.3.4",
-    "typescript": "5.9.2",
-    "yorkie": "^2.0.0"
+    "turbo": "2.8.9",
+    "typescript": "5.9.2"
   },
   "engines": {
-    "node": ">=18.0.0"
-  },
-  "gitHooks": {
-    "pre-commit": "lint-staged && npm run pre-commit:encrypt"
+    "node": "^22 || ^24",
+    "pnpm": ">=10.16.1"
   },
   "lint-staged": {
     "*.{js,jsx}": [
       "prettier --write"
     ],
     "*.{ts,tsx}": [
-      "npm run lint-staged --",
+      "pnpm run lint-staged --",
       "prettier --parser=typescript --write"
     ],
     "*.html": [
@@ -126,13 +126,6 @@
     "*.css": [
       "prettier --write"
     ]
-  },
-  "overrides": {
-    "@oclif/core": "3.26.5",
-    "@shopify/cli-kit": "3.80.4",
-    "form-data": ">=4.0.4",
-    "@types/node": "^22.12.0",
-    "vite": "^6.2.1"
   },
   "optionalDependencies": {
     "@ast-grep/napi-linux-x64-gnu": "0.34.1",

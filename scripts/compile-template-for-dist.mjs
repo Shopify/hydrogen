@@ -1,6 +1,7 @@
 import {resolve} from 'path';
 import fs from 'fs-extra';
 import {transpileProject} from '../packages/cli/dist/lib/transpile/index.js';
+import {replaceWorkspaceProtocolVersions} from '../packages/cli/dist/lib/template-pack.js';
 
 (async () => {
   const [template, ...flags] = process.argv.slice(2);
@@ -10,8 +11,18 @@ import {transpileProject} from '../packages/cli/dist/lib/transpile/index.js';
   const tsTemplateDir = `${templateDir}-ts`;
   const jsTemplateDir = `${templateDir}-js`;
 
-  await createNewApp(templateDir, tsTemplateDir, true);
-  await createNewApp(templateDir, jsTemplateDir, false);
+  await Promise.all([
+    prepareTemplateVariant({
+      sourceTemplateDir: templateDir,
+      targetTemplateDir: tsTemplateDir,
+      useTypeScript: true,
+    }),
+    prepareTemplateVariant({
+      sourceTemplateDir: templateDir,
+      targetTemplateDir: jsTemplateDir,
+      useTypeScript: false,
+    }),
+  ]);
   if (!shouldKeepOriginalTemplate) {
     fs.removeSync(templateDir);
   }
@@ -25,6 +36,18 @@ async function createNewApp(srcDir, destDir, useTypeScript) {
   if (!useTypeScript) {
     await transpileProject(destDir);
   }
+}
+
+async function prepareTemplateVariant({
+  sourceTemplateDir,
+  targetTemplateDir,
+  useTypeScript,
+}) {
+  await createNewApp(sourceTemplateDir, targetTemplateDir, useTypeScript);
+  await replaceWorkspaceProtocolVersions({
+    sourceTemplateDir,
+    targetTemplateDir,
+  });
 }
 
 function removeUnwantedFiles(dir) {

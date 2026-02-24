@@ -24,6 +24,8 @@
     "@react-router/dev": "7.12.0",
     "@types/diff": "^5.0.2",
     "@types/gunzip-maybe": "^1.4.0",
+    "@types/node": "catalog:",
+    "esbuild": "^0.25.0",
     "@types/prettier": "^2.7.2",
     "@types/source-map-support": "^0.5.10",
     "@types/tar-fs": "^2.0.1",
@@ -46,6 +48,7 @@
     "chokidar": "3.5.3",
     "cli-truncate": "^4.0.0",
     "diff": "^5.1.0",
+    "esbuild": "^0.25.12",
     "get-east-asian-width": "^1.3.0",
     "get-port": "^7.0.0",
     "gunzip-maybe": "^1.4.2",
@@ -61,8 +64,8 @@
   "peerDependencies": {
     "@graphql-codegen/cli": "^5.0.2",
     "@react-router/dev": "7.12.0",
-    "@shopify/hydrogen-codegen": "^0.3.3",
-    "@shopify/mini-oxygen": "^4.0.0",
+    "@shopify/hydrogen-codegen": "workspace:*",
+    "@shopify/mini-oxygen": "workspace:*",
     "graphql-config": "^5.0.3",
     "vite": "^5.1.0 || ^6.2.0"
   },
@@ -103,7 +106,7 @@
     "oclif.manifest.json"
   ],
   "engines": {
-    "node": ">=18.0.0"
+    "node": "^20 || ^22 || ^24"
   },
   "oclif": {
     "commands": "dist/commands",
