@@ -25,8 +25,8 @@ export class DiscountUtil {
     await expect(discounts.getByRole('group')).not.toBeVisible();
   }
 
-  async assertCodeNotInDOM(code: string) {
-    const discounts = this.page.getByText(code);
+  async assertCodeNotVisible(code: string) {
+    const discounts = this.page.getByText(code).first();
     await expect(discounts).not.toBeVisible();
   }
 }

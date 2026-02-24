@@ -52,7 +52,7 @@ test.describe('Discount codes', () => {
     await discount.removeCode();
 
     await discount.assertNoDiscounts();
-    await discount.assertCodeNotInDOM(ACTIVE_DISCOUNT_CODE);
+    await discount.assertCodeNotVisible(ACTIVE_DISCOUNT_CODE);
   });
 
   test('Persists discount after page reload', async ({page, discount}) => {
@@ -79,7 +79,7 @@ test.describe('Discount codes', () => {
     await discount.assertAppliedCode(ACTIVE_DISCOUNT_CODE);
 
     await discount.removeCode();
-    await discount.assertCodeNotInDOM(ACTIVE_DISCOUNT_CODE);
+    await discount.assertCodeNotVisible(ACTIVE_DISCOUNT_CODE);
 
     const uppercaseCode = ACTIVE_DISCOUNT_CODE.toUpperCase();
     await discount.applyCode(uppercaseCode);
@@ -90,7 +90,7 @@ test.describe('Discount codes', () => {
     await discount.applyCode(INACTIVE_DISCOUNT_CODE);
 
     await discount.assertNoDiscounts();
-    await discount.assertCodeNotInDOM(INACTIVE_DISCOUNT_CODE);
+    await discount.assertCodeNotVisible(INACTIVE_DISCOUNT_CODE);
   });
 
   test('Handles empty code submission', async ({discount}) => {
