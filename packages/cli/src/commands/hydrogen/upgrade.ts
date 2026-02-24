@@ -618,18 +618,21 @@ export function getCumulativeRelease({
   // A dep removed in one release but re-added in a later release (e.g. react-router
   // renamed/upgraded) should not appear in the cumulative removal list.
   // Use chronological ordering so this is independent from changelog input order.
-  const removedAt = new Map<string, number>();
+  // Track each dependency type separately to handle cross-type moves correctly.
+  const removedDepsAt = new Map<string, number>();
+  const removedDevDepsAt = new Map<string, number>();
 
   releasesByVersion.forEach((release, i) => {
     release.removeDependencies?.forEach((dep) => {
-      removedAt.set(dep, i);
+      removedDepsAt.set(dep, i);
     });
     release.removeDevDependencies?.forEach((dep) => {
-      removedAt.set(dep, i);
+      removedDevDepsAt.set(dep, i);
     });
   });
 
   const reinstalledDeps = new Set<string>();
+  const reinstalledDevDeps = new Set<string>();
 
   for (let i = 0; i < releasesByVersion.length; i++) {
     const release = releasesByVersion[i];
@@ -639,17 +642,18 @@ export function getCumulativeRelease({
     const dependencies = release.dependencies ?? {};
     const devDependencies = release.devDependencies ?? {};
 
+    // Only mark as reinstalled if it returns to the same dependency type
     Object.keys(dependencies).forEach((dep) => {
-      const removalI = removedAt.get(dep);
+      const removalI = removedDepsAt.get(dep);
       if (removalI !== undefined && i >= removalI) {
         reinstalledDeps.add(dep);
       }
     });
 
     Object.keys(devDependencies).forEach((dep) => {
-      const removalI = removedAt.get(dep);
+      const removalI = removedDevDepsAt.get(dep);
       if (removalI !== undefined && i >= removalI) {
-        reinstalledDeps.add(dep);
+        reinstalledDevDeps.add(dep);
       }
     });
   }
@@ -666,7 +670,7 @@ export function getCumulativeRelease({
     ...new Set(
       releasesByVersion
         .flatMap((r) => r.removeDevDependencies ?? [])
-        .filter((dep) => !reinstalledDeps.has(dep)),
+        .filter((dep) => !reinstalledDevDeps.has(dep)),
     ),
   ];
 

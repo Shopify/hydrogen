@@ -1039,6 +1039,85 @@ describe('upgrade', async () => {
 
       expect(removeDependencies).toContain('@shopify/remix-oxygen');
     });
+
+    it('includes removal when package moves from devDependencies to dependencies', () => {
+      const makeRelease = (version: string, overrides: Partial<Release> = {}) =>
+        ({
+          version,
+          hash: 'abc',
+          commit: 'https://github.com/Shopify/hydrogen/commit/abc',
+          pr: 'https://github.com/Shopify/hydrogen/pull/1',
+          date: '2025-01-01',
+          title: '',
+          dependencies: {'@shopify/hydrogen': version},
+          devDependencies: {},
+          features: [],
+          fixes: [],
+          ...overrides,
+        }) as Release;
+
+      // Scenario: typescript is removed from devDependencies, then re-added as a regular dependency
+      // The removal from devDependencies should still appear in removeDevDependencies
+      const targetRelease = makeRelease('2025.10.0', {
+        dependencies: {
+          '@shopify/hydrogen': '2025.10.0',
+          typescript: '5.0.0',
+        },
+      });
+      const intermediateRelease = makeRelease('2025.7.0', {
+        removeDevDependencies: ['typescript'],
+      });
+      const fromRelease = makeRelease('2025.5.0');
+
+      const {removeDependencies, removeDevDependencies} = getCumulativeRelease({
+        availableUpgrades: [targetRelease, intermediateRelease, fromRelease],
+        selectedRelease: targetRelease,
+        currentVersion: '2025.5.0',
+      });
+
+      // typescript should be removed from devDependencies (not suppressed by cross-type re-addition)
+      expect(removeDevDependencies).toContain('typescript');
+      expect(removeDependencies).not.toContain('typescript');
+    });
+
+    it('includes removal when package moves from dependencies to devDependencies', () => {
+      const makeRelease = (version: string, overrides: Partial<Release> = {}) =>
+        ({
+          version,
+          hash: 'abc',
+          commit: 'https://github.com/Shopify/hydrogen/commit/abc',
+          pr: 'https://github.com/Shopify/hydrogen/pull/1',
+          date: '2025-01-01',
+          title: '',
+          dependencies: {'@shopify/hydrogen': version},
+          devDependencies: {},
+          features: [],
+          fixes: [],
+          ...overrides,
+        }) as Release;
+
+      // Scenario: lodash is removed from dependencies, then re-added as a devDependency
+      // The removal from dependencies should still appear in removeDependencies
+      const targetRelease = makeRelease('2025.10.0', {
+        devDependencies: {
+          lodash: '4.17.21',
+        },
+      });
+      const intermediateRelease = makeRelease('2025.7.0', {
+        removeDependencies: ['lodash'],
+      });
+      const fromRelease = makeRelease('2025.5.0');
+
+      const {removeDependencies, removeDevDependencies} = getCumulativeRelease({
+        availableUpgrades: [targetRelease, intermediateRelease, fromRelease],
+        selectedRelease: targetRelease,
+        currentVersion: '2025.5.0',
+      });
+
+      // lodash should be removed from dependencies (not suppressed by cross-type re-addition)
+      expect(removeDependencies).toContain('lodash');
+      expect(removeDevDependencies).not.toContain('lodash');
+    });
   });
 
   describe('displayConfirmation', () => {
