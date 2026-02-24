@@ -1,3 +1,4 @@
+import {execFileSync} from 'node:child_process';
 import {cp, readFile, writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {describe, expect, it} from 'vitest';
@@ -12,27 +13,21 @@ const DEPENDENCY_SECTIONS = [
   'optionalDependencies',
 ] as const;
 
-function getCatalogVersion(workspaceConfig: string, packageName: string) {
-  const catalogSection = workspaceConfig.split('\ncatalog:\n')[1];
-  if (!catalogSection) {
-    throw new Error(
-      'Expected pnpm-workspace.yaml to include a catalog section.',
-    );
-  }
+function getCatalogVersion(sourceTemplateDir: string, packageName: string) {
+  const catalogVersion = execFileSync(
+    'pnpm',
+    ['config', 'get', `catalog.${packageName}`, '--location', 'project'],
+    {
+      cwd: sourceTemplateDir,
+      encoding: 'utf8',
+    },
+  ).trim();
 
-  const escapedPackageName = packageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const match = catalogSection.match(
-    new RegExp(
-      `^\\s*${escapedPackageName}:\\s*['"]?([^'"\\n]+)['"]?\\s*$`,
-      'm',
-    ),
-  );
-
-  if (!match?.[1]) {
+  if (!catalogVersion || catalogVersion === 'undefined') {
     throw new Error(`Expected pnpm catalog entry for ${packageName}.`);
   }
 
-  return match[1];
+  return catalogVersion;
 }
 
 describe('replaceWorkspaceProtocolVersions', () => {
@@ -40,18 +35,14 @@ describe('replaceWorkspaceProtocolVersions', () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const sourceTemplateDir = getSkeletonSourceDir();
       const copiedTemplateDir = join(tmpDir, 'skeleton-copy');
-      const workspaceConfigPath = join(
-        sourceTemplateDir,
-        '..',
-        '..',
-        'pnpm-workspace.yaml',
-      );
 
       await cp(sourceTemplateDir, copiedTemplateDir, {recursive: true});
 
       const copiedPackageJsonPath = join(copiedTemplateDir, 'package.json');
-      const workspaceConfig = await readFile(workspaceConfigPath, 'utf8');
-      const expectedReactVersion = getCatalogVersion(workspaceConfig, 'react');
+      const expectedReactVersion = getCatalogVersion(
+        sourceTemplateDir,
+        'react',
+      );
       const copiedPackageJsonBefore = JSON.parse(
         await readFile(copiedPackageJsonPath, 'utf8'),
       ) as Record<string, Record<string, string> | undefined>;
