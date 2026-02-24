@@ -38,6 +38,10 @@ export class GiftCardUtil {
     ).not.toBeVisible();
   }
 
+  async assertCardCodeNotVisible(lastFourChars: string) {
+    await expect(this.page.getByText(`***${lastFourChars}`)).toHaveCount(0);
+  }
+
   async assertNoGiftCards() {
     const giftCards = this.page.getByLabel('Applied Gift Card(s)');
     await expect(giftCards.getByRole('group')).not.toBeVisible();

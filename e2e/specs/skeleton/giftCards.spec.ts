@@ -8,20 +8,15 @@ const GIFT_CARD_1_LAST_4 = GIFT_CARD_1.slice(-4).toUpperCase();
 const GIFT_CARD_2_LAST_4 = GIFT_CARD_2.slice(-4).toUpperCase();
 
 const PRODUCT_NAME = 'The Element';
+const PRODUCT_HANDLE = 'the-element';
 
 test.describe('Gift Cards', () => {
-  test.beforeEach(async ({page, cart}) => {
-    await page.goto('/');
-
-    const productLink = page.getByRole('link', {name: PRODUCT_NAME});
-    const addToCartButton = page.getByRole('button', {name: 'Add to cart'});
-    const cartDialog = page.getByRole('dialog');
-
-    await productLink.click();
-    await addToCartButton.click();
-    await expect(cartDialog).toBeVisible();
+  test.beforeEach(async ({page, cart, giftCard}) => {
+    await page.goto(`/products/${PRODUCT_HANDLE}`);
+    await cart.addItem(PRODUCT_NAME);
     await cart.closeCartAside();
     await cart.navigateToCartPage();
+    await giftCard.assertNoGiftCards();
   });
 
   test.describe('Core Functionality', () => {
@@ -50,6 +45,7 @@ test.describe('Gift Cards', () => {
       await giftCard.removeCard(GIFT_CARD_1_LAST_4);
 
       await giftCard.assertCardRemoved(GIFT_CARD_1_LAST_4);
+      await giftCard.assertCardCodeNotVisible(GIFT_CARD_1_LAST_4);
       await giftCard.assertAppliedCard(GIFT_CARD_2_LAST_4);
     });
 
@@ -59,9 +55,11 @@ test.describe('Gift Cards', () => {
 
       await giftCard.removeCard(GIFT_CARD_1_LAST_4);
       await giftCard.assertCardRemoved(GIFT_CARD_1_LAST_4);
+      await giftCard.assertCardCodeNotVisible(GIFT_CARD_1_LAST_4);
 
       await giftCard.removeCard(GIFT_CARD_2_LAST_4);
       await giftCard.assertCardRemoved(GIFT_CARD_2_LAST_4);
+      await giftCard.assertCardCodeNotVisible(GIFT_CARD_2_LAST_4);
 
       await giftCard.assertNoGiftCards();
     });
@@ -125,6 +123,7 @@ test.describe('Gift Cards', () => {
 
       await giftCard.removeCard(GIFT_CARD_1_LAST_4);
       await giftCard.assertCardRemoved(GIFT_CARD_1_LAST_4);
+      await giftCard.assertCardCodeNotVisible(GIFT_CARD_1_LAST_4);
 
       const uppercaseCode = GIFT_CARD_1.toUpperCase();
       await giftCard.applyCode(uppercaseCode);

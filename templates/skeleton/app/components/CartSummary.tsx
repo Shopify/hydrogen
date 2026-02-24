@@ -13,6 +13,7 @@ export function CartSummary({cart, layout}: CartSummaryProps) {
   const className =
     layout === 'page' ? 'cart-summary-page' : 'cart-summary-aside';
   const summaryId = useId();
+  const discountsHeadingId = useId();
   const discountCodeInputId = useId();
 
   return (
@@ -30,6 +31,7 @@ export function CartSummary({cart, layout}: CartSummaryProps) {
       </dl>
       <CartDiscounts
         discountCodes={cart?.discountCodes}
+        discountsHeadingId={discountsHeadingId}
         discountCodeInputId={discountCodeInputId}
       />
       <CartGiftCard giftCardCodes={cart?.appliedGiftCards} />
@@ -53,9 +55,11 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
 
 function CartDiscounts({
   discountCodes,
+  discountsHeadingId,
   discountCodeInputId,
 }: {
   discountCodes?: CartApiQueryFragment['discountCodes'];
+  discountsHeadingId: string;
   discountCodeInputId: string;
 }) {
   const codes: string[] =
@@ -64,19 +68,23 @@ function CartDiscounts({
       ?.map(({code}) => code) || [];
 
   return (
-    <div aria-labelledby="cart-discounts">
+    <section aria-label="Discounts">
       {/* Have existing discount, display it with a remove option */}
       <dl hidden={!codes.length}>
         <div>
-          <dt id="cart-discounts">Discount(s)</dt>
+          <dt id={discountsHeadingId}>Discounts</dt>
           <UpdateDiscountForm>
-            <dd className="cart-discount" role="group">
+            <div
+              className="cart-discount"
+              role="group"
+              aria-labelledby={discountsHeadingId}
+            >
               <code>{codes?.join(', ')}</code>
               &nbsp;
               <button type="submit" aria-label="Remove discount">
                 Remove
               </button>
-            </dd>
+            </div>
           </UpdateDiscountForm>
         </div>
       </dl>
@@ -99,7 +107,7 @@ function CartDiscounts({
           </button>
         </div>
       </UpdateDiscountForm>
-    </div>
+    </section>
   );
 }
 
