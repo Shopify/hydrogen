@@ -154,7 +154,7 @@ function CartBadge({count}: {count: number | null}) {
         } as CartViewPayload);
       }}
     >
-      Cart {count === null ? <span>&nbsp;</span> : count}
+      Cart <span aria-label={`(items: ${count})`}>{count}</span>
     </a>
   );
 }

@@ -86,6 +86,9 @@ importers:
       '@shopify/cli':
         specifier: 3.85.4
         version: 3.85.4
+      '@shopify/prettier-config':
+        specifier: ^1.1.2
+        version: 1.1.4
       '@total-typescript/ts-reset':
         specifier: ^0.6.1
         version: 0.6.1
