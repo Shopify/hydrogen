@@ -177,7 +177,7 @@ jobs:
   test_e2e:
     name: ⬣ E2E tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     concurrency:
       group: ci-e2e-${{ github.ref }}
       cancel-in-progress: true
@@ -216,6 +216,7 @@ jobs:
 
       - name: 🧪 Run E2E tests
         run: pnpm exec playwright test --workers=1
+        timeout-minutes: 1
         env:
           EJSON_PRIVATE_KEY: ${{ secrets.EJSON_PRIVATE_KEY }}
 
