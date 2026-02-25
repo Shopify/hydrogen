@@ -114,7 +114,7 @@ describe('getAffectedRecipes', () => {
     expect(result).toEqual(['my-recipe']);
   });
 
-  it('detects recipe affected via a deleted file', () => {
+  it('does NOT treat deleted files as a reason to flag a recipe as affected', () => {
     mockListRecipes.mockReturnValue(['my-recipe']);
     mockLoadRecipe.mockReturnValue(
       makeRecipe({
@@ -125,7 +125,7 @@ describe('getAffectedRecipes', () => {
     const result = getAffectedRecipes([
       'templates/skeleton/app/old-routes/removed.tsx',
     ]);
-    expect(result).toEqual(['my-recipe']);
+    expect(result).toEqual([]);
   });
 
   it('returns only the recipes that match among multiple recipes', () => {
@@ -242,7 +242,7 @@ describe('getSkeletonFiles', () => {
     ]);
   });
 
-  it('collects deleted file paths from all recipes', () => {
+  it('does not include deleted file paths in the skeleton file list', () => {
     mockListRecipes.mockReturnValue(['recipe-a']);
     mockLoadRecipe.mockReturnValue(
       makeRecipe({
@@ -250,7 +250,7 @@ describe('getSkeletonFiles', () => {
       }),
     );
 
-    expect(getSkeletonFiles()).toEqual(['templates/skeleton/app/old.tsx']);
+    expect(getSkeletonFiles()).toEqual([]);
   });
 
   it('deduplicates files referenced by multiple recipes', () => {

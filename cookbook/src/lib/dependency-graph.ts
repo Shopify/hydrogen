@@ -44,11 +44,6 @@ export function getSkeletonFileMap(
     for (const ingredient of recipe.ingredients) {
       addFile(ingredient.path, recipeName);
     }
-
-    // Deleted-file paths are also repo-relative
-    for (const deleted of recipe.deletedFiles ?? []) {
-      addFile(deleted, recipeName);
-    }
   }
 
   return new Map(
@@ -98,10 +93,6 @@ export function getAffectedRecipes(changedFiles: string[]): string[] {
 
     for (const ingredient of recipe.ingredients) {
       recipeFiles.add(ingredient.path);
-    }
-
-    for (const deleted of recipe.deletedFiles ?? []) {
-      recipeFiles.add(deleted);
     }
 
     const isAffected = changedFiles.some((f) => recipeFiles.has(f));
