@@ -64,7 +64,7 @@ jobs:
       - name: Run upgrade flow tests
         run: |
           cd packages/cli
-          pnpm test upgrade-flow.test.ts
+          pnpm test upgrade-e2e.test.ts
         env:
           FORCE_CHANGELOG_SOURCE: local
           SHOPIFY_HYDROGEN_FLAG_FORCE: 1
