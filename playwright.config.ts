@@ -6,7 +6,7 @@ export default defineConfig({
   testMatch: /\.spec\.ts$/,
   retries: isCI ? 1 : 0,
   reporter: isCI ? 'html' : 'list',
-  workers: 1,
+  workers: isCI ? 4 : undefined,
   fullyParallel: true,
   timeout: 60 * 1000,
   use: {
