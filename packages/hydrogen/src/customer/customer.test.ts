@@ -48,6 +48,7 @@ function createFetchResponse<T>(data: T, options: {ok: boolean}) {
 }
 
 let session: HydrogenSession;
+const originalNodeEnv = process.env.NODE_ENV;
 
 const mockCustomerAccountSession: HydrogenSessionData['customerAccount'] = {
   accessToken: 'access_token',
@@ -77,6 +78,7 @@ describe('customer', () => {
   });
 
   afterEach(() => {
+    process.env.NODE_ENV = originalNodeEnv;
     vi.clearAllMocks();
   });
 
@@ -122,6 +124,49 @@ describe('customer', () => {
         expect(params.get('nonce')).toBeTruthy();
         expect(params.get('code_challenge')).toBeTruthy();
         expect(params.get('code_challenge_method')).toBe('S256');
+      });
+
+      it('Throws guidance error in development when request origin is not a tunnel', async () => {
+        process.env.NODE_ENV = 'development';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request('https://localhost'),
+          waitUntil: vi.fn(),
+        });
+
+        try {
+          await customer.login();
+        } catch (error) {
+          const response = error as Response & {message?: string};
+
+          expect(response.status).toBe(400);
+          expect(response.message).toContain('--customer-account-push');
+          expect(response.message).toContain('.tryhydrogen.dev');
+        }
+      });
+
+      it('Redirects in development when request origin uses a tunnel host', async () => {
+        process.env.NODE_ENV = 'development';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request('https://my-shop.tryhydrogen.dev'),
+          waitUntil: vi.fn(),
+        });
+
+        const response = await customer.login();
+        const url = new URL(response.headers.get('location')!);
+
+        expect(response.status).toBe(302);
+        expect(url.origin).toBe('https://shopify.com');
+        expect(url.searchParams.get('redirect_uri')).toBe(
+          'https://my-shop.tryhydrogen.dev/account/authorize',
+        );
       });
 
       it('Redirects to the customer account api login url with authUrl as param', async () => {
@@ -1256,6 +1301,30 @@ describe('customer', () => {
   });
 
   describe('handleAuthStatus()', async () => {
+    it('Throws guidance error in development when request origin is not a tunnel', async () => {
+      process.env.NODE_ENV = 'development';
+
+      const customer = createCustomerAccountClient({
+        session,
+        customerAccountId: 'customerAccountId',
+        shopId: '1',
+        request: new Request('https://localhost/account/orders'),
+        waitUntil: vi.fn(),
+      });
+
+      (session.get as any).mockReturnValueOnce(undefined);
+
+      try {
+        await customer.handleAuthStatus();
+      } catch (error) {
+        const response = error as Response & {message?: string};
+
+        expect(response.status).toBe(400);
+        expect(response.message).toContain('--customer-account-push');
+        expect(response.message).toContain('.tryhydrogen.dev');
+      }
+    });
+
     it('throw redirect to login path and current path as param if logged out', async () => {
       const customer = createCustomerAccountClient({
         session,

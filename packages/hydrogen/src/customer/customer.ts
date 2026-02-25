@@ -58,6 +58,25 @@ function defaultAuthStatusHandler(
 ) {
   if (!request.url) return defaultLoginUrl;
 
+  if (process.env.NODE_ENV === 'development') {
+    const {hostname} = new URL(request.url);
+    if (!hostname.endsWith('.tryhydrogen.dev')) {
+      throw new Response(
+        [
+          'Customer Account API OAuth requires a Hydrogen tunnel in local development.',
+          'Run `shopify hydrogen dev --customer-account-push`.',
+          'Then open the tunnel URL shown in your terminal (`https://*.tryhydrogen.dev`) instead of localhost.',
+        ].join('\n\n'),
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+          },
+        },
+      );
+    }
+  }
+
   const {pathname} = new URL(request.url);
 
   /**
@@ -341,6 +360,23 @@ export function createCustomerAccountClient({
     i18n: {language: language ?? ('EN' as LanguageCode)},
     login: async (options?: LoginOptions) => {
       ifInvalidCredentialThrowError();
+      if (process.env.NODE_ENV === 'development') {
+        if (!requestUrl.hostname.endsWith('.tryhydrogen.dev')) {
+          throw new Response(
+            [
+              'Customer Account API OAuth requires a Hydrogen tunnel in local development.',
+              'Run `shopify hydrogen dev --customer-account-push`.',
+              'Then open the tunnel URL shown in your terminal (`https://*.tryhydrogen.dev`) instead of localhost.',
+            ].join('\n\n'),
+            {
+              status: 400,
+              headers: {
+                'Content-Type': 'text/plain; charset=utf-8',
+              },
+            },
+          );
+        }
+      }
       const loginUrl = new URL(getCustomerAccountUrl(URL_TYPE.AUTH));
 
       const state = generateState();
