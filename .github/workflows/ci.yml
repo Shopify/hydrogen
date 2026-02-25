@@ -215,7 +215,7 @@ jobs:
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
       - name: 🧪 Run E2E tests
-        run: pnpm exec playwright test --workers=1
+        run: pnpm exec playwright test
         timeout-minutes: 15
         env:
           EJSON_PRIVATE_KEY: ${{ secrets.EJSON_PRIVATE_KEY }}
