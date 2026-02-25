@@ -104,9 +104,7 @@ describe('getAffectedRecipes', () => {
     mockListRecipes.mockReturnValue(['my-recipe']);
     mockLoadRecipe.mockReturnValue(
       makeRecipe({
-        ingredients: [
-          {path: 'templates/skeleton/app/components/Foo.tsx'},
-        ],
+        ingredients: [{path: 'templates/skeleton/app/components/Foo.tsx'}],
       }),
     );
 
@@ -367,7 +365,7 @@ describe('getSkeletonFileMap', () => {
       }),
     );
 
-    expect([...getSkeletonFileMap().keys()]).toEqual([
+    expect(Array.from(getSkeletonFileMap().keys())).toEqual([
       'templates/skeleton/app/root.tsx',
       'templates/skeleton/app/server.ts',
     ]);
