@@ -21,5 +21,6 @@ test.describe('Cart Functionality', () => {
     await expect(cartToggle.getByLabel('Items: 1')).toBeVisible();
 
     await cart.assertInCart(page, productName);
+    await cart.assertSubtotal(page, '$30.00');
   });
 });
