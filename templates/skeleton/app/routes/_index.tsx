@@ -34,7 +34,7 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
   ]);
 
   return {
-    isShopLinked: context.env.PUBLIC_STORE_DOMAIN !== undefined,
+    isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
     featuredCollection: collections.nodes[0],
   };
 }
