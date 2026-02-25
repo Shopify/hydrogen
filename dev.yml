@@ -2,7 +2,9 @@ name: hydrogen
 display_name: Hydrogen
 
 up:
-  - node: 'v24.13.0' # .nvmrc uses 'v24' for nvm flexibility; dev tool needs specific version
+  - node:
+      version: v24.13.0 # .nvmrc uses 'v24' for nvm flexibility; dev tool needs specific version
+      package_manager: pnpm@10.16.1
   - packages:
       - ejson
   - custom:
