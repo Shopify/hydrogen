@@ -1,125 +1,112 @@
 import {setTestStore, test, expect, getRequiredSecret} from '../../fixtures';
+import {cart, discount} from '../../fixtures/test-utils';
 
 setTestStore('hydrogenPreviewStorefront');
 
-const activeDiscountCode = getRequiredSecret(
+const ACTIVE_DISCOUNT_CODE = getRequiredSecret(
   'discount_code_active',
 ).toUpperCase();
-const inactiveDiscountCode = getRequiredSecret(
+const INACTIVE_DISCOUNT_CODE = getRequiredSecret(
   'discount_code_inactive',
 ).toUpperCase();
+const PRODUCT_NAME = 'The Element';
+const UNIT_PRICE = '$749.95';
+const DISCOUNTED_PRICE = '$739.95';
 
-test.beforeEach(async ({storefront, context}) => {
-  await context.clearCookies();
-  await storefront.goto('/');
-  await storefront.navigateToFirstProduct();
-  await storefront.addToCart();
-  await storefront.navigateToCart();
+test.beforeEach(async ({page}) => {
+  await page.goto('/');
+
+  const productLink = page.getByRole('link', {name: PRODUCT_NAME});
+  const addToCartButton = page.getByRole('button', {name: 'Add to cart'});
+  const cartDialog = page.getByRole('dialog');
+
+  await productLink.click();
+  await addToCartButton.click();
+  await expect(cartDialog).toBeVisible();
+  await cart.closeCartAside(page);
+  await cart.navigateToCartPage(page);
 });
 
 test.describe('Discount codes', () => {
-  test('Applies and displays discount code', async ({storefront}) => {
-    const discount = await storefront.applyDiscountCode(activeDiscountCode);
-
-    const appliedCodes = await storefront.getAppliedDiscountCodes();
-    expect(appliedCodes).toHaveLength(1);
-    expect(appliedCodes[0]).toBe(discount.code);
+  test('Applies and displays discount code', async ({page}) => {
+    await discount.applyCode(page, ACTIVE_DISCOUNT_CODE);
+    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
   });
 
-  test('Applies discount and reduces subtotal', async ({storefront}) => {
-    // Discount code is $10 off
-    const subtotalBefore = await storefront.getCartSubtotal();
+  test('Applies discount and reduces subtotal', async ({page}) => {
+    await cart.assertSubtotal(page, UNIT_PRICE);
 
-    await storefront.applyDiscountCode(activeDiscountCode);
+    await discount.applyCode(page, ACTIVE_DISCOUNT_CODE);
 
-    const subtotalAfter = await storefront.getCartSubtotal();
-    expect(subtotalAfter).toBeLessThan(subtotalBefore);
-    expect(subtotalBefore - subtotalAfter).toBe(10);
+    await cart.assertSubtotal(page, DISCOUNTED_PRICE);
   });
 
-  test('Applies discount via URL', async ({storefront}) => {
-    await storefront.goto(`/discount/${activeDiscountCode}`);
-    await storefront.page.waitForLoadState('networkidle');
+  test('Applies discount via URL', async ({page}) => {
+    await page.goto(`/discount/${ACTIVE_DISCOUNT_CODE}`);
+    await expect(page).toHaveURL('/');
 
-    await expect(storefront.page).toHaveURL('/');
+    await cart.navigateToCartPage(page);
 
-    await storefront.navigateToCart();
-
-    const appliedCodes = await storefront.getAppliedDiscountCodes();
-    expect(appliedCodes).toContain(activeDiscountCode);
+    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
   });
 
-  test('Removes discount code', async ({storefront}) => {
-    await storefront.applyDiscountCode(activeDiscountCode);
+  test('Removes discount code', async ({page}) => {
+    await discount.applyCode(page, ACTIVE_DISCOUNT_CODE);
+    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
 
-    let appliedCodes = await storefront.getAppliedDiscountCodes();
-    expect(appliedCodes).toHaveLength(1);
+    await discount.removeCode(page);
 
-    await storefront.removeDiscountCode();
-
-    appliedCodes = await storefront.getAppliedDiscountCodes();
-    expect(appliedCodes).toHaveLength(0);
+    await discount.assertNoDiscounts(page);
   });
 
-  test('Persists discount after page reload', async ({storefront}) => {
-    const discount = await storefront.applyDiscountCode(activeDiscountCode);
-    await storefront.expectDiscountCodeApplied(discount.code);
+  test('Persists discount after page reload', async ({page}) => {
+    await discount.applyCode(page, ACTIVE_DISCOUNT_CODE);
+    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
 
-    await storefront.reload();
+    await page.reload();
 
-    await storefront.expectDiscountCodeApplied(discount.code);
+    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
   });
 
-  test('Shows discount input in cart', async ({storefront}) => {
-    const discountInput = storefront.page.locator(
-      'input[name="discountCode"]:visible',
-    );
-    await expect(discountInput).toBeVisible({timeout: 10000});
-
-    const applyButton = discountInput
-      .locator('..')
-      .getByRole('button', {name: 'Apply discount code'});
-    await expect(applyButton).toBeVisible();
+  test('Shows discount input in cart', async ({page}) => {
+    await expect(
+      page.getByRole('textbox', {name: 'Discount code'}),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', {name: 'Apply discount code'}),
+    ).toBeVisible();
   });
 
-  test('Handles case-insensitive codes', async ({storefront}) => {
-    const lowercaseCode = activeDiscountCode.toLowerCase();
-    let discount = await storefront.applyDiscountCode(lowercaseCode);
+  test('Handles case-insensitive codes', async ({page}) => {
+    const lowercaseCode = ACTIVE_DISCOUNT_CODE.toLowerCase();
+    await discount.applyCode(page, lowercaseCode);
+    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
 
-    await storefront.expectDiscountCodeApplied(discount.code);
+    await discount.removeCode(page);
 
-    await storefront.removeDiscountCode();
-
-    const uppercaseCode = activeDiscountCode.toUpperCase();
-    discount = await storefront.applyDiscountCode(uppercaseCode);
-
-    await storefront.expectDiscountCodeApplied(discount.code);
+    const uppercaseCode = ACTIVE_DISCOUNT_CODE.toUpperCase();
+    await discount.applyCode(page, uppercaseCode);
+    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
   });
 
-  test('Rejects invalid discount code', async ({storefront}) => {
-    await storefront.tryApplyDiscountCode(inactiveDiscountCode);
+  test('Rejects invalid discount code', async ({page}) => {
+    await discount.applyCode(page, INACTIVE_DISCOUNT_CODE);
 
-    // TODO: Add error display/help text, and appropriate testing.
-    const appliedCodes = await storefront.getAppliedDiscountCodes();
-    expect(appliedCodes).not.toContain(inactiveDiscountCode);
+    await discount.assertNoDiscounts(page);
   });
 
-  test('Handles empty code submission', async ({storefront}) => {
-    const appliedCodesBefore = await storefront.getAppliedDiscountCodes();
-
-    await storefront.tryApplyDiscountCode('');
-
-    const appliedCodesAfter = await storefront.getAppliedDiscountCodes();
-    expect(appliedCodesAfter).toEqual(appliedCodesBefore);
+  test('Handles empty code submission', async ({page}) => {
+    await discount.applyCode(page, '');
+    await discount.assertNoDiscounts(page);
   });
 
-  test('Prevents duplicate discount codes', async ({storefront}) => {
-    const discount = await storefront.applyDiscountCode(activeDiscountCode);
+  test('Prevents duplicate discount codes', async ({page}) => {
+    await discount.applyCode(page, ACTIVE_DISCOUNT_CODE);
+    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
 
-    await storefront.tryApplyDiscountCode(activeDiscountCode);
+    await discount.applyCode(page, ACTIVE_DISCOUNT_CODE);
 
-    const appliedCodes = await storefront.getAppliedDiscountCodes();
-    expect(appliedCodes).toHaveLength(1);
-    expect(appliedCodes[0]).toBe(discount.code);
+    const discounts = page.getByLabel('Discount(s)');
+    await expect(discounts.getByRole('group')).toHaveCount(1);
   });
 });
