@@ -58,8 +58,8 @@ function throwIfNotTunnelled(hostname: string) {
       throw new Response(
         [
           'Customer Account API OAuth requires a Hydrogen tunnel in local development.',
-          'Run `shopify hydrogen dev --customer-account-push`.',
-          'Then open the tunnel URL shown in your terminal (`https://*.tryhydrogen.dev`) instead of localhost.',
+          'Run the development server with the `--customer-account-push` flag,',
+          'then open the tunnel URL shown in your terminal (`https://*.tryhydrogen.dev`) instead of localhost.',
         ].join('\n\n'),
         {
           status: 400,
