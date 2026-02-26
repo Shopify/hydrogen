@@ -19,8 +19,8 @@
     "encrypt": "ejson encrypt secrets.ejson",
     "lint": "eslint --no-error-on-unmatched-pattern ./packages",
     "lint-staged": "eslint --no-error-on-unmatched-pattern",
-    "format": "prettier --write --ignore-unknown ./packages",
-    "format:check": "prettier --check --ignore-unknown ./packages",
+    "format": "prettier --write --ignore-unknown ./packages ./templates",
+    "format:check": "prettier --check --ignore-unknown ./packages ./templates",
     "typecheck": "turbo typecheck --parallel",
     "test": "turbo run test --parallel",
     "test:watch": "turbo run test:watch",
@@ -107,7 +107,7 @@
     "tsup": "^8.4.0",
     "turbo": "2.8.9",
     "typescript": "5.9.2",
-    "@shopify/prettier-config": "^1.1.2"
+    "@shopify/prettier-config": "catalog:"
   },
   "engines": {
     "node": "^22 || ^24",

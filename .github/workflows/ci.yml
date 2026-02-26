@@ -1,5 +1,9 @@
 name: 🚀 CI
-on: [pull_request]
+on:
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
   check-node-version:
@@ -13,16 +17,25 @@ jobs:
       - name: Validate .nvmrc matches dev.yml
         run: |
           NVMRC_VERSION=$(tr -d 'v\n' < .nvmrc)
-          DEV_YML_RAW=$(grep "node:" dev.yml | grep -oE "'v?[^']+'" | tr -d "'" | head -1)
+          # Expects dev.yml format:
+          #   - node:
+          #       version: vXX.YY.ZZ
+          DEV_YML_RAW=$(grep -A3 '^\s*- node:' dev.yml | grep 'version:' | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+' | head -1)
           DEV_YML_VERSION=$(echo "$DEV_YML_RAW" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
 
           if [ -z "$NVMRC_VERSION" ]; then
             echo "::error::Could not parse version from .nvmrc"
+            echo "  .nvmrc contents: '$(cat .nvmrc)'"
+            echo "  dev.yml raw:     '$DEV_YML_RAW'"
             exit 1
           fi
 
           if [ -z "$DEV_YML_RAW" ]; then
-            echo "::error::Could not find node: directive in dev.yml"
+            echo "::error::Could not find node version in dev.yml"
+            echo "  .nvmrc version:  '$NVMRC_VERSION'"
+            echo "  Searched for: '- node:' followed by 'version:' line in dev.yml"
+            echo "  Relevant dev.yml lines:"
+            grep -A3 'node:' dev.yml | sed 's/^/    /'
             exit 1
           fi
 
@@ -30,6 +43,7 @@ jobs:
             echo "::error::dev.yml must specify a FULL Node version (X.Y.Z format)"
             echo ""
             echo "Found: '$DEV_YML_RAW'"
+            echo ".nvmrc version: '$NVMRC_VERSION'"
             echo "Expected format: 'vX.Y.Z' (e.g., 'v20.19.5')"
             echo ""
             echo "The Shopify 'dev' tool requires a specific installable version,"

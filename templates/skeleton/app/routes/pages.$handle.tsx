@@ -1,6 +1,4 @@
-import {
-  useLoaderData,
-} from 'react-router';
+import {useLoaderData} from 'react-router';
 import type {Route} from './+types/pages.$handle';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 
@@ -22,11 +20,7 @@ export async function loader(args: Route.LoaderArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({
-  context,
-  request,
-  params,
-}: Route.LoaderArgs) {
+async function loadCriticalData({context, request, params}: Route.LoaderArgs) {
   if (!params.handle) {
     throw new Error('Missing page handle');
   }
