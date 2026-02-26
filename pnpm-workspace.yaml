@@ -24,3 +24,4 @@ catalog:
   '@types/react-dom': '^18.3.7'
   react: '^18.3.1'
   react-dom: '^18.3.1'
+  '@shopify/prettier-config': '^1.1.2'

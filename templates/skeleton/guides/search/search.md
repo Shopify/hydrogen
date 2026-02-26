@@ -212,7 +212,7 @@ export async function loader({request, context}: LoaderFunctionArgs) {
   const isRegular = !url.searchParams.has('predictive');
 
   if (!isRegular) {
-    return {}
+    return {};
   }
 
   const searchPromise = regularSearch({request, context});

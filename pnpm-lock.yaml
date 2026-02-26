@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@shopify/prettier-config':
+      specifier: ^1.1.2
+      version: 1.1.4
     '@types/react':
       specifier: ^18.3.28
       version: 18.3.28
@@ -86,6 +89,9 @@ importers:
       '@shopify/cli':
         specifier: 3.85.4
         version: 3.85.4
+      '@shopify/prettier-config':
+        specifier: 'catalog:'
+        version: 1.1.4
       '@total-typescript/ts-reset':
         specifier: ^0.6.1
         version: 0.6.1
@@ -829,7 +835,7 @@ importers:
         specifier: ^4.1.6
         version: 4.2.0
       '@shopify/prettier-config':
-        specifier: ^1.1.2
+        specifier: 'catalog:'
         version: 1.1.4
       '@total-typescript/ts-reset':
         specifier: ^0.6.1
