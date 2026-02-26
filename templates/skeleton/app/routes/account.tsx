@@ -14,14 +14,11 @@ export function shouldRevalidate() {
 
 export async function loader({context}: Route.LoaderArgs) {
   const {customerAccount} = context;
-  const {data, errors} = await customerAccount.query(
-    CUSTOMER_DETAILS_QUERY,
-    {
-      variables: {
-        language: customerAccount.i18n.language,
-      },
+  const {data, errors} = await customerAccount.query(CUSTOMER_DETAILS_QUERY, {
+    variables: {
+      language: customerAccount.i18n.language,
     },
-  );
+  });
 
   if (errors?.length || !data?.customer) {
     throw new Error('Customer not found');
