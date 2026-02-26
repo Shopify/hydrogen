@@ -12,6 +12,10 @@ node_modules
 /playwright-report/
 /playwright/.cache/
 **/dist
+
+# E2E test fixtures
+/.tmp/
+
 # Logs
 logs
 *.log

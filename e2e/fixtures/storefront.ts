@@ -464,9 +464,11 @@ export class StorefrontPage {
    */
   async navigateToFirstProduct() {
     const productLink = this.page.locator('a[href*="/products/"]').first();
-    await expect(productLink).toBeVisible();
-    await productLink.click();
-    await this.page.waitForLoadState('networkidle');
+    await expect(productLink).toBeVisible({timeout: 10000});
+    await Promise.all([
+      this.page.waitForURL(/.*\/products\/.+/, {timeout: 10000}),
+      productLink.click(),
+    ]);
   }
 
   /**

@@ -69,7 +69,7 @@ export interface WithLocale {
 /**
  * Get the currently selected locale from route data
  * @returns Current locale or null if not set
- * 
+ *
  * @example
  * const locale = useSelectedLocale();
  * // {language: 'FR', country: 'CA', pathPrefix: '/FR-CA'}
@@ -84,15 +84,20 @@ export function useSelectedLocale(): Locale | null {
 /**
  * Get pathname without locale prefix (case-insensitive)
  */
-export function getPathWithoutLocale(pathname: string, selectedLocale: Locale | null): string {
+export function getPathWithoutLocale(
+  pathname: string,
+  selectedLocale: Locale | null,
+): string {
   if (!selectedLocale?.pathPrefix) return pathname;
-  
+
   const prefix = selectedLocale.pathPrefix.replace(/\/+$/, '');
   // Case-insensitive check for locale prefix
   if (pathname.toLowerCase().startsWith(prefix.toLowerCase())) {
     const pathWithoutPrefix = pathname.slice(prefix.length);
     // Ensure it starts with /
-    return pathWithoutPrefix.startsWith('/') ? pathWithoutPrefix : '/' + pathWithoutPrefix;
+    return pathWithoutPrefix.startsWith('/')
+      ? pathWithoutPrefix
+      : '/' + pathWithoutPrefix;
   }
   return pathname;
 }
@@ -116,10 +121,12 @@ export function normalizePrefix(prefix: string): string {
  */
 export function findLocaleByPrefix(path: string): Locale | null {
   const normalizedPath = path.toLowerCase();
-  return SUPPORTED_LOCALES.find(locale => {
-    if (locale.pathPrefix === '/') return false;
-    return normalizedPath.startsWith(locale.pathPrefix.toLowerCase());
-  }) ?? null;
+  return (
+    SUPPORTED_LOCALES.find((locale) => {
+      if (locale.pathPrefix === '/') return false;
+      return normalizedPath.startsWith(locale.pathPrefix.toLowerCase());
+    }) ?? null
+  );
 }
 
 /**
@@ -132,62 +139,72 @@ export function cleanPath(pathname: string): string {
     const prefix = normalizePrefix(locale.pathPrefix);
     return pathname.slice(prefix.length) || '/';
   }
-  
+
   // Remove language-only prefixes that aren't valid locales
   const match = pathname.match(/^\/[a-z]{2}(-[a-z]{2})?\//i);
   if (match && !findLocaleByPrefix(match[0])) {
     return pathname.slice(match[0].length - 1);
   }
-  
+
   return pathname;
 }
 
 /**
  * Transform a path with appropriate locale prefix
- * 
+ *
  * @param to - Target path
  * @param locale - Optional specific locale to use
  * @param preservePath - Keep current path when switching locales
  * @returns Localized path
- * 
+ *
  * @example
  * // Add current locale to path
  * useLocalizedPath('/products') // '/FR-CA/products'
- * 
+ *
  * @example
  * // Switch to different locale
  * useLocalizedPath('/', frenchLocale, true) // '/FR-CA/current-path'
- * 
+ *
  * @example
  * // Force specific locale
  * useLocalizedPath('/about', englishLocale) // '/EN-CA/about'
  */
 export function useLocalizedPath(
+  to: string,
+  locale?: Locale,
+  preservePath?: boolean,
+): string;
+export function useLocalizedPath(
   to: string | object,
   locale?: Locale,
-  preservePath = false
+  preservePath?: boolean,
+): string | object;
+export function useLocalizedPath(
+  to: string | object,
+  locale?: Locale,
+  preservePath = false,
 ): string | object {
   const currentLocale = useSelectedLocale();
   const {pathname} = useLocation();
-  
+
   if (typeof to !== 'string') return to;
-  
+
   // Locale switching: maintain current path
   if (locale && preservePath) {
     const cleanCurrentPath = cleanPath(pathname);
     return normalizePrefix(locale.pathPrefix) + cleanCurrentPath;
   }
-  
+
   // Explicit locale for specific link
   if (locale) {
     return normalizePrefix(locale.pathPrefix) + to;
   }
-  
+
   // Skip if path already has locale
   if (findLocaleByPrefix(to)) {
     return to;
   }
-  
+
   // Add current locale to path
   return normalizePrefix(currentLocale?.pathPrefix || '') + to;
 }
