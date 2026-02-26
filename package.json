@@ -106,7 +106,8 @@
     "tiny-invariant": "^1.3.3",
     "tsup": "^8.4.0",
     "turbo": "2.8.9",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "@shopify/prettier-config": "catalog:"
   },
   "engines": {
     "node": "^22 || ^24",
