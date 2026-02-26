@@ -36,7 +36,6 @@ describe('dev', () => {
       git: true,
       language: 'ts',
       i18n: 'subfolders',
-      routes: true,
       installDeps: true,
     });
 

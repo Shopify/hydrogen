@@ -57,7 +57,6 @@ import {
 import {
   generateProjectFile,
   generateRoutes,
-  renderRoutePrompt,
 } from '../setups/routes/generate.js';
 import {execAsync} from '../process.js';
 import {getStorefronts} from '../graphql/admin/link-storefront.js';
@@ -77,7 +76,6 @@ export type InitOptions = {
   i18n?: I18nChoice;
   token?: string;
   force?: boolean;
-  routes?: boolean;
   shortcut?: boolean;
   installDeps?: boolean;
   git?: boolean;
@@ -118,50 +116,31 @@ export async function handleI18n(
   };
 }
 
-export async function handleRouteGeneration(
-  controller: AbortController,
-  flagRoutes?: boolean,
-) {
-  // TODO: Need a multi-select UI component
-  const routesToScaffold =
-    flagRoutes === true
-      ? 'all'
-      : flagRoutes === false
-        ? []
-        : await renderRoutePrompt({
-            abortSignal: controller.signal,
-          });
-
-  const needsRouteGeneration =
-    routesToScaffold === 'all' || routesToScaffold.length > 0;
-
+export function handleRouteGeneration(controller: AbortController) {
   return {
-    needsRouteGeneration,
     setupRoutes: async (
       directory: string,
       language: Language,
       options?: {i18nStrategy?: I18nStrategy; overwriteFileDeps?: boolean},
     ) => {
-      if (needsRouteGeneration) {
-        const result = await generateRoutes(
-          {
-            routeName: routesToScaffold,
-            directory,
-            force: true,
-            typescript: language === 'ts',
-            localePrefix:
-              options?.i18nStrategy === 'subfolders' ? 'locale' : false,
-            signal: controller.signal,
-            ...options,
-          },
-          {
-            rootDirectory: directory,
-            appDirectory: joinPath(directory, 'app'),
-          },
-        );
+      const result = await generateRoutes(
+        {
+          routeName: 'all',
+          directory,
+          force: true,
+          typescript: language === 'ts',
+          localePrefix:
+            options?.i18nStrategy === 'subfolders' ? 'locale' : false,
+          signal: controller.signal,
+          ...options,
+        },
+        {
+          rootDirectory: directory,
+          appDirectory: joinPath(directory, 'app'),
+        },
+      );
 
-        return result.routeGroups;
-      }
+      return result.routeGroups;
     },
   };
 }
