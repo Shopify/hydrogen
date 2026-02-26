@@ -79,6 +79,7 @@ function defaultAuthStatusHandler(
   if (!request.url) return defaultLoginUrl;
 
   const {hostname, pathname} = new URL(request.url);
+  throwIfNotTunnelled(hostname);
 
   /**
    * Remix (single-fetch) request objects have different url
@@ -299,7 +300,6 @@ export function createCustomerAccountClient({
 
   async function handleAuthStatus() {
     if (!(await isLoggedIn())) {
-      throwIfNotTunnelled(requestUrl.hostname);
       throw authStatusHandler();
     }
   }

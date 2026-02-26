@@ -86,7 +86,7 @@ export type CustomerAccount = {
   /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */
   isLoggedIn: () => Promise<boolean>;
   /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */
-  handleAuthStatus: () => void | DataFunctionValue;
+  handleAuthStatus: () => Promise<void>;
   /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */
   getAccessToken: () => Promise<string | undefined>;
   /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/
