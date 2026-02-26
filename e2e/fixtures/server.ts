@@ -4,6 +4,10 @@ import path from 'node:path';
 const STARTUP_TIMEOUT_IN_MS = 120_000;
 const SIGKILL_GRACE_PERIOD_IN_MS = 5_000;
 
+// Passing port 0 to the OS (via listen(0)) tells it to assign any available
+// ephemeral port. This is a standard POSIX convention.
+const OS_ASSIGNED_PORT = 0;
+
 type DevServerOptions = {
   id?: number;
   port?: number;
@@ -15,7 +19,7 @@ type DevServerOptions = {
 
 export class DevServer {
   process: ReturnType<typeof spawn> | undefined;
-  port: number;
+  port: number | undefined;
   projectPath: string;
   customerAccountPush: boolean;
   capturedUrl?: string;
@@ -26,7 +30,7 @@ export class DevServer {
   constructor(options: DevServerOptions = {}) {
     this.id = options.id;
     this.storeKey = options.storeKey;
-    this.port = options.port ?? 0;
+    this.port = options.port;
     this.projectPath =
       options.projectPath ?? path.join(__dirname, '../../templates/skeleton');
     this.customerAccountPush = options.customerAccountPush ?? false;
@@ -35,7 +39,7 @@ export class DevServer {
 
   getUrl() {
     if (this.capturedUrl) return this.capturedUrl;
-    if (this.port === 0) {
+    if (this.port === undefined) {
       throw new Error(
         `Server ${this.id} has not started yet — cannot determine URL with dynamic port allocation`,
       );
@@ -67,7 +71,9 @@ export class DevServer {
         env: {
           ...process.env,
           NODE_ENV: 'development',
-          SHOPIFY_HYDROGEN_FLAG_PORT: this.port.toString(),
+          SHOPIFY_HYDROGEN_FLAG_PORT: (
+            this.port ?? OS_ASSIGNED_PORT
+          ).toString(),
         },
         stdio: ['pipe', 'pipe', 'pipe'],
       });
@@ -90,9 +96,9 @@ export class DevServer {
       const handleOutput = (output: string) => {
         if (!localUrl) {
           const match = output.match(/(http:\/\/localhost:(\d+))/);
-          // Reject port 0 from captured output — it means the server echoed
-          // back the requested port before actually binding to an ephemeral one.
-          if (match && match[2] !== '0') {
+          // Reject port 0 — it means the server echoed back the requested
+          // OS_ASSIGNED_PORT before actually binding to an ephemeral one.
+          if (match && match[2] !== String(OS_ASSIGNED_PORT)) {
             localUrl = match[1];
           }
         }
