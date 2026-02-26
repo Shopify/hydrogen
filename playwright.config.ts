@@ -17,6 +17,10 @@ export default defineConfig({
   },
   projects: [
     {
+      name: 'skeleton',
+      testDir: './e2e/specs/skeleton',
+    },
+    {
       name: 'smoke',
       testDir: './e2e/specs/smoke',
     },
@@ -28,10 +32,6 @@ export default defineConfig({
       // TODO: remove once new cookies are rolled out
       name: 'old-cookies',
       testDir: './e2e/specs/old-cookies',
-    },
-    {
-      name: 'skeleton',
-      testDir: './e2e/specs/skeleton',
     },
   ],
 });
