@@ -1,6 +1,4 @@
-import {
-  useLoaderData,
-} from 'react-router';
+import {useLoaderData} from 'react-router';
 import type {Route} from './+types/search';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {SearchForm} from '~/components/SearchForm';
@@ -10,7 +8,10 @@ import {
   type PredictiveSearchReturn,
   getEmptyPredictiveSearchResult,
 } from '~/lib/search';
-import type {RegularSearchQuery, PredictiveSearchQuery} from 'storefrontapi.generated';
+import type {
+  RegularSearchQuery,
+  PredictiveSearchQuery,
+} from 'storefrontapi.generated';
 
 export const meta: Route.MetaFunction = () => {
   return [{title: `Hydrogen | Search`}];
@@ -225,9 +226,13 @@ async function regularSearch({
   const term = String(url.searchParams.get('q') || '');
 
   // Search articles, pages, and products for the `q` term
-  const {errors, ...items}: {errors?: Array<{message: string}>} & RegularSearchQuery = await storefront.query(SEARCH_QUERY, {
-    variables: {...variables, term},
-  });
+  const {
+    errors,
+    ...items
+  }: {errors?: Array<{message: string}>} & RegularSearchQuery =
+    await storefront.query(SEARCH_QUERY, {
+      variables: {...variables, term},
+    });
 
   if (!items) {
     throw new Error('No search data returned from Shopify API');
@@ -389,17 +394,18 @@ async function predictiveSearch({
   if (!term) return {type, term, result: getEmptyPredictiveSearchResult()};
 
   // Predictively search articles, collections, pages, products, and queries (suggestions)
-  const {predictiveSearch: items, errors}: PredictiveSearchQuery & {errors?: Array<{message: string}>} = await storefront.query(
-    PREDICTIVE_SEARCH_QUERY,
-    {
+  const {
+    predictiveSearch: items,
+    errors,
+  }: PredictiveSearchQuery & {errors?: Array<{message: string}>} =
+    await storefront.query(PREDICTIVE_SEARCH_QUERY, {
       variables: {
         // customize search options as needed
         limit,
         limitScope: 'EACH',
         term,
       },
-    },
-  );
+    });
 
   if (errors) {
     throw new Error(
