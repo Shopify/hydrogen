@@ -74,7 +74,6 @@ describe('init', () => {
       language: 'js',
       mockShop: true,
       path: './hydrogen-quickstart',
-      routes: true,
       shortcut: true,
       quickstart: true,
       git: true,

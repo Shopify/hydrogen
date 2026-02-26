@@ -312,87 +312,71 @@ export async function setupLocalStarterTemplate(
     });
   }
 
-  const continueWithSetup =
-    (options.i18n ?? options.routes) !== undefined ||
-    (await renderConfirmationPrompt({
-      message: 'Do you want to scaffold routes and core functionality?',
-      confirmationMessage: 'Yes, set up now',
-      cancellationMessage:
-        'No, set up later ' +
-        colors.dim(`(run \`${setupSummary.cliCommand} setup\`)`),
-      abortSignal: controller.signal,
-    }));
+  const {i18nStrategy, setupI18n} = await handleI18n(
+    controller,
+    setupSummary.cliCommand,
+    options.i18n,
+  );
 
-  if (continueWithSetup) {
-    const {i18nStrategy, setupI18n} = await handleI18n(
-      controller,
-      setupSummary.cliCommand,
-      options.i18n,
-    );
+  const {setupRoutes} = handleRouteGeneration(controller);
 
-    const {setupRoutes} = await handleRouteGeneration(
-      controller,
-      options.routes ?? true, // TODO: Remove default value when multi-select UI component is available
-    );
+  setupSummary.i18n = i18nStrategy;
+  backgroundWorkPromise = backgroundWorkPromise.then(async () => {
+    // These tasks need to be performed in
+    // sequence to ensure commits are clean.
 
-    setupSummary.i18n = i18nStrategy;
-    backgroundWorkPromise = backgroundWorkPromise.then(async () => {
-      // These tasks need to be performed in
-      // sequence to ensure commits are clean.
-
-      await setupI18n({
-        rootDirectory: project.directory,
-        contextCreate:
-          language === 'ts' ? 'app/lib/context.ts' : 'app/lib/context.js',
-      })
-        .then(() =>
-          options.git
-            ? commitAll(
-                project.directory,
-                `Setup markets support using ${i18nStrategy}`,
-              )
-            : undefined,
-        )
-        .catch((error) => {
-          setupSummary.i18nError = error as AbortError;
-        });
-
-      await setupRoutes(project.directory, language, {
-        i18nStrategy,
-        // The init process might have added and modified files. Do not overwrite them.
-        // E.g. CSS imports might have been added to the root.
-        overwriteFileDeps: false,
-      })
-        .then(async (routes) => {
-          setupSummary.routes = routes;
-
-          // Run React Router typegen after routes are generated for TypeScript projects
-          // (only if dependencies were already installed)
-          if (language === 'ts' && setupSummary.depsInstalled) {
-            try {
-              await execAsync('npx react-router typegen', {
-                cwd: project.directory,
-              });
-            } catch (error) {
-              // Typegen is not critical for project setup, so we don't fail the whole process
-              outputWarn(
-                'Failed to generate React Router types after route generation. You may need to run `npx react-router typegen` manually.',
-              );
-            }
-          }
-
-          if (options.git && routes) {
-            return commitAll(
+    await setupI18n({
+      rootDirectory: project.directory,
+      contextCreate:
+        language === 'ts' ? 'app/lib/context.ts' : 'app/lib/context.js',
+    })
+      .then(() =>
+        options.git
+          ? commitAll(
               project.directory,
-              `Generate routes for core functionality`,
+              `Setup markets support using ${i18nStrategy}`,
+            )
+          : undefined,
+      )
+      .catch((error) => {
+        setupSummary.i18nError = error as AbortError;
+      });
+
+    await setupRoutes(project.directory, language, {
+      i18nStrategy,
+      // The init process might have added and modified files. Do not overwrite them.
+      // E.g. CSS imports might have been added to the root.
+      overwriteFileDeps: false,
+    })
+      .then(async (routes) => {
+        setupSummary.routes = routes;
+
+        // Run React Router typegen after routes are generated for TypeScript projects
+        // (only if dependencies were already installed)
+        if (language === 'ts' && setupSummary.depsInstalled) {
+          try {
+            await execAsync('npx react-router typegen', {
+              cwd: project.directory,
+            });
+          } catch (error) {
+            // Typegen is not critical for project setup, so we don't fail the whole process
+            outputWarn(
+              'Failed to generate React Router types after route generation. You may need to run `npx react-router typegen` manually.',
             );
           }
-        })
-        .catch((error) => {
-          setupSummary.routesError = error as AbortError;
-        });
-    });
-  }
+        }
+
+        if (options.git && routes) {
+          return commitAll(
+            project.directory,
+            `Generate routes for core functionality`,
+          );
+        }
+      })
+      .catch((error) => {
+        setupSummary.routesError = error as AbortError;
+      });
+  });
 
   await renderTasks(tasks);
 

@@ -82,45 +82,42 @@ export async function runSetup(options: RunSetupOptions) {
 
   const i18n = i18nStrategy === 'none' ? undefined : i18nStrategy;
 
-  const {needsRouteGeneration, setupRoutes} =
-    await handleRouteGeneration(controller);
+  const {setupRoutes} = handleRouteGeneration(controller);
 
   let routes: Record<string, string[]> | undefined;
 
-  if (needsRouteGeneration) {
-    const templateRoot = await getTemplateAppFile('..');
-    const [typescript, dtsFiles] = await Promise.all([
-      fileExists(joinPath(rootDirectory, 'tsconfig.json')),
-      glob('*.d.ts', {cwd: templateRoot}),
-    ]);
+  const templateRoot = await getTemplateAppFile('..');
+  const [typescript, dtsFiles] = await Promise.all([
+    fileExists(joinPath(rootDirectory, 'tsconfig.json')),
+    glob('*.d.ts', {cwd: templateRoot}),
+  ]);
 
-    backgroundWorkPromise = backgroundWorkPromise
-      .then(() =>
-        Promise.all([
-          ...dtsFiles.map((filename) =>
-            copyFile(
-              joinPath(templateRoot, filename),
-              resolvePath(rootDirectory, filename),
-            ),
+  backgroundWorkPromise = backgroundWorkPromise
+    .then(() =>
+      Promise.all([
+        ...dtsFiles.map((filename) =>
+          copyFile(
+            joinPath(templateRoot, filename),
+            resolvePath(rootDirectory, filename),
           ),
-          // Copy app entries
-          generateProjectEntries({
-            rootDirectory,
-            appDirectory,
-            typescript,
-          }),
-        ]),
-      )
-      .then(async () => {
-        routes = await setupRoutes(rootDirectory, typescript ? 'ts' : 'js', {
-          i18nStrategy: i18n,
-          // User might have added files before running this command.
-          // We should overwrite them to ensure the routes are set up correctly.
-          // Relies on Git to restore the files if needed.
-          overwriteFileDeps: true,
-        });
+        ),
+        // Copy app entries
+        generateProjectEntries({
+          rootDirectory,
+          appDirectory,
+          typescript,
+        }),
+      ]),
+    )
+    .then(async () => {
+      routes = await setupRoutes(rootDirectory, typescript ? 'ts' : 'js', {
+        i18nStrategy: i18n,
+        // User might have added files before running this command.
+        // We should overwrite them to ensure the routes are set up correctly.
+        // Relies on Git to restore the files if needed.
+        overwriteFileDeps: true,
       });
-  }
+    });
 
   if (i18n) {
     // i18n setup needs to happen after copying the app entries,
@@ -138,7 +135,7 @@ export async function runSetup(options: RunSetupOptions) {
     options.shortcut,
   );
 
-  if (!i18n && !needsRouteGeneration && !createShortcut) return;
+  if (!i18n && !createShortcut) return;
 
   if (createShortcut) {
     backgroundWorkPromise = backgroundWorkPromise.then(async () => {
