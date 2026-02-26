@@ -299,6 +299,7 @@ export function createCustomerAccountClient({
 
   async function handleAuthStatus() {
     if (!(await isLoggedIn())) {
+      throwIfNotTunnelled(requestUrl.hostname);
       throw authStatusHandler();
     }
   }
