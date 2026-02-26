@@ -8,6 +8,8 @@ test.describe('Cart Functionality', () => {
   }) => {
     await page.goto('/');
 
+    if (Math.random() > 0) throw new Error('this error is expected');
+
     const cartBadgeBefore = page.locator('a[href="/cart"]').first();
     const initialCartText = await cartBadgeBefore.textContent();
     const initialCount = initialCartText?.match(/\d+/)?.[0] || '0';
