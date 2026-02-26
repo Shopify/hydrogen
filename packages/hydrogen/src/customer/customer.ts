@@ -52,14 +52,8 @@ import {createCustomerAccountHelper, URL_TYPE} from './customer-account-helper';
 import {warnOnce} from '../utils/warning';
 import {LanguageCode} from '@shopify/hydrogen-react/customer-account-api-types';
 
-function defaultAuthStatusHandler(
-  request: CrossRuntimeRequest,
-  defaultLoginUrl: string,
-) {
-  if (!request.url) return defaultLoginUrl;
-
+function throwIfNotTunnelled(hostname: string) {
   if (process.env.NODE_ENV === 'development') {
-    const {hostname} = new URL(request.url);
     if (!hostname.endsWith('.tryhydrogen.dev')) {
       throw new Response(
         [
@@ -76,8 +70,15 @@ function defaultAuthStatusHandler(
       );
     }
   }
+}
 
-  const {pathname} = new URL(request.url);
+function defaultAuthStatusHandler(
+  request: CrossRuntimeRequest,
+  defaultLoginUrl: string,
+) {
+  if (!request.url) return defaultLoginUrl;
+
+  const {hostname, pathname} = new URL(request.url);
 
   /**
    * Remix (single-fetch) request objects have different url
@@ -313,6 +314,7 @@ export function createCustomerAccountClient({
     mutation: Parameters<CustomerAccount['mutate']>[0],
     options?: Parameters<CustomerAccount['mutate']>[1],
   ) {
+    throwIfNotTunnelled(requestUrl.hostname);
     ifInvalidCredentialThrowError();
 
     mutation = minifyQuery(mutation);
@@ -328,6 +330,7 @@ export function createCustomerAccountClient({
     query: Parameters<CustomerAccount['query']>[0],
     options?: Parameters<CustomerAccount['query']>[1],
   ) {
+    throwIfNotTunnelled(requestUrl.hostname);
     ifInvalidCredentialThrowError();
 
     query = minifyQuery(query);
@@ -359,24 +362,9 @@ export function createCustomerAccountClient({
   return {
     i18n: {language: language ?? ('EN' as LanguageCode)},
     login: async (options?: LoginOptions) => {
+      throwIfNotTunnelled(requestUrl.hostname);
       ifInvalidCredentialThrowError();
-      if (process.env.NODE_ENV === 'development') {
-        if (!requestUrl.hostname.endsWith('.tryhydrogen.dev')) {
-          throw new Response(
-            [
-              'Customer Account API OAuth requires a Hydrogen tunnel in local development.',
-              'Run `shopify hydrogen dev --customer-account-push`.',
-              'Then open the tunnel URL shown in your terminal (`https://*.tryhydrogen.dev`) instead of localhost.',
-            ].join('\n\n'),
-            {
-              status: 400,
-              headers: {
-                'Content-Type': 'text/plain; charset=utf-8',
-              },
-            },
-          );
-        }
-      }
+
       const loginUrl = new URL(getCustomerAccountUrl(URL_TYPE.AUTH));
 
       const state = generateState();
@@ -443,6 +431,7 @@ export function createCustomerAccountClient({
     },
 
     logout: async (options?: LogoutOptions) => {
+      throwIfNotTunnelled(requestUrl.hostname);
       ifInvalidCredentialThrowError();
 
       const idToken = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken;
@@ -489,6 +478,7 @@ export function createCustomerAccountClient({
     mutate: mutate as CustomerAccount['mutate'],
     query: query as CustomerAccount['query'],
     authorize: async () => {
+      throwIfNotTunnelled(requestUrl.hostname);
       ifInvalidCredentialThrowError();
 
       const code = requestUrl.searchParams.get('code');
@@ -654,7 +644,7 @@ function createIfInvalidCredentialThrowError(
       const publicMessage =
         process.env.NODE_ENV === 'production'
           ? 'Internal Server Error'
-          : 'You do not have the valid credential to use Customer Account API (/account).';
+          : 'You do not have a valid credential to use Customer Account API (/account).';
 
       throw new Response(publicMessage, {status: 500});
     }
