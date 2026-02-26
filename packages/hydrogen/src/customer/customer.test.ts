@@ -1303,6 +1303,7 @@ describe('customer', () => {
 
   describe('handleAuthStatus()', async () => {
     it('Throws guidance error in development when request origin is not a tunnel', async () => {
+      expect.assertions(3);
       process.env.NODE_ENV = 'development';
 
       const customer = createCustomerAccountClient({
