@@ -5,7 +5,7 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "2026.1.0",
+  "version": "2026.1.1",
   "license": "MIT",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
@@ -83,7 +83,7 @@
     "dist"
   ],
   "dependencies": {
-    "@shopify/hydrogen-react": "workspace:*",
+    "@shopify/hydrogen-react": "workspace:*2026.1.1",
     "content-security-policy-builder": "^2.2.0",
     "flame-chart-js": "2.3.1",
     "isbot": "^5.1.21",

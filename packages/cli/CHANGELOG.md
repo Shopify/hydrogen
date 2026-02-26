@@ -1,5 +1,20 @@
 # @shopify/cli-hydrogen
 
+## 11.1.10
+
+### Patch Changes
+
+- Updated `prettier` from v2 to v3. ([#3461](https://github.com/Shopify/hydrogen/pull/3461)) by [@fredericoo](https://github.com/fredericoo)
+
+- Removes the React Router v7 version check from the dev command as was confusing from what was resolved in node_modules ([#3499](https://github.com/Shopify/hydrogen/pull/3499)) by [@andguy95](https://github.com/andguy95)
+
+- Fixed an issue where users without addresses could not add the first one ([#3456](https://github.com/Shopify/hydrogen/pull/3456)) by [@fredericoo](https://github.com/fredericoo)
+
+- Route scaffolding now runs automatically during `hydrogen init`, so new projects are fully set up with all routes by default. The `--routes` flag and confirmation prompt have been removed since routes are always generated. ([#3448](https://github.com/Shopify/hydrogen/pull/3448)) by [@fredericoo](https://github.com/fredericoo)
+
+- Updated dependencies [[`ff93a1daf2207e52e1f8331f9ff2ccd1f9b7fed6`](https://github.com/Shopify/hydrogen/commit/ff93a1daf2207e52e1f8331f9ff2ccd1f9b7fed6)]:
+  - @shopify/mini-oxygen@4.0.1
+
 ## 11.1.9
 
 ### Patch Changes
