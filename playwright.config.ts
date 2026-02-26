@@ -5,7 +5,7 @@ const isCI = !!process.env.CI;
 export default defineConfig({
   testMatch: /\.spec\.ts$/,
   retries: isCI ? 1 : 0,
-  reporter: isCI ? 'html' : 'list',
+  reporter: [['html', {open: 'on-failure', outputFolder: 'playwright-report'}]],
   workers: 1,
   fullyParallel: true,
   timeout: 60 * 1000,
