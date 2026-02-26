@@ -160,6 +160,74 @@ describe('<Analytics.Provider />', () => {
     expect(screen.getByText('child')).toBeInTheDocument();
   });
 
+  describe('event queue behavior', () => {
+    it('delivers cart events even when canTrack is initially false', async () => {
+      const cartUpdatedEvent = vi.fn();
+      const productAddedToCartEvent = vi.fn();
+
+      // Simulate the real-world scenario: canTrack is initially false
+      // (privacy SDK not loaded), cart resolves, then canTrack becomes true.
+      const {rerender, AnalyticsProvider, getUpdatedAnalytics} =
+        await renderAnalyticsProvider({
+          initialCart: CART_DATA,
+          mockCanTrack: false,
+          registerCallback: (analytics, ready) => {
+            analytics.subscribe('cart_updated', cartUpdatedEvent);
+            analytics.subscribe(
+              'product_added_to_cart',
+              productAddedToCartEvent,
+            );
+            ready();
+          },
+        });
+
+      // Trigger cart update while canTrack is false
+      rerender(
+        <AnalyticsProvider
+          updateCart={CART_DATA_2}
+          updateMockCanTrack={true}
+        />,
+      );
+      await act(async () => {});
+
+      // Cart events should eventually be delivered
+      expect(cartUpdatedEvent).toHaveBeenCalled();
+      expect(productAddedToCartEvent).toHaveBeenCalled();
+    });
+
+    it('delivers product_added_to_cart event when cart updates while canTrack transitions from false to true', async () => {
+      const productAddedToCartEvent = vi.fn();
+
+      // Start with canTrack: false (simulates privacy SDK not loaded yet)
+      const {rerender, AnalyticsProvider} = await renderAnalyticsProvider({
+        initialCart: CART_DATA,
+        mockCanTrack: false,
+        registerCallback: (analytics, ready) => {
+          analytics.subscribe('product_added_to_cart', productAddedToCartEvent);
+          ready();
+        },
+      });
+
+      // Cart update happens while canTrack is still false
+      // (simulates deferred cart resolving before privacy SDK loads)
+      rerender(<AnalyticsProvider updateCart={CART_DATA_2} />);
+      await act(async () => {});
+
+      // Now transition canTrack to true (simulates privacy SDK loaded)
+      rerender(
+        <AnalyticsProvider
+          updateCart={CART_DATA_2}
+          updateMockCanTrack={true}
+        />,
+      );
+      await act(async () => {});
+
+      // The product_added_to_cart event should eventually be delivered
+      // even though the cart update happened while canTrack was false
+      expect(productAddedToCartEvent).toHaveBeenCalled();
+    });
+  });
+
   describe('useAnalytics()', () => {
     it('returns shop, cart, customData, privacyBanner and customerPrivacy', async () => {
       const {analytics} = await renderAnalyticsProvider({
@@ -334,23 +402,27 @@ async function renderAnalyticsProvider({
   const AnalyticsProvider = ({
     updateCart,
     updateCustomData,
+    updateMockCanTrack,
   }: {
     updateCart?: CartReturn;
     updateCustomData?: Record<string, unknown>;
+    updateMockCanTrack?: boolean;
   } = {}) => {
+    const effectiveCanTrack =
+      updateMockCanTrack !== undefined ? updateMockCanTrack : mockCanTrack;
     return (
       <Analytics.Provider
         cart={updateCart || initialCart}
         shop={SHOP_DATA}
         consent={CONSENT_DATA}
         customData={updateCustomData || customData}
-        {...(typeof mockCanTrack === 'boolean'
-          ? {canTrack: () => mockCanTrack}
+        {...(typeof effectiveCanTrack === 'boolean'
+          ? {canTrack: () => effectiveCanTrack}
           : {})}
       >
         <LoopAnalytics
           registerCallback={registerCallback}
-          mockCanTrack={mockCanTrack}
+          mockCanTrack={effectiveCanTrack}
         >
           {loopAnalyticsFn}
         </LoopAnalytics>
