@@ -3,18 +3,30 @@ import {DevServer} from './server';
 import path from 'node:path';
 import {stat} from 'node:fs/promises';
 import {StorefrontPage} from './storefront';
+import {CartUtil} from './cart-utils';
+import {GiftCardUtil} from './gift-card-utils';
 
 export * from '@playwright/test';
 export * from './storefront';
 export {getTestSecrets, getRequiredSecret} from './test-secrets';
+export {CartUtil} from './cart-utils';
+export {GiftCardUtil} from './gift-card-utils';
 
 export const test = base.extend<
-  {storefront: StorefrontPage},
+  {storefront: StorefrontPage; cart: CartUtil; giftCard: GiftCardUtil},
   {forEachWorker: void}
 >({
   storefront: async ({page}, use) => {
     const storefront = new StorefrontPage(page);
     await use(storefront);
+  },
+  cart: async ({page}, use) => {
+    const cart = new CartUtil(page);
+    await use(cart);
+  },
+  giftCard: async ({page}, use) => {
+    const giftCard = new GiftCardUtil(page);
+    await use(giftCard);
   },
 });
 

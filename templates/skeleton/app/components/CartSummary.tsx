@@ -15,8 +15,8 @@ export function CartSummary({cart, layout}: CartSummaryProps) {
 
   return (
     <div aria-labelledby="cart-summary" className={className}>
-      <h4>Totals</h4>
-      <dl className="cart-subtotal">
+      <h4 id="cart-summary">Totals</h4>
+      <dl role="group" className="cart-subtotal">
         <dt>Subtotal</dt>
         <dd>
           {cart?.cost?.subtotalAmount?.amount ? (
@@ -57,19 +57,19 @@ function CartDiscounts({
       ?.map(({code}) => code) || [];
 
   return (
-    <div>
+    <div aria-labelledby="cart-discounts">
       {/* Have existing discount, display it with a remove option */}
       <dl hidden={!codes.length}>
         <div>
-          <dt>Discount(s)</dt>
+          <dt id="cart-discounts">Discount(s)</dt>
           <UpdateDiscountForm>
-            <div className="cart-discount">
+            <dd className="cart-discount" role="group">
               <code>{codes?.join(', ')}</code>
               &nbsp;
               <button type="submit" aria-label="Remove discount">
                 Remove
               </button>
-            </div>
+            </dd>
           </UpdateDiscountForm>
         </div>
       </dl>
@@ -131,19 +131,21 @@ function CartGiftCard({
   }, [giftCardAddFetcher.data]);
 
   return (
-    <div>
+    <div aria-labelledby="cart-gift-cards">
       {giftCardCodes && giftCardCodes.length > 0 && (
         <dl>
-          <dt>Applied Gift Card(s)</dt>
+          <dt id="cart-gift-cards">Applied Gift Card(s)</dt>
           {giftCardCodes.map((giftCard) => (
             <RemoveGiftCardForm key={giftCard.id} giftCardId={giftCard.id}>
-              <div className="cart-discount">
+              <dd className="cart-discount" role="group">
                 <code>***{giftCard.lastCharacters}</code>
                 &nbsp;
                 <Money data={giftCard.amountUsed} />
                 &nbsp;
-                <button type="submit">Remove</button>
-              </div>
+                <button type="submit" aria-label="Remove gift card">
+                  Remove
+                </button>
+              </dd>
             </RemoveGiftCardForm>
           ))}
         </dl>
@@ -151,14 +153,22 @@ function CartGiftCard({
 
       <AddGiftCardForm fetcherKey="gift-card-add">
         <div>
+          <label htmlFor="gift-card-input" className="sr-only">
+            Gift card code
+          </label>
           <input
+            id="gift-card-input"
             type="text"
             name="giftCardCode"
             placeholder="Gift card code"
             ref={giftCardCodeInput}
           />
           &nbsp;
-          <button type="submit" disabled={giftCardAddFetcher.state !== 'idle'}>
+          <button
+            type="submit"
+            disabled={giftCardAddFetcher.state !== 'idle'}
+            aria-label="Apply gift card code"
+          >
             Apply
           </button>
         </div>

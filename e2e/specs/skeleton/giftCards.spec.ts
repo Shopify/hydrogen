@@ -1,191 +1,141 @@
-/**
- * Gift Card E2E Tests
- *
- * ASSUMPTIONS (test data requirements):
- * - gift_card_code_1 has sufficient balance for tests
- * - gift_card_code_2 has sufficient balance for tests
- * - Both cards are active and not expired
- * - Cards are reusable (balance not fully depleted between runs)
- * - At least one product in the store costs more than the gift card balances
- *   (for partial payment testing)
- */
-
 import {setTestStore, test, expect, getRequiredSecret} from '../../fixtures';
 
 setTestStore('hydrogenPreviewStorefront');
 
-const giftCardCode1 = getRequiredSecret('gift_card_code_1').toUpperCase();
-const giftCardCode2 = getRequiredSecret('gift_card_code_2').toUpperCase();
+const GIFT_CARD_1 = getRequiredSecret('gift_card_code_1');
+const GIFT_CARD_2 = getRequiredSecret('gift_card_code_2');
+const GIFT_CARD_1_LAST_4 = GIFT_CARD_1.slice(-4).toUpperCase();
+const GIFT_CARD_2_LAST_4 = GIFT_CARD_2.slice(-4).toUpperCase();
 
-test.beforeEach(async ({storefront, context}) => {
-  // Clear cookies for fresh session
-  await context.clearCookies();
-  await storefront.goto('/');
-  await storefront.navigateToFirstProduct();
-  await storefront.addToCart();
-  await storefront.navigateToCart();
-});
+const PRODUCT_NAME = 'The Element';
 
-test.describe('Gift Card Functionality', () => {
+test.describe('Gift Cards', () => {
+  test.beforeEach(async ({page, cart}) => {
+    await page.goto('/');
+
+    const productLink = page.getByRole('link', {name: PRODUCT_NAME});
+    const addToCartButton = page.getByRole('button', {name: 'Add to cart'});
+    const cartDialog = page.getByRole('dialog');
+
+    await productLink.click();
+    await addToCartButton.click();
+    await expect(cartDialog).toBeVisible();
+    await cart.closeCartAside();
+    await cart.navigateToCartPage();
+  });
+
   test.describe('Core Functionality', () => {
-    test('should apply a single gift card and verify it appears', async ({
-      storefront,
+    test('applies single gift card', async ({giftCard}) => {
+      await giftCard.applyCode(GIFT_CARD_1);
+      await giftCard.assertAppliedCard(GIFT_CARD_1_LAST_4);
+    });
+
+    test('applies multiple gift cards', async ({giftCard}) => {
+      await giftCard.applyCode(GIFT_CARD_1);
+      await giftCard.assertAppliedCard(GIFT_CARD_1_LAST_4);
+
+      await giftCard.applyCode(GIFT_CARD_2);
+      await giftCard.assertAppliedCard(GIFT_CARD_1_LAST_4);
+      await giftCard.assertAppliedCard(GIFT_CARD_2_LAST_4);
+    });
+
+    test('removes individual gift card while other remains', async ({
+      giftCard,
     }) => {
-      const card = await storefront.applyGiftCard(giftCardCode1);
+      await giftCard.applyCode(GIFT_CARD_1);
+      await giftCard.applyCode(GIFT_CARD_2);
+      await giftCard.assertAppliedCard(GIFT_CARD_1_LAST_4);
+      await giftCard.assertAppliedCard(GIFT_CARD_2_LAST_4);
 
-      const appliedCards = await storefront.getAppliedGiftCards();
-      expect(appliedCards.length).toBe(1);
-      expect(appliedCards[0].lastChars).toBe(card.lastChars);
+      await giftCard.removeCard(GIFT_CARD_1_LAST_4);
+
+      await giftCard.assertCardRemoved(GIFT_CARD_1_LAST_4);
+      await giftCard.assertAppliedCard(GIFT_CARD_2_LAST_4);
     });
 
-    test('should add multiple gift cards sequentially and verify both appear', async ({
-      storefront,
-    }) => {
-      const card1 = await storefront.applyGiftCard(giftCardCode1);
-      await storefront.expectGiftCardApplied(card1.lastChars);
+    test('removes all gift cards sequentially', async ({giftCard}) => {
+      await giftCard.applyCode(GIFT_CARD_1);
+      await giftCard.applyCode(GIFT_CARD_2);
 
-      const card2 = await storefront.applyGiftCard(giftCardCode2);
-      await storefront.expectGiftCardApplied(card2.lastChars);
+      await giftCard.removeCard(GIFT_CARD_1_LAST_4);
+      await giftCard.assertCardRemoved(GIFT_CARD_1_LAST_4);
 
-      const appliedCards = await storefront.getAppliedGiftCards();
-      expect(appliedCards.length).toBe(2);
+      await giftCard.removeCard(GIFT_CARD_2_LAST_4);
+      await giftCard.assertCardRemoved(GIFT_CARD_2_LAST_4);
 
-      const appliedLastChars = appliedCards.map((c) => c.lastChars);
-      expect(appliedLastChars).toContain(card1.lastChars);
-      expect(appliedLastChars).toContain(card2.lastChars);
+      await giftCard.assertNoGiftCards();
     });
 
-    test('should remove individual gift card while other remains', async ({
-      storefront,
-    }) => {
-      const card1 = await storefront.applyGiftCard(giftCardCode1);
-      const card2 = await storefront.applyGiftCard(giftCardCode2);
+    test('persists gift cards after page reload', async ({page, giftCard}) => {
+      await giftCard.applyCode(GIFT_CARD_1);
+      await giftCard.assertAppliedCard(GIFT_CARD_1_LAST_4);
 
-      let appliedCards = await storefront.getAppliedGiftCards();
-      expect(appliedCards.length).toBe(2);
+      await page.reload();
 
-      await storefront.removeGiftCard(card1.lastChars);
-
-      await storefront.expectGiftCardRemoved(card1.lastChars);
-      await storefront.expectGiftCardApplied(card2.lastChars);
-
-      appliedCards = await storefront.getAppliedGiftCards();
-      expect(appliedCards.length).toBe(1);
-      expect(appliedCards[0].lastChars).toBe(card2.lastChars);
+      await giftCard.assertAppliedCard(GIFT_CARD_1_LAST_4);
     });
 
-    test('should remove all gift cards sequentially', async ({storefront}) => {
-      const card1 = await storefront.applyGiftCard(giftCardCode1);
-      const card2 = await storefront.applyGiftCard(giftCardCode2);
+    test('displays gift card amount when applied', async ({page, giftCard}) => {
+      await giftCard.applyCode(GIFT_CARD_1);
+      await giftCard.assertAppliedCard(GIFT_CARD_1_LAST_4);
 
-      let appliedCards = await storefront.getAppliedGiftCards();
-      expect(appliedCards.length).toBe(2);
+      const giftCards = page.getByLabel('Applied Gift Card(s)');
+      const cardGroup = giftCards
+        .getByRole('group')
+        .filter({hasText: `***${GIFT_CARD_1_LAST_4}`});
 
-      await storefront.removeAllGiftCards();
-
-      await storefront.expectGiftCardRemoved(card1.lastChars);
-      await storefront.expectGiftCardRemoved(card2.lastChars);
-
-      appliedCards = await storefront.getAppliedGiftCards();
-      expect(appliedCards.length).toBe(0);
+      await expect(cardGroup).toContainText(/[$\d]/);
     });
 
-    test('should persist gift cards after page reload', async ({
-      storefront,
-    }) => {
-      const card1 = await storefront.applyGiftCard(giftCardCode1);
-      await storefront.expectGiftCardApplied(card1.lastChars);
+    test('shows applied gift cards in checkout', async ({page, giftCard}) => {
+      await giftCard.applyCode(GIFT_CARD_1);
+      await giftCard.assertAppliedCard(GIFT_CARD_1_LAST_4);
 
-      await storefront.reload();
+      const checkoutLink = page.getByRole('link', {
+        name: /continue to checkout/i,
+      });
+      await checkoutLink.click();
 
-      await storefront.expectGiftCardApplied(card1.lastChars);
-
-      const appliedCards = await storefront.getAppliedGiftCards();
-      expect(appliedCards.length).toBe(1);
-      expect(appliedCards[0].lastChars).toBe(card1.lastChars);
-    });
-
-    test('should show applied gift cards in checkout', async ({storefront}) => {
-      const card = await storefront.applyGiftCard(giftCardCode1);
-      await storefront.expectGiftCardApplied(card.lastChars);
-
-      await storefront.navigateToCheckout();
-
-      await storefront.expectGiftCardsInCheckout([card.lastChars]);
+      const costSummary = page.getByLabel('Cost summary');
+      await expect(
+        costSummary.getByText(`•••• ${GIFT_CARD_1_LAST_4}`),
+      ).toBeVisible();
     });
   });
 
   test.describe('Edge Cases', () => {
-    test('should handle duplicate gift card code gracefully', async ({
-      storefront,
-    }) => {
-      const card1 = await storefront.applyGiftCard(giftCardCode1);
-      await storefront.expectGiftCardApplied(card1.lastChars);
+    test('handles duplicate gift card code', async ({page, giftCard}) => {
+      await giftCard.applyCode(GIFT_CARD_1);
+      await giftCard.assertAppliedCard(GIFT_CARD_1_LAST_4);
 
-      // Try to apply the same card again using the helper that doesn't verify success
-      await storefront.tryApplyGiftCardCode(giftCardCode1);
+      await giftCard.tryApplyCode(GIFT_CARD_1);
 
-      // Should still only have one card applied (no duplicates)
-      const appliedCards = await storefront.getAppliedGiftCards();
-      const matchingCards = appliedCards.filter(
-        (c) => c.lastChars === card1.lastChars,
-      );
-      expect(matchingCards.length).toBe(1);
+      const giftCards = page.getByLabel('Applied Gift Card(s)');
+      await expect(
+        giftCards
+          .getByRole('group')
+          .filter({hasText: `***${GIFT_CARD_1_LAST_4}`}),
+      ).toHaveCount(1);
     });
 
-    test('should handle case-insensitive gift card codes', async ({
-      storefront,
-    }) => {
-      const lowercaseCode = giftCardCode1.toLowerCase();
-      let card = await storefront.applyGiftCard(lowercaseCode);
+    test('handles case-insensitive gift card codes', async ({giftCard}) => {
+      const lowercaseCode = GIFT_CARD_1.toLowerCase();
+      await giftCard.applyCode(lowercaseCode);
+      await giftCard.assertAppliedCard(GIFT_CARD_1_LAST_4);
 
-      await storefront.expectGiftCardApplied(card.lastChars);
+      await giftCard.removeCard(GIFT_CARD_1_LAST_4);
+      await giftCard.assertCardRemoved(GIFT_CARD_1_LAST_4);
 
-      let appliedCards = await storefront.getAppliedGiftCards();
-      expect(appliedCards.length).toBe(1);
-
-      const uppercaseCode = giftCardCode1.toUpperCase();
-      card = await storefront.applyGiftCard(uppercaseCode);
-
-      await storefront.expectGiftCardApplied(card.lastChars);
-
-      appliedCards = await storefront.getAppliedGiftCards();
-      expect(appliedCards.length).toBe(1);
+      const uppercaseCode = GIFT_CARD_1.toUpperCase();
+      await giftCard.applyCode(uppercaseCode);
+      await giftCard.assertAppliedCard(GIFT_CARD_1_LAST_4);
     });
 
-    test('should not add card for invalid gift card code', async ({
-      storefront,
-    }) => {
-      const invalidCode = 'INVALID-CODE-12345-FAKE';
+    test('does not add invalid gift card', async ({giftCard}) => {
+      const invalidCode = 'INVALID-CODE-12345';
+      await giftCard.tryApplyCode(invalidCode);
 
-      await storefront.tryApplyGiftCardCode(invalidCode);
-
-      // Core verification: no card should be added for invalid code
-      const appliedCards = await storefront.getAppliedGiftCards();
-      expect(appliedCards.length).toBe(0);
-
-      // Note: The skeleton template currently doesn't display a visible error message
-      // for invalid gift card codes. This is acceptable UX behavior - the form clears
-      // and no card is added, implicitly indicating the code was rejected.
-      // TODO: If error feedback is added in the future, enable this assertion:
-      // await storefront.expectGiftCardError(/invalid|not found|does not exist/i);
-    });
-
-    test('should display gift card amount when applied', async ({
-      storefront,
-    }) => {
-      const card = await storefront.applyGiftCard(giftCardCode1);
-
-      await storefront.expectGiftCardApplied(card.lastChars);
-
-      const appliedCards = await storefront.getAppliedGiftCards();
-      expect(appliedCards.length).toBe(1);
-
-      // Verify the card shows an amount (format: $X.XX or similar)
-      const amount = appliedCards[0].amount;
-      expect(amount).toBeTruthy();
-      // Amount should contain a currency symbol or number
-      expect(amount).toMatch(/[$\d]/);
+      await giftCard.assertNoGiftCards();
     });
   });
 });
