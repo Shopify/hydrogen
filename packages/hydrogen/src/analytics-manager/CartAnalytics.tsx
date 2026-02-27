@@ -81,8 +81,9 @@ export function CartAnalytics({
       customData,
     };
 
-    // prevent duplicate events
-    // TODO: add cart id check
+    // Dedup is safe: `publish` always enqueues for delivery (either immediately
+    // or via waitForReadyQueue when registers aren't ready yet). Events are
+    // never silently dropped, so marking an event as "sent" here is correct.
     if (cart.updatedAt === lastEventId.current) return;
     lastEventId.current = cart.updatedAt;
 

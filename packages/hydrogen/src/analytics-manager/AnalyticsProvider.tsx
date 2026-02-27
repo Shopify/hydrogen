@@ -131,6 +131,9 @@ const AnalyticsContext = createContext<AnalyticsContextValue>(
   defaultAnalyticsContext,
 );
 
+// TODO: These module-scoped singletons are shared across all AnalyticsProvider
+// instances in the same JS context. This works because there is exactly one
+// provider per page, but would need refactoring if multiple providers are ever needed.
 const subscribers = new Map<
   string,
   Map<string, (payload: EventPayloads) => void>
@@ -194,7 +197,8 @@ function subscribe(event: any, callback: any) {
   subscribers.get(event)?.set(callback.toString(), callback);
 }
 
-const waitForReadyQueue = new Map<any, any>();
+const MAX_ANALYTICS_QUEUE_SIZE = 100;
+const waitForReadyQueue: Array<{event: string; payload: any}> = [];
 
 function publish(
   event: typeof AnalyticsEvent.PAGE_VIEWED,
@@ -230,7 +234,14 @@ function publish(
 ): void;
 function publish(event: any, payload: any): void {
   if (!areRegistersReady()) {
-    waitForReadyQueue.set(event, payload);
+    if (waitForReadyQueue.length >= MAX_ANALYTICS_QUEUE_SIZE) {
+      console.warn(
+        '[h2:warn:Analytics] Event queue is full. Events are being dropped. ' +
+          'This usually means analytics registers never called ready().',
+      );
+      return;
+    }
+    waitForReadyQueue.push({event, payload});
     return;
   }
 
@@ -265,11 +276,14 @@ function register(key: string) {
     ready: () => {
       registers[key] = true;
 
-      if (areRegistersReady() && waitForReadyQueue.size > 0) {
-        waitForReadyQueue.forEach((queuePayload, queueEvent) => {
-          publishEvent(queueEvent, queuePayload);
-        });
-        waitForReadyQueue.clear();
+      if (areRegistersReady()) {
+        while (waitForReadyQueue.length > 0) {
+          const pending = [...waitForReadyQueue];
+          waitForReadyQueue.length = 0;
+          for (const {event: queueEvent, payload: queuePayload} of pending) {
+            publishEvent(queueEvent, queuePayload);
+          }
+        }
       }
     },
   };
@@ -300,9 +314,6 @@ function AnalyticsProvider({
   cookieDomain,
 }: AnalyticsProviderProps): JSX.Element {
   const {shop} = useShopAnalytics(shopProp);
-  const [analyticsLoaded, setAnalyticsLoaded] = useState(
-    customCanTrack ? true : false,
-  );
   const [consentCollected, setConsentCollected] = useState(false);
   const [carts, setCarts] = useState<Carts>({cart: null, prevCart: null});
   const [canTrack, setCanTrack] = useState<() => boolean>(
@@ -354,7 +365,7 @@ function AnalyticsProvider({
       canTrack,
       ...carts,
       customData,
-      publish: canTrack() ? publish : () => {},
+      publish,
       shop,
       subscribe,
       register,
@@ -362,7 +373,6 @@ function AnalyticsProvider({
       privacyBanner: getPrivacyBanner(),
     };
   }, [
-    analyticsLoaded,
     canTrack,
     carts,
     carts.cart?.updatedAt,
@@ -388,7 +398,6 @@ function AnalyticsProvider({
         <ShopifyAnalytics
           consent={consent}
           onReady={() => {
-            setAnalyticsLoaded(true);
             setCanTrack(
               customCanTrack ? () => customCanTrack : () => shopifyCanTrack,
             );
