@@ -16,7 +16,7 @@ test.describe('Cart', () => {
 
         const productLink = page.getByRole('link', {name: PRODUCT_NAME});
         const addToCartButton = page.getByRole('button', {name: 'Add to cart'});
-        const cartDialog = page.getByRole('dialog');
+        const cartDialog = page.getByRole('dialog', {name: /cart/i});
 
         await productLink.click();
         await addToCartButton.click();
@@ -50,7 +50,7 @@ test.describe('Cart', () => {
 
         const productLink = page.getByRole('link', {name: PRODUCT_NAME});
         const addToCartButton = page.getByRole('button', {name: 'Add to cart'});
-        const cartDialog = page.getByRole('dialog');
+        const cartDialog = page.getByRole('dialog', {name: /cart/i});
 
         await productLink.click();
         await addToCartButton.click();
@@ -148,6 +148,7 @@ test.describe('Cart', () => {
         await page.goto('/');
         await page.getByRole('link', {name: PRODUCT_NAME}).click();
         await page.getByRole('button', {name: 'Add to cart'}).click();
+        await expect(page.getByRole('dialog', {name: /cart/i})).toBeVisible();
       });
 
       test('removes item from cart aside', async ({page}) => {
@@ -158,7 +159,7 @@ test.describe('Cart', () => {
           .first();
         const removeButton = firstItem.getByRole('button', {name: 'Remove'});
         const emptyCartMessage = page
-          .getByRole('dialog')
+          .getByRole('dialog', {name: /cart/i})
           .getByText(/Looks like you haven.t added anything yet/);
 
         await removeButton.click();
@@ -210,6 +211,7 @@ test.describe('Cart', () => {
 
         await productLink.click();
         await addToCartButton.click();
+        await expect(page.getByRole('dialog', {name: /cart/i})).toBeVisible();
       });
 
       test('displays subtotal in cart aside', async ({page}) => {
@@ -254,7 +256,7 @@ test.describe('Cart', () => {
 
         const cartLink = page.getByRole('link', {name: 'Cart'});
         const emptyCartMessage = page
-          .getByRole('dialog')
+          .getByRole('dialog', {name: /cart/i})
           .getByText(/Looks like you haven.t added anything yet/);
 
         await cartLink.click();
@@ -271,6 +273,7 @@ test.describe('Cart', () => {
 
         await productLink.click();
         await addToCartButton.click();
+        await expect(page.getByRole('dialog', {name: /cart/i})).toBeVisible();
 
         const firstItem = page
           .getByLabel('Line items')
