@@ -1,104 +1,122 @@
 import {setTestStore, test, expect} from '../../fixtures';
+import {CartUtil} from '../../fixtures/cart-utils';
 
-setTestStore('hydrogenPreviewStorefront');
+setTestStore('mockShop');
+
+const PRODUCT_NAME = "Women's T-shirt";
+const UNIT_PRICE = '$30.00';
+const TWO_ITEMS_PRICE = '$60.00';
 
 test.describe('Cart', () => {
   test.describe('Line Items', () => {
     test.describe('Adding Items', () => {
-      test('adds item to cart and opens aside drawer', async ({storefront}) => {
-        await storefront.goto('/');
-        await storefront.navigateToFirstProduct();
-        await storefront.addToCart();
+      test('adds item to cart and opens aside drawer', async ({page}) => {
+        const cart = new CartUtil(page);
+        await page.goto('/');
 
-        await expect(storefront.getCartDrawer()).toBeVisible();
+        const productLink = page.getByRole('link', {name: PRODUCT_NAME});
+        const addToCartButton = page.getByRole('button', {name: 'Add to cart'});
+        const cartDialog = page.getByRole('dialog', {name: /cart/i});
 
-        const lineItems = storefront.getCartLineItems();
-        await expect(lineItems).toHaveCount(1);
+        await productLink.click();
+        await addToCartButton.click();
+        await expect(cartDialog).toBeVisible();
 
-        const firstItem = storefront.getCartLineItemByIndex(0);
-        expect(await storefront.getLineItemQuantity(firstItem)).toBe(1);
-
-        await expect(firstItem.locator('strong')).toBeVisible();
+        await cart.assertProductCount(1);
+        await cart.assertInCart(PRODUCT_NAME);
+        await cart.assertSubtotal(UNIT_PRICE);
       });
 
-      test('updates cart badge count when adding items', async ({
-        storefront,
-      }) => {
-        await storefront.goto('/');
-        const initialCount = await storefront.getCartBadgeCount();
+      test('updates cart badge count when adding items', async ({page}) => {
+        const cart = new CartUtil(page);
+        await page.goto('/');
+        await cart.assertTotalItems(0);
 
-        await storefront.navigateToFirstProduct();
-        await storefront.addToCart();
-        await storefront.closeCartAside();
+        const productLink = page.getByRole('link', {name: PRODUCT_NAME});
+        const addToCartButton = page.getByRole('button', {name: 'Add to cart'});
 
-        const newCount = await storefront.getCartBadgeCount();
-        expect(newCount).toBe(initialCount + 1);
+        await productLink.click();
+        await addToCartButton.click();
+        await cart.closeCartAside();
+
+        await cart.assertTotalItems(1);
       });
     });
 
     test.describe('Quantity Management', () => {
-      test.beforeEach(async ({storefront}) => {
-        await storefront.goto('/');
-        await storefront.navigateToFirstProduct();
-        await storefront.addToCart();
+      test.beforeEach(async ({page}) => {
+        const cart = new CartUtil(page);
+        await page.goto('/');
+
+        const productLink = page.getByRole('link', {name: PRODUCT_NAME});
+        const addToCartButton = page.getByRole('button', {name: 'Add to cart'});
+        const cartDialog = page.getByRole('dialog', {name: /cart/i});
+
+        await productLink.click();
+        await addToCartButton.click();
+        await expect(cartDialog).toBeVisible();
+        await cart.assertTotalItems(1);
       });
 
-      test('increases quantity in cart aside', async ({storefront}) => {
-        const firstItem = storefront.getCartLineItemByIndex(0);
-        const initialSubtotal = await storefront.getSubtotalAmount();
+      test('increases quantity in cart aside', async ({page}) => {
+        const cart = new CartUtil(page);
+        const lineItems = page.getByLabel('Line items').locator('> li:visible');
+        const increaseButton = lineItems
+          .first()
+          .getByRole('button', {name: 'Increase quantity'});
 
-        await storefront.increaseLineItemQuantity(firstItem);
+        await increaseButton.click();
 
-        expect(await storefront.getLineItemQuantity(firstItem)).toBe(2);
-        // Wait for subtotal to update (network latency)
-        await expect
-          .poll(() => storefront.getSubtotalAmount(), {timeout: 10000})
-          .toBeGreaterThan(initialSubtotal);
+        await cart.assertTotalItems(2);
+        await cart.assertSubtotal(TWO_ITEMS_PRICE);
       });
 
-      test('increases quantity on cart page', async ({storefront}) => {
-        await storefront.closeCartAside();
-        await storefront.goto('/cart');
+      test('increases quantity on cart page', async ({page}) => {
+        const cart = new CartUtil(page);
+        await cart.assertProductCount(1);
+        await cart.assertTotalItems(1);
 
-        // Ensure cart line items are visible on cart page before proceeding
-        await expect(storefront.getCartLineItems().first()).toBeVisible({
-          timeout: 10000,
+        await cart.closeCartAside();
+        await cart.navigateToCartPage();
+
+        const lineItems = page.getByLabel('Line items').locator('> li:visible');
+        const increaseButton = lineItems
+          .first()
+          .getByRole('button', {name: 'Increase quantity'});
+
+        await increaseButton.click();
+
+        await cart.assertTotalItems(2);
+        await cart.assertSubtotal(TWO_ITEMS_PRICE);
+      });
+
+      test('decreases quantity when above minimum', async ({page}) => {
+        const cart = new CartUtil(page);
+        const firstItem = page
+          .getByLabel('Line items')
+          .locator('> li:visible')
+          .first();
+        const increaseButton = firstItem.getByRole('button', {
+          name: 'Increase quantity',
+        });
+        const decreaseButton = firstItem.getByRole('button', {
+          name: 'Decrease quantity',
         });
 
-        const firstItem = storefront.getCartLineItemByIndex(0);
-        const initialSubtotal = await storefront.getSubtotalAmount();
+        await increaseButton.click();
+        await cart.assertTotalItems(2);
 
-        await storefront.increaseLineItemQuantity(firstItem);
+        await decreaseButton.click();
 
-        expect(await storefront.getLineItemQuantity(firstItem)).toBe(2);
-        await expect
-          .poll(() => storefront.getSubtotalAmount(), {timeout: 10000})
-          .toBeGreaterThan(initialSubtotal);
+        await cart.assertTotalItems(1);
+        await cart.assertSubtotal(UNIT_PRICE);
       });
 
-      test('decreases quantity when above minimum', async ({storefront}) => {
-        const firstItem = storefront.getCartLineItemByIndex(0);
-        const subtotalAtOne = await storefront.getSubtotalAmount();
-
-        await storefront.increaseLineItemQuantity(firstItem);
-        expect(await storefront.getLineItemQuantity(firstItem)).toBe(2);
-
-        // Wait for subtotal to increase after adding quantity
-        await expect
-          .poll(() => storefront.getSubtotalAmount(), {timeout: 10000})
-          .toBeGreaterThan(subtotalAtOne);
-        const subtotalAtTwo = await storefront.getSubtotalAmount();
-
-        await storefront.decreaseLineItemQuantity(firstItem);
-
-        expect(await storefront.getLineItemQuantity(firstItem)).toBe(1);
-        await expect
-          .poll(() => storefront.getSubtotalAmount(), {timeout: 10000})
-          .toBeLessThan(subtotalAtTwo);
-      });
-
-      test('disables decrease button at quantity 1', async ({storefront}) => {
-        const firstItem = storefront.getCartLineItemByIndex(0);
+      test('disables decrease button at quantity 1', async ({page}) => {
+        const firstItem = page
+          .getByLabel('Line items')
+          .locator('> li:visible')
+          .first();
         const decreaseButton = firstItem.getByRole('button', {
           name: 'Decrease quantity',
         });
@@ -106,219 +124,238 @@ test.describe('Cart', () => {
         await expect(decreaseButton).toBeDisabled();
       });
 
-      test('updates cart badge when quantity changes', async ({storefront}) => {
-        const countAfterAdd = await storefront.getCartBadgeCount();
+      test('updates cart badge when quantity changes', async ({page}) => {
+        const cart = new CartUtil(page);
+        await cart.assertTotalItems(1);
 
-        const firstItem = storefront.getCartLineItemByIndex(0);
-        await storefront.increaseLineItemQuantity(firstItem);
-        await storefront.closeCartAside();
+        const firstItem = page
+          .getByLabel('Line items')
+          .locator('> li:visible')
+          .first();
+        const increaseButton = firstItem.getByRole('button', {
+          name: 'Increase quantity',
+        });
 
-        expect(await storefront.getCartBadgeCount()).toBe(countAfterAdd + 1);
+        await increaseButton.click();
+        await cart.closeCartAside();
+
+        await cart.assertTotalItems(2);
       });
     });
 
     test.describe('Removing Items', () => {
-      test.beforeEach(async ({storefront}) => {
-        await storefront.goto('/');
-        await storefront.navigateToFirstProduct();
-        await storefront.addToCart();
+      test.beforeEach(async ({page}) => {
+        await page.goto('/');
+        await page.getByRole('link', {name: PRODUCT_NAME}).click();
+        await page.getByRole('button', {name: 'Add to cart'}).click();
+        await expect(page.getByRole('dialog', {name: /cart/i})).toBeVisible();
       });
 
-      test('removes item from cart aside', async ({storefront}) => {
-        const firstItem = storefront.getCartLineItemByIndex(0);
+      test('removes item from cart aside', async ({page}) => {
+        const cart = new CartUtil(page);
+        const firstItem = page
+          .getByLabel('Line items')
+          .locator('> li:visible')
+          .first();
+        const removeButton = firstItem.getByRole('button', {name: 'Remove'});
+        const emptyCartMessage = page
+          .getByRole('dialog', {name: /cart/i})
+          .getByText(/Looks like you haven.t added anything yet/);
 
-        await storefront.removeLineItem(firstItem);
+        await removeButton.click();
 
-        await expect(storefront.getCartEmptyMessage()).toBeVisible();
-        await expect(storefront.getCartLineItems()).toHaveCount(0);
+        await expect(emptyCartMessage).toBeVisible();
+        await cart.assertProductCount(0);
       });
 
-      test('removes item from cart page', async ({storefront}) => {
-        await storefront.closeCartAside();
-        await storefront.goto('/cart');
+      test('removes item from cart page', async ({page}) => {
+        const cart = new CartUtil(page);
+        await cart.closeCartAside();
+        await cart.navigateToCartPage();
 
-        // Ensure cart line items are visible on cart page before proceeding
-        await expect(storefront.getCartLineItems().first()).toBeVisible({
-          timeout: 10000,
-        });
+        const firstItem = page
+          .getByLabel('Line items')
+          .locator('> li:visible')
+          .first();
+        const removeButton = firstItem.getByRole('button', {name: 'Remove'});
+        const emptyCartMessage = page
+          .locator('main:visible')
+          .getByText(/Looks like you haven.t added anything yet/);
 
-        const firstItem = storefront.getCartLineItemByIndex(0);
-        await storefront.removeLineItem(firstItem);
+        await removeButton.click();
 
-        await expect(storefront.getCartEmptyMessage()).toBeVisible();
+        await cart.assertTotalItems(0);
+        await expect(emptyCartMessage).toBeVisible();
       });
 
-      test('updates cart badge to zero after removal', async ({storefront}) => {
-        const firstItem = storefront.getCartLineItemByIndex(0);
-        await storefront.removeLineItem(firstItem);
+      test('updates cart badge to zero after removal', async ({page}) => {
+        const cart = new CartUtil(page);
+        const firstItem = page
+          .getByLabel('Line items')
+          .locator('> li:visible')
+          .first();
+        const removeButton = firstItem.getByRole('button', {name: 'Remove'});
 
-        await expect
-          .poll(() => storefront.getCartBadgeCount(), {timeout: 5000})
-          .toBe(0);
+        await removeButton.click();
+
+        await cart.assertTotalItems(0);
       });
     });
 
     test.describe('Cart Totals', () => {
-      test.beforeEach(async ({storefront}) => {
-        await storefront.goto('/');
-        await storefront.navigateToFirstProduct();
-        await storefront.addToCart();
+      test.beforeEach(async ({page}) => {
+        await page.goto('/');
+
+        const productLink = page.getByRole('link', {name: PRODUCT_NAME});
+        const addToCartButton = page.getByRole('button', {name: 'Add to cart'});
+
+        await productLink.click();
+        await addToCartButton.click();
+        await expect(page.getByRole('dialog', {name: /cart/i})).toBeVisible();
       });
 
-      test('displays subtotal in cart aside', async ({storefront}) => {
-        const subtotal = await storefront.getSubtotalAmount();
-        expect(subtotal).toBeGreaterThan(0);
+      test('displays subtotal in cart aside', async ({page}) => {
+        const cart = new CartUtil(page);
+        await cart.assertSubtotal(UNIT_PRICE);
       });
 
-      test('displays subtotal on cart page', async ({storefront}) => {
-        await storefront.closeCartAside();
-        await storefront.goto('/cart');
+      test('displays subtotal on cart page', async ({page}) => {
+        const cart = new CartUtil(page);
+        await cart.closeCartAside();
+        await cart.navigateToCartPage();
 
-        // Ensure cart line items are visible on cart page before proceeding
-        await expect(storefront.getCartLineItems().first()).toBeVisible({
-          timeout: 10000,
+        await cart.assertSubtotal(UNIT_PRICE);
+      });
+
+      test('shows checkout button when cart has items', async ({page}) => {
+        const checkoutButton = page.getByRole('link', {
+          name: /Continue to Checkout/i,
         });
 
-        const subtotal = await storefront.getSubtotalAmount();
-        expect(subtotal).toBeGreaterThan(0);
-      });
-
-      test('shows checkout button when cart has items', async ({
-        storefront,
-      }) => {
-        await expect(storefront.getCheckoutButton()).toBeVisible();
+        await expect(checkoutButton).toBeVisible();
       });
     });
 
     test.describe('Edge Cases', () => {
-      test('shows empty cart state on cart page', async ({storefront}) => {
-        await storefront.goto('/cart');
+      test('shows empty cart state on cart page', async ({page}) => {
+        await page.goto('/cart');
 
-        await expect(storefront.getCartEmptyMessage()).toBeVisible();
-        await expect(
-          storefront.page.getByRole('link', {name: /Continue shopping/i}),
-        ).toBeVisible();
-      });
-
-      test('shows empty cart state in cart aside', async ({storefront}) => {
-        await storefront.goto('/');
-        await storefront.openCartAside();
-
-        await expect(storefront.getCartEmptyMessage()).toBeVisible();
-      });
-
-      test('persists cart state after navigation', async ({storefront}) => {
-        await storefront.goto('/');
-        await storefront.navigateToFirstProduct();
-        await storefront.addToCart();
-
-        const firstItem = storefront.getCartLineItemByIndex(0);
-        await storefront.increaseLineItemQuantity(firstItem);
-        // Wait for quantity update to complete before navigation
-        expect(await storefront.getLineItemQuantity(firstItem)).toBe(2);
-
-        await storefront.closeCartAside();
-        // Navigate to a different page and back
-        await storefront.goto('/collections');
-        await storefront.goto('/');
-        await storefront.openCartAside();
-
-        const item = storefront.getCartLineItemByIndex(0);
-        expect(await storefront.getLineItemQuantity(item)).toBe(2);
-      });
-
-      test('cart page displays correct heading', async ({storefront}) => {
-        await storefront.goto('/cart');
-
-        const heading = storefront.page.getByRole('heading', {
-          level: 1,
-          name: 'Cart',
+        const emptyCartMessage = page
+          .locator('main:visible')
+          .getByText(/Looks like you haven.t added anything yet/);
+        const continueShoppingLink = page.getByRole('link', {
+          name: /Continue shopping/i,
         });
-        await expect(heading).toBeVisible();
+
+        await expect(emptyCartMessage).toBeVisible();
+        await expect(continueShoppingLink).toBeVisible();
+      });
+
+      test('shows empty cart state in cart aside', async ({page}) => {
+        await page.goto('/');
+
+        const cartLink = page.getByRole('link', {name: 'Cart'});
+        const emptyCartMessage = page
+          .getByRole('dialog', {name: /cart/i})
+          .getByText(/Looks like you haven.t added anything yet/);
+
+        await cartLink.click();
+
+        await expect(emptyCartMessage).toBeVisible();
+      });
+
+      test('persists cart state after navigation', async ({page}) => {
+        const cart = new CartUtil(page);
+        await page.goto('/');
+
+        const productLink = page.getByRole('link', {name: PRODUCT_NAME});
+        const addToCartButton = page.getByRole('button', {name: 'Add to cart'});
+
+        await productLink.click();
+        await addToCartButton.click();
+        await expect(page.getByRole('dialog', {name: /cart/i})).toBeVisible();
+
+        const firstItem = page
+          .getByLabel('Line items')
+          .locator('> li:visible')
+          .first();
+        const increaseButton = firstItem.getByRole('button', {
+          name: 'Increase quantity',
+        });
+        const cartLink = page.getByRole('link', {name: 'Cart'});
+
+        await increaseButton.click();
+        await cart.assertTotalItems(2);
+
+        await cart.closeCartAside();
+        await page.goto('/collections');
+        await page.goto('/');
+        await cartLink.click();
+
+        await cart.assertTotalItems(2);
+        await cart.assertSubtotal(TWO_ITEMS_PRICE);
+      });
+
+      test('cart page displays correct heading', async ({page}) => {
+        await page.goto('/cart');
+
+        const cartHeading = page.getByRole('heading', {level: 1, name: 'Cart'});
+
+        await expect(cartHeading).toBeVisible();
       });
     });
   });
 
   test.describe('Nested Line Items', () => {
-    test('Supports nested line items', async ({page, storefront, request}) => {
-      const cartId = await storefront.getCartId();
-      expect(cartId).not.toBeDefined();
-
-      const products = await request
-        .post('api/2025-10/graphql.json', {
-          data: {
-            query: `query productsWithVariants {
-          products(first:2){
-            nodes {
-              title
-              variants(first: 10){
-                nodes {
-                  title
-                  id
-                }
-              }
-            }
-          }
-        }`,
-          },
-        })
-        .then((response) => response.json());
-
-      const firstProduct = products.data.products.nodes[0]
-        ? {
-            title: products.data.products.nodes[0].title,
-            firstVariant: products.data.products.nodes[0].variants.nodes[0],
-          }
-        : undefined;
-      const secondProduct = products.data.products.nodes[1]
-        ? {
-            title: products.data.products.nodes[1].title,
-            firstVariant: products.data.products.nodes[1].variants.nodes[0],
-          }
-        : undefined;
-
-      expect(firstProduct).toBeDefined();
-      expect(secondProduct).toBeDefined();
+    test('Supports nested line items', async ({page, request}) => {
+      const cart = new CartUtil(page);
+      const PARENT_PRODUCT = {
+        title: 'Slides',
+        variantId: 'gid://shopify/ProductVariant/43695710371862',
+      };
+      const CHILD_PRODUCT = {
+        title: 'Sweatpants',
+        variantId: 'gid://shopify/ProductVariant/43696926949398',
+      };
 
       const addedLines = await request
         .post('api/2025-10/graphql.json', {
           data: {
             query: `mutation createCartWithNested($lines: [CartLineInput!]!) {
-            cartCreate(input: {lines: $lines}) {
-              userErrors {
-                code
-                message
-              }
-              warnings {code, message}
-              cart {
-                id
-                lines(first: 10) {
-                  nodes {
-                    id
-                    ...on CartLine {
-                      parentRelationship {
-                        parent {
-                          id
+              cartCreate(input: {lines: $lines}) {
+                userErrors {
+                  code
+                  message
+                }
+                warnings {code, message}
+                cart {
+                  id
+                  lines(first: 10) {
+                    nodes {
+                      id
+                      ...on CartLine {
+                        parentRelationship {
+                          parent {
+                            id
+                          }
                         }
                       }
                     }
                   }
                 }
               }
-            }
-          }
-`,
+            }`,
             variables: {
               lines: [
                 {
-                  merchandiseId: firstProduct?.firstVariant.id,
+                  merchandiseId: PARENT_PRODUCT.variantId,
                   quantity: 1,
                 },
                 {
-                  merchandiseId: secondProduct?.firstVariant.id,
+                  merchandiseId: CHILD_PRODUCT.variantId,
                   quantity: 1,
                   parent: {
-                    merchandiseId: firstProduct?.firstVariant.id,
+                    merchandiseId: PARENT_PRODUCT.variantId,
                   },
                 },
               ],
@@ -338,30 +375,23 @@ test.describe('Cart', () => {
       ).not.toBeNull();
 
       await page.goto('/');
-      await storefront.setCartId(addedLines.data.cartCreate.cart.id);
+      await cart.setCartId(addedLines.data.cartCreate.cart.id);
+      await cart.navigateToCartPage();
 
-      await page.goto('/cart');
-
-      const lineItems = await page
-        .getByRole('list', {name: 'Line items'})
-        .getByRole('listitem')
-        .all();
-
-      /** verify if the first product is there */
-      const firstProductLocator = lineItems[0].getByRole('link', {
-        name: firstProduct?.title,
+      const lineItems = page.getByLabel('Line items').locator('> li:visible');
+      const parentProductLink = lineItems
+        .first()
+        .getByRole('link', {name: PARENT_PRODUCT.title});
+      const nestedList = lineItems.first().getByRole('list', {
+        name: `Line items with ${PARENT_PRODUCT.title}`,
       });
-      await expect(firstProductLocator).toBeVisible();
-
-      const nestedLineItems = lineItems[0].getByRole('list', {
-        name: `Line items with ${firstProduct?.title}`,
+      const childProductLink = nestedList.getByRole('link', {
+        name: CHILD_PRODUCT.title,
       });
-      await expect(nestedLineItems).toBeVisible();
 
-      const nestedProductLocator = nestedLineItems.getByRole('link', {
-        name: secondProduct?.title,
-      });
-      await expect(nestedProductLocator).toBeVisible();
+      await expect(parentProductLink).toBeVisible();
+      await expect(nestedList).toBeVisible();
+      await expect(childProductLink).toBeVisible();
     });
   });
 });
