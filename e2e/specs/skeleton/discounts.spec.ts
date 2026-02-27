@@ -1,5 +1,4 @@
 import {setTestStore, test, expect, getRequiredSecret} from '../../fixtures';
-import {cart, discount} from '../../fixtures/test-utils';
 
 setTestStore('hydrogenPreviewStorefront');
 
@@ -13,7 +12,7 @@ const PRODUCT_NAME = 'The Element';
 const UNIT_PRICE = '$749.95';
 const DISCOUNTED_PRICE = '$739.95';
 
-test.beforeEach(async ({page}) => {
+test.beforeEach(async ({page, cart}) => {
   await page.goto('/');
 
   const productLink = page.getByRole('link', {name: PRODUCT_NAME});
@@ -23,49 +22,49 @@ test.beforeEach(async ({page}) => {
   await productLink.click();
   await addToCartButton.click();
   await expect(cartDialog).toBeVisible();
-  await cart.closeCartAside(page);
-  await cart.navigateToCartPage(page);
+  await cart.closeCartAside();
+  await cart.navigateToCartPage();
 });
 
 test.describe('Discount codes', () => {
-  test('Applies and displays discount code', async ({page}) => {
-    await discount.applyCode(page, ACTIVE_DISCOUNT_CODE);
-    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
+  test('Applies and displays discount code', async ({discount}) => {
+    await discount.applyCode(ACTIVE_DISCOUNT_CODE);
+    await discount.assertAppliedCode(ACTIVE_DISCOUNT_CODE);
   });
 
-  test('Applies discount and reduces subtotal', async ({page}) => {
-    await cart.assertSubtotal(page, UNIT_PRICE);
+  test('Applies discount and reduces subtotal', async ({cart, discount}) => {
+    await cart.assertSubtotal(UNIT_PRICE);
 
-    await discount.applyCode(page, ACTIVE_DISCOUNT_CODE);
+    await discount.applyCode(ACTIVE_DISCOUNT_CODE);
 
-    await cart.assertSubtotal(page, DISCOUNTED_PRICE);
+    await cart.assertSubtotal(DISCOUNTED_PRICE);
   });
 
-  test('Applies discount via URL', async ({page}) => {
+  test('Applies discount via URL', async ({page, cart, discount}) => {
     await page.goto(`/discount/${ACTIVE_DISCOUNT_CODE}`);
     await expect(page).toHaveURL('/');
 
-    await cart.navigateToCartPage(page);
+    await cart.navigateToCartPage();
 
-    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
+    await discount.assertAppliedCode(ACTIVE_DISCOUNT_CODE);
   });
 
-  test('Removes discount code', async ({page}) => {
-    await discount.applyCode(page, ACTIVE_DISCOUNT_CODE);
-    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
+  test('Removes discount code', async ({discount}) => {
+    await discount.applyCode(ACTIVE_DISCOUNT_CODE);
+    await discount.assertAppliedCode(ACTIVE_DISCOUNT_CODE);
 
-    await discount.removeCode(page);
+    await discount.removeCode();
 
-    await discount.assertNoDiscounts(page);
+    await discount.assertNoDiscounts();
   });
 
-  test('Persists discount after page reload', async ({page}) => {
-    await discount.applyCode(page, ACTIVE_DISCOUNT_CODE);
-    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
+  test('Persists discount after page reload', async ({page, discount}) => {
+    await discount.applyCode(ACTIVE_DISCOUNT_CODE);
+    await discount.assertAppliedCode(ACTIVE_DISCOUNT_CODE);
 
     await page.reload();
 
-    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
+    await discount.assertAppliedCode(ACTIVE_DISCOUNT_CODE);
   });
 
   test('Shows discount input in cart', async ({page}) => {
@@ -77,34 +76,34 @@ test.describe('Discount codes', () => {
     ).toBeVisible();
   });
 
-  test('Handles case-insensitive codes', async ({page}) => {
+  test('Handles case-insensitive codes', async ({discount}) => {
     const lowercaseCode = ACTIVE_DISCOUNT_CODE.toLowerCase();
-    await discount.applyCode(page, lowercaseCode);
-    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
+    await discount.applyCode(lowercaseCode);
+    await discount.assertAppliedCode(ACTIVE_DISCOUNT_CODE);
 
-    await discount.removeCode(page);
+    await discount.removeCode();
 
     const uppercaseCode = ACTIVE_DISCOUNT_CODE.toUpperCase();
-    await discount.applyCode(page, uppercaseCode);
-    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
+    await discount.applyCode(uppercaseCode);
+    await discount.assertAppliedCode(ACTIVE_DISCOUNT_CODE);
   });
 
-  test('Rejects invalid discount code', async ({page}) => {
-    await discount.applyCode(page, INACTIVE_DISCOUNT_CODE);
+  test('Rejects invalid discount code', async ({discount}) => {
+    await discount.applyCode(INACTIVE_DISCOUNT_CODE);
 
-    await discount.assertNoDiscounts(page);
+    await discount.assertNoDiscounts();
   });
 
-  test('Handles empty code submission', async ({page}) => {
-    await discount.applyCode(page, '');
-    await discount.assertNoDiscounts(page);
+  test('Handles empty code submission', async ({discount}) => {
+    await discount.applyCode('');
+    await discount.assertNoDiscounts();
   });
 
-  test('Prevents duplicate discount codes', async ({page}) => {
-    await discount.applyCode(page, ACTIVE_DISCOUNT_CODE);
-    await discount.assertAppliedCode(page, ACTIVE_DISCOUNT_CODE);
+  test('Prevents duplicate discount codes', async ({page, discount}) => {
+    await discount.applyCode(ACTIVE_DISCOUNT_CODE);
+    await discount.assertAppliedCode(ACTIVE_DISCOUNT_CODE);
 
-    await discount.applyCode(page, ACTIVE_DISCOUNT_CODE);
+    await discount.applyCode(ACTIVE_DISCOUNT_CODE);
 
     const discounts = page.getByLabel('Discount(s)');
     await expect(discounts.getByRole('group')).toHaveCount(1);
