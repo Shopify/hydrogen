@@ -1,6 +1,13 @@
 import {spawn} from 'node:child_process';
 import path from 'node:path';
 
+const STARTUP_TIMEOUT_IN_MS = 120_000;
+const SIGKILL_GRACE_PERIOD_IN_MS = 5_000;
+
+// Passing port 0 to the OS (via listen(0)) tells it to assign any available
+// ephemeral port. This is a standard POSIX convention.
+const OS_ASSIGNED_PORT = 0;
+
 type DevServerOptions = {
   id?: number;
   port?: number;
@@ -12,7 +19,7 @@ type DevServerOptions = {
 
 export class DevServer {
   process: ReturnType<typeof spawn> | undefined;
-  port: number;
+  port: number | undefined;
   projectPath: string;
   customerAccountPush: boolean;
   capturedUrl?: string;
@@ -23,7 +30,7 @@ export class DevServer {
   constructor(options: DevServerOptions = {}) {
     this.id = options.id;
     this.storeKey = options.storeKey;
-    this.port = options.port ?? 3100;
+    this.port = options.port;
     this.projectPath =
       options.projectPath ?? path.join(__dirname, '../../templates/skeleton');
     this.customerAccountPush = options.customerAccountPush ?? false;
@@ -31,7 +38,13 @@ export class DevServer {
   }
 
   getUrl() {
-    return this.capturedUrl || `http://localhost:${this.port}`;
+    if (this.capturedUrl) return this.capturedUrl;
+    if (this.port === undefined) {
+      throw new Error(
+        `Server ${this.id} has not started yet — cannot determine URL with dynamic port allocation`,
+      );
+    }
+    return `http://localhost:${this.port}`;
   }
 
   start() {
@@ -40,7 +53,10 @@ export class DevServer {
     }
 
     return new Promise((resolve, reject) => {
-      const args = ['run', 'dev', '--'];
+      // Spawn `shopify hydrogen dev` directly instead of via `npm run dev`
+      // so we have full control over flags. The skeleton's npm script includes
+      // `--codegen` which causes file write conflicts under parallel execution.
+      const args = ['shopify', 'hydrogen', 'dev'];
       if (this.customerAccountPush) {
         args.push('--customer-account-push');
       }
@@ -49,12 +65,15 @@ export class DevServer {
         args.push('--env-file', this.envFile);
       }
 
-      this.process = spawn('npm', args, {
+      this.process = spawn('npx', args, {
         cwd: this.projectPath,
+        detached: true,
         env: {
           ...process.env,
           NODE_ENV: 'development',
-          SHOPIFY_HYDROGEN_FLAG_PORT: this.port.toString(),
+          SHOPIFY_HYDROGEN_FLAG_PORT: (
+            this.port ?? OS_ASSIGNED_PORT
+          ).toString(),
         },
         stdio: ['pipe', 'pipe', 'pipe'],
       });
@@ -63,16 +82,25 @@ export class DevServer {
       const timeout = setTimeout(() => {
         if (!started) {
           this.stop();
-          reject(new Error(`Server ${this.id} failed to start within timeout`));
+          reject(
+            new Error(
+              `Server ${this.id} failed to start within ${STARTUP_TIMEOUT_IN_MS / 1000}s timeout`,
+            ),
+          );
         }
-      }, 60000);
+      }, STARTUP_TIMEOUT_IN_MS);
 
       let localUrl: string | undefined;
       let tunnelUrl: string | undefined;
 
       const handleOutput = (output: string) => {
         if (!localUrl) {
-          localUrl = output.match(/(http:\/\/localhost:\d+)/)?.[1];
+          const match = output.match(/(http:\/\/localhost:(\d+))/);
+          // Reject port 0 — it means the server echoed back the requested
+          // OS_ASSIGNED_PORT before actually binding to an ephemeral one.
+          if (match && match[2] !== String(OS_ASSIGNED_PORT)) {
+            localUrl = match[1];
+          }
         }
         if (this.customerAccountPush && !tunnelUrl) {
           tunnelUrl = output.match(/(https:\/\/[^\s]+)/)?.[1];
@@ -125,7 +153,6 @@ export class DevServer {
       if (this.process.stdout) {
         this.process.stdout.on('data', (data) => {
           const output = data.toString();
-          // !started && console.log(output);
           handleOutput(output);
         });
       }
@@ -133,7 +160,6 @@ export class DevServer {
       if (this.process.stderr) {
         this.process.stderr.on('data', (data) => {
           const output = data.toString();
-          // !started && console.log(output);
           handleOutput(output);
         });
       }
@@ -154,19 +180,52 @@ export class DevServer {
 
   stop() {
     return new Promise((resolve) => {
-      if (!this.process) return resolve(false);
+      if (!this.process?.pid) {
+        this.process = undefined;
+        return resolve(false);
+      }
+
+      // Capture PID upfront to avoid non-null assertion races between
+      // the exit handler (which clears this.process) and the SIGKILL timeout.
+      const pid = this.process.pid;
       console.log(`[test-server ${this.id}] Stopping server...`);
 
+      // If the process already exited (e.g. dev server crashed during a test),
+      // the exit listener would never fire and this promise would hang forever.
+      if (this.process.exitCode !== null) {
+        this.process = undefined;
+        return resolve(true);
+      }
+
+      const killTimeoutId = setTimeout(() => {
+        try {
+          process.kill(-pid, 'SIGKILL');
+        } catch {
+          // Process already dead
+        }
+        // Whether SIGKILL succeeded or the process was already dead,
+        // we've done everything we can. Resolve to unblock teardown.
+        this.process = undefined;
+        resolve(false);
+      }, SIGKILL_GRACE_PERIOD_IN_MS);
+
       this.process.on('exit', () => {
+        clearTimeout(killTimeoutId);
         this.process = undefined;
         resolve(true);
       });
 
-      this.process.kill('SIGTERM');
-
-      setTimeout(() => {
-        this.process?.kill('SIGKILL');
-      }, 5000);
+      // Kill the entire process group (negative PID) so child processes
+      // (vite, workerd, etc.) are also terminated, not just the npm parent.
+      try {
+        process.kill(-pid, 'SIGTERM');
+      } catch {
+        try {
+          this.process.kill('SIGTERM');
+        } catch {
+          // Process already dead
+        }
+      }
     });
   }
 }
