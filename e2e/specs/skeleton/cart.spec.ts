@@ -1,5 +1,5 @@
 import {setTestStore, test, expect} from '../../fixtures';
-import {cart} from '../../fixtures/test-utils';
+import {CartUtil} from '../../fixtures/cart-utils';
 
 setTestStore('mockShop');
 
@@ -11,6 +11,7 @@ test.describe('Cart', () => {
   test.describe('Line Items', () => {
     test.describe('Adding Items', () => {
       test('adds item to cart and opens aside drawer', async ({page}) => {
+        const cart = new CartUtil(page);
         await page.goto('/');
 
         const productLink = page.getByRole('link', {name: PRODUCT_NAME});
@@ -21,28 +22,30 @@ test.describe('Cart', () => {
         await addToCartButton.click();
         await expect(cartDialog).toBeVisible();
 
-        await cart.assertProductCount(page, 1);
-        await cart.assertInCart(page, PRODUCT_NAME);
-        await cart.assertSubtotal(page, UNIT_PRICE);
+        await cart.assertProductCount(1);
+        await cart.assertInCart(PRODUCT_NAME);
+        await cart.assertSubtotal(UNIT_PRICE);
       });
 
       test('updates cart badge count when adding items', async ({page}) => {
+        const cart = new CartUtil(page);
         await page.goto('/');
-        await cart.assertTotalItems(page, 0);
+        await cart.assertTotalItems(0);
 
         const productLink = page.getByRole('link', {name: PRODUCT_NAME});
         const addToCartButton = page.getByRole('button', {name: 'Add to cart'});
 
         await productLink.click();
         await addToCartButton.click();
-        await cart.closeCartAside(page);
+        await cart.closeCartAside();
 
-        await cart.assertTotalItems(page, 1);
+        await cart.assertTotalItems(1);
       });
     });
 
     test.describe('Quantity Management', () => {
       test.beforeEach(async ({page}) => {
+        const cart = new CartUtil(page);
         await page.goto('/');
 
         const productLink = page.getByRole('link', {name: PRODUCT_NAME});
@@ -52,10 +55,11 @@ test.describe('Cart', () => {
         await productLink.click();
         await addToCartButton.click();
         await expect(cartDialog).toBeVisible();
-        await cart.assertTotalItems(page, 1);
+        await cart.assertTotalItems(1);
       });
 
       test('increases quantity in cart aside', async ({page}) => {
+        const cart = new CartUtil(page);
         const lineItems = page.getByLabel('Line items').locator('> li:visible');
         const increaseButton = lineItems
           .first()
@@ -63,16 +67,17 @@ test.describe('Cart', () => {
 
         await increaseButton.click();
 
-        await cart.assertTotalItems(page, 2);
-        await cart.assertSubtotal(page, TWO_ITEMS_PRICE);
+        await cart.assertTotalItems(2);
+        await cart.assertSubtotal(TWO_ITEMS_PRICE);
       });
 
       test('increases quantity on cart page', async ({page}) => {
-        await cart.assertProductCount(page, 1);
-        await cart.assertTotalItems(page, 1);
+        const cart = new CartUtil(page);
+        await cart.assertProductCount(1);
+        await cart.assertTotalItems(1);
 
-        await cart.closeCartAside(page);
-        await cart.navigateToCartPage(page);
+        await cart.closeCartAside();
+        await cart.navigateToCartPage();
 
         const lineItems = page.getByLabel('Line items').locator('> li:visible');
         const increaseButton = lineItems
@@ -81,11 +86,12 @@ test.describe('Cart', () => {
 
         await increaseButton.click();
 
-        await cart.assertTotalItems(page, 2);
-        await cart.assertSubtotal(page, TWO_ITEMS_PRICE);
+        await cart.assertTotalItems(2);
+        await cart.assertSubtotal(TWO_ITEMS_PRICE);
       });
 
       test('decreases quantity when above minimum', async ({page}) => {
+        const cart = new CartUtil(page);
         const firstItem = page
           .getByLabel('Line items')
           .locator('> li:visible')
@@ -98,12 +104,12 @@ test.describe('Cart', () => {
         });
 
         await increaseButton.click();
-        await cart.assertTotalItems(page, 2);
+        await cart.assertTotalItems(2);
 
         await decreaseButton.click();
 
-        await cart.assertTotalItems(page, 1);
-        await cart.assertSubtotal(page, UNIT_PRICE);
+        await cart.assertTotalItems(1);
+        await cart.assertSubtotal(UNIT_PRICE);
       });
 
       test('disables decrease button at quantity 1', async ({page}) => {
@@ -119,7 +125,8 @@ test.describe('Cart', () => {
       });
 
       test('updates cart badge when quantity changes', async ({page}) => {
-        await cart.assertTotalItems(page, 1);
+        const cart = new CartUtil(page);
+        await cart.assertTotalItems(1);
 
         const firstItem = page
           .getByLabel('Line items')
@@ -130,9 +137,9 @@ test.describe('Cart', () => {
         });
 
         await increaseButton.click();
-        await cart.closeCartAside(page);
+        await cart.closeCartAside();
 
-        await cart.assertTotalItems(page, 2);
+        await cart.assertTotalItems(2);
       });
     });
 
@@ -144,6 +151,7 @@ test.describe('Cart', () => {
       });
 
       test('removes item from cart aside', async ({page}) => {
+        const cart = new CartUtil(page);
         const firstItem = page
           .getByLabel('Line items')
           .locator('> li:visible')
@@ -156,12 +164,13 @@ test.describe('Cart', () => {
         await removeButton.click();
 
         await expect(emptyCartMessage).toBeVisible();
-        await cart.assertProductCount(page, 0);
+        await cart.assertProductCount(0);
       });
 
       test('removes item from cart page', async ({page}) => {
-        await cart.closeCartAside(page);
-        await cart.navigateToCartPage(page);
+        const cart = new CartUtil(page);
+        await cart.closeCartAside();
+        await cart.navigateToCartPage();
 
         const firstItem = page
           .getByLabel('Line items')
@@ -174,11 +183,12 @@ test.describe('Cart', () => {
 
         await removeButton.click();
 
-        await cart.assertTotalItems(page, 0);
+        await cart.assertTotalItems(0);
         await expect(emptyCartMessage).toBeVisible();
       });
 
       test('updates cart badge to zero after removal', async ({page}) => {
+        const cart = new CartUtil(page);
         const firstItem = page
           .getByLabel('Line items')
           .locator('> li:visible')
@@ -187,7 +197,7 @@ test.describe('Cart', () => {
 
         await removeButton.click();
 
-        await cart.assertTotalItems(page, 0);
+        await cart.assertTotalItems(0);
       });
     });
 
@@ -203,14 +213,16 @@ test.describe('Cart', () => {
       });
 
       test('displays subtotal in cart aside', async ({page}) => {
-        await cart.assertSubtotal(page, UNIT_PRICE);
+        const cart = new CartUtil(page);
+        await cart.assertSubtotal(UNIT_PRICE);
       });
 
       test('displays subtotal on cart page', async ({page}) => {
-        await cart.closeCartAside(page);
-        await cart.navigateToCartPage(page);
+        const cart = new CartUtil(page);
+        await cart.closeCartAside();
+        await cart.navigateToCartPage();
 
-        await cart.assertSubtotal(page, UNIT_PRICE);
+        await cart.assertSubtotal(UNIT_PRICE);
       });
 
       test('shows checkout button when cart has items', async ({page}) => {
@@ -251,6 +263,7 @@ test.describe('Cart', () => {
       });
 
       test('persists cart state after navigation', async ({page}) => {
+        const cart = new CartUtil(page);
         await page.goto('/');
 
         const productLink = page.getByRole('link', {name: PRODUCT_NAME});
@@ -269,15 +282,15 @@ test.describe('Cart', () => {
         const cartLink = page.getByRole('link', {name: 'Cart'});
 
         await increaseButton.click();
-        await cart.assertTotalItems(page, 2);
+        await cart.assertTotalItems(2);
 
-        await cart.closeCartAside(page);
+        await cart.closeCartAside();
         await page.goto('/collections');
         await page.goto('/');
         await cartLink.click();
 
-        await cart.assertTotalItems(page, 2);
-        await cart.assertSubtotal(page, TWO_ITEMS_PRICE);
+        await cart.assertTotalItems(2);
+        await cart.assertSubtotal(TWO_ITEMS_PRICE);
       });
 
       test('cart page displays correct heading', async ({page}) => {
@@ -292,7 +305,7 @@ test.describe('Cart', () => {
 
   test.describe('Nested Line Items', () => {
     test('Supports nested line items', async ({page, request}) => {
-      // Hardcoded variant IDs and expected product names from mockShop
+      const cart = new CartUtil(page);
       const PARENT_PRODUCT = {
         title: 'Slides',
         variantId: 'gid://shopify/ProductVariant/43695710371862',
@@ -359,8 +372,8 @@ test.describe('Cart', () => {
       ).not.toBeNull();
 
       await page.goto('/');
-      await cart.setCartId(page, addedLines.data.cartCreate.cart.id);
-      await cart.navigateToCartPage(page);
+      await cart.setCartId(addedLines.data.cartCreate.cart.id);
+      await cart.navigateToCartPage();
 
       const lineItems = page.getByLabel('Line items').locator('> li:visible');
       const parentProductLink = lineItems
