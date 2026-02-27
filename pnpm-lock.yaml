@@ -434,7 +434,7 @@ importers:
         specifier: 1.4.1
         version: 1.4.1
       '@shopify/hydrogen-react':
-        specifier: workspace:*
+        specifier: workspace:*2026.1.1
         version: link:../hydrogen-react
       content-security-policy-builder:
         specifier: ^2.2.0
@@ -765,7 +765,7 @@ importers:
   packages/remix-oxygen:
     devDependencies:
       '@shopify/hydrogen':
-        specifier: workspace:*
+        specifier: workspace:*2026.1.1
         version: link:../hydrogen
       '@shopify/oxygen-workers-types':
         specifier: ^4.1.6
@@ -780,7 +780,7 @@ importers:
   templates/skeleton:
     dependencies:
       '@shopify/hydrogen':
-        specifier: workspace:*
+        specifier: workspace:*2026.1.1
         version: link:../../packages/hydrogen
       graphql:
         specifier: ^16.10.0
