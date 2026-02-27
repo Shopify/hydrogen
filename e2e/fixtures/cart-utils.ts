@@ -5,6 +5,15 @@ const CART_ID_PREFIX = 'gid://shopify/Cart/';
 export class CartUtil {
   constructor(private page: Page) {}
 
+  async waitForCartCookie() {
+    await expect
+      .poll(async () => {
+        const cookies = await this.page.context().cookies();
+        return cookies.find((cookie) => cookie.name === 'cart')?.value;
+      })
+      .toBeTruthy();
+  }
+
   async assertInCart(productName: string) {
     const lineItems = this.page.getByLabel('Line items');
     await expect(
@@ -53,7 +62,9 @@ export class CartUtil {
   }
 
   async navigateToCartPage(expectLineItems: boolean = true) {
-    await this.page.waitForLoadState('networkidle');
+    if (expectLineItems) {
+      await this.waitForCartCookie();
+    }
     await this.page.goto('/cart');
     await expect(
       this.page.getByRole('dialog', {name: /cart/i}),
