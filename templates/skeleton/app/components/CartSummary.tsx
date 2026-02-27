@@ -1,7 +1,7 @@
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import type {CartLayout} from '~/components/CartMain';
 import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
-import {useEffect, useRef} from 'react';
+import {useEffect, useId, useRef} from 'react';
 import {useFetcher} from 'react-router';
 
 type CartSummaryProps = {
@@ -12,10 +12,13 @@ type CartSummaryProps = {
 export function CartSummary({cart, layout}: CartSummaryProps) {
   const className =
     layout === 'page' ? 'cart-summary-page' : 'cart-summary-aside';
+  const summaryId = useId();
+  const discountsHeadingId = useId();
+  const discountCodeInputId = useId();
 
   return (
-    <div aria-labelledby="cart-summary" className={className}>
-      <h4 id="cart-summary">Totals</h4>
+    <div aria-labelledby={summaryId} className={className}>
+      <h4 id={summaryId}>Totals</h4>
       <dl role="group" className="cart-subtotal">
         <dt>Subtotal</dt>
         <dd>
@@ -26,7 +29,11 @@ export function CartSummary({cart, layout}: CartSummaryProps) {
           )}
         </dd>
       </dl>
-      <CartDiscounts discountCodes={cart?.discountCodes} />
+      <CartDiscounts
+        discountCodes={cart?.discountCodes}
+        discountsHeadingId={discountsHeadingId}
+        discountCodeInputId={discountCodeInputId}
+      />
       <CartGiftCard giftCardCodes={cart?.appliedGiftCards} />
       <CartCheckoutActions checkoutUrl={cart?.checkoutUrl} />
     </div>
@@ -48,8 +55,12 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
 
 function CartDiscounts({
   discountCodes,
+  discountsHeadingId,
+  discountCodeInputId,
 }: {
   discountCodes?: CartApiQueryFragment['discountCodes'];
+  discountsHeadingId: string;
+  discountCodeInputId: string;
 }) {
   const codes: string[] =
     discountCodes
@@ -57,11 +68,11 @@ function CartDiscounts({
       ?.map(({code}) => code) || [];
 
   return (
-    <div aria-labelledby="cart-discounts">
+    <div aria-labelledby={discountsHeadingId}>
       {/* Have existing discount, display it with a remove option */}
       <dl hidden={!codes.length}>
         <div>
-          <dt id="cart-discounts">Discount(s)</dt>
+          <dt id={discountsHeadingId}>Discounts</dt>
           <UpdateDiscountForm>
             <dd className="cart-discount" role="group">
               <code>{codes?.join(', ')}</code>
@@ -77,11 +88,11 @@ function CartDiscounts({
       {/* Show an input to apply a discount */}
       <UpdateDiscountForm discountCodes={codes}>
         <div>
-          <label htmlFor="discount-code-input" className="sr-only">
+          <label htmlFor={discountCodeInputId} className="sr-only">
             Discount code
           </label>
           <input
-            id="discount-code-input"
+            id={discountCodeInputId}
             type="text"
             name="discountCode"
             placeholder="Discount code"

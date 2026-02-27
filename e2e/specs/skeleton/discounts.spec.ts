@@ -107,7 +107,7 @@ test.describe('Discount codes', () => {
 
     await discount.applyCode(ACTIVE_DISCOUNT_CODE);
 
-    const discounts = page.getByLabel('Discount(s)');
+    const discounts = page.getByLabel('Discounts');
     await expect(discounts.getByRole('group')).toHaveCount(1);
   });
 });
