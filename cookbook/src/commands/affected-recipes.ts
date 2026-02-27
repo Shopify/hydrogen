@@ -1,5 +1,5 @@
-import { CommandModule } from 'yargs';
-import { getAffectedRecipes } from '../lib/dependency-graph';
+import {CommandModule} from 'yargs';
+import {getAffectedRecipes} from '../lib/dependency-graph';
 
 type AffectedRecipesArgs = {
   files: string[];
@@ -12,6 +12,7 @@ export const affectedRecipes: CommandModule<{}, AffectedRecipesArgs> = {
   builder: {
     files: {
       type: 'array',
+      string: true,
       description: 'Repo-relative paths to changed skeleton files',
       default: [],
     },
@@ -21,8 +22,8 @@ export const affectedRecipes: CommandModule<{}, AffectedRecipesArgs> = {
       default: false,
     },
   },
-  handler({ files, json }) {
-    const affected = getAffectedRecipes(files as string[]);
+  handler({files, json}) {
+    const affected = getAffectedRecipes(files);
 
     if (json) {
       console.log(JSON.stringify(affected));

@@ -60,4 +60,13 @@ describe('affected-recipes command handler', () => {
 
     expect(console.log).not.toHaveBeenCalled();
   });
+
+  it('prints empty JSON array when --json flag is set and no recipes are affected', () => {
+    mockGetAffectedRecipes.mockReturnValue([]);
+
+    handler({files: ['templates/skeleton/app/root.tsx'], json: true});
+
+    expect(console.log).toHaveBeenCalledTimes(1);
+    expect(console.log).toHaveBeenCalledWith(JSON.stringify([]));
+  });
 });

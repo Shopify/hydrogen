@@ -1,9 +1,5 @@
 import {describe, expect, it, vi, beforeEach} from 'vitest';
-import {
-  getAffectedRecipes,
-  getSkeletonFileMap,
-  getSkeletonFiles,
-} from './dependency-graph';
+import {getAffectedRecipes, getSkeletonFileMap} from './dependency-graph';
 
 vi.mock('./util', () => ({listRecipes: vi.fn()}));
 vi.mock('./recipe', () => ({loadRecipe: vi.fn()}));
@@ -46,6 +42,7 @@ function makeRecipe({
 describe('getAffectedRecipes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   it('returns empty array immediately when no changed files provided', () => {
@@ -208,119 +205,10 @@ describe('getAffectedRecipes', () => {
   });
 });
 
-describe('getSkeletonFiles', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('returns empty array when there are no recipes', () => {
-    mockListRecipes.mockReturnValue([]);
-    expect(getSkeletonFiles()).toEqual([]);
-  });
-
-  it('collects diff files (normalised to repo-relative) from all recipes', () => {
-    mockListRecipes.mockReturnValue(['recipe-a']);
-    mockLoadRecipe.mockReturnValue(
-      makeRecipe({
-        diffs: [{file: 'app/root.tsx', patchFile: 'root.tsx.abc.patch'}],
-      }),
-    );
-
-    expect(getSkeletonFiles()).toEqual(['templates/skeleton/app/root.tsx']);
-  });
-
-  it('collects ingredient paths from all recipes', () => {
-    mockListRecipes.mockReturnValue(['recipe-a']);
-    mockLoadRecipe.mockReturnValue(
-      makeRecipe({
-        ingredients: [{path: 'templates/skeleton/app/components/Foo.tsx'}],
-      }),
-    );
-
-    expect(getSkeletonFiles()).toEqual([
-      'templates/skeleton/app/components/Foo.tsx',
-    ]);
-  });
-
-  it('does not include deleted file paths in the skeleton file list', () => {
-    mockListRecipes.mockReturnValue(['recipe-a']);
-    mockLoadRecipe.mockReturnValue(
-      makeRecipe({
-        deletedFiles: ['templates/skeleton/app/old.tsx'],
-      }),
-    );
-
-    expect(getSkeletonFiles()).toEqual([]);
-  });
-
-  it('deduplicates files referenced by multiple recipes', () => {
-    mockListRecipes.mockReturnValue(['recipe-a', 'recipe-b']);
-    mockLoadRecipe
-      .mockReturnValueOnce(
-        makeRecipe({
-          diffs: [{file: 'app/root.tsx', patchFile: 'root.tsx.abc.patch'}],
-        }),
-      )
-      .mockReturnValueOnce(
-        makeRecipe({
-          diffs: [{file: 'app/root.tsx', patchFile: 'root.tsx.def.patch'}],
-        }),
-      );
-
-    expect(getSkeletonFiles()).toEqual(['templates/skeleton/app/root.tsx']);
-  });
-
-  it('returns files sorted alphabetically', () => {
-    mockListRecipes.mockReturnValue(['recipe-a']);
-    mockLoadRecipe.mockReturnValue(
-      makeRecipe({
-        diffs: [
-          {file: 'app/server.ts', patchFile: 'server.ts.abc.patch'},
-          {file: 'app/root.tsx', patchFile: 'root.tsx.abc.patch'},
-        ],
-      }),
-    );
-
-    expect(getSkeletonFiles()).toEqual([
-      'templates/skeleton/app/root.tsx',
-      'templates/skeleton/app/server.ts',
-    ]);
-  });
-
-  it('filters to specified recipe names when provided', () => {
-    mockListRecipes.mockReturnValue(['recipe-a', 'recipe-b']);
-    mockLoadRecipe.mockReturnValue(
-      makeRecipe({
-        diffs: [{file: 'app/root.tsx', patchFile: 'root.tsx.abc.patch'}],
-      }),
-    );
-
-    getSkeletonFiles(['recipe-a']);
-
-    // Only loads the one recipe requested, not all
-    expect(mockLoadRecipe).toHaveBeenCalledTimes(1);
-    expect(mockListRecipes).not.toHaveBeenCalled();
-  });
-
-  it('skips recipes that fail to load', () => {
-    mockListRecipes.mockReturnValue(['bad-recipe', 'good-recipe']);
-    mockLoadRecipe
-      .mockImplementationOnce(() => {
-        throw new Error('YAML parse error');
-      })
-      .mockReturnValueOnce(
-        makeRecipe({
-          diffs: [{file: 'app/root.tsx', patchFile: 'root.tsx.abc.patch'}],
-        }),
-      );
-
-    expect(getSkeletonFiles()).toEqual(['templates/skeleton/app/root.tsx']);
-  });
-});
-
 describe('getSkeletonFileMap', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   it('returns empty map when there are no recipes', () => {
@@ -352,6 +240,32 @@ describe('getSkeletonFileMap', () => {
     expect(result.get('templates/skeleton/app/components/Foo.tsx')).toEqual([
       'recipe-b',
     ]);
+  });
+
+  it('collects ingredient paths as repo-relative keys', () => {
+    mockListRecipes.mockReturnValue(['recipe-a']);
+    mockLoadRecipe.mockReturnValue(
+      makeRecipe({
+        ingredients: [{path: 'templates/skeleton/app/components/Foo.tsx'}],
+      }),
+    );
+
+    const result = getSkeletonFileMap();
+
+    expect(result.get('templates/skeleton/app/components/Foo.tsx')).toEqual([
+      'recipe-a',
+    ]);
+  });
+
+  it('does not include deletedFiles entries as map keys', () => {
+    mockListRecipes.mockReturnValue(['recipe-a']);
+    mockLoadRecipe.mockReturnValue(
+      makeRecipe({
+        deletedFiles: ['templates/skeleton/app/old.tsx'],
+      }),
+    );
+
+    expect(getSkeletonFileMap()).toEqual(new Map());
   });
 
   it('returns entries sorted alphabetically by file path', () => {

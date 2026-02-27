@@ -294,7 +294,7 @@ npm run cookbook -- schema
 
 ### Skeleton Files
 
-`skeleton-files` lists all skeleton template files that are referenced by recipes (via diffs or ingredients). It maps each file to the recipes that touch it, and is primarily used by CI to determine which files need to be watched for changes.
+`skeleton-files` lists all skeleton template files that are referenced by recipes (via diffs or ingredients). It maps each file to the recipes that touch it.
 
 Note: `deletedFiles` entries in a recipe are intentionally excluded — files that are unconditionally deleted by a recipe cannot become stale and do not need to be tracked.
 
@@ -349,7 +349,7 @@ JSON output format (`--json`):
 
 ### Affected Recipes
 
-`affected-recipes` takes a list of changed skeleton file paths and returns the names of all recipes that reference any of those files. It is designed for use in CI to efficiently scope recipe validation to only the recipes that could be affected by a given pull request.
+`affected-recipes` takes a list of changed skeleton file paths and returns the names of all recipes that reference any of those files. It is called by the pre-commit hook to warn developers when skeleton changes may require recipe updates.
 
 Note: `deletedFiles` entries in a recipe are intentionally excluded — changes to files that a recipe unconditionally deletes cannot make the recipe stale.
 
