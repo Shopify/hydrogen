@@ -260,8 +260,12 @@ function updatePackageDependencies(pkg, versionMap) {
 
     for (const [depName, depVersion] of Object.entries(pkg[depType])) {
       if (versionMap[depName]) {
-        // Preserve any prefix like ^, ~, or workspace:
-        const prefix = depVersion.match(/^([^\d]*)/)[1];
+        if (depVersion.startsWith('workspace:')) {
+          continue;
+        }
+
+        // Preserve any prefix like ^ or ~ for non-workspace ranges.
+        const prefix = depVersion.match(/^([^\d]*)/)?.[1] || '';
         pkg[depType][depName] = prefix + versionMap[depName];
         modified = true;
       }
