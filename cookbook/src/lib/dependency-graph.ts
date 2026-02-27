@@ -61,9 +61,7 @@ export function getSkeletonFileMap(
       continue;
     }
 
-    for (const file of getFilesForRecipe(recipe)) {
-      addFile(file, recipeName);
-    }
+    getFilesForRecipe(recipe).forEach((file) => addFile(file, recipeName));
   }
 
   return new Map(
