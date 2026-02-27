@@ -7,7 +7,6 @@ test.describe('Home Page', () => {
     page,
   }) => {
     const consoleErrors: string[] = [];
-
     page.on('console', (msg) => {
       if (msg.type() === 'error') {
         consoleErrors.push(msg.text());
@@ -16,21 +15,20 @@ test.describe('Home Page', () => {
 
     await page.goto('/');
 
-    const featuredCollection = page.locator('.featured-collection').first();
-    await expect(featuredCollection).toBeVisible();
+    const heroImage = page
+      .getByRole('link')
+      .filter({
+        has: page.getByRole('heading', {level: 1}),
+      })
+      .getByRole('img');
 
-    const featuredImage = page
-      .locator('.featured-collection-image img')
-      .first();
-    await expect(featuredImage).toBeVisible();
+    const productGridImage = page
+      .getByRole('region', {name: 'Recommended Products'})
+      .getByRole('link', {name: "Women's T-shirt"})
+      .getByRole('img');
 
-    const recommendedProducts = page
-      .locator('.recommended-products-grid')
-      .first();
-    await expect(recommendedProducts).toBeVisible();
-
-    const productItems = page.locator('.product-item');
-    await expect(productItems.first()).toBeVisible();
+    await expect(heroImage).toBeVisible();
+    await expect(productGridImage).toBeVisible();
 
     expect(consoleErrors).toHaveLength(0);
   });
