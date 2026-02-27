@@ -17,11 +17,10 @@ test.beforeEach(async ({page, cart}) => {
 
   const productLink = page.getByRole('link', {name: PRODUCT_NAME});
   const addToCartButton = page.getByRole('button', {name: 'Add to cart'});
-  const cartDialog = page.getByRole('dialog');
 
   await productLink.click();
   await addToCartButton.click();
-  await expect(cartDialog).toBeVisible();
+  await expect(page.getByRole('dialog', {name: /cart/i})).toBeVisible();
   await cart.closeCartAside();
   await cart.navigateToCartPage();
 });
