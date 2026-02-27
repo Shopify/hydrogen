@@ -1,5 +1,5 @@
 import {setTestStore, test, expect} from '../../fixtures';
-import {cart} from '../../fixtures/test-utils';
+import {cart} from '../../fixtures/cart-utils';
 
 setTestStore('mockShop');
 
