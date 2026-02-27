@@ -1,5 +1,11 @@
 # @shopify/mini-oxygen
 
+## 4.0.1
+
+### Patch Changes
+
+- Updated `undici` to `7.21.0` and `body-parser` to `1.20.4` to resolve known vulnerabilities. ([#3461](https://github.com/Shopify/hydrogen/pull/3461)) by [@fredericoo](https://github.com/fredericoo)
+
 ## 4.0.0
 
 ### Major Changes
