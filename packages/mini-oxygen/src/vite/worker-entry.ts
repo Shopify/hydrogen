@@ -10,6 +10,11 @@ import {
   EvaluatedModuleNode,
   ModuleRunner,
   ssrModuleExportsKey,
+  ssrImportMetaKey,
+  ssrImportKey,
+  ssrDynamicImportKey,
+  ssrExportAllKey,
+  ssrExportNameKey,
   type ModuleRunnerContext,
 } from 'vite/module-runner';
 import type {HotPayload} from 'vite';
@@ -17,7 +22,6 @@ import type {Response} from 'miniflare';
 import {withRequestHook} from '../worker/handler.js';
 
 export interface ViteEnv {
-  __VITE_ROOT: string;
   __VITE_FETCH_MODULE_PATHNAME: string;
   __VITE_RUNTIME_EXECUTE_URL: string;
   __VITE_WARMUP_PATHNAME: string;
@@ -93,7 +97,6 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
   if (!runtime) {
     runtime = new ModuleRunner(
       {
-        root: env.__VITE_ROOT,
         sourcemapInterceptor: 'prepareStackTrace',
         transport: {
           invoke: async (data) => {
@@ -101,12 +104,25 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
             // of WS in workerd. Instead, use fetch to get the module:
             if (data.type === 'custom') {
               const customData = data.data;
-              const url = new URL(env.__VITE_FETCH_MODULE_PATHNAME, publicUrl);
-              url.searchParams.set('id', customData.data[0]);
-              if (customData.data)
-                url.searchParams.set('importer', customData.name);
 
-              return fetch(url).then((res) => ({result: res.json()}));
+              // Handle getBuiltins() method added in Vite 7
+              if (customData.name === 'getBuiltins') {
+                return Promise.resolve({result: []});
+              }
+
+              // Handle fetchModule() method
+              if (customData.name === 'fetchModule') {
+                const url = new URL(
+                  env.__VITE_FETCH_MODULE_PATHNAME,
+                  publicUrl,
+                );
+                const [id, importer] = customData.data;
+                url.searchParams.set('id', id);
+                if (importer) {
+                  url.searchParams.set('importer', importer);
+                }
+                return fetch(url).then((res) => ({result: res.json()}));
+              }
             }
             return Promise.resolve({
               error: `Error - invoke: ${JSON.stringify(data)}`,
@@ -145,18 +161,26 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
           // as the function name AND for sourcemaps. The `id` contains
           // symbols like `@`, `/` or `.` to make the sourcemaps work, but
           // these symbols are not allowed in function names. Therefore,
-          // use `eval` instead with an anonymous function:
+          // use `eval` instead with an anonymous function.
+          //
+          // IMPORTANT: Parameter order must match Vite's esmEvaluator to
+          // ensure compatibility with the transformed SSR code in Vite 7+
           const initModule = env.__VITE_UNSAFE_EVAL.eval(
             // 'use strict' is implied in ESM so we enable it here. Also, we
             // add an extra block scope (`{}`) to allow redeclaring variables
             // with the same name as the parameters.
-            `'use strict';async (${Object.keys(context).join(
-              ',',
-            )})=>{{${code}\n}}`,
+            `'use strict';async (${ssrModuleExportsKey},${ssrImportMetaKey},${ssrImportKey},${ssrDynamicImportKey},${ssrExportAllKey},${ssrExportNameKey})=>{{${code}\n}}`,
             module.id,
           );
 
-          await initModule(...Object.values(context));
+          await initModule(
+            context[ssrModuleExportsKey],
+            context[ssrImportMetaKey],
+            context[ssrImportKey],
+            context[ssrDynamicImportKey],
+            context[ssrExportAllKey],
+            context[ssrExportNameKey],
+          );
 
           Object.freeze(context[ssrModuleExportsKey]);
         },
