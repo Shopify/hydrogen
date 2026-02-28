@@ -23,7 +23,6 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {
   getDependencies,
-  installNodeModules,
   getPackageManager,
   type PackageJson,
 } from '@shopify/cli-kit/node/node-package-manager';
@@ -903,10 +902,13 @@ export async function upgradeNodeModules({
     tasks.push({
       title: `Upgrading dependencies`,
       task: async () => {
-        await installNodeModules({
-          directory: appPath,
-          packageManager: await getPackageManager(appPath),
-          args: upgradeArgs,
+        const packageManager = await getPackageManager(appPath);
+        const command = packageManager === 'yarn' ? 'add' : 'install';
+        const actualPackageManager =
+          packageManager === 'unknown' ? 'npm' : packageManager;
+
+        await exec(actualPackageManager, [command, ...upgradeArgs], {
+          cwd: appPath,
         });
       },
     });
