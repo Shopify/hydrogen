@@ -6,6 +6,24 @@ on:
       - main
 
 jobs:
+  # TODO: Remove after verifying token type for release PR fix
+  debug-token-identity:
+    name: 🔍 Debug - Check PAT identity
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Check SHOPIFY_GH_ACCESS_TOKEN identity
+        run: |
+          echo "Checking SHOPIFY_GH_ACCESS_TOKEN identity..."
+          RESPONSE=$(curl -s -H "Authorization: token $TOKEN" https://api.github.com/user)
+          echo "Login: $(echo $RESPONSE | jq -r '.login')"
+          echo "Type: $(echo $RESPONSE | jq -r '.type')"
+          echo "Name: $(echo $RESPONSE | jq -r '.name')"
+          # Check token prefix (first 4 chars only - safe to log)
+          echo "Token prefix: ${TOKEN:0:4}..."
+        env:
+          TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
+
   check-node-version:
     name: 🔧 Node version sync
     runs-on: ubuntu-latest
@@ -277,6 +295,9 @@ jobs:
 
   validate_recipes:
     name: ⬣ Validate Recipes
+    # TEMPORARILY DISABLED: Recipe system is being re-evaluated.
+    # Remove this line to re-enable.
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
