@@ -635,12 +635,8 @@ async function scaffoldProjectAtVersion(
   }
 
   try {
-    await exec(
-      'sh',
-      [
-        '-c',
-        `git archive ${commit} -- templates/skeleton | tar -x -C ${tempDir} --exclude='templates/skeleton/.cursor'`,
-      ],
+    await execAsync(
+      `git archive ${commit} -- templates/skeleton | tar -x -C ${tempDir} --exclude='templates/skeleton/.cursor'`,
       {
         cwd: repoRoot,
       },
