@@ -1,17 +1,26 @@
-import {expect, Page} from '@playwright/test';
+import {expect, Locator, Page} from '@playwright/test';
 
 const CART_ID_PREFIX = 'gid://shopify/Cart/';
 
 export class CartUtil {
   constructor(private page: Page) {}
 
-  async waitForCartCookie() {
-    await expect
-      .poll(async () => {
-        const cookies = await this.page.context().cookies();
-        return cookies.find((cookie) => cookie.name === 'cart')?.value;
-      })
-      .toBeTruthy();
+  async addItem(productName: string) {
+    await expect(
+      this.page.getByRole('heading', {level: 1, name: productName}),
+    ).toBeVisible();
+    const addToCartButton = this.page.getByRole('button', {
+      name: /add to cart/i,
+    });
+    await addToCartButton.click();
+    await expect(this.page.getByRole('dialog', {name: /cart/i})).toBeVisible();
+    const removeButton = this.page
+      .getByLabel('Line items')
+      .getByRole('listitem')
+      .filter({hasText: productName})
+      .getByRole('button', {name: 'Remove'});
+    // validate cart is settled.
+    await expect(removeButton).toBeEnabled();
   }
 
   async assertInCart(productName: string) {
@@ -62,9 +71,6 @@ export class CartUtil {
   }
 
   async navigateToCartPage(expectLineItems: boolean = true) {
-    if (expectLineItems) {
-      await this.waitForCartCookie();
-    }
     await this.page.goto('/cart');
     await expect(
       this.page.getByRole('dialog', {name: /cart/i}),
@@ -85,5 +91,25 @@ export class CartUtil {
     await expect(
       this.page.getByRole('dialog', {name: /cart/i}),
     ).not.toBeVisible();
+  }
+
+  getLineItems() {
+    return this.page.getByLabel('Line items').locator('> li:visible');
+  }
+
+  getFirstLineItem() {
+    return this.getLineItems().first();
+  }
+
+  getIncreaseButton(lineItem: Locator) {
+    return lineItem.getByRole('button', {name: 'Increase quantity'});
+  }
+
+  getDecreaseButton(lineItem: Locator) {
+    return lineItem.getByRole('button', {name: 'Decrease quantity'});
+  }
+
+  getRemoveButton(lineItem: Locator) {
+    return lineItem.getByRole('button', {name: 'Remove'});
   }
 }

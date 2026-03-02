@@ -9,21 +9,14 @@ const INACTIVE_DISCOUNT_CODE = getRequiredSecret(
   'discount_code_inactive',
 ).toUpperCase();
 const PRODUCT_NAME = 'The Element';
+const PRODUCT_HANDLE = 'the-element';
 const UNIT_PRICE = '$749.95';
 const DISCOUNTED_PRICE = '$739.95';
 
 test.beforeEach(async ({page, cart}) => {
-  await page.goto('/');
+  await page.goto(`/products/${PRODUCT_HANDLE}`);
 
-  const productLink = page.getByRole('link', {name: PRODUCT_NAME});
-  await expect(productLink).toBeVisible();
-  await productLink.click();
-  await expect(page).toHaveURL(/\/products\//);
-
-  const addToCartButton = page.getByRole('button', {name: /add to cart/i});
-  await expect(addToCartButton).toBeVisible();
-  await addToCartButton.click();
-  await expect(page.getByRole('dialog', {name: /cart/i})).toBeVisible();
+  await cart.addItem(PRODUCT_NAME);
   await cart.closeCartAside();
   await cart.navigateToCartPage();
 });
