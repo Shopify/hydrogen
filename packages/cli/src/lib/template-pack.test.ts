@@ -76,6 +76,9 @@ describe('replaceWorkspaceProtocolVersions', () => {
       }
 
       expect(copiedPackageJson.dependencies?.react).toBe(expectedReactVersion);
+      expect(
+        copiedPackageJson.devDependencies?.['@shopify/mini-oxygen'],
+      ).toMatch(/^\d+\.\d+\.\d+/);
     });
   });
 
