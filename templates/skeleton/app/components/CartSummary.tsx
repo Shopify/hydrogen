@@ -68,19 +68,19 @@ function CartDiscounts({
       ?.map(({code}) => code) || [];
 
   return (
-    <div aria-labelledby={discountsHeadingId}>
+    <div aria-label="Discounts">
       {/* Have existing discount, display it with a remove option */}
       <dl hidden={!codes.length}>
         <div>
           <dt id={discountsHeadingId}>Discounts</dt>
           <UpdateDiscountForm>
-            <dd className="cart-discount" role="group">
+            <div className="cart-discount" role="group">
               <code>{codes?.join(', ')}</code>
               &nbsp;
               <button type="submit" aria-label="Remove discount">
                 Remove
               </button>
-            </dd>
+            </div>
           </UpdateDiscountForm>
         </div>
       </dl>

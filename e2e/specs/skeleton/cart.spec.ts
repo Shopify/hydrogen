@@ -45,7 +45,9 @@ test.describe('Cart', () => {
 
       test('increases quantity in cart aside', async ({page}) => {
         const cart = new CartUtil(page);
-        const increaseButton = cart.getIncreaseButton(cart.getFirstLineItem());
+        const increaseButton = cart.getIncreaseButton(
+          cart.getLineItems().first(),
+        );
 
         await increaseButton.click();
 
@@ -61,7 +63,9 @@ test.describe('Cart', () => {
         await cart.closeCartAside();
         await cart.navigateToCartPage();
 
-        const increaseButton = cart.getIncreaseButton(cart.getFirstLineItem());
+        const increaseButton = cart.getIncreaseButton(
+          cart.getLineItems().first(),
+        );
 
         await increaseButton.click();
 
@@ -71,7 +75,7 @@ test.describe('Cart', () => {
 
       test('decreases quantity when above minimum', async ({page}) => {
         const cart = new CartUtil(page);
-        const firstItem = cart.getFirstLineItem();
+        const firstItem = cart.getLineItems().first();
         const increaseButton = cart.getIncreaseButton(firstItem);
         const decreaseButton = cart.getDecreaseButton(firstItem);
 
@@ -86,7 +90,9 @@ test.describe('Cart', () => {
 
       test('disables decrease button at quantity 1', async ({page}) => {
         const cart = new CartUtil(page);
-        const decreaseButton = cart.getDecreaseButton(cart.getFirstLineItem());
+        const decreaseButton = cart.getDecreaseButton(
+          cart.getLineItems().first(),
+        );
 
         await expect(decreaseButton).toBeDisabled();
       });
@@ -95,7 +101,9 @@ test.describe('Cart', () => {
         const cart = new CartUtil(page);
         await cart.assertTotalItems(1);
 
-        const increaseButton = cart.getIncreaseButton(cart.getFirstLineItem());
+        const increaseButton = cart.getIncreaseButton(
+          cart.getLineItems().first(),
+        );
 
         await increaseButton.click();
         await cart.closeCartAside();
@@ -113,9 +121,9 @@ test.describe('Cart', () => {
 
       test('removes item from cart aside', async ({page}) => {
         const cart = new CartUtil(page);
-        const removeButton = cart.getRemoveButton(cart.getFirstLineItem());
+        const removeButton = cart.getRemoveButton(cart.getLineItems().first());
         const emptyCartMessage = page
-          .getByRole('dialog', {name: /cart/i})
+          .getByRole('dialog', {name: 'Cart'})
           .getByText(/Looks like you haven.t added anything yet/);
 
         await removeButton.click();
@@ -129,9 +137,9 @@ test.describe('Cart', () => {
         await cart.closeCartAside();
         await cart.navigateToCartPage();
 
-        const removeButton = cart.getRemoveButton(cart.getFirstLineItem());
+        const removeButton = cart.getRemoveButton(cart.getLineItems().first());
         const emptyCartMessage = page
-          .locator('main:visible')
+          .getByLabel('Cart page')
           .getByText(/Looks like you haven.t added anything yet/);
 
         await removeButton.click();
@@ -142,7 +150,7 @@ test.describe('Cart', () => {
 
       test('updates cart badge to zero after removal', async ({page}) => {
         const cart = new CartUtil(page);
-        const removeButton = cart.getRemoveButton(cart.getFirstLineItem());
+        const removeButton = cart.getRemoveButton(cart.getLineItems().first());
 
         await removeButton.click();
 
@@ -173,7 +181,7 @@ test.describe('Cart', () => {
 
       test('shows checkout button when cart has items', async ({page}) => {
         const checkoutButton = page.getByRole('link', {
-          name: /Continue to Checkout/i,
+          name: 'Continue to Checkout →',
         });
 
         await expect(checkoutButton).toBeVisible();
@@ -182,13 +190,14 @@ test.describe('Cart', () => {
 
     test.describe('Edge Cases', () => {
       test('shows empty cart state on cart page', async ({page}) => {
-        await page.goto('/cart');
+        const cart = new CartUtil(page);
+        await cart.navigateToCartPage();
 
         const emptyCartMessage = page
-          .locator('main:visible')
+          .getByLabel('Cart page')
           .getByText(/Looks like you haven.t added anything yet/);
         const continueShoppingLink = page.getByRole('link', {
-          name: /Continue shopping/i,
+          name: 'Continue shopping',
         });
 
         await expect(emptyCartMessage).toBeVisible();
@@ -200,7 +209,7 @@ test.describe('Cart', () => {
 
         const cartLink = page.getByRole('link', {name: 'Cart'});
         const emptyCartMessage = page
-          .getByRole('dialog', {name: /cart/i})
+          .getByRole('dialog', {name: 'Cart'})
           .getByText(/Looks like you haven.t added anything yet/);
 
         await cartLink.click();
@@ -213,7 +222,9 @@ test.describe('Cart', () => {
         await page.goto(`/products/${PRODUCT_HANDLE}`);
         await cart.addItem(PRODUCT_NAME);
 
-        const increaseButton = cart.getIncreaseButton(cart.getFirstLineItem());
+        const increaseButton = cart.getIncreaseButton(
+          cart.getLineItems().first(),
+        );
         const cartLink = page.getByRole('link', {name: 'Cart'});
 
         await increaseButton.click();
@@ -229,7 +240,8 @@ test.describe('Cart', () => {
       });
 
       test('cart page displays correct heading', async ({page}) => {
-        await page.goto('/cart');
+        const cart = new CartUtil(page);
+        await cart.navigateToCartPage();
 
         const cartHeading = page.getByRole('heading', {level: 1, name: 'Cart'});
 

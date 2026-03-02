@@ -21,7 +21,7 @@ export class DiscountUtil {
   }
 
   async assertNoDiscounts() {
-    const discounts = this.page.locator('main:visible').getByLabel('Discounts');
+    const discounts = this.page.getByLabel('Cart page').getByLabel('Discounts');
     await expect(discounts.getByRole('group')).not.toBeVisible();
   }
 }

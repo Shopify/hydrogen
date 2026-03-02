@@ -50,7 +50,10 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
   const childrenMap = getLineItemChildrenMap(cart?.lines?.nodes ?? []);
 
   return (
-    <div className={className}>
+    <div
+      className={className}
+      aria-label={layout === 'page' ? 'Cart page' : 'Cart drawer'}
+    >
       <CartEmpty hidden={linesCount} layout={layout} />
       <div className="cart-details">
         <p id="cart-lines" className="sr-only">
