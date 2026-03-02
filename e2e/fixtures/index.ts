@@ -3,19 +3,30 @@ import {DevServer} from './server';
 import path from 'node:path';
 import {stat} from 'node:fs/promises';
 import {StorefrontPage} from './storefront';
+import {CartUtil} from './cart-utils';
+import {DiscountUtil} from './discount-utils';
 
 export * from '@playwright/test';
 export * from './storefront';
 export {getTestSecrets, getRequiredSecret} from './test-secrets';
 export {CartUtil} from './cart-utils';
+export {DiscountUtil} from './discount-utils';
 
 export const test = base.extend<
-  {storefront: StorefrontPage},
+  {storefront: StorefrontPage; cart: CartUtil; discount: DiscountUtil},
   {forEachWorker: void}
 >({
   storefront: async ({page}, use) => {
     const storefront = new StorefrontPage(page);
     await use(storefront);
+  },
+  cart: async ({page}, use) => {
+    const cart = new CartUtil(page);
+    await use(cart);
+  },
+  discount: async ({page}, use) => {
+    const discount = new DiscountUtil(page);
+    await use(discount);
   },
 });
 

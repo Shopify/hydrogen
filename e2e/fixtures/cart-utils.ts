@@ -1,14 +1,28 @@
-import {expect, Page} from '@playwright/test';
+import {expect, Locator, Page} from '@playwright/test';
 
 const CART_ID_PREFIX = 'gid://shopify/Cart/';
 
 export class CartUtil {
   constructor(private page: Page) {}
 
-  async assertInCart(productName: string) {
-    const lineItems = this.page.getByLabel('Line items');
+  async addItem(productName: string) {
     await expect(
-      lineItems.getByRole('listitem').filter({hasText: productName}),
+      this.page.getByRole('heading', {level: 1, name: productName}),
+    ).toBeVisible();
+    const addToCartButton = this.page.getByRole('button', {
+      name: 'Add to cart',
+    });
+    await addToCartButton.click();
+    await expect(this.page.getByRole('dialog', {name: 'Cart'})).toBeVisible();
+    const removeButton = this.getLineItems()
+      .filter({hasText: productName})
+      .getByRole('button', {name: 'Remove'});
+    await expect(removeButton).toBeEnabled();
+  }
+
+  async assertInCart(productName: string) {
+    await expect(
+      this.getLineItems().filter({hasText: productName}),
     ).toBeVisible();
   }
 
@@ -23,9 +37,7 @@ export class CartUtil {
   }
 
   async assertProductCount(count: number) {
-    await expect(
-      this.page.getByLabel('Line items').locator('> li:visible'),
-    ).toHaveCount(count);
+    await expect(this.getLineItems()).toHaveCount(count);
   }
 
   async assertTotalItems(itemCount: number) {
@@ -52,27 +64,45 @@ export class CartUtil {
     ]);
   }
 
-  async navigateToCartPage(expectLineItems: boolean = true) {
-    await this.page.waitForLoadState('networkidle');
+  async navigateToCartPage() {
     await this.page.goto('/cart');
     await expect(
-      this.page.getByRole('dialog', {name: /cart/i}),
+      this.page.getByRole('dialog', {name: 'Cart'}),
     ).not.toBeVisible();
-    if (expectLineItems) {
-      const lineItems = this.page
-        .getByLabel('Line items')
-        .locator('> li:visible');
-      await expect(lineItems.first()).toBeVisible();
-    }
   }
 
   async closeCartAside() {
     const closeButton = this.page
-      .getByRole('dialog', {name: /cart/i})
+      .getByRole('dialog', {name: 'Cart'})
       .getByRole('button', {name: 'Close'});
     await closeButton.click();
     await expect(
-      this.page.getByRole('dialog', {name: /cart/i}),
+      this.page.getByRole('dialog', {name: 'Cart'}),
     ).not.toBeVisible();
+  }
+
+  /**
+   * The skeleton template renders both cart page and drawer simultaneously,
+   * with the drawer hidden via CSS. Auto-detection ensures we select from the
+   * correct context to avoid matching duplicate line items.
+   */
+  getLineItems() {
+    const lineItemsList = this.page.url().includes('/cart')
+      ? this.page.getByLabel('Cart page').getByLabel('Line items')
+      : this.page.getByRole('dialog', {name: 'Cart'}).getByLabel('Line items');
+
+    return lineItemsList.locator('> li');
+  }
+
+  getIncreaseButton(lineItem: Locator) {
+    return lineItem.getByRole('button', {name: 'Increase quantity'});
+  }
+
+  getDecreaseButton(lineItem: Locator) {
+    return lineItem.getByRole('button', {name: 'Decrease quantity'});
+  }
+
+  getRemoveButton(lineItem: Locator) {
+    return lineItem.getByRole('button', {name: 'Remove'});
   }
 }
