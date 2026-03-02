@@ -23,6 +23,7 @@ function getCatalogVersion(sourceTemplateDir: string, packageName: string) {
     },
   ).trim();
 
+  // pnpm config get returns the literal string "undefined" for missing keys.
   if (!catalogVersion || catalogVersion === 'undefined') {
     throw new Error(`Expected pnpm catalog entry for ${packageName}.`);
   }
