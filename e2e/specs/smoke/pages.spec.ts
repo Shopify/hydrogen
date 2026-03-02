@@ -3,7 +3,9 @@ import {test, expect, setTestStore} from '../../fixtures';
 setTestStore('mockShop');
 
 test.describe('Pages', () => {
-  test('should display all static page content', async ({page}) => {
+  test('When visiting static pages, each should display its heading', async ({
+    page,
+  }) => {
     const pages = [
       {url: '/pages/contact', heading: 'Contact'},
       {url: '/collections', heading: 'Collections'},
@@ -16,12 +18,12 @@ test.describe('Pages', () => {
 
     for (const {url, heading} of pages) {
       await page.goto(url);
-      const pageContent = page.getByRole('heading', {level: 1, name: heading});
-      await expect(pageContent).toBeVisible();
+      const pageHeading = page.getByRole('heading', {level: 1, name: heading});
+      await expect(pageHeading).toBeVisible();
     }
 
     await page.goto('/graphiql');
-    const graphiqlPage = page.getByText('Storefront API');
-    await expect(graphiqlPage).toBeVisible();
+    const storefrontApiText = page.getByText('Storefront API');
+    await expect(storefrontApiText).toBeVisible();
   });
 });
