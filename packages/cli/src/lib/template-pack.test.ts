@@ -48,7 +48,8 @@ describe('replaceWorkspaceProtocolVersions', () => {
         await readFile(copiedPackageJsonPath, 'utf8'),
       ) as Record<string, Record<string, string> | undefined>;
 
-      // Simulate a dependency managed through pnpm catalog.
+      // Use a real workspace dependency from the packed manifest and swap it to
+      // catalog: so the test validates resolution against an actual package entry.
       copiedPackageJsonBefore.dependencies ??= {};
       copiedPackageJsonBefore.dependencies['@shopify/hydrogen'] = 'catalog:';
 
