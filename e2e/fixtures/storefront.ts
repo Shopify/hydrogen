@@ -853,7 +853,7 @@ export class StorefrontPage {
   async openCartAside(): Promise<void> {
     const cartLink = this.page
       .getByRole('banner')
-      .getByRole('link', {name: /cart/i});
+      .getByRole('link', {name: 'Cart'});
     await cartLink.click();
     await expect(this.getCartDrawer()).toBeVisible({timeout: 5000});
   }
@@ -877,7 +877,7 @@ export class StorefrontPage {
   async getCartBadgeCount(): Promise<number> {
     const cartLink = this.page
       .getByRole('banner')
-      .getByRole('link', {name: /cart/i});
+      .getByRole('link', {name: 'Cart'});
     const text = await cartLink.textContent();
     const match = text?.match(/\d+/);
     return match ? parseInt(match[0], 10) : 0;
@@ -1434,9 +1434,7 @@ export class StorefrontPage {
       // - "Gift card ending in XXXX"
       // - "•••• XXXX"
       // - Just the last 4 digits in a discount section
-      const giftCardLocator = this.page.locator(
-        `text=/${upperLastChars}/i`,
-      );
+      const giftCardLocator = this.page.locator(`text=/${upperLastChars}/i`);
 
       await expect(
         giftCardLocator.first(),
