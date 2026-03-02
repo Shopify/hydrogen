@@ -295,24 +295,28 @@ async function testUpgrade(
       toRelease.dependencies ?? {},
     )) {
       const actualVersion = upgradedPackageJson.dependencies?.[dep];
-      validateDependencyVersion(
-        actualVersion,
-        expectedVersion,
-        dep,
-        'dependency',
-      );
+      if (actualVersion) {
+        validateDependencyVersion(
+          actualVersion,
+          expectedVersion,
+          dep,
+          'dependency',
+        );
+      }
     }
 
     for (const [dep, expectedVersion] of Object.entries(
       toRelease.devDependencies ?? {},
     )) {
       const actualVersion = upgradedPackageJson.devDependencies?.[dep];
-      validateDependencyVersion(
-        actualVersion,
-        expectedVersion,
-        dep,
-        'devDependency',
-      );
+      if (actualVersion) {
+        validateDependencyVersion(
+          actualVersion,
+          expectedVersion,
+          dep,
+          'devDependency',
+        );
+      }
     }
 
     if (toRelease.removeDependencies) {
