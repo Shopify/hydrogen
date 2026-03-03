@@ -5,11 +5,13 @@ import yargs from 'yargs/yargs';
 import * as commands from './commands';
 
 const cli = yargs(process.argv.slice(2))
+  .command(commands.affectedRecipes)
   .command(commands.generate)
   .command(commands.render)
   .command(commands.apply)
   .command(commands.validate)
   .command(commands.regenerate)
+  .command(commands.skeletonFiles)
   .command(commands.update)
   .command(commands.schema);
 
