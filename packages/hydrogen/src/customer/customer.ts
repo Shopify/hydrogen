@@ -52,14 +52,17 @@ import {createCustomerAccountHelper, URL_TYPE} from './customer-account-helper';
 import {warnOnce} from '../utils/warning';
 import {LanguageCode} from '@shopify/hydrogen-react/customer-account-api-types';
 
+const HYDROGEN_TUNNEL_DOMAIN_SUFFIX = '.tryhydrogen.dev';
+
 function throwIfNotTunnelled(hostname: string) {
   if (process.env.NODE_ENV === 'development') {
-    if (!hostname.endsWith('.tryhydrogen.dev')) {
+    // Keep this suffix in sync with the domain used by --customer-account-push.
+    if (!hostname.endsWith(HYDROGEN_TUNNEL_DOMAIN_SUFFIX)) {
       throw new Response(
         [
           'Customer Account API OAuth requires a Hydrogen tunnel in local development.',
           'Run the development server with the `--customer-account-push` flag,',
-          'then open the tunnel URL shown in your terminal (`https://*.tryhydrogen.dev`) instead of localhost.',
+          `then open the tunnel URL shown in your terminal (\`https://*${HYDROGEN_TUNNEL_DOMAIN_SUFFIX}\`) instead of localhost.`,
         ].join('\n\n'),
         {
           status: 400,
