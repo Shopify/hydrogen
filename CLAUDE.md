@@ -101,8 +101,9 @@ Hydrogen uses a sophisticated automated release system built on Changesets, GitH
 
 1. **Developer Actions**
    - **Create changesets**: Run `npm run changeset add` for any PR with code changes
-   - **Skeleton changes**: MUST include `@shopify/cli-hydrogen` in the changeset
-     - This ensures the CLI bundles the latest skeleton template
+   - **Skeleton changes**: MUST include BOTH `@shopify/cli-hydrogen` AND `@shopify/create-hydrogen` in the changeset
+     - Including `@shopify/cli-hydrogen` ensures the CLI bundles the latest skeleton template and therefore running `shopify hydrogen init` will use the latest skeleton template
+     - Including `@shopify/create-hydrogen` ensures that when users run `npm create @shopify/hydrogen@latest`, the latest skeleton template will be used
      - Without this, new projects will scaffold with outdated templates
    - **Write PR descriptions**: Include clear explanations of changes
    - **Request snapshot builds**: Comment `/snapit` on PR to test changes
