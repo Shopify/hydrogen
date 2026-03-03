@@ -63,7 +63,7 @@ Disallow: /collections/*%2b*
 Disallow: /*/collections/*+*
 Disallow: /*/collections/*%2B*
 Disallow: /*/collections/*%2b*
-Disallow: */collections/*filter*&*filter*
+Disallow: /*/collections/*filter*&*filter*
 Disallow: /blogs/*+*
 Disallow: /blogs/*%2B*
 Disallow: /blogs/*%2b*
