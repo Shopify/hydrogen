@@ -903,7 +903,16 @@ export async function upgradeNodeModules({
       title: `Upgrading dependencies`,
       task: async () => {
         const packageManager = await getPackageManager(appPath);
-        const command = packageManager === 'yarn' ? 'add' : 'install';
+        const command =
+          packageManager === 'npm'
+            ? 'install'
+            : packageManager === 'yarn'
+              ? 'add'
+              : packageManager === 'pnpm'
+                ? 'add'
+                : packageManager === 'bun'
+                  ? 'install'
+                  : 'install'; // fallback to npm for 'unknown'
         const actualPackageManager =
           packageManager === 'unknown' ? 'npm' : packageManager;
 
