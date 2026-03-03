@@ -891,7 +891,9 @@ export async function upgradeNodeModules({
     });
   }
 
-  // Then install/upgrade dependencies
+  // Install/upgrade dependencies using exec() directly instead of cli-kit's
+  // installNodeModules(), which runs `<pm> install` and doesn't support adding
+  // specific packages with version specifiers (yarn/pnpm require `add`).
   const upgradeArgs = buildUpgradeCommandArgs({
     selectedRelease,
     currentDependencies,
