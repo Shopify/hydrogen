@@ -913,12 +913,13 @@ export async function upgradeNodeModules({
                 : packageManager === 'bun'
                   ? 'install'
                   : 'install'; // fallback to npm for 'unknown'
-        const actualPackageManager =
-          packageManager === 'unknown' ? 'npm' : packageManager;
-
-        await exec(actualPackageManager, [command, ...upgradeArgs], {
-          cwd: appPath,
-        });
+        await exec(
+          resolvePackageManagerName(packageManager),
+          [command, ...upgradeArgs],
+          {
+            cwd: appPath,
+          },
+        );
       },
     });
   }
@@ -926,6 +927,15 @@ export async function upgradeNodeModules({
   if (tasks.length > 0) {
     await renderTasks(tasks, {});
   }
+}
+
+/**
+ * Normalizes the package manager name, falling back to npm for 'unknown'.
+ */
+function resolvePackageManagerName(
+  packageManager: 'npm' | 'yarn' | 'pnpm' | 'unknown' | 'bun',
+): 'npm' | 'yarn' | 'pnpm' | 'bun' {
+  return packageManager === 'unknown' ? 'npm' : packageManager;
 }
 
 /**
@@ -953,10 +963,9 @@ async function uninstallNodeModules({
             ? 'remove'
             : 'uninstall'; // fallback to npm for 'unknown'
 
-  const actualPackageManager =
-    packageManager === 'unknown' ? 'npm' : packageManager;
-
-  await exec(actualPackageManager, [command, ...args], {cwd: directory});
+  await exec(resolvePackageManagerName(packageManager), [command, ...args], {
+    cwd: directory,
+  });
 }
 
 /**
