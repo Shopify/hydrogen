@@ -1,3 +1,4 @@
+import {execFileSync} from 'node:child_process';
 import {cp, readFile, writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {describe, expect, it} from 'vitest';
@@ -12,6 +13,24 @@ const DEPENDENCY_SECTIONS = [
   'optionalDependencies',
 ] as const;
 
+function getCatalogVersion(sourceTemplateDir: string, packageName: string) {
+  const catalogVersion = execFileSync(
+    'pnpm',
+    ['config', 'get', `catalog.${packageName}`, '--location', 'project'],
+    {
+      cwd: sourceTemplateDir,
+      encoding: 'utf8',
+    },
+  ).trim();
+
+  // pnpm config get returns the literal string "undefined" for missing keys.
+  if (!catalogVersion || catalogVersion === 'undefined') {
+    throw new Error(`Expected pnpm catalog entry for ${packageName}.`);
+  }
+
+  return catalogVersion;
+}
+
 describe('replaceWorkspaceProtocolVersions', () => {
   it('replaces workspace protocol versions in copied templates', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
@@ -21,11 +40,16 @@ describe('replaceWorkspaceProtocolVersions', () => {
       await cp(sourceTemplateDir, copiedTemplateDir, {recursive: true});
 
       const copiedPackageJsonPath = join(copiedTemplateDir, 'package.json');
+      const expectedReactVersion = getCatalogVersion(
+        sourceTemplateDir,
+        'react',
+      );
       const copiedPackageJsonBefore = JSON.parse(
         await readFile(copiedPackageJsonPath, 'utf8'),
       ) as Record<string, Record<string, string> | undefined>;
 
-      // Simulate a dependency managed through pnpm catalog.
+      // Use a real workspace dependency from the packed manifest and swap it to
+      // catalog: so the test validates resolution against an actual package entry.
       copiedPackageJsonBefore.dependencies ??= {};
       copiedPackageJsonBefore.dependencies['@shopify/hydrogen'] = 'catalog:';
 
@@ -52,6 +76,75 @@ describe('replaceWorkspaceProtocolVersions', () => {
           expect(version.startsWith('catalog:')).toBe(false);
         }
       }
+
+      expect(copiedPackageJson.dependencies?.react).toBe(expectedReactVersion);
+      expect(
+        copiedPackageJson.devDependencies?.['@shopify/mini-oxygen'],
+      ).toMatch(/^\d+\.\d+\.\d+/);
+    });
+  });
+
+  it('throws a clear error when a workspace dependency is missing from the packed manifest', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      const sourceTemplateDir = getSkeletonSourceDir();
+      const copiedTemplateDir = join(tmpDir, 'skeleton-copy');
+
+      await cp(sourceTemplateDir, copiedTemplateDir, {recursive: true});
+
+      const copiedPackageJsonPath = join(copiedTemplateDir, 'package.json');
+      const copiedPackageJsonBefore = JSON.parse(
+        await readFile(copiedPackageJsonPath, 'utf8'),
+      ) as Record<string, Record<string, string> | undefined>;
+
+      copiedPackageJsonBefore.dependencies ??= {};
+      copiedPackageJsonBefore.dependencies['@shopify/does-not-exist'] =
+        'workspace:*';
+
+      await writeFile(
+        copiedPackageJsonPath,
+        `${JSON.stringify(copiedPackageJsonBefore, null, 2)}\n`,
+      );
+
+      await expect(
+        replaceWorkspaceProtocolVersions({
+          sourceTemplateDir,
+          targetTemplateDir: copiedTemplateDir,
+        }),
+      ).rejects.toThrow(
+        'Unable to resolve @shopify/does-not-exist from dependencies in packed template manifest.',
+      );
+    });
+  });
+
+  it('throws a clear error when a catalog dependency is missing from the packed manifest', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      const sourceTemplateDir = getSkeletonSourceDir();
+      const copiedTemplateDir = join(tmpDir, 'skeleton-copy');
+
+      await cp(sourceTemplateDir, copiedTemplateDir, {recursive: true});
+
+      const copiedPackageJsonPath = join(copiedTemplateDir, 'package.json');
+      const copiedPackageJsonBefore = JSON.parse(
+        await readFile(copiedPackageJsonPath, 'utf8'),
+      ) as Record<string, Record<string, string> | undefined>;
+
+      copiedPackageJsonBefore.dependencies ??= {};
+      copiedPackageJsonBefore.dependencies['@shopify/catalog-does-not-exist'] =
+        'catalog:';
+
+      await writeFile(
+        copiedPackageJsonPath,
+        `${JSON.stringify(copiedPackageJsonBefore, null, 2)}\n`,
+      );
+
+      await expect(
+        replaceWorkspaceProtocolVersions({
+          sourceTemplateDir,
+          targetTemplateDir: copiedTemplateDir,
+        }),
+      ).rejects.toThrow(
+        'Unable to resolve @shopify/catalog-does-not-exist from dependencies in packed template manifest.',
+      );
     });
   });
 });
