@@ -1,13 +1,8 @@
 import type {Route} from './+types/[robots.txt]';
-import {parseGid} from '@shopify/hydrogen';
 
-export async function loader({request, context}: Route.LoaderArgs) {
+export function loader({request}: Route.LoaderArgs) {
   const url = new URL(request.url);
-
-  const {shop} = await context.storefront.query(ROBOTS_QUERY);
-
-  const shopId = parseGid(shop.id).id;
-  const body = robotsTxtData({url: url.origin, shopId});
+  const body = robotsTxtData({url: url.origin});
 
   return new Response(body, {
     status: 200,
@@ -19,12 +14,12 @@ export async function loader({request, context}: Route.LoaderArgs) {
   });
 }
 
-function robotsTxtData({url, shopId}: {shopId?: string; url?: string}) {
+function robotsTxtData({url}: {url?: string}) {
   const sitemapUrl = url ? `${url}/sitemap.xml` : undefined;
 
   return `
 User-agent: *
-${generalDisallowRules({sitemapUrl, shopId})}
+${generalDisallowRules({sitemapUrl})}
 
 # Google adsbot ignores robots.txt unless specifically named!
 User-agent: adsbot-google
@@ -39,11 +34,11 @@ Disallow: /
 
 User-agent: AhrefsBot
 Crawl-delay: 10
-${generalDisallowRules({sitemapUrl, shopId})}
+${generalDisallowRules({sitemapUrl})}
 
 User-agent: AhrefsSiteAudit
 Crawl-delay: 10
-${generalDisallowRules({sitemapUrl, shopId})}
+${generalDisallowRules({sitemapUrl})}
 
 User-agent: MJ12bot
 Crawl-Delay: 10
@@ -57,13 +52,7 @@ Crawl-delay: 1
  * This function generates disallow rules that generally follow what Shopify's
  * Online Store has as defaults for their robots.txt
  */
-function generalDisallowRules({
-  shopId,
-  sitemapUrl,
-}: {
-  shopId?: string;
-  sitemapUrl?: string;
-}) {
+function generalDisallowRules({sitemapUrl}: {sitemapUrl?: string}) {
   return `Disallow: /cart
 Disallow: /account
 Disallow: /collections/*sort_by*
@@ -90,12 +79,3 @@ Allow: /search/
 Disallow: /search/?*
 ${sitemapUrl ? `Sitemap: ${sitemapUrl}` : ''}`;
 }
-
-const ROBOTS_QUERY = `#graphql
-  query StoreRobots($country: CountryCode, $language: LanguageCode)
-   @inContext(country: $country, language: $language) {
-    shop {
-      id
-    }
-  }
-` as const;
