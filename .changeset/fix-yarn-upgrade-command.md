@@ -2,4 +2,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Fix `hydrogen upgrade` failing with yarn by using `yarn add` instead of `yarn install` when upgrading dependencies
+Fix `hydrogen upgrade` failing with yarn and pnpm by using the correct package-specific install subcommand (`add` for yarn/pnpm, `install` for npm/bun) when upgrading dependencies
