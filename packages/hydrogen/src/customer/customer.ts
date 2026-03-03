@@ -645,7 +645,7 @@ function createIfInvalidCredentialThrowError(
       const publicMessage =
         process.env.NODE_ENV === 'production'
           ? 'Internal Server Error'
-          : 'You do not have a valid credential to use Customer Account API (/account).';
+          : 'You do not have valid credentials to use Customer Account API (/account).';
 
       throw new Response(publicMessage, {status: 500});
     }
