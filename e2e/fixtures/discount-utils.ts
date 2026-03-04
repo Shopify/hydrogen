@@ -25,7 +25,7 @@ export class DiscountUtil {
     await expect(discounts.getByRole('group')).not.toBeVisible();
   }
 
-  async assertCodeNotVisible(code: string) {
+  async assertCodeNotPresent(code: string) {
     const discounts = this.page.getByText(code);
     await expect(discounts).toHaveCount(0);
   }

@@ -5,15 +5,17 @@ import {stat} from 'node:fs/promises';
 import {StorefrontPage} from './storefront';
 import {CartUtil} from './cart-utils';
 import {DiscountUtil} from './discount-utils';
+import {GiftCardUtil} from './gift-card-utils';
 
 export * from '@playwright/test';
 export * from './storefront';
 export {getTestSecrets, getRequiredSecret} from './test-secrets';
 export {CartUtil} from './cart-utils';
 export {DiscountUtil} from './discount-utils';
+export {GiftCardUtil} from './gift-card-utils';
 
 export const test = base.extend<
-  {storefront: StorefrontPage; cart: CartUtil; discount: DiscountUtil},
+  {storefront: StorefrontPage; cart: CartUtil; discount: DiscountUtil; giftCard: GiftCardUtil},
   {forEachWorker: void}
 >({
   storefront: async ({page}, use) => {
@@ -27,6 +29,10 @@ export const test = base.extend<
   discount: async ({page}, use) => {
     const discount = new DiscountUtil(page);
     await use(discount);
+  },
+  giftCard: async ({page}, use) => {
+    const giftCard = new GiftCardUtil(page);
+    await use(giftCard);
   },
 });
 
