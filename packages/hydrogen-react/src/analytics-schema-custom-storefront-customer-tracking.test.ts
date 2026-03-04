@@ -323,6 +323,16 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
         price: parseFloat(productPayload.price),
       });
     });
+
+    it('strips cart key from cart_token', () => {
+      const events = addToCart({
+        ...BASE_PAYLOAD,
+        cartId: 'gid://shopify/Cart/abc123?key=secret',
+        products: [BASE_PRODUCT_PAYLOAD],
+      });
+
+      expect(events[0]?.payload?.cart_token).toBe('abc123');
+    });
   });
 });
 

@@ -203,6 +203,8 @@ export function addToCart(
 ): ShopifyMonorailEvent[] {
   const addToCartPayload = payload;
   const cartToken = parseGid(addToCartPayload.cartId);
+  const cartTokenValue = cartToken.resourceId || cartToken.id || null;
+
   return [
     schemaWrapper(
       SCHEMA_ID,
@@ -210,7 +212,7 @@ export function addToCart(
         {
           event_name: PRODUCT_ADDED_TO_CART_EVENT_NAME,
           customerId: addToCartPayload.customerId,
-          cart_token: cartToken?.id ? `${cartToken.id}` : null,
+          cart_token: cartTokenValue,
           total_value: addToCartPayload.totalValue,
           products: formatProductPayload(addToCartPayload.products),
           customer_id: parseInt(
