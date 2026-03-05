@@ -9,13 +9,19 @@ import {GiftCardUtil} from './gift-card-utils';
 
 export * from '@playwright/test';
 export * from './storefront';
+export * from './recipe';
 export {getTestSecrets, getRequiredSecret} from './test-secrets';
 export {CartUtil} from './cart-utils';
 export {DiscountUtil} from './discount-utils';
 export {GiftCardUtil} from './gift-card-utils';
 
 export const test = base.extend<
-  {storefront: StorefrontPage; cart: CartUtil; discount: DiscountUtil; giftCard: GiftCardUtil},
+  {
+    storefront: StorefrontPage;
+    cart: CartUtil;
+    discount: DiscountUtil;
+    giftCard: GiftCardUtil;
+  },
   {forEachWorker: void}
 >({
   storefront: async ({page}, use) => {
