@@ -1,6 +1,18 @@
 import {defineConfig} from '@playwright/test';
+import {getTestSecrets} from './e2e/fixtures/test-secrets';
 
 const isCI = !!process.env.CI;
+
+function getLoadtestHeaders(): Record<string, string> {
+  try {
+    const secrets = getTestSecrets();
+    const header = secrets.loadtest_header;
+    if (header) return {[header]: 'true'};
+  } catch {
+    // Secrets not available (e.g. missing ejson key) — skip loadtest header
+  }
+  return {};
+}
 
 export default defineConfig({
   testMatch: /\.spec\.ts$/,
@@ -16,6 +28,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     // Record trace on first retry (helps debug flaky tests)
     trace: 'on-first-retry',
+    // Loadtest header so Shopify's bot-priority system recognises our
+    // traffic as internal Playwright e2e tests.
+    extraHTTPHeaders: getLoadtestHeaders(),
   },
   projects: [
     {

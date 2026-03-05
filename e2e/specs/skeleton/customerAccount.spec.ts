@@ -1,6 +1,14 @@
 import {setTestStore, test, expect, getRequiredSecret} from '../../fixtures';
 
-setTestStore('customerAccount', {customerAccountPush: true});
+// Pass CUSTOMER_ACCOUNT_URL to skip the tunnel and use an existing dev server, e.g.:
+//   CUSTOMER_ACCOUNT_URL=https://xyz.tryhydrogen.dev npx playwright test --project=skeleton
+const tunnelUrl = process.env.CUSTOMER_ACCOUNT_URL;
+
+if (tunnelUrl) {
+  setTestStore(tunnelUrl as `https://${string}`);
+} else {
+  setTestStore('customerAccount', {customerAccountPush: true});
+}
 
 function getTestEmail(): string {
   if (process.env.CUSTOMER_ACCOUNT_TEST_EMAIL) {
@@ -108,9 +116,7 @@ test.describe('Customer Account', () => {
   test.describe('Unauthenticated', () => {
     test('redirects to login when visiting /account unauthenticated', async ({
       page,
-      customerAccount,
     }) => {
-      await customerAccount.enableLoadtestBypass();
       await page.goto('/account');
 
       // Should redirect to Shopify's hosted login page
