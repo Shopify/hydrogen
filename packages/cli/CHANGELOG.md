@@ -1,5 +1,21 @@
 # @shopify/cli-hydrogen
 
+## 11.1.11
+
+### Patch Changes
+
+- Improve gift card accessibility in Skeleton template ([#3518](https://github.com/Shopify/hydrogen/pull/3518)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Updated the skeleton `robots.txt` defaults to remove disallow rules that are specific to Shopify themes and not part of a new Hydrogen app by default. This reduces confusion when reviewing or customizing robots rules in scaffolded projects. ([#3526](https://github.com/Shopify/hydrogen/pull/3526)) by [@fredericoo](https://github.com/fredericoo)
+
+- Fixed `--package-manager` flag being ignored when `--install-deps` was explicitly passed. Projects now correctly use the specified package manager for dependency installation. ([#3458](https://github.com/Shopify/hydrogen/pull/3458)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Updated loaders that used `customerAccount.handleAuthStatus()` to now await it. ([#3523](https://github.com/Shopify/hydrogen/pull/3523)) by [@fredericoo](https://github.com/fredericoo)
+
+  ### Migration
+
+  If you call `handleAuthStatus()` in your own loaders, update those callsites to use `await`.
+
 ## 11.1.10
 
 ### Patch Changes
