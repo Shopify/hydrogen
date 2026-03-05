@@ -1,4 +1,5 @@
 import {expect, Locator, Page} from '@playwright/test';
+import {CartUtil} from './cart-utils';
 
 /**
  * Markets-specific test utilities for the Markets recipe.
@@ -6,11 +7,6 @@ import {expect, Locator, Page} from '@playwright/test';
  */
 export class MarketsUtil {
   constructor(private page: Page) {}
-
-  async navigateToLocale(localePath: string) {
-    await this.page.goto(localePath);
-    await expect(this.page).toHaveURL(new RegExp(localePath));
-  }
 
   async assertLocaleInUrl(localePrefix: string) {
     const url = this.page.url();
@@ -65,7 +61,7 @@ export class MarketsUtil {
   }
 
   getCountrySelector() {
-    return this.page.locator('details[aria-label="Country selector"]');
+    return this.page.getByRole('group', {name: 'Country selector'});
   }
 
   async assertCountrySelectorVisible() {
@@ -81,22 +77,27 @@ export class MarketsUtil {
     await expect(currentLocaleSummary).toContainText(locale);
   }
 
-  async openCountrySelector() {
+  async switchToFirstAvailableLocale() {
     const summary = this.getCountrySelector().locator('summary');
     await summary.click();
-  }
 
-  async switchToFirstAvailableLocale() {
-    await this.openCountrySelector();
     const switchButton = this.page
       .getByRole('button', {name: /Switch to/i})
       .first();
     await expect(switchButton).toBeVisible();
+
+    const switchButtonText = (await switchButton.textContent())?.trim() ?? '';
+    const targetLocale = switchButtonText.replace(/^Switch to\s+/, '');
+
     await switchButton.click();
     // Wait for navigation to a locale-prefixed URL (e.g., /FR-CA) or root (/)
     await this.page.waitForURL(/\/[A-Z]{2}-[A-Z]{2}(\/|$)|\/$/, {
       timeout: 10000,
     });
+
+    if (targetLocale) {
+      await this.assertCurrentLocaleInSelector(targetLocale);
+    }
   }
 
   async assertCollectionLinksHaveLocalePrefix(localePrefix: string) {
@@ -108,30 +109,6 @@ export class MarketsUtil {
   }
 
   async assertCartSubtotalFormat(currencyFormat: RegExp) {
-    const cartDrawer = this.page.getByRole('dialog', {name: /cart/i});
-    await expect(cartDrawer).toBeVisible();
-
-    // Wait for cart to load (remove button enabled means data is ready)
-    const removeButton = cartDrawer.getByRole('button', {name: 'Remove'});
-    await expect(removeButton).toBeEnabled();
-
-    const drawerSubtotal = cartDrawer
-      .getByRole('definition')
-      .filter({hasText: currencyFormat});
-    await expect(drawerSubtotal).toBeVisible();
-  }
-
-  async assertCartPageSubtotalFormat(currencyFormat: RegExp) {
-    const cartHeading = this.page.getByRole('heading', {
-      name: /cart/i,
-      level: 1,
-    });
-    await expect(cartHeading).toBeVisible();
-
-    const subtotal = this.page
-      .getByRole('definition')
-      .filter({hasText: currencyFormat});
-    await expect(subtotal).toBeVisible();
-    await expect(subtotal).toHaveText(currencyFormat);
+    await new CartUtil(this.page).assertSubtotalCurrencyFormat(currencyFormat);
   }
 }
