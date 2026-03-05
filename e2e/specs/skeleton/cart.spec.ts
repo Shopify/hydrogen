@@ -1,12 +1,12 @@
 import {setTestStore, test, expect} from '../../fixtures';
 import {CartUtil} from '../../fixtures/cart-utils';
 
-setTestStore('mockShop');
+setTestStore('hydrogenPreviewStorefront');
 
-const PRODUCT_NAME = "Women's T-shirt";
-const PRODUCT_HANDLE = 'women-t-shirt';
-const UNIT_PRICE = '$30.00';
-const TWO_ITEMS_PRICE = '$60.00';
+const PRODUCT_NAME = 'The Element';
+const PRODUCT_HANDLE = 'the-element';
+const UNIT_PRICE = '$749.95';
+const TWO_ITEMS_PRICE = '$1,499.90';
 
 test.describe('Cart', () => {
   test.describe('Line Items', () => {
@@ -254,12 +254,12 @@ test.describe('Cart', () => {
     test('Supports nested line items', async ({page, request}) => {
       const cart = new CartUtil(page);
       const PARENT_PRODUCT = {
-        title: 'Slides',
-        variantId: 'gid://shopify/ProductVariant/43695710371862',
+        title: 'The Element',
+        variantId: 'gid://shopify/ProductVariant/43567673344056',
       };
       const CHILD_PRODUCT = {
-        title: 'Sweatpants',
-        variantId: 'gid://shopify/ProductVariant/43696926949398',
+        title: 'The Elemental',
+        variantId: 'gid://shopify/ProductVariant/43567673442360',
       };
 
       const addedLines = await request
@@ -325,12 +325,13 @@ test.describe('Cart', () => {
       const lineItems = cart.getLineItems();
       const parentProductLink = lineItems
         .first()
-        .getByRole('link', {name: PARENT_PRODUCT.title});
+        .getByRole('link', {name: PARENT_PRODUCT.title, exact: true});
       const nestedList = lineItems.first().getByRole('list', {
         name: `Line items with ${PARENT_PRODUCT.title}`,
       });
       const childProductLink = nestedList.getByRole('link', {
         name: CHILD_PRODUCT.title,
+        exact: true,
       });
 
       await expect(parentProductLink).toBeVisible();
