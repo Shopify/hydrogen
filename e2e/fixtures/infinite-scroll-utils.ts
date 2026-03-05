@@ -9,7 +9,9 @@ export class InfiniteScrollUtil {
   }
 
   getProducts() {
-    return this.page.getByRole('heading', {level: 4});
+    return this.page
+      .getByRole('region', {name: 'Products'})
+      .getByRole('heading', {level: 4});
   }
 
   getLoadMoreButton() {

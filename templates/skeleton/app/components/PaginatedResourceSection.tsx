@@ -26,7 +26,19 @@ export function PaginatedResourceSection<NodesType>({
               {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
             </PreviousLink>
             {resourcesClassName ? (
-              <div className={resourcesClassName}>{resourcesMarkup}</div>
+              <div
+                aria-label={
+                  resourcesClassName === 'products-grid'
+                    ? 'Products'
+                    : undefined
+                }
+                className={resourcesClassName}
+                role={
+                  resourcesClassName === 'products-grid' ? 'region' : undefined
+                }
+              >
+                {resourcesMarkup}
+              </div>
             ) : (
               resourcesMarkup
             )}
