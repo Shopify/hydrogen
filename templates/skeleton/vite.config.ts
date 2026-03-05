@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [hydrogen(), oxygen(), reactRouter(), tsconfigPaths()],
   build: {
     // Allow a strict Content-Security-Policy
-    // withtout inlining assets as base64:
+    // without inlining assets as base64:
     assetsInlineLimit: 0,
   },
   ssr: {
