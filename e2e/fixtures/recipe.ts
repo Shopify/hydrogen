@@ -12,9 +12,16 @@ import {
 } from 'node:fs/promises';
 import {exec} from 'node:child_process';
 import {promisify} from 'node:util';
+import {parse as parseYaml} from 'yaml';
 
 const execAsync = promisify(exec);
 let workspacePackageMapPromise: Promise<Map<string, string>> | null = null;
+let workspaceConfigPromise: Promise<WorkspaceConfig> | null = null;
+
+type WorkspaceConfig = {
+  packages: string[];
+  catalog: Record<string, string>;
+};
 
 export type RecipeFixtureOptions = {
   /**
@@ -184,10 +191,7 @@ const resolveWorkspaceProtocols = async (
     devDependencies?: Record<string, string>;
   };
 
-  // Read catalog from pnpm-workspace.yaml for catalog: protocol resolution
-  const workspacePath = path.join(repoRoot, 'pnpm-workspace.yaml');
-  const workspaceContent = await readFile(workspacePath, 'utf-8');
-  const catalog = parseCatalogFromWorkspace(workspaceContent);
+  const {catalog} = await getWorkspaceConfig(repoRoot);
 
   // Resolve dependencies
   if (pkgJson.dependencies) {
@@ -198,7 +202,7 @@ const resolveWorkspaceProtocols = async (
           repoRoot,
         );
       } else if (depVersion === 'catalog:') {
-        pkgJson.dependencies[depName] = catalog[depName];
+        pkgJson.dependencies[depName] = resolveCatalogVersion(depName, catalog);
       }
     }
   }
@@ -214,7 +218,10 @@ const resolveWorkspaceProtocols = async (
           repoRoot,
         );
       } else if (depVersion === 'catalog:') {
-        pkgJson.devDependencies[depName] = catalog[depName];
+        pkgJson.devDependencies[depName] = resolveCatalogVersion(
+          depName,
+          catalog,
+        );
       }
     }
   }
@@ -222,63 +229,57 @@ const resolveWorkspaceProtocols = async (
   await writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n');
 };
 
-/**
- * Parses the catalog section from pnpm-workspace.yaml
- */
-const parseCatalogFromWorkspace = (
-  workspaceContent: string,
-): Record<string, string> => {
-  const lines = workspaceContent.split('\n');
-  const catalog: Record<string, string> = {};
-  let inCatalog = false;
-
-  for (const line of lines) {
-    if (line.trim() === 'catalog:') {
-      inCatalog = true;
-      continue;
-    }
-
-    if (inCatalog) {
-      // Stop when we hit a non-indented line or empty line after catalog
-      if (line && !line.startsWith(' ')) {
-        break;
-      }
-
-      // Parse catalog entries like: "  '@types/node': '^22'"
-      const match = line.match(/^\s+'?([^':]+)'?:\s+'?([^']+)'?/);
-      if (match) {
-        catalog[match[1]] = match[2];
-      }
-    }
+const getWorkspaceConfig = async (
+  repoRoot: string,
+): Promise<WorkspaceConfig> => {
+  if (workspaceConfigPromise) {
+    return workspaceConfigPromise;
   }
 
-  return catalog;
+  workspaceConfigPromise = (async () => {
+    const workspacePath = path.join(repoRoot, 'pnpm-workspace.yaml');
+    const workspaceContent = await readFile(workspacePath, 'utf-8');
+    const parsed = parseYaml(workspaceContent) as {
+      packages?: unknown;
+      catalog?: unknown;
+    };
+
+    const packages = Array.isArray(parsed.packages)
+      ? parsed.packages.filter(
+          (value): value is string => typeof value === 'string',
+        )
+      : [];
+
+    const catalogEntries =
+      parsed.catalog && typeof parsed.catalog === 'object'
+        ? parsed.catalog
+        : {};
+    const catalog = Object.fromEntries(
+      Object.entries(catalogEntries).filter(
+        (entry): entry is [string, string] =>
+          typeof entry[0] === 'string' && typeof entry[1] === 'string',
+      ),
+    );
+
+    return {packages, catalog};
+  })();
+
+  return workspaceConfigPromise;
 };
 
-const parseWorkspacePackagePaths = (workspaceContent: string): string[] => {
-  const lines = workspaceContent.split('\n');
-  const packagePaths: string[] = [];
-  let inPackages = false;
+const resolveCatalogVersion = (
+  dependencyName: string,
+  catalog: Record<string, string>,
+) => {
+  const resolvedVersion = catalog[dependencyName];
 
-  for (const line of lines) {
-    if (line.trim() === 'packages:') {
-      inPackages = true;
-      continue;
-    }
-
-    if (inPackages) {
-      if (line && !line.startsWith(' ')) {
-        break;
-      }
-
-      const match = line.match(/^\s*-\s+['"]?([^'"]+)['"]?\s*$/);
-      if (match) {
-        packagePaths.push(match[1]);
-      }
-    }
+  if (!resolvedVersion) {
+    throw new Error(
+      `Missing catalog entry for ${dependencyName} in pnpm-workspace.yaml catalog`,
+    );
   }
 
-  return packagePaths;
+  return resolvedVersion;
 };
 
 const getWorkspacePackageMap = async (
@@ -289,9 +290,7 @@ const getWorkspacePackageMap = async (
   }
 
   workspacePackageMapPromise = (async () => {
-    const workspacePath = path.join(repoRoot, 'pnpm-workspace.yaml');
-    const workspaceContent = await readFile(workspacePath, 'utf-8');
-    const packagePaths = parseWorkspacePackagePaths(workspaceContent);
+    const {packages: packagePaths} = await getWorkspaceConfig(repoRoot);
     const packageMap = new Map<string, string>();
 
     await Promise.all(
