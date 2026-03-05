@@ -36,6 +36,26 @@ export class CartUtil {
     ).toBeVisible();
   }
 
+  async assertSubtotalCurrencyFormat(currencyFormat: RegExp) {
+    const {isCartPage, scope} = this.getActiveCartContext();
+
+    if (isCartPage) {
+      const cartHeading = this.page.getByRole('heading', {
+        name: /cart/i,
+        level: 1,
+      });
+      await expect(cartHeading).toBeVisible();
+    }
+
+    const cartTotals = scope.getByLabel('Totals');
+    const subtotal = cartTotals
+      .getByRole('group')
+      .filter({hasText: 'Subtotal'});
+    await expect(
+      subtotal.getByRole('definition').filter({hasText: currencyFormat}),
+    ).toBeVisible();
+  }
+
   async assertProductCount(count: number) {
     await expect(this.getLineItems()).toHaveCount(count);
   }
@@ -87,11 +107,19 @@ export class CartUtil {
    * correct context to avoid matching duplicate line items.
    */
   getLineItems() {
-    const lineItemsList = this.page.url().includes('/cart')
-      ? this.page.getByLabel('Cart page').getByLabel('Line items')
-      : this.page.getByRole('dialog', {name: 'Cart'}).getByLabel('Line items');
+    const {scope} = this.getActiveCartContext();
+    const lineItemsList = scope.getByLabel('Line items');
 
     return lineItemsList.locator('> li');
+  }
+
+  private getActiveCartContext() {
+    const isCartPage = this.page.url().includes('/cart');
+    const scope = isCartPage
+      ? this.page.getByLabel('Cart page')
+      : this.page.getByRole('dialog', {name: 'Cart'});
+
+    return {isCartPage, scope};
   }
 
   getIncreaseButton(lineItem: Locator) {
