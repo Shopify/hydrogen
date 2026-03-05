@@ -383,9 +383,6 @@ const getWorkspacePackageMap = async (
   return packageMap;
 };
 
-/**
- * Resolves a workspace:* dependency to a file: protocol pointing to the built package
- */
 const resolveWorkspacePackage = (
   packageName: string,
   packageMap: Map<string, string>,
