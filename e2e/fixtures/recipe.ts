@@ -1,11 +1,20 @@
 import {test} from './index';
 import path from 'node:path';
 import {DevServer} from './server';
-import {stat, mkdir, rm, cp, readFile, writeFile} from 'node:fs/promises';
+import {
+  stat,
+  mkdir,
+  rm,
+  cp,
+  readFile,
+  writeFile,
+  access,
+} from 'node:fs/promises';
 import {exec} from 'node:child_process';
 import {promisify} from 'node:util';
 
 const execAsync = promisify(exec);
+let workspacePackageMapPromise: Promise<Map<string, string>> | null = null;
 
 export type RecipeFixtureOptions = {
   /**
@@ -30,7 +39,7 @@ export type RecipeFixtureOptions = {
   envOverrides?: Record<string, string>;
 };
 
-export const setRecipeFixture = async (options: RecipeFixtureOptions) => {
+export const setRecipeFixture = (options: RecipeFixtureOptions) => {
   const {
     recipeName,
     storeKey = 'hydrogenPreviewStorefront',
@@ -246,6 +255,79 @@ const parseCatalogFromWorkspace = (
   return catalog;
 };
 
+const parseWorkspacePackagePaths = (workspaceContent: string): string[] => {
+  const lines = workspaceContent.split('\n');
+  const packagePaths: string[] = [];
+  let inPackages = false;
+
+  for (const line of lines) {
+    if (line.trim() === 'packages:') {
+      inPackages = true;
+      continue;
+    }
+
+    if (inPackages) {
+      if (line && !line.startsWith(' ')) {
+        break;
+      }
+
+      const match = line.match(/^\s*-\s+['"]?([^'"]+)['"]?\s*$/);
+      if (match) {
+        packagePaths.push(match[1]);
+      }
+    }
+  }
+
+  return packagePaths;
+};
+
+const getWorkspacePackageMap = async (
+  repoRoot: string,
+): Promise<Map<string, string>> => {
+  if (workspacePackageMapPromise) {
+    return workspacePackageMapPromise;
+  }
+
+  workspacePackageMapPromise = (async () => {
+    const workspacePath = path.join(repoRoot, 'pnpm-workspace.yaml');
+    const workspaceContent = await readFile(workspacePath, 'utf-8');
+    const packagePaths = parseWorkspacePackagePaths(workspaceContent);
+    const packageMap = new Map<string, string>();
+
+    await Promise.all(
+      packagePaths.map(async (packagePath) => {
+        const packageJsonPath = path.join(
+          repoRoot,
+          packagePath,
+          'package.json',
+        );
+
+        try {
+          await access(packageJsonPath);
+        } catch {
+          return;
+        }
+
+        const packageJson = JSON.parse(
+          await readFile(packageJsonPath, 'utf-8'),
+        ) as {
+          name?: string;
+        };
+
+        if (!packageJson.name) {
+          return;
+        }
+
+        packageMap.set(packageJson.name, path.join(repoRoot, packagePath));
+      }),
+    );
+
+    return packageMap;
+  })();
+
+  return workspacePackageMapPromise;
+};
+
 /**
  * Resolves a workspace:* dependency to a file: protocol pointing to the built package
  */
@@ -253,21 +335,15 @@ const resolveWorkspacePackage = async (
   packageName: string,
   repoRoot: string,
 ): Promise<string> => {
-  // Map package name to workspace location
-  const packageMap: Record<string, string> = {
-    '@shopify/hydrogen': 'packages/hydrogen',
-    '@shopify/hydrogen-codegen': 'packages/hydrogen-codegen',
-    '@shopify/mini-oxygen': 'packages/mini-oxygen',
-    '@shopify/cli-hydrogen': 'packages/cli-hydrogen',
-  };
+  const packageMap = await getWorkspacePackageMap(repoRoot);
+  const packagePath = packageMap.get(packageName);
 
-  const packagePath = packageMap[packageName];
   if (!packagePath) {
+    const knownPackages = [...packageMap.keys()].sort().join(', ');
     throw new Error(
-      `Unknown workspace package: ${packageName}. Add to packageMap in recipe.ts`,
+      `Unknown workspace package: ${packageName}. Known workspace packages: ${knownPackages}`,
     );
   }
 
-  const absolutePath = path.join(repoRoot, packagePath);
-  return `file:${absolutePath}`;
+  return `file:${packagePath}`;
 };
