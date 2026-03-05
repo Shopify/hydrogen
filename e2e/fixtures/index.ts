@@ -12,6 +12,7 @@ import {getHandlersForScenario} from './msw/handlers';
 
 export * from '@playwright/test';
 export * from './storefront';
+export * from './recipe';
 export {getTestSecrets, getRequiredSecret} from './test-secrets';
 export {CartUtil} from './cart-utils';
 export {DiscountUtil} from './discount-utils';
