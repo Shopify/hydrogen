@@ -1,11 +1,5 @@
 import {expect, Locator, Page} from '@playwright/test';
 
-export type LocaleConfig = {
-  path: string;
-  currencyFormat: RegExp;
-  label?: string;
-};
-
 /**
  * Markets-specific test utilities for the Markets recipe.
  * Provides helpers for locale navigation, currency assertions, and country selector.
@@ -15,7 +9,6 @@ export class MarketsUtil {
 
   async navigateToLocale(localePath: string) {
     await this.page.goto(localePath);
-    await this.page.waitForLoadState('networkidle');
     await expect(this.page).toHaveURL(new RegExp(localePath));
   }
 
@@ -26,13 +19,12 @@ export class MarketsUtil {
 
   async assertNoLocalePrefix() {
     const pathname = new URL(this.page.url()).pathname;
-    expect(pathname).toMatch(/^\/(\?.*)?$/);
+    expect(pathname).toBe('/');
   }
 
   async assertPriceFormat(priceLocator: Locator, expectedFormat: RegExp) {
-    await expect(priceLocator).toBeVisible({timeout: 3000});
-    const priceText = (await priceLocator.textContent())?.trim();
-    expect(priceText).toMatch(expectedFormat);
+    await expect(priceLocator).toBeVisible();
+    await expect(priceLocator).toHaveText(expectedFormat);
   }
 
   async assertNavigationLinksHaveLocalePrefix(localePrefix: string) {
@@ -56,20 +48,16 @@ export class MarketsUtil {
       ? `${localePrefix}/products/${productHandle}`
       : `/products/${productHandle}`;
     await this.page.goto(path);
-    await this.page.waitForLoadState('networkidle');
     await expect(this.page).toHaveURL(new RegExp(`/products/${productHandle}`));
   }
 
   async clickProductLink(productName: string, expectedLocalePrefix?: string) {
     const productLink = this.page.getByRole('link', {name: productName});
-    await expect(productLink).toBeVisible({timeout: 3000});
+    await expect(productLink).toBeVisible();
     const urlPattern = expectedLocalePrefix
       ? new RegExp(`${expectedLocalePrefix}/products/.+`)
       : /\/products\/.+/;
-    await Promise.all([
-      this.page.waitForURL(urlPattern, {timeout: 5000}),
-      productLink.click(),
-    ]);
+    await Promise.all([this.page.waitForURL(urlPattern), productLink.click()]);
   }
 
   getPriceElement() {
@@ -90,7 +78,7 @@ export class MarketsUtil {
       'summary[aria-label*="Current locale"]',
     );
     await expect(currentLocaleSummary).toBeVisible();
-    expect(await currentLocaleSummary.textContent()).toContain(locale);
+    await expect(currentLocaleSummary).toContainText(locale);
   }
 
   async openCountrySelector() {
@@ -105,6 +93,7 @@ export class MarketsUtil {
       .first();
     await expect(switchButton).toBeVisible();
     await switchButton.click();
+    // Wait for navigation to a locale-prefixed URL (e.g., /FR-CA) or root (/)
     await this.page.waitForURL(/\/[A-Z]{2}-[A-Z]{2}(\/|$)|\/$/, {
       timeout: 10000,
     });
@@ -112,7 +101,7 @@ export class MarketsUtil {
 
   async assertCollectionLinksHaveLocalePrefix(localePrefix: string) {
     const productLinks = this.page.locator('a[href*="/products/"]');
-    await expect(productLinks.first()).toBeVisible({timeout: 5000});
+    await expect(productLinks.first()).toBeVisible();
 
     const href = await productLinks.first().getAttribute('href');
     expect(href).toMatch(new RegExp(`^${localePrefix}/products/.+`));
@@ -143,7 +132,6 @@ export class MarketsUtil {
       .getByRole('definition')
       .filter({hasText: currencyFormat});
     await expect(subtotal).toBeVisible();
-    const subtotalText = await subtotal.textContent();
-    expect(subtotalText?.trim()).toMatch(currencyFormat);
+    await expect(subtotal).toHaveText(currencyFormat);
   }
 }
