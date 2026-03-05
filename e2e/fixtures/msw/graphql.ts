@@ -1,63 +1,16 @@
 import {graphql, HttpResponse, type RequestHandler} from 'msw';
 
-import {
-  CREATE_ADDRESS_MUTATION,
-  DELETE_ADDRESS_MUTATION,
-  UPDATE_ADDRESS_MUTATION,
-} from '../../../templates/skeleton/app/graphql/customer-account/CustomerAddressMutations';
-import {CUSTOMER_DETAILS_QUERY} from '../../../templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery';
-import {CUSTOMER_ORDER_QUERY} from '../../../templates/skeleton/app/graphql/customer-account/CustomerOrderQuery';
-import {CUSTOMER_ORDERS_QUERY} from '../../../templates/skeleton/app/graphql/customer-account/CustomerOrdersQuery';
-import {CUSTOMER_UPDATE_MUTATION} from '../../../templates/skeleton/app/graphql/customer-account/CustomerUpdateMutation';
+/// <reference path="../../../templates/skeleton/customer-accountapi.generated.d.ts" />
+
 import type {
-  CustomerAddressCreateMutation,
-  CustomerAddressCreateMutationVariables,
-  CustomerAddressDeleteMutation,
-  CustomerAddressDeleteMutationVariables,
-  CustomerAddressUpdateMutation,
-  CustomerAddressUpdateMutationVariables,
-  CustomerDetailsQuery,
-  CustomerDetailsQueryVariables,
-  CustomerOrdersQuery,
-  CustomerOrdersQueryVariables,
-  CustomerUpdateMutation,
-  CustomerUpdateMutationVariables,
-  OrderQuery,
-  OrderQueryVariables,
-} from '../../../templates/skeleton/customer-accountapi.generated';
+  CustomerAccountMutations,
+  CustomerAccountQueries,
+} from '@shopify/hydrogen';
 
-type CustomerAccountOperationMap = {
-  [CUSTOMER_DETAILS_QUERY]: {
-    return: CustomerDetailsQuery;
-    variables: CustomerDetailsQueryVariables;
-  };
-  [CUSTOMER_ORDER_QUERY]: {
-    return: OrderQuery;
-    variables: OrderQueryVariables;
-  };
-  [CUSTOMER_ORDERS_QUERY]: {
-    return: CustomerOrdersQuery;
-    variables: CustomerOrdersQueryVariables;
-  };
-  [UPDATE_ADDRESS_MUTATION]: {
-    return: CustomerAddressUpdateMutation;
-    variables: CustomerAddressUpdateMutationVariables;
-  };
-  [DELETE_ADDRESS_MUTATION]: {
-    return: CustomerAddressDeleteMutation;
-    variables: CustomerAddressDeleteMutationVariables;
-  };
-  [CREATE_ADDRESS_MUTATION]: {
-    return: CustomerAddressCreateMutation;
-    variables: CustomerAddressCreateMutationVariables;
-  };
-  [CUSTOMER_UPDATE_MUTATION]: {
-    return: CustomerUpdateMutation;
-    variables: CustomerUpdateMutationVariables;
-  };
-};
+type CustomerAccountOperationMap = CustomerAccountQueries &
+  CustomerAccountMutations;
 
-type CustomerAccountDocument = keyof CustomerAccountOperationMap;
+type CustomerAccountDocument = keyof CustomerAccountOperationMap & string;
 
 type MaybePromise<TValue> = TValue | Promise<TValue>;
 

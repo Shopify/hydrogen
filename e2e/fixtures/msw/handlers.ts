@@ -1,5 +1,4 @@
 import type {RequestHandler} from 'msw';
-
 import {CUSTOMER_DETAILS_QUERY} from '../../../templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery';
 import {CUSTOMER_ORDERS_QUERY} from '../../../templates/skeleton/app/graphql/customer-account/CustomerOrdersQuery';
 import type {
@@ -7,7 +6,7 @@ import type {
   CustomerOrdersQuery,
 } from '../../../templates/skeleton/customer-accountapi.generated';
 import {mockCustomerAccountOperation} from './graphql';
-import {MSW_SCENARIOS} from './scenarios';
+import {MSW_SCENARIOS, MswScenario} from './scenarios';
 
 const scenario = process.env.HYDROGEN_E2E_MSW_SCENARIO;
 
@@ -37,8 +36,8 @@ const customerOrdersMock: CustomerOrdersQuery = {
   },
 };
 
-const handlersByScenario: Partial<Record<string, RequestHandler[]>> = {
-  [MSW_SCENARIOS.customerAccountLoggedIn]: [
+const handlersByScenario: Record<MswScenario, RequestHandler[]> = {
+  'customer-account-logged-in': [
     mockCustomerAccountOperation(CUSTOMER_DETAILS_QUERY, ({variables}) => {
       return {
         ...customerDetailsMock,
@@ -87,4 +86,6 @@ const handlersByScenario: Partial<Record<string, RequestHandler[]>> = {
 };
 
 export const handlers: RequestHandler[] =
-  handlersByScenario[scenario ?? MSW_SCENARIOS.customerAccountLoggedIn] ?? [];
+  scenario && scenario in handlersByScenario
+    ? handlersByScenario[scenario as keyof typeof handlersByScenario]
+    : [];
