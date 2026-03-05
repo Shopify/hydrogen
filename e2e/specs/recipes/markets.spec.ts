@@ -86,17 +86,13 @@ test.describe('Markets Recipe', () => {
 
       // CAD in the drawer proves AddToCartButton posted to /FR-CA/cart rather than /cart,
       // creating the cart with the correct market context.
-      const cartDrawer = page.getByRole('dialog', {name: /cart/i});
-      const drawerSubtotal = cartDrawer
-        .getByRole('definition')
-        .filter({hasText: CAD_FORMAT});
-      await expect(drawerSubtotal).toBeVisible();
+      await recipe.assertCartSubtotalFormat(CAD_FORMAT);
 
       // Navigate to cart page
       await page.goto('/FR-CA/cart');
       await page.waitForURL(/\/FR-CA\/cart$/);
 
-      await recipe.assertCartPageSubtotalFormat(CAD_FORMAT);
+      await recipe.assertCartSubtotalFormat(CAD_FORMAT);
     });
   });
 
