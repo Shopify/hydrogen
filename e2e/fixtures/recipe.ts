@@ -14,12 +14,17 @@ import {promisify} from 'node:util';
 import {parse as parseYaml} from 'yaml';
 
 const execAsync = promisify(exec);
+<<<<<<< HEAD
 const execFileAsync = promisify(execFile);
 
 const LOCK_POLL_INTERVAL_MS = 500;
 const LOCK_TIMEOUT_MS = 5 * 60 * 1000;
 const COOKBOOK_APPLY_TIMEOUT_IN_MS = 2 * 60 * 1000;
 const PNPM_INSTALL_TIMEOUT_IN_MS = 3 * 60 * 1000;
+=======
+let workspacePackageMapPromise: Promise<Map<string, string>> | null = null;
+let workspaceConfigPromise: Promise<WorkspaceConfig> | null = null;
+>>>>>>> a0fbb258 (refactor(tests): simplify markets cart assertions and fixture parsing)
 
 type WorkspaceConfig = {
   packages: string[];
@@ -256,7 +261,10 @@ const resolveWorkspaceProtocols = async (
   };
 
   const {catalog} = await getWorkspaceConfig(repoRoot);
+<<<<<<< HEAD
   const packageMap = await getWorkspacePackageMap(repoRoot);
+=======
+>>>>>>> a0fbb258 (refactor(tests): simplify markets cart assertions and fixture parsing)
 
   // Resolve dependencies
   if (pkgJson.dependencies) {
@@ -268,10 +276,13 @@ const resolveWorkspaceProtocols = async (
         );
       } else if (depVersion === 'catalog:') {
         pkgJson.dependencies[depName] = resolveCatalogVersion(depName, catalog);
+<<<<<<< HEAD
       } else if (depVersion.startsWith('workspace:')) {
         throw new Error(
           `Unsupported workspace specifier "${depVersion}" for dependency "${depName}". Only "workspace:*" is supported.`,
         );
+=======
+>>>>>>> a0fbb258 (refactor(tests): simplify markets cart assertions and fixture parsing)
       }
     }
   }
@@ -291,10 +302,13 @@ const resolveWorkspaceProtocols = async (
           depName,
           catalog,
         );
+<<<<<<< HEAD
       } else if (depVersion.startsWith('workspace:')) {
         throw new Error(
           `Unsupported workspace specifier "${depVersion}" for devDependency "${depName}". Only "workspace:*" is supported.`,
         );
+=======
+>>>>>>> a0fbb258 (refactor(tests): simplify markets cart assertions and fixture parsing)
       }
     }
   }
@@ -305,6 +319,7 @@ const resolveWorkspaceProtocols = async (
 const getWorkspaceConfig = async (
   repoRoot: string,
 ): Promise<WorkspaceConfig> => {
+<<<<<<< HEAD
   const workspacePath = path.join(repoRoot, 'pnpm-workspace.yaml');
   const workspaceContent = await readFile(workspacePath, 'utf-8');
   const parsed = parseYaml(workspaceContent) as {
@@ -328,6 +343,41 @@ const getWorkspaceConfig = async (
   );
 
   return {packages, catalog};
+=======
+  if (workspaceConfigPromise) {
+    return workspaceConfigPromise;
+  }
+
+  workspaceConfigPromise = (async () => {
+    const workspacePath = path.join(repoRoot, 'pnpm-workspace.yaml');
+    const workspaceContent = await readFile(workspacePath, 'utf-8');
+    const parsed = parseYaml(workspaceContent) as {
+      packages?: unknown;
+      catalog?: unknown;
+    };
+
+    const packages = Array.isArray(parsed.packages)
+      ? parsed.packages.filter(
+          (value): value is string => typeof value === 'string',
+        )
+      : [];
+
+    const catalogEntries =
+      parsed.catalog && typeof parsed.catalog === 'object'
+        ? parsed.catalog
+        : {};
+    const catalog = Object.fromEntries(
+      Object.entries(catalogEntries).filter(
+        (entry): entry is [string, string] =>
+          typeof entry[0] === 'string' && typeof entry[1] === 'string',
+      ),
+    );
+
+    return {packages, catalog};
+  })();
+
+  return workspaceConfigPromise;
+>>>>>>> a0fbb258 (refactor(tests): simplify markets cart assertions and fixture parsing)
 };
 
 const resolveCatalogVersion = (
@@ -351,9 +401,15 @@ const getWorkspacePackageMap = async (
   const {packages: packagePaths} = await getWorkspaceConfig(repoRoot);
   const packageMap = new Map<string, string>();
 
+<<<<<<< HEAD
   await Promise.all(
     packagePaths.map(async (packagePath) => {
       const packageJsonPath = path.join(repoRoot, packagePath, 'package.json');
+=======
+  workspacePackageMapPromise = (async () => {
+    const {packages: packagePaths} = await getWorkspaceConfig(repoRoot);
+    const packageMap = new Map<string, string>();
+>>>>>>> a0fbb258 (refactor(tests): simplify markets cart assertions and fixture parsing)
 
       try {
         await access(packageJsonPath);

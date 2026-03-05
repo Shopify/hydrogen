@@ -1,7 +1,10 @@
 import {expect, Locator, Page} from '@playwright/test';
 import {CartUtil} from './cart-utils';
+<<<<<<< HEAD
 
 const LOCALE_SWITCH_NAVIGATION_TIMEOUT_IN_MS = 10_000;
+=======
+>>>>>>> a0fbb258 (refactor(tests): simplify markets cart assertions and fixture parsing)
 
 /**
  * Markets-specific test utilities for the Markets recipe.
@@ -82,6 +85,7 @@ export class MarketsUtil {
     await expect(currentLocaleSummary).toContainText(locale);
   }
 
+<<<<<<< HEAD
   async switchToFirstAvailableLocale(currentLocalePrefix: string) {
     const summary = this.getCountrySelector().locator('summary');
     await summary.click();
@@ -111,11 +115,33 @@ export class MarketsUtil {
     }
 
     await targetButton.click();
+=======
+  async switchToFirstAvailableLocale() {
+    const summary = this.getCountrySelector().locator('summary');
+    await summary.click();
+
+    const switchButton = this.page
+      .getByRole('button', {name: /Switch to/i})
+      .first();
+    await expect(switchButton).toBeVisible();
+
+    const switchButtonText = (await switchButton.textContent())?.trim() ?? '';
+    const targetLocale = switchButtonText.replace(/^Switch to\s+/, '');
+
+    await switchButton.click();
+    // Wait for navigation to a locale-prefixed URL (e.g., /FR-CA) or root (/)
+>>>>>>> a0fbb258 (refactor(tests): simplify markets cart assertions and fixture parsing)
     await this.page.waitForURL(/\/[A-Z]{2}-[A-Z]{2}(\/|$)|\/$/, {
       timeout: LOCALE_SWITCH_NAVIGATION_TIMEOUT_IN_MS,
     });
 
+<<<<<<< HEAD
     await this.assertCurrentLocaleInSelector(targetLocale);
+=======
+    if (targetLocale) {
+      await this.assertCurrentLocaleInSelector(targetLocale);
+    }
+>>>>>>> a0fbb258 (refactor(tests): simplify markets cart assertions and fixture parsing)
   }
 
   async assertCollectionLinksHaveLocalePrefix(localePrefix: string) {

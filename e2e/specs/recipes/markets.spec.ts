@@ -81,11 +81,16 @@ test.describe('Markets Recipe', () => {
 
       // CAD in the drawer proves AddToCartButton posted to /FR-CA/cart rather than /cart,
       // creating the cart with the correct market context.
+<<<<<<< HEAD
       await recipe.assertCartSubtotalFormat(CURRENCY_FORMATS.CAD);
+=======
+      await recipe.assertCartSubtotalFormat(CAD_FORMAT);
+>>>>>>> a0fbb258 (refactor(tests): simplify markets cart assertions and fixture parsing)
 
       await page.goto('/FR-CA/cart');
       await page.waitForURL(/\/FR-CA\/cart$/);
 
+<<<<<<< HEAD
       await recipe.assertCartSubtotalFormat(CURRENCY_FORMATS.CAD);
     });
   });
@@ -94,6 +99,9 @@ test.describe('Markets Recipe', () => {
     test('returns 404 for unsupported locale prefix', async ({page}) => {
       const response = await page.goto('/ZZ-ZZ/');
       expect(response?.status()).toBe(404);
+=======
+      await recipe.assertCartSubtotalFormat(CAD_FORMAT);
+>>>>>>> a0fbb258 (refactor(tests): simplify markets cart assertions and fixture parsing)
     });
   });
 
