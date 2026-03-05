@@ -35,5 +35,13 @@ export default defineConfig({
       name: 'old-cookies',
       testDir: './e2e/specs/old-cookies',
     },
+    {
+      name: 'recipes',
+      testDir: './e2e/specs/recipes',
+      // Run serially within this project to avoid race conditions when applying recipes
+      fullyParallel: false,
+      // Run after skeleton tests to avoid mutating skeleton while skeleton tests use it
+      dependencies: ['skeleton'],
+    },
   ],
 });
