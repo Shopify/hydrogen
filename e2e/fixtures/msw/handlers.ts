@@ -1,14 +1,12 @@
 import type {RequestHandler} from 'msw';
 import {CUSTOMER_DETAILS_QUERY} from '../../../templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery';
 import {CUSTOMER_ORDERS_QUERY} from '../../../templates/skeleton/app/graphql/customer-account/CustomerOrdersQuery';
-import type {
+import {mockCustomerAccountOperation} from './graphql';
+import {MSW_SCENARIOS, MswScenario} from './scenarios';
+import {
   CustomerDetailsQuery,
   CustomerOrdersQuery,
 } from '../../../templates/skeleton/customer-accountapi.generated';
-import {mockCustomerAccountOperation} from './graphql';
-import {MSW_SCENARIOS, MswScenario} from './scenarios';
-
-const scenario = process.env.HYDROGEN_E2E_MSW_SCENARIO;
 
 const customerDetailsMock: CustomerDetailsQuery = {
   customer: {
@@ -85,7 +83,20 @@ const handlersByScenario: Record<MswScenario, RequestHandler[]> = {
   ],
 };
 
-export const handlers: RequestHandler[] =
-  scenario && scenario in handlersByScenario
-    ? handlersByScenario[scenario as keyof typeof handlersByScenario]
-    : [];
+function isMswScenario(scenario: string): scenario is MswScenario {
+  return Object.values(MSW_SCENARIOS).includes(scenario as MswScenario);
+}
+
+export function getHandlersForScenario(
+  scenario: string | undefined,
+): RequestHandler[] {
+  if (!scenario) {
+    return [];
+  }
+
+  if (!isMswScenario(scenario)) {
+    throw new Error(`[e2e-msw] Unknown scenario: "${scenario}"`);
+  }
+
+  return handlersByScenario[scenario];
+}

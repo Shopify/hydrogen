@@ -1,7 +1,8 @@
 import {test as base} from '@playwright/test';
 import {DevServer} from './server';
 import path from 'node:path';
-import {stat} from 'node:fs/promises';
+import {mkdtemp, readFile, rm, stat, writeFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
 import {StorefrontPage} from './storefront';
 import {CartUtil} from './cart-utils';
 import {DiscountUtil} from './discount-utils';
@@ -69,6 +70,7 @@ export const setTestStore = async (
 ) => {
   const isLocal = !testStore.startsWith('https://');
   let server: DevServer | null = null;
+  let mockEnvDir: string | undefined;
 
   const mockScenario = isLocal ? options.mock?.scenario : undefined;
   const useMsw = mockScenario !== undefined;
@@ -88,22 +90,38 @@ export const setTestStore = async (
 
   test.afterAll(async () => {
     await server?.stop();
+
+    if (mockEnvDir) {
+      await rm(mockEnvDir, {recursive: true, force: true});
+    }
   });
 
   test.beforeAll(async ({}) => {
-    const filepath = path.resolve(__dirname, `../envs/.env.${testStore}`);
-    await stat(filepath); // Ensure the file exists
+    const envFile = path.resolve(__dirname, `../envs/.env.${testStore}`);
+    await stat(envFile); // Ensure the file exists
+
+    let runtimeEnvFile = envFile;
+
+    if (mockScenario) {
+      mockEnvDir = await mkdtemp(path.join(tmpdir(), 'hydrogen-e2e-msw-'));
+      runtimeEnvFile = path.join(mockEnvDir, '.env.mock');
+
+      const baseEnvContents = await readFile(envFile, 'utf8');
+      const normalizedEnvContents = baseEnvContents.endsWith('\n')
+        ? baseEnvContents
+        : `${baseEnvContents}\n`;
+
+      await writeFile(
+        runtimeEnvFile,
+        `${normalizedEnvContents}HYDROGEN_E2E_MSW_SCENARIO=${mockScenario}\n`,
+      );
+    }
 
     server = new DevServer({
       storeKey: testStore,
       customerAccountPush: false,
-      envFile: filepath,
+      envFile: runtimeEnvFile,
       entry: useMsw ? mswEntryFile : undefined,
-      env: mockScenario
-        ? {
-            HYDROGEN_E2E_MSW_SCENARIO: mockScenario,
-          }
-        : undefined,
     });
 
     await server.start();

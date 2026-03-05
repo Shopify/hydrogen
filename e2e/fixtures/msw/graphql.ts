@@ -1,5 +1,6 @@
-/// <reference path="../../../templates/skeleton/customer-accountapi.generated.d.ts" />
 import {graphql, HttpResponse, type RequestHandler} from 'msw';
+
+/// <reference path="../../../templates/skeleton/customer-accountapi.generated.d.ts" />
 
 import type {
   CustomerAccountMutations,

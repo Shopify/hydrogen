@@ -141,9 +141,7 @@ ensureNodeProcessForMsw();
 // Import MSW only after runtime shims are installed.
 // Static import evaluates too early and can crash during module init.
 const {getResponse} = await import('msw');
-const {handlers} = await import('./handlers');
-
-const mswScenario = process.env.HYDROGEN_E2E_MSW_SCENARIO;
+const {getHandlersForScenario} = await import('./handlers');
 
 const installedKey = Symbol.for('hydrogen.e2e.msw.installed');
 
@@ -152,6 +150,7 @@ type MswGlobal = typeof globalThis & {
 };
 
 const mswGlobal = globalThis as MswGlobal;
+let currentMswHandlers: ReturnType<typeof getHandlersForScenario> = [];
 
 if (!mswGlobal[installedKey]) {
   const originalFetch = globalThis.fetch.bind(globalThis);
@@ -159,7 +158,7 @@ if (!mswGlobal[installedKey]) {
   // Intercept server-side fetch so MSW handlers can respond first.
   // Unhandled requests fall through to the original fetch.
   globalThis.fetch = async (input, init) => {
-    if (handlers.length > 0) {
+    if (currentMswHandlers.length > 0) {
       let request: Request | null = null;
 
       try {
@@ -169,7 +168,7 @@ if (!mswGlobal[installedKey]) {
       }
 
       if (request) {
-        const mockedResponse = await getResponse(handlers, request);
+        const mockedResponse = await getResponse(currentMswHandlers, request);
 
         if (mockedResponse) {
           return mockedResponse;
@@ -181,16 +180,18 @@ if (!mswGlobal[installedKey]) {
   };
 
   mswGlobal[installedKey] = true;
-  console.log(
-    `[e2e-msw] Installed fetch interceptor with ${handlers.length} handlers`,
-  );
+  console.log('[e2e-msw] Installed fetch interceptor');
 }
 
-function shouldInjectCustomerSession() {
+function getMswScenario(env: Env): string | undefined {
+  return (env as unknown as Record<string, string | undefined>)
+    .HYDROGEN_E2E_MSW_SCENARIO;
+}
+
+function shouldInjectCustomerSession(mswScenario: string | undefined) {
   return (
-    handlers.length > 0 &&
-    (mswScenario === undefined ||
-      mswScenario === MSW_SCENARIOS.customerAccountLoggedIn)
+    currentMswHandlers.length > 0 &&
+    mswScenario === MSW_SCENARIOS.customerAccountLoggedIn
   );
 }
 
@@ -202,7 +203,9 @@ async function addMockCustomerSessionCookieIfNeeded(
   request: Request,
   env: Env,
 ) {
-  if (!shouldInjectCustomerSession()) {
+  const mswScenario = getMswScenario(env);
+
+  if (!shouldInjectCustomerSession(mswScenario)) {
     return request;
   }
 
@@ -275,6 +278,9 @@ function getTunnelRequestUrl(requestUrl: string) {
 
 const appWithMsw = {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
+    const mswScenario = getMswScenario(env);
+    currentMswHandlers = getHandlersForScenario(mswScenario);
+
     // Dynamic import keeps this wrapper compatible with dev reload behavior.
     const app = (await import('../../../templates/skeleton/server')).default;
 
