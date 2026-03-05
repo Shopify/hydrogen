@@ -6,6 +6,7 @@ import {StorefrontPage} from './storefront';
 import {CartUtil} from './cart-utils';
 import {DiscountUtil} from './discount-utils';
 import {GiftCardUtil} from './gift-card-utils';
+import type {MswScenario} from './msw/scenarios';
 
 export * from '@playwright/test';
 export * from './storefront';
@@ -13,6 +14,8 @@ export {getTestSecrets, getRequiredSecret} from './test-secrets';
 export {CartUtil} from './cart-utils';
 export {DiscountUtil} from './discount-utils';
 export {GiftCardUtil} from './gift-card-utils';
+export {mockCustomerAccountOperation} from './msw/graphql';
+export {MSW_SCENARIOS} from './msw/scenarios';
 
 export const test = base.extend<
   {
@@ -52,12 +55,12 @@ const TEST_STORE_KEYS = [
 
 type TestStoreKey = (typeof TEST_STORE_KEYS)[number];
 
-type MswServerOptions = {
-  enabled?: boolean;
+type MockServerOptions = {
+  scenario: MswScenario;
 };
 
 type TestStoreOptions = {
-  msw?: MswServerOptions;
+  mock?: MockServerOptions;
 };
 
 export const setTestStore = async (
@@ -67,8 +70,8 @@ export const setTestStore = async (
   const isLocal = !testStore.startsWith('https://');
   let server: DevServer | null = null;
 
-  const mswEnabled = options.msw?.enabled ?? false;
-  const useMsw = isLocal && mswEnabled;
+  const mockScenario = isLocal ? options.mock?.scenario : undefined;
+  const useMsw = mockScenario !== undefined;
 
   const mswEntryFile = path.resolve(__dirname, './msw/entry.ts');
 
@@ -96,6 +99,11 @@ export const setTestStore = async (
       customerAccountPush: false,
       envFile: filepath,
       entry: useMsw ? mswEntryFile : undefined,
+      env: mockScenario
+        ? {
+            HYDROGEN_E2E_MSW_SCENARIO: mockScenario,
+          }
+        : undefined,
     });
 
     await server.start();

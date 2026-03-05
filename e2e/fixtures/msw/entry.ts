@@ -1,9 +1,16 @@
-import app from '../../../templates/skeleton/server';
-import {handlers} from './handlers';
+import {createCookieSessionStorage} from 'react-router';
+import {MSW_SCENARIOS} from './scenarios';
 
 function ensureLocalStorage() {
-  if ('localStorage' in globalThis) {
+  try {
+    const key = '__hydrogen_e2e_local_storage_test__';
+
+    globalThis.localStorage?.setItem(key, key);
+    globalThis.localStorage?.removeItem(key);
+
     return;
+  } catch {
+    // Continue and install a safe localStorage polyfill below.
   }
 
   const store = new Map<string, string>();
@@ -72,7 +79,57 @@ function ensureBroadcastChannel() {
 
 ensureBroadcastChannel();
 
+function ensureNodeProcessForMsw() {
+  const currentProcess = (globalThis as typeof globalThis & {process?: unknown})
+    .process as
+    | {
+        versions?: {node?: string};
+      }
+    | undefined;
+
+  if (currentProcess?.versions?.node) {
+    try {
+      (process.env as Record<string, string>).NODE_ENV = 'production';
+    } catch {
+      // Ignore if process.env is read-only in this runtime.
+    }
+
+    return;
+  }
+
+  const processShim: any = {
+    env: {
+      ...(typeof currentProcess === 'object' &&
+      currentProcess &&
+      'env' in currentProcess
+        ? ((currentProcess as {env?: Record<string, string>}).env ?? {})
+        : {}),
+      NODE_ENV: 'production',
+    },
+    versions: {
+      ...(currentProcess?.versions ?? {}),
+      node: '22.0.0',
+    },
+  };
+
+  try {
+    Object.defineProperty(globalThis, 'process', {
+      configurable: true,
+      enumerable: false,
+      value: processShim,
+      writable: true,
+    });
+  } catch {
+    (globalThis as any).process = processShim;
+  }
+}
+
+ensureNodeProcessForMsw();
+
 const {getResponse} = await import('msw');
+const {handlers} = await import('./handlers');
+
+const mswScenario = process.env.HYDROGEN_E2E_MSW_SCENARIO;
 
 const installedKey = Symbol.for('hydrogen.e2e.msw.installed');
 
@@ -113,4 +170,98 @@ if (!mswGlobal[installedKey]) {
   );
 }
 
-export default app;
+function shouldInjectCustomerSession() {
+  return (
+    handlers.length > 0 &&
+    (mswScenario === undefined ||
+      mswScenario === MSW_SCENARIOS.customerAccountLoggedIn)
+  );
+}
+
+async function addMockCustomerSessionCookieIfNeeded(
+  request: Request,
+  env: Env,
+) {
+  if (!shouldInjectCustomerSession()) {
+    return request;
+  }
+
+  const requestWithTunnelHostname = new Request(
+    getTunnelRequestUrl(request.url),
+    request,
+  );
+
+  const storage = createCookieSessionStorage({
+    cookie: {
+      name: 'session',
+      httpOnly: true,
+      path: '/',
+      sameSite: 'lax',
+      secrets: [env.SESSION_SECRET],
+    },
+  });
+
+  const session = await storage.getSession(
+    requestWithTunnelHostname.headers.get('Cookie') ?? '',
+  );
+
+  const customerAccountSession =
+    session.get('customerAccount') ??
+    ({} as {
+      accessToken?: string;
+      expiresAt?: string;
+      refreshToken?: string;
+    });
+
+  session.set('customerAccount', {
+    ...customerAccountSession,
+    accessToken:
+      customerAccountSession.accessToken ?? 'e2e-customer-access-token',
+    refreshToken:
+      customerAccountSession.refreshToken ?? 'e2e-customer-refresh-token',
+    expiresAt:
+      customerAccountSession.expiresAt ?? String(Date.now() + 60 * 60 * 1000),
+  });
+
+  const setCookieHeader = await storage.commitSession(session);
+  const sessionCookiePair = setCookieHeader.split(';', 1)[0];
+
+  const headers = new Headers(requestWithTunnelHostname.headers);
+  const existingCookies = headers.get('Cookie');
+  const cookiePairs = existingCookies
+    ? existingCookies
+        .split(';')
+        .map((cookie) => cookie.trim())
+        .filter(Boolean)
+        .filter((cookie) => !cookie.startsWith('session='))
+    : [];
+
+  cookiePairs.push(sessionCookiePair);
+  headers.set('Cookie', cookiePairs.join('; '));
+
+  return new Request(requestWithTunnelHostname, {headers});
+}
+
+function getTunnelRequestUrl(requestUrl: string) {
+  const url = new URL(requestUrl);
+  url.protocol = 'https:';
+  url.hostname = 'e2e.tryhydrogen.dev';
+  url.port = '';
+
+  return url.toString();
+}
+
+const appWithMsw = {
+  async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
+    const app = (await import('../../../templates/skeleton/server')).default;
+
+    const requestWithSession = await addMockCustomerSessionCookieIfNeeded(
+      request,
+      env,
+    );
+
+    return app.fetch(requestWithSession, env, executionContext);
+  },
+};
+
+export default appWithMsw;
