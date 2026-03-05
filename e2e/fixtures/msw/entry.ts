@@ -1,5 +1,5 @@
 import {createCookieSessionStorage} from 'react-router';
-import {MSW_SCENARIOS} from './scenarios';
+import {MswScenarioMeta} from './handlers';
 
 /**
  * MSW’s cookie internals touch localStorage in this runtime path.
@@ -150,7 +150,10 @@ type MswGlobal = typeof globalThis & {
 };
 
 const mswGlobal = globalThis as MswGlobal;
-let currentMswHandlers: ReturnType<typeof getHandlersForScenario> = [];
+let currentMswHandlers: ReturnType<typeof getHandlersForScenario> = {
+  handlers: [],
+  mocksCustomerAccountApi: false,
+};
 
 if (!mswGlobal[installedKey]) {
   const originalFetch = globalThis.fetch.bind(globalThis);
@@ -158,7 +161,7 @@ if (!mswGlobal[installedKey]) {
   // Intercept server-side fetch so MSW handlers can respond first.
   // Unhandled requests fall through to the original fetch.
   globalThis.fetch = async (input, init) => {
-    if (currentMswHandlers.length > 0) {
+    if (currentMswHandlers && currentMswHandlers.handlers.length > 0) {
       let request: Request | null = null;
 
       try {
@@ -168,7 +171,10 @@ if (!mswGlobal[installedKey]) {
       }
 
       if (request) {
-        const mockedResponse = await getResponse(currentMswHandlers, request);
+        const mockedResponse = await getResponse(
+          currentMswHandlers.handlers,
+          request,
+        );
 
         if (mockedResponse) {
           return mockedResponse;
@@ -188,10 +194,14 @@ function getMswScenario(env: Env): string | undefined {
     .HYDROGEN_E2E_MSW_SCENARIO;
 }
 
-function shouldInjectCustomerSession(mswScenario: string | undefined) {
+function shouldInjectCustomerSession(
+  mswScenarioMeta: MswScenarioMeta | undefined,
+) {
+  if (!mswScenarioMeta) return false;
   return (
-    currentMswHandlers.length > 0 &&
-    mswScenario === MSW_SCENARIOS.customerAccountLoggedIn
+    mswScenarioMeta &&
+    mswScenarioMeta.handlers.length > 0 &&
+    mswScenarioMeta.mocksCustomerAccountApi
   );
 }
 
@@ -202,10 +212,9 @@ function shouldInjectCustomerSession(mswScenario: string | undefined) {
 async function addMockCustomerSessionCookieIfNeeded(
   request: Request,
   env: Env,
+  mswScenarioMeta: MswScenarioMeta | undefined,
 ) {
-  const mswScenario = getMswScenario(env);
-
-  if (!shouldInjectCustomerSession(mswScenario)) {
+  if (!shouldInjectCustomerSession(mswScenarioMeta)) {
     return request;
   }
 
@@ -281,12 +290,16 @@ const appWithMsw = {
     const mswScenario = getMswScenario(env);
     currentMswHandlers = getHandlersForScenario(mswScenario);
 
+    if (currentMswHandlers && currentMswHandlers.mocksCustomerAccountApi) {
+      process.env.HYDROGEN_E2E_CAAPI_MOCK = 'true';
+    }
     // Dynamic import keeps this wrapper compatible with dev reload behavior.
     const app = (await import('../../../templates/skeleton/server')).default;
 
     const requestWithSession = await addMockCustomerSessionCookieIfNeeded(
       request,
       env,
+      currentMswHandlers,
     );
 
     return app.fetch(requestWithSession, env, executionContext);

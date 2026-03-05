@@ -34,8 +34,15 @@ const customerOrdersMock: CustomerOrdersQuery = {
   },
 };
 
-const handlersByScenario: Record<MswScenario, RequestHandler[]> = {
-  'customer-account-logged-in': [
+export interface MswScenarioMeta {
+  handlers: RequestHandler[];
+  mocksCustomerAccountApi: boolean;
+}
+
+const scenarios = new Map<MswScenario, MswScenarioMeta>();
+
+scenarios.set('customer-account-logged-in', {
+  handlers: [
     mockCustomerAccountOperation(CUSTOMER_DETAILS_QUERY, ({variables}) => {
       return {
         ...customerDetailsMock,
@@ -81,22 +88,21 @@ const handlersByScenario: Record<MswScenario, RequestHandler[]> = {
       };
     }),
   ],
-};
+  mocksCustomerAccountApi: true,
+});
 
 function isMswScenario(scenario: string): scenario is MswScenario {
-  return Object.values(MSW_SCENARIOS).includes(scenario as MswScenario);
+  return scenarios.has(scenario);
 }
 
-export function getHandlersForScenario(
-  scenario: string | undefined,
-): RequestHandler[] {
+export function getHandlersForScenario(scenario: string | undefined) {
   if (!scenario) {
-    return [];
+    return {handlers: [], mocksCustomerAccountApi: false};
   }
 
   if (!isMswScenario(scenario)) {
     throw new Error(`[e2e-msw] Unknown scenario: "${scenario}"`);
   }
 
-  return handlersByScenario[scenario];
+  return scenarios.get(scenario);
 }
