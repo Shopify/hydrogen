@@ -2,7 +2,7 @@ import {expect, Locator, Page} from '@playwright/test';
 
 const ACCOUNT_URL_PATTERN = /\/account(?:\/orders)?$/;
 
-export class AccountPage {
+export class AccountUtil {
   constructor(private page: Page) {}
 
   async goto() {

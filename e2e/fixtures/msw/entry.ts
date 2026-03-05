@@ -1,6 +1,10 @@
 import {createCookieSessionStorage} from 'react-router';
 import {MSW_SCENARIOS} from './scenarios';
 
+/**
+ * MSW’s cookie internals touch localStorage in this runtime path.
+ * Without this, we hit: Failed to create a CookieStore: localStorage is not available.
+ */
 function ensureLocalStorage() {
   try {
     const key = '__hydrogen_e2e_local_storage_test__';
@@ -46,6 +50,10 @@ function ensureLocalStorage() {
 
 ensureLocalStorage();
 
+/**
+ * MSW core imports WebSocket helpers that reference BroadcastChannel.
+ * MiniOxygen/workerd doesn't provide it, so we install a no-op shim.
+ */
 function ensureBroadcastChannel() {
   if ('BroadcastChannel' in globalThis) {
     return;
@@ -79,6 +87,10 @@ function ensureBroadcastChannel() {
 
 ensureBroadcastChannel();
 
+/**
+ * Worker-like runtimes may not expose a full Node `process` object.
+ * MSW environment checks expect `process.versions.node` and `process.env`.
+ */
 function ensureNodeProcessForMsw() {
   const currentProcess = (globalThis as typeof globalThis & {process?: unknown})
     .process as
@@ -126,6 +138,8 @@ function ensureNodeProcessForMsw() {
 
 ensureNodeProcessForMsw();
 
+// Import MSW only after runtime shims are installed.
+// Static import evaluates too early and can crash during module init.
 const {getResponse} = await import('msw');
 const {handlers} = await import('./handlers');
 
@@ -142,6 +156,8 @@ const mswGlobal = globalThis as MswGlobal;
 if (!mswGlobal[installedKey]) {
   const originalFetch = globalThis.fetch.bind(globalThis);
 
+  // Intercept server-side fetch so MSW handlers can respond first.
+  // Unhandled requests fall through to the original fetch.
   globalThis.fetch = async (input, init) => {
     if (handlers.length > 0) {
       let request: Request | null = null;
@@ -178,6 +194,10 @@ function shouldInjectCustomerSession() {
   );
 }
 
+/**
+ * The /account route needs a customer session cookie in addition to GraphQL mocks.
+ * We synthesize a session payload so route loaders treat the user as logged in.
+ */
 async function addMockCustomerSessionCookieIfNeeded(
   request: Request,
   env: Env,
@@ -243,6 +263,8 @@ async function addMockCustomerSessionCookieIfNeeded(
 }
 
 function getTunnelRequestUrl(requestUrl: string) {
+  // Customer account session cookie logic expects the tunneled HTTPS host.
+  // Normalize local URL to match that shape before building the session.
   const url = new URL(requestUrl);
   url.protocol = 'https:';
   url.hostname = 'e2e.tryhydrogen.dev';
@@ -253,6 +275,7 @@ function getTunnelRequestUrl(requestUrl: string) {
 
 const appWithMsw = {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
+    // Dynamic import keeps this wrapper compatible with dev reload behavior.
     const app = (await import('../../../templates/skeleton/server')).default;
 
     const requestWithSession = await addMockCustomerSessionCookieIfNeeded(
