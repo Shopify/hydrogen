@@ -6,6 +6,7 @@ import {StorefrontPage} from './storefront';
 import {CartUtil} from './cart-utils';
 import {DiscountUtil} from './discount-utils';
 import {GiftCardUtil} from './gift-card-utils';
+import {CustomerAccountUtil} from './customer-account-utils';
 
 export * from '@playwright/test';
 export * from './storefront';
@@ -13,9 +14,16 @@ export {getTestSecrets, getRequiredSecret} from './test-secrets';
 export {CartUtil} from './cart-utils';
 export {DiscountUtil} from './discount-utils';
 export {GiftCardUtil} from './gift-card-utils';
+export {CustomerAccountUtil} from './customer-account-utils';
 
 export const test = base.extend<
-  {storefront: StorefrontPage; cart: CartUtil; discount: DiscountUtil; giftCard: GiftCardUtil},
+  {
+    storefront: StorefrontPage;
+    cart: CartUtil;
+    discount: DiscountUtil;
+    giftCard: GiftCardUtil;
+    customerAccount: CustomerAccountUtil;
+  },
   {forEachWorker: void}
 >({
   storefront: async ({page}, use) => {
@@ -34,6 +42,10 @@ export const test = base.extend<
     const giftCard = new GiftCardUtil(page);
     await use(giftCard);
   },
+  customerAccount: async ({page}, use) => {
+    const customerAccount = new CustomerAccountUtil(page);
+    await use(customerAccount);
+  },
 });
 
 const TEST_STORE_KEYS = [
@@ -43,12 +55,18 @@ const TEST_STORE_KEYS = [
   'defaultConsentDisallowed_cookiesDisabled',
   'defaultConsentAllowed_cookiesDisabled',
   'hydrogenPreviewStorefront',
+  'customerAccount',
 ] as const;
 
 type TestStoreKey = (typeof TEST_STORE_KEYS)[number];
 
+type SetTestStoreOptions = {
+  customerAccountPush?: boolean;
+};
+
 export const setTestStore = async (
   testStore: TestStoreKey | `https://${string}`,
+  options: SetTestStoreOptions = {},
 ) => {
   const isLocal = !testStore.startsWith('https://');
   let server: DevServer | null = null;
@@ -74,7 +92,7 @@ export const setTestStore = async (
 
     server = new DevServer({
       storeKey: testStore,
-      customerAccountPush: false,
+      customerAccountPush: options.customerAccountPush ?? false,
       envFile: filepath,
     });
 
