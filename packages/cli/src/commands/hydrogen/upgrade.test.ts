@@ -785,7 +785,7 @@ describe('upgrade', async () => {
             getCumulativeRelease({
               availableUpgrades,
               ...current,
-              // @ts-ignore - we know this release version exists
+              // @ts-expect-error - we know this release version exists
               selectedRelease,
             });
 
