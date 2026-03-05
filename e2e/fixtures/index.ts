@@ -15,7 +15,12 @@ export {DiscountUtil} from './discount-utils';
 export {GiftCardUtil} from './gift-card-utils';
 
 export const test = base.extend<
-  {storefront: StorefrontPage; cart: CartUtil; discount: DiscountUtil; giftCard: GiftCardUtil},
+  {
+    storefront: StorefrontPage;
+    cart: CartUtil;
+    discount: DiscountUtil;
+    giftCard: GiftCardUtil;
+  },
   {forEachWorker: void}
 >({
   storefront: async ({page}, use) => {
@@ -47,11 +52,25 @@ const TEST_STORE_KEYS = [
 
 type TestStoreKey = (typeof TEST_STORE_KEYS)[number];
 
+type MswServerOptions = {
+  enabled?: boolean;
+};
+
+type TestStoreOptions = {
+  msw?: MswServerOptions;
+};
+
 export const setTestStore = async (
   testStore: TestStoreKey | `https://${string}`,
+  options: TestStoreOptions = {},
 ) => {
   const isLocal = !testStore.startsWith('https://');
   let server: DevServer | null = null;
+
+  const mswEnabled = options.msw?.enabled ?? false;
+  const useMsw = isLocal && mswEnabled;
+
+  const mswEntryFile = path.resolve(__dirname, './msw/entry.ts');
 
   test.use({
     baseURL: async ({}, use) => {
@@ -76,6 +95,7 @@ export const setTestStore = async (
       storeKey: testStore,
       customerAccountPush: false,
       envFile: filepath,
+      entry: useMsw ? mswEntryFile : undefined,
     });
 
     await server.start();
