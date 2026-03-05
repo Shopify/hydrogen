@@ -258,8 +258,6 @@ jobs:
             lockfile: package-lock.json
           - pm: pnpm
             lockfile: pnpm-lock.yaml
-            setup: |
-              npm i -g pnpm@9
           - pm: yarn
             lockfile: yarn.lock
           - pm: bun
@@ -270,24 +268,28 @@ jobs:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      # Explicit version required because pnpm/action-setup doesn't auto-detect
+      # from packageManager field in this context. The version must match
+      # engines.pnpm in package.json (>=10.16.1)
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        with:
+          version: 10.16.1
+
       - name: ⎔ Setup node
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version-file: '.nvmrc'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
 
       - name: 📦 Setup ${{ matrix.pm }}
         if: matrix.setup
         run: ${{ matrix.setup }}
 
       - name: 📥 Install dependencies
-        run: |
-          npm ci
-          npm rebuild
+        run: pnpm install --frozen-lockfile
 
       - name: 📦 Build packages
-        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npm run build:pkg
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run build:pkg
 
       - name: 🧪 Scaffold with ${{ matrix.pm }}
         run: |
