@@ -10,10 +10,12 @@ import {
   getYamlLineNumber,
   validateRecipe,
   formatValidationError,
+  resolveCatalogProtocol,
+  _resetWorkspaceVersionsCache,
 } from './validate';
 import fs from 'fs';
 import path from 'path';
-import {COOKBOOK_PATH} from './constants';
+import {COOKBOOK_PATH, REPO_ROOT, TEMPLATE_PATH} from './constants';
 import * as recipeModule from './recipe';
 
 vi.mock('./apply', () => ({
@@ -888,5 +890,199 @@ commit: abc123
 
     expect(errorOutput).toContain('validateLlmPromptExists');
     expect(errorOutput).toContain('LLM prompt file not found');
+  });
+});
+
+describe('resolveCatalogProtocol', () => {
+  let mockExistsSync: Mock;
+  let mockReadFileSync: Mock;
+  let mockWriteFileSync: Mock;
+
+  const workspaceYaml = `
+packages:
+  - packages/hydrogen
+  - packages/cli
+  - templates/skeleton
+catalog:
+  react: ^18.3.1
+  react-dom: ^18.3.1
+  '@types/node': ^22
+`;
+
+  beforeEach(() => {
+    _resetWorkspaceVersionsCache();
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    mockExistsSync = vi.spyOn(fs, 'existsSync') as Mock;
+    mockReadFileSync = vi.spyOn(fs, 'readFileSync') as Mock;
+    mockWriteFileSync = vi.spyOn(fs, 'writeFileSync') as Mock;
+    mockWriteFileSync.mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should resolve catalog: references in package.json', () => {
+    const workspacePath = path.join(REPO_ROOT, 'pnpm-workspace.yaml');
+    const rootPkgPath = path.join(REPO_ROOT, 'package.json');
+    const skeletonPkgPath = path.join(TEMPLATE_PATH, 'package.json');
+
+    mockExistsSync.mockReturnValue(true);
+
+    mockReadFileSync.mockImplementation((filePath: string) => {
+      if (filePath === workspacePath) return workspaceYaml;
+      if (filePath === rootPkgPath) {
+        return JSON.stringify({dependencies: {}});
+      }
+      if (filePath === skeletonPkgPath) {
+        return JSON.stringify({
+          dependencies: {react: 'catalog:', 'react-dom': 'catalog:'},
+          devDependencies: {'@types/node': 'catalog:'},
+        });
+      }
+      // Workspace package.json files for resolving workspace: versions
+      if (filePath.includes('packages/hydrogen/package.json')) {
+        return JSON.stringify({name: '@shopify/hydrogen', version: '2026.1.0'});
+      }
+      if (filePath.includes('packages/cli/package.json')) {
+        return JSON.stringify({
+          name: '@shopify/cli-hydrogen',
+          version: '8.5.0',
+        });
+      }
+      return JSON.stringify({});
+    });
+
+    resolveCatalogProtocol();
+
+    const writeCalls = mockWriteFileSync.mock.calls;
+    const skeletonWrite = writeCalls.find(
+      (call: any[]) => call[0] === skeletonPkgPath,
+    );
+
+    expect(skeletonWrite).toBeDefined();
+    const written = JSON.parse(skeletonWrite![1] as string);
+    expect(written.dependencies.react).toBe('^18.3.1');
+    expect(written.dependencies['react-dom']).toBe('^18.3.1');
+    expect(written.devDependencies['@types/node']).toBe('^22');
+  });
+
+  it('should resolve workspace:* references in package.json', () => {
+    const workspacePath = path.join(REPO_ROOT, 'pnpm-workspace.yaml');
+    const rootPkgPath = path.join(REPO_ROOT, 'package.json');
+    const skeletonPkgPath = path.join(TEMPLATE_PATH, 'package.json');
+
+    mockExistsSync.mockReturnValue(true);
+
+    mockReadFileSync.mockImplementation((filePath: string) => {
+      if (filePath === workspacePath) return workspaceYaml;
+      if (filePath === rootPkgPath) {
+        return JSON.stringify({dependencies: {}});
+      }
+      if (filePath === skeletonPkgPath) {
+        return JSON.stringify({
+          dependencies: {'@shopify/hydrogen': 'workspace:*'},
+        });
+      }
+      if (filePath.includes('packages/hydrogen/package.json')) {
+        return JSON.stringify({name: '@shopify/hydrogen', version: '2026.1.0'});
+      }
+      if (filePath.includes('packages/cli/package.json')) {
+        return JSON.stringify({
+          name: '@shopify/cli-hydrogen',
+          version: '8.5.0',
+        });
+      }
+      return JSON.stringify({});
+    });
+
+    resolveCatalogProtocol();
+
+    const writeCalls = mockWriteFileSync.mock.calls;
+    const skeletonWrite = writeCalls.find(
+      (call: any[]) => call[0] === skeletonPkgPath,
+    );
+
+    expect(skeletonWrite).toBeDefined();
+    const written = JSON.parse(skeletonWrite![1] as string);
+    expect(written.dependencies['@shopify/hydrogen']).toBe('2026.1.0');
+  });
+
+  it('should do nothing when pnpm-workspace.yaml does not exist', () => {
+    mockExistsSync.mockReturnValue(false);
+
+    resolveCatalogProtocol();
+
+    expect(mockWriteFileSync).not.toHaveBeenCalled();
+  });
+
+  it('should do nothing when no catalog: or workspace: references exist', () => {
+    const workspacePath = path.join(REPO_ROOT, 'pnpm-workspace.yaml');
+    const rootPkgPath = path.join(REPO_ROOT, 'package.json');
+
+    mockExistsSync.mockReturnValue(true);
+
+    mockReadFileSync.mockImplementation((filePath: string) => {
+      if (filePath === workspacePath) return workspaceYaml;
+      if (filePath === rootPkgPath) {
+        return JSON.stringify({dependencies: {lodash: '^4.0.0'}});
+      }
+      // Workspace packages
+      if (filePath.includes('packages/hydrogen/package.json')) {
+        return JSON.stringify({name: '@shopify/hydrogen', version: '2026.1.0'});
+      }
+      if (filePath.includes('packages/cli/package.json')) {
+        return JSON.stringify({
+          name: '@shopify/cli-hydrogen',
+          version: '8.5.0',
+        });
+      }
+      return JSON.stringify({dependencies: {express: '^4.0.0'}});
+    });
+
+    resolveCatalogProtocol();
+
+    expect(mockWriteFileSync).not.toHaveBeenCalled();
+  });
+
+  it('should handle catalog:default variant', () => {
+    const workspacePath = path.join(REPO_ROOT, 'pnpm-workspace.yaml');
+    const rootPkgPath = path.join(REPO_ROOT, 'package.json');
+    const skeletonPkgPath = path.join(TEMPLATE_PATH, 'package.json');
+
+    mockExistsSync.mockReturnValue(true);
+
+    mockReadFileSync.mockImplementation((filePath: string) => {
+      if (filePath === workspacePath) return workspaceYaml;
+      if (filePath === rootPkgPath) {
+        return JSON.stringify({dependencies: {}});
+      }
+      if (filePath === skeletonPkgPath) {
+        return JSON.stringify({
+          dependencies: {react: 'catalog:default'},
+        });
+      }
+      if (filePath.includes('packages/hydrogen/package.json')) {
+        return JSON.stringify({name: '@shopify/hydrogen', version: '2026.1.0'});
+      }
+      if (filePath.includes('packages/cli/package.json')) {
+        return JSON.stringify({
+          name: '@shopify/cli-hydrogen',
+          version: '8.5.0',
+        });
+      }
+      return JSON.stringify({});
+    });
+
+    resolveCatalogProtocol();
+
+    const writeCalls = mockWriteFileSync.mock.calls;
+    const skeletonWrite = writeCalls.find(
+      (call: any[]) => call[0] === skeletonPkgPath,
+    );
+
+    expect(skeletonWrite).toBeDefined();
+    const written = JSON.parse(skeletonWrite![1] as string);
+    expect(written.dependencies.react).toBe('^18.3.1');
   });
 });

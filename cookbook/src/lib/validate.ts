@@ -6,6 +6,7 @@ import {
   COOKBOOK_PATH,
   LLMS_PATH,
   RENDER_FILENAME_GITHUB,
+  REPO_ROOT,
 } from './constants';
 import {loadRecipe, Recipe} from './recipe';
 import path from 'path';
@@ -423,6 +424,9 @@ export function validateRecipe(params: {
       return false;
     }
 
+    console.log('- 🔄 Resolving catalog: and workspace: protocol references…');
+    resolveCatalogProtocol();
+
     console.log(`- 🧑‍🍳 Applying recipe '${recipeTitle}'`);
     applyRecipe({
       recipeTitle,
@@ -507,8 +511,23 @@ export function validateRecipe(params: {
     }
     return false;
   } finally {
-    // rewind the changes to the template directory
+    // rewind the changes to the template directory and any modified package.json files
     execSync(`git checkout -- .`, {cwd: TEMPLATE_PATH});
+    try {
+      // Restore any package.json files modified by resolveCatalogProtocol
+      const modifiedPkgJsons = execSync(
+        `git diff --name-only -- '*/package.json' package.json`,
+        {cwd: REPO_ROOT, encoding: 'utf-8', stdio: 'pipe'},
+      ).trim();
+      if (modifiedPkgJsons) {
+        execSync(`git checkout -- ${modifiedPkgJsons.split('\n').join(' ')}`, {
+          cwd: REPO_ROOT,
+          stdio: 'pipe',
+        });
+      }
+    } catch {
+      // Ignore if no package.json files were modified
+    }
   }
 }
 
@@ -517,9 +536,123 @@ type Command = {
   options: ExecSyncOptionsWithBufferEncoding;
 };
 
+/**
+ * Builds a map of package name → version for all workspace packages.
+ */
+let _workspaceVersions: Map<string, string> | null = null;
+
+/** @internal Reset cached workspace versions (for testing) */
+export function _resetWorkspaceVersionsCache(): void {
+  _workspaceVersions = null;
+}
+
+function getWorkspaceVersions(): Map<string, string> {
+  if (_workspaceVersions) return _workspaceVersions;
+  _workspaceVersions = new Map();
+
+  const workspacePath = path.join(REPO_ROOT, 'pnpm-workspace.yaml');
+  if (!fs.existsSync(workspacePath)) return _workspaceVersions;
+
+  const workspaceContent = fs.readFileSync(workspacePath, 'utf-8');
+  const workspace = YAML.parse(workspaceContent);
+  const packages: string[] = workspace?.packages ?? [];
+
+  for (const pattern of packages) {
+    const pkgJsonPath = path.join(REPO_ROOT, pattern, 'package.json');
+    if (fs.existsSync(pkgJsonPath)) {
+      const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'));
+      if (pkgJson.name && pkgJson.version) {
+        _workspaceVersions.set(pkgJson.name, pkgJson.version);
+      }
+    }
+  }
+
+  return _workspaceVersions;
+}
+
+/**
+ * Resolves a workspace:* version by looking up the package's version
+ * from its package.json in the monorepo.
+ */
+function resolveWorkspaceVersion(packageName: string): string | null {
+  return getWorkspaceVersions().get(packageName) ?? null;
+}
+
+/**
+ * Resolves `catalog:` protocol references in the skeleton's package.json
+ * by looking up versions from pnpm-workspace.yaml catalog.
+ * This is needed because `npm install` doesn't understand the `catalog:` protocol.
+ */
+export function resolveCatalogProtocol(): void {
+  const workspacePath = path.join(REPO_ROOT, 'pnpm-workspace.yaml');
+  if (!fs.existsSync(workspacePath)) return;
+
+  const workspaceContent = fs.readFileSync(workspacePath, 'utf-8');
+  const workspace = YAML.parse(workspaceContent);
+  const catalog = workspace?.catalog;
+  if (!catalog) return;
+
+  // Resolve in all workspace package.json files since npm traverses the workspace
+  const workspacePkgPaths: string[] = [path.join(REPO_ROOT, 'package.json')];
+  const workspaceYaml = YAML.parse(workspaceContent);
+  const workspacePackages: string[] = workspaceYaml?.packages ?? [];
+  for (const pattern of workspacePackages) {
+    const pkgJsonPath = path.join(REPO_ROOT, pattern, 'package.json');
+    if (fs.existsSync(pkgJsonPath)) {
+      workspacePkgPaths.push(pkgJsonPath);
+    }
+  }
+  const pkgJsonPaths = workspacePkgPaths;
+
+  let totalResolved = 0;
+
+  for (const pkgJsonPath of pkgJsonPaths) {
+    if (!fs.existsSync(pkgJsonPath)) continue;
+
+    const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'));
+    let resolved = 0;
+
+    for (const depType of [
+      'dependencies',
+      'devDependencies',
+      'peerDependencies',
+    ]) {
+      const deps = pkgJson[depType];
+      if (!deps) continue;
+
+      for (const [name, version] of Object.entries(deps)) {
+        if (version === 'catalog:' || version === 'catalog:default') {
+          if (catalog[name]) {
+            deps[name] = catalog[name];
+            resolved++;
+          }
+        } else if (
+          typeof version === 'string' &&
+          version.startsWith('workspace:')
+        ) {
+          const workspaceVersion = resolveWorkspaceVersion(name);
+          if (workspaceVersion) {
+            deps[name] = workspaceVersion;
+            resolved++;
+          }
+        }
+      }
+    }
+
+    if (resolved > 0) {
+      fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n');
+      totalResolved += resolved;
+    }
+  }
+
+  if (totalResolved > 0) {
+    console.log(`  Resolved ${totalResolved} catalog:/workspace: references`);
+  }
+}
+
 function installDependencies(): Command {
   return {
-    command: 'npm install',
+    command: 'npm install --no-workspaces --ignore-scripts',
     options: {cwd: TEMPLATE_PATH, encoding: 'buffer'},
   };
 }
