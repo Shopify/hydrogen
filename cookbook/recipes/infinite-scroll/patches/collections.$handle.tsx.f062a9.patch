@@ -17,19 +17,20 @@ index c416c2b3..e6a35150 100644
 +import {useEffect} from 'react';
 +import {useInView} from 'react-intersection-observer';
  import type {ProductItemFragment} from 'storefrontapi.generated';
- 
+
  export const meta: Route.MetaFunction = ({data}) => {
-@@ -67,23 +72,41 @@ function loadDeferredData({context}: Route.LoaderArgs) {
- 
+@@ -67,24 +72,43 @@
+
  export default function Collection() {
    const {collection} = useLoaderData<typeof loader>();
 +  const {ref, inView} = useInView();
- 
+
    return (
      <div className="collection">
        <h1>{collection.title}</h1>
        <p className="collection-description">{collection.description}</p>
 -      <PaginatedResourceSection<ProductItemFragment>
+-        ariaLabel="Products"
 -        connection={collection.products}
 -        resourcesClassName="products-grid"
 -      >
@@ -61,10 +62,12 @@ index c416c2b3..e6a35150 100644
 +              state={state}
 +            />
 +            <br />
-+            {/* @description Add ref to NextLink for intersection observer */}
-+            <NextLink ref={ref}>
-+              {isLoading ? 'Loading...' : <span>Load more ↓</span>}
-+            </NextLink>
++            {/* @description Observe a wrapper element for intersection state */}
++            <div ref={ref}>
++              <NextLink>
++                {isLoading ? 'Loading...' : <span>Load more ↓</span>}
++              </NextLink>
++            </div>
 +          </>
          )}
 -      </PaginatedResourceSection>
@@ -72,10 +75,10 @@ index c416c2b3..e6a35150 100644
        <Analytics.CollectionView
          data={{
            collection: {
-@@ -96,6 +119,47 @@ export default function Collection() {
+@@ -97,6 +121,47 @@
    );
  }
- 
+
 +// @description ProductsGrid component with infinite scroll functionality
 +function ProductsGrid({
 +  products,
@@ -103,7 +106,7 @@ index c416c2b3..e6a35150 100644
 +  }, [inView, navigate, state, nextPageUrl, hasNextPage]);
 +
 +  return (
-+    <div className="products-grid">
++    <div aria-label="Products" role="region" className="products-grid">
 +      {products.map((product, index) => {
 +        return (
 +          <ProductItem
