@@ -100,117 +100,125 @@ deletedFiles:
   - templates/skeleton/server.ts
 steps:
   - type: PATCH
-    step: "1"
+    step: '1'
     name: Disable customer account API
     description: Comment out customer account GraphQL configuration
     diffs:
       - file: .graphqlrc.ts
-        patchFile: .graphqlrc.ts.141680.patch
+        patchFile: .graphqlrc.ts.57f7a7.patch
   - type: PATCH
-    step: "2"
+    step: '2'
     name: Update README for Express deployment
     description: Update README with Express-specific setup and deployment instructions
     diffs:
       - file: README.md
-        patchFile: README.md.533419.patch
+        patchFile: README.md.a0354d.patch
   - type: NEW_FILE
-    step: "3"
+    step: '3'
     name: Add environment type definitions
     description: Add environment type definitions for Hydrogen on Express
     ingredients:
       - path: templates/skeleton/app/env.ts
   - type: PATCH
-    step: "4"
+    step: '4'
     name: Set up client-side hydration
     description: Update client entry to use React Router hydration without
       Oxygen-specific code
     diffs:
       - file: app/entry.client.tsx
-        patchFile: entry.client.tsx.1224f7.patch
+        patchFile: entry.client.tsx.2b3098.patch
   - type: NEW_FILE
-    step: "5"
+    step: '5'
     name: Add the Express template favicon
     description: Add Express template favicon
     ingredients:
       - path: templates/skeleton/public/favicon.svg
   - type: PATCH
-    step: "6"
+    step: '6'
     name: Configure server-side rendering
-    description: Replace Oxygen server rendering with Express-compatible Node.js SSR
+    description:
+      Replace Oxygen server rendering with Express-compatible Node.js SSR
       using PassThrough streams
     diffs:
       - file: app/entry.server.tsx
-        patchFile: entry.server.tsx.3f7fcb.patch
+        patchFile: entry.server.tsx.2fe45e.patch
   - type: NEW_FILE
-    step: "7"
+    step: '7'
     name: Set up the development server
     description: Add development server orchestration script for Vite and nodemon
     ingredients:
       - path: templates/skeleton/scripts/dev.mjs
   - type: PATCH
-    step: "8"
+    step: '8'
     name: Simplify the root layout
     description: Simplify root layout for Express template by removing complex components
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.ca3339.patch
+        patchFile: root.tsx.8c60e9.patch
   - type: NEW_FILE
-    step: "9"
+    step: '9'
     name: Create the Express server
-    description: Add Express server with Hydrogen context, session management, and
+    description:
+      Add Express server with Hydrogen context, session management, and
       SSR support
     ingredients:
       - path: templates/skeleton/server.mjs
   - type: PATCH
-    step: "10"
+    step: '10'
     name: Configure routes for Express
     description: Update routes configuration to work with Hydrogen on Express
     diffs:
       - file: app/routes.ts
-        patchFile: routes.ts.a0bd15.patch
+        patchFile: routes.ts.d33a0d.patch
   - type: PATCH
-    step: "11"
+    step: '11'
     name: Create a basic homepage
     description: Simplify homepage route to basic Express example content
     diffs:
       - file: app/routes/_index.tsx
-        patchFile: _index.tsx.6585c3.patch
+        patchFile: _index.tsx.be2f11.patch
   - type: PATCH
-    step: "12"
+    step: '12'
     name: Add a minimal product page
     description: Simplify product route to minimal implementation without cart functionality
     diffs:
       - file: app/routes/products.$handle.tsx
-        patchFile: products.$handle.tsx.258cf0.patch
+        patchFile: products.$handle.tsx.2292d3.patch
   - type: PATCH
-    step: "13"
+    step: '13'
+    name: Update TypeScript configuration
+    description: Remove Oxygen Workers type definitions since Express uses standard Node.js types
+    diffs:
+      - file: tsconfig.json
+        patchFile: tsconfig.json.35dc4d.patch
+  - type: PATCH
+    step: '14'
     name: Add basic styles
     description: Replace skeleton styles with minimal Express template styling
     diffs:
       - file: app/styles/app.css
-        patchFile: app.css.9144aa.patch
+        patchFile: app.css.dedf0f.patch
   - type: PATCH
-    step: "14"
+    step: '15'
     name: Update ESLint configuration
     description: Simplify ESLint configuration for Express template
     diffs:
       - file: eslint.config.js
-        patchFile: eslint.config.js.e8a677.patch
+        patchFile: eslint.config.js.7409a5.patch
   - type: PATCH
-    step: "15"
+    step: '16'
     name: Install Express dependencies
-    description: Update dependencies and scripts for Express server deployment (add
-      express, nodemon, compression, remove Oxygen packages)
+    description: Update dependencies and scripts for Express server deployment (add express, nodemon, compression, remove Oxygen packages)
     diffs:
       - file: package.json
-        patchFile: package.json.073a52.patch
+        patchFile: package.json.acbf33.patch
   - type: PATCH
-    step: "16"
+    step: '17'
     name: Configure Vite for Node.js
     description: Configure Vite for Express deployment with Node.js module externalization
     diffs:
       - file: vite.config.ts
-        patchFile: vite.config.ts.a3d046.patch
+        patchFile: vite.config.ts.63904f.patch
 nextSteps: |
   1. Create a `.env` file with your Shopify Storefront API credentials:
     ```
@@ -231,19 +239,23 @@ llms:
     - How to run Hydrogen without Shopify Oxygen?
     - Can I use Hydrogen with my own server?
   troubleshooting:
-    - issue: "Error: [h2:error:createStorefrontClient] `storeDomain` is required"
+    - issue: 'Error: [h2:error:createStorefrontClient] `storeDomain` is required'
       solution: Create a .env file with your Shopify store credentials. See the
         nextSteps section for required environment variables.
-    - issue: "Cannot read file: fs/path/stream errors during build"
-      solution: This is expected. The vite.config.ts properly externalizes Node.js
+    - issue: 'Cannot read file: fs/path/stream errors during build'
+      solution:
+        This is expected. The vite.config.ts properly externalizes Node.js
         built-in modules for the Express server.
     - issue: GraphQL codegen fails with 'Unable to find any GraphQL type definitions'
-      solution: The recipe preserves GraphQL functionality. Make sure .graphqlrc.ts
+      solution:
+        The recipe preserves GraphQL functionality. Make sure .graphqlrc.ts
         exists and your GraphQL queries use the gql template literal.
     - issue: Port already in use when running npm run dev
-      solution: The Express server defaults to port 3000. Either stop the process
+      solution:
+        The Express server defaults to port 3000. Either stop the process
         using that port or set PORT environment variable to a different port.
     - issue: TypeScript errors about missing @react-router/node types
-      solution: Run 'npm install' to ensure all dependencies including @types packages
+      solution:
+        Run 'npm install' to ensure all dependencies including @types packages
         are installed.
-commit: 14d09107663313bae8eac3c701b90a7bc49819e4
+commit: d27e9178195e76ed6a3ead38b87788677bb449cd
