@@ -1,7 +1,7 @@
-index bb143b40..9fc582d9 100644
+index 983f6505..48381426 100644
 --- a/templates/skeleton/app/routes/cart.tsx
 +++ b/templates/skeleton/app/routes/cart.tsx
-@@ -6,6 +6,10 @@ import {
+@@ -2,6 +2,10 @@ import {useLoaderData, data, type HeadersFunction} from 'react-router';
  import type {Route} from './+types/cart';
  import type {CartQueryDataReturn} from '@shopify/hydrogen';
  import {CartForm} from '@shopify/hydrogen';
@@ -12,7 +12,7 @@ index bb143b40..9fc582d9 100644
  import {CartMain} from '~/components/CartMain';
  
  export const meta: Route.MetaFunction = () => {
-@@ -29,6 +33,21 @@ export async function action({request, context}: Route.ActionArgs) {
+@@ -25,6 +29,21 @@ export async function action({request, context}: Route.ActionArgs) {
    let result: CartQueryDataReturn;
  
    switch (action) {
