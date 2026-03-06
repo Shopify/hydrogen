@@ -1,7 +1,7 @@
-index 422a2eb9..f898702c 100644
+index 99730d41..bd97c83c 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
-@@ -14,7 +14,14 @@ import {
+@@ -11,7 +11,14 @@ import {
  import {ProductPrice} from '~/components/ProductPrice';
  import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
@@ -17,7 +17,7 @@ index 422a2eb9..f898702c 100644
  
  export const meta: Route.MetaFunction = ({data}) => {
    return [
-@@ -66,6 +73,10 @@ async function loadCriticalData({
+@@ -59,6 +66,10 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
    // The API handle might be localized, so redirect to the localized handle
    redirectIfHandleIsLocalized(request, {handle, data: product});
  
@@ -28,7 +28,7 @@ index 422a2eb9..f898702c 100644
    return {
      product,
    };
-@@ -85,6 +96,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
+@@ -78,6 +89,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
  
  export default function Product() {
    const {product} = useLoaderData<typeof loader>();
@@ -36,7 +36,7 @@ index 422a2eb9..f898702c 100644
  
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
-@@ -94,7 +106,9 @@ export default function Product() {
+@@ -87,7 +99,9 @@ export default function Product() {
  
    // Sets the search param to the selected variant without navigation
    // only when no search params are set in the url
@@ -47,7 +47,7 @@ index 422a2eb9..f898702c 100644
  
    // Get the product options array
    const productOptions = getProductOptions({
-@@ -102,21 +116,41 @@ export default function Product() {
+@@ -95,21 +109,41 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
  
@@ -96,7 +96,7 @@ index 422a2eb9..f898702c 100644
          />
          <br />
          <br />
-@@ -193,6 +227,22 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -186,6 +220,22 @@ const PRODUCT_FRAGMENT = `#graphql
      description
      encodedVariantExistence
      encodedVariantAvailability

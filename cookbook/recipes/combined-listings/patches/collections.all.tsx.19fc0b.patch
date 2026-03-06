@@ -1,13 +1,7 @@
-index f33ce797..a0fd66d7 100644
+index 5a122262..a0fd66d7 100644
 --- a/templates/skeleton/app/routes/collections.all.tsx
 +++ b/templates/skeleton/app/routes/collections.all.tsx
-@@ -1,11 +1,13 @@
- import type {Route} from './+types/collections.all';
--import {
--  useLoaderData,
--} from 'react-router';
-+import {useLoaderData} from 'react-router';
- import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
+@@ -4,6 +4,10 @@ import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
  import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
  import {ProductItem} from '~/components/ProductItem';
  import type {CollectionItemFragment} from 'storefrontapi.generated';
@@ -18,7 +12,7 @@ index f33ce797..a0fd66d7 100644
  
  export const meta: Route.MetaFunction = () => {
    return [{title: `Hydrogen | Products`}];
-@@ -33,7 +35,12 @@ async function loadCriticalData({context, request}: Route.LoaderArgs) {
+@@ -31,7 +35,12 @@ async function loadCriticalData({context, request}: Route.LoaderArgs) {
  
    const [{products}] = await Promise.all([
      storefront.query(CATALOG_QUERY, {
@@ -32,7 +26,7 @@ index f33ce797..a0fd66d7 100644
      }),
      // Add other queries here, so that they are loaded in parallel
    ]);
-@@ -80,6 +87,7 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
+@@ -78,6 +87,7 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
      id
      handle
      title
@@ -40,7 +34,7 @@ index f33ce797..a0fd66d7 100644
      featuredImage {
        id
        altText
-@@ -107,8 +115,9 @@ const CATALOG_QUERY = `#graphql
+@@ -105,8 +115,9 @@ const CATALOG_QUERY = `#graphql
      $last: Int
      $startCursor: String
      $endCursor: String

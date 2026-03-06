@@ -1,15 +1,15 @@
-index 28102dbe..9bc7a79d 100644
+index 237edc91..bfde9915 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
-@@ -11,6 +11,7 @@ import type {
-   RecommendedProductsQuery,
+@@ -8,6 +8,7 @@ import type {
  } from 'storefrontapi.generated';
  import {ProductItem} from '~/components/ProductItem';
+ import {MockShopNotice} from '~/components/MockShopNotice';
 +import {maybeFilterOutCombinedListingsQuery} from '~/lib/combined-listings';
  
  export const meta: Route.MetaFunction = () => {
    return [{title: 'Hydrogen | Home'}];
-@@ -48,7 +49,11 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
+@@ -46,7 +47,11 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
   */
  function loadDeferredData({context}: Route.LoaderArgs) {
    const recommendedProducts = context.storefront
@@ -22,7 +22,7 @@ index 28102dbe..9bc7a79d 100644
      .catch((error: Error) => {
        // Log query errors, but don't throw them so the page can still render
        console.error(error);
-@@ -104,11 +109,9 @@ function RecommendedProducts({
+@@ -110,11 +115,9 @@ function RecommendedProducts({
          <Await resolve={products}>
            {(response) => (
              <div className="recommended-products-grid">
@@ -37,7 +37,7 @@ index 28102dbe..9bc7a79d 100644
              </div>
            )}
          </Await>
-@@ -151,7 +154,12 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+@@ -157,7 +160,12 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
          amount
          currencyCode
        }
@@ -50,7 +50,7 @@ index 28102dbe..9bc7a79d 100644
      featuredImage {
        id
        url
-@@ -160,9 +168,9 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+@@ -166,9 +174,9 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
        height
      }
    }
