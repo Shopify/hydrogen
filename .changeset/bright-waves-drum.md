@@ -3,4 +3,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Add a Products region landmark to paginated product grids for accessibility.
+Improve screen reader navigation on collection pages by marking product grids as a named section.
