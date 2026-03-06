@@ -12,6 +12,8 @@ user-invocable: true
 
 Update Storefront API and Customer Account API versions quarterly. This guide follows a streamlined 9-step workflow.
 
+> **SANDBOX CONSTRAINT**: HEREDOC (`cat <<'EOF'`) is blocked in the Claude Code sandbox. **Always use the `Write` tool** to create body files, then pass them via `--body-file`. This applies everywhere a body file is needed: parent issue, child issues, phase child issues, parent body updates, and PR bodies.
+
 ## Anti-Hallucination Directive
 
 **CRITICAL CONSTRAINT**: When creating GitHub issues from API changelog:
@@ -110,12 +112,11 @@ Include these packages:
 
 ### Step 7: Create Parent Issue
 
-Create in `Shopify/developer-tools-team` with `--repo` flag:
+Create in `Shopify/developer-tools-team` with `--repo` flag.
 
-```bash
-PARENT_ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
-  --title "Hydrogen <VERSION> update" \
-  --body "$(cat <<'EOF'
+**First, use the `Write` tool** to create `/tmp/claude/parent-body-initial.md` with this content (substituting `<VERSION>` with the actual version):
+
+```
 API changes:
 - [Storefront API changes](https://shopify.dev/changelog?filter=api&api_version=<VERSION>&api_type=storefront-graphql)
 - [Customer Account API changes](https://shopify.dev/changelog?filter=api&api_version=<VERSION>&api_type=customer-account-graphql)
@@ -145,45 +146,71 @@ API changes:
 
 **8. Blog post: hydrogen.shopify.dev**
 - (child issue will be linked here)
-EOF
-)")
+```
+
+Then create the issue:
+
+```bash
+mkdir -p /tmp/claude
+
+PARENT_ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
+  --title "Hydrogen <VERSION> update" \
+  --body-file /tmp/claude/parent-body-initial.md)
 
 PARENT_NUM=$(echo "$PARENT_ISSUE_URL" | grep -oE '[0-9]+$')
+echo "$PARENT_NUM" > /tmp/claude/parent_num.txt
 echo "Created parent issue #$PARENT_NUM"
 ```
 
-### Step 7a: Add Parent to Project with Hydrogen Field
+### Step 7a: Add Parent to Project with Hydrogen and Status Fields
 
 ```bash
+PARENT_NUM=$(cat /tmp/claude/parent_num.txt)
+PARENT_ISSUE_URL="https://github.com/Shopify/developer-tools-team/issues/$PARENT_NUM"
+
 # Add parent issue to project
 gh project item-add 4613 --owner Shopify --url "$PARENT_ISSUE_URL"
 sleep 2
 
 # Get project item ID
-PARENT_ITEM_ID=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '$PARENT_NUM') { projectItems(first: 5) { nodes { id project { number } } } } } }' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 4613) | .id')
+PARENT_ITEM_ID=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$PARENT_NUM"') { projectItems(first: 5) { nodes { id project { number } } } } } }' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 4613) | .id')
 
 # Set "Project" field to "Hydrogen"
 gh api graphql -f query='mutation {
   updateProjectV2ItemFieldValue(input: {
     projectId: "PVT_kwDNH5XOABDyGA"
-    itemId: "'$PARENT_ITEM_ID'"
+    itemId: "'"$PARENT_ITEM_ID"'"
     fieldId: "PVTSSF_lADNH5XOABDyGM4Av2Pl"
     value: { singleSelectOptionId: "ad0bd2a6" }
   }) { projectV2Item { id } }
-}'
+}' > /dev/null
 
-# Verify
-FIELD_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '$PARENT_NUM') { projectItems(first: 5) { nodes { fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+# Set "Status" field to "Todo (prioritized)"
+gh api graphql -f query='mutation {
+  updateProjectV2ItemFieldValue(input: {
+    projectId: "PVT_kwDNH5XOABDyGA"
+    itemId: "'"$PARENT_ITEM_ID"'"
+    fieldId: "PVTSSF_lADNH5XOABDyGM4AnCva"
+    value: { singleSelectOptionId: "f75ad846" }
+  }) { projectV2Item { id } }
+}' > /dev/null
 
-if [ "$FIELD_VALUE" = "Hydrogen" ]; then
-  echo "✓ Parent #$PARENT_NUM: Project = Hydrogen"
+# Verify both fields
+PROJECT_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$PARENT_NUM"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+
+STATUS_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$PARENT_NUM"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+
+if [ "$PROJECT_VALUE" = "Hydrogen" ] && [ "$STATUS_VALUE" = "Todo (prioritized)" ]; then
+  echo "✓ Parent #$PARENT_NUM: Project = Hydrogen, Status = Todo (prioritized)"
 else
-  echo "✗ FAILED to set Hydrogen field on parent"
+  echo "✗ FAILED: Project = '$PROJECT_VALUE', Status = '$STATUS_VALUE'"
   exit 1
 fi
 ```
 
 ### Step 8: Create Child Issues for API Changes
+
+> **Prerequisites for all child issues**: The `child` label already exists in `Shopify/developer-tools-team`. No creation step needed — simply use `--label "child"` when creating issues.
 
 ### 8a: Fetch API Changelog
 
@@ -222,13 +249,9 @@ grep -o 'shopify.dev/changelog' /tmp/claude/api_changes.json | head -1 && echo "
 gh issue list --repo Shopify/developer-tools-team --search "in:body <permalink>"
 ```
 
-**If no existing issue**, create with minimal template:
+**If no existing issue**, use the **`Write` tool** to create `/tmp/claude/child-api-body.md` with this content (substituting exact text and permalink from the changelog):
 
-```bash
-ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
-  --title "[<VERSION> API UPDATE] <Title from changelog>" \
-  --label "child" \
-  --body "$(cat <<'EOF'
+```
 ## Changelog Entry
 <EXACT text from changelog - no modifications>
 
@@ -237,13 +260,20 @@ ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
 
 ---
 _Implementation notes to be added during human investigation._
-EOF
-)")
+```
+
+Then create the issue:
+
+```bash
+ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
+  --title "[<VERSION> API UPDATE] <Title from changelog>" \
+  --label "child" \
+  --body-file /tmp/claude/child-api-body.md)
 
 ISSUE_NUM=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
 ```
 
-### 8d: Add to Project and Set Hydrogen Field
+### 8d: Add to Project, Set Hydrogen and Status Fields
 
 ```bash
 # Add issue to project
@@ -251,7 +281,7 @@ gh project item-add 4613 --owner Shopify --url "$ISSUE_URL"
 sleep 2  # Wait for GitHub to process
 
 # Get project item ID
-ITEM_ID=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '$ISSUE_NUM') { projectItems(first: 5) { nodes { id project { number } } } } } }' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 4613) | .id')
+ITEM_ID=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { projectItems(first: 5) { nodes { id project { number } } } } } }' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 4613) | .id')
 
 if [ -z "$ITEM_ID" ]; then
   echo "#$ISSUE_NUM: ✗ FAILED to get project item ID"
@@ -262,19 +292,31 @@ fi
 gh api graphql -f query='mutation {
   updateProjectV2ItemFieldValue(input: {
     projectId: "PVT_kwDNH5XOABDyGA"
-    itemId: "'$ITEM_ID'"
+    itemId: "'"$ITEM_ID"'"
     fieldId: "PVTSSF_lADNH5XOABDyGM4Av2Pl"
     value: { singleSelectOptionId: "ad0bd2a6" }
   }) { projectV2Item { id } }
-}'
+}' > /dev/null
 
-# Verify field was set
-FIELD_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '$ISSUE_NUM') { projectItems(first: 5) { nodes { fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+# Set "Status" field to "Todo (prioritized)"
+gh api graphql -f query='mutation {
+  updateProjectV2ItemFieldValue(input: {
+    projectId: "PVT_kwDNH5XOABDyGA"
+    itemId: "'"$ITEM_ID"'"
+    fieldId: "PVTSSF_lADNH5XOABDyGM4AnCva"
+    value: { singleSelectOptionId: "f75ad846" }
+  }) { projectV2Item { id } }
+}' > /dev/null
 
-if [ "$FIELD_VALUE" = "Hydrogen" ]; then
-  echo "#$ISSUE_NUM: ✓ Added to project with Hydrogen field"
+# Verify both fields
+PROJECT_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+
+STATUS_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+
+if [ "$PROJECT_VALUE" = "Hydrogen" ] && [ "$STATUS_VALUE" = "Todo (prioritized)" ]; then
+  echo "#$ISSUE_NUM: ✓ Added to project with Hydrogen field and Todo (prioritized) status"
 else
-  echo "#$ISSUE_NUM: ✗ FAILED to set Hydrogen field (got: $FIELD_VALUE)"
+  echo "#$ISSUE_NUM: ✗ FAILED: Project = '$PROJECT_VALUE', Status = '$STATUS_VALUE'"
   exit 1
 fi
 ```
@@ -282,16 +324,18 @@ fi
 ### 8e: Link as Sub-Issue of Parent
 
 ```bash
+PARENT_NUM=$(cat /tmp/claude/parent_num.txt)
+
 # Get node IDs first
-PARENT_NODE_ID=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: <PARENT_NUM>) { id } } }' --jq '.data.repository.issue.id')
-CHILD_NODE_ID=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '$ISSUE_NUM') { id } } }' --jq '.data.repository.issue.id')
+PARENT_NODE_ID=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$PARENT_NUM"') { id } } }' --jq '.data.repository.issue.id')
+CHILD_NODE_ID=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { id } } }' --jq '.data.repository.issue.id')
 
 # Link as sub-issue
 RESULT=$(gh api graphql -f query='
   mutation {
     addSubIssue(input: {
-      issueId: "'$PARENT_NODE_ID'"
-      subIssueId: "'$CHILD_NODE_ID'"
+      issueId: "'"$PARENT_NODE_ID"'"
+      subIssueId: "'"$CHILD_NODE_ID"'"
     }) { issue { id } subIssue { number } }
   }
 ' 2>&1)
@@ -303,7 +347,7 @@ fi
 
 # Verify the link exists (using subIssues field, NOT trackedIssues)
 sleep 1
-LINKED=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: <PARENT_NUM>) { subIssues(first: 50) { nodes { number } } } } }' --jq '.data.repository.issue.subIssues.nodes[].number' | grep -w "^${ISSUE_NUM}$" || true)
+LINKED=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$PARENT_NUM"') { subIssues(first: 50) { nodes { number } } } } }' --jq '.data.repository.issue.subIssues.nodes[].number' | grep -w "^${ISSUE_NUM}$" || true)
 
 if [ -n "$LINKED" ]; then
   echo "#$ISSUE_NUM: ✓ Linked as sub-issue of parent"
@@ -317,22 +361,25 @@ fi
 
 Create child issues for remaining phases. Each follows the same pattern as API changelog issues with full verification.
 
-**Prerequisites:** `$PARENT_NUM` must be set from Step 7.
+**Prerequisites:** `$PARENT_NUM` must be set (read from `/tmp/claude/parent_num.txt`).
 
-**Reusable function (define once at start of Step 8e.1):**
+**Reusable function (define once, call for each phase):**
+
 ```bash
-# Function to setup child issue: add to project, set Hydrogen field, link as sub-issue
+# Function to setup child issue: add to project, set Hydrogen + Status fields, link as sub-issue
 # Requires: PARENT_NUM set from Step 7
 setup_phase_child_issue() {
   local ISSUE_NUM=$1
   local ISSUE_URL=$2
+
+  PARENT_NUM=$(cat /tmp/claude/parent_num.txt)
 
   # Add to project
   gh project item-add 4613 --owner Shopify --url "$ISSUE_URL"
   sleep 2
 
   # Get project item ID
-  ITEM_ID=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '$ISSUE_NUM') { projectItems(first: 5) { nodes { id project { number } } } } } }' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 4613) | .id')
+  ITEM_ID=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { projectItems(first: 5) { nodes { id project { number } } } } } }' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 4613) | .id')
 
   if [ -z "$ITEM_ID" ]; then
     echo "#$ISSUE_NUM: ✗ FAILED to get project item ID"
@@ -343,25 +390,37 @@ setup_phase_child_issue() {
   gh api graphql -f query='mutation {
     updateProjectV2ItemFieldValue(input: {
       projectId: "PVT_kwDNH5XOABDyGA"
-      itemId: "'$ITEM_ID'"
+      itemId: "'"$ITEM_ID"'"
       fieldId: "PVTSSF_lADNH5XOABDyGM4Av2Pl"
       value: { singleSelectOptionId: "ad0bd2a6" }
     }) { projectV2Item { id } }
   }' > /dev/null
 
-  # Verify field was set
-  FIELD_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '$ISSUE_NUM') { projectItems(first: 5) { nodes { fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+  # Set "Status" field to "Todo (prioritized)"
+  gh api graphql -f query='mutation {
+    updateProjectV2ItemFieldValue(input: {
+      projectId: "PVT_kwDNH5XOABDyGA"
+      itemId: "'"$ITEM_ID"'"
+      fieldId: "PVTSSF_lADNH5XOABDyGM4AnCva"
+      value: { singleSelectOptionId: "f75ad846" }
+    }) { projectV2Item { id } }
+  }' > /dev/null
 
-  if [ "$FIELD_VALUE" != "Hydrogen" ]; then
-    echo "#$ISSUE_NUM: ✗ FAILED to set Hydrogen field (got: $FIELD_VALUE)"
+  # Verify both fields
+  PROJECT_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+
+  STATUS_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+
+  if [ "$PROJECT_VALUE" != "Hydrogen" ] || [ "$STATUS_VALUE" != "Todo (prioritized)" ]; then
+    echo "#$ISSUE_NUM: ✗ FAILED to set fields (Project='$PROJECT_VALUE', Status='$STATUS_VALUE')"
     exit 1
   fi
 
   # Link as sub-issue
-  PARENT_NODE_ID=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '$PARENT_NUM') { id } } }' --jq '.data.repository.issue.id')
-  CHILD_NODE_ID=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '$ISSUE_NUM') { id } } }' --jq '.data.repository.issue.id')
+  PARENT_NODE_ID=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$PARENT_NUM"') { id } } }' --jq '.data.repository.issue.id')
+  CHILD_NODE_ID=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { id } } }' --jq '.data.repository.issue.id')
 
-  RESULT=$(gh api graphql -f query='mutation { addSubIssue(input: {issueId: "'$PARENT_NODE_ID'", subIssueId: "'$CHILD_NODE_ID'"}) { issue { id } subIssue { number } } }' 2>&1)
+  RESULT=$(gh api graphql -f query='mutation { addSubIssue(input: {issueId: "'"$PARENT_NODE_ID"'", subIssueId: "'"$CHILD_NODE_ID"'"}) { issue { id } subIssue { number } } }' 2>&1)
 
   if echo "$RESULT" | grep -q '"errors"'; then
     echo "#$ISSUE_NUM: ✗ Link mutation error: $RESULT"
@@ -370,10 +429,10 @@ setup_phase_child_issue() {
 
   # Verify link
   sleep 1
-  LINKED=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '$PARENT_NUM') { subIssues(first: 50) { nodes { number } } } } }' --jq '.data.repository.issue.subIssues.nodes[].number' | grep -w "^${ISSUE_NUM}$" || true)
+  LINKED=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$PARENT_NUM"') { subIssues(first: 50) { nodes { number } } } } }' --jq '.data.repository.issue.subIssues.nodes[].number' | grep -w "^${ISSUE_NUM}$" || true)
 
   if [ -n "$LINKED" ]; then
-    echo "#$ISSUE_NUM: ✓ Created, project field set, linked as sub-issue"
+    echo "#$ISSUE_NUM: ✓ Created, project fields set (Hydrogen + Todo prioritized), linked as sub-issue"
     return 0
   else
     echo "#$ISSUE_NUM: ✗ FAILED - sub-issue link not found"
@@ -383,8 +442,10 @@ setup_phase_child_issue() {
 ```
 
 **Phase 3: Fix recipes**
-```bash
-cat > /tmp/claude/child-issue.md <<'EOF'
+
+Use the **`Write` tool** to create `/tmp/claude/child-issue.md` with this content (substituting `<PARENT_NUM>` and `<VERSION>`):
+
+```
 Parent issue: #<PARENT_NUM>
 
 Ensure the "Validate recipes" CI step passes with the new API version.
@@ -392,7 +453,12 @@ Ensure the "Validate recipes" CI step passes with the new API version.
 ## Scope
 - Run recipe validation CI step
 - Fix any recipe compatibility issues
-EOF
+```
+
+Then:
+
+```bash
+PARENT_NUM=$(cat /tmp/claude/parent_num.txt)
 
 ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
   --title "Fix recipes for <VERSION>" \
@@ -404,8 +470,10 @@ PHASE3_ISSUE=$ISSUE_NUM
 ```
 
 **Phase 4: Manual testing**
-```bash
-cat > /tmp/claude/child-issue.md <<'EOF'
+
+Use the **`Write` tool** to create `/tmp/claude/child-issue.md`:
+
+```
 Parent issue: #<PARENT_NUM>
 
 Test changes in a real Hydrogen project.
@@ -413,8 +481,11 @@ Test changes in a real Hydrogen project.
 ## Scope
 - Test with both `h2 dev` AND `npm run dev` (they should behave identically but verify)
 - Validate all API changes work correctly
-EOF
+```
 
+Then:
+
+```bash
 ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
   --title "Manual testing for <VERSION> update" \
   --label "child" \
@@ -425,8 +496,10 @@ PHASE4_ISSUE=$ISSUE_NUM
 ```
 
 **Phase 5: Release versions**
-```bash
-cat > /tmp/claude/child-issue.md <<'EOF'
+
+Use the **`Write` tool** to create `/tmp/claude/child-issue.md`:
+
+```
 Parent issue: #<PARENT_NUM>
 
 Publish packages to npm.
@@ -435,8 +508,11 @@ Publish packages to npm.
 - Merge the Version PR to trigger npm publication
 - Verify packages published correctly
 - Monitor Slack for release notifications
-EOF
+```
 
+Then:
+
+```bash
 ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
   --title "Release <VERSION_CALVER> versions" \
   --label "child" \
@@ -447,16 +523,21 @@ PHASE5_ISSUE=$ISSUE_NUM
 ```
 
 **Phase 6: Changelog for h2 upgrade**
-```bash
-cat > /tmp/claude/child-issue.md <<'EOF'
+
+Use the **`Write` tool** to create `/tmp/claude/child-issue.md`:
+
+```
 Parent issue: #<PARENT_NUM>
 
 Document upgrade path for Hydrogen users in the changelog used by `h2 upgrade`. Use [this Claude command to help](https://github.com/Shopify/hydrogen/blob/main/.claude/commands/changelog-update.md)
 
 ## Scope
 - Add changelog entry in docs/changelog.json with upgrade steps
-EOF
+```
 
+Then:
+
+```bash
 ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
   --title "[<VERSION>] Add post in docs/changelog.json for h2 upgrade" \
   --label "child" \
@@ -467,8 +548,10 @@ PHASE6_ISSUE=$ISSUE_NUM
 ```
 
 **Phase 7: Update Shopify dev docs**
-```bash
-cat > /tmp/claude/child-issue.md <<'EOF'
+
+Use the **`Write` tool** to create `/tmp/claude/child-issue.md`:
+
+```
 Parent issue: #<PARENT_NUM>
 
 Sync external documentation with new API version.
@@ -476,8 +559,11 @@ Sync external documentation with new API version.
 ## Scope
 - Update Shopify dev API reference documentation
 - Ensure version numbers are current
-EOF
+```
 
+Then:
+
+```bash
 ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
   --title "[<VERSION>] Update Shopify dev API reference docs" \
   --label "child" \
@@ -488,8 +574,10 @@ PHASE7_ISSUE=$ISSUE_NUM
 ```
 
 **Phase 8: Blog post**
-```bash
-cat > /tmp/claude/child-issue.md <<'EOF'
+
+Use the **`Write` tool** to create `/tmp/claude/child-issue.md`:
+
+```
 Parent issue: #<PARENT_NUM>
 
 Announce the API update on hydrogen.shopify.dev.
@@ -499,8 +587,11 @@ Announce the API update on hydrogen.shopify.dev.
 - Highlight key features/changes
 - Publish to hydrogen.shopify.dev
   - This needs a new article created in [this shop](https://app.shopify.com/services/internal/shops/59848228886)
-EOF
+```
 
+Then:
+
+```bash
 ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
   --title "[<VERSION>] Blog post: hydrogen.shopify.dev" \
   --label "child" \
@@ -512,23 +603,9 @@ PHASE8_ISSUE=$ISSUE_NUM
 
 ### 8f.2: Update Parent Issue Body
 
-After all child issues (API changes AND phases 3-8) are created, update the parent body:
+After all child issues (API changes AND phases 3-8) are created, use the **`Write` tool** to create `/tmp/claude/parent-body.md` with actual issue numbers substituted in:
 
-```bash
-# Collect ALL child issue numbers (API changes + phases 3-8)
-# API_CHILDREN comes from Step 8b loop
-# PHASE*_ISSUE variables come from Step 8e.1
-ALL_CHILDREN="$API_CHILDREN $PHASE3_ISSUE $PHASE4_ISSUE $PHASE5_ISSUE $PHASE6_ISSUE $PHASE7_ISSUE $PHASE8_ISSUE"
-
-# Generate child list for API changes section
-API_CHILD_LIST=""
-for CHILD in $API_CHILDREN; do
-  API_CHILD_LIST="${API_CHILD_LIST}- #${CHILD}
-"
-done
-
-# Update parent body with ALL children (no checkboxes - use unordered lists)
-cat > /tmp/claude/parent-body.md <<EOF
+```
 API changes:
 - [Storefront API changes](https://shopify.dev/changelog?filter=api&api_version=<VERSION>&api_type=storefront-graphql)
 - [Customer Account API changes](https://shopify.dev/changelog?filter=api&api_version=<VERSION>&api_type=customer-account-graphql)
@@ -539,30 +616,39 @@ API changes:
 - (link after PR created)
 
 **2. Complete all API changes**
-${API_CHILD_LIST}
+- #<API_CHILD_1>
+- #<API_CHILD_2>
+(one line per API changelog child issue)
+
 **3. Fix recipes for <VERSION>**
-- #$PHASE3_ISSUE
+- #<PHASE3_ISSUE>
 
 **4. Manual testing**
-- #$PHASE4_ISSUE
+- #<PHASE4_ISSUE>
 
 **5. Release versions**
-- #$PHASE5_ISSUE
+- #<PHASE5_ISSUE>
 
 **6. Add post in docs/changelog.json for h2 upgrade**
-- #$PHASE6_ISSUE
+- #<PHASE6_ISSUE>
 
 **7. Update Shopify dev API reference docs**
-- #$PHASE7_ISSUE
+- #<PHASE7_ISSUE>
 
 **8. Blog post: hydrogen.shopify.dev**
-- #$PHASE8_ISSUE
-EOF
+- #<PHASE8_ISSUE>
+```
 
-gh issue edit <PARENT_NUM> --repo Shopify/developer-tools-team --body-file /tmp/claude/parent-body.md
+Then apply and verify:
+
+```bash
+PARENT_NUM=$(cat /tmp/claude/parent_num.txt)
+ALL_CHILDREN="$API_CHILDREN $PHASE3_ISSUE $PHASE4_ISSUE $PHASE5_ISSUE $PHASE6_ISSUE $PHASE7_ISSUE $PHASE8_ISSUE"
+
+gh issue edit "$PARENT_NUM" --repo Shopify/developer-tools-team --body-file /tmp/claude/parent-body.md
 
 # Verify no checkboxes remain and all children are listed
-BODY=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: <PARENT_NUM>) { body } } }' --jq '.data.repository.issue.body')
+BODY=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$PARENT_NUM"') { body } } }' --jq '.data.repository.issue.body')
 
 if echo "$BODY" | grep -q "\- \[ \]"; then
   echo "✗ FAILED: Body still contains checkboxes"
@@ -586,11 +672,11 @@ echo "✓ Parent body updated with all children (no checkboxes)"
 # Checkpoint 3 Verification - Run after all child issues created
 set -e
 
-PARENT_NUM="<PARENT_NUM>"  # Replace with actual parent issue number
-EXPECTED_CHILDREN="<ISSUE1> <ISSUE2> ..."  # Space-separated list
+PARENT_NUM=$(cat /tmp/claude/parent_num.txt)
+EXPECTED_CHILDREN="<ISSUE1> <ISSUE2> ..."  # Space-separated list of ALL child issue numbers
 
 echo "=== 1. Verify sub-issues linked to parent ==="
-LINKED=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '$PARENT_NUM') { subIssues(first: 50) { nodes { number title } } } } }' --jq '.data.repository.issue.subIssues.nodes[] | "#\(.number): \(.title)"')
+LINKED=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$PARENT_NUM"') { subIssues(first: 50) { nodes { number title } } } } }' --jq '.data.repository.issue.subIssues.nodes[] | "#\(.number): \(.title)"')
 echo "$LINKED"
 
 for CHILD in $EXPECTED_CHILDREN; do
@@ -605,7 +691,7 @@ done
 echo ""
 echo "=== 2. Verify Hydrogen field set on all children ==="
 for CHILD in $EXPECTED_CHILDREN; do
-  VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '$CHILD') { projectItems(first: 5) { nodes { fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+  VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$CHILD"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
   if [ "$VALUE" = "Hydrogen" ]; then
     echo "  ✓ #$CHILD: Project = Hydrogen"
   else
@@ -615,8 +701,20 @@ for CHILD in $EXPECTED_CHILDREN; do
 done
 
 echo ""
-echo "=== 3. Verify parent body contains children ==="
-BODY=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '$PARENT_NUM') { body } } }' --jq '.data.repository.issue.body')
+echo "=== 3. Verify Status field set on all issues (parent + children) ==="
+for ISSUE in $PARENT_NUM $EXPECTED_CHILDREN; do
+  VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+  if [ "$VALUE" = "Todo (prioritized)" ]; then
+    echo "  ✓ #$ISSUE: Status = Todo (prioritized)"
+  else
+    echo "  ✗ #$ISSUE: Status = '$VALUE' (expected: Todo (prioritized)) - FAILURE"
+    exit 1
+  fi
+done
+
+echo ""
+echo "=== 4. Verify parent body contains children ==="
+BODY=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$PARENT_NUM"') { body } } }' --jq '.data.repository.issue.body')
 for CHILD in $EXPECTED_CHILDREN; do
   if echo "$BODY" | grep -q "#$CHILD"; then
     echo "  ✓ #$CHILD in parent body"
@@ -633,6 +731,7 @@ echo "=== ALL CHECKS PASSED ==="
 **Expected output:**
 - All sub-issues show as linked
 - All children show "Project = Hydrogen"
+- All issues (parent + children) show "Status = Todo (prioritized)"
 - All children appear in parent body
 - Script exits with 0 (success)
 
@@ -640,14 +739,9 @@ echo "=== ALL CHECKS PASSED ==="
 
 ### Step 9: Create PR
 
-```bash
-git add -A
-git commit -m "[<VERSION>] Update Storefront API and Customer Account API"
-git push -u origin <BRANCH>
+Use the **`Write` tool** to create `/tmp/claude/pr-body.md` with this content (substituting `<VERSION>` and the parent issue link):
 
-gh pr create --repo Shopify/hydrogen --draft \
-  --title "[<VERSION>] Storefront & Customer Account API version update" \
-  --body "$(cat <<'EOF'
+```
 ## Summary
 Updated Storefront API and Customer Account API to version <VERSION>.
 
@@ -661,8 +755,18 @@ Updated Storefront API and Customer Account API to version <VERSION>.
 
 ## Related
 - Parent tracking issue: <link>
-EOF
-)"
+```
+
+Then:
+
+```bash
+git add -A
+git commit -m "[<VERSION>] Update Storefront API and Customer Account API"
+git push -u origin <BRANCH>
+
+gh pr create --repo Shopify/hydrogen --draft \
+  --title "[<VERSION>] Storefront & Customer Account API version update" \
+  --body-file /tmp/claude/pr-body.md
 ```
 
 ---
@@ -715,17 +819,37 @@ These values are stable and verified:
 | Constant | Value | Notes |
 |----------|-------|-------|
 | Project Number | `4613` | Online Store Developer Platforms |
-| Project Field ID | `PVTSSF_lADNH5XOABDyGM4Av2Pl` | "Project" single-select field |
-| Hydrogen Option ID | `ad0bd2a6` | "Hydrogen" option value |
+| Project ID | `PVT_kwDNH5XOABDyGA` | GraphQL node ID for the project |
+| "Project" Field ID | `PVTSSF_lADNH5XOABDyGM4Av2Pl` | Single-select field for team assignment |
+| Hydrogen Option ID | `ad0bd2a6` | "Hydrogen" value in the Project field |
+| "Status" Field ID | `PVTSSF_lADNH5XOABDyGM4AnCva` | Single-select field for workflow status |
+| "Todo (prioritized)" Option ID | `f75ad846` | Default status for all new issues |
 
 **Verification (run if values seem outdated):**
 ```bash
-# Verify project exists
-gh project field-list 4613 --owner Shopify | grep "Project"
+# Verify project and list all fields
+gh project field-list 4613 --owner Shopify
 
 # Verify Hydrogen option exists
 gh api graphql -f query='query { node(id: "PVTSSF_lADNH5XOABDyGM4Av2Pl") { ... on ProjectV2SingleSelectField { options { id name } } } }' | grep -i hydrogen
+
+# Verify "Todo (prioritized)" option exists
+gh api graphql -f query='query { node(id: "PVTSSF_lADNH5XOABDyGM4AnCva") { ... on ProjectV2SingleSelectField { options { id name } } } }' | grep -i todo
 ```
+
+---
+
+## Success Criteria Checklist
+
+Before considering this skill run complete, verify all of the following:
+
+- [ ] Parent issue created in `Shopify/developer-tools-team`
+- [ ] All child issues have the `child` GitHub label
+- [ ] All child issues listed in parent body (unordered lists, no checkboxes)
+- [ ] All child issues linked as actual GitHub sub-issues of the parent
+- [ ] ALL issues (parent + children) added to "Online Store Developer Platforms" project (#4613)
+- [ ] ALL issues have "Project" field = "Hydrogen" in that project
+- [ ] ALL issues have "Status" field = "Todo (prioritized)" in that project
 
 ---
 
@@ -772,3 +896,29 @@ Project field mutations require the Item ID because fields are project-scoped, n
 - Retrieve later: `PARENT_NUM=$(cat /tmp/claude/parent_num.txt)`
 
 **Standard recovery file pattern:** `/tmp/claude/<variable_name>.txt`
+
+### 6. HEREDOC Is Blocked in the Claude Code Sandbox
+**Problem:** Shell HEREDOC syntax (`cat <<'EOF'` or `cat > file <<'EOF'`) is blocked by the Claude Code sandbox security policy. Any script using HEREDOC will silently fail or error.
+
+**Solution:** Use the `Write` tool to create body files, then pass them via `--body-file`. This applies everywhere a body is needed:
+- Parent issue body → Write to `/tmp/claude/parent-body-initial.md`, pass via `--body-file`
+- Child issue bodies → Write to `/tmp/claude/child-issue.md`, pass via `--body-file`
+- Phase 3-8 child bodies → same pattern
+- Parent body update → Write to `/tmp/claude/parent-body.md`, pass via `--body-file`
+- PR body → Write to `/tmp/claude/pr-body.md`, pass via `--body-file`
+
+### 7. GraphQL Variable Interpolation in Shell
+**Problem:** When shell variables need to expand inside a GraphQL query string that uses single-quote boundaries, naive approaches either fail to expand or break the quote structure.
+
+**Solution:** Use the `'"$VAR"'` pattern to end the single-quote string, expand the variable (double-quoted for safety), and resume the single-quote string:
+
+```bash
+# Wrong - $VAR won't expand inside single quotes:
+gh api graphql -f query='mutation { ... itemId: "$ITEM_ID" ... }'
+
+# Correct - break out of single quotes to expand the variable:
+gh api graphql -f query='mutation { ... itemId: "'"$ITEM_ID"'" ... }'
+#                                              ↑end'  expand  "start'↑
+```
+
+The pattern `'"$VAR"'` means: end single-quote, double-quote-wrapped variable expansion, start single-quote again.
