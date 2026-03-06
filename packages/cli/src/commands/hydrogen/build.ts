@@ -457,16 +457,15 @@ async function runNativeBuild({
     forceClientSourcemap ??
     (process.env.NODE_ENV !== 'production' && sourcemap);
 
-  const buildArgs = [
-    'react-router',
-    'build',
-    '--mode',
-    mode,
-    '--sourcemapServer',
-    String(sourcemap),
-    '--sourcemapClient',
-    String(clientSourcemap),
-  ];
+  const buildArgs = ['react-router', 'build', '--mode', mode];
+
+  if (sourcemap) {
+    buildArgs.push('--sourcemapServer');
+  }
+
+  if (clientSourcemap) {
+    buildArgs.push('--sourcemapClient');
+  }
 
   await onServerBuildStart?.();
 
