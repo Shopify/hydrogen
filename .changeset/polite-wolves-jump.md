@@ -3,4 +3,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Add aria-label to ProductPrice for accessibility
+Add aria-label to ProductPrice for accessibility and recipe testing
