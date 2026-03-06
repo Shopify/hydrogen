@@ -9,13 +9,16 @@ export class MarketsUtil {
   constructor(private page: Page) {}
 
   async assertLocaleInUrl(localePrefix: string) {
-    const url = this.page.url();
-    expect(url).toContain(localePrefix);
+    const pathname = new URL(this.page.url()).pathname;
+    expect(pathname.toLowerCase()).toMatch(
+      new RegExp(`^${localePrefix.toLowerCase()}(/|$)`),
+    );
   }
 
   async assertNoLocalePrefix() {
     const pathname = new URL(this.page.url()).pathname;
-    expect(pathname).toBe('/');
+    // Checks that the path doesn't start with a locale prefix (e.g., /FR-CA/)
+    expect(pathname).not.toMatch(/^\/[A-Z]{2}-[A-Z]{2}(\/|$)/);
   }
 
   async assertPriceFormat(priceLocator: Locator, expectedFormat: RegExp) {
