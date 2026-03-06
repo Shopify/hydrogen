@@ -1,15 +1,14 @@
-index 422a2eb9..79bacfbe 100644
+index 99730d41..e98f2793 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
-@@ -3,6 +3,7 @@ import {
-   useLoaderData,
- } from 'react-router';
+@@ -1,5 +1,6 @@
+ import {redirect, useLoaderData} from 'react-router';
  import type {Route} from './+types/products.$handle';
 +import type {SellingPlanFragment} from 'storefrontapi.generated';
  import {
    getSelectedProductOptions,
    Analytics,
-@@ -16,6 +17,12 @@ import {ProductImage} from '~/components/ProductImage';
+@@ -13,6 +14,12 @@ import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
  
@@ -22,7 +21,7 @@ index 422a2eb9..79bacfbe 100644
  export const meta: Route.MetaFunction = ({data}) => {
    return [
      {title: `Hydrogen | ${data?.product.title ?? ''}`},
-@@ -66,8 +73,34 @@ async function loadCriticalData({
+@@ -59,8 +66,34 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
    // The API handle might be localized, so redirect to the localized handle
    redirectIfHandleIsLocalized(request, {handle, data: product});
  
@@ -57,7 +56,7 @@ index 422a2eb9..79bacfbe 100644
    };
  }
  
-@@ -84,7 +117,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
+@@ -77,7 +110,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
  }
  
  export default function Product() {
@@ -66,7 +65,7 @@ index 422a2eb9..79bacfbe 100644
  
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
-@@ -102,7 +135,7 @@ export default function Product() {
+@@ -95,7 +128,7 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
  
@@ -75,7 +74,7 @@ index 422a2eb9..79bacfbe 100644
  
    return (
      <div className="product">
-@@ -112,11 +145,15 @@ export default function Product() {
+@@ -105,11 +138,15 @@ export default function Product() {
          <ProductPrice
            price={selectedVariant?.price}
            compareAtPrice={selectedVariant?.compareAtPrice}
@@ -91,7 +90,7 @@ index 422a2eb9..79bacfbe 100644
          />
          <br />
          <br />
-@@ -180,9 +217,83 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+@@ -173,9 +210,83 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
        amount
        currencyCode
      }
@@ -175,7 +174,7 @@ index 422a2eb9..79bacfbe 100644
  const PRODUCT_FRAGMENT = `#graphql
    fragment Product on Product {
      id
-@@ -210,6 +321,11 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -203,6 +314,11 @@ const PRODUCT_FRAGMENT = `#graphql
          }
        }
      }
@@ -187,7 +186,7 @@ index 422a2eb9..79bacfbe 100644
      selectedOrFirstAvailableVariant(selectedOptions: $selectedOptions, ignoreUnknownOptions: true, caseInsensitiveMatch: true) {
        ...ProductVariant
      }
-@@ -221,6 +337,7 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -214,6 +330,7 @@ const PRODUCT_FRAGMENT = `#graphql
        title
      }
    }
