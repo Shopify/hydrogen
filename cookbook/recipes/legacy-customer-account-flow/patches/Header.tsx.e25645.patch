@@ -1,4 +1,4 @@
-index 45b620b4..f55c4143 100644
+index 045a7592..05b871c3 100644
 --- a/templates/skeleton/app/components/Header.tsx
 +++ b/templates/skeleton/app/components/Header.tsx
 @@ -11,7 +11,8 @@ import {useAside} from '~/components/Aside';

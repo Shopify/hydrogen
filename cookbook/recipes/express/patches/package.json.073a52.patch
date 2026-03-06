@@ -1,8 +1,8 @@
-index 472b4357..63876517 100644
+index e971ba7e..ae934ffd 100644
 --- a/templates/skeleton/package.json
 +++ b/templates/skeleton/package.json
 @@ -5,59 +5,52 @@
-   "version": "2026.1.0",
+   "version": "2026.1.1",
    "type": "module",
    "scripts": {
 -    "build": "shopify hydrogen build --codegen",
@@ -21,7 +21,7 @@ index 472b4357..63876517 100644
 +    "@react-router/express": "7.12.0",
 +    "@react-router/node": "7.12.0",
 +    "@remix-run/eslint-config": "^2.16.1",
-     "@shopify/hydrogen": "2026.1.0",
+     "@shopify/hydrogen": "2026.1.1",
 +    "compression": "^1.7.4",
 +    "cross-env": "^7.0.3",
 +    "express": "^4.19.2",
@@ -29,8 +29,8 @@ index 472b4357..63876517 100644
      "graphql-tag": "^2.12.6",
      "isbot": "^5.1.22",
 +    "morgan": "^1.10.0",
-     "react": "18.3.1",
-     "react-dom": "18.3.1",
+     "react": "^18.3.1",
+     "react-dom": "^18.3.1",
      "react-router": "7.12.0",
      "react-router-dom": "7.12.0"
    },
@@ -42,8 +42,8 @@ index 472b4357..63876517 100644
      "@react-router/dev": "7.12.0",
      "@react-router/fs-routes": "7.12.0",
      "@shopify/cli": "3.85.4",
-     "@shopify/hydrogen-codegen": "^0.3.3",
--    "@shopify/mini-oxygen": "^4.0.0",
+     "@shopify/hydrogen-codegen": "0.3.3",
+-    "@shopify/mini-oxygen": "4.0.1",
 -    "@shopify/oxygen-workers-types": "^4.1.6",
 -    "@shopify/prettier-config": "^1.1.2",
 -    "@total-typescript/ts-reset": "^0.6.1",
@@ -51,8 +51,8 @@ index 472b4357..63876517 100644
 +    "@types/compression": "^1.7.2",
 +    "@types/express": "^4.17.17",
 +    "@types/morgan": "^1.9.4",
-     "@types/react": "^18.2.22",
-     "@types/react-dom": "^18.2.7",
+     "@types/react": "^18.3.28",
+     "@types/react-dom": "^18.3.7",
 -    "@typescript-eslint/eslint-plugin": "^8.21.0",
 -    "@typescript-eslint/parser": "^8.21.0",
 -    "eslint": "^9.18.0",

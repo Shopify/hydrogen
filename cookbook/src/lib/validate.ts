@@ -424,6 +424,9 @@ export function validateRecipe(params: {
       return false;
     }
 
+    console.log('- 🔄 Resolving catalog: and workspace: protocol references…');
+    resolveCatalogProtocol();
+
     console.log(`- 🧑‍🍳 Applying recipe '${recipeTitle}'`);
     applyRecipe({
       recipeTitle,
@@ -458,9 +461,6 @@ export function validateRecipe(params: {
       // Ignore errors from find command (e.g., if template directory doesn't exist).
       // This is an optional safety check; subsequent validation commands (typecheck, build) will catch any real issues.
     }
-
-    console.log('- 🔄 Resolving catalog: and workspace: protocol references…');
-    resolveCatalogProtocol();
 
     const validationCommands: Command[] = [
       ...(hydrogenPackagesVersion != null
