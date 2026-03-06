@@ -64,11 +64,16 @@ test.describe('Combined Listings Recipe', () => {
     test('variant selection updates URL', async ({page}) => {
       const initialUrl = page.url();
 
-      const variantLinks = page.getByRole('main').getByRole('link');
-      const firstVariantLink = variantLinks.first();
-      await expect(firstVariantLink).toBeVisible();
+      const variantOptionLinks = page.locator(
+        'main a[href^="/products/"][href*="?"]',
+      );
+      const variantOptionCount = await variantOptionLinks.count();
+      expect(variantOptionCount).toBeGreaterThan(0);
 
-      await firstVariantLink.click();
+      const firstVariantOptionLink = variantOptionLinks.first();
+      await expect(firstVariantOptionLink).toBeVisible();
+
+      await firstVariantOptionLink.click();
 
       await expect.poll(() => page.url()).not.toBe(initialUrl);
     });
