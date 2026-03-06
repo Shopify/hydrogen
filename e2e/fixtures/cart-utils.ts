@@ -5,6 +5,43 @@ const CART_ID_PREFIX = 'gid://shopify/Cart/';
 export class CartUtil {
   constructor(private page: Page) {}
 
+  async getOptionSelectors(lineItem: Locator) {
+    const optionSelectors = lineItem.getByRole('combobox');
+    await expect(optionSelectors.first()).toBeVisible();
+    return optionSelectors;
+  }
+
+  async selectDifferentOption(optionSelect: Locator) {
+    const optionName = await optionSelect.getAttribute('name');
+    expect(optionName).toBeTruthy();
+
+    const initialValue = await optionSelect.inputValue();
+    const enabledOptionValues = await optionSelect.evaluate((element) => {
+      const selectElement = element as HTMLSelectElement;
+      return Array.from(selectElement.options)
+        .filter((option) => !option.disabled)
+        .map((option) => option.value);
+    });
+
+    expect(enabledOptionValues.length).toBeGreaterThan(1);
+
+    const nextValue = enabledOptionValues.find(
+      (value) => value !== initialValue,
+    );
+    expect(nextValue).toBeTruthy();
+
+    if (!optionName || !nextValue) {
+      throw new Error(
+        'Expected cart line option select with at least two values',
+      );
+    }
+
+    await optionSelect.selectOption(nextValue);
+    await expect.poll(async () => optionSelect.inputValue()).toBe(nextValue);
+
+    return {optionName, nextValue};
+  }
+
   async addItem(productName: string) {
     await expect(
       this.page.getByRole('heading', {level: 1, name: productName}),
