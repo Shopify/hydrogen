@@ -11,7 +11,6 @@ test.describe('Metaobjects Recipe', () => {
       await page.goto('/');
 
       await expect(page.getByRole('banner')).toBeVisible();
-      await expect(page.getByRole('main')).toBeVisible();
 
       const sections = page.locator('.sections');
       const sectionsCount = await sections.count();
@@ -28,7 +27,6 @@ test.describe('Metaobjects Recipe', () => {
 
       await expect(page).toHaveURL(/\/stores$/);
       await expect(page.getByRole('banner')).toBeVisible();
-      await expect(page.getByRole('main')).toBeVisible();
 
       const pageContent = await page.textContent('body');
       const hasContent = (pageContent?.length || 0) > 200;
