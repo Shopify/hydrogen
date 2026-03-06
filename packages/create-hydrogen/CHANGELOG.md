@@ -1,5 +1,11 @@
 # @shopify/create-hydrogen
 
+## 5.0.30
+
+### Patch Changes
+
+- Improve gift card accessibility in Skeleton template ([#3518](https://github.com/Shopify/hydrogen/pull/3518)) by [@itsjustriley](https://github.com/itsjustriley)
+
 ## 5.0.29
 
 ### Patch Changes

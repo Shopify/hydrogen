@@ -1,5 +1,20 @@
 # skeleton
 
+## 2026.1.2
+
+### Patch Changes
+
+- Improve gift card accessibility in Skeleton template ([#3518](https://github.com/Shopify/hydrogen/pull/3518)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Updated loaders that used `customerAccount.handleAuthStatus()` to now await it. ([#3523](https://github.com/Shopify/hydrogen/pull/3523)) by [@fredericoo](https://github.com/fredericoo)
+
+  ### Migration
+
+  If you call `handleAuthStatus()` in your own loaders, update those callsites to use `await`.
+
+- Updated dependencies [[`16b0e7baca0dfd1fb330d12dac924c7593d169a8`](https://github.com/Shopify/hydrogen/commit/16b0e7baca0dfd1fb330d12dac924c7593d169a8), [`1c19b87782818dbdb4252754d2d44eb9a44fe50f`](https://github.com/Shopify/hydrogen/commit/1c19b87782818dbdb4252754d2d44eb9a44fe50f), [`029fa2d0e2297f67b37c650ba8e875ee5dee81b3`](https://github.com/Shopify/hydrogen/commit/029fa2d0e2297f67b37c650ba8e875ee5dee81b3)]:
+  - @shopify/hydrogen@2026.1.2
+
 ## 2026.1.1
 
 ### Patch Changes
