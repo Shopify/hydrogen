@@ -12,8 +12,9 @@ setRecipeFixture({
  *
  * Tests cover:
  * - Product option selectors display in cart line items
- * - Changing variant options updates the cart automatically
- * - Cart maintains correct quantities after variant changes
+ * - Variant changes update product link URLs
+ * - Cart maintains single line item when variant changes
+ * - Updates happen without page reload
  */
 
 const KNOWN_PRODUCT_WITH_VARIANTS = {
@@ -63,12 +64,15 @@ test.describe('Custom Cart Method Recipe', () => {
       expect(selectCount).toBeGreaterThan(0);
     });
 
-    test('allows changing product variant via dropdown selector', async ({
+    test('changes product variant and updates cart line item', async ({
       page,
     }) => {
       const cart = new CartUtil(page);
       const lineItems = cart.getLineItems();
       const firstLineItem = lineItems.first();
+
+      const productLink = firstLineItem.getByRole('link').first();
+      const initialUrl = await productLink.getAttribute('href');
 
       const optionSelect = firstLineItem.locator('select').first();
       await expect(optionSelect).toBeVisible();
@@ -89,10 +93,16 @@ test.describe('Custom Cart Method Recipe', () => {
             return currentValue !== initialValue;
           })
           .toBeTruthy();
+
+        const updatedUrl = await productLink.getAttribute('href');
+        expect(updatedUrl).not.toBe(initialUrl);
+        expect(updatedUrl).toContain(differentOption);
       }
     });
 
-    test('maintains cart quantity after variant change', async ({page}) => {
+    test('maintains single line item when changing variants', async ({
+      page,
+    }) => {
       const cart = new CartUtil(page);
       const lineItems = cart.getLineItems();
       const firstLineItem = lineItems.first();
@@ -111,12 +121,45 @@ test.describe('Custom Cart Method Recipe', () => {
       const options = await optionSelect.locator('option').allTextContents();
 
       if (options.length > 1) {
+        const initialValue = await optionSelect.inputValue();
         await optionSelect.selectOption(options[1]);
 
-        await expect(increaseButton).toBeEnabled();
+        await expect
+          .poll(async () => {
+            const currentValue = await optionSelect.inputValue();
+            return currentValue !== initialValue;
+          })
+          .toBeTruthy();
 
         const finalLineItems = cart.getLineItems();
         await expect(finalLineItems).toHaveCount(1);
+      }
+    });
+
+    test('updates without page reload when variant changes', async ({page}) => {
+      const cart = new CartUtil(page);
+      const lineItems = cart.getLineItems();
+      const firstLineItem = lineItems.first();
+
+      const cartDialog = page.getByRole('dialog', {name: 'Cart'});
+      await expect(cartDialog).toBeVisible();
+
+      const optionSelect = firstLineItem.locator('select').first();
+      const options = await optionSelect.locator('option').allTextContents();
+
+      if (options.length > 1) {
+        const initialValue = await optionSelect.inputValue();
+
+        await optionSelect.selectOption(options[1]);
+
+        await expect
+          .poll(async () => {
+            const currentValue = await optionSelect.inputValue();
+            return currentValue !== initialValue;
+          })
+          .toBeTruthy();
+
+        await expect(cartDialog).toBeVisible();
       }
     });
   });
