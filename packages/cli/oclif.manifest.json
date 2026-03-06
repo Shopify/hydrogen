@@ -79,6 +79,13 @@
           "name": "force-client-sourcemap",
           "allowNo": false,
           "type": "boolean"
+        },
+        "native-build": {
+          "description": "Use `react-router build` instead of the Hydrogen Vite build pipeline.",
+          "env": "SHOPIFY_HYDROGEN_FLAG_NATIVE_BUILD",
+          "name": "native-build",
+          "allowNo": false,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
