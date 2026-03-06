@@ -15,8 +15,6 @@ import {promisify} from 'node:util';
 import {parse as parseYaml} from 'yaml';
 
 const execAsync = promisify(exec);
-let workspacePackageMapPromise: Promise<Map<string, string>> | null = null;
-let workspaceConfigPromise: Promise<WorkspaceConfig> | null = null;
 
 type WorkspaceConfig = {
   packages: string[];
@@ -222,39 +220,29 @@ const resolveWorkspaceProtocols = async (
 const getWorkspaceConfig = async (
   repoRoot: string,
 ): Promise<WorkspaceConfig> => {
-  if (workspaceConfigPromise) {
-    return workspaceConfigPromise;
-  }
+  const workspacePath = path.join(repoRoot, 'pnpm-workspace.yaml');
+  const workspaceContent = await readFile(workspacePath, 'utf-8');
+  const parsed = parseYaml(workspaceContent) as {
+    packages?: unknown;
+    catalog?: unknown;
+  };
 
-  workspaceConfigPromise = (async () => {
-    const workspacePath = path.join(repoRoot, 'pnpm-workspace.yaml');
-    const workspaceContent = await readFile(workspacePath, 'utf-8');
-    const parsed = parseYaml(workspaceContent) as {
-      packages?: unknown;
-      catalog?: unknown;
-    };
+  const packages = Array.isArray(parsed.packages)
+    ? parsed.packages.filter(
+        (value): value is string => typeof value === 'string',
+      )
+    : [];
 
-    const packages = Array.isArray(parsed.packages)
-      ? parsed.packages.filter(
-          (value): value is string => typeof value === 'string',
-        )
-      : [];
+  const catalogEntries =
+    parsed.catalog && typeof parsed.catalog === 'object' ? parsed.catalog : {};
+  const catalog = Object.fromEntries(
+    Object.entries(catalogEntries).filter(
+      (entry): entry is [string, string] =>
+        typeof entry[0] === 'string' && typeof entry[1] === 'string',
+    ),
+  );
 
-    const catalogEntries =
-      parsed.catalog && typeof parsed.catalog === 'object'
-        ? parsed.catalog
-        : {};
-    const catalog = Object.fromEntries(
-      Object.entries(catalogEntries).filter(
-        (entry): entry is [string, string] =>
-          typeof entry[0] === 'string' && typeof entry[1] === 'string',
-      ),
-    );
-
-    return {packages, catalog};
-  })();
-
-  return workspaceConfigPromise;
+  return {packages, catalog};
 };
 
 const resolveCatalogVersion = (
@@ -275,46 +263,34 @@ const resolveCatalogVersion = (
 const getWorkspacePackageMap = async (
   repoRoot: string,
 ): Promise<Map<string, string>> => {
-  if (workspacePackageMapPromise) {
-    return workspacePackageMapPromise;
-  }
+  const {packages: packagePaths} = await getWorkspaceConfig(repoRoot);
+  const packageMap = new Map<string, string>();
 
-  workspacePackageMapPromise = (async () => {
-    const {packages: packagePaths} = await getWorkspaceConfig(repoRoot);
-    const packageMap = new Map<string, string>();
+  await Promise.all(
+    packagePaths.map(async (packagePath) => {
+      const packageJsonPath = path.join(repoRoot, packagePath, 'package.json');
 
-    await Promise.all(
-      packagePaths.map(async (packagePath) => {
-        const packageJsonPath = path.join(
-          repoRoot,
-          packagePath,
-          'package.json',
-        );
+      try {
+        await access(packageJsonPath);
+      } catch {
+        return;
+      }
 
-        try {
-          await access(packageJsonPath);
-        } catch {
-          return;
-        }
+      const packageJson = JSON.parse(
+        await readFile(packageJsonPath, 'utf-8'),
+      ) as {
+        name?: string;
+      };
 
-        const packageJson = JSON.parse(
-          await readFile(packageJsonPath, 'utf-8'),
-        ) as {
-          name?: string;
-        };
+      if (!packageJson.name) {
+        return;
+      }
 
-        if (!packageJson.name) {
-          return;
-        }
+      packageMap.set(packageJson.name, path.join(repoRoot, packagePath));
+    }),
+  );
 
-        packageMap.set(packageJson.name, path.join(repoRoot, packagePath));
-      }),
-    );
-
-    return packageMap;
-  })();
-
-  return workspacePackageMapPromise;
+  return packageMap;
 };
 
 /**
