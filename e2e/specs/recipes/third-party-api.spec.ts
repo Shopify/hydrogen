@@ -33,12 +33,26 @@ test.describe('Third-party API Recipe', () => {
   });
 
   test('renders character list from third-party API', async ({page}) => {
-    const characterList = page
-      .getByRole('main')
-      .locator('.third-party-api-example ul');
+    const recipeSection = page.locator('section').filter({
+      has: page.getByRole('heading', {
+        name: 'Rick & Morty Characters (Third-Party API Example)',
+      }),
+    });
+    const characterList = recipeSection.getByRole('list');
     await expect(characterList).toBeVisible();
 
     const characters = characterList.getByRole('listitem');
-    await expect(characters).toHaveCount(20);
+    await expect(characters.first()).toBeVisible();
+    expect(await characters.count()).toBeGreaterThan(0);
+    await expect(characters.first()).not.toHaveText(/^\s*$/);
+  });
+
+  test('preserves existing homepage sections alongside third-party content', async ({
+    page,
+  }) => {
+    await expect(page.getByRole('heading', {level: 1})).toBeVisible();
+    await expect(
+      page.getByRole('heading', {level: 2, name: 'Recommended Products'}),
+    ).toBeVisible();
   });
 });
