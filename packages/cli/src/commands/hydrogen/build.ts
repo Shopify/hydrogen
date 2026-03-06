@@ -33,6 +33,8 @@ import {importVite} from '../../lib/import-utils.js';
 import {deferPromise, type DeferredPromise} from '../../lib/defer.js';
 import {setupResourceCleanup} from '../../lib/resource-cleanup.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {spawnSync} from 'node:child_process';
+import {readdir} from 'node:fs/promises';
 
 export default class Build extends Command {
   static descriptionWithMarkdown = `Builds a Hydrogen storefront for production. The client and app worker files are compiled to a \`/dist\` folder in your Hydrogen project directory.`;
@@ -59,6 +61,11 @@ export default class Build extends Command {
       description:
         'Client sourcemapping is avoided by default because it makes backend code visible in the browser. Use this flag to force enabling it.',
       env: 'SHOPIFY_HYDROGEN_FLAG_FORCE_CLIENT_SOURCEMAP',
+    }),
+    'native-build': Flags.boolean({
+      description:
+        'Use `react-router build` instead of the Hydrogen Vite build pipeline.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_NATIVE_BUILD',
     }),
   };
 
@@ -108,6 +115,7 @@ type RunBuildOptions = {
   bundleStats?: boolean;
   lockfileCheck?: boolean;
   watch?: boolean;
+  nativeBuild?: boolean;
   onServerBuildStart?: () => void | Promise<void>;
   onServerBuildFinish?: () => void | Promise<void>;
 };
@@ -124,6 +132,7 @@ export async function runBuild({
   assetPath,
   bundleStats = !isCI(),
   watch = false,
+  nativeBuild = false,
   onServerBuildStart,
   onServerBuildFinish,
 }: RunBuildOptions) {
@@ -139,140 +148,181 @@ export async function runBuild({
     await checkLockfileStatus(root, isCI());
   }
 
-  const [
-    vite,
-    {userViteConfig, remixConfig, clientOutDir, serverOutDir, serverOutFile},
-  ] = await Promise.all([
-    // Avoid static imports because this file is imported by `deploy` command,
-    // which must have a hard dependency on 'vite'.
-    importVite(root),
-    getViteConfig(root, ssrEntry),
-  ]);
-
-  const customLogger = vite.createLogger(watch ? 'warn' : undefined);
-  if (process.env.SHOPIFY_UNIT_TEST) {
-    // Make logs from Vite visible in tests
-    customLogger.info = (msg) => collectLog('info', msg);
-    customLogger.warn = (msg) => collectLog('warn', msg);
-    customLogger.error = (msg) => collectLog('error', msg);
-  }
+  const {
+    userViteConfig,
+    remixConfig,
+    clientOutDir,
+    serverOutDir,
+    serverOutFile,
+  } = await getViteConfig(root, ssrEntry);
 
   const serverMinify = userViteConfig.build?.minify ?? true;
-  const commonConfig = {
-    root,
-    mode: process.env.NODE_ENV,
-    base: assetPath,
-    customLogger,
-  };
 
-  let clientBuildStatus: DeferredPromise;
+  if (nativeBuild && watch) {
+    throw new AbortError(
+      'The `--watch` flag is not supported with `--native-build`.',
+      'Use `shopify hydrogen dev` for automatic rebuilds.',
+    );
+  }
 
-  // Client build first
-  const clientBuild = await vite.build({
-    ...commonConfig,
-    build: {
-      emptyOutDir: true,
-      copyPublicDir: true,
-      // Disable client sourcemaps in production by default
-      sourcemap:
-        forceClientSourcemap ??
-        (process.env.NODE_ENV !== 'production' && sourcemap),
-      watch: watch ? {} : null,
-    },
-    server: {
-      watch: watch ? {} : null,
-    },
-    plugins: [
-      {
-        name: 'hydrogen:cli:client',
-        buildStart() {
-          clientBuildStatus?.resolve();
-          clientBuildStatus = deferPromise();
-        },
-        buildEnd(error) {
-          if (error) clientBuildStatus.reject(error);
-        },
-        writeBundle() {
-          clientBuildStatus.resolve();
-        },
-        closeWatcher() {
-          // End build process if watcher is closed
-          this.error(new Error('Process exited before client build finished.'));
-        },
-      },
-    ],
-  });
+  if (nativeBuild && ssrEntry) {
+    throw new AbortError(
+      'The `--entry` flag is not supported with `--native-build`.',
+      'Use the React Router config file to customize your server entrypoint.',
+    );
+  }
 
-  console.log('');
-
-  let serverBuildStatus: DeferredPromise;
-
-  // Server/SSR build
-  const serverBuild = await vite.build({
-    ...commonConfig,
-    build: {
+  if (nativeBuild) {
+    await runNativeBuild({
+      root,
       sourcemap,
-      ssr: ssrEntry ?? true,
-      emptyOutDir: false,
-      copyPublicDir: false,
-      minify: serverMinify,
-      // Ensure the server rebuild start after the client one
-      watch: watch ? {buildDelay: 100} : null,
-    },
-    server: {
-      watch: watch ? {} : null,
-    },
-    plugins: [
-      {
-        name: 'hydrogen:cli:server',
-        async buildStart() {
-          // Wait for the client build to finish in watch mode
-          // before starting the server build to access the
-          // Remix manifest from file disk.
-          await clientBuildStatus.promise;
+      forceClientSourcemap,
+      mode: process.env.NODE_ENV,
+      onServerBuildStart,
+      onServerBuildFinish,
+    });
+  }
 
-          // Keep track of server builds to wait for them to finish
-          // before cleaning up resources in watch mode. Otherwise,
-          // it might complain about missing files and loop infinitely.
-          serverBuildStatus?.resolve();
-          serverBuildStatus = deferPromise();
-          await onServerBuildStart?.();
-        },
-        async writeBundle() {
-          if (serverBuildStatus?.state !== 'rejected') {
-            await onServerBuildFinish?.();
-          }
+  const vite = nativeBuild ? undefined : await importVite(root);
 
-          serverBuildStatus.resolve();
-        },
-        closeWatcher() {
-          // End build process if watcher is closed
-          this.error(new Error('Process exited before server build finished.'));
-        },
+  let clientBuild: {close: () => Promise<void>} | undefined;
+  let serverBuild: {close: () => Promise<void>} | undefined;
+  let clientBuildStatus: DeferredPromise | undefined;
+  let serverBuildStatus: DeferredPromise | undefined;
+
+  if (vite) {
+    const customLogger = vite.createLogger(watch ? 'warn' : undefined);
+    if (process.env.SHOPIFY_UNIT_TEST) {
+      // Make logs from Vite visible in tests
+      customLogger.info = (msg) => collectLog('info', msg);
+      customLogger.warn = (msg) => collectLog('warn', msg);
+      customLogger.error = (msg) => collectLog('error', msg);
+    }
+
+    const commonConfig = {
+      root,
+      mode: process.env.NODE_ENV,
+      base: assetPath,
+      customLogger,
+    };
+
+    // Client build first
+    const maybeClientBuild = await vite.build({
+      ...commonConfig,
+      build: {
+        emptyOutDir: true,
+        copyPublicDir: true,
+        // Disable client sourcemaps in production by default
+        sourcemap:
+          forceClientSourcemap ??
+          (process.env.NODE_ENV !== 'production' && sourcemap),
+        watch: watch ? {} : null,
       },
-      ...(bundleStats
-        ? [
-            hydrogenBundleAnalyzer({
-              minify: serverMinify
-                ? (code, filepath) =>
-                    vite
-                      .transformWithEsbuild(code, filepath, {
-                        minify: true,
-                        minifyWhitespace: true,
-                        minifySyntax: true,
-                        minifyIdentifiers: true,
-                        sourcemap: false,
-                        treeShaking: false, // Tree-shaking would drop most exports in routes
-                        legalComments: 'none',
-                        target: 'esnext',
-                      })
-                      .then((result) => result.code)
-                : undefined,
-            }),
-          ]
-        : []),
-    ],
-  });
+      server: {
+        watch: watch ? {} : null,
+      },
+      plugins: [
+        {
+          name: 'hydrogen:cli:client',
+          buildStart() {
+            clientBuildStatus?.resolve();
+            clientBuildStatus = deferPromise();
+          },
+          buildEnd(error) {
+            if (error) clientBuildStatus?.reject(error);
+          },
+          writeBundle() {
+            clientBuildStatus?.resolve();
+          },
+          closeWatcher() {
+            // End build process if watcher is closed
+            this.error(
+              new Error('Process exited before client build finished.'),
+            );
+          },
+        },
+      ],
+    });
+
+    if ('close' in maybeClientBuild) {
+      clientBuild = maybeClientBuild;
+    }
+
+    console.log('');
+
+    // Server/SSR build
+    const maybeServerBuild = await vite.build({
+      ...commonConfig,
+      build: {
+        sourcemap,
+        ssr: ssrEntry ?? true,
+        emptyOutDir: false,
+        copyPublicDir: false,
+        minify: serverMinify,
+        // Ensure the server rebuild start after the client one
+        watch: watch ? {buildDelay: 100} : null,
+      },
+      server: {
+        watch: watch ? {} : null,
+      },
+      plugins: [
+        {
+          name: 'hydrogen:cli:server',
+          async buildStart() {
+            // Wait for the client build to finish in watch mode
+            // before starting the server build to access the
+            // Remix manifest from file disk.
+            await clientBuildStatus?.promise;
+
+            // Keep track of server builds to wait for them to finish
+            // before cleaning up resources in watch mode. Otherwise,
+            // it might complain about missing files and loop infinitely.
+            serverBuildStatus?.resolve();
+            serverBuildStatus = deferPromise();
+            await onServerBuildStart?.();
+          },
+          async writeBundle() {
+            if (serverBuildStatus?.state !== 'rejected') {
+              await onServerBuildFinish?.();
+            }
+
+            serverBuildStatus?.resolve();
+          },
+          closeWatcher() {
+            // End build process if watcher is closed
+            this.error(
+              new Error('Process exited before server build finished.'),
+            );
+          },
+        },
+        ...(bundleStats
+          ? [
+              hydrogenBundleAnalyzer({
+                minify: serverMinify
+                  ? (code, filepath) =>
+                      vite
+                        .transformWithEsbuild(code, filepath, {
+                          minify: true,
+                          minifyWhitespace: true,
+                          minifySyntax: true,
+                          minifyIdentifiers: true,
+                          sourcemap: false,
+                          treeShaking: false, // Tree-shaking would drop most exports in routes
+                          legalComments: 'none',
+                          target: 'esnext',
+                        })
+                        .then((result) => result.code)
+                  : undefined,
+              }),
+            ]
+          : []),
+      ],
+    });
+
+    if ('close' in maybeServerBuild) {
+      serverBuild = maybeServerBuild;
+    }
+  }
 
   if (!watch) {
     await Promise.all([
@@ -280,6 +330,16 @@ export async function runBuild({
       removeFile(joinPath(serverOutDir, '.vite')),
       removeFile(joinPath(serverOutDir, 'assets')),
     ]);
+
+    if (nativeBuild) {
+      await cleanupNativeBuildArtifacts({
+        clientOutDir,
+        serverOutDir,
+        clientSourcemap:
+          forceClientSourcemap ??
+          (process.env.NODE_ENV !== 'production' && sourcemap),
+      });
+    }
   }
 
   const codegenOptions = {
@@ -295,7 +355,7 @@ export async function runBuild({
     : undefined;
 
   if (!watch && process.env.NODE_ENV !== 'development') {
-    if (bundleStats) {
+    if (bundleStats && !nativeBuild) {
       const bundleAnalysisPath =
         'file://' + joinPath(serverOutDir, BUNDLE_ANALYZER_HTML_FILE);
 
@@ -306,6 +366,12 @@ export async function runBuild({
           'Complete analysis: ' + bundleAnalysisPath,
           bundleAnalysisPath,
         )}\n\n`,
+      );
+    }
+
+    if (bundleStats && nativeBuild) {
+      outputInfo(
+        'Bundle stats are not currently available with `--native-build`.',
       );
     }
 
@@ -348,8 +414,8 @@ export async function runBuild({
       codegenProcess?.kill('SIGINT');
 
       const promises: Array<Promise<void>> = [];
-      if ('close' in clientBuild) promises.push(clientBuild.close());
-      if ('close' in serverBuild) promises.push(serverBuild.close());
+      if (clientBuild) promises.push(clientBuild.close());
+      if (serverBuild) promises.push(serverBuild.close());
 
       await Promise.allSettled(promises);
 
@@ -367,4 +433,88 @@ export async function runBuild({
       }
     },
   };
+}
+
+type NativeBuildOptions = {
+  root: string;
+  mode: string;
+  sourcemap: boolean;
+  forceClientSourcemap?: boolean;
+  onServerBuildStart?: () => void | Promise<void>;
+  onServerBuildFinish?: () => void | Promise<void>;
+};
+
+async function runNativeBuild({
+  root,
+  mode,
+  sourcemap,
+  forceClientSourcemap,
+  onServerBuildStart,
+  onServerBuildFinish,
+}: NativeBuildOptions) {
+  const packageManager = await getPackageManager(root);
+  const clientSourcemap =
+    forceClientSourcemap ??
+    (process.env.NODE_ENV !== 'production' && sourcemap);
+
+  const buildArgs = [
+    'react-router',
+    'build',
+    '--mode',
+    mode,
+    '--sourcemapServer',
+    String(sourcemap),
+    '--sourcemapClient',
+    String(clientSourcemap),
+  ];
+
+  await onServerBuildStart?.();
+
+  const result = spawnSync('npx', buildArgs, {
+    cwd: root,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  });
+
+  if (result.error || result.status !== 0) {
+    throw new AbortError(
+      'Native build failed while running `react-router build`.',
+      'Fix the build error shown above and try again.',
+    );
+  }
+
+  await onServerBuildFinish?.();
+}
+
+async function cleanupNativeBuildArtifacts({
+  clientOutDir,
+  serverOutDir,
+  clientSourcemap,
+}: {
+  clientOutDir: string;
+  serverOutDir: string;
+  clientSourcemap: boolean;
+}) {
+  const serverFiles = await readdir(serverOutDir).catch(() => []);
+
+  const cleanupPromises = serverFiles
+    .filter(
+      (filename) =>
+        filename === 'metafile.server.json' ||
+        (filename.startsWith('server-') && filename.endsWith('.html')),
+    )
+    .map((filename) => removeFile(joinPath(serverOutDir, filename)));
+
+  if (!clientSourcemap) {
+    const clientAssetDir = joinPath(clientOutDir, 'assets');
+    const clientAssetFiles = await readdir(clientAssetDir).catch(() => []);
+
+    cleanupPromises.push(
+      ...clientAssetFiles
+        .filter((filename) => filename.endsWith('.map'))
+        .map((filename) => removeFile(joinPath(clientAssetDir, filename))),
+    );
+  }
+
+  await Promise.allSettled(cleanupPromises);
 }

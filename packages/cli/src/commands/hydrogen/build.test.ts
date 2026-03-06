@@ -1,10 +1,5 @@
 import '../../lib/onboarding/setup-template.mocks.js';
-import {
-  readFile,
-  fileExists,
-  inTemporaryDirectory,
-  removeFile,
-} from '@shopify/cli-kit/node/fs';
+import {readFile, fileExists, removeFile} from '@shopify/cli-kit/node/fs';
 import {describe, it, expect, vi, beforeAll, afterAll} from 'vitest';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
@@ -13,6 +8,7 @@ import {setupTemplate} from '../../lib/onboarding/index.js';
 import {BUNDLE_ANALYZER_HTML_FILE} from '../../lib/bundle/analyzer.js';
 import path from 'node:path';
 import {mkdirSync} from 'node:fs';
+import {readdir} from 'node:fs/promises';
 
 describe('build', () => {
   const outputMock = mockAndCaptureOutput();
@@ -28,13 +24,7 @@ describe('build', () => {
       `test-project-build-${Date.now()}-${Math.random().toString(36).substring(7)}`,
     );
     mkdirSync(tmpDir);
-  });
 
-  afterAll(async () => {
-    await removeFile(tmpDir);
-  });
-
-  it('builds a Vite project', async () => {
     await setupTemplate({
       path: tmpDir,
       git: true,
@@ -42,7 +32,13 @@ describe('build', () => {
       i18n: 'subfolders',
       installDeps: true,
     });
+  });
 
+  afterAll(async () => {
+    await removeFile(tmpDir);
+  });
+
+  it('builds a Vite project', async () => {
     outputMock.clear();
     vi.stubEnv('NODE_ENV', 'production');
 
@@ -84,4 +80,60 @@ describe('build', () => {
     // Close build result resources.
     await runBuildResult.close();
   }, 60000); // 60 second timeout for build
+
+  it('builds equivalent dist outputs with native build', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+
+    await runBuild({
+      directory: tmpDir,
+      bundleStats: false,
+    });
+    const viteBuildFiles = await listNormalizedDistFiles(tmpDir);
+
+    await runBuild({
+      directory: tmpDir,
+      bundleStats: false,
+      nativeBuild: true,
+    });
+    const nativeBuildFiles = await listNormalizedDistFiles(tmpDir);
+
+    expect(nativeBuildFiles).toEqual(viteBuildFiles);
+    await expect(
+      fileExists(joinPath(tmpDir, 'dist/server/index.js')),
+    ).resolves.toBe(true);
+  }, 60000);
 });
+
+async function listNormalizedDistFiles(root: string) {
+  const files: string[] = [];
+  await walk(joinPath(root, 'dist'));
+
+  return files
+    .filter((filepath) => {
+      const normalized = filepath.replaceAll('\\', '/');
+      if (normalized.endsWith('.map')) return false;
+      if (normalized === 'server/metafile.server.json') return false;
+      if (/^server\/server-[A-Za-z0-9_-]+\.html$/.test(normalized)) {
+        return false;
+      }
+      return true;
+    })
+    .map((filepath) =>
+      filepath
+        .replaceAll('\\', '/')
+        .replace(/([-.])[A-Za-z0-9_-]{8,}(?=\.[^.\/]+$)/g, '$1HASH'),
+    )
+    .sort();
+
+  async function walk(directory: string) {
+    for (const entry of await readdir(directory, {withFileTypes: true})) {
+      const fullPath = joinPath(directory, entry.name);
+
+      if (entry.isDirectory()) {
+        await walk(fullPath);
+      } else {
+        files.push(path.relative(joinPath(root, 'dist'), fullPath));
+      }
+    }
+  }
+}
