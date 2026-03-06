@@ -1,4 +1,4 @@
-import {expect, type Locator, type Page} from '@playwright/test';
+import {expect, type Page} from '@playwright/test';
 
 export class InfiniteScrollUtil {
   constructor(private page: Page) {}
@@ -33,10 +33,6 @@ export class InfiniteScrollUtil {
     await loadMoreButton.click();
   }
 
-  async scrollIntoView(locator: Locator) {
-    await locator.scrollIntoViewIfNeeded();
-  }
-
   async assertUrlDoesNotContainParam(param: string) {
     const url = new URL(this.page.url());
     expect(url.searchParams.has(param)).toBe(false);
@@ -48,12 +44,6 @@ export class InfiniteScrollUtil {
     return products.count();
   }
 
-  async waitForProductCountToChange(initialCount: number) {
-    await expect
-      .poll(async () => this.getProducts().count())
-      .not.toBe(initialCount);
-  }
-
   async waitForProductCountToIncrease(initialCount: number) {
     await expect
       .poll(async () => this.getProducts().count())
@@ -62,6 +52,10 @@ export class InfiniteScrollUtil {
 
   async getHistoryLength() {
     return this.page.evaluate(() => window.history.length);
+  }
+
+  async getScrollY() {
+    return this.page.evaluate(() => window.scrollY);
   }
 
   async assertHistoryLength(expectedLength: number) {

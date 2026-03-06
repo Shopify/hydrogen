@@ -54,6 +54,7 @@ export default function Collection() {
     <div className="collection">
       <h1>Products</h1>
       <PaginatedResourceSection<CollectionItemFragment>
+        ariaLabel="Products"
         connection={products}
         resourcesClassName="products-grid"
       >

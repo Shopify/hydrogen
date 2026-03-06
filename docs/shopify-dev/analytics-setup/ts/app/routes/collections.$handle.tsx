@@ -83,6 +83,7 @@ export default function Collection() {
       <h1>{collection.title}</h1>
       <p className="collection-description">{collection.description}</p>
       <PaginatedResourceSection
+        ariaLabel="Products"
         connection={collection.products}
         resourcesClassName="products-grid"
       >

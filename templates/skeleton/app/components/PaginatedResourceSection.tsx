@@ -7,10 +7,12 @@ import {Pagination} from '@shopify/hydrogen';
 export function PaginatedResourceSection<NodesType>({
   connection,
   children,
+  ariaLabel,
   resourcesClassName,
 }: {
   connection: React.ComponentProps<typeof Pagination<NodesType>>['connection'];
   children: React.FunctionComponent<{node: NodesType; index: number}>;
+  ariaLabel?: string;
   resourcesClassName?: string;
 }) {
   return (
@@ -23,19 +25,19 @@ export function PaginatedResourceSection<NodesType>({
         return (
           <div>
             <PreviousLink>
-              {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
+              {isLoading ? (
+                'Loading...'
+              ) : (
+                <span>
+                  <span aria-hidden="true">↑</span> Load previous
+                </span>
+              )}
             </PreviousLink>
             {resourcesClassName ? (
               <div
-                aria-label={
-                  resourcesClassName === 'products-grid'
-                    ? 'Products'
-                    : undefined
-                }
+                aria-label={ariaLabel}
                 className={resourcesClassName}
-                role={
-                  resourcesClassName === 'products-grid' ? 'region' : undefined
-                }
+                role={ariaLabel ? 'region' : undefined}
               >
                 {resourcesMarkup}
               </div>
@@ -43,7 +45,13 @@ export function PaginatedResourceSection<NodesType>({
               resourcesMarkup
             )}
             <NextLink>
-              {isLoading ? 'Loading...' : <span>Load more ↓</span>}
+              {isLoading ? (
+                'Loading...'
+              ) : (
+                <span>
+                  Load more <span aria-hidden="true">↓</span>
+                </span>
+              )}
             </NextLink>
           </div>
         );
