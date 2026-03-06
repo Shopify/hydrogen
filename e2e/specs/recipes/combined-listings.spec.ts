@@ -37,7 +37,12 @@ test.describe('Combined Listings Recipe', () => {
   test.describe('Combined Listing Product Page', () => {
     test.beforeEach(async ({page}) => {
       await page.goto(`/products/${KNOWN_COMBINED_LISTING.handle}`);
-      await expect(page.getByRole('heading', {level: 1})).toBeVisible();
+      await expect(
+        page.getByRole('heading', {
+          level: 1,
+          name: KNOWN_COMBINED_LISTING.name,
+        }),
+      ).toBeVisible();
     });
 
     test('hides "Add to cart" button on parent product', async ({page}) => {
@@ -47,18 +52,19 @@ test.describe('Combined Listings Recipe', () => {
     });
 
     test('displays price range from minimum to maximum', async ({page}) => {
-      await expect(page.getByText('From')).toBeVisible();
-      await expect(page.getByText('To')).toBeVisible();
+      const main = page.getByRole('main');
+      await expect(main.getByText(/From\s*\$/)).toBeVisible();
+      await expect(main.getByText(/To\s*\$/)).toBeVisible();
 
-      const priceText = await page.textContent('body');
-      expect(priceText).toContain('$500');
-      expect(priceText).toContain('$700');
+      const mainText = await main.textContent();
+      expect(mainText).toContain('$500');
+      expect(mainText).toContain('$700');
     });
 
     test('variant selection updates URL', async ({page}) => {
       const initialUrl = page.url();
 
-      const variantLinks = page.getByRole('link').filter({hasText: /.+/});
+      const variantLinks = page.getByRole('main').getByRole('link');
       const firstVariantLink = variantLinks.first();
       await expect(firstVariantLink).toBeVisible();
 
@@ -96,7 +102,9 @@ test.describe('Combined Listings Recipe', () => {
     });
 
     test('does not display price range', async ({page}) => {
-      await expect(page.getByText('From')).toHaveCount(0);
+      const main = page.getByRole('main');
+      await expect(main.getByText(/From\s*\$/)).toHaveCount(0);
+      await expect(main.getByText(/To\s*\$/)).toHaveCount(0);
     });
   });
 });
