@@ -16,8 +16,12 @@ export function CountrySelector() {
       : 'Country';
 
   return (
-    <details style={{position: 'relative', cursor: 'pointer'}}>
-      <summary>{label}</summary>
+    <details
+      role="group"
+      aria-label="Country selector"
+      style={{position: 'relative', cursor: 'pointer'}}
+    >
+      <summary aria-label={`Current locale: ${label}`}>{label}</summary>
       <div
         style={{
           position: 'absolute',
@@ -70,7 +74,7 @@ function LocaleForm({locale}: {locale: Locale}) {
         value={JSON.stringify(variables)}
       />
       <button type="submit">
-        {locale.language}-{locale.country}
+        Switch to {locale.language}-{locale.country}
       </button>
     </Form>
   );
