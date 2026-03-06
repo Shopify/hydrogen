@@ -72,7 +72,9 @@ test.describe('Subscriptions Recipe', () => {
 
       await weeklyOption.click();
 
-      await expect.poll(() => page.url()).toMatch(/selling_plan=gid/);
+      await expect
+        .poll(() => new URL(page.url()).searchParams.get('selling_plan'))
+        .toBeTruthy();
     });
 
     test('allows selecting subscription and adding to cart', async ({page}) => {
@@ -81,7 +83,9 @@ test.describe('Subscriptions Recipe', () => {
       });
       await weeklyOption.click();
 
-      await expect.poll(() => page.url()).toMatch(/selling_plan=gid/);
+      await expect
+        .poll(() => new URL(page.url()).searchParams.get('selling_plan'))
+        .toBeTruthy();
 
       const addToCartButton = page.getByRole('button', {
         name: /add to cart/i,
@@ -103,7 +107,9 @@ test.describe('Subscriptions Recipe', () => {
       });
       await weeklyOption.click();
 
-      await expect.poll(() => page.url()).toMatch(/selling_plan=gid/);
+      await expect
+        .poll(() => new URL(page.url()).searchParams.get('selling_plan'))
+        .toBeTruthy();
 
       const addToCartButton = page.getByRole('button', {
         name: /add to cart/i,
