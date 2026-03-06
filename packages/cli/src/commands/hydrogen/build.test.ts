@@ -89,6 +89,7 @@ describe('build', () => {
       bundleStats: false,
     });
     const viteBuildFiles = await listNormalizedDistFiles(tmpDir);
+    const viteSourcemaps = await listNormalizedSourcemaps(tmpDir);
 
     await runBuild({
       directory: tmpDir,
@@ -96,8 +97,10 @@ describe('build', () => {
       nativeBuild: true,
     });
     const nativeBuildFiles = await listNormalizedDistFiles(tmpDir);
+    const nativeSourcemaps = await listNormalizedSourcemaps(tmpDir);
 
     expect(nativeBuildFiles).toEqual(viteBuildFiles);
+    expect(nativeSourcemaps).toEqual(viteSourcemaps);
     await expect(
       fileExists(joinPath(tmpDir, 'dist/server/index.js')),
     ).resolves.toBe(true);
@@ -136,4 +139,55 @@ async function listNormalizedDistFiles(root: string) {
       }
     }
   }
+}
+
+async function listNormalizedSourcemaps(root: string) {
+  const mapFiles: string[] = [];
+  await walk(joinPath(root, 'dist'));
+
+  const rootNormalized = root.replaceAll('\\', '/');
+
+  const summaries = await Promise.all(
+    mapFiles.map(async (filepath) => {
+      const absolutePath = joinPath(root, 'dist', filepath);
+      const map = JSON.parse(await readFile(absolutePath));
+
+      const normalizedSources = Array.isArray(map.sources)
+        ? map.sources
+            .map((source: string) => normalizeMapValue(source, rootNormalized))
+            .sort()
+        : [];
+
+      return {
+        file: normalizeMapValue(filepath, rootNormalized),
+        generatedFile: normalizeMapValue(
+          String(map.file ?? ''),
+          rootNormalized,
+        ),
+        sourceCount: normalizedSources.length,
+        sources: normalizedSources,
+      };
+    }),
+  );
+
+  return summaries.sort((a, b) => a.file.localeCompare(b.file));
+
+  async function walk(directory: string) {
+    for (const entry of await readdir(directory, {withFileTypes: true})) {
+      const fullPath = joinPath(directory, entry.name);
+
+      if (entry.isDirectory()) {
+        await walk(fullPath);
+      } else if (entry.name.endsWith('.map')) {
+        mapFiles.push(path.relative(joinPath(root, 'dist'), fullPath));
+      }
+    }
+  }
+}
+
+function normalizeMapValue(value: string, rootNormalized: string) {
+  return value
+    .replaceAll('\\', '/')
+    .replaceAll(rootNormalized, '<ROOT>')
+    .replace(/([-.])[A-Za-z0-9_-]{8,}(?=\.[^.\/]+$)/g, '$1HASH');
 }
