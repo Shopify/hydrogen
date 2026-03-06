@@ -3,6 +3,7 @@ import {applyRecipe} from '../lib/apply';
 
 type ApplyArgs = {
   recipe: string;
+  template?: string;
 };
 
 export const apply: CommandModule<{}, ApplyArgs> = {
@@ -14,6 +15,12 @@ export const apply: CommandModule<{}, ApplyArgs> = {
       description: 'The name of the recipe to apply',
       required: true,
     },
+    template: {
+      type: 'string',
+      description:
+        'Path to template directory (defaults to templates/skeleton)',
+      required: false,
+    },
   },
   handler,
 };
@@ -21,5 +28,6 @@ export const apply: CommandModule<{}, ApplyArgs> = {
 function handler(args: ApplyArgs) {
   applyRecipe({
     recipeTitle: args.recipe,
+    templatePath: args.template,
   });
 }
