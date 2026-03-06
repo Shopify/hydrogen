@@ -158,6 +158,7 @@ PARENT_ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
   --body-file /tmp/claude/parent-body-initial.md)
 
 PARENT_NUM=$(echo "$PARENT_ISSUE_URL" | grep -oE '[0-9]+$')
+[ -z "$PARENT_NUM" ] && { echo "✗ FAILED to parse issue number from: $PARENT_ISSUE_URL"; exit 1; }
 echo "$PARENT_NUM" > /tmp/claude/parent_num.txt
 echo "Created parent issue #$PARENT_NUM"
 ```
@@ -174,6 +175,7 @@ sleep 2
 
 # Get project item ID
 PARENT_ITEM_ID=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$PARENT_NUM"') { projectItems(first: 5) { nodes { id project { number } } } } } }' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 4613) | .id')
+[ -z "$PARENT_ITEM_ID" ] && { echo "✗ FAILED to get project item ID for parent #$PARENT_NUM"; exit 1; }
 
 # Set "Project" field to "Hydrogen"
 gh api graphql -f query='mutation {
@@ -271,6 +273,7 @@ ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
   --body-file /tmp/claude/child-api-body.md)
 
 ISSUE_NUM=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
+[ -z "$ISSUE_NUM" ] && { echo "✗ FAILED to parse issue number from: $ISSUE_URL"; exit 1; }
 ```
 
 ### 8d: Add to Project, Set Hydrogen and Status Fields
@@ -465,6 +468,7 @@ ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
   --label "child" \
   --body-file /tmp/claude/child-issue.md)
 ISSUE_NUM=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
+[ -z "$ISSUE_NUM" ] && { echo "✗ FAILED to parse issue number from: $ISSUE_URL"; exit 1; }
 setup_phase_child_issue "$ISSUE_NUM" "$ISSUE_URL"
 PHASE3_ISSUE=$ISSUE_NUM
 ```
@@ -491,6 +495,7 @@ ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
   --label "child" \
   --body-file /tmp/claude/child-issue.md)
 ISSUE_NUM=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
+[ -z "$ISSUE_NUM" ] && { echo "✗ FAILED to parse issue number from: $ISSUE_URL"; exit 1; }
 setup_phase_child_issue "$ISSUE_NUM" "$ISSUE_URL"
 PHASE4_ISSUE=$ISSUE_NUM
 ```
@@ -518,6 +523,7 @@ ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
   --label "child" \
   --body-file /tmp/claude/child-issue.md)
 ISSUE_NUM=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
+[ -z "$ISSUE_NUM" ] && { echo "✗ FAILED to parse issue number from: $ISSUE_URL"; exit 1; }
 setup_phase_child_issue "$ISSUE_NUM" "$ISSUE_URL"
 PHASE5_ISSUE=$ISSUE_NUM
 ```
@@ -543,6 +549,7 @@ ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
   --label "child" \
   --body-file /tmp/claude/child-issue.md)
 ISSUE_NUM=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
+[ -z "$ISSUE_NUM" ] && { echo "✗ FAILED to parse issue number from: $ISSUE_URL"; exit 1; }
 setup_phase_child_issue "$ISSUE_NUM" "$ISSUE_URL"
 PHASE6_ISSUE=$ISSUE_NUM
 ```
@@ -569,6 +576,7 @@ ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
   --label "child" \
   --body-file /tmp/claude/child-issue.md)
 ISSUE_NUM=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
+[ -z "$ISSUE_NUM" ] && { echo "✗ FAILED to parse issue number from: $ISSUE_URL"; exit 1; }
 setup_phase_child_issue "$ISSUE_NUM" "$ISSUE_URL"
 PHASE7_ISSUE=$ISSUE_NUM
 ```
@@ -597,6 +605,7 @@ ISSUE_URL=$(gh issue create --repo Shopify/developer-tools-team \
   --label "child" \
   --body-file /tmp/claude/child-issue.md)
 ISSUE_NUM=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
+[ -z "$ISSUE_NUM" ] && { echo "✗ FAILED to parse issue number from: $ISSUE_URL"; exit 1; }
 setup_phase_child_issue "$ISSUE_NUM" "$ISSUE_URL"
 PHASE8_ISSUE=$ISSUE_NUM
 ```
