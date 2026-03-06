@@ -1,4 +1,4 @@
-index ddfa18f3..9e104eed 100644
+index 3e04bc72..d36d1d91 100644
 --- a/templates/skeleton/app/routes/account.addresses.tsx
 +++ b/templates/skeleton/app/routes/account.addresses.tsx
 @@ -1,22 +1,14 @@
@@ -32,7 +32,7 @@ index ddfa18f3..9e104eed 100644
  };
  
  export async function loader({context}: Route.LoaderArgs) {
--  context.customerAccount.handleAuthStatus();
+-  await context.customerAccount.handleAuthStatus();
 -
 +  const {session} = context;
 +  const customerAccessToken = await session.get('customerAccessToken');
@@ -528,4 +528,3 @@ index ddfa18f3..9e104eed 100644
 +    }
 +  }
 +` as const;
-\ No newline at end of file
