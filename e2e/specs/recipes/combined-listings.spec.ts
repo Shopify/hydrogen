@@ -68,6 +68,19 @@ test.describe('Combined Listings Recipe', () => {
     });
   });
 
+  test.describe('Collection Page', () => {
+    test('parent combined listing products are filtered from collections', async ({
+      page,
+    }) => {
+      await page.goto('/collections/all');
+
+      const parentProductCard = page.getByRole('link', {
+        name: new RegExp(KNOWN_COMBINED_LISTING.name, 'i'),
+      });
+      await expect(parentProductCard).toHaveCount(0);
+    });
+  });
+
   test.describe('Regular Product Page', () => {
     test.beforeEach(async ({page}) => {
       await page.goto(`/products/${KNOWN_REGULAR_PRODUCT.handle}`);
