@@ -795,17 +795,22 @@ describe('upgrade', async () => {
             (release) => release.version === '2023.4.1',
           );
 
+          if (!selectedRelease) {
+            throw new Error(
+              'Test setup: 2023.4.1 not found in changelog - is this fixture stale?',
+            );
+          }
+
           // testing from 2023.1.6 (outdated) to 2023.4.1
           const {features, fixes, removeDependencies, removeDevDependencies} =
             getCumulativeRelease({
               availableUpgrades,
               ...current,
-              // @ts-expect-error - we know this release version exists
               selectedRelease,
             });
 
-          expect(features).toMatchObject(CUMULATIVE_RELEASE.features);
-          expect(fixes).toMatchObject(CUMULATIVE_RELEASE.fixes);
+          expect(features).toEqual(CUMULATIVE_RELEASE.features);
+          expect(fixes).toEqual(CUMULATIVE_RELEASE.fixes);
           expect(removeDependencies).toEqual(
             CUMULATIVE_RELEASE.removeDependencies,
           );

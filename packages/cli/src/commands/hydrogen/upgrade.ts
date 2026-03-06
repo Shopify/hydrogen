@@ -699,7 +699,7 @@ export function displayConfirmation({
   if (features.length || fixes.length) {
     renderInfo({
       headline: `Included in this upgrade:`,
-      //@ts-ignore we know that filter(Boolean) will always return an array
+      // @ts-expect-error - filter(Boolean) removes falsy values, leaving only objects
       customSections: [
         features.length && {
           title: 'Features',
