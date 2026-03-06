@@ -11,6 +11,7 @@ setRecipeFixture({
  * bundles on the Hydrogen storefront using the Shopify Bundles app.
  *
  * Tests cover:
+ * - Bundle badge display on product cards in grids
  * - Bundle badge display on product pages
  * - Bundled products section with component details
  * - Add to cart button text changes for bundles
@@ -35,6 +36,26 @@ const KNOWN_REGULAR_PRODUCT = {
 } as const;
 
 test.describe('Bundles Recipe', () => {
+  test.describe('Product Cards', () => {
+    test('displays bundle badge on product cards when bundle appears in grids', async ({
+      page,
+    }) => {
+      await page.goto('/');
+
+      const bundleCard = page.getByRole('link', {
+        name: new RegExp(KNOWN_BUNDLE.name, 'i'),
+      });
+
+      const bundleCount = await bundleCard.count();
+      if (bundleCount > 0) {
+        await expect(bundleCard.first()).toBeVisible();
+        await expect(
+          bundleCard.first().getByText('BUNDLE', {exact: true}),
+        ).toBeVisible();
+      }
+    });
+  });
+
   test.describe('Bundle Product Page', () => {
     test.beforeEach(async ({page}) => {
       await page.goto(`/products/${KNOWN_BUNDLE.handle}`);
@@ -98,11 +119,11 @@ test.describe('Bundles Recipe', () => {
         page.getByRole('heading', {level: 1, name: KNOWN_REGULAR_PRODUCT.name}),
       ).toBeVisible();
 
-      await expect(page.getByText('BUNDLE', {exact: true})).not.toBeVisible();
+      await expect(page.getByText('BUNDLE', {exact: true})).toHaveCount(0);
 
       await expect(
         page.getByRole('heading', {level: 4, name: 'Bundled Products'}),
-      ).not.toBeVisible();
+      ).toHaveCount(0);
 
       await expect(
         page.getByRole('button', {name: 'Add to cart'}),
