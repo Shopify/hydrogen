@@ -8,27 +8,22 @@ setRecipeFixture({
 
 /**
  * Validates the Subscriptions recipe, which enables selling subscription-based
- * products using selling plan groups on the Hydrogen storefront.
+ * products using selling plan groups from the Shopify Subscriptions app.
  *
  * Tests cover:
  * - Selling plan selector display on product pages
- * - One-time purchase vs subscription pricing display
- * - Subscription option selection
+ * - Subscription frequency options with links
+ * - Subscription selection and cart integration
  * - Subscription details in cart line items
- *
- * The recipe implements selling plan groups from the Shopify Subscriptions app,
- * allowing customers to choose between one-time purchases or recurring subscriptions.
  *
  * TODO: Add tests for /account/subscriptions management page (requires customer authentication).
  */
 
-// Subscription product in hydrogenPreviewStorefront
 const KNOWN_SUBSCRIPTION_PRODUCT = {
   handle: 'shopify-wax',
   name: 'Shopify Wax (Subscription)',
 } as const;
 
-// A regular product without subscriptions for comparison
 const KNOWN_REGULAR_PRODUCT = {
   handle: 'the-ascend',
   name: 'The Ascend',
