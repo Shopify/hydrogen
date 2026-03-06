@@ -15,7 +15,12 @@ export {DiscountUtil} from './discount-utils';
 export {GiftCardUtil} from './gift-card-utils';
 
 export const test = base.extend<
-  {storefront: StorefrontPage; cart: CartUtil; discount: DiscountUtil; giftCard: GiftCardUtil},
+  {
+    storefront: StorefrontPage;
+    cart: CartUtil;
+    discount: DiscountUtil;
+    giftCard: GiftCardUtil;
+  },
   {forEachWorker: void}
 >({
   storefront: async ({page}, use) => {
@@ -55,7 +60,8 @@ export const setTestStore = async (
 
   test.use({
     baseURL: async ({}, use) => {
-      await use(isLocal ? server?.getUrl() : testStore);
+      const baseURL = isLocal ? await server?.getUrl() : testStore;
+      await use(baseURL);
     },
   });
 
@@ -77,7 +83,5 @@ export const setTestStore = async (
       customerAccountPush: false,
       envFile: filepath,
     });
-
-    await server.start();
   });
 };
