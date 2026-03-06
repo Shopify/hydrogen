@@ -132,33 +132,23 @@ const generateFixture = async ({
 }: GenerateOptions) => {
   await mkdir(path.dirname(recipeFixturePath), {recursive: true});
 
-  // apply mutates templates/skeleton in-place; always revert it afterward
-  // so tests that depend on the pristine skeleton aren't affected.
   try {
-    console.log(`[recipe-fixture] Applying ${recipeName} recipe...`);
-    await execAsync(
-      `npm run cookbook --workspace=cookbook -- apply --recipe ${recipeName}`,
-      {cwd: repoRoot, env: {...process.env, ...envOverrides, CI: 'true'}},
-    );
+    // Copy skeleton to fixture directory first, then apply recipe to the copy
+    // This avoids mutating the pristine skeleton and prevents race conditions
     console.log(`[recipe-fixture] Copying skeleton to fixture directory...`);
     await cp(skeletonPath, recipeFixturePath, {recursive: true});
+
+    console.log(`[recipe-fixture] Applying ${recipeName} recipe...`);
+    await execAsync(
+      `npm run cookbook --workspace=cookbook -- apply --recipe ${recipeName} --template ${recipeFixturePath}`,
+      {cwd: repoRoot, env: {...process.env, ...envOverrides, CI: 'true'}},
+    );
   } catch (error) {
     console.error(
       `[recipe-fixture] Failed to apply recipe ${recipeName}:`,
       error,
     );
     throw error;
-  } finally {
-    // Always clean up the skeleton, even if the recipe application failed
-    try {
-      await execAsync('git restore templates/skeleton', {cwd: repoRoot});
-      await execAsync('git clean -fd templates/skeleton', {cwd: repoRoot});
-    } catch (cleanupError) {
-      console.warn(
-        '[recipe-fixture] Failed to clean up skeleton:',
-        cleanupError,
-      );
-    }
   }
 
   try {
