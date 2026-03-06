@@ -9,35 +9,36 @@ setRecipeFixture({
  * Validates the Third-party API recipe, which demonstrates integrating
  * external GraphQL APIs with Oxygen's caching system.
  *
- * Tests cover:
- * - Third-party API data displays on homepage
- * - Cached API client fetches external data
+ * The recipe adds a Rick & Morty characters section to the homepage that
+ * fetches data from rickandmortyapi.com GraphQL API.
  */
 
 test.describe('Third-party API Recipe', () => {
-  test.describe('Homepage Integration', () => {
-    test('displays Rick and Morty characters from third-party API', async ({
-      page,
-    }) => {
-      await page.goto('/');
+  test.beforeEach(async ({page}) => {
+    await page.goto('/');
+  });
 
-      const mainContent = page.getByRole('main');
-      await expect(mainContent).toBeVisible();
-
-      const pageContent = await mainContent.textContent();
-
-      expect(pageContent).toContain('Rick');
-      expect(pageContent).toContain('Morty');
+  test('displays Rick and Morty characters section with heading', async ({
+    page,
+  }) => {
+    const heading = page.getByRole('heading', {
+      name: 'Rick & Morty Characters (Third-Party API Example)',
     });
+    await expect(heading).toBeVisible();
 
-    test('renders third-party API content section', async ({page}) => {
-      await page.goto('/');
+    const description = page.getByText(
+      /This data is fetched from rickandmortyapi\.com GraphQL API/i,
+    );
+    await expect(description).toBeVisible();
+  });
 
-      const mainContent = page.getByRole('main');
-      const content = await mainContent.textContent();
+  test('renders character list from third-party API', async ({page}) => {
+    const characterList = page
+      .getByRole('main')
+      .locator('.third-party-api-example ul');
+    await expect(characterList).toBeVisible();
 
-      expect(content).toBeTruthy();
-      expect(content?.length || 0).toBeGreaterThan(100);
-    });
+    const characters = characterList.getByRole('listitem');
+    await expect(characters).toHaveCount(20);
   });
 });
