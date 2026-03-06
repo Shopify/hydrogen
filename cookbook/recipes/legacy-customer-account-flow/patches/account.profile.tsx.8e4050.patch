@@ -1,4 +1,4 @@
-index 7053f7d7..7b8c77d3 100644
+index 6f10065f..7b8c77d3 100644
 --- a/templates/skeleton/app/routes/account.profile.tsx
 +++ b/templates/skeleton/app/routes/account.profile.tsx
 @@ -1,12 +1,12 @@
@@ -22,7 +22,7 @@ index 7053f7d7..7b8c77d3 100644
  };
  
  export async function loader({context}: Route.LoaderArgs) {
--  context.customerAccount.handleAuthStatus();
+-  await context.customerAccount.handleAuthStatus();
 -
 +  const customerAccessToken = await context.session.get('customerAccessToken');
 +  if (!customerAccessToken) {
