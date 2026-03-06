@@ -18,7 +18,7 @@ import {
   displayConfirmation,
   getAbsoluteVersion,
   getAvailableUpgrades,
-  getCummulativeRelease,
+  getCumulativeRelease,
   getHydrogenVersion,
   getPackageVersion,
   getSelectedRelease,
@@ -110,8 +110,32 @@ async function createOutdatedSkeletonPackageJsonWithReactRouter() {
   return packageJson;
 }
 
+async function createPreMigrationPackageJson() {
+  const require = createRequire(import.meta.url);
+  // Deep clone to avoid mutating the require() cache, which is shared
+  // across all createXxx helpers in this file.
+  const packageJson: PackageJson = JSON.parse(
+    JSON.stringify(require(joinPath(getSkeletonSourceDir(), 'package.json'))),
+  ) as PackageJson;
+
+  if (!packageJson) throw new Error('Could not parse package.json');
+  if (!packageJson?.dependencies)
+    throw new Error('Could not parse package.json dependencies');
+  if (!packageJson?.devDependencies)
+    throw new Error('Could not parse package.json devDependencies');
+
+  // Pin to pre-React Router migration version so the upgrade to 2025.7.0 triggers cumulative removals
+  packageJson.dependencies['@shopify/hydrogen'] = '~2025.5.1';
+  packageJson.dependencies['@remix-run/react'] = '^2.0.0';
+  packageJson.dependencies['@remix-run/server-runtime'] = '^2.0.0';
+  packageJson.devDependencies['@shopify/remix-oxygen'] = '^2.0.0';
+  packageJson.devDependencies['@remix-run/dev'] = '^2.0.0';
+
+  return packageJson;
+}
+
 const REACT_ROUTER_RELEASE = {
-  title: 'React Rotuer 7.5',
+  title: 'React Router 7.5',
   version: '2025.5.0',
   hash: '-',
   commit: 'https://github.com/Shopify/hydrogen/pull/2819',
@@ -225,6 +249,8 @@ describe('upgrade', async () => {
 
   const OUTDATED_HYDROGEN_PACKAGE_JSON_WITH_REACT_ROUTER =
     await createOutdatedSkeletonPackageJsonWithReactRouter();
+
+  const PRE_MIGRATION_PACKAGE_JSON = await createPreMigrationPackageJson();
 
   describe('checkIsGitRepo', () => {
     it('renders an error message when not in a git repo', async () => {
@@ -735,7 +761,22 @@ describe('upgrade', async () => {
     });
   });
 
-  describe('getCummulativeRelease', () => {
+  describe('getCumulativeRelease', () => {
+    const makeRelease = (version: string, overrides: Partial<Release> = {}) =>
+      ({
+        version,
+        hash: 'abc',
+        commit: 'https://github.com/Shopify/hydrogen/commit/abc',
+        pr: 'https://github.com/Shopify/hydrogen/pull/1',
+        date: '2025-01-01',
+        title: '',
+        dependencies: {'@shopify/hydrogen': version},
+        devDependencies: {},
+        features: [],
+        fixes: [],
+        ...overrides,
+      }) as Release;
+
     it('returns the correct fixes and features for a release range thats outdated', async () => {
       await inTemporaryHydrogenRepo(
         async (appPath) => {
@@ -754,22 +795,250 @@ describe('upgrade', async () => {
             (release) => release.version === '2023.4.1',
           );
 
-          // testing from 2023.1.6 (outdated) to 2023.4.1
-          const {features, fixes} = getCummulativeRelease({
-            availableUpgrades,
-            ...current,
-            // @ts-ignore - we know this release version exists
-            selectedRelease,
-          });
+          if (!selectedRelease) {
+            throw new Error(
+              'Test setup: 2023.4.1 not found in changelog - is this fixture stale?',
+            );
+          }
 
-          expect(features).toMatchObject(CUMMLATIVE_RELEASE.features);
-          expect(fixes).toMatchObject(CUMMLATIVE_RELEASE.fixes);
+          // testing from 2023.1.6 (outdated) to 2023.4.1
+          const {features, fixes, removeDependencies, removeDevDependencies} =
+            getCumulativeRelease({
+              availableUpgrades,
+              ...current,
+              selectedRelease,
+            });
+
+          expect(features).toEqual(CUMULATIVE_RELEASE.features);
+          expect(fixes).toEqual(CUMULATIVE_RELEASE.fixes);
+          expect(removeDependencies).toEqual(
+            CUMULATIVE_RELEASE.removeDependencies,
+          );
+          expect(removeDevDependencies).toEqual(
+            CUMULATIVE_RELEASE.removeDevDependencies,
+          );
         },
         {
           cleanGitRepo: true,
           packageJson: OUTDATED_HYDROGEN_PACKAGE_JSON,
         },
       );
+    });
+
+    it('accumulates real removeDependencies when upgrading across the React Router migration', async () => {
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          const {releases} = await getChangelog();
+          const current = await getHydrogenVersion({appPath});
+
+          expect(current?.currentVersion).toBeDefined();
+
+          const {availableUpgrades} = getAvailableUpgrades({
+            ...current,
+            releases,
+          });
+
+          // 2025.7.0 is the React Router migration release that drops @shopify/remix-oxygen and Remix packages.
+          // This test ensures cumulative dependency removal works for the actual migration scenario.
+          // If the migration release version ever changes, update this version string.
+          const selectedRelease = releases.find(
+            (release) => release.version === '2025.7.0',
+          );
+
+          if (!selectedRelease) {
+            throw new Error(
+              'Test setup: 2025.7.0 not found in changelog - is this fixture stale?',
+            );
+          }
+
+          const {removeDependencies, removeDevDependencies} =
+            getCumulativeRelease({
+              availableUpgrades,
+              ...current,
+              selectedRelease,
+            });
+
+          // @shopify/remix-oxygen and @remix-run/* are removed without being re-added
+          expect(removeDependencies).toContain('@shopify/remix-oxygen');
+          expect(removeDependencies).toContain('@remix-run/react');
+          expect(removeDependencies).toContain('@remix-run/server-runtime');
+          expect(removeDevDependencies).toContain('@remix-run/dev');
+
+          // react-router is re-added at a new version so it stays
+          expect(removeDependencies).not.toContain('react-router');
+          expect(removeDependencies).not.toContain('react-router-dom');
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: PRE_MIGRATION_PACKAGE_JSON,
+        },
+      );
+    });
+
+    it('accumulates removeDependencies from intermediate releases', () => {
+      // Simulates: user on 2025.5.0, upgrading to 2025.10.0.
+      // 2025.7.0 removes @shopify/remix-oxygen (a breaking migration).
+      // 2025.10.0 is the target and knows nothing about remix-oxygen.
+      const target = makeRelease('2025.10.0');
+      const intermediate = makeRelease('2025.7.0', {
+        removeDependencies: ['@shopify/remix-oxygen', '@remix-run/react'],
+        removeDevDependencies: ['@remix-run/dev'],
+      });
+      const from = makeRelease('2025.5.0');
+
+      const {removeDependencies, removeDevDependencies} = getCumulativeRelease({
+        availableUpgrades: [target, intermediate, from],
+        selectedRelease: target,
+        currentVersion: '2025.5.0',
+      });
+
+      expect(removeDependencies).toContain('@shopify/remix-oxygen');
+      expect(removeDependencies).toContain('@remix-run/react');
+      expect(removeDevDependencies).toContain('@remix-run/dev');
+    });
+
+    it('excludes removeDependencies for deps that are re-added in any release', () => {
+      // react-router is removed (old Remix version) AND re-added at a new version
+      // in the same release — it should not appear in cumulative removeDependencies.
+      const target = makeRelease('2025.10.0');
+      const intermediate = makeRelease('2025.7.0', {
+        dependencies: {
+          '@shopify/hydrogen': '2025.7.0',
+          'react-router': '7.9.2',
+        },
+        removeDependencies: ['@shopify/remix-oxygen', 'react-router'],
+      });
+      const from = makeRelease('2025.5.0');
+
+      const {removeDependencies} = getCumulativeRelease({
+        availableUpgrades: [target, intermediate, from],
+        selectedRelease: target,
+        currentVersion: '2025.5.0',
+      });
+
+      expect(removeDependencies).toContain('@shopify/remix-oxygen');
+      expect(removeDependencies).not.toContain('react-router');
+    });
+
+    it('deduplicates removeDependencies listed in multiple releases', () => {
+      const target = makeRelease('2025.10.0', {
+        removeDependencies: ['@shopify/remix-oxygen'],
+      });
+      const intermediate = makeRelease('2025.7.0', {
+        removeDependencies: ['@shopify/remix-oxygen'],
+      });
+      const from = makeRelease('2025.5.0');
+
+      const {removeDependencies} = getCumulativeRelease({
+        availableUpgrades: [target, intermediate, from],
+        selectedRelease: target,
+        currentVersion: '2025.5.0',
+      });
+
+      expect(
+        removeDependencies.filter((d) => d === '@shopify/remix-oxygen'),
+      ).toHaveLength(1);
+    });
+
+    it('includes removals when an intermediate release has a dep and a later intermediate release removes it', () => {
+      // Scenario: upgrading from 2025.5.0 → 2025.10.0
+      // remix exists in an intermediate release (2025.6.0), is removed in 2025.7.0,
+      // and is never re-added. It should be included in cumulative removals.
+      const intermediateWithRemix = makeRelease('2025.6.0', {
+        dependencies: {
+          '@shopify/hydrogen': '2025.6.0',
+          remix: '4.0.0',
+        },
+      });
+      const releaseRemovingRemix = makeRelease('2025.7.0', {
+        removeDependencies: ['remix'],
+      });
+      const targetRelease = makeRelease('2025.10.0');
+
+      const {removeDependencies} = getCumulativeRelease({
+        availableUpgrades: [
+          targetRelease,
+          releaseRemovingRemix,
+          intermediateWithRemix,
+        ],
+        selectedRelease: targetRelease,
+        currentVersion: '2025.5.0',
+      });
+
+      expect(removeDependencies).toContain('remix');
+    });
+
+    it('handles releases that omit dependencies maps', () => {
+      const targetRelease = makeRelease('2025.10.0');
+      const releaseWithoutDependencyMaps = {
+        ...makeRelease('2025.7.0', {
+          removeDependencies: ['@shopify/remix-oxygen'],
+        }),
+        dependencies: undefined,
+        devDependencies: undefined,
+      } as unknown as Release;
+      const fromRelease = makeRelease('2025.5.0');
+
+      const {removeDependencies} = getCumulativeRelease({
+        availableUpgrades: [
+          targetRelease,
+          releaseWithoutDependencyMaps,
+          fromRelease,
+        ],
+        selectedRelease: targetRelease,
+        currentVersion: '2025.5.0',
+      });
+
+      expect(removeDependencies).toContain('@shopify/remix-oxygen');
+    });
+
+    it('includes removal when package moves from devDependencies to dependencies', () => {
+      // Scenario: typescript is removed from devDependencies, then re-added as a regular dependency
+      // The removal from devDependencies should still appear in removeDevDependencies
+      const targetRelease = makeRelease('2025.10.0', {
+        dependencies: {
+          '@shopify/hydrogen': '2025.10.0',
+          typescript: '5.0.0',
+        },
+      });
+      const intermediateRelease = makeRelease('2025.7.0', {
+        removeDevDependencies: ['typescript'],
+      });
+      const fromRelease = makeRelease('2025.5.0');
+
+      const {removeDependencies, removeDevDependencies} = getCumulativeRelease({
+        availableUpgrades: [targetRelease, intermediateRelease, fromRelease],
+        selectedRelease: targetRelease,
+        currentVersion: '2025.5.0',
+      });
+
+      // typescript should be removed from devDependencies (not suppressed by cross-type re-addition)
+      expect(removeDevDependencies).toContain('typescript');
+      expect(removeDependencies).not.toContain('typescript');
+    });
+
+    it('includes removal when package moves from dependencies to devDependencies', () => {
+      // Scenario: lodash is removed from dependencies, then re-added as a devDependency
+      // The removal from dependencies should still appear in removeDependencies
+      const targetRelease = makeRelease('2025.10.0', {
+        devDependencies: {
+          lodash: '4.17.21',
+        },
+      });
+      const intermediateRelease = makeRelease('2025.7.0', {
+        removeDependencies: ['lodash'],
+      });
+      const fromRelease = makeRelease('2025.5.0');
+
+      const {removeDependencies, removeDevDependencies} = getCumulativeRelease({
+        availableUpgrades: [targetRelease, intermediateRelease, fromRelease],
+        selectedRelease: targetRelease,
+        currentVersion: '2025.5.0',
+      });
+
+      // lodash should be removed from dependencies (not suppressed by cross-type re-addition)
+      expect(removeDependencies).toContain('lodash');
+      expect(removeDevDependencies).not.toContain('lodash');
     });
   });
 
@@ -786,7 +1055,7 @@ describe('upgrade', async () => {
 
           await expect(
             displayConfirmation({
-              cumulativeRelease: CUMMLATIVE_RELEASE,
+              cumulativeRelease: CUMULATIVE_RELEASE,
               selectedRelease,
             }),
           ).resolves.toEqual(false);
@@ -794,7 +1063,7 @@ describe('upgrade', async () => {
           const info = outputMock.info();
           expect(info).toMatch('Included in this upgrade');
 
-          [...CUMMLATIVE_RELEASE.features, ...CUMMLATIVE_RELEASE.fixes].forEach(
+          [...CUMULATIVE_RELEASE.features, ...CUMULATIVE_RELEASE.fixes].forEach(
             (feat) =>
               // Cut the string to avoid matching the banner
               expect(info).toMatch(feat.title.slice(0, 15)),
@@ -1204,7 +1473,7 @@ describe('upgrade', async () => {
       const {releases} = await getChangelog();
 
       const selectedRelease = Object.create(
-        // @ts-ignore - we know this release version exists
+        // @ts-expect-error - we know this release version exists
         releases.find((release) => release.version === '2023.10.0'),
       ) as (typeof releases)[0];
 
@@ -1260,7 +1529,7 @@ describe('upgrade', async () => {
         '@shopify/hydrogen@2023.10.0',
         '@shopify/remix-oxygen@2.0.0',
         `typescript@${getAbsoluteVersion(
-          // @ts-ignore - we know this release version exists
+          // @ts-expect-error - we know this release version exists
           selectedRelease.devDependencies.typescript,
         )}`,
       ];
@@ -1321,7 +1590,7 @@ describe('upgrade', async () => {
         '@shopify/cli-hydrogen@6.0.0',
         '@shopify/remix-oxygen@2.0.0',
         `typescript@${getAbsoluteVersion(
-          // @ts-ignore - we know this release version exists
+          // @ts-expect-error - we know this release version exists
           selectedRelease.devDependencies.typescript,
         )}`,
       ];
@@ -1336,8 +1605,8 @@ describe('upgrade', async () => {
   });
 });
 
-// cummlative result when upgrading from 2023.1.6 (outdated) to 2023.4.1
-const CUMMLATIVE_RELEASE = {
+// cumulative result when upgrading from 2023.1.6 (outdated) to 2023.4.1
+const CUMULATIVE_RELEASE = {
   fixes: [
     {
       title: 'Add a default Powered-By: Shopify-Hydrogen header',
@@ -1503,6 +1772,8 @@ const CUMMLATIVE_RELEASE = {
       id: '642',
     },
   ],
+  removeDependencies: [],
+  removeDevDependencies: [],
 } as CumulativeRelease;
 
 describe('dependency removal', () => {
@@ -1827,6 +2098,48 @@ describe('--version=next functionality', () => {
 
       expect(result.version).toBe('2025.7.0');
     });
+
+    it('preserves dependency removals in cumulative release for synthetic next upgrades', async () => {
+      const latestRelease = {
+        title: 'Latest release',
+        version: '2025.7.0',
+        hash: 'abc123',
+        commit: 'https://github.com/test' as `https://${string}`,
+        pr: 'https://github.com/test' as `https://${string}`,
+        date: '2025-09-17',
+        dependencies: {
+          '@shopify/hydrogen': '2025.7.0',
+          'react-router': '7.9.2',
+        },
+        devDependencies: {
+          '@shopify/mini-oxygen': '4.0.0',
+        },
+        removeDependencies: ['@remix-run/react'],
+        removeDevDependencies: ['@remix-run/dev'],
+        fixes: [],
+        features: [],
+      } as Release;
+
+      const selectedRelease = await getSelectedRelease({
+        targetVersion: 'next',
+        availableUpgrades: [latestRelease],
+        currentVersion: '2025.4.0',
+        currentDependencies: {'@shopify/hydrogen': '2025.4.0'},
+      });
+
+      const cumulativeRelease = getCumulativeRelease({
+        availableUpgrades: [latestRelease],
+        selectedRelease,
+        currentVersion: '2025.4.0',
+      });
+
+      expect(cumulativeRelease.removeDependencies).toEqual([
+        '@remix-run/react',
+      ]);
+      expect(cumulativeRelease.removeDevDependencies).toEqual([
+        '@remix-run/dev',
+      ]);
+    });
   });
 
   describe('buildUpgradeCommandArgs with --version=next', () => {
@@ -1912,6 +2225,8 @@ describe('--version=next functionality', () => {
       const cumulativeRelease = {
         features: [],
         fixes: [],
+        removeDependencies: [],
+        removeDevDependencies: [],
       };
 
       const selectedRelease = {
@@ -1931,13 +2246,15 @@ describe('--version=next functionality', () => {
       const cumulativeRelease = {
         features: [],
         fixes: [],
+        removeDependencies: [],
+        removeDevDependencies: [],
       };
 
       const selectedRelease = {
         version: '2025.7.0',
       } as Release;
 
-      const result = await displayConfirmation({
+      await displayConfirmation({
         cumulativeRelease,
         selectedRelease,
         // No targetVersion specified
