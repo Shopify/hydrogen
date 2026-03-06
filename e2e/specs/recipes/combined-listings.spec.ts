@@ -43,7 +43,7 @@ test.describe('Combined Listings Recipe', () => {
     test('hides "Add to cart" button on parent product', async ({page}) => {
       await expect(
         page.getByRole('button', {name: /add to cart/i}),
-      ).not.toBeVisible();
+      ).toHaveCount(0);
     });
 
     test('displays price range from minimum to maximum', async ({page}) => {
@@ -96,8 +96,7 @@ test.describe('Combined Listings Recipe', () => {
     });
 
     test('does not display price range', async ({page}) => {
-      const priceSection = page.locator('text=From');
-      await expect(priceSection).not.toBeVisible();
+      await expect(page.getByText('From')).toHaveCount(0);
     });
   });
 });
