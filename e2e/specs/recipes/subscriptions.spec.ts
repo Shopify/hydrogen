@@ -19,8 +19,7 @@ setRecipeFixture({
  * The recipe implements selling plan groups from the Shopify Subscriptions app,
  * allowing customers to choose between one-time purchases or recurring subscriptions.
  *
- * Note: This test does NOT cover the /account/subscriptions management page,
- * as that requires customer authentication.
+ * TODO: Add tests for /account/subscriptions management page (requires customer authentication).
  */
 
 // Subscription product in hydrogenPreviewStorefront
