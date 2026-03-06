@@ -196,9 +196,9 @@ gh api graphql -f query='mutation {
 }' > /dev/null
 
 # Verify both fields
-PROJECT_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$PARENT_NUM"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+PROJECT_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$PARENT_NUM"') { projectItems(first: 5) { nodes { project { number } fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 4613) | .fieldValueByName.name')
 
-STATUS_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$PARENT_NUM"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+STATUS_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$PARENT_NUM"') { projectItems(first: 5) { nodes { project { number } fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 4613) | .fieldValueByName.name')
 
 if [ "$PROJECT_VALUE" = "Hydrogen" ] && [ "$STATUS_VALUE" = "Todo (prioritized)" ]; then
   echo "✓ Parent #$PARENT_NUM: Project = Hydrogen, Status = Todo (prioritized)"
@@ -309,9 +309,9 @@ gh api graphql -f query='mutation {
 }' > /dev/null
 
 # Verify both fields
-PROJECT_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+PROJECT_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { projectItems(first: 5) { nodes { project { number } fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 4613) | .fieldValueByName.name')
 
-STATUS_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+STATUS_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { projectItems(first: 5) { nodes { project { number } fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 4613) | .fieldValueByName.name')
 
 if [ "$PROJECT_VALUE" = "Hydrogen" ] && [ "$STATUS_VALUE" = "Todo (prioritized)" ]; then
   echo "#$ISSUE_NUM: ✓ Added to project with Hydrogen field and Todo (prioritized) status"
@@ -407,9 +407,9 @@ setup_phase_child_issue() {
   }' > /dev/null
 
   # Verify both fields
-  PROJECT_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+  PROJECT_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { projectItems(first: 5) { nodes { project { number } fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 4613) | .fieldValueByName.name')
 
-  STATUS_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+  STATUS_VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE_NUM"') { projectItems(first: 5) { nodes { project { number } fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 4613) | .fieldValueByName.name')
 
   if [ "$PROJECT_VALUE" != "Hydrogen" ] || [ "$STATUS_VALUE" != "Todo (prioritized)" ]; then
     echo "#$ISSUE_NUM: ✗ FAILED to set fields (Project='$PROJECT_VALUE', Status='$STATUS_VALUE')"
@@ -691,7 +691,7 @@ done
 echo ""
 echo "=== 2. Verify Hydrogen field set on all children ==="
 for CHILD in $EXPECTED_CHILDREN; do
-  VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$CHILD"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+  VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$CHILD"') { projectItems(first: 5) { nodes { project { number } fieldValueByName(name: "Project") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 4613) | .fieldValueByName.name')
   if [ "$VALUE" = "Hydrogen" ]; then
     echo "  ✓ #$CHILD: Project = Hydrogen"
   else
@@ -703,7 +703,7 @@ done
 echo ""
 echo "=== 3. Verify Status field set on all issues (parent + children) ==="
 for ISSUE in $PARENT_NUM $EXPECTED_CHILDREN; do
-  VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE"') { projectItems(first: 5) { nodes { fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[0].fieldValueByName.name')
+  VALUE=$(gh api graphql -f query='query { repository(owner:"Shopify", name:"developer-tools-team") { issue(number: '"$ISSUE"') { projectItems(first: 5) { nodes { project { number } fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } } } } }' --jq '.data.repository.issue.projectItems.nodes[] | select(.project.number == 4613) | .fieldValueByName.name')
   if [ "$VALUE" = "Todo (prioritized)" ]; then
     echo "  ✓ #$ISSUE: Status = Todo (prioritized)"
   else
