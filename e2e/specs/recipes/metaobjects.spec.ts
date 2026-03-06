@@ -17,25 +17,23 @@ setRecipeFixture({
 test.describe('Metaobjects Recipe', () => {
   test.describe('Stores Index Route', () => {
     test('renders stores index page', async ({page}) => {
-      await page.goto('/stores');
+      const response = await page.goto('/stores');
+      expect(response?.ok()).toBeTruthy();
+
+      await expect(page).toHaveURL(/\/stores$/);
 
       await expect(page.getByRole('banner')).toBeVisible();
+      await expect(page.getByRole('main')).toHaveCount(1);
       await expect(page.getByRole('contentinfo')).toBeVisible();
-
-      const pageContent = await page.textContent('body');
-      expect(pageContent).toBeTruthy();
-      expect(pageContent?.length || 0).toBeGreaterThan(100);
     });
 
-    test('displays route content or no sections fallback', async ({page}) => {
-      await page.goto('/stores');
+    test('shows fallback content for unknown route handle', async ({page}) => {
+      const response = await page.goto('/stores/does-not-exist');
+      expect(response?.ok()).toBeTruthy();
 
-      const pageContent = await page.textContent('body');
+      await expect(page).toHaveURL(/\/stores\/does-not-exist$/);
 
-      const hasContent = pageContent && pageContent.length > 500;
-      const hasFallback = pageContent?.includes('No route content sections');
-
-      expect(hasContent || hasFallback).toBe(true);
+      await expect(page.getByText('No route content sections')).toBeVisible();
     });
   });
 });
