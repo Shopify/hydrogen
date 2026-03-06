@@ -56,13 +56,28 @@ const TEST_STORE_KEYS = [
 
 type TestStoreKey = (typeof TEST_STORE_KEYS)[number];
 
-type MockServerOptions = {
-  scenario: MswScenario;
+type TestStoreOptions = {
+  mock?: {
+    scenario: MswScenario;
+  };
 };
 
-type TestStoreOptions = {
-  mock?: MockServerOptions;
-};
+async function createMockEnvFile(envFile: string, scenario: MswScenario) {
+  const mockEnvDir = await mkdtemp(path.join(tmpdir(), 'hydrogen-e2e-msw-'));
+  const mockEnvFile = path.join(mockEnvDir, '.env.mock');
+
+  const baseEnvContents = await readFile(envFile, 'utf8');
+  const normalizedEnvContents = baseEnvContents.endsWith('\n')
+    ? baseEnvContents
+    : `${baseEnvContents}\n`;
+
+  await writeFile(
+    mockEnvFile,
+    `${normalizedEnvContents}HYDROGEN_E2E_MSW_SCENARIO=${scenario}\n`,
+  );
+
+  return {mockEnvDir, mockEnvFile};
+}
 
 export const setTestStore = async (
   testStore: TestStoreKey | `https://${string}`,
@@ -73,9 +88,6 @@ export const setTestStore = async (
   let mockEnvDir: string | undefined;
 
   const mockScenario = isLocal ? options.mock?.scenario : undefined;
-  const useMsw = mockScenario !== undefined;
-
-  const mswEntryFile = path.resolve(__dirname, './msw/entry.ts');
 
   test.use({
     baseURL: async ({}, use) => {
@@ -103,25 +115,18 @@ export const setTestStore = async (
     let runtimeEnvFile = envFile;
 
     if (mockScenario) {
-      mockEnvDir = await mkdtemp(path.join(tmpdir(), 'hydrogen-e2e-msw-'));
-      runtimeEnvFile = path.join(mockEnvDir, '.env.mock');
-
-      const baseEnvContents = await readFile(envFile, 'utf8');
-      const normalizedEnvContents = baseEnvContents.endsWith('\n')
-        ? baseEnvContents
-        : `${baseEnvContents}\n`;
-
-      await writeFile(
-        runtimeEnvFile,
-        `${normalizedEnvContents}HYDROGEN_E2E_MSW_SCENARIO=${mockScenario}\n`,
-      );
+      const mockEnvFiles = await createMockEnvFile(envFile, mockScenario);
+      runtimeEnvFile = mockEnvFiles.mockEnvFile;
+      mockEnvDir = mockEnvFiles.mockEnvDir;
     }
 
     server = new DevServer({
       storeKey: testStore,
       customerAccountPush: false,
       envFile: runtimeEnvFile,
-      entry: useMsw ? mswEntryFile : undefined,
+      entry: mockScenario
+        ? path.resolve(__dirname, './msw/entry.ts')
+        : undefined,
     });
 
     await server.start();

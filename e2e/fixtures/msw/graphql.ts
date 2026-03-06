@@ -27,20 +27,10 @@ export function mockCustomerAccountOperation<
   resolver: CustomerAccountResolver<TDocument>,
 ): RequestHandler {
   const operation = parseOperation(document);
+  const createHandler =
+    operation.type === 'query' ? graphql.query : graphql.mutation;
 
-  if (operation.type === 'query') {
-    return graphql.query(operation.name, async ({variables, request}) => {
-      const data = await resolver({
-        variables:
-          variables as CustomerAccountOperationMap[TDocument]['variables'],
-        request,
-      });
-
-      return HttpResponse.json({data});
-    });
-  }
-
-  return graphql.mutation(operation.name, async ({variables, request}) => {
+  return createHandler(operation.name, async ({variables, request}) => {
     const data = await resolver({
       variables:
         variables as CustomerAccountOperationMap[TDocument]['variables'],

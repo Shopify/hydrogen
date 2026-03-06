@@ -1,25 +1,48 @@
 import {createCookieSessionStorage} from 'react-router';
 import {MswScenarioMeta} from './handlers';
 
-/**
- * MSW’s cookie internals touch localStorage in this runtime path.
- * Without this, we hit: Failed to create a CookieStore: localStorage is not available.
- */
-function ensureLocalStorage() {
+const installedKey = Symbol.for('hydrogen.e2e.msw.installed');
+const LOCAL_STORAGE_TEST_KEY = '__hydrogen_e2e_local_storage_test__';
+
+type ProcessLike = {
+  env?: Record<string, string | undefined>;
+  versions?: {node?: string};
+};
+
+type MswGlobal = typeof globalThis & {
+  [installedKey]?: boolean;
+  process?: ProcessLike;
+};
+
+function defineGlobal(name: string, value: unknown, writable = false) {
   try {
-    const key = '__hydrogen_e2e_local_storage_test__';
-
-    globalThis.localStorage?.setItem(key, key);
-    globalThis.localStorage?.removeItem(key);
-
-    return;
+    Object.defineProperty(globalThis, name, {
+      configurable: true,
+      enumerable: false,
+      value,
+      writable,
+    });
   } catch {
-    // Continue and install a safe localStorage polyfill below.
+    (globalThis as Record<string, unknown>)[name] = value;
   }
+}
+
+function hasWorkingLocalStorage() {
+  try {
+    globalThis.localStorage?.setItem(LOCAL_STORAGE_TEST_KEY, '1');
+    globalThis.localStorage?.removeItem(LOCAL_STORAGE_TEST_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function ensureLocalStorage() {
+  if (hasWorkingLocalStorage()) return;
 
   const store = new Map<string, string>();
 
-  const localStorage = {
+  defineGlobal('localStorage', {
     get length() {
       return store.size;
     },
@@ -38,35 +61,17 @@ function ensureLocalStorage() {
     setItem(key: string, value: string) {
       store.set(key, value);
     },
-  };
-
-  Object.defineProperty(globalThis, 'localStorage', {
-    configurable: true,
-    enumerable: false,
-    value: localStorage,
-    writable: false,
   });
 }
 
-ensureLocalStorage();
-
-/**
- * MSW core imports WebSocket helpers that reference BroadcastChannel.
- * MiniOxygen/workerd doesn't provide it, so we install a no-op shim.
- */
 function ensureBroadcastChannel() {
-  if ('BroadcastChannel' in globalThis) {
-    return;
-  }
+  if ('BroadcastChannel' in globalThis) return;
 
   class NoopBroadcastChannel {
-    name: string;
+    constructor(public name: string) {}
+
     onmessage: ((event: MessageEvent) => void) | null = null;
     onmessageerror: ((event: MessageEvent) => void) | null = null;
-
-    constructor(name: string) {
-      this.name = name;
-    }
 
     addEventListener() {}
     removeEventListener() {}
@@ -77,146 +82,117 @@ function ensureBroadcastChannel() {
     close() {}
   }
 
-  Object.defineProperty(globalThis, 'BroadcastChannel', {
-    configurable: true,
-    enumerable: false,
-    value: NoopBroadcastChannel,
-    writable: false,
-  });
+  defineGlobal('BroadcastChannel', NoopBroadcastChannel);
 }
 
-ensureBroadcastChannel();
-
-/**
- * Worker-like runtimes may not expose a full Node `process` object.
- * MSW environment checks expect `process.versions.node` and `process.env`.
- */
 function ensureNodeProcessForMsw() {
-  const currentProcess = (globalThis as typeof globalThis & {process?: unknown})
-    .process as
-    | {
-        versions?: {node?: string};
-      }
-    | undefined;
+  const currentProcess = (globalThis as MswGlobal).process;
 
   if (currentProcess?.versions?.node) {
-    try {
-      (process.env as Record<string, string>).NODE_ENV = 'production';
-    } catch {
-      // Ignore if process.env is read-only in this runtime.
-    }
-
+    currentProcess.env = {...currentProcess.env, NODE_ENV: 'production'};
     return;
   }
 
-  const processShim: any = {
-    env: {
-      ...(typeof currentProcess === 'object' &&
-      currentProcess &&
-      'env' in currentProcess
-        ? ((currentProcess as {env?: Record<string, string>}).env ?? {})
-        : {}),
-      NODE_ENV: 'production',
-    },
-    versions: {
-      ...(currentProcess?.versions ?? {}),
-      node: '22.0.0',
-    },
-  };
-
-  try {
-    Object.defineProperty(globalThis, 'process', {
-      configurable: true,
-      enumerable: false,
-      value: processShim,
-      writable: true,
-    });
-  } catch {
-    (globalThis as any).process = processShim;
-  }
+  defineGlobal(
+    'process',
+    {
+      env: {
+        ...(currentProcess?.env ?? {}),
+        NODE_ENV: 'production',
+      },
+      versions: {
+        ...(currentProcess?.versions ?? {}),
+        node: '22.0.0',
+      },
+    } satisfies ProcessLike,
+    true,
+  );
 }
 
+ensureLocalStorage();
+ensureBroadcastChannel();
 ensureNodeProcessForMsw();
 
-// Import MSW only after runtime shims are installed.
-// Static import evaluates too early and can crash during module init.
 const {getResponse} = await import('msw');
 const {getHandlersForScenario} = await import('./handlers');
 
-const installedKey = Symbol.for('hydrogen.e2e.msw.installed');
+let currentMswScenarioMeta: MswScenarioMeta | undefined = undefined;
 
-type MswGlobal = typeof globalThis & {
-  [installedKey]?: boolean;
-};
+function toRequest(input: RequestInfo | URL, init?: RequestInit) {
+  try {
+    return input instanceof Request ? input : new Request(input, init);
+  } catch {
+    return null;
+  }
+}
 
-const mswGlobal = globalThis as MswGlobal;
-let currentMswHandlers: ReturnType<typeof getHandlersForScenario> = {
-  handlers: [],
-  mocksCustomerAccountApi: false,
-};
+function installFetchInterceptor() {
+  const mswGlobal = globalThis as MswGlobal;
+  if (mswGlobal[installedKey]) return;
 
-if (!mswGlobal[installedKey]) {
   const originalFetch = globalThis.fetch.bind(globalThis);
 
-  // Intercept server-side fetch so MSW handlers can respond first.
-  // Unhandled requests fall through to the original fetch.
   globalThis.fetch = async (input, init) => {
-    if (currentMswHandlers && currentMswHandlers.handlers.length > 0) {
-      let request: Request | null = null;
+    const request = toRequest(input, init);
 
-      try {
-        request = input instanceof Request ? input : new Request(input, init);
-      } catch {
-        request = null;
-      }
+    if (
+      request &&
+      currentMswScenarioMeta &&
+      currentMswScenarioMeta.handlers.length > 0
+    ) {
+      const mockedResponse = await getResponse(
+        currentMswScenarioMeta.handlers,
+        request,
+      );
 
-      if (request) {
-        const mockedResponse = await getResponse(
-          currentMswHandlers.handlers,
-          request,
-        );
-
-        if (mockedResponse) {
-          return mockedResponse;
-        }
-      }
+      if (mockedResponse) return mockedResponse;
     }
 
     return originalFetch(input, init);
   };
 
   mswGlobal[installedKey] = true;
-  console.log('[e2e-msw] Installed fetch interceptor');
 }
+
+installFetchInterceptor();
 
 function getMswScenario(env: Env): string | undefined {
   return (env as unknown as Record<string, string | undefined>)
     .HYDROGEN_E2E_MSW_SCENARIO;
 }
 
-function shouldInjectCustomerSession(
-  mswScenarioMeta: MswScenarioMeta | undefined,
-) {
-  if (!mswScenarioMeta) return false;
+function shouldInjectCustomerSession() {
   return (
-    mswScenarioMeta &&
-    mswScenarioMeta.handlers.length > 0 &&
-    mswScenarioMeta.mocksCustomerAccountApi
+    currentMswScenarioMeta &&
+    currentMswScenarioMeta.mocksCustomerAccountApi &&
+    currentMswScenarioMeta.handlers.length > 0
   );
 }
 
-/**
- * The /account route needs a customer session cookie in addition to GraphQL mocks.
- * We synthesize a session payload so route loaders treat the user as logged in.
- */
+function getTunnelRequestUrl(requestUrl: string) {
+  const url = new URL(requestUrl);
+  url.protocol = 'https:';
+  url.hostname = 'e2e.tryhydrogen.dev';
+  url.port = '';
+  return url.toString();
+}
+
+function withCookie(headers: Headers, cookiePair: string) {
+  const cookiePairs = (headers.get('Cookie') ?? '')
+    .split(';')
+    .map((cookie) => cookie.trim())
+    .filter(Boolean)
+    .filter((cookie) => !cookie.startsWith('session='));
+
+  cookiePairs.push(cookiePair);
+  headers.set('Cookie', cookiePairs.join('; '));
+}
+
 async function addMockCustomerSessionCookieIfNeeded(
   request: Request,
   env: Env,
-  mswScenarioMeta: MswScenarioMeta | undefined,
 ) {
-  if (!shouldInjectCustomerSession(mswScenarioMeta)) {
-    return request;
-  }
+  if (!shouldInjectCustomerSession()) return request;
 
   const requestWithTunnelHostname = new Request(
     getTunnelRequestUrl(request.url),
@@ -237,69 +213,48 @@ async function addMockCustomerSessionCookieIfNeeded(
     requestWithTunnelHostname.headers.get('Cookie') ?? '',
   );
 
-  const customerAccountSession =
+  const currentCustomerAccountSession =
     session.get('customerAccount') ??
     ({} as {
       accessToken?: string;
-      expiresAt?: string;
       refreshToken?: string;
+      expiresAt?: string;
     });
 
   session.set('customerAccount', {
-    ...customerAccountSession,
+    ...currentCustomerAccountSession,
     accessToken:
-      customerAccountSession.accessToken ?? 'e2e-customer-access-token',
+      currentCustomerAccountSession.accessToken ?? 'e2e-customer-access-token',
     refreshToken:
-      customerAccountSession.refreshToken ?? 'e2e-customer-refresh-token',
+      currentCustomerAccountSession.refreshToken ??
+      'e2e-customer-refresh-token',
     expiresAt:
-      customerAccountSession.expiresAt ?? String(Date.now() + 60 * 60 * 1000),
+      currentCustomerAccountSession.expiresAt ??
+      String(Date.now() + 60 * 60 * 1000),
   });
 
-  const setCookieHeader = await storage.commitSession(session);
-  const sessionCookiePair = setCookieHeader.split(';', 1)[0];
-
+  const sessionCookiePair = (await storage.commitSession(session)).split(
+    ';',
+    1,
+  )[0];
   const headers = new Headers(requestWithTunnelHostname.headers);
-  const existingCookies = headers.get('Cookie');
-  const cookiePairs = existingCookies
-    ? existingCookies
-        .split(';')
-        .map((cookie) => cookie.trim())
-        .filter(Boolean)
-        .filter((cookie) => !cookie.startsWith('session='))
-    : [];
-
-  cookiePairs.push(sessionCookiePair);
-  headers.set('Cookie', cookiePairs.join('; '));
+  withCookie(headers, sessionCookiePair);
 
   return new Request(requestWithTunnelHostname, {headers});
 }
 
-function getTunnelRequestUrl(requestUrl: string) {
-  // Customer account session cookie logic expects the tunneled HTTPS host.
-  // Normalize local URL to match that shape before building the session.
-  const url = new URL(requestUrl);
-  url.protocol = 'https:';
-  url.hostname = 'e2e.tryhydrogen.dev';
-  url.port = '';
-
-  return url.toString();
-}
-
 const appWithMsw = {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
-    const mswScenario = getMswScenario(env);
-    currentMswHandlers = getHandlersForScenario(mswScenario);
+    currentMswScenarioMeta = getHandlersForScenario(getMswScenario(env));
 
-    if (currentMswHandlers && currentMswHandlers.mocksCustomerAccountApi) {
+    if (currentMswScenarioMeta?.mocksCustomerAccountApi) {
       process.env.HYDROGEN_E2E_CAAPI_MOCK = 'true';
     }
-    // Dynamic import keeps this wrapper compatible with dev reload behavior.
-    const app = (await import('../../../templates/skeleton/server')).default;
 
+    const app = (await import('../../../templates/skeleton/server')).default;
     const requestWithSession = await addMockCustomerSessionCookieIfNeeded(
       request,
       env,
-      currentMswHandlers,
     );
 
     return app.fetch(requestWithSession, env, executionContext);
