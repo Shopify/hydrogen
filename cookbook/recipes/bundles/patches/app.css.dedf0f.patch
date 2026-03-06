@@ -1,7 +1,7 @@
-index 499d1301..535f6c43 100644
+index 3be08d31..51b74911 100644
 --- a/templates/skeleton/app/styles/app.css
 +++ b/templates/skeleton/app/styles/app.css
-@@ -455,6 +455,10 @@ button.reset:hover:not(:has(> *)) {
+@@ -506,6 +506,10 @@ button.reset:hover:not(:has(> *)) {
    margin-top: 0;
  }
  
