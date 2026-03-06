@@ -37,22 +37,15 @@ const KNOWN_REGULAR_PRODUCT = {
 
 test.describe('Bundles Recipe', () => {
   test.describe('Product Cards', () => {
-    test('displays bundle badge on product cards when bundle appears in grids', async ({
+    test('displays bundle badges on product cards in collection grids', async ({
       page,
     }) => {
-      await page.goto('/');
+      await page.goto('/collections/bundles');
 
-      const bundleCard = page.getByRole('link', {
-        name: new RegExp(KNOWN_BUNDLE.name, 'i'),
-      });
+      const productsRegion = page.getByRole('region', {name: 'Products'});
+      const bundleBadges = productsRegion.getByText('BUNDLE', {exact: true});
 
-      const bundleCount = await bundleCard.count();
-      if (bundleCount > 0) {
-        await expect(bundleCard.first()).toBeVisible();
-        await expect(
-          bundleCard.first().getByText('BUNDLE', {exact: true}),
-        ).toBeVisible();
-      }
+      await expect(bundleBadges.first()).toBeVisible();
     });
   });
 
@@ -75,8 +68,10 @@ test.describe('Bundles Recipe', () => {
       });
       await expect(bundledProductsHeading).toBeVisible();
 
-      const bundledProductLinks = page.getByRole('link');
-      await expect(bundledProductLinks.first()).toBeVisible();
+      const bundledProductLink = page
+        .getByRole('link', {name: /Qty:\s*\d+/})
+        .first();
+      await expect(bundledProductLink).toBeVisible();
     });
 
     test('shows "Add bundle to cart" text on add to cart button', async ({
@@ -128,6 +123,10 @@ test.describe('Bundles Recipe', () => {
       await expect(
         page.getByRole('button', {name: 'Add to cart'}),
       ).toBeVisible();
+
+      await expect(
+        page.getByRole('button', {name: /add bundle to cart/i}),
+      ).toHaveCount(0);
     });
   });
 });
