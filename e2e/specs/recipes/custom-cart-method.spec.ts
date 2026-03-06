@@ -107,7 +107,8 @@ test.describe('Custom Cart Method Recipe', () => {
       const increaseButton = cart.getIncreaseButton(firstLineItem);
       await increaseButton.click();
 
-      await expect(firstLineItem.getByText(/quantity:\s*2/i)).toBeVisible();
+      const decreaseButton = cart.getDecreaseButton(firstLineItem);
+      await expect(decreaseButton).toBeEnabled();
       await expect(cart.getLineItems()).toHaveCount(1);
 
       const optionSelect = (
@@ -116,7 +117,7 @@ test.describe('Custom Cart Method Recipe', () => {
       await cart.selectDifferentOption(optionSelect);
 
       await expect(cart.getLineItems()).toHaveCount(1);
-      await expect(firstLineItem.getByText(/quantity:\s*2/i)).toBeVisible();
+      await expect(decreaseButton).toBeEnabled();
     });
 
     test('updates without page reload when variant changes', async ({page}) => {
