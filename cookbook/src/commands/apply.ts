@@ -4,6 +4,7 @@ import {withResolvedCatalog} from '../lib/workspace';
 
 type ApplyArgs = {
   recipe: string;
+  template?: string;
 };
 
 export const apply: CommandModule<{}, ApplyArgs> = {
@@ -15,6 +16,12 @@ export const apply: CommandModule<{}, ApplyArgs> = {
       description: 'The name of the recipe to apply',
       required: true,
     },
+    template: {
+      type: 'string',
+      description:
+        'Path to template directory (defaults to templates/skeleton)',
+      required: false,
+    },
   },
   handler,
 };
@@ -23,6 +30,7 @@ function handler(args: ApplyArgs) {
   withResolvedCatalog(() => {
     applyRecipe({
       recipeTitle: args.recipe,
+      templatePath: args.template,
     });
   });
 }
