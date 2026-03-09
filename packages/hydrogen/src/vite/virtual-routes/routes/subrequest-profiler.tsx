@@ -109,12 +109,13 @@ function NotificationBanner({
     <div className="notification">
       <div id="close-notification">
         <button
+          aria-label="Close notification"
           className="plain icon"
           onClick={() => {
             setHideNotification(true);
           }}
         >
-          <IconClose />
+          <IconClose aria-hidden={true} />
         </button>
       </div>
       <p>
@@ -132,8 +133,8 @@ function EmptyState() {
       <p className="text-normal">
         Open your localhost to initiate subrequest profiler
       </p>
-      <Link to="/" target="_blank" className="link-margin-top">
-        <button className="primary">Open app</button>
+      <Link to="/" target="_blank" className="link-margin-top primary-link">
+        Open app
       </Link>
     </div>
   );
