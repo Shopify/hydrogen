@@ -10,7 +10,7 @@ setRecipeFixture({
  * external GraphQL APIs with Oxygen's caching system.
  *
  * The recipe adds a Rick & Morty characters section to the homepage that
- * fetches data from rickandmortyapi.com GraphQL API.
+ * displays data fetched server-side from rickandmortyapi.com GraphQL API in the loader.
  */
 
 test.describe('Third-party API Recipe', () => {
