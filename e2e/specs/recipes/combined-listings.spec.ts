@@ -25,6 +25,8 @@ setRecipeFixture({
 const KNOWN_COMBINED_LISTING = {
   handle: 'the-snowboards',
   name: 'The Hydrogen Snowboards (Combined)',
+  minPrice: '$500',
+  maxPrice: '$700',
 } as const;
 
 // A regular product for comparison tests
@@ -57,25 +59,24 @@ test.describe('Combined Listings Recipe', () => {
       await expect(main.getByText(/To\s*\$/)).toBeVisible();
 
       const mainText = await main.textContent();
-      expect(mainText).toContain('$500');
-      expect(mainText).toContain('$700');
+      expect(mainText).toContain(KNOWN_COMBINED_LISTING.minPrice);
+      expect(mainText).toContain(KNOWN_COMBINED_LISTING.maxPrice);
     });
 
-    test('variant selection updates URL', async ({page}) => {
-      const initialUrl = page.url();
+    test('variant selection navigates to child product with options', async ({
+      page,
+    }) => {
+      // Combined listings render variants as links to child products
+      const emberLink = page
+        .getByRole('main')
+        .getByRole('link', {name: 'Ember'});
+      await expect(emberLink).toBeVisible();
 
-      const variantOptionLinks = page.locator(
-        'main a[href^="/products/"][href*="?"]',
-      );
-      const variantOptionCount = await variantOptionLinks.count();
-      expect(variantOptionCount).toBeGreaterThan(0);
+      await emberLink.click();
 
-      const firstVariantOptionLink = variantOptionLinks.first();
-      await expect(firstVariantOptionLink).toBeVisible();
-
-      await firstVariantOptionLink.click();
-
-      await expect.poll(() => page.url()).not.toBe(initialUrl);
+      await expect
+        .poll(() => new URL(page.url()).searchParams.has('Color'))
+        .toBe(true);
     });
   });
 
@@ -86,7 +87,7 @@ test.describe('Combined Listings Recipe', () => {
       await page.goto('/collections/all');
 
       const parentProductCard = page.getByRole('link', {
-        name: new RegExp(KNOWN_COMBINED_LISTING.name, 'i'),
+        name: KNOWN_COMBINED_LISTING.name,
       });
       await expect(parentProductCard).toHaveCount(0);
     });
