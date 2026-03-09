@@ -104,6 +104,8 @@ test.describe('Metaobjects Recipe', () => {
 
       await storeLinks.first().click();
 
+      await page.waitForURL(/\/stores\//);
+
       const storeContent = page.locator('section.store');
       await expect(storeContent).toBeVisible();
 
