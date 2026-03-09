@@ -114,15 +114,16 @@ getCartTotals() {
 
 **Examples of acceptable accessibility improvements:**
 
-- Adding `aria-label` to landmark regions for disambiguation
+- Adding `aria-label` or preferably `aria-labelledby` to landmark regions for disambiguation
 - Adding `aria-labelledby` to associate labels with controls
-- Improving semantic HTML (e.g., `<ul>` → `<ul role="list" aria-label="Line items">`)
+- Adding accessible names to native elements without overriding their roles (e.g., `<ul aria-label="Line items">` or preferably `<ul aria-labelledby="line-items-heading">`)
 - Adding accessible names to buttons (e.g., `aria-label="Remove gift card ending in 1234"`)
 
 **Not acceptable:**
 
 - Adding `aria-label` purely for test purposes when it provides no user benefit
 - Over-labeling elements that are already accessible
+- Adding explicit ARIA roles that duplicate native semantics (e.g., `role="list"` on `<ul>`, `role="button"` on `<button>`)
 - Using `data-testid` when role-based selectors would work with proper markup
 
 ### Presence vs Absence Assertions
