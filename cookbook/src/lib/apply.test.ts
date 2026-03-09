@@ -2,7 +2,6 @@ import {describe, it, expect, beforeEach, afterEach} from 'vitest';
 import {applyRecipe} from './apply';
 import fs from 'fs';
 import path from 'path';
-import {execSync} from 'child_process';
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 const TEST_TEMPLATE_DIR = path.join(REPO_ROOT, '.tmp/test-apply-template');
@@ -27,7 +26,7 @@ describe('applyRecipe with --template flag', () => {
 
   it('applies recipe to custom template path without mutating original skeleton', () => {
     // Copy skeleton to test directory
-    execSync(`cp -r "${SKELETON_PATH}" "${TEST_TEMPLATE_DIR}"`);
+    fs.cpSync(SKELETON_PATH, TEST_TEMPLATE_DIR, {recursive: true});
 
     // Verify skeleton has a file that markets recipe will delete
     const originalSkeletonFile = path.join(
@@ -72,7 +71,7 @@ describe('applyRecipe with --template flag', () => {
 
   it('applies patches to custom template path', () => {
     // Copy skeleton to test directory
-    execSync(`cp -r "${SKELETON_PATH}" "${TEST_TEMPLATE_DIR}"`);
+    fs.cpSync(SKELETON_PATH, TEST_TEMPLATE_DIR, {recursive: true});
 
     const rootFile = path.join(TEST_TEMPLATE_DIR, 'app/root.tsx');
     const originalContent = fs.readFileSync(rootFile, 'utf-8');

@@ -27,7 +27,9 @@ export function applyRecipe(params: {
   const recipeDir = path.join(COOKBOOK_PATH, 'recipes', params.recipeTitle);
   const recipeYamlPath = path.join(recipeDir, 'recipe.yaml');
   const templatePath = params.templatePath
-    ? path.resolve(REPO_ROOT, params.templatePath)
+    ? path.isAbsolute(params.templatePath)
+      ? params.templatePath
+      : path.resolve(process.cwd(), params.templatePath)
     : TEMPLATE_PATH;
 
   console.log(`- 🍱 Loading recipe '${params.recipeTitle}'…`);
