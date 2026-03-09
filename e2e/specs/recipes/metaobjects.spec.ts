@@ -25,16 +25,13 @@ test.describe('Metaobjects Recipe', () => {
 
       await expect(page.getByRole('banner')).toBeVisible();
 
-      // Verify RouteContent component rendered successfully (not fallback)
       await expect(
         page.getByText('No route content sections'),
       ).not.toBeVisible();
 
-      // Verify sections container exists and has content
       const sections = page.locator('.sections');
       await expect(sections).toBeVisible();
 
-      // Verify at least one section rendered (proves metaobjects CMS is working)
       const sectionElements = sections.locator('> *');
       const sectionCount = await sectionElements.count();
       expect(sectionCount).toBeGreaterThan(0);
@@ -45,29 +42,27 @@ test.describe('Metaobjects Recipe', () => {
     }) => {
       await page.goto('/');
 
-      // Test that the section switching logic in Sections.tsx works
       const sections = page.locator('.sections');
       const sectionElements = sections.locator('> *');
       const totalSections = await sectionElements.count();
 
-      // Verify multiple different section types can render
       expect(totalSections).toBeGreaterThan(0);
     });
   });
 
   test.describe('Stores Index Route', () => {
-    test('renders stores route with metaobject content', async ({page}) => {
+    test.beforeEach(async ({page}) => {
       await page.goto('/stores');
+    });
 
+    test('renders stores route with metaobject content', async ({page}) => {
       await expect(page).toHaveURL(/\/stores$/);
       await expect(page.getByRole('banner')).toBeVisible();
 
-      // Verify RouteContent rendered successfully (not fallback)
       await expect(
         page.getByText('No route content sections'),
       ).not.toBeVisible();
 
-      // Verify sections container exists
       const sections = page.locator('.sections');
       await expect(sections).toBeVisible();
     });
@@ -77,18 +72,18 @@ test.describe('Metaobjects Recipe', () => {
 
       await expect(page).toHaveURL(/\/stores\/does-not-exist$/);
 
-      // Verify fallback message displayed (per RouteContent.tsx line 8)
       await expect(page.getByText('No route content sections')).toBeVisible();
 
-      // Verify sections container doesn't exist or is empty
       await expect(page.locator('.sections')).toHaveCount(0);
     });
   });
 
   test.describe('Individual Store Navigation', () => {
-    test('navigates to store detail and back', async ({page}) => {
+    test.beforeEach(async ({page}) => {
       await page.goto('/stores');
+    });
 
+    test('navigates to store detail and back', async ({page}) => {
       const storeLinks = page.locator('a[href^="/stores/"]').filter({
         has: page.locator('address'),
       });
@@ -103,8 +98,6 @@ test.describe('Metaobjects Recipe', () => {
     });
 
     test('renders store profile details', async ({page}) => {
-      await page.goto('/stores');
-
       const storeLinks = page.locator('a[href^="/stores/"]').filter({
         has: page.locator('address'),
       });
@@ -114,18 +107,14 @@ test.describe('Metaobjects Recipe', () => {
       const storeContent = page.locator('section.store');
       await expect(storeContent).toBeVisible();
 
-      // per SectionStoreProfile.tsx line 33
       await expect(page.getByRole('heading', {level: 1})).toBeVisible();
 
-      // per SectionStoreProfile.tsx line 38
       await expect(storeContent.locator('address')).toBeVisible();
     });
 
     test('handles dynamic route parameters in GraphQL query', async ({
       page,
     }) => {
-      await page.goto('/stores');
-
       const storeLinks = page.locator('a[href^="/stores/"]').filter({
         has: page.locator('address'),
       });
@@ -145,10 +134,9 @@ test.describe('Metaobjects Recipe', () => {
     test('renders hero section', async ({page}) => {
       await page.goto('/');
 
-      const heroSection = page.locator('.section-hero');
+      const heroSection = page.getByRole('region', {name: 'Hero'});
       await expect(heroSection.first()).toBeVisible();
 
-      // per SectionHero.tsx line 47
       await expect(
         heroSection.first().getByRole('heading', {level: 1}),
       ).toBeVisible();
@@ -157,13 +145,12 @@ test.describe('Metaobjects Recipe', () => {
     test('renders store grid', async ({page}) => {
       await page.goto('/stores');
 
-      const storesSection = page.locator('.section-stores');
+      const storesSection = page.getByRole('region', {name: 'Stores'});
       await expect(storesSection).toBeVisible();
 
       const storeLinks = storesSection.getByRole('link');
       await expect(storeLinks.first()).toBeVisible();
 
-      // per SectionStores.tsx line 48
       await expect(storeLinks.first().locator('address')).toBeVisible();
     });
   });
@@ -172,7 +159,6 @@ test.describe('Metaobjects Recipe', () => {
     test('shows edit button in development environment', async ({page}) => {
       await page.goto('/');
 
-      // EditRoute checks for localhost/127.0.0.1/preview (per EditRoute.tsx line 21-23)
       const currentUrl = page.url();
       const isDevelopmentEnv =
         currentUrl.includes('localhost') ||
@@ -180,29 +166,30 @@ test.describe('Metaobjects Recipe', () => {
         currentUrl.includes('preview');
 
       const editButton = page.getByRole('link', {name: 'Edit Route'});
-      const buttonCount = await editButton.count();
 
-      if (isDevelopmentEnv && buttonCount > 0) {
+      if (isDevelopmentEnv) {
         await expect(editButton).toBeVisible();
 
-        // Verify link points to Shopify admin
         const href = await editButton.getAttribute('href');
         expect(href).toContain('admin.shopify.com');
         expect(href).toContain('/content/entries/route/');
 
-        // Verify opens in new tab (per EditRoute.tsx line 33-34)
         const target = await editButton.getAttribute('target');
         const rel = await editButton.getAttribute('rel');
         expect(target).toBe('_blank');
         expect(rel).toBe('noreferrer');
+      } else {
+        await expect(editButton).toHaveCount(0);
       }
     });
   });
 
   test.describe('Accessibility', () => {
-    test('store links are keyboard navigable', async ({page}) => {
+    test.beforeEach(async ({page}) => {
       await page.goto('/stores');
+    });
 
+    test('store links are keyboard navigable', async ({page}) => {
       const storeLinks = page.locator('a[href^="/stores/"]').filter({
         has: page.locator('address'),
       });
@@ -216,8 +203,6 @@ test.describe('Metaobjects Recipe', () => {
     });
 
     test('back to stores link is keyboard accessible', async ({page}) => {
-      await page.goto('/stores');
-
       const storeLinks = page.locator('a[href^="/stores/"]').filter({
         has: page.locator('address'),
       });
