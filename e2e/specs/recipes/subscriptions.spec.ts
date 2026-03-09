@@ -94,6 +94,38 @@ test.describe('Subscriptions Recipe', () => {
 
       await expect(page.getByRole('dialog', {name: 'Cart'})).toBeVisible();
     });
+
+    test('allows switching between subscription frequencies', async ({
+      page,
+    }) => {
+      const monthlyOption = page.getByRole('link', {
+        name: /deliver every month/i,
+      });
+      const weeklyOption = page.getByRole('link', {
+        name: /deliver every week/i,
+      });
+
+      await monthlyOption.click();
+
+      const monthlySellingPlan = await expect
+        .poll(() => new URL(page.url()).searchParams.get('selling_plan'))
+        .toBeTruthy();
+      expect(monthlySellingPlan).toBeTruthy();
+
+      await weeklyOption.click();
+
+      const weeklySellingPlan = await expect
+        .poll(() => new URL(page.url()).searchParams.get('selling_plan'))
+        .toBeTruthy();
+      expect(weeklySellingPlan).toBeTruthy();
+      expect(weeklySellingPlan).not.toBe(monthlySellingPlan);
+
+      await monthlyOption.click();
+
+      await expect
+        .poll(() => new URL(page.url()).searchParams.get('selling_plan'))
+        .toBe(monthlySellingPlan);
+    });
   });
 
   test.describe('Cart - Subscription Product', () => {
