@@ -108,22 +108,31 @@ test.describe('Subscriptions Recipe', () => {
       await monthlyOption.click();
 
       await expect
-        .poll(() => new URL(page.url()).searchParams.has('selling_plan'))
+        .poll(() => {
+          const sellingPlan = new URL(page.url()).searchParams.get(
+            'selling_plan',
+          );
+          return sellingPlan !== null;
+        })
         .toBe(true);
       const monthlySellingPlan = new URL(page.url()).searchParams.get(
         'selling_plan',
       );
-      expect(monthlySellingPlan).toBeTruthy();
 
       await weeklyOption.click();
 
       await expect
-        .poll(() => new URL(page.url()).searchParams.has('selling_plan'))
+        .poll(() => {
+          const sellingPlan = new URL(page.url()).searchParams.get(
+            'selling_plan',
+          );
+          return sellingPlan !== null && sellingPlan !== monthlySellingPlan;
+        })
         .toBe(true);
       const weeklySellingPlan = new URL(page.url()).searchParams.get(
         'selling_plan',
       );
-      expect(weeklySellingPlan).toBeTruthy();
+
       expect(weeklySellingPlan).not.toBe(monthlySellingPlan);
 
       await monthlyOption.click();
@@ -159,10 +168,10 @@ test.describe('Subscriptions Recipe', () => {
       const lineItems = cart.getLineItems();
       await expect(lineItems).toHaveCount(1);
 
-      const lineItemText = await lineItems.first().textContent();
-      expect(lineItemText?.toLowerCase()).toMatch(
-        /deliver|subscription|every|week|month/,
-      );
+      // Recipe currently only shows "(subscription)" marker in cart
+      // TODO: Enhance recipe to display selling plan details (e.g., "Deliver every week")
+      const firstLineItem = lineItems.first();
+      await expect(firstLineItem.getByText(/subscription/i)).toBeVisible();
     });
   });
 
