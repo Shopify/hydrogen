@@ -1,6 +1,7 @@
 import {test, expect, setRecipeFixture} from '../../fixtures';
 import {MarketsUtil} from '../../fixtures/markets-utils';
 import {CartUtil} from '../../fixtures/cart-utils';
+import {CURRENCY_FORMATS} from '../../fixtures/currency-formats';
 
 setRecipeFixture({
   recipeName: 'markets',
@@ -8,9 +9,7 @@ setRecipeFixture({
 });
 
 /**
- * Validates the Markets recipe, which provides URL-based localization via path
- * prefixes (e.g. /FR-CA/). Tests cover routing, API-driven currency formatting,
- * and the country selector UI.
+ * Markets Recipe E2E Tests
  *
  * NOTE: The recipe doesn't include a UI string translation system — hardcoded
  * text like "Add to cart" stays in English. Localization is routing- and
@@ -24,9 +23,6 @@ const KNOWN_PRODUCT = {
   name: 'The Ascend',
 } as const;
 
-const USD_FORMAT = /^\$[\d,]+\.\d{2}$/;
-const CAD_FORMAT = /^CA\$[\d,]+\.\d{2}$/;
-
 test.describe('Markets Recipe', () => {
   test.describe('Default Locale (USD)', () => {
     test('has no URL prefix and shows USD prices', async ({page}) => {
@@ -37,7 +33,7 @@ test.describe('Markets Recipe', () => {
 
       await page.goto(`/products/${KNOWN_PRODUCT.handle}`);
       const priceElement = recipe.getPriceElement();
-      await recipe.assertPriceFormat(priceElement, USD_FORMAT);
+      await recipe.assertPriceFormat(priceElement, CURRENCY_FORMATS.USD);
     });
   });
 
@@ -58,7 +54,7 @@ test.describe('Markets Recipe', () => {
       await page.goto(`/FR-CA/products/${KNOWN_PRODUCT.handle}`);
 
       const priceElement = recipe.getPriceElement();
-      await recipe.assertPriceFormat(priceElement, CAD_FORMAT);
+      await recipe.assertPriceFormat(priceElement, CURRENCY_FORMATS.CAD);
     });
 
     test('collection page URL includes locale prefix and products link with locale', async ({
@@ -81,18 +77,16 @@ test.describe('Markets Recipe', () => {
 
       await page.goto(`/FR-CA/products/${KNOWN_PRODUCT.handle}`);
 
-      // Add to cart and wait for drawer to load
       await cart.addItem(KNOWN_PRODUCT.name);
 
       // CAD in the drawer proves AddToCartButton posted to /FR-CA/cart rather than /cart,
       // creating the cart with the correct market context.
-      await recipe.assertCartSubtotalFormat(CAD_FORMAT);
+      await recipe.assertCartSubtotalFormat(CURRENCY_FORMATS.CAD);
 
-      // Navigate to cart page
       await page.goto('/FR-CA/cart');
       await page.waitForURL(/\/FR-CA\/cart$/);
 
-      await recipe.assertCartSubtotalFormat(CAD_FORMAT);
+      await recipe.assertCartSubtotalFormat(CURRENCY_FORMATS.CAD);
     });
   });
 
