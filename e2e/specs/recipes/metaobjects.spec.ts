@@ -156,18 +156,20 @@ test.describe('Metaobjects Recipe', () => {
   });
 
   test.describe('EditRoute Component', () => {
-    test('shows edit button in development environment', async ({page}) => {
+    test('shows edit button in development or preview environments', async ({
+      page,
+    }) => {
       await page.goto('/');
 
       const currentUrl = page.url();
-      const isDevelopmentEnv =
+      const isDevOrPreview =
         currentUrl.includes('localhost') ||
         currentUrl.includes('127.0.0.1') ||
         currentUrl.includes('preview');
 
       const editButton = page.getByRole('link', {name: 'Edit Route'});
 
-      if (isDevelopmentEnv) {
+      if (isDevOrPreview) {
         await expect(editButton).toBeVisible();
 
         const href = await editButton.getAttribute('href');
