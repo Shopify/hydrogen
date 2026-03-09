@@ -1,0 +1,452 @@
+# Metaobjects Recipe - Data Verification Query
+#
+# This GraphQL query verifies all metaobjects data required for the metaobjects recipe tests.
+# Store: hydrogenPreviewStorefront
+#
+# HOW TO RUN THIS QUERY:
+#
+# Method 1: Using Shopify GraphiQL App (Recommended for visual inspection)
+# 1. Install the Shopify GraphiQL app: https://shopify-graphiql-app.shopifycloud.com/login
+# 2. Select your store: hydrogenPreviewStorefront
+# 3. Copy and paste this entire query into the GraphiQL interface
+# 4. Click "Execute Query" (play button)
+# 5. Review the results to verify all required data exists
+#
+# Method 2: Using curl (for CI/CD or scripting)
+# curl -X POST \
+#   https://your-store.myshopify.com/api/2024-01/graphql.json \
+#   -H "Content-Type: application/json" \
+#   -H "X-Shopify-Storefront-Access-Token: YOUR_TOKEN" \
+#   -d @verify-metaobjects-data.graphql
+#
+# Method 3: From Hydrogen project (recommended for developers)
+# 1. Save this query in your project
+# 2. Use the Shopify CLI or your Hydrogen dev server
+# 3. Execute via your storefront client
+#
+# WHAT SHOULD EXIST FOR TESTS TO PASS:
+#
+# ✅ route-home metaobject with:
+#    - At least 1 section configured
+#    - Sections can be any type (hero, products, collections, stores)
+#
+# ✅ route-stores metaobject with:
+#    - At least 1 section_stores_grid section
+#    - The stores grid section should reference at least 1 store
+#
+# ✅ Store metaobjects (at least 1) with:
+#    - handle (for URL routing)
+#    - heading (for display)
+#    - address (required for tests)
+#    - image (optional but recommended)
+#
+# ✅ Individual store routes (created via route-{store-handle}) with:
+#    - section_store_profile section
+#    - The store profile section references the store metaobject
+#
+# INTERPRETING THE RESULTS:
+#
+# - If routeHome is null: Create a metaobject of type "route" with handle "route-home"
+# - If routeHome.sections is empty: Add section references to the route
+# - If routeStores is null: Create a metaobject of type "route" with handle "route-stores"
+# - If storesGridSection is null: Create a section_stores_grid and add it to route-stores
+# - If stores array is empty: Create store metaobjects and reference them in the stores grid
+# - If a store route is null: Create a route for that store with a store_profile section
+
+query VerifyMetaobjectsData {
+  # ============================================================================
+  # 1. HOMEPAGE ROUTE (route-home)
+  # ============================================================================
+  # Tests require: Homepage should render with at least one section
+  # Test location: e2e/specs/recipes/metaobjects.spec.ts:23-41
+
+  routeHome: metaobject(handle: {type: "route", handle: "route-home"}) {
+    id
+    type
+    handle
+
+    # Route title
+    title: field(key: "title") {
+      value
+    }
+
+    # Sections configured for this route
+    sections: field(key: "sections") {
+      references(first: 10) {
+        nodes {
+          ... on Metaobject {
+            id
+            type
+            handle
+
+            # Section type determines which component renders
+            # Expected types: section_hero, section_featured_products,
+            # section_featured_collections, section_stores_grid, section_store_profile
+          }
+        }
+      }
+    }
+  }
+
+  # ============================================================================
+  # 2. STORES INDEX ROUTE (route-stores)
+  # ============================================================================
+  # Tests require: /stores route should render with stores grid section
+  # Test location: e2e/specs/recipes/metaobjects.spec.ts:58-73
+
+  routeStores: metaobject(handle: {type: "route", handle: "route-stores"}) {
+    id
+    type
+    handle
+
+    title: field(key: "title") {
+      value
+    }
+
+    sections: field(key: "sections") {
+      references(first: 10) {
+        nodes {
+          ... on Metaobject {
+            id
+            type
+            handle
+          }
+        }
+      }
+    }
+  }
+
+  # ============================================================================
+  # 3. STORES GRID SECTION
+  # ============================================================================
+  # Tests require: The stores grid section should reference actual stores
+  # Test location: e2e/specs/recipes/metaobjects.spec.ts:213-232
+
+  # Query for the stores grid section (should be referenced by route-stores)
+  storesGridSection: metaobjects(type: "section_stores_grid", first: 1) {
+    nodes {
+      id
+      type
+      handle
+
+      # Heading for the stores grid
+      heading: field(key: "heading") {
+        value
+      }
+
+      # Store references - CRITICAL for tests
+      stores: field(key: "stores") {
+        references(first: 10) {
+          nodes {
+            ... on Metaobject {
+              id
+              type
+              handle
+
+              # Store heading (required by tests at line 123)
+              heading: field(key: "heading") {
+                value
+              }
+
+              # Store address (required by tests at line 126, 229)
+              address: field(key: "address") {
+                value
+              }
+
+              # Store image (optional but shown in UI)
+              image: field(key: "image") {
+                reference {
+                  ... on MediaImage {
+                    image {
+                      url
+                      altText
+                      width
+                      height
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  # ============================================================================
+  # 4. ALL STORE METAOBJECTS
+  # ============================================================================
+  # Tests require: At least one store for navigation tests
+  # Test location: e2e/specs/recipes/metaobjects.spec.ts:88-152
+
+  stores: metaobjects(type: "store", first: 10) {
+    nodes {
+      id
+      type
+      handle # Used for /stores/{handle} routing
+      # Store details
+      title: field(key: "title") {
+        value
+      }
+
+      heading: field(key: "heading") {
+        value
+      }
+
+      description: field(key: "description") {
+        value
+      }
+
+      address: field(key: "address") {
+        value
+      }
+
+      # Opening hours (list of strings)
+      hours: field(key: "hours") {
+        value
+      }
+
+      image: field(key: "image") {
+        reference {
+          ... on MediaImage {
+            image {
+              url
+              altText
+              width
+              height
+            }
+          }
+        }
+      }
+    }
+  }
+
+  # ============================================================================
+  # 5. EXAMPLE INDIVIDUAL STORE ROUTES
+  # ============================================================================
+  # Tests require: Individual store routes should have store_profile sections
+  # Test location: e2e/specs/recipes/metaobjects.spec.ts:108-152
+
+  # Note: You'll need to create routes for each store with format: route-{store.handle}
+  # Example: If you have a store with handle "downtown", create route-downtown
+
+  # Query for all store profile sections
+  storeProfileSections: metaobjects(type: "section_store_profile", first: 10) {
+    nodes {
+      id
+      type
+      handle
+
+      # Store reference - links to the actual store metaobject
+      store: field(key: "store") {
+        reference {
+          ... on Metaobject {
+            id
+            type
+            handle
+
+            heading: field(key: "heading") {
+              value
+            }
+
+            description: field(key: "description") {
+              value
+            }
+
+            address: field(key: "address") {
+              value
+            }
+
+            hours: field(key: "hours") {
+              value
+            }
+
+            image: field(key: "image") {
+              reference {
+                ... on MediaImage {
+                  image {
+                    url
+                    altText
+                    width
+                    height
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  # ============================================================================
+  # 6. OPTIONAL: HERO SECTIONS
+  # ============================================================================
+  # Tests check for hero sections if they exist
+  # Test location: e2e/specs/recipes/metaobjects.spec.ts:156-170
+
+  heroSections: metaobjects(type: "section_hero", first: 5) {
+    nodes {
+      id
+      type
+      handle
+
+      heading: field(key: "heading") {
+        value
+      }
+
+      subheading: field(key: "subheading") {
+        value
+      }
+
+      image: field(key: "image") {
+        reference {
+          ... on MediaImage {
+            image {
+              url
+              altText
+              width
+              height
+            }
+          }
+        }
+      }
+
+      # Link metaobject reference
+      link: field(key: "link") {
+        reference {
+          ... on Metaobject {
+            href: field(key: "href") {
+              value
+            }
+            text: field(key: "text") {
+              value
+            }
+            target: field(key: "target") {
+              value
+            }
+          }
+        }
+      }
+    }
+  }
+
+  # ============================================================================
+  # 7. OPTIONAL: FEATURED PRODUCTS SECTIONS
+  # ============================================================================
+  # Tests check for product links if they exist
+  # Test location: e2e/specs/recipes/metaobjects.spec.ts:172-187
+
+  featuredProductsSections: metaobjects(
+    type: "section_featured_products"
+    first: 5
+  ) {
+    nodes {
+      id
+      type
+      handle
+
+      heading: field(key: "heading") {
+        value
+      }
+
+      body: field(key: "body") {
+        value
+      }
+
+      # Product references
+      products: field(key: "products") {
+        references(first: 10) {
+          nodes {
+            ... on Product {
+              id
+              title
+              handle
+              priceRange {
+                minVariantPrice {
+                  amount
+                  currencyCode
+                }
+              }
+            }
+          }
+        }
+      }
+
+      withProductPrices: field(key: "with_product_prices") {
+        value
+      }
+    }
+  }
+
+  # ============================================================================
+  # 8. OPTIONAL: FEATURED COLLECTIONS SECTIONS
+  # ============================================================================
+  # Tests check for collection links if they exist
+  # Test location: e2e/specs/recipes/metaobjects.spec.ts:189-211
+
+  featuredCollectionsSections: metaobjects(
+    type: "section_featured_collections"
+    first: 5
+  ) {
+    nodes {
+      id
+      type
+      handle
+
+      heading: field(key: "heading") {
+        value
+      }
+
+      # Collection references
+      collections: field(key: "collections") {
+        references(first: 10) {
+          nodes {
+            ... on Collection {
+              id
+              title
+              handle
+              image {
+                url
+                altText
+                width
+                height
+              }
+            }
+          }
+        }
+      }
+
+      withCollectionTitles: field(key: "with_collection_titles") {
+        value
+      }
+    }
+  }
+
+  # ============================================================================
+  # 9. ALL ROUTE METAOBJECTS (For debugging)
+  # ============================================================================
+  # List all routes to see what's configured
+
+  allRoutes: metaobjects(type: "route", first: 20) {
+    nodes {
+      id
+      handle
+
+      title: field(key: "title") {
+        value
+      }
+
+      # Count sections
+      sections: field(key: "sections") {
+        references(first: 1) {
+          nodes {
+            ... on Metaobject {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+}

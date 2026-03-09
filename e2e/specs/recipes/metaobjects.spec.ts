@@ -3,6 +3,7 @@ import {test, expect, setRecipeFixture} from '../../fixtures';
 setRecipeFixture({
   recipeName: 'metaobjects',
   storeKey: 'hydrogenPreviewStorefront',
+  useCache: false,
 });
 
 /**
@@ -92,17 +93,14 @@ test.describe('Metaobjects Recipe', () => {
       const storeLinks = page.locator('a[href^="/stores/"]').filter({
         has: page.locator('address'),
       });
-      const linkCount = await storeLinks.count();
 
-      if (linkCount > 0) {
-        await storeLinks.first().click();
-        await expect(page).toHaveURL(/\/stores\/.+$/);
+      await storeLinks.first().click();
+      await expect(page).toHaveURL(/\/stores\/.+$/);
 
-        const backLink = page.getByRole('link', {name: 'Back to Stores'});
-        await expect(backLink).toBeVisible();
-        await backLink.click();
-        await expect(page).toHaveURL(/\/stores$/);
-      }
+      const backLink = page.getByRole('link', {name: 'Back to Stores'});
+      await expect(backLink).toBeVisible();
+      await backLink.click();
+      await expect(page).toHaveURL(/\/stores$/);
     });
 
     test('renders store profile details', async ({page}) => {
@@ -111,20 +109,17 @@ test.describe('Metaobjects Recipe', () => {
       const storeLinks = page.locator('a[href^="/stores/"]').filter({
         has: page.locator('address'),
       });
-      const linkCount = await storeLinks.count();
 
-      if (linkCount > 0) {
-        await storeLinks.first().click();
+      await storeLinks.first().click();
 
-        const storeContent = page.locator('.store');
-        await expect(storeContent).toBeVisible();
+      const storeContent = page.locator('section.store');
+      await expect(storeContent).toBeVisible();
 
-        // Verify required heading exists (per SectionStoreProfile.tsx line 33)
-        await expect(page.getByRole('heading', {level: 1})).toBeVisible();
+      // per SectionStoreProfile.tsx line 33
+      await expect(page.getByRole('heading', {level: 1})).toBeVisible();
 
-        // Verify address is present (per SectionStoreProfile.tsx line 38)
-        await expect(storeContent.locator('address')).toBeVisible();
-      }
+      // per SectionStoreProfile.tsx line 38
+      await expect(storeContent.locator('address')).toBeVisible();
     });
 
     test('handles dynamic route parameters in GraphQL query', async ({
@@ -135,100 +130,42 @@ test.describe('Metaobjects Recipe', () => {
       const storeLinks = page.locator('a[href^="/stores/"]').filter({
         has: page.locator('address'),
       });
-      const linkCount = await storeLinks.count();
 
-      if (linkCount > 0) {
-        await storeLinks.first().click();
+      await storeLinks.first().click();
 
-        // If GraphQL query with dynamic handle succeeded, no fallback
-        await expect(
-          page.getByText('No route content sections'),
-        ).not.toBeVisible();
+      await expect(
+        page.getByText('No route content sections'),
+      ).not.toBeVisible();
 
-        // Store section should render
-        const storeContent = page.locator('.store');
-        await expect(storeContent).toBeVisible();
-      }
+      const storeContent = page.locator('section.store');
+      await expect(storeContent).toBeVisible();
     });
   });
 
   test.describe('Section Components', () => {
-    test('renders hero section when configured', async ({page}) => {
+    test('renders hero section', async ({page}) => {
       await page.goto('/');
 
       const heroSection = page.locator('.section-hero');
-      const heroCount = await heroSection.count();
+      await expect(heroSection.first()).toBeVisible();
 
-      if (heroCount > 0) {
-        await expect(heroSection.first()).toBeVisible();
-
-        // Verify required heading (per SectionHero.tsx line 47)
-        await expect(
-          heroSection.first().getByRole('heading', {level: 1}),
-        ).toBeVisible();
-      }
+      // per SectionHero.tsx line 47
+      await expect(
+        heroSection.first().getByRole('heading', {level: 1}),
+      ).toBeVisible();
     });
 
-    test('renders product links when featured products configured', async ({
-      page,
-    }) => {
-      await page.goto('/');
-
-      const productLinks = page.locator('a[href*="/products/"]');
-      const productCount = await productLinks.count();
-
-      if (productCount > 0) {
-        await expect(productLinks.first()).toBeVisible();
-
-        // Verify link structure
-        const href = await productLinks.first().getAttribute('href');
-        expect(href).toMatch(/\/products\/.+/);
-      }
-    });
-
-    test('renders featured collections when configured', async ({page}) => {
-      await page.goto('/');
-
-      const collectionsSection = page.locator('.featured-collection');
-      const sectionCount = await collectionsSection.count();
-
-      if (sectionCount > 0) {
-        await expect(collectionsSection.first()).toBeVisible();
-
-        // Verify collection links exist
-        const collectionLinks = collectionsSection
-          .first()
-          .locator('a[href*="/collections/"]');
-        const linkCount = await collectionLinks.count();
-
-        if (linkCount > 0) {
-          await expect(collectionLinks.first()).toBeVisible();
-
-          // Verify image rendered (per SectionFeaturedCollections.tsx line 28-32)
-          await expect(collectionLinks.first().locator('img')).toBeVisible();
-        }
-      }
-    });
-
-    test('renders store grid when configured', async ({page}) => {
+    test('renders store grid', async ({page}) => {
       await page.goto('/stores');
 
       const storesSection = page.locator('.section-stores');
-      const sectionCount = await storesSection.count();
+      await expect(storesSection).toBeVisible();
 
-      if (sectionCount > 0) {
-        await expect(storesSection).toBeVisible();
+      const storeLinks = storesSection.getByRole('link');
+      await expect(storeLinks.first()).toBeVisible();
 
-        const storeLinks = storesSection.getByRole('link');
-        const linkCount = await storeLinks.count();
-
-        if (linkCount > 0) {
-          await expect(storeLinks.first()).toBeVisible();
-
-          // Verify address element present (per SectionStores.tsx line 48)
-          await expect(storeLinks.first().locator('address')).toBeVisible();
-        }
-      }
+      // per SectionStores.tsx line 48
+      await expect(storeLinks.first().locator('address')).toBeVisible();
     });
   });
 
@@ -270,34 +207,13 @@ test.describe('Metaobjects Recipe', () => {
       const storeLinks = page.locator('a[href^="/stores/"]').filter({
         has: page.locator('address'),
       });
-      const linkCount = await storeLinks.count();
 
-      if (linkCount > 0) {
-        const firstLink = storeLinks.first();
-        await firstLink.focus();
-        await expect(firstLink).toBeFocused();
+      const firstLink = storeLinks.first();
+      await firstLink.focus();
+      await expect(firstLink).toBeFocused();
 
-        // Verify can activate with Enter
-        await page.keyboard.press('Enter');
-        await expect(page).toHaveURL(/\/stores\/.+$/);
-      }
-    });
-
-    test('product links are keyboard navigable', async ({page}) => {
-      await page.goto('/');
-
-      const productLinks = page.locator('a[href*="/products/"]');
-      const productCount = await productLinks.count();
-
-      if (productCount > 0) {
-        const firstLink = productLinks.first();
-        await firstLink.focus();
-        await expect(firstLink).toBeFocused();
-
-        // Verify can activate with Enter
-        await page.keyboard.press('Enter');
-        await expect(page).toHaveURL(/\/products\/.+/);
-      }
+      await page.keyboard.press('Enter');
+      await expect(page).toHaveURL(/\/stores\/.+$/);
     });
 
     test('back to stores link is keyboard accessible', async ({page}) => {
@@ -306,18 +222,15 @@ test.describe('Metaobjects Recipe', () => {
       const storeLinks = page.locator('a[href^="/stores/"]').filter({
         has: page.locator('address'),
       });
-      const linkCount = await storeLinks.count();
 
-      if (linkCount > 0) {
-        await storeLinks.first().click();
+      await storeLinks.first().click();
 
-        const backLink = page.getByRole('link', {name: 'Back to Stores'});
-        await backLink.focus();
-        await expect(backLink).toBeFocused();
+      const backLink = page.getByRole('link', {name: 'Back to Stores'});
+      await backLink.focus();
+      await expect(backLink).toBeFocused();
 
-        await page.keyboard.press('Enter');
-        await expect(page).toHaveURL(/\/stores$/);
-      }
+      await page.keyboard.press('Enter');
+      await expect(page).toHaveURL(/\/stores$/);
     });
   });
 });
