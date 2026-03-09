@@ -107,16 +107,22 @@ test.describe('Subscriptions Recipe', () => {
 
       await monthlyOption.click();
 
-      const monthlySellingPlan = await expect
-        .poll(() => new URL(page.url()).searchParams.get('selling_plan'))
-        .toBeTruthy();
+      await expect
+        .poll(() => new URL(page.url()).searchParams.has('selling_plan'))
+        .toBe(true);
+      const monthlySellingPlan = new URL(page.url()).searchParams.get(
+        'selling_plan',
+      );
       expect(monthlySellingPlan).toBeTruthy();
 
       await weeklyOption.click();
 
-      const weeklySellingPlan = await expect
-        .poll(() => new URL(page.url()).searchParams.get('selling_plan'))
-        .toBeTruthy();
+      await expect
+        .poll(() => new URL(page.url()).searchParams.has('selling_plan'))
+        .toBe(true);
+      const weeklySellingPlan = new URL(page.url()).searchParams.get(
+        'selling_plan',
+      );
       expect(weeklySellingPlan).toBeTruthy();
       expect(weeklySellingPlan).not.toBe(monthlySellingPlan);
 
