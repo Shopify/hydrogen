@@ -151,6 +151,26 @@ await expect(
 1. The specific item is gone (`.toHaveCount(0)`)
 2. The empty state is displayed (`.toBeVisible()`)
 
+**Real-world examples**:
+
+```typescript
+// GOOD: Remove item, assert it's gone AND empty state is shown
+await removeGiftCardButton.click();
+await expect(page.getByText(`***${GIFT_CARD_1_LAST_4}`)).toHaveCount(0);
+await expect(page.getByText('No gift cards applied')).toBeVisible();
+
+// AVOID: Only asserting the removal (could still have items if count changes to 1)
+const initialCount = await page.getByRole('listitem').count();
+await clearButton.click();
+const newCount = await page.getByRole('listitem').count();
+expect(newCount).not.toBe(initialCount); // ❌ Passes even if count=1
+
+// GOOD: Assert absence broadly (no list items exist anywhere)
+await clearButton.click();
+await expect(page.getByRole('listitem')).toHaveCount(0);
+await expect(page.getByText('Cart is empty')).toBeVisible();
+```
+
 ### Wait for Visible Effects, Not Mechanisms
 
 Wait for the **actual data change** the user sees, not intermediate states or implementation details.
