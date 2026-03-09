@@ -113,8 +113,7 @@ Hydrogen uses a sophisticated automated release system built on Changesets, GitH
 
 3. **Maintainer Actions - CLI Releases**
    - When cli-hydrogen has updates, create a PR in the Shopify CLI repo and coordinate with Shopify CLI team to request patch release
-   - **Update skeleton after CLI release**: Once @shopify/cli releases, update skeleton's package.json
-   - **Second cli-hydrogen release**: Often required to bundle the updated skeleton
+   - **Post-release actions**: Whether to update skeleton's `@shopify/cli` and trigger a second cli-hydrogen release depends on the nature of the cli-hydrogen changes — see **Skeleton's CLI Version (Post-Release Action)** under *Understanding the Circular Dependency* below
 
 4. **Maintainer Actions - Major Version Changes**
    - **Update latestBranch**: Edit `.github/workflows/changesets.yml` line 32 when moving to new major version
@@ -317,23 +316,20 @@ skeleton template's devDependencies
 
 We break the cycle with a simple rule: skeleton changes → bump all three packages (skeleton, cli-hydrogen, create-hydrogen). This ensures the release includes everything needed.
 
-**Skeleton's CLI Version (Maintenance Note):**
+**Skeleton's CLI Version (Post-Release Action):**
 
-The skeleton's `@shopify/cli` version should be periodically updated, but:
+After Shopify CLI releases a new version containing updated `@shopify/cli-hydrogen`, whether further action is required depends on what the cli-hydrogen changes contained:
 
-- **Don't create a PR just to bump the CLI version** — this does NOT warrant a new Hydrogen release on its own
-- **Dependabot handles CLI version updates** — Dependabot automatically creates PRs when new `@shopify/cli` versions are available. Review and merge these PRs as part of regular maintenance (they'll be bundled into the next release with other changes)
-- Bumping the CLI version immediately after a cli-hydrogen release is unnecessary
+**If cli-hydrogen had actual changes** (any code changes: bug fixes, new commands, refactors — anything beyond just adding a changeset to bundle a new skeleton template):
+- Manually update skeleton's `@shopify/cli` dependency to the new Shopify CLI version
+- Create changesets for `@shopify/cli-hydrogen` AND `@shopify/create-hydrogen`
+- This triggers another cli-hydrogen release (now bundling the updated skeleton) and another Shopify CLI release
+- Required so new Hydrogen storefronts are created with the latest cli-hydrogen changes
 
-<details>
-<summary>Why CLI version bumps in the skeleton don't need immediate releases</summary>
+**If cli-hydrogen changes were ONLY a changeset to re-bundle the skeleton** (no actual code changes to cli-hydrogen itself):
+- No further action required after Shopify CLI releases
+- The skeleton's `@shopify/cli` version does not need to be updated
 
-The CLI is a devDependency, not runtime code. If skeleton was bundled with
-`@shopify/cli@3.80.0` which included `cli-hydrogen@X`, immediately releasing again
-with `@shopify/cli@3.80.1` (containing `cli-hydrogen@X+1`) provides no benefit—
-the skeleton code itself hasn't changed.
-
-Users can update their CLI version after scaffolding. The skeleton's CLI version
-is a starting point, not a strict requirement.
-
-</details>
+**The key question**: "Were there actual code changes to cli-hydrogen, beyond just adding a changeset to bundle an updated skeleton?"
+- **Yes** → Manually update skeleton's CLI version and release another cli-hydrogen cycle
+- **No** → Done
