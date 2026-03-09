@@ -3,7 +3,6 @@ import {test, expect, setRecipeFixture} from '../../fixtures';
 setRecipeFixture({
   recipeName: 'metaobjects',
   storeKey: 'hydrogenPreviewStorefront',
-  useCache: false,
 });
 
 /**
