@@ -277,24 +277,27 @@ All three must be bumped to ensure `npm create @shopify/hydrogen@latest` gets yo
 
 #### I'm Updating the CLI (cli-hydrogen)
 
-**Scenario A: CLI-only change (no scaffolding impact)**
+**Scenario A: CLI-only change (no init/scaffolding impact)**
 - Just bump `@shopify/cli-hydrogen`
-- Examples: bug fixes in existing commands, new flags for existing commands
+- Examples: bug fixes in non-init commands such as `dev`, `build`, or `check`; new flags for existing commands
 
-**Scenario B: Change affects newly scaffolded projects**
+**Scenario B: Change affects the `init` command, scaffolding process, or CLI assets**
 - Bump both `@shopify/cli-hydrogen` and `@shopify/create-hydrogen`
-- Examples: new commands users need immediately, changes to init behavior
+- Examples: changes to how `hydrogen init` (which powers `npm create @shopify/hydrogen`) works; changes to virtual-route templates or other files in `packages/cli/assets/`
 
 <details>
 <summary>When does a CLI change affect scaffolding?</summary>
 
-Ask yourself: "If someone scaffolds a new project tomorrow, will they need this change?"
+`create-hydrogen` bundles two things from `@shopify/cli-hydrogen`:
+1. **The `init` command code** — tree-shaken from the `init` entry point and its transitive dependencies only
+2. **The full `dist/assets` directory** — templates, virtual routes, tailwind configs, and other shared assets
+
+**"Does this change affect the `init` command, or any files in `packages/cli/assets/`?"**
 
 - **Yes** → bump both `cli-hydrogen` and `create-hydrogen`
 - **No** → just bump `cli-hydrogen`
 
-Most CLI changes (bug fixes, improvements to existing commands) don't affect scaffolding.
-New features that users would want in fresh projects do affect scaffolding.
+For non-init command changes (bug fixes to commands such as `dev`/`build`/`check`, new non-init commands): these reach newly scaffolded projects through the skeleton's `@shopify/cli` version. If those changes need to be in new scaffolds quickly, follow the circular dependency release cycle described in **Skeleton's CLI Version (Post-Release Action)** under *Understanding the Circular Dependency* below.
 
 </details>
 
