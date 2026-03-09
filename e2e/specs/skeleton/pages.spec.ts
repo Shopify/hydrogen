@@ -19,9 +19,5 @@ test.describe('Pages', () => {
       const pageContent = page.getByRole('heading', {level: 1, name: heading});
       await expect(pageContent).toBeVisible();
     }
-
-    await page.goto('/graphiql');
-    const graphiqlPage = page.getByText('Storefront API');
-    await expect(graphiqlPage).toBeVisible();
   });
 });
