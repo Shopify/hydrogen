@@ -7,8 +7,8 @@ import {type ServerEvents} from '../lib/useDebugNetworkServer.jsx';
 import {RequestTable} from '../components/RequestTable.jsx';
 import {Link} from 'react-router';
 
-import favicon from '../assets/favicon.svg';
-import faviconDark from '../assets/favicon-dark.svg';
+import favicon from '../assets/favicon.svg?url';
+import faviconDark from '../assets/favicon-dark.svg?url';
 import {useDebugNetworkServer} from '../lib/useDebugNetworkServer.jsx';
 import {RequestDetails} from '../components/RequestDetails.jsx';
 import {IconClose} from '../components/IconClose.jsx';
