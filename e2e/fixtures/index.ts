@@ -8,6 +8,7 @@ import {CartUtil} from './cart-utils';
 import {DiscountUtil} from './discount-utils';
 import {GiftCardUtil} from './gift-card-utils';
 import type {MswScenario} from './msw/scenarios';
+import {getHandlersForScenario} from './msw/handlers';
 
 export * from '@playwright/test';
 export * from './storefront';
@@ -71,9 +72,15 @@ async function createMockEnvFile(envFile: string, scenario: MswScenario) {
     ? baseEnvContents
     : `${baseEnvContents}\n`;
 
+  const scenarioMeta = getHandlersForScenario(scenario);
+  /** these variables are required by the CAAPI client */
+  const caapiVars = scenarioMeta?.mocksCustomerAccountApi
+    ? `SHOP_ID="mock-shop"\nPUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID="shp_mock-client-id"\n`
+    : '';
+
   await writeFile(
     mockEnvFile,
-    `${normalizedEnvContents}HYDROGEN_E2E_MSW_SCENARIO=${scenario}\n`,
+    `${normalizedEnvContents}HYDROGEN_E2E_MSW_SCENARIO=${scenario}\n${caapiVars}`,
   );
 
   return {mockEnvDir, mockEnvFile};
