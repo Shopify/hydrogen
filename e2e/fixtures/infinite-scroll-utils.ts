@@ -51,7 +51,7 @@ export class InfiniteScrollUtil {
   async waitForProductCountToChange(initialCount: number) {
     await expect
       .poll(async () => this.getProducts().count())
-      .not.toBe(initialCount);
+      .toBeGreaterThan(initialCount);
   }
 
   async waitForProductCountToIncrease(initialCount: number) {

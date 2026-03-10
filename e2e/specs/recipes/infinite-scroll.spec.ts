@@ -38,7 +38,6 @@ test.describe('Infinite Scroll Recipe', () => {
       const scroll = new InfiniteScrollUtil(page);
       await scroll.navigateToCollection(TEST_COLLECTION);
 
-      // Should show load more button (assuming "all" collection has pagination)
       await scroll.assertLoadMoreButtonVisible();
     });
   });
@@ -108,22 +107,35 @@ test.describe('Infinite Scroll Recipe', () => {
     }) => {
       const scroll = new InfiniteScrollUtil(page);
 
-      // Navigate to collection
       await scroll.navigateToCollection(TEST_COLLECTION);
 
-      // Get initial history length and product count
       const initialHistoryLength = await scroll.getHistoryLength();
       const initialCount = await scroll.getProductCount();
 
-      // Scroll load more into view to trigger automatic loading
       const loadMoreButton = scroll.getLoadMoreButton();
       await scroll.scrollIntoView(loadMoreButton);
 
-      // Wait for products to load (indicates navigation happened)
       await scroll.waitForProductCountToChange(initialCount);
 
-      // History length should be the same (replace mode, not push)
       await scroll.assertHistoryLength(initialHistoryLength);
+    });
+
+    test('keeps scroll position when new products load', async ({page}) => {
+      const scroll = new InfiniteScrollUtil(page);
+
+      await scroll.navigateToCollection(TEST_COLLECTION);
+
+      const loadMoreButton = scroll.getLoadMoreButton();
+      await loadMoreButton.scrollIntoViewIfNeeded();
+
+      const initialCount = await scroll.getProductCount();
+      const initialScrollY = await page.evaluate(() => window.scrollY);
+
+      await scroll.clickLoadMore();
+      await scroll.waitForProductCountToChange(initialCount);
+
+      const finalScrollY = await page.evaluate(() => window.scrollY);
+      expect(finalScrollY).toBeGreaterThanOrEqual(initialScrollY);
     });
   });
 });
