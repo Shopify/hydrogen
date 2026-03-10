@@ -2,7 +2,7 @@ import {execSync} from 'child_process';
 import {CommandModule} from 'yargs';
 import {applyRecipe} from '../lib/apply';
 import {FILES_TO_IGNORE_FOR_GENERATE, TEMPLATE_PATH} from '../lib/constants';
-import {resolveCatalogProtocol} from '../lib/validate';
+import {withResolvedCatalog} from '../lib/workspace';
 import {generateRecipe} from '../lib/generate';
 import {isRenderFormat, RENDER_FORMATS, renderRecipe} from '../lib/render';
 import {listRecipes, separator, RecipeManifestFormat} from '../lib/util';
@@ -71,24 +71,24 @@ async function handler(args: RegenerateArgs) {
 
   for await (const recipe of recipes) {
     console.log(`🔄 Regenerating recipe '${recipe}'`);
-    // resolve catalog: and workspace: protocol references before applying
-    resolveCatalogProtocol();
-    // apply the recipe
-    applyRecipe({
-      recipeTitle: recipe,
-    });
-    // generate the recipe
-    await generateRecipe({
-      recipeName: recipe,
-      onlyFiles: args.onlyFiles,
-      filenamesToIgnore: FILES_TO_IGNORE_FOR_GENERATE,
-      referenceBranch: args.referenceBranch,
-      recipeManifestFormat: args.recipeManifestFormat,
-    });
-    // render the recipe
-    renderRecipe({
-      recipeName: recipe,
-      format,
+    // resolve catalog/workspace protocols, apply recipe, then restore
+    await withResolvedCatalog(async () => {
+      applyRecipe({
+        recipeTitle: recipe,
+      });
+      // generate the recipe
+      await generateRecipe({
+        recipeName: recipe,
+        onlyFiles: args.onlyFiles,
+        filenamesToIgnore: FILES_TO_IGNORE_FOR_GENERATE,
+        referenceBranch: args.referenceBranch,
+        recipeManifestFormat: args.recipeManifestFormat,
+      });
+      // render the recipe
+      renderRecipe({
+        recipeName: recipe,
+        format,
+      });
     });
     // clean up the skeleton template directory
     execSync(`git checkout -- ${TEMPLATE_PATH}`);

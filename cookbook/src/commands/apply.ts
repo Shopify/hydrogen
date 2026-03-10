@@ -1,6 +1,6 @@
 import {CommandModule} from 'yargs';
 import {applyRecipe} from '../lib/apply';
-import {resolveCatalogProtocol} from '../lib/validate';
+import {withResolvedCatalog} from '../lib/workspace';
 
 type ApplyArgs = {
   recipe: string;
@@ -20,8 +20,9 @@ export const apply: CommandModule<{}, ApplyArgs> = {
 };
 
 function handler(args: ApplyArgs) {
-  resolveCatalogProtocol();
-  applyRecipe({
-    recipeTitle: args.recipe,
+  withResolvedCatalog(() => {
+    applyRecipe({
+      recipeTitle: args.recipe,
+    });
   });
 }

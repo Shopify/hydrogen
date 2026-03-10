@@ -10,9 +10,11 @@ import {
   getYamlLineNumber,
   validateRecipe,
   formatValidationError,
+} from './validate';
+import {
   resolveCatalogProtocol,
   _resetWorkspaceVersionsCache,
-} from './validate';
+} from './workspace';
 import fs from 'fs';
 import path from 'path';
 import {COOKBOOK_PATH, REPO_ROOT, TEMPLATE_PATH} from './constants';
