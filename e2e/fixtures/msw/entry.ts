@@ -247,10 +247,6 @@ const appWithMsw = {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
     currentMswScenarioMeta = getHandlersForScenario(getMswScenario(env));
 
-    if (currentMswScenarioMeta?.mocksCustomerAccountApi) {
-      process.env.HYDROGEN_E2E_CAAPI_MOCK = 'true';
-    }
-
     const app = (await import('../../../templates/skeleton/server')).default;
     const requestWithSession = await addMockCustomerSessionCookieIfNeeded(
       request,
