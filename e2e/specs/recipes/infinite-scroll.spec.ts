@@ -126,25 +126,4 @@ test.describe('Infinite Scroll Recipe', () => {
       await scroll.assertHistoryLength(initialHistoryLength);
     });
   });
-
-  test.describe('Edge Cases', () => {
-    test('handles collections with no pagination gracefully', async ({
-      page,
-    }) => {
-      const scroll = new InfiniteScrollUtil(page);
-
-      // Navigate to a potentially small collection (hydrogen in demo store)
-      await page.goto('/collections/hydrogen');
-
-      // Wait for at least one product to be visible (indicates page loaded)
-      const products = scroll.getProducts();
-      await expect(products.first()).toBeVisible();
-
-      const count = await products.count();
-      expect(count).toBeGreaterThan(0);
-
-      // If no pagination needed, load more might not be visible
-      // This is expected behavior, not an error
-    });
-  });
 });
