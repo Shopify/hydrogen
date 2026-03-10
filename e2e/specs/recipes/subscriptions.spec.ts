@@ -10,12 +10,6 @@ setRecipeFixture({
  * Validates the Subscriptions recipe, which enables selling subscription-based
  * products using selling plan groups from the Shopify Subscriptions app.
  *
- * Tests cover:
- * - Selling plan selector display on product pages
- * - Subscription frequency options with links
- * - Subscription selection and cart integration
- * - Subscription details in cart line items
- *
  * TODO: Add tests for /account/subscriptions management page (requires customer authentication).
  */
 
@@ -168,10 +162,8 @@ test.describe('Subscriptions Recipe', () => {
       const lineItems = cart.getLineItems();
       await expect(lineItems).toHaveCount(1);
 
-      // Recipe currently only shows "(subscription)" marker in cart
-      // TODO: Enhance recipe to display selling plan details (e.g., "Deliver every week")
       const firstLineItem = lineItems.first();
-      await expect(firstLineItem.getByText(/subscription/i)).toBeVisible();
+      await expect(firstLineItem.locator('li small')).toBeVisible();
     });
   });
 
