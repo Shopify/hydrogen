@@ -27,10 +27,7 @@ test.describe('Infinite Scroll Recipe', () => {
       const scroll = new InfiniteScrollUtil(page);
       await scroll.navigateToCollection(TEST_COLLECTION);
 
-      // Should have products visible
       await scroll.assertProductCountGreaterThan(0);
-
-      // Collection heading should be visible
       await expect(page.getByRole('heading', {level: 1})).toBeVisible();
     });
 
@@ -49,28 +46,22 @@ test.describe('Infinite Scroll Recipe', () => {
       const scroll = new InfiniteScrollUtil(page);
       await scroll.navigateToCollection(TEST_COLLECTION);
 
-      // Get initial product count
       const initialCount = await scroll.getProductCount();
       expect(initialCount).toBeGreaterThan(0);
 
-      // Click load more - this should trigger navigation
       await scroll.clickLoadMore();
-
-      // Wait for product count to change (indicates products have loaded)
-      await scroll.waitForProductCountToChange(initialCount);
+      await scroll.waitForProductCountToIncrease(initialCount);
     });
 
     test('updates URL with pagination parameters', async ({page}) => {
       const scroll = new InfiniteScrollUtil(page);
       await scroll.navigateToCollection(TEST_COLLECTION);
 
-      // Initial load should not have pagination params
       await scroll.assertUrlDoesNotContainParam('cursor');
+      await scroll.assertUrlDoesNotContainParam('after');
 
-      // Click load more
       await scroll.clickLoadMore();
 
-      // Wait for URL to change (indicates navigation happened)
       await expect
         .poll(
           () =>
@@ -91,12 +82,9 @@ test.describe('Infinite Scroll Recipe', () => {
       const initialCount = await scroll.getProductCount();
       expect(initialCount).toBeGreaterThan(0);
 
-      // Scroll the load more button into view to trigger intersection observer
       const loadMoreButton = scroll.getLoadMoreButton();
-      await scroll.scrollIntoView(loadMoreButton);
+      await loadMoreButton.scrollIntoViewIfNeeded();
 
-      // Wait for product count to increase (indicates automatic loading triggered)
-      // With infinite scroll, products accumulate, so count should be greater
       await scroll.waitForProductCountToIncrease(initialCount);
     });
   });
@@ -113,9 +101,8 @@ test.describe('Infinite Scroll Recipe', () => {
       const initialCount = await scroll.getProductCount();
 
       const loadMoreButton = scroll.getLoadMoreButton();
-      await scroll.scrollIntoView(loadMoreButton);
-
-      await scroll.waitForProductCountToChange(initialCount);
+      await loadMoreButton.scrollIntoViewIfNeeded();
+      await scroll.waitForProductCountToIncrease(initialCount);
 
       await scroll.assertHistoryLength(initialHistoryLength);
     });
@@ -132,7 +119,7 @@ test.describe('Infinite Scroll Recipe', () => {
       const initialScrollY = await page.evaluate(() => window.scrollY);
 
       await scroll.clickLoadMore();
-      await scroll.waitForProductCountToChange(initialCount);
+      await scroll.waitForProductCountToIncrease(initialCount);
 
       const finalScrollY = await page.evaluate(() => window.scrollY);
       expect(finalScrollY).toBeGreaterThanOrEqual(initialScrollY);

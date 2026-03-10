@@ -1,4 +1,4 @@
-import {expect, type Locator, type Page} from '@playwright/test';
+import {expect, type Page} from '@playwright/test';
 
 export class InfiniteScrollUtil {
   constructor(private page: Page) {}
@@ -31,10 +31,6 @@ export class InfiniteScrollUtil {
     const loadMoreButton = this.getLoadMoreButton();
     await expect(loadMoreButton).toBeVisible();
     await loadMoreButton.click();
-  }
-
-  async scrollIntoView(locator: Locator) {
-    await locator.scrollIntoViewIfNeeded();
   }
 
   async assertUrlDoesNotContainParam(param: string) {
