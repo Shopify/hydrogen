@@ -96,6 +96,7 @@ export {
   type VisitorConsentCollected,
 } from './customer-privacy/ShopifyCustomerPrivacy';
 export {hydrogenRoutes} from './dev/hydrogen-routes';
+export {handleProxyStandardRoutes} from './handleProxyStandardRoutes';
 export {
   OptimisticInput,
   useOptimisticData,

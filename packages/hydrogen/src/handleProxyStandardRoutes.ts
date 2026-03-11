@@ -5,7 +5,7 @@ export function handleProxyStandardRoutes({
   storefront,
 }: {
   request: Request;
-  storefront: Storefront;
+  storefront: Pick<Storefront, 'isStorefrontApiUrl' | 'forward'>;
 }): Promise<Response> | undefined {
   if (!storefront.isStorefrontApiUrl(request)) {
     return undefined;
