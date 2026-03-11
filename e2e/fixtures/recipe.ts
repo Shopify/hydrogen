@@ -10,11 +10,11 @@ import {
   writeFile,
   access,
 } from 'node:fs/promises';
-import {execFile} from 'node:child_process';
+import {exec} from 'node:child_process';
 import {promisify} from 'node:util';
 import {parse as parseYaml} from 'yaml';
 
-const execFileAsync = promisify(execFile);
+const execAsync = promisify(exec);
 
 type WorkspaceConfig = {
   packages: string[];
@@ -65,17 +65,7 @@ export const setRecipeFixture = (options: RecipeFixtureOptions) => {
 
   test.use({
     baseURL: async ({}, use) => {
-      if (!isLocal) {
-        await use(storeKey);
-        return;
-      }
-      const url = server?.getUrl();
-      if (!url) {
-        throw new Error(
-          `[recipe-fixture] Server for recipe "${recipeName}" has no URL. Did beforeAll fail to start the server?`,
-        );
-      }
-      await use(url);
+      await use(isLocal ? server?.getUrl() : storeKey);
     },
   });
 
@@ -151,21 +141,8 @@ const generateFixture = async ({
     await cp(skeletonPath, recipeFixturePath, {recursive: true});
 
     console.log(`[recipe-fixture] Applying ${recipeName} recipe...`);
-    // Use execFile with array args (not exec with string) to prevent shell injection
-    // if recipeName or recipeFixturePath ever contain special characters.
-    await execFileAsync(
-      'pnpm',
-      [
-        '--filter',
-        'cookbook',
-        'run',
-        'cookbook',
-        'apply',
-        '--recipe',
-        recipeName,
-        '--template',
-        recipeFixturePath,
-      ],
+    await execAsync(
+      `npm run cookbook --workspace=cookbook -- apply --recipe ${recipeName} --template ${recipeFixturePath}`,
       {cwd: repoRoot, env: {...process.env, ...envOverrides, CI: 'true'}},
     );
   } catch (error) {
@@ -181,7 +158,6 @@ const generateFixture = async ({
     await resolveWorkspaceProtocols(recipeFixturePath, repoRoot);
 
     console.log(`[recipe-fixture] Installing dependencies...`);
-    // Run pnpm install - workspace protocols are already resolved to file: paths
     await execAsync('pnpm install', {cwd: recipeFixturePath});
     console.log(
       `[recipe-fixture] Generated ${recipeName} fixture successfully`,
