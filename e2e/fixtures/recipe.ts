@@ -215,6 +215,9 @@ const generateFixture = async ({
     await cp(skeletonPath, recipeFixturePath, {recursive: true});
 
     console.log(`[recipe-fixture] Applying ${recipeName} recipe...`);
+    // Note: recipeName comes from test file literals (not user input), and
+    // recipeFixturePath is constructed from controlled paths. Safe for test environment.
+    // Using exec (not execFile) because npm run requires shell for script resolution.
     await execAsync(
       `npm run cookbook --workspace=cookbook -- apply --recipe ${recipeName} --template ${recipeFixturePath}`,
       {cwd: repoRoot, env: {...process.env, ...envOverrides, CI: 'true'}},
