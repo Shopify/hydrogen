@@ -6,18 +6,8 @@ setRecipeFixture({
 });
 
 /**
- * Validates the Combined Listings recipe, which enables displaying and managing
- * combined listings on product pages.
- *
- * Tests cover:
- * - "Add to cart" button hidden on parent product pages
- * - Price range display (From X To Y) on product pages
- * - Variant selection updates URL for combined listings
- * - Regular products still show "Add to cart" button normally
- *
- * The recipe uses the Combined Listings app to group separate products together
- * into a single product listing using a shared option like color or size.
- * By default, parent products are hidden from collection listings.
+ * Tests for Combined Listings recipe, which groups separate products into
+ * a single listing using shared options like color or size.
  */
 
 // Combined listing product in hydrogenPreviewStorefront.
@@ -27,9 +17,10 @@ const KNOWN_COMBINED_LISTING = {
   name: 'The Hydrogen Snowboards (Combined)',
   minPrice: '$500',
   maxPrice: '$700',
+  variantOptionName: 'Color',
+  knownVariant: 'Ember',
 } as const;
 
-// A regular product for comparison tests
 const KNOWN_REGULAR_PRODUCT = {
   handle: 'the-ascend',
   name: 'The Ascend',
@@ -66,16 +57,19 @@ test.describe('Combined Listings Recipe', () => {
     test('variant selection navigates to child product with options', async ({
       page,
     }) => {
-      // Combined listings render variants as links to child products
-      const emberLink = page
+      const variantLink = page
         .getByRole('main')
-        .getByRole('link', {name: 'Ember'});
-      await expect(emberLink).toBeVisible();
+        .getByRole('link', {name: KNOWN_COMBINED_LISTING.knownVariant});
+      await expect(variantLink).toBeVisible();
 
-      await emberLink.click();
+      await variantLink.click();
 
       await expect
-        .poll(() => new URL(page.url()).searchParams.has('Color'))
+        .poll(() =>
+          new URL(page.url()).searchParams.has(
+            KNOWN_COMBINED_LISTING.variantOptionName,
+          ),
+        )
         .toBe(true);
     });
   });
@@ -85,6 +79,11 @@ test.describe('Combined Listings Recipe', () => {
       page,
     }) => {
       await page.goto('/collections/all');
+
+      const regularProductLink = page.getByRole('link', {
+        name: 'The Hydrogen Snowboard',
+      });
+      await expect(regularProductLink.first()).toBeVisible();
 
       const parentProductCard = page.getByRole('link', {
         name: KNOWN_COMBINED_LISTING.name,
