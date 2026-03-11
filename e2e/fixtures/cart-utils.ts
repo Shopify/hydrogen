@@ -19,7 +19,7 @@ export class CartUtil {
     const enabledOptionValues = await optionSelect.evaluate((element) => {
       const selectElement = element as HTMLSelectElement;
       return Array.from(selectElement.options)
-        .filter((option) => !option.disabled)
+        .filter((option) => !option.disabled && option.value.trim() !== '')
         .map((option) => option.value);
     });
 
