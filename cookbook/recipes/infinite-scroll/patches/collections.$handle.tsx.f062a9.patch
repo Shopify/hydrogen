@@ -51,7 +51,13 @@ index c416c2b3..e6a35150 100644
 +        }) => (
 +          <>
 +            <PreviousLink>
-+              {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
++              {isLoading ? (
++                'Loading...'
++              ) : (
++                <span>
++                  <span aria-hidden="true">↑</span> Load previous
++                </span>
++              )}
 +            </PreviousLink>
 +            <ProductsGrid
 +              products={nodes}
@@ -63,7 +69,13 @@ index c416c2b3..e6a35150 100644
 +            <br />
 +            {/* @description Add ref to NextLink for intersection observer */}
 +            <NextLink ref={ref}>
-+              {isLoading ? 'Loading...' : <span>Load more ↓</span>}
++              {isLoading ? (
++                'Loading...'
++              ) : (
++                <span>
++                  Load more <span aria-hidden="true">↓</span>
++                </span>
++              )}
 +            </NextLink>
 +          </>
          )}

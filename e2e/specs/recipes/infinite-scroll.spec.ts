@@ -18,7 +18,7 @@ setRecipeFixture({
  * - Scroll position preservation
  */
 
-// Using backcountry or freeride collections which have many products for pagination testing
+// backcountry is stable in the fixture store and consistently exercises pagination.
 const TEST_COLLECTION = 'backcountry';
 
 test.describe('Infinite Scroll Recipe', () => {
@@ -97,6 +97,8 @@ test.describe('Infinite Scroll Recipe', () => {
 
       await scroll.navigateToCollection(TEST_COLLECTION);
 
+      // Playwright starts each test with a new browser context, so this baseline is stable.
+      // We assert relative history growth rather than an absolute value.
       const initialHistoryLength = await scroll.getHistoryLength();
       const initialCount = await scroll.getProductCount();
 
