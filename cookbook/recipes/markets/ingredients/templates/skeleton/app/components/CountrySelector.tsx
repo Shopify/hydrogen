@@ -17,7 +17,6 @@ export function CountrySelector() {
 
   return (
     <details
-      role="group"
       aria-label="Country selector"
       style={{position: 'relative', cursor: 'pointer'}}
     >
