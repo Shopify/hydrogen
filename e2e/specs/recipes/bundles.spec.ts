@@ -42,10 +42,15 @@ test.describe('Bundles Recipe', () => {
     }) => {
       await page.goto('/collections/bundles');
 
-      const productsRegion = page.getByRole('region', {name: 'Products'});
-      const bundleBadges = productsRegion.getByText('BUNDLE', {exact: true});
+      // Scoped to product card links so a product named "BUNDLE" doesn't
+      // produce false positives. We deliberately avoid adding role="region"
+      // to the recipe's collection route — semantic landmarks should serve
+      // users, not exist to make tests easier to scope.
+      const bundleProductCards = page
+        .getByRole('link')
+        .filter({has: page.getByText('BUNDLE', {exact: true})});
 
-      await expect(bundleBadges.first()).toBeVisible();
+      await expect(bundleProductCards.first()).toBeVisible();
     });
   });
 
