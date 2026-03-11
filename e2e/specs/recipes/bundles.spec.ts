@@ -6,21 +6,6 @@ setRecipeFixture({
   storeKey: 'hydrogenPreviewStorefront',
 });
 
-/**
- * Validates the Bundles recipe, which adds special styling and UI for product
- * bundles on the Hydrogen storefront using the Shopify Bundles app.
- *
- * Tests cover:
- * - Bundle badge display on product cards in grids
- * - Bundle badge display on product pages
- * - Bundled products section with component details
- * - Add to cart button text changes for bundles
- * - Bundle badge in cart line items
- *
- * The recipe queries `isBundle.requiresComponents` from the Storefront API
- * to determine if a product is a bundle, then renders conditional UI elements.
- */
-
 // Stable bundle product in the hydrogenPreviewStorefront used for testing.
 // This is a product bundle created using the Shopify Bundles app.
 // If this product is removed from the store, these tests will need updating.
@@ -29,7 +14,6 @@ const KNOWN_BUNDLE = {
   name: 'The Hydrogen + Free Wax Bundle',
 } as const;
 
-// A non-bundle product for comparison tests
 const KNOWN_REGULAR_PRODUCT = {
   handle: 'the-ascend',
   name: 'The Ascend',
