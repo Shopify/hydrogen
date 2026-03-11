@@ -920,6 +920,31 @@ describe('upgrade', async () => {
       expect(removeDependencies).not.toContain('react-router');
     });
 
+    it('excludes removeDependencies when removed and re-added in the same release (>= operator behavior)', () => {
+      // This test specifically validates the >= operator in upgrade.ts:652 and upgrade.ts:659.
+      // When a package appears in both removeDependencies AND dependencies of the SAME release,
+      // it should be excluded from cumulative removals (treated as a version upgrade, not removal).
+      // This is the React Router 7 migration scenario: old react-router removed, new react-router added.
+      const singleRelease = makeRelease('2025.7.0', {
+        dependencies: {
+          '@shopify/hydrogen': '2025.7.0',
+          'react-router': '7.9.2', // Re-added in same release
+        },
+        removeDependencies: ['react-router'], // Also removed in same release
+      });
+      const from = makeRelease('2025.5.0');
+
+      const {removeDependencies} = getCumulativeRelease({
+        availableUpgrades: [singleRelease, from],
+        selectedRelease: singleRelease,
+        currentVersion: '2025.5.0',
+      });
+
+      // react-router is removed and re-added in the SAME release (i >= removalI)
+      // so it should NOT appear in cumulative removeDependencies
+      expect(removeDependencies).not.toContain('react-router');
+    });
+
     it('deduplicates removeDependencies listed in multiple releases', () => {
       const target = makeRelease('2025.10.0', {
         removeDependencies: ['@shopify/remix-oxygen'],
@@ -1039,6 +1064,64 @@ describe('upgrade', async () => {
       // lodash should be removed from dependencies (not suppressed by cross-type re-addition)
       expect(removeDependencies).toContain('lodash');
       expect(removeDevDependencies).not.toContain('lodash');
+    });
+
+    it('integration: upgradeNodeModules accepts cumulative removals from getCumulativeRelease', async () => {
+      const testRelease = makeRelease('2025.10.0', {
+        dependencies: {'@shopify/hydrogen': '2025.10.0'},
+        devDependencies: {},
+      });
+      const intermediateRelease = makeRelease('2025.7.0', {
+        removeDependencies: ['@shopify/remix-oxygen', '@remix-run/react'],
+        removeDevDependencies: ['@remix-run/dev'],
+      });
+      const fromRelease = makeRelease('2025.5.0');
+
+      const cumulativeRelease = getCumulativeRelease({
+        availableUpgrades: [testRelease, intermediateRelease, fromRelease],
+        selectedRelease: testRelease,
+        currentVersion: '2025.5.0',
+      });
+
+      expect(cumulativeRelease.removeDependencies).toContain(
+        '@shopify/remix-oxygen',
+      );
+      expect(cumulativeRelease.removeDependencies).toContain(
+        '@remix-run/react',
+      );
+      expect(cumulativeRelease.removeDevDependencies).toContain(
+        '@remix-run/dev',
+      );
+
+      await inTemporaryHydrogenRepo(
+        async (appPath) => {
+          const currentDependencies = {
+            '@shopify/hydrogen': '2025.5.0',
+            '@shopify/remix-oxygen': '2.0.0',
+            '@remix-run/react': '2.0.0',
+            '@remix-run/dev': '2.0.0',
+          };
+
+          await upgradeNodeModules({
+            appPath,
+            selectedRelease: testRelease,
+            currentDependencies,
+            cumulativeRemoveDependencies: cumulativeRelease.removeDependencies,
+            cumulativeRemoveDevDependencies:
+              cumulativeRelease.removeDevDependencies,
+          });
+
+          expect(renderTasks).toHaveBeenCalled();
+        },
+        {
+          cleanGitRepo: true,
+          packageJson: {
+            dependencies: {
+              '@shopify/hydrogen': '2025.5.0',
+            },
+          },
+        },
+      );
     });
   });
 
@@ -1303,6 +1386,8 @@ describe('upgrade', async () => {
             appPath,
             selectedRelease,
             currentDependencies,
+            cumulativeRemoveDependencies: [],
+            cumulativeRemoveDevDependencies: [],
           });
 
           expect(renderTasks).toHaveBeenCalled();

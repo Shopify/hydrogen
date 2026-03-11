@@ -557,7 +557,7 @@ export async function getSelectedRelease({
 }
 
 /**
- * Gets an aggregate list of features and fixes included in the upgrade versions range
+ * Gets an aggregate list of features, fixes, and dependency removals included in the upgrade versions range
  */
 export function getCumulativeRelease({
   availableUpgrades,
@@ -649,6 +649,7 @@ export function getCumulativeRelease({
     // Only mark as reinstalled if it returns to the same dependency type
     Object.keys(dependencies).forEach((dep) => {
       const removalI = removedDepsAt.get(dep);
+      // >= allows same-release remove+add (e.g., react-router upgraded in 2025.7.0)
       if (removalI !== undefined && i >= removalI) {
         reinstalledDeps.add(dep);
       }
@@ -656,6 +657,7 @@ export function getCumulativeRelease({
 
     Object.keys(devDependencies).forEach((dep) => {
       const removalI = removedDevDepsAt.get(dep);
+      // >= allows same-release remove+add
       if (removalI !== undefined && i >= removalI) {
         reinstalledDevDeps.add(dep);
       }
@@ -936,25 +938,24 @@ export function buildUpgradeCommandArgs({
 /**
  * Installs the new Hydrogen dependencies
  *
- * When upgrading across multiple versions, callers should pass cumulative removal lists
- * from `getCumulativeRelease()` to ensure dependencies removed in intermediate releases
- * are properly cleaned up. The defaults fall back to the target release's own removal
- * lists, which only provides single-release behavior and may miss intermediate removals.
+ * Callers must pass cumulative removal lists from `getCumulativeRelease()` to ensure
+ * dependencies removed in intermediate releases are properly cleaned up when upgrading
+ * across multiple versions.
  */
 export async function upgradeNodeModules({
   appPath,
   selectedRelease,
   currentDependencies,
   targetVersion,
-  cumulativeRemoveDependencies = selectedRelease.removeDependencies ?? [],
-  cumulativeRemoveDevDependencies = selectedRelease.removeDevDependencies ?? [],
+  cumulativeRemoveDependencies,
+  cumulativeRemoveDevDependencies,
 }: {
   appPath: string;
   selectedRelease: Release;
   currentDependencies: Record<string, string>;
   targetVersion?: string;
-  cumulativeRemoveDependencies?: string[];
-  cumulativeRemoveDevDependencies?: string[];
+  cumulativeRemoveDependencies: string[];
+  cumulativeRemoveDevDependencies: string[];
 }) {
   const tasks: Array<{title: string; task: () => Promise<void>}> = [];
 
