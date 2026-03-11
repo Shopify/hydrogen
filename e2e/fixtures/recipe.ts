@@ -167,6 +167,8 @@ const ensureFixture = async ({
     return;
   }
 
+  await mkdir(path.dirname(recipeFixturePath), {recursive: true});
+
   const lockPath = `${recipeFixturePath}.lock`;
   const isGenerator = await acquireLock(lockPath);
 
