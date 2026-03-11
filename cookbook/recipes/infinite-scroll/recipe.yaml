@@ -21,7 +21,7 @@ ingredients: []
 deletedFiles: []
 steps:
   - type: PATCH
-    step: "1"
+    step: '1'
     name: Document infinite scroll in the README
     description: Update the README file with infinite scroll documentation and
       implementation details.
@@ -29,20 +29,21 @@ steps:
       - file: README.md
         patchFile: README.md.db10ed.patch
   - type: PATCH
-    step: "2"
+    step: '2'
     name: Add infinite scroll to collections
-    description: Implement automatic loading with Intersection Observer when users
+    description:
+      Implement automatic loading with Intersection Observer when users
       scroll to the bottom.
     diffs:
       - file: app/routes/collections.$handle.tsx
         patchFile: collections.$handle.tsx.f062a9.patch
   - type: PATCH
-    step: "3"
+    step: '3'
     name: Install Intersection Observer library
     description: Add the react-intersection-observer package for viewport detection.
     diffs:
       - file: package.json
-        patchFile: package.json.f30b0a.patch
+        patchFile: package.json.acbf33.patch
 nextSteps: null
 llms:
   userQueries: []
