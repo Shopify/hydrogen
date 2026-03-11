@@ -2,4 +2,4 @@
 '@shopify/hydrogen': patch
 ---
 
-Added a public `handleProxyStandardRoutes()` export so custom server runtimes like Next.js can reuse Hydrogen's built-in Storefront API proxy handling for `/api/.../graphql.json` requests.
+Extracted `handleProxyStandardRoutes()` for use outside React Router contexts. Requires a `Storefront` client instance to proxy `/api/.../graphql.json` requests.
