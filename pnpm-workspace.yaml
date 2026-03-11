@@ -9,6 +9,7 @@ packages:
   - packages/mini-oxygen
   - packages/remix-oxygen
   - templates/skeleton
+  - templates/next-commerce
 
 overrides:
   '@oclif/core': '3.26.5'
