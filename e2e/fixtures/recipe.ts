@@ -10,11 +10,11 @@ import {
   writeFile,
   access,
 } from 'node:fs/promises';
-import {exec} from 'node:child_process';
+import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {parse as parseYaml} from 'yaml';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 type WorkspaceConfig = {
   packages: string[];
@@ -55,13 +55,27 @@ export const setRecipeFixture = (options: RecipeFixtureOptions) => {
   const isLocal = !storeKey.startsWith('https://');
   let server: DevServer | null = null;
   const tmpRoot = path.resolve(__dirname, '../../.tmp/recipe-fixtures');
+  // Each recipe fixture directory is owned by exactly one test file's beforeAll.
+  // Two test files MUST NOT share the same recipeName — doing so would cause
+  // parallel workers to race on the same directory. Enforced by convention:
+  // each recipe has its own dedicated spec file.
   const recipeFixturePath = path.join(tmpRoot, recipeName);
   const skeletonPath = path.resolve(__dirname, '../../templates/skeleton');
   const repoRoot = path.resolve(__dirname, '../..');
 
   test.use({
     baseURL: async ({}, use) => {
-      await use(isLocal ? server?.getUrl() : storeKey);
+      if (!isLocal) {
+        await use(storeKey);
+        return;
+      }
+      const url = server?.getUrl();
+      if (!url) {
+        throw new Error(
+          `[recipe-fixture] Server for recipe "${recipeName}" has no URL. Did beforeAll fail to start the server?`,
+        );
+      }
+      await use(url);
     },
   });
 
@@ -137,8 +151,21 @@ const generateFixture = async ({
     await cp(skeletonPath, recipeFixturePath, {recursive: true});
 
     console.log(`[recipe-fixture] Applying ${recipeName} recipe...`);
-    await execAsync(
-      `npm run cookbook --workspace=cookbook -- apply --recipe ${recipeName} --template ${recipeFixturePath}`,
+    // Use execFile with array args (not exec with string) to prevent shell injection
+    // if recipeName or recipeFixturePath ever contain special characters.
+    await execFileAsync(
+      'pnpm',
+      [
+        '--filter',
+        'cookbook',
+        'run',
+        'cookbook',
+        'apply',
+        '--recipe',
+        recipeName,
+        '--template',
+        recipeFixturePath,
+      ],
       {cwd: repoRoot, env: {...process.env, ...envOverrides, CI: 'true'}},
     );
   } catch (error) {
