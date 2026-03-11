@@ -243,6 +243,10 @@ const generateFixture = async ({
 /**
  * Resolves workspace:* and catalog: protocols in package.json to actual versions
  * so the fixture can be installed independently without being part of the workspace.
+ *
+ * Note: only `workspace:*` is handled — `workspace:^` and `workspace:~` are not.
+ * The skeleton template uses only `workspace:*`, so this is sufficient for now.
+ * Recipe authors must not use other workspace range specifiers.
  */
 const resolveWorkspaceProtocols = async (
   fixturePath: string,
