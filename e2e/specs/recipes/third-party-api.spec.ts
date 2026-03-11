@@ -11,7 +11,13 @@ setRecipeFixture({
  *
  * The recipe adds a Rick & Morty characters section to the homepage that
  * displays data fetched server-side from rickandmortyapi.com GraphQL API in the loader.
+ *
+ * ⚠️  Note: These tests depend on rickandmortyapi.com being available.
+ * If the external API is down, slow, or rate-limited, tests may fail.
+ * This is expected behavior as the recipe is designed to call this live API.
  */
+
+const RECIPE_HEADING_TEXT = 'Rick & Morty Characters (Third-Party API Example)';
 
 test.describe('Third-party API Recipe', () => {
   test.beforeEach(async ({page}) => {
@@ -22,7 +28,7 @@ test.describe('Third-party API Recipe', () => {
     page,
   }) => {
     const heading = page.getByRole('heading', {
-      name: 'Rick & Morty Characters (Third-Party API Example)',
+      name: RECIPE_HEADING_TEXT,
     });
     await expect(heading).toBeVisible();
 
@@ -34,7 +40,7 @@ test.describe('Third-party API Recipe', () => {
 
   test('renders character list from third-party API', async ({page}) => {
     const recipeHeading = page.getByRole('heading', {
-      name: 'Rick & Morty Characters (Third-Party API Example)',
+      name: RECIPE_HEADING_TEXT,
     });
     const recipeSection = page.locator('section').filter({has: recipeHeading});
     const characterList = recipeSection.getByRole('list');
@@ -46,7 +52,7 @@ test.describe('Third-party API Recipe', () => {
     const characters = characterList.getByRole('listitem');
     await expect(characters.first()).toBeVisible();
     await expect(characters.nth(1)).toBeVisible();
-    expect(await characters.count()).toBeGreaterThan(1);
+    await expect.poll(() => characters.count()).toBeGreaterThan(1);
     await expect(characters.first()).not.toHaveText(/^\s*$/);
     await expect(characters.first()).toContainText(/[A-Za-z]/);
   });
@@ -54,7 +60,10 @@ test.describe('Third-party API Recipe', () => {
   test('preserves existing homepage sections alongside third-party content', async ({
     page,
   }) => {
-    const featuredCollectionHeading = page.getByRole('heading', {level: 1});
+    const featuredCollectionHeading = page.getByRole('heading', {
+      level: 1,
+      name: /featured/i,
+    });
     await expect(featuredCollectionHeading).toBeVisible();
     await expect(featuredCollectionHeading).not.toHaveText(/^\s*$/);
 
@@ -66,6 +75,6 @@ test.describe('Third-party API Recipe', () => {
     const recommendedProductLinks =
       recommendedProductsSection.getByRole('link');
     await expect(recommendedProductLinks.first()).toBeVisible();
-    expect(await recommendedProductLinks.count()).toBeGreaterThan(0);
+    await expect.poll(() => recommendedProductLinks.count()).toBeGreaterThan(0);
   });
 });
