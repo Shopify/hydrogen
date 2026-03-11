@@ -16,6 +16,9 @@ import {parse as parseYaml} from 'yaml';
 
 const execAsync = promisify(exec);
 
+const LOCK_POLL_INTERVAL_MS = 500;
+const LOCK_TIMEOUT_MS = 5 * 60 * 1000;
+
 type WorkspaceConfig = {
   packages: string[];
   catalog: Record<string, string>;
@@ -81,30 +84,14 @@ export const setRecipeFixture = (options: RecipeFixtureOptions) => {
     const envPath = path.resolve(__dirname, `../envs/.env.${storeKey}`);
     await stat(envPath);
 
-    let fixtureExists = false;
-    try {
-      await stat(recipeFixturePath);
-      fixtureExists = true;
-    } catch (err: unknown) {
-      if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
-    }
-
-    if (fixtureExists && useCache) {
-      console.log(
-        `[recipe-fixture] Using cached ${recipeName} fixture from ${recipeFixturePath}`,
-      );
-    } else {
-      if (fixtureExists) {
-        await rm(recipeFixturePath, {recursive: true, force: true});
-      }
-      await generateFixture({
-        recipeName,
-        recipeFixturePath,
-        skeletonPath,
-        repoRoot,
-        envOverrides,
-      });
-    }
+    await ensureFixture({
+      recipeName,
+      recipeFixturePath,
+      skeletonPath,
+      repoRoot,
+      envOverrides,
+      useCache,
+    });
 
     server = new DevServer({
       storeKey,
@@ -123,6 +110,91 @@ type GenerateOptions = {
   skeletonPath: string;
   repoRoot: string;
   envOverrides: Record<string, string>;
+};
+
+type EnsureFixtureOptions = GenerateOptions & {useCache: boolean};
+
+const pathExists = async (targetPath: string): Promise<boolean> => {
+  try {
+    await stat(targetPath);
+    return true;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+    return false;
+  }
+};
+
+const acquireLock = async (lockPath: string): Promise<boolean> => {
+  try {
+    await writeFile(lockPath, process.pid.toString(), {flag: 'wx'});
+    return true;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
+    return false;
+  }
+};
+
+const waitForFixture = async (
+  fixturePath: string,
+  lockPath: string,
+): Promise<void> => {
+  const deadline = Date.now() + LOCK_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    await new Promise<void>((resolve) =>
+      setTimeout(resolve, LOCK_POLL_INTERVAL_MS),
+    );
+    if (await pathExists(lockPath)) continue;
+    if (await pathExists(fixturePath)) return;
+    throw new Error(
+      `[recipe-fixture] Fixture at ${fixturePath} missing after lock released — generator may have failed`,
+    );
+  }
+  throw new Error(
+    `[recipe-fixture] Timed out waiting for fixture at ${fixturePath}`,
+  );
+};
+
+const ensureFixture = async ({
+  recipeName,
+  recipeFixturePath,
+  useCache,
+  ...generateOptions
+}: EnsureFixtureOptions): Promise<void> => {
+  if (useCache && (await pathExists(recipeFixturePath))) {
+    console.log(
+      `[recipe-fixture] Using cached ${recipeName} fixture from ${recipeFixturePath}`,
+    );
+    return;
+  }
+
+  const lockPath = `${recipeFixturePath}.lock`;
+  const isGenerator = await acquireLock(lockPath);
+
+  if (!isGenerator) {
+    console.log(
+      `[recipe-fixture] Waiting for another worker to generate ${recipeName} fixture...`,
+    );
+    await waitForFixture(recipeFixturePath, lockPath);
+    return;
+  }
+
+  try {
+    // Re-check after acquiring lock — another worker may have just generated it
+    if (useCache && (await pathExists(recipeFixturePath))) {
+      console.log(
+        `[recipe-fixture] Using cached ${recipeName} fixture from ${recipeFixturePath}`,
+      );
+      return;
+    }
+
+    if (await pathExists(recipeFixturePath)) {
+      await rm(recipeFixturePath, {recursive: true, force: true});
+    }
+
+    await generateFixture({recipeName, recipeFixturePath, ...generateOptions});
+  } finally {
+    await rm(lockPath, {force: true});
+  }
 };
 
 const generateFixture = async ({
