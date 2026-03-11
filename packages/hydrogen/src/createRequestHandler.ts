@@ -6,6 +6,7 @@ import {
 } from 'react-router';
 import {storefrontContext} from './context-keys';
 import {HYDROGEN_SFAPI_PROXY_KEY} from './constants';
+import {handleProxyStandardRoutes} from './handleProxyStandardRoutes';
 import {appendServerTimingHeader} from './utils/server-timing';
 import {warnOnce} from './utils/warning';
 
@@ -93,10 +94,16 @@ export function createRequestHandler<Context = unknown>({
         );
       }
 
-      if (storefront?.isStorefrontApiUrl(request)) {
-        const response = await storefront.forward(request);
-        appendPoweredByHeader?.(response);
-        return response;
+      if (storefront) {
+        const proxyResponsePromise = handleProxyStandardRoutes({
+          request,
+          storefront,
+        });
+        if (proxyResponsePromise) {
+          const proxyResponse = await proxyResponsePromise;
+          appendPoweredByHeader?.(proxyResponse);
+          return proxyResponse;
+        }
       }
     }
 
