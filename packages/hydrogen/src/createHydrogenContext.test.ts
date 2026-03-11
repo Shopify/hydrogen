@@ -3,10 +3,10 @@ import {createHydrogenContext} from './createHydrogenContext';
 import {createStorefrontClient} from './storefront';
 import {createCustomerAccountClient} from './customer/customer';
 import {
-  createCartHandler,
   type HydrogenCart,
   type HydrogenCartCustom,
 } from './cart/createCartHandler';
+import {createHydrogenCart} from './cart/createHydrogenCart';
 import {cartGetIdDefault} from './cart/cartGetIdDefault';
 import {cartSetIdDefault} from './cart/cartSetIdDefault';
 import type {HydrogenSession} from './types';
@@ -29,8 +29,8 @@ vi.mock('./customer/customer', async () => ({
   createCustomerAccountClient: vi.fn(() => ({isLoggedIn: true})),
 }));
 
-vi.mock('./cart/createCartHandler', async () => ({
-  createCartHandler: vi.fn(() => ({get: vi.fn()})),
+vi.mock('./cart/createHydrogenCart', async () => ({
+  createHydrogenCart: vi.fn(() => ({get: vi.fn()})),
 }));
 
 vi.mock('./cart/cartGetIdDefault', async () => ({
@@ -237,7 +237,7 @@ describe('createHydrogenContext', () => {
       );
     });
 
-    it('called createCartHandler with default values', async () => {
+    it('called createHydrogenCart with default values', async () => {
       const mockRequest = new Request('https://localhost');
 
       const hydrogenContext = createHydrogenContext({
@@ -245,7 +245,7 @@ describe('createHydrogenContext', () => {
         request: mockRequest,
       });
 
-      expect(vi.mocked(createCartHandler)).toHaveBeenCalledWith(
+      expect(vi.mocked(createHydrogenCart)).toHaveBeenCalledWith(
         expect.objectContaining({
           storefront: hydrogenContext.storefront,
           customerAccount: hydrogenContext.customerAccount,
@@ -263,7 +263,7 @@ describe('createHydrogenContext', () => {
       expect(vi.mocked(cartSetIdDefault)).toHaveBeenCalledWith();
     });
 
-    it('called createCartHandler with overwrite default values', async () => {
+    it('called createHydrogenCart with overwrite default values', async () => {
       const mockGetCartId = () => {
         return 'mock getCartId';
       };
@@ -275,14 +275,14 @@ describe('createHydrogenContext', () => {
         },
       });
 
-      expect(vi.mocked(createCartHandler)).toHaveBeenCalledWith(
+      expect(vi.mocked(createHydrogenCart)).toHaveBeenCalledWith(
         expect.objectContaining({
           getCartId: mockGetCartId,
         }),
       );
     });
 
-    it('called createCartHandler with values that does not have default', async () => {
+    it('called createHydrogenCart with values that does not have default', async () => {
       const mockCartQueryFragment = 'mock cartQueryFragment';
 
       createHydrogenContext({
@@ -292,7 +292,7 @@ describe('createHydrogenContext', () => {
         },
       });
 
-      expect(vi.mocked(createCartHandler)).toHaveBeenCalledWith(
+      expect(vi.mocked(createHydrogenCart)).toHaveBeenCalledWith(
         expect.objectContaining({
           cartQueryFragment: mockCartQueryFragment,
         }),
@@ -311,7 +311,7 @@ describe('createHydrogenContext', () => {
         },
       });
 
-      expect(vi.mocked(createCartHandler)).toHaveBeenCalledWith(
+      expect(vi.mocked(createHydrogenCart)).toHaveBeenCalledWith(
         expect.objectContaining({
           getCartId: mockGetCartId,
         }),
@@ -332,7 +332,7 @@ describe('createHydrogenContext', () => {
         },
       });
 
-      expect(vi.mocked(createCartHandler)).toHaveBeenCalledWith(
+      expect(vi.mocked(createHydrogenCart)).toHaveBeenCalledWith(
         expect.objectContaining({
           setCartId: mockSetCartId,
         }),
@@ -341,7 +341,7 @@ describe('createHydrogenContext', () => {
       expect(vi.mocked(cartSetIdDefault)).not.toHaveBeenCalled();
     });
 
-    it('called createCartHandler with renamed queryFragment key', async () => {
+    it('called createHydrogenCart with renamed queryFragment key', async () => {
       const mockQueryFragment = 'new queryFragment';
 
       createHydrogenContext({
@@ -351,14 +351,14 @@ describe('createHydrogenContext', () => {
         },
       });
 
-      expect(vi.mocked(createCartHandler)).toHaveBeenCalledWith(
+      expect(vi.mocked(createHydrogenCart)).toHaveBeenCalledWith(
         expect.objectContaining({
           cartQueryFragment: mockQueryFragment,
         }),
       );
     });
 
-    it('called createCartHandler with renamed mutateFragment key', async () => {
+    it('called createHydrogenCart with renamed mutateFragment key', async () => {
       const mockMutateFragment = 'new mutateFragment';
 
       createHydrogenContext({
@@ -368,7 +368,7 @@ describe('createHydrogenContext', () => {
         },
       });
 
-      expect(vi.mocked(createCartHandler)).toHaveBeenCalledWith(
+      expect(vi.mocked(createHydrogenCart)).toHaveBeenCalledWith(
         expect.objectContaining({
           cartMutateFragment: mockMutateFragment,
         }),

@@ -33,26 +33,33 @@ export type CartDeliveryAddressesRemoveFunction = (
  * ],
  * { someOptionalParam: 'value' });
  */
-export function cartDeliveryAddressesRemoveDefault(
-  options: CartQueryOptions,
-): CartDeliveryAddressesRemoveFunction {
-  return async (
-    addressIds: Array<Scalars['ID']['input']> | string[],
-    optionalParams,
-  ) => {
-    const {cartDeliveryAddressesRemove, errors} =
-      await options.storefront.mutate<{
-        cartDeliveryAddressesRemove: CartQueryData;
-        errors: StorefrontApiErrors;
-      }>(CART_DELIVERY_ADDRESSES_REMOVE_MUTATION(options.cartFragment), {
-        variables: {
-          cartId: options.getCartId(),
-          addressIds,
-          ...optionalParams,
-        },
-      });
+export function cartDeliveryAddressesRemoveDefault(config?: {
+  mutation?: string;
+}): (options: CartQueryOptions) => CartDeliveryAddressesRemoveFunction {
+  return (options) => {
+    return async (
+      addressIds: Array<Scalars['ID']['input']> | string[],
+      optionalParams,
+    ) => {
+      const {cartDeliveryAddressesRemove, errors} =
+        await options.storefront.mutate<{
+          cartDeliveryAddressesRemove: CartQueryData;
+          errors: StorefrontApiErrors;
+        }>(
+          CART_DELIVERY_ADDRESSES_REMOVE_MUTATION(
+            config?.mutation ?? options.cartFragment,
+          ),
+          {
+            variables: {
+              cartId: options.getCartId(),
+              addressIds,
+              ...optionalParams,
+            },
+          },
+        );
 
-    return formatAPIResult(cartDeliveryAddressesRemove, errors);
+      return formatAPIResult(cartDeliveryAddressesRemove, errors);
+    };
   };
 }
 

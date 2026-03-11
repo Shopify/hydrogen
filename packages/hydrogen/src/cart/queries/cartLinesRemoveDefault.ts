@@ -17,23 +17,25 @@ export type CartLinesRemoveFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-export function cartLinesRemoveDefault(
-  options: CartQueryOptions,
-): CartLinesRemoveFunction {
-  return async (lineIds, optionalParams) => {
-    throwIfLinesAreOptimistic('removeLines', lineIds);
+export function cartLinesRemoveDefault(config?: {
+  mutation?: string;
+}): (options: CartQueryOptions) => CartLinesRemoveFunction {
+  return (options) => {
+    return async (lineIds, optionalParams) => {
+      throwIfLinesAreOptimistic('removeLines', lineIds);
 
-    const {cartLinesRemove, errors} = await options.storefront.mutate<{
-      cartLinesRemove: CartQueryData;
-      errors: StorefrontApiErrors;
-    }>(CART_LINES_REMOVE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        lineIds,
-        ...optionalParams,
-      },
-    });
-    return formatAPIResult(cartLinesRemove, errors);
+      const {cartLinesRemove, errors} = await options.storefront.mutate<{
+        cartLinesRemove: CartQueryData;
+        errors: StorefrontApiErrors;
+      }>(CART_LINES_REMOVE_MUTATION(config?.mutation ?? options.cartFragment), {
+        variables: {
+          cartId: options.getCartId(),
+          lineIds,
+          ...optionalParams,
+        },
+      });
+      return formatAPIResult(cartLinesRemove, errors);
+    };
   };
 }
 

@@ -1,220 +1,108 @@
-import {Storefront} from '../storefront';
+import type {Storefront} from '../storefront';
 import type {CustomerAccount} from '../customer/types';
-import {type CartGetFunction, cartGetDefault} from './queries/cartGetDefault';
-import {
-  type CartCreateFunction,
-  cartCreateDefault,
-} from './queries/cartCreateDefault';
-import {
-  type CartLinesAddFunction,
-  cartLinesAddDefault,
-} from './queries/cartLinesAddDefault';
-import {
-  type CartLinesUpdateFunction,
-  cartLinesUpdateDefault,
-} from './queries/cartLinesUpdateDefault';
-import {
-  type CartLinesRemoveFunction,
-  cartLinesRemoveDefault,
-} from './queries/cartLinesRemoveDefault';
-import {
-  type CartDiscountCodesUpdateFunction,
-  cartDiscountCodesUpdateDefault,
-} from './queries/cartDiscountCodesUpdateDefault';
-import {
-  type CartBuyerIdentityUpdateFunction,
-  cartBuyerIdentityUpdateDefault,
-} from './queries/cartBuyerIdentityUpdateDefault';
-import {
-  type CartNoteUpdateFunction,
-  cartNoteUpdateDefault,
-} from './queries/cartNoteUpdateDefault';
-import {
-  type CartSelectedDeliveryOptionsUpdateFunction,
-  cartSelectedDeliveryOptionsUpdateDefault,
-} from './queries/cartSelectedDeliveryOptionsUpdateDefault';
-import {
-  type CartAttributesUpdateFunction,
-  cartAttributesUpdateDefault,
-} from './queries/cartAttributesUpdateDefault';
-import {
-  type CartMetafieldsSetFunction,
-  cartMetafieldsSetDefault,
-} from './queries/cartMetafieldsSetDefault';
-import {
-  type CartMetafieldDeleteFunction,
-  cartMetafieldDeleteDefault,
-} from './queries/cartMetafieldDeleteDefault';
-import {
-  type CartGiftCardCodesUpdateFunction,
-  cartGiftCardCodesUpdateDefault,
-} from './queries/cartGiftCardCodeUpdateDefault';
-import {
-  type CartGiftCardCodesAddFunction,
-  cartGiftCardCodesAddDefault,
-} from './queries/cartGiftCardCodesAddDefault';
-import {
-  type CartGiftCardCodesRemoveFunction,
-  cartGiftCardCodesRemoveDefault,
-} from './queries/cartGiftCardCodesRemoveDefault';
-import {
-  type CartDeliveryAddressesAddFunction,
-  cartDeliveryAddressesAddDefault,
-} from './queries/cartDeliveryAddressesAddDefault';
-import {
-  type CartDeliveryAddressesRemoveFunction,
-  cartDeliveryAddressesRemoveDefault,
-} from './queries/cartDeliveryAddressesRemoveDefault';
-import {
-  type CartDeliveryAddressesUpdateFunction,
-  cartDeliveryAddressesUpdateDefault,
-} from './queries/cartDeliveryAddressesUpdateDefault';
-import {
-  type CartDeliveryAddressesReplaceFunction,
-  cartDeliveryAddressesReplaceDefault,
-} from './queries/cartDeliveryAddressesReplaceDefault';
-import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
+import type {CartQueryOptions} from './queries/cart-types';
+import type {CartGetFunction} from './queries/cartGetDefault';
+import type {CartCreateFunction} from './queries/cartCreateDefault';
+import type {CartLinesAddFunction} from './queries/cartLinesAddDefault';
+import type {CartLinesUpdateFunction} from './queries/cartLinesUpdateDefault';
+import type {CartLinesRemoveFunction} from './queries/cartLinesRemoveDefault';
+import type {CartDiscountCodesUpdateFunction} from './queries/cartDiscountCodesUpdateDefault';
+import type {CartBuyerIdentityUpdateFunction} from './queries/cartBuyerIdentityUpdateDefault';
+import type {CartNoteUpdateFunction} from './queries/cartNoteUpdateDefault';
+import type {CartSelectedDeliveryOptionsUpdateFunction} from './queries/cartSelectedDeliveryOptionsUpdateDefault';
+import type {CartAttributesUpdateFunction} from './queries/cartAttributesUpdateDefault';
+import type {CartMetafieldsSetFunction} from './queries/cartMetafieldsSetDefault';
+import type {CartMetafieldDeleteFunction} from './queries/cartMetafieldDeleteDefault';
+import type {CartGiftCardCodesUpdateFunction} from './queries/cartGiftCardCodeUpdateDefault';
+import type {CartGiftCardCodesAddFunction} from './queries/cartGiftCardCodesAddDefault';
+import type {CartGiftCardCodesRemoveFunction} from './queries/cartGiftCardCodesRemoveDefault';
+import type {CartDeliveryAddressesAddFunction} from './queries/cartDeliveryAddressesAddDefault';
+import type {CartDeliveryAddressesRemoveFunction} from './queries/cartDeliveryAddressesRemoveDefault';
+import type {CartDeliveryAddressesUpdateFunction} from './queries/cartDeliveryAddressesUpdateDefault';
+import type {CartDeliveryAddressesReplaceFunction} from './queries/cartDeliveryAddressesReplaceDefault';
+import type {
+  CartBuyerIdentityInput,
+  CartInput,
+} from '@shopify/hydrogen-react/storefront-api-types';
 
-export type CartHandlerOptions = {
+/**
+ * A factory function that accepts CartQueryOptions and returns a cart method.
+ */
+export type CartMethodFactory<T> = (options: CartQueryOptions) => T;
+
+export type CustomMethodsBase = Record<string, Function>;
+
+/**
+ * Options for createCartHandler with explicit method registration.
+ */
+export type CartHandlerOptions<
+  TMethods extends Record<string, CartMethodFactory<any>>,
+  TCustomMethods extends CustomMethodsBase = {},
+> = {
   storefront: Storefront;
   customerAccount?: CustomerAccount;
   getCartId: () => string | undefined;
   setCartId: (cartId: string) => Headers;
-  cartQueryFragment?: string;
-  cartMutateFragment?: string;
   buyerIdentity?: CartBuyerIdentityInput;
-};
-
-export type CustomMethodsBase = Record<string, Function>;
-export type CartHandlerOptionsWithCustom<
-  TCustomMethods extends CustomMethodsBase,
-> = CartHandlerOptions & {
+  methods: TMethods;
   customMethods?: TCustomMethods;
 };
 
-export type HydrogenCart = {
-  get: ReturnType<typeof cartGetDefault>;
+/**
+ * Infers the resolved method types from a record of method factories.
+ */
+type InferMethods<T extends Record<string, CartMethodFactory<any>>> = {
+  [K in keyof T]: ReturnType<T[K]>;
+};
+
+/**
+ * The return type of createCartHandler — resolved methods + getCartId/setCartId + custom methods.
+ */
+export type CartHandlerResult<
+  TMethods extends Record<string, CartMethodFactory<any>>,
+  TCustomMethods extends CustomMethodsBase = {},
+> = InferMethods<TMethods> & {
   getCartId: () => string | undefined;
   setCartId: (cartId: string) => Headers;
-  create: ReturnType<typeof cartCreateDefault>;
-  addLines: ReturnType<typeof cartLinesAddDefault>;
-  updateLines: ReturnType<typeof cartLinesUpdateDefault>;
-  removeLines: ReturnType<typeof cartLinesRemoveDefault>;
-  updateDiscountCodes: ReturnType<typeof cartDiscountCodesUpdateDefault>;
-  updateGiftCardCodes: ReturnType<typeof cartGiftCardCodesUpdateDefault>;
-  addGiftCardCodes: ReturnType<typeof cartGiftCardCodesAddDefault>;
-  removeGiftCardCodes: ReturnType<typeof cartGiftCardCodesRemoveDefault>;
-  updateBuyerIdentity: ReturnType<typeof cartBuyerIdentityUpdateDefault>;
-  updateNote: ReturnType<typeof cartNoteUpdateDefault>;
-  updateSelectedDeliveryOption: ReturnType<
-    typeof cartSelectedDeliveryOptionsUpdateDefault
-  >;
-  updateAttributes: ReturnType<typeof cartAttributesUpdateDefault>;
-  setMetafields: ReturnType<typeof cartMetafieldsSetDefault>;
-  deleteMetafield: ReturnType<typeof cartMetafieldDeleteDefault>;
+} & TCustomMethods;
+
+/**
+ * The full HydrogenCart type with all methods — returned by createHydrogenCart.
+ */
+export type HydrogenCart = {
+  get: CartGetFunction;
+  getCartId: () => string | undefined;
+  setCartId: (cartId: string) => Headers;
+  create: CartCreateFunction;
+  addLines: CartLinesAddFunction;
+  updateLines: CartLinesUpdateFunction;
+  removeLines: CartLinesRemoveFunction;
+  updateDiscountCodes: CartDiscountCodesUpdateFunction;
+  updateGiftCardCodes: CartGiftCardCodesUpdateFunction;
+  addGiftCardCodes: CartGiftCardCodesAddFunction;
+  removeGiftCardCodes: CartGiftCardCodesRemoveFunction;
+  updateBuyerIdentity: CartBuyerIdentityUpdateFunction;
+  updateNote: CartNoteUpdateFunction;
+  updateSelectedDeliveryOption: CartSelectedDeliveryOptionsUpdateFunction;
+  updateAttributes: CartAttributesUpdateFunction;
+  setMetafields: CartMetafieldsSetFunction;
+  deleteMetafield: CartMetafieldDeleteFunction;
   /**
    * Adds delivery addresses to the cart.
-   *
-   * This function sends a mutation to the storefront API to add one or more delivery addresses to the cart.
-   * It returns the result of the mutation, including any errors that occurred.
-   *
-   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
-   * @returns {ReturnType<typeof cartDeliveryAddressesAddDefault>} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
-   *
-   * @example
-   * const result = await cart.addDeliveryAddresses(
-   *   [
-   *     {
-   *       address1: '123 Main St',
-   *       city: 'Anytown',
-   *       countryCode: 'US'
-   *     }
-   *   ],
-   *   { someOptionalParam: 'value' }
-   * );
    */
-  addDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesAddDefault>;
+  addDeliveryAddresses: CartDeliveryAddressesAddFunction;
   /**
    * Removes delivery addresses from the cart.
-   *
-   * This function sends a mutation to the storefront API to remove one or more delivery addresses from the cart.
-   * It returns the result of the mutation, including any errors that occurred.
-   *
-   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
-   * @returns {CartDeliveryAddressRemoveFunction} - A function that takes an array of address IDs and optional parameters, and returns the result of the API call.
-   *
-   * @example
-   * const result = await cart.removeDeliveryAddresses([
-   *   "gid://shopify/<objectName>/10079785100"
-   * ],
-   * { someOptionalParam: 'value' });
    */
-
-  removeDeliveryAddresses: ReturnType<
-    typeof cartDeliveryAddressesRemoveDefault
-  >;
+  removeDeliveryAddresses: CartDeliveryAddressesRemoveFunction;
   /**
-  * Updates delivery addresses in the cart.
-  *
-  * This function sends a mutation to the storefront API to update one or more delivery addresses in the cart.
-  * It returns the result of the mutation, including any errors that occurred.
-  *
-  * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
-  * @returns {CartDeliveryAddressUpdateFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
-  *
-  * const result = await cart.updateDeliveryAddresses([
-      {
-        "address": {
-          "copyFromCustomerAddressId": "gid://shopify/<objectName>/10079785100",
-          "deliveryAddress": {
-            "address1": "<your-address1>",
-            "address2": "<your-address2>",
-            "city": "<your-city>",
-            "company": "<your-company>",
-            "countryCode": "AC",
-            "firstName": "<your-firstName>",
-            "lastName": "<your-lastName>",
-            "phone": "<your-phone>",
-            "provinceCode": "<your-provinceCode>",
-            "zip": "<your-zip>"
-          }
-        },
-        "id": "gid://shopify/<objectName>/10079785100",
-        "oneTimeUse": true,
-        "selected": true,
-        "validationStrategy": "COUNTRY_CODE_ONLY"
-      }
-    ],{ someOptionalParam: 'value' });
-  */
-  updateDeliveryAddresses: ReturnType<
-    typeof cartDeliveryAddressesUpdateDefault
-  >;
+   * Updates delivery addresses in the cart.
+   */
+  updateDeliveryAddresses: CartDeliveryAddressesUpdateFunction;
   /**
    * Replaces all delivery addresses on the cart.
-   *
-   * This function sends a mutation to the storefront API to replace all delivery addresses on the cart
-   * with the provided addresses. It returns the result of the mutation, including any errors that occurred.
-   *
-   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
-   * @returns {CartDeliveryAddressesReplaceFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
-   *
-   * @example
-   * const result = await cart.replaceDeliveryAddresses([
-   *   {
-   *     address: {
-   *       deliveryAddress: {
-   *         address1: '123 Main St',
-   *         city: 'Anytown',
-   *         countryCode: 'US'
-   *       }
-   *     },
-   *     selected: true
-   *   }
-   * ], { someOptionalParam: 'value' });
    */
-  replaceDeliveryAddresses: ReturnType<
-    typeof cartDeliveryAddressesReplaceDefault
-  >;
+  replaceDeliveryAddresses: CartDeliveryAddressesReplaceFunction;
 };
 
 export type HydrogenCartCustom<
@@ -224,141 +112,161 @@ export type CartHandlerReturn<TCustomMethods extends CustomMethodsBase> =
   | HydrogenCartCustom<TCustomMethods>
   | HydrogenCart;
 
-export function createCartHandler(options: CartHandlerOptions): HydrogenCart;
-export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
-  options: CartHandlerOptionsWithCustom<TCustomMethods>,
-): HydrogenCartCustom<TCustomMethods>;
-export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
-  options: CartHandlerOptions | CartHandlerOptionsWithCustom<TCustomMethods>,
-): CartHandlerReturn<TCustomMethods> {
+// Methods that support auto-create (will call create if no cartId exists)
+const AUTO_CREATE_METHODS = new Set([
+  'addLines',
+  'updateDiscountCodes',
+  'updateBuyerIdentity',
+  'updateNote',
+  'updateAttributes',
+  'setMetafields',
+  'updateGiftCardCodes',
+]);
+
+export function createCartHandler<
+  TMethods extends Record<string, CartMethodFactory<any>>,
+  TCustomMethods extends CustomMethodsBase = {},
+>(
+  options: CartHandlerOptions<TMethods, TCustomMethods>,
+): CartHandlerResult<TMethods, TCustomMethods> {
   const {
     getCartId: _getCartId,
     setCartId,
     storefront,
     customerAccount,
-    cartQueryFragment,
-    cartMutateFragment,
     buyerIdentity,
+    methods: methodFactories,
+    customMethods,
   } = options;
 
+  // Mutable cartId ref shared across all methods in the same request
   let cartId = _getCartId();
-
   const getCartId = () => cartId || _getCartId();
 
-  const mutateOptions = {
+  const queryOptions: CartQueryOptions = {
     storefront,
     getCartId,
-    cartFragment: cartMutateFragment,
     customerAccount,
   };
 
-  const _cartCreate = cartCreateDefault(mutateOptions);
+  const resolvedMethods: Record<string, any> = {};
 
-  const cartCreate: CartCreateFunction = async function (...args) {
-    // Default buyerIdentity to what is passed into the handler
-    // Only override if buyerIdentity is passed directly to the method
-    args[0].buyerIdentity = {
-      ...buyerIdentity,
-      ...args[0].buyerIdentity,
+  // First, resolve the create method if it exists (needed for auto-create wrapping)
+  let cartCreate: CartCreateFunction | undefined;
+  if ('create' in methodFactories) {
+    const _cartCreate = methodFactories.create(
+      queryOptions,
+    ) as CartCreateFunction;
+    // Wrap create to merge default buyerIdentity and update cartId ref
+    cartCreate = async function (...args: Parameters<CartCreateFunction>) {
+      args[0] = {
+        ...args[0],
+        buyerIdentity: {
+          ...buyerIdentity,
+          ...args[0].buyerIdentity,
+        },
+      };
+      const result = await _cartCreate(...args);
+      cartId = result?.cart?.id;
+      return result;
     };
+    resolvedMethods.create = cartCreate;
+  }
 
-    const result = await _cartCreate(...args);
-    cartId = result?.cart?.id;
-    return result;
-  };
+  // Resolve all other methods
+  for (const [name, factory] of Object.entries(methodFactories)) {
+    if (name === 'create') continue; // Already handled
 
-  const methods: HydrogenCart = {
-    get: cartGetDefault({
-      storefront,
-      customerAccount,
-      getCartId,
-      cartFragment: cartQueryFragment,
-    }),
-    getCartId,
-    setCartId,
-    create: cartCreate,
-    addLines: async (linesWithOptimisticData, optionalParams) => {
-      const lines = linesWithOptimisticData.map((line) => {
-        return {
+    const method = factory(queryOptions);
+
+    // Apply auto-create wrapping for known methods if create is registered
+    if (AUTO_CREATE_METHODS.has(name) && cartCreate) {
+      resolvedMethods[name] = wrapWithAutoCreate(
+        name,
+        method,
+        cartCreate,
+        getCartId,
+        buyerIdentity,
+      );
+    } else {
+      resolvedMethods[name] = method;
+    }
+  }
+
+  // Add getCartId and setCartId
+  resolvedMethods.getCartId = getCartId;
+  resolvedMethods.setCartId = setCartId;
+
+  // Merge custom methods
+  if (customMethods) {
+    Object.assign(resolvedMethods, customMethods);
+  }
+
+  return resolvedMethods as CartHandlerResult<TMethods, TCustomMethods>;
+}
+
+function wrapWithAutoCreate(
+  methodName: string,
+  method: Function,
+  cartCreate: CartCreateFunction,
+  getCartId: () => string | undefined,
+  buyerIdentity?: CartBuyerIdentityInput,
+): Function {
+  return async (input: any, optionalParams?: any) => {
+    const currentCartId = getCartId();
+
+    if (currentCartId || optionalParams?.cartId) {
+      // Cart exists, use the normal method
+      if (methodName === 'addLines') {
+        // Strip optimistic data from lines
+        const lines = input.map((line: any) => ({
           attributes: line.attributes,
           quantity: line.quantity,
           merchandiseId: line.merchandiseId,
           sellingPlanId: line.sellingPlanId,
           parent: line.parent,
-        };
-      });
+        }));
+        return method(lines, optionalParams);
+      }
+      return method(input, optionalParams);
+    }
 
-      return cartId || optionalParams?.cartId
-        ? await cartLinesAddDefault(mutateOptions)(lines, optionalParams)
-        : await cartCreate({lines, buyerIdentity}, optionalParams);
-    },
-    updateLines: cartLinesUpdateDefault(mutateOptions),
-    removeLines: cartLinesRemoveDefault(mutateOptions),
-    updateDiscountCodes: async (discountCodes, optionalParams) => {
-      return cartId || optionalParams?.cartId
-        ? await cartDiscountCodesUpdateDefault(mutateOptions)(
-            discountCodes,
-            optionalParams,
-          )
-        : await cartCreate({discountCodes}, optionalParams);
-    },
-    updateGiftCardCodes: async (giftCardCodes, optionalParams) => {
-      return cartId || optionalParams?.cartId
-        ? await cartGiftCardCodesUpdateDefault(mutateOptions)(
-            giftCardCodes,
-            optionalParams,
-          )
-        : await cartCreate({giftCardCodes}, optionalParams);
-    },
-    addGiftCardCodes: cartGiftCardCodesAddDefault(mutateOptions),
-    removeGiftCardCodes: cartGiftCardCodesRemoveDefault(mutateOptions),
-    updateBuyerIdentity: async (buyerIdentity, optionalParams) => {
-      return cartId || optionalParams?.cartId
-        ? await cartBuyerIdentityUpdateDefault(mutateOptions)(
-            buyerIdentity,
-            optionalParams,
-          )
-        : await cartCreate({buyerIdentity}, optionalParams);
-    },
-    updateNote: async (note, optionalParams) => {
-      return cartId || optionalParams?.cartId
-        ? await cartNoteUpdateDefault(mutateOptions)(note, optionalParams)
-        : await cartCreate({note}, optionalParams);
-    },
-    updateSelectedDeliveryOption:
-      cartSelectedDeliveryOptionsUpdateDefault(mutateOptions),
-    updateAttributes: async (attributes, optionalParams) => {
-      return cartId || optionalParams?.cartId
-        ? await cartAttributesUpdateDefault(mutateOptions)(
-            attributes,
-            optionalParams,
-          )
-        : await cartCreate({attributes}, optionalParams);
-    },
-    setMetafields: async (metafields, optionalParams) => {
-      return cartId || optionalParams?.cartId
-        ? await cartMetafieldsSetDefault(mutateOptions)(
-            metafields,
-            optionalParams,
-          )
-        : await cartCreate({metafields}, optionalParams);
-    },
-    deleteMetafield: cartMetafieldDeleteDefault(mutateOptions),
-    addDeliveryAddresses: cartDeliveryAddressesAddDefault(mutateOptions),
-    removeDeliveryAddresses: cartDeliveryAddressesRemoveDefault(mutateOptions),
-    updateDeliveryAddresses: cartDeliveryAddressesUpdateDefault(mutateOptions),
-    replaceDeliveryAddresses:
-      cartDeliveryAddressesReplaceDefault(mutateOptions),
+    // No cart exists, create one with the input
+    const createInput: CartInput = {};
+    switch (methodName) {
+      case 'addLines': {
+        const lines = input.map((line: any) => ({
+          attributes: line.attributes,
+          quantity: line.quantity,
+          merchandiseId: line.merchandiseId,
+          sellingPlanId: line.sellingPlanId,
+          parent: line.parent,
+        }));
+        createInput.lines = lines;
+        createInput.buyerIdentity = buyerIdentity;
+        break;
+      }
+      case 'updateDiscountCodes':
+        createInput.discountCodes = input;
+        break;
+      case 'updateGiftCardCodes':
+        createInput.giftCardCodes = input;
+        break;
+      case 'updateBuyerIdentity':
+        createInput.buyerIdentity = input;
+        break;
+      case 'updateNote':
+        createInput.note = input;
+        break;
+      case 'updateAttributes':
+        createInput.attributes = input;
+        break;
+      case 'setMetafields':
+        createInput.metafields = input;
+        break;
+    }
+    return cartCreate(createInput, optionalParams);
   };
-
-  if ('customMethods' in options) {
-    return {
-      ...methods,
-      ...(options.customMethods ?? {}),
-    };
-  } else {
-    return methods;
-  }
 }
 
 export type CartHandlerOptionsForDocs<
@@ -377,15 +285,11 @@ export type CartHandlerOptionsForDocs<
    */
   storefront: Storefront;
   /**
-   * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.
-   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.
+   * An object of cart method factories. Each factory is called with CartQueryOptions
+   * and returns the resolved method. Only methods you register are included in the
+   * returned cart object, enabling tree-shaking of unused cart operations.
    */
-  cartMutateFragment?: string;
-  /**
-   * The cart query fragment used by `cart.get()`.
-   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.
-   */
-  cartQueryFragment?: string;
+  methods: Record<string, CartMethodFactory<any>>;
   /**
    * Define custom methods or override existing methods for your cart API instance.
    * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) in the documentation.

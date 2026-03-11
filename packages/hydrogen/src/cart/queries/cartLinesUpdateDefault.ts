@@ -18,23 +18,25 @@ export type CartLinesUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-export function cartLinesUpdateDefault(
-  options: CartQueryOptions,
-): CartLinesUpdateFunction {
-  return async (lines, optionalParams) => {
-    throwIfLinesAreOptimistic('updateLines', lines);
+export function cartLinesUpdateDefault(config?: {
+  mutation?: string;
+}): (options: CartQueryOptions) => CartLinesUpdateFunction {
+  return (options) => {
+    return async (lines, optionalParams) => {
+      throwIfLinesAreOptimistic('updateLines', lines);
 
-    const {cartLinesUpdate, errors} = await options.storefront.mutate<{
-      cartLinesUpdate: CartQueryData;
-      errors: StorefrontApiErrors;
-    }>(CART_LINES_UPDATE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        lines,
-        ...optionalParams,
-      },
-    });
-    return formatAPIResult(cartLinesUpdate, errors);
+      const {cartLinesUpdate, errors} = await options.storefront.mutate<{
+        cartLinesUpdate: CartQueryData;
+        errors: StorefrontApiErrors;
+      }>(CART_LINES_UPDATE_MUTATION(config?.mutation ?? options.cartFragment), {
+        variables: {
+          cartId: options.getCartId(),
+          lines,
+          ...optionalParams,
+        },
+      });
+      return formatAPIResult(cartLinesUpdate, errors);
+    };
   };
 }
 

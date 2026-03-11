@@ -4,7 +4,7 @@ import {cartMetafieldDeleteDefault} from './cartMetafieldDeleteDefault';
 
 describe('cartMetafieldsSetDefault', () => {
   it('should return a default cart metafields set implementation', async () => {
-    const cartMetafieldDelete = cartMetafieldDeleteDefault({
+    const cartMetafieldDelete = cartMetafieldDeleteDefault()({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
     });
@@ -17,9 +17,10 @@ describe('cartMetafieldsSetDefault', () => {
   it('can override cartFragment', async () => {
     const cartFragment = 'cartFragmentOverride';
     const cartMetafieldDelete = cartMetafieldDeleteDefault({
+      mutation: cartFragment,
+    })({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
-      cartFragment,
     });
 
     const result = await cartMetafieldDelete('');

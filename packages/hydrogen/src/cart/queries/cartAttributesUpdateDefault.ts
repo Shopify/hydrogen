@@ -17,21 +17,28 @@ export type CartAttributesUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-export function cartAttributesUpdateDefault(
-  options: CartQueryOptions,
-): CartAttributesUpdateFunction {
-  return async (attributes, optionalParams) => {
-    const {cartAttributesUpdate, errors} = await options.storefront.mutate<{
-      cartAttributesUpdate: CartQueryData;
-      errors: StorefrontApiErrors;
-    }>(CART_ATTRIBUTES_UPDATE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: optionalParams?.cartId || options.getCartId(),
-        attributes,
-        ...optionalParams,
-      },
-    });
-    return formatAPIResult(cartAttributesUpdate, errors);
+export function cartAttributesUpdateDefault(config?: {
+  mutation?: string;
+}): (options: CartQueryOptions) => CartAttributesUpdateFunction {
+  return (options) => {
+    return async (attributes, optionalParams) => {
+      const {cartAttributesUpdate, errors} = await options.storefront.mutate<{
+        cartAttributesUpdate: CartQueryData;
+        errors: StorefrontApiErrors;
+      }>(
+        CART_ATTRIBUTES_UPDATE_MUTATION(
+          config?.mutation ?? options.cartFragment,
+        ),
+        {
+          variables: {
+            cartId: optionalParams?.cartId || options.getCartId(),
+            attributes,
+            ...optionalParams,
+          },
+        },
+      );
+      return formatAPIResult(cartAttributesUpdate, errors);
+    };
   };
 }
 

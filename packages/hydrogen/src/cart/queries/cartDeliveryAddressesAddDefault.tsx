@@ -38,25 +38,33 @@ export type CartDeliveryAddressesAddFunction = (
  *  ], { someOptionalParam: 'value' }
  * );
  */
-export function cartDeliveryAddressesAddDefault(
-  options: CartQueryOptions,
-): CartDeliveryAddressesAddFunction {
-  return async (
-    addresses: Array<CartSelectableAddressInput>,
-    optionalParams,
-  ) => {
-    const {cartDeliveryAddressesAdd, errors} = await options.storefront.mutate<{
-      cartDeliveryAddressesAdd: CartQueryData;
-      errors: StorefrontApiErrors;
-    }>(CART_DELIVERY_ADDRESSES_ADD_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        addresses,
-        ...optionalParams,
-      },
-    });
+export function cartDeliveryAddressesAddDefault(config?: {
+  mutation?: string;
+}): (options: CartQueryOptions) => CartDeliveryAddressesAddFunction {
+  return (options) => {
+    return async (
+      addresses: Array<CartSelectableAddressInput>,
+      optionalParams,
+    ) => {
+      const {cartDeliveryAddressesAdd, errors} =
+        await options.storefront.mutate<{
+          cartDeliveryAddressesAdd: CartQueryData;
+          errors: StorefrontApiErrors;
+        }>(
+          CART_DELIVERY_ADDRESSES_ADD_MUTATION(
+            config?.mutation ?? options.cartFragment,
+          ),
+          {
+            variables: {
+              cartId: options.getCartId(),
+              addresses,
+              ...optionalParams,
+            },
+          },
+        );
 
-    return formatAPIResult(cartDeliveryAddressesAdd, errors);
+      return formatAPIResult(cartDeliveryAddressesAdd, errors);
+    };
   };
 }
 

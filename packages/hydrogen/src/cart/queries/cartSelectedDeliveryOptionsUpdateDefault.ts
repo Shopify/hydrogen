@@ -17,22 +17,29 @@ export type CartSelectedDeliveryOptionsUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-export function cartSelectedDeliveryOptionsUpdateDefault(
-  options: CartQueryOptions,
-): CartSelectedDeliveryOptionsUpdateFunction {
-  return async (selectedDeliveryOptions, optionalParams) => {
-    const {cartSelectedDeliveryOptionsUpdate, errors} =
-      await options.storefront.mutate<{
-        cartSelectedDeliveryOptionsUpdate: CartQueryData;
-        errors: StorefrontApiErrors;
-      }>(CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION(options.cartFragment), {
-        variables: {
-          cartId: options.getCartId(),
-          selectedDeliveryOptions,
-          ...optionalParams,
-        },
-      });
-    return formatAPIResult(cartSelectedDeliveryOptionsUpdate, errors);
+export function cartSelectedDeliveryOptionsUpdateDefault(config?: {
+  mutation?: string;
+}): (options: CartQueryOptions) => CartSelectedDeliveryOptionsUpdateFunction {
+  return (options) => {
+    return async (selectedDeliveryOptions, optionalParams) => {
+      const {cartSelectedDeliveryOptionsUpdate, errors} =
+        await options.storefront.mutate<{
+          cartSelectedDeliveryOptionsUpdate: CartQueryData;
+          errors: StorefrontApiErrors;
+        }>(
+          CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION(
+            config?.mutation ?? options.cartFragment,
+          ),
+          {
+            variables: {
+              cartId: options.getCartId(),
+              selectedDeliveryOptions,
+              ...optionalParams,
+            },
+          },
+        );
+      return formatAPIResult(cartSelectedDeliveryOptionsUpdate, errors);
+    };
   };
 }
 

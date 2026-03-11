@@ -16,21 +16,29 @@ export type CartGiftCardCodesRemoveFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-export function cartGiftCardCodesRemoveDefault(
-  options: CartQueryOptions,
-): CartGiftCardCodesRemoveFunction {
-  return async (appliedGiftCardIds, optionalParams) => {
-    const {cartGiftCardCodesRemove, errors} = await options.storefront.mutate<{
-      cartGiftCardCodesRemove: CartQueryData;
-      errors: StorefrontApiErrors;
-    }>(CART_GIFT_CARD_CODES_REMOVE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        appliedGiftCardIds,
-        ...optionalParams,
-      },
-    });
-    return formatAPIResult(cartGiftCardCodesRemove, errors);
+export function cartGiftCardCodesRemoveDefault(config?: {
+  mutation?: string;
+}): (options: CartQueryOptions) => CartGiftCardCodesRemoveFunction {
+  return (options) => {
+    return async (appliedGiftCardIds, optionalParams) => {
+      const {cartGiftCardCodesRemove, errors} =
+        await options.storefront.mutate<{
+          cartGiftCardCodesRemove: CartQueryData;
+          errors: StorefrontApiErrors;
+        }>(
+          CART_GIFT_CARD_CODES_REMOVE_MUTATION(
+            config?.mutation ?? options.cartFragment,
+          ),
+          {
+            variables: {
+              cartId: options.getCartId(),
+              appliedGiftCardIds,
+              ...optionalParams,
+            },
+          },
+        );
+      return formatAPIResult(cartGiftCardCodesRemove, errors);
+    };
   };
 }
 

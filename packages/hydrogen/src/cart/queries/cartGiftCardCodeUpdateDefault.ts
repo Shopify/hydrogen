@@ -28,21 +28,29 @@ export type CartGiftCardCodesUpdateFunction = (
  * const updateGiftCardCodes = cartGiftCardCodesUpdateDefault({ storefront, getCartId });
  * await updateGiftCardCodes(['SUMMER2025', 'WELCOME10']);
  */
-export function cartGiftCardCodesUpdateDefault(
-  options: CartQueryOptions,
-): CartGiftCardCodesUpdateFunction {
-  return async (giftCardCodes, optionalParams) => {
-    const {cartGiftCardCodesUpdate, errors} = await options.storefront.mutate<{
-      cartGiftCardCodesUpdate: CartQueryData;
-      errors: StorefrontApiErrors;
-    }>(CART_GIFT_CARD_CODE_UPDATE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        giftCardCodes,
-        ...optionalParams,
-      },
-    });
-    return formatAPIResult(cartGiftCardCodesUpdate, errors);
+export function cartGiftCardCodesUpdateDefault(config?: {
+  mutation?: string;
+}): (options: CartQueryOptions) => CartGiftCardCodesUpdateFunction {
+  return (options) => {
+    return async (giftCardCodes, optionalParams) => {
+      const {cartGiftCardCodesUpdate, errors} =
+        await options.storefront.mutate<{
+          cartGiftCardCodesUpdate: CartQueryData;
+          errors: StorefrontApiErrors;
+        }>(
+          CART_GIFT_CARD_CODE_UPDATE_MUTATION(
+            config?.mutation ?? options.cartFragment,
+          ),
+          {
+            variables: {
+              cartId: options.getCartId(),
+              giftCardCodes,
+              ...optionalParams,
+            },
+          },
+        );
+      return formatAPIResult(cartGiftCardCodesUpdate, errors);
+    };
   };
 }
 

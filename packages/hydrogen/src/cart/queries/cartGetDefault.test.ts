@@ -5,7 +5,7 @@ import type {CustomerAccount} from '../../customer/types';
 
 describe('cartGetDefault', () => {
   it('should return a default cart get implementation', async () => {
-    const cartGet = cartGetDefault({
+    const cartGet = cartGetDefault()({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
     });
@@ -16,7 +16,7 @@ describe('cartGetDefault', () => {
   });
 
   it('should return an empty object when no cart id found', async () => {
-    const cartGet = cartGetDefault({
+    const cartGet = cartGetDefault()({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => undefined,
     });
@@ -28,10 +28,9 @@ describe('cartGetDefault', () => {
 
   it('can override cartFragment', async () => {
     const cartFragment = 'cartFragmentOverride';
-    const cartGet = cartGetDefault({
+    const cartGet = cartGetDefault({query: cartFragment})({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
-      cartFragment,
     });
 
     const result = await cartGet();
@@ -43,7 +42,7 @@ describe('cartGetDefault', () => {
   });
 
   it('should return a cartId passed in', async () => {
-    const cartGet = cartGetDefault({
+    const cartGet = cartGetDefault()({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
     });
@@ -55,7 +54,7 @@ describe('cartGetDefault', () => {
 
   describe('run with customerAccount option', () => {
     it('should add logged_in search param to checkout link if customer is logged in', async () => {
-      const cartGet = cartGetDefault({
+      const cartGet = cartGetDefault()({
         storefront: mockCreateStorefrontClient(),
         customerAccount: {
           isLoggedIn: () => Promise.resolve(true),
@@ -68,7 +67,7 @@ describe('cartGetDefault', () => {
     });
 
     it('should NOT add logged_in search param to checkout link if customer is NOT logged in', async () => {
-      const cartGet = cartGetDefault({
+      const cartGet = cartGetDefault()({
         storefront: mockCreateStorefrontClient(),
         customerAccount: {
           isLoggedIn: () => Promise.resolve(false),

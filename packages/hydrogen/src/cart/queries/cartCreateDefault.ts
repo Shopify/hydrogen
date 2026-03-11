@@ -17,31 +17,33 @@ export type CartCreateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-export function cartCreateDefault(
-  options: CartQueryOptions,
-): CartCreateFunction {
-  return async (input, optionalParams) => {
-    const buyer = options.customerAccount
-      ? await options.customerAccount.getBuyer()
-      : undefined;
-    const {cartId, ...restOfOptionalParams} = optionalParams || {};
-    const {buyerIdentity, ...restOfInput} = input;
-    const {cartCreate, errors} = await options.storefront.mutate<{
-      cartCreate: CartQueryData;
-      errors: StorefrontApiErrors;
-    }>(CART_CREATE_MUTATION(options.cartFragment), {
-      variables: {
-        input: {
-          ...restOfInput,
-          buyerIdentity: {
-            ...buyer,
-            ...buyerIdentity,
+export function cartCreateDefault(config?: {
+  mutation?: string;
+}): (options: CartQueryOptions) => CartCreateFunction {
+  return (options) => {
+    return async (input, optionalParams) => {
+      const buyer = options.customerAccount
+        ? await options.customerAccount.getBuyer()
+        : undefined;
+      const {cartId, ...restOfOptionalParams} = optionalParams || {};
+      const {buyerIdentity, ...restOfInput} = input;
+      const {cartCreate, errors} = await options.storefront.mutate<{
+        cartCreate: CartQueryData;
+        errors: StorefrontApiErrors;
+      }>(CART_CREATE_MUTATION(config?.mutation ?? options.cartFragment), {
+        variables: {
+          input: {
+            ...restOfInput,
+            buyerIdentity: {
+              ...buyer,
+              ...buyerIdentity,
+            },
           },
+          ...restOfOptionalParams,
         },
-        ...restOfOptionalParams,
-      },
-    });
-    return formatAPIResult(cartCreate, errors);
+      });
+      return formatAPIResult(cartCreate, errors);
+    };
   };
 }
 

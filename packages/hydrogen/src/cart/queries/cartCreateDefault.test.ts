@@ -8,7 +8,7 @@ import {cartCreateDefault} from './cartCreateDefault';
 
 describe('cartCreateDefault', () => {
   it('should return a default cart create implementation', async () => {
-    const cartCreate = cartCreateDefault({
+    const cartCreate = cartCreateDefault()({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
     });
@@ -20,10 +20,9 @@ describe('cartCreateDefault', () => {
 
   it('can override cartFragment', async () => {
     const cartFragment = 'cartFragmentOverride';
-    const cartCreate = cartCreateDefault({
+    const cartCreate = cartCreateDefault({mutation: cartFragment})({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
-      cartFragment,
     });
 
     const result = await cartCreate({});

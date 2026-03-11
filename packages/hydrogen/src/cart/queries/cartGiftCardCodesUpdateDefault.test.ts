@@ -4,7 +4,7 @@ import {cartGiftCardCodesUpdateDefault} from './cartGiftCardCodeUpdateDefault';
 
 describe('cartGiftCardCodesUpdateDefault', () => {
   it('should return a default cart discount code update implementation', async () => {
-    const cartGiftCardCodes = cartGiftCardCodesUpdateDefault({
+    const cartGiftCardCodes = cartGiftCardCodesUpdateDefault()({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
     });
@@ -17,9 +17,10 @@ describe('cartGiftCardCodesUpdateDefault', () => {
   it('can override cartFragment', async () => {
     const cartFragment = 'cartFragmentOverride';
     const cartGiftCardCodes = cartGiftCardCodesUpdateDefault({
+      mutation: cartFragment,
+    })({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
-      cartFragment,
     });
 
     const result = await cartGiftCardCodes([]);
@@ -30,7 +31,7 @@ describe('cartGiftCardCodesUpdateDefault', () => {
 
   describe('no duplicate filtering (API 2025-10+)', () => {
     it('should pass duplicate codes directly to API without filtering', async () => {
-      const updateGiftCardCodes = cartGiftCardCodesUpdateDefault({
+      const updateGiftCardCodes = cartGiftCardCodesUpdateDefault()({
         storefront: mockCreateStorefrontClient(),
         getCartId: () => CART_ID,
       });
@@ -42,7 +43,7 @@ describe('cartGiftCardCodesUpdateDefault', () => {
     });
 
     it('should delegate duplicate handling to API (case-insensitive normalization)', async () => {
-      const updateGiftCardCodes = cartGiftCardCodesUpdateDefault({
+      const updateGiftCardCodes = cartGiftCardCodesUpdateDefault()({
         storefront: mockCreateStorefrontClient(),
         getCartId: () => CART_ID,
       });

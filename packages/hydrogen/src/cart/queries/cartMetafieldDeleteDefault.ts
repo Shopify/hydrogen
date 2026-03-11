@@ -15,34 +15,36 @@ export type CartMetafieldDeleteFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-export function cartMetafieldDeleteDefault(
-  options: CartQueryOptions,
-): CartMetafieldDeleteFunction {
-  return async (key, optionalParams) => {
-    const ownerId = optionalParams?.cartId || options.getCartId();
-    const {cartMetafieldDelete, errors} = await options.storefront.mutate<{
-      cartMetafieldDelete: {
-        userErrors: MetafieldDeleteUserError[];
-      };
-      errors: StorefrontApiErrors;
-    }>(CART_METAFIELD_DELETE_MUTATION(), {
-      variables: {
-        input: {
-          ownerId,
-          key,
+export function cartMetafieldDeleteDefault(config?: {
+  mutation?: string;
+}): (options: CartQueryOptions) => CartMetafieldDeleteFunction {
+  return (options) => {
+    return async (key, optionalParams) => {
+      const ownerId = optionalParams?.cartId || options.getCartId();
+      const {cartMetafieldDelete, errors} = await options.storefront.mutate<{
+        cartMetafieldDelete: {
+          userErrors: MetafieldDeleteUserError[];
+        };
+        errors: StorefrontApiErrors;
+      }>(CART_METAFIELD_DELETE_MUTATION(), {
+        variables: {
+          input: {
+            ownerId,
+            key,
+          },
+          ...optionalParams,
         },
-        ...optionalParams,
-      },
-    });
-    return formatAPIResult(
-      {
-        cart: {
-          id: ownerId,
-        } as Cart,
-        ...cartMetafieldDelete,
-      },
-      errors,
-    );
+      });
+      return formatAPIResult(
+        {
+          cart: {
+            id: ownerId,
+          } as Cart,
+          ...cartMetafieldDelete,
+        },
+        errors,
+      );
+    };
   };
 }
 

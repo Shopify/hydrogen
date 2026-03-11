@@ -11,12 +11,14 @@ import {
 } from './customer/types';
 import {LanguageCode} from '@shopify/hydrogen-react/customer-account-api-types';
 import {
-  createCartHandler,
-  type CartHandlerOptions,
   type CustomMethodsBase,
   type HydrogenCart,
   type HydrogenCartCustom,
 } from './cart/createCartHandler';
+import {
+  createHydrogenCart,
+  type HydrogenCartOptions,
+} from './cart/createHydrogenCart';
 import {cartGetIdDefault} from './cart/cartGetIdDefault';
 import {cartSetIdDefault} from './cart/cartSetIdDefault';
 import type {
@@ -80,19 +82,19 @@ export type HydrogenContextOptions<
   /** Cart handler overwrite options. See documentation for createCartHandler for more information. */
   cart?: {
     /** A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`. */
-    getId?: CartHandlerOptions['getCartId'];
+    getId?: HydrogenCartOptions['getCartId'];
     /** A function that sets the cart ID. */
-    setId?: CartHandlerOptions['setCartId'];
+    setId?: HydrogenCartOptions['setCartId'];
     /**
      * The cart query fragment used by `cart.get()`.
      * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.
      */
-    queryFragment?: CartHandlerOptions['cartQueryFragment'];
+    queryFragment?: HydrogenCartOptions['cartQueryFragment'];
     /**
      * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.
      * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.
      */
-    mutateFragment?: CartHandlerOptions['cartMutateFragment'];
+    mutateFragment?: HydrogenCartOptions['cartMutateFragment'];
     /**
      * Define custom methods or override existing methods for your cart API instance.
      * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) in the documentation.
@@ -225,7 +227,7 @@ export function createHydrogenContext<
    * Create a cart handler that will be used to
    * create and update the cart in the session.
    */
-  const cart = createCartHandler({
+  const cart = createHydrogenCart({
     // cartOptions
     getCartId: cartOptions.getId || cartGetIdDefault(request.headers),
     setCartId: cartOptions.setId || cartSetIdDefault(),

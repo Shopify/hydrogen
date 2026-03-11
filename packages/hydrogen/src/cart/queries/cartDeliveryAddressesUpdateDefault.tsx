@@ -55,26 +55,33 @@ export type CartDeliveryAddressesUpdateFunction = (
     }
   ],{ someOptionalParam: 'value' });
  */
-export function cartDeliveryAddressesUpdateDefault(
-  options: CartQueryOptions,
-): CartDeliveryAddressesUpdateFunction {
-  return async (
-    addresses: Array<CartSelectableAddressUpdateInput>,
-    optionalParams,
-  ) => {
-    const {cartDeliveryAddressesUpdate, errors} =
-      await options.storefront.mutate<{
-        cartDeliveryAddressesUpdate: CartQueryData;
-        errors: StorefrontApiErrors;
-      }>(CART_DELIVERY_ADDRESSES_UPDATE_MUTATION(options.cartFragment), {
-        variables: {
-          cartId: options.getCartId(),
-          addresses,
-          ...optionalParams,
-        },
-      });
+export function cartDeliveryAddressesUpdateDefault(config?: {
+  mutation?: string;
+}): (options: CartQueryOptions) => CartDeliveryAddressesUpdateFunction {
+  return (options) => {
+    return async (
+      addresses: Array<CartSelectableAddressUpdateInput>,
+      optionalParams,
+    ) => {
+      const {cartDeliveryAddressesUpdate, errors} =
+        await options.storefront.mutate<{
+          cartDeliveryAddressesUpdate: CartQueryData;
+          errors: StorefrontApiErrors;
+        }>(
+          CART_DELIVERY_ADDRESSES_UPDATE_MUTATION(
+            config?.mutation ?? options.cartFragment,
+          ),
+          {
+            variables: {
+              cartId: options.getCartId(),
+              addresses,
+              ...optionalParams,
+            },
+          },
+        );
 
-    return formatAPIResult(cartDeliveryAddressesUpdate, errors);
+      return formatAPIResult(cartDeliveryAddressesUpdate, errors);
+    };
   };
 }
 

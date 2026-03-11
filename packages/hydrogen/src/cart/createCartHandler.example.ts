@@ -1,6 +1,6 @@
 import {
   createStorefrontClient,
-  createCartHandler,
+  createHydrogenCart,
   cartGetIdDefault,
   cartSetIdDefault,
   createRequestHandler,
@@ -17,8 +17,8 @@ export default {
       /* client parameters */
     });
 
-    // Create a cart api instance.
-    const cart = createCartHandler({
+    // Create a cart api instance with all methods bundled.
+    const cart = createHydrogenCart({
       storefront,
       getCartId: cartGetIdDefault(request.headers),
       setCartId: cartSetIdDefault(),

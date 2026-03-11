@@ -17,22 +17,24 @@ export type CartLinesAddFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-export function cartLinesAddDefault(
-  options: CartQueryOptions,
-): CartLinesAddFunction {
-  return async (lines, optionalParams) => {
-    const {cartLinesAdd, errors} = await options.storefront.mutate<{
-      cartLinesAdd: CartQueryData;
-      errors: StorefrontApiErrors;
-    }>(CART_LINES_ADD_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        lines,
-        ...optionalParams,
-      },
-    });
+export function cartLinesAddDefault(config?: {
+  mutation?: string;
+}): (options: CartQueryOptions) => CartLinesAddFunction {
+  return (options) => {
+    return async (lines, optionalParams) => {
+      const {cartLinesAdd, errors} = await options.storefront.mutate<{
+        cartLinesAdd: CartQueryData;
+        errors: StorefrontApiErrors;
+      }>(CART_LINES_ADD_MUTATION(config?.mutation ?? options.cartFragment), {
+        variables: {
+          cartId: options.getCartId(),
+          lines,
+          ...optionalParams,
+        },
+      });
 
-    return formatAPIResult(cartLinesAdd, errors);
+      return formatAPIResult(cartLinesAdd, errors);
+    };
   };
 }
 

@@ -4,7 +4,7 @@ import {cartDiscountCodesUpdateDefault} from './cartDiscountCodesUpdateDefault';
 
 describe('cartDiscountCodesUpdateDefault', () => {
   it('should return a default cart discount code update implementation', async () => {
-    const cartDiscountCode = cartDiscountCodesUpdateDefault({
+    const cartDiscountCode = cartDiscountCodesUpdateDefault()({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
     });
@@ -17,9 +17,10 @@ describe('cartDiscountCodesUpdateDefault', () => {
   it('can override cartFragment', async () => {
     const cartFragment = 'cartFragmentOverride';
     const cartDiscountCode = cartDiscountCodesUpdateDefault({
+      mutation: cartFragment,
+    })({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
-      cartFragment,
     });
 
     const result = await cartDiscountCode([]);

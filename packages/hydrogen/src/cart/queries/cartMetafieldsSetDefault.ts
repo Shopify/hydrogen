@@ -15,35 +15,37 @@ export type CartMetafieldsSetFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-export function cartMetafieldsSetDefault(
-  options: CartQueryOptions,
-): CartMetafieldsSetFunction {
-  return async (metafields, optionalParams) => {
-    const ownerId = optionalParams?.cartId || options.getCartId();
-    const metafieldsWithOwnerId = metafields.map(
-      (metafield: MetafieldWithoutOwnerId) => ({
-        ...metafield,
-        ownerId,
-      }),
-    );
-    const {cartMetafieldsSet, errors} = await options.storefront.mutate<{
-      cartMetafieldsSet: {
-        userErrors: MetafieldsSetUserError[];
-      };
-      errors: StorefrontApiErrors;
-    }>(CART_METAFIELD_SET_MUTATION(), {
-      variables: {metafields: metafieldsWithOwnerId, ...optionalParams},
-    });
+export function cartMetafieldsSetDefault(config?: {
+  mutation?: string;
+}): (options: CartQueryOptions) => CartMetafieldsSetFunction {
+  return (options) => {
+    return async (metafields, optionalParams) => {
+      const ownerId = optionalParams?.cartId || options.getCartId();
+      const metafieldsWithOwnerId = metafields.map(
+        (metafield: MetafieldWithoutOwnerId) => ({
+          ...metafield,
+          ownerId,
+        }),
+      );
+      const {cartMetafieldsSet, errors} = await options.storefront.mutate<{
+        cartMetafieldsSet: {
+          userErrors: MetafieldsSetUserError[];
+        };
+        errors: StorefrontApiErrors;
+      }>(CART_METAFIELD_SET_MUTATION(), {
+        variables: {metafields: metafieldsWithOwnerId, ...optionalParams},
+      });
 
-    return formatAPIResult(
-      {
-        cart: {
-          id: ownerId,
-        } as Cart,
-        ...cartMetafieldsSet,
-      },
-      errors,
-    );
+      return formatAPIResult(
+        {
+          cart: {
+            id: ownerId,
+          } as Cart,
+          ...cartMetafieldsSet,
+        },
+        errors,
+      );
+    };
   };
 }
 

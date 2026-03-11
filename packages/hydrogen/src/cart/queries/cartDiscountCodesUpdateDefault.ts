@@ -16,26 +16,34 @@ export type CartDiscountCodesUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-export function cartDiscountCodesUpdateDefault(
-  options: CartQueryOptions,
-): CartDiscountCodesUpdateFunction {
-  return async (discountCodes, optionalParams) => {
-    // Ensure the discount codes are unique
-    const uniqueCodes = discountCodes.filter((value, index, array) => {
-      return array.indexOf(value) === index;
-    });
+export function cartDiscountCodesUpdateDefault(config?: {
+  mutation?: string;
+}): (options: CartQueryOptions) => CartDiscountCodesUpdateFunction {
+  return (options) => {
+    return async (discountCodes, optionalParams) => {
+      // Ensure the discount codes are unique
+      const uniqueCodes = discountCodes.filter((value, index, array) => {
+        return array.indexOf(value) === index;
+      });
 
-    const {cartDiscountCodesUpdate, errors} = await options.storefront.mutate<{
-      cartDiscountCodesUpdate: CartQueryData;
-      errors: StorefrontApiErrors;
-    }>(CART_DISCOUNT_CODE_UPDATE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        discountCodes: uniqueCodes,
-        ...optionalParams,
-      },
-    });
-    return formatAPIResult(cartDiscountCodesUpdate, errors);
+      const {cartDiscountCodesUpdate, errors} =
+        await options.storefront.mutate<{
+          cartDiscountCodesUpdate: CartQueryData;
+          errors: StorefrontApiErrors;
+        }>(
+          CART_DISCOUNT_CODE_UPDATE_MUTATION(
+            config?.mutation ?? options.cartFragment,
+          ),
+          {
+            variables: {
+              cartId: options.getCartId(),
+              discountCodes: uniqueCodes,
+              ...optionalParams,
+            },
+          },
+        );
+      return formatAPIResult(cartDiscountCodesUpdate, errors);
+    };
   };
 }
 

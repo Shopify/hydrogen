@@ -4,12 +4,33 @@ import {
   HydrogenCart,
   HydrogenCartCustom,
   createCartHandler,
+  type CartMethodFactory,
 } from './createCartHandler';
+import {createHydrogenCart} from './createHydrogenCart';
 import {
   mockCreateCustomerAccountClient,
   mockCreateStorefrontClient,
 } from './cart-test-helper';
 import {Storefront} from '../storefront';
+import {cartGetDefault} from './queries/cartGetDefault';
+import {cartCreateDefault} from './queries/cartCreateDefault';
+import {cartLinesAddDefault} from './queries/cartLinesAddDefault';
+import {cartLinesUpdateDefault} from './queries/cartLinesUpdateDefault';
+import {cartLinesRemoveDefault} from './queries/cartLinesRemoveDefault';
+import {cartDiscountCodesUpdateDefault} from './queries/cartDiscountCodesUpdateDefault';
+import {cartBuyerIdentityUpdateDefault} from './queries/cartBuyerIdentityUpdateDefault';
+import {cartNoteUpdateDefault} from './queries/cartNoteUpdateDefault';
+import {cartSelectedDeliveryOptionsUpdateDefault} from './queries/cartSelectedDeliveryOptionsUpdateDefault';
+import {cartAttributesUpdateDefault} from './queries/cartAttributesUpdateDefault';
+import {cartMetafieldsSetDefault} from './queries/cartMetafieldsSetDefault';
+import {cartMetafieldDeleteDefault} from './queries/cartMetafieldDeleteDefault';
+import {cartGiftCardCodesUpdateDefault} from './queries/cartGiftCardCodeUpdateDefault';
+import {cartGiftCardCodesAddDefault} from './queries/cartGiftCardCodesAddDefault';
+import {cartGiftCardCodesRemoveDefault} from './queries/cartGiftCardCodesRemoveDefault';
+import {cartDeliveryAddressesAddDefault} from './queries/cartDeliveryAddressesAddDefault';
+import {cartDeliveryAddressesRemoveDefault} from './queries/cartDeliveryAddressesRemoveDefault';
+import {cartDeliveryAddressesUpdateDefault} from './queries/cartDeliveryAddressesUpdateDefault';
+import {cartDeliveryAddressesReplaceDefault} from './queries/cartDeliveryAddressesReplaceDefault';
 
 type MockCarthandler = {
   cartId?: string;
@@ -22,7 +43,7 @@ type MockCarthandler = {
 
 function getCartHandler(options: MockCarthandler = {}) {
   const {cartId, ...rest} = options;
-  return createCartHandler({
+  return createHydrogenCart({
     storefront: mockCreateStorefrontClient(),
     customerAccount: mockCreateCustomerAccountClient(),
     getCartId: () =>
@@ -32,8 +53,8 @@ function getCartHandler(options: MockCarthandler = {}) {
   });
 }
 
-describe('createCartHandler', () => {
-  it('returns a cart handler instance', () => {
+describe('createHydrogenCart', () => {
+  it('returns a cart handler instance with all methods', () => {
     const cart = getCartHandler();
 
     expectTypeOf(cart).toEqualTypeOf<HydrogenCart>;
@@ -62,7 +83,7 @@ describe('createCartHandler', () => {
   });
 
   it('can add custom methods', () => {
-    const cart = createCartHandler({
+    const cart = createHydrogenCart({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => undefined,
       setCartId: () => new Headers(),
@@ -555,5 +576,104 @@ describe('createCartHandler', () => {
         },
       },
     });
+  });
+});
+
+describe('createCartHandler with explicit methods', () => {
+  it('returns only registered methods', () => {
+    const cart = createCartHandler({
+      storefront: mockCreateStorefrontClient(),
+      customerAccount: mockCreateCustomerAccountClient(),
+      getCartId: () => undefined,
+      setCartId: () => new Headers(),
+      methods: {
+        get: cartGetDefault(),
+        addLines: cartLinesAddDefault(),
+      },
+    });
+
+    expect(cart).toHaveProperty('get');
+    expect(cart).toHaveProperty('addLines');
+    expect(cart).toHaveProperty('getCartId');
+    expect(cart).toHaveProperty('setCartId');
+    // Should NOT have methods that weren't registered
+    expect(cart).not.toHaveProperty('create');
+    expect(cart).not.toHaveProperty('updateLines');
+    expect(cart).not.toHaveProperty('removeLines');
+  });
+
+  it('supports custom fragment config on defaults', async () => {
+    const customFragment = 'customFragmentOverride';
+    const cart = createCartHandler({
+      storefront: mockCreateStorefrontClient(),
+      customerAccount: mockCreateCustomerAccountClient(),
+      getCartId: () => 'gid://shopify/Cart/c1-123',
+      setCartId: () => new Headers(),
+      methods: {
+        get: cartGetDefault({query: customFragment}),
+        create: cartCreateDefault({mutation: customFragment}),
+        addLines: cartLinesAddDefault({mutation: customFragment}),
+      },
+    });
+
+    const getResult = await cart.get();
+    // @ts-expect-error
+    expect(getResult.query).toContain(customFragment);
+
+    const createResult = await cart.create({});
+    expect(createResult.userErrors?.[0]).toContain(customFragment);
+  });
+
+  it('auto-create works when create is registered', async () => {
+    const cart = createCartHandler({
+      storefront: mockCreateStorefrontClient(),
+      customerAccount: mockCreateCustomerAccountClient(),
+      getCartId: () => undefined,
+      setCartId: () => new Headers(),
+      methods: {
+        create: cartCreateDefault(),
+        addLines: cartLinesAddDefault(),
+      },
+    });
+
+    const result = await cart.addLines([]);
+    expect(result.cart).toHaveProperty('id', 'c1-new-cart-id');
+  });
+
+  it('auto-create does not happen when create is not registered', async () => {
+    const cart = createCartHandler({
+      storefront: mockCreateStorefrontClient(),
+      customerAccount: mockCreateCustomerAccountClient(),
+      getCartId: () => undefined,
+      setCartId: () => new Headers(),
+      methods: {
+        addLines: cartLinesAddDefault(),
+      },
+    });
+
+    // Without create, addLines will try to call the storefront with undefined cartId
+    const result = await cart.addLines([]);
+    expect(result.cart).toHaveProperty('id', undefined);
+  });
+
+  it('supports customMethods alongside methods', () => {
+    const cart = createCartHandler({
+      storefront: mockCreateStorefrontClient(),
+      customerAccount: mockCreateCustomerAccountClient(),
+      getCartId: () => undefined,
+      setCartId: () => new Headers(),
+      methods: {
+        get: cartGetDefault(),
+      },
+      customMethods: {
+        myCustomMethod() {
+          return 'custom';
+        },
+      },
+    });
+
+    expect(cart).toHaveProperty('get');
+    expect(cart).toHaveProperty('myCustomMethod');
+    expect((cart as any).myCustomMethod()).toBe('custom');
   });
 });

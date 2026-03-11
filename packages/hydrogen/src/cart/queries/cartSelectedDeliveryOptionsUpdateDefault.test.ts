@@ -4,7 +4,7 @@ import {cartSelectedDeliveryOptionsUpdateDefault} from './cartSelectedDeliveryOp
 
 describe('cartSelectedDeliveryOptionsUpdateDefault', () => {
   it('should return a default cart delivery option update implementation', async () => {
-    const cartUpdate = cartSelectedDeliveryOptionsUpdateDefault({
+    const cartUpdate = cartSelectedDeliveryOptionsUpdateDefault()({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
     });
@@ -22,9 +22,10 @@ describe('cartSelectedDeliveryOptionsUpdateDefault', () => {
   it('can override cartFragment', async () => {
     const cartFragment = 'cartFragmentOverride';
     const cartUpdate = cartSelectedDeliveryOptionsUpdateDefault({
+      mutation: cartFragment,
+    })({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
-      cartFragment,
     });
 
     const result = await cartUpdate([

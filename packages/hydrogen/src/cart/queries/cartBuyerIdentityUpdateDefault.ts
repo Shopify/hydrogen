@@ -17,34 +17,42 @@ export type CartBuyerIdentityUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-export function cartBuyerIdentityUpdateDefault(
-  options: CartQueryOptions,
-): CartBuyerIdentityUpdateFunction {
-  return async (buyerIdentity, optionalParams) => {
-    if (buyerIdentity.companyLocationId && options.customerAccount) {
-      options.customerAccount.setBuyer({
-        companyLocationId: buyerIdentity.companyLocationId,
-      });
-    }
+export function cartBuyerIdentityUpdateDefault(config?: {
+  mutation?: string;
+}): (options: CartQueryOptions) => CartBuyerIdentityUpdateFunction {
+  return (options) => {
+    return async (buyerIdentity, optionalParams) => {
+      if (buyerIdentity.companyLocationId && options.customerAccount) {
+        options.customerAccount.setBuyer({
+          companyLocationId: buyerIdentity.companyLocationId,
+        });
+      }
 
-    const buyer = options.customerAccount
-      ? await options.customerAccount.getBuyer()
-      : undefined;
+      const buyer = options.customerAccount
+        ? await options.customerAccount.getBuyer()
+        : undefined;
 
-    const {cartBuyerIdentityUpdate, errors} = await options.storefront.mutate<{
-      cartBuyerIdentityUpdate: CartQueryData;
-      errors: StorefrontApiErrors;
-    }>(CART_BUYER_IDENTITY_UPDATE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        buyerIdentity: {
-          ...buyer,
-          ...buyerIdentity,
-        },
-        ...optionalParams,
-      },
-    });
-    return formatAPIResult(cartBuyerIdentityUpdate, errors);
+      const {cartBuyerIdentityUpdate, errors} =
+        await options.storefront.mutate<{
+          cartBuyerIdentityUpdate: CartQueryData;
+          errors: StorefrontApiErrors;
+        }>(
+          CART_BUYER_IDENTITY_UPDATE_MUTATION(
+            config?.mutation ?? options.cartFragment,
+          ),
+          {
+            variables: {
+              cartId: options.getCartId(),
+              buyerIdentity: {
+                ...buyer,
+                ...buyerIdentity,
+              },
+              ...optionalParams,
+            },
+          },
+        );
+      return formatAPIResult(cartBuyerIdentityUpdate, errors);
+    };
   };
 }
 

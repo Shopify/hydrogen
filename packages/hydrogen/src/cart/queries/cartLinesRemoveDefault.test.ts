@@ -4,7 +4,7 @@ import {cartLinesRemoveDefault} from './cartLinesRemoveDefault';
 
 describe('cartLinesRemoveDefault', () => {
   it('should return a default cart lines remove implementation', async () => {
-    const cartRemove = cartLinesRemoveDefault({
+    const cartRemove = cartLinesRemoveDefault()({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
     });
@@ -16,10 +16,9 @@ describe('cartLinesRemoveDefault', () => {
 
   it('can override cartFragment', async () => {
     const cartFragment = 'cartFragmentOverride';
-    const cartRemove = cartLinesRemoveDefault({
+    const cartRemove = cartLinesRemoveDefault({mutation: cartFragment})({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
-      cartFragment,
     });
 
     const result = await cartRemove([]);

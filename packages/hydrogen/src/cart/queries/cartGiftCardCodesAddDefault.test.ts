@@ -13,7 +13,7 @@ import {
 describe('cartGiftCardCodesAddDefault', () => {
   describe('basic functionality', () => {
     it('should add gift card codes to cart without replacing existing ones', async () => {
-      const addGiftCardCodes = cartGiftCardCodesAddDefault({
+      const addGiftCardCodes = cartGiftCardCodesAddDefault()({
         storefront: mockCreateStorefrontClient(),
         getCartId: () => CART_ID,
       });
@@ -24,7 +24,7 @@ describe('cartGiftCardCodesAddDefault', () => {
     });
 
     it('should handle multiple gift card codes in single call', async () => {
-      const addGiftCardCodes = cartGiftCardCodesAddDefault({
+      const addGiftCardCodes = cartGiftCardCodesAddDefault()({
         storefront: mockCreateStorefrontClient(),
         getCartId: () => CART_ID,
       });
@@ -39,7 +39,7 @@ describe('cartGiftCardCodesAddDefault', () => {
     });
 
     it('should handle empty array', async () => {
-      const addGiftCardCodes = cartGiftCardCodesAddDefault({
+      const addGiftCardCodes = cartGiftCardCodesAddDefault()({
         storefront: mockCreateStorefrontClient(),
         getCartId: () => CART_ID,
       });
@@ -54,9 +54,10 @@ describe('cartGiftCardCodesAddDefault', () => {
     it('can override cartFragment for custom query fields', async () => {
       const cartFragment = 'cartFragmentOverride';
       const addGiftCardCodes = cartGiftCardCodesAddDefault({
+        mutation: cartFragment,
+      })({
         storefront: mockCreateStorefrontClient(),
         getCartId: () => CART_ID,
-        cartFragment,
       });
 
       const result = await addGiftCardCodes(['TESTCODE']);
@@ -88,7 +89,7 @@ describe('cartGiftCardCodesAddDefault', () => {
 
   describe('no duplicate filtering', () => {
     it('should pass duplicate codes to API without filtering', async () => {
-      const addGiftCardCodes = cartGiftCardCodesAddDefault({
+      const addGiftCardCodes = cartGiftCardCodesAddDefault()({
         storefront: mockCreateStorefrontClient(),
         getCartId: () => CART_ID,
       });

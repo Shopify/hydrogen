@@ -6,7 +6,7 @@ import {
 
 export async function action({context}: {context: CartQueryOptions}) {
   const cartRemoveGiftCardCodes: HydrogenCart['removeGiftCardCodes'] =
-    cartGiftCardCodesRemoveDefault({
+    cartGiftCardCodesRemoveDefault()({
       storefront: context.storefront,
       getCartId: context.getCartId,
     });

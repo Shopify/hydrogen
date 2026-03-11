@@ -4,7 +4,7 @@ import {cartDeliveryAddressesRemoveDefault} from './cartDeliveryAddressesRemoveD
 
 describe('cartDeliveryAddressesRemoveDefault', () => {
   it('should return a default cart delivery address remove implementation', async () => {
-    const removeDeliveryAddresses = cartDeliveryAddressesRemoveDefault({
+    const removeDeliveryAddresses = cartDeliveryAddressesRemoveDefault()({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
     });
@@ -17,9 +17,10 @@ describe('cartDeliveryAddressesRemoveDefault', () => {
   it('can override cartFragment', async () => {
     const cartFragment = 'cartFragmentOverride';
     const removeDeliveryAddresses = cartDeliveryAddressesRemoveDefault({
+      mutation: cartFragment,
+    })({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
-      cartFragment,
     });
 
     const result = await removeDeliveryAddresses([]);

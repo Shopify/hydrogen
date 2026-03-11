@@ -56,32 +56,34 @@ type CartGetOptions = CartQueryOptions & {
   customerAccount?: CustomerAccount;
 };
 
-export function cartGetDefault({
-  storefront,
-  customerAccount,
-  getCartId,
-  cartFragment,
-}: CartGetOptions): CartGetFunction {
-  return async (cartInput?: CartGetProps) => {
-    const cartId = getCartId();
+export function cartGetDefault(config?: {
+  query?: string;
+}): (options: CartGetOptions) => CartGetFunction {
+  return ({storefront, customerAccount, getCartId, cartFragment}) => {
+    return async (cartInput?: CartGetProps) => {
+      const cartId = getCartId();
 
-    if (!cartId) return null;
+      if (!cartId) return null;
 
-    const [isCustomerLoggedIn, {cart, errors}] = await Promise.all([
-      customerAccount ? customerAccount.isLoggedIn() : false,
-      storefront.query<{cart: Cart | null}>(CART_QUERY(cartFragment), {
-        variables: {cartId, ...cartInput},
-        cache: storefront.CacheNone(),
-      }),
-    ]);
+      const [isCustomerLoggedIn, {cart, errors}] = await Promise.all([
+        customerAccount ? customerAccount.isLoggedIn() : false,
+        storefront.query<{cart: Cart | null}>(
+          CART_QUERY(config?.query ?? cartFragment),
+          {
+            variables: {cartId, ...cartInput},
+            cache: storefront.CacheNone(),
+          },
+        ),
+      ]);
 
-    if (isCustomerLoggedIn && cart?.checkoutUrl) {
-      const finalCheckoutUrl = new URL(cart.checkoutUrl);
-      finalCheckoutUrl.searchParams.set('logged_in', 'true');
-      cart.checkoutUrl = finalCheckoutUrl.toString();
-    }
+      if (isCustomerLoggedIn && cart?.checkoutUrl) {
+        const finalCheckoutUrl = new URL(cart.checkoutUrl);
+        finalCheckoutUrl.searchParams.set('logged_in', 'true');
+        cart.checkoutUrl = finalCheckoutUrl.toString();
+      }
 
-    return cart || errors ? formatAPIResult(cart, errors) : null;
+      return cart || errors ? formatAPIResult(cart, errors) : null;
+    };
   };
 }
 

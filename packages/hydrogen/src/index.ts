@@ -37,10 +37,12 @@ export {
 export {cartGetIdDefault} from './cart/cartGetIdDefault';
 export {cartSetIdDefault, type CookieOptions} from './cart/cartSetIdDefault';
 export {
+  type CartMethodFactory,
   createCartHandler,
   type HydrogenCart,
   type HydrogenCartCustom,
 } from './cart/createCartHandler';
+export {createHydrogenCart} from './cart/createHydrogenCart';
 export {
   type OptimisticCart,
   type OptimisticCartLine,
@@ -56,6 +58,10 @@ export type {
 export {cartAttributesUpdateDefault} from './cart/queries/cartAttributesUpdateDefault';
 export {cartBuyerIdentityUpdateDefault} from './cart/queries/cartBuyerIdentityUpdateDefault';
 export {cartCreateDefault} from './cart/queries/cartCreateDefault';
+export {cartDeliveryAddressesAddDefault} from './cart/queries/cartDeliveryAddressesAddDefault';
+export {cartDeliveryAddressesRemoveDefault} from './cart/queries/cartDeliveryAddressesRemoveDefault';
+export {cartDeliveryAddressesReplaceDefault} from './cart/queries/cartDeliveryAddressesReplaceDefault';
+export {cartDeliveryAddressesUpdateDefault} from './cart/queries/cartDeliveryAddressesUpdateDefault';
 export {cartDiscountCodesUpdateDefault} from './cart/queries/cartDiscountCodesUpdateDefault';
 export {cartGetDefault} from './cart/queries/cartGetDefault';
 export {cartGiftCardCodesAddDefault} from './cart/queries/cartGiftCardCodesAddDefault';

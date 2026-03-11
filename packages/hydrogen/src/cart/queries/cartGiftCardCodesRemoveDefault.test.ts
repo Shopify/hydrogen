@@ -4,7 +4,7 @@ import {cartGiftCardCodesRemoveDefault} from './cartGiftCardCodesRemoveDefault';
 
 describe('cartGiftCardCodesRemoveDefault', () => {
   it('should return a default cart gift card codes remove implementation', async () => {
-    const removeGiftCardCodes = cartGiftCardCodesRemoveDefault({
+    const removeGiftCardCodes = cartGiftCardCodesRemoveDefault()({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
     });
@@ -17,9 +17,10 @@ describe('cartGiftCardCodesRemoveDefault', () => {
   it('can override cartFragment', async () => {
     const cartFragment = 'cartFragmentOverride';
     const removeGiftCardCodes = cartGiftCardCodesRemoveDefault({
+      mutation: cartFragment,
+    })({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
-      cartFragment,
     });
 
     const result = await removeGiftCardCodes(['GIFT123', 'GIFT456']);

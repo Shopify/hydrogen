@@ -4,7 +4,7 @@ import {cartNoteUpdateDefault} from './cartNoteUpdateDefault';
 
 describe('cartNoteUpdateDefault', () => {
   it('should return a default cart note update implementation', async () => {
-    const cartNote = cartNoteUpdateDefault({
+    const cartNote = cartNoteUpdateDefault()({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
     });
@@ -16,10 +16,9 @@ describe('cartNoteUpdateDefault', () => {
 
   it('can override cartFragment', async () => {
     const cartFragment = 'cartFragmentOverride';
-    const cartNote = cartNoteUpdateDefault({
+    const cartNote = cartNoteUpdateDefault({mutation: cartFragment})({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
-      cartFragment,
     });
 
     const result = await cartNote('');

@@ -4,7 +4,7 @@ import {cartBuyerIdentityUpdateDefault} from './cartBuyerIdentityUpdateDefault';
 
 describe('cartBuyerIdentityUpdateDefault', () => {
   it('should return a default cart buyer identity update implementation', async () => {
-    const cartUpdate = cartBuyerIdentityUpdateDefault({
+    const cartUpdate = cartBuyerIdentityUpdateDefault()({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => CART_ID,
     });
@@ -16,11 +16,12 @@ describe('cartBuyerIdentityUpdateDefault', () => {
 
   it('can override cartFragment', async () => {
     const cartFragment = 'cartFragmentOverride';
-    const cartUpdate = cartBuyerIdentityUpdateDefault({
-      storefront: mockCreateStorefrontClient(),
-      getCartId: () => CART_ID,
-      cartFragment,
-    });
+    const cartUpdate = cartBuyerIdentityUpdateDefault({mutation: cartFragment})(
+      {
+        storefront: mockCreateStorefrontClient(),
+        getCartId: () => CART_ID,
+      },
+    );
 
     const result = await cartUpdate({});
 
