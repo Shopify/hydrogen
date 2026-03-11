@@ -1,22 +1,61 @@
 import type {Route} from './+types/api.mcp';
+import type {
+  SearchProductsQuery,
+  ShopPoliciesQuery,
+  GetCartQuery,
+  CreateCartMutation,
+  AddToCartMutation,
+  UpdateCartMutation,
+} from 'storefrontapi.generated';
 
 /**
  * Storefront MCP (Model Context Protocol) Server
  *
- * This endpoint implements the MCP specification to enable AI agents
- * to interact with the storefront. It provides tools for:
- * - Product search
- * - Cart management
- * - Store policies and FAQs
- *
  * @see https://shopify.dev/docs/apps/build/storefront-mcp/servers/storefront
  * @see https://modelcontextprotocol.io
  */
+
+interface ToolCallParams {
+  name: string;
+  arguments: Record<string, unknown>;
+}
+
+interface SearchCatalogArgs {
+  query: string;
+  context: string;
+}
+
+interface SearchPoliciesArgs {
+  query: string;
+  context?: string;
+}
+
+interface GetCartArgs {
+  cart_id: string;
+}
+
+interface CartLine {
+  line_item_id?: string;
+  merchandise_id?: string;
+  quantity: number;
+}
+
+interface UpdateCartArgs {
+  cart_id?: string;
+  lines: CartLine[];
+}
+
+interface JsonRpcRequest {
+  jsonrpc: string;
+  id?: string | number | null;
+  method?: string;
+  params?: ToolCallParams;
+}
+
 export async function action({request, context}: Route.ActionArgs) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as JsonRpcRequest;
 
-    // Validate JSON-RPC 2.0 format
     if (body.jsonrpc !== '2.0') {
       return Response.json(
         {
@@ -27,17 +66,16 @@ export async function action({request, context}: Route.ActionArgs) {
             message: 'Invalid Request: jsonrpc must be "2.0"',
           },
         },
-        {status: 400},
+        {status: 200},
       );
     }
 
-    // Handle MCP methods
     switch (body.method) {
       case 'tools/list':
-        return handleToolsList(body.id);
+        return handleToolsList(body.id ?? null);
 
       case 'tools/call':
-        return handleToolsCall(body.id, body.params, context);
+        return handleToolsCall(body.id ?? null, body.params, context);
 
       default:
         return Response.json(
@@ -49,7 +87,7 @@ export async function action({request, context}: Route.ActionArgs) {
               message: `Method not found: ${body.method}`,
             },
           },
-          {status: 404},
+          {status: 200},
         );
     }
   } catch (error) {
@@ -62,14 +100,11 @@ export async function action({request, context}: Route.ActionArgs) {
           message: 'Parse error',
         },
       },
-      {status: 400},
+      {status: 200},
     );
   }
 }
 
-/**
- * Handle tools/list - Returns available MCP tools
- */
 function handleToolsList(id: number | string | null) {
   return Response.json({
     jsonrpc: '2.0',
@@ -130,7 +165,8 @@ function handleToolsList(id: number | string | null) {
         },
         {
           name: 'update_cart',
-          description: 'Update cart items or create a new cart',
+          description:
+            'Update cart items or create a new cart. Set quantity to 0 to remove items.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -147,11 +183,13 @@ function handleToolsList(id: number | string | null) {
                   properties: {
                     line_item_id: {
                       type: 'string',
-                      description: 'ID of existing line item (for updates)',
+                      description:
+                        'ID of existing line item (required for updates, omit for new items)',
                     },
                     merchandise_id: {
                       type: 'string',
-                      description: 'Product variant ID',
+                      description:
+                        'Product variant ID (required for new items, omit for updates)',
                     },
                     quantity: {
                       type: 'number',
@@ -170,29 +208,48 @@ function handleToolsList(id: number | string | null) {
   });
 }
 
-/**
- * Handle tools/call - Execute a specific tool
- */
 async function handleToolsCall(
   id: number | string | null,
-  params: any,
+  params: unknown,
   context: Route.LoaderArgs['context'],
 ) {
-  const {name, arguments: args} = params;
+  if (!params || typeof params !== 'object') {
+    return Response.json(
+      {
+        jsonrpc: '2.0',
+        id,
+        error: {
+          code: -32602,
+          message: 'Invalid params',
+        },
+      },
+      {status: 200},
+    );
+  }
+
+  const {name, arguments: args} = params as ToolCallParams;
 
   try {
     switch (name) {
       case 'search_shop_catalog':
-        return await searchCatalog(id, args, context);
+        return await searchCatalog(
+          id,
+          args as unknown as SearchCatalogArgs,
+          context,
+        );
 
       case 'search_shop_policies_and_faqs':
-        return await searchPolicies(id, args, context);
+        return await searchPolicies(
+          id,
+          args as unknown as SearchPoliciesArgs,
+          context,
+        );
 
       case 'get_cart':
-        return await getCart(id, args, context);
+        return await getCart(id, args as unknown as GetCartArgs, context);
 
       case 'update_cart':
-        return await updateCart(id, args, context);
+        return await updateCart(id, args as unknown as UpdateCartArgs, context);
 
       default:
         return Response.json(
@@ -204,7 +261,7 @@ async function handleToolsCall(
               message: `Unknown tool: ${name}`,
             },
           },
-          {status: 400},
+          {status: 200},
         );
     }
   } catch (error) {
@@ -214,28 +271,29 @@ async function handleToolsCall(
         id,
         error: {
           code: -32603,
-          message: `Internal error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          message: `Tool execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         },
       },
-      {status: 500},
+      {status: 200},
     );
   }
 }
 
-/**
- * Search product catalog
- */
 async function searchCatalog(
   id: number | string | null,
-  args: {query: string; context: string},
+  args: SearchCatalogArgs,
   context: Route.LoaderArgs['context'],
 ) {
   const {query} = args;
 
-  // Use Storefront API to search products
-  const {data} = await context.storefront.query(
+  if (!query || typeof query !== 'string' || query.trim().length === 0) {
+    throw new Error('query must be a non-empty string');
+  }
+
+  const {products} = await context.storefront.query<SearchProductsQuery>(
     `#graphql
-      query SearchProducts($query: String!) {
+      query SearchProducts($query: String!, $country: CountryCode, $language: LanguageCode)
+      @inContext(country: $country, language: $language) {
         products(first: 10, query: $query) {
           nodes {
             id
@@ -254,16 +312,34 @@ async function searchCatalog(
             variants(first: 1) {
               nodes {
                 id
+                availableForSale
               }
             }
           }
         }
       }
     `,
-    {variables: {query}},
+    {
+      variables: {
+        query,
+        country: context.storefront.i18n.country,
+        language: context.storefront.i18n.language,
+      },
+    },
   );
 
-  const products = data?.products?.nodes || [];
+  const validProducts = products.nodes
+    .filter((product) => product.variants.nodes.length > 0)
+    .map((product) => ({
+      name: product.title,
+      price: product.priceRange.minVariantPrice.amount,
+      currency: product.priceRange.minVariantPrice.currencyCode,
+      variant_id: product.variants.nodes[0].id,
+      available: product.variants.nodes[0].availableForSale,
+      url: product.onlineStoreUrl ?? '',
+      image_url: product.featuredImage?.url ?? '',
+      description: product.description ?? '',
+    }));
 
   return Response.json({
     jsonrpc: '2.0',
@@ -272,33 +348,25 @@ async function searchCatalog(
       content: [
         {
           type: 'text',
-          text: JSON.stringify(
-            products.map((product: any) => ({
-              name: product.title,
-              price: product.priceRange.minVariantPrice.amount,
-              currency: product.priceRange.minVariantPrice.currencyCode,
-              variant_id: product.variants.nodes[0]?.id,
-              url: product.onlineStoreUrl,
-              image_url: product.featuredImage?.url,
-              description: product.description,
-            })),
-          ),
+          text: JSON.stringify(validProducts),
         },
       ],
     },
   });
 }
 
-/**
- * Search store policies and FAQs
- */
 async function searchPolicies(
   id: number | string | null,
-  args: {query: string; context?: string},
+  args: SearchPoliciesArgs,
   context: Route.LoaderArgs['context'],
 ) {
-  // Query shop policies
-  const {data} = await context.storefront.query(
+  const {query} = args;
+
+  if (!query || typeof query !== 'string' || query.trim().length === 0) {
+    throw new Error('query must be a non-empty string');
+  }
+
+  const {shop} = await context.storefront.query<ShopPoliciesQuery>(
     `#graphql
       query ShopPolicies {
         shop {
@@ -323,8 +391,7 @@ async function searchPolicies(
     `,
   );
 
-  const policies = data?.shop || {};
-  const answer = `Here are the store policies:\n\n${Object.entries(policies)
+  const answer = `Here are the store policies:\n\n${Object.entries(shop)
     .filter(([_, value]) => value)
     .map(([key, value]: [string, any]) => `${value.title}: ${value.body}`)
     .join('\n\n')}`;
@@ -343,17 +410,18 @@ async function searchPolicies(
   });
 }
 
-/**
- * Get cart contents
- */
 async function getCart(
   id: number | string | null,
-  args: {cart_id: string},
+  args: GetCartArgs,
   context: Route.LoaderArgs['context'],
 ) {
   const {cart_id} = args;
 
-  const {data} = await context.storefront.query(
+  if (!cart_id || typeof cart_id !== 'string') {
+    throw new Error('cart_id is required');
+  }
+
+  const {cart} = await context.storefront.query<GetCartQuery>(
     `#graphql
       query GetCart($cartId: ID!) {
         cart(id: $cartId) {
@@ -391,26 +459,33 @@ async function getCart(
       content: [
         {
           type: 'text',
-          text: JSON.stringify(data?.cart),
+          text: JSON.stringify(cart),
         },
       ],
     },
   });
 }
 
-/**
- * Update cart (add/remove/update items)
- */
 async function updateCart(
   id: number | string | null,
-  args: {cart_id?: string; lines: any[]},
+  args: UpdateCartArgs,
   context: Route.LoaderArgs['context'],
 ) {
   const {cart_id, lines} = args;
 
-  // If no cart_id, create a new cart
+  if (!Array.isArray(lines) || lines.length === 0) {
+    throw new Error('lines must be a non-empty array');
+  }
+
+  for (const line of lines) {
+    if (typeof line.quantity !== 'number' || line.quantity < 0) {
+      throw new Error('quantity must be a non-negative number');
+    }
+  }
+
+  // Create new cart if no cart_id
   if (!cart_id) {
-    const {data} = await context.storefront.mutate(
+    const {cartCreate} = await context.storefront.mutate<CreateCartMutation>(
       `#graphql
         mutation CreateCart($lines: [CartLineInput!]!) {
           cartCreate(input: {lines: $lines}) {
@@ -418,18 +493,28 @@ async function updateCart(
               id
               checkoutUrl
             }
+            userErrors {
+              field
+              message
+            }
           }
         }
       `,
       {
         variables: {
-          lines: lines.map((line) => ({
-            merchandiseId: line.merchandise_id,
-            quantity: line.quantity,
-          })),
+          lines: lines
+            .filter((line) => line.merchandise_id)
+            .map((line) => ({
+              merchandiseId: line.merchandise_id!,
+              quantity: line.quantity,
+            })),
         },
       },
     );
+
+    if (cartCreate?.userErrors && cartCreate.userErrors.length > 0) {
+      throw new Error(cartCreate.userErrors.map((e) => e.message).join(', '));
+    }
 
     return Response.json({
       jsonrpc: '2.0',
@@ -438,35 +523,97 @@ async function updateCart(
         content: [
           {
             type: 'text',
-            text: JSON.stringify(data?.cartCreate?.cart),
+            text: JSON.stringify(cartCreate?.cart),
           },
         ],
       },
     });
   }
 
-  // Update existing cart
-  const {data} = await context.storefront.mutate(
-    `#graphql
-      mutation UpdateCart($cartId: ID!, $lines: [CartLineUpdateInput!]!) {
-        cartLinesUpdate(cartId: $cartId, lines: $lines) {
-          cart {
-            id
-            checkoutUrl
+  // Update existing cart - split into add vs update
+  const linesToAdd = lines.filter(
+    (line) => line.merchandise_id && !line.line_item_id,
+  );
+  const linesToUpdate = lines.filter((line) => line.line_item_id);
+
+  let cart = null;
+
+  // Add new items
+  if (linesToAdd.length > 0) {
+    const {cartLinesAdd} = await context.storefront.mutate<AddToCartMutation>(
+      `#graphql
+        mutation AddToCart($cartId: ID!, $lines: [CartLineInput!]!) {
+          cartLinesAdd(cartId: $cartId, lines: $lines) {
+            cart {
+              id
+              checkoutUrl
+            }
+            userErrors {
+              field
+              message
+            }
           }
         }
-      }
-    `,
-    {
-      variables: {
-        cartId: cart_id,
-        lines: lines.map((line) => ({
-          id: line.line_item_id,
-          quantity: line.quantity,
-        })),
+      `,
+      {
+        variables: {
+          cartId: cart_id,
+          lines: linesToAdd
+            .filter((line) => line.merchandise_id)
+            .map((line) => ({
+              merchandiseId: line.merchandise_id!,
+              quantity: line.quantity,
+            })),
+        },
       },
-    },
-  );
+    );
+
+    if (cartLinesAdd?.userErrors && cartLinesAdd.userErrors.length > 0) {
+      throw new Error(cartLinesAdd.userErrors.map((e) => e.message).join(', '));
+    }
+
+    cart = cartLinesAdd?.cart ?? null;
+  }
+
+  // Update existing items
+  if (linesToUpdate.length > 0) {
+    const {cartLinesUpdate} =
+      await context.storefront.mutate<UpdateCartMutation>(
+        `#graphql
+        mutation UpdateCart($cartId: ID!, $lines: [CartLineUpdateInput!]!) {
+          cartLinesUpdate(cartId: $cartId, lines: $lines) {
+            cart {
+              id
+              checkoutUrl
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+      `,
+        {
+          variables: {
+            cartId: cart_id,
+            lines: linesToUpdate
+              .filter((line) => line.line_item_id)
+              .map((line) => ({
+                id: line.line_item_id!,
+                quantity: line.quantity,
+              })),
+          },
+        },
+      );
+
+    if (cartLinesUpdate?.userErrors && cartLinesUpdate.userErrors.length > 0) {
+      throw new Error(
+        cartLinesUpdate.userErrors.map((e) => e.message).join(', '),
+      );
+    }
+
+    cart = cartLinesUpdate?.cart ?? null;
+  }
 
   return Response.json({
     jsonrpc: '2.0',
@@ -475,7 +622,7 @@ async function updateCart(
       content: [
         {
           type: 'text',
-          text: JSON.stringify(data?.cartLinesUpdate?.cart),
+          text: JSON.stringify(cart),
         },
       ],
     },
