@@ -391,9 +391,14 @@ async function searchPolicies(
     `,
   );
 
+  type PolicyValue = NonNullable<ShopPoliciesQuery['shop']['privacyPolicy']>;
+
   const answer = `Here are the store policies:\n\n${Object.entries(shop)
-    .filter(([_, value]) => value)
-    .map(([key, value]: [string, any]) => `${value.title}: ${value.body}`)
+    .filter(([_, value]) => value !== null)
+    .map(([_, value]) => {
+      const policy = value as PolicyValue;
+      return `${policy.title}: ${policy.body}`;
+    })
     .join('\n\n')}`;
 
   return Response.json({

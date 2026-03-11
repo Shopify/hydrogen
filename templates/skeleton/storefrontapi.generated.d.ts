@@ -377,13 +377,6 @@ export type FooterQuery = {
   >;
 };
 
-export type StoreRobotsQueryVariables = StorefrontAPI.Exact<{
-  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
-  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-}>;
-
-export type StoreRobotsQuery = {shop: Pick<StorefrontAPI.Shop, 'id'>};
-
 export type FeaturedCollectionFragment = Pick<
   StorefrontAPI.Collection,
   'id' | 'title' | 'handle'
@@ -449,6 +442,127 @@ export type RecommendedProductsQuery = {
       }
     >;
   };
+};
+
+export type SearchProductsQueryVariables = StorefrontAPI.Exact<{
+  query: StorefrontAPI.Scalars['String']['input'];
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+}>;
+
+export type SearchProductsQuery = {
+  products: {
+    nodes: Array<
+      Pick<
+        StorefrontAPI.Product,
+        'id' | 'title' | 'description' | 'onlineStoreUrl'
+      > & {
+        priceRange: {
+          minVariantPrice: Pick<
+            StorefrontAPI.MoneyV2,
+            'amount' | 'currencyCode'
+          >;
+        };
+        featuredImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>>;
+        variants: {
+          nodes: Array<
+            Pick<StorefrontAPI.ProductVariant, 'id' | 'availableForSale'>
+          >;
+        };
+      }
+    >;
+  };
+};
+
+export type ShopPoliciesQueryVariables = StorefrontAPI.Exact<{
+  [key: string]: never;
+}>;
+
+export type ShopPoliciesQuery = {
+  shop: {
+    privacyPolicy?: StorefrontAPI.Maybe<
+      Pick<StorefrontAPI.ShopPolicy, 'title' | 'body'>
+    >;
+    refundPolicy?: StorefrontAPI.Maybe<
+      Pick<StorefrontAPI.ShopPolicy, 'title' | 'body'>
+    >;
+    shippingPolicy?: StorefrontAPI.Maybe<
+      Pick<StorefrontAPI.ShopPolicy, 'title' | 'body'>
+    >;
+    termsOfService?: StorefrontAPI.Maybe<
+      Pick<StorefrontAPI.ShopPolicy, 'title' | 'body'>
+    >;
+  };
+};
+
+export type GetCartQueryVariables = StorefrontAPI.Exact<{
+  cartId: StorefrontAPI.Scalars['ID']['input'];
+}>;
+
+export type GetCartQuery = {
+  cart?: StorefrontAPI.Maybe<
+    Pick<StorefrontAPI.Cart, 'id' | 'checkoutUrl'> & {
+      lines: {
+        nodes: Array<
+          | (Pick<StorefrontAPI.CartLine, 'id' | 'quantity'> & {
+              merchandise: Pick<
+                StorefrontAPI.ProductVariant,
+                'id' | 'title'
+              > & {
+                product: Pick<StorefrontAPI.Product, 'title'>;
+                price: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
+              };
+            })
+          | (Pick<StorefrontAPI.ComponentizableCartLine, 'id' | 'quantity'> & {
+              merchandise: Pick<
+                StorefrontAPI.ProductVariant,
+                'id' | 'title'
+              > & {
+                product: Pick<StorefrontAPI.Product, 'title'>;
+                price: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
+              };
+            })
+        >;
+      };
+    }
+  >;
+};
+
+export type CreateCartMutationVariables = StorefrontAPI.Exact<{
+  lines: Array<StorefrontAPI.CartLineInput> | StorefrontAPI.CartLineInput;
+}>;
+
+export type CreateCartMutation = {
+  cartCreate?: StorefrontAPI.Maybe<{
+    cart?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Cart, 'id' | 'checkoutUrl'>>;
+    userErrors: Array<Pick<StorefrontAPI.CartUserError, 'field' | 'message'>>;
+  }>;
+};
+
+export type AddToCartMutationVariables = StorefrontAPI.Exact<{
+  cartId: StorefrontAPI.Scalars['ID']['input'];
+  lines: Array<StorefrontAPI.CartLineInput> | StorefrontAPI.CartLineInput;
+}>;
+
+export type AddToCartMutation = {
+  cartLinesAdd?: StorefrontAPI.Maybe<{
+    cart?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Cart, 'id' | 'checkoutUrl'>>;
+    userErrors: Array<Pick<StorefrontAPI.CartUserError, 'field' | 'message'>>;
+  }>;
+};
+
+export type UpdateCartMutationVariables = StorefrontAPI.Exact<{
+  cartId: StorefrontAPI.Scalars['ID']['input'];
+  lines:
+    | Array<StorefrontAPI.CartLineUpdateInput>
+    | StorefrontAPI.CartLineUpdateInput;
+}>;
+
+export type UpdateCartMutation = {
+  cartLinesUpdate?: StorefrontAPI.Maybe<{
+    cart?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Cart, 'id' | 'checkoutUrl'>>;
+    userErrors: Array<Pick<StorefrontAPI.CartUserError, 'field' | 'message'>>;
+  }>;
 };
 
 export type ArticleQueryVariables = StorefrontAPI.Exact<{
@@ -1283,10 +1397,6 @@ interface GeneratedQueryTypes {
     return: FooterQuery;
     variables: FooterQueryVariables;
   };
-  '#graphql\n  query StoreRobots($country: CountryCode, $language: LanguageCode)\n   @inContext(country: $country, language: $language) {\n    shop {\n      id\n    }\n  }\n': {
-    return: StoreRobotsQuery;
-    variables: StoreRobotsQueryVariables;
-  };
   '#graphql\n  fragment FeaturedCollection on Collection {\n    id\n    title\n    image {\n      id\n      url\n      altText\n      width\n      height\n    }\n    handle\n  }\n  query FeaturedCollection($country: CountryCode, $language: LanguageCode)\n    @inContext(country: $country, language: $language) {\n    collections(first: 1, sortKey: UPDATED_AT, reverse: true) {\n      nodes {\n        ...FeaturedCollection\n      }\n    }\n  }\n': {
     return: FeaturedCollectionQuery;
     variables: FeaturedCollectionQueryVariables;
@@ -1294,6 +1404,18 @@ interface GeneratedQueryTypes {
   '#graphql\n  fragment RecommendedProduct on Product {\n    id\n    title\n    handle\n    priceRange {\n      minVariantPrice {\n        amount\n        currencyCode\n      }\n    }\n    featuredImage {\n      id\n      url\n      altText\n      width\n      height\n    }\n  }\n  query RecommendedProducts ($country: CountryCode, $language: LanguageCode)\n    @inContext(country: $country, language: $language) {\n    products(first: 4, sortKey: UPDATED_AT, reverse: true) {\n      nodes {\n        ...RecommendedProduct\n      }\n    }\n  }\n': {
     return: RecommendedProductsQuery;
     variables: RecommendedProductsQueryVariables;
+  };
+  '#graphql\n      query SearchProducts($query: String!, $country: CountryCode, $language: LanguageCode)\n      @inContext(country: $country, language: $language) {\n        products(first: 10, query: $query) {\n          nodes {\n            id\n            title\n            description\n            onlineStoreUrl\n            priceRange {\n              minVariantPrice {\n                amount\n                currencyCode\n              }\n            }\n            featuredImage {\n              url\n            }\n            variants(first: 1) {\n              nodes {\n                id\n                availableForSale\n              }\n            }\n          }\n        }\n      }\n    ': {
+    return: SearchProductsQuery;
+    variables: SearchProductsQueryVariables;
+  };
+  '#graphql\n      query ShopPolicies {\n        shop {\n          privacyPolicy {\n            title\n            body\n          }\n          refundPolicy {\n            title\n            body\n          }\n          shippingPolicy {\n            title\n            body\n          }\n          termsOfService {\n            title\n            body\n          }\n        }\n      }\n    ': {
+    return: ShopPoliciesQuery;
+    variables: ShopPoliciesQueryVariables;
+  };
+  '#graphql\n      query GetCart($cartId: ID!) {\n        cart(id: $cartId) {\n          id\n          checkoutUrl\n          lines(first: 100) {\n            nodes {\n              id\n              quantity\n              merchandise {\n                ... on ProductVariant {\n                  id\n                  title\n                  product {\n                    title\n                  }\n                  price {\n                    amount\n                    currencyCode\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    ': {
+    return: GetCartQuery;
+    variables: GetCartQueryVariables;
   };
   '#graphql\n  query Article(\n    $articleHandle: String!\n    $blogHandle: String!\n    $country: CountryCode\n    $language: LanguageCode\n  ) @inContext(language: $language, country: $country) {\n    blog(handle: $blogHandle) {\n      handle\n      articleByHandle(handle: $articleHandle) {\n        handle\n        title\n        contentHtml\n        publishedAt\n        author: authorV2 {\n          name\n        }\n        image {\n          id\n          altText\n          url\n          width\n          height\n        }\n        seo {\n          description\n          title\n        }\n      }\n    }\n  }\n': {
     return: ArticleQuery;
@@ -1345,7 +1467,20 @@ interface GeneratedQueryTypes {
   };
 }
 
-interface GeneratedMutationTypes {}
+interface GeneratedMutationTypes {
+  '#graphql\n        mutation CreateCart($lines: [CartLineInput!]!) {\n          cartCreate(input: {lines: $lines}) {\n            cart {\n              id\n              checkoutUrl\n            }\n            userErrors {\n              field\n              message\n            }\n          }\n        }\n      ': {
+    return: CreateCartMutation;
+    variables: CreateCartMutationVariables;
+  };
+  '#graphql\n        mutation AddToCart($cartId: ID!, $lines: [CartLineInput!]!) {\n          cartLinesAdd(cartId: $cartId, lines: $lines) {\n            cart {\n              id\n              checkoutUrl\n            }\n            userErrors {\n              field\n              message\n            }\n          }\n        }\n      ': {
+    return: AddToCartMutation;
+    variables: AddToCartMutationVariables;
+  };
+  '#graphql\n        mutation UpdateCart($cartId: ID!, $lines: [CartLineUpdateInput!]!) {\n          cartLinesUpdate(cartId: $cartId, lines: $lines) {\n            cart {\n              id\n              checkoutUrl\n            }\n            userErrors {\n              field\n              message\n            }\n          }\n        }\n      ': {
+    return: UpdateCartMutation;
+    variables: UpdateCartMutationVariables;
+  };
+}
 
 declare module '@shopify/hydrogen' {
   interface StorefrontQueries extends GeneratedQueryTypes {}
