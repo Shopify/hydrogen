@@ -328,6 +328,10 @@ async function searchCatalog(
     },
   );
 
+  if (!products?.nodes) {
+    throw new Error('products.nodes returned null or undefined.');
+  }
+
   const validProducts = products.nodes
     .filter((product) => product.variants.nodes.length > 0)
     .map((product) => ({
@@ -391,15 +395,27 @@ async function searchPolicies(
     `,
   );
 
+  if (!shop) {
+    throw new Error('shop returned null or undefined.');
+  }
+
   type PolicyValue = NonNullable<ShopPoliciesQuery['shop']['privacyPolicy']>;
 
-  const answer = `Here are the store policies:\n\n${Object.entries(shop)
+  // Note: We return all policies and let the AI agent extract relevant information
+  // based on the query. This is simpler than implementing semantic search and
+  // works well given stores typically have only 4-5 policies.
+  const policies = Object.entries(shop)
     .filter(([_, value]) => value !== null)
     .map(([_, value]) => {
       const policy = value as PolicyValue;
       return `${policy.title}: ${policy.body}`;
-    })
-    .join('\n\n')}`;
+    });
+
+  if (policies.length === 0) {
+    throw new Error('All policy fields returned null or undefined.');
+  }
+
+  const answer = `Here are the store policies:\n\n${policies.join('\n\n')}`;
 
   return Response.json({
     jsonrpc: '2.0',
@@ -456,6 +472,10 @@ async function getCart(
     `,
     {variables: {cartId: cart_id}},
   );
+
+  if (!cart) {
+    throw new Error('cart returned null or undefined.');
+  }
 
   return Response.json({
     jsonrpc: '2.0',
@@ -517,8 +537,16 @@ async function updateCart(
       },
     );
 
-    if (cartCreate?.userErrors && cartCreate.userErrors.length > 0) {
+    if (!cartCreate) {
+      throw new Error('cartCreate mutation returned null or undefined.');
+    }
+
+    if (cartCreate.userErrors && cartCreate.userErrors.length > 0) {
       throw new Error(cartCreate.userErrors.map((e) => e.message).join(', '));
+    }
+
+    if (!cartCreate.cart) {
+      throw new Error('cartCreate.cart returned null or undefined.');
     }
 
     return Response.json({
@@ -528,7 +556,7 @@ async function updateCart(
         content: [
           {
             type: 'text',
-            text: JSON.stringify(cartCreate?.cart),
+            text: JSON.stringify(cartCreate.cart),
           },
         ],
       },
@@ -573,11 +601,15 @@ async function updateCart(
       },
     );
 
-    if (cartLinesAdd?.userErrors && cartLinesAdd.userErrors.length > 0) {
+    if (!cartLinesAdd) {
+      throw new Error('cartLinesAdd mutation returned null or undefined.');
+    }
+
+    if (cartLinesAdd.userErrors && cartLinesAdd.userErrors.length > 0) {
       throw new Error(cartLinesAdd.userErrors.map((e) => e.message).join(', '));
     }
 
-    cart = cartLinesAdd?.cart ?? null;
+    cart = cartLinesAdd.cart ?? null;
   }
 
   // Update existing items
@@ -611,13 +643,21 @@ async function updateCart(
         },
       );
 
-    if (cartLinesUpdate?.userErrors && cartLinesUpdate.userErrors.length > 0) {
+    if (!cartLinesUpdate) {
+      throw new Error('cartLinesUpdate mutation returned null or undefined.');
+    }
+
+    if (cartLinesUpdate.userErrors && cartLinesUpdate.userErrors.length > 0) {
       throw new Error(
         cartLinesUpdate.userErrors.map((e) => e.message).join(', '),
       );
     }
 
-    cart = cartLinesUpdate?.cart ?? null;
+    cart = cartLinesUpdate.cart ?? null;
+  }
+
+  if (!cart) {
+    throw new Error('cart returned null or undefined.');
   }
 
   return Response.json({
