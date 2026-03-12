@@ -1,12 +1,12 @@
 import {describe, it, expect, vi} from 'vitest';
-import {createHydrogenContext} from './createHydrogenContext';
+import {createHydrogenContext} from './core/createHydrogenContext';
 import type {HydrogenSession} from './types';
 import {
   cartContext,
   envContext,
   sessionContext,
   storefrontContext,
-} from './context-keys';
+} from './core/context-keys';
 
 describe('createHydrogenContext with v8_middleware compatibility', () => {
   const mockRequest = new Request('http://localhost');
@@ -113,7 +113,7 @@ describe('createHydrogenContext with v8_middleware compatibility', () => {
     );
 
     const {sessionContext, storefrontContext, cartContext, envContext} =
-      await import('./context-keys');
+      await import('./core/context-keys');
 
     const sessionViaGet = context.get(sessionContext);
     expect(sessionViaGet).toBe(mockSession);

@@ -22,42 +22,7 @@ export {
   CartForm,
   type OptimisticCartLineInput,
 } from './cart/CartForm';
-export {cartGetIdDefault} from './cart/cartGetIdDefault';
-export {cartSetIdDefault, type CookieOptions} from './cart/cartSetIdDefault';
-export {
-  createCartHandler,
-  type HydrogenCart,
-  type HydrogenCartCustom,
-} from './cart/createCartHandler';
-export {
-  type OptimisticCart,
-  type OptimisticCartLine,
-  useOptimisticCart,
-} from './cart/optimistic/useOptimisticCart';
-export type {
-  CartQueryDataReturn,
-  CartQueryOptions,
-  CartQueryReturn,
-  CartReturn,
-  MetafieldWithoutOwnerId,
-} from './cart/queries/cart-types';
-export {cartAttributesUpdateDefault} from './cart/queries/cartAttributesUpdateDefault';
-export {cartBuyerIdentityUpdateDefault} from './cart/queries/cartBuyerIdentityUpdateDefault';
-export {cartCreateDefault} from './cart/queries/cartCreateDefault';
-export {cartDiscountCodesUpdateDefault} from './cart/queries/cartDiscountCodesUpdateDefault';
-export {cartGetDefault} from './cart/queries/cartGetDefault';
-export {cartGiftCardCodesAddDefault} from './cart/queries/cartGiftCardCodesAddDefault';
-export {cartGiftCardCodesRemoveDefault} from './cart/queries/cartGiftCardCodesRemoveDefault';
-export {cartGiftCardCodesUpdateDefault} from './cart/queries/cartGiftCardCodeUpdateDefault';
-export {cartLinesAddDefault} from './cart/queries/cartLinesAddDefault';
-export {cartLinesRemoveDefault} from './cart/queries/cartLinesRemoveDefault';
-export {cartLinesUpdateDefault} from './cart/queries/cartLinesUpdateDefault';
-export {cartMetafieldDeleteDefault} from './cart/queries/cartMetafieldDeleteDefault';
-export {cartMetafieldsSetDefault} from './cart/queries/cartMetafieldsSetDefault';
-export {cartNoteUpdateDefault} from './cart/queries/cartNoteUpdateDefault';
-export {cartSelectedDeliveryOptionsUpdateDefault} from './cart/queries/cartSelectedDeliveryOptionsUpdateDefault';
 export {changelogHandler} from './changelogHandler';
-export {hydrogenContext} from './context-keys';
 export * from './core';
 export {createWithCache, type WithCache} from './core/cache/create-with-cache';
 export {InMemoryCache} from './core/cache/in-memory';
@@ -71,19 +36,52 @@ export {
   generateCacheControlHeader,
   type NoStoreStrategy,
 } from './core/cache/strategies';
+export {cartGetIdDefault} from './core/cart/cartGetIdDefault';
 export {
-  createHydrogenContext,
-  type HydrogenContext,
-} from './createHydrogenContext';
-export {createRequestHandler} from './createRequestHandler';
-export {createContentSecurityPolicy, NonceProvider, useNonce} from './csp/csp';
-export {Script} from './csp/Script';
-export {createCustomerAccountClient} from './customer/customer';
+  cartSetIdDefault,
+  type CookieOptions,
+} from './core/cart/cartSetIdDefault';
+export {
+  createCartHandler,
+  type HydrogenCart,
+  type HydrogenCartCustom,
+} from './core/cart/createCartHandler';
+export {
+  type OptimisticCart,
+  type OptimisticCartLine,
+  useOptimisticCart,
+} from './core/cart/optimistic/useOptimisticCart';
+export type {
+  CartQueryDataReturn,
+  CartQueryOptions,
+  CartQueryReturn,
+  CartReturn,
+  MetafieldWithoutOwnerId,
+} from './core/cart/queries/cart-types';
+export {cartAttributesUpdateDefault} from './core/cart/queries/cartAttributesUpdateDefault';
+export {cartBuyerIdentityUpdateDefault} from './core/cart/queries/cartBuyerIdentityUpdateDefault';
+export {cartCreateDefault} from './core/cart/queries/cartCreateDefault';
+export {cartDiscountCodesUpdateDefault} from './core/cart/queries/cartDiscountCodesUpdateDefault';
+export {cartGetDefault} from './core/cart/queries/cartGetDefault';
+export {cartGiftCardCodesAddDefault} from './core/cart/queries/cartGiftCardCodesAddDefault';
+export {cartGiftCardCodesRemoveDefault} from './core/cart/queries/cartGiftCardCodesRemoveDefault';
+export {cartGiftCardCodesUpdateDefault} from './core/cart/queries/cartGiftCardCodeUpdateDefault';
+export {cartLinesAddDefault} from './core/cart/queries/cartLinesAddDefault';
+export {cartLinesRemoveDefault} from './core/cart/queries/cartLinesRemoveDefault';
+export {cartLinesUpdateDefault} from './core/cart/queries/cartLinesUpdateDefault';
+export {cartMetafieldDeleteDefault} from './core/cart/queries/cartMetafieldDeleteDefault';
+export {cartMetafieldsSetDefault} from './core/cart/queries/cartMetafieldsSetDefault';
+export {cartNoteUpdateDefault} from './core/cart/queries/cartNoteUpdateDefault';
+export {cartSelectedDeliveryOptionsUpdateDefault} from './core/cart/queries/cartSelectedDeliveryOptionsUpdateDefault';
+export {createCustomerAccountClient} from './core/customer/customer';
 export type {
   CustomerAccount,
   CustomerAccountMutations,
   CustomerAccountQueries,
-} from './customer/types';
+} from './core/customer/types';
+export {createRequestHandler} from './createRequestHandler';
+export {createContentSecurityPolicy, NonceProvider, useNonce} from './csp/csp';
+export {Script} from './csp/Script';
 export {
   type ConsentStatus,
   type CustomerPrivacy,

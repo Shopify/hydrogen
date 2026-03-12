@@ -1,6 +1,6 @@
 import type {LoaderFunctionArgs} from 'react-router';
 import type {Storefront} from '../core/storefront';
-import type {CustomerAccount} from '../customer/types';
+import type {CustomerAccount} from '../core/customer/types';
 
 type GraphiQLLoader = (args: LoaderFunctionArgs) => Promise<Response>;
 

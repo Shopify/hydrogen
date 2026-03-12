@@ -6,7 +6,7 @@ import {
   createContext,
   useContext,
 } from 'react';
-import {type CartReturn} from '../cart/queries/cart-types';
+import {type CartReturn} from '../core/cart/queries/cart-types';
 import {
   AnalyticsPageView,
   AnalyticsProductView,
