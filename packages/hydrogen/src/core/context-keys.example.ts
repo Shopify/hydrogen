@@ -1,6 +1,6 @@
 // Import from local files to get proper types
 import {hydrogenContext} from './context-keys';
-import type {HydrogenRouterContextProvider} from './types';
+import type {HydrogenRouterContextProvider} from '../types';
 
 // These examples show how to use hydrogenContext with React Router's context.get() pattern
 // In a real app, you would import from '@shopify/hydrogen' and have proper type augmentation
