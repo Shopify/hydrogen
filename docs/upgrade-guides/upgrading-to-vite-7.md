@@ -5,18 +5,11 @@ Hydrogen now requires Vite 7.0.0 or higher. This guide covers the changes needed
 ## Prerequisites
 
 - Node.js 22+ (see `engines` field in package.json)
-- npm 11.6.2+
 
 ## Step 1: Update dependencies
 
 ```bash
-npm install vite@^7.0.0
-```
-
-If you use Vitest for testing:
-
-```bash
-npm install vitest@^3.2.4 @vitest/coverage-v8@^3.2.4
+pnpm add vite@^7.0.0
 ```
 
 ## Step 2: Verify your Vite config
@@ -47,7 +40,7 @@ export default defineConfig({
 ## Step 4: Run your project
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 The development server should start without the `ReferenceError: __vite_ssr_exportName__ is not defined` error that occurred with Vite 7 on older versions of `@shopify/mini-oxygen`.
@@ -59,13 +52,5 @@ The development server should start without the `ReferenceError: __vite_ssr_expo
 This error means you're running Vite 7 with an older version of `@shopify/mini-oxygen`. Update all Hydrogen packages:
 
 ```bash
-npm install @shopify/hydrogen@latest @shopify/mini-oxygen@latest
-```
-
-### Vitest compatibility
-
-Vite 7 requires Vitest 3.2.4+. If you see test runner errors, upgrade Vitest:
-
-```bash
-npm install vitest@^3.2.4
+pnpm add @shopify/hydrogen@latest @shopify/mini-oxygen@latest
 ```

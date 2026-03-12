@@ -11,13 +11,13 @@ Upgrade to Vite 7. Support for Vite 5 and Vite 6 has been removed.
 Update your project's Vite dependency:
 
 ```bash
-npm install vite@^7.0.0
+pnpm add vite@^7.0.0
 ```
 
 If you use Vitest, upgrade it as well:
 
 ```bash
-npm install vitest@^3.2.4 @vitest/coverage-v8@^3.2.4
+pnpm add vitest@^3.2.4 @vitest/coverage-v8@^3.2.4
 ```
 
 ### Why Vite 7 only?
