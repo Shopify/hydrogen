@@ -48,6 +48,9 @@ export function getStorefrontHeaders(
 /** Regular expression to match Storefront API GraphQL endpoint paths */
 export const SFAPI_RE = /^\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
 
+/** Regular expression to match Storefront MCP endpoint path */
+export const MCP_RE = /^\/api\/mcp$/;
+
 export const getSafePathname = (url: string) => {
   try {
     return new URL(url, 'http://e.c').pathname;

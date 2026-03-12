@@ -59,7 +59,6 @@ describe('create-hydrogen', () => {
         │      • Search (/search)                                                      │
         │      • Robots (/robots.txt)                                                  │
         │      • Sitemap (/sitemap.xml & /sitemap/:type/:page.xml)                     │
-        │      • Mcp (/api/mcp)                                                        │
         │                                                                              │
         │  Next steps                                                                  │
         │                                                                              │

@@ -48,7 +48,6 @@ const ROUTE_MAP = {
   search: ['search', 'api.predictive-search'],
   robots: '[robots.txt]',
   sitemap: ['[sitemap.xml]', 'sitemap.$type.$page[.xml]'],
-  mcp: 'api.mcp',
 };
 
 type RouteKey = keyof typeof ROUTE_MAP;
