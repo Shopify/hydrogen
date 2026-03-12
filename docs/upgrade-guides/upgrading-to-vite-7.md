@@ -59,7 +59,7 @@ The development server should start without the `ReferenceError: __vite_ssr_expo
 This error means you're running Vite 7 with an older version of `@shopify/mini-oxygen`. Update all Hydrogen packages:
 
 ```bash
-npm install @shopify/hydrogen@latest @shopify/mini-oxygen@latest @shopify/cli-hydrogen@latest
+npm install @shopify/hydrogen@latest @shopify/mini-oxygen@latest
 ```
 
 ### Vitest compatibility
