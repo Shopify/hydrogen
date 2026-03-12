@@ -52,6 +52,14 @@
       "types": "./dist/oxygen/index.d.ts",
       "default": "./dist/oxygen/index.js"
     },
+    "./cart": {
+      "types": "./dist/cart/cart-entry.d.ts",
+      "default": "./dist/cart/cart-entry.js"
+    },
+    "./storefront": {
+      "types": "./dist/storefront/storefront-entry.d.ts",
+      "default": "./dist/storefront/storefront-entry.js"
+    },
     "./storefront-api-types": "./dist/storefront-api-types.d.ts",
     "./storefront.schema.json": "./dist/storefront.schema.json",
     "./customer-account-api-types": "./dist/customer-account-api-types.d.ts",
@@ -76,6 +84,9 @@
       ],
       "customer-account-api-types": [
         "./dist/customer-account-api-types.d.ts"
+      ],
+      "cart": [
+        "./dist/cart/cart-entry.d.ts"
       ]
     }
   },
@@ -120,6 +131,12 @@
   },
   "peerDependenciesMeta": {
     "vite": {
+      "optional": true
+    },
+    "react-router": {
+      "optional": true
+    },
+    "@react-router/dev": {
       "optional": true
     }
   }

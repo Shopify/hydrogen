@@ -1,24 +1,13 @@
-import {
-  HIDDEN_PRODUCT_TAG,
-  SHOPIFY_GRAPHQL_API_ENDPOINT,
-  TAGS,
-} from 'lib/constants';
-import {isShopifyError} from 'lib/type-guards';
+import {createStorefrontClient} from '@shopify/hydrogen/storefront';
+import {HIDDEN_PRODUCT_TAG, TAGS} from 'lib/constants';
 import {ensureStartsWith} from 'lib/utils';
 import {
   unstable_cacheLife as cacheLife,
   unstable_cacheTag as cacheTag,
   revalidateTag,
 } from 'next/cache';
-import {cookies, headers} from 'next/headers';
+import {headers} from 'next/headers';
 import {NextRequest, NextResponse} from 'next/server';
-import {
-  addToCartMutation,
-  createCartMutation,
-  editCartItemsMutation,
-  removeFromCartMutation,
-} from './mutations/cart';
-import {getCartQuery} from './queries/cart';
 import {
   getCollectionProductsQuery,
   getCollectionQuery,
@@ -32,8 +21,7 @@ import {
   getProductsQuery,
 } from './queries/product';
 import {getShopAnalyticsQuery} from './queries/shop';
-import {
-  Cart,
+import type {
   Collection,
   Connection,
   Image,
@@ -41,14 +29,10 @@ import {
   Page,
   Product,
   ShopAnalytics,
-  ShopifyAddToCartOperation,
-  ShopifyCart,
-  ShopifyCartOperation,
   ShopifyCollection,
   ShopifyCollectionOperation,
   ShopifyCollectionProductsOperation,
   ShopifyCollectionsOperation,
-  ShopifyCreateCartOperation,
   ShopifyMenuOperation,
   ShopifyPageOperation,
   ShopifyPagesOperation,
@@ -56,91 +40,39 @@ import {
   ShopifyProductOperation,
   ShopifyProductRecommendationsOperation,
   ShopifyProductsOperation,
-  ShopifyRemoveFromCartOperation,
   ShopifyShopAnalyticsOperation,
-  ShopifyUpdateCartOperation,
 } from './types';
 
 const domain = process.env.SHOPIFY_STORE_DOMAIN
   ? ensureStartsWith(process.env.SHOPIFY_STORE_DOMAIN, 'https://')
   : '';
-const endpoint = domain ? `${domain}${SHOPIFY_GRAPHQL_API_ENDPOINT}` : '';
-const key = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN!;
 
-type ExtractVariables<T> = T extends {variables: object}
-  ? T['variables']
-  : never;
+/**
+ * Creates a Hydrogen Storefront API client.
+ *
+ * Key difference from Hydrogen/Remix: In Remix, createStorefrontClient is
+ * called per-request inside a loader with access to the incoming Request
+ * for buyer IP, cookies, etc. In Next.js, we create it at module level since:
+ * - We use a public token (no buyer-specific auth)
+ * - Next.js caching is handled via `use cache` / cacheTag, not Hydrogen's Cache API
+ * - Buyer IP and cookie forwarding isn't needed for public storefront queries
+ *
+ * If you need per-request headers (e.g. private token with buyer IP),
+ * move this into a getStorefront() function that reads from next/headers.
+ */
+const {storefront} = createStorefrontClient({
+  storeDomain: domain,
+  publicStorefrontToken: process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN!,
+  // Hydrogen manages the full API URL — no need for a hardcoded endpoint constant.
+  storefrontApiVersion: '2026-01',
+  // No cache or waitUntil — Next.js handles caching via 'use cache' directives
+  // instead of Hydrogen's Cache API (which requires Web Cache API + waitUntil from edge runtimes).
+});
 
-export async function shopifyFetch<T>({
-  headers,
-  query,
-  variables,
-}: {
-  headers?: HeadersInit;
-  query: string;
-  variables?: ExtractVariables<T>;
-}): Promise<{status: number; body: T} | never> {
-  try {
-    if (!endpoint) {
-      throw new Error('SHOPIFY_STORE_DOMAIN environment variable is not set');
-    }
-
-    const result = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Storefront-Access-Token': key,
-        ...headers,
-      },
-      body: JSON.stringify({
-        ...(query && {query}),
-        ...(variables && {variables}),
-      }),
-    });
-
-    const body = await result.json();
-
-    if (body.errors) {
-      throw body.errors[0];
-    }
-
-    return {
-      status: result.status,
-      body,
-    };
-  } catch (e) {
-    if (isShopifyError(e)) {
-      throw {
-        cause: e.cause?.toString() || 'unknown',
-        status: e.status || 500,
-        message: e.message,
-        query,
-      };
-    }
-
-    throw {
-      error: e,
-      query,
-    };
-  }
-}
+export {storefront};
 
 const removeEdgesAndNodes = <T>(array: Connection<T>): T[] => {
   return array.edges.map((edge) => edge?.node);
-};
-
-const reshapeCart = (cart: ShopifyCart): Cart => {
-  if (!cart.cost?.totalTaxAmount) {
-    cart.cost.totalTaxAmount = {
-      amount: '0.0',
-      currencyCode: cart.cost.totalAmount.currencyCode,
-    };
-  }
-
-  return {
-    ...cart,
-    lines: removeEdgesAndNodes(cart.lines),
-  };
 };
 
 const reshapeCollection = (
@@ -220,79 +152,13 @@ const reshapeProducts = (products: ShopifyProduct[]) => {
   return reshapedProducts;
 };
 
-export async function createCart(): Promise<Cart> {
-  const res = await shopifyFetch<ShopifyCreateCartOperation>({
-    query: createCartMutation,
-  });
-
-  return reshapeCart(res.body.data.cartCreate.cart);
-}
-
-export async function addToCart(
-  lines: {merchandiseId: string; quantity: number}[],
-): Promise<Cart> {
-  const cartId = (await cookies()).get('cartId')?.value!;
-  const res = await shopifyFetch<ShopifyAddToCartOperation>({
-    query: addToCartMutation,
-    variables: {
-      cartId,
-      lines,
-    },
-  });
-  return reshapeCart(res.body.data.cartLinesAdd.cart);
-}
-
-export async function removeFromCart(lineIds: string[]): Promise<Cart> {
-  const cartId = (await cookies()).get('cartId')?.value!;
-  const res = await shopifyFetch<ShopifyRemoveFromCartOperation>({
-    query: removeFromCartMutation,
-    variables: {
-      cartId,
-      lineIds,
-    },
-  });
-
-  return reshapeCart(res.body.data.cartLinesRemove.cart);
-}
-
-export async function updateCart(
-  lines: {id: string; merchandiseId: string; quantity: number}[],
-): Promise<Cart> {
-  const cartId = (await cookies()).get('cartId')?.value!;
-  const res = await shopifyFetch<ShopifyUpdateCartOperation>({
-    query: editCartItemsMutation,
-    variables: {
-      cartId,
-      lines,
-    },
-  });
-
-  return reshapeCart(res.body.data.cartLinesUpdate.cart);
-}
-
-export async function getCart(): Promise<Cart | undefined> {
-  'use cache: private';
-  cacheTag(TAGS.cart);
-  cacheLife('seconds');
-
-  const cartId = (await cookies()).get('cartId')?.value;
-
-  if (!cartId) {
-    return undefined;
-  }
-
-  const res = await shopifyFetch<ShopifyCartOperation>({
-    query: getCartQuery,
-    variables: {cartId},
-  });
-
-  // Old carts becomes `null` when you checkout.
-  if (!res.body.data.cart) {
-    return undefined;
-  }
-
-  return reshapeCart(res.body.data.cart);
-}
+export {
+  getCart,
+  createCart,
+  addToCart,
+  removeFromCart,
+  updateCart,
+} from './cart';
 
 export async function getCollection(
   handle: string,
@@ -301,14 +167,13 @@ export async function getCollection(
   cacheTag(TAGS.collections);
   cacheLife('days');
 
-  const res = await shopifyFetch<ShopifyCollectionOperation>({
-    query: getCollectionQuery,
-    variables: {
-      handle,
-    },
+  const {collection} = await storefront.query<
+    ShopifyCollectionOperation['data']
+  >(getCollectionQuery, {
+    variables: {handle},
   });
 
-  return reshapeCollection(res.body.data.collection);
+  return reshapeCollection(collection);
 }
 
 export async function getCollectionProducts({
@@ -324,15 +189,9 @@ export async function getCollectionProducts({
   cacheTag(TAGS.collections, TAGS.products);
   cacheLife('days');
 
-  if (!endpoint) {
-    console.log(
-      `Skipping getCollectionProducts for '${collection}' - Shopify not configured`,
-    );
-    return [];
-  }
-
-  const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
-    query: getCollectionProductsQuery,
+  const {collection: collectionData} = await storefront.query<
+    ShopifyCollectionProductsOperation['data']
+  >(getCollectionProductsQuery, {
     variables: {
       handle: collection,
       reverse,
@@ -340,14 +199,12 @@ export async function getCollectionProducts({
     },
   });
 
-  if (!res.body.data.collection) {
+  if (!collectionData) {
     console.log(`No collection found for \`${collection}\``);
     return [];
   }
 
-  return reshapeProducts(
-    removeEdgesAndNodes(res.body.data.collection.products),
-  );
+  return reshapeProducts(removeEdgesAndNodes(collectionData.products));
 }
 
 export async function getCollections(): Promise<Collection[]> {
@@ -355,29 +212,12 @@ export async function getCollections(): Promise<Collection[]> {
   cacheTag(TAGS.collections);
   cacheLife('days');
 
-  if (!endpoint) {
-    console.log('Skipping getCollections - Shopify not configured');
-    return [
-      {
-        id: 'all-products',
-        handle: '',
-        title: 'All',
-        description: 'All products',
-        seo: {
-          title: 'All',
-          description: 'All products',
-        },
-        path: '/search',
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-  }
-
-  const res = await shopifyFetch<ShopifyCollectionsOperation>({
-    query: getCollectionsQuery,
-  });
-  const shopifyCollections = removeEdgesAndNodes(res.body?.data?.collections);
-  const collections = [
+  const {collections} =
+    await storefront.query<ShopifyCollectionsOperation['data']>(
+      getCollectionsQuery,
+    );
+  const shopifyCollections = removeEdgesAndNodes(collections);
+  const allCollections = [
     {
       id: 'all-products',
       handle: '',
@@ -397,7 +237,7 @@ export async function getCollections(): Promise<Collection[]> {
     ),
   ];
 
-  return collections;
+  return allCollections;
 }
 
 export async function getShopAnalytics(): Promise<ShopAnalytics> {
@@ -405,14 +245,14 @@ export async function getShopAnalytics(): Promise<ShopAnalytics> {
   cacheTag(TAGS.collections);
   cacheLife('days');
 
-  const res = await shopifyFetch<ShopifyShopAnalyticsOperation>({
-    query: getShopAnalyticsQuery,
-  });
+  const {shop, localization} = await storefront.query<
+    ShopifyShopAnalyticsOperation['data']
+  >(getShopAnalyticsQuery);
 
   return {
-    shopId: res.body.data.shop.id,
-    acceptedLanguage: res.body.data.localization.language.isoCode,
-    currency: res.body.data.localization.country.currency.isoCode,
+    shopId: shop.id,
+    acceptedLanguage: localization.language.isoCode,
+    currency: localization.country.currency.isoCode,
   };
 }
 
@@ -421,20 +261,15 @@ export async function getMenu(handle: string): Promise<Menu[]> {
   cacheTag(TAGS.collections);
   cacheLife('days');
 
-  if (!endpoint) {
-    console.log(`Skipping getMenu for '${handle}' - Shopify not configured`);
-    return [];
-  }
-
-  const res = await shopifyFetch<ShopifyMenuOperation>({
-    query: getMenuQuery,
-    variables: {
-      handle,
+  const {menu} = await storefront.query<ShopifyMenuOperation['data']>(
+    getMenuQuery,
+    {
+      variables: {handle},
     },
-  });
+  );
 
   return (
-    res.body?.data?.menu?.items.map((item: {title: string; url: string}) => ({
+    menu?.items.map((item: {title: string; url: string}) => ({
       title: item.title,
       path: item.url
         .replace(domain, '')
@@ -445,20 +280,21 @@ export async function getMenu(handle: string): Promise<Menu[]> {
 }
 
 export async function getPage(handle: string): Promise<Page> {
-  const res = await shopifyFetch<ShopifyPageOperation>({
-    query: getPageQuery,
-    variables: {handle},
-  });
+  const {pageByHandle} = await storefront.query<ShopifyPageOperation['data']>(
+    getPageQuery,
+    {
+      variables: {handle},
+    },
+  );
 
-  return res.body.data.pageByHandle;
+  return pageByHandle;
 }
 
 export async function getPages(): Promise<Page[]> {
-  const res = await shopifyFetch<ShopifyPagesOperation>({
-    query: getPagesQuery,
-  });
+  const {pages} =
+    await storefront.query<ShopifyPagesOperation['data']>(getPagesQuery);
 
-  return removeEdgesAndNodes(res.body.data.pages);
+  return removeEdgesAndNodes(pages);
 }
 
 export async function getProduct(handle: string): Promise<Product | undefined> {
@@ -466,19 +302,14 @@ export async function getProduct(handle: string): Promise<Product | undefined> {
   cacheTag(TAGS.products);
   cacheLife('days');
 
-  if (!endpoint) {
-    console.log(`Skipping getProduct for '${handle}' - Shopify not configured`);
-    return undefined;
-  }
-
-  const res = await shopifyFetch<ShopifyProductOperation>({
-    query: getProductQuery,
-    variables: {
-      handle,
+  const {product} = await storefront.query<ShopifyProductOperation['data']>(
+    getProductQuery,
+    {
+      variables: {handle},
     },
-  });
+  );
 
-  return reshapeProduct(res.body.data.product, false);
+  return reshapeProduct(product, false);
 }
 
 export async function getProductRecommendations(
@@ -488,14 +319,13 @@ export async function getProductRecommendations(
   cacheTag(TAGS.products);
   cacheLife('days');
 
-  const res = await shopifyFetch<ShopifyProductRecommendationsOperation>({
-    query: getProductRecommendationsQuery,
-    variables: {
-      productId,
-    },
+  const {productRecommendations} = await storefront.query<
+    ShopifyProductRecommendationsOperation['data']
+  >(getProductRecommendationsQuery, {
+    variables: {productId},
   });
 
-  return reshapeProducts(res.body.data.productRecommendations);
+  return reshapeProducts(productRecommendations);
 }
 
 export async function getProducts({
@@ -511,16 +341,14 @@ export async function getProducts({
   cacheTag(TAGS.products);
   cacheLife('days');
 
-  const res = await shopifyFetch<ShopifyProductsOperation>({
-    query: getProductsQuery,
-    variables: {
-      query,
-      reverse,
-      sortKey,
+  const {products} = await storefront.query<ShopifyProductsOperation['data']>(
+    getProductsQuery,
+    {
+      variables: {query, reverse, sortKey},
     },
-  });
+  );
 
-  return reshapeProducts(removeEdgesAndNodes(res.body.data.products));
+  return reshapeProducts(removeEdgesAndNodes(products));
 }
 
 // This is called from `app/api/revalidate.ts` so providers can control revalidation logic.
