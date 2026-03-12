@@ -52,13 +52,9 @@
       "types": "./dist/oxygen/index.d.ts",
       "default": "./dist/oxygen/index.js"
     },
-    "./cart": {
-      "types": "./dist/cart/cart-entry.d.ts",
-      "default": "./dist/cart/cart-entry.js"
-    },
-    "./storefront": {
-      "types": "./dist/storefront/storefront-entry.d.ts",
-      "default": "./dist/storefront/storefront-entry.js"
+    "./core": {
+      "types": "./dist/core/core-entry.d.ts",
+      "default": "./dist/core/core-entry.js"
     },
     "./storefront-api-types": "./dist/storefront-api-types.d.ts",
     "./storefront.schema.json": "./dist/storefront.schema.json",
@@ -85,8 +81,8 @@
       "customer-account-api-types": [
         "./dist/customer-account-api-types.d.ts"
       ],
-      "cart": [
-        "./dist/cart/cart-entry.d.ts"
+      "core": [
+        "./dist/core/core-entry.d.ts"
       ]
     }
   },

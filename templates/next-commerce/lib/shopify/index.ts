@@ -1,4 +1,4 @@
-import {createStorefrontClient} from '@shopify/hydrogen/storefront';
+import {createStorefrontClient} from '@shopify/hydrogen/core';
 import {HIDDEN_PRODUCT_TAG, TAGS} from 'lib/constants';
 import {ensureStartsWith} from 'lib/utils';
 import {

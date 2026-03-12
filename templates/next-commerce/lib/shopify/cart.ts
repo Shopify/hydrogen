@@ -23,7 +23,7 @@ import {
   cartLinesAddDefault,
   cartLinesRemoveDefault,
   cartLinesUpdateDefault,
-} from '@shopify/hydrogen/cart';
+} from '@shopify/hydrogen/core';
 import {storefront} from './index';
 import type {Cart, CartItem, Connection, ShopifyCart} from './types';
 
