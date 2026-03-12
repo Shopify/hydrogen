@@ -785,6 +785,9 @@ importers:
       '@heroicons/react':
         specifier: ^2.2.0
         version: 2.2.0(react@19.0.0)
+      '@shopify/hydrogen':
+        specifier: workspace:*
+        version: link:../../packages/hydrogen
       '@shopify/hydrogen-react':
         specifier: 2026.1.1
         version: 2026.1.1(@types/react@19.0.12)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(three@0.172.0)(vite@6.4.1(@types/node@22.19.11)(jiti@2.6.1)(lightningcss@1.31.1)(yaml@2.8.2))

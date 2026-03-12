@@ -184,7 +184,7 @@ export async function getCart(): Promise<Cart | undefined> {
   const result = await cartGetDefault({query: CART_QUERY_FRAGMENT})({
     storefront,
     getCartId: () => cartId,
-  } as any)();
+  })();
 
   if (!result) return undefined;
   return reshapeCart(result as unknown as ShopifyCart);
