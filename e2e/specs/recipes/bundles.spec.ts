@@ -47,12 +47,13 @@ test.describe('Bundles Recipe', () => {
     });
 
     test('displays bundle badge on product image', async ({page}) => {
-      await expect(page.getByText('BUNDLE', {exact: true})).toBeVisible();
+      await expect(
+        page.locator('.product-image').getByText('BUNDLE', {exact: true}),
+      ).toBeVisible();
     });
 
     test('displays bundled products section', async ({page}) => {
       const bundledProductsHeading = page.getByRole('heading', {
-        level: 4,
         name: 'Bundled Products',
       });
       await expect(bundledProductsHeading).toBeVisible();
@@ -106,7 +107,7 @@ test.describe('Bundles Recipe', () => {
       await expect(page.getByText('BUNDLE', {exact: true})).toHaveCount(0);
 
       await expect(
-        page.getByRole('heading', {level: 4, name: 'Bundled Products'}),
+        page.getByRole('heading', {name: 'Bundled Products'}),
       ).toHaveCount(0);
 
       await expect(
@@ -115,6 +116,25 @@ test.describe('Bundles Recipe', () => {
 
       await expect(
         page.getByRole('button', {name: /add bundle to cart/i}),
+      ).toHaveCount(0);
+    });
+
+    test('does not display bundle badge in cart for regular products', async ({
+      page,
+    }) => {
+      const cart = new CartUtil(page);
+
+      await page.goto(`/products/${KNOWN_REGULAR_PRODUCT.handle}`);
+
+      const addButton = page.getByRole('button', {name: 'Add to cart'});
+      await addButton.click();
+
+      await expect(page.getByRole('dialog', {name: 'Cart'})).toBeVisible();
+
+      const lineItems = cart.getLineItems();
+      await expect(lineItems.first()).toBeVisible();
+      await expect(
+        lineItems.first().getByText('BUNDLE', {exact: true}),
       ).toHaveCount(0);
     });
   });
