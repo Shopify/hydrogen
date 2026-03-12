@@ -70,6 +70,7 @@ export {cartNoteUpdateDefault} from './cart/queries/cartNoteUpdateDefault';
 export {cartSelectedDeliveryOptionsUpdateDefault} from './cart/queries/cartSelectedDeliveryOptionsUpdateDefault';
 export {changelogHandler} from './changelogHandler';
 export {hydrogenContext} from './context-keys';
+export * from './core';
 export {
   createHydrogenContext,
   type HydrogenContext,
@@ -120,7 +121,6 @@ export type {SeoHandleFunction} from './seo/seo';
 export {Seo} from './seo/seo';
 export {ShopPayButton} from './shop/ShopPayButton';
 export {getSitemap, getSitemapIndex} from './sitemap/sitemap';
-export * from './storefront';
 export type {
   HydrogenEnv,
   HydrogenRouterContextProvider,

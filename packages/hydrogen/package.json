@@ -44,6 +44,22 @@
         "default": "./dist/production/index.js"
       }
     },
+    "./core": {
+      "types": "./dist/production/core/index.d.ts",
+      "module": {
+        "development": "./dist/development/core/index.js",
+        "default": "./dist/production/core/index.js"
+      },
+      "require": "./dist/core.cjs",
+      "import": {
+        "development": "./dist/development/core/index.js",
+        "default": "./dist/production/core/index.js"
+      },
+      "default": {
+        "development": "./dist/development/core/index.js",
+        "default": "./dist/production/core/index.js"
+      }
+    },
     "./vite": {
       "types": "./dist/vite/plugin.d.ts",
       "default": "./dist/vite/plugin.js"
@@ -120,6 +136,12 @@
   },
   "peerDependenciesMeta": {
     "vite": {
+      "optional": true
+    },
+    "react-router": {
+      "optional": true
+    },
+    "@react-router/dev": {
       "optional": true
     }
   }

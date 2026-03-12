@@ -5,9 +5,11 @@ import {defineConfig} from 'tsup';
 const outDir = 'dist';
 const cjsEntryContent = `module.exports = process.env.NODE_ENV === 'development' ? require('./development/index.cjs') : require('./production/index.cjs');`;
 const cjsEntryFile = path.resolve(process.cwd(), outDir, 'index.cjs');
+const cjsCoreEntryContent = `module.exports = process.env.NODE_ENV === 'development' ? require('./development/core/index.cjs') : require('./production/core/index.cjs');`;
+const cjsCoreEntryFile = path.resolve(process.cwd(), outDir, 'core.cjs');
 
 const commonConfig = defineConfig({
-  entry: ['src/index.ts'],
+  entry: ['src/index.ts', 'src/core/index.ts'],
   format: ['esm', 'cjs'],
   treeshake: true,
   sourcemap: true,
@@ -29,6 +31,7 @@ export default defineConfig([
     minify: true,
     onSuccess: async () => {
       await fs.writeFile(cjsEntryFile, cjsEntryContent, 'utf-8');
+      await fs.writeFile(cjsCoreEntryFile, cjsCoreEntryContent, 'utf-8');
 
       const hydrogenReact = path.resolve('..', 'hydrogen-react');
       const sfSchemaFile = 'storefront.schema.json';
