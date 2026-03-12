@@ -11,7 +11,7 @@ import {
   BUYER_SESSION_KEY,
 } from './customer/constants';
 import type {BuyerInput} from '@shopify/hydrogen-react/storefront-api-types';
-import type {StorefrontClient, I18nBase} from './storefront';
+import type {StorefrontClient, I18nBase} from './core/storefront';
 import type {CustomerAccount} from './customer/types';
 import type {
   HydrogenCart,
@@ -84,7 +84,7 @@ export interface HydrogenRouterContextProvider<
   TEnv extends HydrogenEnv = Env,
 > extends RouterContextProvider {
   /** A GraphQL client for querying the Storefront API */
-  storefront: import('./storefront').Storefront<TI18n>;
+  storefront: import('./core/storefront').Storefront<TI18n>;
   /** A GraphQL client for querying the Customer Account API */
   customerAccount: import('./customer/types').CustomerAccount;
   /** A collection of utilities used to interact with the cart */

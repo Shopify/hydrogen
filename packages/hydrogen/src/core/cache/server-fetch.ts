@@ -4,7 +4,7 @@ import {
   runWithCache,
   type DebugOptions,
 } from './run-with-cache.js';
-import type {WaitUntil} from '../types.js';
+import type {WaitUntil} from '../../types.js';
 import {parseJSON} from '../utils/parse-json.js';
 import {createGraphQLClient} from '@shopify/graphql-client';
 

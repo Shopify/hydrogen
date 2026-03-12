@@ -1,4 +1,4 @@
-import {formatAPIResult} from '../../storefront';
+import {formatAPIResult} from '../../core/storefront';
 import type {CustomerAccount} from '../../customer/types';
 import type {CartQueryOptions, CartReturn} from './cart-types';
 import type {

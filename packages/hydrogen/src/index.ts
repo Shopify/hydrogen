@@ -17,18 +17,6 @@ export {
   type SearchViewPayload,
 } from './analytics-manager/AnalyticsView';
 export {AnalyticsEvent} from './analytics-manager/events';
-export {createWithCache, type WithCache} from './cache/create-with-cache';
-export {InMemoryCache} from './cache/in-memory';
-export {type CacheKey} from './cache/run-with-cache';
-export {
-  CacheCustom,
-  CacheLong,
-  CacheNone,
-  CacheShort,
-  type CachingStrategy,
-  generateCacheControlHeader,
-  type NoStoreStrategy,
-} from './cache/strategies';
 export {
   type CartActionInput,
   CartForm,
@@ -71,6 +59,18 @@ export {cartSelectedDeliveryOptionsUpdateDefault} from './cart/queries/cartSelec
 export {changelogHandler} from './changelogHandler';
 export {hydrogenContext} from './context-keys';
 export * from './core';
+export {createWithCache, type WithCache} from './core/cache/create-with-cache';
+export {InMemoryCache} from './core/cache/in-memory';
+export {type CacheKey} from './core/cache/run-with-cache';
+export {
+  CacheCustom,
+  CacheLong,
+  CacheNone,
+  CacheShort,
+  type CachingStrategy,
+  generateCacheControlHeader,
+  type NoStoreStrategy,
+} from './core/cache/strategies';
 export {
   createHydrogenContext,
   type HydrogenContext,

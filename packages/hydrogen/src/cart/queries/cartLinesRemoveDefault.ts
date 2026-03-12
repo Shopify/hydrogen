@@ -1,4 +1,4 @@
-import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
+import {StorefrontApiErrors, formatAPIResult} from '../../core/storefront';
 import {throwIfLinesAreOptimistic} from '../optimistic/optimistic-cart.helper';
 import {
   CART_WARNING_FRAGMENT,

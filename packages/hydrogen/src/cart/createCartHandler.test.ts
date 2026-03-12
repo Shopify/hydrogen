@@ -9,7 +9,7 @@ import {
   mockCreateCustomerAccountClient,
   mockCreateStorefrontClient,
 } from './cart-test-helper';
-import {Storefront} from '../storefront';
+import {Storefront} from '../core/storefront';
 
 type MockCarthandler = {
   cartId?: string;

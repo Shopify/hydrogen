@@ -1,4 +1,4 @@
-import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
+import {StorefrontApiErrors, formatAPIResult} from '../../core/storefront';
 import {
   CART_WARNING_FRAGMENT,
   MINIMAL_CART_FRAGMENT,

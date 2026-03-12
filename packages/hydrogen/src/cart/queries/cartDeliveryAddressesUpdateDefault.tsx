@@ -1,4 +1,4 @@
-import {StorefrontApiErrors, formatAPIResult} from '../../storefront';
+import {StorefrontApiErrors, formatAPIResult} from '../../core/storefront';
 import type {CartSelectableAddressUpdateInput} from '@shopify/hydrogen-react/storefront-api-types';
 import {
   CART_WARNING_FRAGMENT,

@@ -1,6 +1,6 @@
 // @ts-ignore - worktop/cookie types not properly exported
 import {parse} from 'worktop/cookie';
-import {type CrossRuntimeRequest, getHeaderValue} from '../utils/request';
+import {type CrossRuntimeRequest, getHeaderValue} from '../core/utils/request';
 
 export const cartGetIdDefault = (
   requestHeaders: CrossRuntimeRequest['headers'],

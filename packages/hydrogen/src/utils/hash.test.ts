@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {hashKey} from './hash';
+import {hashKey} from '../core/utils/hash';
 
 describe('hashKey', () => {
   it('hashes the raw keys provided by storefront.query', () => {

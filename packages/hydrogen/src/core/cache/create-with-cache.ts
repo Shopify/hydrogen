@@ -7,7 +7,7 @@ import {
   runWithCache,
 } from './run-with-cache';
 import {fetchWithServerCache} from './server-fetch';
-import type {WaitUntil} from '../types';
+import type {WaitUntil} from '../../types';
 
 type CreateWithCacheOptions = {
   /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */

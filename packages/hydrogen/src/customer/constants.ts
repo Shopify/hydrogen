@@ -1,4 +1,4 @@
-import {LIB_VERSION} from '../version';
+import {LIB_VERSION} from '../core/version';
 
 export const DEFAULT_CUSTOMER_API_VERSION = '2026-01';
 export const USER_AGENT = `Shopify Hydrogen ${LIB_VERSION}`;

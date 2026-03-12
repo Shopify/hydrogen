@@ -28,14 +28,14 @@ import {
   throwErrorWithGqlLink,
   type GraphQLErrorOptions,
   GraphQLError,
-} from '../utils/graphql';
-import {parseJSON} from '../utils/parse-json';
+} from '../core/utils/graphql';
+import {parseJSON} from '../core/utils/parse-json';
 import {
   CrossRuntimeRequest,
   getHeader,
   getDebugHeaders,
-} from '../utils/request';
-import {getCallerStackLine, withSyncStack} from '../utils/callsites';
+} from '../core/utils/request';
+import {getCallerStackLine, withSyncStack} from '../core/utils/callsites';
 import {
   getRedirectUrl,
   ensureLocalRedirectUrl,
@@ -49,7 +49,7 @@ import type {
   Buyer,
 } from './types';
 import {createCustomerAccountHelper, URL_TYPE} from './customer-account-helper';
-import {warnOnce} from '../utils/warning';
+import {warnOnce} from '../core/utils/warning';
 import {LanguageCode} from '@shopify/hydrogen-react/customer-account-api-types';
 
 const HYDROGEN_TUNNEL_DOMAIN_SUFFIX = '.tryhydrogen.dev';

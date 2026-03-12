@@ -2,8 +2,8 @@ import type {
   ClientReturn,
   ClientVariablesInRestParams,
 } from '@shopify/hydrogen-codegen';
-import {type GraphQLError} from '../utils/graphql';
-import type {CrossRuntimeRequest} from '../utils/request';
+import {type GraphQLError} from '../core/utils/graphql';
+import type {CrossRuntimeRequest} from '../core/utils/request';
 import type {HydrogenSession, WaitUntil} from '../types';
 import type {
   LanguageCode,

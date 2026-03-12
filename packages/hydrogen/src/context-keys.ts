@@ -1,5 +1,5 @@
 import {createContext} from 'react-router';
-import type {StorefrontClient, I18nBase} from './storefront';
+import type {StorefrontClient, I18nBase} from './core/storefront';
 import type {CustomerAccount} from './customer/types';
 import type {
   HydrogenCart,

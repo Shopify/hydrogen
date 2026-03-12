@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest';
-import {getHeader, extractHeaders} from './request';
+import {getHeader, extractHeaders} from '../core/utils/request';
 import {IncomingMessage} from 'node:http';
 import type {Socket} from 'node:net';
 

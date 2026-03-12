@@ -1,5 +1,5 @@
 import type {LoaderFunctionArgs} from 'react-router';
-import type {Storefront} from '../storefront';
+import type {Storefront} from '../core/storefront';
 
 const SITEMAP_INDEX_PREFIX = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;

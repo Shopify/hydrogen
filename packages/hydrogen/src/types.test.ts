@@ -5,7 +5,7 @@ import type {
   HydrogenSession,
 } from './types';
 import type {RouterContextProvider} from 'react-router';
-import type {Storefront} from './storefront';
+import type {Storefront} from './core/storefront';
 import type {CustomerAccount} from './customer/types';
 import type {HydrogenCart} from './cart/createCartHandler';
 

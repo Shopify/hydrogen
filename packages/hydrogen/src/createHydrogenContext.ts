@@ -3,7 +3,7 @@ import {
   type CreateStorefrontClientOptions,
   type StorefrontClient,
   type I18nBase,
-} from './storefront';
+} from './core/storefront';
 import {createCustomerAccountClient} from './customer/customer';
 import {
   type CustomerAccountOptions,
@@ -26,8 +26,11 @@ import type {
   StorefrontHeaders,
   HydrogenRouterContextProvider,
 } from './types';
-import {type CrossRuntimeRequest, getStorefrontHeaders} from './utils/request';
-import {warnOnce} from './utils/warning';
+import {
+  type CrossRuntimeRequest,
+  getStorefrontHeaders,
+} from './core/utils/request';
+import {warnOnce} from './core/utils/warning';
 import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
 import {RouterContextProvider} from 'react-router';
 import {

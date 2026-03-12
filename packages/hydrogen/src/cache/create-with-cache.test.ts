@@ -1,8 +1,8 @@
 import {describe, beforeEach, it, expect, vi} from 'vitest';
-import {type WithCache, createWithCache} from './create-with-cache';
-import {InMemoryCache} from './in-memory';
-import {getItemFromCache} from './sub-request';
-import {CacheNone, CacheShort} from './strategies';
+import {type WithCache, createWithCache} from '../core/cache/create-with-cache';
+import {InMemoryCache} from '../core/cache/in-memory';
+import {getItemFromCache} from '../core/cache/sub-request';
+import {CacheNone, CacheShort} from '../core/cache/strategies';
 
 describe('createWithCache', () => {
   const waitUntil = vi.fn(() => {});

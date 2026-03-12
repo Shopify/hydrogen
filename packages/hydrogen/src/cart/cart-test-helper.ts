@@ -1,6 +1,6 @@
-import {CachingStrategy, CacheNone} from '../cache/strategies';
+import {CachingStrategy, CacheNone} from '../core/cache/strategies';
 import type {ExecutionArgs} from 'graphql';
-import {Storefront} from '../storefront';
+import {Storefront} from '../core/storefront';
 import {CustomerAccount} from '../customer/types';
 
 export const BUYER_ACCESS_TOKEN = 'sha123';

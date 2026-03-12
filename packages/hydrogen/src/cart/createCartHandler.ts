@@ -1,4 +1,4 @@
-import {Storefront} from '../storefront';
+import {Storefront} from '../core/storefront';
 import type {CustomerAccount} from '../customer/types';
 import {type CartGetFunction, cartGetDefault} from './queries/cartGetDefault';
 import {

@@ -1,5 +1,5 @@
 import {SHOPIFY_CLIENT_IP_SIG_HEADER} from '../constants';
-import type {StorefrontHeaders} from '../types';
+import type {StorefrontHeaders} from '../../types';
 
 export type CrossRuntimeRequest = {
   url?: string;

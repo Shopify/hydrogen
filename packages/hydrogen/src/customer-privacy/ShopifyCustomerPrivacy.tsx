@@ -9,7 +9,7 @@ import {useLoadScript} from '@shopify/hydrogen-react/load-script';
 import {
   isSfapiProxyEnabled,
   hasServerReturnedTrackingValues,
-} from '../utils/server-timing';
+} from '../core/utils/server-timing';
 
 export type ConsentStatus = boolean | undefined;
 

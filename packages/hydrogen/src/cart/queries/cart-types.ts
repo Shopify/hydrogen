@@ -10,7 +10,7 @@ import type {
   CartWarning,
   VisitorConsent,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import type {StorefrontApiErrors, Storefront} from '../../storefront';
+import type {StorefrontApiErrors, Storefront} from '../../core/storefront';
 import {CustomerAccount} from '../../customer/types';
 
 export type CartOptionalInput = {

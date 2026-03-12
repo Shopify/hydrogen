@@ -4,11 +4,11 @@ import {
   appendServerTimingHeader,
   isSfapiProxyEnabled,
   hasServerReturnedTrackingValues,
-} from './server-timing';
+} from '../core/utils/server-timing';
 import {
   HYDROGEN_SERVER_TRACKING_KEY,
   HYDROGEN_SFAPI_PROXY_KEY,
-} from '../constants';
+} from '../core/constants';
 
 describe('server-timing', () => {
   describe('extractServerTimingHeader', () => {

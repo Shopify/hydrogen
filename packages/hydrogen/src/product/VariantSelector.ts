@@ -10,7 +10,7 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {type ReactNode, useMemo, createElement, Fragment} from 'react';
 import type {PartialDeep} from 'type-fest';
-import {warnOnce} from '../utils/warning';
+import {warnOnce} from '../core/utils/warning';
 
 export type VariantOption = {
   name: string;

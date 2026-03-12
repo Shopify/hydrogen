@@ -56,7 +56,7 @@ import {
   withSyncStack,
   type StackInfo,
 } from './utils/callsites';
-import type {WaitUntil, StorefrontHeaders} from './types';
+import type {WaitUntil, StorefrontHeaders} from '../types';
 import {extractHeaders, getSafePathname, SFAPI_RE} from './utils/request';
 import {
   appendServerTimingHeader,

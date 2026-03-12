@@ -1,6 +1,6 @@
 import {vi, describe, it, expect, afterEach, expectTypeOf} from 'vitest';
 import {createHydrogenContext} from './createHydrogenContext';
-import {createStorefrontClient} from './storefront';
+import {createStorefrontClient} from './core/storefront';
 import {createCustomerAccountClient} from './customer/customer';
 import {
   createCartHandler,
@@ -19,7 +19,7 @@ import {
   waitUntilContext,
 } from './context-keys';
 
-vi.mock('./storefront', async () => ({
+vi.mock('./core/storefront', async () => ({
   createStorefrontClient: vi.fn(() => ({
     storefront: {},
   })),
