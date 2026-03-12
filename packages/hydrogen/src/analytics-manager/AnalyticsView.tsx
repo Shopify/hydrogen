@@ -5,7 +5,7 @@ import {
   type AnalyticsProviderProps,
   useAnalytics,
 } from './AnalyticsProvider';
-import {CartReturn} from '../cart/queries/cart-types';
+import {CartReturn} from '../core/cart/queries/cart-types';
 import {AnalyticsEvent} from './events';
 import {
   CartLine,

@@ -20,7 +20,7 @@ import {
   logSubRequestEvent,
 } from './auth.helpers';
 import {BadRequest} from './BadRequest';
-import {generateNonce} from '../csp/nonce';
+import {generateNonce} from '../../csp/nonce';
 import {
   minifyQuery,
   assertQuery,
@@ -39,7 +39,7 @@ import {getCallerStackLine, withSyncStack} from '../utils/callsites';
 import {
   getRedirectUrl,
   ensureLocalRedirectUrl,
-} from '../utils/get-redirect-url';
+} from '../../utils/get-redirect-url';
 import type {
   CustomerAccountOptions,
   CustomerAccount,

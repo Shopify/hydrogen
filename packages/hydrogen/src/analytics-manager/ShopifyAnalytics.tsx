@@ -8,7 +8,7 @@ import {
   type ShopifyAnalyticsProduct,
   type ShopifyAddToCartPayload,
 } from '@shopify/hydrogen-react';
-import {type CartReturn} from '../cart/queries/cart-types';
+import {type CartReturn} from '../core/cart/queries/cart-types';
 import {AnalyticsEvent} from './events';
 import {useAnalytics, type AnalyticsProviderProps} from './AnalyticsProvider';
 import {

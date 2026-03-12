@@ -1,5 +1,5 @@
 import type {UrlRedirectConnection} from '@shopify/hydrogen-react/storefront-api-types';
-import type {I18nBase, Storefront} from '../storefront';
+import type {I18nBase, Storefront} from '../core/storefront';
 import {getRedirectUrl} from '../utils/get-redirect-url';
 
 type StorefrontRedirect = {

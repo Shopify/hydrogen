@@ -6,7 +6,7 @@ import type {
   HydrogenCartCustom,
   CustomMethodsBase,
 } from './cart/createCartHandler';
-import type {HydrogenEnv, HydrogenSession, WaitUntil} from './types';
+import type {HydrogenEnv, HydrogenSession, WaitUntil} from '../types';
 
 // Internal context keys - not exported from package, only used internally
 export const storefrontContext =

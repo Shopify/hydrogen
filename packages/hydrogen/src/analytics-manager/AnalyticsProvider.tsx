@@ -6,7 +6,7 @@ import {
   createContext,
   useContext,
 } from 'react';
-import {type CartReturn} from '../cart/queries/cart-types';
+import {type CartReturn} from '../core/cart/queries/cart-types';
 import {
   AnalyticsPageView,
   AnalyticsProductView,
@@ -41,9 +41,9 @@ import {
   type CustomerPrivacy,
   type CustomerPrivacyApiProps,
 } from '../customer-privacy/ShopifyCustomerPrivacy';
-import type {Storefront} from '../storefront';
+import type {Storefront} from '../core/storefront';
 import {PerfKit} from './PerfKit';
-import {errorOnce, warnOnce} from '../utils/warning';
+import {errorOnce, warnOnce} from '../core/utils/warning';
 
 export type ShopAnalytics = {
   /** The shop ID. */

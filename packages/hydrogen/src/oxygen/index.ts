@@ -3,5 +3,5 @@
 // should too. Therefore, there's nothing special to do when using Oxygen.
 // TODO: Remove in new major version.
 export {createRequestHandler} from '../createRequestHandler';
-export {getStorefrontHeaders} from '../utils/request';
+export {getStorefrontHeaders} from '../core/utils/request';
 export type {StorefrontHeaders} from '../types';

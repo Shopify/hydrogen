@@ -1,4 +1,4 @@
-import type {HydrogenSession} from '../types';
+import type {HydrogenSession} from '../../types';
 import {BadRequest} from './BadRequest';
 import {
   USER_AGENT,

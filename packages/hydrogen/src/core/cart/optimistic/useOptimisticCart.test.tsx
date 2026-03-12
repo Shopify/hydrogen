@@ -1,7 +1,7 @@
 import {expect, it, describe, afterEach, vi} from 'vitest';
 import {useOptimisticCart} from './useOptimisticCart';
 import * as RemixReact from 'react-router';
-import {type CartActionInput, CartForm} from '../CartForm';
+import {type CartActionInput, CartForm} from '../../../cart/CartForm';
 import {FormData} from 'formdata-polyfill/esm.min.js';
 
 let fetchers: {formData: FormData}[] = [];

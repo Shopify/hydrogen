@@ -1,5 +1,5 @@
 import {useFetchers} from 'react-router';
-import {CartForm} from '../CartForm';
+import {CartForm} from '../../../cart/CartForm';
 import type {
   CartLine,
   ProductVariant,

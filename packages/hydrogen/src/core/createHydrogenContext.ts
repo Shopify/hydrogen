@@ -25,7 +25,7 @@ import type {
   HydrogenSession,
   StorefrontHeaders,
   HydrogenRouterContextProvider,
-} from './types';
+} from '../types';
 import {type CrossRuntimeRequest, getStorefrontHeaders} from './utils/request';
 import {warnOnce} from './utils/warning';
 import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';

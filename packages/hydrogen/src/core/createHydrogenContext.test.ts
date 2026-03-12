@@ -9,7 +9,7 @@ import {
 } from './cart/createCartHandler';
 import {cartGetIdDefault} from './cart/cartGetIdDefault';
 import {cartSetIdDefault} from './cart/cartSetIdDefault';
-import type {HydrogenSession} from './types';
+import type {HydrogenSession} from '../types';
 import {
   storefrontContext,
   cartContext,

@@ -4,10 +4,10 @@ import {
   type RouterContextProvider,
   type ServerBuild,
 } from 'react-router';
-import {storefrontContext} from './context-keys';
-import {HYDROGEN_SFAPI_PROXY_KEY} from './constants';
-import {appendServerTimingHeader} from './utils/server-timing';
-import {warnOnce} from './utils/warning';
+import {storefrontContext} from './core/context-keys';
+import {HYDROGEN_SFAPI_PROXY_KEY} from './core/constants';
+import {appendServerTimingHeader} from './core/utils/server-timing';
+import {warnOnce} from './core/utils/warning';
 
 type CreateRequestHandlerOptions<Context = unknown> = {
   /** React Router's server build */

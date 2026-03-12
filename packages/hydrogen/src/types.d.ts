@@ -9,15 +9,15 @@ import type {RequestEventPayload} from './vite/request-events';
 import {
   CUSTOMER_ACCOUNT_SESSION_KEY,
   BUYER_SESSION_KEY,
-} from './customer/constants';
+} from './core/customer/constants';
 import type {BuyerInput} from '@shopify/hydrogen-react/storefront-api-types';
-import type {StorefrontClient, I18nBase} from './storefront';
-import type {CustomerAccount} from './customer/types';
+import type {StorefrontClient, I18nBase} from './core/storefront';
+import type {CustomerAccount} from './core/customer/types';
 import type {
   HydrogenCart,
   HydrogenCartCustom,
   CustomMethodsBase,
-} from './cart/createCartHandler';
+} from './core/cart/createCartHandler';
 
 export interface HydrogenSessionData {
   [CUSTOMER_ACCOUNT_SESSION_KEY]: {
@@ -84,13 +84,13 @@ export interface HydrogenRouterContextProvider<
   TEnv extends HydrogenEnv = Env,
 > extends RouterContextProvider {
   /** A GraphQL client for querying the Storefront API */
-  storefront: import('./storefront').Storefront<TI18n>;
+  storefront: import('./core/storefront').Storefront<TI18n>;
   /** A GraphQL client for querying the Customer Account API */
-  customerAccount: import('./customer/types').CustomerAccount;
+  customerAccount: import('./core/customer/types').CustomerAccount;
   /** A collection of utilities used to interact with the cart */
   cart: TCustomMethods extends CustomMethodsBase
-    ? import('./cart/createCartHandler').HydrogenCartCustom<TCustomMethods>
-    : import('./cart/createCartHandler').HydrogenCart;
+    ? import('./core/cart/createCartHandler').HydrogenCartCustom<TCustomMethods>
+    : import('./core/cart/createCartHandler').HydrogenCart;
   /** Environment variables from the fetch function */
   env: TEnv;
   /** The waitUntil function for keeping requests alive */

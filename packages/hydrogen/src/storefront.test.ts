@@ -1,16 +1,16 @@
 import {vi, describe, it, expect} from 'vitest';
-import {createStorefrontClient} from './storefront';
-import {fetchWithServerCache} from './cache/server-fetch';
-import {STOREFRONT_ACCESS_TOKEN_HEADER} from './constants';
+import {createStorefrontClient} from './core/storefront';
+import {fetchWithServerCache} from './core/cache/server-fetch';
+import {STOREFRONT_ACCESS_TOKEN_HEADER} from './core/constants';
 import {
   SHOPIFY_STOREFRONT_S_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
 } from '@shopify/hydrogen-react';
 
-vi.mock('./cache/server-fetch.ts', async () => {
-  const original = await vi.importActual<typeof import('./cache/server-fetch')>(
-    './cache/server-fetch.ts',
-  );
+vi.mock('./core/cache/server-fetch.ts', async () => {
+  const original = await vi.importActual<
+    typeof import('./core/cache/server-fetch')
+  >('./core/cache/server-fetch.ts');
 
   return {
     ...original,

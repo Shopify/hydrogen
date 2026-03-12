@@ -4,7 +4,7 @@ import type {
 } from '@shopify/hydrogen-codegen';
 import {type GraphQLError} from '../utils/graphql';
 import type {CrossRuntimeRequest} from '../utils/request';
-import type {HydrogenSession, WaitUntil} from '../types';
+import type {HydrogenSession, WaitUntil} from '../../types';
 import type {
   LanguageCode,
   CountryCode,

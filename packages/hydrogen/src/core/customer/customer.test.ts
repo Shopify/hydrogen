@@ -1,5 +1,5 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
-import type {HydrogenSession, HydrogenSessionData} from '../types';
+import type {HydrogenSession, HydrogenSessionData} from '../../types';
 import {
   createCustomerAccountClient,
   getMaybeUILocales,
