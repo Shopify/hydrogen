@@ -14,25 +14,9 @@ Update your project's Vite dependency:
 pnpm add vite@^7.0.0
 ```
 
-If you use Vitest, upgrade it as well:
-
-```bash
-pnpm add vitest@^3.2.4 @vitest/coverage-v8@^3.2.4
-```
-
-### Why Vite 7 only?
-
-Vite 7 introduced breaking changes to the Module Runner API that are incompatible with previous versions:
-
-- Added `ssrExportNameKey` as a 6th parameter to the SSR evaluation context
-- Added `getBuiltins()` invoke method
-- Removed deprecated `root` option from `ModuleRunnerOptions`
-
-Supporting both Vite 6 and 7 would require runtime version detection and dual code paths, adding unnecessary complexity.
-
 ### Browser targets
 
-Vite 7 modernized default browser targets. If you need to support older browsers, configure `build.target` in your Vite config:
+Vite 7 updated default browser targets. If your storefront needs to support older browsers, configure `build.target` in your Vite config:
 
 | Browser | Vite 6 | Vite 7 |
 |---------|--------|--------|
