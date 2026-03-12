@@ -1,6 +1,6 @@
 ---
-'skeleton': patch
 '@shopify/cli-hydrogen': patch
+'@shopify/create-hydrogen': patch
 ---
 
 Remove redundant Storefront API proxy route from skeleton template. The server now automatically proxies requests to `/api/:version/graphql.json` via `createRequestHandler` with `proxyStandardRoutes: true` (enabled by default since December 2025).
