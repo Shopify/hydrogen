@@ -71,24 +71,6 @@ test.describe('Subscriptions Recipe', () => {
         .toBeTruthy();
     });
 
-    test('allows selecting subscription and adding to cart', async ({page}) => {
-      const weeklyOption = page.getByRole('link', {
-        name: /deliver every week/i,
-      });
-      await weeklyOption.click();
-
-      await expect
-        .poll(() => new URL(page.url()).searchParams.get('selling_plan'))
-        .toBeTruthy();
-
-      const addToCartButton = page.getByRole('button', {
-        name: /add to cart/i,
-      });
-      await addToCartButton.click();
-
-      await expect(page.getByRole('dialog', {name: 'Cart'})).toBeVisible();
-    });
-
     test('allows switching between subscription frequencies', async ({
       page,
     }) => {
@@ -152,18 +134,19 @@ test.describe('Subscriptions Recipe', () => {
         .poll(() => new URL(page.url()).searchParams.get('selling_plan'))
         .toBeTruthy();
 
-      const addToCartButton = page.getByRole('button', {
-        name: /add to cart/i,
-      });
-      await addToCartButton.click();
+      const subscribeButton = page.getByRole('button', {name: 'Subscribe'});
+      await subscribeButton.click();
 
       await expect(page.getByRole('dialog', {name: 'Cart'})).toBeVisible();
 
       const lineItems = cart.getLineItems();
       await expect(lineItems).toHaveCount(1);
 
+      // The recipe renders sellingPlanAllocation.sellingPlan.name in a <small> element
       const firstLineItem = lineItems.first();
-      await expect(firstLineItem.locator('li small')).toBeVisible();
+      await expect(
+        firstLineItem.getByText(/deliver every week/i),
+      ).toBeVisible();
     });
   });
 
