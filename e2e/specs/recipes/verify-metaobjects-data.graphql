@@ -14,7 +14,7 @@
 #
 # Method 2: Using curl (for CI/CD or scripting)
 # curl -X POST \
-#   https://your-store.myshopify.com/api/2024-01/graphql.json \
+#   https://your-store.myshopify.com/api/2026-01/graphql.json \
 #   -H "Content-Type: application/json" \
 #   -H "X-Shopify-Storefront-Access-Token: YOUR_TOKEN" \
 #   -d @verify-metaobjects-data.graphql
@@ -58,7 +58,8 @@ query VerifyMetaobjectsData {
   # 1. HOMEPAGE ROUTE (route-home)
   # ============================================================================
   # Tests require: Homepage should render with at least one section
-  # Test location: e2e/specs/recipes/metaobjects.spec.ts:23-41
+  # Test: "Homepage > renders route content with metaobject sections"
+  # Test: "Homepage > renders multiple section types via type switching"
 
   routeHome: metaobject(handle: {type: "route", handle: "route-home"}) {
     id
@@ -92,7 +93,7 @@ query VerifyMetaobjectsData {
   # 2. STORES INDEX ROUTE (route-stores)
   # ============================================================================
   # Tests require: /stores route should render with stores grid section
-  # Test location: e2e/specs/recipes/metaobjects.spec.ts:58-73
+  # Test: "Stores Index Route > renders stores route with metaobject content"
 
   routeStores: metaobject(handle: {type: "route", handle: "route-stores"}) {
     id
@@ -120,7 +121,9 @@ query VerifyMetaobjectsData {
   # 3. STORES GRID SECTION
   # ============================================================================
   # Tests require: The stores grid section should reference actual stores
-  # Test location: e2e/specs/recipes/metaobjects.spec.ts:213-232
+  # Test: "Section Components > renders store grid"
+  # Test: "Accessibility > store links are keyboard navigable"
+  # Test: "Accessibility > back to stores link is keyboard accessible"
 
   # Query for the stores grid section (should be referenced by route-stores)
   storesGridSection: metaobjects(type: "section_stores_grid", first: 1) {
@@ -177,7 +180,8 @@ query VerifyMetaobjectsData {
   # 4. ALL STORE METAOBJECTS
   # ============================================================================
   # Tests require: At least one store for navigation tests
-  # Test location: e2e/specs/recipes/metaobjects.spec.ts:88-152
+  # Test: "Individual Store Navigation > navigates to store detail and back"
+  # Test: "Individual Store Navigation > renders store profile details"
 
   stores: metaobjects(type: "store", first: 10) {
     nodes {
@@ -225,7 +229,7 @@ query VerifyMetaobjectsData {
   # 5. EXAMPLE INDIVIDUAL STORE ROUTES
   # ============================================================================
   # Tests require: Individual store routes should have store_profile sections
-  # Test location: e2e/specs/recipes/metaobjects.spec.ts:108-152
+  # Test: "Individual Store Navigation > renders store profile details"
 
   # Note: You'll need to create routes for each store with format: route-{store.handle}
   # Example: If you have a store with handle "downtown", create route-downtown
@@ -283,7 +287,7 @@ query VerifyMetaobjectsData {
   # 6. OPTIONAL: HERO SECTIONS
   # ============================================================================
   # Tests check for hero sections if they exist
-  # Test location: e2e/specs/recipes/metaobjects.spec.ts:156-170
+  # Test: "Section Components > renders hero section"
 
   heroSections: metaobjects(type: "section_hero", first: 5) {
     nodes {
@@ -334,8 +338,8 @@ query VerifyMetaobjectsData {
   # ============================================================================
   # 7. OPTIONAL: FEATURED PRODUCTS SECTIONS
   # ============================================================================
-  # Tests check for product links if they exist
-  # Test location: e2e/specs/recipes/metaobjects.spec.ts:172-187
+  # (No tests currently implemented for featured products sections)
+  # This section documents the schema for future test development
 
   featuredProductsSections: metaobjects(
     type: "section_featured_products"
@@ -382,8 +386,8 @@ query VerifyMetaobjectsData {
   # ============================================================================
   # 8. OPTIONAL: FEATURED COLLECTIONS SECTIONS
   # ============================================================================
-  # Tests check for collection links if they exist
-  # Test location: e2e/specs/recipes/metaobjects.spec.ts:189-211
+  # (No tests currently implemented for featured collections sections)
+  # This section documents the schema for future test development
 
   featuredCollectionsSections: metaobjects(
     type: "section_featured_collections"

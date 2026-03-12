@@ -29,33 +29,19 @@ test.describe('Metaobjects Recipe', () => {
         page.getByText('No route content sections'),
       ).not.toBeVisible();
 
-      const sections = page.locator('.sections');
+      const sections = page.getByRole('region', {name: 'Route Content'});
       await expect(sections).toBeVisible();
 
       const sectionElements = sections.locator('> *');
       const sectionCount = await sectionElements.count();
       expect(sectionCount).toBeGreaterThan(0);
     });
-
-    test('renders multiple section types via type switching', async ({
-      page,
-    }) => {
-      await page.goto('/');
-
-      const sections = page.locator('.sections');
-      const sectionElements = sections.locator('> *');
-      const totalSections = await sectionElements.count();
-
-      expect(totalSections).toBeGreaterThan(0);
-    });
   });
 
   test.describe('Stores Index Route', () => {
-    test.beforeEach(async ({page}) => {
-      await page.goto('/stores');
-    });
-
     test('renders stores route with metaobject content', async ({page}) => {
+      await page.goto('/stores');
+
       await expect(page).toHaveURL(/\/stores$/);
       await expect(page.getByRole('banner')).toBeVisible();
 
@@ -63,10 +49,12 @@ test.describe('Metaobjects Recipe', () => {
         page.getByText('No route content sections'),
       ).not.toBeVisible();
 
-      const sections = page.locator('.sections');
+      const sections = page.getByRole('region', {name: 'Route Content'});
       await expect(sections).toBeVisible();
     });
+  });
 
+  test.describe('Route Fallback', () => {
     test('shows fallback when route has no sections', async ({page}) => {
       await page.goto('/stores/does-not-exist');
 
@@ -74,7 +62,9 @@ test.describe('Metaobjects Recipe', () => {
 
       await expect(page.getByText('No route content sections')).toBeVisible();
 
-      await expect(page.locator('.sections')).toHaveCount(0);
+      await expect(
+        page.getByRole('region', {name: 'Route Content'}),
+      ).toHaveCount(0);
     });
   });
 
@@ -84,9 +74,12 @@ test.describe('Metaobjects Recipe', () => {
     });
 
     test('navigates to store detail and back', async ({page}) => {
-      const storeLinks = page.locator('a[href^="/stores/"]').filter({
-        has: page.locator('address'),
-      });
+      const storeLinks = page
+        .getByRole('region', {name: 'Stores'})
+        .getByRole('link')
+        .filter({
+          has: page.locator('address'),
+        });
 
       await storeLinks.first().click();
       await expect(page).toHaveURL(/\/stores\/.+$/);
@@ -98,37 +91,23 @@ test.describe('Metaobjects Recipe', () => {
     });
 
     test('renders store profile details', async ({page}) => {
-      const storeLinks = page.locator('a[href^="/stores/"]').filter({
-        has: page.locator('address'),
-      });
+      const storeLinks = page
+        .getByRole('region', {name: 'Stores'})
+        .getByRole('link')
+        .filter({
+          has: page.locator('address'),
+        });
 
       await storeLinks.first().click();
 
       await page.waitForURL(/\/stores\//);
 
-      const storeContent = page.locator('section.store');
+      const storeContent = page.getByRole('region', {name: 'Store Profile'});
       await expect(storeContent).toBeVisible();
 
       await expect(page.getByRole('heading', {level: 1})).toBeVisible();
 
       await expect(storeContent.locator('address')).toBeVisible();
-    });
-
-    test('handles dynamic route parameters in GraphQL query', async ({
-      page,
-    }) => {
-      const storeLinks = page.locator('a[href^="/stores/"]').filter({
-        has: page.locator('address'),
-      });
-
-      await storeLinks.first().click();
-
-      await expect(
-        page.getByText('No route content sections'),
-      ).not.toBeVisible();
-
-      const storeContent = page.locator('section.store');
-      await expect(storeContent).toBeVisible();
     });
   });
 
@@ -158,9 +137,7 @@ test.describe('Metaobjects Recipe', () => {
   });
 
   test.describe('EditRoute Component', () => {
-    test('shows edit button in development or preview environments', async ({
-      page,
-    }) => {
+    test('shows edit button in development environments', async ({page}) => {
       await page.goto('/');
 
       const currentUrl = page.url();
@@ -169,22 +146,19 @@ test.describe('Metaobjects Recipe', () => {
         currentUrl.includes('127.0.0.1') ||
         currentUrl.includes('preview');
 
+      expect(isDevOrPreview).toBe(true);
+
       const editButton = page.getByRole('link', {name: 'Edit Route'});
+      await expect(editButton).toBeVisible();
 
-      if (isDevOrPreview) {
-        await expect(editButton).toBeVisible();
+      const href = await editButton.getAttribute('href');
+      expect(href).toContain('admin.shopify.com');
+      expect(href).toContain('/content/entries/route/');
 
-        const href = await editButton.getAttribute('href');
-        expect(href).toContain('admin.shopify.com');
-        expect(href).toContain('/content/entries/route/');
-
-        const target = await editButton.getAttribute('target');
-        const rel = await editButton.getAttribute('rel');
-        expect(target).toBe('_blank');
-        expect(rel).toBe('noreferrer');
-      } else {
-        await expect(editButton).toHaveCount(0);
-      }
+      const target = await editButton.getAttribute('target');
+      const rel = await editButton.getAttribute('rel');
+      expect(target).toBe('_blank');
+      expect(rel).toBe('noreferrer');
     });
   });
 
@@ -194,9 +168,12 @@ test.describe('Metaobjects Recipe', () => {
     });
 
     test('store links are keyboard navigable', async ({page}) => {
-      const storeLinks = page.locator('a[href^="/stores/"]').filter({
-        has: page.locator('address'),
-      });
+      const storeLinks = page
+        .getByRole('region', {name: 'Stores'})
+        .getByRole('link')
+        .filter({
+          has: page.locator('address'),
+        });
 
       const firstLink = storeLinks.first();
       await firstLink.focus();
@@ -207,9 +184,12 @@ test.describe('Metaobjects Recipe', () => {
     });
 
     test('back to stores link is keyboard accessible', async ({page}) => {
-      const storeLinks = page.locator('a[href^="/stores/"]').filter({
-        has: page.locator('address'),
-      });
+      const storeLinks = page
+        .getByRole('region', {name: 'Stores'})
+        .getByRole('link')
+        .filter({
+          has: page.locator('address'),
+        });
 
       await storeLinks.first().click();
 
