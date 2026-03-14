@@ -4,6 +4,8 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
+    "patch-cli": "node scripts/patch-cli.mjs",
+    "unpatch-cli": "node scripts/unpatch-cli.mjs",
     "prepare": "husky",
     "build": "pnpm run build:pkg",
     "build:pkg": "turbo build --parallel --filter=./packages/*",
