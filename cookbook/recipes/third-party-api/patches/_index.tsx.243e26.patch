@@ -1,13 +1,8 @@
-index 28102dbe..618b99a0 100644
+index 237edc91..d65e1253 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
-@@ -1,11 +1,7 @@
--import {
--  Await,
--  useLoaderData,
--  Link,
--} from 'react-router';
-+import {Await, useLoaderData, Link} from 'react-router';
+@@ -1,7 +1,7 @@
+ import {Await, useLoaderData, Link} from 'react-router';
  import type {Route} from './+types/_index';
  import {Suspense} from 'react';
 -import {Image} from '@shopify/hydrogen';
@@ -15,7 +10,7 @@ index 28102dbe..618b99a0 100644
  import type {
    FeaturedCollectionFragment,
    RecommendedProductsQuery,
-@@ -31,13 +27,19 @@ export async function loader(args: Route.LoaderArgs) {
+@@ -28,14 +28,20 @@ export async function loader(args: Route.LoaderArgs) {
   * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
   */
  async function loadCriticalData({context}: Route.LoaderArgs) {
@@ -29,18 +24,19 @@ index 28102dbe..618b99a0 100644
 +      cache: CacheShort(),
 +    }),
    ]);
- 
+
    return {
+     isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
      featuredCollection: collections.nodes[0],
 +    // @description Return Rick & Morty characters data
 +    characters,
    };
  }
- 
-@@ -64,12 +66,50 @@ export default function Homepage() {
-   const data = useLoaderData<typeof loader>();
+
+@@ -63,12 +69,50 @@ export default function Homepage() {
    return (
      <div className="home">
+       {data.isShopLinked ? null : <MockShopNotice />}
 +      {/* @description Display Rick & Morty characters from third-party API */}
 +      <ThirdPartyApiExample characters={data.characters} />
        <FeaturedCollection collection={data.featuredCollection} />
@@ -48,7 +44,7 @@ index 28102dbe..618b99a0 100644
      </div>
    );
  }
- 
+
 +// @description Component to display Rick & Morty characters fetched from third-party API
 +function ThirdPartyApiExample({characters}: {characters: any}) {
 +  return (
@@ -88,10 +84,10 @@ index 28102dbe..618b99a0 100644
  function FeaturedCollection({
    collection,
  }: {
-@@ -141,6 +181,18 @@ const FEATURED_COLLECTION_QUERY = `#graphql
+@@ -147,6 +191,18 @@ const FEATURED_COLLECTION_QUERY = `#graphql
    }
  ` as const;
- 
+
 +// @description GraphQL query for Rick & Morty characters from third-party API
 +const CHARACTERS_QUERY = `#graphql:rickAndMorty
 +  query Characters {
