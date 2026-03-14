@@ -172,6 +172,12 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   // Load the Shopify customer privacy API with or without the privacy banner
   // NOTE: We no longer use the status because we need `ready` to be not when the script is loaded
   // but instead when both `privacyBanner` (optional) and customerPrivacy are loaded in the window
+  //
+  // From 2025.7.3 onwards, set also a global variable to not use the legacy _tracking_consent cookie.
+  window.Shopify ||= {};
+  window.Shopify.customerPrivacy ||= {};
+  window.Shopify.customerPrivacy.backendConsentEnabled = true;
+
   useLoadScript(withPrivacyBanner ? CONSENT_API_WITH_BANNER : CONSENT_API, {
     attributes: {
       id: 'customer-privacy-api',
