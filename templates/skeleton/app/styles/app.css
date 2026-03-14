@@ -341,6 +341,12 @@ button.reset:hover:not(:has(> *)) {
 
 .cart-line-quantity {
   display: flex;
+  align-items: center;
+}
+
+.cart-line-quantity-input {
+  width: 40px;
+  height: 1rem;
 }
 
 /* Child line components (warranties, gift wrapping, etc.) */
@@ -357,6 +363,59 @@ button.reset:hover:not(:has(> *)) {
 .cart-subtotal {
   align-items: center;
   display: flex;
+}
+
+.cart-warnings {
+  margin-bottom: 1rem;
+}
+
+/*
+* --------------------------------------------------
+* components/InlineFeedback
+* --------------------------------------------------
+*/
+.inline-feedback {
+  align-items: flex-start;
+  border-radius: 4px;
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.inline-feedback--warning {
+  background-color: #fef3cd;
+  border: 1px solid #ffc107;
+  color: #856404;
+}
+
+.inline-feedback--error {
+  background-color: #f8d7da;
+  border: 1px solid #f5c2c7;
+  color: #842029;
+}
+
+.inline-feedback-icon {
+  flex-shrink: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.inline-feedback-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.inline-feedback-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.inline-feedback-description {
+  font-size: 0.875rem;
+  margin: 0.25rem 0 0;
+  opacity: 0.9;
 }
 /*
 * --------------------------------------------------
