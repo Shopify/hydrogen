@@ -15,6 +15,8 @@ type DevServerOptions = {
   customerAccountPush?: boolean;
   envFile?: string;
   storeKey?: string;
+  entry?: string;
+  env?: NodeJS.ProcessEnv;
 };
 
 export class DevServer {
@@ -26,6 +28,8 @@ export class DevServer {
   id?: number;
   envFile?: string;
   storeKey?: string;
+  entry?: string;
+  env?: NodeJS.ProcessEnv;
 
   constructor(options: DevServerOptions = {}) {
     this.id = options.id;
@@ -35,6 +39,8 @@ export class DevServer {
       options.projectPath ?? path.join(__dirname, '../../templates/skeleton');
     this.customerAccountPush = options.customerAccountPush ?? false;
     this.envFile = options.envFile;
+    this.entry = options.entry;
+    this.env = options.env;
   }
 
   getUrl() {
@@ -65,11 +71,16 @@ export class DevServer {
         args.push('--env-file', this.envFile);
       }
 
+      if (this.entry) {
+        args.push('--entry', this.entry);
+      }
+
       this.process = spawn('npx', args, {
         cwd: this.projectPath,
         detached: true,
         env: {
           ...process.env,
+          ...this.env,
           NODE_ENV: 'development',
           SHOPIFY_HYDROGEN_FLAG_PORT: (
             this.port ?? OS_ASSIGNED_PORT
