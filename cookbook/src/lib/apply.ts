@@ -15,15 +15,27 @@ import {handleZodErrorFromLoadRecipe} from './validate';
 /**
  * Apply a recipe to the current project.
  * @param params - The parameters for the recipe.
+ * @param params.recipeTitle - The name of the recipe to apply.
+ * @param params.noCopyIngredients - Skip copying ingredient files (used during generation).
+ * @param params.templatePath - Custom path to the template directory. If not provided, uses templates/skeleton.
  */
 export function applyRecipe(params: {
   recipeTitle: string;
   noCopyIngredients?: boolean;
+  templatePath?: string;
 }): void {
   const recipeDir = path.join(COOKBOOK_PATH, 'recipes', params.recipeTitle);
   const recipeYamlPath = path.join(recipeDir, 'recipe.yaml');
+  const templatePath = params.templatePath
+    ? path.isAbsolute(params.templatePath)
+      ? params.templatePath
+      : path.resolve(process.cwd(), params.templatePath)
+    : TEMPLATE_PATH;
 
   console.log(`- 🍱 Loading recipe '${params.recipeTitle}'…`);
+  if (params.templatePath) {
+    console.log(`- 📁 Using custom template path: ${templatePath}`);
+  }
 
   let recipe;
   try {
@@ -83,7 +95,11 @@ export function applyRecipe(params: {
   console.log(`- 🗑️ Deleting files…`);
   for (const file of recipe.deletedFiles ?? []) {
     console.log('  - Deleting', file);
-    fs.unlinkSync(path.join(REPO_ROOT, file));
+    // When using a custom template path, adjust the file path to be relative to the template
+    const fileToDelete = params.templatePath
+      ? path.join(templatePath, file.replace(TEMPLATE_DIRECTORY, ''))
+      : path.join(REPO_ROOT, file);
+    fs.unlinkSync(fileToDelete);
   }
 
   // copy over every ingredient to the template directory
@@ -91,7 +107,7 @@ export function applyRecipe(params: {
   if (!params.noCopyIngredients) {
     for (const ingredient of fsIngredients) {
       const dir = path.dirname(
-        path.join(TEMPLATE_PATH, ingredient.replace(TEMPLATE_DIRECTORY, '')),
+        path.join(templatePath, ingredient.replace(TEMPLATE_DIRECTORY, '')),
       );
       const src = path.join(recipeDir, 'ingredients', ingredient);
       const dst = path.join(dir, path.basename(ingredient));
@@ -114,7 +130,7 @@ export function applyRecipe(params: {
     for (const diff of step.diffs) {
       console.log(`  - 🩹 Patching ${diff.file} with ${diff.patchFile}…`);
       const patchPath = path.join(recipeDir, 'patches', diff.patchFile);
-      const destPath = path.join(TEMPLATE_PATH, diff.file);
+      const destPath = path.join(templatePath, diff.file);
 
       try {
         execSync(`patch '${destPath}' '${patchPath}'`, {stdio: 'inherit'});
