@@ -1,4 +1,4 @@
-import {useMachine} from '@xstate/react/fsm';
+import {useMachine} from '@nexpb/xstate-react-patched/fsm';
 import {createMachine, assign, StateMachine} from '@xstate/fsm';
 import {
   Cart,
