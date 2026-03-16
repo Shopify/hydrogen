@@ -359,7 +359,9 @@ skeleton template's devDependencies
 @shopify/cli-hydrogen (circular!)
 ```
 
-This may require a second cli-hydrogen release after the Shopify CLI is updated to bundle the correct skeleton version.
+Whether a second cli-hydrogen release is required depends on what the cli-hydrogen changes contained:
+- **If cli-hydrogen had actual code changes** (beyond just adding a changeset to bundle a new skeleton): manually update skeleton's `@shopify/cli` to the new Shopify CLI version and create changesets for `@shopify/cli-hydrogen` AND `@shopify/create-hydrogen` to trigger another release cycle
+- **If cli-hydrogen changes were ONLY a changeset to re-bundle the skeleton**: no further action required after Shopify CLI releases
 
 ## Exit Conditions
 
