@@ -13,8 +13,10 @@ import {
 } from './validate';
 import {
   resolveCatalogProtocol,
+  withResolvedCatalog,
   _resetWorkspaceVersionsCache,
 } from './workspace';
+import {execFileSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import {COOKBOOK_PATH, REPO_ROOT, TEMPLATE_PATH} from './constants';
@@ -28,6 +30,7 @@ vi.mock('child_process', () => ({
   execSync: vi.fn(() =>
     Buffer.from('/Users/juanp.prieto/github.com/Shopify/hydrogen'),
   ),
+  execFileSync: vi.fn(),
 }));
 
 describe('formatValidationError', () => {
@@ -1086,5 +1089,135 @@ catalog:
     expect(skeletonWrite).toBeDefined();
     const written = JSON.parse(skeletonWrite![1] as string);
     expect(written.dependencies.react).toBe('^18.3.1');
+  });
+});
+
+describe('withResolvedCatalog', () => {
+  let mockExistsSync: Mock;
+  let mockReadFileSync: Mock;
+  let mockWriteFileSync: Mock;
+  const mockedExecFileSync = vi.mocked(execFileSync);
+
+  const workspaceYaml = `
+packages:
+  - templates/skeleton
+catalog:
+  react: ^18.3.1
+`;
+
+  const skeletonPkgPath = path.join(TEMPLATE_PATH, 'package.json');
+  const skeletonPkgJson = JSON.stringify({
+    dependencies: {react: 'catalog:'},
+  });
+
+  function setupMocksWithCatalogResolution() {
+    const workspacePath = path.join(REPO_ROOT, 'pnpm-workspace.yaml');
+    const rootPkgPath = path.join(REPO_ROOT, 'package.json');
+
+    mockExistsSync.mockReturnValue(true);
+    mockReadFileSync.mockImplementation((filePath: string) => {
+      if (filePath === workspacePath) return workspaceYaml;
+      if (filePath === rootPkgPath) {
+        return JSON.stringify({dependencies: {}});
+      }
+      if (filePath === skeletonPkgPath) return skeletonPkgJson;
+      return JSON.stringify({});
+    });
+  }
+
+  beforeEach(() => {
+    _resetWorkspaceVersionsCache();
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    mockExistsSync = vi.spyOn(fs, 'existsSync') as Mock;
+    mockReadFileSync = vi.spyOn(fs, 'readFileSync') as Mock;
+    mockWriteFileSync = vi.spyOn(fs, 'writeFileSync') as Mock;
+    mockWriteFileSync.mockImplementation(() => {});
+
+    mockedExecFileSync.mockClear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should return the result of a sync function', () => {
+    setupMocksWithCatalogResolution();
+    const result = withResolvedCatalog(() => 42);
+    expect(result).toBe(42);
+  });
+
+  it('should return the result of an async function', async () => {
+    setupMocksWithCatalogResolution();
+    const result = await withResolvedCatalog(async () => 'async-result');
+    expect(result).toBe('async-result');
+  });
+
+  it('should restore modified package.json files after sync success', () => {
+    setupMocksWithCatalogResolution();
+
+    withResolvedCatalog(() => 'done');
+
+    expect(mockedExecFileSync).toHaveBeenCalledWith(
+      'git',
+      expect.arrayContaining(['checkout', '--']),
+      expect.objectContaining({cwd: REPO_ROOT}),
+    );
+  });
+
+  it('should restore modified package.json files after async success', async () => {
+    setupMocksWithCatalogResolution();
+
+    await withResolvedCatalog(async () => 'done');
+
+    expect(mockedExecFileSync).toHaveBeenCalledWith(
+      'git',
+      expect.arrayContaining(['checkout', '--']),
+      expect.objectContaining({cwd: REPO_ROOT}),
+    );
+  });
+
+  it('should restore modified package.json files after sync throw', () => {
+    setupMocksWithCatalogResolution();
+
+    expect(() =>
+      withResolvedCatalog(() => {
+        throw new Error('sync-error');
+      }),
+    ).toThrow('sync-error');
+
+    expect(mockedExecFileSync).toHaveBeenCalledWith(
+      'git',
+      expect.arrayContaining(['checkout', '--']),
+      expect.objectContaining({cwd: REPO_ROOT}),
+    );
+  });
+
+  it('should restore modified package.json files after async rejection', async () => {
+    setupMocksWithCatalogResolution();
+
+    await expect(
+      withResolvedCatalog(async () => {
+        throw new Error('async-error');
+      }),
+    ).rejects.toThrow('async-error');
+
+    expect(mockedExecFileSync).toHaveBeenCalledWith(
+      'git',
+      expect.arrayContaining(['checkout', '--']),
+      expect.objectContaining({cwd: REPO_ROOT}),
+    );
+  });
+
+  it('should resolve catalog references before executing the function', () => {
+    setupMocksWithCatalogResolution();
+    let writtenBeforeFn = false;
+
+    withResolvedCatalog(() => {
+      // Inside fn, writeFileSync should already have been called by resolveCatalogProtocol
+      writtenBeforeFn = mockWriteFileSync.mock.calls.length > 0;
+    });
+
+    expect(writtenBeforeFn).toBe(true);
   });
 });

@@ -1,4 +1,4 @@
-import {execSync} from 'child_process';
+import {execFileSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import YAML from 'yaml';
@@ -115,10 +115,7 @@ export function resolveCatalogProtocol(): string[] {
           typeof version === 'string' &&
           version.startsWith('workspace:')
         ) {
-          const workspaceVersion = resolveWorkspaceVersion(
-            name,
-            version,
-          );
+          const workspaceVersion = resolveWorkspaceVersion(name, version);
           if (workspaceVersion) {
             deps[name] = workspaceVersion;
             resolved++;
@@ -147,20 +144,16 @@ export function resolveCatalogProtocol(): string[] {
 function restorePackageJsonFiles(paths: string[]): void {
   if (paths.length === 0) return;
   try {
-    // Use -- separator and pass each path as a separate argument via
-    // a safe approach that avoids shell injection from file paths.
     const relativePaths = paths.map((p) => path.relative(REPO_ROOT, p));
-    execSync(
-      `git checkout -- ${relativePaths.map((p) => `'${p}'`).join(' ')}`,
-      {
-        cwd: REPO_ROOT,
-        stdio: 'pipe',
-      },
-    );
+    execFileSync('git', ['checkout', '--', ...relativePaths], {
+      cwd: REPO_ROOT,
+      stdio: 'pipe',
+    });
   } catch (error: any) {
-    console.warn(`Warning: failed to restore package.json files: ${error.message}`);
-  }
     // Ignore if files were not modified or already restored
+    console.warn(
+      `Warning: failed to restore package.json files: ${error.message}`,
+    );
   }
 }
 
