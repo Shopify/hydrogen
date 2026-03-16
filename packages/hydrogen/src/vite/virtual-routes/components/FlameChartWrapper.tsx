@@ -11,7 +11,7 @@ import type {
   Timeseries,
   FlameChart,
 } from 'flame-chart-js';
-import {useResizeObserver} from 'usehooks-ts';
+import {useResizeObserver} from './useResizeObserver.js';
 
 declare global {
   // Downloaded via CDN
