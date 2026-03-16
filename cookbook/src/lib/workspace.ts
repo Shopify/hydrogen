@@ -117,7 +117,7 @@ export function resolveCatalogProtocol(): string[] {
         ) {
           const workspaceVersion = resolveWorkspaceVersion(
             name,
-            version as string,
+            version,
           );
           if (workspaceVersion) {
             deps[name] = workspaceVersion;
