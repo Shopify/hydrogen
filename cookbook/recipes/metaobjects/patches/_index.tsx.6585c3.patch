@@ -1,12 +1,8 @@
-index 28102dbe..27dbb95c 100644
+index 237edc91..27dbb95c 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
-@@ -1,19 +1,11 @@
--import {
--  Await,
--  useLoaderData,
--  Link,
--} from 'react-router';
+@@ -1,16 +1,11 @@
+-import {Await, useLoaderData, Link} from 'react-router';
 +import {useLoaderData} from 'react-router';
  import type {Route} from './+types/_index';
 -import {Suspense} from 'react';
@@ -16,17 +12,18 @@ index 28102dbe..27dbb95c 100644
 -  RecommendedProductsQuery,
 -} from 'storefrontapi.generated';
 -import {ProductItem} from '~/components/ProductItem';
+-import {MockShopNotice} from '~/components/MockShopNotice';
 +
 +// @description Add metaobject content imports
 +import {ROUTE_CONTENT_QUERY, RouteContent} from '~/sections/RouteContent';
- 
+
  export const meta: Route.MetaFunction = () => {
 -  return [{title: 'Hydrogen | Home'}];
 +  return [{title: 'Hydrogen Metaobject | Home'}];
  };
- 
+
  export async function loader(args: Route.LoaderArgs) {
-@@ -31,14 +23,18 @@ export async function loader(args: Route.LoaderArgs) {
+@@ -28,15 +23,18 @@ export async function loader(args: Route.LoaderArgs) {
   * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
   */
  async function loadCriticalData({context}: Route.LoaderArgs) {
@@ -42,15 +39,16 @@ index 28102dbe..27dbb95c 100644
 +    }),
      // Add other queries here, so that they are loaded in parallel
    ]);
- 
+
 -  return {
+-    isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
 -    featuredCollection: collections.nodes[0],
 -  };
 +  return {route};
  }
- 
+
  /**
-@@ -47,125 +43,17 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
+@@ -45,133 +43,17 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
   * Make sure to not throw any errors here, as it will cause the page to 500.
   */
  function loadDeferredData({context}: Route.LoaderArgs) {
@@ -68,13 +66,14 @@ index 28102dbe..27dbb95c 100644
 +  // No deferred data for this route
 +  return {};
  }
- 
+
  export default function Homepage() {
 -  const data = useLoaderData<typeof loader>();
 +  const {route} = useLoaderData<typeof loader>();
 +
    return (
      <div className="home">
+-      {data.isShopLinked ? null : <MockShopNotice />}
 -      <FeaturedCollection collection={data.featuredCollection} />
 -      <RecommendedProducts products={data.recommendedProducts} />
 +      {/* @description Render the route's content sections */}
@@ -97,7 +96,11 @@ index 28102dbe..27dbb95c 100644
 -    >
 -      {image && (
 -        <div className="featured-collection-image">
--          <Image data={image} sizes="100vw" />
+-          <Image
+-            data={image}
+-            sizes="100vw"
+-            alt={image.altText || collection.title}
+-          />
 -        </div>
 -      )}
 -      <h1>{collection.title}</h1>
@@ -111,8 +114,11 @@ index 28102dbe..27dbb95c 100644
 -  products: Promise<RecommendedProductsQuery | null>;
 -}) {
 -  return (
--    <div className="recommended-products">
--      <h2>Recommended Products</h2>
+-    <section
+-      className="recommended-products"
+-      aria-labelledby="recommended-products"
+-    >
+-      <h2 id="recommended-products">Recommended Products</h2>
 -      <Suspense fallback={<div>Loading...</div>}>
 -        <Await resolve={products}>
 -          {(response) => (
@@ -127,7 +133,7 @@ index 28102dbe..27dbb95c 100644
 -        </Await>
 -      </Suspense>
 -      <br />
--    </div>
+-    </section>
 -  );
 -}
 -

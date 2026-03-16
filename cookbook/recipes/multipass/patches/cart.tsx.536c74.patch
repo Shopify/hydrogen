@@ -1,7 +1,7 @@
-index bb143b40..85c335d6 100644
+index 983f6505..a09b66d5 100644
 --- a/templates/skeleton/app/routes/cart.tsx
 +++ b/templates/skeleton/app/routes/cart.tsx
-@@ -15,9 +15,13 @@ export const meta: Route.MetaFunction = () => {
+@@ -11,9 +11,13 @@ export const meta: Route.MetaFunction = () => {
  export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
  
  export async function action({request, context}: Route.ActionArgs) {
@@ -17,7 +17,7 @@ index bb143b40..85c335d6 100644
  
    const {action, inputs} = CartForm.getFormInput(formData);
  
-@@ -70,6 +74,8 @@ export async function action({request, context}: Route.ActionArgs) {
+@@ -66,6 +70,8 @@ export async function action({request, context}: Route.ActionArgs) {
      case CartForm.ACTIONS.BuyerIdentityUpdate: {
        result = await cart.updateBuyerIdentity({
          ...inputs.buyerIdentity,

@@ -1,4 +1,4 @@
-index 7053f7d7..7b8c77d3 100644
+index 6f10065f..52fec3b5 100644
 --- a/templates/skeleton/app/routes/account.profile.tsx
 +++ b/templates/skeleton/app/routes/account.profile.tsx
 @@ -1,12 +1,12 @@
@@ -18,11 +18,11 @@ index 7053f7d7..7b8c77d3 100644
  } from 'react-router';
  import type {Route} from './+types/account.profile';
  
-@@ -20,62 +20,79 @@ export const meta: Route.MetaFunction = () => {
+@@ -20,61 +20,79 @@ export const meta: Route.MetaFunction = () => {
  };
  
  export async function loader({context}: Route.LoaderArgs) {
--  context.customerAccount.handleAuthStatus();
+-  await context.customerAccount.handleAuthStatus();
 -
 +  const customerAccessToken = await context.session.get('customerAccessToken');
 +  if (!customerAccessToken) {
@@ -119,12 +119,11 @@ index 7053f7d7..7b8c77d3 100644
 -      {
 -        status: 400,
 -      },
--    );
-+    return data({error: error.message, customer: null}, {status: 400});
++    return data({error: error.message, customer: null}, {status: 400},
+     );
    }
  }
- 
-@@ -114,6 +131,64 @@ export default function AccountProfile() {
+@@ -114,6 +132,64 @@ export default function AccountProfile() {
              defaultValue={customer.lastName ?? ''}
              minLength={2}
            />
@@ -189,7 +188,7 @@ index 7053f7d7..7b8c77d3 100644
          </fieldset>
          {action?.error ? (
            <p>
-@@ -131,3 +206,55 @@ export default function AccountProfile() {
+@@ -131,3 +207,55 @@ export default function AccountProfile() {
      </div>
    );
  }

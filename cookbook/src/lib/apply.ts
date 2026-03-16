@@ -49,7 +49,8 @@ export function applyRecipe(params: {
     const status = parseGitStatus({filenamesToIgnore: []});
     if (
       status.modifiedFiles.filter(
-        (f) => !['package.json', 'package-lock.json'].includes(f),
+        (f) =>
+          !['package.json', 'package-lock.json'].includes(path.basename(f)),
       ).length > 0
     ) {
       throw new Error('Template folder has uncommitted changes.');

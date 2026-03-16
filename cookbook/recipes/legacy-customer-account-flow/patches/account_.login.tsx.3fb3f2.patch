@@ -1,3 +1,4 @@
+index e89c8e0a..37ff4d40 100644
 --- a/templates/skeleton/app/routes/account_.login.tsx
 +++ b/templates/skeleton/app/routes/account_.login.tsx
 @@ -1,17 +1,139 @@
@@ -10,7 +11,10 @@
 -  const loginHint = url.searchParams.get('login_hint') || undefined;
 -  const loginHintMode = url.searchParams.get('login_hint_mode') || undefined;
 -  const locale = url.searchParams.get('locale') || undefined;
--
++type ActionResponse = {
++  error: string | null;
++};
+ 
 -  return context.customerAccount.login({
 -    countryCode: context.storefront.i18n.country,
 -    acrValues,
@@ -18,11 +22,6 @@
 -    loginHintMode,
 -    locale,
 -  });
--}
-+type ActionResponse = {
-+  error: string | null;
-+};
-+
 +export const meta: Route.MetaFunction = () => {
 +  return [{title: 'Login'}];
 +};
@@ -32,7 +31,7 @@
 +    return redirect('/account');
 +  }
 +  return {};
-+}
+ }
 +
 +export async function action({request, context}: Route.ActionArgs) {
 +  const {session, storefront} = context;

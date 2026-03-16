@@ -1,11 +1,8 @@
-index 422a2eb9..061b059c 100644
+index 99730d41..061b059c 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
-@@ -1,50 +1,7 @@
--import {
--  redirect,
--  useLoaderData,
--} from 'react-router';
+@@ -1,43 +1,7 @@
+-import {redirect, useLoaderData} from 'react-router';
 +import {useLoaderData} from 'react-router';
  import type {Route} from './+types/products.$handle';
 -import {
@@ -45,16 +42,12 @@ index 422a2eb9..061b059c 100644
 - * Load data necessary for rendering content above the fold. This is the critical data
 - * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
 - */
--async function loadCriticalData({
--  context,
--  params,
--  request,
--}: Route.LoaderArgs) {
+-async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
 +export async function loader({params, context}: Route.LoaderArgs) {
    const {handle} = params;
    const {storefront} = context;
  
-@@ -52,188 +9,42 @@ async function loadCriticalData({
+@@ -45,188 +9,42 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
      throw new Error('Expected product handle to be defined');
    }
  
