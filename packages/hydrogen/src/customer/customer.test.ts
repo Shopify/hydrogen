@@ -126,7 +126,7 @@ describe('customer', () => {
         expect(params.get('code_challenge_method')).toBe('S256');
       });
 
-      it('Throws guidance error in development when request origin is not a tunnel', async () => {
+      it('Throws guidance error in development when request origin is not secure', async () => {
         expect.assertions(3);
         process.env.NODE_ENV = 'development';
 
@@ -167,6 +167,27 @@ describe('customer', () => {
         expect(url.origin).toBe('https://shopify.com');
         expect(url.searchParams.get('redirect_uri')).toBe(
           'https://my-shop.tryhydrogen.dev/account/authorize',
+        );
+      });
+
+      it('Redirects in development when request origin uses a valid HTTPS host', async () => {
+        process.env.NODE_ENV = 'development';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request('https://my-shop.dev'),
+          waitUntil: vi.fn(),
+        });
+
+        const response = await customer.login();
+        const url = new URL(response.headers.get('location')!);
+
+        expect(response.status).toBe(302);
+        expect(url.origin).toBe('https://shopify.com');
+        expect(url.searchParams.get('redirect_uri')).toBe(
+          'https://my-shop.dev/account/authorize',
         );
       });
 
@@ -1302,7 +1323,7 @@ describe('customer', () => {
   });
 
   describe('handleAuthStatus()', async () => {
-    it('Throws guidance error in development when request origin is not a tunnel', async () => {
+    it('Throws guidance error in development when request origin is not secure', async () => {
       expect.assertions(3);
       process.env.NODE_ENV = 'development';
 
