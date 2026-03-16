@@ -10,6 +10,7 @@ on:
       # Example: If we are currently on 2025-07, add 2025-01 here to do a back-fix
       # release for the 2025-01 CalVer branch
       - 2025-01
+      - 2025-10
 
 concurrency:
   group: release-${{ github.ref_name }}
