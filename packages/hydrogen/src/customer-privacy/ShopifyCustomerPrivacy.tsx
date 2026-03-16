@@ -345,7 +345,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
       'Shopify',
     );
     if (shopifyDescriptor && !shopifyDescriptor.configurable) {
-      customShopify = window.Shopify || void 0;
+      customShopify = window.Shopify || undefined;
       const pollForCustomerPrivacy = setInterval(() => {
         if (window.Shopify?.customerPrivacy) {
           setLoaded.customerPrivacy();
