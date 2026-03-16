@@ -157,7 +157,9 @@ function restorePackageJsonFiles(paths: string[]): void {
         stdio: 'pipe',
       },
     );
-  } catch {
+  } catch (error: any) {
+    console.warn(`Warning: failed to restore package.json files: ${error.message}`);
+  }
     // Ignore if files were not modified or already restored
   }
 }
