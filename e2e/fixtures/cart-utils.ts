@@ -5,7 +5,7 @@ const CART_ID_PREFIX = 'gid://shopify/Cart/';
 export class CartUtil {
   constructor(private page: Page) {}
 
-  async getOptionSelectors(lineItem: Locator) {
+  async waitForOptionSelectors(lineItem: Locator) {
     const optionSelectors = lineItem.getByRole('combobox');
     await expect(optionSelectors.first()).toBeVisible();
     return optionSelectors;
