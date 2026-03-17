@@ -1,4 +1,4 @@
-index 32460ae2..59eed1d8 100644
+index 76f924e8..cf93f212 100644
 --- a/templates/skeleton/app/components/ProductPrice.tsx
 +++ b/templates/skeleton/app/components/ProductPrice.tsx
 @@ -1,13 +1,31 @@
@@ -31,7 +31,7 @@ index 32460ae2..59eed1d8 100644
 +  }
 +
    return (
-     <div className="product-price">
+     <div aria-label="Price" className="product-price" role="group">
        {compareAtPrice ? (
 @@ -25,3 +43,74 @@ export function ProductPrice({
      </div>
