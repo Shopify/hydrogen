@@ -95,7 +95,9 @@ function isMswScenario(scenario: string): scenario is MswScenario {
   return scenarios.has(scenario);
 }
 
-export function getHandlersForScenario(scenario: string | undefined) {
+export function getHandlersForScenario(
+  scenario: string | undefined,
+): MswScenarioMeta {
   if (!scenario) {
     return {handlers: [], mocksCustomerAccountApi: false};
   }
@@ -104,5 +106,12 @@ export function getHandlersForScenario(scenario: string | undefined) {
     throw new Error(`[e2e-msw] Unknown scenario: "${scenario}"`);
   }
 
-  return scenarios.get(scenario);
+  const meta = scenarios.get(scenario);
+  if (!meta) {
+    throw new Error(
+      `[e2e-msw] Scenario "${scenario}" registered but metadata missing`,
+    );
+  }
+
+  return meta;
 }

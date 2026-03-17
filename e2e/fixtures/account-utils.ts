@@ -16,10 +16,6 @@ export class AccountUtil {
     await expect(this.getEmptyOrdersMessage()).toBeVisible();
   }
 
-  async expectLoggedInState(firstName: string) {
-    await this.assertLoggedInState(firstName);
-  }
-
   getWelcomeHeading(firstName: string): Locator {
     return this.page.getByRole('heading', {
       level: 1,

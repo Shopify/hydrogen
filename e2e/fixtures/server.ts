@@ -16,7 +16,6 @@ type DevServerOptions = {
   envFile?: string;
   storeKey?: string;
   entry?: string;
-  env?: NodeJS.ProcessEnv;
 };
 
 export class DevServer {
@@ -29,7 +28,6 @@ export class DevServer {
   envFile?: string;
   storeKey?: string;
   entry?: string;
-  env?: NodeJS.ProcessEnv;
 
   constructor(options: DevServerOptions = {}) {
     this.id = options.id;
@@ -40,7 +38,6 @@ export class DevServer {
     this.customerAccountPush = options.customerAccountPush ?? false;
     this.envFile = options.envFile;
     this.entry = options.entry;
-    this.env = options.env;
   }
 
   getUrl() {
@@ -80,7 +77,6 @@ export class DevServer {
         detached: true,
         env: {
           ...process.env,
-          ...this.env,
           NODE_ENV: 'development',
           SHOPIFY_HYDROGEN_FLAG_PORT: (
             this.port ?? OS_ASSIGNED_PORT

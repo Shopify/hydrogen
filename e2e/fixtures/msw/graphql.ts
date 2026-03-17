@@ -55,13 +55,7 @@ function parseOperation(document: string): {
     );
   }
 
-  const operationType = operationMatch[1];
-
-  if (operationType !== 'query' && operationType !== 'mutation') {
-    throw new Error(
-      `[e2e-msw] Unsupported GraphQL operation type: ${operationType}`,
-    );
-  }
+  const operationType = operationMatch[1] as 'query' | 'mutation';
 
   return {
     type: operationType,

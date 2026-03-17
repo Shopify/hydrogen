@@ -4,6 +4,13 @@ import {MswScenarioMeta} from './handlers';
 const installedKey = Symbol.for('hydrogen.e2e.msw.installed');
 const LOCAL_STORAGE_TEST_KEY = '__hydrogen_e2e_local_storage_test__';
 
+// Cookie-based session storage derives cookie attributes from the request URL.
+// localhost wouldn't produce cookies valid for the CAAPI auth flow, so we
+// rewrite requests to a tunnel hostname that matches the expected cookie domain.
+const E2E_TUNNEL_HOSTNAME = 'e2e.tryhydrogen.dev';
+
+const SESSION_TTL_IN_MS = 60 * 60 * 1000;
+
 type ProcessLike = {
   env?: Record<string, string | undefined>;
   versions?: {node?: string};
@@ -28,9 +35,11 @@ function defineGlobal(name: string, value: unknown, writable = false) {
 }
 
 function hasWorkingLocalStorage() {
+  if (globalThis.localStorage == null) return false;
+
   try {
-    globalThis.localStorage?.setItem(LOCAL_STORAGE_TEST_KEY, '1');
-    globalThis.localStorage?.removeItem(LOCAL_STORAGE_TEST_KEY);
+    globalThis.localStorage.setItem(LOCAL_STORAGE_TEST_KEY, '1');
+    globalThis.localStorage.removeItem(LOCAL_STORAGE_TEST_KEY);
     return true;
   } catch {
     return false;
@@ -85,6 +94,11 @@ function ensureBroadcastChannel() {
   defineGlobal('BroadcastChannel', NoopBroadcastChannel);
 }
 
+/**
+ * MSW needs `process.versions.node` set so it uses its Node.js programmatic
+ * interception strategy (not Service Worker). `NODE_ENV: 'production'`
+ * suppresses MSW's verbose dev-mode diagnostics that pollute test logs.
+ */
 function ensureNodeProcessForMsw() {
   const currentProcess = (globalThis as MswGlobal).process;
 
@@ -116,6 +130,9 @@ ensureNodeProcessForMsw();
 const {getResponse} = await import('msw');
 const {getHandlersForScenario} = await import('./handlers');
 
+// The fetch interceptor is installed once as a closure and cannot receive
+// parameters per-request. Module-level state is the only way to communicate
+// the current scenario to the interceptor. Safe because workerd is single-threaded.
 let currentMswScenarioMeta: MswScenarioMeta | undefined = undefined;
 
 function toRequest(input: RequestInfo | URL, init?: RequestInit) {
@@ -157,8 +174,7 @@ function installFetchInterceptor() {
 installFetchInterceptor();
 
 function getMswScenario(env: Env): string | undefined {
-  return (env as unknown as Record<string, string | undefined>)
-    .HYDROGEN_E2E_MSW_SCENARIO;
+  return env.HYDROGEN_E2E_MSW_SCENARIO;
 }
 
 function shouldInjectCustomerSession() {
@@ -172,7 +188,7 @@ function shouldInjectCustomerSession() {
 function getTunnelRequestUrl(requestUrl: string) {
   const url = new URL(requestUrl);
   url.protocol = 'https:';
-  url.hostname = 'e2e.tryhydrogen.dev';
+  url.hostname = E2E_TUNNEL_HOSTNAME;
   url.port = '';
   return url.toString();
 }
@@ -230,7 +246,7 @@ async function addMockCustomerSessionCookieIfNeeded(
       'e2e-customer-refresh-token',
     expiresAt:
       currentCustomerAccountSession.expiresAt ??
-      String(Date.now() + 60 * 60 * 1000),
+      String(Date.now() + SESSION_TTL_IN_MS),
   });
 
   const sessionCookiePair = (await storage.commitSession(session)).split(

@@ -7,6 +7,7 @@ import {StorefrontPage} from './storefront';
 import {CartUtil} from './cart-utils';
 import {DiscountUtil} from './discount-utils';
 import {GiftCardUtil} from './gift-card-utils';
+import {AccountUtil} from './account-utils';
 import type {MswScenario} from './msw/scenarios';
 import {getHandlersForScenario} from './msw/handlers';
 
@@ -16,6 +17,7 @@ export {getTestSecrets, getRequiredSecret} from './test-secrets';
 export {CartUtil} from './cart-utils';
 export {DiscountUtil} from './discount-utils';
 export {GiftCardUtil} from './gift-card-utils';
+export {AccountUtil} from './account-utils';
 export {mockCustomerAccountOperation} from './msw/graphql';
 export {MSW_SCENARIOS} from './msw/scenarios';
 
@@ -25,6 +27,7 @@ export const test = base.extend<
     cart: CartUtil;
     discount: DiscountUtil;
     giftCard: GiftCardUtil;
+    account: AccountUtil;
   },
   {forEachWorker: void}
 >({
@@ -43,6 +46,10 @@ export const test = base.extend<
   giftCard: async ({page}, use) => {
     const giftCard = new GiftCardUtil(page);
     await use(giftCard);
+  },
+  account: async ({page}, use) => {
+    const account = new AccountUtil(page);
+    await use(account);
   },
 });
 
