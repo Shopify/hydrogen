@@ -53,37 +53,52 @@ const TEST_STORE_KEYS = [
 
 type TestStoreKey = (typeof TEST_STORE_KEYS)[number];
 
-export const setTestStore = async (
-  testStore: TestStoreKey | `https://${string}`,
-) => {
-  const isLocal = !testStore.startsWith('https://');
+type DevServerLifecycleOptions = {
+  storeKey: string;
+  projectPath?: string;
+};
+
+/**
+ * Registers Playwright hooks for DevServer lifecycle: baseURL fixture,
+ * beforeAll (start), and afterAll (stop). For remote stores, only the
+ * baseURL fixture is registered — no local server is started.
+ *
+ * Playwright runs beforeAll hooks in registration order, so callers
+ * that need setup before the server starts (e.g. fixture generation)
+ * should register their own beforeAll BEFORE calling this function.
+ */
+export const configureDevServer = (options: DevServerLifecycleOptions) => {
+  const {storeKey, projectPath} = options;
+  const isLocal = !storeKey.startsWith('https://');
   let server: DevServer | null = null;
 
   test.use({
     baseURL: async ({}, use) => {
-      await use(isLocal ? server?.getUrl() : testStore);
+      await use(isLocal ? server?.getUrl() : storeKey);
     },
   });
 
-  if (!isLocal) {
-    console.log(`Using test store: ${testStore}`);
-    return;
-  }
+  if (!isLocal) return;
 
   test.afterAll(async () => {
     await server?.stop();
   });
 
-  test.beforeAll(async ({}) => {
-    const filepath = path.resolve(__dirname, `../envs/.env.${testStore}`);
-    await stat(filepath); // Ensure the file exists
+  test.beforeAll(async () => {
+    const envPath = path.resolve(__dirname, `../envs/.env.${storeKey}`);
+    await stat(envPath);
 
     server = new DevServer({
-      storeKey: testStore,
+      storeKey,
       customerAccountPush: false,
-      envFile: filepath,
+      envFile: envPath,
+      projectPath,
     });
 
     await server.start();
   });
+};
+
+export const setTestStore = (testStore: TestStoreKey | `https://${string}`) => {
+  configureDevServer({storeKey: testStore});
 };
