@@ -9,11 +9,11 @@ index 5a122262..a0fd66d7 100644
 +  combinedListingsSettings,
 +  maybeFilterOutCombinedListingsQuery,
 +} from '../lib/combined-listings';
-
+ 
  export const meta: Route.MetaFunction = () => {
    return [{title: `Hydrogen | Products`}];
 @@ -31,7 +35,12 @@ async function loadCriticalData({context, request}: Route.LoaderArgs) {
-
+ 
    const [{products}] = await Promise.all([
      storefront.query(CATALOG_QUERY, {
 -      variables: {...paginationVariables},

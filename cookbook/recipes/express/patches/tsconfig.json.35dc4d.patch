@@ -1,3 +1,4 @@
+index 54587bd5..64a860ad 100644
 --- a/templates/skeleton/tsconfig.json
 +++ b/templates/skeleton/tsconfig.json
 @@ -26,7 +26,6 @@

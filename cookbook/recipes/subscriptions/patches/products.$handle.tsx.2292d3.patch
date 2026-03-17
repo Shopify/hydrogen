@@ -11,7 +11,7 @@ index 99730d41..e98f2793 100644
 @@ -13,6 +14,12 @@ import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
-
+ 
 +import sellingPlanStyle from '~/styles/selling-plan.css?url';
 +
 +export const links: Route.LinksFunction = () => [
@@ -24,7 +24,7 @@ index 99730d41..e98f2793 100644
 @@ -59,8 +66,34 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
    // The API handle might be localized, so redirect to the localized handle
    redirectIfHandleIsLocalized(request, {handle, data: product});
-
+ 
 +  // Initialize the selectedSellingPlan to null
 +  let selectedSellingPlan = null;
 +
@@ -55,23 +55,23 @@ index 99730d41..e98f2793 100644
 +    selectedSellingPlan,
    };
  }
-
+ 
 @@ -77,7 +110,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
  }
-
+ 
  export default function Product() {
 -  const {product} = useLoaderData<typeof loader>();
 +  const {product, selectedSellingPlan} = useLoaderData<typeof loader>();
-
+ 
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
 @@ -95,7 +128,7 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
-
+ 
 -  const {title, descriptionHtml} = product;
 +  const {title, descriptionHtml, sellingPlanGroups} = product;
-
+ 
    return (
      <div className="product">
 @@ -105,11 +138,15 @@ export default function Product() {
@@ -103,7 +103,7 @@ index 99730d41..e98f2793 100644
 +    }
    }
  ` as const;
-
+ 
 +const SELLING_PLAN_FRAGMENT = `#graphql
 +  fragment SellingPlanMoney on MoneyV2 {
 +    amount
@@ -193,3 +193,4 @@ index 99730d41..e98f2793 100644
 +  ${SELLING_PLAN_GROUP_FRAGMENT}
    ${PRODUCT_VARIANT_FRAGMENT}
  ` as const;
+ 

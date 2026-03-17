@@ -4,7 +4,7 @@ index 3be08d31..51b74911 100644
 @@ -506,6 +506,10 @@ button.reset:hover:not(:has(> *)) {
    margin-top: 0;
  }
-
+ 
 +.product-image {
 +  position: relative;
 +}

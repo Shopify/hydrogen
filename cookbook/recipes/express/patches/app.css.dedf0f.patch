@@ -1,7 +1,7 @@
-index 3be08d31..313080f1 100644
+index 3be08d31..98fde229 100644
 --- a/templates/skeleton/app/styles/app.css
 +++ b/templates/skeleton/app/styles/app.css
-@@ -1,645 +1,44 @@
+@@ -1,645 +1,54 @@
 -:root {
 -  --aside-width: 400px;
 -  --cart-aside-summary-height-with-discount: 300px;
@@ -112,8 +112,18 @@ index 3be08d31..313080f1 100644
 -aside header h3 {
    margin: 0;
 +  background: rgb(245, 245, 241);
-+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-+    Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
++  font-family:
++    system-ui,
++    -apple-system,
++    BlinkMacSystemFont,
++    'Segoe UI',
++    Roboto,
++    Oxygen,
++    Ubuntu,
++    Cantarell,
++    'Open Sans',
++    'Helvetica Neue',
++    sans-serif;
  }
  
 -aside header .close {
