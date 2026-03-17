@@ -53,7 +53,7 @@ test.describe('Custom Cart Method Recipe', () => {
       await expect(cart.getLineItems()).toHaveCount(1);
 
       const firstLineItem = cart.getFirstLineItem();
-      const optionSelects = await cart.getOptionSelectors(firstLineItem);
+      const optionSelects = await cart.waitForOptionSelectors(firstLineItem);
       const minimumExpectedOptions = 2;
       expect(await optionSelects.count()).toBeGreaterThanOrEqual(
         minimumExpectedOptions,
@@ -71,7 +71,7 @@ test.describe('Custom Cart Method Recipe', () => {
       expect(initialUrl).toBeTruthy();
 
       const optionSelect = (
-        await cart.getOptionSelectors(firstLineItem)
+        await cart.waitForOptionSelectors(firstLineItem)
       ).first();
       const {optionName, nextValue} =
         await cart.selectDifferentOption(optionSelect);
@@ -105,7 +105,7 @@ test.describe('Custom Cart Method Recipe', () => {
       await expect(firstLineItem).toContainText('Quantity: 2');
 
       const optionSelect = (
-        await cart.getOptionSelectors(firstLineItem)
+        await cart.waitForOptionSelectors(firstLineItem)
       ).first();
       await cart.selectDifferentOption(optionSelect);
 
@@ -122,7 +122,7 @@ test.describe('Custom Cart Method Recipe', () => {
       const initialPageUrl = page.url();
 
       const optionSelect = (
-        await cart.getOptionSelectors(firstLineItem)
+        await cart.waitForOptionSelectors(firstLineItem)
       ).first();
       await cart.selectDifferentOption(optionSelect);
 
