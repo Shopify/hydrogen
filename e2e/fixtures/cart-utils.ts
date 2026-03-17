@@ -18,12 +18,12 @@ export class CartUtil {
     }
 
     const initialValue = await optionSelect.inputValue();
-    const enabledOptionValues = await optionSelect.evaluate((element) => {
-      const selectElement = element as HTMLSelectElement;
-      return Array.from(selectElement.options)
-        .filter((option) => !option.disabled && option.value.trim() !== '')
-        .map((option) => option.value);
-    });
+    const enabledOptionValues = await optionSelect.evaluate(
+      (el: HTMLSelectElement) =>
+        Array.from(el.options)
+          .filter((option) => !option.disabled && option.value.trim() !== '')
+          .map((option) => option.value),
+    );
 
     expect(enabledOptionValues.length).toBeGreaterThan(1);
 
