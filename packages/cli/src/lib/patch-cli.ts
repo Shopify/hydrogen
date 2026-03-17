@@ -71,7 +71,7 @@ if (monorepoRoot) {
   const d = '\\x1b[2m';
   const r = '\\x1b[0m';
   console.log('');
-  console.log(c + '  \u250c\u2500\u2500 hydrogen-monorepo \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510' + r);
+  console.log(c + '  \u250c\u2500\u2500 hydrogen-monorepo \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510' + r);
   console.log(c + '  \u2502' + r + '                                                          ' + c + '\u2502' + r);
   console.log(c + '  \u2502' + r + '  Using local cli-hydrogen plugin from packages/cli       ' + c + '\u2502' + r);
   console.log(c + '  \u2502' + r + d + '  Bundled commands replaced with local source             ' + r + c + '\u2502' + r);
