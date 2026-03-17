@@ -1,0 +1,90 @@
+import {expect, type Page} from '@playwright/test';
+
+export class InfiniteScrollUtil {
+  constructor(private page: Page) {}
+
+  async navigateToCollection(handle: string) {
+    await this.page.goto(`/collections/${handle}`);
+    await expect(this.page).toHaveURL(new RegExp(`/collections/${handle}`));
+  }
+
+  getProducts() {
+    return this.page
+      .getByRole('region', {name: 'Products'})
+      .getByRole('heading', {level: 4});
+  }
+
+  getLoadMoreButton() {
+    return this.page.getByRole('link', {name: /load more/i});
+  }
+
+  async assertProductCountGreaterThan(minCount: number) {
+    const count = await this.getProductCount();
+    expect(count).toBeGreaterThan(minCount);
+  }
+
+  async assertLoadMoreButtonVisible() {
+    await expect(this.getLoadMoreButton()).toBeVisible();
+  }
+
+  async clickLoadMore() {
+    const loadMoreButton = this.getLoadMoreButton();
+    await expect(loadMoreButton).toBeVisible();
+    await loadMoreButton.click();
+  }
+
+  async assertUrlDoesNotContainParam(param: string) {
+    const url = new URL(this.page.url());
+    expect(url.searchParams.has(param)).toBe(false);
+  }
+
+  async waitForUrlToContainPaginationParam() {
+    await expect
+      .poll(
+        () => {
+          const url = new URL(this.page.url());
+          return (
+            url.searchParams.has('cursor') || url.searchParams.has('after')
+          );
+        },
+        {
+          message:
+            'URL should contain a "cursor" or "after" pagination parameter',
+        },
+      )
+      .toBe(true);
+  }
+
+  getPreviousLink() {
+    return this.page.getByRole('link', {name: /load previous/i});
+  }
+
+  /**
+   * Captures the current paginated URL (which contains a cursor param)
+   * for use in direct-navigation tests that simulate shared links.
+   */
+  getPaginatedUrl() {
+    return this.page.url();
+  }
+
+  async getProductCount() {
+    const products = this.getProducts();
+    await expect(products.first()).toBeVisible();
+    return products.count();
+  }
+
+  async waitForProductCountToIncrease(initialCount: number) {
+    await expect
+      .poll(async () => this.getProducts().count())
+      .toBeGreaterThan(initialCount);
+  }
+
+  async getHistoryLength() {
+    return this.page.evaluate(() => window.history.length);
+  }
+
+  async assertHistoryLength(expectedLength: number) {
+    const actualLength = await this.getHistoryLength();
+    expect(actualLength).toBe(expectedLength);
+  }
+}
