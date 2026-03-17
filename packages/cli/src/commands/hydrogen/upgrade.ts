@@ -23,7 +23,6 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {
   getDependencies,
-  installNodeModules,
   getPackageManager,
   type PackageJson,
 } from '@shopify/cli-kit/node/node-package-manager';
@@ -979,7 +978,9 @@ export async function upgradeNodeModules({
     });
   }
 
-  // Then install/upgrade dependencies
+  // Install/upgrade dependencies using exec() directly instead of cli-kit's
+  // installNodeModules(), which runs `<pm> install` and doesn't support adding
+  // specific packages with version specifiers (yarn/pnpm require `add`).
   const upgradeArgs = buildUpgradeCommandArgs({
     selectedRelease,
     currentDependencies,
@@ -990,11 +991,24 @@ export async function upgradeNodeModules({
     tasks.push({
       title: `Upgrading dependencies`,
       task: async () => {
-        await installNodeModules({
-          directory: appPath,
-          packageManager: await getPackageManager(appPath),
-          args: upgradeArgs,
-        });
+        const packageManager = await getPackageManager(appPath);
+        const command =
+          packageManager === 'npm'
+            ? 'install'
+            : packageManager === 'yarn'
+              ? 'add'
+              : packageManager === 'pnpm'
+                ? 'add'
+                : packageManager === 'bun'
+                  ? 'install'
+                  : 'install'; // fallback to npm for 'unknown'
+        await exec(
+          resolvePackageManagerName(packageManager),
+          [command, ...upgradeArgs],
+          {
+            cwd: appPath,
+          },
+        );
       },
     });
   }
@@ -1002,6 +1016,15 @@ export async function upgradeNodeModules({
   if (tasks.length > 0) {
     await renderTasks(tasks, {});
   }
+}
+
+/**
+ * Normalizes the package manager name, falling back to npm for 'unknown'.
+ */
+function resolvePackageManagerName(
+  packageManager: 'npm' | 'yarn' | 'pnpm' | 'unknown' | 'bun',
+): 'npm' | 'yarn' | 'pnpm' | 'bun' {
+  return packageManager === 'unknown' ? 'npm' : packageManager;
 }
 
 /**
@@ -1029,10 +1052,9 @@ async function uninstallNodeModules({
             ? 'remove'
             : 'uninstall'; // fallback to npm for 'unknown'
 
-  const actualPackageManager =
-    packageManager === 'unknown' ? 'npm' : packageManager;
-
-  await exec(actualPackageManager, [command, ...args], {cwd: directory});
+  await exec(resolvePackageManagerName(packageManager), [command, ...args], {
+    cwd: directory,
+  });
 }
 
 /**
