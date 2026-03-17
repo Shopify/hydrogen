@@ -13,7 +13,19 @@ import {
   StateMachine,
   EventObject,
 } from '@xstate/fsm';
-import {useCallback, useEffect, useRef, useSyncExternalStore} from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
+
+// useLayoutEffect in the browser (sync after DOM mutations, before paint),
+// useEffect on the server (where useLayoutEffect warns). This matches the
+// original xstate/react behavior via use-isomorphic-layout-effect.
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 function useConstant<T>(fn: () => T): T {
   const ref = useRef<{v: T}>();
@@ -67,8 +79,10 @@ export function useMachine<
     return [svc, eventQueue] as const;
   });
 
-  // Keep action implementations in sync without re-creating the service
-  useEffect(() => {
+  // Keep action implementations in sync without re-creating the service.
+  // useIsomorphicLayoutEffect ensures this runs before child effects and paint,
+  // preventing a window where stale action handlers could be invoked.
+  useIsomorphicLayoutEffect(() => {
     if (options) {
       (service as any)._machine._options = options;
     }
@@ -84,7 +98,11 @@ export function useMachine<
     [service],
   );
 
-  const storeSnapshot = useSyncExternalStore(subscribe, getSnapshot);
+  const storeSnapshot = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getSnapshot,
+  );
 
   useEffect(() => {
     service.start(persistedStateRef.current as any);
