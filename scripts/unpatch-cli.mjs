@@ -1,30 +1,24 @@
+#!/usr/bin/env node
 // scripts/unpatch-cli.mjs
 //
-// Restores node_modules/@shopify/cli/bin/run.js to its original content,
-// undoing the patch applied by patch-cli.mjs. Idempotent.
+// Restores @shopify/cli/bin/run.js to its original content.
 
-import {readFileSync, writeFileSync} from 'node:fs';
 import {resolve, dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const RUN_JS = resolve(
-  ROOT,
-  'node_modules',
-  '@shopify',
-  'cli',
-  'bin',
-  'run.js',
-);
 
-const MARKER = '// [hydrogen-monorepo-patch]';
+let patchModule;
+try {
+  patchModule = await import('../packages/cli/dist/lib/patch-cli.js');
+} catch {
+  console.error(
+    '[unpatch-cli] packages/cli must be built first. Run: pnpm build --filter=@shopify/cli-hydrogen',
+  );
+  process.exit(1);
+}
 
-const current = readFileSync(RUN_JS, 'utf8');
-if (!current.includes(MARKER)) process.exit(0); // already unpatched
-
-const original = `#!/usr/bin/env node
-const {default: runCLI} = await import('../dist/index.js');
-runCLI({development: false});
-`;
-
-writeFileSync(RUN_JS, original);
+const {removePatch, getRunJsPath} = patchModule;
+const runJsPath = getRunJsPath(ROOT);
+const removed = removePatch(runJsPath);
+if (removed) console.log('[unpatch-cli] Restored original run.js');

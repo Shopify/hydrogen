@@ -1,4 +1,4 @@
-import {readFileSync, writeFileSync} from 'node:fs';
+import {readFileSync, writeFileSync, existsSync, unlinkSync} from 'node:fs';
 import {resolve} from 'node:path';
 
 /** Marker comment used to detect whether the patch has been applied. */
@@ -19,13 +19,17 @@ export function generatePatchedContent(): string {
   return `#!/usr/bin/env node
 ${MARKER}
 
+// Mirrors upstream @shopify/cli/bin/run.js behavior.
+// This is not introduced by the patch — @shopify/cli ships with this line.
+// Changing it here would create a behavioral divergence between dev and production.
 process.removeAllListeners('warning')
 
 // --- Monorepo detection ---
 // Walk up from cwd to find the hydrogen monorepo root.
-// We look for packages/cli/package.json — if it exists, we know we're
-// inside the monorepo and should load the local @shopify/cli-hydrogen
-const {existsSync} = await import('node:fs');
+// We look for packages/cli/package.json with the correct package name —
+// if it matches, we know we're inside the monorepo and should load the
+// local @shopify/cli-hydrogen
+const {existsSync, readFileSync} = await import('node:fs');
 const {resolve, dirname} = await import('node:path');
 
 let monorepoRoot = null;
@@ -33,8 +37,15 @@ let dir = process.cwd();
 while (true) {
   const candidate = resolve(dir, 'packages', 'cli', 'package.json');
   if (existsSync(candidate)) {
-    monorepoRoot = dir;
-    break;
+    try {
+      const pkg = JSON.parse(readFileSync(candidate, 'utf8'));
+      if (pkg.name === '@shopify/cli-hydrogen') {
+        monorepoRoot = dir;
+        break;
+      }
+    } catch {
+      // Ignore malformed package.json and keep walking
+    }
   }
   const parent = dirname(dir);
   if (parent === dir) break; // reached filesystem root
@@ -93,31 +104,40 @@ if (monorepoRoot) {
   // --- Post-load command replacement ---
   // After loading, both the bundled hydrogen commands (from @shopify/cli's
   // root plugin) and the local ones (from pluginAdditions) are registered.
-  // Since oclif v3.83.0, determinePriority is no longer an overridable
-  // instance method, so we manually replace the bundled commands with
-  // the external plugin's versions using oclif's private _commands Map.
+  // Since @shopify/cli@3.83.0 (which upgraded to oclif v4),
+  // determinePriority is no longer an overridable instance method, so we
+  // manually replace the bundled commands with the external plugin's
+  // versions using oclif's private _commands Map.
   const externalPlugin = Array.from(config.plugins.values()).find(
     (p) => p.name === '@shopify/cli-hydrogen' && !p.isRoot,
   );
 
-  if (externalPlugin) {
-    const cmds = config._commands;
-    if (!cmds || !(cmds instanceof Map)) {
-      console.warn('[hydrogen-monorepo] Cannot replace bundled commands: oclif internals changed');
-    } else {
-      // Delete bundled hydrogen commands (canonical IDs + aliases + hidden aliases)
-      for (const command of externalPlugin.commands) {
-        if (!command.id.startsWith('hydrogen')) continue;
-        cmds.delete(command.id);
-        for (const alias of [...(command.aliases ?? []), ...(command.hiddenAliases ?? [])]) {
-          cmds.delete(alias);
-        }
-      }
-      // Re-insert commands from the local plugin. loadCommands handles
-      // alias registration and command permutations correctly.
-      config.loadCommands(externalPlugin);
+  if (!externalPlugin) {
+    throw new Error(
+      '[hydrogen-monorepo] Could not find local @shopify/cli-hydrogen plugin. ' +
+      'The patch may need updating for the current @shopify/cli version.'
+    );
+  }
+
+  const cmds = config._commands;
+  if (!cmds || !(cmds instanceof Map)) {
+    throw new Error(
+      '[hydrogen-monorepo] Cannot replace bundled commands — oclif internals changed. ' +
+      'The patch may need updating for the current oclif version.'
+    );
+  }
+
+  // Delete bundled hydrogen commands (canonical IDs + aliases + hidden aliases)
+  for (const command of externalPlugin.commands) {
+    if (!command.id.startsWith('hydrogen')) continue;
+    cmds.delete(command.id);
+    for (const alias of [...(command.aliases ?? []), ...(command.hiddenAliases ?? [])]) {
+      cmds.delete(alias);
     }
   }
+  // Re-insert commands from the local plugin. loadCommands handles
+  // alias registration and command permutations correctly.
+  config.loadCommands(externalPlugin);
 
   await run(process.argv.slice(2), config);
   await flush();
@@ -129,21 +149,46 @@ if (monorepoRoot) {
 `;
 }
 
-/** Return the original (unpatched) file content for `run.js`. */
+/**
+ * Last-resort fallback content for run.js.
+ * Prefer restoring from .backup file (see removePatch).
+ * This may drift from upstream — update when bumping @shopify/cli.
+ */
 export function generateOriginalContent(): string {
   return `#!/usr/bin/env node
-const {default: runCLI} = await import('../dist/index.js');
-runCLI({development: false});
+
+// process.removeAllListeners('warning')
+
+import runCLI from '../dist/index.js'
+
+runCLI({development: false})
 `;
 }
 
 /**
  * Apply the monorepo patch to the given `run.js` file.
  * Returns `true` if the patch was applied, `false` if it was already present.
+ * Creates a `.backup` of the original before overwriting.
  */
 export function applyPatch(runJsPath: string): boolean {
-  const current = readFileSync(runJsPath, 'utf8');
+  let current: string;
+  try {
+    current = readFileSync(runJsPath, 'utf8');
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      throw new Error(
+        `@shopify/cli is not installed (${runJsPath} not found). Run 'pnpm install' first.`,
+      );
+    }
+    throw err;
+  }
+
   if (isPatchApplied(current)) return false;
+
+  const backupPath = runJsPath + '.backup';
+  if (!existsSync(backupPath)) {
+    writeFileSync(backupPath, current);
+  }
 
   writeFileSync(runJsPath, generatePatchedContent());
   return true;
@@ -152,11 +197,24 @@ export function applyPatch(runJsPath: string): boolean {
 /**
  * Remove the monorepo patch from the given `run.js` file.
  * Returns `true` if the patch was removed, `false` if it was not present.
+ * Restores from `.backup` file if available, otherwise falls back to
+ * hardcoded original content.
  */
 export function removePatch(runJsPath: string): boolean {
   const current = readFileSync(runJsPath, 'utf8');
   if (!isPatchApplied(current)) return false;
 
-  writeFileSync(runJsPath, generateOriginalContent());
+  const backupPath = runJsPath + '.backup';
+  const hasBackup = existsSync(backupPath);
+  const original = hasBackup
+    ? readFileSync(backupPath, 'utf8')
+    : generateOriginalContent();
+
+  writeFileSync(runJsPath, original);
+
+  if (hasBackup) {
+    unlinkSync(backupPath);
+  }
+
   return true;
 }

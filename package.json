@@ -6,7 +6,7 @@
   "scripts": {
     "patch-cli": "node scripts/patch-cli.mjs",
     "unpatch-cli": "node scripts/unpatch-cli.mjs",
-    "prepare": "husky",
+    "prepare": "husky && node scripts/patch-cli.mjs",
     "build": "pnpm run build:pkg",
     "build:pkg": "turbo build --parallel --filter=./packages/*",
     "build:templates": "turbo build --parallel --filter=./templates/*",
