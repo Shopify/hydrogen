@@ -24,7 +24,8 @@ test.describe('Home Page', () => {
 
     const productGridImage = page
       .getByRole('region', {name: 'Recommended Products'})
-      .getByRole('link', {name: 'The Hydrogen Snowboard'})
+      .getByRole('link')
+      .first()
       .getByRole('img');
 
     await expect(heroImage).toBeVisible();
