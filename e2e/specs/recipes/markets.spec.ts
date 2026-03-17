@@ -90,6 +90,13 @@ test.describe('Markets Recipe', () => {
     });
   });
 
+  test.describe('Invalid Locale', () => {
+    test('returns 404 for unsupported locale prefix', async ({page}) => {
+      const response = await page.goto('/ZZ-ZZ/');
+      expect(response?.status()).toBe(404);
+    });
+  });
+
   test.describe('Country Selector', () => {
     test.beforeEach(async ({page}) => {
       await page.goto('/FR-CA');
@@ -105,7 +112,7 @@ test.describe('Markets Recipe', () => {
 
       // Clicking a switch button triggers a cart buyer identity update and
       // redirects to the selected locale's root — verify the redirect happens.
-      await recipe.switchToFirstAvailableLocale();
+      await recipe.switchToFirstAvailableLocale('FR-CA');
     });
   });
 });

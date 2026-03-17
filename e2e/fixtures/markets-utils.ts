@@ -1,6 +1,8 @@
 import {expect, Locator, Page} from '@playwright/test';
 import {CartUtil} from './cart-utils';
 
+const LOCALE_SWITCH_NAVIGATION_TIMEOUT_IN_MS = 10_000;
+
 /**
  * Markets-specific test utilities for the Markets recipe.
  * Provides helpers for locale navigation, currency assertions, and country selector.
@@ -80,27 +82,40 @@ export class MarketsUtil {
     await expect(currentLocaleSummary).toContainText(locale);
   }
 
-  async switchToFirstAvailableLocale() {
+  async switchToFirstAvailableLocale(currentLocalePrefix: string) {
     const summary = this.getCountrySelector().locator('summary');
     await summary.click();
 
-    const switchButton = this.page
-      .getByRole('button', {name: /Switch to/i})
-      .first();
-    await expect(switchButton).toBeVisible();
+    const switchButtons = this.page.getByRole('button', {name: /Switch to/i});
+    const buttonCount = await switchButtons.count();
 
-    const switchButtonText = (await switchButton.textContent())?.trim() ?? '';
-    const targetLocale = switchButtonText.replace(/^Switch to\s+/, '');
+    let targetLocale: string | undefined;
+    let targetButton;
 
-    await switchButton.click();
-    // Wait for navigation to a locale-prefixed URL (e.g., /FR-CA) or root (/)
+    for (let i = 0; i < buttonCount; i++) {
+      const button = switchButtons.nth(i);
+      const buttonText = (await button.textContent())?.trim() ?? '';
+      const locale = buttonText.replace(/^Switch to\s+/i, '');
+
+      if (locale.toUpperCase() !== currentLocalePrefix.toUpperCase()) {
+        targetLocale = locale;
+        targetButton = button;
+        break;
+      }
+    }
+
+    if (!targetButton || !targetLocale) {
+      throw new Error(
+        `No locale switch button found targeting a locale other than ${currentLocalePrefix}`,
+      );
+    }
+
+    await targetButton.click();
     await this.page.waitForURL(/\/[A-Z]{2}-[A-Z]{2}(\/|$)|\/$/, {
-      timeout: 10000,
+      timeout: LOCALE_SWITCH_NAVIGATION_TIMEOUT_IN_MS,
     });
 
-    if (targetLocale) {
-      await this.assertCurrentLocaleInSelector(targetLocale);
-    }
+    await this.assertCurrentLocaleInSelector(targetLocale);
   }
 
   async assertCollectionLinksHaveLocalePrefix(localePrefix: string) {

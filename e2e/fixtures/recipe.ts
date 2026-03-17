@@ -1,6 +1,5 @@
-import {test} from './index';
+import {test, configureDevServer} from './index';
 import path from 'node:path';
-import {DevServer} from './server';
 import {
   stat,
   mkdir,
@@ -10,14 +9,17 @@ import {
   writeFile,
   access,
 } from 'node:fs/promises';
-import {exec} from 'node:child_process';
+import {exec, execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {parse as parseYaml} from 'yaml';
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 const LOCK_POLL_INTERVAL_MS = 500;
 const LOCK_TIMEOUT_MS = 5 * 60 * 1000;
+const COOKBOOK_APPLY_TIMEOUT_IN_MS = 2 * 60 * 1000;
+const PNPM_INSTALL_TIMEOUT_IN_MS = 3 * 60 * 1000;
 
 type WorkspaceConfig = {
   packages: string[];
@@ -56,7 +58,6 @@ export const setRecipeFixture = (options: RecipeFixtureOptions) => {
   } = options;
 
   const isLocal = !storeKey.startsWith('https://');
-  let server: DevServer | null = null;
   const tmpRoot = path.resolve(__dirname, '../../.tmp/recipe-fixtures');
   // Each recipe fixture directory is owned by exactly one test file's beforeAll.
   // Two test files MUST NOT share the same recipeName — doing so would cause
@@ -66,41 +67,25 @@ export const setRecipeFixture = (options: RecipeFixtureOptions) => {
   const skeletonPath = path.resolve(__dirname, '../../templates/skeleton');
   const repoRoot = path.resolve(__dirname, '../..');
 
-  test.use({
-    baseURL: async ({}, use) => {
-      await use(isLocal ? server?.getUrl() : storeKey);
-    },
-  });
-
-  if (!isLocal) {
-    return;
+  // Register fixture generation BEFORE server lifecycle — Playwright runs
+  // beforeAll hooks in registration order, so the fixture directory exists
+  // before configureDevServer's beforeAll tries to serve from it.
+  if (isLocal) {
+    test.beforeAll(async () => {
+      await ensureFixture({
+        recipeName,
+        recipeFixturePath,
+        skeletonPath,
+        repoRoot,
+        envOverrides,
+        useCache,
+      });
+    });
   }
 
-  test.afterAll(async () => {
-    await server?.stop();
-  });
-
-  test.beforeAll(async ({}) => {
-    const envPath = path.resolve(__dirname, `../envs/.env.${storeKey}`);
-    await stat(envPath);
-
-    await ensureFixture({
-      recipeName,
-      recipeFixturePath,
-      skeletonPath,
-      repoRoot,
-      envOverrides,
-      useCache,
-    });
-
-    server = new DevServer({
-      storeKey,
-      customerAccountPush: false,
-      envFile: envPath,
-      projectPath: recipeFixturePath,
-    });
-
-    await server.start();
+  configureDevServer({
+    storeKey,
+    projectPath: isLocal ? recipeFixturePath : undefined,
   });
 };
 
@@ -220,7 +205,11 @@ const generateFixture = async ({
     // Using exec (not execFile) because npm run requires shell for script resolution.
     await execAsync(
       `npm run cookbook --workspace=cookbook -- apply --recipe ${recipeName} --template ${recipeFixturePath}`,
-      {cwd: repoRoot, env: {...process.env, ...envOverrides, CI: 'true'}},
+      {
+        cwd: repoRoot,
+        env: {...process.env, ...envOverrides, CI: 'true'},
+        timeout: COOKBOOK_APPLY_TIMEOUT_IN_MS,
+      },
     );
   } catch (error) {
     console.error(
@@ -235,7 +224,10 @@ const generateFixture = async ({
     await resolveWorkspaceProtocols(recipeFixturePath, repoRoot);
 
     console.log(`[recipe-fixture] Installing dependencies...`);
-    await execAsync('pnpm install', {cwd: recipeFixturePath});
+    await execFileAsync('pnpm', ['install'], {
+      cwd: recipeFixturePath,
+      timeout: PNPM_INSTALL_TIMEOUT_IN_MS,
+    });
     console.log(
       `[recipe-fixture] Generated ${recipeName} fixture successfully`,
     );
@@ -264,17 +256,22 @@ const resolveWorkspaceProtocols = async (
   };
 
   const {catalog} = await getWorkspaceConfig(repoRoot);
+  const packageMap = await getWorkspacePackageMap(repoRoot);
 
   // Resolve dependencies
   if (pkgJson.dependencies) {
     for (const [depName, depVersion] of Object.entries(pkgJson.dependencies)) {
       if (depVersion === 'workspace:*') {
-        pkgJson.dependencies[depName] = await resolveWorkspacePackage(
+        pkgJson.dependencies[depName] = resolveWorkspacePackage(
           depName,
-          repoRoot,
+          packageMap,
         );
       } else if (depVersion === 'catalog:') {
         pkgJson.dependencies[depName] = resolveCatalogVersion(depName, catalog);
+      } else if (depVersion.startsWith('workspace:')) {
+        throw new Error(
+          `Unsupported workspace specifier "${depVersion}" for dependency "${depName}". Only "workspace:*" is supported.`,
+        );
       }
     }
   }
@@ -285,14 +282,18 @@ const resolveWorkspaceProtocols = async (
       pkgJson.devDependencies,
     )) {
       if (depVersion === 'workspace:*') {
-        pkgJson.devDependencies[depName] = await resolveWorkspacePackage(
+        pkgJson.devDependencies[depName] = resolveWorkspacePackage(
           depName,
-          repoRoot,
+          packageMap,
         );
       } else if (depVersion === 'catalog:') {
         pkgJson.devDependencies[depName] = resolveCatalogVersion(
           depName,
           catalog,
+        );
+      } else if (depVersion.startsWith('workspace:')) {
+        throw new Error(
+          `Unsupported workspace specifier "${depVersion}" for devDependency "${depName}". Only "workspace:*" is supported.`,
         );
       }
     }
@@ -380,11 +381,10 @@ const getWorkspacePackageMap = async (
 /**
  * Resolves a workspace:* dependency to a file: protocol pointing to the built package
  */
-const resolveWorkspacePackage = async (
+const resolveWorkspacePackage = (
   packageName: string,
-  repoRoot: string,
-): Promise<string> => {
-  const packageMap = await getWorkspacePackageMap(repoRoot);
+  packageMap: Map<string, string>,
+): string => {
   const packagePath = packageMap.get(packageName);
 
   if (!packagePath) {
