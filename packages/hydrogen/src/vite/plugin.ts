@@ -40,21 +40,20 @@ export type HydrogenPlugin = Plugin<{
 export function hydrogen(pluginOptions: HydrogenPluginOptions = {}): Plugin[] {
   let middlewareOptions: HydrogenMiddlewareOptions = {};
 
-  const isHydrogenMonorepo = new URL(
-    '../../..',
-    import.meta.url,
-  ).pathname.endsWith('/hydrogen/packages/');
-
   return [
     {
       name: 'hydrogen:main',
       config(_, env) {
         sharedOptions.command = env.command;
 
+        // Detect monorepo: in monorepo the parent of 'hydrogen/' is 'packages/',
+        // while in production installs it's '@shopify/' (inside node_modules).
+        // Using '/packages/' instead of '/hydrogen/packages/' so this works in
+        // git worktrees and forks where the repo root isn't named 'hydrogen'.
         const isHydrogenMonorepo = new URL(
           '../../..',
           import.meta.url,
-        ).pathname.endsWith('/hydrogen/packages/');
+        ).pathname.endsWith('/packages/');
 
         return {
           build: {
