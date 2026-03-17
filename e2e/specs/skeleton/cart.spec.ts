@@ -213,6 +213,7 @@ test.describe('Cart', () => {
           .getByText(/Looks like you haven.t added anything yet/);
 
         await cartLink.click();
+        await expect(page.getByRole('dialog', {name: 'Cart'})).toBeVisible();
 
         await expect(emptyCartMessage).toBeVisible();
       });
