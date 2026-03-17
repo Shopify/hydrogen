@@ -22,8 +22,6 @@ const KNOWN_PRODUCT_WITH_VARIANTS = {
   name: 'The Ascend',
 } as const;
 
-const getFirstLineItem = (cart: CartUtil) => cart.getLineItems().first();
-
 test.describe('Custom Cart Method Recipe', () => {
   test.describe('Cart Line Item Variant Selector', () => {
     test.beforeEach(async ({page}) => {
@@ -52,25 +50,21 @@ test.describe('Custom Cart Method Recipe', () => {
       page,
     }) => {
       const cart = new CartUtil(page);
-      const lineItems = cart.getLineItems();
-      await expect(lineItems).toHaveCount(1);
+      await expect(cart.getLineItems()).toHaveCount(1);
 
-      const firstLineItem = getFirstLineItem(cart);
-
-      const increaseButton = cart.getIncreaseButton(firstLineItem);
-      await expect(increaseButton).toBeEnabled();
-
+      const firstLineItem = cart.getFirstLineItem();
       const optionSelects = await cart.getOptionSelectors(firstLineItem);
-
-      const selectCount = await optionSelects.count();
-      expect(selectCount).toBeGreaterThan(0);
+      const minimumExpectedOptions = 2;
+      expect(await optionSelects.count()).toBeGreaterThanOrEqual(
+        minimumExpectedOptions,
+      );
     });
 
     test('changes product variant and updates cart line item', async ({
       page,
     }) => {
       const cart = new CartUtil(page);
-      const firstLineItem = getFirstLineItem(cart);
+      const firstLineItem = cart.getFirstLineItem();
 
       const productLink = firstLineItem.getByRole('link').first();
       const initialUrl = await productLink.getAttribute('href');
@@ -102,7 +96,7 @@ test.describe('Custom Cart Method Recipe', () => {
       page,
     }) => {
       const cart = new CartUtil(page);
-      const firstLineItem = getFirstLineItem(cart);
+      const firstLineItem = cart.getFirstLineItem();
 
       const increaseButton = cart.getIncreaseButton(firstLineItem);
       await increaseButton.click();
@@ -121,7 +115,7 @@ test.describe('Custom Cart Method Recipe', () => {
 
     test('updates without page reload when variant changes', async ({page}) => {
       const cart = new CartUtil(page);
-      const firstLineItem = getFirstLineItem(cart);
+      const firstLineItem = cart.getFirstLineItem();
 
       const cartDialog = page.getByRole('dialog', {name: 'Cart'});
       await expect(cartDialog).toBeVisible();
