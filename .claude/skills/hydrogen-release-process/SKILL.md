@@ -173,28 +173,44 @@ Sometimes you need to release a patch/minor for a version that is not the latest
 
 **If this is your first back-fix, pair with an experienced team member.** The process involves branch naming conventions and force-push scenarios that can silently break things if done wrong.
 
-**CRITICAL — Branch naming**: The back-fix branch **must** be named to match the major version, e.g., `2024-10`. Do NOT use arbitrary branch names. The dev docs automation for updating API documentation depends on this exact naming pattern. If the branch name is wrong, docs will not update and there will be **no error** — it fails silently.
+> [!CAUTION]
+> **Branch naming**: The back-fix branch **must** be named to match the major version, e.g., `2024-10`. Do NOT use arbitrary branch names¹. The dev docs automation for updating API documentation depends on this exact naming pattern. If the branch name is wrong, docs will not update and there will be **no error** — it fails silently.
+
+_¹This dev docs automation (at time of writing - Mar. 17, 2026) currently only applies to `@shopify/hydrogen` and `@shopify/hydrogen-react`. It is extremely rare that you would want to back-fix a different package in this monorepo, though you could, and in that case the specific branch name can be whatever you want, you just need to make sure that you have the SAME branch name as what you put in `.github/workflows/release.yml`. Also note that in this situation (after back-fixing a non `@shopify/hydrogen` or `@shopify/hydrogen-react` dependency in this repo), you probably don't need to release a new Hydrogen version, and instead you can just add a new entry to `docs/changelog.json` with the new back-fixed version of the dependency. [Example](https://github.com/Shopify/hydrogen/blob/b1462efb71e5fd358105f5c38a17df1b6ddb13ae/docs/changelog.json#L715-L729): we released a new version of the Shopify CLI that we wanted people to upgrade to, so we just added a _second_ entry in `docs/changelog.json` for Hydrogen version 2025.4.1, as it would be unnecessary to do another release of Hydrogen with just the CLI bump._
 
 **Step-by-step workflow**:
 
-1. Create branch from the latest patch of the target major:
+Create the back-fix branch:
+1. ALWAYS create a NEW branch from the latest patch/minor of the target major (even if an existing branch by that name already exists!!):
    ```bash
    git checkout -b 2024-10 @shopify/hydrogen@2024.10.1
    ```
 2. Add your back-fix branch to the `on.push.branches` array in `.github/workflows/release.yml`. This change is only made on back-fix branches, never on main.
-3. Commit and push:
+3. Commit and push (FORCE push your version if the branch already exists on remote!!):
    ```bash
    git push origin 2024-10
    ```
-4. Make your code changes and create a changeset
-5. Push changes directly to the back-fix branch (or create a PR targeting it)
-6. A GitHub Action will automatically create a back-fix release PR (example: [#3360](https://github.com/Shopify/hydrogen/pull/3360))
-7. Get reviews on the release PR
-8. Merge the release PR and monitor GitHub Actions for release success
+
+> [!WARNING] 
+> **Why should I always create a NEW back-fix branch and (force) push, even if one already exists on remote?**
+> - While we can update `.github/workflows/release.yml` to automatically create a back-fix branch for each release upon release, we've decided not to. Sometimes changes can accidentally get pushed to or merged into the back-fix branch but not released, so if you were to then add onto it you also have some arbitrary changes present that shouldn't be there. Also, even if a back-fix branch is automatically created after each Hydrogen release, others can still force push to it or make changes to it such that you cannot and should not trust the existing back-fix branch (if it exists) as the source of truth. The existing back-fix branch could theoretically be named "2025-10" but actually contain code from Hydrogen version "2025-01" if someone pushed faulty code to it in the past.
+
+Do the code changes that you want present in the back-fixed version:
+
+1. Create a new branch for your code changes, that is based on the back-fix branch
+   ```bash
+   git checkout -b 2024-10-my-changes 2024-10
+   ```
+2. Make your code changes and create a changeset
+3. Push your changes to remote, and then create a PR on your `2024-10-my-changes` branch, with the base branch being `2024-10` (obviously adjust specific branch names to your specific case)
+4. Get reviews from team members on your PR!
+5. Once your PR is approved and merged, a GitHub Action will automatically create a back-fix release PR (example: [#3360](https://github.com/Shopify/hydrogen/pull/3360))
+6. Get reviews from team members on the release PR!
+7. Merge the release PR and monitor GitHub Actions for release success
 
 ## Release Failure Recovery
 
-**If this is your first release failure, pair with an experienced team member before attempting recovery.**
+**If this is your first release failure, pair with an experienced team member before attempting recovery. DO NOT JUST YOLO THIS WITH LLMs!!!!!**
 
 1. **Investigate** the error message from the failed GitHub Action
 2. If the issue appears to be a Shopify/npm configuration issue (NOT a Hydrogen-specific issue), get help in `#help-eng-infrastructure` (Slack ID: `C01MXHNTT4Z`)
