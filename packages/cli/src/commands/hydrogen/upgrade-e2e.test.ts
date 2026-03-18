@@ -23,11 +23,18 @@
  */
 
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
+import {execFile} from 'node:child_process';
 import {readFile, unlink, writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
+import {promisify} from 'node:util';
 import {exec} from '@shopify/cli-kit/node/system';
 import {inTemporaryDirectory} from '@shopify/cli-kit/node/fs';
-import {execAsync} from '../../lib/process.js';
+
+const execFileAsync = promisify(execFile) as (
+  file: string,
+  args: string[],
+  options: {cwd: string},
+) => Promise<{stdout: string; stderr: string}>;
 import * as upgradeModule from './upgrade.js';
 import type {Release} from './upgrade.js';
 
@@ -60,7 +67,6 @@ vi.mock('../../lib/shell.js', () => ({getCliCommand: vi.fn(() => 'h2')}));
 
 const commitCache = new Map<string, string | null>();
 const DEFAULT_LOOKBACK_PERIOD_IN_DAYS = 365;
-const REPO_ROOT = join(process.cwd(), '../../');
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -278,13 +284,17 @@ function createVersionMatrix(changelog: ChangeLog): Array<[string, string]> {
       matrix.push([release.version, targetVersion]);
     }
 
-    if (matrix.length > 0) {
-      const oldestVersion = matrix[matrix.length - 1]?.[0];
-      const countNote = matrix.length < lastN ? ` of ${lastN} requested` : '';
-      console.log(
-        `Testing last ${matrix.length}${countNote}: ${oldestVersion} → ${targetVersion}`,
+    if (matrix.length === 0) {
+      throw new Error(
+        `UPGRADE_TEST_LAST_N=${lastN} requested but no releases exist before ${targetVersion}`,
       );
     }
+
+    const oldestVersion = matrix[matrix.length - 1]?.[0];
+    const countNote = matrix.length < lastN ? ` of ${lastN} requested` : '';
+    console.log(
+      `Testing last ${matrix.length}${countNote}: ${oldestVersion} → ${targetVersion}`,
+    );
 
     return matrix;
   }
@@ -561,71 +571,68 @@ async function testUpgrade(
 async function arePackagesPublished(
   packages: Array<[string, string | undefined]>,
 ): Promise<{published: boolean; missing: string[]}> {
-  const packagesToCheck = packages.filter(([, version]) => version);
-  const missing: string[] = [];
+  const packagesToCheck = packages.filter((p): p is [string, string] =>
+    Boolean(p[1]),
+  );
 
-  for (const [packageName, version] of packagesToCheck) {
-    try {
-      await exec('npm', ['view', `${packageName}@${version}`, 'version'], {
+  const checks = await Promise.allSettled(
+    packagesToCheck.map(([name, version]) =>
+      exec('npm', ['view', `${name}@${version}`, 'version'], {
         cwd: process.cwd(),
-      });
-    } catch {
-      missing.push(`${packageName}@${version}`);
-    }
-  }
+      }),
+    ),
+  );
 
-  return {
-    published: missing.length === 0,
-    missing,
-  };
+  const missing = packagesToCheck
+    .filter((_, i) => checks[i]?.status === 'rejected')
+    .map(([name, version]) => `${name}@${version}`);
+
+  return {published: missing.length === 0, missing};
 }
 
-async function findGitRepoRoot(): Promise<string | null> {
-  const possibleRoots = [
-    REPO_ROOT,
-    process.cwd(),
-    join(process.cwd(), '../../../'),
-  ];
-
-  for (const root of possibleRoots) {
-    try {
-      await execAsync('git rev-parse --git-dir', {cwd: root});
-      return root;
-    } catch {
-      /* Expected: git command fails when not in a git repository */
-    }
+async function getRepoRoot(): Promise<string | null> {
+  try {
+    const {stdout} = await execFileAsync(
+      'git',
+      ['rev-parse', '--show-toplevel'],
+      {cwd: process.cwd()},
+    );
+    return stdout.trim();
+  } catch {
+    return null;
   }
-
-  return null;
 }
 
 async function findCommitByTag(
   version: string,
   repoRoot: string,
 ): Promise<string | null> {
+  let tags: string[];
   try {
-    const {stdout: tags} = await execAsync(
-      `git tag -l "*${version}*" | head -10`,
-      {cwd: repoRoot},
-    );
-
-    for (const tag of tags.trim().split('\n').filter(Boolean)) {
-      try {
-        const {stdout: tagCommit} = await execAsync(
-          `git rev-list -n 1 ${tag}`,
-          {cwd: repoRoot},
-        );
-        const commit = tagCommit.trim();
-
-        if (await isMatchingSkeletonCommit({repoRoot, commit, version})) {
-          return commit;
-        }
-      } catch {
-        /* Expected: tag might not point to a commit with matching skeleton */
-      }
-    }
+    const {stdout} = await execFileAsync('git', ['tag', '-l', `*${version}*`], {
+      cwd: repoRoot,
+    });
+    tags = stdout.trim().split('\n').filter(Boolean).slice(0, 10);
   } catch {
-    /* Expected: no tags found matching version pattern */
+    /* git unavailable or unexpected failure — no tags to search */
+    return null;
+  }
+
+  for (const tag of tags) {
+    try {
+      const {stdout: tagCommit} = await execFileAsync(
+        'git',
+        ['rev-list', '-n', '1', tag],
+        {cwd: repoRoot},
+      );
+      const commit = tagCommit.trim();
+
+      if (await isMatchingSkeletonCommit({repoRoot, commit, version})) {
+        return commit;
+      }
+    } catch {
+      /* Expected: tag might not point to a commit with matching skeleton */
+    }
   }
 
   return null;
@@ -642,19 +649,23 @@ async function findCommitByReleaseMessage(
   ];
 
   for (const pattern of releasePatterns) {
+    let commits: string[];
     try {
-      const {stdout: releaseCommits} = await execAsync(
-        `git log --format=%H --grep="${pattern}" --all | head -10`,
+      const {stdout} = await execFileAsync(
+        'git',
+        ['log', '--format=%H', `--grep=${pattern}`, '--all'],
         {cwd: repoRoot},
       );
-
-      for (const commit of releaseCommits.trim().split('\n').filter(Boolean)) {
-        if (await isMatchingSkeletonCommit({repoRoot, commit, version})) {
-          return commit;
-        }
-      }
+      commits = stdout.trim().split('\n').filter(Boolean).slice(0, 10);
     } catch {
-      /* Expected: pattern might not match any commits */
+      /* git unavailable or unexpected failure — try next pattern */
+      continue;
+    }
+
+    for (const commit of commits) {
+      if (await isMatchingSkeletonCommit({repoRoot, commit, version})) {
+        return commit;
+      }
     }
   }
 
@@ -665,19 +676,36 @@ async function findCommitByPackageJsonHistory(
   version: string,
   repoRoot: string,
 ): Promise<string | null> {
+  let allCommits: string[];
   try {
-    const {stdout: allCommits} = await execAsync(
-      'git log --format=%H --all -- templates/skeleton/package.json | head -200',
+    const {stdout} = await execFileAsync(
+      'git',
+      ['log', '--format=%H', '--all', '--', 'templates/skeleton/package.json'],
       {cwd: repoRoot},
     );
+    allCommits = stdout.trim().split('\n').filter(Boolean).slice(0, 200);
+  } catch {
+    /* git unavailable or unexpected failure */
+    return null;
+  }
 
-    for (const commit of allCommits.trim().split('\n').filter(Boolean)) {
-      if (await isMatchingSkeletonCommit({repoRoot, commit, version})) {
+  for (const commit of allCommits) {
+    try {
+      const {stdout: packageContent} = await execFileAsync(
+        'git',
+        ['show', `${commit}:templates/skeleton/package.json`],
+        {cwd: repoRoot},
+      );
+      const packageJson = JSON.parse(packageContent);
+      if (
+        packageJson.dependencies?.['@shopify/hydrogen'] === version &&
+        packageJson.version === version
+      ) {
         return commit;
       }
+    } catch {
+      /* Expected: commit might not have valid package.json */
     }
-  } catch {
-    /* Expected: git log might fail or find no commits */
   }
 
   return null;
@@ -685,15 +713,9 @@ async function findCommitByPackageJsonHistory(
 
 async function findCommitForVersion(version: string): Promise<string | null> {
   try {
-    const repoRoot = await findGitRepoRoot();
+    const repoRoot = await getRepoRoot();
     if (!repoRoot) {
       return null;
-    }
-
-    try {
-      await execAsync('git fetch origin', {cwd: repoRoot});
-    } catch {
-      /* Expected: fetch might fail in CI or without network access */
     }
 
     return (
@@ -748,8 +770,9 @@ async function isMatchingSkeletonCommit({
   version: string;
 }): Promise<boolean> {
   try {
-    const {stdout: packageContent} = await execAsync(
-      `git show ${commit}:templates/skeleton/package.json`,
+    const {stdout: packageContent} = await execFileAsync(
+      'git',
+      ['show', `${commit}:templates/skeleton/package.json`],
       {cwd: repoRoot},
     );
     const packageJson = JSON.parse(packageContent);
@@ -767,7 +790,12 @@ async function resolveSkeletonCommit(
   version: string,
   changelog: ChangeLog,
 ): Promise<{commit: string; skeletonVersion: string}> {
-  const repoRoot = (await findGitRepoRoot()) ?? REPO_ROOT;
+  const repoRoot = await getRepoRoot();
+  if (!repoRoot) {
+    throw new Error(
+      `Could not find git repository root. Ensure tests run from within the Hydrogen monorepo.`,
+    );
+  }
   const release = changelog.releases.find((item) => item.version === version);
 
   let commit: string | undefined = release?.hash;
@@ -832,6 +860,10 @@ async function resolveSkeletonCommit(
       if (candidateCommit) {
         commit = candidateCommit;
         skeletonVersion = candidateRelease.version;
+        console.warn(
+          `⚠️  Could not find exact skeleton commit for ${version}. ` +
+            `Falling back to ${candidateRelease.version} skeleton — test fidelity may be reduced.`,
+        );
       }
     }
 
@@ -851,7 +883,12 @@ async function extractSkeletonTemplate(
   commit: string,
   skeletonVersion: string,
 ): Promise<string> {
-  const repoRoot = (await findGitRepoRoot()) ?? REPO_ROOT;
+  const repoRoot = await getRepoRoot();
+  if (!repoRoot) {
+    throw new Error(
+      `Could not find git repository root for scaffolding. Ensure tests run from within the Hydrogen monorepo.`,
+    );
+  }
   const archivePath = join(tempDir, 'skeleton.tar');
 
   try {

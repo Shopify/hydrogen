@@ -24,9 +24,11 @@ on:
   push:
     paths:
       - 'docs/changelog.json'
+      - 'packages/cli/src/commands/hydrogen/upgrade*.ts'
   pull_request:
     paths:
       - 'docs/changelog.json'
+      - 'packages/cli/src/commands/hydrogen/upgrade*.ts'
   workflow_dispatch:
 
 jobs:
