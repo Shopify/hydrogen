@@ -13,6 +13,7 @@ import {
 import {exec, execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {parse as parseYaml} from 'yaml';
+import type {MswScenario} from './msw/scenarios';
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
@@ -48,6 +49,13 @@ export type RecipeFixtureOptions = {
    * These override any defaults but don't override the test store env file.
    */
   envOverrides?: Record<string, string>;
+  /**
+   * MSW mock configuration for intercepting API calls (e.g. Customer Account API).
+   * Storefront API calls still reach the real store.
+   */
+  mock?: {
+    scenario: MswScenario;
+  };
 };
 
 export const setRecipeFixture = (options: RecipeFixtureOptions) => {
@@ -56,6 +64,7 @@ export const setRecipeFixture = (options: RecipeFixtureOptions) => {
     storeKey = 'hydrogenPreviewStorefront',
     useCache = true,
     envOverrides = {},
+    mock,
   } = options;
 
   const isLocal = !storeKey.startsWith('https://');
@@ -87,6 +96,7 @@ export const setRecipeFixture = (options: RecipeFixtureOptions) => {
   configureDevServer({
     storeKey,
     projectPath: isLocal ? recipeFixturePath : undefined,
+    mock,
   });
 };
 
