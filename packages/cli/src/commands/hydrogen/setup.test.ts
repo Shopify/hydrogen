@@ -8,7 +8,6 @@ import {
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {runSetup} from './setup.js';
-import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {getRepoNodeModules, getSkeletonSourceDir} from '../../lib/build.js';
 
 vi.mock('../../lib/shell.js');
@@ -56,9 +55,6 @@ describe('setup', () => {
         await getRepoNodeModules(),
         joinPath(tmpDir, 'node_modules'),
       );
-
-      // For generating routes
-      vi.mocked(renderConfirmationPrompt).mockResolvedValueOnce(true);
 
       await expect(
         runSetup({

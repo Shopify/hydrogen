@@ -1,7 +1,4 @@
-import {
-  redirect,
-  useLoaderData,
-} from 'react-router';
+import {redirect, useLoaderData} from 'react-router';
 import type {Route} from './+types/products.$handle';
 import {
   getSelectedProductOptions,
@@ -40,11 +37,7 @@ export async function loader(args: Route.LoaderArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({
-  context,
-  params,
-  request,
-}: Route.LoaderArgs) {
+async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   const {handle} = params;
   const {storefront} = context;
 

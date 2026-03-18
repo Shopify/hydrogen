@@ -45,11 +45,6 @@ export default class Init extends Command {
     ...commonFlags.styling,
     ...commonFlags.markets,
     ...commonFlags.shortcut,
-    routes: Flags.boolean({
-      description: 'Generate routes for all pages.',
-      env: 'SHOPIFY_HYDROGEN_FLAG_ROUTES',
-      allowNo: true,
-    }),
     git: Flags.boolean({
       description: 'Init Git and create initial commits.',
       env: 'SHOPIFY_HYDROGEN_FLAG_GIT',
@@ -58,7 +53,7 @@ export default class Init extends Command {
     }),
     quickstart: Flags.boolean({
       description:
-        'Scaffolds a new Hydrogen project with a set of sensible defaults. Equivalent to `shopify hydrogen init --path hydrogen-quickstart --mock-shop --language js --shortcut --routes --markets none`',
+        'Scaffolds a new Hydrogen project with a set of sensible defaults. Equivalent to `shopify hydrogen init --path hydrogen-quickstart --mock-shop --language js --shortcut --markets none`',
       env: 'SHOPIFY_HYDROGEN_FLAG_QUICKSTART',
       default: false,
     }),
@@ -123,7 +118,6 @@ export async function runInit(
     options.language ??= 'js';
     options.mockShop ??= true;
     options.path ??= './hydrogen-quickstart';
-    options.routes ??= true;
     options.shortcut ??= true;
     // TODO: enable Tailwind once v4 is stable
     options.styling ??= 'none';

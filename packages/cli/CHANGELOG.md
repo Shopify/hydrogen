@@ -1,5 +1,38 @@
 # @shopify/cli-hydrogen
 
+## 11.1.11
+
+### Patch Changes
+
+- Improve gift card accessibility in Skeleton template ([#3518](https://github.com/Shopify/hydrogen/pull/3518)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Updated shopify/cli dependencies for cli-hydrogen ([#3553](https://github.com/Shopify/hydrogen/pull/3553)) by [@andguy95](https://github.com/andguy95)
+
+- Updated the skeleton `robots.txt` defaults to remove disallow rules that are specific to Shopify themes and not part of a new Hydrogen app by default. This reduces confusion when reviewing or customizing robots rules in scaffolded projects. ([#3526](https://github.com/Shopify/hydrogen/pull/3526)) by [@fredericoo](https://github.com/fredericoo)
+
+- Fixed `--package-manager` flag being ignored when `--install-deps` was explicitly passed. Projects now correctly use the specified package manager for dependency installation. ([#3458](https://github.com/Shopify/hydrogen/pull/3458)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Updated loaders that used `customerAccount.handleAuthStatus()` to now await it. ([#3523](https://github.com/Shopify/hydrogen/pull/3523)) by [@fredericoo](https://github.com/fredericoo)
+
+  ### Migration
+
+  If you call `handleAuthStatus()` in your own loaders, update those callsites to use `await`.
+
+## 11.1.10
+
+### Patch Changes
+
+- Updated `prettier` from v2 to v3. ([#3461](https://github.com/Shopify/hydrogen/pull/3461)) by [@fredericoo](https://github.com/fredericoo)
+
+- Removes the React Router v7 version check from the dev command as was confusing from what was resolved in node_modules ([#3499](https://github.com/Shopify/hydrogen/pull/3499)) by [@andguy95](https://github.com/andguy95)
+
+- Fixed an issue where users without addresses could not add the first one ([#3456](https://github.com/Shopify/hydrogen/pull/3456)) by [@fredericoo](https://github.com/fredericoo)
+
+- Route scaffolding now runs automatically during `hydrogen init`, so new projects are fully set up with all routes by default. The `--routes` flag and confirmation prompt have been removed since routes are always generated. ([#3448](https://github.com/Shopify/hydrogen/pull/3448)) by [@fredericoo](https://github.com/fredericoo)
+
+- Updated dependencies [[`ff93a1daf2207e52e1f8331f9ff2ccd1f9b7fed6`](https://github.com/Shopify/hydrogen/commit/ff93a1daf2207e52e1f8331f9ff2ccd1f9b7fed6)]:
+  - @shopify/mini-oxygen@4.0.1
+
 ## 11.1.9
 
 ### Patch Changes

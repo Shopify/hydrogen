@@ -10,6 +10,7 @@ import {setupTemplate} from './index.js';
 import {getSkeletonSourceDir} from '../build.js';
 import {basename} from '@shopify/cli-kit/node/path';
 import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
+import {installNodeModules} from '@shopify/cli-kit/node/node-package-manager';
 import {execAsync} from '../process.js';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 
@@ -48,8 +49,8 @@ describe('local templates', () => {
       expect(resultFiles).toContain('app/entry.server.tsx');
       expect(resultFiles).toContain('app/components/PageLayout.tsx');
 
-      // Skip routes:
-      expect(resultFiles).not.toContain('app/routes/_index.tsx');
+      // Routes are always generated:
+      expect(resultFiles).toContain('app/routes/_index.tsx');
 
       // Not modified:
       await expect(readFile(`${tmpDir}/server.ts`)).resolves.toEqual(
@@ -70,7 +71,7 @@ describe('local templates', () => {
       expect(output).toMatch('success');
       expect(output).not.toMatch('warning');
       expect(output).toMatch(basename(tmpDir));
-      expect(output).not.toMatch('Routes');
+      expect(output).toMatch('Routes');
       expect(output).toMatch(/Language:\s*TypeScript/);
       expect(output).toMatch('Next steps');
       expect(output).toMatch(
@@ -103,7 +104,6 @@ describe('local templates', () => {
       await setupTemplate({
         path: tmpDir,
         git: false,
-        routes: true,
         language: 'ts',
       });
 
@@ -140,7 +140,6 @@ describe('local templates', () => {
       await setupTemplate({
         path: tmpDir,
         git: false,
-        routes: true,
         language: 'js',
       });
 
@@ -185,7 +184,6 @@ describe('local templates', () => {
           git: false,
           language: 'ts',
           styling: 'tailwind',
-          routes: true,
         });
 
         // Injects dependencies
@@ -222,7 +220,6 @@ describe('local templates', () => {
           git: false,
           language: 'ts',
           styling: 'vanilla-extract',
-          routes: true,
         });
 
         // Injects dependencies
@@ -250,7 +247,6 @@ describe('local templates', () => {
           git: false,
           language: 'ts',
           i18n: 'domains',
-          routes: true,
         });
 
         const resultFiles = await glob('**/*', {cwd: tmpDir});
@@ -277,7 +273,6 @@ describe('local templates', () => {
           git: false,
           language: 'ts',
           i18n: 'subdomains',
-          routes: true,
         });
 
         const resultFiles = await glob('**/*', {cwd: tmpDir});
@@ -304,7 +299,6 @@ describe('local templates', () => {
           git: false,
           language: 'ts',
           i18n: 'subfolders',
-          routes: true,
         });
 
         const resultFiles = await glob('**/*', {cwd: tmpDir});
@@ -337,7 +331,6 @@ describe('local templates', () => {
           git: true,
           language: 'js',
           i18n: 'domains',
-          routes: true,
           installDeps: true,
         });
 
@@ -356,6 +349,25 @@ describe('local templates', () => {
             expect.stringContaining('Setup markets support using domains'),
             expect.stringContaining('Scaffold Storefront'),
           ]),
+        );
+      });
+    });
+  });
+
+  describe('package manager', () => {
+    it('uses the specified package manager when installDeps is true', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await setupTemplate({
+          path: tmpDir,
+          git: false,
+          language: 'ts',
+          mockShop: true,
+          installDeps: true,
+          packageManager: 'pnpm',
+        });
+
+        expect(installNodeModules).toHaveBeenCalledWith(
+          expect.objectContaining({packageManager: 'pnpm'}),
         );
       });
     });

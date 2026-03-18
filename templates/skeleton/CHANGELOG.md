@@ -1,5 +1,33 @@
 # skeleton
 
+## 2026.1.2
+
+### Patch Changes
+
+- Improve gift card accessibility in Skeleton template ([#3518](https://github.com/Shopify/hydrogen/pull/3518)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Updated shopify/cli dependencies for cli-hydrogen ([#3553](https://github.com/Shopify/hydrogen/pull/3553)) by [@andguy95](https://github.com/andguy95)
+
+- Updated loaders that used `customerAccount.handleAuthStatus()` to now await it. ([#3523](https://github.com/Shopify/hydrogen/pull/3523)) by [@fredericoo](https://github.com/fredericoo)
+
+  ### Migration
+
+  If you call `handleAuthStatus()` in your own loaders, update those callsites to use `await`.
+
+- Updated dependencies [[`16b0e7baca0dfd1fb330d12dac924c7593d169a8`](https://github.com/Shopify/hydrogen/commit/16b0e7baca0dfd1fb330d12dac924c7593d169a8), [`1c19b87782818dbdb4252754d2d44eb9a44fe50f`](https://github.com/Shopify/hydrogen/commit/1c19b87782818dbdb4252754d2d44eb9a44fe50f), [`029fa2d0e2297f67b37c650ba8e875ee5dee81b3`](https://github.com/Shopify/hydrogen/commit/029fa2d0e2297f67b37c650ba8e875ee5dee81b3)]:
+  - @shopify/hydrogen@2026.1.2
+
+## 2026.1.1
+
+### Patch Changes
+
+- Added a notice with relevant information on how to link a store in case there is no store linked yet ([#3448](https://github.com/Shopify/hydrogen/pull/3448)) by [@fredericoo](https://github.com/fredericoo)
+
+- Fixed an issue where users without addresses could not add the first one ([#3456](https://github.com/Shopify/hydrogen/pull/3456)) by [@fredericoo](https://github.com/fredericoo)
+
+- Updated dependencies [[`ff93a1daf2207e52e1f8331f9ff2ccd1f9b7fed6`](https://github.com/Shopify/hydrogen/commit/ff93a1daf2207e52e1f8331f9ff2ccd1f9b7fed6)]:
+  - @shopify/hydrogen@2026.1.1
+
 ## 2026.1.0
 
 ### Major Changes

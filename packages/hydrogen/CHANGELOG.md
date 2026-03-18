@@ -1,5 +1,24 @@
 # @shopify/hydrogen
 
+## 2026.1.2
+
+### Patch Changes
+
+- Updated the skeleton `robots.txt` defaults to remove disallow rules that are specific to Shopify themes and not part of a new Hydrogen app by default. This reduces confusion when reviewing or customizing robots rules in scaffolded projects. ([#3526](https://github.com/Shopify/hydrogen/pull/3526)) by [@fredericoo](https://github.com/fredericoo)
+
+- Improved local Customer Account OAuth errors: in development, if you are not on a `*.tryhydrogen.dev` tunnel URL, Hydrogen now shows clear guidance to run `shopify hydrogen dev --customer-account-push` and continue from the tunnel URL. ([#3504](https://github.com/Shopify/hydrogen/pull/3504)) by [@fredericoo](https://github.com/fredericoo)
+
+- Fixed the customer account auth status typing so `customerAccount.handleAuthStatus()` is typed as async (`Promise<void>`), matching runtime behavior. ([#3523](https://github.com/Shopify/hydrogen/pull/3523)) by [@fredericoo](https://github.com/fredericoo)
+
+## 2026.1.1
+
+### Patch Changes
+
+- Updated transitive dependencies (`form-data`, `vite`) to resolve known vulnerabilities. ([#3461](https://github.com/Shopify/hydrogen/pull/3461)) by [@fredericoo](https://github.com/fredericoo)
+
+- Updated dependencies [[`ff93a1daf2207e52e1f8331f9ff2ccd1f9b7fed6`](https://github.com/Shopify/hydrogen/commit/ff93a1daf2207e52e1f8331f9ff2ccd1f9b7fed6)]:
+  - @shopify/hydrogen-react@2026.1.1
+
 ## 2026.1.0
 
 ### Major Changes

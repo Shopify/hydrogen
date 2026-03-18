@@ -40,7 +40,6 @@ describe('build', () => {
       git: true,
       language: 'ts',
       i18n: 'subfolders',
-      routes: true,
       installDeps: true,
     });
 

@@ -15,7 +15,7 @@ This integration uses the storefront API (SFAPI) [predictiveSearch](https://shop
 
 | File                                                                                             | Description                                                                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`app/components/SearchFormPredictive.tsx`](../../app/components/SearchFormPredictive.tsx)       | A fully customizable form component configured to make form `GET` requests to the `/search` route.                                                    |
+| [`app/components/SearchFormPredictive.tsx`](../../app/components/SearchFormPredictive.tsx)       | A fully customizable form component configured to make form `GET` requests to the `/search` route.                                                     |
 | [`app/components/SearchResultsPredictive.tsx`](../../app/components/SearchResultsPredictive.tsx) | A fully customizable search results wrapper, that provides compound components to render `articles`, `pages`, `products`, `collections` and `queries`. |
 
 ## Instructions
@@ -217,10 +217,10 @@ export async function loader({request, context}: LoaderFunctionArgs) {
   const isPredictive = url.searchParams.has('predictive');
 
   if (!isPredictive) {
-    return {}
+    return {};
   }
 
-  const searchPromise = predictiveSearch({request, context})
+  const searchPromise = predictiveSearch({request, context});
 
   searchPromise.catch((error: Error) => {
     console.error(error);

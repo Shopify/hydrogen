@@ -20,7 +20,7 @@ const {
   getPackagePath,
   readPackage,
   writePackage,
-  hasMajorChangesets
+  hasMajorChangesets,
 } = require('./calver-shared.js');
 
 // Parse CLI arguments
@@ -91,14 +91,14 @@ function validateUpdates(updates, originalVersions) {
 function getBumpTypeFromChangesets(pkgName) {
   const changesetDir = path.join(process.cwd(), '.changeset');
   let bumpType = null;
-  
+
   try {
     const files = fs.readdirSync(changesetDir);
     for (const file of files) {
       if (!file.endsWith('.md') || file === 'README.md') continue;
       const filePath = path.join(changesetDir, file);
       const content = fs.readFileSync(filePath, 'utf-8');
-      
+
       // Check for this package in changesets
       if (content.includes(`"${pkgName}": major`)) {
         bumpType = 'major';
@@ -112,7 +112,7 @@ function getBumpTypeFromChangesets(pkgName) {
   } catch (error) {
     console.error(`Error reading changesets: ${error.message}`);
   }
-  
+
   return bumpType;
 }
 
@@ -167,7 +167,7 @@ CALVER_PACKAGES.forEach((pkgName) => {
   // In dry-run mode, simulate what changesets would do based on actual changesets
   if (opts.dryRun && !opts.skipChangesets) {
     const bumpType = getBumpTypeFromChangesets(pkgName);
-    
+
     if (bumpType) {
       // Simulate the changeset bump
       const simVersion = getNextVersion(originalVersions[pkgName], bumpType);
@@ -179,7 +179,7 @@ CALVER_PACKAGES.forEach((pkgName) => {
   const originalVersion = originalVersions[pkgName];
   const changesetVersion = pkg.version;
   const bumpType = getBumpType(originalVersion, changesetVersion);
-  
+
   // For major bumps, ensure all CalVer packages advance to same quarter
   const effectiveBumpType = hasAnyMajor ? 'major' : bumpType;
   const calverVersion = getNextVersion(originalVersion, effectiveBumpType);
@@ -197,9 +197,7 @@ console.log('\n📊 Version transformations:');
 Object.entries(updates).forEach(([pkgName, update]) => {
   const arrow = update.from === update.to ? '=' : '→';
   const changesetInfo =
-    update.from !== update.changeset
-      ? ` (changeset: ${update.changeset})`
-      : '';
+    update.from !== update.changeset ? ` (changeset: ${update.changeset})` : '';
   console.log(
     `  ${pkgName}: ${update.from} ${arrow} ${update.to}${changesetInfo}`,
   );
@@ -208,7 +206,9 @@ Object.entries(updates).forEach(([pkgName, update]) => {
 // Check for major version coordination
 if (hasAnyMajor) {
   console.log('\n🔗 Major version coordination:');
-  console.log('  All CalVer packages advance to same quarter due to major bump');
+  console.log(
+    '  All CalVer packages advance to same quarter due to major bump',
+  );
 }
 
 // Validate transformations
@@ -222,7 +222,7 @@ if (errors.length > 0) {
 // Apply changes if not dry-run
 if (!opts.dryRun) {
   console.log('\n✏️  Applying CalVer transformations...');
-  
+
   // Apply version updates
   Object.entries(updates).forEach(([pkgName, update]) => {
     const pkgPath = getPackagePath(pkgName);
@@ -231,44 +231,52 @@ if (!opts.dryRun) {
     writePackage(pkgPath, pkg);
     console.log(`  ${pkgName}: Updated to ${update.to}`);
   });
-  
+
   // Update internal dependencies
   console.log('\n📝 Updating internal dependencies...');
   const versionMap = {};
   Object.entries(updates).forEach(([pkgName, update]) => {
     versionMap[pkgName] = update.to;
   });
-  
+
   // Update all package.json files that might depend on CalVer packages
   const packagesDir = path.join(process.cwd(), 'packages');
   const dirs = fs.readdirSync(packagesDir);
-  
+
   for (const dir of dirs) {
     const pkgPath = path.join(packagesDir, dir, 'package.json');
     if (!fs.existsSync(pkgPath)) continue;
-    
+
     const pkg = readPackage(pkgPath);
     let modified = false;
-    
+
     // Check all dependency types
-    for (const depType of ['dependencies', 'devDependencies', 'peerDependencies']) {
+    for (const depType of [
+      'dependencies',
+      'devDependencies',
+      'peerDependencies',
+    ]) {
       if (!pkg[depType]) continue;
-      
+
       for (const [depName, depVersion] of Object.entries(pkg[depType])) {
         if (versionMap[depName]) {
-          // Update to new version (preserve any prefix like ^, ~, or workspace:)
-          const prefix = depVersion.match(/^([^\d]*)/)[1];
+          if (depVersion.startsWith('workspace:')) {
+            continue;
+          }
+
+          // Update to new version (preserve any prefix like ^ or ~).
+          const prefix = depVersion.match(/^([^\d]*)/)?.[1] || '';
           pkg[depType][depName] = prefix + versionMap[depName];
           modified = true;
         }
       }
     }
-    
+
     if (modified) {
       writePackage(pkgPath, pkg);
     }
   }
-  
+
   console.log('\n✅ CalVer transformations applied successfully!');
 } else {
   console.log('\n✅ CalVer simulation complete (no files modified)');

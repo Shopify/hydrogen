@@ -11,41 +11,28 @@ interface Permutation {
   language: Language;
   markets: I18nChoice;
   styling: StylingChoice;
-  routes: boolean;
 }
 
-// Test each dimension (language/markets/styling/routes) independently,
+// Test each dimension (language/markets/styling) independently,
 // then add combinations to verify feature interactions
 const permutations: Permutation[] = [
-  {language: 'ts', markets: 'none', styling: 'none', routes: true},
-  {language: 'ts', markets: 'none', styling: 'none', routes: false},
-  {language: 'js', markets: 'none', styling: 'none', routes: true},
-  {language: 'js', markets: 'none', styling: 'none', routes: false},
+  {language: 'ts', markets: 'none', styling: 'none'},
+  {language: 'js', markets: 'none', styling: 'none'},
 
-  {language: 'ts', markets: 'subfolders', styling: 'none', routes: true},
-  {language: 'ts', markets: 'subdomains', styling: 'none', routes: true},
-  {language: 'ts', markets: 'domains', styling: 'none', routes: true},
+  {language: 'ts', markets: 'subfolders', styling: 'none'},
+  {language: 'ts', markets: 'subdomains', styling: 'none'},
+  {language: 'ts', markets: 'domains', styling: 'none'},
 
-  {language: 'ts', markets: 'none', styling: 'tailwind', routes: true},
-  {language: 'ts', markets: 'none', styling: 'vanilla-extract', routes: true},
+  {language: 'ts', markets: 'none', styling: 'tailwind'},
+  {language: 'ts', markets: 'none', styling: 'vanilla-extract'},
 
   // PostCSS and CSS Modules don't modify files (Vite built-in), but included to verify they don't break scaffolding
-  {language: 'ts', markets: 'none', styling: 'css-modules', routes: true},
-  {language: 'ts', markets: 'none', styling: 'postcss', routes: true},
+  {language: 'ts', markets: 'none', styling: 'css-modules'},
+  {language: 'ts', markets: 'none', styling: 'postcss'},
 
-  {language: 'js', markets: 'subfolders', styling: 'tailwind', routes: true},
-  {
-    language: 'js',
-    markets: 'domains',
-    styling: 'vanilla-extract',
-    routes: true,
-  },
-  {
-    language: 'js',
-    markets: 'subdomains',
-    styling: 'css-modules',
-    routes: false,
-  },
+  {language: 'js', markets: 'subfolders', styling: 'tailwind'},
+  {language: 'js', markets: 'domains', styling: 'vanilla-extract'},
+  {language: 'js', markets: 'subdomains', styling: 'css-modules'},
 ];
 
 function expectRoutesScaffolded(
@@ -72,11 +59,6 @@ function expectRoutesScaffolded(
   ).toBe(true);
 }
 
-function expectNoRoutes(files: string[]) {
-  const routeFiles = files.filter((f) => f.startsWith('app/routes/'));
-  expect(routeFiles).toHaveLength(0);
-}
-
 describe('scaffolding permutations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -84,8 +66,8 @@ describe('scaffolding permutations', () => {
   });
 
   it.each(permutations)(
-    '$language / $markets / $styling / routes=$routes',
-    async ({language, markets, styling, routes}) => {
+    '$language / $markets / $styling',
+    async ({language, markets, styling}) => {
       await inTemporaryDirectory(async (tmpDir) => {
         await setupTemplate({
           path: tmpDir,
@@ -94,7 +76,6 @@ describe('scaffolding permutations', () => {
           mockShop: true,
           i18n: markets,
           styling,
-          routes,
         });
 
         const files = await glob('**/*', {
@@ -120,11 +101,7 @@ describe('scaffolding permutations', () => {
           expect(files).toContain(file);
         });
 
-        if (routes) {
-          expectRoutesScaffolded(files, markets, jsxExt);
-        } else {
-          expectNoRoutes(files);
-        }
+        expectRoutesScaffolded(files, markets, jsxExt);
 
         if (markets !== 'none') {
           expect(files).toContain(`app/lib/i18n${ext}`);

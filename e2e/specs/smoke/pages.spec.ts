@@ -1,14 +1,16 @@
 import {test, expect, setTestStore} from '../../fixtures';
 
-setTestStore('mockShop');
+setTestStore('hydrogenPreviewStorefront');
 
 test.describe('Pages', () => {
-  test('should display all static page content', async ({page}) => {
+  test('When visiting static pages, each should display its heading', async ({
+    page,
+  }) => {
     const pages = [
-      {url: '/pages/contact', heading: 'Contact'},
+      {url: '/pages/about', heading: 'About'},
       {url: '/collections', heading: 'Collections'},
-      {url: '/collections/men', heading: 'Men'},
-      {url: '/blogs/news', heading: 'News'},
+      {url: '/collections/all', heading: 'Products'},
+      {url: '/blogs/journal', heading: 'Journal'},
       {url: '/search', heading: 'Search'},
       {url: '/cart', heading: 'Cart'},
       {url: '/policies', heading: 'Policies'},
@@ -16,12 +18,12 @@ test.describe('Pages', () => {
 
     for (const {url, heading} of pages) {
       await page.goto(url);
-      const pageContent = page.getByRole('heading', {level: 1, name: heading});
-      await expect(pageContent).toBeVisible();
+      const pageHeading = page.getByRole('heading', {level: 1, name: heading});
+      await expect(pageHeading).toBeVisible();
     }
 
     await page.goto('/graphiql');
-    const graphiqlPage = page.getByText('Storefront API');
-    await expect(graphiqlPage).toBeVisible();
+    const storefrontApiText = page.getByText('Storefront API');
+    await expect(storefrontApiText).toBeVisible();
   });
 });

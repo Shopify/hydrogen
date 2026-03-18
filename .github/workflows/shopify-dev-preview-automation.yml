@@ -1,7 +1,7 @@
-# This workflow dispatches a docs sync event to shopify-dev when generated docs files change.
+# This workflow dispatches a docs sync event to shop/world when generated docs files change.
 # It monitors changes to generated docs files in PRs.
 #
-# The shopify-dev repository will then sync these docs files for preview.
+# The shop/world repository will then sync these docs files for preview.
 
 name: Shopify Dev Docs Sync
 
@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   dispatch-docs-sync:
-    name: Dispatch docs sync to shopify-dev
+    name: Dispatch docs sync to shop/world
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: github.repository_owner == 'Shopify'
@@ -39,7 +39,7 @@ jobs:
 
       - name: Checkout repository
         if: steps.check-branch.outputs.matches == 'true' && github.event.action != 'closed'
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 0
 
@@ -51,9 +51,9 @@ jobs:
         with:
           app-id: ${{ secrets.SHOPIFY_DEV_DOCS_SYNC_APP_ID }}
           private-key: ${{ secrets.SHOPIFY_DEV_DOCS_SYNC_APP_PRIVATE_KEY }}
-          owner: Shopify
+          owner: Shop
           repositories: |
-            shopify-dev
+            world
 
       - name: Get changed files
         id: changed-files
@@ -93,7 +93,7 @@ jobs:
             echo "files=$JSON_ARRAY" >> $GITHUB_OUTPUT
           fi
 
-      - name: Dispatch to shopify-dev
+      - name: Dispatch to shop/world
         if: steps.check-branch.outputs.matches == 'true' && (github.event.action == 'closed' || steps.changed-files.outputs.has_changes == 'true')
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
@@ -130,7 +130,7 @@ jobs:
               }
             }')
 
-          echo "Dispatching to shopify-dev with payload:"
+          echo "Dispatching to shop/world with payload:"
           echo "$PAYLOAD" | jq .
 
           # Send the dispatch request
@@ -138,11 +138,11 @@ jobs:
             -X POST \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/Shopify/shopify-dev/dispatches \
+            https://api.github.com/repos/shop/world/dispatches \
             -d "$PAYLOAD")
 
           if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
-            echo "Successfully dispatched docs $ACTION event to shopify-dev (HTTP $HTTP_STATUS)"
+            echo "Successfully dispatched docs $ACTION event to shop/world (HTTP $HTTP_STATUS)"
           else
             echo "Failed to dispatch docs $ACTION event (HTTP $HTTP_STATUS)"
             cat response.txt

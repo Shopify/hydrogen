@@ -1,8 +1,8 @@
-index 1f5eeca9..78d13891 100644
+index 15e8a3c9..7a4380dc 100644
 --- a/templates/skeleton/app/components/CartSummary.tsx
 +++ b/templates/skeleton/app/components/CartSummary.tsx
 @@ -4,6 +4,9 @@ import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
- import {useEffect, useRef} from 'react';
+ import {useEffect, useId, useRef, useState} from 'react';
  import {useFetcher} from 'react-router';
  
 +// @description Import MultipassCheckoutButton for Shopify Plus multipass checkout
@@ -11,7 +11,7 @@ index 1f5eeca9..78d13891 100644
  type CartSummaryProps = {
    cart: OptimisticCart<CartApiQueryFragment | null>;
    layout: CartLayout;
-@@ -38,9 +41,10 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
+@@ -51,9 +54,10 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl?: string}) {
  
    return (
      <div>

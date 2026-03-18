@@ -221,6 +221,10 @@ function updateInternalDependencies(updates, dryRun = false) {
         Object.keys(updates).forEach((updatedPkg) => {
           if (pkg[depType][updatedPkg]) {
             const oldRange = pkg[depType][updatedPkg];
+            if (oldRange.startsWith('workspace:')) {
+              return;
+            }
+
             const operator = oldRange.match(/^([^\d]*)/)?.[1] || '';
             pkg[depType][updatedPkg] = `${operator}${updates[updatedPkg].to}`;
             modified = true;
