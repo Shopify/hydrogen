@@ -76,41 +76,37 @@ test.describe('Legacy Customer Account Flow — Authenticated', () => {
   });
 
   test.describe('Orders Page', () => {
+    let recipe: LegacyCustomerAccountUtil;
+
     test.beforeEach(async ({page}) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
+      recipe = new LegacyCustomerAccountUtil(page);
       await recipe.navigateToOrders();
     });
 
-    test('renders welcome heading with customer first name', async ({page}) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
+    test('renders welcome heading with customer first name', async () => {
       await expect(
         recipe.getWelcomeHeading(LEGACY_CUSTOMER_MOCK.firstName),
       ).toBeVisible();
     });
 
-    test('shows empty orders message with start shopping link', async ({
-      page,
-    }) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
+    test('shows empty orders message with start shopping link', async () => {
       await recipe.assertEmptyOrders();
     });
 
-    test('displays account navigation menu', async ({page}) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
+    test('displays account navigation menu', async () => {
       await recipe.assertAccountMenuLinks();
     });
   });
 
   test.describe('Profile Page', () => {
+    let recipe: LegacyCustomerAccountUtil;
+
     test.beforeEach(async ({page}) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
+      recipe = new LegacyCustomerAccountUtil(page);
       await recipe.navigateToProfile();
     });
 
-    test('renders profile form pre-filled with customer data', async ({
-      page,
-    }) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
+    test('renders profile form pre-filled with customer data', async () => {
       await recipe.assertProfilePageRendered({
         firstName: LEGACY_CUSTOMER_MOCK.firstName,
         lastName: LEGACY_CUSTOMER_MOCK.lastName,
@@ -119,31 +115,29 @@ test.describe('Legacy Customer Account Flow — Authenticated', () => {
       });
     });
 
-    test('shows marketing preferences checkbox', async ({page}) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
+    test('shows marketing preferences checkbox', async () => {
       await expect(recipe.getMarketingCheckbox()).toBeVisible();
     });
 
-    test('shows password change section', async ({page}) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
+    test('shows password change section', async () => {
       await expect(recipe.getNewPasswordInput()).toBeVisible();
       await expect(recipe.getNewPasswordConfirmInput()).toBeVisible();
     });
   });
 
   test.describe('Addresses Page', () => {
+    let recipe: LegacyCustomerAccountUtil;
+
     test.beforeEach(async ({page}) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
+      recipe = new LegacyCustomerAccountUtil(page);
       await recipe.navigateToAddresses();
     });
 
-    test('renders addresses page with heading', async ({page}) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
+    test('renders addresses page with heading', async () => {
       await recipe.assertAddressesPageRendered();
     });
 
-    test('shows new address form with required fields', async ({page}) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
+    test('shows new address form with required fields', async () => {
       await expect(recipe.getFirstNameInput()).toBeVisible();
       await expect(recipe.getLastNameInput()).toBeVisible();
       await expect(recipe.getCityInput()).toBeVisible();
@@ -151,13 +145,14 @@ test.describe('Legacy Customer Account Flow — Authenticated', () => {
   });
 
   test.describe('Account Navigation', () => {
+    let recipe: LegacyCustomerAccountUtil;
+
     test.beforeEach(async ({page}) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
+      recipe = new LegacyCustomerAccountUtil(page);
       await recipe.navigateToOrders();
     });
 
     test('clicking Profile link navigates to profile page', async ({page}) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
       await recipe.getAccountMenuLink(/profile/i).click();
       await expect(page).toHaveURL(/\/account\/profile/);
     });
@@ -165,7 +160,6 @@ test.describe('Legacy Customer Account Flow — Authenticated', () => {
     test('clicking Addresses link navigates to addresses page', async ({
       page,
     }) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
       await recipe.getAccountMenuLink(/addresses/i).click();
       await expect(page).toHaveURL(/\/account\/addresses/);
     });
