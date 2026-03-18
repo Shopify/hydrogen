@@ -112,7 +112,7 @@ export class LegacyCustomerAccountUtil {
   }
 
   getNewPasswordConfirmInput(): Locator {
-    return this.page.getByLabel(/new password \(confirm\)/i);
+    return this.page.getByLabel(/new password confirm/i);
   }
 
   getLogoutButton(): Locator {
