@@ -104,11 +104,11 @@ export class LegacyCustomerAccountUtil {
   }
 
   getMarketingCheckbox(): Locator {
-    return this.page.getByLabel(/subscribed to marketing/i);
+    return this.page.getByLabel(/accept marketing/i);
   }
 
   getNewPasswordInput(): Locator {
-    return this.page.getByLabel('New password', {exact: true});
+    return this.page.getByLabel(/^new password$/i);
   }
 
   getNewPasswordConfirmInput(): Locator {
