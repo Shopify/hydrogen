@@ -5,7 +5,7 @@ import {
   CUSTOMER_ACCOUNT_SESSION_KEY,
   BUYER_SESSION_KEY,
   USER_AGENT,
-} from './constants';
+} from './constants'
 import {
   clearSession,
   generateCodeChallenge,
@@ -500,10 +500,12 @@ export function createCustomerAccountClient({
       if (session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.state !== state) {
         clearSession(session);
 
-        throw new BadRequest(
-          'Unauthorized',
-          'The session state does not match the state parameter. Make sure that the session is configured correctly and passed to `createCustomerAccountClient`.',
-        );
+        // State mismatch can occur when:
+        // 1. User opens login in a different browser/tab (e.g. from a webview to a browser)
+        // 2. User opens the login link multiple times (e.g. cmd+click/ctrl+click twice)
+        // In these cases, if the user is already authenticated with Shopify, redirecting
+        // back to login restarts the OAuth flow and they are logged in automatically.
+        return redirect(loginPath);
       }
 
       const clientId = customerAccountId;
