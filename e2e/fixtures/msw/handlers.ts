@@ -318,6 +318,104 @@ scenarios.set('b2b-logged-in', {
   mocksCustomerAccountApi: true,
 });
 
+/**
+ * Subscriptions scenario: simulates a logged-in customer with active
+ * subscription contracts. The SubscriptionsContractsQuery and cancel
+ * mutation are introduced by the subscriptions recipe and have no
+ * generated types, so we use raw graphql handlers matched by operation name.
+ */
+const subscriptionsContractsMock = {
+  customer: {
+    subscriptionContracts: {
+      nodes: [
+        {
+          id: 'gid://shopify/SubscriptionContract/1',
+          status: 'ACTIVE',
+          createdAt: '2025-06-01T00:00:00.000Z',
+          billingPolicy: {
+            interval: 'MONTH',
+            intervalCount: {
+              count: 1,
+              precision: 'EXACT',
+            },
+          },
+          discounts: {
+            nodes: [
+              {
+                id: 'gid://shopify/SubscriptionDiscount/1',
+                title: 'Subscriber Savings',
+                recurringCycleLimit: null,
+                value: {
+                  __typename: 'SubscriptionDiscountPercentageValue',
+                  percentage: 10,
+                },
+              },
+            ],
+          },
+          lines: {
+            nodes: [
+              {
+                id: 'gid://shopify/SubscriptionLine/1',
+                name: 'Shopify Wax - Monthly',
+              },
+            ],
+          },
+        },
+        {
+          id: 'gid://shopify/SubscriptionContract/2',
+          status: 'CANCELLED',
+          createdAt: '2025-01-15T00:00:00.000Z',
+          billingPolicy: {
+            interval: 'WEEK',
+            intervalCount: {
+              count: 2,
+              precision: 'EXACT',
+            },
+          },
+          discounts: {
+            nodes: [],
+          },
+          lines: {
+            nodes: [
+              {
+                id: 'gid://shopify/SubscriptionLine/2',
+                name: 'Premium Polish - Bi-Weekly',
+              },
+            ],
+          },
+        },
+      ],
+    },
+  },
+};
+
+scenarios.set('subscriptions-logged-in', {
+  handlers: [
+    mockCustomerAccountOperation(CUSTOMER_DETAILS_QUERY, () => {
+      return customerDetailsMock;
+    }),
+    mockCustomerAccountOperation(CUSTOMER_ORDERS_QUERY, () => {
+      return customerOrdersMock;
+    }),
+    graphql.query('SubscriptionsContractsQuery', () => {
+      return HttpResponse.json({data: subscriptionsContractsMock});
+    }),
+    graphql.mutation('subscriptionContractCancel', ({variables}) => {
+      return HttpResponse.json({
+        data: {
+          subscriptionContractCancel: {
+            contract: {
+              id: variables.subscriptionContractId,
+            },
+            userErrors: [],
+          },
+        },
+      });
+    }),
+  ],
+  mocksCustomerAccountApi: true,
+});
+
 function isMswScenario(scenario: string): scenario is MswScenario {
   return scenarios.has(scenario);
 }
