@@ -4,7 +4,10 @@ import {join} from 'node:path';
 import {describe, expect, it} from 'vitest';
 import {inTemporaryDirectory} from '@shopify/cli-kit/node/fs';
 import {getSkeletonSourceDir} from './build.js';
-import {replaceWorkspaceProtocolVersions} from './template-pack.js';
+import {
+  replaceWorkspaceProtocolVersions,
+  WINDOWS_SHELL_OPTS,
+} from './template-pack.js';
 
 const DEPENDENCY_SECTIONS = [
   'dependencies',
@@ -12,8 +15,6 @@ const DEPENDENCY_SECTIONS = [
   'peerDependencies',
   'optionalDependencies',
 ] as const;
-
-const WINDOWS_SHELL_OPTS = process.platform === 'win32' ? {shell: true} : {};
 
 function getCatalogVersion(sourceTemplateDir: string, packageName: string) {
   const catalogVersion = execFileSync(

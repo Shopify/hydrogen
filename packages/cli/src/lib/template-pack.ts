@@ -10,7 +10,8 @@ import {extract as tarExtract} from 'tar-fs';
 // On Windows, .cmd wrappers cannot be directly executed by execFileSync (which
 // calls CreateProcess and bypasses the shell). Use shell: true on Windows so
 // cmd.exe resolves 'pnpm' to 'pnpm.cmd' via PATH.
-const WINDOWS_SHELL_OPTS = process.platform === 'win32' ? {shell: true} : {};
+export const WINDOWS_SHELL_OPTS =
+  process.platform === 'win32' ? {shell: true} : {};
 const PNPM_PACK_TIMEOUT_IN_MS = 60_000;
 
 type DependencySection =
@@ -68,10 +69,15 @@ async function getPackedTemplatePackageJson(sourceTemplateDir: string) {
       ? packedTarball
       : join(tempDir, packedTarball);
 
+    const PACKAGE_JSON_ENTRY = 'package/package.json';
     await pipeline(
       createReadStream(tarballPath),
       gunzipMaybe(),
-      tarExtract(tempDir),
+      tarExtract(tempDir, {
+        filter(name) {
+          return name === PACKAGE_JSON_ENTRY;
+        },
+      }),
     );
 
     const packedManifestRaw = await readFile(

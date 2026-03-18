@@ -308,7 +308,9 @@ jobs:
         shell: bash
 
       - name: 📦 Build packages
-        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run build:pkg
+        run: pnpm run build:pkg
+        env:
+          SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK: 'false'
         shell: bash
 
       - name: 🧪 Scaffold with ${{ matrix.pm }}
