@@ -1,6 +1,6 @@
 import {test, expect, setTestStore} from '../../fixtures';
 
-setTestStore('mockShop');
+setTestStore('hydrogenPreviewStorefront');
 
 test.describe('Home Page', () => {
   test('should display hero image, product grid, and no console errors', async ({
@@ -24,7 +24,8 @@ test.describe('Home Page', () => {
 
     const productGridImage = page
       .getByRole('region', {name: 'Recommended Products'})
-      .getByRole('link', {name: "Women's T-shirt"})
+      .getByRole('link')
+      .first()
       .getByRole('img');
 
     await expect(heroImage).toBeVisible();
