@@ -229,7 +229,11 @@ jobs:
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
       - name: 🧪 Run E2E tests
-        run: pnpm exec playwright test
+        # Customer Account tests are run separately in a different job
+        # because they require a static redirect URL so we have a different CI
+        # job to test Customer Account specific features.
+        # The @customer-account tag is defined in e2e/specs/skeleton/customerAccount.spec.ts
+        run: pnpm exec playwright test --grep-invert "@customer-account"
         env:
           EJSON_PRIVATE_KEY: ${{ secrets.EJSON_PRIVATE_KEY }}
 
@@ -238,6 +242,86 @@ jobs:
         if: ${{ always() && !cancelled() }}
         with:
           name: playwright-report
+          path: playwright-report/
+          if-no-files-found: warn
+          retention-days: 30
+
+  test_e2e_customer_account:
+    name: ⬣ E2E Customer Account tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    if: >-
+      github.event_name == 'push' ||
+      contains(github.event.pull_request.labels.*.name, 'run-customer-account-e2e')
+    concurrency:
+      # Serialized because all runs deploy to the same Oxygen storefront URL —
+      # concurrent deploys would overwrite each other and cause test flakes.
+      group: oxygen-deploy-customer-account-e2e
+      cancel-in-progress: false
+    # Required secrets:
+    #   OXYGEN_DEPLOYMENT_TOKEN_1000108386 — deploy token for the benchmark shop's Oxygen storefront
+    #   EJSON_PRIVATE_KEY — decrypts secrets.ejson to provide CUSTOMER_ACCOUNT_TEST_EMAIL
+    # These correspond to the benchmark shop (drru00-at.myshopify.com / storefront 1000108386).
+    # Update both if the test shop changes.
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        with:
+          run_install: false
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 📦 Build packages
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run build:pkg
+
+      #! oxygen_storefront_id: 1000108386
+      - name: 🚀 Deploy skeleton to Oxygen
+        id: deploy
+        working-directory: templates/skeleton
+        run: pnpm exec shopify hydrogen deploy --no-lockfile-check --force --auth-bypass-token --env-file ../../e2e/envs/.env.customerAccount
+        env:
+          SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000108386 }}
+
+      - name: 📋 Extract deployment URL
+        id: deployment_info
+        working-directory: templates/skeleton
+        run: |
+          echo "url=$(jq -r '.url' h2_deploy_log.json)" >> "$GITHUB_OUTPUT"
+          echo "auth_bypass_token=$(jq -r '.authBypassToken // empty' h2_deploy_log.json)" >> "$GITHUB_OUTPUT"
+
+      - name: 🎭 Install Playwright Chromium
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: 🔐 Install ejson
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y golang-go
+          go install github.com/Shopify/ejson/cmd/ejson@latest
+          echo "$HOME/go/bin" >> $GITHUB_PATH
+
+      - name: 🧪 Run Customer Account E2E tests
+        run: pnpm exec playwright test --project=skeleton e2e/specs/skeleton/customerAccount.spec.ts
+        env:
+          CUSTOMER_ACCOUNT_URL: ${{ steps.deployment_info.outputs.url }}
+          OXYGEN_AUTH_BYPASS_TOKEN: ${{ steps.deployment_info.outputs.auth_bypass_token }}
+          EJSON_PRIVATE_KEY: ${{ secrets.EJSON_PRIVATE_KEY }}
+
+      - name: 📤 Upload Playwright Report
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        if: ${{ always() && !cancelled() }}
+        with:
+          name: playwright-report-customer-account
           path: playwright-report/
           if-no-files-found: warn
           retention-days: 30

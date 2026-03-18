@@ -16,10 +16,16 @@ export {DiscountUtil} from './discount-utils';
 export {GiftCardUtil} from './gift-card-utils';
 export {CustomerAccountUtil} from './customer-account-utils';
 
+export const CUSTOMER_ACCOUNT_STORAGE_STATE_PATH = path.resolve(
+  __dirname,
+  '../.auth/customer-account.json',
+);
+
+// Only applies to the local Cloudflare tunnel path (not Oxygen deployments).
 // Tunnel-based customer account tests need generous time because Cloudflare
 // quick-tunnel propagation takes an observed 30-90s on top of dev server startup (~10s).
-// This timeout is used for both the beforeAll hook (via test.setTimeout) and
-// individual tests (via test.describe.configure in spec files).
+// Used for both the beforeAll hook (via test.setTimeout) and individual tests
+// (via test.describe.configure in spec files).
 export const TUNNEL_SETUP_TIMEOUT_IN_MS = 3 * 60 * 1000;
 
 export const test = base.extend<

@@ -1,5 +1,7 @@
-import type {Page, BrowserContext} from '@playwright/test';
+import type {Page} from '@playwright/test';
 import {expect} from '@playwright/test';
+import {mkdir} from 'node:fs/promises';
+import nodePath from 'node:path';
 
 const DEFAULT_OTP = '000000';
 
@@ -12,7 +14,9 @@ const DEFAULT_OTP = '000000';
  * - A test customer whose email ends in `@example.com`
  *
  * The benchmark shop bypass allows OTP to be `000000` when the loadtest
- * header is present and the email ends in `@example.com`.
+ * header is present and the email ends in `@example.com`. The loadtest
+ * header (`X-Shopify-Loadtest`) is set globally via `playwright.config.ts`
+ * `extraHTTPHeaders`, not per-request in this fixture.
  */
 export class CustomerAccountUtil {
   readonly page: Page;
@@ -29,8 +33,6 @@ export class CustomerAccountUtil {
    * @param otp - OTP code (defaults to 000000 for benchmark shops)
    */
   async login(email: string, otp: string = DEFAULT_OTP) {
-    // await this.enableLoadtestBypass();
-
     await this.page.goto('/');
     await this.page.waitForLoadState('networkidle');
 
@@ -80,6 +82,24 @@ export class CustomerAccountUtil {
       await submitButton.first().click();
     }
 
+    // Detect OTP errors before waiting for redirect — if the bypass isn't
+    // configured correctly, the page shows an error and the redirect never comes.
+    // Shopify's login page always renders an empty [role="alert"] live region,
+    // so we filter to only match elements that actually contain error text.
+    const otpError = this.page
+      .locator('[data-error], .field__message--error, [role="alert"]')
+      .filter({hasText: /.+/});
+    if (await otpError.isVisible({timeout: 3000}).catch(() => false)) {
+      throw new Error(
+        'OTP submission failed — check if bypass is configured correctly',
+      );
+    }
+
+    // Wait until we've left Shopify's hosted login and redirected back to the store
+    const redirectBackTimeoutInMs = 30_000;
+    await this.page.waitForURL((url) => !url.hostname.includes('shopify.com'), {
+      timeout: redirectBackTimeoutInMs,
+    });
     await this.page.waitForLoadState('networkidle');
   }
 
@@ -93,6 +113,15 @@ export class CustomerAccountUtil {
 
     // Logout redirects through Shopify and back to the store
     await this.page.waitForLoadState('networkidle');
+  }
+
+  /**
+   * Serialize cookies and localStorage to disk so subsequent tests can
+   * skip the full OAuth flow by loading this file via `test.use({ storageState })`.
+   */
+  async saveStorageState(filePath: string): Promise<void> {
+    await mkdir(nodePath.dirname(filePath), {recursive: true});
+    await this.page.context().storageState({path: filePath});
   }
 
   /**
@@ -120,7 +149,7 @@ export class CustomerAccountUtil {
           await this.page.waitForLoadState('networkidle');
           return signInLink.isVisible().catch(() => false);
         },
-        {timeout: 30000, intervals: [2000]},
+        {timeout: 30000, intervals: [5000]},
       )
       .toBe(true);
   }

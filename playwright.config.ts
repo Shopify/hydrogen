@@ -3,7 +3,6 @@ import {getTestSecrets} from './e2e/fixtures/test-secrets';
 
 const isCI = !!process.env.CI;
 
-// TODO: Check if we have a helper to getTestSecrets and use instead of recreating
 function getLoadtestHeaders(): Record<string, string> {
   try {
     const secrets = getTestSecrets();
