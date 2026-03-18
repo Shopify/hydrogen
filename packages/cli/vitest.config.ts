@@ -5,7 +5,7 @@ export default defineConfig({
     globalSetup: './vitest.setup.ts',
     exclude: [
       ...configDefaults.exclude,
-      '**/*.e2e.test.ts', // E2E tests require full git history; run in dedicated workflows
+      '**/*-e2e.test.ts', // E2E tests require full git history; run in dedicated workflows
     ],
     coverage: {
       provider: 'v8',

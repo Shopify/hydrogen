@@ -6,8 +6,9 @@
  * Tests scaffold real projects from git history and run full upgrade flows.
  *
  * Run via: .github/workflows/test-upgrade-flow.yml
- * Not included in the regular `pnpm test` suite because they require full git
- * history (fetch-depth: 0) to scaffold historical skeleton templates.
+ * Not included in the regular `pnpm test` suite (excluded via `vitest.config.ts`
+ * pattern `**\/*-e2e.test.ts`) because they require full git history
+ * (fetch-depth: 0) to scaffold historical skeleton templates.
  *
  * Environment variables:
  *   UPGRADE_TEST_FROM=<version>   - Test from specific version
