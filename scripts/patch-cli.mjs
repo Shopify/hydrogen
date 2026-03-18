@@ -15,13 +15,21 @@ let patchModule;
 try {
   patchModule = await import('../packages/cli/dist/lib/patch-cli.js');
 } catch {
-  console.error(
-    '[patch-cli] packages/cli must be built first. Run: pnpm build --filter=@shopify/cli-hydrogen',
+  console.warn(
+    '[patch-cli] Skipping - packages/cli not built yet.',
   );
-  process.exit(1);
+  process.exit(0);
 }
 
-const {applyPatch, getRunJsPath} = patchModule;
-const runJsPath = getRunJsPath(ROOT);
-const applied = applyPatch(runJsPath);
-if (applied) console.log('[patch-cli] Patched run.js — local packages/cli will be used');
+try {
+  const {applyPatch, getRunJsPath} = patchModule;
+  const runJsPath = getRunJsPath(ROOT);
+  const applied = applyPatch(runJsPath);
+  if (applied) console.log('[patch-cli] Patched run.js — local packages/cli will be used');
+} catch (err) {
+  if (err instanceof Error && err.message.includes('@shopify/cli is not installed')) {
+    console.warn('[patch-cli] Skipping - @shopify/cli not installed yet.');
+    process.exit(0);
+  }
+  throw err;
+}

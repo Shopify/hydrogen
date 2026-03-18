@@ -172,6 +172,24 @@ describe('patch-cli', () => {
         '@shopify/cli is not installed',
       );
     });
+
+    it('re-throws non-ENOENT errors', () => {
+      const dir = resolve(
+        tmpdir(),
+        `patch-cli-test-${Date.now()}-${Math.random()}`,
+      );
+      mkdirSync(dir, {recursive: true});
+      tempDirs.push(dir);
+
+      // readFileSync on a directory throws EISDIR, not ENOENT
+      const dirAsFile = resolve(dir, 'run.js');
+      mkdirSync(dirAsFile);
+
+      expect(() => applyPatch(dirAsFile)).toThrow();
+      expect(() => applyPatch(dirAsFile)).not.toThrow(
+        '@shopify/cli is not installed',
+      );
+    });
   });
 
   describe('removePatch', () => {
@@ -189,6 +207,15 @@ describe('patch-cli', () => {
       // No .backup file exists because we wrote patched content directly
       expect(removePatch(filePath)).toBe(true);
       expect(readFileSync(filePath, 'utf8')).toBe(generateOriginalContent());
+    });
+
+    it('returns false when file does not exist', () => {
+      const nonexistentPath = resolve(
+        tmpdir(),
+        `no-such-dir-${Date.now()}`,
+        'run.js',
+      );
+      expect(removePatch(nonexistentPath)).toBe(false);
     });
 
     it('is idempotent — returns false if not patched', () => {

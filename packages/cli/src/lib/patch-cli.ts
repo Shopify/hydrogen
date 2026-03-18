@@ -1,6 +1,10 @@
 import {readFileSync, writeFileSync, existsSync, unlinkSync} from 'node:fs';
 import {resolve} from 'node:path';
 
+function isErrnoException(err: unknown): err is NodeJS.ErrnoException {
+  return err instanceof Error && 'code' in err;
+}
+
 /** Marker comment used to detect whether the patch has been applied. */
 export const MARKER = '// [hydrogen-monorepo-patch]';
 
@@ -157,7 +161,7 @@ if (monorepoRoot) {
 export function generateOriginalContent(): string {
   return `#!/usr/bin/env node
 
-// process.removeAllListeners('warning')
+process.removeAllListeners('warning')
 
 import runCLI from '../dist/index.js'
 
@@ -175,7 +179,7 @@ export function applyPatch(runJsPath: string): boolean {
   try {
     current = readFileSync(runJsPath, 'utf8');
   } catch (err: unknown) {
-    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+    if (isErrnoException(err) && err.code === 'ENOENT') {
       throw new Error(
         `@shopify/cli is not installed (${runJsPath} not found). Run 'pnpm install' first.`,
       );
@@ -201,7 +205,15 @@ export function applyPatch(runJsPath: string): boolean {
  * hardcoded original content.
  */
 export function removePatch(runJsPath: string): boolean {
-  const current = readFileSync(runJsPath, 'utf8');
+  let current: string;
+  try {
+    current = readFileSync(runJsPath, 'utf8');
+  } catch (err: unknown) {
+    if (isErrnoException(err) && err.code === 'ENOENT') {
+      return false;
+    }
+    throw err;
+  }
   if (!isPatchApplied(current)) return false;
 
   const backupPath = runJsPath + '.backup';
