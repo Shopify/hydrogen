@@ -25,7 +25,7 @@ description: |
   - The .graphqlrc.ts file is preserved with customer account section commented out
 notes: []
 requirements: |
-  - Node.js 20 or higher (less than 22.0.0) for production deployment
+  - Node.js 20 or higher for production deployment
   - npm or yarn package manager
   - Shopify Storefront API credentials
 ingredients:
@@ -211,6 +211,13 @@ steps:
     diffs:
       - file: vite.config.ts
         patchFile: vite.config.ts.a3d046.patch
+  - type: PATCH
+    step: "17"
+    name: Update TypeScript configuration
+    description: Remove Oxygen worker types from tsconfig since Express replaces Oxygen
+    diffs:
+      - file: tsconfig.json
+        patchFile: tsconfig.json.a59979.patch
 nextSteps: |
   1. Create a `.env` file with your Shopify Storefront API credentials:
     ```
