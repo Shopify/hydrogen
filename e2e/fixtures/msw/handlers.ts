@@ -44,6 +44,7 @@ const customerOrdersMock: CustomerOrdersQuery = {
 export interface MswScenarioMeta {
   handlers: RequestHandler[];
   mocksCustomerAccountApi: boolean;
+  mocksLegacyCustomerAuth: boolean;
 }
 
 const scenarios = new Map<MswScenario, MswScenarioMeta>();
@@ -96,6 +97,52 @@ scenarios.set(MSW_SCENARIOS.customerAccountLoggedIn, {
     }),
   ],
   mocksCustomerAccountApi: true,
+  mocksLegacyCustomerAuth: false,
+});
+
+/**
+ * Legacy customer account scenario: simulates a logged-in customer using
+ * Storefront API auth (not Customer Account API). The legacy recipe stores
+ * customerAccessToken in the session instead of customerAccount.
+ * GraphQL queries are matched by operation name against the Storefront API.
+ */
+export const LEGACY_CUSTOMER_FIRST_NAME = 'Taylor';
+
+const legacyCustomerMock = {
+  acceptsMarketing: false,
+  addresses: {nodes: []},
+  defaultAddress: null,
+  email: 'taylor@example.com',
+  firstName: LEGACY_CUSTOMER_FIRST_NAME,
+  lastName: 'E2E',
+  numberOfOrders: 0,
+  phone: '+15551234567',
+};
+
+const legacyCustomerOrdersMock = {
+  numberOfOrders: 0,
+  orders: {
+    nodes: [],
+    pageInfo: {
+      hasPreviousPage: false,
+      hasNextPage: false,
+      endCursor: null,
+      startCursor: null,
+    },
+  },
+};
+
+scenarios.set('legacy-customer-account-logged-in', {
+  handlers: [
+    graphql.query('Customer', () => {
+      return HttpResponse.json({data: {customer: legacyCustomerMock}});
+    }),
+    graphql.query('CustomerOrders', () => {
+      return HttpResponse.json({data: {customer: legacyCustomerOrdersMock}});
+    }),
+  ],
+  mocksCustomerAccountApi: false,
+  mocksLegacyCustomerAuth: true,
 });
 
 /**
@@ -424,17 +471,21 @@ export function getHandlersForScenario(
   scenario: string | undefined,
 ): MswScenarioMeta {
   if (!scenario) {
-    return {handlers: [], mocksCustomerAccountApi: false};
+    return {
+      handlers: [],
+      mocksCustomerAccountApi: false,
+      mocksLegacyCustomerAuth: false,
+    };
   }
 
   if (!isMswScenario(scenario)) {
-    throw new Error(`[e2e-msw] Unknown scenario: "${scenario}"`);
+    throw new Error('[e2e-msw] Unknown scenario: "' + scenario + '"');
   }
 
   const meta = scenarios.get(scenario);
   if (!meta) {
     throw new Error(
-      `[e2e-msw] Scenario "${scenario}" registered but metadata missing`,
+      '[e2e-msw] Scenario "' + scenario + '" registered but metadata missing',
     );
   }
 

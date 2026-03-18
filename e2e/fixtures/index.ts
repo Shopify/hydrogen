@@ -55,6 +55,7 @@ export {B2BUtil} from './b2b-utils';
 export {mockCustomerAccountOperation} from './msw/graphql';
 export {MSW_SCENARIOS} from './msw/scenarios';
 export {B2B_COMPANY_NAME} from './msw/handlers';
+export {LEGACY_CUSTOMER_FIRST_NAME} from './msw/handlers';
 
 export const test = base.extend<
   {

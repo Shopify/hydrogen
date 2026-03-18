@@ -25,6 +25,21 @@ export class LegacyCustomerAccountUtil {
     await expect(this.page).toHaveURL(/\/account\/recover/);
   }
 
+  async navigateToOrders() {
+    await this.page.goto('/account/orders');
+    await expect(this.page).toHaveURL(/\/account\/orders/);
+  }
+
+  async navigateToProfile() {
+    await this.page.goto('/account/profile');
+    await expect(this.page).toHaveURL(/\/account\/profile/);
+  }
+
+  async navigateToAddresses() {
+    await this.page.goto('/account/addresses');
+    await expect(this.page).toHaveURL(/\/account\/addresses/);
+  }
+
   // ── Page element locators ───────────────────────────────
 
   getPageHeading(): Locator {
@@ -49,6 +64,59 @@ export class LegacyCustomerAccountUtil {
 
   getLink(name: string | RegExp): Locator {
     return this.page.getByRole('link', {name});
+  }
+
+  // ── Authenticated page locators ─────────────────────────
+
+  getWelcomeHeading(firstName: string): Locator {
+    return this.page.getByRole('heading', {
+      name: new RegExp('Welcome, ' + firstName),
+      level: 1,
+    });
+  }
+
+  getAccountMenuLink(name: string | RegExp): Locator {
+    return this.page.getByRole('link', {name});
+  }
+
+  getEmptyOrdersMessage(): Locator {
+    return this.page.getByText("You haven't placed any orders yet.");
+  }
+
+  getStartShoppingLink(): Locator {
+    return this.page.getByRole('link', {name: /start shopping/i});
+  }
+
+  getFirstNameInput(): Locator {
+    return this.page.getByRole('textbox', {name: /first name/i});
+  }
+
+  getLastNameInput(): Locator {
+    return this.page.getByRole('textbox', {name: /last name/i});
+  }
+
+  getPhoneInput(): Locator {
+    return this.page.getByLabel(/mobile/i);
+  }
+
+  getProfileEmailInput(): Locator {
+    return this.page.locator('#email');
+  }
+
+  getMarketingCheckbox(): Locator {
+    return this.page.getByLabel(/subscribed to marketing/i);
+  }
+
+  getNewPasswordInput(): Locator {
+    return this.page.getByLabel('New password', {exact: true});
+  }
+
+  getNewPasswordConfirmInput(): Locator {
+    return this.page.getByLabel(/new password \(confirm\)/i);
+  }
+
+  getLogoutButton(): Locator {
+    return this.page.getByRole('button', {name: /logout|sign out/i});
   }
 
   // ── Login page assertions ───────────────────────────────
@@ -101,5 +169,41 @@ export class LegacyCustomerAccountUtil {
 
   async assertHeaderHasAccountLink() {
     await expect(this.getHeaderAccountLink()).toBeVisible();
+  }
+
+  // ── Authenticated page assertions ───────────────────────
+
+  async assertOrdersPageRendered(firstName: string) {
+    await expect(this.getWelcomeHeading(firstName)).toBeVisible();
+    await expect(this.page.locator('.orders')).toBeVisible();
+  }
+
+  async assertEmptyOrders() {
+    await expect(this.getEmptyOrdersMessage()).toBeVisible();
+    await expect(this.getStartShoppingLink()).toBeVisible();
+  }
+
+  async assertProfilePageRendered(customer: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+  }) {
+    await expect(this.getFirstNameInput()).toHaveValue(customer.firstName);
+    await expect(this.getLastNameInput()).toHaveValue(customer.lastName);
+    await expect(this.getProfileEmailInput()).toHaveValue(customer.email);
+    await expect(this.getPhoneInput()).toHaveValue(customer.phone);
+  }
+
+  async assertAddressesPageRendered() {
+    await expect(
+      this.page.getByRole('heading', {name: /addresses/i}),
+    ).toBeVisible();
+  }
+
+  async assertAccountMenuLinks() {
+    await expect(this.getAccountMenuLink(/orders/i)).toBeVisible();
+    await expect(this.getAccountMenuLink(/profile/i)).toBeVisible();
+    await expect(this.getAccountMenuLink(/addresses/i)).toBeVisible();
   }
 }
