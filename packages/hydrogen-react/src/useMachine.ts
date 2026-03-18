@@ -6,6 +6,7 @@
 // while keeping xstate/fsm and the cart state machine definition unchanged.
 //
 // Adapted from xstate/react v3.2.1/fsm (MIT license, Stately/xstate).
+// Copyright (c) 2022 Stately, https://stately.ai
 import {
   createMachine,
   interpret,
@@ -22,8 +23,9 @@ import {
 } from 'react';
 
 // useLayoutEffect in the browser (sync after DOM mutations, before paint),
-// useEffect on the server (where useLayoutEffect warns). This matches the
-// original xstate/react behavior via use-isomorphic-layout-effect.
+// useEffect on the server (where useLayoutEffect warns). The check runs once
+// at module evaluation time (not per-render). This matches the original
+// xstate/react behavior via use-isomorphic-layout-effect.
 const useIsomorphicLayoutEffect =
   typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
@@ -111,6 +113,7 @@ export function useMachine<
     return () => {
       service.stop();
     };
+    // service and queue are stable refs from useConstant
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
