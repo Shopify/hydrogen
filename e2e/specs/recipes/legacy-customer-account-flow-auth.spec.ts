@@ -3,7 +3,7 @@ import {
   expect,
   setRecipeFixture,
   MSW_SCENARIOS,
-  LEGACY_CUSTOMER_FIRST_NAME,
+  LEGACY_CUSTOMER_MOCK,
 } from '../../fixtures';
 import {LegacyCustomerAccountUtil} from '../../fixtures/legacy-customer-account-utils';
 
@@ -32,13 +32,6 @@ setRecipeFixture({
  * to /account (the login loader checks session.customerAccessToken).
  */
 
-const legacyCustomerMock = {
-  firstName: LEGACY_CUSTOMER_FIRST_NAME,
-  lastName: 'E2E',
-  email: 'taylor@example.com',
-  phone: '+15551234567',
-};
-
 test.describe('Legacy Customer Account Flow — Authenticated', () => {
   test.describe('Account Home Redirect', () => {
     test('redirects /account to /account/orders when logged in', async ({
@@ -46,6 +39,39 @@ test.describe('Legacy Customer Account Flow — Authenticated', () => {
     }) => {
       await page.goto('/account');
       await expect(page).toHaveURL(/\/account\/orders/);
+    });
+  });
+
+  test.describe('Authenticated Redirects on Public Routes', () => {
+    test('redirects /account/login to /account when already authenticated', async ({
+      page,
+    }) => {
+      await page.goto('/account/login');
+      await expect(page).toHaveURL(/\/account/);
+      await expect(page).not.toHaveURL(/\/account\/login/);
+    });
+
+    test('redirects /account/register to /account when already authenticated', async ({
+      page,
+    }) => {
+      await page.goto('/account/register');
+      await expect(page).toHaveURL(/\/account/);
+      await expect(page).not.toHaveURL(/\/account\/register/);
+    });
+
+    test('redirects /account/recover to /account when already authenticated', async ({
+      page,
+    }) => {
+      await page.goto('/account/recover');
+      await expect(page).toHaveURL(/\/account/);
+      await expect(page).not.toHaveURL(/\/account\/recover/);
+    });
+
+    test('redirects unknown account sub-route to /account when authenticated', async ({
+      page,
+    }) => {
+      await page.goto('/account/nonexistent');
+      await expect(page).toHaveURL(/\/account/);
     });
   });
 
@@ -57,7 +83,9 @@ test.describe('Legacy Customer Account Flow — Authenticated', () => {
 
     test('renders welcome heading with customer first name', async ({page}) => {
       const recipe = new LegacyCustomerAccountUtil(page);
-      await recipe.assertOrdersPageRendered(legacyCustomerMock.firstName);
+      await expect(
+        recipe.getWelcomeHeading(LEGACY_CUSTOMER_MOCK.firstName),
+      ).toBeVisible();
     });
 
     test('shows empty orders message with start shopping link', async ({
@@ -83,7 +111,12 @@ test.describe('Legacy Customer Account Flow — Authenticated', () => {
       page,
     }) => {
       const recipe = new LegacyCustomerAccountUtil(page);
-      await recipe.assertProfilePageRendered(legacyCustomerMock);
+      await recipe.assertProfilePageRendered({
+        firstName: LEGACY_CUSTOMER_MOCK.firstName,
+        lastName: LEGACY_CUSTOMER_MOCK.lastName,
+        email: LEGACY_CUSTOMER_MOCK.email,
+        phone: LEGACY_CUSTOMER_MOCK.phone,
+      });
     });
 
     test('shows marketing preferences checkbox', async ({page}) => {
