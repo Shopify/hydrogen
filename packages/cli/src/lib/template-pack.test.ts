@@ -13,6 +13,8 @@ const DEPENDENCY_SECTIONS = [
   'optionalDependencies',
 ] as const;
 
+const WINDOWS_SHELL_OPTS = process.platform === 'win32' ? {shell: true} : {};
+
 function getCatalogVersion(sourceTemplateDir: string, packageName: string) {
   const catalogVersion = execFileSync(
     'pnpm',
@@ -20,6 +22,7 @@ function getCatalogVersion(sourceTemplateDir: string, packageName: string) {
     {
       cwd: sourceTemplateDir,
       encoding: 'utf8',
+      ...WINDOWS_SHELL_OPTS,
     },
   ).trim();
 

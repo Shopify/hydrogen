@@ -11,6 +11,7 @@ import {extract as tarExtract} from 'tar-fs';
 // calls CreateProcess and bypasses the shell). Use shell: true on Windows so
 // cmd.exe resolves 'pnpm' to 'pnpm.cmd' via PATH.
 const WINDOWS_SHELL_OPTS = process.platform === 'win32' ? {shell: true} : {};
+const PNPM_PACK_TIMEOUT_IN_MS = 60_000;
 
 type DependencySection =
   | 'dependencies'
@@ -47,6 +48,7 @@ async function getPackedTemplatePackageJson(sourceTemplateDir: string) {
       {
         cwd: sourceTemplateDir,
         encoding: 'utf8',
+        timeout: PNPM_PACK_TIMEOUT_IN_MS,
         ...WINDOWS_SHELL_OPTS,
       },
     );
