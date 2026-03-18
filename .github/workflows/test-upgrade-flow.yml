@@ -61,7 +61,7 @@ jobs:
       - name: Run upgrade flow tests
         run: |
           cd packages/cli
-          pnpm test upgrade-e2e.test.ts
+          pnpm exec vitest run --config vitest.e2e.config.ts
         env:
           FORCE_CHANGELOG_SOURCE: local
           SHOPIFY_HYDROGEN_FLAG_FORCE: 1
