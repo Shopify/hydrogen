@@ -24,7 +24,7 @@
 
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {execFile} from 'node:child_process';
-import {readFile, unlink, writeFile} from 'node:fs/promises';
+import {readFile, rename, unlink, writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {promisify} from 'node:util';
 import {exec} from '@shopify/cli-kit/node/system';
@@ -86,13 +86,6 @@ function validateDependencyVersion(
   depName: string,
   depType: 'dependency' | 'devDependency',
 ): void {
-  // Defense-in-depth: callers assert isDefined before calling, but we keep
-  // this check here so the function remains self-contained and testable alone.
-  expect(
-    actualVersion,
-    `${depType} ${depName} should be present after upgrade`,
-  ).toBeDefined();
-
   const expectedBase = stripVersionPrefix(String(expectedVersion));
   const actualBase = stripVersionPrefix(actualVersion);
 
@@ -983,7 +976,7 @@ async function scaffoldProjectAtVersion(
     skeletonVersion,
   );
 
-  await exec('mv', [skeletonPath, projectDir]);
+  await rename(skeletonPath, projectDir);
   await initializeTestProject(projectDir);
 
   return {projectDir, skeletonVersion};

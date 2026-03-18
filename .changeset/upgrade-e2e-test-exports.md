@@ -2,4 +2,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Export `runUpgrade` and `getChangelog` from the upgrade command to support E2E test infrastructure
+Fix multi-version upgrades to accumulate intermediate dependency bumps across all versions between source and target; apply `--legacy-peer-deps` for npm to resolve ERESOLVE conflicts during upgrade
