@@ -23,7 +23,6 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {
   getDependencies,
-  installNodeModules,
   getPackageManager,
   type PackageJson,
 } from '@shopify/cli-kit/node/node-package-manager';
@@ -78,6 +77,8 @@ type ChangeLog = {
 export type CumulativeRelease = {
   features: Array<ReleaseItem>;
   fixes: Array<ReleaseItem>;
+  removeDependencies: string[];
+  removeDevDependencies: string[];
 };
 
 const INSTRUCTIONS_FOLDER = '.hydrogen';
@@ -204,7 +205,7 @@ export async function runUpgrade({
     });
 
     // Get an aggregate list of features and fixes included in the upgrade versions range
-    cumulativeRelease = getCummulativeRelease({
+    cumulativeRelease = getCumulativeRelease({
       availableUpgrades,
       currentVersion,
       currentDependencies,
@@ -231,6 +232,8 @@ export async function runUpgrade({
     selectedRelease,
     currentDependencies,
     targetVersion,
+    cumulativeRemoveDependencies: cumulativeRelease.removeDependencies,
+    cumulativeRemoveDevDependencies: cumulativeRelease.removeDevDependencies,
   });
   await validateUpgrade({
     appPath,
@@ -553,9 +556,9 @@ export async function getSelectedRelease({
 }
 
 /**
- * Gets an aggregate list of features and fixes included in the upgrade versions range
+ * Gets an aggregate list of features, fixes, and dependency removals included in the upgrade versions range
  */
-export function getCummulativeRelease({
+export function getCumulativeRelease({
   availableUpgrades,
   selectedRelease,
   currentVersion,
@@ -568,15 +571,25 @@ export function getCummulativeRelease({
 }): CumulativeRelease {
   const currentPinnedVersion = getAbsoluteVersion(currentVersion);
 
-  if (!availableUpgrades?.length) {
-    return {features: [], fixes: []};
-  }
+  const empty: CumulativeRelease = {
+    features: [],
+    fixes: [],
+    removeDependencies: [],
+    removeDevDependencies: [],
+  };
 
-  // For synthetic next releases, return features/fixes directly
+  if (!availableUpgrades?.length) return empty;
+
+  // For synthetic next releases, return features/fixes directly without accumulation.
+  // Synthetic "next" releases are constructed from the latest real release and already
+  // carry all necessary removals, so no additional accumulation is needed.
   if (selectedRelease.dependencies?.['@shopify/hydrogen'] === 'next') {
     return {
+      ...empty,
       features: selectedRelease.features || [],
       fixes: selectedRelease.fixes || [],
+      removeDependencies: selectedRelease.removeDependencies ?? [],
+      removeDevDependencies: selectedRelease.removeDevDependencies ?? [],
     };
   }
 
@@ -595,14 +608,78 @@ export function getCummulativeRelease({
     return hasOutdatedDependencies({release, currentDependencies});
   });
 
-  return upgradingReleases.reduce(
-    (acc, release) => {
-      acc.features = [...acc.features, ...release.features];
-      acc.fixes = [...acc.fixes, ...release.fixes];
-      return acc;
-    },
-    {features: [], fixes: []} as CumulativeRelease,
+  const features = upgradingReleases.flatMap((r) => r.features);
+  const fixes = upgradingReleases.flatMap((r) => r.fixes);
+
+  const releasesByVersion = [...upgradingReleases].sort((a, b) =>
+    semver.compare(a.version, b.version),
   );
+
+  // Track deps that are re-added after being removed in the upgrade range.
+  // A dep removed in one release but re-added in a later release (e.g. react-router
+  // renamed/upgraded) should not appear in the cumulative removal list.
+  // Use chronological ordering so this is independent from changelog input order.
+  // Track each dependency type separately to handle cross-type moves correctly.
+  const removedDepsAt = new Map<string, number>();
+  const removedDevDepsAt = new Map<string, number>();
+
+  // Last-write-wins: If a dep is removed in multiple releases, the map stores the *last* removal index.
+  // This ensures that a re-addition between two removal occurrences won't suppress the later removal.
+  releasesByVersion.forEach((release, i) => {
+    release.removeDependencies?.forEach((dep) => {
+      removedDepsAt.set(dep, i);
+    });
+    release.removeDevDependencies?.forEach((dep) => {
+      removedDevDepsAt.set(dep, i);
+    });
+  });
+
+  const reinstalledDeps = new Set<string>();
+  const reinstalledDevDeps = new Set<string>();
+
+  for (let i = 0; i < releasesByVersion.length; i++) {
+    const release = releasesByVersion[i];
+
+    if (!release) continue;
+
+    const dependencies = release.dependencies ?? {};
+    const devDependencies = release.devDependencies ?? {};
+
+    // Only mark as reinstalled if it returns to the same dependency type
+    Object.keys(dependencies).forEach((dep) => {
+      const removalI = removedDepsAt.get(dep);
+      // >= allows same-release remove+add (e.g., react-router upgraded in 2025.7.0)
+      if (removalI !== undefined && i >= removalI) {
+        reinstalledDeps.add(dep);
+      }
+    });
+
+    Object.keys(devDependencies).forEach((dep) => {
+      const removalI = removedDevDepsAt.get(dep);
+      // >= allows same-release remove+add
+      if (removalI !== undefined && i >= removalI) {
+        reinstalledDevDeps.add(dep);
+      }
+    });
+  }
+
+  const removeDependencies = [
+    ...new Set(
+      releasesByVersion
+        .flatMap((r) => r.removeDependencies ?? [])
+        .filter((dep) => !reinstalledDeps.has(dep)),
+    ),
+  ];
+
+  const removeDevDependencies = [
+    ...new Set(
+      releasesByVersion
+        .flatMap((r) => r.removeDevDependencies ?? [])
+        .filter((dep) => !reinstalledDevDeps.has(dep)),
+    ),
+  ];
+
+  return {features, fixes, removeDependencies, removeDevDependencies};
 }
 
 /**
@@ -623,7 +700,7 @@ export function displayConfirmation({
   if (features.length || fixes.length) {
     renderInfo({
       headline: `Included in this upgrade:`,
-      //@ts-ignore we know that filter(Boolean) will always return an array
+      // @ts-expect-error - filter(Boolean) removes falsy values, leaving only objects
       customSections: [
         features.length && {
           title: 'Features',
@@ -859,24 +936,33 @@ export function buildUpgradeCommandArgs({
 
 /**
  * Installs the new Hydrogen dependencies
+ *
+ * Callers must pass cumulative removal lists from `getCumulativeRelease()` to ensure
+ * dependencies removed in intermediate releases are properly cleaned up when upgrading
+ * across multiple versions.
  */
 export async function upgradeNodeModules({
   appPath,
   selectedRelease,
   currentDependencies,
   targetVersion,
+  cumulativeRemoveDependencies,
+  cumulativeRemoveDevDependencies,
 }: {
   appPath: string;
   selectedRelease: Release;
   currentDependencies: Record<string, string>;
   targetVersion?: string;
+  cumulativeRemoveDependencies: string[];
+  cumulativeRemoveDevDependencies: string[];
 }) {
   const tasks: Array<{title: string; task: () => Promise<void>}> = [];
 
-  // Remove deprecated dependencies first if specified
+  // Cumulative removals cover intermediate releases (multi-version jumps).
+  // Defaults to the target release's own removals when not upgrading across multiple versions.
   const depsToRemove = [
-    ...(selectedRelease.removeDependencies || []),
-    ...(selectedRelease.removeDevDependencies || []),
+    ...cumulativeRemoveDependencies,
+    ...cumulativeRemoveDevDependencies,
   ].filter((dep) => dep in currentDependencies);
 
   if (depsToRemove.length > 0) {
@@ -892,7 +978,9 @@ export async function upgradeNodeModules({
     });
   }
 
-  // Then install/upgrade dependencies
+  // Install/upgrade dependencies using exec() directly instead of cli-kit's
+  // installNodeModules(), which runs `<pm> install` and doesn't support adding
+  // specific packages with version specifiers (yarn/pnpm require `add`).
   const upgradeArgs = buildUpgradeCommandArgs({
     selectedRelease,
     currentDependencies,
@@ -903,11 +991,24 @@ export async function upgradeNodeModules({
     tasks.push({
       title: `Upgrading dependencies`,
       task: async () => {
-        await installNodeModules({
-          directory: appPath,
-          packageManager: await getPackageManager(appPath),
-          args: upgradeArgs,
-        });
+        const packageManager = await getPackageManager(appPath);
+        const command =
+          packageManager === 'npm'
+            ? 'install'
+            : packageManager === 'yarn'
+              ? 'add'
+              : packageManager === 'pnpm'
+                ? 'add'
+                : packageManager === 'bun'
+                  ? 'install'
+                  : 'install'; // fallback to npm for 'unknown'
+        await exec(
+          resolvePackageManagerName(packageManager),
+          [command, ...upgradeArgs],
+          {
+            cwd: appPath,
+          },
+        );
       },
     });
   }
@@ -915,6 +1016,15 @@ export async function upgradeNodeModules({
   if (tasks.length > 0) {
     await renderTasks(tasks, {});
   }
+}
+
+/**
+ * Normalizes the package manager name, falling back to npm for 'unknown'.
+ */
+function resolvePackageManagerName(
+  packageManager: 'npm' | 'yarn' | 'pnpm' | 'unknown' | 'bun',
+): 'npm' | 'yarn' | 'pnpm' | 'bun' {
+  return packageManager === 'unknown' ? 'npm' : packageManager;
 }
 
 /**
@@ -942,10 +1052,9 @@ async function uninstallNodeModules({
             ? 'remove'
             : 'uninstall'; // fallback to npm for 'unknown'
 
-  const actualPackageManager =
-    packageManager === 'unknown' ? 'npm' : packageManager;
-
-  await exec(actualPackageManager, [command, ...args], {cwd: directory});
+  await exec(resolvePackageManagerName(packageManager), [command, ...args], {
+    cwd: directory,
+  });
 }
 
 /**

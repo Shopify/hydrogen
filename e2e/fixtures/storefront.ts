@@ -1,4 +1,4 @@
-import type {Page, BrowserContext, Locator} from '@playwright/test';
+import type {Page, BrowserContext, Locator, Route} from '@playwright/test';
 import {expect} from '@playwright/test';
 
 // Privacy Banner element IDs
@@ -985,8 +985,7 @@ export class StorefrontPage {
    * @param enable - Whether to enable (true) or disable (false) the privacy banner
    */
   async setWithPrivacyBanner(enable: boolean) {
-    // Intercept the Hydrogen development bundle
-    await this.page.route('**/@fs/**/hydrogen/dist/**/*.js', async (route) => {
+    const injectConsentFlag = async (route: Route) => {
       const response = await route.fetch();
       let body = await response.text();
 
@@ -1003,7 +1002,17 @@ export class StorefrontPage {
         headers: response.headers(),
         body,
       });
-    });
+    };
+
+    // Intercept the Hydrogen bundle in BOTH Vite serving modes:
+    // 1. Direct filesystem serving (monorepo — hydrogen not in optimizeDeps)
+    await this.page.route('**/@fs/**/hydrogen/dist/**/*.js', injectConsentFlag);
+    // 2. Vite pre-bundled deps (production-like — hydrogen in optimizeDeps).
+    //    Trailing * after .js matches Vite's cache-busting query strings (?v=abc123).
+    await this.page.route(
+      '**/.vite/deps/@shopify_hydrogen*.js*',
+      injectConsentFlag,
+    );
   }
 
   async getCartId() {
