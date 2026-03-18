@@ -95,6 +95,10 @@ export class LegacyCustomerAccountUtil {
     return this.page.getByRole('textbox', {name: /last name/i});
   }
 
+  getCityInput(): Locator {
+    return this.page.getByRole('textbox', {name: /city/i});
+  }
+
   getPhoneInput(): Locator {
     return this.page.getByLabel(/mobile/i);
   }
@@ -172,15 +176,6 @@ export class LegacyCustomerAccountUtil {
   }
 
   // ── Authenticated page assertions ───────────────────────
-
-  async assertOrdersPageRendered(firstName: string) {
-    await expect(this.getWelcomeHeading(firstName)).toBeVisible();
-    await expect(
-      this.getEmptyOrdersMessage().or(
-        this.page.getByRole('link', {name: /view order/i}),
-      ),
-    ).toBeVisible();
-  }
 
   async assertEmptyOrders() {
     await expect(this.getEmptyOrdersMessage()).toBeVisible();

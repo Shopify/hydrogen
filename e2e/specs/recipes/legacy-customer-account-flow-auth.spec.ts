@@ -67,11 +67,11 @@ test.describe('Legacy Customer Account Flow — Authenticated', () => {
       await expect(page).not.toHaveURL(/\/account\/recover/);
     });
 
-    test('redirects unknown account sub-route to /account when authenticated', async ({
+    test('redirects unknown account sub-route to /account/orders when authenticated', async ({
       page,
     }) => {
       await page.goto('/account/nonexistent');
-      await expect(page).toHaveURL(/\/account/);
+      await expect(page).toHaveURL(/\/account\/orders/);
     });
   });
 
@@ -143,13 +143,10 @@ test.describe('Legacy Customer Account Flow — Authenticated', () => {
     });
 
     test('shows new address form with required fields', async ({page}) => {
-      await expect(
-        page.getByRole('textbox', {name: /first name/i}),
-      ).toBeVisible();
-      await expect(
-        page.getByRole('textbox', {name: /last name/i}),
-      ).toBeVisible();
-      await expect(page.getByRole('textbox', {name: /city/i})).toBeVisible();
+      const recipe = new LegacyCustomerAccountUtil(page);
+      await expect(recipe.getFirstNameInput()).toBeVisible();
+      await expect(recipe.getLastNameInput()).toBeVisible();
+      await expect(recipe.getCityInput()).toBeVisible();
     });
   });
 
