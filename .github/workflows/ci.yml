@@ -365,8 +365,42 @@ jobs:
         id: deployment_info
         working-directory: templates/skeleton
         run: |
-          echo "url=$(jq -r '.url' h2_deploy_log.json)" >> "$GITHUB_OUTPUT"
-          echo "auth_bypass_token=$(jq -r '.authBypassToken // empty' h2_deploy_log.json)" >> "$GITHUB_OUTPUT"
+          URL="$(jq -r '.url' h2_deploy_log.json)"
+          TOKEN="$(jq -r '.authBypassToken // empty' h2_deploy_log.json)"
+          if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+            echo "::error::Deployment URL is empty — h2_deploy_log.json may be missing or malformed"
+            exit 1
+          fi
+          if [ -z "$TOKEN" ]; then
+            echo "::error::Auth bypass token is empty — deploy may not have generated one"
+            exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "auth_bypass_token=$TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: 🩺 Wait for deployment to be healthy
+        env:
+          DEPLOYMENT_URL: ${{ steps.deployment_info.outputs.url }}
+          AUTH_BYPASS_TOKEN: ${{ steps.deployment_info.outputs.auth_bypass_token }}
+        run: |
+          # Poll the deployment until it returns 200 (not 302 redirect).
+          # Oxygen deployments can take a few seconds to propagate after
+          # the deploy command reports success.
+          MAX_ATTEMPTS=30
+          POLL_INTERVAL_IN_SECONDS=3
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "oxygen-auth-bypass-token: $AUTH_BYPASS_TOKEN" \
+              "$DEPLOYMENT_URL")
+            if [ "$STATUS" = "200" ]; then
+              echo "Deployment is healthy (HTTP $STATUS) after $((i * POLL_INTERVAL_IN_SECONDS))s"
+              exit 0
+            fi
+            echo "Attempt $i/$MAX_ATTEMPTS: HTTP $STATUS — waiting ${POLL_INTERVAL_IN_SECONDS}s..."
+            sleep $POLL_INTERVAL_IN_SECONDS
+          done
+          echo "::error::Deployment did not become healthy within $((MAX_ATTEMPTS * POLL_INTERVAL_IN_SECONDS))s (last status: $STATUS)"
+          exit 1
 
       - name: 🎭 Install Playwright Chromium
         run: pnpm exec playwright install chromium --with-deps

@@ -19,24 +19,15 @@ if (externalUrl) {
 }
 
 // When running against a password-protected Oxygen deployment, inject the
-// auth bypass token as a cookie so Playwright requests aren't blocked.
+// auth bypass token as an HTTP header so Oxygen serves the app instead of
+// redirecting to its OAuth password page. Oxygen checks request headers
+// (not cookies) for this token.
+// See: https://shopify.dev/docs/storefronts/headless/hydrogen/debugging/end-to-end-testing
 const authBypassToken = process.env.OXYGEN_AUTH_BYPASS_TOKEN;
 if (authBypassToken && externalUrl) {
-  const oxygenUrl = new URL(externalUrl);
   test.use({
-    storageState: {
-      cookies: [
-        {
-          name: '_oxygen_auth_bypass_token',
-          value: authBypassToken,
-          domain: oxygenUrl.hostname,
-          path: '/',
-          httpOnly: false,
-          secure: true,
-          sameSite: 'None' as const,
-        },
-      ],
-      origins: [],
+    extraHTTPHeaders: {
+      'oxygen-auth-bypass-token': authBypassToken,
     },
   });
 }
@@ -112,10 +103,9 @@ test.describe('Customer Account', {tag: '@customer-account'}, () => {
   });
 
   test.describe('Auth Persistence', () => {
-    // The saved session file from Auth Setup includes the Oxygen bypass cookie
-    // because it was present in the browser context at save time. This inner
-    // test.use fully replaces the file-level storageState, but the bypass
-    // cookie survives because it's included in the saved file.
+    // Load the saved session from Auth Setup so we skip the full OAuth flow.
+    // The Oxygen auth bypass is handled via extraHTTPHeaders (file-level),
+    // which applies to all tests regardless of storageState overrides.
     test.use({storageState: CUSTOMER_ACCOUNT_STORAGE_STATE_PATH});
 
     test('stays logged in after navigating away and back', async ({
@@ -133,7 +123,7 @@ test.describe('Customer Account', {tag: '@customer-account'}, () => {
   });
 
   test.describe('Account Pages', () => {
-    // See Auth Persistence comment — bypass cookie is embedded in the saved session file
+    // Load saved session — bypass header is applied file-level via extraHTTPHeaders
     test.use({storageState: CUSTOMER_ACCOUNT_STORAGE_STATE_PATH});
 
     test('navigates to orders page', async ({page}) => {
@@ -169,7 +159,7 @@ test.describe('Customer Account', {tag: '@customer-account'}, () => {
   // Logout must run after all auth-dependent blocks because it invalidates
   // the server-side session. Unauthenticated runs last and doesn't need auth.
   test.describe('Logout', () => {
-    // See Auth Persistence comment — bypass cookie is embedded in the saved session file
+    // Load saved session — bypass header is applied file-level via extraHTTPHeaders
     test.use({storageState: CUSTOMER_ACCOUNT_STORAGE_STATE_PATH});
 
     test('logs out and shows sign-in link', async ({page, customerAccount}) => {
