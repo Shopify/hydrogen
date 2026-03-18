@@ -25,10 +25,12 @@ on:
     paths:
       - 'docs/changelog.json'
       - 'packages/cli/src/commands/hydrogen/upgrade*.ts'
+      - 'packages/cli/vitest.e2e.config.ts'
   pull_request:
     paths:
       - 'docs/changelog.json'
       - 'packages/cli/src/commands/hydrogen/upgrade*.ts'
+      - 'packages/cli/vitest.e2e.config.ts'
   workflow_dispatch:
 
 jobs:
