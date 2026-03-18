@@ -35,7 +35,14 @@ test.beforeAll(() => {
 // Run serially so all tests share one DevServer/tunnel instance.
 // Each worker spawns its own Cloudflare tunnel, and parallel workers
 // quickly hit Cloudflare's rate limit (429 Too Many Requests).
-test.describe.configure({mode: 'serial'});
+// Tunnel setup (Cloudflare negotiation + route propagation + health polling)
+// takes far longer than a plain dev server startup — 3 minutes accommodates
+// the worst-case warmup.
+const TUNNEL_STARTUP_TIMEOUT_IN_MS = 3 * 60 * 1000;
+test.describe.configure({
+  mode: 'serial',
+  timeout: TUNNEL_STARTUP_TIMEOUT_IN_MS,
+});
 
 test.describe('Customer Account', () => {
   test.describe('Login', () => {
