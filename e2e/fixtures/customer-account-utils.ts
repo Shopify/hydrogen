@@ -34,7 +34,6 @@ export class CustomerAccountUtil {
    */
   async login(email: string, otp: string = DEFAULT_OTP) {
     await this.page.goto('/');
-    await this.page.waitForLoadState('networkidle');
 
     const signInLink = this.page.getByRole('link', {name: 'Sign in'});
     await expect(signInLink).toBeVisible({timeout: 10000});
@@ -42,7 +41,6 @@ export class CustomerAccountUtil {
 
     // The login route redirects to Shopify's hosted login page
     await this.page.waitForURL(/shopify\.com/, {timeout: 30000});
-    await this.page.waitForLoadState('networkidle');
 
     // Enter email on the hosted login page
     const emailInput = this.page.getByRole('textbox', {name: 'Email'});
@@ -55,9 +53,6 @@ export class CustomerAccountUtil {
     });
     await expect(continueButton).toBeVisible();
     await continueButton.click();
-
-    // Wait for the OTP entry page to load
-    await this.page.waitForLoadState('networkidle');
 
     // Enter OTP digits — Shopify's login currently uses a single combined input.
     // The regex matches several possible accessible name patterns to be
@@ -100,7 +95,6 @@ export class CustomerAccountUtil {
     await this.page.waitForURL((url) => !url.hostname.includes('shopify.com'), {
       timeout: redirectBackTimeoutInMs,
     });
-    await this.page.waitForLoadState('networkidle');
   }
 
   /**
@@ -110,9 +104,6 @@ export class CustomerAccountUtil {
     const signOutButton = this.page.getByRole('button', {name: /sign out/i});
     await expect(signOutButton).toBeVisible({timeout: 10000});
     await signOutButton.click();
-
-    // Logout redirects through Shopify and back to the store
-    await this.page.waitForLoadState('networkidle');
   }
 
   /**
@@ -146,7 +137,7 @@ export class CustomerAccountUtil {
       .poll(
         async () => {
           await this.page.goto('/');
-          await this.page.waitForLoadState('networkidle');
+          await this.page.waitForLoadState('domcontentloaded');
           return signInLink.isVisible().catch(() => false);
         },
         {timeout: 30000, intervals: [5000]},
@@ -159,7 +150,6 @@ export class CustomerAccountUtil {
    */
   async navigateToAccount() {
     await this.page.goto('/account');
-    await this.page.waitForLoadState('networkidle');
   }
 
   /**

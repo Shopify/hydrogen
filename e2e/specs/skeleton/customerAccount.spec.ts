@@ -114,7 +114,6 @@ test.describe('Customer Account', {tag: '@customer-account'}, () => {
     }) => {
       // storageState pre-seeds session cookies — load a page to verify they work
       await page.goto('/');
-      await page.waitForLoadState('networkidle');
       await customerAccount.expectLoggedIn();
 
       await customerAccount.navigateToAccount();
@@ -128,7 +127,6 @@ test.describe('Customer Account', {tag: '@customer-account'}, () => {
 
     test('navigates to orders page', async ({page}) => {
       await page.goto('/account/orders');
-      await page.waitForLoadState('networkidle');
 
       expect(page.url()).toContain('/account/orders');
       // The orders page renders a filter form, not a heading
@@ -139,7 +137,6 @@ test.describe('Customer Account', {tag: '@customer-account'}, () => {
 
     test('navigates to profile page', async ({page}) => {
       await page.goto('/account/profile');
-      await page.waitForLoadState('networkidle');
 
       await expect(
         page.getByRole('heading', {level: 2, name: /my profile/i}),
@@ -148,7 +145,6 @@ test.describe('Customer Account', {tag: '@customer-account'}, () => {
 
     test('navigates to addresses page', async ({page}) => {
       await page.goto('/account/addresses');
-      await page.waitForLoadState('networkidle');
 
       await expect(
         page.getByRole('heading', {level: 2, name: /addresses/i}),
@@ -164,14 +160,12 @@ test.describe('Customer Account', {tag: '@customer-account'}, () => {
 
     test('logs out and shows sign-in link', async ({page, customerAccount}) => {
       await page.goto('/');
-      await page.waitForLoadState('networkidle');
       await customerAccount.expectLoggedIn();
 
       await customerAccount.navigateToAccount();
       await customerAccount.logout();
 
       await page.goto('/');
-      await page.waitForLoadState('networkidle');
       await customerAccount.expectLoggedOut();
     });
   });
