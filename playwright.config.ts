@@ -9,7 +9,14 @@ function getLoadtestHeaders(): Record<string, string> {
     const header = secrets.loadtest_header;
     if (header) return {[header]: 'true'};
   } catch {
-    // Secrets not available (e.g. missing ejson key) — skip loadtest header
+    // Secrets not available (e.g. missing ejson key). The loadtest header is
+    // required for customer account OTP bypass — without it, tests fail
+    // cryptically minutes later. Warn loudly so the root cause is obvious.
+    console.warn(
+      '[playwright.config] Failed to load loadtest header from ejson secrets.\n' +
+        'Customer account tests will fail without it.\n' +
+        'Set up ejson: ./scripts/setup-ejson-private-key.sh',
+    );
   }
   return {};
 }

@@ -59,11 +59,11 @@ export class CustomerAccountUtil {
     // Wait for the OTP entry page to load
     await this.page.waitForLoadState('networkidle');
 
-    // Enter OTP digits — Shopify's login may use individual digit inputs
-    // or a single input field. Try the single input first, then fall back
-    // to individual digit inputs.
+    // Enter OTP digits — Shopify's login currently uses a single combined input.
+    // The regex matches several possible accessible name patterns to be
+    // resilient against label changes on the hosted login page we don't control.
     const singleOtpInput = this.page.getByRole('textbox', {
-      name: '-digit code',
+      name: /digit.*code|verification.*code|otp/i,
     });
     await singleOtpInput.first().fill(otp);
 
@@ -87,7 +87,7 @@ export class CustomerAccountUtil {
     // Shopify's login page always renders an empty [role="alert"] live region,
     // so we filter to only match elements that actually contain error text.
     const otpError = this.page
-      .locator('[data-error], .field__message--error, [role="alert"]')
+      .locator('[role="alert"]')
       .filter({hasText: /.+/});
     if (await otpError.isVisible({timeout: 3000}).catch(() => false)) {
       throw new Error(
@@ -174,7 +174,7 @@ export class CustomerAccountUtil {
    * Assert that account navigation links are visible.
    */
   async expectAccountNavVisible() {
-    const nav = this.page.locator('nav[role="navigation"]');
+    const nav = this.page.getByRole('navigation');
     await expect(nav.getByRole('link', {name: /orders/i})).toBeVisible();
     await expect(nav.getByRole('link', {name: /profile/i})).toBeVisible();
     await expect(nav.getByRole('link', {name: /addresses/i})).toBeVisible();

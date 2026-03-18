@@ -26,7 +26,10 @@ export const CUSTOMER_ACCOUNT_STORAGE_STATE_PATH = path.resolve(
 // quick-tunnel propagation takes an observed 30-90s on top of dev server startup (~10s).
 // Used for both the beforeAll hook (via test.setTimeout) and individual tests
 // (via test.describe.configure in spec files).
-export const TUNNEL_SETUP_TIMEOUT_IN_MS = 3 * 60 * 1000;
+// Must exceed STARTUP_TIMEOUT_IN_MS (120s) + TUNNEL_READY_TIMEOUT_IN_MS (90s)
+// in server.ts so the tunnel health check's descriptive error surfaces before
+// Playwright's generic beforeAll timeout fires.
+export const TUNNEL_SETUP_TIMEOUT_IN_MS = 4 * 60 * 1000;
 
 export const test = base.extend<
   {

@@ -246,13 +246,81 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+  test_scaffolding:
+    name: ⬣ Scaffolding tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: ci-scaffolding-${{ matrix.pm }}-${{ github.ref }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        # TODO: Re-enable bun once @shopify/cli releases with @shopify/cli-hydrogen that supports bun.lock
+        pm: [npm, pnpm, yarn]
+        include:
+          - pm: npm
+            lockfile: package-lock.json
+          - pm: pnpm
+            lockfile: pnpm-lock.yaml
+          - pm: yarn
+            lockfile: yarn.lock
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # Explicit version required because pnpm/action-setup doesn't auto-detect
+      # from packageManager field in this context. The version must match
+      # engines.pnpm in package.json (>=10.16.1)
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        with:
+          version: 10.16.1
+          run_install: false
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: 📦 Setup ${{ matrix.pm }}
+        if: matrix.setup
+        run: ${{ matrix.setup }}
+
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 📦 Build packages
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run build:pkg
+
+      - name: 🧪 Scaffold with ${{ matrix.pm }}
+        run: |
+          node packages/create-hydrogen/dist/create-app.js \
+            --path "$RUNNER_TEMP/h2-test-${{ matrix.pm }}" \
+            --language ts \
+            --mock-shop \
+            --install-deps \
+            --no-git \
+            --package-manager ${{ matrix.pm }} \
+            --no-shortcut \
+            --routes \
+            --markets none \
+            --styling none
+
+      - name: ✅ Verify lockfile
+        run: test -f "$RUNNER_TEMP/h2-test-${{ matrix.pm }}/${{ matrix.lockfile }}"
+
+      - name: ✅ Verify app builds
+        run: |
+          cd "$RUNNER_TEMP/h2-test-${{ matrix.pm }}"
+          ${{ matrix.pm }} run build
+
   test_e2e_customer_account:
     name: ⬣ E2E Customer Account tests
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    if: >-
-      github.event_name == 'push' ||
-      contains(github.event.pull_request.labels.*.name, 'run-customer-account-e2e')
     concurrency:
       # Serialized because all runs deploy to the same Oxygen storefront URL —
       # concurrent deploys would overwrite each other and cause test flakes.

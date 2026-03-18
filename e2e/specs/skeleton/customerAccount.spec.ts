@@ -1,3 +1,4 @@
+import {unlink} from 'node:fs/promises';
 import {
   setTestStore,
   test,
@@ -80,6 +81,13 @@ test.describe('Customer Account', {tag: '@customer-account'}, () => {
   // Subsequent describe blocks load this file via test.use({ storageState })
   // to skip the expensive Shopify redirect chain.
   test.describe('Auth Setup', () => {
+    test.beforeAll(async () => {
+      // Delete any stale session file from a previous run. Without this,
+      // if Auth Setup fails, subsequent tests would load stale credentials
+      // and could produce false positives in local development.
+      await unlink(CUSTOMER_ACCOUNT_STORAGE_STATE_PATH).catch(() => {});
+    });
+
     test('logs in and saves session for reuse', async ({customerAccount}) => {
       await customerAccount.login(testEmail);
       await customerAccount.expectLoggedIn();
@@ -90,7 +98,8 @@ test.describe('Customer Account', {tag: '@customer-account'}, () => {
   });
 
   // Intentionally performs full OAuth to test the login flow end-to-end
-  // (does not use saved storageState)
+  // (does not use saved storageState). Assertions cover account page
+  // visibility, auth state in the header, and account navigation links.
   test.describe('Login', () => {
     test('logs in with OTP bypass and shows account page', async ({
       customerAccount,
@@ -98,10 +107,6 @@ test.describe('Customer Account', {tag: '@customer-account'}, () => {
       await customerAccount.login(testEmail);
       await customerAccount.expectAccountPageVisible();
       await customerAccount.expectLoggedIn();
-    });
-
-    test('shows account navigation after login', async ({customerAccount}) => {
-      await customerAccount.login(testEmail);
       await customerAccount.expectAccountNavVisible();
     });
   });
