@@ -1,7 +1,7 @@
-index 422a2eb9..f05fd79c 100644
+index 99730d41..3b5eed43 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
-@@ -15,6 +15,19 @@ import {ProductPrice} from '~/components/ProductPrice';
+@@ -12,6 +12,19 @@ import {ProductPrice} from '~/components/ProductPrice';
  import {ProductImage} from '~/components/ProductImage';
  import {ProductForm} from '~/components/ProductForm';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
@@ -21,7 +21,7 @@ index 422a2eb9..f05fd79c 100644
  
  export const meta: Route.MetaFunction = ({data}) => {
    return [
-@@ -27,11 +40,24 @@ export const meta: Route.MetaFunction = ({data}) => {
+@@ -24,11 +37,24 @@ export const meta: Route.MetaFunction = ({data}) => {
  };
  
  export async function loader(args: Route.LoaderArgs) {
@@ -48,17 +48,16 @@ index 422a2eb9..f05fd79c 100644
  
    return {...deferredData, ...criticalData};
  }
-@@ -44,7 +70,8 @@ async function loadCriticalData({
-   context,
-   params,
-   request,
--}: Route.LoaderArgs) {
-+  buyerVariables,
-+}: Route.LoaderArgs & {buyerVariables: BuyerVariables}) {
+@@ -37,7 +63,7 @@ export async function loader(args: Route.LoaderArgs) {
+  * Load data necessary for rendering content above the fold. This is the critical data
+  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
+  */
+-async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
++async function loadCriticalData({context, params, request, buyerVariables}: Route.LoaderArgs & {buyerVariables: BuyerVariables}) {
    const {handle} = params;
    const {storefront} = context;
  
-@@ -54,7 +81,7 @@ async function loadCriticalData({
+@@ -47,7 +73,7 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
  
    const [{product}] = await Promise.all([
      storefront.query(PRODUCT_QUERY, {
@@ -67,7 +66,7 @@ index 422a2eb9..f05fd79c 100644
      }),
      // Add other queries here, so that they are loaded in parallel
    ]);
-@@ -76,7 +103,7 @@ async function loadCriticalData({
+@@ -69,7 +95,7 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   * fetched after the initial page load. If it's unavailable, the page should still 200.
   * Make sure to not throw any errors here, as it will cause the page to 500.
   */
@@ -76,7 +75,7 @@ index 422a2eb9..f05fd79c 100644
    // Put any API calls that is not critical to be available on first page render
    // For example: product reviews, product recommendations, social feeds.
  
-@@ -117,8 +144,26 @@ export default function Product() {
+@@ -110,8 +136,26 @@ export default function Product() {
          <ProductForm
            productOptions={productOptions}
            selectedVariant={selectedVariant}
@@ -103,7 +102,7 @@ index 422a2eb9..f05fd79c 100644
          <br />
          <p>
            <strong>Description</strong>
-@@ -174,6 +219,21 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
+@@ -167,6 +211,21 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
        name
        value
      }
@@ -125,7 +124,7 @@ index 422a2eb9..f05fd79c 100644
      sku
      title
      unitPrice {
-@@ -224,13 +284,15 @@ const PRODUCT_FRAGMENT = `#graphql
+@@ -217,13 +276,15 @@ const PRODUCT_FRAGMENT = `#graphql
    ${PRODUCT_VARIANT_FRAGMENT}
  ` as const;
  
