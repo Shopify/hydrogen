@@ -33,6 +33,8 @@ import type {Release} from './upgrade.js';
 
 type ChangeLog = Awaited<ReturnType<typeof upgradeModule.getChangelog>>;
 
+class ScaffoldNotFoundError extends Error {}
+
 vi.mock('@shopify/cli-kit/node/ui', async () => {
   const original = await vi.importActual<
     typeof import('@shopify/cli-kit/node/ui')
@@ -309,8 +311,29 @@ describe('upgrade e2e', () => {
       return;
     }
 
+    let testedCount = 0;
+
     for (const [fromVersion, toVersion] of matrix) {
-      await testUpgrade(fromVersion, toVersion, changelog);
+      try {
+        await testUpgrade(fromVersion, toVersion, changelog);
+        testedCount++;
+      } catch (error) {
+        if (error instanceof ScaffoldNotFoundError) {
+          console.warn(
+            `⊘ Skipping ${fromVersion} → ${toVersion}: no valid scaffold commit found ` +
+              `(changelog data quality issue, not an upgrade bug).`,
+          );
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    if (testedCount === 0 && matrix.length > 0) {
+      throw new Error(
+        `No upgrade paths could be tested — all ${matrix.length} matrix entries failed to ` +
+          `scaffold. Check changelog.json commit hashes or run with UPGRADE_TEST_FROM/TO.`,
+      );
     }
   }, 600000);
 });
@@ -697,6 +720,24 @@ async function findCommitForVersionCached(
   return commit;
 }
 
+// Resolve a single release to a verified git commit, or return null if unavailable.
+// Validates the changelog hash exists in git before returning it; falls through to
+// a git-log search if the hash is absent, a non-commit object, or unreachable.
+async function resolveReleaseCommit(
+  release: {hash?: string | null; version: string},
+  repoRoot: string,
+): Promise<string | null> {
+  if (release.hash) {
+    try {
+      await exec('git', ['cat-file', '-e', release.hash], {cwd: repoRoot});
+      return release.hash;
+    } catch {
+      return findCommitForVersionCached(release.version);
+    }
+  }
+  return findCommitForVersionCached(release.version);
+}
+
 async function isMatchingSkeletonCommit({
   repoRoot,
   commit,
@@ -771,22 +812,31 @@ async function resolveSkeletonCommit(
     const versionIndex = changelog.releases.findIndex(
       (r) => r.version === version,
     );
+    const originalMajor = getMajorVersion(version);
 
-    if (versionIndex >= 0 && versionIndex < changelog.releases.length - 1) {
-      const previousRelease = changelog.releases[versionIndex + 1];
-      if (previousRelease) {
-        const foundCommit =
-          previousRelease.hash ||
-          (await findCommitForVersionCached(previousRelease.version));
-        if (foundCommit) {
-          commit = foundCommit;
-          skeletonVersion = previousRelease.version;
-        }
+    for (
+      let i = versionIndex + 1;
+      i < changelog.releases.length && !commit;
+      i++
+    ) {
+      const candidateRelease = changelog.releases[i];
+      if (!candidateRelease) continue;
+      // Stop when we cross a major-train boundary — scaffolding from a different
+      // year would compromise test fidelity without making it obvious.
+      if (getMajorVersion(candidateRelease.version) !== originalMajor) break;
+
+      const candidateCommit = await resolveReleaseCommit(
+        candidateRelease,
+        repoRoot,
+      );
+      if (candidateCommit) {
+        commit = candidateCommit;
+        skeletonVersion = candidateRelease.version;
       }
     }
 
     if (!commit) {
-      throw new Error(
+      throw new ScaffoldNotFoundError(
         `Could not find git commit for version ${version} or any previous version.\n` +
           `This version likely never had a skeleton template release.`,
       );
