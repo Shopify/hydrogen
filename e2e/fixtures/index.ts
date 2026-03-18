@@ -31,6 +31,7 @@ export {GiftCardUtil} from './gift-card-utils';
 export {CustomerAccountUtil} from './customer-account-utils';
 export {DeliveryAddressUtil} from './delivery-address-utils';
 export {SubscriptionsUtil} from './subscriptions-utils';
+export {LegacyCustomerAccountUtil} from './legacy-customer-account-utils';
 
 export const CUSTOMER_ACCOUNT_STORAGE_STATE_PATH = path.resolve(
   __dirname,
