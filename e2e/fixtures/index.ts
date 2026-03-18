@@ -16,6 +16,12 @@ export {DiscountUtil} from './discount-utils';
 export {GiftCardUtil} from './gift-card-utils';
 export {CustomerAccountUtil} from './customer-account-utils';
 
+// Tunnel-based customer account tests need generous time because Cloudflare
+// quick-tunnel propagation takes an observed 30-90s on top of dev server startup (~10s).
+// This timeout is used for both the beforeAll hook (via test.setTimeout) and
+// individual tests (via test.describe.configure in spec files).
+export const TUNNEL_SETUP_TIMEOUT_IN_MS = 3 * 60 * 1000;
+
 export const test = base.extend<
   {
     storefront: StorefrontPage;
@@ -87,8 +93,15 @@ export const setTestStore = async (
   });
 
   test.beforeAll(async ({}) => {
+    // test.describe.configure({ timeout }) only applies to individual test
+    // bodies, not to beforeAll hooks — they inherit the global timeout (60s).
+    // Tunnel propagation alone takes and observed 30-90s, so we must override explicitly.
+    if (options.customerAccountPush) {
+      test.setTimeout(TUNNEL_SETUP_TIMEOUT_IN_MS);
+    }
+
     const filepath = path.resolve(__dirname, `../envs/.env.${testStore}`);
-    await stat(filepath); // Ensure the file exists
+    await stat(filepath);
 
     server = new DevServer({
       storeKey: testStore,

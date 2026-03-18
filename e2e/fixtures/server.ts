@@ -256,8 +256,15 @@ export class DevServer {
   }
 }
 
+// Cloudflare quick-tunnels propagate across edge servers gradually. A single
+// successful probe can hit one edge while the browser hits another that hasn't
+// propagated yet (Error 1016). Require consecutive successes to confirm the
+// tunnel is stable across the edge network.
+const CONSECUTIVE_SUCCESSES_REQUIRED = 3;
+
 async function waitForTunnelReady(url: string): Promise<void> {
   const startTimeInMs = Date.now();
+  let consecutiveSuccesses = 0;
 
   while (Date.now() - startTimeInMs < TUNNEL_READY_TIMEOUT_IN_MS) {
     try {
@@ -267,17 +274,24 @@ async function waitForTunnelReady(url: string): Promise<void> {
       });
 
       if (TUNNEL_NOT_READY_STATUS_CODES.has(response.status)) {
+        consecutiveSuccesses = 0;
         const elapsedInMs = Date.now() - startTimeInMs;
         console.log(
           `[tunnel-health] ${url} returned ${response.status} after ${(elapsedInMs / 1000).toFixed(1)}s — tunnel not yet routing`,
         );
       } else {
+        consecutiveSuccesses++;
+        const elapsedInMs = Date.now() - startTimeInMs;
         console.log(
-          `[tunnel-health] ${url} responded with status ${response.status} — tunnel is routing`,
+          `[tunnel-health] ${url} responded with status ${response.status} after ${(elapsedInMs / 1000).toFixed(1)}s — ${consecutiveSuccesses}/${CONSECUTIVE_SUCCESSES_REQUIRED} consecutive`,
         );
-        return;
+        if (consecutiveSuccesses >= CONSECUTIVE_SUCCESSES_REQUIRED) {
+          console.log(`[tunnel-health] Tunnel is stable — proceeding`);
+          return;
+        }
       }
     } catch (error: unknown) {
+      consecutiveSuccesses = 0;
       const elapsedInMs = Date.now() - startTimeInMs;
       const message = error instanceof Error ? error.message : String(error);
       console.log(
@@ -288,7 +302,7 @@ async function waitForTunnelReady(url: string): Promise<void> {
   }
 
   console.warn(
-    `[tunnel-health] ${url} did not respond within ${TUNNEL_READY_TIMEOUT_IN_MS / 1000}s — proceeding anyway`,
+    `[tunnel-health] ${url} did not stabilize within ${TUNNEL_READY_TIMEOUT_IN_MS / 1000}s — proceeding anyway`,
   );
 }
 
