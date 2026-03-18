@@ -515,8 +515,16 @@ async function testUpgrade(
       await expect(readFile(guideFile, 'utf8')).rejects.toThrow();
     }
 
+    // Intermediate-state projects (manual steps or breaking changes) have
+    // expected peer dep conflicts from old-era transitive deps that the
+    // developer must manually migrate. Use --legacy-peer-deps so we still
+    // validate the changelog's declared dependencies resolve.
+    // Clean paths use strict resolution to catch incomplete changelogs.
+    const installArgs =
+      hasUpgradeSteps || hasBreakingChanges ? ['--legacy-peer-deps'] : [];
+
     try {
-      await exec('npm', ['install'], {cwd: projectDir});
+      await exec('npm', ['install', ...installArgs], {cwd: projectDir});
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(
