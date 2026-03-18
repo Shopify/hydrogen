@@ -6,7 +6,7 @@
 // while keeping xstate/fsm and the cart state machine definition unchanged.
 //
 // Adapted from xstate/react v3.2.1/fsm (MIT license, Stately/xstate).
-// Copyright (c) 2022 Stately, https://stately.ai
+// Copyright (c) 2015 David Khourshid
 import {
   createMachine,
   interpret,
