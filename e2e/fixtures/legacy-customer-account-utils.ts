@@ -76,7 +76,7 @@ export class LegacyCustomerAccountUtil {
   }
 
   getAccountMenuLink(name: string | RegExp): Locator {
-    return this.page.getByRole('link', {name});
+    return this.page.getByRole('navigation').getByRole('link', {name});
   }
 
   getEmptyOrdersMessage(): Locator {
@@ -100,7 +100,7 @@ export class LegacyCustomerAccountUtil {
   }
 
   getProfileEmailInput(): Locator {
-    return this.page.locator('#email');
+    return this.page.getByLabel(/email address/i);
   }
 
   getMarketingCheckbox(): Locator {
@@ -175,7 +175,11 @@ export class LegacyCustomerAccountUtil {
 
   async assertOrdersPageRendered(firstName: string) {
     await expect(this.getWelcomeHeading(firstName)).toBeVisible();
-    await expect(this.page.locator('.orders')).toBeVisible();
+    await expect(
+      this.getEmptyOrdersMessage().or(
+        this.page.getByRole('link', {name: /view order/i}),
+      ),
+    ).toBeVisible();
   }
 
   async assertEmptyOrders() {

@@ -106,14 +106,12 @@ scenarios.set(MSW_SCENARIOS.customerAccountLoggedIn, {
  * customerAccessToken in the session instead of customerAccount.
  * GraphQL queries are matched by operation name against the Storefront API.
  */
-export const LEGACY_CUSTOMER_FIRST_NAME = 'Taylor';
-
-const legacyCustomerMock = {
+export const LEGACY_CUSTOMER_MOCK = {
   acceptsMarketing: false,
   addresses: {nodes: []},
   defaultAddress: null,
   email: 'taylor@example.com',
-  firstName: LEGACY_CUSTOMER_FIRST_NAME,
+  firstName: 'Taylor',
   lastName: 'E2E',
   numberOfOrders: 0,
   phone: '+15551234567',
@@ -135,7 +133,7 @@ const legacyCustomerOrdersMock = {
 scenarios.set('legacy-customer-account-logged-in', {
   handlers: [
     graphql.query('Customer', () => {
-      return HttpResponse.json({data: {customer: legacyCustomerMock}});
+      return HttpResponse.json({data: {customer: LEGACY_CUSTOMER_MOCK}});
     }),
     graphql.query('CustomerOrders', () => {
       return HttpResponse.json({data: {customer: legacyCustomerOrdersMock}});
