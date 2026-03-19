@@ -1,4 +1,5 @@
 import {test, expect, setRecipeFixture} from '../../fixtures';
+import assert from '../../fixtures/assertions';
 import {CartUtil} from '../../fixtures/cart-utils';
 
 setRecipeFixture({
@@ -70,7 +71,7 @@ test.describe('Custom Cart Method Recipe', () => {
         name: KNOWN_PRODUCT_WITH_VARIANTS.name,
       });
       const initialUrl = await productLink.getAttribute('href');
-      expect(initialUrl).toBeTruthy();
+      assert(initialUrl);
 
       const optionSelect = (
         await cart.waitForOptionSelectors(firstLineItem)
@@ -78,20 +79,12 @@ test.describe('Custom Cart Method Recipe', () => {
       const {optionName, nextValue} =
         await cart.selectDifferentOption(optionSelect);
 
-      await expect
-        .poll(async () => {
-          const href = await productLink.getAttribute('href');
-          if (!href) {
-            return false;
-          }
+      const href = await productLink.getAttribute('href');
+      assert(href);
 
-          const updatedProductUrl = new URL(href, page.url());
-          return (
-            href !== initialUrl &&
-            updatedProductUrl.searchParams.get(optionName) === nextValue
-          );
-        })
-        .toBe(true);
+      const updatedProductUrl = new URL(href, page.url());
+      expect(href).not.toBe(initialUrl);
+      expect(updatedProductUrl.searchParams.get(optionName)).toBe(nextValue);
     });
 
     test('maintains single line item when changing variants', async ({
@@ -117,12 +110,9 @@ test.describe('Custom Cart Method Recipe', () => {
       await cart.selectDifferentOption(optionSelect);
 
       // Wait for the cart update to complete before checking preservation
-      await expect
-        .poll(async () => {
-          const href = await productLink.getAttribute('href');
-          return href !== null && href !== initialUrl;
-        })
-        .toBe(true);
+      const href = await productLink.getAttribute('href');
+      assert(href);
+      expect(href).not.toBe(initialUrl);
 
       await expect(cart.getLineItems()).toHaveCount(1);
       await expect(firstLineItem).toContainText('Quantity: 2');
@@ -147,12 +137,9 @@ test.describe('Custom Cart Method Recipe', () => {
       await cart.selectDifferentOption(optionSelect);
 
       // Verify the cart update completed without navigating away
-      await expect
-        .poll(async () => {
-          const href = await productLink.getAttribute('href');
-          return href !== null && href !== initialProductUrl;
-        })
-        .toBe(true);
+      const href = await productLink.getAttribute('href');
+      assert(href);
+      expect(href).not.toBe(initialProductUrl);
 
       expect(page.url()).toBe(initialPageUrl);
       await expect(cartDialog).toBeVisible();

@@ -1,4 +1,5 @@
 import {expect, Locator, Page} from '@playwright/test';
+import assert from './assertions';
 
 const CART_ID_PREFIX = 'gid://shopify/Cart/';
 
@@ -30,14 +31,13 @@ export class CartUtil {
     const nextValue = enabledOptionValues.find(
       (value) => value !== initialValue,
     );
-    if (!nextValue) {
-      throw new Error(
-        'Expected option select to have at least two different values',
-      );
-    }
+    assert(
+      nextValue,
+      'Expected option select to have at least two different values',
+    );
 
     await optionSelect.selectOption(nextValue);
-    await expect.poll(async () => optionSelect.inputValue()).toBe(nextValue);
+    await expect(optionSelect).toHaveValue(nextValue);
 
     return {optionName, nextValue};
   }
