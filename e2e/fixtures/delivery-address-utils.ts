@@ -99,7 +99,10 @@ export class DeliveryAddressUtil {
   async deleteAddress(form: Locator) {
     const deleteButton = form.getByRole('button', {name: 'Delete'});
     await deleteButton.click();
-    await this.page.waitForLoadState('networkidle');
+    // Wait for the form to be removed from the DOM, which proves the full
+    // delete → revalidate → re-render cycle completed. Unlike networkidle,
+    // this is a DOM-level signal that can't fire prematurely.
+    await expect(deleteButton).not.toBeVisible();
   }
 
   async assertAddressCount(count: number) {
