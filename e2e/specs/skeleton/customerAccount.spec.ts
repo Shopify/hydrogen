@@ -63,6 +63,14 @@ let testEmail: string;
 
 test.beforeAll(() => {
   testEmail = getTestEmail();
+
+  const headers = getLoadtestHeaders();
+  if (Object.keys(headers).length === 0) {
+    throw new Error(
+      'Loadtest header not available — OTP bypass will not work.\n' +
+        'Set up ejson: ./scripts/setup-ejson-private-key.sh',
+    );
+  }
 });
 
 // Serial mode: Auth Setup saves a session to disk that subsequent blocks
