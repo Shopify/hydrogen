@@ -55,7 +55,13 @@ function parseOperation(document: string): {
     );
   }
 
-  const operationType = operationMatch[1] as 'query' | 'mutation';
+  const operationType = operationMatch[1];
+
+  if (operationType !== 'query' && operationType !== 'mutation') {
+    throw new Error(
+      `[e2e-msw] Unexpected operation type "${operationType}" in document:\n${document}`,
+    );
+  }
 
   return {
     type: operationType,

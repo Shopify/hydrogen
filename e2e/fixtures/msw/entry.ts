@@ -46,6 +46,11 @@ function hasWorkingLocalStorage() {
   }
 }
 
+/**
+ * MSW stores handler state in localStorage. Workerd doesn't provide
+ * localStorage, so we polyfill it with an in-memory Map. Without this,
+ * MSW's `getResponse` silently fails to match registered handlers.
+ */
 function ensureLocalStorage() {
   if (hasWorkingLocalStorage()) return;
 
@@ -73,6 +78,11 @@ function ensureLocalStorage() {
   });
 }
 
+/**
+ * MSW uses BroadcastChannel internally for coordination between its
+ * service-worker and client runtimes. Workerd doesn't provide it, so we
+ * supply a no-op implementation to prevent runtime errors during MSW init.
+ */
 function ensureBroadcastChannel() {
   if ('BroadcastChannel' in globalThis) return;
 
@@ -194,6 +204,7 @@ function getTunnelRequestUrl(requestUrl: string) {
 }
 
 function withCookie(headers: Headers, cookiePair: string) {
+  // Strip any existing session cookie before appending the mock one
   const cookiePairs = (headers.get('Cookie') ?? '')
     .split(';')
     .map((cookie) => cookie.trim())
@@ -204,26 +215,42 @@ function withCookie(headers: Headers, cookiePair: string) {
   headers.set('Cookie', cookiePairs.join('; '));
 }
 
+let cachedSessionStorage: ReturnType<typeof createCookieSessionStorage>;
+let cachedSessionSecret: string;
+
+function getSessionStorage(secret: string) {
+  if (cachedSessionStorage && cachedSessionSecret === secret) {
+    return cachedSessionStorage;
+  }
+
+  cachedSessionSecret = secret;
+  cachedSessionStorage = createCookieSessionStorage({
+    cookie: {
+      name: 'session',
+      httpOnly: true,
+      path: '/',
+      sameSite: 'lax',
+      secrets: [secret],
+    },
+  });
+
+  return cachedSessionStorage;
+}
+
 async function addMockCustomerSessionCookieIfNeeded(
   request: Request,
   env: Env,
 ) {
   if (!shouldInjectCustomerSession()) return request;
 
+  // Clone so the original body isn't consumed — `new Request(url, init)`
+  // exhausts the init request's body per the Fetch spec.
   const requestWithTunnelHostname = new Request(
     getTunnelRequestUrl(request.url),
-    request,
+    request.clone(),
   );
 
-  const storage = createCookieSessionStorage({
-    cookie: {
-      name: 'session',
-      httpOnly: true,
-      path: '/',
-      sameSite: 'lax',
-      secrets: [env.SESSION_SECRET],
-    },
-  });
+  const storage = getSessionStorage(env.SESSION_SECRET);
 
   const session = await storage.getSession(
     requestWithTunnelHostname.headers.get('Cookie') ?? '',

@@ -16,7 +16,6 @@ export {getTestSecrets, getRequiredSecret} from './test-secrets';
 export {CartUtil} from './cart-utils';
 export {DiscountUtil} from './discount-utils';
 export {GiftCardUtil} from './gift-card-utils';
-export {AccountUtil} from './account-utils';
 export {mockCustomerAccountOperation} from './msw/graphql';
 export {MSW_SCENARIOS} from './msw/scenarios';
 
@@ -75,7 +74,7 @@ async function createMockEnvFile(envFile: string, scenario: MswScenario) {
 
   const scenarioMeta = getHandlersForScenario(scenario);
   /** these variables are required by the CAAPI client */
-  const caapiVars = scenarioMeta?.mocksCustomerAccountApi
+  const caapiVars = scenarioMeta.mocksCustomerAccountApi
     ? `SHOP_ID="mock-shop"\nPUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID="shp_mock-client-id"\n`
     : '';
 

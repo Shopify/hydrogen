@@ -41,7 +41,7 @@ export interface MswScenarioMeta {
 
 const scenarios = new Map<MswScenario, MswScenarioMeta>();
 
-scenarios.set('customer-account-logged-in', {
+scenarios.set(MSW_SCENARIOS.customerAccountLoggedIn, {
   handlers: [
     mockCustomerAccountOperation(CUSTOMER_DETAILS_QUERY, ({variables}) => {
       return {
