@@ -12,6 +12,7 @@ import {CartUtil} from './cart-utils';
 import {DiscountUtil} from './discount-utils';
 import {GiftCardUtil} from './gift-card-utils';
 import {CustomerAccountUtil} from './customer-account-utils';
+import {DeliveryAddressUtil} from './delivery-address-utils';
 import type {MswScenario} from './msw/scenarios';
 import {getHandlersForScenario} from './msw/handlers';
 
@@ -57,6 +58,7 @@ export const test = base.extend<
     discount: DiscountUtil;
     giftCard: GiftCardUtil;
     customerAccount: CustomerAccountUtil;
+    addresses: DeliveryAddressUtil;
   },
   {forEachWorker: void}
 >({
@@ -79,6 +81,10 @@ export const test = base.extend<
   customerAccount: async ({page}, use) => {
     const customerAccount = new CustomerAccountUtil(page);
     await use(customerAccount);
+  },
+  addresses: async ({page}, use) => {
+    const addresses = new DeliveryAddressUtil(page);
+    await use(addresses);
   },
 });
 

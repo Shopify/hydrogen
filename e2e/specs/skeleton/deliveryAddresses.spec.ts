@@ -1,9 +1,6 @@
 import {setTestStore, test, expect, MSW_SCENARIOS} from '../../fixtures';
 import {DELIVERY_ADDRESS_SEED_COUNT} from '../../fixtures/msw/handlers';
-import {
-  DeliveryAddressUtil,
-  type AddressFormData,
-} from '../../fixtures/delivery-address-utils';
+import type {AddressFormData} from '../../fixtures/delivery-address-utils';
 
 setTestStore('mockShop', {
   mock: {scenario: MSW_SCENARIOS.deliveryAddresses},
@@ -28,18 +25,16 @@ test.describe('Delivery Addresses', () => {
   // and Delete tests then operate on).
   test.describe.configure({mode: 'serial'});
 
-  test.describe('Read', () => {
-    test('renders existing addresses', async ({page}) => {
-      const addresses = new DeliveryAddressUtil(page);
-      await addresses.navigateToAddresses();
+  test.beforeEach(async ({addresses}) => {
+    await addresses.navigateToAddresses();
+  });
 
+  test.describe('Read', () => {
+    test('renders existing addresses', async ({addresses}) => {
       await addresses.assertAddressCount(DELIVERY_ADDRESS_SEED_COUNT);
     });
 
-    test('shows the create address form', async ({page}) => {
-      const addresses = new DeliveryAddressUtil(page);
-      await addresses.navigateToAddresses();
-
+    test('shows the create address form', async ({addresses}) => {
       const createForm = addresses.getCreateAddressForm();
       await expect(createForm).toBeVisible();
       await expect(
@@ -47,10 +42,7 @@ test.describe('Delivery Addresses', () => {
       ).toBeVisible();
     });
 
-    test('displays default address checkbox state', async ({page}) => {
-      const addresses = new DeliveryAddressUtil(page);
-      await addresses.navigateToAddresses();
-
+    test('displays default address checkbox state', async ({addresses}) => {
       const existingForms = addresses.getExistingAddresses();
       const firstCheckbox = existingForms.first().getByRole('checkbox');
       await expect(firstCheckbox).toBeChecked();
@@ -61,10 +53,7 @@ test.describe('Delivery Addresses', () => {
   });
 
   test.describe('Create', () => {
-    test('creates a new address', async ({page}) => {
-      const addresses = new DeliveryAddressUtil(page);
-      await addresses.navigateToAddresses();
-
+    test('creates a new address', async ({addresses}) => {
       await addresses.assertAddressCount(DELIVERY_ADDRESS_SEED_COUNT);
       await addresses.createAddress(NEW_ADDRESS);
 
@@ -77,10 +66,7 @@ test.describe('Delivery Addresses', () => {
   });
 
   test.describe('Update', () => {
-    test('updates an existing address', async ({page}) => {
-      const addresses = new DeliveryAddressUtil(page);
-      await addresses.navigateToAddresses();
-
+    test('updates an existing address', async ({addresses}) => {
       const updatedCity = 'New Portland';
       const existingForms = addresses.getExistingAddresses();
       const targetForm = existingForms.first();
@@ -97,10 +83,9 @@ test.describe('Delivery Addresses', () => {
   });
 
   test.describe('Default Address', () => {
-    test('toggles default address to a different address', async ({page}) => {
-      const addresses = new DeliveryAddressUtil(page);
-      await addresses.navigateToAddresses();
-
+    test('toggles default address to a different address', async ({
+      addresses,
+    }) => {
       const existingForms = addresses.getExistingAddresses();
       const firstForm = existingForms.first();
       const secondForm = existingForms.nth(1);
@@ -125,10 +110,7 @@ test.describe('Delivery Addresses', () => {
   });
 
   test.describe('Delete', () => {
-    test('deletes an address and decreases count', async ({page}) => {
-      const addresses = new DeliveryAddressUtil(page);
-      await addresses.navigateToAddresses();
-
+    test('deletes an address and decreases count', async ({addresses}) => {
       const countBefore = await addresses.getExistingAddresses().count();
       expect(countBefore).toBeGreaterThan(0);
       const lastForm = addresses.getExistingAddresses().last();
@@ -137,10 +119,9 @@ test.describe('Delivery Addresses', () => {
       await addresses.assertAddressCount(countBefore - 1);
     });
 
-    test('shows empty state when all addresses are deleted', async ({page}) => {
-      const addresses = new DeliveryAddressUtil(page);
-      await addresses.navigateToAddresses();
-
+    test('shows empty state when all addresses are deleted', async ({
+      addresses,
+    }) => {
       await expect(addresses.getEmptyState()).toHaveCount(0);
       const remaining = await addresses.getExistingAddresses().count();
       for (let i = 0; i < remaining; i++) {
