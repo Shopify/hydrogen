@@ -22,3 +22,4 @@ const {removePatch, getRunJsPath} = patchModule;
 const runJsPath = getRunJsPath(ROOT);
 const removed = removePatch(runJsPath);
 if (removed) console.log('[unpatch-cli] Restored original run.js');
+else console.log('[unpatch-cli] Nothing to unpatch - run.js is not patched');
