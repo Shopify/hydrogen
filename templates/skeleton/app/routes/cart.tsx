@@ -3,6 +3,7 @@ import type {Route} from './+types/cart';
 import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
 import {CartMain} from '~/components/CartMain';
+import {STORE_CREDIT_BALANCE_QUERY} from '~/graphql/customer-account/StoreCreditQuery';
 
 export const meta: Route.MetaFunction = () => {
   return [{title: `Hydrogen | Cart`}];
@@ -97,17 +98,30 @@ export async function action({request, context}: Route.ActionArgs) {
 }
 
 export async function loader({context}: Route.LoaderArgs) {
-  const {cart} = context;
-  return await cart.get();
+  const {cart, customerAccount} = context;
+
+  const [cartData, storeCreditBalance] = await Promise.all([
+    cart.get(),
+    customerAccount
+      .query(STORE_CREDIT_BALANCE_QUERY)
+      .then(({data}) => data)
+      .catch(() => null),
+  ]);
+
+  return {cart: cartData, storeCreditBalance};
 }
 
 export default function Cart() {
-  const cart = useLoaderData<typeof loader>();
+  const {cart, storeCreditBalance} = useLoaderData<typeof loader>();
 
   return (
     <div className="cart">
       <h1>Cart</h1>
-      <CartMain layout="page" cart={cart} />
+      <CartMain
+        layout="page"
+        cart={cart}
+        storeCreditBalance={storeCreditBalance}
+      />
     </div>
   );
 }

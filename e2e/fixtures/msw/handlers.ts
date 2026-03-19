@@ -1,11 +1,13 @@
 import type {RequestHandler} from 'msw';
 import {CUSTOMER_DETAILS_QUERY} from '../../../templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery';
 import {CUSTOMER_ORDERS_QUERY} from '../../../templates/skeleton/app/graphql/customer-account/CustomerOrdersQuery';
+import {STORE_CREDIT_BALANCE_QUERY} from '../../../templates/skeleton/app/graphql/customer-account/StoreCreditQuery';
 import {mockCustomerAccountOperation} from './graphql';
 import {MSW_SCENARIOS, MswScenario} from './scenarios';
 import {
   CustomerDetailsQuery,
   CustomerOrdersQuery,
+  StoreCreditBalanceQuery,
 } from '../../../templates/skeleton/customer-accountapi.generated';
 
 const customerDetailsMock: CustomerDetailsQuery = {
@@ -87,6 +89,40 @@ scenarios.set('customer-account-logged-in', {
         },
       };
     }),
+  ],
+  mocksCustomerAccountApi: true,
+});
+
+const storeCreditBalanceMock: StoreCreditBalanceQuery = {
+  customer: {
+    storeCreditAccounts: {
+      nodes: [
+        {
+          id: 'gid://shopify/StoreCreditAccount/1',
+          balance: {
+            amount: '50.00',
+            currencyCode: 'USD',
+          },
+        },
+      ],
+    },
+  },
+};
+
+scenarios.set(MSW_SCENARIOS.storeCredit, {
+  handlers: [
+    mockCustomerAccountOperation(
+      CUSTOMER_DETAILS_QUERY,
+      () => customerDetailsMock,
+    ),
+    mockCustomerAccountOperation(
+      CUSTOMER_ORDERS_QUERY,
+      () => customerOrdersMock,
+    ),
+    mockCustomerAccountOperation(
+      STORE_CREDIT_BALANCE_QUERY,
+      () => storeCreditBalanceMock,
+    ),
   ],
   mocksCustomerAccountApi: true,
 });

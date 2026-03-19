@@ -1,4 +1,5 @@
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
+import type {StoreCreditBalanceQuery} from 'customer-accountapi.generated';
 import type {CartLayout} from '~/components/CartMain';
 import {CartForm, Money, type OptimisticCart} from '@shopify/hydrogen';
 import {useEffect, useId, useRef, useState} from 'react';
@@ -7,9 +8,14 @@ import {useFetcher} from 'react-router';
 type CartSummaryProps = {
   cart: OptimisticCart<CartApiQueryFragment | null>;
   layout: CartLayout;
+  storeCreditBalance?: StoreCreditBalanceQuery | null;
 };
 
-export function CartSummary({cart, layout}: CartSummaryProps) {
+export function CartSummary({
+  cart,
+  layout,
+  storeCreditBalance,
+}: CartSummaryProps) {
   const className =
     layout === 'page' ? 'cart-summary-page' : 'cart-summary-aside';
   const summaryId = useId();
@@ -41,6 +47,7 @@ export function CartSummary({cart, layout}: CartSummaryProps) {
         giftCardHeadingId={giftCardHeadingId}
         giftCardInputId={giftCardInputId}
       />
+      <CartStoreCredit storeCreditBalance={storeCreditBalance} />
       <CartCheckoutActions checkoutUrl={cart?.checkoutUrl} />
     </div>
   );
@@ -242,6 +249,35 @@ function CartGiftCard({
           </button>
         </div>
       </AddGiftCardForm>
+    </section>
+  );
+}
+
+function CartStoreCredit({
+  storeCreditBalance,
+}: {
+  storeCreditBalance?: StoreCreditBalanceQuery | null;
+}) {
+  const accounts = storeCreditBalance?.customer?.storeCreditAccounts?.nodes;
+  if (!accounts || accounts.length === 0) return null;
+
+  const totalBalance = accounts.reduce(
+    (sum, account) => sum + parseFloat(account.balance.amount),
+    0,
+  );
+
+  if (totalBalance <= 0) return null;
+
+  const currencyCode = accounts[0].balance.currencyCode;
+
+  return (
+    <section aria-label="Store credit">
+      <dl>
+        <dt>Store credit</dt>
+        <dd>
+          <Money data={{amount: String(totalBalance), currencyCode}} />
+        </dd>
+      </dl>
     </section>
   );
 }

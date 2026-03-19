@@ -1,6 +1,7 @@
 import {useOptimisticCart} from '@shopify/hydrogen';
 import {Link} from 'react-router';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
+import type {StoreCreditBalanceQuery} from 'customer-accountapi.generated';
 import {useAside} from '~/components/Aside';
 import {CartLineItem, type CartLine} from '~/components/CartLineItem';
 import {CartSummary} from './CartSummary';
@@ -10,6 +11,7 @@ export type CartLayout = 'page' | 'aside';
 export type CartMainProps = {
   cart: CartApiQueryFragment | null;
   layout: CartLayout;
+  storeCreditBalance?: StoreCreditBalanceQuery | null;
 };
 
 export type LineItemChildrenMap = {[parentId: string]: CartLine[]};
@@ -36,7 +38,11 @@ function getLineItemChildrenMap(lines: CartLine[]): LineItemChildrenMap {
  * The main cart component that displays the cart items and summary.
  * It is used by both the /cart route and the cart aside dialog.
  */
-export function CartMain({layout, cart: originalCart}: CartMainProps) {
+export function CartMain({
+  layout,
+  cart: originalCart,
+  storeCreditBalance,
+}: CartMainProps) {
   // The useOptimisticCart hook applies pending actions to the cart
   // so the user immediately sees feedback when they modify the cart.
   const cart = useOptimisticCart(originalCart);
@@ -80,7 +86,13 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
             })}
           </ul>
         </div>
-        {cartHasItems && <CartSummary cart={cart} layout={layout} />}
+        {cartHasItems && (
+          <CartSummary
+            cart={cart}
+            layout={layout}
+            storeCreditBalance={storeCreditBalance}
+          />
+        )}
       </div>
     </section>
   );
