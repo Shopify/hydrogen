@@ -1,6 +1,7 @@
 import {test, expect, setRecipeFixture} from '../../fixtures';
 import assert from '../../fixtures/assertions';
 import {CartUtil} from '../../fixtures/cart-utils';
+import {CustomCartMethodUtil} from '../../fixtures/custom-cart-method-utils';
 
 setRecipeFixture({
   recipeName: 'custom-cart-method',
@@ -22,6 +23,8 @@ const KNOWN_PRODUCT_WITH_VARIANTS = {
   handle: 'the-ascend',
   name: 'The Ascend',
 } as const;
+
+const variantSelector = new CustomCartMethodUtil();
 
 test.describe('Custom Cart Method Recipe', () => {
   test.describe('Cart Line Item Variant Selector', () => {
@@ -54,7 +57,8 @@ test.describe('Custom Cart Method Recipe', () => {
       await expect(cart.getLineItems()).toHaveCount(1);
 
       const firstLineItem = cart.getFirstLineItem();
-      const optionSelects = await cart.waitForOptionSelectors(firstLineItem);
+      const optionSelects =
+        await variantSelector.waitForOptionSelectors(firstLineItem);
       const minimumExpectedOptions = 2;
       expect(await optionSelects.count()).toBeGreaterThanOrEqual(
         minimumExpectedOptions,
@@ -74,10 +78,10 @@ test.describe('Custom Cart Method Recipe', () => {
       assert(initialUrl);
 
       const optionSelect = (
-        await cart.waitForOptionSelectors(firstLineItem)
+        await variantSelector.waitForOptionSelectors(firstLineItem)
       ).first();
       const {optionName, nextValue} =
-        await cart.selectDifferentOption(optionSelect);
+        await variantSelector.selectDifferentOption(optionSelect);
 
       const href = await productLink.getAttribute('href');
       assert(href);
@@ -105,9 +109,9 @@ test.describe('Custom Cart Method Recipe', () => {
       const initialUrl = await productLink.getAttribute('href');
 
       const optionSelect = (
-        await cart.waitForOptionSelectors(firstLineItem)
+        await variantSelector.waitForOptionSelectors(firstLineItem)
       ).first();
-      await cart.selectDifferentOption(optionSelect);
+      await variantSelector.selectDifferentOption(optionSelect);
 
       // Wait for the cart update to complete before checking preservation
       const href = await productLink.getAttribute('href');
@@ -132,9 +136,9 @@ test.describe('Custom Cart Method Recipe', () => {
       const initialProductUrl = await productLink.getAttribute('href');
 
       const optionSelect = (
-        await cart.waitForOptionSelectors(firstLineItem)
+        await variantSelector.waitForOptionSelectors(firstLineItem)
       ).first();
-      await cart.selectDifferentOption(optionSelect);
+      await variantSelector.selectDifferentOption(optionSelect);
 
       // Verify the cart update completed without navigating away
       const href = await productLink.getAttribute('href');

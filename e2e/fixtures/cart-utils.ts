@@ -1,46 +1,9 @@
 import {expect, Locator, Page} from '@playwright/test';
-import assert from './assertions';
 
 const CART_ID_PREFIX = 'gid://shopify/Cart/';
 
 export class CartUtil {
   constructor(private page: Page) {}
-
-  async waitForOptionSelectors(lineItem: Locator) {
-    const optionSelectors = lineItem.getByRole('combobox');
-    await expect(optionSelectors.first()).toBeVisible();
-    return optionSelectors;
-  }
-
-  async selectDifferentOption(optionSelect: Locator) {
-    const optionName = await optionSelect.getAttribute('name');
-    if (!optionName) {
-      throw new Error('Expected option select to have a name attribute');
-    }
-
-    const initialValue = await optionSelect.inputValue();
-    const enabledOptionValues = await optionSelect.evaluate(
-      (el: HTMLSelectElement) =>
-        Array.from(el.options)
-          .filter((option) => !option.disabled && option.value.trim() !== '')
-          .map((option) => option.value),
-    );
-
-    expect(enabledOptionValues.length).toBeGreaterThan(1);
-
-    const nextValue = enabledOptionValues.find(
-      (value) => value !== initialValue,
-    );
-    assert(
-      nextValue,
-      'Expected option select to have at least two different values',
-    );
-
-    await optionSelect.selectOption(nextValue);
-    await expect(optionSelect).toHaveValue(nextValue);
-
-    return {optionName, nextValue};
-  }
 
   async addItem(productName: string) {
     await expect(
