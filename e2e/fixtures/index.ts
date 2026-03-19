@@ -27,6 +27,7 @@ export {CartUtil} from './cart-utils';
 export {DiscountUtil} from './discount-utils';
 export {GiftCardUtil} from './gift-card-utils';
 export {CustomerAccountUtil} from './customer-account-utils';
+export {DeliveryAddressUtil} from './delivery-address-utils';
 
 export const CUSTOMER_ACCOUNT_STORAGE_STATE_PATH = path.resolve(
   __dirname,
