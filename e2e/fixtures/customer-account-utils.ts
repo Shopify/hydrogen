@@ -104,6 +104,17 @@ export class CustomerAccountUtil {
     const signOutButton = this.page.getByRole('button', {name: /sign out/i});
     await expect(signOutButton).toBeVisible({timeout: 10000});
     await signOutButton.click();
+
+    // The logout redirect chain goes: store → shopify.com → store.
+    // Wait until we've left the /account path and returned to the store,
+    // so the server-side session is fully invalidated before callers navigate.
+    const logoutRedirectTimeoutInMs = 30_000;
+    await this.page.waitForURL(
+      (url) =>
+        !url.hostname.includes('shopify.com') &&
+        !url.pathname.startsWith('/account'),
+      {timeout: logoutRedirectTimeoutInMs},
+    );
   }
 
   /**

@@ -23,13 +23,29 @@ if (externalUrl) {
 // redirecting to its OAuth password page. Oxygen checks request headers
 // (not cookies) for this token.
 // See: https://shopify.dev/docs/storefronts/headless/hydrogen/debugging/end-to-end-testing
+//
+// IMPORTANT: test.use() replaces (not merges) extraHTTPHeaders from the
+// global playwright config. We must spread the config's loadtest header
+// here, otherwise the OTP bypass breaks because the loadtest header is lost.
 const authBypassToken = process.env.OXYGEN_AUTH_BYPASS_TOKEN;
 if (authBypassToken && externalUrl) {
+  const loadtestHeader = getLoadtestHeader();
+
   test.use({
     extraHTTPHeaders: {
+      ...loadtestHeader,
       'oxygen-auth-bypass-token': authBypassToken,
     },
   });
+}
+
+function getLoadtestHeader(): Record<string, string> {
+  try {
+    const secrets = getRequiredSecret('loadtest_header');
+    return {[secrets]: 'true'};
+  } catch {
+    return {};
+  }
 }
 
 function getTestEmail(): string {
