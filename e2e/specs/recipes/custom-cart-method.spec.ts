@@ -66,7 +66,9 @@ test.describe('Custom Cart Method Recipe', () => {
       const cart = new CartUtil(page);
       const firstLineItem = cart.getFirstLineItem();
 
-      const productLink = firstLineItem.getByRole('link').first();
+      const productLink = firstLineItem.getByRole('link', {
+        name: KNOWN_PRODUCT_WITH_VARIANTS.name,
+      });
       const initialUrl = await productLink.getAttribute('href');
       expect(initialUrl).toBeTruthy();
 
@@ -104,10 +106,23 @@ test.describe('Custom Cart Method Recipe', () => {
       await expect(cart.getLineItems()).toHaveCount(1);
       await expect(firstLineItem).toContainText('Quantity: 2');
 
+      const productLink = firstLineItem.getByRole('link', {
+        name: KNOWN_PRODUCT_WITH_VARIANTS.name,
+      });
+      const initialUrl = await productLink.getAttribute('href');
+
       const optionSelect = (
         await cart.waitForOptionSelectors(firstLineItem)
       ).first();
       await cart.selectDifferentOption(optionSelect);
+
+      // Wait for the cart update to complete before checking preservation
+      await expect
+        .poll(async () => {
+          const href = await productLink.getAttribute('href');
+          return href !== null && href !== initialUrl;
+        })
+        .toBe(true);
 
       await expect(cart.getLineItems()).toHaveCount(1);
       await expect(firstLineItem).toContainText('Quantity: 2');
@@ -121,10 +136,23 @@ test.describe('Custom Cart Method Recipe', () => {
       await expect(cartDialog).toBeVisible();
       const initialPageUrl = page.url();
 
+      const productLink = firstLineItem.getByRole('link', {
+        name: KNOWN_PRODUCT_WITH_VARIANTS.name,
+      });
+      const initialProductUrl = await productLink.getAttribute('href');
+
       const optionSelect = (
         await cart.waitForOptionSelectors(firstLineItem)
       ).first();
       await cart.selectDifferentOption(optionSelect);
+
+      // Verify the cart update completed without navigating away
+      await expect
+        .poll(async () => {
+          const href = await productLink.getAttribute('href');
+          return href !== null && href !== initialProductUrl;
+        })
+        .toBe(true);
 
       expect(page.url()).toBe(initialPageUrl);
       await expect(cartDialog).toBeVisible();
