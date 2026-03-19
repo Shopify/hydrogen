@@ -328,7 +328,7 @@ jobs:
       cancel-in-progress: false
     # Required secrets:
     #   OXYGEN_DEPLOYMENT_TOKEN_1000108386 — deploy token for the benchmark shop's Oxygen storefront
-    #   EJSON_PRIVATE_KEY — decrypts secrets.ejson to provide CUSTOMER_ACCOUNT_TEST_EMAIL
+    #   EJSON_PRIVATE_KEY — decrypts secrets.ejson to provide customer_account_email and loadtest_header
     # These correspond to the benchmark shop (drru00-at.myshopify.com / storefront 1000108386).
     # Update both if the test shop changes.
     steps:
@@ -375,6 +375,7 @@ jobs:
             echo "::error::Auth bypass token is empty — deploy may not have generated one"
             exit 1
           fi
+          echo "::add-mask::$TOKEN"
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           echo "auth_bypass_token=$TOKEN" >> "$GITHUB_OUTPUT"
 

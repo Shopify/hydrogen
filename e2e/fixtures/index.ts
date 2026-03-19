@@ -1,5 +1,9 @@
 import {test as base} from '@playwright/test';
-import {DevServer} from './server';
+import {
+  DevServer,
+  STARTUP_TIMEOUT_IN_MS,
+  TUNNEL_READY_TIMEOUT_IN_MS,
+} from './server';
 import path from 'node:path';
 import {stat} from 'node:fs/promises';
 import {StorefrontPage} from './storefront';
@@ -10,7 +14,11 @@ import {CustomerAccountUtil} from './customer-account-utils';
 
 export * from '@playwright/test';
 export * from './storefront';
-export {getTestSecrets, getRequiredSecret} from './test-secrets';
+export {
+  getTestSecrets,
+  getRequiredSecret,
+  getLoadtestHeaders,
+} from './test-secrets';
 export {CartUtil} from './cart-utils';
 export {DiscountUtil} from './discount-utils';
 export {GiftCardUtil} from './gift-card-utils';
@@ -26,10 +34,14 @@ export const CUSTOMER_ACCOUNT_STORAGE_STATE_PATH = path.resolve(
 // quick-tunnel propagation takes an observed 30-90s on top of dev server startup (~10s).
 // Used for both the beforeAll hook (via test.setTimeout) and individual tests
 // (via test.describe.configure in spec files).
-// Must exceed STARTUP_TIMEOUT_IN_MS (120s) + TUNNEL_READY_TIMEOUT_IN_MS (90s)
-// in server.ts so the tunnel health check's descriptive error surfaces before
-// Playwright's generic beforeAll timeout fires.
-export const TUNNEL_SETUP_TIMEOUT_IN_MS = 4 * 60 * 1000;
+// Computed from the constituent timeouts so the relationship stays in sync
+// automatically. The margin ensures the tunnel health check's descriptive
+// error surfaces before Playwright's generic beforeAll timeout fires.
+const TUNNEL_SETUP_MARGIN_IN_MS = 30_000;
+export const TUNNEL_SETUP_TIMEOUT_IN_MS =
+  STARTUP_TIMEOUT_IN_MS +
+  TUNNEL_READY_TIMEOUT_IN_MS +
+  TUNNEL_SETUP_MARGIN_IN_MS;
 
 export const test = base.extend<
   {
@@ -104,7 +116,7 @@ export const setTestStore = async (
   test.beforeAll(async ({}) => {
     // test.describe.configure({ timeout }) only applies to individual test
     // bodies, not to beforeAll hooks — they inherit the global timeout (60s).
-    // Tunnel propagation alone takes and observed 30-90s, so we must override explicitly.
+    // Tunnel propagation alone takes an observed 30-90s, so we must override explicitly.
     if (options.customerAccountPush) {
       test.setTimeout(TUNNEL_SETUP_TIMEOUT_IN_MS);
     }

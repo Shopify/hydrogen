@@ -296,18 +296,19 @@ getCartLineItems() {
 **Prerequisites:**
 - Shopify CLI authenticated: `cd templates/skeleton && npx shopify auth login`
 - Skeleton linked to benchmark store: `cd templates/skeleton && npx shopify hydrogen link`
-- Either ejson configured (`./scripts/setup-ejson-private-key.sh`) OR the `CUSTOMER_ACCOUNT_TEST_EMAIL` env var set
+- ejson configured (`./scripts/setup-ejson-private-key.sh`) — required for both the test email and the loadtest header (OTP bypass)
 
 ```bash
 # With ejson configured:
 npx playwright test --project=skeleton e2e/specs/skeleton/customerAccount.spec.ts
 
-# Without ejson (env var fallback):
+# Override test email (ejson is still required for the loadtest header):
 CUSTOMER_ACCOUNT_TEST_EMAIL="hydrogen-e2e-test@example.com" \
   npx playwright test --project=skeleton e2e/specs/skeleton/customerAccount.spec.ts
 
 # Against an existing Oxygen deployment (skips tunnel):
 CUSTOMER_ACCOUNT_URL=https://your-oxygen-deployment.oxygen.myshopify.com \
+OXYGEN_AUTH_BYPASS_TOKEN=your-token \
   npx playwright test --project=skeleton e2e/specs/skeleton/customerAccount.spec.ts
 ```
 

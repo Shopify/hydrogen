@@ -4,6 +4,7 @@ import {
   test,
   expect,
   getRequiredSecret,
+  getLoadtestHeaders,
   TUNNEL_SETUP_TIMEOUT_IN_MS,
   CUSTOMER_ACCOUNT_STORAGE_STATE_PATH,
 } from '../../fixtures';
@@ -13,6 +14,11 @@ import {
 const externalUrl = process.env.CUSTOMER_ACCOUNT_URL;
 
 if (externalUrl) {
+  if (!externalUrl.startsWith('https://')) {
+    throw new Error(
+      `CUSTOMER_ACCOUNT_URL must start with "https://", got: ${externalUrl}`,
+    );
+  }
   setTestStore(externalUrl as `https://${string}`);
 } else {
   setTestStore('customerAccount', {customerAccountPush: true});
@@ -29,23 +35,12 @@ if (externalUrl) {
 // here, otherwise the OTP bypass breaks because the loadtest header is lost.
 const authBypassToken = process.env.OXYGEN_AUTH_BYPASS_TOKEN;
 if (authBypassToken && externalUrl) {
-  const loadtestHeader = getLoadtestHeader();
-
   test.use({
     extraHTTPHeaders: {
-      ...loadtestHeader,
+      ...getLoadtestHeaders(),
       'oxygen-auth-bypass-token': authBypassToken,
     },
   });
-}
-
-function getLoadtestHeader(): Record<string, string> {
-  try {
-    const secrets = getRequiredSecret('loadtest_header');
-    return {[secrets]: 'true'};
-  } catch {
-    return {};
-  }
 }
 
 function getTestEmail(): string {
@@ -133,7 +128,6 @@ test.describe('Customer Account', {tag: '@customer-account'}, () => {
       await customerAccount.expectLoggedIn();
 
       await customerAccount.navigateToAccount();
-      await customerAccount.expectAccountPageVisible();
     });
   });
 

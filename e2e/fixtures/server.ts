@@ -2,11 +2,11 @@ import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import path from 'node:path';
 
-const STARTUP_TIMEOUT_IN_MS = 120_000;
+export const STARTUP_TIMEOUT_IN_MS = 120_000;
 const SIGKILL_GRACE_PERIOD_IN_MS = 5_000;
 const TUNNEL_URL_PATTERN = /(https:\/\/[\w-]+\.tryhydrogen\.dev)\b/;
 const TUNNEL_POLL_INTERVAL_IN_MS = 1_000;
-const TUNNEL_READY_TIMEOUT_IN_MS = 90_000;
+export const TUNNEL_READY_TIMEOUT_IN_MS = 90_000;
 const TUNNEL_FETCH_TIMEOUT_IN_MS = 45_000;
 
 // Status codes that indicate the tunnel is NOT routing to the origin yet.

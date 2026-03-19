@@ -10,13 +10,13 @@ const DEFAULT_OTP = '000000';
  *
  * Requires:
  * - A benchmark shop with Customer Account API enabled
- * - The dev server started with `--customer-account-push` (tunnel)
+ * - Either a dev server with `--customer-account-push` (tunnel) or an Oxygen deployment URL
  * - A test customer whose email ends in `@example.com`
  *
  * The benchmark shop bypass allows OTP to be `000000` when the loadtest
  * header is present and the email ends in `@example.com`. The loadtest
- * header (`X-Shopify-Loadtest`) is set globally via `playwright.config.ts`
- * `extraHTTPHeaders`, not per-request in this fixture.
+ * header (loaded from `secrets.ejson` at runtime) is set globally via
+ * `playwright.config.ts` `extraHTTPHeaders`, not per-request in this fixture.
  */
 export class CustomerAccountUtil {
   readonly page: Page;
@@ -157,10 +157,12 @@ export class CustomerAccountUtil {
   }
 
   /**
-   * Navigate to the account page and wait for load.
+   * Navigate to the account page and wait for the welcome heading to confirm
+   * the page loaded successfully (not a redirect or error state).
    */
   async navigateToAccount() {
     await this.page.goto('/account');
+    await this.expectAccountPageVisible();
   }
 
   /**
