@@ -92,13 +92,16 @@ export class DeliveryAddressUtil {
     await this.assertAddressCount(countBefore + 1);
   }
 
+  // DEVIATION: waitForResponse is used here despite the e2e guideline to
+  // "wait for the visible effect rather than the underlying mechanism."
+  // The skeleton's AddressForm has no visible success feedback (no toast, no
+  // flash), and the inputs are uncontrolled (defaultValue) so user-typed values
+  // persist in the DOM regardless of mutation success. There is no user-visible
+  // effect to wait for. Tests that call updateAddress must re-navigate afterward
+  // to verify persistence via a fresh mount from MSW state.
   async updateAddress(form: Locator, data: Partial<AddressFormData>) {
     await this.fillAddressForm(form, data);
     const saveButton = form.getByRole('button', {name: 'Save'});
-    // Register response listener before clicking so we don't miss it.
-    // React Router's Form sends a real fetch to the dev server for the
-    // action. Waiting for the response proves the server-side mutation
-    // completed and MSW closure state is updated.
     const actionResponse = this.page.waitForResponse((res) =>
       res.url().includes('/account/addresses'),
     );
