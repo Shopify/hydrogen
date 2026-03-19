@@ -897,6 +897,61 @@ describe('upgrade', async () => {
       expect(removeDevDependencies).toContain('@remix-run/dev');
     });
 
+    it('accumulates dependencies and devDependencies from intermediate releases (last-write-wins)', () => {
+      // Simulates: user on 2025.5.1, upgrading to 2026.1.0.
+      // @react-router/dev was bumped to 7.12.0 in 2025.7.1 (intermediate).
+      // 2026.1.0 (target) does not repeat the react-router bump.
+      // The cumulative result must include @react-router/dev@7.12.0 so that
+      // upgradeNodeModules can install it and resolve the peer dep conflict.
+      const target = makeRelease('2026.1.0', {
+        dependencies: {'@shopify/hydrogen': '2026.1.0'},
+        devDependencies: {},
+      });
+      const intermediate = makeRelease('2025.7.1', {
+        dependencies: {
+          '@shopify/hydrogen': '2025.7.1',
+          'react-router': '7.12.0',
+        },
+        devDependencies: {'@react-router/dev': '7.12.0'},
+      });
+      const from = makeRelease('2025.5.1');
+
+      const {dependencies, devDependencies} = getCumulativeRelease({
+        availableUpgrades: [target, intermediate, from],
+        selectedRelease: target,
+        currentVersion: '2025.5.1',
+      });
+
+      // Intermediate bump flows through to the cumulative result
+      expect(dependencies['react-router']).toBe('7.12.0');
+      expect(devDependencies['@react-router/dev']).toBe('7.12.0');
+      // Target release dep still present
+      expect(dependencies['@shopify/hydrogen']).toBe('2026.1.0');
+    });
+
+    it('uses last-write-wins when a dep is bumped in multiple intermediate releases', () => {
+      const target = makeRelease('2026.1.0', {
+        dependencies: {'@shopify/hydrogen': '2026.1.0'},
+        devDependencies: {},
+      });
+      const newer = makeRelease('2025.7.1', {
+        devDependencies: {'@react-router/dev': '7.12.0'},
+      });
+      const older = makeRelease('2025.7.0', {
+        devDependencies: {'@react-router/dev': '7.9.2'},
+      });
+      const from = makeRelease('2025.5.1');
+
+      const {devDependencies} = getCumulativeRelease({
+        availableUpgrades: [target, newer, older, from],
+        selectedRelease: target,
+        currentVersion: '2025.5.1',
+      });
+
+      // The newer release's version wins
+      expect(devDependencies['@react-router/dev']).toBe('7.12.0');
+    });
+
     it('excludes removeDependencies for deps that are re-added in any release', () => {
       // react-router is removed (old Remix version) AND re-added at a new version
       // in the same release — it should not appear in cumulative removeDependencies.
@@ -1656,6 +1711,37 @@ describe('upgrade', async () => {
       expect(args).toEqual(expect.arrayContaining(result));
     });
 
+    it('includes deps from cumulativeDependencies that are absent from selectedRelease', () => {
+      // Reproduces the 2025.5.1 → 2026.1.0 scenario: @react-router/dev was bumped in
+      // an intermediate release (2025.7.1) but is absent from the target (2026.1.0).
+      // Without cumulative deps, the upgrade command would never install @react-router/dev,
+      // leaving a stale version that causes npm ERESOLVE.
+      const selectedRelease = {
+        version: '2026.1.0',
+        dependencies: {'@shopify/hydrogen': '2026.1.0'},
+        devDependencies: {},
+        dependenciesMeta: {},
+      } as unknown as Release;
+
+      const currentDependencies = {
+        '@shopify/hydrogen': '2025.5.1',
+        'react-router': '7.6.0',
+        '@react-router/dev': '7.6.0',
+      };
+
+      const args = buildUpgradeCommandArgs({
+        selectedRelease,
+        currentDependencies,
+        cumulativeDependencies: {'react-router': '7.12.0'},
+        cumulativeDevDependencies: {'@react-router/dev': '7.12.0'},
+      });
+
+      expect(args).toContain('@shopify/hydrogen@2026.1.0');
+      // Cumulative React Router deps are included and trigger appendReactRouterDependencies
+      expect(args).toContain('react-router@7.12.0');
+      expect(args).toContain('@react-router/dev@7.12.0');
+    });
+
     it('does not upgrade @next dependencies', async () => {
       const {releases} = await getChangelog();
 
@@ -1859,6 +1945,8 @@ const CUMULATIVE_RELEASE = {
   ],
   removeDependencies: [],
   removeDevDependencies: [],
+  dependencies: {},
+  devDependencies: {},
 } as CumulativeRelease;
 
 describe('dependency removal', () => {
@@ -2312,6 +2400,8 @@ describe('--version=next functionality', () => {
         fixes: [],
         removeDependencies: [],
         removeDevDependencies: [],
+        dependencies: {},
+        devDependencies: {},
       };
 
       const selectedRelease = {
@@ -2333,6 +2423,8 @@ describe('--version=next functionality', () => {
         fixes: [],
         removeDependencies: [],
         removeDevDependencies: [],
+        dependencies: {},
+        devDependencies: {},
       };
 
       const selectedRelease = {
