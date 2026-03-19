@@ -1,7 +1,6 @@
 import {expect, Locator, Page} from '@playwright/test';
 
 export const EMPTY_STATE_MESSAGE = 'You have no addresses saved.';
-const FORM_SUBMISSION_TIMEOUT_IN_MS = 10_000;
 
 export interface AddressFormData {
   firstName: string;
@@ -87,26 +86,20 @@ export class DeliveryAddressUtil {
     await this.fillAddressForm(form, data);
     const createButton = form.getByRole('button', {name: 'Create'});
     await createButton.click();
-    await expect(createButton).toHaveText('Create', {
-      timeout: FORM_SUBMISSION_TIMEOUT_IN_MS,
-    });
+    await this.page.waitForLoadState('networkidle');
   }
 
   async updateAddress(form: Locator, data: Partial<AddressFormData>) {
     await this.fillAddressForm(form, data);
     const saveButton = form.getByRole('button', {name: 'Save'});
     await saveButton.click();
-    await expect(saveButton).toHaveText('Save', {
-      timeout: FORM_SUBMISSION_TIMEOUT_IN_MS,
-    });
+    await this.page.waitForLoadState('networkidle');
   }
 
   async deleteAddress(form: Locator) {
     const deleteButton = form.getByRole('button', {name: 'Delete'});
     await deleteButton.click();
-    await expect(deleteButton).not.toBeVisible({
-      timeout: FORM_SUBMISSION_TIMEOUT_IN_MS,
-    });
+    await this.page.waitForLoadState('networkidle');
   }
 
   async assertAddressCount(count: number) {

@@ -88,7 +88,11 @@ test.describe('Delivery Addresses', () => {
       await expect(targetForm.getByLabel('City')).not.toHaveValue(updatedCity);
       await addresses.updateAddress(targetForm, {city: updatedCity});
 
-      await expect(targetForm.getByLabel('City')).toHaveValue(updatedCity);
+      // Re-navigate to verify the mutation persisted in MSW closure state.
+      // Without this, the assertion would pass from the user-typed DOM value
+      // alone, since the form uses uncontrolled inputs (defaultValue).
+      await addresses.navigateToAddresses();
+      await addresses.assertAddressVisible({city: updatedCity});
     });
   });
 
@@ -106,8 +110,17 @@ test.describe('Delivery Addresses', () => {
 
       await addresses.updateAddress(secondForm, {defaultAddress: true});
 
-      await expect(secondForm.getByRole('checkbox')).toBeChecked();
-      await expect(firstForm.getByRole('checkbox')).not.toBeChecked();
+      // Re-navigate to verify the default toggle persisted in MSW state.
+      // The checkbox uses defaultChecked (uncontrolled), and key={address.id}
+      // is stable across default-toggle updates, so React reconciles in place
+      // without resetting the checkbox DOM state. Fresh mount is needed.
+      await addresses.navigateToAddresses();
+
+      const refreshedForms = addresses.getExistingAddresses();
+      await expect(
+        refreshedForms.first().getByRole('checkbox'),
+      ).not.toBeChecked();
+      await expect(refreshedForms.nth(1).getByRole('checkbox')).toBeChecked();
     });
   });
 
