@@ -7,7 +7,7 @@ const SIGKILL_GRACE_PERIOD_IN_MS = 5_000;
 const TUNNEL_URL_PATTERN = /(https:\/\/[\w-]+\.tryhydrogen\.dev)\b/;
 const TUNNEL_POLL_INTERVAL_IN_MS = 1_000;
 export const TUNNEL_READY_TIMEOUT_IN_MS = 90_000;
-const TUNNEL_FETCH_TIMEOUT_IN_MS = 45_000;
+const TUNNEL_FETCH_TIMEOUT_IN_MS = 10_000;
 
 // Status codes that indicate the tunnel is NOT routing to the origin yet.
 // Includes Cloudflare's proprietary 520-530 range (origin unreachable) and
@@ -130,7 +130,7 @@ export class DevServer {
           }
         }
 
-        if (!started && output.includes('success')) {
+        if (!started && output.includes('View') && output.includes('app:')) {
           started = true;
           clearTimeout(timeout);
           this.capturedUrl = tunnelUrl || localUrl;
@@ -303,8 +303,9 @@ async function waitForTunnelReady(url: string): Promise<void> {
     await new Promise((r) => setTimeout(r, TUNNEL_POLL_INTERVAL_IN_MS));
   }
 
+  const actualElapsedInMs = Date.now() - startTimeInMs;
   throw new Error(
-    `[tunnel-health] ${url} did not stabilize within ${TUNNEL_READY_TIMEOUT_IN_MS / 1000}s`,
+    `[tunnel-health] ${url} did not stabilize within ${(actualElapsedInMs / 1000).toFixed(1)}s (limit: ${TUNNEL_READY_TIMEOUT_IN_MS / 1000}s)`,
   );
 }
 
