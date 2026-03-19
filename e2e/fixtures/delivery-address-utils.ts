@@ -97,12 +97,16 @@ export class DeliveryAddressUtil {
   }
 
   async deleteAddress(form: Locator) {
+    const countBefore = await this.getExistingAddresses().count();
     const deleteButton = form.getByRole('button', {name: 'Delete'});
+    await expect(deleteButton).toBeVisible();
     await deleteButton.click();
-    // Wait for the form to be removed from the DOM, which proves the full
-    // delete → revalidate → re-render cycle completed. Unlike networkidle,
-    // this is a DOM-level signal that can't fire prematurely.
-    await expect(deleteButton).not.toBeVisible();
+    // Wait for the address count to decrease, proving the full
+    // delete -> revalidate -> re-render cycle completed. We can't use
+    // not.toBeVisible() on the delete button because Playwright locators
+    // are lazy: after the form is removed, .first()/.last() shifts to
+    // the next form whose delete button IS visible.
+    await this.assertAddressCount(countBefore - 1);
   }
 
   async assertAddressCount(count: number) {

@@ -141,6 +141,7 @@ test.describe('Delivery Addresses', () => {
       const addresses = new DeliveryAddressUtil(page);
       await addresses.navigateToAddresses();
 
+      await expect(addresses.getEmptyState()).toHaveCount(0);
       const remaining = await addresses.getExistingAddresses().count();
       for (let i = 0; i < remaining; i++) {
         const form = addresses.getExistingAddresses().first();
