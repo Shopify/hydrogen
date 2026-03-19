@@ -82,18 +82,28 @@ export class DeliveryAddressUtil {
   }
 
   async createAddress(data: AddressFormData) {
+    const countBefore = await this.getExistingAddresses().count();
     const form = this.getCreateAddressForm();
     await this.fillAddressForm(form, data);
     const createButton = form.getByRole('button', {name: 'Create'});
     await createButton.click();
-    await this.page.waitForLoadState('networkidle');
+    // Wait for a new existing-address form to appear, proving the full
+    // create -> revalidate -> re-render cycle completed.
+    await this.assertAddressCount(countBefore + 1);
   }
 
   async updateAddress(form: Locator, data: Partial<AddressFormData>) {
     await this.fillAddressForm(form, data);
     const saveButton = form.getByRole('button', {name: 'Save'});
+    // Register response listener before clicking so we don't miss it.
+    // React Router's Form sends a real fetch to the dev server for the
+    // action. Waiting for the response proves the server-side mutation
+    // completed and MSW closure state is updated.
+    const actionResponse = this.page.waitForResponse((res) =>
+      res.url().includes('/account/addresses'),
+    );
     await saveButton.click();
-    await this.page.waitForLoadState('networkidle');
+    await actionResponse;
   }
 
   async deleteAddress(form: Locator) {
