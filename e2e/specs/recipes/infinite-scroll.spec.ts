@@ -142,6 +142,7 @@ test.describe('Infinite Scroll Recipe', () => {
 
       const initialCount = await scroll.getProductCount();
       const initialScrollY = await page.evaluate(() => window.scrollY);
+      expect(initialScrollY).toBeGreaterThan(0);
 
       await scroll.clickLoadMore();
       await scroll.waitForProductCountToIncrease(initialCount);
