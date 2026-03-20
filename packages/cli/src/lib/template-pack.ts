@@ -1,7 +1,18 @@
+import {createReadStream} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
-import {join} from 'node:path';
+import {isAbsolute, join} from 'node:path';
+import {pipeline} from 'node:stream/promises';
 import {tmpdir} from 'node:os';
+import gunzipMaybe from 'gunzip-maybe';
+import {extract as tarExtract} from 'tar-fs';
+
+// On Windows, .cmd wrappers cannot be directly executed by execFileSync (which
+// calls CreateProcess and bypasses the shell). Use shell: true on Windows so
+// cmd.exe resolves 'pnpm' to 'pnpm.cmd' via PATH.
+export const WINDOWS_SHELL_OPTS =
+  process.platform === 'win32' ? {shell: true} : {};
+const PNPM_PACK_TIMEOUT_IN_MS = 60_000;
 
 type DependencySection =
   | 'dependencies'
@@ -38,6 +49,8 @@ async function getPackedTemplatePackageJson(sourceTemplateDir: string) {
       {
         cwd: sourceTemplateDir,
         encoding: 'utf8',
+        timeout: PNPM_PACK_TIMEOUT_IN_MS,
+        ...WINDOWS_SHELL_OPTS,
       },
     );
 
@@ -52,16 +65,19 @@ async function getPackedTemplatePackageJson(sourceTemplateDir: string) {
       throw new Error('pnpm pack did not return a tarball filename.');
     }
 
-    const packedManifestRaw = execFileSync(
-      'tar',
-      [
-        '-xOf',
-        packedTarball.startsWith('/')
-          ? packedTarball
-          : join(tempDir, packedTarball),
-        'package/package.json',
-      ],
-      {encoding: 'utf8'},
+    const tarballPath = isAbsolute(packedTarball)
+      ? packedTarball
+      : join(tempDir, packedTarball);
+
+    await pipeline(
+      createReadStream(tarballPath),
+      gunzipMaybe(),
+      tarExtract(tempDir),
+    );
+
+    const packedManifestRaw = await readFile(
+      join(tempDir, 'package', 'package.json'),
+      'utf8',
     );
 
     return JSON.parse(packedManifestRaw) as PackageJsonWithDeps;

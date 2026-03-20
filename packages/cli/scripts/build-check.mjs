@@ -1,14 +1,15 @@
 // Script to check that all virtual routes are built or copied.
 
+import {fileURLToPath} from 'node:url';
 import {glob} from '@shopify/cli-kit/node/fs';
 
 const virtualRoutesGlob = 'virtual-routes/**/*';
 
 const srcEntries = await glob(virtualRoutesGlob, {
-  cwd: new URL('../../hydrogen/src/vite', import.meta.url).pathname,
+  cwd: fileURLToPath(new URL('../../hydrogen/src/vite', import.meta.url)),
 });
 const distEntries = await glob(virtualRoutesGlob, {
-  cwd: new URL('../dist/assets/hydrogen', import.meta.url).pathname,
+  cwd: fileURLToPath(new URL('../dist/assets/hydrogen', import.meta.url)),
 });
 
 for (const srcEntry of srcEntries) {
