@@ -96,9 +96,7 @@
   "types": "./dist/types/index.d.ts",
   "unpkg": "./dist/umd/hydrogen-react.prod.js",
   "jsdelivr": "./dist/umd/hydrogen-react.prod.js",
-  "sideEffects": [
-    "dist/*/node_modules/use-sync-external-store/shim/with-selector.*js"
-  ],
+  "sideEffects": false,
   "scripts": {
     "build-docs": "sh ./docs/build-docs.sh && pnpm run format",
     "clean-dist": "rimraf ./dist",
@@ -173,12 +171,9 @@
   "dependencies": {
     "@google/model-viewer": "^4.0.0",
     "@xstate/fsm": "2.0.0",
-    "@xstate/react": "3.2.1",
     "ast-v8-to-istanbul": "^0.3.11",
     "graphql": "^16.10.0",
     "type-fest": "^4.33.0",
-    "use-isomorphic-layout-effect": "1.2.1",
-    "use-sync-external-store": "1.6.0",
     "worktop": "^0.7.3"
   },
   "repository": {

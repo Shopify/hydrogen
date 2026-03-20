@@ -67,37 +67,13 @@ export default defineConfig(({mode, isSsrBuild}) => {
       minify: false,
       emptyOutDir: false,
       rollupOptions: {
-        external: (id) => {
-          /**
-            xstate is marked as "not external" because it has import paths that don't work in a pure-esm resolution algo (yet).
-            For example, `import {} from '@xstate/react/fsm'` doesn't actually exist in the file path, so we need Vite to process it so it does
-            Hypothetically, if they update their package to do so, then we can externalize it at that point.
-
-            Note that this has no effect on the ssr builds; we need to mark xstate as "not external" in 'ssr.noExternal' https://vitejs.dev/config/ssr-options.html#ssr-noexternal
-           */
-          if (id.includes('xstate')) {
-            return false;
-          }
-
-          return externals.includes(id);
-        },
+        external: externals,
         output: {
           // keep the folder structure of the components in the dist folder
           preserveModules: true,
           preserveModulesRoot: 'src',
         },
       },
-    },
-    ssr: {
-      // for esm builds, we need Vite to process these deps in order to work correctly
-      noExternal: [
-        '@xstate',
-        '@xstate/react',
-        '@xstate/fsm',
-        '@xstate/react/fsm',
-        'use-sync-external-store',
-        'use-isomorphic-layout-effect',
-      ],
     },
     define: {
       __HYDROGEN_DEV__: mode === 'devbuild' || mode === 'test',
