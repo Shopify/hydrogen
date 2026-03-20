@@ -113,6 +113,10 @@ export class CartUtil {
     return lineItemsList.locator('> li');
   }
 
+  getFirstLineItem() {
+    return this.getLineItems().first();
+  }
+
   private getActiveCartContext() {
     const isCartPage = this.page.url().includes('/cart');
     const scope = isCartPage
