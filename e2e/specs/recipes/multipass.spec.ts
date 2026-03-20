@@ -1,10 +1,13 @@
-import {test, expect, setRecipeFixture} from '../../fixtures';
+import {test, expect, setRecipeFixture, MSW_SCENARIOS} from '../../fixtures';
 import {MultipassUtil} from '../../fixtures/multipass-utils';
 import {CartUtil} from '../../fixtures/cart-utils';
 
 setRecipeFixture({
   recipeName: 'multipass',
   storeKey: 'hydrogenPreviewStorefront',
+  mock: {
+    scenario: MSW_SCENARIOS.multipassUnauthenticated,
+  },
 });
 
 const KNOWN_PRODUCT = {

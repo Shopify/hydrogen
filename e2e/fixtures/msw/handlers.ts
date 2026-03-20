@@ -45,6 +45,8 @@ export interface MswScenarioMeta {
   handlers: RequestHandler[];
   mocksCustomerAccountApi: boolean;
   mocksLegacyCustomerAuth: boolean;
+  /** When false, skips mock session cookie injection and URL rewriting. */
+  injectCustomerSession?: boolean;
 }
 
 const scenarios = new Map<MswScenario, MswScenarioMeta>();
@@ -348,6 +350,22 @@ const b2bCustomerLocationsMock = {
     },
   },
 };
+
+scenarios.set(MSW_SCENARIOS.multipassUnauthenticated, {
+  handlers: [
+    mockCustomerAccountOperation(
+      CUSTOMER_DETAILS_QUERY,
+      () => customerDetailsMock,
+    ),
+    mockCustomerAccountOperation(
+      CUSTOMER_ORDERS_QUERY,
+      () => customerOrdersMock,
+    ),
+  ],
+  mocksCustomerAccountApi: true,
+  mocksLegacyCustomerAuth: false,
+  injectCustomerSession: false,
+});
 
 scenarios.set('b2b-logged-in', {
   handlers: [

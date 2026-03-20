@@ -192,7 +192,8 @@ function shouldInjectCustomerSession() {
     currentMswScenarioMeta &&
     (currentMswScenarioMeta.mocksCustomerAccountApi ||
       currentMswScenarioMeta.mocksLegacyCustomerAuth) &&
-    currentMswScenarioMeta.handlers.length > 0
+    currentMswScenarioMeta.handlers.length > 0 &&
+    currentMswScenarioMeta.injectCustomerSession !== false
   );
 }
 
