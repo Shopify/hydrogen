@@ -13,6 +13,7 @@ import {DiscountUtil} from './discount-utils';
 import {GiftCardUtil} from './gift-card-utils';
 import {CustomerAccountUtil} from './customer-account-utils';
 import {DeliveryAddressUtil} from './delivery-address-utils';
+import {B2BUtil} from './b2b-utils';
 import type {MswScenario} from './msw/scenarios';
 import {getHandlersForScenario} from './msw/handlers';
 
@@ -48,8 +49,10 @@ export const TUNNEL_SETUP_TIMEOUT_IN_MS =
   STARTUP_TIMEOUT_IN_MS +
   TUNNEL_READY_TIMEOUT_IN_MS +
   TUNNEL_SETUP_MARGIN_IN_MS;
+export {B2BUtil} from './b2b-utils';
 export {mockCustomerAccountOperation} from './msw/graphql';
 export {MSW_SCENARIOS} from './msw/scenarios';
+export {B2B_COMPANY_NAME} from './msw/handlers';
 
 export const test = base.extend<
   {
@@ -59,6 +62,7 @@ export const test = base.extend<
     giftCard: GiftCardUtil;
     customerAccount: CustomerAccountUtil;
     addresses: DeliveryAddressUtil;
+    b2b: B2BUtil;
   },
   {forEachWorker: void}
 >({
@@ -85,6 +89,10 @@ export const test = base.extend<
   addresses: async ({page}, use) => {
     const addresses = new DeliveryAddressUtil(page);
     await use(addresses);
+  },
+  b2b: async ({page}, use) => {
+    const b2b = new B2BUtil(page);
+    await use(b2b);
   },
 });
 

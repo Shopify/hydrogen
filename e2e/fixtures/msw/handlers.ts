@@ -1,4 +1,5 @@
 import type {RequestHandler} from 'msw';
+import {graphql, HttpResponse} from 'msw';
 import {CUSTOMER_DETAILS_QUERY} from '../../../templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery';
 import {CUSTOMER_ORDERS_QUERY} from '../../../templates/skeleton/app/graphql/customer-account/CustomerOrdersQuery';
 import {
@@ -240,6 +241,82 @@ scenarios.set(
   MSW_SCENARIOS.deliveryAddresses,
   createDeliveryAddressesScenario(),
 );
+
+/**
+ * B2B scenario: simulates a logged-in customer with a B2B company
+ * that has multiple locations. The CustomerLocationsQuery is introduced
+ * by the B2B recipe and has no generated types, so we use raw graphql
+ * handlers matched by operation name.
+ */
+export const B2B_COMPANY_NAME = 'Acme Corp';
+
+const b2bCustomerLocationsMock = {
+  customer: {
+    id: 'gid://shopify/Customer/123',
+    emailAddress: {
+      emailAddress: 'taylor@acmecorp.example.com',
+    },
+    companyContacts: {
+      edges: [
+        {
+          node: {
+            company: {
+              id: 'gid://shopify/Company/1',
+              name: B2B_COMPANY_NAME,
+              locations: {
+                edges: [
+                  {
+                    node: {
+                      id: 'gid://shopify/CompanyLocation/1',
+                      name: 'Headquarters',
+                      shippingAddress: {
+                        countryCode: 'US',
+                        formattedAddress: [
+                          '123 Main St',
+                          'New York, NY 10001',
+                          'United States',
+                        ],
+                      },
+                    },
+                  },
+                  {
+                    node: {
+                      id: 'gid://shopify/CompanyLocation/2',
+                      name: 'Warehouse',
+                      shippingAddress: {
+                        countryCode: 'US',
+                        formattedAddress: [
+                          '456 Industrial Ave',
+                          'Chicago, IL 60601',
+                          'United States',
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      ],
+    },
+  },
+};
+
+scenarios.set('b2b-logged-in', {
+  handlers: [
+    mockCustomerAccountOperation(CUSTOMER_DETAILS_QUERY, () => {
+      return customerDetailsMock;
+    }),
+    mockCustomerAccountOperation(CUSTOMER_ORDERS_QUERY, () => {
+      return customerOrdersMock;
+    }),
+    graphql.query('CustomerLocations', () => {
+      return HttpResponse.json({data: b2bCustomerLocationsMock});
+    }),
+  ],
+  mocksCustomerAccountApi: true,
+});
 
 function isMswScenario(scenario: string): scenario is MswScenario {
   return scenarios.has(scenario);

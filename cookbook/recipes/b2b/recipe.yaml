@@ -151,6 +151,15 @@ steps:
       - path: templates/skeleton/app/routes/b2blocations.tsx
   - type: PATCH
     step: "13"
+    name: Persist B2B company location in session when updating buyer identity
+    description: Update the cart route to call customerAccount.setBuyer() when
+      processing BuyerIdentityUpdate, so the selected company location persists
+      in the session and the b2blocations loader can read it back via getBuyer()
+    diffs:
+      - file: app/routes/cart.tsx
+        patchFile: cart.tsx.2f79e3.patch
+  - type: PATCH
+    step: "14"
     name: Clear company location and customer data from cart when logging out
     description: Update the logout process to clear B2B-specific data including
       selected company location and customer context from the cart session
@@ -158,7 +167,7 @@ steps:
       - file: app/routes/account_.logout.tsx
         patchFile: account_.logout.tsx.eec6ad.patch
   - type: PATCH
-    step: "14"
+    step: "15"
     name: Contextualize product queries with buyer information and display B2B
       pricing details
     description: Update product queries to include buyer context (company location
