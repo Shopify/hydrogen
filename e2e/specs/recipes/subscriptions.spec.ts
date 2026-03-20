@@ -10,7 +10,8 @@ setRecipeFixture({
  * Validates the Subscriptions recipe, which enables selling subscription-based
  * products using selling plan groups from the Shopify Subscriptions app.
  *
- * TODO: Add tests for /account/subscriptions management page (requires customer authentication).
+ * Auth-required flows (account subscriptions management, cancellation) are
+ * covered in subscriptions-auth.spec.ts.
  */
 
 const KNOWN_SUBSCRIPTION_PRODUCT = {
