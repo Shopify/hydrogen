@@ -2,6 +2,8 @@
 '@shopify/hydrogen': major
 '@shopify/mini-oxygen': major
 '@shopify/cli-hydrogen': major
+'skeleton': patch
+'@shopify/create-hydrogen': patch
 ---
 
 Upgrade to Vite 7. Support for Vite 5 and Vite 6 has been removed.
