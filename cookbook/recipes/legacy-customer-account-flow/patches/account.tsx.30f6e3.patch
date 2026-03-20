@@ -1,7 +1,7 @@
 index 0429e7eb..c5e01b28 100644
 --- a/templates/skeleton/app/routes/account.tsx
 +++ b/templates/skeleton/app/routes/account.tsx
-@@ -1,42 +1,106 @@
+@@ -1,42 +1,109 @@
  import {
 -  data as remixData,
    Form,
@@ -42,24 +42,23 @@ index 0429e7eb..c5e01b28 100644
 +      pathname,
 +    );
 +
++  if (!isLoggedIn && (isPrivateRoute || isAccountHome)) {
++    session.unset('customerAccessToken');
++    return redirect('/account/login');
++  }
++
 +  if (!isLoggedIn) {
-+    if (isPrivateRoute || isAccountHome) {
-+      session.unset('customerAccessToken');
-+      return redirect('/account/login');
-+    } else {
-+      // public subroute such as /account/login...
-+      return {
-+        isLoggedIn: false,
-+        isAccountHome,
-+        isPrivateRoute,
-+        customer: null,
-+      };
-+    }
-+  } else {
-+    // loggedIn, default redirect to the orders page
-+    if (isAccountHome) {
-+      return redirect('/account/orders');
-+    }
++    // public subroute such as /account/login...
++    return {
++      isLoggedIn: false,
++      isAccountHome,
++      isPrivateRoute,
++      customer: null,
++    };
++  }
++
++  if (isAccountHome) {
++    return redirect('/account/orders');
    }
  
 -  return remixData(
@@ -106,8 +105,12 @@ index 0429e7eb..c5e01b28 100644
 +    return <Outlet context={{customer}} />;
 +  }
 +
++  if (!customer) {
++    return null;
++  }
++
 +  return (
-+    <AccountLayout customer={customer as CustomerFragment}>
++    <AccountLayout customer={customer}>
 +      <br />
 +      <br />
 +      <Outlet context={{customer}} />
@@ -128,7 +131,7 @@ index 0429e7eb..c5e01b28 100644
    const heading = customer
      ? customer.firstName
        ? `Welcome, ${customer.firstName}`
-@@ -48,9 +112,7 @@ export default function AccountLayout() {
+@@ -48,9 +115,7 @@ export default function AccountLayout() {
        <h1>{heading}</h1>
        <br />
        <AccountMenu />
@@ -139,7 +142,7 @@ index 0429e7eb..c5e01b28 100644
      </div>
    );
  }
-@@ -95,3 +157,50 @@ function Logout() {
+@@ -95,3 +160,50 @@ function Logout() {
      </Form>
    );
  }
