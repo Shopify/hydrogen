@@ -1,4 +1,4 @@
-import {useMachine} from '@xstate/react/fsm';
+import {useMachine} from './useMachine.js';
 import {createMachine, assign, StateMachine} from '@xstate/fsm';
 import {
   Cart,

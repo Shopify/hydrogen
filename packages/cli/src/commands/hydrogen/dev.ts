@@ -167,6 +167,13 @@ export async function runDev({
   if (verbose) setH2OVerbose();
   if (!isH2Verbose()) muteDevLogs();
 
+  // Port 0 (OS-assigned) breaks tunnel-based dev: cloudflared and Vite
+  // receive the same 0, but Vite resolves it internally to a concrete port
+  // while cloudflared targets localhost:0. Resolve to a real port upfront.
+  if (appPort === 0) {
+    appPort = await findPort(DEFAULT_APP_PORT);
+  }
+
   const root = appPath ?? process.cwd();
 
   const cliCommandPromise = getCliCommand(root);
