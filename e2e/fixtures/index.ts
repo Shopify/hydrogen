@@ -103,6 +103,7 @@ type TestStoreOptions = {
 type DevServerLifecycleOptions = {
   storeKey: string;
   projectPath?: string;
+  customerAccountPush?: boolean;
   mock?: {
     scenario: MswScenario;
   };
@@ -171,8 +172,8 @@ export const configureDevServer = (options: DevServerLifecycleOptions) => {
     if (options.customerAccountPush) {
       test.setTimeout(TUNNEL_SETUP_TIMEOUT_IN_MS);
     }
-    
-    const envFile = path.resolve(__dirname, `../envs/.env.${testStore}`);
+
+    const envFile = path.resolve(__dirname, `../envs/.env.${storeKey}`);
     await stat(envFile); // Ensure the file exists
 
     let runtimeEnvFile = envFile;
@@ -184,7 +185,7 @@ export const configureDevServer = (options: DevServerLifecycleOptions) => {
     }
 
     server = new DevServer({
-      storeKey: testStore,
+      storeKey,
       customerAccountPush: options.customerAccountPush ?? false,
       envFile: runtimeEnvFile,
       entry: mockScenario
@@ -201,5 +202,9 @@ export const setTestStore = (
   testStore: TestStoreKey | `https://${string}`,
   options: TestStoreOptions = {},
 ) => {
-  configureDevServer({storeKey: testStore, mock: options.mock});
+  configureDevServer({
+    storeKey: testStore,
+    customerAccountPush: options.customerAccountPush,
+    mock: options.mock,
+  });
 };
