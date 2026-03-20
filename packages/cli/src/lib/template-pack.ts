@@ -69,15 +69,10 @@ async function getPackedTemplatePackageJson(sourceTemplateDir: string) {
       ? packedTarball
       : join(tempDir, packedTarball);
 
-    const PACKAGE_JSON_ENTRY = 'package/package.json';
     await pipeline(
       createReadStream(tarballPath),
       gunzipMaybe(),
-      tarExtract(tempDir, {
-        filter(name) {
-          return name === PACKAGE_JSON_ENTRY;
-        },
-      }),
+      tarExtract(tempDir),
     );
 
     const packedManifestRaw = await readFile(
