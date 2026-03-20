@@ -1,16 +1,16 @@
 import {test, expect, setTestStore} from '../../fixtures';
 
-setTestStore('mockShop');
+setTestStore('hydrogenPreviewStorefront');
 
 test.describe('Pages', () => {
   test('When visiting static pages, each should display its heading', async ({
     page,
   }) => {
     const pages = [
-      {url: '/pages/contact', heading: 'Contact'},
+      {url: '/pages/about', heading: 'About'},
       {url: '/collections', heading: 'Collections'},
-      {url: '/collections/men', heading: 'Men'},
-      {url: '/blogs/news', heading: 'News'},
+      {url: '/collections/all', heading: 'Products'},
+      {url: '/blogs/journal', heading: 'Journal'},
       {url: '/search', heading: 'Search'},
       {url: '/cart', heading: 'Cart'},
       {url: '/policies', heading: 'Policies'},
