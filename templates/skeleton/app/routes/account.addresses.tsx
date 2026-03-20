@@ -468,7 +468,7 @@ export function AddressForm({
         />
         <label htmlFor="territoryCode">Country Code*</label>
         <input
-          aria-label="territoryCode"
+          aria-label="Country code"
           autoComplete="country"
           defaultValue={address?.territoryCode ?? ''}
           id="territoryCode"
