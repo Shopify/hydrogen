@@ -1,5 +1,4 @@
 import {test, expect, setRecipeFixture} from '../../fixtures';
-import {LegacyCustomerAccountUtil} from '../../fixtures/legacy-customer-account-utils';
 
 setRecipeFixture({
   recipeName: 'legacy-customer-account-flow',
@@ -20,79 +19,88 @@ setRecipeFixture({
 
 test.describe('Legacy Customer Account Flow Recipe', () => {
   test.describe('Login Page', () => {
-    let recipe: LegacyCustomerAccountUtil;
-
-    test.beforeEach(async ({page}) => {
-      recipe = new LegacyCustomerAccountUtil(page);
-      await recipe.navigateToLogin();
+    test.beforeEach(async ({legacyCustomerAccount}) => {
+      await legacyCustomerAccount.navigateToLogin();
     });
 
-    test('renders login form with email and password fields', async () => {
-      await recipe.assertLoginPageRendered();
+    test('renders login form with email and password fields', async ({
+      legacyCustomerAccount,
+    }) => {
+      await legacyCustomerAccount.assertLoginPageRendered();
     });
 
-    test('shows links to register and forgot password', async () => {
-      await recipe.assertLoginPageLinks();
+    test('shows links to register and forgot password', async ({
+      legacyCustomerAccount,
+    }) => {
+      await legacyCustomerAccount.assertLoginPageLinks();
     });
 
-    test('navigates to register page via link', async ({page}) => {
-      await recipe.getLink(/register/i).click();
+    test('navigates to register page via link', async ({
+      page,
+      legacyCustomerAccount,
+    }) => {
+      await legacyCustomerAccount.getLink(/register/i).click();
       await expect(page).toHaveURL(/\/account\/register/);
-      await recipe.assertRegisterPageRendered();
+      await legacyCustomerAccount.assertRegisterPageRendered();
     });
 
     test('navigates to recover page via forgot password link', async ({
       page,
+      legacyCustomerAccount,
     }) => {
-      await recipe.getLink(/forgot password/i).click();
+      await legacyCustomerAccount.getLink(/forgot password/i).click();
       await expect(page).toHaveURL(/\/account\/recover/);
-      await recipe.assertRecoverPageRendered();
+      await legacyCustomerAccount.assertRecoverPageRendered();
     });
   });
 
   test.describe('Register Page', () => {
-    let recipe: LegacyCustomerAccountUtil;
-
-    test.beforeEach(async ({page}) => {
-      recipe = new LegacyCustomerAccountUtil(page);
-      await recipe.navigateToRegister();
+    test.beforeEach(async ({legacyCustomerAccount}) => {
+      await legacyCustomerAccount.navigateToRegister();
     });
 
-    test('renders registration form with email, password, and confirm fields', async () => {
-      await recipe.assertRegisterPageRendered();
+    test('renders registration form with email, password, and confirm fields', async ({
+      legacyCustomerAccount,
+    }) => {
+      await legacyCustomerAccount.assertRegisterPageRendered();
     });
 
-    test('shows link to login page', async () => {
-      await recipe.assertRegisterPageLinks();
+    test('shows link to login page', async ({legacyCustomerAccount}) => {
+      await legacyCustomerAccount.assertRegisterPageLinks();
     });
 
-    test('navigates to login page via link', async ({page}) => {
-      await recipe.getLink(/login/i).click();
+    test('navigates to login page via link', async ({
+      page,
+      legacyCustomerAccount,
+    }) => {
+      await legacyCustomerAccount.getLink(/login/i).click();
       await expect(page).toHaveURL(/\/account\/login/);
-      await recipe.assertLoginPageRendered();
+      await legacyCustomerAccount.assertLoginPageRendered();
     });
   });
 
   test.describe('Password Recovery Page', () => {
-    let recipe: LegacyCustomerAccountUtil;
-
-    test.beforeEach(async ({page}) => {
-      recipe = new LegacyCustomerAccountUtil(page);
-      await recipe.navigateToRecover();
+    test.beforeEach(async ({legacyCustomerAccount}) => {
+      await legacyCustomerAccount.navigateToRecover();
     });
 
-    test('renders recovery form with email field', async () => {
-      await recipe.assertRecoverPageRendered();
+    test('renders recovery form with email field', async ({
+      legacyCustomerAccount,
+    }) => {
+      await legacyCustomerAccount.assertRecoverPageRendered();
     });
 
-    test('shows link to login page', async () => {
-      await recipe.assertRecoverPageLinks();
+    test('shows link to login page', async ({legacyCustomerAccount}) => {
+      await legacyCustomerAccount.assertRecoverPageLinks();
     });
 
-    test('navigates to login page via link', async ({page}) => {
-      await recipe.getLink(/login/i).click();
+    test('navigates to login page via link', async ({
+      page,
+      legacyCustomerAccount,
+    }) => {
+      await legacyCustomerAccount.getLink(/login/i).click();
       await expect(page).toHaveURL(/\/account\/login/);
-      await recipe.assertLoginPageRendered();
+      await legacyCustomerAccount.assertLoginPageRendered();
     });
   });
 
@@ -132,18 +140,20 @@ test.describe('Legacy Customer Account Flow Recipe', () => {
   });
 
   test.describe('Header Navigation', () => {
-    test('header contains an account link', async ({page}) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
+    test('header contains an account link', async ({
+      page,
+      legacyCustomerAccount,
+    }) => {
       await page.goto('/');
-      await recipe.assertHeaderHasAccountLink();
+      await legacyCustomerAccount.assertHeaderHasAccountLink();
     });
 
     test('account link navigates to login page when not authenticated', async ({
       page,
+      legacyCustomerAccount,
     }) => {
-      const recipe = new LegacyCustomerAccountUtil(page);
       await page.goto('/');
-      await recipe.getHeaderAccountLink().click();
+      await legacyCustomerAccount.getHeaderAccountLink().click();
       await expect(page).toHaveURL(/\/account\/login/);
     });
   });

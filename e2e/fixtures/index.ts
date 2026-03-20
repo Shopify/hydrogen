@@ -14,6 +14,7 @@ import {GiftCardUtil} from './gift-card-utils';
 import {CustomerAccountUtil} from './customer-account-utils';
 import {DeliveryAddressUtil} from './delivery-address-utils';
 import {B2BUtil} from './b2b-utils';
+import {LegacyCustomerAccountUtil} from './legacy-customer-account-utils';
 import type {MswScenario} from './msw/scenarios';
 import {getHandlersForScenario} from './msw/handlers';
 
@@ -66,6 +67,7 @@ export const test = base.extend<
     customerAccount: CustomerAccountUtil;
     addresses: DeliveryAddressUtil;
     b2b: B2BUtil;
+    legacyCustomerAccount: LegacyCustomerAccountUtil;
   },
   {forEachWorker: void}
 >({
@@ -96,6 +98,10 @@ export const test = base.extend<
   b2b: async ({page}, use) => {
     const b2b = new B2BUtil(page);
     await use(b2b);
+  },
+  legacyCustomerAccount: async ({page}, use) => {
+    const legacyCustomerAccount = new LegacyCustomerAccountUtil(page);
+    await use(legacyCustomerAccount);
   },
 });
 

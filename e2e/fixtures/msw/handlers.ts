@@ -279,6 +279,7 @@ function createDeliveryAddressesScenario(): MswScenarioMeta {
       }),
     ],
     mocksCustomerAccountApi: true,
+    mocksLegacyCustomerAuth: false,
   };
 }
 
@@ -477,13 +478,13 @@ export function getHandlersForScenario(
   }
 
   if (!isMswScenario(scenario)) {
-    throw new Error('[e2e-msw] Unknown scenario: "' + scenario + '"');
+    throw new Error(`[e2e-msw] Unknown scenario: "${scenario}"`);
   }
 
   const meta = scenarios.get(scenario);
   if (!meta) {
     throw new Error(
-      '[e2e-msw] Scenario "' + scenario + '" registered but metadata missing',
+      `[e2e-msw] Scenario "${scenario}" registered but metadata missing`,
     );
   }
 

@@ -4,6 +4,9 @@ import {MswScenarioMeta} from './handlers';
 const installedKey = Symbol.for('hydrogen.e2e.msw.installed');
 const LOCAL_STORAGE_TEST_KEY = '__hydrogen_e2e_local_storage_test__';
 
+// Cookie-based session storage derives cookie attributes from the request URL.
+// localhost wouldn't produce cookies valid for the CAAPI auth flow, so we
+// rewrite requests to a tunnel hostname that matches the expected cookie domain.
 const E2E_TUNNEL_HOSTNAME = 'e2e.tryhydrogen.dev';
 
 const SESSION_TTL_IN_MS = 60 * 60 * 1000;
@@ -137,6 +140,9 @@ ensureNodeProcessForMsw();
 const {getResponse} = await import('msw');
 const {getHandlersForScenario} = await import('./handlers');
 
+// The fetch interceptor is installed once as a closure and cannot receive
+// parameters per-request. Module-level state is the only way to communicate
+// the current scenario to the interceptor. Safe because workerd is single-threaded.
 let currentMswScenarioMeta: MswScenarioMeta | undefined = undefined;
 
 function toRequest(input: RequestInfo | URL, init?: RequestInit) {
