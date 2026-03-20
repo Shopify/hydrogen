@@ -229,7 +229,11 @@ jobs:
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
       - name: 🧪 Run E2E tests
-        run: pnpm exec playwright test
+        # Customer Account tests are run separately in a different job
+        # because they require a static redirect URL so we have a different CI
+        # job to test Customer Account specific features.
+        # The @customer-account tag is defined in e2e/specs/skeleton/customerAccount.spec.ts
+        run: pnpm exec playwright test --grep-invert "@customer-account"
         env:
           EJSON_PRIVATE_KEY: ${{ secrets.EJSON_PRIVATE_KEY }}
 
@@ -269,7 +273,7 @@ jobs:
       # from packageManager field in this context. The version must match
       # engines.pnpm in package.json (>=10.16.1)
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
         with:
           version: 10.16.1
           run_install: false
@@ -312,6 +316,118 @@ jobs:
         run: |
           cd "$RUNNER_TEMP/h2-test-${{ matrix.pm }}"
           ${{ matrix.pm }} run build
+
+  test_e2e_customer_account:
+    name: ⬣ E2E Customer Account tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    concurrency:
+      # Serialized because all runs deploy to the same Oxygen storefront URL —
+      # concurrent deploys would overwrite each other and cause test flakes.
+      group: oxygen-deploy-customer-account-e2e
+      cancel-in-progress: false
+    # Required secrets:
+    #   OXYGEN_DEPLOYMENT_TOKEN_1000108386 — deploy token for the benchmark shop's Oxygen storefront
+    #   EJSON_PRIVATE_KEY — decrypts secrets.ejson to provide customer_account_email and loadtest_header
+    # These correspond to the benchmark shop (drru00-at.myshopify.com / storefront 1000108386).
+    # Update both if the test shop changes.
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        with:
+          run_install: false
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 📦 Build packages
+        run: SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm run build:pkg
+
+      #! oxygen_storefront_id: 1000108386
+      - name: 🚀 Deploy skeleton to Oxygen
+        id: deploy
+        working-directory: templates/skeleton
+        run: pnpm exec shopify hydrogen deploy --no-lockfile-check --force --auth-bypass-token --env-file ../../e2e/envs/.env.customerAccount
+        env:
+          SHOPIFY_HYDROGEN_DEPLOYMENT_TOKEN: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_1000108386 }}
+
+      - name: 📋 Extract deployment URL
+        id: deployment_info
+        working-directory: templates/skeleton
+        run: |
+          URL="$(jq -r '.url' h2_deploy_log.json)"
+          TOKEN="$(jq -r '.authBypassToken // empty' h2_deploy_log.json)"
+          if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+            echo "::error::Deployment URL is empty — h2_deploy_log.json may be missing or malformed"
+            exit 1
+          fi
+          if [ -z "$TOKEN" ]; then
+            echo "::error::Auth bypass token is empty — deploy may not have generated one"
+            exit 1
+          fi
+          echo "::add-mask::$TOKEN"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "auth_bypass_token=$TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: 🩺 Wait for deployment to be healthy
+        env:
+          DEPLOYMENT_URL: ${{ steps.deployment_info.outputs.url }}
+          AUTH_BYPASS_TOKEN: ${{ steps.deployment_info.outputs.auth_bypass_token }}
+        run: |
+          # Poll the deployment until it returns 200 (not 302 redirect).
+          # Oxygen deployments can take a few seconds to propagate after
+          # the deploy command reports success.
+          MAX_ATTEMPTS=30
+          POLL_INTERVAL_IN_SECONDS=3
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "oxygen-auth-bypass-token: $AUTH_BYPASS_TOKEN" \
+              "$DEPLOYMENT_URL")
+            if [ "$STATUS" = "200" ]; then
+              echo "Deployment is healthy (HTTP $STATUS) after $((i * POLL_INTERVAL_IN_SECONDS))s"
+              exit 0
+            fi
+            echo "Attempt $i/$MAX_ATTEMPTS: HTTP $STATUS — waiting ${POLL_INTERVAL_IN_SECONDS}s..."
+            sleep $POLL_INTERVAL_IN_SECONDS
+          done
+          echo "::error::Deployment did not become healthy within $((MAX_ATTEMPTS * POLL_INTERVAL_IN_SECONDS))s (last status: $STATUS)"
+          exit 1
+
+      - name: 🎭 Install Playwright Chromium
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: 🔐 Install ejson
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y golang-go
+          go install github.com/Shopify/ejson/cmd/ejson@latest
+          echo "$HOME/go/bin" >> $GITHUB_PATH
+
+      - name: 🧪 Run Customer Account E2E tests
+        run: pnpm exec playwright test --project=skeleton e2e/specs/skeleton/customerAccount.spec.ts
+        env:
+          CUSTOMER_ACCOUNT_URL: ${{ steps.deployment_info.outputs.url }}
+          OXYGEN_AUTH_BYPASS_TOKEN: ${{ steps.deployment_info.outputs.auth_bypass_token }}
+          EJSON_PRIVATE_KEY: ${{ secrets.EJSON_PRIVATE_KEY }}
+
+      - name: 📤 Upload Playwright Report
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        if: ${{ always() && !cancelled() }}
+        with:
+          name: playwright-report-customer-account
+          path: playwright-report/
+          if-no-files-found: warn
+          retention-days: 30
 
   test_unit:
     name: ⬣ Unit tests
