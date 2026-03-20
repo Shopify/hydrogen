@@ -22,7 +22,7 @@ export class DevServer {
   port: number | undefined;
   projectPath: string;
   customerAccountPush: boolean;
-  capturedUrl: Promise<string>;
+  private capturedUrl: Promise<string>;
   id?: number;
   envFile?: string;
   storeKey?: string;
@@ -42,7 +42,7 @@ export class DevServer {
     return this.capturedUrl;
   }
 
-  start() {
+  private start() {
     if (this.process) {
       throw new Error(`Server ${this.id} is already running`);
     }
@@ -188,8 +188,7 @@ export class DevServer {
       });
     });
 
-    this.capturedUrl = startupPromise;
-    this.capturedUrl.catch(() => {
+    startupPromise.catch(() => {
       // Prevent unhandled rejection warnings if startup fails before await.
     });
     return startupPromise;
