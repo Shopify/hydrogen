@@ -6,8 +6,11 @@ import {
   LEGACY_CUSTOMER_MOCK,
 } from '../../fixtures';
 
+// Uses a distinct recipeName so parallel workers don't race on the same
+// fixture directory as the unauthenticated spec file. Both apply the same
+// recipe but from independent fixture copies.
 setRecipeFixture({
-  recipeName: 'legacy-customer-account-flow',
+  recipeName: 'legacy-customer-account-flow-auth',
   storeKey: 'hydrogenPreviewStorefront',
   mock: {
     scenario: MSW_SCENARIOS.legacyCustomerAccountLoggedIn,

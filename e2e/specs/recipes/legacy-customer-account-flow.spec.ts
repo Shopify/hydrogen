@@ -39,7 +39,7 @@ test.describe('Legacy Customer Account Flow Recipe', () => {
       page,
       legacyCustomerAccount,
     }) => {
-      await legacyCustomerAccount.getLink(/register/i).click();
+      await page.getByRole('link', {name: /register/i}).click();
       await expect(page).toHaveURL(/\/account\/register/);
       await legacyCustomerAccount.assertRegisterPageRendered();
     });
@@ -48,7 +48,7 @@ test.describe('Legacy Customer Account Flow Recipe', () => {
       page,
       legacyCustomerAccount,
     }) => {
-      await legacyCustomerAccount.getLink(/forgot password/i).click();
+      await page.getByRole('link', {name: /forgot password/i}).click();
       await expect(page).toHaveURL(/\/account\/recover/);
       await legacyCustomerAccount.assertRecoverPageRendered();
     });
@@ -73,7 +73,7 @@ test.describe('Legacy Customer Account Flow Recipe', () => {
       page,
       legacyCustomerAccount,
     }) => {
-      await legacyCustomerAccount.getLink(/login/i).click();
+      await page.getByRole('link', {name: /login/i}).click();
       await expect(page).toHaveURL(/\/account\/login/);
       await legacyCustomerAccount.assertLoginPageRendered();
     });
@@ -98,7 +98,7 @@ test.describe('Legacy Customer Account Flow Recipe', () => {
       page,
       legacyCustomerAccount,
     }) => {
-      await legacyCustomerAccount.getLink(/login/i).click();
+      await page.getByRole('link', {name: /login/i}).click();
       await expect(page).toHaveURL(/\/account\/login/);
       await legacyCustomerAccount.assertLoginPageRendered();
     });

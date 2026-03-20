@@ -58,14 +58,6 @@ export class LegacyCustomerAccountUtil {
     return this.page.getByLabel(/re-enter password/i);
   }
 
-  getSubmitButton(name: string | RegExp): Locator {
-    return this.page.getByRole('button', {name});
-  }
-
-  getLink(name: string | RegExp): Locator {
-    return this.page.getByRole('link', {name});
-  }
-
   // ── Authenticated page locators ─────────────────────────
 
   getWelcomeHeading(firstName: string): Locator {
@@ -129,12 +121,18 @@ export class LegacyCustomerAccountUtil {
     await expect(this.getPageHeading()).toHaveText('Sign in.');
     await expect(this.getEmailInput()).toBeVisible();
     await expect(this.getPasswordInput()).toBeVisible();
-    await expect(this.getSubmitButton('Sign in')).toBeVisible();
+    await expect(
+      this.page.getByRole('button', {name: 'Sign in'}),
+    ).toBeVisible();
   }
 
   async assertLoginPageLinks() {
-    await expect(this.getLink(/forgot password/i)).toBeVisible();
-    await expect(this.getLink(/register/i)).toBeVisible();
+    await expect(
+      this.page.getByRole('link', {name: /forgot password/i}),
+    ).toBeVisible();
+    await expect(
+      this.page.getByRole('link', {name: /register/i}),
+    ).toBeVisible();
   }
 
   // ── Register page assertions ────────────────────────────
@@ -144,11 +142,13 @@ export class LegacyCustomerAccountUtil {
     await expect(this.getEmailInput()).toBeVisible();
     await expect(this.getPasswordInput()).toBeVisible();
     await expect(this.getPasswordConfirmInput()).toBeVisible();
-    await expect(this.getSubmitButton('Register')).toBeVisible();
+    await expect(
+      this.page.getByRole('button', {name: 'Register'}),
+    ).toBeVisible();
   }
 
   async assertRegisterPageLinks() {
-    await expect(this.getLink(/login/i)).toBeVisible();
+    await expect(this.page.getByRole('link', {name: /login/i})).toBeVisible();
   }
 
   // ── Recover page assertions ─────────────────────────────
@@ -156,11 +156,13 @@ export class LegacyCustomerAccountUtil {
   async assertRecoverPageRendered() {
     await expect(this.getPageHeading()).toHaveText('Forgot Password.');
     await expect(this.getEmailInput()).toBeVisible();
-    await expect(this.getSubmitButton(/request reset link/i)).toBeVisible();
+    await expect(
+      this.page.getByRole('button', {name: /request reset link/i}),
+    ).toBeVisible();
   }
 
   async assertRecoverPageLinks() {
-    await expect(this.getLink(/login/i)).toBeVisible();
+    await expect(this.page.getByRole('link', {name: /login/i})).toBeVisible();
   }
 
   // ── Header assertions ──────────────────────────────────

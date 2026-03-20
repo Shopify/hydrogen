@@ -105,8 +105,8 @@ function ensureBroadcastChannel() {
 }
 
 /**
- * MSW needs process.versions.node set so it uses its Node.js programmatic
- * interception strategy (not Service Worker). NODE_ENV: 'production'
+ * MSW needs `process.versions.node` set so it uses its Node.js programmatic
+ * interception strategy (not Service Worker). `NODE_ENV: 'production'`
  * suppresses MSW verbose dev-mode diagnostics that pollute test logs.
  */
 function ensureNodeProcessForMsw() {

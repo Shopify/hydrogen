@@ -130,7 +130,7 @@ const legacyCustomerOrdersMock = {
   },
 };
 
-scenarios.set('legacy-customer-account-logged-in', {
+scenarios.set(MSW_SCENARIOS.legacyCustomerAccountLoggedIn, {
   handlers: [
     graphql.query('Customer', () => {
       return HttpResponse.json({data: {customer: LEGACY_CUSTOMER_MOCK}});
