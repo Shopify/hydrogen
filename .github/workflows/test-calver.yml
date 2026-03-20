@@ -3,7 +3,7 @@ name: Test CalVer Scripts
 # This workflow validates the automated CalVer (Calendar Versioning) release system
 # that powers Hydrogen's quarterly release cycle aligned with Shopify Storefront API versions.
 #
-# CRITICAL: These scripts run in production changesets.yml workflow during every release.
+# CRITICAL: These scripts run in production release.yml workflow during every release.
 # Failures here indicate potential version corruption, release blocking, or incorrect
 # quarterly alignment that affects millions of Hydrogen developers.
 #
@@ -13,7 +13,7 @@ name: Test CalVer Scripts
 # 3. Patch versioning - CalVer packages increment correctly (2025.5.0 → 2025.5.1)
 # 4. Major versioning - CalVer packages align to quarters (2025.5.0 → 2025.7.0 for Q3)
 # 5. Branch detection - Automated quarter advancement logic (2025-05 → 2025-07)
-# 6. CLI utilities - Shared functions used by changesets.yml workflow
+# 6. CLI utilities - Shared functions used by release.yml workflow
 # 7. Mixed packages - CalVer vs semver package type handling and precedence logic
 #
 # Each test validates against actual package.json versions and changeset files,

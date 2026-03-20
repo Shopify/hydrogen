@@ -308,7 +308,7 @@ node scripts/get-latest-branch.js
 
 ### 1. Regular Release (main branch)
 - **Trigger**: Merge to main with changesets
-- **Workflow**: `.github/workflows/changesets.yml`
+- **Workflow**: `.github/workflows/release.yml` (`release` job)
 - **Branch Detection**: Automatic via `get-latest-branch.js`
 - **Version Calculation**: Automatic via `calver-shared.js` utilities
 - **Version PR Title**: `[ci] release YYYY.Q.P` (CalVer format)
@@ -316,14 +316,14 @@ node scripts/get-latest-branch.js
 
 ### 2. Back-fix Release (CalVer branches)
 - **Trigger**: Push to CalVer branch (e.g., `2025-01`)
-- **Workflow**: `.github/workflows/changesets-back-fix.yml`
+- **Workflow**: `.github/workflows/release.yml` (`backfix-release` job)
 - **Branch**: Uses branch name directly
 - **Version PR Title**: `[ci] back-fix release YYYY-MM`
 - **npm tag**: Branch name (e.g., `2025-01`)
 
 ### 3. Next Release (continuous)
 - **Trigger**: Every push to main
-- **Workflow**: `.github/workflows/next-release.yml`
+- **Workflow**: `.github/workflows/release.yml` (`next-release` job)
 - **Version Format**: `0.0.0-next-{SHA}-{timestamp}`
 - **npm tag**: `next`
 - **Purpose**: Immediate testing of latest changes
@@ -538,8 +538,8 @@ cat packages/hydrogen-react/package.json | grep version
 ### Issue: PR titles still show branch format (YYYY-MM) instead of version format (YYYY.Q.P)
 **Solution**: Ensure the workflow has been updated with dynamic version calculation
 ```bash
-# Check if latestVersion is being calculated in changesets.yml
-grep -A 10 "latestVersion" .github/workflows/changesets.yml
+# Check if latestVersion is being calculated in release.yml
+grep -A 10 "latestVersion" .github/workflows/release.yml
 ```
 
 ### Issue: CLI-only releases create misleading CalVer PR titles
@@ -581,7 +581,7 @@ rm .changeset/test-cli.md
 ## Migration Notes
 
 ### For Maintainers
-- **No more manual updates**: The `latestBranch` in changesets.yml updates automatically
+- **No more manual updates**: The `latestBranch` in release.yml is detected automatically
 - **Branch naming unchanged**: Still uses `YYYY-MM` format (e.g., `2025-05`)
 - **Changeset process unchanged**: Continue using `npm run changeset add`
 
