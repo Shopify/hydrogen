@@ -107,7 +107,7 @@ function ensureBroadcastChannel() {
 /**
  * MSW needs `process.versions.node` set so it uses its Node.js programmatic
  * interception strategy (not Service Worker). `NODE_ENV: 'production'`
- * suppresses MSW's verbose dev-mode diagnostics that pollute test logs.
+ * suppresses MSW verbose dev-mode diagnostics that pollute test logs.
  */
 function ensureNodeProcessForMsw() {
   const currentProcess = (globalThis as MswGlobal).process;
@@ -190,7 +190,8 @@ function getMswScenario(env: Env): string | undefined {
 function shouldInjectCustomerSession() {
   return (
     currentMswScenarioMeta &&
-    currentMswScenarioMeta.mocksCustomerAccountApi &&
+    (currentMswScenarioMeta.mocksCustomerAccountApi ||
+      currentMswScenarioMeta.mocksLegacyCustomerAuth) &&
     currentMswScenarioMeta.handlers.length > 0
   );
 }
@@ -237,6 +238,47 @@ function getSessionStorage(secret: string) {
   return cachedSessionStorage;
 }
 
+type SessionLike = Awaited<
+  ReturnType<ReturnType<typeof createCookieSessionStorage>['getSession']>
+>;
+
+function injectCustomerAccountSession(session: SessionLike) {
+  const current =
+    session.get('customerAccount') ??
+    ({} as {
+      accessToken?: string;
+      refreshToken?: string;
+      expiresAt?: string;
+    });
+
+  session.set('customerAccount', {
+    ...current,
+    accessToken: current.accessToken ?? 'e2e-customer-access-token',
+    refreshToken: current.refreshToken ?? 'e2e-customer-refresh-token',
+    expiresAt: current.expiresAt ?? String(Date.now() + SESSION_TTL_IN_MS),
+  });
+}
+
+/**
+ * The legacy customer account recipe uses the Storefront API for auth,
+ * storing customerAccessToken (with shape {accessToken, expiresAt})
+ * instead of customerAccount (which also has refreshToken).
+ * expiresAt is an ISO date string parsed with new Date(expiresAt).
+ */
+function injectLegacyCustomerSession(session: SessionLike) {
+  const current =
+    session.get('customerAccessToken') ??
+    ({} as {accessToken?: string; expiresAt?: string});
+
+  session.set('customerAccessToken', {
+    ...current,
+    accessToken: current.accessToken ?? 'e2e-legacy-customer-access-token',
+    expiresAt:
+      current.expiresAt ??
+      new Date(Date.now() + SESSION_TTL_IN_MS).toISOString(),
+  });
+}
+
 async function addMockCustomerSessionCookieIfNeeded(
   request: Request,
   env: Env,
@@ -256,25 +298,11 @@ async function addMockCustomerSessionCookieIfNeeded(
     requestWithTunnelHostname.headers.get('Cookie') ?? '',
   );
 
-  const currentCustomerAccountSession =
-    session.get('customerAccount') ??
-    ({} as {
-      accessToken?: string;
-      refreshToken?: string;
-      expiresAt?: string;
-    });
-
-  session.set('customerAccount', {
-    ...currentCustomerAccountSession,
-    accessToken:
-      currentCustomerAccountSession.accessToken ?? 'e2e-customer-access-token',
-    refreshToken:
-      currentCustomerAccountSession.refreshToken ??
-      'e2e-customer-refresh-token',
-    expiresAt:
-      currentCustomerAccountSession.expiresAt ??
-      String(Date.now() + SESSION_TTL_IN_MS),
-  });
+  if (currentMswScenarioMeta?.mocksLegacyCustomerAuth) {
+    injectLegacyCustomerSession(session);
+  } else {
+    injectCustomerAccountSession(session);
+  }
 
   const sessionCookiePair = (await storage.commitSession(session)).split(
     ';',

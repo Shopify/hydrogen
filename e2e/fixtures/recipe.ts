@@ -69,10 +69,10 @@ export const setRecipeFixture = (options: RecipeFixtureOptions) => {
 
   const isLocal = !storeKey.startsWith('https://');
   const tmpRoot = path.resolve(__dirname, '../../.tmp/recipe-fixtures');
-  // Each recipe fixture directory is owned by exactly one test file's beforeAll.
-  // Two test files MUST NOT share the same recipeName — doing so would cause
-  // parallel workers to race on the same directory. Enforced by convention:
-  // each recipe has its own dedicated spec file.
+  // Multiple spec files MAY share the same recipeName (e.g. subscriptions.spec.ts
+  // and subscriptions-auth.spec.ts both use 'subscriptions'). The lock-and-wait
+  // mechanism (acquireLock/waitForFixture) ensures only one worker generates
+  // the fixture while others wait for it to complete.
   const recipeFixturePath = path.join(tmpRoot, recipeName);
   const skeletonPath = path.resolve(__dirname, '../../templates/skeleton');
   const repoRoot = path.resolve(__dirname, '../..');
