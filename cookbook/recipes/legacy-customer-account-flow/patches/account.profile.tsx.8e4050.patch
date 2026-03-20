@@ -18,7 +18,7 @@ index 6f10065f..7b8c77d3 100644
  } from 'react-router';
  import type {Route} from './+types/account.profile';
  
-@@ -20,62 +20,79 @@ export const meta: Route.MetaFunction = () => {
+@@ -20,62 +20,80 @@ export const meta: Route.MetaFunction = () => {
  };
  
  export async function loader({context}: Route.LoaderArgs) {
@@ -49,20 +49,21 @@ index 6f10065f..7b8c77d3 100644
 +    const password = getPassword(form);
      const customer: CustomerUpdateInput = {};
 -    const validInputKeys = ['firstName', 'lastName'] as const;
++    const acceptsMarketing = form.get('acceptsMarketing');
++    if (acceptsMarketing !== null) {
++      customer.acceptsMarketing = acceptsMarketing === 'on';
++    }
++
 +    const validInputKeys = [
 +      'firstName',
 +      'lastName',
 +      'email',
-+      'password',
 +      'phone',
 +    ] as const;
      for (const [key, value] of form.entries()) {
        if (!validInputKeys.includes(key as any)) {
          continue;
        }
-+      if (key === 'acceptsMarketing') {
-+        customer.acceptsMarketing = value === 'on';
-+      }
        if (typeof value === 'string' && value.length) {
          customer[key as (typeof validInputKeys)[number]] = value;
        }
@@ -189,31 +190,24 @@ index 6f10065f..7b8c77d3 100644
          </fieldset>
          {action?.error ? (
            <p>
-@@ -131,3 +206,55 @@ export default function AccountProfile() {
+@@ -131,3 +207,48 @@ export default function AccountProfile() {
      </div>
    );
  }
 +
 +function getPassword(form: FormData): string | undefined {
-+  let password;
 +  const newPassword = form.get('newPassword');
 +  const newPasswordConfirm = form.get('newPasswordConfirm');
 +
-+  let passwordError;
-+
-+  if (newPassword && newPassword !== newPasswordConfirm) {
-+    passwordError = new Error('New passwords must match.');
++  if (!newPassword) {
++    return undefined;
 +  }
 +
-+  if (passwordError) {
-+    throw passwordError;
++  if (newPassword !== newPasswordConfirm) {
++    throw new Error('New passwords must match.');
 +  }
 +
-+  if (newPassword) {
-+    password = newPassword;
-+  }
-+
-+  return String(password);
++  return String(newPassword);
 +}
 +
 +const CUSTOMER_UPDATE_MUTATION = `#graphql

@@ -428,7 +428,7 @@ index 3e04bc72..e95f252f 100644
 -        <label htmlFor="territoryCode">Country Code*</label>
 +        <label htmlFor="country">Country*</label>
          <input
--          aria-label="territoryCode"
+-          aria-label="Country code"
 -          autoComplete="country"
 -          defaultValue={address?.territoryCode ?? ''}
 -          id="territoryCode"

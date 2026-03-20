@@ -22,7 +22,7 @@ npm run cookbook -- validate --recipe {name}
 ```
 
 **Recipe requirements:**
-- Step numbers are numeric: `step: 1` not `step: "1"`
+- Step values are quoted strings: `step: "1"` not `step: 1` (YAML coerces unquoted integers to numbers, but the Zod schema expects strings)
 - Every step has a description (non-null, non-empty)
 - Step names are unique within the same step number
 - All referenced patch/ingredient files exist
@@ -36,14 +36,14 @@ npm run cookbook -- render --recipe {name}
 
 ## Common Errors
 
-### String Step Numbers
+### Unquoted Step Numbers
 ```
-❌ recipe.yaml:52  steps.0.step  RecipeSchema: Expected number, received string (actual value: "1")
+❌ recipe.yaml:52  steps.0.step  RecipeSchema: Invalid input: expected string, received number (actual value: 1)
 ```
-**Fix**: Remove quotes from step numbers:
+**Fix**: Quote step numbers so YAML preserves them as strings:
 ```diff
-- step: "1"
-+ step: 1
+- step: 1
++ step: "1"
 ```
 
 ### Outdated README
@@ -69,7 +69,7 @@ npm run cookbook -- render --recipe {name}
 
 ## Code Style
 
-- Step numbers: Numeric values only (`step: 1`)
+- Step values: Quoted strings (`step: "1"`) — unquoted integers fail Zod validation
 - Step names: Unique within same step number, kebab-case for file paths
 - Descriptions: Non-null, non-empty strings explaining what the step does
 - Comments: Use `@description` in code to explain why, not what
@@ -194,7 +194,7 @@ npm run cookbook -- validate --recipe my-recipe --hydrogenPackagesVersion 2025.1
 ```
 ❌ Recipe 'gtm' - 5 error(s):
 
-recipe.yaml:52      steps.0.step                  RecipeSchema: Expected number, received string (actual value: "1")
+recipe.yaml:52      steps.0.step                  RecipeSchema: Invalid input: expected string, received number (actual value: 1)
                     README.md                     validateReadmeExists: README.md not found. Run: npm run cookbook render gtm
 ```
 
@@ -320,7 +320,7 @@ ingredients:
   - path: 'templates/skeleton/app/components/NewFile.tsx'
     description: 'Component description'
 steps:
-  - step: 1  # IMPORTANT: Numeric, not string
+  - step: "1"  # IMPORTANT: Quoted string, not bare integer
     type: PATCH
     name: 'app/root.tsx'
     description: 'What this step does'  # IMPORTANT: Required, non-null
