@@ -42,5 +42,11 @@ export default defineConfig({
       name: 'old-cookies',
       testDir: './e2e/specs/old-cookies',
     },
+    {
+      name: 'recipes',
+      testDir: './e2e/specs/recipes',
+      // Each recipe test uses isolated fixture directories, enabling parallel execution
+      fullyParallel: true,
+    },
   ],
 });

@@ -17,6 +17,7 @@ import {getHandlersForScenario} from './msw/handlers';
 
 export * from '@playwright/test';
 export * from './storefront';
+export * from './recipe';
 export {
   getTestSecrets,
   getRequiredSecret,
@@ -99,6 +100,15 @@ type TestStoreOptions = {
   };
 };
 
+type DevServerLifecycleOptions = {
+  storeKey: string;
+  projectPath?: string;
+  customerAccountPush?: boolean;
+  mock?: {
+    scenario: MswScenario;
+  };
+};
+
 async function createMockEnvFile(envFile: string, scenario: MswScenario) {
   const mockEnvDir = await mkdtemp(path.join(tmpdir(), 'hydrogen-e2e-msw-'));
   const mockEnvFile = path.join(mockEnvDir, '.env.mock');
@@ -122,26 +132,30 @@ async function createMockEnvFile(envFile: string, scenario: MswScenario) {
   return {mockEnvDir, mockEnvFile};
 }
 
-export const setTestStore = async (
-  testStore: TestStoreKey | `https://${string}`,
-  options: TestStoreOptions = {},
-) => {
-  const isLocal = !testStore.startsWith('https://');
+/**
+ * Registers Playwright hooks for DevServer lifecycle: baseURL fixture,
+ * beforeAll (start), and afterAll (stop). For remote stores, only the
+ * baseURL fixture is registered — no local server is started.
+ *
+ * Playwright runs beforeAll hooks in registration order, so callers
+ * that need setup before the server starts (e.g. fixture generation)
+ * should register their own beforeAll BEFORE calling this function.
+ */
+export const configureDevServer = (options: DevServerLifecycleOptions) => {
+  const {storeKey, projectPath, mock} = options;
+  const isLocal = !storeKey.startsWith('https://');
   let server: DevServer | null = null;
   let mockEnvDir: string | undefined;
 
-  const mockScenario = isLocal ? options.mock?.scenario : undefined;
+  const mockScenario = isLocal ? mock?.scenario : undefined;
 
   test.use({
     baseURL: async ({}, use) => {
-      await use(isLocal ? server?.getUrl() : testStore);
+      await use(isLocal ? server?.getUrl() : storeKey);
     },
   });
 
-  if (!isLocal) {
-    console.log(`Using test store: ${testStore}`);
-    return;
-  }
+  if (!isLocal) return;
 
   test.afterAll(async () => {
     await server?.stop();
@@ -158,8 +172,8 @@ export const setTestStore = async (
     if (options.customerAccountPush) {
       test.setTimeout(TUNNEL_SETUP_TIMEOUT_IN_MS);
     }
-    
-    const envFile = path.resolve(__dirname, `../envs/.env.${testStore}`);
+
+    const envFile = path.resolve(__dirname, `../envs/.env.${storeKey}`);
     await stat(envFile); // Ensure the file exists
 
     let runtimeEnvFile = envFile;
@@ -171,14 +185,26 @@ export const setTestStore = async (
     }
 
     server = new DevServer({
-      storeKey: testStore,
+      storeKey,
       customerAccountPush: options.customerAccountPush ?? false,
       envFile: runtimeEnvFile,
       entry: mockScenario
         ? path.resolve(__dirname, './msw/entry.ts')
         : undefined,
+      projectPath,
     });
 
     await server.start();
+  });
+};
+
+export const setTestStore = (
+  testStore: TestStoreKey | `https://${string}`,
+  options: TestStoreOptions = {},
+) => {
+  configureDevServer({
+    storeKey: testStore,
+    customerAccountPush: options.customerAccountPush,
+    mock: options.mock,
   });
 };
