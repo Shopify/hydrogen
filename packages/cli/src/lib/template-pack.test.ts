@@ -4,7 +4,10 @@ import {join} from 'node:path';
 import {describe, expect, it} from 'vitest';
 import {inTemporaryDirectory} from '@shopify/cli-kit/node/fs';
 import {getSkeletonSourceDir} from './build.js';
-import {replaceWorkspaceProtocolVersions} from './template-pack.js';
+import {
+  replaceWorkspaceProtocolVersions,
+  WINDOWS_SHELL_OPTS,
+} from './template-pack.js';
 
 const DEPENDENCY_SECTIONS = [
   'dependencies',
@@ -20,6 +23,7 @@ function getCatalogVersion(sourceTemplateDir: string, packageName: string) {
     {
       cwd: sourceTemplateDir,
       encoding: 'utf8',
+      ...WINDOWS_SHELL_OPTS,
     },
   ).trim();
 
