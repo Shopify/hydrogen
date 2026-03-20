@@ -17,7 +17,7 @@ import type {SectionsFragment} from 'storefrontapi.generated';
 
 export function Sections({sections}: {sections: SectionsFragment}) {
   return (
-    <div className="sections">
+    <div className="sections" role="region" aria-label="Route Content">
       {sections?.references?.nodes.map((section) => {
         switch (section.type) {
           case 'section_hero':

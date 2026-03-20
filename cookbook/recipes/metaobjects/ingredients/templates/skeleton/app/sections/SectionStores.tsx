@@ -15,7 +15,7 @@ export function SectionStores(props: SectionStoresFragment) {
   const {heading, stores} = section;
 
   return (
-    <section className="section-stores">
+    <section className="section-stores" aria-label="Stores">
       {heading?.value && <h1>{heading.value}</h1>}
       <div
         className="stores"

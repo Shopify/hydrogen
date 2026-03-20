@@ -6,7 +6,7 @@ index df87425c..12434050 100644
        language: args.context.storefront.i18n.language,
      },
 +    // @description Add public store subdomain for metaobjects
-+    publictoreSubdomain: args.context.env.PUBLIC_STORE_DOMAIN,
++    publicStoreSubdomain: args.context.env.PUBLIC_STORE_DOMAIN,
    };
  }
  
