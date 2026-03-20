@@ -5,12 +5,15 @@ import {
   TUNNEL_READY_TIMEOUT_IN_MS,
 } from './server';
 import path from 'node:path';
-import {stat} from 'node:fs/promises';
+import {mkdtemp, readFile, rm, stat, writeFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
 import {StorefrontPage} from './storefront';
 import {CartUtil} from './cart-utils';
 import {DiscountUtil} from './discount-utils';
 import {GiftCardUtil} from './gift-card-utils';
 import {CustomerAccountUtil} from './customer-account-utils';
+import type {MswScenario} from './msw/scenarios';
+import {getHandlersForScenario} from './msw/handlers';
 
 export * from '@playwright/test';
 export * from './storefront';
@@ -42,6 +45,8 @@ export const TUNNEL_SETUP_TIMEOUT_IN_MS =
   STARTUP_TIMEOUT_IN_MS +
   TUNNEL_READY_TIMEOUT_IN_MS +
   TUNNEL_SETUP_MARGIN_IN_MS;
+export {mockCustomerAccountOperation} from './msw/graphql';
+export {MSW_SCENARIOS} from './msw/scenarios';
 
 export const test = base.extend<
   {
@@ -87,16 +92,45 @@ const TEST_STORE_KEYS = [
 
 type TestStoreKey = (typeof TEST_STORE_KEYS)[number];
 
-type SetTestStoreOptions = {
+type TestStoreOptions = {
   customerAccountPush?: boolean;
+  mock?: {
+    scenario: MswScenario;
+  };
 };
+
+async function createMockEnvFile(envFile: string, scenario: MswScenario) {
+  const mockEnvDir = await mkdtemp(path.join(tmpdir(), 'hydrogen-e2e-msw-'));
+  const mockEnvFile = path.join(mockEnvDir, '.env.mock');
+
+  const baseEnvContents = await readFile(envFile, 'utf8');
+  const normalizedEnvContents = baseEnvContents.endsWith('\n')
+    ? baseEnvContents
+    : `${baseEnvContents}\n`;
+
+  const scenarioMeta = getHandlersForScenario(scenario);
+  /** these variables are required by the CAAPI client */
+  const caapiVars = scenarioMeta.mocksCustomerAccountApi
+    ? `SHOP_ID="mock-shop"\nPUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID="shp_mock-client-id"\n`
+    : '';
+
+  await writeFile(
+    mockEnvFile,
+    `${normalizedEnvContents}HYDROGEN_E2E_MSW_SCENARIO=${scenario}\n${caapiVars}`,
+  );
+
+  return {mockEnvDir, mockEnvFile};
+}
 
 export const setTestStore = async (
   testStore: TestStoreKey | `https://${string}`,
-  options: SetTestStoreOptions = {},
+  options: TestStoreOptions = {},
 ) => {
   const isLocal = !testStore.startsWith('https://');
   let server: DevServer | null = null;
+  let mockEnvDir: string | undefined;
+
+  const mockScenario = isLocal ? options.mock?.scenario : undefined;
 
   test.use({
     baseURL: async ({}, use) => {
@@ -111,6 +145,10 @@ export const setTestStore = async (
 
   test.afterAll(async () => {
     await server?.stop();
+
+    if (mockEnvDir) {
+      await rm(mockEnvDir, {recursive: true, force: true});
+    }
   });
 
   test.beforeAll(async ({}) => {
@@ -120,14 +158,25 @@ export const setTestStore = async (
     if (options.customerAccountPush) {
       test.setTimeout(TUNNEL_SETUP_TIMEOUT_IN_MS);
     }
+    
+    const envFile = path.resolve(__dirname, `../envs/.env.${testStore}`);
+    await stat(envFile); // Ensure the file exists
 
-    const filepath = path.resolve(__dirname, `../envs/.env.${testStore}`);
-    await stat(filepath);
+    let runtimeEnvFile = envFile;
+
+    if (mockScenario) {
+      const mockEnvFiles = await createMockEnvFile(envFile, mockScenario);
+      runtimeEnvFile = mockEnvFiles.mockEnvFile;
+      mockEnvDir = mockEnvFiles.mockEnvDir;
+    }
 
     server = new DevServer({
       storeKey: testStore,
       customerAccountPush: options.customerAccountPush ?? false,
-      envFile: filepath,
+      envFile: runtimeEnvFile,
+      entry: mockScenario
+        ? path.resolve(__dirname, './msw/entry.ts')
+        : undefined,
     });
 
     await server.start();
