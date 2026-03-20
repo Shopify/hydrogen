@@ -161,6 +161,9 @@ importers:
       lint-staged:
         specifier: ^10.5.4
         version: 10.5.4
+      msw:
+        specifier: ^2.12.10
+        version: 2.12.10(@types/node@22.19.11)(typescript@5.9.2)
       prettier:
         specifier: ^3.4.2
         version: 3.8.1
