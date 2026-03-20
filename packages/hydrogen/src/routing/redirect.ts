@@ -64,7 +64,10 @@ export async function storefrontRedirect(
       variables: {
         query:
           'path:"' +
-          redirectFrom.replace(/\/+$/, '').replace(/"/g, '\\"') +
+          redirectFrom
+            .replace(/\/+$/, '')
+            .replace(/%22/gi, '"')
+            .replace(/"/g, '\\"') +
           '"',
       },
     });

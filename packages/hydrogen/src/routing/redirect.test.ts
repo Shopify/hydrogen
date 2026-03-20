@@ -294,7 +294,25 @@ describe('storefrontRedirect', () => {
       });
     });
 
-    it('escapes percent-encoded double quotes in path', async () => {
+    it('wraps query params containing injection characters in phrase quotes with matchQueryParams', async () => {
+      queryMock.mockResolvedValueOnce({urlRedirects: {edges: []}});
+      const response = new Response('Not Found', {status: 404});
+
+      await storefrontRedirect({
+        response,
+        storefront: storefrontMock,
+        request: new Request(
+          'https://domain.com/some-page?param=value*%20OR%20path:*',
+        ),
+        matchQueryParams: true,
+      });
+
+      expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+        variables: {query: 'path:"/some-page?param=value*+or+path%3a*"'},
+      });
+    });
+
+    it('wraps paths containing percent-encoded quotes in phrase quotes', async () => {
       queryMock.mockResolvedValueOnce({urlRedirects: {edges: []}});
       const response = new Response('Not Found', {status: 404});
 
@@ -305,7 +323,7 @@ describe('storefrontRedirect', () => {
       });
 
       expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
-        variables: {query: 'path:"/page%22breakout"'},
+        variables: {query: 'path:"/page\\"breakout"'},
       });
     });
   });
