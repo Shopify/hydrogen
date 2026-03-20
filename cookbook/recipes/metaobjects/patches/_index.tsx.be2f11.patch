@@ -1,4 +1,4 @@
-index 237edc91..27dbb95c 100644
+index 237edc91..4502e979 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
 @@ -1,16 +1,11 @@
@@ -16,14 +16,14 @@ index 237edc91..27dbb95c 100644
 +
 +// @description Add metaobject content imports
 +import {ROUTE_CONTENT_QUERY, RouteContent} from '~/sections/RouteContent';
-
+ 
  export const meta: Route.MetaFunction = () => {
 -  return [{title: 'Hydrogen | Home'}];
 +  return [{title: 'Hydrogen Metaobject | Home'}];
  };
-
+ 
  export async function loader(args: Route.LoaderArgs) {
-@@ -28,15 +23,18 @@ export async function loader(args: Route.LoaderArgs) {
+@@ -28,150 +23,37 @@ export async function loader(args: Route.LoaderArgs) {
   * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
   */
  async function loadCriticalData({context}: Route.LoaderArgs) {
@@ -39,16 +39,18 @@ index 237edc91..27dbb95c 100644
 +    }),
      // Add other queries here, so that they are loaded in parallel
    ]);
-
+ 
 -  return {
 -    isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
 -    featuredCollection: collections.nodes[0],
 -  };
 +  return {route};
  }
-
+ 
  /**
-@@ -45,133 +43,17 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
+  * Load data for rendering content below the fold. This data is deferred and will be
+- * fetched after the initial page load. If it's unavailable, the page should still 200.
++ * fetched after the initial page load. If it's unavailable, the page should still render
   * Make sure to not throw any errors here, as it will cause the page to 500.
   */
  function loadDeferredData({context}: Route.LoaderArgs) {
@@ -66,7 +68,7 @@ index 237edc91..27dbb95c 100644
 +  // No deferred data for this route
 +  return {};
  }
-
+ 
  export default function Homepage() {
 -  const data = useLoaderData<typeof loader>();
 +  const {route} = useLoaderData<typeof loader>();
