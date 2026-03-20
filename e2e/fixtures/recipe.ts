@@ -3,6 +3,7 @@ import path from 'node:path';
 import {
   stat,
   mkdir,
+  rename,
   rm,
   cp,
   readFile,
@@ -174,9 +175,8 @@ const ensureFixture = async ({
       return;
     }
 
-    if (await pathExists(recipeFixturePath)) {
-      await rm(recipeFixturePath, {recursive: true, force: true});
-    }
+    await rm(recipeFixturePath, {recursive: true, force: true});
+    await rm(`${recipeFixturePath}.tmp`, {recursive: true, force: true});
 
     await generateFixture({recipeName, recipeFixturePath, ...generateOptions});
   } finally {
@@ -191,20 +191,23 @@ const generateFixture = async ({
   repoRoot,
   envOverrides,
 }: GenerateOptions) => {
+  // Build into a staging directory so recipeFixturePath only exists once
+  // generation is fully complete. This prevents parallel workers from seeing
+  // pathExists(recipeFixturePath) === true on a partially-built fixture.
+  const stagingPath = `${recipeFixturePath}.tmp`;
   await mkdir(path.dirname(recipeFixturePath), {recursive: true});
+  await rm(stagingPath, {recursive: true, force: true});
 
   try {
-    // Copy skeleton to fixture directory first, then apply recipe to the copy
-    // This avoids mutating the pristine skeleton and prevents race conditions
     console.log(`[recipe-fixture] Copying skeleton to fixture directory...`);
-    await cp(skeletonPath, recipeFixturePath, {recursive: true});
+    await cp(skeletonPath, stagingPath, {recursive: true});
 
     console.log(`[recipe-fixture] Applying ${recipeName} recipe...`);
     // Note: recipeName comes from test file literals (not user input), and
     // recipeFixturePath is constructed from controlled paths. Safe for test environment.
     // Using exec (not execFile) because npm run requires shell for script resolution.
     await execAsync(
-      `npm run cookbook --workspace=cookbook -- apply --recipe ${recipeName} --template ${recipeFixturePath}`,
+      `npm run cookbook --workspace=cookbook -- apply --recipe ${recipeName} --template ${stagingPath}`,
       {
         cwd: repoRoot,
         env: {...process.env, ...envOverrides, CI: 'true'},
@@ -221,13 +224,15 @@ const generateFixture = async ({
 
   try {
     console.log(`[recipe-fixture] Resolving workspace protocols...`);
-    await resolveWorkspaceProtocols(recipeFixturePath, repoRoot);
+    await resolveWorkspaceProtocols(stagingPath, repoRoot);
 
     console.log(`[recipe-fixture] Installing dependencies...`);
     await execFileAsync('pnpm', ['install'], {
-      cwd: recipeFixturePath,
+      cwd: stagingPath,
       timeout: PNPM_INSTALL_TIMEOUT_IN_MS,
     });
+
+    await rename(stagingPath, recipeFixturePath);
     console.log(
       `[recipe-fixture] Generated ${recipeName} fixture successfully`,
     );
