@@ -134,6 +134,7 @@ test.describe('Custom Cart Method Recipe', () => {
         name: KNOWN_PRODUCT_WITH_VARIANTS.name,
       });
       const initialProductUrl = await productLink.getAttribute('href');
+      assert(initialProductUrl);
 
       const optionSelect = (
         await variantSelector.waitForOptionSelectors(firstLineItem)
