@@ -73,6 +73,31 @@ export function getRequiredSecret(key: string): string {
   return value;
 }
 
+/**
+ * Returns the loadtest header as a key-value pair for use in Playwright's
+ * `extraHTTPHeaders`. Falls back to an empty object if ejson is not configured.
+ *
+ * WARNING: Any spec that calls `test.use({ extraHTTPHeaders })` must spread
+ * these headers, otherwise the loadtest header is silently lost because
+ * Playwright replaces (not merges) extraHTTPHeaders.
+ */
+export function getLoadtestHeaders(): Record<string, string> {
+  try {
+    const secrets = getTestSecrets();
+    const header = secrets.loadtest_header;
+    if (header) return {[header]: 'true'};
+  } catch {
+    // The loadtest header is required for customer account OTP bypass —
+    // without it, tests fail cryptically minutes later with a redirect timeout.
+    console.warn(
+      '[loadtest-headers] Failed to load loadtest header from ejson secrets.\n' +
+        'Customer account tests will fail without it.\n' +
+        'Set up ejson: ./scripts/setup-ejson-private-key.sh',
+    );
+  }
+  return {};
+}
+
 function loadFromEjson(): TestSecrets | null {
   const secretsPath = path.resolve(__dirname, '../../secrets.ejson');
 
