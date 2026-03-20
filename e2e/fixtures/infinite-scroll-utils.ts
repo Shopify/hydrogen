@@ -18,11 +18,6 @@ export class InfiniteScrollUtil {
     return this.page.getByRole('link', {name: /load more/i});
   }
 
-  async assertProductCountGreaterThan(minCount: number) {
-    const count = await this.getProductCount();
-    expect(count).toBeGreaterThan(minCount);
-  }
-
   async assertLoadMoreButtonVisible() {
     await expect(this.getLoadMoreButton()).toBeVisible();
   }
@@ -33,26 +28,17 @@ export class InfiniteScrollUtil {
     await loadMoreButton.click();
   }
 
+  // Snapshot assertion (not web-first) — safe because callers invoke this
+  // immediately after navigateToCollection, which already awaits toHaveURL.
   async assertUrlDoesNotContainParam(param: string) {
     const url = new URL(this.page.url());
     expect(url.searchParams.has(param)).toBe(false);
   }
 
   async waitForUrlToContainPaginationParam() {
-    await expect
-      .poll(
-        () => {
-          const url = new URL(this.page.url());
-          return (
-            url.searchParams.has('cursor') || url.searchParams.has('after')
-          );
-        },
-        {
-          message:
-            'URL should contain a "cursor" or "after" pagination parameter',
-        },
-      )
-      .toBe(true);
+    await expect(this.page).toHaveURL(
+      (url) => url.searchParams.has('cursor') || url.searchParams.has('after'),
+    );
   }
 
   getPreviousLink() {
@@ -73,18 +59,19 @@ export class InfiniteScrollUtil {
     return products.count();
   }
 
-  async waitForProductCountToIncrease(initialCount: number) {
+  async assertProductCount(count: number) {
+    await expect(this.getProducts()).toHaveCount(count);
+  }
+
+  /**
+   * Waits for at least one new page of products to load. Use this instead of
+   * assertProductCount when the final count is non-deterministic — the recipe's
+   * preventScrollReset keeps the load-more button in the viewport, so the
+   * Intersection Observer can fire multiple times and cascade through pages.
+   */
+  async waitForMoreProducts(previousCount: number) {
     await expect
-      .poll(async () => this.getProducts().count())
-      .toBeGreaterThan(initialCount);
-  }
-
-  async getHistoryLength() {
-    return this.page.evaluate(() => window.history.length);
-  }
-
-  async assertHistoryLength(expectedLength: number) {
-    const actualLength = await this.getHistoryLength();
-    expect(actualLength).toBe(expectedLength);
+      .poll(() => this.getProducts().count())
+      .toBeGreaterThan(previousCount);
   }
 }
