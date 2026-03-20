@@ -51,14 +51,14 @@ steps:
     description: Update the README file to document the legacy customer account flow.
     diffs:
       - file: README.md
-        patchFile: README.md.db10ed.patch
+        patchFile: README.md.a0354d.patch
   - type: PATCH
     step: "2"
     name: Add account link to header navigation
     description: Add an account link to the header navigation.
     diffs:
       - file: app/components/Header.tsx
-        patchFile: Header.tsx.e25645.patch
+        patchFile: Header.tsx.994c25.patch
   - type: NEW_FILE
     step: "3"
     name: Create account activation flow
@@ -71,7 +71,7 @@ steps:
     description: Update PageLayout to handle account routes.
     diffs:
       - file: app/components/PageLayout.tsx
-        patchFile: PageLayout.tsx.23e685.patch
+        patchFile: PageLayout.tsx.145dab.patch
   - type: NEW_FILE
     step: "5"
     name: Build password recovery flow
@@ -84,7 +84,7 @@ steps:
     description: Add customer access token validation to the root loader.
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.5e9998.patch
+        patchFile: root.tsx.8c60e9.patch
   - type: NEW_FILE
     step: "7"
     name: Create customer registration flow
@@ -97,7 +97,7 @@ steps:
     description: Convert the catch-all route to use Storefront API authentication.
     diffs:
       - file: app/routes/account.$.tsx
-        patchFile: account.$.tsx.ce5422.patch
+        patchFile: account.$.tsx.5ed838.patch
   - type: NEW_FILE
     step: "9"
     name: Build password reset flow
@@ -110,49 +110,49 @@ steps:
     description: Convert address management to use Storefront API mutations.
     diffs:
       - file: app/routes/account.addresses.tsx
-        patchFile: account.addresses.tsx.cb4cc0.patch
+        patchFile: account.addresses.tsx.f3bb60.patch
   - type: PATCH
     step: "11"
     name: Show order details
     description: Convert the order details page to use Storefront API queries.
     diffs:
       - file: app/routes/account.orders.$id.tsx
-        patchFile: account.orders.$id.tsx.4ddfdd.patch
+        patchFile: account.orders.$id.tsx.56d9c4.patch
   - type: PATCH
     step: "12"
     name: Display order history
     description: Convert the orders list to use the Storefront API with pagination.
     diffs:
       - file: app/routes/account.orders._index.tsx
-        patchFile: account.orders._index.tsx.4daaeb.patch
+        patchFile: account.orders._index.tsx.8942cc.patch
   - type: PATCH
     step: "13"
     name: Build customer profile page
     description: Convert the customer profile page to use Storefront API queries.
     diffs:
       - file: app/routes/account.profile.tsx
-        patchFile: account.profile.tsx.f09d0b.patch
+        patchFile: account.profile.tsx.8e4050.patch
   - type: PATCH
     step: "14"
     name: Update account layout for session auth
     description: Convert the account layout to use session-based authentication.
     diffs:
       - file: app/routes/account.tsx
-        patchFile: account.tsx.f95c1e.patch
+        patchFile: account.tsx.30f6e3.patch
   - type: PATCH
     step: "15"
     name: Create login page
     description: Replace the Customer Account API login with the Storefront API form.
     diffs:
       - file: app/routes/account_.login.tsx
-        patchFile: account_.login.tsx.3fb3f2.patch
+        patchFile: account_.login.tsx.d75928.patch
   - type: PATCH
     step: "16"
     name: Handle logout and session cleanup
     description: Replace the Customer Account API logout with a session cleanup.
     diffs:
       - file: app/routes/account_.logout.tsx
-        patchFile: account_.logout.tsx.a1f12e.patch
+        patchFile: account_.logout.tsx.eec6ad.patch
 nextSteps: |
   After applying this recipe:
 
@@ -195,4 +195,4 @@ llms:
     - issue: TypeScript errors about missing types
       solution: Run `npm run codegen` to generate the Storefront API types after
         applying all patches.
-commit: 4f5db289f8a9beb5c46dda9416a7ae8151f7e08e
+commit: d27e9178195e76ed6a3ead38b87788677bb449cd

@@ -24,7 +24,7 @@ index 237edc91..d65e1253 100644
 +      cache: CacheShort(),
 +    }),
    ]);
-
+ 
    return {
      isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
      featuredCollection: collections.nodes[0],
@@ -32,7 +32,7 @@ index 237edc91..d65e1253 100644
 +    characters,
    };
  }
-
+ 
 @@ -63,12 +69,50 @@ export default function Homepage() {
    return (
      <div className="home">
@@ -44,7 +44,7 @@ index 237edc91..d65e1253 100644
      </div>
    );
  }
-
+ 
 +// @description Component to display Rick & Morty characters fetched from third-party API
 +function ThirdPartyApiExample({characters}: {characters: any}) {
 +  return (
@@ -87,7 +87,7 @@ index 237edc91..d65e1253 100644
 @@ -147,6 +191,18 @@ const FEATURED_COLLECTION_QUERY = `#graphql
    }
  ` as const;
-
+ 
 +// @description GraphQL query for Rick & Morty characters from third-party API
 +const CHARACTERS_QUERY = `#graphql:rickAndMorty
 +  query Characters {

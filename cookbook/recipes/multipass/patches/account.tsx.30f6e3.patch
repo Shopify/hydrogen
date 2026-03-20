@@ -1,7 +1,7 @@
-index 0429e7eb..9f559843 100644
+index 0429e7eb..c5e01b28 100644
 --- a/templates/skeleton/app/routes/account.tsx
 +++ b/templates/skeleton/app/routes/account.tsx
-@@ -1,42 +1,105 @@
+@@ -1,42 +1,106 @@
  import {
 -  data as remixData,
    Form,
@@ -26,7 +26,8 @@ index 0429e7eb..9f559843 100644
 -      language: customerAccount.i18n.language,
 -    },
 -  });
-+export const headers: Route.HeadersFunction = ({loaderHeaders}) => loaderHeaders;
++export const headers: Route.HeadersFunction = ({loaderHeaders}) =>
++  loaderHeaders;
  
 -  if (errors?.length || !data?.customer) {
 -    throw new Error('Customer not found');
@@ -127,7 +128,7 @@ index 0429e7eb..9f559843 100644
    const heading = customer
      ? customer.firstName
        ? `Welcome, ${customer.firstName}`
-@@ -48,9 +111,7 @@ export default function AccountLayout() {
+@@ -48,9 +112,7 @@ export default function AccountLayout() {
        <h1>{heading}</h1>
        <br />
        <AccountMenu />
@@ -138,7 +139,7 @@ index 0429e7eb..9f559843 100644
      </div>
    );
  }
-@@ -95,3 +156,50 @@ function Logout() {
+@@ -95,3 +157,50 @@ function Logout() {
      </Form>
    );
  }

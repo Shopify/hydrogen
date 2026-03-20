@@ -15,6 +15,6 @@ index e971ba7e..8f0acac2 100644
    "prettier": "@shopify/prettier-config",
    "dependencies": {
 +    "@qwik.dev/partytown": "^0.11.2",
-     "@shopify/hydrogen": "2026.1.1",
+     "@shopify/hydrogen": "workspace:*",
      "graphql": "^16.10.0",
      "graphql-tag": "^2.12.6",

@@ -1,4 +1,4 @@
-index 3e04bc72..62d6b575 100644
+index 3e04bc72..d36d1d91 100644
 --- a/templates/skeleton/app/routes/account.addresses.tsx
 +++ b/templates/skeleton/app/routes/account.addresses.tsx
 @@ -1,22 +1,14 @@
@@ -528,4 +528,3 @@ index 3e04bc72..62d6b575 100644
 +    }
 +  }
 +` as const;
-\ No newline at end of file

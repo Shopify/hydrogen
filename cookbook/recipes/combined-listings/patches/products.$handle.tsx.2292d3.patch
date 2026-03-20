@@ -14,13 +14,13 @@ index 99730d41..bd97c83c 100644
 +  isCombinedListing,
 +  combinedListingsSettings,
 +} from '../lib/combined-listings';
-
+ 
  export const meta: Route.MetaFunction = ({data}) => {
    return [
 @@ -59,6 +66,10 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
    // The API handle might be localized, so redirect to the localized handle
    redirectIfHandleIsLocalized(request, {handle, data: product});
-
+ 
 +  if (combinedListingsSettings.redirectToFirstVariant) {
 +    redirectIfCombinedListing(request, product);
 +  }
@@ -29,35 +29,35 @@ index 99730d41..bd97c83c 100644
      product,
    };
 @@ -78,6 +89,7 @@ function loadDeferredData({context, params}: Route.LoaderArgs) {
-
+ 
  export default function Product() {
    const {product} = useLoaderData<typeof loader>();
 +  const combinedListing = isCombinedListing(product);
-
+ 
    // Optimistically selects a variant with given available variant information
    const selectedVariant = useOptimisticVariant(
 @@ -87,7 +99,9 @@ export default function Product() {
-
+ 
    // Sets the search param to the selected variant without navigation
    // only when no search params are set in the url
 -  useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
 +  useSelectedOptionInUrlParam(
 +    combinedListing ? [] : selectedVariant.selectedOptions,
 +  );
-
+ 
    // Get the product options array
    const productOptions = getProductOptions({
 @@ -95,21 +109,41 @@ export default function Product() {
      selectedOrFirstAvailableVariant: selectedVariant,
    });
-
+ 
 -  const {title, descriptionHtml} = product;
 +  const {descriptionHtml, title} = product;
 +
 +  const productImage = combinedListing
 +    ? (product.featuredImage ?? selectedVariant?.image)
 +    : selectedVariant?.image;
-
+ 
    return (
      <div className="product">
 -      <ProductImage image={selectedVariant?.image} />

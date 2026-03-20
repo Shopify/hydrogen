@@ -1,4 +1,4 @@
-index 6f10065f..fc09931a 100644
+index 6f10065f..7b8c77d3 100644
 --- a/templates/skeleton/app/routes/account.profile.tsx
 +++ b/templates/skeleton/app/routes/account.profile.tsx
 @@ -1,12 +1,12 @@
@@ -245,4 +245,3 @@ index 6f10065f..fc09931a 100644
 +    }
 +  }
 +` as const;
-\ No newline at end of file
