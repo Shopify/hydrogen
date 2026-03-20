@@ -99,11 +99,6 @@ export const setTestStore = async (
   test.use({
     baseURL: async ({}, use) => {
       const baseURL = isLocal ? await server?.getUrl() : testStore;
-      if (!baseURL) {
-        throw new Error(
-          'Server URL is undefined — server may not have been initialized before this fixture ran',
-        );
-      }
       await use(baseURL);
     },
   });
@@ -141,5 +136,7 @@ export const setTestStore = async (
         ? path.resolve(__dirname, './msw/entry.ts')
         : undefined,
     });
+
+    await server.getUrl();
   });
 };
