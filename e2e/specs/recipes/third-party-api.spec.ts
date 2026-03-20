@@ -22,7 +22,7 @@ const RECIPE_HEADING_TEXT = 'Rick & Morty Characters (Third-Party API Example)';
 // The skeleton queries the most recently updated collection, which may change over time.
 // If this collection is removed or renamed in hydrogenPreviewStorefront, update this constant.
 const KNOWN_FEATURED_COLLECTION = {
-  title: 'Hats and Accessories',
+  title: 'Winter Collection',
 } as const;
 
 test.describe('Third-party API Recipe', () => {
