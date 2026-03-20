@@ -153,19 +153,27 @@ steps:
     description: Update cart line items to use the unified Link component for product links.
     diffs:
       - file: app/components/CartLineItem.tsx
-        patchFile: CartLineItem.tsx.7a55bb.patch
-  - type: NEW_FILE
+        patchFile: CartLineItem.tsx.18f1fd.patch
+  - type: PATCH
     step: "1.2"
-    name: Create a CountrySelector component
+    name: Update AddToCartButton to use locale-aware cart route
+    description: Update the AddToCartButton component to post to the localized cart
+      route (e.g., /FR-CA/cart instead of /cart) so the cart is created with the
+      correct market context and currency.
+    diffs:
+      - file: app/components/AddToCartButton.tsx
+        patchFile: AddToCartButton.tsx.c70860.patch
+  - type: NEW_FILE
+    step: "1.3"
+    name: Create a CountrySelector component with accessibility labels
     description: |
       Create a new `CountrySelector` component that allows users to select the locale from a dropdown of the supported locales.
-
       To handle redirects, use a `Form` that updates the cart buyer identity,
       which eventually redirects to the localized root of the app.
     ingredients:
       - path: templates/skeleton/app/components/CountrySelector.tsx
   - type: NEW_FILE
-    step: "1.3"
+    step: "1.4"
     name: Create a unified locale-aware Link component
     description: |
       Create a single Link component that handles both regular links and navigation links.
@@ -177,7 +185,7 @@ steps:
     ingredients:
       - path: templates/skeleton/app/components/Link.tsx
   - type: NEW_FILE
-    step: "1.4"
+    step: "1.5"
     name: Create comprehensive i18n utilities
     description: |
       Create a centralized i18n module that includes:
@@ -191,24 +199,24 @@ steps:
     ingredients:
       - path: templates/skeleton/app/lib/i18n.ts
   - type: PATCH
-    step: "1.5"
+    step: "1.6"
     name: Update ProductItem to use locale-aware Link
     description: |
       Replace standard react-router Link imports with the new unified Link component.
       This ensures all product links automatically include the correct locale prefix.
     diffs:
       - file: app/components/ProductItem.tsx
-        patchFile: ProductItem.tsx.2c25ad.patch
+        patchFile: ProductItem.tsx.8e65ba.patch
   - type: PATCH
-    step: "1.6"
+    step: "1.7"
     name: Add the selected locale to the context
     description: |
       Detect the locale from the URL path, and add it to the HydrogenContext.
     diffs:
       - file: app/lib/context.ts
-        patchFile: context.ts.46015e.patch
+        patchFile: context.ts.4b0079.patch
   - type: PATCH
-    step: "1.7"
+    step: "1.8"
     name: Update Header with CountrySelector and locale-aware Links
     description: |
       1. Add the `CountrySelector` component to the header navigation.
@@ -217,9 +225,9 @@ steps:
       Menu URLs are automatically cleaned of invalid locale prefixes.
     diffs:
       - file: app/components/Header.tsx
-        patchFile: Header.tsx.fb2b8e.patch
+        patchFile: Header.tsx.26d4bb.patch
   - type: PATCH
-    step: "1.8"
+    step: "1.9"
     name: Add the selected locale to the root route
     description: |
       1. Include the selected locale in the root route's loader data.
@@ -228,7 +236,7 @@ steps:
       when the locale changes.
     diffs:
       - file: app/root.tsx
-        patchFile: root.tsx.ca3339.patch
+        patchFile: root.tsx.9594cb.patch
   - type: INFO
     step: "2"
     name: Localizing the individual routes
@@ -241,7 +249,7 @@ steps:
       component for consistent navigation.
     diffs:
       - file: app/components/CartMain.tsx
-        patchFile: CartMain.tsx.26048c.patch
+        patchFile: CartMain.tsx.3524c1.patch
   - type: INFO
     step: "2.2"
     name: Add language dynamic segment to the desired routes
@@ -433,4 +441,4 @@ llms:
       solution: Make sure you update *all* routes that need localization (not only the
         routes for the home page, the cart page, and the product page). See step
         2.1 for details.
-commit: 14d09107663313bae8eac3c701b90a7bc49819e4
+commit: f4ea0a899cea0d83f01a64c0c5bb37380cee0eb2

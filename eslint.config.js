@@ -130,6 +130,10 @@ module.exports = [
       '**/tsup.config.ts',
       '**/src/storefront-api-response.types.ts',
       '**/storefrontapi.generated.d.ts',
+      // Cookbook recipe ingredients/patches are templates copied into projects, not monorepo source.
+      // They get linted in the projects that use them, not here.
+      '**/cookbook/recipes/*/ingredients/**/*',
+      '**/cookbook/recipes/*/patches/**/*',
     ],
   },
 
