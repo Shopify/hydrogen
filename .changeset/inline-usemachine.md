@@ -1,5 +1,6 @@
 ---
 '@shopify/hydrogen-react': patch
+'@shopify/hydrogen': patch
 ---
 
 Inline `useMachine` hook from `@xstate/react/fsm`, removing the `@xstate/react` dependency
