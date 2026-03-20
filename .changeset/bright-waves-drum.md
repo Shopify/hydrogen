@@ -1,6 +1,7 @@
 ---
 'skeleton': patch
 '@shopify/cli-hydrogen': patch
+'@shopify/create-hydrogen': patch
 ---
 
-Add a Products region landmark to paginated product grids for accessibility.
+Improve screen reader experience for paginated product grids by hiding decorative arrow characters from assistive technology.

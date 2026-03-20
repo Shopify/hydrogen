@@ -21,6 +21,16 @@ setRecipeFixture({
 
 // backcountry is stable in the fixture store and consistently exercises pagination.
 const TEST_COLLECTION = 'backcountry';
+// Must match the fixture store's page size for the backcountry collection.
+const PRODUCTS_PER_PAGE = 8;
+
+// Why two assertion strategies:
+// The recipe uses preventScrollReset, so the load-more button stays in the
+// viewport after each page load. The Intersection Observer therefore keeps
+// firing and cascades through all remaining pages. The exact final count
+// depends on timing, so tests that trigger a load use waitForMoreProducts
+// (greater-than). Only the initial page load — where no IO cascade occurs —
+// uses assertProductCount (exact).
 
 // Short viewport ensures the load-more button starts below the fold,
 // so scrollIntoViewIfNeeded actually triggers the Intersection Observer.
@@ -32,7 +42,7 @@ test.describe('Infinite Scroll Recipe', () => {
       const scroll = new InfiniteScrollUtil(page);
       await scroll.navigateToCollection(TEST_COLLECTION);
 
-      await scroll.assertProductCountGreaterThan(0);
+      await scroll.assertProductCount(PRODUCTS_PER_PAGE);
       await expect(page.getByRole('heading', {level: 1})).toBeVisible();
     });
 
@@ -52,10 +62,10 @@ test.describe('Infinite Scroll Recipe', () => {
       await scroll.navigateToCollection(TEST_COLLECTION);
 
       const initialCount = await scroll.getProductCount();
-      expect(initialCount).toBeGreaterThan(0);
+      expect(initialCount).toBe(PRODUCTS_PER_PAGE);
 
       await scroll.clickLoadMore();
-      await scroll.waitForProductCountToIncrease(initialCount);
+      await scroll.waitForMoreProducts(initialCount);
     });
 
     test('updates URL with pagination parameters', async ({page}) => {
@@ -101,50 +111,51 @@ test.describe('Infinite Scroll Recipe', () => {
       await scroll.navigateToCollection(TEST_COLLECTION);
 
       const initialCount = await scroll.getProductCount();
-      expect(initialCount).toBeGreaterThan(0);
+      expect(initialCount).toBe(PRODUCTS_PER_PAGE);
 
       const loadMoreButton = scroll.getLoadMoreButton();
       await loadMoreButton.scrollIntoViewIfNeeded();
 
-      await scroll.waitForProductCountToIncrease(initialCount);
+      await scroll.waitForMoreProducts(initialCount);
     });
   });
 
   test.describe('History Management', () => {
-    test('uses replace mode to avoid cluttering browser history', async ({
+    test('uses replace mode so back button skips pagination state', async ({
       page,
     }) => {
       await page.setViewportSize(SCROLL_TEST_VIEWPORT);
       const scroll = new InfiniteScrollUtil(page);
 
+      // Build a two-entry history: homepage → collection page.
+      await page.goto('/');
       await scroll.navigateToCollection(TEST_COLLECTION);
 
-      // Playwright starts each test with a new browser context, so this baseline is stable.
-      // We assert relative history growth rather than an absolute value.
-      const initialHistoryLength = await scroll.getHistoryLength();
       const initialCount = await scroll.getProductCount();
-
       const loadMoreButton = scroll.getLoadMoreButton();
       await loadMoreButton.scrollIntoViewIfNeeded();
-      await scroll.waitForProductCountToIncrease(initialCount);
+      await scroll.waitForMoreProducts(initialCount);
 
-      await scroll.assertHistoryLength(initialHistoryLength);
+      // If replace mode works, back should skip all pagination URLs
+      // and return directly to the homepage.
+      await page.goBack();
+      await expect(page).toHaveURL('/');
     });
 
     test('keeps scroll position when new products load', async ({page}) => {
       await page.setViewportSize(SCROLL_TEST_VIEWPORT);
       const scroll = new InfiniteScrollUtil(page);
-
       await scroll.navigateToCollection(TEST_COLLECTION);
 
+      // Scroll down so we have a non-zero baseline, then trigger loading.
       const loadMoreButton = scroll.getLoadMoreButton();
       await loadMoreButton.scrollIntoViewIfNeeded();
 
-      const initialCount = await scroll.getProductCount();
       const initialScrollY = await page.evaluate(() => window.scrollY);
+      expect(initialScrollY).toBeGreaterThan(0);
 
-      await scroll.clickLoadMore();
-      await scroll.waitForProductCountToIncrease(initialCount);
+      const initialCount = await scroll.getProductCount();
+      await scroll.waitForMoreProducts(initialCount);
 
       const finalScrollY = await page.evaluate(() => window.scrollY);
       expect(finalScrollY).toBeGreaterThanOrEqual(initialScrollY);

@@ -11,6 +11,7 @@ node_modules
 /test-project-*/
 /playwright-report/
 /playwright/.cache/
+e2e/.auth/
 **/dist
 
 # E2E test fixtures
