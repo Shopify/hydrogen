@@ -288,3 +288,42 @@ getCartLineItems() {
 ```
 
 **Why avoid CSS?** Per [Playwright docs](https://playwright.dev/docs/locators), CSS selectors are "not recommended as the DOM can often change leading to non resilient tests." Use role-based selectors that reflect how users perceive the page.
+
+## Customer Account Tests
+
+### Running Locally
+
+**Prerequisites:**
+- Shopify CLI authenticated: `cd templates/skeleton && npx shopify auth login`
+- Skeleton linked to benchmark store: `cd templates/skeleton && npx shopify hydrogen link`
+- ejson configured (`./scripts/setup-ejson-private-key.sh`) — required for both the test email and the loadtest header (OTP bypass)
+
+```bash
+# With ejson configured:
+npx playwright test --project=skeleton e2e/specs/skeleton/customerAccount.spec.ts
+
+# Override test email (ejson is still required for the loadtest header):
+CUSTOMER_ACCOUNT_TEST_EMAIL="hydrogen-e2e-test@example.com" \
+  npx playwright test --project=skeleton e2e/specs/skeleton/customerAccount.spec.ts
+
+# Against an existing Oxygen deployment (skips tunnel):
+CUSTOMER_ACCOUNT_URL=https://your-oxygen-deployment.oxygen.myshopify.com \
+OXYGEN_AUTH_BYPASS_TOKEN=your-token \
+  npx playwright test --project=skeleton e2e/specs/skeleton/customerAccount.spec.ts
+```
+
+Without `CUSTOMER_ACCOUNT_URL`, the test starts a local dev server with `--customer-account-push` which creates a Cloudflare quick-tunnel.
+
+### Architecture
+
+**Session reuse pattern**: The `Auth Setup` describe block performs a full OAuth login once and saves the browser session to disk via `storageState`. Subsequent describe blocks (`Auth Persistence`, `Account Pages`, `Logout`) load this file via `test.use({storageState})` to skip the expensive Shopify redirect chain.
+
+**Oxygen auth bypass**: Password-protected Oxygen deployments require an `oxygen-auth-bypass-token` HTTP header (not a cookie). This is set via `test.use({extraHTTPHeaders})` at file scope, so it applies to all tests regardless of `storageState` overrides. See [Shopify docs](https://shopify.dev/docs/storefronts/headless/hydrogen/debugging/end-to-end-testing).
+
+**Serial mode**: Tests run serially because they share a session file on disk. Parallel execution would race on that file and break the dependency chain. Cloudflare rate limits are also a concern.
+
+### CI Split
+
+The main E2E job excludes customer account tests via `--grep-invert "@customer-account"`. A dedicated `test_e2e_customer_account` job deploys the skeleton to Oxygen and runs only these tests against the deployment URL. A health check step polls the deployment (with the bypass header) until it returns HTTP 200 before Playwright runs.
+
+**Tag coupling**: The `@customer-account` tag in `customerAccount.spec.ts` is coupled to the `--grep-invert` in `.github/workflows/ci.yml`. If you rename the tag, update both places.
