@@ -33,6 +33,11 @@ export interface ViteEnv {
 
 const O2_PREFIX = '[o2:runtime]';
 
+type ViteInvokePayload = {
+  name: string;
+  data: unknown[];
+};
+
 export default {
   /**
    * Worker entry module that wraps the user app's entry module.
@@ -93,23 +98,58 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
   if (!runtime) {
     runtime = new ModuleRunner(
       {
-        root: env.__VITE_ROOT,
         sourcemapInterceptor: 'prepareStackTrace',
         transport: {
-          invoke: async (data) => {
+          invoke: async (payload) => {
             // Do not use WS here because the payload can exceed the limit
-            // of WS in workerd. Instead, use fetch to get the module:
-            if (data.type === 'custom') {
-              const customData = data.data;
-              const url = new URL(env.__VITE_FETCH_MODULE_PATHNAME, publicUrl);
-              url.searchParams.set('id', customData.data[0]);
-              if (customData.data)
-                url.searchParams.set('importer', customData.name);
+            // of WS in workerd. Instead, use fetch to proxy Vite runner RPC
+            // calls through the parent Vite dev server.
+            if (
+              payload.type === 'custom' &&
+              payload.event === 'vite:invoke' &&
+              isViteInvokePayload(payload.data)
+            ) {
+              if (payload.data.name === 'fetchModule') {
+                const [id, importer, options] = payload.data.data;
 
-              return fetch(url).then((res) => ({result: res.json()}));
+                if (typeof id !== 'string') {
+                  return Promise.resolve({
+                    error: {message: `Invalid fetchModule id: ${String(id)}`},
+                  });
+                }
+
+                const url = new URL(
+                  env.__VITE_FETCH_MODULE_PATHNAME,
+                  publicUrl,
+                );
+                url.searchParams.set('id', id);
+
+                if (typeof importer === 'string') {
+                  url.searchParams.set('importer', importer);
+                }
+
+                if (options && typeof options === 'object') {
+                  url.searchParams.set('options', JSON.stringify(options));
+                }
+
+                return fetch(url).then((res) => res.json());
+              }
+
+              return fetch(
+                new URL(env.__VITE_FETCH_MODULE_PATHNAME, publicUrl),
+                {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({
+                    name: payload.data.name,
+                    data: payload.data.data,
+                  }),
+                },
+              ).then((res) => res.json());
             }
+
             return Promise.resolve({
-              error: `Error - invoke: ${JSON.stringify(data)}`,
+              error: {message: `Error - invoke: ${JSON.stringify(payload)}`},
             });
           },
         },
@@ -179,4 +219,14 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
       ),
     };
   });
+}
+
+function isViteInvokePayload(payload: unknown): payload is ViteInvokePayload {
+  return Boolean(
+    payload &&
+    typeof payload === 'object' &&
+    'name' in payload &&
+    'data' in payload &&
+    Array.isArray((payload as ViteInvokePayload).data),
+  );
 }
