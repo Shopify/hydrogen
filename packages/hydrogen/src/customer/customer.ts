@@ -505,6 +505,9 @@ export function createCustomerAccountClient({
         // 2. User opens the login link multiple times (e.g. cmd+click/ctrl+click twice)
         // In these cases, if the user is already authenticated with Shopify, redirecting
         // back to login restarts the OAuth flow and they are logged in automatically.
+        console.warn(
+          '[hydrogen] State mismatch in authorize callback — redirecting to login. This can happen when the login link is opened in a different browser context or multiple times.',
+        );
         return redirect(loginPath);
       }
 
