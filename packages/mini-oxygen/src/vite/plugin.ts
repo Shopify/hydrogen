@@ -145,7 +145,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           };
         },
       },
-      generateBundle(_, bundle) {
+      generateBundle() {
         if (apiOptions.compatibilityDate) {
           if (!/^\d{4}-\d{2}-\d{2}$/.test(apiOptions.compatibilityDate)) {
             throw new Error(
@@ -159,17 +159,11 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
             compatibility_date: apiOptions.compatibilityDate,
           };
 
-          bundle[oxygenJsonFile] = {
+          this.emitFile({
             type: 'asset',
             fileName: oxygenJsonFile,
             source: JSON.stringify(oxygenJsonContent, null, 2),
-            names: [oxygenJsonFile],
-            originalFileNames: [oxygenJsonFile],
-            // name and originalFileName should be deprecated .. but
-            // for some reason, removing them breaks typescript check
-            name: oxygenJsonFile,
-            originalFileName: oxygenJsonFile,
-          } as any;
+          });
         }
       },
     } satisfies Plugin<{
