@@ -19,6 +19,12 @@ type BundleAnalyzerOptions = {
   minify?: (code: string, filepath: string) => Promise<string>;
 };
 
+type BundleModuleInfo = {
+  code?: string;
+  renderedLength?: number;
+  originalLength?: number;
+};
+
 export function hydrogenBundleAnalyzer(pluginOptions?: BundleAnalyzerOptions) {
   let config: ResolvedConfig;
 
@@ -86,9 +92,13 @@ export function hydrogenBundleAnalyzer(pluginOptions?: BundleAnalyzerOptions) {
       const resultError = await Promise.all(
         modsToAnalyze.map(async (mod) => {
           const relativeModId = relativePath(root, mod.id);
-          const modBundleInfo = workerFile.modules[mod.id];
+          const modBundleInfo = workerFile.modules[mod.id] as
+            | BundleModuleInfo
+            | undefined;
           const originalCodeBytes =
-            modBundleInfo?.originalLength ?? mod.code?.length ?? 0;
+            typeof modBundleInfo?.originalLength === 'number'
+              ? modBundleInfo.originalLength
+              : (mod.code?.length ?? 0);
 
           let resultingCodeBytes = modBundleInfo?.renderedLength ?? 0;
 
