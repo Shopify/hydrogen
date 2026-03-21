@@ -18,7 +18,7 @@ import {withRequestHook} from '../worker/handler.js';
 
 export interface ViteEnv {
   __VITE_ROOT: string;
-  __VITE_FETCH_MODULE_PATHNAME: string;
+  __VITE_INVOKE_MODULE: {fetch: typeof fetch};
   __VITE_RUNTIME_EXECUTE_URL: string;
   __VITE_WARMUP_PATHNAME: string;
   __VITE_REQUEST_HOOK?: {fetch: typeof fetch};
@@ -47,7 +47,7 @@ export default {
     const url = new URL(request.url);
 
     // Fetch the app's entry module and cache it. E.g. `<root>/server.ts`
-    const module = await fetchEntryModule(url, env);
+    const module = await fetchEntryModule(env);
 
     if ('errorResponse' in module) {
       return module.errorResponse;
@@ -94,7 +94,7 @@ let runtime: ModuleRunner;
  * for subsequent requests, so there's no need to refresh the pointer.
  * @returns The app's entry module.
  */
-function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
+function fetchEntryModule(env: ViteEnv) {
   if (!runtime) {
     runtime = new ModuleRunner(
       {
@@ -102,50 +102,22 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
         transport: {
           invoke: async (payload) => {
             // Do not use WS here because the payload can exceed the limit
-            // of WS in workerd. Instead, use fetch to proxy Vite runner RPC
-            // calls through the parent Vite dev server.
+            // of WS in workerd. Instead, use a service binding to forward
+            // runner RPC payloads back to Vite's built-in invoke handlers.
             if (
               payload.type === 'custom' &&
               payload.event === 'vite:invoke' &&
               isViteInvokePayload(payload.data)
             ) {
-              if (payload.data.name === 'fetchModule') {
-                const [id, importer, options] = payload.data.data;
-
-                if (typeof id !== 'string') {
-                  return Promise.resolve({
-                    error: {message: `Invalid fetchModule id: ${String(id)}`},
-                  });
-                }
-
-                const url = new URL(
-                  env.__VITE_FETCH_MODULE_PATHNAME,
-                  publicUrl,
-                );
-                url.searchParams.set('id', id);
-
-                if (typeof importer === 'string') {
-                  url.searchParams.set('importer', importer);
-                }
-
-                if (options && typeof options === 'object') {
-                  url.searchParams.set('options', JSON.stringify(options));
-                }
-
-                return fetch(url).then((res) => res.json());
-              }
-
-              return fetch(
-                new URL(env.__VITE_FETCH_MODULE_PATHNAME, publicUrl),
-                {
-                  method: 'POST',
-                  headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify({
-                    name: payload.data.name,
-                    data: payload.data.data,
+              return env.__VITE_INVOKE_MODULE
+                .fetch(
+                  new Request('http://mini-oxygen', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload),
                   }),
-                },
-              ).then((res) => res.json());
+                )
+                .then((res) => res.json());
             }
 
             return Promise.resolve({

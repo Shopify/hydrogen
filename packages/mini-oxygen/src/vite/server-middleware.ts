@@ -1,9 +1,8 @@
 import {
   isFetchableDevEnvironment,
-  type FetchModuleOptions,
+  type HotPayload,
   type ViteDevServer,
 } from 'vite';
-import type {IncomingMessage} from 'node:http';
 import {fileURLToPath} from 'node:url';
 import {
   createMiniOxygen,
@@ -14,7 +13,7 @@ import {
 } from '../worker/index.js';
 import {Request as MiniflareRequest} from 'miniflare';
 import type {OnlyBindings, OnlyServices} from '../worker/utils.js';
-import {pipeFromWeb, toURL, toWeb} from './utils.js';
+import {pipeFromWeb, toWeb} from './utils.js';
 import {
   isEntrypointError,
   handleEntrypointError,
@@ -26,31 +25,7 @@ import type {ViteEnv} from './worker-entry.js';
 import type {RequestHookInfo} from '../worker/handler.js';
 const scriptPath = fileURLToPath(new URL('./worker-entry.js', import.meta.url));
 
-export const FETCH_MODULE_PATHNAME = '/__vite_fetch_module';
 export const WARMUP_PATHNAME = '/__vite_warmup';
-
-type SerializedViteBuiltin =
-  | {
-      type: 'string';
-      value: string;
-    }
-  | {
-      type: 'RegExp';
-      source: string;
-      flags: string;
-    };
-
-type FetchModuleInvokeRequest = {
-  name: 'fetchModule';
-  data: [id: string, importer?: string, options?: FetchModuleOptions];
-};
-
-type GetBuiltinsInvokeRequest = {
-  name: 'getBuiltins';
-  data: [];
-};
-
-type ViteInvokeRequest = FetchModuleInvokeRequest | GetBuiltinsInvokeRequest;
 
 export type InternalMiniOxygenOptions = {
   /**
@@ -125,6 +100,8 @@ export function startMiniOxygenRuntime({
           return new MiniOxygenResponse('ok');
         }
       : null;
+  const wrappedViteInvoke = async (request: MiniOxygenRequest) =>
+    handleViteInvokeRequest(viteDevServer, request);
 
   const miniOxygen = createMiniOxygen({
     debug,
@@ -136,13 +113,13 @@ export function startMiniOxygenRuntime({
         modulesRoot: '/',
         modules: [{type: 'ESModule', path: scriptPath}],
         serviceBindings: {
+          __VITE_INVOKE_MODULE: wrappedViteInvoke,
           ...(wrappedHook && {__VITE_REQUEST_HOOK: wrappedHook}),
         } satisfies OnlyServices<ViteEnv>,
         bindings: {
           ...env,
           __VITE_ROOT: viteDevServer.config.root,
           __VITE_RUNTIME_EXECUTE_URL: workerEntryFile,
-          __VITE_FETCH_MODULE_PATHNAME: FETCH_MODULE_PATHNAME,
           __VITE_WARMUP_PATHNAME: WARMUP_PATHNAME,
         } satisfies OnlyBindings<ViteEnv>,
         unsafeEvalBinding: '__VITE_UNSAFE_EVAL',
@@ -203,40 +180,6 @@ export function startMiniOxygenRuntime({
 }
 
 export function setupOxygenMiddleware(viteDevServer: ViteDevServer) {
-  viteDevServer.middlewares.use(
-    FETCH_MODULE_PATHNAME,
-    function o2HandleModuleFetch(req, res) {
-      // This request comes from workerd. It forwards Vite module runner
-      // RPC calls that need to execute in the Node.js Vite server.
-      void readViteInvokeRequest(req)
-        .then((invokeRequest) => {
-          if (!invokeRequest) {
-            res.writeHead(400, {'Content-Type': 'text/plain'});
-            res.end('Invalid request');
-            return;
-          }
-
-          res.setHeader('Cache-Control', 'no-store');
-          res.setHeader('Content-Type', 'application/json');
-
-          return handleViteInvokeRequest(viteDevServer, invokeRequest)
-            .then((result) => {
-              res.end(JSON.stringify({result}));
-            })
-            .catch((error) => {
-              console.error('Error during Vite runner invoke:', error);
-              res.writeHead(500);
-              res.end(JSON.stringify({error: serializeInvokeError(error)}));
-            });
-        })
-        .catch((error) => {
-          console.error('Error during Vite runner invoke:', error);
-          res.writeHead(500, {'Content-Type': 'application/json'});
-          res.end(JSON.stringify({error: serializeInvokeError(error)}));
-        });
-    },
-  );
-
   viteDevServer.middlewares.use(function o2HandleWorkerRequest(req, res, next) {
     // This request comes from the browser. At this point, Vite
     // tried to serve the request as a static file, but it didn't
@@ -307,113 +250,33 @@ export function toMiniflareRequest(request: Request): MiniflareRequest {
 
 async function handleViteInvokeRequest(
   viteDevServer: ViteDevServer,
-  invokeRequest: ViteInvokeRequest,
-) {
-  const environment = viteDevServer.environments['ssr'];
+  request: MiniOxygenRequest,
+): Promise<MiniOxygenResponse> {
+  try {
+    const payload = (await request.json()) as HotPayload;
+    const result =
+      await viteDevServer.environments['ssr'].hot.handleInvoke(payload);
 
-  switch (invokeRequest.name) {
-    case 'fetchModule': {
-      const [id, importer, options] = invokeRequest.data;
+    return new MiniOxygenResponse(JSON.stringify(result), {
+      headers: {
+        'Cache-Control': 'no-store',
+        'Content-Type': 'application/json',
+      },
+    });
+  } catch (error) {
+    console.error('Error during Vite runner invoke:', error);
 
-      // `fetchModule` is similar to `viteDevServer.ssrFetchModule`,
-      // but it treats source maps differently (avoids adding empty lines).
-      return environment.fetchModule(id, importer, options);
-    }
-    case 'getBuiltins':
-      return serializeViteBuiltins(environment.config.resolve.builtins ?? []);
+    return new MiniOxygenResponse(
+      JSON.stringify({error: serializeInvokeError(error)}),
+      {
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store',
+          'Content-Type': 'application/json',
+        },
+      },
+    );
   }
-}
-
-async function readViteInvokeRequest(
-  req: IncomingMessage,
-): Promise<ViteInvokeRequest | null> {
-  if (req.method === 'POST') {
-    return parseViteInvokeRequest(await readJsonBody(req));
-  }
-
-  const url = toURL(req);
-  const id = url.searchParams.get('id');
-
-  if (!id) return null;
-
-  const importer = url.searchParams.get('importer') ?? undefined;
-  const rawOptions = url.searchParams.get('options');
-  const options = rawOptions
-    ? (JSON.parse(rawOptions) as FetchModuleOptions)
-    : undefined;
-
-  return {
-    name: 'fetchModule',
-    data: [id, importer, options],
-  };
-}
-
-async function readJsonBody(req: IncomingMessage): Promise<unknown> {
-  const chunks: Uint8Array[] = [];
-
-  for await (const chunk of req) {
-    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
-  }
-
-  if (!chunks.length) return null;
-
-  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
-}
-
-function parseViteInvokeRequest(payload: unknown): ViteInvokeRequest | null {
-  if (!payload || typeof payload !== 'object') {
-    return null;
-  }
-
-  const {name, data} = payload as {
-    name?: unknown;
-    data?: unknown;
-  };
-
-  if (name === 'getBuiltins' && Array.isArray(data) && data.length === 0) {
-    return {name: 'getBuiltins', data: []};
-  }
-
-  if (
-    name === 'fetchModule' &&
-    Array.isArray(data) &&
-    typeof data[0] === 'string' &&
-    (data[1] === undefined ||
-      data[1] === null ||
-      typeof data[1] === 'string') &&
-    (data[2] === undefined ||
-      data[2] === null ||
-      (typeof data[2] === 'object' && data[2] !== null))
-  ) {
-    const importer = typeof data[1] === 'string' ? data[1] : undefined;
-    const options =
-      data[2] && typeof data[2] === 'object'
-        ? (data[2] as FetchModuleOptions)
-        : undefined;
-
-    return {
-      name,
-      data: [data[0], importer, options],
-    };
-  }
-
-  return null;
-}
-
-function serializeViteBuiltins(
-  builtins: Array<string | RegExp>,
-): SerializedViteBuiltin[] {
-  return builtins.map((builtin) => {
-    if (typeof builtin === 'string') {
-      return {type: 'string', value: builtin};
-    }
-
-    return {
-      type: 'RegExp',
-      source: builtin.source,
-      flags: builtin.flags,
-    };
-  });
 }
 
 function serializeInvokeError(error: unknown) {
