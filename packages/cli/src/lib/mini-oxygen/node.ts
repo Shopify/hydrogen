@@ -3,7 +3,7 @@ import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import type {MiniOxygenOptions as InternalMiniOxygenOptions} from '@shopify/mini-oxygen/node';
+import type {MiniOxygenOptions as InternalMiniOxygenOptions} from '~/mini-oxygen/node/index.js';
 import {DEFAULT_INSPECTOR_PORT} from '../flags.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {
@@ -32,7 +32,7 @@ export async function startNodeServer({
   inspectorPort,
   root,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
-  type MiniOxygenType = typeof import('@shopify/mini-oxygen/node');
+  type MiniOxygenType = typeof import('~/mini-oxygen/node/index.js');
   const {startServer, Request, Response} = await importLocal<MiniOxygenType>(
     '@shopify/mini-oxygen/node',
     root,
