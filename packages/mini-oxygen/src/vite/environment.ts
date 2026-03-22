@@ -73,6 +73,10 @@ export function createMiniOxygenDevEnvironment(
     | Promise<ReturnType<typeof startMiniOxygenRuntime>>
     | undefined;
 
+  function runtimeHasStarted() {
+    return Boolean(pendingRuntime || (miniOxygen && !miniOxygen.isDisposed));
+  }
+
   const environment = createFetchableDevEnvironment(name, config, {
     hot: false,
     transport: context.transport,
@@ -120,8 +124,7 @@ export function createMiniOxygenDevEnvironment(
       viteDevServer,
     );
 
-    miniOxygen = startMiniOxygenRuntime(options);
-    return miniOxygen;
+    return startMiniOxygenRuntime(options);
   }
 
   async function warmup() {
@@ -138,6 +141,12 @@ export function createMiniOxygenDevEnvironment(
   return Object.assign(environment, {
     [MINI_OXYGEN_ENVIRONMENT]: true as const,
     configureRuntime(options: MiniOxygenRuntimeOptions) {
+      if (runtimeHasStarted()) {
+        throw new Error(
+          'MiniOxygen runtime options cannot be updated after the runtime has started.',
+        );
+      }
+
       currentRuntimeOptions = mergeMiniOxygenRuntimeOptions(
         currentRuntimeOptions,
         options,

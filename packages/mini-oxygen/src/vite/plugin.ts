@@ -73,8 +73,8 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
   };
 
   const applyRuntimeOptions = (newOptions: OxygenApiOptions) => {
-    apiOptions = mergeMiniOxygenRuntimeOptions(apiOptions, newOptions);
     miniOxygenEnvironment?.configureRuntime(newOptions);
+    apiOptions = mergeMiniOxygenRuntimeOptions(apiOptions, newOptions);
   };
 
   return [
