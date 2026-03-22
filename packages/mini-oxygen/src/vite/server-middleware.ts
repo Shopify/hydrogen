@@ -118,7 +118,6 @@ export function startMiniOxygenRuntime({
         } satisfies OnlyServices<ViteEnv>,
         bindings: {
           ...env,
-          __VITE_ROOT: viteDevServer.config.root,
           __VITE_RUNTIME_EXECUTE_URL: workerEntryFile,
           __VITE_WARMUP_PATHNAME: WARMUP_PATHNAME,
         } satisfies OnlyBindings<ViteEnv>,
