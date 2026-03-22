@@ -21,6 +21,7 @@ export function SectionHero(props: SectionHeroFragment) {
   return (
     <section
       className="section-hero"
+      aria-label="Hero"
       style={{
         backgroundImage,
         height: '50%',

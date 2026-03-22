@@ -79,6 +79,8 @@ export type CumulativeRelease = {
   fixes: Array<ReleaseItem>;
   removeDependencies: string[];
   removeDevDependencies: string[];
+  dependencies: Record<string, string>;
+  devDependencies: Record<string, string>;
 };
 
 const INSTRUCTIONS_FOLDER = '.hydrogen';
@@ -234,6 +236,8 @@ export async function runUpgrade({
     targetVersion,
     cumulativeRemoveDependencies: cumulativeRelease.removeDependencies,
     cumulativeRemoveDevDependencies: cumulativeRelease.removeDevDependencies,
+    cumulativeDependencies: cumulativeRelease.dependencies,
+    cumulativeDevDependencies: cumulativeRelease.devDependencies,
   });
   await validateUpgrade({
     appPath,
@@ -576,6 +580,8 @@ export function getCumulativeRelease({
     fixes: [],
     removeDependencies: [],
     removeDevDependencies: [],
+    dependencies: {},
+    devDependencies: {},
   };
 
   if (!availableUpgrades?.length) return empty;
@@ -590,6 +596,8 @@ export function getCumulativeRelease({
       fixes: selectedRelease.fixes || [],
       removeDependencies: selectedRelease.removeDependencies ?? [],
       removeDevDependencies: selectedRelease.removeDevDependencies ?? [],
+      dependencies: selectedRelease.dependencies ?? {},
+      devDependencies: selectedRelease.devDependencies ?? {},
     };
   }
 
@@ -679,7 +687,24 @@ export function getCumulativeRelease({
     ),
   ];
 
-  return {features, fixes, removeDependencies, removeDevDependencies};
+  // Accumulate dep additions/bumps across all upgrading releases (last-write-wins
+  // by ascending version order). This ensures intermediate bumps — e.g. @react-router/dev
+  // upgraded in 2025.7.1 — are applied when the target release doesn't repeat them.
+  const dependencies: Record<string, string> = {};
+  const devDependencies: Record<string, string> = {};
+  for (const release of releasesByVersion) {
+    Object.assign(dependencies, release.dependencies ?? {});
+    Object.assign(devDependencies, release.devDependencies ?? {});
+  }
+
+  return {
+    features,
+    fixes,
+    removeDependencies,
+    removeDevDependencies,
+    dependencies,
+    devDependencies,
+  };
 }
 
 /**
@@ -838,15 +863,31 @@ export function buildUpgradeCommandArgs({
   selectedRelease,
   currentDependencies,
   targetVersion,
+  cumulativeDependencies,
+  cumulativeDevDependencies,
 }: {
   selectedRelease: Release;
   currentDependencies: Record<string, string>;
   targetVersion?: string;
+  cumulativeDependencies?: Record<string, string>;
+  cumulativeDevDependencies?: Record<string, string>;
 }) {
   const args: string[] = [];
 
+  // Merge cumulative deps (from intermediate releases) with the target release's deps.
+  // selectedRelease wins for any dep it declares; cumulative fills in the gaps for
+  // packages bumped in intermediate releases but absent from the target entry.
+  const effectiveDependencies = {
+    ...(cumulativeDependencies ?? {}),
+    ...selectedRelease.dependencies,
+  };
+  const effectiveDevDependencies = {
+    ...(cumulativeDevDependencies ?? {}),
+    ...selectedRelease.devDependencies,
+  };
+
   // upgrade dependencies
-  for (const dependency of Object.entries(selectedRelease.dependencies)) {
+  for (const dependency of Object.entries(effectiveDependencies)) {
     const shouldUpgradeDep = maybeIncludeDependency({
       currentDependencies,
       dependency,
@@ -865,7 +906,7 @@ export function buildUpgradeCommandArgs({
   }
 
   // upgrade devDependencies
-  for (const dependency of Object.entries(selectedRelease.devDependencies)) {
+  for (const dependency of Object.entries(effectiveDevDependencies)) {
     const shouldUpgradeDep = maybeIncludeDependency({
       currentDependencies,
       dependency,
@@ -886,7 +927,7 @@ export function buildUpgradeCommandArgs({
   // Maybe upgrade Remix dependencies
   const currentRemix =
     Object.entries(currentDependencies).find(isRemixDependency);
-  const selectedRemix = Object.entries(selectedRelease.dependencies).find(
+  const selectedRemix = Object.entries(effectiveDependencies).find(
     isRemixDependency,
   );
 
@@ -907,7 +948,7 @@ export function buildUpgradeCommandArgs({
   const currentReactRouter = Object.entries(currentDependencies).find(
     isReactRouterDependency,
   );
-  const selectedReactRouter = Object.entries(selectedRelease.dependencies).find(
+  const selectedReactRouter = Object.entries(effectiveDependencies).find(
     isReactRouterDependency,
   );
 
@@ -948,6 +989,8 @@ export async function upgradeNodeModules({
   targetVersion,
   cumulativeRemoveDependencies,
   cumulativeRemoveDevDependencies,
+  cumulativeDependencies,
+  cumulativeDevDependencies,
 }: {
   appPath: string;
   selectedRelease: Release;
@@ -955,6 +998,8 @@ export async function upgradeNodeModules({
   targetVersion?: string;
   cumulativeRemoveDependencies: string[];
   cumulativeRemoveDevDependencies: string[];
+  cumulativeDependencies?: Record<string, string>;
+  cumulativeDevDependencies?: Record<string, string>;
 }) {
   const tasks: Array<{title: string; task: () => Promise<void>}> = [];
 
@@ -985,6 +1030,8 @@ export async function upgradeNodeModules({
     selectedRelease,
     currentDependencies,
     targetVersion,
+    cumulativeDependencies,
+    cumulativeDevDependencies,
   });
 
   if (upgradeArgs.length > 0) {
@@ -1002,9 +1049,19 @@ export async function upgradeNodeModules({
                 : packageManager === 'bun'
                   ? 'install'
                   : 'install'; // fallback to npm for 'unknown'
+        // npm v7+ strict peer dep resolution rejects installing packages
+        // that conflict with currently-installed versions, even when those
+        // old versions are being replaced in the same command. --legacy-peer-deps
+        // reverts to npm v6 behavior, which resolves correctly for upgrade
+        // scenarios where peer dep versions are changing. pnpm/yarn handle
+        // this without special flags.
+        const extraArgs =
+          packageManager === 'npm' || packageManager === 'unknown'
+            ? ['--legacy-peer-deps']
+            : [];
         await exec(
           resolvePackageManagerName(packageManager),
-          [command, ...upgradeArgs],
+          [command, ...extraArgs, ...upgradeArgs],
           {
             cwd: appPath,
           },
@@ -1052,9 +1109,19 @@ async function uninstallNodeModules({
             ? 'remove'
             : 'uninstall'; // fallback to npm for 'unknown'
 
-  await exec(resolvePackageManagerName(packageManager), [command, ...args], {
-    cwd: directory,
-  });
+  // npm v7+ runs full peer dep resolution during uninstall too, which can
+  // reject the operation when old and new peer dep ranges conflict. Mirror
+  // the --legacy-peer-deps flag used by installNodeModules for consistency.
+  const extraArgs =
+    packageManager === 'npm' || packageManager === 'unknown'
+      ? ['--legacy-peer-deps']
+      : [];
+
+  await exec(
+    resolvePackageManagerName(packageManager),
+    [command, ...extraArgs, ...args],
+    {cwd: directory},
+  );
 }
 
 /**

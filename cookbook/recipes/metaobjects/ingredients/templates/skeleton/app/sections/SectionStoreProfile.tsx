@@ -18,7 +18,7 @@ export function SectionStoreProfile(props: SectionStoreProfileFragment) {
   const {image, heading, description, hours, address} = section.store;
 
   return (
-    <section id={props.id} className="store">
+    <section id={props.id} className="store" aria-label="Store Profile">
       <Link to={`/stores`}>Back to Stores</Link>
       <div>
         <br />
