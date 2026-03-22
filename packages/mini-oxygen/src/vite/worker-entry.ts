@@ -17,7 +17,6 @@ import type {Response} from 'miniflare';
 import {withRequestHook} from '../worker/handler.js';
 
 export interface ViteEnv {
-  __VITE_ROOT: string;
   __VITE_INVOKE_MODULE: {fetch: typeof fetch};
   __VITE_RUNTIME_EXECUTE_URL: string;
   __VITE_WARMUP_PATHNAME: string;
