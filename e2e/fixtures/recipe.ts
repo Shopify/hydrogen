@@ -21,7 +21,7 @@ const execFileAsync = promisify(execFile);
 const LOCK_POLL_INTERVAL_MS = 500;
 const LOCK_TIMEOUT_MS = 5 * 60 * 1000;
 const COOKBOOK_APPLY_TIMEOUT_IN_MS = 2 * 60 * 1000;
-const PNPM_INSTALL_TIMEOUT_IN_MS = 3 * 60 * 1000;
+const INSTALL_TIMEOUT_IN_MS = 3 * 60 * 1000;
 
 type WorkspaceConfig = {
   packages: string[];
@@ -239,8 +239,10 @@ const generateFixture = async ({
     console.log(`[recipe-fixture] Installing dependencies...`);
     await execFileAsync('pnpm', ['install'], {
       cwd: stagingPath,
-      timeout: PNPM_INSTALL_TIMEOUT_IN_MS,
+      timeout: INSTALL_TIMEOUT_IN_MS,
     });
+
+    await installMissingRegistryDeps(stagingPath);
 
     await rename(stagingPath, recipeFixturePath);
     console.log(
@@ -250,6 +252,53 @@ const generateFixture = async ({
     console.error(`[recipe-fixture] Failed to install ${recipeName}:`, error);
     throw error;
   }
+};
+
+/**
+ * Detects dependencies declared in package.json that pnpm failed to install
+ * (due to workspace mode silently skipping non-workspace registry packages)
+ * and installs them with npm as a fallback.
+ */
+const installMissingRegistryDeps = async (fixturePath: string) => {
+  const pkgJsonPath = path.join(fixturePath, 'package.json');
+  const pkgJson = JSON.parse(await readFile(pkgJsonPath, 'utf-8')) as {
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  };
+
+  const allDeps = {
+    ...pkgJson.dependencies,
+    ...pkgJson.devDependencies,
+  };
+
+  const missingDeps: string[] = [];
+
+  for (const [name, version] of Object.entries(allDeps)) {
+    if (version.startsWith('file:')) continue;
+
+    const depPath = path.join(fixturePath, 'node_modules', name);
+    if (!(await pathExists(depPath))) {
+      missingDeps.push(`${name}@${version}`);
+    }
+  }
+
+  if (missingDeps.length === 0) return;
+
+  console.log(
+    `[recipe-fixture] Installing ${missingDeps.length} missing registry deps: ${missingDeps.join(', ')}`,
+  );
+
+  // --ignore-scripts is safe because current registry deps (e.g. crypto-js)
+  // are pure JS with no postinstall build steps. If a recipe adds a dep
+  // with native compilation, this flag must be removed or handled separately.
+  await execFileAsync(
+    'npm',
+    ['install', '--no-save', '--ignore-scripts', ...missingDeps],
+    {
+      cwd: fixturePath,
+      timeout: INSTALL_TIMEOUT_IN_MS,
+    },
+  );
 };
 
 /**
