@@ -337,20 +337,29 @@ const copyMissingNodeModules = async (
     if (entry.startsWith('.')) continue;
 
     if (entry.startsWith('@')) {
-      const scopedEntries = await readdir(path.join(srcModules, entry));
-      for (const scopedEntry of scopedEntries) {
-        const destPath = path.join(destModules, entry, scopedEntry);
-        if (await pathExists(destPath)) continue;
-        await mkdir(path.join(destModules, entry), {recursive: true});
-        await cp(path.join(srcModules, entry, scopedEntry), destPath, {
-          recursive: true,
-        });
-      }
+      await copyScopedPackages(srcModules, destModules, entry);
     } else {
       const destPath = path.join(destModules, entry);
       if (await pathExists(destPath)) continue;
       await cp(path.join(srcModules, entry), destPath, {recursive: true});
     }
+  }
+};
+
+const copyScopedPackages = async (
+  srcModules: string,
+  destModules: string,
+  scope: string,
+) => {
+  await mkdir(path.join(destModules, scope), {recursive: true});
+  const scopedEntries = await readdir(path.join(srcModules, scope));
+
+  for (const scopedEntry of scopedEntries) {
+    const destPath = path.join(destModules, scope, scopedEntry);
+    if (await pathExists(destPath)) continue;
+    await cp(path.join(srcModules, scope, scopedEntry), destPath, {
+      recursive: true,
+    });
   }
 };
 
