@@ -85,7 +85,6 @@ export class StorefrontPage {
     this.page.context().on('page', async (newPage) => {
       await this.setupCDPTracking(newPage);
     });
-
     this.page.on('request', (request) => {
       const url = request.url();
 
@@ -166,6 +165,20 @@ export class StorefrontPage {
           '';
         if (initiatorUrl) {
           this.requestInitiators.set(url, initiatorUrl);
+        }
+
+        // Capture PerfKit produce requests from CDP. PerfKit uses
+        // sendBeacon() which Playwright's page.on('request') doesn't
+        // intercept, but CDP Network.requestWillBeSent does.
+        if (
+          url.includes(MONORAIL_PRODUCE_URL) &&
+          !url.includes(MONORAIL_BATCH_URL)
+        ) {
+          this.perfKitProduceRequests.push({
+            url,
+            postData: event.request.postData || undefined,
+            initiator: initiatorUrl || undefined,
+          });
         }
       });
     } catch {
