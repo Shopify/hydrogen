@@ -192,8 +192,7 @@ function shouldInjectCustomerSession() {
     currentMswScenarioMeta &&
     (currentMswScenarioMeta.mocksCustomerAccountApi ||
       currentMswScenarioMeta.mocksLegacyCustomerAuth) &&
-    currentMswScenarioMeta.handlers.length > 0 &&
-    currentMswScenarioMeta.injectCustomerSession !== false
+    currentMswScenarioMeta.handlers.length > 0
   );
 }
 

@@ -4,7 +4,6 @@ export const MSW_SCENARIOS = {
   b2bLoggedIn: 'b2b-logged-in',
   subscriptionsLoggedIn: 'subscriptions-logged-in',
   legacyCustomerAccountLoggedIn: 'legacy-customer-account-logged-in',
-  multipassUnauthenticated: 'multipass-unauthenticated',
 } as const;
 
 export type MswScenario = (typeof MSW_SCENARIOS)[keyof typeof MSW_SCENARIOS];
