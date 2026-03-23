@@ -3,6 +3,8 @@ import path from 'node:path';
 import {
   stat,
   mkdir,
+  mkdtemp,
+  readdir,
   rename,
   rm,
   cp,
@@ -10,6 +12,7 @@ import {
   writeFile,
   access,
 } from 'node:fs/promises';
+import {tmpdir} from 'node:os';
 import {exec, execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {parse as parseYaml} from 'yaml';
@@ -258,6 +261,12 @@ const generateFixture = async ({
  * Detects dependencies declared in package.json that pnpm failed to install
  * (due to workspace mode silently skipping non-workspace registry packages)
  * and installs them with npm as a fallback.
+ *
+ * npm install runs in an isolated temp directory (outside the monorepo) to
+ * prevent npm from traversing into the parent node_modules/.pnpm/ store,
+ * where it discovers packages with broken lifecycle scripts (e.g.
+ * eslint-import-resolver-typescript publishes prepare: "simple-git-hooks")
+ * and tries to run them despite --ignore-scripts.
  */
 const installMissingRegistryDeps = async (fixturePath: string) => {
   const pkgJsonPath = path.join(fixturePath, 'package.json');
@@ -288,17 +297,61 @@ const installMissingRegistryDeps = async (fixturePath: string) => {
     `[recipe-fixture] Installing ${missingDeps.length} missing registry deps: ${missingDeps.join(', ')}`,
   );
 
-  // --ignore-scripts is safe because current registry deps (e.g. crypto-js)
-  // are pure JS with no postinstall build steps. If a recipe adds a dep
-  // with native compilation, this flag must be removed or handled separately.
-  await execFileAsync(
-    'npm',
-    ['install', '--no-save', '--ignore-scripts', ...missingDeps],
-    {
-      cwd: fixturePath,
-      timeout: INSTALL_TIMEOUT_IN_MS,
-    },
-  );
+  const isolatedDir = await mkdtemp(path.join(tmpdir(), 'h2-recipe-deps-'));
+  try {
+    await writeFile(
+      path.join(isolatedDir, 'package.json'),
+      '{"private":true}\n',
+    );
+
+    // --ignore-scripts is safe because current registry deps (e.g. crypto-js)
+    // are pure JS with no postinstall build steps. If a recipe adds a dep
+    // with native compilation, this flag must be removed or handled separately.
+    await execFileAsync(
+      'npm',
+      ['install', '--no-save', '--ignore-scripts', ...missingDeps],
+      {cwd: isolatedDir, timeout: INSTALL_TIMEOUT_IN_MS},
+    );
+
+    await copyMissingNodeModules(
+      path.join(isolatedDir, 'node_modules'),
+      path.join(fixturePath, 'node_modules'),
+    );
+  } finally {
+    await rm(isolatedDir, {recursive: true, force: true});
+  }
+};
+
+/**
+ * Copies packages from source node_modules into destination, skipping any
+ * that already exist (to preserve pnpm-managed workspace packages).
+ * Handles both regular and scoped (@org/pkg) packages.
+ */
+const copyMissingNodeModules = async (
+  srcModules: string,
+  destModules: string,
+) => {
+  const entries = await readdir(srcModules);
+
+  for (const entry of entries) {
+    if (entry.startsWith('.')) continue;
+
+    if (entry.startsWith('@')) {
+      const scopedEntries = await readdir(path.join(srcModules, entry));
+      for (const scopedEntry of scopedEntries) {
+        const destPath = path.join(destModules, entry, scopedEntry);
+        if (await pathExists(destPath)) continue;
+        await mkdir(path.join(destModules, entry), {recursive: true});
+        await cp(path.join(srcModules, entry, scopedEntry), destPath, {
+          recursive: true,
+        });
+      }
+    } else {
+      const destPath = path.join(destModules, entry);
+      if (await pathExists(destPath)) continue;
+      await cp(path.join(srcModules, entry), destPath, {recursive: true});
+    }
+  }
 };
 
 /**
