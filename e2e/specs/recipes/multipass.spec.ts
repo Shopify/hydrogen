@@ -1,4 +1,9 @@
-import {test, expect, setRecipeFixture} from '../../fixtures';
+import {
+  test,
+  expect,
+  setRecipeFixture,
+  getRequiredSecret,
+} from '../../fixtures';
 import {MultipassUtil} from '../../fixtures/multipass-utils';
 import {CartUtil} from '../../fixtures/cart-utils';
 
@@ -13,6 +18,33 @@ const KNOWN_PRODUCT = {
 } as const;
 
 test.describe('Multipass Recipe', () => {
+  test.describe('Login Page', () => {
+    let multipass: MultipassUtil;
+
+    test.beforeEach(async ({page}) => {
+      multipass = new MultipassUtil(page);
+      await multipass.navigateToLogin();
+    });
+
+    test('renders login form with email, password fields and sign-in button', async () => {
+      await multipass.assertLoginPageRendered();
+    });
+
+    test('shows forgot password and register links', async () => {
+      await multipass.assertLoginPageLinks();
+    });
+
+    test('forgot password link points to /account/recover', async () => {
+      const forgotLink = multipass.getLink(/forgot password/i);
+      await expect(forgotLink).toHaveAttribute('href', '/account/recover');
+    });
+
+    test('register link points to /account/register', async () => {
+      const registerLink = multipass.getLink(/register/i);
+      await expect(registerLink).toHaveAttribute('href', '/account/register');
+    });
+  });
+
   test.describe('Register Page', () => {
     let multipass: MultipassUtil;
 
@@ -50,11 +82,6 @@ test.describe('Multipass Recipe', () => {
     test('shows link to login page', async () => {
       await multipass.assertRecoverPageLinks();
     });
-
-    test('login link points to /account/login', async () => {
-      const loginLink = multipass.getLink(/login/i);
-      await expect(loginLink).toHaveAttribute('href', '/account/login');
-    });
   });
 
   test.describe('Password Reset Page', () => {
@@ -72,11 +99,6 @@ test.describe('Multipass Recipe', () => {
     test('shows back to login link', async () => {
       await multipass.assertResetPageLinks();
     });
-
-    test('back to login link points to /account/login', async () => {
-      const backLink = multipass.getLink(/back to login/i);
-      await expect(backLink).toHaveAttribute('href', '/account/login');
-    });
   });
 
   test.describe('Account Activation Page', () => {
@@ -90,44 +112,122 @@ test.describe('Multipass Recipe', () => {
     test('renders activation form with password fields', async () => {
       await multipass.assertActivatePageRendered();
     });
+  });
 
-    test('does not show a login link', async () => {
-      await expect(multipass.getLink(/login/i)).not.toBeVisible();
+  test.describe('Storefront API Authentication', () => {
+    let multipass: MultipassUtil;
+    let email: string;
+    let password: string;
+
+    test.beforeEach(async ({page}) => {
+      multipass = new MultipassUtil(page);
+      email = getRequiredSecret('multipass_customer_email');
+      password = getRequiredSecret('multipass_customer_password');
+    });
+
+    test('logs in and redirects to account orders page', async () => {
+      await multipass.login(email, password);
+
+      await multipass.assertAccountPageVisible();
+    });
+
+    test('persists session across navigation', async ({page}) => {
+      await multipass.login(email, password);
+
+      // Navigate directly to orders — should NOT redirect to login
+      await page.goto('/account/orders');
+      await expect(page).toHaveURL(/\/account\/orders/);
+      await multipass.assertAccountPageVisible();
+    });
+
+    test('redirects to account when visiting login page while authenticated', async ({
+      page,
+    }) => {
+      await multipass.login(email, password);
+
+      await page.goto('/account/login');
+      await expect(page).toHaveURL(/\/account/);
+      await expect(page).not.toHaveURL(/\/account\/login/);
+    });
+
+    test('renders orders page after login', async ({page}) => {
+      await multipass.login(email, password);
+
+      await page.goto('/account/orders');
+      await expect(page).toHaveURL(/\/account\/orders/);
+      await multipass.assertAccountPageVisible();
+    });
+
+    test('renders profile page after login', async ({page}) => {
+      await multipass.login(email, password);
+
+      await page.goto('/account/profile');
+      await expect(page).toHaveURL(/\/account\/profile/);
+      await expect(
+        page.getByRole('heading', {name: /my profile/i}),
+      ).toBeVisible();
+    });
+
+    test('renders addresses page after login', async ({page}) => {
+      await multipass.login(email, password);
+
+      await page.goto('/account/addresses');
+      await expect(page).toHaveURL(/\/account\/addresses/);
+      await expect(
+        page.getByRole('heading', {name: /addresses/i}),
+      ).toBeVisible();
+    });
+
+    test('shows error message for invalid credentials', async () => {
+      await multipass.navigateToLogin();
+      await multipass.fillLoginForm('invalid@example.com', 'wrongpassword');
+      await multipass.submitLogin();
+
+      await expect(multipass.getLoginError()).toBeVisible();
+      // Should stay on login page, not redirect
+      await expect(multipass.getPageHeading('Sign in.')).toBeVisible();
+    });
+
+    test('logs out and redirects to home page', async ({page}) => {
+      await multipass.login(email, password);
+      await multipass.logout();
+
+      // After logout, visiting /account should redirect to login
+      await page.goto('/account');
+      await expect(page).toHaveURL(/\/account\/login/);
     });
   });
 
   test.describe('Unauthenticated Redirects', () => {
-    test('redirects away from /account when not logged in', async ({page}) => {
-      await page.goto('/account');
-      await expect(page).not.toHaveURL(/\/account$/);
+    test('GET /account/logout redirects to login', async ({page}) => {
+      await page.goto('/account/logout');
+      await expect(page).toHaveURL(/\/account\/login/);
     });
 
-    test('redirects away from /account/orders when not logged in', async ({
+    test('redirects /account to login when not logged in', async ({page}) => {
+      await page.goto('/account');
+      await expect(page).toHaveURL(/\/account\/login/);
+    });
+
+    test('redirects /account/orders to login when not logged in', async ({
       page,
     }) => {
       await page.goto('/account/orders');
-      await expect(page).not.toHaveURL(/\/account\/orders/);
+      await expect(page).toHaveURL(/\/account\/login/);
     });
 
-    test('redirects away from /account/profile when not logged in', async ({
+    test('redirects /account/profile to login when not logged in', async ({
       page,
     }) => {
       await page.goto('/account/profile');
-      await expect(page).not.toHaveURL(/\/account\/profile/);
+      await expect(page).toHaveURL(/\/account\/login/);
     });
 
-    test('redirects away from /account/addresses when not logged in', async ({
+    test('redirects /account/addresses to login when not logged in', async ({
       page,
     }) => {
       await page.goto('/account/addresses');
-      await expect(page).not.toHaveURL(/\/account\/addresses/);
-    });
-
-    test('redirects away from /account/logout when not logged in', async ({
-      page,
-    }) => {
-      await page.goto('/account/logout');
-      await expect(page).not.toHaveURL(/\/account\/logout/);
+      await expect(page).toHaveURL(/\/account\/login/);
     });
   });
 

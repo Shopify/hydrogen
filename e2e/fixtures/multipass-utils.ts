@@ -5,6 +5,11 @@ export class MultipassUtil {
 
   // ── Navigation ──────────────────────────────────────────────
 
+  async navigateToLogin() {
+    await this.page.goto('/account/login');
+    await expect(this.page).toHaveURL(/\/account\/login/);
+  }
+
   async navigateToRegister() {
     await this.page.goto('/account/register');
     await expect(this.page).toHaveURL(/\/account\/register/);
@@ -65,7 +70,58 @@ export class MultipassUtil {
     return this.page.getByRole('button', {name: /continue to checkout/i});
   }
 
+  getLogoutButton() {
+    return this.page.getByRole('button', {name: /logout|sign out/i});
+  }
+
+  getLoginError() {
+    return this.page.locator('mark');
+  }
+
+  // ── Auth Actions ────────────────────────────────────────────
+
+  async fillLoginForm(email: string, password: string) {
+    await this.getEmailInput().fill(email);
+    await this.getPasswordInput().fill(password);
+  }
+
+  async submitLogin() {
+    await this.getSubmitButton(/sign in/i).click();
+  }
+
+  /**
+   * Full login flow: navigate to login page, fill form, submit,
+   * and wait for redirect to /account (which then redirects to /account/orders).
+   */
+  async login(email: string, password: string) {
+    await this.navigateToLogin();
+    await this.fillLoginForm(email, password);
+    await this.submitLogin();
+    await expect(this.page).toHaveURL(/\/account\/orders/);
+  }
+
+  /**
+   * Logs out by submitting the logout form on the account page.
+   * Waits for redirect back to the home page.
+   */
+  async logout() {
+    await this.getLogoutButton().click();
+    await expect(this.page).toHaveURL(/^https?:\/\/[^/]+\/$/);
+  }
+
   // ── Assertions ──────────────────────────────────────────────
+
+  async assertLoginPageRendered() {
+    await expect(this.getPageHeading('Sign in.')).toBeVisible();
+    await expect(this.getEmailInput()).toBeVisible();
+    await expect(this.getPasswordInput()).toBeVisible();
+    await expect(this.getSubmitButton(/sign in/i)).toBeVisible();
+  }
+
+  async assertLoginPageLinks() {
+    await expect(this.getLink(/forgot password/i)).toBeVisible();
+    await expect(this.getLink(/register/i)).toBeVisible();
+  }
 
   async assertRegisterPageRendered() {
     await expect(this.getPageHeading('Register.')).toBeVisible();
@@ -109,5 +165,9 @@ export class MultipassUtil {
 
   async assertHeaderHasAccountLink() {
     await expect(this.getHeaderAccountLink()).toBeVisible();
+  }
+
+  async assertAccountPageVisible() {
+    await expect(this.getPageHeading(/welcome/i)).toBeVisible();
   }
 }
