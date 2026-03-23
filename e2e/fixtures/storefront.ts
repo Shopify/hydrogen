@@ -74,14 +74,16 @@ export class StorefrontPage {
     this.setupRequestTracking();
   }
 
+  // Promise that resolves when CDP setup (bot signal hiding + request tracking)
+  // is complete. Must be awaited before first navigation.
+  private cdpReady: Promise<void>;
+
   private setupRequestTracking() {
-    // Use CDP to track request initiators (which script initiated the request)
+    // Set up CDP for both bot signal hiding and request tracking.
+    // Store the promise so goto() can await it before navigating.
+    this.cdpReady = this.setupCDPTracking(this.page).catch(() => {});
     this.page.context().on('page', async (newPage) => {
       await this.setupCDPTracking(newPage);
-    });
-    // Also set up for the current page
-    this.setupCDPTracking(this.page).catch(() => {
-      // Ignore errors if CDP isn't available
     });
 
     this.page.on('request', (request) => {
@@ -116,11 +118,43 @@ export class StorefrontPage {
   }
 
   /**
-   * Chrome DevTools Protocol setup to track request initiators.
+   * Chrome DevTools Protocol setup for both:
+   * 1. Hiding Playwright's automation signals so PerfKit's isObviousBot()
+   *    doesn't suppress metric publishing
+   * 2. Tracking request initiators (which script initiated each request)
+   *
+   * Uses a single CDP session for both to ensure the bot signal override
+   * is registered (via addScriptToEvaluateOnNewDocument) before navigation.
    */
   private async setupCDPTracking(page: Page) {
     try {
       const cdp = await page.context().newCDPSession(page);
+
+      // Enable Page domain (required for addScriptToEvaluateOnNewDocument)
+      await cdp.send('Page.enable');
+
+      // Hide automation signals BEFORE any page scripts run.
+      // PerfKit checks navigator.webdriver, __playwright__binding__, and
+      // __pwInitScripts in isObviousBot() and silently suppresses all metrics.
+      await cdp.send('Page.addScriptToEvaluateOnNewDocument', {
+        source: `
+          Object.defineProperty(navigator, 'webdriver', {
+            get: () => false,
+            configurable: true,
+          });
+          Object.defineProperty(window, '__playwright__binding__', {
+            get: () => undefined,
+            set: () => {},
+            configurable: true,
+          });
+          Object.defineProperty(window, '__pwInitScripts', {
+            get: () => undefined,
+            set: () => {},
+            configurable: true,
+          });
+        `,
+      });
+
       await cdp.send('Network.enable');
 
       cdp.on('Network.requestWillBeSent', (event: any) => {
@@ -143,6 +177,9 @@ export class StorefrontPage {
    * Navigate to a page and wait for network idle
    */
   async goto(path = '/') {
+    // Ensure CDP setup (bot signal hiding + request tracking) completes
+    // before navigation so PerfKit's isObviousBot() check sees clean signals.
+    await this.cdpReady;
     await this.page.goto(path);
     await this.page.waitForLoadState('networkidle');
   }
