@@ -12,8 +12,8 @@ import type {
   RegularSearchQuery,
   PredictiveSearchQuery,
 } from 'storefrontapi.generated';
-import {parseFiltersFromParams} from '~/lib/productFilters';
-import {parseSortParam, SEARCH_SORT_OPTIONS} from '~/lib/productSort';
+import {parseFiltersFromParams} from '~/lib/product-filters';
+import {parseSortParam, SEARCH_SORT_OPTIONS} from '~/lib/product-sort';
 import {CollectionFilters} from '~/components/CollectionFilters';
 import {CollectionSort} from '~/components/CollectionSort';
 
