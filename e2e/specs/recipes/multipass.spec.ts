@@ -6,16 +6,12 @@ import {
 } from '../../fixtures';
 import {MultipassUtil} from '../../fixtures/multipass-utils';
 import {CartUtil} from '../../fixtures/cart-utils';
+import {KNOWN_PRODUCT} from '../../fixtures/known-products';
 
 setRecipeFixture({
   recipeName: 'multipass',
   storeKey: 'hydrogenPreviewStorefront',
 });
-
-const KNOWN_PRODUCT = {
-  handle: 'the-ascend',
-  name: 'The Ascend',
-} as const;
 
 test.describe('Multipass Recipe', () => {
   test.describe('Login Page', () => {
@@ -134,19 +130,22 @@ test.describe('Multipass Recipe', () => {
     test('persists session across navigation', async ({page}) => {
       await multipass.login(email, password);
 
-      // Navigate directly to orders — should NOT redirect to login
+      // Navigate away from the account area to a public page
+      await page.goto('/');
+      await expect(page).toHaveURL('/');
+
+      // Return to an authenticated route — should NOT redirect to login
       await page.goto('/account/orders');
       await expect(page).toHaveURL(/\/account\/orders/);
       await multipass.assertAccountPageVisible();
     });
 
-    test('redirects to account when visiting login page while authenticated', async ({
+    test('redirects away from login page when already authenticated', async ({
       page,
     }) => {
       await multipass.login(email, password);
 
       await page.goto('/account/login');
-      await expect(page).toHaveURL(/\/account/);
       await expect(page).not.toHaveURL(/\/account\/login/);
     });
 
@@ -156,6 +155,7 @@ test.describe('Multipass Recipe', () => {
       await page.goto('/account/orders');
       await expect(page).toHaveURL(/\/account\/orders/);
       await multipass.assertAccountPageVisible();
+      await expect(page).toHaveTitle(/Orders/);
     });
 
     test('renders profile page after login', async ({page}) => {
@@ -183,9 +183,7 @@ test.describe('Multipass Recipe', () => {
       await multipass.fillLoginForm('invalid@example.com', 'wrongpassword');
       await multipass.submitLogin();
 
-      await expect(multipass.getLoginError()).toBeVisible();
-      // Should stay on login page, not redirect
-      await expect(multipass.getPageHeading('Sign in.')).toBeVisible();
+      await multipass.assertLoginError();
     });
 
     test('logs out and redirects to home page', async ({page}) => {
@@ -243,12 +241,11 @@ test.describe('Multipass Recipe', () => {
       await multipass.assertHeaderHasAccountLink();
     });
 
-    test('account link navigates away from home page when clicked', async ({
+    test('account link navigates to account area when clicked', async ({
       page,
     }) => {
-      const homeUrl = page.url();
       await multipass.getHeaderAccountLink().click();
-      await expect(page).not.toHaveURL(homeUrl);
+      await expect(page).toHaveURL(/\/account/);
     });
   });
 

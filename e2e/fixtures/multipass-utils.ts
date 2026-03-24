@@ -40,19 +40,19 @@ export class MultipassUtil {
     return this.page.getByRole('heading', {level: 1, name});
   }
 
-  getEmailInput() {
+  private getEmailInput() {
     return this.page.getByRole('textbox', {name: /email address/i});
   }
 
-  getPasswordInput() {
+  private getPasswordInput() {
     return this.page.getByLabel('Password', {exact: true});
   }
 
-  getPasswordConfirmInput() {
+  private getPasswordConfirmInput() {
     return this.page.getByLabel(/re-enter password/i);
   }
 
-  getSubmitButton(name: string | RegExp) {
+  private getSubmitButton(name: string | RegExp) {
     return this.page.getByRole('button', {name});
   }
 
@@ -70,11 +70,11 @@ export class MultipassUtil {
     return this.page.getByRole('button', {name: /continue to checkout/i});
   }
 
-  getLogoutButton() {
+  private getLogoutButton() {
     return this.page.getByRole('button', {name: /logout|sign out/i});
   }
 
-  getLoginError() {
+  private getLoginError() {
     return this.page.locator('mark');
   }
 
@@ -106,7 +106,7 @@ export class MultipassUtil {
    */
   async logout() {
     await this.getLogoutButton().click();
-    await expect(this.page).toHaveURL(/^https?:\/\/[^/]+\/$/);
+    await expect(this.page).toHaveURL('/');
   }
 
   // ── Assertions ──────────────────────────────────────────────
@@ -165,6 +165,11 @@ export class MultipassUtil {
 
   async assertHeaderHasAccountLink() {
     await expect(this.getHeaderAccountLink()).toBeVisible();
+  }
+
+  async assertLoginError() {
+    await expect(this.getLoginError()).toBeVisible();
+    await expect(this.getPageHeading('Sign in.')).toBeVisible();
   }
 
   async assertAccountPageVisible() {
