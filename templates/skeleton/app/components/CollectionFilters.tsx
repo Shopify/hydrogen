@@ -1,5 +1,5 @@
 import {useNavigate, useLocation} from 'react-router';
-import {applyFilter, removeFilter} from '~/lib/productFilters';
+import {applyFilter, removeFilter} from '~/lib/product-filters';
 import type {ProductFilter} from '@shopify/hydrogen/storefront-api-types';
 import {PriceRangeFilter} from './PriceRangeFilter';
 import type {CollectionQuery} from 'storefrontapi.generated';

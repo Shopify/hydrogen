@@ -5,8 +5,8 @@ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {ProductItem} from '~/components/ProductItem';
 import type {ProductItemFragment} from 'storefrontapi.generated';
-import {parseFiltersFromParams} from '~/lib/productFilters';
-import {parseSortParam, COLLECTION_SORT_OPTIONS} from '~/lib/productSort';
+import {parseFiltersFromParams} from '~/lib/product-filters';
+import {parseSortParam, COLLECTION_SORT_OPTIONS} from '~/lib/product-sort';
 import {CollectionFilters} from '~/components/CollectionFilters';
 import {CollectionSort} from '~/components/CollectionSort';
 

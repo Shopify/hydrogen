@@ -1,5 +1,5 @@
 import {useNavigate, useLocation} from 'react-router';
-import {applySortParam, type SortOption} from '~/lib/productSort';
+import {applySortParam, type SortOption} from '~/lib/product-sort';
 
 export function CollectionSort({
   sortOptions,

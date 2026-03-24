@@ -1,6 +1,6 @@
 import {useState, useEffect} from 'react';
 import {useNavigate, useLocation} from 'react-router';
-import {applyFilter, removeFilter} from '~/lib/productFilters';
+import {applyFilter, removeFilter} from '~/lib/product-filters';
 import type {ProductFilter} from '@shopify/hydrogen/storefront-api-types';
 
 /**
