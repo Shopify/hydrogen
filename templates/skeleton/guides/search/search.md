@@ -12,12 +12,12 @@ endpoint to retrieve search results based on a search term.
 
 ## Components
 
-| File                                                                   | Description                                                                                                                 |
-| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| [`app/components/SearchForm.tsx`](../../app/components/SearchForm.tsx)       | A fully customizable form component configured to make (server-side) form `GET` requests to the `/search` route.            |
-| [`app/components/SearchResults.tsx`](../../app/components/SearchResults.tsx) | A fully customizable search results wrapper, that provides compound components to render `articles`, `pages` and `products` |
-| [`app/components/CollectionSort.tsx`](../../app/components/CollectionSort.tsx) | A sort dropdown reused on both collection and search pages |
-| [`app/components/CollectionFilters.tsx`](../../app/components/CollectionFilters.tsx) | Product filters (list, swatch, and price range) reused on both collection and search pages |
+| File                                                                                 | Description                                                                                                                 |
+| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| [`app/components/SearchForm.tsx`](../../app/components/SearchForm.tsx)               | A fully customizable form component configured to make (server-side) form `GET` requests to the `/search` route.            |
+| [`app/components/SearchResults.tsx`](../../app/components/SearchResults.tsx)         | A fully customizable search results wrapper, that provides compound components to render `articles`, `pages` and `products` |
+| [`app/components/CollectionSort.tsx`](../../app/components/CollectionSort.tsx)       | A sort dropdown reused on both collection and search pages                                                                  |
+| [`app/components/CollectionFilters.tsx`](../../app/components/CollectionFilters.tsx) | Product filters (list, swatch, and price range) reused on both collection and search pages                                  |
 
 ## Filtering and sorting
 
@@ -38,6 +38,7 @@ Sort definitions live in [`app/lib/product-sort.ts`](../../app/lib/product-sort.
 Filters use the Hydrogen JSON format: `filter.{graphqlKey}={JSON value}`.
 
 For example:
+
 - `?filter.variantOption={"name":"Color","value":"Red"}` — a single variant option
 - `?filter.price={"min":25,"max":100}` — a price range
 - Multiple values for the same key are supported (multi-select)
