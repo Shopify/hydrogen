@@ -1,0 +1,62 @@
+import {CodegenConfig} from '@graphql-codegen/cli';
+import {storefrontApiCustomScalars} from './src/core/codegen.helpers';
+
+const SF_API_VERSION = '2026-01';
+
+const storefrontAPISchema: CodegenConfig['schema'] = {
+  [`https://hydrogen-preview.myshopify.com/api/${SF_API_VERSION}/graphql.json`]:
+    {
+      headers: {
+        'X-Shopify-Storefront-Access-Token': '3b580e70970c4528da70c98e097c2fa0',
+        'content-type': 'application/json',
+      },
+    },
+};
+
+const config: CodegenConfig = {
+  overwrite: true,
+  generates: {
+    // The generated base types
+    'src/core/storefront-api-types.d.ts': {
+      schema: storefrontAPISchema,
+      plugins: [
+        {
+          add: {
+            content: `
+              /**
+               * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
+               * Based on Storefront API ${SF_API_VERSION}
+               * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run \`npm run codegen\`.
+               * Except custom Scalars, which are defined in the \`codegen.ts\` file
+               */
+              /* eslint-disable */`,
+          },
+        },
+        {
+          typescript: {
+            useTypeImports: true,
+            // If a default type for a scalar isn't set, then instead of 'any' we set to 'unknown' for better type safety.
+            defaultScalarType: 'unknown',
+            useImplementingTypes: true,
+            enumsAsTypes: true,
+            // Define how the Storefront API's custom scalars map to TypeScript types
+            scalars: storefrontApiCustomScalars,
+          },
+        },
+      ],
+    },
+    // The schema file, which is the local representation of the GraphQL endpoint
+    './storefront.schema.json': {
+      schema: storefrontAPISchema,
+      plugins: [
+        {
+          introspection: {
+            minify: true,
+          },
+        },
+      ],
+    },
+  },
+};
+
+export default config;

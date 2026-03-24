@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["src/core/**/*.ts", "globals.d.ts"],
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist",
+    "rootDir": "src/core",
+    "moduleResolution": "bundler",
+    "types": ["node"]
+  }
+}

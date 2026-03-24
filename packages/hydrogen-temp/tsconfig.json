@@ -1,6 +1,6 @@
 {
-    "files": [],
-    "references": [
-      { "path": "./src" },
-    ]
-  }
+  "files": [],
+  "references": [
+    {"path": "./src/core"}
+  ]
+}
