@@ -1,8 +1,6 @@
 {
-  "extends": "../../tsconfig.json",
-  "include": ["src"],
-  "compilerOptions": {
-    "noEmit": true,
-    "types": ["node"]
+    "files": [],
+    "references": [
+      { "path": "./src" },
+    ]
   }
-}
