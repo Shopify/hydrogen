@@ -7,8 +7,10 @@ packages:
   - packages/hydrogen-react
   - packages/hydrogen
   - packages/mini-oxygen
+  - packages/hydrogen-temp
   - packages/remix-oxygen
   - templates/skeleton
+  - templates/commerce
 
 overrides:
   '@oclif/core': '3.26.5'

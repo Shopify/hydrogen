@@ -1,0 +1,16 @@
+{
+  "name": "@shopify/hydrogen-temp",
+  "version": "0.0.0",
+  "description": "",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "@shopify:registry": "https://registry.npmjs.org"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shopify/hydrogen",
+    "directory": "packages/hydrogen-temp"
+  }
+}
