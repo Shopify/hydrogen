@@ -78,8 +78,13 @@ export function createMiniOxygenDevEnvironment(
   }
 
   const environment = createFetchableDevEnvironment(name, config, {
+    // Do NOT pass the WebSocket server as transport. If we did, the SSR
+    // environment would share the browser's hot channel. When the SSR module
+    // graph can't find hot-update boundaries (no React Fast Refresh in SSR),
+    // it would send `full-reload` over that shared WebSocket, hard-refreshing
+    // the browser on every file change. With no transport and hot:false,
+    // Vite creates a noop hot channel for this environment instead.
     hot: false,
-    transport: context.transport,
     handleRequest: async (request) => {
       if (miniOxygen?.isDisposed) {
         miniOxygen = undefined;
@@ -157,6 +162,24 @@ export function createMiniOxygenDevEnvironment(
     },
     async listen(server: ViteDevServer) {
       viteDevServer = server;
+
+      // When a file that belongs to the SSR module graph changes, dispose
+      // the mini-oxygen runtime so the next request gets a fresh workerd
+      // instance with a clean module-runner cache. This replicates what the
+      // old (pre-Environment API) approach did via full restarts, without
+      // needing a WebSocket transport for push-based HMR invalidation.
+      const onFileChange = async (file: string) => {
+        const ssrModules =
+          server.environments.ssr?.moduleGraph.getModulesByFile(file);
+        if (ssrModules?.size) {
+          const stale = miniOxygen;
+          miniOxygen = undefined;
+          pendingRuntime = undefined;
+          await stale?.dispose();
+        }
+      };
+      server.watcher.on('change', onFileChange);
+
       await originalListen(server);
       void warmup();
     },
