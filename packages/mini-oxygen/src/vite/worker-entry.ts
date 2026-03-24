@@ -108,6 +108,12 @@ function fetchEntryModule(env: ViteEnv) {
               payload.event === 'vite:invoke' &&
               isViteInvokePayload(payload.data)
             ) {
+              // workerd has no Node builtins; return empty list directly
+              // so Vite 6 servers (which have no getBuiltins handler) still work.
+              if (payload.data.name === 'getBuiltins') {
+                return Promise.resolve({result: []});
+              }
+
               return env.__VITE_INVOKE_MODULE
                 .fetch(
                   new Request('http://mini-oxygen', {
