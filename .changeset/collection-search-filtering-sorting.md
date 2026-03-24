@@ -4,10 +4,9 @@
 "@shopify/create-hydrogen": patch
 ---
 
-Add collection and search filtering & sorting to skeleton template
+Add collection and search filtering & sorting to the skeleton template
 
-- **Collection filtering**: Collections now support product filters (list, swatch, and price range) via URL parameters using the Storefront API's `ProductFilter` input. Filters are rendered with a new `CollectionFilters` component and managed through `productFilters` utility functions.
-- **Collection sorting**: Collections now support sorting via a `CollectionSort` dropdown component. Sort options include Featured, Price, Best Selling, Alphabetical, and Date.
-- **Search filtering & sorting**: The search page now returns and renders product filters and supports sort options (Relevance, Price).
-- **Bug fix**: Fixed article search result URLs from `/blogs/{articleHandle}` to `/blogs/{blogHandle}/{articleHandle}`.
-- **New files**: `CollectionFilters`, `CollectionSort`, `PriceRangeFilter` components and `productFilters`, `productSort` utility libraries.
+- **Collection filtering**: Collection pages now display product filters (list, color/image swatches, and price range) that your customers can use to narrow results. Filters are driven by the options you configure in the Shopify admin under **Online Store → Navigation → Collection and search filters**.
+- **Collection sorting**: A sort dropdown is now available on collection pages with options for Featured, Price, Best Selling, Alphabetical, and Date.
+- **Search sorting & filtering**: The search results page now supports the same product filters and sort options (Relevance, Price).
+- **Bug fix**: Article links in search results now navigate to the correct URL.
