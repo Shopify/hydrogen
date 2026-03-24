@@ -677,7 +677,14 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.11)(happy-dom@20.6.1)(jiti@2.6.1)(lightningcss@1.32.0)(msw@2.12.10(@types/node@22.19.11)(typescript@5.9.2))(yaml@2.8.2)
 
-  packages/hydrogen-temp: {}
+  packages/hydrogen-temp:
+    devDependencies:
+      '@types/node':
+        specifier: ^22
+        version: 22.19.11
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(@swc/core@1.15.11)(jiti@2.6.1)(postcss@8.5.6)(typescript@5.9.2)(yaml@2.8.2)
 
   packages/mini-oxygen:
     dependencies:
