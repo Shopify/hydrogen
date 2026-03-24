@@ -593,6 +593,11 @@ export type CollectionQueryVariables = StorefrontAPI.Exact<{
   endCursor?: StorefrontAPI.InputMaybe<
     StorefrontAPI.Scalars['String']['input']
   >;
+  filters?: StorefrontAPI.InputMaybe<
+    Array<StorefrontAPI.ProductFilter> | StorefrontAPI.ProductFilter
+  >;
+  sortKey?: StorefrontAPI.InputMaybe<StorefrontAPI.ProductCollectionSortKeys>;
+  reverse?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Boolean']['input']>;
 }>;
 
 export type CollectionQuery = {
@@ -602,6 +607,26 @@ export type CollectionQuery = {
       'id' | 'handle' | 'title' | 'description'
     > & {
       products: {
+        filters: Array<
+          Pick<StorefrontAPI.Filter, 'id' | 'label' | 'type'> & {
+            values: Array<
+              Pick<
+                StorefrontAPI.FilterValue,
+                'id' | 'label' | 'count' | 'input'
+              > & {
+                swatch?: StorefrontAPI.Maybe<
+                  Pick<StorefrontAPI.Swatch, 'color'> & {
+                    image?: StorefrontAPI.Maybe<{
+                      previewImage?: StorefrontAPI.Maybe<
+                        Pick<StorefrontAPI.Image, 'url'>
+                      >;
+                    }>;
+                  }
+                >;
+              }
+            >;
+          }
+        >;
         nodes: Array<
           Pick<StorefrontAPI.Product, 'id' | 'handle' | 'title'> & {
             featuredImage?: StorefrontAPI.Maybe<
@@ -1078,7 +1103,9 @@ export type SearchPageFragment = {__typename: 'Page'} & Pick<
 export type SearchArticleFragment = {__typename: 'Article'} & Pick<
   StorefrontAPI.Article,
   'handle' | 'id' | 'title' | 'trackingParameters'
->;
+> & {
+    blog: Pick<StorefrontAPI.Blog, 'handle'>;
+  };
 
 export type PageInfoFragmentFragment = Pick<
   StorefrontAPI.PageInfo,
@@ -1097,6 +1124,11 @@ export type RegularSearchQueryVariables = StorefrontAPI.Exact<{
   startCursor?: StorefrontAPI.InputMaybe<
     StorefrontAPI.Scalars['String']['input']
   >;
+  productFilters?: StorefrontAPI.InputMaybe<
+    Array<StorefrontAPI.ProductFilter> | StorefrontAPI.ProductFilter
+  >;
+  sortKey?: StorefrontAPI.InputMaybe<StorefrontAPI.SearchSortKeys>;
+  reverse?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Boolean']['input']>;
 }>;
 
 export type RegularSearchQuery = {
@@ -1105,7 +1137,9 @@ export type RegularSearchQuery = {
       {__typename: 'Article'} & Pick<
         StorefrontAPI.Article,
         'handle' | 'id' | 'title' | 'trackingParameters'
-      >
+      > & {
+          blog: Pick<StorefrontAPI.Blog, 'handle'>;
+        }
     >;
   };
   pages: {
@@ -1146,6 +1180,26 @@ export type RegularSearchQuery = {
             }
           >;
         }
+    >;
+    productFilters: Array<
+      Pick<StorefrontAPI.Filter, 'id' | 'label' | 'type'> & {
+        values: Array<
+          Pick<
+            StorefrontAPI.FilterValue,
+            'id' | 'label' | 'count' | 'input'
+          > & {
+            swatch?: StorefrontAPI.Maybe<
+              Pick<StorefrontAPI.Swatch, 'color'> & {
+                image?: StorefrontAPI.Maybe<{
+                  previewImage?: StorefrontAPI.Maybe<
+                    Pick<StorefrontAPI.Image, 'url'>
+                  >;
+                }>;
+              }
+            >;
+          }
+        >;
+      }
     >;
     pageInfo: Pick<
       StorefrontAPI.PageInfo,

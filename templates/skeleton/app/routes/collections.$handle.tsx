@@ -5,6 +5,10 @@ import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {ProductItem} from '~/components/ProductItem';
 import type {ProductItemFragment} from 'storefrontapi.generated';
+import {parseFiltersFromParams} from '~/lib/productFilters';
+import {parseSortParam, COLLECTION_SORT_OPTIONS} from '~/lib/productSort';
+import {CollectionFilters} from '~/components/CollectionFilters';
+import {CollectionSort} from '~/components/CollectionSort';
 
 export const meta: Route.MetaFunction = ({data}) => {
   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
@@ -27,9 +31,14 @@ export async function loader(args: Route.LoaderArgs) {
 async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
   const {handle} = params;
   const {storefront} = context;
+  const url = new URL(request.url);
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 8,
   });
+
+  // Parse filters and sort from URL search params
+  const filters = parseFiltersFromParams(url.searchParams);
+  const sortOption = parseSortParam(url.searchParams);
 
   if (!handle) {
     throw redirect('/collections');
@@ -37,7 +46,15 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
 
   const [{collection}] = await Promise.all([
     storefront.query(COLLECTION_QUERY, {
-      variables: {handle, ...paginationVariables},
+      variables: {
+        handle,
+        ...paginationVariables,
+        filters: filters.length > 0 ? filters : undefined,
+        ...(sortOption && {
+          sortKey: sortOption.sortKey,
+          reverse: sortOption.reverse,
+        }),
+      },
       // Add other queries here, so that they are loaded in parallel
     }),
   ]);
@@ -72,6 +89,12 @@ export default function Collection() {
     <div className="collection">
       <h1>{collection.title}</h1>
       <p className="collection-description">{collection.description}</p>
+      <div className="collection-controls">
+        <CollectionSort sortOptions={COLLECTION_SORT_OPTIONS} />
+      </div>
+      {collection.products?.filters && (
+        <CollectionFilters filters={collection.products.filters} />
+      )}
       <PaginatedResourceSection<ProductItemFragment>
         connection={collection.products}
         resourcesClassName="products-grid"
@@ -134,6 +157,9 @@ const COLLECTION_QUERY = `#graphql
     $last: Int
     $startCursor: String
     $endCursor: String
+    $filters: [ProductFilter!]
+    $sortKey: ProductCollectionSortKeys
+    $reverse: Boolean
   ) @inContext(country: $country, language: $language) {
     collection(handle: $handle) {
       id
@@ -144,8 +170,30 @@ const COLLECTION_QUERY = `#graphql
         first: $first,
         last: $last,
         before: $startCursor,
-        after: $endCursor
+        after: $endCursor,
+        filters: $filters,
+        sortKey: $sortKey,
+        reverse: $reverse
       ) {
+        filters {
+          id
+          label
+          type
+          values {
+            id
+            label
+            count
+            input
+            swatch {
+              color
+              image {
+                previewImage {
+                  url
+                }
+              }
+            }
+          }
+        }
         nodes {
           ...ProductItem
         }
