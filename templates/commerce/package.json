@@ -7,7 +7,8 @@
     "start": "next start",
     "prettier": "prettier --write --ignore-unknown .",
     "prettier:check": "prettier --check --ignore-unknown .",
-    "test": "pnpm prettier:check"
+    "test": "pnpm prettier:check",
+    "setup-local": "cp .env.example .env"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
