@@ -1,4 +1,3 @@
-/// <reference types="@shopify/hydrogen" />
 import {
   createRequestHandler as createReactRouterRequestHandler,
   type AppLoadContext,

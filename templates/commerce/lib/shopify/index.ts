@@ -55,7 +55,7 @@ import {
 
 const isConfigured = !!process.env.SHOPIFY_STORE_DOMAIN;
 
-const {storefront} = createStorefrontClient({
+export const {storefront} = createStorefrontClient({
   storeDomain: process.env.SHOPIFY_STORE_DOMAIN!,
   publicStorefrontToken: process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN!,
 });

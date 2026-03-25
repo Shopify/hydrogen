@@ -554,11 +554,13 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         const forwardedHeaders = new Headers([
           // Forward only a selected set of headers to the Storefront API
           // to avoid getting 403 errors due to unexpected headers.
+          // Note: accept-encoding is intentionally omitted so the upstream
+          // returns uncompressed content. See the content-encoding stripping
+          // below for why this matters for cross-runtime compatibility.
           ...extractHeaders(
             (key) => request.headers.get(key),
             [
               'accept',
-              'accept-encoding',
               'accept-language',
               // Access-Control headers are used for CORS preflight requests.
               'access-control-request-headers',
@@ -603,11 +605,25 @@ export function createStorefrontClient<TI18n extends I18nBase>(
             body: request.body,
             headers: forwardedHeaders,
             signal: AbortSignal.timeout(FORWARD_TIMEOUT_IN_MS),
+            // Fetch spec requires duplex: 'half' for streaming bodies.
+            // Node.js enforces this strictly; workerd and Bun accept it as a no-op.
+            ...(request.body ? {duplex: 'half' as const} : {}),
           },
         );
 
-        // Create a new response to allow modifying headers
-        return new Response(sfapiResponse.body, sfapiResponse);
+        // Safety net for Node.js, which auto-decompresses the body but
+        // preserves the Content-Encoding header. Since we omit accept-encoding
+        // above, SFAPI returns uncompressed — making this a no-op on workerd/Bun
+        // where fetch does not auto-decompress.
+        const responseHeaders = new Headers(sfapiResponse.headers);
+        responseHeaders.delete('content-encoding');
+        responseHeaders.delete('content-length');
+
+        return new Response(sfapiResponse.body, {
+          status: sfapiResponse.status,
+          statusText: sfapiResponse.statusText,
+          headers: responseHeaders,
+        });
       },
 
       setCollectedSubrequestHeaders: (response: {headers: Headers}) => {
