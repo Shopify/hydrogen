@@ -13,8 +13,8 @@
   "types": "dist/esm/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsup --clean",
-    "dev": "tsup --watch",
+    "build": "tsdown --clean",
+    "dev": "tsdown --watch",
     "typecheck": "tsc --noEmit",
     "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --typecheck",
     "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --typecheck"
