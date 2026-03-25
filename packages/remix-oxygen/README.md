@@ -6,9 +6,9 @@
 
 Replace imports from `@shopify/remix-oxygen` as follows:
 
-| Before | After |
-|--------|-------|
-| `import type {LoaderFunctionArgs} from '@shopify/remix-oxygen'` | `import type {LoaderFunctionArgs} from 'react-router'` |
-| `import {redirect} from '@shopify/remix-oxygen'` | `import {redirect} from 'react-router'` |
-| `import {createRequestHandler} from '@shopify/remix-oxygen'` | `import {createRequestHandler} from '@shopify/hydrogen/oxygen'` |
-| `import {getStorefrontHeaders} from '@shopify/remix-oxygen'` | `import {getStorefrontHeaders} from '@shopify/hydrogen/oxygen'` |
+| Before                                                          | After                                                           |
+| --------------------------------------------------------------- | --------------------------------------------------------------- |
+| `import type {LoaderFunctionArgs} from '@shopify/remix-oxygen'` | `import type {LoaderFunctionArgs} from 'react-router'`          |
+| `import {redirect} from '@shopify/remix-oxygen'`                | `import {redirect} from 'react-router'`                         |
+| `import {createRequestHandler} from '@shopify/remix-oxygen'`    | `import {createRequestHandler} from '@shopify/hydrogen/oxygen'` |
+| `import {getStorefrontHeaders} from '@shopify/remix-oxygen'`    | `import {getStorefrontHeaders} from '@shopify/hydrogen/oxygen'` |

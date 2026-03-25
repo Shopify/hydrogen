@@ -126,10 +126,7 @@ Remix-specific route API functions should be ordered and consistent in style, to
 
 ```tsx
 /* module imports... */
-import type {
-  LoaderFunctionArgs,
-  ActionFunctionArgs,
-} from 'react-router';
+import type {LoaderFunctionArgs, ActionFunctionArgs} from 'react-router';
 
 /* local type defintions */
 
