@@ -1,7 +1,8 @@
-index 3be08d31..98fde229 100644
+diff --git a/templates/skeleton/app/styles/app.css b/templates/skeleton/app/styles/app.css
+index 86c54680..98fde229 100644
 --- a/templates/skeleton/app/styles/app.css
 +++ b/templates/skeleton/app/styles/app.css
-@@ -1,645 +1,54 @@
+@@ -1,818 +1,54 @@
 -:root {
 -  --aside-width: 400px;
 -  --cart-aside-summary-height-with-discount: 300px;
@@ -502,18 +503,190 @@ index 3be08d31..98fde229 100644
 +  line-height: 1.4;
  }
  
+-.collection-controls {
+-  margin-bottom: 1.5rem;
+-  display: flex;
+-  align-items: center;
+-  justify-content: flex-end;
+-}
+-
+-/*
+-* --------------------------------------------------
+-* components/CollectionSort
+-* --------------------------------------------------
+-*/
+-.collection-sort {
+-  display: flex;
+-  align-items: center;
+-  gap: 0.5rem;
+-}
+-
+-.collection-sort label {
+-  font-size: 0.875rem;
+-  color: #666;
+-}
+-
+-.collection-sort select {
+-  padding: 0.5rem 2rem 0.5rem 0.75rem;
+-  border: 1px solid #ccc;
+-  border-radius: 4px;
+-  background: white;
+-  cursor: pointer;
+-  font-size: 0.875rem;
+-  appearance: none;
+-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+-  background-repeat: no-repeat;
+-  background-position: right 0.5rem center;
+-}
+-
+-.collection-sort select:hover {
+-  border-color: #999;
+-}
+-
+-.collection-sort select:focus {
+-  outline: 2px solid black;
+-  outline-offset: 2px;
+-}
+-
+-/*
+-* --------------------------------------------------
+-* components/CollectionFilters
+-* --------------------------------------------------
+-*/
+-.collection-filters {
+-  margin-bottom: 2rem;
+-}
+-
+-.collection-filters-clear {
+-  padding: 0.5rem 1rem;
+-  background: black;
+-  color: white;
+-  border: none;
+-  border-radius: 4px;
+-  cursor: pointer;
+-  font-size: 0.875rem;
++h2 {
++  font-size: 1.2rem;
++  font-weight: 700;
+   margin-bottom: 1rem;
++  line-height: 1.4;
+ }
+ 
+-.collection-filters-clear:hover {
+-  background: #333;
+-}
+-
+-.collection-filter-group {
+-  margin-bottom: 1.5rem;
+-}
+-
+-.collection-filter-group h3 {
+-  margin-bottom: 0.5rem;
+-}
+-
+-.collection-filter-options {
+-  display: flex;
+-  flex-wrap: wrap;
+-  gap: 0.5rem;
+-}
+-
+-.collection-filter-option {
+-  padding: 0.5rem 1rem;
+-  cursor: pointer;
+-  background: white;
+-  border-radius: 4px;
+-}
+-
+-.collection-filter-option.has-swatch {
+-  padding: 0.375rem;
+-  min-width: 3rem;
+-  min-height: 3rem;
+-  display: flex;
+-  align-items: center;
+-  justify-content: center;
+-}
+-
+-.swatch-color,
+-.swatch-image {
+-  width: 2rem;
+-  height: 2rem;
+-  border-radius: 50%;
+-  display: block;
+-}
+-
+-.swatch-color {
+-  border: 1px solid rgba(0, 0, 0, 0.1);
+-}
+-
+-.swatch-image {
+-  object-fit: cover;
+-}
+-
+-/*
+-* --------------------------------------------------
+-* components/PriceRangeFilter
+-* --------------------------------------------------
+-*/
+-.price-range-filter {
+-  display: flex;
+-  flex-direction: column;
+-  gap: 0.75rem;
+-}
+-
+-.price-inputs {
+-  display: flex;
+-  align-items: center;
+-  gap: 0.5rem;
+-}
+-
+-.price-inputs input {
+-  padding: 0.5rem;
+-  border: 1px solid #ccc;
+-  border-radius: 4px;
+-  width: 5rem;
+-  font-size: 0.875rem;
+-}
+-
+-.price-separator {
+-  color: #666;
+-  font-size: 0.875rem;
+-}
+-
+-.price-actions {
+-  display: flex;
+-  gap: 0.5rem;
+-}
+-
+-.price-actions button {
+-  padding: 0.5rem 1rem;
+-  border: 1px solid #ccc;
+-  border-radius: 4px;
+-  background: white;
+-  cursor: pointer;
+-  font-size: 0.875rem;
+-}
+-
+-.price-actions button:hover {
+-  background: #f5f5f5;
+-}
+-
+-.price-actions button:first-child {
+-  background: black;
+-  color: white;
+-  border-color: black;
+-}
+-
+-.price-actions button:first-child:hover {
+-  background: #333;
+-}
+-
 -.products-grid {
 -  display: grid;
 -  grid-gap: 1.5rem;
 -  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
 -  margin-bottom: 2rem;
-+h2 {
-+  font-size: 1.2rem;
-+  font-weight: 700;
-+  margin-bottom: 1rem;
-+  line-height: 1.4;
- }
- 
+-}
+-
 -.product-item img {
 -  height: auto;
 -  width: 100%;

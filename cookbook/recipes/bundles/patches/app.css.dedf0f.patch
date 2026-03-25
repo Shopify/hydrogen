@@ -1,7 +1,8 @@
-index 3be08d31..51b74911 100644
+diff --git a/templates/skeleton/app/styles/app.css b/templates/skeleton/app/styles/app.css
+index 86c54680..244e81d7 100644
 --- a/templates/skeleton/app/styles/app.css
 +++ b/templates/skeleton/app/styles/app.css
-@@ -506,6 +506,10 @@ button.reset:hover:not(:has(> *)) {
+@@ -679,6 +679,10 @@ button.reset:hover:not(:has(> *)) {
    margin-top: 0;
  }
  

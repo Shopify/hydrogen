@@ -1,7 +1,8 @@
-index c416c2b3..773ba8b6 100644
+diff --git a/templates/skeleton/app/routes/collections.$handle.tsx b/templates/skeleton/app/routes/collections.$handle.tsx
+index d6285de8..57701d2b 100644
 --- a/templates/skeleton/app/routes/collections.$handle.tsx
 +++ b/templates/skeleton/app/routes/collections.$handle.tsx
-@@ -120,10 +120,16 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
+@@ -143,10 +143,16 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
          ...MoneyProductItem
        }
      }
