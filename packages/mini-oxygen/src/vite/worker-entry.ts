@@ -88,9 +88,13 @@ function createUserEnv(env: ViteEnv) {
 let runtime: ModuleRunner;
 
 /**
- * Setup the whole Vite runtime and HMR the first time this function is called.
- * Note: we can use the `env` object that comes from the first request even
- * for subsequent requests, so there's no need to refresh the pointer.
+ * Initialize the Vite module runner the first time this function is called.
+ * Server updates are then picked up on the next request after Vite invalidates
+ * the SSR module graph, so this stays request-driven instead of using push HMR.
+ *
+ * Note: we can use the `env` object from the first request for subsequent
+ * requests too, so there's no need to refresh the pointer.
+ *
  * @returns The app's entry module.
  */
 function fetchEntryModule(env: ViteEnv) {
