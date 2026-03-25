@@ -17,8 +17,8 @@
     "directory": "packages/remix-oxygen"
   },
   "scripts": {
-    "build": "tsup --clean",
-    "dev": "tsup --watch",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "prepack": "pnpm run build",
     "typecheck": "tsc --noEmit"
   },

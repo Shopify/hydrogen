@@ -1,5 +1,5 @@
 import {rmSync} from 'node:fs';
-import {defineConfig} from 'tsup';
+import {defineConfig} from 'tsdown';
 
 // Cleanup dist folder before buid/dev.
 rmSync('./dist', {recursive: true, force: true});
@@ -10,15 +10,23 @@ export default defineConfig([
     outDir: 'dist',
     format: 'esm',
     minify: false,
-    bundle: false,
+    unbundle: true,
     sourcemap: false,
     dts: true,
+    fixedExtension: false,
+    outExtensions: () => ({dts: '.d.ts'}),
+    deps: {
+      skipNodeModulesBundle: true,
+    },
   },
   {
     entry: ['src/vite/worker-entry.ts'],
     outDir: 'dist/vite',
     format: 'esm',
-    noExternal: [/./],
+    fixedExtension: false,
+    deps: {
+      alwaysBundle: [/./],
+    },
     dts: false,
   },
 ]);

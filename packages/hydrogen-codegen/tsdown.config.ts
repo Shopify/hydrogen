@@ -1,14 +1,16 @@
-import path from 'node:path';
 import fs from 'node:fs/promises';
-import {defineConfig} from 'tsup';
+import {defineConfig} from 'tsdown';
 import {generateDtsBundle} from 'dts-bundle-generator';
 
 const commonConfig = {
   minify: false,
-  bundle: false,
-  splitting: true,
+  unbundle: true,
   treeshake: true,
   sourcemap: true,
+  fixedExtension: false,
+  deps: {
+    skipNodeModulesBundle: true,
+  },
 };
 
 export default defineConfig([
@@ -17,8 +19,8 @@ export default defineConfig([
     format: 'esm',
     entry: ['src/**/*.ts'],
     outDir: 'dist/esm',
-    // TSUP does not bundle types properly for this package,
-    // use dts-bundle-generator instead.
+    // The default DTS generation does not bundle types properly for this
+    // package, so use dts-bundle-generator instead.
     dts: false,
     async onSuccess() {
       const schemaFile = 'dist/esm/schema.js';
@@ -60,20 +62,12 @@ export default defineConfig([
       {
         // Replace .js with .cjs in require() calls:
         name: 'replace-require-extension',
-        async buildEnd({writtenFiles}) {
-          await Promise.all(
-            writtenFiles
-              .filter(({name}) => name.endsWith('.cjs'))
-              .map(async ({name}) => {
-                const filepath = path.resolve('.', name);
-                const contents = await fs.readFile(filepath, 'utf8');
-
-                await fs.writeFile(
-                  filepath,
-                  contents.replace(/\.js'\);/g, ".cjs');"),
-                );
-              }),
-          );
+        generateBundle(_, bundle) {
+          for (const output of Object.values(bundle)) {
+            if (output.type === 'chunk' && output.fileName.endsWith('.cjs')) {
+              output.code = output.code.replace(/\.js(['"]\))/g, '.cjs$1');
+            }
+          }
         },
       },
     ],

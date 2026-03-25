@@ -1,16 +1,28 @@
 import path from 'node:path';
+import {rmSync} from 'node:fs';
 import fs from 'node:fs/promises';
-import {defineConfig} from 'tsup';
+import {defineConfig} from 'tsdown';
 
 const outDir = 'dist';
 const cjsEntryContent = `module.exports = process.env.NODE_ENV === 'development' ? require('./development/index.cjs') : require('./production/index.cjs');`;
 const cjsEntryFile = path.resolve(process.cwd(), outDir, 'index.cjs');
+
+// Cleanup dist folder before build/dev.
+rmSync('./dist', {recursive: true, force: true});
+
+const dtsOutExtensions = () => ({dts: '.d.ts'});
 
 const commonConfig = defineConfig({
   entry: ['src/index.ts'],
   format: ['esm', 'cjs'],
   treeshake: true,
   sourcemap: true,
+  dts: false,
+  fixedExtension: false,
+  clean: false,
+  deps: {
+    skipNodeModulesBundle: true,
+  },
 });
 
 export default defineConfig([
@@ -22,9 +34,7 @@ export default defineConfig([
   {
     ...commonConfig,
     env: {NODE_ENV: 'production'},
-    // Bundle types from hydrogen-codgen so that we
-    // don't need to add it as a dependency in Hydrogen.
-    dts: {resolve: ['@shopify/hydrogen-codegen']},
+    dts: false,
     outDir: path.join(outDir, 'production'),
     minify: true,
     onSuccess: async () => {
@@ -79,6 +89,19 @@ export default defineConfig([
     },
   },
   {
+    entry: ['src/index.ts'],
+    outDir: path.join(outDir, 'production'),
+    format: 'esm',
+    sourcemap: false,
+    dts: {emitDtsOnly: true},
+    fixedExtension: false,
+    outExtensions: dtsOutExtensions,
+    clean: false,
+    deps: {
+      skipNodeModulesBundle: true,
+    },
+  },
+  {
     entry: [
       'src/vite/**/*.ts',
       '!src/vite/**/*.test.ts',
@@ -87,41 +110,62 @@ export default defineConfig([
     outDir: 'dist/vite',
     format: 'esm',
     minify: false,
-    bundle: true,
     sourcemap: false,
     dts: true,
+    fixedExtension: false,
+    outExtensions: dtsOutExtensions,
+    clean: false,
+    deps: {
+      skipNodeModulesBundle: true,
+    },
   },
   {
     entry: ['src/dev/**/*.ts', '!src/dev/**/*.test.ts'],
     outDir: 'dist/dev',
     format: 'esm',
     minify: false,
-    bundle: true,
     sourcemap: false,
     dts: true,
+    fixedExtension: false,
+    outExtensions: dtsOutExtensions,
+    clean: false,
+    deps: {
+      skipNodeModulesBundle: true,
+    },
   },
   {
     entry: ['src/oxygen/**/*.ts', '!src/oxygen/**/*.test.ts'],
     outDir: 'dist/oxygen',
     format: 'esm',
     minify: false,
-    bundle: true,
     sourcemap: false,
     dts: true,
+    fixedExtension: false,
+    outExtensions: dtsOutExtensions,
+    clean: false,
+    deps: {
+      skipNodeModulesBundle: true,
+    },
   },
   {
     entry: ['src/vite/virtual-routes/**/*.tsx'],
     outDir: `${outDir}/vite/virtual-routes`,
-    outExtension: () => ({js: '.jsx'}),
+    outExtensions: () => ({js: '.jsx'}),
     format: 'esm',
     minify: false,
-    bundle: false,
-    splitting: false,
+    unbundle: true,
     treeshake: false,
     sourcemap: false,
-    publicDir: false,
     dts: false,
     clean: false, // Avoid deleting the assets folder
+    deps: {
+      skipNodeModulesBundle: true,
+      neverBundle: [
+        /^@shopify\/hydrogen(?:-react)?(?:\/.*)?$/,
+        /^react(?:-router)?(?:\/.*)?$/,
+        /\.(css|svg|woff2)(\?.*)?$/,
+      ],
+    },
     async onSuccess() {
       await fs.cp(
         'src/vite/virtual-routes/assets',
@@ -143,19 +187,29 @@ export default defineConfig([
     outDir: 'dist/production',
     format: 'esm',
     minify: true,
-    bundle: true,
     sourcemap: false,
     dts: true,
-    external: ['@react-router/dev/config'],
+    fixedExtension: false,
+    outExtensions: dtsOutExtensions,
+    clean: false,
+    deps: {
+      skipNodeModulesBundle: true,
+      neverBundle: ['@react-router/dev/config'],
+    },
   },
   {
     entry: ['src/react-router-preset.ts'],
     outDir: 'dist/development',
     format: 'esm',
     minify: false,
-    bundle: true,
     sourcemap: true,
     dts: true,
-    external: ['@react-router/dev/config'],
+    fixedExtension: false,
+    outExtensions: dtsOutExtensions,
+    clean: false,
+    deps: {
+      skipNodeModulesBundle: true,
+      neverBundle: ['@react-router/dev/config'],
+    },
   },
 ]);

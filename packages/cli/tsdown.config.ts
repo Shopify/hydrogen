@@ -1,7 +1,7 @@
 import path from 'node:path';
 import {rmSync} from 'node:fs';
 import {cp as copy} from 'node:fs/promises';
-import {defineConfig} from 'tsup';
+import {defineConfig} from 'tsdown';
 import {execAsync} from './src/lib/process';
 import {
   ASSETS_DIR_PREFIX,
@@ -16,11 +16,14 @@ rmSync('./dist', {recursive: true, force: true});
 const commonConfig = defineConfig({
   format: 'esm',
   minify: false,
-  bundle: false,
-  splitting: true,
+  unbundle: true,
   treeshake: true,
   sourcemap: false,
+  fixedExtension: false,
   clean: false, // Avoid deleting the assets folder
+  deps: {
+    skipNodeModulesBundle: true,
+  },
 });
 
 const outDir = 'dist';
@@ -30,8 +33,7 @@ export default defineConfig([
     ...commonConfig,
     entry: ['src/**/*.ts', '!src/**/*.test.ts'],
     outDir,
-    // Generate types only for the exposed entry points
-    dts: {entry: ['src/index.ts', 'src/commands/hydrogen/init.ts']},
+    dts: false,
     async onSuccess() {
       // Copy assets templates
       await copy(path.resolve('assets'), path.join(outDir, ASSETS_DIR_PREFIX), {
@@ -71,11 +73,28 @@ export default defineConfig([
   },
   {
     ...commonConfig,
+    entry: ['src/index.ts', 'src/commands/hydrogen/init.ts'],
+    outDir,
+    // Generate types only for the exposed entry points
+    dts: {emitDtsOnly: true},
+    outExtensions: () => ({dts: '.d.ts'}),
+  },
+  {
+    ...commonConfig,
     // TODO remove virtual routes copy when deprecating classic compiler
     entry: ['../hydrogen/src/vite/virtual-routes/**/*.tsx'],
     outDir: `${outDir}/${ASSETS_DIR_PREFIX}/virtual-routes`,
-    outExtension: () => ({js: '.jsx'}),
+    outExtensions: () => ({js: '.jsx'}),
     dts: false,
+    treeshake: false,
+    deps: {
+      skipNodeModulesBundle: true,
+      neverBundle: [
+        /^@shopify\/hydrogen(?:-react)?(?:\/.*)?$/,
+        /^react(?:-router)?(?:\/.*)?$/,
+        /\.(css|svg|woff2)(\?.*)?$/,
+      ],
+    },
     async onSuccess() {
       // For some reason, it seems that publicDir => outDir might be skipped on CI,
       // so ensure here that asset files are copied:
