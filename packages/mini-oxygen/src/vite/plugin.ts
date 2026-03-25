@@ -4,7 +4,6 @@ import {
   createMiniOxygenDevEnvironment,
   type MiniOxygenDevEnvironment,
   type MiniOxygenRuntimeOptions,
-  isMiniOxygenDevEnvironment,
   mergeMiniOxygenRuntimeOptions,
 } from './environment.js';
 import {
@@ -32,7 +31,7 @@ export type OxygenPlugin = Plugin<{
   registerPluginOptions(newOptions: OxygenApiOptions): void;
 }>;
 
-export {MiniOxygenDevEnvironment, isMiniOxygenDevEnvironment};
+export type {MiniOxygenDevEnvironment};
 
 /**
  * Runs backend code in an Oxygen worker instead of Node.js during development.
@@ -140,7 +139,10 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
         order: 'pre',
         handler: (viteDevServer) => {
           return () => {
-            setupOxygenMiddleware(viteDevServer);
+            setupOxygenMiddleware(
+              viteDevServer,
+              () => apiOptions.entryPointErrorHandler,
+            );
           };
         },
       },
