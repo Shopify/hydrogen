@@ -30,12 +30,8 @@ type RuntimeOptionsResolver = (
   viteDevServer: ViteDevServer,
 ) => Promise<MiniOxygenViteOptions>;
 
-const MINI_OXYGEN_ENVIRONMENT = Symbol('mini-oxygen-environment');
-
 export type MiniOxygenDevEnvironment = FetchableDevEnvironment & {
-  [MINI_OXYGEN_ENVIRONMENT]: true;
   configureRuntime(options: MiniOxygenRuntimeOptions): void;
-  getRuntimeOptions(): MiniOxygenRuntimeOptions;
 };
 
 export function mergeMiniOxygenRuntimeOptions(
@@ -133,7 +129,6 @@ export function createMiniOxygenDevEnvironment(
   }
 
   return Object.assign(environment, {
-    [MINI_OXYGEN_ENVIRONMENT]: true as const,
     configureRuntime(options: MiniOxygenRuntimeOptions) {
       if (runtimeHasStarted()) {
         throw new Error(
@@ -146,9 +141,6 @@ export function createMiniOxygenDevEnvironment(
         options,
       );
     },
-    getRuntimeOptions() {
-      return currentRuntimeOptions;
-    },
     async listen(server: ViteDevServer) {
       viteDevServer = server;
       await originalListen(server);
@@ -158,12 +150,4 @@ export function createMiniOxygenDevEnvironment(
       await Promise.allSettled([originalClose(), miniOxygen?.dispose()]);
     },
   });
-}
-
-export function isMiniOxygenDevEnvironment(
-  value: unknown,
-): value is MiniOxygenDevEnvironment {
-  return Boolean(
-    value && typeof value === 'object' && MINI_OXYGEN_ENVIRONMENT in value,
-  );
 }

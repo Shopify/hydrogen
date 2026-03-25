@@ -19,7 +19,6 @@ import {
   handleEntrypointError,
   type CustomEntryPointErrorHandler,
 } from './entry-error.js';
-import {isMiniOxygenDevEnvironment} from './environment.js';
 
 import type {ViteEnv} from './worker-entry.js';
 import type {RequestHookInfo} from '../worker/handler.js';
@@ -178,7 +177,10 @@ export function startMiniOxygenRuntime({
   return miniOxygen;
 }
 
-export function setupOxygenMiddleware(viteDevServer: ViteDevServer) {
+export function setupOxygenMiddleware(
+  viteDevServer: ViteDevServer,
+  getEntryPointErrorHandler?: () => CustomEntryPointErrorHandler | undefined,
+) {
   viteDevServer.middlewares.use(function o2HandleWorkerRequest(req, res, next) {
     // This request comes from the browser. At this point, Vite
     // tried to serve the request as a static file, but it didn't
@@ -195,15 +197,11 @@ export function setupOxygenMiddleware(viteDevServer: ViteDevServer) {
       .dispatchFetch(toWeb(req))
       .then(async (webResponse) => {
         if (isEntrypointError(webResponse)) {
-          const entryPointErrorHandler = isMiniOxygenDevEnvironment(environment)
-            ? environment.getRuntimeOptions().entryPointErrorHandler
-            : undefined;
-
           await handleEntrypointError(
             viteDevServer,
             webResponse,
             res,
-            entryPointErrorHandler,
+            getEntryPointErrorHandler?.(),
           );
         } else {
           await pipeFromWeb(webResponse, res);
