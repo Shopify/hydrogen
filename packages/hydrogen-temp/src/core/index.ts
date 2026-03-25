@@ -65,3 +65,26 @@ export {storefrontApiCustomScalars} from './codegen.helpers';
 // --- Utils ---
 export {getStorefrontHeaders} from './utils/request';
 export type {CrossRuntimeRequest} from './utils/request';
+
+// --- Analytics ---
+export {
+  createAnalyticsBus,
+  AnalyticsEvent,
+  getShopAnalytics,
+} from './analytics';
+export type {
+  AnalyticsBus,
+  AnalyticsBusOptions,
+  ShopAnalytics,
+  ConsentConfig,
+  AnalyticsCart,
+  AnalyticsCartLine,
+  PageViewPayload,
+  ProductViewPayload,
+  CollectionViewPayload,
+  CartViewPayload,
+  SearchViewPayload,
+  CartUpdatePayload,
+  CartLineUpdatePayload,
+  CustomEventPayload,
+} from './analytics';
