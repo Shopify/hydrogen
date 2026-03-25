@@ -1,5 +1,6 @@
 import {vi, describe, it, beforeEach, afterEach, expect} from 'vitest';
 import {renderHook, act} from '@testing-library/react';
+import '@testing-library/jest-dom/vitest';
 import {
   useCustomerPrivacy,
   getCustomerPrivacy,
