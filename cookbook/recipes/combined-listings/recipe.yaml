@@ -15,8 +15,7 @@ description: |
   5. Show a range of prices for combined listings in `ProductItem`.
 notes:
   - This recipe is compatible with React Router 7.9.x and uses consolidated
-    imports from 'react-router' instead of separate '@shopify/remix-oxygen' and
-    '@remix-run/react' packages.
+    imports from 'react-router'.
 requirements: |
   - Your store must be on either a [Shopify Plus](https://www.shopify.com/plus) or enterprise plan.
   - Your store must have the [Combined Listings app](https://admin.shopify.com/apps/combined-listings) installed.

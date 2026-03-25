@@ -52,7 +52,7 @@ In this recipe, you'll make the following changes:
 ## Notes
 
 > [!NOTE]
-> This recipe is compatible with React Router 7.9.x and uses consolidated imports from 'react-router' instead of separate '@shopify/remix-oxygen' and '@remix-run/react' packages.
+> This recipe is compatible with React Router 7.9.x and uses consolidated imports from 'react-router'.
 
 ## Requirements
 
