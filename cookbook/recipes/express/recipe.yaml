@@ -55,6 +55,9 @@ deletedFiles:
   - templates/skeleton/app/components/SearchFormPredictive.tsx
   - templates/skeleton/app/components/SearchResults.tsx
   - templates/skeleton/app/components/SearchResultsPredictive.tsx
+  - templates/skeleton/app/components/CollectionFilters.tsx
+  - templates/skeleton/app/components/CollectionSort.tsx
+  - templates/skeleton/app/components/PriceRangeFilter.tsx
   - templates/skeleton/app/graphql/customer-account/CustomerAddressMutations.ts
   - templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts
   - templates/skeleton/app/graphql/customer-account/CustomerOrderQuery.ts
@@ -66,6 +69,8 @@ deletedFiles:
   - templates/skeleton/app/lib/search.ts
   - templates/skeleton/app/lib/session.ts
   - templates/skeleton/app/lib/variants.ts
+  - templates/skeleton/app/lib/product-filters.ts
+  - templates/skeleton/app/lib/product-sort.ts
   - templates/skeleton/app/routes/$.tsx
   - templates/skeleton/app/routes/[robots.txt].tsx
   - templates/skeleton/app/routes/[sitemap.xml].tsx
