@@ -53,11 +53,7 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
       entry,
       viteDevServer,
       crossBoundarySetup: runtimeOptions.crossBoundarySetup,
-      env: {
-        ...remoteEnv,
-        ...runtimeOptions.env,
-        ...pluginOptions.env,
-      },
+      env: {...remoteEnv, ...runtimeOptions.env, ...pluginOptions.env},
       debug: runtimeOptions.debug ?? pluginOptions.debug ?? false,
       inspectorPort:
         runtimeOptions.inspectorPort ?? pluginOptions.inspectorPort,
@@ -118,14 +114,16 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
           },
           dev: {
             createEnvironment(name, config) {
-              miniOxygenEnvironment = createMiniOxygenDevEnvironment(
+              // Vite can recreate environments on server restart. Keep this
+              // pointer on the latest SSR environment so late runtime options
+              // are applied to the active instance, and let Vite close the
+              // previous environment through its normal restart lifecycle.
+              return (miniOxygenEnvironment = createMiniOxygenDevEnvironment(
                 name,
                 config,
                 apiOptions,
                 resolveMiniOxygenOptions,
-              );
-
-              return miniOxygenEnvironment;
+              ));
             },
           },
         };

@@ -58,11 +58,14 @@ export function createMiniOxygenDevEnvironment(
   let currentRuntimeOptions = runtimeOptions;
   let viteDevServer: ViteDevServer | undefined;
   let miniOxygen: ReturnType<typeof startMiniOxygenRuntime> | undefined;
+  // Deduplicate concurrent first requests so the runtime only starts once.
   let pendingRuntime:
     | Promise<ReturnType<typeof startMiniOxygenRuntime>>
     | undefined;
 
   function runtimeHasStarted() {
+    // Treat in-flight startup as "started" too so runtime options cannot
+    // change while the first MiniOxygen instance is being created.
     return Boolean(pendingRuntime || (miniOxygen && !miniOxygen.isDisposed));
   }
 
@@ -118,6 +121,8 @@ export function createMiniOxygenDevEnvironment(
   }
 
   async function warmup() {
+    // Give Vite a brief moment to settle after listen/config reload before
+    // sending the synthetic first request that boots MiniOxygen eagerly.
     await new Promise((resolve) => setTimeout(resolve, 200));
 
     const viteUrl = viteDevServer && getViteUrl(viteDevServer);
