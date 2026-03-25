@@ -55,6 +55,10 @@ export {
   HYDROGEN_SERVER_TRACKING_KEY,
 } from './constants';
 
+// --- Server Routes ---
+export {hydrogenServerRoutes} from './server-routes';
+export type {HydrogenServerRoutesOptions} from './server-routes';
+
 // --- Codegen ---
 export {storefrontApiCustomScalars} from './codegen.helpers';
 

@@ -45,8 +45,15 @@ export function getStorefrontHeaders(
   };
 }
 
-/** Regular expression to match Storefront API GraphQL endpoint paths */
+/** Regular expression to match Storefront API GraphQL endpoint paths (start-anchored) */
 export const SFAPI_RE = /^\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
+
+/** Suffix-anchored variant — matches regardless of mount prefix */
+export const SFAPI_SUFFIX_RE = /\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
+
+export function matchSfapiRoute(url: string): RegExpMatchArray | null {
+  return getSafePathname(url).match(SFAPI_SUFFIX_RE);
+}
 
 export const getSafePathname = (url: string) => {
   try {

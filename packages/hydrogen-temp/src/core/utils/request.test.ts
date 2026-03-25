@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest';
-import {getHeader, extractHeaders} from './request';
+import {getHeader, extractHeaders, matchSfapiRoute} from './request';
 import {IncomingMessage} from 'node:http';
 import type {Socket} from 'node:net';
 
@@ -43,6 +43,40 @@ describe('request utils', () => {
           ],
         ),
       ).toEqual(testHeaders);
+    });
+  });
+
+  describe('matchSfapiRoute', () => {
+    it('matches a standard SFAPI path and captures the version', () => {
+      const match = matchSfapiRoute(
+        'http://localhost/api/2024-10/graphql.json',
+      );
+      expect(match).not.toBeNull();
+      expect(match![1]).toBe('2024-10');
+    });
+
+    it('matches when mounted at an arbitrary prefix', () => {
+      const match = matchSfapiRoute(
+        'http://localhost/shopify/api/2024-10/graphql.json',
+      );
+      expect(match).not.toBeNull();
+      expect(match![1]).toBe('2024-10');
+    });
+
+    it('matches the unstable version', () => {
+      const match = matchSfapiRoute(
+        'http://localhost/api/unstable/graphql.json',
+      );
+      expect(match).not.toBeNull();
+      expect(match![1]).toBe('unstable');
+    });
+
+    it('returns null for non-SFAPI paths', () => {
+      expect(
+        matchSfapiRoute('http://localhost/api/2024-10/products.json'),
+      ).toBeNull();
+      expect(matchSfapiRoute('http://localhost/checkout')).toBeNull();
+      expect(matchSfapiRoute('http://localhost/')).toBeNull();
     });
   });
 });
