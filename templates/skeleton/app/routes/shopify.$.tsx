@@ -16,6 +16,7 @@ async function handler({request, context}: Route.ActionArgs) {
 
   const response = await hydrogenServerRoutes(request, {
     storefront,
+    basePath: '/shopify',
   });
   if (response) return response;
 

@@ -3,6 +3,8 @@ import {matchSfapiRoute} from './utils/request';
 
 export type HydrogenServerRoutesOptions = {
   storefront: Storefront<I18nBase>;
+  /** The path prefix where this handler is mounted (e.g. '/shopify', '/'). */
+  basePath: string;
 };
 
 /**
@@ -17,7 +19,7 @@ export async function hydrogenServerRoutes(
 ): Promise<Response | null> {
   const {storefront} = options;
 
-  const sfapiMatch = matchSfapiRoute(request.url);
+  const sfapiMatch = matchSfapiRoute(request.url, options.basePath);
   if (!sfapiMatch) return null;
 
   const storefrontApiVersion = sfapiMatch[1];

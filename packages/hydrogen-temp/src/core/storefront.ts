@@ -56,7 +56,11 @@ import {
   type StackInfo,
 } from './utils/callsites';
 import type {WaitUntil, StorefrontHeaders} from './types';
-import {extractHeaders, getSafePathname, SFAPI_RE} from './utils/request';
+import {
+  extractHeaders,
+  getSafePathname,
+  SFAPI_SUFFIX_RE,
+} from './utils/request';
 import {
   appendServerTimingHeader,
   extractServerTimingHeader,
@@ -545,7 +549,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        * Checks if the request is targeting the Storefront API endpoint.
        */
       isStorefrontApiUrl(request) {
-        return SFAPI_RE.test(getSafePathname(request.url ?? ''));
+        return SFAPI_SUFFIX_RE.test(getSafePathname(request.url ?? ''));
       },
       /**
        * Forwards the request to the Storefront API.
@@ -595,7 +599,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
         const storefrontApiVersion =
           options?.storefrontApiVersion ??
-          getSafePathname(request.url).match(SFAPI_RE)?.[1];
+          getSafePathname(request.url).match(SFAPI_SUFFIX_RE)?.[1];
 
         const FORWARD_TIMEOUT_IN_MS = 30_000;
         const sfapiResponse = await fetch(

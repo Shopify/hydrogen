@@ -45,14 +45,37 @@ export function getStorefrontHeaders(
   };
 }
 
-/** Regular expression to match Storefront API GraphQL endpoint paths (start-anchored) */
-export const SFAPI_RE = /^\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
+/** Matches the SFAPI GraphQL endpoint path regardless of mount prefix.
+ * Used by storefront.ts which lacks basePath context. */
+export const SFAPI_SUFFIX_RE = /\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
 
-/** Suffix-anchored variant — matches regardless of mount prefix */
-export const SFAPI_SUFFIX_RE = /\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
+/** Start-and-end anchored route pattern — used after stripping the basePath. */
+const SFAPI_ROUTE_RE = /^\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
 
-export function matchSfapiRoute(url: string): RegExpMatchArray | null {
-  return getSafePathname(url).match(SFAPI_SUFFIX_RE);
+/**
+ * Normalizes a user-supplied base path to canonical form:
+ * leading slash, no trailing slash, empty string for root mount.
+ */
+function normalizeBasePath(raw: string): string {
+  const trimmed = raw.replace(/^\/+|\/+$/g, '');
+  return trimmed ? '/' + trimmed : '';
+}
+
+/**
+ * Matches the SFAPI GraphQL endpoint at exactly `basePath/<version>/graphql.json`.
+ * Rejects URLs with extra segments between the basePath and the version.
+ */
+export function matchSfapiRoute(
+  url: string,
+  basePath: string,
+): RegExpMatchArray | null {
+  const pathname = getSafePathname(url);
+  const normalizedBase = normalizeBasePath(basePath);
+
+  if (!pathname.startsWith(normalizedBase)) return null;
+
+  const remainder = pathname.slice(normalizedBase.length);
+  return remainder.match(SFAPI_ROUTE_RE);
 }
 
 export const getSafePathname = (url: string) => {

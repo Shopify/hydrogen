@@ -23,12 +23,15 @@ describe('hydrogenServerRoutes', () => {
 
   describe('SFAPI proxy', () => {
     it('forwards a standard SFAPI path with the correct version', async () => {
-      const request = new Request('http://localhost/api/2024-10/graphql.json', {
+      const request = new Request('http://localhost/2024-10/graphql.json', {
         method: 'POST',
         body: '{"query":"{ shop { name } }"}',
       });
 
-      const response = await hydrogenServerRoutes(request, {storefront});
+      const response = await hydrogenServerRoutes(request, {
+        storefront,
+        basePath: '/',
+      });
 
       expect(forwardMock).toHaveBeenCalledWith(request, {
         storefrontApiVersion: '2024-10',
@@ -39,11 +42,14 @@ describe('hydrogenServerRoutes', () => {
 
     it('matches when mounted at an arbitrary prefix', async () => {
       const request = new Request(
-        'http://localhost/shopify/api/2024-10/graphql.json',
+        'http://localhost/shopify/2024-10/graphql.json',
         {method: 'POST'},
       );
 
-      await hydrogenServerRoutes(request, {storefront});
+      await hydrogenServerRoutes(request, {
+        storefront,
+        basePath: '/shopify',
+      });
 
       expect(forwardMock).toHaveBeenCalledWith(request, {
         storefrontApiVersion: '2024-10',
@@ -51,12 +57,14 @@ describe('hydrogenServerRoutes', () => {
     });
 
     it('matches the unstable version', async () => {
-      const request = new Request(
-        'http://localhost/api/unstable/graphql.json',
-        {method: 'POST'},
-      );
+      const request = new Request('http://localhost/unstable/graphql.json', {
+        method: 'POST',
+      });
 
-      await hydrogenServerRoutes(request, {storefront});
+      await hydrogenServerRoutes(request, {
+        storefront,
+        basePath: '/',
+      });
 
       expect(forwardMock).toHaveBeenCalledWith(request, {
         storefrontApiVersion: 'unstable',
@@ -65,11 +73,14 @@ describe('hydrogenServerRoutes', () => {
 
     it('matches with a deep mount prefix', async () => {
       const request = new Request(
-        'http://localhost/api/hydrogen/v1/api/2025-01/graphql.json',
+        'http://localhost/api/hydrogen/v1/2025-01/graphql.json',
         {method: 'POST'},
       );
 
-      await hydrogenServerRoutes(request, {storefront});
+      await hydrogenServerRoutes(request, {
+        storefront,
+        basePath: '/api/hydrogen/v1',
+      });
 
       expect(forwardMock).toHaveBeenCalledWith(request, {
         storefrontApiVersion: '2025-01',
@@ -79,12 +90,12 @@ describe('hydrogenServerRoutes', () => {
     it('passes the request through as-is (including body)', async () => {
       const body =
         '{"query":"{ products(first: 10) { edges { node { id } } } }"}';
-      const request = new Request('http://localhost/api/2024-10/graphql.json', {
+      const request = new Request('http://localhost/2024-10/graphql.json', {
         method: 'POST',
         body,
       });
 
-      await hydrogenServerRoutes(request, {storefront});
+      await hydrogenServerRoutes(request, {storefront, basePath: '/'});
 
       const passedRequest = forwardMock.mock.calls[0][0] as Request;
       expect(passedRequest).toBe(request);
@@ -93,9 +104,12 @@ describe('hydrogenServerRoutes', () => {
 
   describe('unmatched routes', () => {
     it('returns null for non-graphql SFAPI paths', async () => {
-      const request = new Request('http://localhost/api/2024-10/products.json');
+      const request = new Request('http://localhost/2024-10/products.json');
 
-      const response = await hydrogenServerRoutes(request, {storefront});
+      const response = await hydrogenServerRoutes(request, {
+        storefront,
+        basePath: '/',
+      });
 
       expect(response).toBeNull();
       expect(forwardMock).not.toHaveBeenCalled();
@@ -104,7 +118,25 @@ describe('hydrogenServerRoutes', () => {
     it('returns null for unrelated paths', async () => {
       const request = new Request('http://localhost/checkout');
 
-      const response = await hydrogenServerRoutes(request, {storefront});
+      const response = await hydrogenServerRoutes(request, {
+        storefront,
+        basePath: '/',
+      });
+
+      expect(response).toBeNull();
+      expect(forwardMock).not.toHaveBeenCalled();
+    });
+
+    it('rejects URLs with extra segments between basePath and version', async () => {
+      const request = new Request(
+        'http://localhost/shopify/api/2025-10/graphql.json',
+        {method: 'POST'},
+      );
+
+      const response = await hydrogenServerRoutes(request, {
+        storefront,
+        basePath: '/shopify',
+      });
 
       expect(response).toBeNull();
       expect(forwardMock).not.toHaveBeenCalled();
@@ -121,12 +153,13 @@ describe('hydrogenServerRoutes', () => {
         throw networkError;
       });
 
-      const request = new Request('http://localhost/api/2024-10/graphql.json', {
+      const request = new Request('http://localhost/2024-10/graphql.json', {
         method: 'POST',
       });
 
       const response = await hydrogenServerRoutes(request, {
         storefront: failingStorefront,
+        basePath: '/',
       });
 
       expect(response).not.toBeNull();
@@ -152,12 +185,13 @@ describe('hydrogenServerRoutes', () => {
         throw timeoutError;
       });
 
-      const request = new Request('http://localhost/api/2024-10/graphql.json', {
+      const request = new Request('http://localhost/2024-10/graphql.json', {
         method: 'POST',
       });
 
       const response = await hydrogenServerRoutes(request, {
         storefront: timeoutStorefront,
+        basePath: '/',
       });
 
       expect(response).not.toBeNull();
