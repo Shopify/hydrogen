@@ -89,7 +89,7 @@ export function generateTypeDefs(sourceFile: SourceFile, code: string) {
 
     if (/(function loader\(|const loader =)/.test(source)) {
       typedefs.push(
-        `/** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */`,
+        `/** @typedef {import('react-router').SerializeFrom<typeof loader>} LoaderReturnData */`,
       );
 
       code = code.replace(
@@ -116,7 +116,7 @@ export function generateTypeDefs(sourceFile: SourceFile, code: string) {
 
     if (/(function action\(|const action =)/.test(source)) {
       typedefs.push(
-        `/** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof action>} ActionReturnData */`,
+        `/** @typedef {import('react-router').SerializeFrom<typeof action>} ActionReturnData */`,
       );
 
       code = code.replace(

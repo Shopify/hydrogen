@@ -76,8 +76,8 @@ export function emitRequestEvent(payload: RequestEventPayload, root: string) {
   }
 
   if (payload.eventType === 'request' && !payload.__fromVite) {
-    // Filter out events that come from @shopify/remix-oxygen,
-    // which is a deprecated way to send events.
+    // Filter out request events not originating from Vite's
+    // hydrogen middleware. Legacy adapters sent these directly.
     return;
   }
 
