@@ -8,7 +8,7 @@
     "unpatch-cli": "node scripts/unpatch-cli.mjs",
     "prepare": "husky && node scripts/patch-cli.mjs",
     "build": "pnpm run build:pkg",
-    "build:pkg": "turbo build --parallel --filter=./packages/*",
+    "build:pkg": "turbo build --filter=./packages/*",
     "build:templates": "turbo build --parallel --filter=./templates/*",
     "build:all": "pnpm run build:pkg && pnpm run build:templates",
     "ci:checks": "turbo run lint test format:check typecheck",
