@@ -117,7 +117,6 @@ describe('createMiniOxygenDevEnvironment', () => {
     const environment = createMiniOxygenDevEnvironment(
       'ssr',
       {} as any,
-      {transport: {} as any},
       {env: {TOKEN: '123'}},
       resolveRuntimeOptions,
     );
@@ -151,7 +150,6 @@ describe('createMiniOxygenDevEnvironment', () => {
     const environment = createMiniOxygenDevEnvironment(
       'ssr',
       {} as any,
-      {transport: {} as any},
       {},
       resolveRuntimeOptions,
     );
@@ -201,7 +199,6 @@ describe('createMiniOxygenDevEnvironment', () => {
     const environment = createMiniOxygenDevEnvironment(
       'ssr',
       {} as any,
-      {transport: {} as any},
       {},
       resolveRuntimeOptions,
     );
@@ -236,7 +233,6 @@ describe('createMiniOxygenDevEnvironment', () => {
     const environment = createMiniOxygenDevEnvironment(
       'ssr',
       {} as any,
-      {transport: {} as any},
       {},
       resolveRuntimeOptions,
     );
@@ -263,7 +259,6 @@ describe('createMiniOxygenDevEnvironment', () => {
     const environment = createMiniOxygenDevEnvironment(
       'ssr',
       {} as any,
-      {transport: {} as any},
       {},
       resolveRuntimeOptions,
     );
@@ -302,7 +297,6 @@ describe('createMiniOxygenDevEnvironment', () => {
     const environment = createMiniOxygenDevEnvironment(
       'ssr',
       {} as any,
-      {transport: {} as any},
       {},
       resolveRuntimeOptions,
     );
@@ -335,7 +329,6 @@ describe('createMiniOxygenDevEnvironment', () => {
     const environment = createMiniOxygenDevEnvironment(
       'ssr',
       {} as any,
-      {transport: {} as any},
       {},
       resolveRuntimeOptions,
     );

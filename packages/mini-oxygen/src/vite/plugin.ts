@@ -118,11 +118,10 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
             conditions: ['worker', 'workerd', ...defaultClientConditions],
           },
           dev: {
-            createEnvironment(name, config, context) {
+            createEnvironment(name, config) {
               miniOxygenEnvironment = createMiniOxygenDevEnvironment(
                 name,
                 config,
-                {transport: context.ws},
                 apiOptions,
                 resolveMiniOxygenOptions,
               );

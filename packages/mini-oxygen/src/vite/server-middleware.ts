@@ -206,21 +206,7 @@ export function setupOxygenMiddleware(viteDevServer: ViteDevServer) {
             entryPointErrorHandler,
           );
         } else {
-          // React Router's <Scripts /> already injects the inject-hmr-runtime
-          // preamble. The only thing missing for HMR to work is @vite/client,
-          // which establishes the WebSocket connection for hot updates.
-          const contentType = webResponse.headers.get('content-type');
-          if (contentType?.includes('text/html')) {
-            const html = await webResponse.text();
-            const injected = html.replace(
-              '</head>',
-              '<script type="module" src="/@vite/client"></script></head>',
-            );
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-            res.end(injected);
-          } else {
-            await pipeFromWeb(webResponse, res);
-          }
+          await pipeFromWeb(webResponse, res);
         }
       })
       .catch((error) => {
