@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["src/react/**/*.ts", "src/react/**/*.tsx", "globals.d.ts"],
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist/react",
+    "rootDir": "src/react",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "types": ["node"]
+  }
+}

@@ -25,10 +25,14 @@
     "./storefront-api-types": {
       "types": "./dist/storefront-api-types.d.ts"
     },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js"
+    },
     "./storefront.schema.json": "./storefront.schema.json"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "rimraf dist && tsup",
     "test": "vitest run",
     "test:watch": "vitest",
     "codegen": "graphql-codegen --config codegen.ts"
@@ -38,9 +42,22 @@
     "@shopify/graphql-client": "1.4.1",
     "type-fest": "^4.33.0"
   },
+  "peerDependencies": {
+    "react": "^18.3.1 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "tsup": "^8.4.0",
     "@types/node": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "rimraf": "^6.0.1",
     "vitest": "^3.2.4",
     "graphql": "^16.12.0",
     "@graphql-codegen/cli": "^5.0.4",

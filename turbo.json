@@ -51,6 +51,9 @@
     "@shopify/hydrogen#build": {
       "dependsOn": ["@shopify/hydrogen-react#build"]
     },
+    "@shopify/hydrogen-temp#build": {
+      "dependsOn": ["@shopify/hydrogen-codegen#build"]
+    },
     "skeleton#build": {
       "dependsOn": [
         "@shopify/hydrogen#build",

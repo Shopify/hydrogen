@@ -1,6 +1,7 @@
 {
   "files": [],
   "references": [
-    {"path": "./src/core"}
+    {"path": "./src/core"},
+    {"path": "./src/react"}
   ]
 }
