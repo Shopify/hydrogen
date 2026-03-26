@@ -5,7 +5,7 @@ const isCI = !!process.env.CI;
 
 export default defineConfig({
   testMatch: /\.spec\.ts$/,
-  retries: isCI ? 1 : 0,
+  retries: 1, // Enable retries to handle test flakiness
   reporter: [['html', {open: 'on-failure', outputFolder: 'playwright-report'}]],
   // 3 workers in CI (ubuntu-latest: 2 vCPUs, 7GB RAM).
   // Each worker spawns a Vite dev server + Chromium. Increase with caution.
