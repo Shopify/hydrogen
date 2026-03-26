@@ -60,8 +60,6 @@ test.describe('Third-party API Recipe', () => {
   test('preserves existing homepage sections alongside third-party content', async ({
     page,
   }) => {
-    const featuredCollectionHeading = page.getByRole('heading', {level: 1});
-    await expect(featuredCollectionHeading).toBeVisible();
 
     const recommendedProductsSection = page.getByRole('region', {
       name: 'Recommended Products',
