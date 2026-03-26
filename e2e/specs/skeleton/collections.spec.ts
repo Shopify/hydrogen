@@ -8,6 +8,29 @@ const TEST_COLLECTION = 'backcountry';
 const COLLECTION_URL = `/collections/${TEST_COLLECTION}`;
 
 test.describe('Collections', () => {
+  test.describe('Page Rendering', () => {
+    test('displays collection heading, products, and no console errors', async ({
+      page,
+    }) => {
+      const consoleErrors: string[] = [];
+      page.on('console', (msg) => {
+        if (msg.type() === 'error') {
+          consoleErrors.push(msg.text());
+        }
+      });
+
+      await page.goto(COLLECTION_URL);
+
+      await expect(page.getByRole('heading', {level: 1})).toBeVisible();
+
+      // Products should render in the grid
+      const productLinks = page.locator('.products-grid .product-item');
+      await expect(productLinks.first()).toBeVisible();
+
+      expect(consoleErrors).toHaveLength(0);
+    });
+  });
+
   test.describe('Sorting', () => {
     test('displays the sort dropdown on collection pages', async ({page}) => {
       await page.goto(COLLECTION_URL);
