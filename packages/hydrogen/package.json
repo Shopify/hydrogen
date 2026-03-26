@@ -87,7 +87,8 @@
     "content-security-policy-builder": "^2.2.0",
     "flame-chart-js": "2.3.1",
     "worktop": "^0.7.3",
-    "@shopify/graphql-client": "1.4.1"
+    "@shopify/graphql-client": "1.4.1",
+    "type-fest": "^4.33.0"
   },
   "devDependencies": {
     "react-router": "7.12.0",
