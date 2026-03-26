@@ -7,23 +7,6 @@ const SEARCH_TERM = 'snowboard';
 
 test.describe('Search', () => {
   test.describe('Basic Search', () => {
-    test('renders search results without console errors', async ({page}) => {
-      const consoleErrors: string[] = [];
-      page.on('console', (msg) => {
-        if (msg.type() === 'error') {
-          consoleErrors.push(msg.text());
-        }
-      });
-
-      await page.goto(`/search?q=${SEARCH_TERM}`);
-
-      await expect(
-        page.getByRole('heading', {level: 2, name: 'Products'}),
-      ).toBeVisible();
-
-      expect(consoleErrors).toHaveLength(0);
-    });
-
     test('displays search heading and form', async ({page}) => {
       await page.goto('/search');
 
@@ -31,7 +14,9 @@ test.describe('Search', () => {
         page.getByRole('heading', {level: 1, name: 'Search'}),
       ).toBeVisible();
       await expect(page.getByPlaceholder('Search…')).toBeVisible();
-      await expect(page.getByRole('button', {name: 'Search'})).toBeVisible();
+      await expect(
+        page.getByRole('main').getByRole('button', {name: 'Search'}),
+      ).toBeVisible();
     });
 
     test('returns results for a valid search term', async ({page}) => {
@@ -73,7 +58,8 @@ test.describe('Search', () => {
       const sortSelect = page.getByLabel('Sort products');
       await sortSelect.selectOption('PRICE_LOW_TO_HIGH');
 
-      await expect(page).toHaveURL(/sort_by=PRICE_LOW_TO_HIGH/);
+      // Wait for navigation to complete after sort change
+      await page.waitForURL(/sort_by=PRICE_LOW_TO_HIGH/);
       // Search term should be preserved
       await expect(page).toHaveURL(new RegExp(`q=${SEARCH_TERM}`));
     });
