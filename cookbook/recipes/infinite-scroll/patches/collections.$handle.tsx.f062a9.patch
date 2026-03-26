@@ -51,7 +51,7 @@ index c416c2b3..e6a35150 100644
 +        }) => (
 +          <>
 +            <PreviousLink>
-+              {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
++              {isLoading ? 'Loading...' : <span><span aria-hidden="true">↑</span> Load previous</span>}
 +            </PreviousLink>
 +            <ProductsGrid
 +              products={nodes}
@@ -66,7 +66,7 @@ index c416c2b3..e6a35150 100644
 +                from triggering IO and creating an infinite loading cycle (WCAG 2.1.1). */}
 +            <div ref={ref} aria-hidden="true" style={{height: '1px'}} />
 +            <NextLink>
-+              {isLoading ? 'Loading...' : <span>Load more ↓</span>}
++              {isLoading ? 'Loading...' : <span>Load more <span aria-hidden="true">↓</span></span>}
 +            </NextLink>
 +          </>
          )}
