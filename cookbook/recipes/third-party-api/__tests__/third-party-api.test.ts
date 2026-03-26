@@ -1,13 +1,12 @@
-import {describe, expect, it} from 'vitest';
+import {describe, expect, it, vi} from 'vitest';
 
-// minifyQuery is not exported, so we inline-test the same logic.
-// If it becomes exported in the future, import it directly.
-function minifyQuery<T extends string>(string: T) {
-  return string
-    .replace(/\s*#.*$/gm, '')
-    .replace(/\s+/gm, ' ')
-    .trim() as T;
-}
+// Mock @shopify/hydrogen since it's not available in the cookbook test context
+vi.mock('@shopify/hydrogen', () => ({
+  createWithCache: vi.fn(),
+  CacheLong: vi.fn(),
+}));
+
+import {minifyQuery} from '../ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server';
 
 describe('third-party-api recipe', () => {
   describe('minifyQuery', () => {
@@ -82,14 +81,12 @@ describe('third-party-api recipe', () => {
   });
 
   describe('display name extraction', () => {
-    // The createRickAndMortyClient extracts display names via regex:
-    // query.match(/^(query|mutation)\s\w+/)?.[0]
+    // The createRickAndMortyClient extracts display names via this regex
+    // on the minified query string. We test the combined behavior.
     const extractDisplayName = (query: string) =>
       query.match(/^(query|mutation)\s\w+/)?.[0];
 
-    it('extracts query display name', () => {
-      // In real usage, #graphql:rickAndMorty is on its own line followed by the query.
-      // After minification, the comment line is stripped and the query starts with 'query'.
+    it('extracts query display name from minified query', () => {
       const minified = minifyQuery(`#graphql:rickAndMorty
         query Characters { characters { results { name } } }`);
       expect(extractDisplayName(minified)).toBe('query Characters');

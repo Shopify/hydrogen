@@ -1,10 +1,31 @@
-import {describe, expect, it} from 'vitest';
-import {readFile} from 'node:fs/promises';
+import {describe, expect, it, beforeAll} from 'vitest';
+import {readFile, readdir} from 'node:fs/promises';
 import {join} from 'node:path';
 
 const RECIPE_DIR = join(__dirname, '..');
 
 describe('express recipe', () => {
+  let serverContent: string;
+  let patchFiles: string[];
+
+  beforeAll(async () => {
+    serverContent = await readFile(
+      join(RECIPE_DIR, 'ingredients/templates/skeleton/server.mjs'),
+      'utf8',
+    );
+    patchFiles = await readdir(join(RECIPE_DIR, 'patches'));
+  });
+
+  function findPatchFile(prefix: string): string {
+    const match = patchFiles.find((f) => f.startsWith(prefix));
+    if (!match) {
+      throw new Error(
+        `Expected ${prefix} patch file to exist in patches directory`,
+      );
+    }
+    return match;
+  }
+
   describe('recipe structure', () => {
     it('has a valid recipe.yaml', async () => {
       const content = await readFile(join(RECIPE_DIR, 'recipe.yaml'), 'utf8');
@@ -13,103 +34,58 @@ describe('express recipe', () => {
       expect(content).toContain('express');
     });
 
-    it('includes server.mjs ingredient', async () => {
-      const content = await readFile(
-        join(RECIPE_DIR, 'ingredients/templates/skeleton/server.mjs'),
-        'utf8',
-      );
-      expect(content).toBeTruthy();
+    it('includes server.mjs ingredient', () => {
+      expect(serverContent).toBeTruthy();
     });
   });
 
   describe('server configuration', () => {
-    it('creates an Express app with required middleware', async () => {
-      const content = await readFile(
-        join(RECIPE_DIR, 'ingredients/templates/skeleton/server.mjs'),
-        'utf8',
-      );
-
-      // Core Express setup
-      expect(content).toContain('express()');
-      expect(content).toContain('app.listen');
-
-      // Uses express.static for serving built assets
-      expect(content).toContain('express.static');
+    it('creates an Express app with static file serving', () => {
+      expect(serverContent).toContain('express()');
+      expect(serverContent).toContain('app.listen');
+      expect(serverContent).toContain('express.static');
     });
 
-    it('handles port-in-use error with fallback', async () => {
-      const content = await readFile(
-        join(RECIPE_DIR, 'ingredients/templates/skeleton/server.mjs'),
-        'utf8',
-      );
-
-      expect(content).toContain('EADDRINUSE');
+    it('handles port-in-use error with fallback', () => {
+      expect(serverContent).toContain('EADDRINUSE');
     });
 
     it('uses renderToPipeableStream for Node.js streaming', async () => {
-      const patchFiles = await import('node:fs/promises').then((fs) =>
-        fs.readdir(join(RECIPE_DIR, 'patches')),
-      );
-      const entryServerPatch = patchFiles.find((f) =>
-        f.startsWith('entry.server.tsx'),
-      );
-      expect(entryServerPatch).toBeDefined();
-
+      const patchFile = findPatchFile('entry.server.tsx');
       const content = await readFile(
-        join(RECIPE_DIR, 'patches', entryServerPatch!),
+        join(RECIPE_DIR, 'patches', patchFile),
         'utf8',
       );
-
       expect(content).toContain('renderToPipeableStream');
     });
 
     it('removes oxygen plugin from vite config', async () => {
-      const patchFiles = await import('node:fs/promises').then((fs) =>
-        fs.readdir(join(RECIPE_DIR, 'patches')),
-      );
-      const viteConfigPatch = patchFiles.find((f) =>
-        f.startsWith('vite.config.ts'),
-      );
-      expect(viteConfigPatch).toBeDefined();
-
+      const patchFile = findPatchFile('vite.config.ts');
       const content = await readFile(
-        join(RECIPE_DIR, 'patches', viteConfigPatch!),
+        join(RECIPE_DIR, 'patches', patchFile),
         'utf8',
       );
-
-      // The patch should remove the oxygen plugin import
-      expect(content).toContain('-');
       expect(content).toContain('oxygen');
     });
   });
 
   describe('session management', () => {
-    it('includes AppSession class with cookie session storage', async () => {
-      const content = await readFile(
-        join(RECIPE_DIR, 'ingredients/templates/skeleton/server.mjs'),
-        'utf8',
-      );
-
-      expect(content).toContain('AppSession');
-      expect(content).toContain('createCookieSessionStorage');
+    it('includes AppSession class with cookie session storage', () => {
+      expect(serverContent).toContain('AppSession');
+      expect(serverContent).toContain('createCookieSessionStorage');
     });
 
-    it('AppSession implements required session methods', async () => {
-      const content = await readFile(
-        join(RECIPE_DIR, 'ingredients/templates/skeleton/server.mjs'),
-        'utf8',
-      );
-
+    it('AppSession implements required session methods', () => {
       const requiredMethods = [
-        'get',
-        'set',
-        'destroy',
-        'flash',
-        'unset',
-        'commit',
+        'get(',
+        'set(',
+        'destroy(',
+        'flash(',
+        'unset(',
+        'commit(',
       ];
       for (const method of requiredMethods) {
-        expect(content).toContain(method);
+        expect(serverContent).toContain(method);
       }
     });
   });

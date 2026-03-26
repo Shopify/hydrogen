@@ -54,7 +54,7 @@ export function createRickAndMortyClient({
   };
 }
 
-function minifyQuery<T extends string>(string: T) {
+export function minifyQuery<T extends string>(string: T) {
   return string
     .replace(/\s*#.*$/gm, '') // Remove GQL comments
     .replace(/\s+/gm, ' ') // Minify spaces
