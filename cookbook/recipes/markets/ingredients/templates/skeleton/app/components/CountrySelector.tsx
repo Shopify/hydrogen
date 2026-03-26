@@ -72,7 +72,7 @@ function LocaleForm({locale}: {locale: Locale}) {
 
   return (
     <Form method="POST" action={action}>
-      <input type="hidden" name="redirectTo" value={newPath} tabIndex={-1} />
+      <input type="hidden" name="redirectTo" value={newPath} />
       <input
         type="hidden"
         name="cartFormInput"
