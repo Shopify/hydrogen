@@ -227,7 +227,6 @@ export function createCustomerAccountClient({
       const gqlErrors = errors?.map(
         ({message, ...rest}) =>
           new GraphQLError(message, {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ...(rest as any),
             clientOperation: `customerAccount.${errorOptions.type}`,
             requestId: response.headers.get('x-request-id'),
