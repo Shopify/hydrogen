@@ -1077,7 +1077,7 @@
     "src/cache/strategies.ts": {
       "filePath": "src/cache/strategies.ts",
       "name": "GenerateCacheControlHeaderGeneratedType",
-      "description": "",
+      "description": "Accepts a CachingStrategy object and returns a string with the corresponding `cache-control` header.",
       "isPublicDocs": true,
       "params": [
         {
@@ -1100,7 +1100,7 @@
     "src/cache/strategies.ts": {
       "filePath": "src/cache/strategies.ts",
       "name": "CacheNoneGeneratedType",
-      "description": "",
+      "description": "The CacheNone() strategy instructs caches not to store any data.",
       "isPublicDocs": true,
       "params": [],
       "returns": {
@@ -1116,7 +1116,7 @@
     "src/cache/strategies.ts": {
       "filePath": "src/cache/strategies.ts",
       "name": "CacheShortGeneratedType",
-      "description": "",
+      "description": "The CacheShort() strategy instructs caches to store data for 1 second, and `staleWhileRevalidate` data for an additional 9 seconds.",
       "isPublicDocs": true,
       "params": [
         {
@@ -1140,7 +1140,7 @@
     "src/cache/strategies.ts": {
       "filePath": "src/cache/strategies.ts",
       "name": "CacheLongGeneratedType",
-      "description": "",
+      "description": "The CacheLong() strategy instructs caches to store data for 1 hour, and `staleWhileRevalidate` data for an additional 23 hours.",
       "isPublicDocs": true,
       "params": [
         {
@@ -1164,7 +1164,7 @@
     "src/cache/strategies.ts": {
       "filePath": "src/cache/strategies.ts",
       "name": "CacheCustomGeneratedType",
-      "description": "",
+      "description": "Allows you to create your own caching strategy using any of the options available in a CachingStrategy object.",
       "isPublicDocs": true,
       "params": [
         {
@@ -1341,7 +1341,7 @@
     "src/cart/queries/cartGetDefault.ts": {
       "filePath": "src/cart/queries/cartGetDefault.ts",
       "name": "CartGetDefaultGeneratedType",
-      "description": "",
+      "description": "Creates a function that returns a cart.",
       "isPublicDocs": true,
       "params": [
         {
@@ -1629,7 +1629,7 @@
     "src/cart/queries/cartCreateDefault.ts": {
       "filePath": "src/cart/queries/cartCreateDefault.ts",
       "name": "CartCreateDefaultGeneratedType",
-      "description": "",
+      "description": "Creates a function that accepts an object of CartInput and returns a new cart.",
       "isPublicDocs": true,
       "params": [
         {
@@ -1815,7 +1815,7 @@
     "src/cart/queries/cartLinesAddDefault.ts": {
       "filePath": "src/cart/queries/cartLinesAddDefault.ts",
       "name": "CartLinesAddDefaultGeneratedType",
-      "description": "",
+      "description": "Creates a function that accepts an array of CartLineInput and adds the line items to a cart.",
       "isPublicDocs": true,
       "params": [
         {
@@ -1876,7 +1876,7 @@
     "src/cart/queries/cartLinesUpdateDefault.ts": {
       "filePath": "src/cart/queries/cartLinesUpdateDefault.ts",
       "name": "CartLinesUpdateDefaultGeneratedType",
-      "description": "",
+      "description": "Creates a function that accepts an array of CartLineUpdateInput and updates the line items in a cart.",
       "isPublicDocs": true,
       "params": [
         {
@@ -1937,7 +1937,7 @@
     "src/cart/queries/cartLinesRemoveDefault.ts": {
       "filePath": "src/cart/queries/cartLinesRemoveDefault.ts",
       "name": "CartLinesRemoveDefaultGeneratedType",
-      "description": "",
+      "description": "Creates a function that removes lines from the cart.",
       "isPublicDocs": true,
       "params": [
         {
@@ -1989,7 +1989,7 @@
     "src/cart/queries/cartDiscountCodesUpdateDefault.ts": {
       "filePath": "src/cart/queries/cartDiscountCodesUpdateDefault.ts",
       "name": "CartDiscountCodesUpdateDefaultGeneratedType",
-      "description": "",
+      "description": "Creates a function that accepts an array of discount codes and updates them on a cart.",
       "isPublicDocs": true,
       "params": [
         {
@@ -2041,7 +2041,7 @@
     "src/cart/queries/cartBuyerIdentityUpdateDefault.ts": {
       "filePath": "src/cart/queries/cartBuyerIdentityUpdateDefault.ts",
       "name": "CartBuyerIdentityUpdateDefaultGeneratedType",
-      "description": "",
+      "description": "Creates a function that accepts an object of CartBuyerIdentityInput and updates the buyer identity of a cart.",
       "isPublicDocs": true,
       "params": [
         {
@@ -2102,7 +2102,7 @@
     "src/cart/queries/cartNoteUpdateDefault.ts": {
       "filePath": "src/cart/queries/cartNoteUpdateDefault.ts",
       "name": "CartNoteUpdateDefaultGeneratedType",
-      "description": "",
+      "description": "Creates a function that updates the note on a cart.",
       "isPublicDocs": true,
       "params": [
         {
@@ -2154,7 +2154,7 @@
     "src/cart/queries/cartSelectedDeliveryOptionsUpdateDefault.ts": {
       "filePath": "src/cart/queries/cartSelectedDeliveryOptionsUpdateDefault.ts",
       "name": "CartSelectedDeliveryOptionsUpdateDefaultGeneratedType",
-      "description": "",
+      "description": "Creates a function that accepts an object of CartSelectedDeliveryOptionInput and updates the selected delivery option of a cart.",
       "isPublicDocs": true,
       "params": [
         {
@@ -2215,7 +2215,7 @@
     "src/cart/queries/cartAttributesUpdateDefault.ts": {
       "filePath": "src/cart/queries/cartAttributesUpdateDefault.ts",
       "name": "CartAttributesUpdateDefaultGeneratedType",
-      "description": "",
+      "description": "Creates a function that accepts an array of AttributeInput and updates attributes to a cart.",
       "isPublicDocs": true,
       "params": [
         {
@@ -2276,7 +2276,7 @@
     "src/cart/queries/cartMetafieldsSetDefault.ts": {
       "filePath": "src/cart/queries/cartMetafieldsSetDefault.ts",
       "name": "CartMetafieldsSetDefaultGeneratedType",
-      "description": "",
+      "description": "Creates a function that accepts an array of CartMetafieldsSetInput without `ownerId` and sets the metafields on a cart.",
       "isPublicDocs": true,
       "params": [
         {
@@ -2337,7 +2337,7 @@
     "src/cart/queries/cartMetafieldDeleteDefault.ts": {
       "filePath": "src/cart/queries/cartMetafieldDeleteDefault.ts",
       "name": "CartMetafieldDeleteDefaultGeneratedType",
-      "description": "",
+      "description": "Creates a function that deletes a metafield from the cart.",
       "isPublicDocs": true,
       "params": [
         {
@@ -2453,7 +2453,7 @@
     "src/cart/queries/cartGiftCardCodesRemoveDefault.ts": {
       "filePath": "src/cart/queries/cartGiftCardCodesRemoveDefault.ts",
       "name": "CartGiftCardCodesRemoveDefaultGeneratedType",
-      "description": "",
+      "description": "Creates a function that removes gift card codes from the cart.",
       "isPublicDocs": true,
       "params": [
         {
@@ -2507,7 +2507,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CartHandlerOptionsForDocs",
       "value": "{\n  /**\n   * A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.\n   */\n  getCartId: () => string | undefined;\n  /**\n   * A function that sets the cart ID.\n   */\n  setCartId: (cartId: string) => Headers;\n  /**\n   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/utilities/createstorefrontclient).\n   */\n  storefront: Storefront;\n  /**\n   * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartMutateFragment?: string;\n  /**\n   * The cart query fragment used by `cart.get()`.\n   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or override existing methods for your cart API instance.\n   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) in the documentation.\n   */\n  customMethods?: TCustomMethods;\n\n  /**\n   * Buyer identity. Default buyer identity is passed to cartCreate.\n   */\n  buyerIdentity?: CartBuyerIdentityInput;\n}",
-      "description": "",
+      "description": "Creates an API that can be used to interact with the cart.",
       "isPublicDocs": true,
       "members": [
         {
@@ -2639,7 +2639,7 @@
     "src/cart/cartGetIdDefault.ts": {
       "filePath": "src/cart/cartGetIdDefault.ts",
       "name": "CartGetIdDefaultGeneratedType",
-      "description": "",
+      "description": "Creates a function that returns the cart id from request header cookie.",
       "isPublicDocs": true,
       "params": [
         {
@@ -2662,7 +2662,7 @@
     "src/cart/cartSetIdDefault.ts": {
       "filePath": "src/cart/cartSetIdDefault.ts",
       "name": "CartSetIdDefaultGeneratedType",
-      "description": "",
+      "description": "Creates a function that returns a header with a Set-Cookie on the cart ID.",
       "isPublicDocs": true,
       "params": [
         {
@@ -2755,7 +2755,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "HydrogenContextOptionsForDocs",
       "value": "{\n  /* Environment variables from the fetch function */\n  env: TEnv;\n  /* Request object from the fetch function */\n  request: CrossRuntimeRequest;\n  /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */\n  cache?: Cache;\n  /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */\n  waitUntil?: WaitUntil;\n  /** Any cookie implementation. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */\n  session: TSession;\n  /** An object containing a country code and language code */\n  i18n?: TI18n;\n  /** Whether it should print GraphQL errors automatically. Defaults to true */\n  logErrors?: boolean | ((error?: Error) => boolean);\n  /** Storefront client overwrite options. See documentation for createStorefrontClient for more information. */\n  storefront?: {\n    /** Storefront API headers. Default values set from request header.  */\n    headers?: StorefrontHeaders;\n    /** Override the Storefront API version for this query. */\n    apiVersion?: string;\n  };\n  /** Customer Account client overwrite options. See documentation for createCustomerAccountClient for more information. */\n  customerAccount?: {\n    /** Override the version of the API */\n    apiVersion?: string;\n    /** This is the route in your app that authorizes the customer after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */\n    authUrl?: string;\n    /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */\n    customAuthStatusHandler?: () => Response | NonNullable<unknown> | null;\n    /** Deprecated. `unstableB2b` is now stable. Please remove. */\n    unstableB2b?: boolean;\n  };\n  /** Cart handler overwrite options. See documentation for createCartHandler for more information. */\n  cart?: {\n    /** A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`. */\n    getId?: () => string | undefined;\n    /** A function that sets the cart ID. */\n    setId?: (cartId: string) => Headers;\n    /**\n     * The cart query fragment used by `cart.get()`.\n     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n     */\n    queryFragment?: string;\n    /**\n     * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n     */\n    mutateFragment?: string;\n    /**\n     * Define custom methods or override existing methods for your cart API instance.\n     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) in the documentation.\n     */\n    customMethods?: Record<string, Function>;\n  };\n  /**\n   * Buyer identity. Default buyer identity is passed to cartCreate.\n   */\n  buyerIdentity?: CartBuyerIdentityInput;\n}",
-      "description": "",
+      "description": "The `createHydrogenContext` function creates the context object required to use Hydrogen utilities throughout a Hydrogen project.",
       "isPublicDocs": true,
       "members": [
         {
@@ -2852,7 +2852,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "CreateRequestHandlerOptionsForDocs",
       "value": "{\n  /** React Router's server build */\n  build: ServerBuild;\n  /** React Router's mode */\n  mode?: string;\n  /**\n   * Function to provide the load context for each request.\n   * It must contain Hydrogen's storefront client instance\n   * for other Hydrogen utilities to work properly.\n   */\n  getLoadContext?: (request: Request) => Promise<unknown> | unknown;\n  /**\n   * Whether to include the `powered-by` header in responses.\n   * @default true\n   */\n  poweredByHeader?: boolean;\n  /**\n   * Collect tracking information from subrequests such as cookies\n   * and forward them to the browser. Disable this if you are not\n   * using Hydrogen's built-in analytics.\n   * @default true\n   */\n  collectTrackingInformation?: boolean;\n  /**\n   * Whether to proxy standard routes such as `/api/.../graphql.json` (Storefront API).\n   * You can disable this if you are handling these routes yourself. Ensure that\n   * the proxy works if you rely on Hydrogen's built-in behaviors such as analytics.\n   * @default true\n   */\n  proxyStandardRoutes?: boolean;\n}",
-      "description": "",
+      "description": "Creates a request handler for Hydrogen apps. It wraps React Router's request handler and adds Hydrogen-specific functionality such as proxying Storefront API requests and collecting tracking information.",
       "isPublicDocs": true,
       "members": [
         {
@@ -2912,7 +2912,7 @@
     "src/cache/create-with-cache.ts": {
       "filePath": "src/cache/create-with-cache.ts",
       "name": "CreateWithCacheGeneratedType",
-      "description": "",
+      "description": "Creates a utility function that caches data fetched from a loader or query.",
       "isPublicDocs": true,
       "params": [
         {
@@ -3120,7 +3120,7 @@
     "src/csp/csp.ts": {
       "filePath": "src/csp/csp.ts",
       "name": "UseNonceGeneratedType",
-      "description": "",
+      "description": "The `useNonce` hook returns the content security policy nonce. Use the hook to manually add a nonce to third-party scripts.",
       "isPublicDocs": true,
       "params": [],
       "returns": {
@@ -3136,7 +3136,7 @@
     "src/csp/csp.ts": {
       "filePath": "src/csp/csp.ts",
       "name": "CreateContentSecurityPolicyGeneratedType",
-      "description": "",
+      "description": "Create a content security policy to secure your application. The default content security policy includes exclusions for cdn.shopify.com and specific Shopify domains.",
       "isPublicDocs": true,
       "params": [
         {
@@ -3584,7 +3584,7 @@
     "src/pagination/Pagination.ts": {
       "filePath": "src/pagination/Pagination.ts",
       "name": "GetPaginationVariablesGeneratedType",
-      "description": "",
+      "description": "The `getPaginationVariables` function is used with the `<Pagination>` component to generate the variables needed to fetch paginated data from the Storefront API.",
       "isPublicDocs": true,
       "params": [
         {
@@ -4173,7 +4173,7 @@
     "src/product/VariantSelector.ts": {
       "filePath": "src/product/VariantSelector.ts",
       "name": "GetSelectedProductOptions",
-      "description": "",
+      "description": "A function type that extracts selected product options from a Request's search parameters.",
       "isPublicDocs": true,
       "params": [
         {
@@ -4196,7 +4196,7 @@
     "src/routing/graphiql.ts": {
       "filePath": "src/routing/graphiql.ts",
       "name": "GraphiQLLoader",
-      "description": "",
+      "description": "A loader function type for the GraphiQL route in Hydrogen apps.",
       "isPublicDocs": true,
       "params": [
         {
@@ -4318,7 +4318,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "GetSeoMetaTypeForDocs",
       "value": "{\n  /** `getSeoMeta` takes an arbitrary number of configuration object parameters. Values in each object are overwritten based on the object order. \\`jsonLd\\` properties are preserved between each configuration object. */\n  seoInputs: SeoConfig[];\n}",
-      "description": "",
+      "description": "Generate a Remix meta array from one or more SEO configuration objects. Pass SEO configuration for the parent route(s) and the current route to preserve meta tags across routes.",
       "isPublicDocs": true,
       "members": [
         {
@@ -4645,7 +4645,7 @@
     "src/seo/seo.ts": {
       "filePath": "src/seo/seo.ts",
       "name": "SeoProps",
-      "description": "",
+      "description": "The `<Seo />` component renders SEO meta tags in the document `head`. Add it to your `root.jsx` before the `<Meta />` and `<Link />` components. SEO metadata is set on a per-route basis using route loaders.",
       "isPublicDocs": true,
       "members": [
         {
@@ -4814,7 +4814,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "AnalyticsProviderProps",
       "value": "{\n  /** React children to render. */\n  children?: ReactNode;\n  /** The cart or cart promise to track for cart analytics. When there is a difference between the state of the cart, `AnalyticsProvider` will trigger a `cart_updated` event. It will also produce `product_added_to_cart` and `product_removed_from_cart` based on cart line quantity and cart line id changes. */\n  cart: Promise<CartReturn | null> | CartReturn | null;\n  /** An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */\n  canTrack?: () => boolean;\n  /** An optional custom payload to pass to all events. e.g language/locale/currency. */\n  customData?: Record<string, unknown>;\n  /** The shop configuration required to publish analytics events to Shopify. Use [`getShopAnalytics`](/docs/api/hydrogen/utilities/getshopanalytics). */\n  shop: Promise<ShopAnalytics | null> | ShopAnalytics | null;\n  /** The customer privacy consent configuration and options. */\n  consent: Consent;\n  /** @deprecated Disable throwing errors when required props are missing. */\n  disableThrowOnError?: boolean;\n  /** The domain scope of the cookie set with `useShopifyCookies`. **/\n  cookieDomain?: string;\n}",
-      "description": "",
+      "description": "Provides a context for tracking page views and cart events to send as analytics data to Shopify. This component is integrated with the Customer Privacy API for consent management.",
       "isPublicDocs": true,
       "members": [
         {
@@ -5143,7 +5143,7 @@
     "src/analytics-manager/AnalyticsProvider.tsx": {
       "filePath": "src/analytics-manager/AnalyticsProvider.tsx",
       "name": "GetShopAnalyticsGeneratedType",
-      "description": "",
+      "description": "A function that queries for shop required analytics data to be used in the Analytics.Provider component.",
       "isPublicDocs": true,
       "params": [
         {
@@ -5193,7 +5193,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "AnalyticsContextValueForDoc",
       "value": "{\n  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */\n  canTrack?: () => boolean;\n  /** The current cart state. You can overwrite the type by passing a generic */\n  cart?: UserCart | DefaultCart;\n  /** The custom data passed in from the `AnalyticsProvider`. */\n  customData?: Record<string, unknown>;\n  /** The previous cart state. You can overwrite the type by passing a generic */\n  prevCart?: UserCart | DefaultCart;\n  /** A function to publish an analytics event. */\n  publish?: AnalyticsContextPublishForDoc;\n  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/hooks/useanalytics#example-useanalytics.register). */\n  register?: (key: string) => {ready: () => void};\n  /** The shop configuration required to publish events to Shopify. */\n  shop?: Promise<ShopAnalytics | null> | ShopAnalytics | null;\n  /** A function to subscribe to analytics events. */\n  subscribe?: AnalyticsContextSubscribeForDoc;\n}",
-      "description": "",
+      "description": "The analytics context value returned by the `useAnalytics` hook, providing access to cart state, tracking consent, and publish/subscribe methods.",
       "isPublicDocs": true,
       "members": [
         {
@@ -6129,7 +6129,7 @@
     "src/analytics-manager/AnalyticsView.tsx": {
       "filePath": "src/analytics-manager/AnalyticsView.tsx",
       "name": "AnalyticsProductViewGeneratedType",
-      "description": "",
+      "description": "Publishes a `product_viewed` event to the Analytics.Provider component.",
       "isPublicDocs": true,
       "params": [
         {
@@ -6178,7 +6178,7 @@
     "src/analytics-manager/AnalyticsView.tsx": {
       "filePath": "src/analytics-manager/AnalyticsView.tsx",
       "name": "AnalyticsCollectionViewGeneratedType",
-      "description": "",
+      "description": "Publishes a `collection_viewed` event to the Analytics.Provider component.",
       "isPublicDocs": true,
       "params": [
         {
@@ -6227,7 +6227,7 @@
     "src/analytics-manager/AnalyticsView.tsx": {
       "filePath": "src/analytics-manager/AnalyticsView.tsx",
       "name": "AnalyticsCartViewGeneratedType",
-      "description": "",
+      "description": "Publishes a `cart_viewed` event to the Analytics.Provider component.",
       "isPublicDocs": true,
       "params": [
         {
@@ -6277,7 +6277,7 @@
     "src/analytics-manager/AnalyticsView.tsx": {
       "filePath": "src/analytics-manager/AnalyticsView.tsx",
       "name": "AnalyticsSearchViewGeneratedType",
-      "description": "",
+      "description": "Publishes a `search_viewed` event to the Analytics.Provider component.",
       "isPublicDocs": true,
       "params": [
         {
@@ -6327,7 +6327,7 @@
     "src/analytics-manager/AnalyticsView.tsx": {
       "filePath": "src/analytics-manager/AnalyticsView.tsx",
       "name": "AnalyticsCustomViewGeneratedType",
-      "description": "",
+      "description": "Publishes a custom page view event to the Analytics.Provider component. The `type` prop must be preceded by `custom_`.",
       "isPublicDocs": true,
       "params": [
         {
@@ -6384,7 +6384,7 @@
     "src/cart/CartForm.tsx": {
       "filePath": "src/cart/CartForm.tsx",
       "name": "CartFormGeneratedType",
-      "description": "",
+      "description": "A Remix/React Router form that removes the complexity of building cart functionality.",
       "isPublicDocs": true,
       "params": [
         {
@@ -6973,7 +6973,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ScriptProps",
       "value": "HydrogenScriptProps & ScriptAttributes",
-      "description": "",
+      "description": "Props for the Script component, which adds third-party scripts with automatic nonce support from the content security policy.",
       "isPublicDocs": true
     }
   },
@@ -9206,7 +9206,7 @@
     "src/customer-privacy/ShopifyCustomerPrivacy.tsx": {
       "filePath": "src/customer-privacy/ShopifyCustomerPrivacy.tsx",
       "name": "UseCustomerPrivacyGeneratedType",
-      "description": "",
+      "description": "A hook that loads the Customer Privacy API and sets up consent management for your Hydrogen storefront.",
       "isPublicDocs": true,
       "params": [
         {
@@ -9229,7 +9229,7 @@
     "src/optimistic-ui/optimistic-ui.tsx": {
       "filePath": "src/optimistic-ui/optimistic-ui.tsx",
       "name": "UseOptimisticDataGeneratedType",
-      "description": "",
+      "description": "Gets the latest optimistic data with matching optimistic id from actions. Use `OptimisticInput` to add optimistic data to a form action.",
       "isPublicDocs": true,
       "params": [
         {
@@ -9252,7 +9252,7 @@
     "src/optimistic-ui/optimistic-ui.tsx": {
       "filePath": "src/optimistic-ui/optimistic-ui.tsx",
       "name": "OptimisticInputGeneratedType",
-      "description": "",
+      "description": "Creates a form input for optimistic UI updates. Use `useOptimisticData` to update the UI with the latest optimistic data from actions.",
       "isPublicDocs": true,
       "params": [
         {
@@ -9449,7 +9449,7 @@
     "src/cart/optimistic/useOptimisticCart.tsx": {
       "filePath": "src/cart/optimistic/useOptimisticCart.tsx",
       "name": "UseOptimisticCartGeneratedType",
-      "description": "",
+      "description": "The `useOptimisticCart` hook takes an existing cart object, processes all pending cart actions, and locally mutates the cart with optimistic state. An optimistic cart makes cart actions immediately render in the browser while actions sync to the server.",
       "isPublicDocs": true,
       "params": [
         {
@@ -12893,7 +12893,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "FlattenConnectionReturnForDoc",
       "value": "unknown[]",
-      "description": "",
+      "description": "The return type of the `flattenConnection` utility: a flat array of nodes extracted from a Storefront API connection object.",
       "isPublicDocs": true
     }
   },
@@ -13013,7 +13013,7 @@
       "syntaxKind": "TypeAliasDeclaration",
       "name": "ShopifyCookies",
       "value": "{\n  /** Shopify unique user token: Value of `_shopify_y` cookie. */\n  [SHOPIFY_Y]: string;\n  /** Shopify session token: Value of `_shopify_s` cookie. */\n  [SHOPIFY_S]: string;\n}",
-      "description": "",
+      "description": "The Shopify analytics cookie values containing the unique user token and session token.",
       "isPublicDocs": true,
       "members": [
         {
@@ -13917,7 +13917,7 @@
     "../hydrogen-react/src/optionValueDecoder.ts": {
       "filePath": "../hydrogen-react/src/optionValueDecoder.ts",
       "name": "IsOptionValueCombinationInEncodedVariant",
-      "description": "",
+      "description": "A function type that determines whether a given option value combination is present in an encoded variant field from the Storefront API.",
       "isPublicDocs": true,
       "params": [
         {
