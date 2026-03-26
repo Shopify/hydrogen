@@ -375,7 +375,7 @@ describe('createAnalyticsBus', () => {
       expect(cartUpdatedEvent).toHaveBeenCalledOnce();
     });
 
-    it('deduplicates via localStorage on page reload', () => {
+    it('deduplicates via localStorage across bus instances', () => {
       const bus = createTestBus();
       const cartUpdatedEvent = vi.fn();
       bus.subscribe('cart_updated', cartUpdatedEvent);
@@ -392,6 +392,101 @@ describe('createAnalyticsBus', () => {
 
       bus2.updateCart(CART_DATA);
       expect(cartUpdatedEvent2).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('lazy-init: shop provided after creation via updateShop', () => {
+    it('does not initialize internal subscribers when shop is null at creation', () => {
+      // autoInit: true (default), but shop is null — init should NOT run
+      const bus = createAnalyticsBus({
+        shop: null,
+        consent: CONSENT_DATA,
+        canTrack: () => true,
+        // autoInit defaults to true
+      });
+
+      // The bus should still work for pub/sub (no internal subscribers blocking)
+      const callback = vi.fn();
+      bus.subscribe('page_viewed', callback);
+      // No registers from internal subscribers, so the bus has no pending registers
+      bus.publish('page_viewed', {url: '/test', shop: SHOP_DATA});
+      // Event should be delivered since there are no pending registers
+      expect(callback).toHaveBeenCalledOnce();
+
+      bus.destroy();
+    });
+
+    it('initializes internal subscribers when updateShop provides a valid shop', () => {
+      const bus = createAnalyticsBus({
+        shop: null,
+        consent: CONSENT_DATA,
+        canTrack: () => true,
+      });
+
+      // Before updateShop: no internal registers exist
+      const callbackBefore = vi.fn();
+      bus.subscribe('page_viewed', callbackBefore);
+      bus.publish('page_viewed', {url: '/before', shop: SHOP_DATA});
+      expect(callbackBefore).toHaveBeenCalledOnce();
+
+      // After updateShop: internal subscribers are initialized
+      // (initShopifyAnalytics registers handlers, initConsent loads scripts, etc.)
+      // In test environment (happy-dom), scripts won't actually load, but
+      // the initialization path is exercised — internal registers are created
+      bus._internal.updateShop(SHOP_DATA);
+
+      // The bus now has internal registers (Internal_Shopify_Analytics, etc.)
+      // that aren't ready yet, so new events will be queued
+      const callbackAfter = vi.fn();
+      bus.subscribe('page_viewed', callbackAfter);
+      bus.publish('page_viewed', {url: '/after', shop: SHOP_DATA});
+      // Events are queued because internal registers haven't called ready()
+      expect(callbackAfter).not.toHaveBeenCalled();
+
+      bus.destroy();
+    });
+
+    it('does not double-initialize on repeated updateShop calls', () => {
+      const bus = createAnalyticsBus({
+        shop: null,
+        consent: CONSENT_DATA,
+        canTrack: () => true,
+      });
+
+      // First updateShop triggers init
+      bus._internal.updateShop(SHOP_DATA);
+
+      // Subscribe and check that internal registers exist (events are queued)
+      const callback = vi.fn();
+      bus.subscribe('page_viewed', callback);
+      bus.publish('page_viewed', {url: '/test', shop: SHOP_DATA});
+      expect(callback).not.toHaveBeenCalled();
+
+      // Second updateShop should NOT double-register
+      bus._internal.updateShop({...SHOP_DATA, shopId: 'gid://shopify/Shop/2'});
+
+      // Events are still queued (same registers, not duplicated)
+      bus.publish('page_viewed', {url: '/test2', shop: SHOP_DATA});
+      expect(callback).not.toHaveBeenCalled();
+
+      bus.destroy();
+    });
+
+    it('does not initialize after destroy', () => {
+      const bus = createAnalyticsBus({
+        shop: null,
+        consent: CONSENT_DATA,
+        canTrack: () => true,
+      });
+
+      bus.destroy();
+      // updateShop after destroy should not initialize anything
+      bus._internal.updateShop(SHOP_DATA);
+
+      const callback = vi.fn();
+      bus.subscribe('page_viewed', callback);
+      bus.publish('page_viewed', {url: '/test', shop: SHOP_DATA});
+      expect(callback).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,4 +1,4 @@
-import {createStorefrontClient} from '@shopify/hydrogen-temp';
+import {createStorefrontClient, getShopAnalytics} from '@shopify/hydrogen-temp';
 import {HIDDEN_PRODUCT_TAG, TAGS} from 'lib/constants';
 import {
   unstable_cacheLife as cacheLife,
@@ -304,6 +304,7 @@ export async function getCollections(): Promise<Collection[]> {
     console.log('Skipping getCollections - Shopify not configured');
     return [
       {
+        id: '',
         handle: '',
         title: 'All',
         description: 'All products',
@@ -324,6 +325,7 @@ export async function getCollections(): Promise<Collection[]> {
   const shopifyCollections = removeEdgesAndNodes(data?.collections);
   const collections = [
     {
+      id: '',
       handle: '',
       title: 'All',
       description: 'All products',
@@ -455,6 +457,17 @@ export async function getProducts({
   );
 
   return reshapeProducts(removeEdgesAndNodes(data.products));
+}
+
+export async function getShopAnalyticsData() {
+  'use cache';
+  cacheTag(TAGS.shop);
+  cacheLife('days');
+
+  return getShopAnalytics({
+    storefront,
+    publicStorefrontId: process.env.PUBLIC_STOREFRONT_ID || '0',
+  });
 }
 
 // This is called from `app/api/revalidate.ts` so providers can control revalidation logic.

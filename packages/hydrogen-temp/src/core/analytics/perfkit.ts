@@ -3,15 +3,6 @@ import {parseGid} from './utils/parse-gid';
 import type {ShopAnalytics} from './types';
 import {AnalyticsEvent} from './events';
 
-declare global {
-  interface Window {
-    PerfKit: {
-      navigate: () => void;
-      setPageType: (pageType: string) => void;
-    };
-  }
-}
-
 const PERF_KIT_URL =
   'https://cdn.shopify.com/shopifycloud/perf-kit/shopify-perf-kit-spa.min.js';
 

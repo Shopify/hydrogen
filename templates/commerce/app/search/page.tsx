@@ -1,7 +1,9 @@
+import { SearchViewed } from "components/analytics/search-viewed";
 import Grid from "components/grid";
 import ProductGridItems from "components/layout/product-grid-items";
 import { defaultSort, sorting } from "lib/constants";
 import { getProducts } from "lib/shopify";
+import { Suspense } from "react";
 
 export const metadata = {
   title: "Search",
@@ -21,6 +23,11 @@ export default async function SearchPage(props: {
 
   return (
     <>
+      {searchValue && (
+        <Suspense>
+          <SearchViewed searchTerm={searchValue} />
+        </Suspense>
+      )}
       {searchValue ? (
         <p className="mb-4">
           {products.length === 0

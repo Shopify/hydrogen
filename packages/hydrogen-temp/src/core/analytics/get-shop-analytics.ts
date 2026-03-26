@@ -1,7 +1,7 @@
 import type {ShopAnalytics} from './types';
 
 type StorefrontClientLike = {
-  query: (query: string, options?: {cache?: unknown}) => Promise<any>;
+  query: (...args: any[]) => Promise<any>;
   CacheLong?: () => unknown;
 };
 

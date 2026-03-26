@@ -8,7 +8,6 @@ import {
   type MonorailPageViewPayload,
   type MonorailAddToCartPayload,
 } from './utils';
-import {parseGid} from './utils/parse-gid';
 import type {
   PageViewPayload,
   ProductViewPayload,
@@ -16,7 +15,6 @@ import type {
   SearchViewPayload,
   CartUpdatePayload,
   CartLineUpdatePayload,
-  AnalyticsCartLine,
   AnalyticsCart,
 } from './types';
 import {HYDROGEN_VERSION as version} from '../version';

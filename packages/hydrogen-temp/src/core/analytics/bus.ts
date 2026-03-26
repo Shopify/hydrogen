@@ -45,8 +45,13 @@ export function createAnalyticsBus(options: AnalyticsBusOptions): AnalyticsBus {
 
   function publish(event: string, payload: any): void {
     if (destroyed) return;
-    if (!canTrack()) return;
-    if (!areRegistersReady()) {
+    // Queue events when canTrack is false OR registers aren't ready.
+    // In the old Hydrogen system, the React re-render cycle would
+    // re-fire useEffect when canTrack flipped to true. The bus doesn't
+    // have that re-render signal, so we queue instead of dropping.
+    // Events drain when all registers call ready() (which happens
+    // after consent loads and canTrack becomes true).
+    if (!canTrack() || !areRegistersReady()) {
       waitForReadyQueue.set(event, payload);
       return;
     }
@@ -99,7 +104,7 @@ export function createAnalyticsBus(options: AnalyticsBusOptions): AnalyticsBus {
     return {
       ready: () => {
         registers[key] = true;
-        if (areRegistersReady() && waitForReadyQueue.size > 0) {
+        if (areRegistersReady() && canTrack() && waitForReadyQueue.size > 0) {
           waitForReadyQueue.forEach((queuePayload, queueEvent) => {
             publishEvent(queueEvent, queuePayload);
           });
@@ -115,7 +120,16 @@ export function createAnalyticsBus(options: AnalyticsBusOptions): AnalyticsBus {
     getCustomData: () => currentCustomData,
   });
 
-  if (autoInit && typeof window !== 'undefined' && shop) {
+  // Track whether internal subscribers have been initialized.
+  // Supports lazy init: if shop is null at creation but provided later via
+  // updateShop(), initialization runs at that point instead.
+  let internalSubscribersInitialized = false;
+
+  function initInternalSubscribers() {
+    if (internalSubscribersInitialized || destroyed) return;
+    if (!autoInit || typeof window === 'undefined' || !shop) return;
+
+    internalSubscribersInitialized = true;
     initShopifyAnalytics({subscribe, register, publish});
     initConsent({
       consent,
@@ -130,6 +144,9 @@ export function createAnalyticsBus(options: AnalyticsBusOptions): AnalyticsBus {
       if (shop) initPerfKit({shop, subscribe, register});
     });
   }
+
+  // Attempt init immediately (works when shop is provided at creation)
+  initInternalSubscribers();
 
   function destroy() {
     destroyed = true;
@@ -146,6 +163,9 @@ export function createAnalyticsBus(options: AnalyticsBusOptions): AnalyticsBus {
     _internal: {
       updateShop: (newShop: ShopAnalytics | null) => {
         shop = newShop;
+        // Lazy init: if shop was null at creation but is now provided,
+        // trigger internal subscriber initialization
+        initInternalSubscribers();
       },
       updateCustomData: (newData: Record<string, unknown> | undefined) => {
         currentCustomData = newData;

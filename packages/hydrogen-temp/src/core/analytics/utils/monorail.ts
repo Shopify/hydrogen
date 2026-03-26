@@ -329,7 +329,7 @@ function isLighthouseUserAgent(): boolean {
   return /Chrome-Lighthouse/.test(window.navigator.userAgent);
 }
 
-function sendToShopify(
+async function sendToShopify(
   events: MonorailEvent[],
   shopDomain?: string,
 ): Promise<void> {

@@ -1,3 +1,4 @@
+import { ProductViewed } from "components/analytics/product-viewed";
 import { GridTileImage } from "components/grid/tile";
 import Footer from "components/layout/footer";
 import { Gallery } from "components/product/gallery";
@@ -72,8 +73,26 @@ export default async function ProductPage(props: {
     },
   };
 
+  const firstVariant = product.variants[0];
+
   return (
     <>
+      {firstVariant && (
+        <Suspense>
+          <ProductViewed
+            product={{
+              id: product.id,
+              title: product.title,
+              vendor: product.vendor,
+            }}
+            variant={{
+              id: firstVariant.id,
+              title: firstVariant.title,
+              price: firstVariant.price.amount,
+            }}
+          />
+        </Suspense>
+      )}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

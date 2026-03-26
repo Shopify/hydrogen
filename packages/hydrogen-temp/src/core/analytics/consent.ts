@@ -96,6 +96,7 @@ export function initConsent(deps: ConsentDeps) {
   let shopifySubscriptionsReady = false;
   let privacyReady = false;
   let hasCalledReady = false;
+  let bannerApiLoaded = false;
 
   function checkReady() {
     if (hasCalledReady) return;
@@ -105,8 +106,36 @@ export function initConsent(deps: ConsentDeps) {
     }
   }
 
+  /**
+   * Auto-loads the privacy banner once both customerPrivacy and privacyBanner
+   * APIs are ready. Mirrors the old Hydrogen behavior in ShopifyCustomerPrivacy.tsx
+   * where `privacyBanner.loadBanner(config)` is called after APIs load.
+   *
+   * Also injects cachedConsent from server-timing so the consent-tracking-api
+   * has correct initial state rather than assuming no consent.
+   */
+  function maybeLoadBanner() {
+    if (!withPrivacyBanner || !bannerApiLoaded || !shopifySubscriptionsReady)
+      return;
+
+    const customerPrivacy = (window as any).Shopify?.customerPrivacy;
+    if (customerPrivacy && !customerPrivacy.cachedConsent) {
+      const trackingValues = getTrackingValues();
+      if (trackingValues.consent) {
+        customerPrivacy.cachedConsent = trackingValues.consent;
+      }
+    }
+
+    (window as any).privacyBanner?.loadBanner(config);
+  }
+
   const scriptUrl = withPrivacyBanner ? CONSENT_API_WITH_BANNER : CONSENT_API;
-  loadScript(scriptUrl, {attributes: {id: 'customer-privacy-api'}});
+  loadScript(scriptUrl, {attributes: {id: 'customer-privacy-api'}}).catch(
+    () => {
+      // Consent script failed to load (ad blocker, CDN down, test environment).
+      // The consent timeout (below) will still fire and unblock the bus.
+    },
+  );
 
   document.addEventListener('visitorConsentCollected', ((
     event: CustomEvent,
@@ -176,6 +205,7 @@ export function initConsent(deps: ConsentDeps) {
               };
               shopifySubscriptionsReady = true;
               checkReady();
+              maybeLoadBanner();
             }
           },
         });
@@ -185,6 +215,8 @@ export function initConsent(deps: ConsentDeps) {
 
   if (withPrivacyBanner) {
     let customPrivacyBanner: any = window.privacyBanner || undefined;
+    let bannerApiLoaded = false;
+
     Object.defineProperty(window, 'privacyBanner', {
       configurable: true,
       get() {
@@ -206,6 +238,9 @@ export function initConsent(deps: ConsentDeps) {
                 userConfig ? {...config, ...userConfig} : config,
               ),
           };
+
+          bannerApiLoaded = true;
+          maybeLoadBanner();
         }
       },
     });

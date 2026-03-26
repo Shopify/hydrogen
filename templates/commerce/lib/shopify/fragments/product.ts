@@ -7,6 +7,7 @@ const productFragment = /* GraphQL */ `
     handle
     availableForSale
     title
+    vendor
     description
     descriptionHtml
     options {

@@ -86,10 +86,12 @@ function createOrUpdateCartItem(
       id: variant.id,
       title: variant.title,
       selectedOptions: variant.selectedOptions,
+      price: variant.price,
       product: {
         id: product.id,
         handle: product.handle,
         title: product.title,
+        vendor: product.vendor,
         featuredImage: product.featuredImage,
       },
     },
@@ -120,6 +122,7 @@ function createEmptyCart(): Cart {
   return {
     id: undefined,
     checkoutUrl: "",
+    updatedAt: "",
     totalQuantity: 0,
     lines: [],
     cost: {
