@@ -17,6 +17,27 @@
 ❌ `page.waitForResponse(...)` - Implementation detail
 ❌ `page.locator('.css-class')` - Fragile selectors
 ❌ Adding test IDs when accessibility markup would work
+❌ Hardcoding dynamic store data names (e.g., collection titles from `sortKey: UPDATED_AT` queries)
+
+### Dynamic Store Data
+
+When testing homepage sections that query dynamic store data (e.g., "most recently updated collection"),
+assert **structure** rather than specific names:
+
+```typescript
+// GOOD: Assert that a featured collection heading exists (any h1)
+const featuredCollectionHeading = page.getByRole('heading', {level: 1});
+await expect(featuredCollectionHeading).toBeVisible();
+
+// AVOID: Hardcoding a collection name that depends on store state
+const featuredCollectionHeading = page.getByRole('heading', {
+  level: 1,
+  name: 'Winter Collection', // ❌ Breaks when a different collection is most recently updated
+});
+```
+
+Only assert specific entity names when navigating to a known entity by **handle** (a stable identifier),
+e.g., `/products/${KNOWN_PRODUCT.handle}`.
 
 ## Test Isolation
 
