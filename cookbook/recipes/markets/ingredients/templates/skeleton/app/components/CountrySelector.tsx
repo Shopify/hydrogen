@@ -20,6 +20,12 @@ export function CountrySelector() {
       role="group"
       aria-label="Country selector"
       style={{position: 'relative', cursor: 'pointer'}}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          e.currentTarget.removeAttribute('open');
+          e.currentTarget.querySelector('summary')?.focus();
+        }
+      }}
     >
       <summary aria-label={`Current locale: ${label}`}>{label}</summary>
       <div
@@ -67,11 +73,12 @@ function LocaleForm({locale}: {locale: Locale}) {
 
   return (
     <Form method="POST" action={action}>
-      <input type="hidden" name="redirectTo" value={newPath} />
+      <input type="hidden" name="redirectTo" value={newPath} tabIndex={-1} />
       <input
         type="hidden"
         name="cartFormInput"
         value={JSON.stringify(variables)}
+        tabIndex={-1}
       />
       <button type="submit">
         Switch to {locale.language}-{locale.country}

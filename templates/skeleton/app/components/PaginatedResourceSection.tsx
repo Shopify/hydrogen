@@ -24,6 +24,11 @@ export function PaginatedResourceSection<NodesType>({
 
         return (
           <div>
+            <div aria-live="polite" aria-atomic="true" className="sr-only">
+              {isLoading
+                ? 'Loading more items...'
+                : `Showing ${nodes.length} items`}
+            </div>
             <PreviousLink>
               {isLoading ? (
                 'Loading...'
@@ -33,7 +38,7 @@ export function PaginatedResourceSection<NodesType>({
                 </span>
               )}
             </PreviousLink>
-            {resourcesClassName ? (
+            {resourcesClassName || ariaLabel ? (
               <div
                 aria-label={ariaLabel}
                 className={resourcesClassName}

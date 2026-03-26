@@ -30,7 +30,7 @@ export function SectionStoreProfile(props: SectionStoreProfileFragment) {
           />
         )}
       </div>
-      {heading && <h1>{heading.value}</h1>}
+      {heading && <h2>{heading.value}</h2>}
       {description && <p>{description.value}</p>}
       <br />
       <div>

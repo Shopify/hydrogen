@@ -16,7 +16,7 @@ export function SectionStores(props: SectionStoresFragment) {
 
   return (
     <section className="section-stores" aria-label="Stores">
-      {heading?.value && <h1>{heading.value}</h1>}
+      {heading?.value && <h2>{heading.value}</h2>}
       <div
         className="stores"
         style={{
