@@ -18,6 +18,13 @@ setRecipeFixture({
  * - Navigation between store routes
  */
 
+function getStoreLinks(page: import('@playwright/test').Page) {
+  return page
+    .getByRole('region', {name: 'Stores'})
+    .getByRole('link')
+    .filter({has: page.locator('address')});
+}
+
 test.describe('Metaobjects Recipe', () => {
   test.describe('Homepage', () => {
     test('renders route content with metaobject sections', async ({page}) => {
@@ -32,7 +39,7 @@ test.describe('Metaobjects Recipe', () => {
       const sections = page.getByRole('region', {name: 'Route Content'});
       await expect(sections).toBeVisible();
 
-      const sectionElements = sections.locator('> *');
+      const sectionElements = sections.getByRole('region');
       const sectionCount = await sectionElements.count();
       expect(sectionCount).toBeGreaterThan(0);
     });
@@ -74,12 +81,7 @@ test.describe('Metaobjects Recipe', () => {
     });
 
     test('navigates to store detail and back', async ({page}) => {
-      const storeLinks = page
-        .getByRole('region', {name: 'Stores'})
-        .getByRole('link')
-        .filter({
-          has: page.locator('address'),
-        });
+      const storeLinks = getStoreLinks(page);
 
       await storeLinks.first().click();
       await expect(page).toHaveURL(/\/stores\/.+$/);
@@ -91,16 +93,11 @@ test.describe('Metaobjects Recipe', () => {
     });
 
     test('renders store profile details', async ({page}) => {
-      const storeLinks = page
-        .getByRole('region', {name: 'Stores'})
-        .getByRole('link')
-        .filter({
-          has: page.locator('address'),
-        });
+      const storeLinks = getStoreLinks(page);
 
       await storeLinks.first().click();
 
-      await page.waitForURL(/\/stores\//);
+      await expect(page).toHaveURL(/\/stores\//);
 
       const storeContent = page.getByRole('region', {name: 'Store Profile'});
       await expect(storeContent).toBeVisible();
@@ -160,35 +157,45 @@ test.describe('Metaobjects Recipe', () => {
     });
 
     test('store links are keyboard navigable', async ({page}) => {
-      const storeLinks = page
-        .getByRole('region', {name: 'Stores'})
-        .getByRole('link')
-        .filter({
-          has: page.locator('address'),
-        });
+      const storeLinks = getStoreLinks(page);
 
+      // Tab into the store links region and verify keyboard navigation
       const firstLink = storeLinks.first();
-      await firstLink.focus();
-      await expect(firstLink).toBeFocused();
+      await firstLink.scrollIntoViewIfNeeded();
+      await page.keyboard.press('Tab');
 
+      // Tab until a store link is focused (skip header/nav links)
+      const maxTabPresses = 20;
+      for (let i = 0; i < maxTabPresses; i++) {
+        if (await firstLink.evaluate((el) => el === document.activeElement)) {
+          break;
+        }
+        await page.keyboard.press('Tab');
+      }
+
+      await expect(firstLink).toBeFocused();
       await page.keyboard.press('Enter');
       await expect(page).toHaveURL(/\/stores\/.+$/);
     });
 
     test('back to stores link is keyboard accessible', async ({page}) => {
-      const storeLinks = page
-        .getByRole('region', {name: 'Stores'})
-        .getByRole('link')
-        .filter({
-          has: page.locator('address'),
-        });
+      const storeLinks = getStoreLinks(page);
 
       await storeLinks.first().click();
 
       const backLink = page.getByRole('link', {name: 'Back to Stores'});
-      await backLink.focus();
-      await expect(backLink).toBeFocused();
+      await backLink.scrollIntoViewIfNeeded();
+      await page.keyboard.press('Tab');
 
+      const maxTabPresses = 20;
+      for (let i = 0; i < maxTabPresses; i++) {
+        if (await backLink.evaluate((el) => el === document.activeElement)) {
+          break;
+        }
+        await page.keyboard.press('Tab');
+      }
+
+      await expect(backLink).toBeFocused();
       await page.keyboard.press('Enter');
       await expect(page).toHaveURL(/\/stores$/);
     });

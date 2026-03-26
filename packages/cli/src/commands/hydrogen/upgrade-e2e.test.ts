@@ -337,6 +337,14 @@ describe('upgrade e2e', () => {
       }
     }
 
+    const skippedCount = matrix.length - testedCount;
+    console.log(
+      `Tested ${testedCount}/${matrix.length} upgrade paths` +
+        (skippedCount > 0
+          ? `, ${skippedCount} skipped due to missing scaffolds`
+          : ''),
+    );
+
     if (testedCount === 0 && matrix.length > 0) {
       throw new Error(
         `No upgrade paths could be tested — all ${matrix.length} matrix entries failed to ` +
@@ -491,6 +499,30 @@ async function testUpgrade(
         if (!isReinstalled) {
           expect(upgradedPackageJson.dependencies?.[dep]).toBeUndefined();
           expect(upgradedPackageJson.devDependencies?.[dep]).toBeUndefined();
+        }
+      }
+    }
+
+    // Verify cumulative intermediate dependencies are applied (not just toRelease).
+    // This exercises the core getCumulativeRelease logic for multi-version jumps.
+    for (const intermediateRelease of intermediateReleases) {
+      for (const [dep, expectedVersion] of Object.entries(
+        intermediateRelease.dependencies ?? {},
+      )) {
+        // Only verify if not overridden by a later release (toRelease wins)
+        if (toRelease.dependencies?.[dep]) continue;
+
+        const isRemoved = toRelease.removeDependencies?.includes(dep);
+        if (isRemoved) continue;
+
+        const actualVersion = upgradedPackageJson.dependencies?.[dep];
+        if (actualVersion) {
+          validateDependencyVersion(
+            actualVersion,
+            expectedVersion,
+            dep,
+            `cumulative dependency from ${intermediateRelease.version}`,
+          );
         }
       }
     }

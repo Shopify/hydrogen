@@ -1,5 +1,6 @@
 import {test, expect, setRecipeFixture} from '../../fixtures';
 import {CartUtil} from '../../fixtures/cart-utils';
+import {KNOWN_PRODUCT as KNOWN_REGULAR_PRODUCT} from '../../fixtures/known-products';
 
 setRecipeFixture({
   recipeName: 'subscriptions',
@@ -17,11 +18,6 @@ setRecipeFixture({
 const KNOWN_SUBSCRIPTION_PRODUCT = {
   handle: 'shopify-wax',
   name: 'Shopify Wax (Subscription)',
-} as const;
-
-const KNOWN_REGULAR_PRODUCT = {
-  handle: 'the-ascend',
-  name: 'The Ascend',
 } as const;
 
 test.describe('Subscriptions Recipe', () => {
