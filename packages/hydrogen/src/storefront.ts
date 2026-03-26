@@ -7,6 +7,7 @@ import {
   SHOPIFY_VISIT_TOKEN_HEADER,
   type StorefrontClientProps,
 } from '@shopify/hydrogen-react';
+import type {WritableDeep} from 'type-fest';
 import {fetchWithServerCache} from './cache/server-fetch';
 import {
   SDK_VARIANT_HEADER,
@@ -460,7 +461,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     const gqlErrors = errors?.map(
       ({message, ...rest}) =>
         new GraphQLError(message, {
-          ...(rest as any),
+          ...(rest as WritableDeep<typeof rest>),
           clientOperation: `storefront.${errorOptions.type}`,
           requestId: response.headers.get('x-request-id'),
           queryVariables,

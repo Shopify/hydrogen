@@ -1,4 +1,5 @@
 import type {GenericVariables} from '@shopify/hydrogen-codegen';
+import type {WritableDeep} from 'type-fest';
 import {
   DEFAULT_CUSTOMER_API_VERSION,
   CUSTOMER_ACCOUNT_SESSION_KEY,
@@ -227,7 +228,7 @@ export function createCustomerAccountClient({
       const gqlErrors = errors?.map(
         ({message, ...rest}) =>
           new GraphQLError(message, {
-            ...(rest as any),
+            ...(rest as WritableDeep<typeof rest>),
             clientOperation: `customerAccount.${errorOptions.type}`,
             requestId: response.headers.get('x-request-id'),
             queryVariables: variables,
