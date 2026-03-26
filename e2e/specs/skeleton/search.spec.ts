@@ -7,6 +7,23 @@ const SEARCH_TERM = 'snowboard';
 
 test.describe('Search', () => {
   test.describe('Basic Search', () => {
+    test('renders search results without console errors', async ({page}) => {
+      const consoleErrors: string[] = [];
+      page.on('console', (msg) => {
+        if (msg.type() === 'error') {
+          consoleErrors.push(msg.text());
+        }
+      });
+
+      await page.goto(`/search?q=${SEARCH_TERM}`);
+
+      await expect(
+        page.getByRole('heading', {level: 2, name: 'Products'}),
+      ).toBeVisible();
+
+      expect(consoleErrors).toHaveLength(0);
+    });
+
     test('displays search heading and form', async ({page}) => {
       await page.goto('/search');
 
