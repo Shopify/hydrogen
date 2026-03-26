@@ -1,5 +1,6 @@
 import {useFetchers} from 'react-router';
 
+/** @publicDocs */
 export function useOptimisticData<T>(identifier: string) {
   const fetchers = useFetchers();
   const data: Record<string, unknown> = {};
@@ -34,6 +35,7 @@ export type OptimisticInputProps = {
   data: Record<string, unknown>;
 };
 
+/** @publicDocs */
 export function OptimisticInput({id, data}: OptimisticInputProps) {
   return (
     <>

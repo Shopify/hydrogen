@@ -209,5 +209,9 @@ function richTextToString(
 }
 
 // This is only for documentation purposes, and it is not used in the code.
+/**
+ * The `RichText` component renders a metafield of type `rich_text_field`. By default the rendered output uses semantic HTML tags. Customize how nodes are rendered with the `components` prop.
+ * @publicDocs
+ */
 export type RichTextPropsForDocs<AsType extends React.ElementType = 'div'> =
   RichTextPropsBase<AsType>;

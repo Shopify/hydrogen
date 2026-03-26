@@ -32,6 +32,7 @@ export type CartDeliveryAddressesRemoveFunction = (
  *   "gid://shopify/<objectName>/10079785100"
  * ],
  * { someOptionalParam: 'value' });
+ * @publicDocs
  */
 export function cartDeliveryAddressesRemoveDefault(
   options: CartQueryOptions,
