@@ -18,6 +18,10 @@ setRecipeFixture({
  * - Navigation between store routes
  */
 
+// Upper bound on Tab presses needed to reach content past header/nav links.
+// Both keyboard tests use this to avoid infinite loops while tabbing to targets.
+const MAX_TAB_PRESSES_TO_REACH_CONTENT = 20;
+
 function getStoreLinks(page: import('@playwright/test').Page) {
   return page
     .getByRole('region', {name: 'Stores'})
@@ -161,11 +165,10 @@ test.describe('Metaobjects Recipe', () => {
 
       // Tab into the store links region and verify keyboard navigation
       const firstLink = storeLinks.first();
-      await firstLink.scrollIntoViewIfNeeded();
       await page.keyboard.press('Tab');
 
       // Tab until a store link is focused (skip header/nav links)
-      const maxTabPresses = 20;
+      const maxTabPresses = MAX_TAB_PRESSES_TO_REACH_CONTENT;
       for (let i = 0; i < maxTabPresses; i++) {
         if (await firstLink.evaluate((el) => el === document.activeElement)) {
           break;
@@ -184,10 +187,9 @@ test.describe('Metaobjects Recipe', () => {
       await storeLinks.first().click();
 
       const backLink = page.getByRole('link', {name: 'Back to Stores'});
-      await backLink.scrollIntoViewIfNeeded();
       await page.keyboard.press('Tab');
 
-      const maxTabPresses = 20;
+      const maxTabPresses = MAX_TAB_PRESSES_TO_REACH_CONTENT;
       for (let i = 0; i < maxTabPresses; i++) {
         if (await backLink.evaluate((el) => el === document.activeElement)) {
           break;

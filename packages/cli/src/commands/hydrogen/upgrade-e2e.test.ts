@@ -509,11 +509,8 @@ async function testUpgrade(
       for (const [dep, expectedVersion] of Object.entries(
         intermediateRelease.dependencies ?? {},
       )) {
-        // Only verify if not overridden by a later release (toRelease wins)
         if (toRelease.dependencies?.[dep]) continue;
-
-        const isRemoved = toRelease.removeDependencies?.includes(dep);
-        if (isRemoved) continue;
+        if (toRelease.removeDependencies?.includes(dep)) continue;
 
         const actualVersion = upgradedPackageJson.dependencies?.[dep];
         if (actualVersion) {
@@ -522,6 +519,23 @@ async function testUpgrade(
             expectedVersion,
             dep,
             `cumulative dependency from ${intermediateRelease.version}`,
+          );
+        }
+      }
+
+      for (const [dep, expectedVersion] of Object.entries(
+        intermediateRelease.devDependencies ?? {},
+      )) {
+        if (toRelease.devDependencies?.[dep]) continue;
+        if (toRelease.removeDevDependencies?.includes(dep)) continue;
+
+        const actualVersion = upgradedPackageJson.devDependencies?.[dep];
+        if (actualVersion) {
+          validateDependencyVersion(
+            actualVersion,
+            expectedVersion,
+            dep,
+            `cumulative devDependency from ${intermediateRelease.version}`,
           );
         }
       }
