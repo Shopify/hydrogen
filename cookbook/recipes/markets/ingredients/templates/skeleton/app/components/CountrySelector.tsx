@@ -21,7 +21,7 @@ export function CountrySelector() {
       style={{position: 'relative', cursor: 'pointer'}}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
-          e.currentTarget.removeAttribute('open');
+          e.currentTarget.open = false;
           e.currentTarget.querySelector('summary')?.focus();
         }
       }}
