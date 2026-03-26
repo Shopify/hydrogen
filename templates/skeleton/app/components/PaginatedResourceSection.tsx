@@ -24,11 +24,7 @@ export function PaginatedResourceSection<NodesType>({
 
         return (
           <div>
-            <div aria-live="polite" aria-atomic="true" className="sr-only">
-              {isLoading
-                ? 'Loading more items...'
-                : `Showing ${nodes.length} items`}
-            </div>
+            <PaginationStatus isLoading={isLoading} itemCount={nodes.length} />
             <PreviousLink>
               {isLoading ? (
                 'Loading...'
@@ -62,5 +58,35 @@ export function PaginatedResourceSection<NodesType>({
         );
       }}
     </Pagination>
+  );
+}
+
+/**
+ * Announces loading state and item count changes to screen readers.
+ * Renders empty on initial mount to avoid an unprompted announcement.
+ */
+function PaginationStatus({
+  isLoading,
+  itemCount,
+}: {
+  isLoading: boolean;
+  itemCount: number;
+}) {
+  const [message, setMessage] = React.useState('');
+  const prevCountRef = React.useRef(itemCount);
+
+  React.useEffect(() => {
+    if (isLoading) {
+      setMessage('Loading more items...');
+    } else if (itemCount !== prevCountRef.current) {
+      setMessage(`Showing ${itemCount} items`);
+      prevCountRef.current = itemCount;
+    }
+  }, [isLoading, itemCount]);
+
+  return (
+    <div aria-live="polite" aria-atomic="true" className="sr-only">
+      {message}
+    </div>
   );
 }

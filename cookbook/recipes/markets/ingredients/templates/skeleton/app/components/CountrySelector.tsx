@@ -17,7 +17,6 @@ export function CountrySelector() {
 
   return (
     <details
-      role="group"
       aria-label="Country selector"
       style={{position: 'relative', cursor: 'pointer'}}
       onKeyDown={(e) => {
@@ -78,7 +77,6 @@ function LocaleForm({locale}: {locale: Locale}) {
         type="hidden"
         name="cartFormInput"
         value={JSON.stringify(variables)}
-        tabIndex={-1}
       />
       <button type="submit">
         Switch to {locale.language}-{locale.country}
