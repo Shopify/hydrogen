@@ -1,7 +1,7 @@
-import productFragment from "../fragments/product";
-import seoFragment from "../fragments/seo";
+import PRODUCT_FRAGMENT from '../fragments/product';
+import SEO_FRAGMENT from '../fragments/seo';
 
-const collectionFragment = /* GraphQL */ `
+const COLLECTION_FRAGMENT = `#graphql
   fragment collection on Collection {
     handle
     title
@@ -11,19 +11,19 @@ const collectionFragment = /* GraphQL */ `
     }
     updatedAt
   }
-  ${seoFragment}
-`;
+  ${SEO_FRAGMENT}
+` as const;
 
-export const getCollectionQuery = /* GraphQL */ `
+export const getCollectionQuery = `#graphql
   query getCollection($handle: String!) {
     collection(handle: $handle) {
       ...collection
     }
   }
-  ${collectionFragment}
-`;
+  ${COLLECTION_FRAGMENT}
+` as const;
 
-export const getCollectionsQuery = /* GraphQL */ `
+export const getCollectionsQuery = `#graphql
   query getCollections {
     collections(first: 100, sortKey: TITLE) {
       edges {
@@ -33,10 +33,10 @@ export const getCollectionsQuery = /* GraphQL */ `
       }
     }
   }
-  ${collectionFragment}
-`;
+  ${COLLECTION_FRAGMENT}
+` as const;
 
-export const getCollectionProductsQuery = /* GraphQL */ `
+export const getCollectionProductsQuery = `#graphql
   query getCollectionProducts(
     $handle: String!
     $sortKey: ProductCollectionSortKeys
@@ -52,5 +52,5 @@ export const getCollectionProductsQuery = /* GraphQL */ `
       }
     }
   }
-  ${productFragment}
-`;
+  ${PRODUCT_FRAGMENT}
+` as const;

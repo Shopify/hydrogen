@@ -1,10 +1,10 @@
-import cartFragment from "../fragments/cart";
+import CART_FRAGMENT from '../fragments/cart';
 
-export const getCartQuery = /* GraphQL */ `
+export const getCartQuery = `#graphql
   query getCart($cartId: ID!) {
     cart(id: $cartId) {
       ...cart
     }
   }
-  ${cartFragment}
-`;
+  ${CART_FRAGMENT}
+` as const;

@@ -1,8 +1,8 @@
-const seoFragment = /* GraphQL */ `
+const SEO_FRAGMENT = `#graphql
   fragment seo on SEO {
     description
     title
   }
-`;
+` as const;
 
-export default seoFragment;
+export default SEO_FRAGMENT;

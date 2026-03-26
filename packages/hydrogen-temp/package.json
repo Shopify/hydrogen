@@ -29,7 +29,12 @@
       "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.js"
     },
-    "./storefront.schema.json": "./storefront.schema.json"
+    "./storefront.schema.json": "./storefront.schema.json",
+    "./codegen": {
+      "types": "./dist/codegen/index.d.ts",
+      "import": "./dist/codegen/index.js",
+      "default": "./dist/codegen/index.js"
+    }
   },
   "scripts": {
     "build": "rimraf dist && tsup",
@@ -61,8 +66,10 @@
     "vitest": "^3.2.4",
     "graphql": "^16.12.0",
     "@graphql-codegen/cli": "^5.0.4",
+    "@graphql-codegen/plugin-helpers": "^5.1.1",
     "@graphql-codegen/typescript": "^4.1.3",
     "@graphql-codegen/introspection": "^4.0.3",
-    "@graphql-codegen/add": "^5.0.3"
+    "@graphql-codegen/add": "^5.0.3",
+    "@shopify/graphql-codegen": "^0.1.0"
   }
 }

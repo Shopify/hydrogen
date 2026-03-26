@@ -95,52 +95,29 @@ const { storefront } = createStorefrontClient({
 });
 ```
 
-## Setting Up GraphQL Codegen (Bonus)
+## GraphQL Codegen
 
-To get fully typed queries and mutations, set up `@graphql-codegen`:
+The commerce template uses `.graphqlrc.ts` (the `graphql-config` standard) with `@graphql-codegen/cli`.
 
-1. Install dependencies:
-```bash
-npm install -D @graphql-codegen/cli @shopify/hydrogen-codegen
-```
+Run with: `pnpm codegen`
 
-2. Create `codegen.ts`:
-```ts
-import { CodegenConfig } from "@graphql-codegen/cli";
-import { storefrontApiCustomScalars } from "@shopify/hydrogen-temp";
+### How it differs from skeleton
 
-const config: CodegenConfig = {
-  overwrite: true,
-  schema: {
-    "https://hydrogen-preview.myshopify.com/api/2026-01/graphql.json": {
-      headers: {
-        "X-Shopify-Storefront-Access-Token": "3b580e70970c4528da70c98e097c2fa0",
-        "content-type": "application/json",
-      },
-    },
-  },
-  generates: {
-    "lib/shopify/storefront-api-types.d.ts": {
-      plugins: [
-        {
-          typescript: {
-            useTypeImports: true,
-            defaultScalarType: "unknown",
-            enumsAsTypes: true,
-            scalars: storefrontApiCustomScalars,
-          },
-        },
-      ],
-    },
-  },
-};
+| Aspect | Skeleton | Commerce |
+|---|---|---|
+| CLI runner | `shopify hydrogen codegen` (Hydrogen CLI) | `graphql-codegen` (`@graphql-codegen/cli` directly) |
+| Config complexity | Minimal — only `schema` + `documents`; CLI injects preset | Full — must specify `preset`, `pluckConfig`, `overwrite`, output path in `extensions.codegen` |
+| Codegen package | `@shopify/hydrogen-codegen` | `@shopify/hydrogen-temp/codegen` |
+| Customer Account API | Active `customer` project | Commented-out placeholder (hydrogen-temp doesn't support it yet) |
 
-export default config;
-```
+### Why not use the Hydrogen CLI?
 
-3. Run codegen:
-```bash
-npx graphql-codegen --config codegen.ts
-```
+The CLI's fallback codegen path hardcodes `@shopify/hydrogen-codegen`'s preset, which generates `declare module '@shopify/hydrogen'`. Since this template uses `@shopify/hydrogen-temp`, the module augmentation wouldn't match.
 
-This generates full TypeScript types from the Storefront API schema, replacing the hand-written types in `lib/shopify/types.ts`.
+### Post-rename simplification opportunity
+
+Once `hydrogen-temp` is renamed to `@shopify/hydrogen`, the mismatch disappears. At that point, commerce could:
+1. Switch to `shopify hydrogen codegen` like skeleton
+2. Simplify `.graphqlrc.ts` to skeleton's minimal style (just `schema` + `documents`, drop the `extensions.codegen` block)
+
+This is optional — the current explicit `graphql-codegen` approach will also work after rename with just a package name change in `.graphqlrc.ts`.

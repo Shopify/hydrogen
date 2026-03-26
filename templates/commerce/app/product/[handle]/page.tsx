@@ -1,24 +1,24 @@
-import { GridTileImage } from "components/grid/tile";
-import Footer from "components/layout/footer";
-import { Gallery } from "components/product/gallery";
-import { ProductDescription } from "components/product/product-description";
-import { HIDDEN_PRODUCT_TAG } from "lib/constants";
-import { getProduct, getProductRecommendations } from "lib/shopify";
-import type { Image } from "lib/shopify/types";
-import type { Metadata } from "next";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import {GridTileImage} from 'components/grid/tile';
+import Footer from 'components/layout/footer';
+import {Gallery} from 'components/product/gallery';
+import {ProductDescription} from 'components/product/product-description';
+import {HIDDEN_PRODUCT_TAG} from 'lib/constants';
+import {getProduct, getProductRecommendations} from 'lib/shopify';
+import type {Image} from 'lib/shopify/types';
+import type {Metadata} from 'next';
+import Link from 'next/link';
+import {notFound} from 'next/navigation';
+import {Suspense} from 'react';
 
 export async function generateMetadata(props: {
-  params: Promise<{ handle: string }>;
+  params: Promise<{handle: string}>;
 }): Promise<Metadata> {
   const params = await props.params;
   const product = await getProduct(params.handle);
 
   if (!product) return notFound();
 
-  const { url, width, height, altText: alt } = product.featuredImage || {};
+  const {url, width, height, altText: alt} = product.featuredImage || {};
   const indexable = !product.tags.includes(HIDDEN_PRODUCT_TAG);
 
   return {
@@ -37,9 +37,9 @@ export async function generateMetadata(props: {
           images: [
             {
               url,
-              width,
-              height,
-              alt,
+              width: width ?? undefined,
+              height: height ?? undefined,
+              alt: alt ?? undefined,
             },
           ],
         }
@@ -48,7 +48,7 @@ export async function generateMetadata(props: {
 }
 
 export default async function ProductPage(props: {
-  params: Promise<{ handle: string }>;
+  params: Promise<{handle: string}>;
 }) {
   const params = await props.params;
   const product = await getProduct(params.handle);
@@ -56,16 +56,16 @@ export default async function ProductPage(props: {
   if (!product) return notFound();
 
   const productJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
+    '@context': 'https://schema.org',
+    '@type': 'Product',
     name: product.title,
     description: product.description,
-    image: product.featuredImage.url,
+    image: product.featuredImage?.url,
     offers: {
-      "@type": "AggregateOffer",
+      '@type': 'AggregateOffer',
       availability: product.availableForSale
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
       priceCurrency: product.priceRange.minVariantPrice.currencyCode,
       highPrice: product.priceRange.maxVariantPrice.amount,
       lowPrice: product.priceRange.minVariantPrice.amount,
@@ -91,7 +91,7 @@ export default async function ProductPage(props: {
               <Gallery
                 images={product.images.slice(0, 5).map((image: Image) => ({
                   src: image.url,
-                  altText: image.altText,
+                  altText: image.altText ?? '',
                 }))}
               />
             </Suspense>
@@ -110,7 +110,7 @@ export default async function ProductPage(props: {
   );
 }
 
-async function RelatedProducts({ id }: { id: string }) {
+async function RelatedProducts({id}: {id: string}) {
   const relatedProducts = await getProductRecommendations(id);
 
   if (!relatedProducts.length) return null;
@@ -136,7 +136,7 @@ async function RelatedProducts({ id }: { id: string }) {
                   amount: product.priceRange.maxVariantPrice.amount,
                   currencyCode: product.priceRange.maxVariantPrice.currencyCode,
                 }}
-                src={product.featuredImage?.url}
+                src={product.featuredImage?.url ?? ''}
                 fill
                 sizes="(min-width: 1024px) 20vw, (min-width: 768px) 25vw, (min-width: 640px) 33vw, (min-width: 475px) 50vw, 100vw"
               />

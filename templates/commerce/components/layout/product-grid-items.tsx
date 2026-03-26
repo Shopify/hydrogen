@@ -1,13 +1,9 @@
-import Grid from "components/grid";
-import { GridTileImage } from "components/grid/tile";
-import { Product } from "lib/shopify/types";
-import Link from "next/link";
+import Grid from 'components/grid';
+import {GridTileImage} from 'components/grid/tile';
+import {Product} from 'lib/shopify/types';
+import Link from 'next/link';
 
-export default function ProductGridItems({
-  products,
-}: {
-  products: Product[];
-}) {
+export default function ProductGridItems({products}: {products: Product[]}) {
   return (
     <>
       {products.map((product) => (
@@ -24,7 +20,7 @@ export default function ProductGridItems({
                 amount: product.priceRange.maxVariantPrice.amount,
                 currencyCode: product.priceRange.maxVariantPrice.currencyCode,
               }}
-              src={product.featuredImage?.url}
+              src={product.featuredImage?.url ?? ''}
               fill
               sizes="(min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
             />

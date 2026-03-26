@@ -1,4 +1,4 @@
-export const getMenuQuery = /* GraphQL */ `
+export const getMenuQuery = `#graphql
   query getMenu($handle: String!) {
     menu(handle: $handle) {
       items {
@@ -7,4 +7,4 @@ export const getMenuQuery = /* GraphQL */ `
       }
     }
   }
-`;
+` as const;

@@ -1,4 +1,8 @@
 import {createStorefrontClient} from '@shopify/hydrogen-temp';
+import type {
+  ProductCollectionSortKeys,
+  ProductSortKeys,
+} from '@shopify/hydrogen-temp/storefront-api-types';
 import {HIDDEN_PRODUCT_TAG, TAGS} from 'lib/constants';
 import {
   unstable_cacheLife as cacheLife,
@@ -26,7 +30,7 @@ import {
   getProductRecommendationsQuery,
   getProductsQuery,
 } from './queries/product';
-import {
+import type {
   Cart,
   Collection,
   Connection,
@@ -34,23 +38,9 @@ import {
   Menu,
   Page,
   Product,
-  ShopifyAddToCartOperation,
   ShopifyCart,
-  ShopifyCartOperation,
   ShopifyCollection,
-  ShopifyCollectionOperation,
-  ShopifyCollectionProductsOperation,
-  ShopifyCollectionsOperation,
-  ShopifyCreateCartOperation,
-  ShopifyMenuOperation,
-  ShopifyPageOperation,
-  ShopifyPagesOperation,
   ShopifyProduct,
-  ShopifyProductOperation,
-  ShopifyProductRecommendationsOperation,
-  ShopifyProductsOperation,
-  ShopifyRemoveFromCartOperation,
-  ShopifyUpdateCartOperation,
 } from './types';
 
 const isConfigured = !!process.env.SHOPIFY_STORE_DOMAIN;
@@ -158,60 +148,48 @@ const reshapeProducts = (products: ShopifyProduct[]) => {
 };
 
 export async function createCart(): Promise<Cart> {
-  const data =
-    await storefront.mutate<ShopifyCreateCartOperation['data']>(
-      createCartMutation,
-    );
+  const data = await storefront.mutate(createCartMutation);
 
-  return reshapeCart(data.cartCreate.cart);
+  return reshapeCart(data.cartCreate!.cart!);
 }
 
 export async function addToCart(
   lines: {merchandiseId: string; quantity: number}[],
 ): Promise<Cart> {
   const cartId = (await cookies()).get('cartId')?.value!;
-  const data = await storefront.mutate<ShopifyAddToCartOperation['data']>(
-    addToCartMutation,
-    {
-      variables: {
-        cartId,
-        lines,
-      },
+  const data = await storefront.mutate(addToCartMutation, {
+    variables: {
+      cartId,
+      lines,
     },
-  );
-  return reshapeCart(data.cartLinesAdd.cart);
+  });
+  return reshapeCart(data.cartLinesAdd!.cart!);
 }
 
 export async function removeFromCart(lineIds: string[]): Promise<Cart> {
   const cartId = (await cookies()).get('cartId')?.value!;
-  const data = await storefront.mutate<ShopifyRemoveFromCartOperation['data']>(
-    removeFromCartMutation,
-    {
-      variables: {
-        cartId,
-        lineIds,
-      },
+  const data = await storefront.mutate(removeFromCartMutation, {
+    variables: {
+      cartId,
+      lineIds,
     },
-  );
+  });
 
-  return reshapeCart(data.cartLinesRemove.cart);
+  return reshapeCart(data.cartLinesRemove!.cart!);
 }
 
 export async function updateCart(
   lines: {id: string; merchandiseId: string; quantity: number}[],
 ): Promise<Cart> {
   const cartId = (await cookies()).get('cartId')?.value!;
-  const data = await storefront.mutate<ShopifyUpdateCartOperation['data']>(
-    editCartItemsMutation,
-    {
-      variables: {
-        cartId,
-        lines,
-      },
+  const data = await storefront.mutate(editCartItemsMutation, {
+    variables: {
+      cartId,
+      lines,
     },
-  );
+  });
 
-  return reshapeCart(data.cartLinesUpdate.cart);
+  return reshapeCart(data.cartLinesUpdate!.cart!);
 }
 
 export async function getCart(): Promise<Cart | undefined> {
@@ -225,11 +203,7 @@ export async function getCart(): Promise<Cart | undefined> {
     return undefined;
   }
 
-  const data = await storefront.query<ShopifyCartOperation['data']>(
-    getCartQuery,
-    {variables: {cartId}},
-  );
-
+  const data = await storefront.query(getCartQuery, {variables: {cartId}});
   // Old carts becomes `null` when you checkout.
   if (!data.cart) {
     return undefined;
@@ -245,14 +219,15 @@ export async function getCollection(
   cacheTag(TAGS.collections);
   cacheLife('days');
 
-  const data = await storefront.query<ShopifyCollectionOperation['data']>(
-    getCollectionQuery,
-    {
-      variables: {
-        handle,
-      },
+  const data = await storefront.query(getCollectionQuery, {
+    variables: {
+      handle,
     },
-  );
+  });
+
+  if (!data.collection) {
+    return undefined;
+  }
 
   return reshapeCollection(data.collection);
 }
@@ -277,13 +252,13 @@ export async function getCollectionProducts({
     return [];
   }
 
-  const data = await storefront.query<
-    ShopifyCollectionProductsOperation['data']
-  >(getCollectionProductsQuery, {
+  const data = await storefront.query(getCollectionProductsQuery, {
     variables: {
       handle: collection,
       reverse,
-      sortKey: sortKey === 'CREATED_AT' ? 'CREATED' : sortKey,
+      sortKey: (sortKey === 'CREATED_AT'
+        ? 'CREATED'
+        : sortKey) as ProductCollectionSortKeys,
     },
   });
 
@@ -317,10 +292,7 @@ export async function getCollections(): Promise<Collection[]> {
     ];
   }
 
-  const data =
-    await storefront.query<ShopifyCollectionsOperation['data']>(
-      getCollectionsQuery,
-    );
+  const data = await storefront.query(getCollectionsQuery);
   const shopifyCollections = removeEdgesAndNodes(data?.collections);
   const collections = [
     {
@@ -354,19 +326,16 @@ export async function getMenu(handle: string): Promise<Menu[]> {
     return [];
   }
 
-  const data = await storefront.query<ShopifyMenuOperation['data']>(
-    getMenuQuery,
-    {
-      variables: {
-        handle,
-      },
+  const data = await storefront.query(getMenuQuery, {
+    variables: {
+      handle,
     },
-  );
+  });
 
   return (
-    data?.menu?.items.map((item: {title: string; url: string}) => ({
+    data?.menu?.items.map((item) => ({
       title: item.title,
-      path: item.url
+      path: (item.url ?? '')
         .replace(domain, '')
         .replace('/collections', '/search')
         .replace('/pages', ''),
@@ -375,17 +344,13 @@ export async function getMenu(handle: string): Promise<Menu[]> {
 }
 
 export async function getPage(handle: string): Promise<Page> {
-  const data = await storefront.query<ShopifyPageOperation['data']>(
-    getPageQuery,
-    {variables: {handle}},
-  );
+  const data = await storefront.query(getPageQuery, {variables: {handle}});
 
-  return data.pageByHandle;
+  return data.pageByHandle!;
 }
 
 export async function getPages(): Promise<Page[]> {
-  const data =
-    await storefront.query<ShopifyPagesOperation['data']>(getPagesQuery);
+  const data = await storefront.query(getPagesQuery);
 
   return removeEdgesAndNodes(data.pages);
 }
@@ -400,14 +365,15 @@ export async function getProduct(handle: string): Promise<Product | undefined> {
     return undefined;
   }
 
-  const data = await storefront.query<ShopifyProductOperation['data']>(
-    getProductQuery,
-    {
-      variables: {
-        handle,
-      },
+  const data = await storefront.query(getProductQuery, {
+    variables: {
+      handle,
     },
-  );
+  });
+
+  if (!data.product) {
+    return undefined;
+  }
 
   return reshapeProduct(data.product, false);
 }
@@ -419,15 +385,13 @@ export async function getProductRecommendations(
   cacheTag(TAGS.products);
   cacheLife('days');
 
-  const data = await storefront.query<
-    ShopifyProductRecommendationsOperation['data']
-  >(getProductRecommendationsQuery, {
+  const data = await storefront.query(getProductRecommendationsQuery, {
     variables: {
       productId,
     },
   });
 
-  return reshapeProducts(data.productRecommendations);
+  return reshapeProducts(data.productRecommendations ?? []);
 }
 
 export async function getProducts({
@@ -437,22 +401,19 @@ export async function getProducts({
 }: {
   query?: string;
   reverse?: boolean;
-  sortKey?: string;
+  sortKey?: ProductSortKeys;
 }): Promise<Product[]> {
   'use cache';
   cacheTag(TAGS.products);
   cacheLife('days');
 
-  const data = await storefront.query<ShopifyProductsOperation['data']>(
-    getProductsQuery,
-    {
-      variables: {
-        query,
-        reverse,
-        sortKey,
-      },
+  const data = await storefront.query(getProductsQuery, {
+    variables: {
+      query,
+      reverse,
+      sortKey,
     },
-  );
+  });
 
   return reshapeProducts(removeEdgesAndNodes(data.products));
 }

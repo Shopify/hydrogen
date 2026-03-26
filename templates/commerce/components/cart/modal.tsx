@@ -1,28 +1,28 @@
-"use client";
+'use client';
 
-import clsx from "clsx";
-import { Dialog, Transition } from "@headlessui/react";
-import { ShoppingCartIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import LoadingDots from "components/loading-dots";
-import Price from "components/price";
-import { DEFAULT_OPTION } from "lib/constants";
-import { createUrl } from "lib/utils";
-import Image from "next/image";
-import Link from "next/link";
-import { Fragment, useEffect, useRef, useState } from "react";
-import { useFormStatus } from "react-dom";
-import { createCartAndSetCookie, redirectToCheckout } from "./actions";
-import { useCart } from "./cart-context";
-import { DeleteItemButton } from "./delete-item-button";
-import { EditItemQuantityButton } from "./edit-item-quantity-button";
-import OpenCart from "./open-cart";
+import clsx from 'clsx';
+import {Dialog, Transition} from '@headlessui/react';
+import {ShoppingCartIcon, XMarkIcon} from '@heroicons/react/24/outline';
+import LoadingDots from 'components/loading-dots';
+import Price from 'components/price';
+import {DEFAULT_OPTION} from 'lib/constants';
+import {createUrl} from 'lib/utils';
+import Image from 'next/image';
+import Link from 'next/link';
+import {Fragment, useEffect, useRef, useState} from 'react';
+import {useFormStatus} from 'react-dom';
+import {createCartAndSetCookie, redirectToCheckout} from './actions';
+import {useCart} from './cart-context';
+import {DeleteItemButton} from './delete-item-button';
+import {EditItemQuantityButton} from './edit-item-quantity-button';
+import OpenCart from './open-cart';
 
 type MerchandiseSearchParams = {
   [key: string]: string;
 };
 
 export default function CartModal() {
-  const { cart, updateCartItem } = useCart();
+  const {cart, updateCartItem} = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const quantityRef = useRef(cart?.totalQuantity);
   const openCart = () => setIsOpen(true);
@@ -103,7 +103,7 @@ export default function CartModal() {
                           {} as MerchandiseSearchParams;
 
                         item.merchandise.selectedOptions.forEach(
-                          ({ name, value }) => {
+                          ({name, value}) => {
                             if (value !== DEFAULT_OPTION) {
                               merchandiseSearchParams[name.toLowerCase()] =
                                 value;
@@ -136,11 +136,12 @@ export default function CartModal() {
                                     height={64}
                                     alt={
                                       item.merchandise.product.featuredImage
-                                        .altText ||
+                                        ?.altText ||
                                       item.merchandise.product.title
                                     }
                                     src={
-                                      item.merchandise.product.featuredImage.url
+                                      item.merchandise.product.featuredImage
+                                        ?.url ?? ''
                                     }
                                   />
                                 </div>
@@ -198,8 +199,11 @@ export default function CartModal() {
                       <p>Taxes</p>
                       <Price
                         className="text-right text-base text-black dark:text-white"
-                        amount={cart.cost.totalTaxAmount.amount}
-                        currencyCode={cart.cost.totalTaxAmount.currencyCode}
+                        amount={cart.cost.totalTaxAmount?.amount ?? '0.0'}
+                        currencyCode={
+                          cart.cost.totalTaxAmount?.currencyCode ??
+                          cart.cost.totalAmount.currencyCode
+                        }
                       />
                     </div>
                     <div className="mb-3 flex items-center justify-between border-b border-neutral-200 pb-1 pt-1 dark:border-neutral-700">
@@ -228,12 +232,12 @@ export default function CartModal() {
   );
 }
 
-function CloseCart({ className }: { className?: string }) {
+function CloseCart({className}: {className?: string}) {
   return (
     <div className="relative flex h-11 w-11 items-center justify-center rounded-md border border-neutral-200 text-black transition-colors dark:border-neutral-700 dark:text-white">
       <XMarkIcon
         className={clsx(
-          "h-6 transition-all ease-in-out hover:scale-110",
+          'h-6 transition-all ease-in-out hover:scale-110',
           className,
         )}
       />
@@ -242,7 +246,7 @@ function CloseCart({ className }: { className?: string }) {
 }
 
 function CheckoutButton() {
-  const { pending } = useFormStatus();
+  const {pending} = useFormStatus();
 
   return (
     <button
@@ -250,7 +254,7 @@ function CheckoutButton() {
       type="submit"
       disabled={pending}
     >
-      {pending ? <LoadingDots className="bg-white" /> : "Proceed to Checkout"}
+      {pending ? <LoadingDots className="bg-white" /> : 'Proceed to Checkout'}
     </button>
   );
 }

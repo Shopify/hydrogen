@@ -1,6 +1,6 @@
-import seoFragment from "../fragments/seo";
+import SEO_FRAGMENT from '../fragments/seo';
 
-const pageFragment = /* GraphQL */ `
+const PAGE_FRAGMENT = `#graphql
   fragment page on Page {
     ... on Page {
       id
@@ -15,19 +15,19 @@ const pageFragment = /* GraphQL */ `
       updatedAt
     }
   }
-  ${seoFragment}
-`;
+  ${SEO_FRAGMENT}
+` as const;
 
-export const getPageQuery = /* GraphQL */ `
+export const getPageQuery = `#graphql
   query getPage($handle: String!) {
     pageByHandle(handle: $handle) {
       ...page
     }
   }
-  ${pageFragment}
-`;
+  ${PAGE_FRAGMENT}
+` as const;
 
-export const getPagesQuery = /* GraphQL */ `
+export const getPagesQuery = `#graphql
   query getPages {
     pages(first: 100) {
       edges {
@@ -37,5 +37,5 @@ export const getPagesQuery = /* GraphQL */ `
       }
     }
   }
-  ${pageFragment}
-`;
+  ${PAGE_FRAGMENT}
+` as const;

@@ -1,0 +1,13 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "include": ["**/*.ts", "../../globals.d.ts"],
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "../../dist/codegen",
+    "rootDir": ".",
+    "moduleResolution": "bundler",
+    "types": ["node"]
+  }
+}
