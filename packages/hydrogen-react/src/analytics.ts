@@ -136,7 +136,10 @@ function sendToShopify(
   }
 }
 
-/** @publicDocs */
+/**
+ * Gathers client browser values commonly used for analytics.
+ * @publicDocs
+ */
 export function getClientBrowserParameters(): ClientBrowserParameters {
   if (errorIfServer('getClientBrowserParameters')) {
     return {

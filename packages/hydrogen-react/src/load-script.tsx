@@ -52,7 +52,10 @@ export function loadScript(
   return promise;
 }
 
-/** @publicDocs */
+/**
+ * The `useLoadScript` hook loads an external script tag in the browser. It allows React components to lazy-load third-party dependencies.
+ * @publicDocs
+ */
 export type LoadScriptParams = Parameters<typeof loadScript>;
 
 /**
