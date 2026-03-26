@@ -64,7 +64,7 @@ index c416c2b3..e6a35150 100644
 +            {/* @description Non-focusable sentinel for Intersection Observer.
 +                Separated from the focusable NextLink to prevent keyboard tabbing
 +                from triggering IO and creating an infinite loading cycle (WCAG 2.1.1). */}
-+            <div ref={ref} aria-hidden="true" style={{height: 1}} />
++            <div ref={ref} aria-hidden="true" style={{height: '1px'}} />
 +            <NextLink>
 +              {isLoading ? 'Loading...' : <span>Load more ↓</span>}
 +            </NextLink>

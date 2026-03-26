@@ -41,9 +41,9 @@ export function SectionStores(props: SectionStoresFragment) {
                   />
                 )}
                 {heading && (
-                  <h2 style={{marginBottom: '.25rem', marginTop: '1rem'}}>
+                  <h3 style={{marginBottom: '.25rem', marginTop: '1rem'}}>
                     {heading.value}
-                  </h2>
+                  </h3>
                 )}
                 {address && <address>{address?.value}</address>}
               </Link>

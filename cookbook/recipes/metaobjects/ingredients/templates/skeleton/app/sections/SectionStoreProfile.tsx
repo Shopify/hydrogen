@@ -34,13 +34,13 @@ export function SectionStoreProfile(props: SectionStoreProfileFragment) {
       {description && <p>{description.value}</p>}
       <br />
       <div>
-        <h5>Address</h5>
+        <h3>Address</h3>
         {address && <address>{address.value}</address>}
       </div>
       {hours?.parsedValue && (
         <div>
           <br />
-          <h5>Opening Hours</h5>
+          <h3>Opening Hours</h3>
           {hours.parsedValue.map((day: string) => (
             <p key={day}>{day}</p>
           ))}
