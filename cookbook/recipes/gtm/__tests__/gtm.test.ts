@@ -10,10 +10,22 @@ const COMPONENT_PATH = join(
 
 describe('gtm recipe', () => {
   let componentContent: string;
+  let patchFiles: string[];
 
   beforeAll(async () => {
     componentContent = await readFile(COMPONENT_PATH, 'utf8');
+    patchFiles = await readdir(join(RECIPE_DIR, 'patches'));
   });
+
+  function findPatchFile(prefix: string): string {
+    const match = patchFiles.find((f) => f.startsWith(prefix));
+    if (!match) {
+      throw new Error(
+        `Expected ${prefix} patch file to exist in patches directory`,
+      );
+    }
+    return match;
+  }
 
   describe('recipe structure', () => {
     it('has a valid recipe.yaml', async () => {
@@ -31,18 +43,9 @@ describe('gtm recipe', () => {
 
   describe('CSP configuration', () => {
     it('entry.server patch includes GTM domains in CSP directives', async () => {
-      const patchFiles = await readdir(join(RECIPE_DIR, 'patches'));
-      const entryServerPatch = patchFiles.find((f) =>
-        f.startsWith('entry.server.tsx'),
-      );
-      if (!entryServerPatch) {
-        throw new Error(
-          'Expected entry.server.tsx patch file to exist in patches directory',
-        );
-      }
-
+      const patchFile = findPatchFile('entry.server.tsx');
       const patchContent = await readFile(
-        join(RECIPE_DIR, 'patches', entryServerPatch),
+        join(RECIPE_DIR, 'patches', patchFile),
         'utf8',
       );
 

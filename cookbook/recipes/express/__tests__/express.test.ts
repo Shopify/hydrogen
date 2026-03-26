@@ -76,6 +76,10 @@ describe('express recipe', () => {
     });
 
     it('AppSession implements required session methods', () => {
+      const classMatch = serverContent.match(/class AppSession[\s\S]*?^}/m);
+      expect(classMatch).not.toBeNull();
+      const classBody = classMatch![0];
+
       const requiredMethods = [
         'get(',
         'set(',
@@ -85,7 +89,7 @@ describe('express recipe', () => {
         'commit(',
       ];
       for (const method of requiredMethods) {
-        expect(serverContent).toContain(method);
+        expect(classBody).toContain(method);
       }
     });
   });

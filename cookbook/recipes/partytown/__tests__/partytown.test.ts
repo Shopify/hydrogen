@@ -33,10 +33,9 @@ describe('partytown recipe', () => {
       expect(result).toBe(url);
     });
 
-    it('returns the original URL for non-proxy domains', () => {
+    it('proxies all domains when nonProxyDomains is empty', () => {
       // nonProxyDomains is currently empty, so all domains get proxied.
-      // This test documents the current behavior — if domains are added
-      // to nonProxyDomains, they should bypass the proxy.
+      // If domains are added to nonProxyDomains, they should bypass the proxy.
       const url = new URL('https://cdn.example.com/lib.js');
       const result = maybeProxyRequest(url, location, 'script');
 
