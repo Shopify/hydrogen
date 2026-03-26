@@ -22,7 +22,6 @@ const EVENT_MAP: Record<string, string> = {
 };
 
 export type RequestEventPayload = {
-  __fromVite?: boolean;
   url: string;
   eventType: 'request' | 'subrequest';
   requestId?: string | null;
@@ -74,14 +73,6 @@ export function emitRequestEvent(payload: RequestEventPayload, root: string) {
     // Ignore incorrect events, although this should not happen.
     return;
   }
-
-  if (payload.eventType === 'request' && !payload.__fromVite) {
-    // Filter out request events not originating from Vite's
-    // hydrogen middleware. Legacy adapters sent these directly.
-    return;
-  }
-
-  delete payload.__fromVite;
 
   const {pathname} = new URL(payload.url, 'http://localhost');
   if (IGNORED_ROUTES.has(pathname)) return;
