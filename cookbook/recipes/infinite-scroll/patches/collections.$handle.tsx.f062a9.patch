@@ -61,8 +61,11 @@ index c416c2b3..e6a35150 100644
 +              state={state}
 +            />
 +            <br />
-+            {/* @description Add ref to NextLink for intersection observer */}
-+            <NextLink ref={ref}>
++            {/* @description Non-focusable sentinel for Intersection Observer.
++                Separated from the focusable NextLink to prevent keyboard tabbing
++                from triggering IO and creating an infinite loading cycle (WCAG 2.1.1). */}
++            <div ref={ref} aria-hidden="true" style={{height: 1}} />
++            <NextLink>
 +              {isLoading ? 'Loading...' : <span>Load more ↓</span>}
 +            </NextLink>
 +          </>
@@ -104,6 +107,9 @@ index c416c2b3..e6a35150 100644
 +
 +  return (
 +    <div aria-label="Products" role="region" className="products-grid">
++      <div aria-live="polite" aria-atomic="true" className="sr-only">
++        {`Showing ${products.length} products`}
++      </div>
 +      {products.map((product, index) => {
 +        return (
 +          <ProductItem
