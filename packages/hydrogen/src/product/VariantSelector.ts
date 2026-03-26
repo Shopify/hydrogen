@@ -204,6 +204,7 @@ export function VariantSelector({
   );
 }
 
+/** @publicDocs */
 type GetSelectedProductOptions = (request: Request) => SelectedOptionInput[];
 
 /**

@@ -3967,6 +3967,52 @@
       ]
     }
   },
+  "GetSelectedProductOptions": {
+    "src/product/VariantSelector.ts": {
+      "filePath": "src/product/VariantSelector.ts",
+      "name": "GetSelectedProductOptions",
+      "description": "",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "request",
+          "description": "",
+          "value": "Request",
+          "filePath": "src/product/VariantSelector.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/product/VariantSelector.ts",
+        "description": "",
+        "name": "SelectedOptionInput[]",
+        "value": "SelectedOptionInput[]"
+      },
+      "value": "(request: Request) => SelectedOptionInput[]"
+    }
+  },
+  "GraphiQLLoader": {
+    "src/routing/graphiql.ts": {
+      "filePath": "src/routing/graphiql.ts",
+      "name": "GraphiQLLoader",
+      "description": "",
+      "isPublicDocs": true,
+      "params": [
+        {
+          "name": "args",
+          "description": "",
+          "value": "LoaderFunctionArgs<any>",
+          "filePath": "src/routing/graphiql.ts"
+        }
+      ],
+      "returns": {
+        "filePath": "src/routing/graphiql.ts",
+        "description": "",
+        "name": "Promise<Response>",
+        "value": "Promise<Response>"
+      },
+      "value": "(args: LoaderFunctionArgs) => Promise<Response>"
+    }
+  },
   "StorefrontRedirectGeneratedType": {
     "src/routing/redirect.ts": {
       "filePath": "src/routing/redirect.ts",
@@ -6656,6 +6702,2241 @@
           "isOptional": true
         }
       ]
+    }
+  },
+  "ScriptProps": {
+    "src/csp/Script.tsx": {
+      "filePath": "src/csp/Script.tsx",
+      "syntaxKind": "TypeAliasDeclaration",
+      "name": "ScriptProps",
+      "value": "HydrogenScriptProps & ScriptAttributes",
+      "description": "",
+      "isPublicDocs": true
+    }
+  },
+  "HydrogenScriptProps": {
+    "src/csp/Script.tsx": {
+      "filePath": "src/csp/Script.tsx",
+      "name": "HydrogenScriptProps",
+      "description": "",
+      "members": [
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "waitForHydration",
+          "value": "boolean",
+          "description": "Wait to load the script until after the page hydrates. This prevents hydration errors for scripts that modify the DOM. Note: For security, `nonce` is not supported when using `waitForHydration`. Instead you need to add the domain of the script directly to your [Content Securitiy Policy directives](https://shopify.dev/docs/storefronts/headless/hydrogen/content-security-policy#step-3-customize-the-content-security-policy).",
+          "isOptional": true
+        }
+      ],
+      "value": "interface HydrogenScriptProps {\n  /** Wait to load the script until after the page hydrates. This prevents hydration errors for scripts that modify the DOM. Note: For security, `nonce` is not supported when using `waitForHydration`. Instead you need to add the domain of the script directly to your [Content Securitiy Policy directives](https://shopify.dev/docs/storefronts/headless/hydrogen/content-security-policy#step-3-customize-the-content-security-policy).*/\n  waitForHydration?: boolean;\n}"
+    }
+  },
+  "ScriptAttributes": {
+    "src/csp/Script.tsx": {
+      "filePath": "src/csp/Script.tsx",
+      "name": "ScriptAttributes",
+      "description": "",
+      "members": [
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "about",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "accessKey",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-activedescendant",
+          "value": "string | undefined",
+          "description": "Identifies the currently active element when DOM focus is on a composite widget, textbox, group, or application.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-atomic",
+          "value": "Booleanish | undefined",
+          "description": "Indicates whether assistive technologies will present all, or only parts of, the changed region based on the change notifications defined by the aria-relevant attribute.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-autocomplete",
+          "value": "\"none\" | \"inline\" | \"list\" | \"both\" | undefined",
+          "description": "Indicates whether inputting text could trigger display of one or more predictions of the user's intended value for an input and specifies how predictions would be presented if they are made.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-braillelabel",
+          "value": "string | undefined",
+          "description": "Defines a string value that labels the current element, which is intended to be converted into Braille.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-brailleroledescription",
+          "value": "string | undefined",
+          "description": "Defines a human-readable, author-localized abbreviated description for the role of an element, which is intended to be converted into Braille.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-busy",
+          "value": "Booleanish | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-checked",
+          "value": "boolean | \"false\" | \"mixed\" | \"true\" | undefined",
+          "description": "Indicates the current \"checked\" state of checkboxes, radio buttons, and other widgets.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-colcount",
+          "value": "number | undefined",
+          "description": "Defines the total number of columns in a table, grid, or treegrid.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-colindex",
+          "value": "number | undefined",
+          "description": "Defines an element's column index or position with respect to the total number of columns within a table, grid, or treegrid.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-colindextext",
+          "value": "string | undefined",
+          "description": "Defines a human readable text alternative of aria-colindex.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-colspan",
+          "value": "number | undefined",
+          "description": "Defines the number of columns spanned by a cell or gridcell within a table, grid, or treegrid.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-controls",
+          "value": "string | undefined",
+          "description": "Identifies the element (or elements) whose contents or presence are controlled by the current element.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-current",
+          "value": "boolean | \"false\" | \"true\" | \"page\" | \"step\" | \"location\" | \"date\" | \"time\" | undefined",
+          "description": "Indicates the element that represents the current item within a container or set of related elements.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-describedby",
+          "value": "string | undefined",
+          "description": "Identifies the element (or elements) that describes the object.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-description",
+          "value": "string | undefined",
+          "description": "Defines a string value that describes or annotates the current element.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-details",
+          "value": "string | undefined",
+          "description": "Identifies the element that provides a detailed, extended description for the object.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-disabled",
+          "value": "Booleanish | undefined",
+          "description": "Indicates that the element is perceivable but disabled, so it is not editable or otherwise operable.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-dropeffect",
+          "value": "\"none\" | \"copy\" | \"execute\" | \"link\" | \"move\" | \"popup\" | undefined",
+          "description": "Indicates what functions can be performed when a dragged object is released on the drop target.",
+          "isOptional": true,
+          "deprecationMessage": "in ARIA 1.1"
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-errormessage",
+          "value": "string | undefined",
+          "description": "Identifies the element that provides an error message for the object.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-expanded",
+          "value": "Booleanish | undefined",
+          "description": "Indicates whether the element, or another grouping element it controls, is currently expanded or collapsed.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-flowto",
+          "value": "string | undefined",
+          "description": "Identifies the next element (or elements) in an alternate reading order of content which, at the user's discretion, allows assistive technology to override the general default of reading in document source order.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-grabbed",
+          "value": "Booleanish | undefined",
+          "description": "Indicates an element's \"grabbed\" state in a drag-and-drop operation.",
+          "isOptional": true,
+          "deprecationMessage": "in ARIA 1.1"
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-haspopup",
+          "value": "boolean | \"false\" | \"true\" | \"menu\" | \"listbox\" | \"tree\" | \"grid\" | \"dialog\" | undefined",
+          "description": "Indicates the availability and type of interactive popup element, such as menu or dialog, that can be triggered by an element.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-hidden",
+          "value": "Booleanish | undefined",
+          "description": "Indicates whether the element is exposed to an accessibility API.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-invalid",
+          "value": "boolean | \"false\" | \"true\" | \"grammar\" | \"spelling\" | undefined",
+          "description": "Indicates the entered value does not conform to the format expected by the application.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-keyshortcuts",
+          "value": "string | undefined",
+          "description": "Indicates keyboard shortcuts that an author has implemented to activate or give focus to an element.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-label",
+          "value": "string | undefined",
+          "description": "Defines a string value that labels the current element.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-labelledby",
+          "value": "string | undefined",
+          "description": "Identifies the element (or elements) that labels the current element.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-level",
+          "value": "number | undefined",
+          "description": "Defines the hierarchical level of an element within a structure.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-live",
+          "value": "\"off\" | \"assertive\" | \"polite\" | undefined",
+          "description": "Indicates that an element will be updated, and describes the types of updates the user agents, assistive technologies, and user can expect from the live region.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-modal",
+          "value": "Booleanish | undefined",
+          "description": "Indicates whether an element is modal when displayed.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-multiline",
+          "value": "Booleanish | undefined",
+          "description": "Indicates whether a text box accepts multiple lines of input or only a single line.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-multiselectable",
+          "value": "Booleanish | undefined",
+          "description": "Indicates that the user may select more than one item from the current selectable descendants.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-orientation",
+          "value": "\"horizontal\" | \"vertical\" | undefined",
+          "description": "Indicates whether the element's orientation is horizontal, vertical, or unknown/ambiguous.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-owns",
+          "value": "string | undefined",
+          "description": "Identifies an element (or elements) in order to define a visual, functional, or contextual parent/child relationship between DOM elements where the DOM hierarchy cannot be used to represent the relationship.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-placeholder",
+          "value": "string | undefined",
+          "description": "Defines a short hint (a word or short phrase) intended to aid the user with data entry when the control has no value. A hint could be a sample value or a brief description of the expected format.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-posinset",
+          "value": "number | undefined",
+          "description": "Defines an element's number or position in the current set of listitems or treeitems. Not required if all elements in the set are present in the DOM.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-pressed",
+          "value": "boolean | \"false\" | \"mixed\" | \"true\" | undefined",
+          "description": "Indicates the current \"pressed\" state of toggle buttons.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-readonly",
+          "value": "Booleanish | undefined",
+          "description": "Indicates that the element is not editable, but is otherwise operable.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-relevant",
+          "value": "| \"additions\"\n            | \"additions removals\"\n            | \"additions text\"\n            | \"all\"\n            | \"removals\"\n            | \"removals additions\"\n            | \"removals text\"\n            | \"text\"\n            | \"text additions\"\n            | \"text removals\"\n            | undefined",
+          "description": "Indicates what notifications the user agent will trigger when the accessibility tree within a live region is modified.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-required",
+          "value": "Booleanish | undefined",
+          "description": "Indicates that user input is required on the element before a form may be submitted.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-roledescription",
+          "value": "string | undefined",
+          "description": "Defines a human-readable, author-localized description for the role of an element.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-rowcount",
+          "value": "number | undefined",
+          "description": "Defines the total number of rows in a table, grid, or treegrid.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-rowindex",
+          "value": "number | undefined",
+          "description": "Defines an element's row index or position with respect to the total number of rows within a table, grid, or treegrid.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-rowindextext",
+          "value": "string | undefined",
+          "description": "Defines a human readable text alternative of aria-rowindex.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-rowspan",
+          "value": "number | undefined",
+          "description": "Defines the number of rows spanned by a cell or gridcell within a table, grid, or treegrid.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-selected",
+          "value": "Booleanish | undefined",
+          "description": "Indicates the current \"selected\" state of various widgets.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-setsize",
+          "value": "number | undefined",
+          "description": "Defines the number of items in the current set of listitems or treeitems. Not required if all elements in the set are present in the DOM.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-sort",
+          "value": "\"none\" | \"ascending\" | \"descending\" | \"other\" | undefined",
+          "description": "Indicates if items in a table or grid are sorted in ascending or descending order.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-valuemax",
+          "value": "number | undefined",
+          "description": "Defines the maximum allowed value for a range widget.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-valuemin",
+          "value": "number | undefined",
+          "description": "Defines the minimum allowed value for a range widget.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-valuenow",
+          "value": "number | undefined",
+          "description": "Defines the current value for a range widget.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "aria-valuetext",
+          "value": "string | undefined",
+          "description": "Defines the human readable text alternative of aria-valuenow for a range widget.",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "async",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "autoCapitalize",
+          "value": "\"off\" | \"none\" | \"on\" | \"sentences\" | \"words\" | \"characters\" | undefined | (string & {})",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "autoCorrect",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "autoFocus",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "autoSave",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "blocking",
+          "value": "\"render\" | (string & {}) | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "charSet",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true,
+          "deprecationMessage": "Deprecated"
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "children",
+          "value": "ReactNode | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "className",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "color",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "content",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "contentEditable",
+          "value": "Booleanish | \"inherit\" | \"plaintext-only\" | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "contextMenu",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "crossOrigin",
+          "value": "CrossOrigin",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "dangerouslySetInnerHTML",
+          "value": "{\n            // Should be InnerHTML['innerHTML'].\n            // But unfortunately we're mixing renderer-specific type declarations.\n            __html: string | TrustedHTML;\n        } | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "datatype",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "defaultChecked",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "defaultValue",
+          "value": "string | number | readonly string[] | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "defer",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "dir",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "draggable",
+          "value": "Booleanish | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "enterKeyHint",
+          "value": "\"enter\" | \"done\" | \"go\" | \"next\" | \"previous\" | \"search\" | \"send\" | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "exportparts",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "hidden",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "id",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "inlist",
+          "value": "any",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "inputMode",
+          "value": "\"none\" | \"text\" | \"tel\" | \"url\" | \"email\" | \"numeric\" | \"decimal\" | \"search\" | undefined",
+          "description": "Hints at the type of data that might be entered by the user while editing the element or its contents",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "integrity",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "is",
+          "value": "string | undefined",
+          "description": "Specify that a standard HTML element should behave like a defined custom built-in element",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "itemID",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "itemProp",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "itemRef",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "itemScope",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "itemType",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "lang",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "noModule",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "nonce",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAbort",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAbortCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAnimationEnd",
+          "value": "AnimationEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAnimationEndCapture",
+          "value": "AnimationEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAnimationIteration",
+          "value": "AnimationEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAnimationIterationCapture",
+          "value": "AnimationEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAnimationStart",
+          "value": "AnimationEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAnimationStartCapture",
+          "value": "AnimationEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAuxClick",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onAuxClickCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onBeforeInput",
+          "value": "InputEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onBeforeInputCapture",
+          "value": "FormEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onBlur",
+          "value": "FocusEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onBlurCapture",
+          "value": "FocusEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCanPlay",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCanPlayCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCanPlayThrough",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCanPlayThroughCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onChange",
+          "value": "FormEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onChangeCapture",
+          "value": "FormEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onClick",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onClickCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCompositionEnd",
+          "value": "CompositionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCompositionEndCapture",
+          "value": "CompositionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCompositionStart",
+          "value": "CompositionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCompositionStartCapture",
+          "value": "CompositionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCompositionUpdate",
+          "value": "CompositionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCompositionUpdateCapture",
+          "value": "CompositionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onContextMenu",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onContextMenuCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCopy",
+          "value": "ClipboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCopyCapture",
+          "value": "ClipboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCut",
+          "value": "ClipboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onCutCapture",
+          "value": "ClipboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDoubleClick",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDoubleClickCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDrag",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragEnd",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragEndCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragEnter",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragEnterCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragExit",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragExitCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragLeave",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragLeaveCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragOver",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragOverCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragStart",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDragStartCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDrop",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDropCapture",
+          "value": "DragEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDurationChange",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onDurationChangeCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onEmptied",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onEmptiedCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onEncrypted",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onEncryptedCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onEnded",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onEndedCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onError",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onErrorCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onFocus",
+          "value": "FocusEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onFocusCapture",
+          "value": "FocusEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onGotPointerCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onGotPointerCaptureCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onInput",
+          "value": "FormEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onInputCapture",
+          "value": "FormEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onInvalid",
+          "value": "FormEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onInvalidCapture",
+          "value": "FormEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onKeyDown",
+          "value": "KeyboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onKeyDownCapture",
+          "value": "KeyboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onKeyPress",
+          "value": "KeyboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true,
+          "deprecationMessage": "Use `onKeyUp` or `onKeyDown` instead"
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onKeyPressCapture",
+          "value": "KeyboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true,
+          "deprecationMessage": "Use `onKeyUpCapture` or `onKeyDownCapture` instead"
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onKeyUp",
+          "value": "KeyboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onKeyUpCapture",
+          "value": "KeyboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoad",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoadCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoadedData",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoadedDataCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoadedMetadata",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoadedMetadataCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoadStart",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLoadStartCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLostPointerCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onLostPointerCaptureCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseDown",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseDownCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseEnter",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseLeave",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseMove",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseMoveCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseOut",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseOutCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseOver",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseOverCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseUp",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onMouseUpCapture",
+          "value": "MouseEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPaste",
+          "value": "ClipboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPasteCapture",
+          "value": "ClipboardEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPause",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPauseCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPlay",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPlayCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPlaying",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPlayingCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerCancel",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerCancelCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerDown",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerDownCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerEnter",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerLeave",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerMove",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerMoveCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerOut",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerOutCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerOver",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerOverCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerUp",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onPointerUpCapture",
+          "value": "PointerEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onProgress",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onProgressCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onRateChange",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onRateChangeCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onReset",
+          "value": "FormEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onResetCapture",
+          "value": "FormEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onScroll",
+          "value": "UIEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onScrollCapture",
+          "value": "UIEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSeeked",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSeekedCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSeeking",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSeekingCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSelect",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSelectCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onStalled",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onStalledCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSubmit",
+          "value": "FormEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSubmitCapture",
+          "value": "FormEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSuspend",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onSuspendCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTimeUpdate",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTimeUpdateCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchCancel",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchCancelCapture",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchEnd",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchEndCapture",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchMove",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchMoveCapture",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchStart",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTouchStartCapture",
+          "value": "TouchEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTransitionEnd",
+          "value": "TransitionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onTransitionEndCapture",
+          "value": "TransitionEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onVolumeChange",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onVolumeChangeCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onWaiting",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onWaitingCapture",
+          "value": "ReactEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onWheel",
+          "value": "WheelEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "onWheelCapture",
+          "value": "WheelEventHandler<T> | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "part",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "prefix",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "property",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "radioGroup",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "referrerPolicy",
+          "value": "HTMLAttributeReferrerPolicy | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "rel",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "resource",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "results",
+          "value": "number | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "rev",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "role",
+          "value": "AriaRole | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "security",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "slot",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "spellCheck",
+          "value": "Booleanish | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "src",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "style",
+          "value": "CSSProperties | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "suppressContentEditableWarning",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "suppressHydrationWarning",
+          "value": "boolean | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "tabIndex",
+          "value": "number | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "title",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "translate",
+          "value": "\"yes\" | \"no\" | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "type",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "typeof",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "unselectable",
+          "value": "\"on\" | \"off\" | undefined",
+          "description": "",
+          "isOptional": true
+        },
+        {
+          "filePath": "src/csp/Script.tsx",
+          "syntaxKind": "PropertySignature",
+          "name": "vocab",
+          "value": "string | undefined",
+          "description": "",
+          "isOptional": true
+        }
+      ],
+      "value": "interface ScriptAttributes extends ScriptHTMLAttributes<HTMLScriptElement> {}"
     }
   },
   "UseCustomerPrivacyGeneratedType": {

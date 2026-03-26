@@ -2,6 +2,7 @@ import type {LoaderFunctionArgs} from 'react-router';
 import type {Storefront} from '../storefront';
 import type {CustomerAccount} from '../customer/types';
 
+/** @publicDocs */
 type GraphiQLLoader = (args: LoaderFunctionArgs) => Promise<Response>;
 
 /** @publicDocs */
