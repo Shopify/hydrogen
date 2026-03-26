@@ -6,3 +6,8 @@ COMPILE_DOCS="generate-docs --overridePath ./docs/typeOverride.json --input ./sr
 fi
 
 eval $COMPILE_DOCS
+
+if [ "$1" != "isTest" ];
+then
+node ./docs/copy-docs-to-shopify-dev.mjs
+fi
