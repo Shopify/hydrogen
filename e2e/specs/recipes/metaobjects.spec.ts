@@ -11,7 +11,7 @@ setRecipeFixture({
  *
  * Tests cover:
  * - RouteContent component renders metaobject sections
- * - Section type switching logic (hero, products, collections, stores, store profile)
+ * - Section type switching logic (hero, stores grid, store profile)
  * - Dynamic route handling for store listings and individual stores
  * - Fallback behavior when routes have no sections
  * - EditRoute component for development/preview environments

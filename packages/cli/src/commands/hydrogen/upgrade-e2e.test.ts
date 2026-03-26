@@ -72,6 +72,8 @@ vi.mock('../../lib/shell.js', () => ({getCliCommand: vi.fn(() => 'h2')}));
 
 const commitCache = new Map<string, string | null>();
 const DEFAULT_LOOKBACK_PERIOD_IN_DAYS = 365;
+// Cap git log lookback to avoid scanning the entire commit history
+const MAX_RELEASE_LOOKBACK_COUNT = 200;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -689,7 +691,11 @@ async function findCommitByPackageJsonHistory(
       ['log', '--format=%H', '--all', '--', 'templates/skeleton/package.json'],
       {cwd: repoRoot},
     );
-    allCommits = stdout.trim().split('\n').filter(Boolean).slice(0, 200);
+    allCommits = stdout
+      .trim()
+      .split('\n')
+      .filter(Boolean)
+      .slice(0, MAX_RELEASE_LOOKBACK_COUNT);
   } catch {
     /* git unavailable or unexpected failure */
     return null;

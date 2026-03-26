@@ -20,7 +20,8 @@ setRecipeFixture({
 const RECIPE_HEADING_TEXT = 'Rick & Morty Characters (Third-Party API Example)';
 
 // The skeleton queries the most recently updated collection, which may change over time.
-// If this collection is removed or renamed in hydrogenPreviewStorefront, update this constant.
+// If this collection is removed or renamed in hydrogenPreviewStorefront, or if another
+// collection becomes more recently updated than this one, update this constant.
 const KNOWN_FEATURED_COLLECTION = {
   title: 'Winter Collection',
 } as const;
@@ -63,7 +64,7 @@ test.describe('Third-party API Recipe', () => {
     await expect(characters.first()).toContainText(/[A-Za-z]/);
   });
 
-  test('preserves existing homepage sections alongside third-party content', async ({
+  test('shows Featured Collection and Recommended Products on homepage', async ({
     page,
   }) => {
     const featuredCollectionHeading = page.getByRole('heading', {
