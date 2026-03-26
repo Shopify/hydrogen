@@ -36,12 +36,14 @@ setRecipeFixture({
 
 test.describe('B2B Recipe', () => {
   test.describe('Location Selector', () => {
+    test.beforeEach(async ({page}) => {
+      await page.goto('/');
+    });
+
     test('shows location modal on first visit for B2B customer with multiple locations', async ({
       page,
       b2b,
     }) => {
-      await page.goto('/');
-
       await b2b.assertLocationModalVisible(B2B_COMPANY_NAME);
     });
 
@@ -49,8 +51,6 @@ test.describe('B2B Recipe', () => {
       page,
       b2b,
     }) => {
-      await page.goto('/');
-
       await b2b.assertLocationModalVisible(B2B_COMPANY_NAME);
 
       const locationButtons = b2b.getLocationButtons();
@@ -64,8 +64,6 @@ test.describe('B2B Recipe', () => {
     });
 
     test('closes modal after selecting a location', async ({page, b2b}) => {
-      await page.goto('/');
-
       await b2b.assertLocationModalVisible(B2B_COMPANY_NAME);
       await b2b.selectLocation(B2B_COMPANY_NAME, 'Headquarters');
     });
@@ -74,8 +72,6 @@ test.describe('B2B Recipe', () => {
       page,
       b2b,
     }) => {
-      await page.goto('/');
-
       await b2b.assertLocationModalVisible(B2B_COMPANY_NAME);
       await b2b.selectLocation(B2B_COMPANY_NAME, 'Headquarters');
 
@@ -86,8 +82,6 @@ test.describe('B2B Recipe', () => {
       page,
       b2b,
     }) => {
-      await page.goto('/');
-
       await b2b.assertLocationModalVisible(B2B_COMPANY_NAME);
       await b2b.selectLocation(B2B_COMPANY_NAME, 'Headquarters');
 
@@ -98,8 +92,6 @@ test.describe('B2B Recipe', () => {
     });
 
     test('switches location and updates header button', async ({page, b2b}) => {
-      await page.goto('/');
-
       await b2b.assertLocationModalVisible(B2B_COMPANY_NAME);
       await b2b.selectLocation(B2B_COMPANY_NAME, 'Headquarters');
       await expect(b2b.getChangeLocationButton('Headquarters')).toBeVisible();
