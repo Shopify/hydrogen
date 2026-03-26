@@ -6,7 +6,10 @@ const isCI = !!process.env.CI;
 export default defineConfig({
   testMatch: /\.spec\.ts$/,
   retries: isCI ? 1 : 0,
-  reporter: [['html', {open: 'on-failure', outputFolder: 'playwright-report'}]],
+  reporter: [
+    ['html', {open: 'on-failure', outputFolder: 'playwright-report'}],
+    ['json', {outputFile: 'playwright-report/results.json'}],
+  ],
   // 3 workers in CI (ubuntu-latest: 2 vCPUs, 7GB RAM).
   // Each worker spawns a Vite dev server + Chromium. Increase with caution.
   workers: process.env.CI ? 3 : 4,
