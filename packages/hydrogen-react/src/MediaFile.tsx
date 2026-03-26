@@ -35,6 +35,7 @@ type MediaOptions = {
  * The `MediaFile` component renders the media for the Storefront API's
  * [Media object](https://shopify.dev/api/storefront/reference/products/media). It renders an `Image`, a
  * `Video`, an `ExternalVideo`, or a `ModelViewer` depending on the `__typename` of the `data` prop.
+ * Use the `mediaOptions` prop to customize the props sent to each of these components.
  * @publicDocs
  */
 export function MediaFile({
