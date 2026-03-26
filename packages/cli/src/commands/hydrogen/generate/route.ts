@@ -20,7 +20,7 @@ export default class GenerateRoute extends Command {
   static flags = {
     adapter: Flags.string({
       description:
-        'Remix adapter used in the route. The default is `react-router`.',
+        'React Router adapter used in the route. The default is `react-router`.',
       env: 'SHOPIFY_HYDROGEN_FLAG_ADAPTER',
     }),
     typescript: Flags.boolean({
