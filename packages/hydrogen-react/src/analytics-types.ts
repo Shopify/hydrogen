@@ -223,7 +223,10 @@ export type ShopifyAnalyticsPayloadWithPrivacyFields =
 
 export type ShopifyAnalytics = ShopifyPageView | ShopifyAddToCart;
 
-/** @publicDocs */
+/**
+ * The Shopify analytics cookie values containing the unique user token and session token.
+ * @publicDocs
+ */
 export type ShopifyCookies = {
   /** Shopify unique user token: Value of `_shopify_y` cookie. */
   [SHOPIFY_Y]: string;

@@ -2,7 +2,10 @@ import {forwardRef, ScriptHTMLAttributes, HTMLAttributes} from 'react';
 import {useNonce} from './csp';
 import {useLoadScript} from '@shopify/hydrogen-react';
 
-/** @publicDocs */
+/**
+ * Props for the Script component, which adds third-party scripts with automatic nonce support from the content security policy.
+ * @publicDocs
+ */
 type ScriptProps = HydrogenScriptProps & ScriptAttributes;
 
 interface HydrogenScriptProps {
@@ -12,7 +15,10 @@ interface HydrogenScriptProps {
 
 interface ScriptAttributes extends ScriptHTMLAttributes<HTMLScriptElement> {}
 
-/** @publicDocs */
+/**
+ * Use the Script component to add third-party scripts to your app. It automatically adds a nonce attribute from your content security policy.
+ * @publicDocs
+ */
 export const Script = forwardRef<HTMLScriptElement, ScriptProps>(
   (props, ref) => {
     const {waitForHydration, src, ...rest} = props;

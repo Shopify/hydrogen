@@ -15,7 +15,10 @@ export type CartMetafieldDeleteFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-/** @publicDocs */
+/**
+ * Creates a function that deletes a metafield from the cart.
+ * @publicDocs
+ */
 export function cartMetafieldDeleteDefault(
   options: CartQueryOptions,
 ): CartMetafieldDeleteFunction {

@@ -361,7 +361,10 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   }
 }
 
-/** @publicDocs */
+/**
+ * Creates an API that can be used to interact with the cart.
+ * @publicDocs
+ */
 export type CartHandlerOptionsForDocs<
   TCustomMethods extends CustomMethodsBase,
 > = {

@@ -16,7 +16,10 @@ export type CartNoteUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-/** @publicDocs */
+/**
+ * Creates a function that updates the note on a cart.
+ * @publicDocs
+ */
 export function cartNoteUpdateDefault(
   options: CartQueryOptions,
 ): CartNoteUpdateFunction {

@@ -424,6 +424,7 @@ export function usePagination<NodesType>(
 }
 
 /**
+ * The `getPaginationVariables` function is used with the `<Pagination>` component to generate the variables needed to fetch paginated data from the Storefront API.
  * @param request The request object passed to your Remix loader function.
  * @param options Options for how to configure the pagination variables. Includes the ability to change how many nodes are within each page as well as a namespace to avoid URL param conflicts when using multiple `Pagination` components on a single page.
  *

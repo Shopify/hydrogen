@@ -17,7 +17,10 @@ export type CartCreateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-/** @publicDocs */
+/**
+ * Creates a function that accepts an object of CartInput and returns a new cart.
+ * @publicDocs
+ */
 export function cartCreateDefault(
   options: CartQueryOptions,
 ): CartCreateFunction {

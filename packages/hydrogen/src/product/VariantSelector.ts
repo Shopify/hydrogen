@@ -204,7 +204,10 @@ export function VariantSelector({
   );
 }
 
-/** @publicDocs */
+/**
+ * A function type that extracts selected product options from a Request's search parameters.
+ * @publicDocs
+ */
 type GetSelectedProductOptions = (request: Request) => SelectedOptionInput[];
 
 /**

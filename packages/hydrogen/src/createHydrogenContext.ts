@@ -323,7 +323,10 @@ export function createHydrogenContext<
     TAdditionalContext;
 }
 
-/** @publicDocs */
+/**
+ * The `createHydrogenContext` function creates the context object required to use Hydrogen utilities throughout a Hydrogen project.
+ * @publicDocs
+ */
 export type HydrogenContextOptionsForDocs<
   TSession extends HydrogenSession = HydrogenSession,
   TI18n extends I18nBase = I18nBase,
