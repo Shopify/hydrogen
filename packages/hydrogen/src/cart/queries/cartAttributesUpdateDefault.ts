@@ -17,6 +17,7 @@ export type CartAttributesUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
+/** @publicDocs */
 export function cartAttributesUpdateDefault(
   options: CartQueryOptions,
 ): CartAttributesUpdateFunction {

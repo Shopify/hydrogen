@@ -11,6 +11,7 @@ interface HydrogenScriptProps {
 
 interface ScriptAttributes extends ScriptHTMLAttributes<HTMLScriptElement> {}
 
+/** @publicDocs */
 export const Script = forwardRef<HTMLScriptElement, ScriptProps>(
   (props, ref) => {
     const {waitForHydration, src, ...rest} = props;
