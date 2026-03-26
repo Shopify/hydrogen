@@ -19,6 +19,12 @@ setRecipeFixture({
 
 const RECIPE_HEADING_TEXT = 'Rick & Morty Characters (Third-Party API Example)';
 
+// The skeleton queries the most recently updated collection, which may change over time.
+// If this collection is removed or renamed in hydrogenPreviewStorefront, update this constant.
+const KNOWN_FEATURED_COLLECTION = {
+  title: 'Winter Collection',
+} as const;
+
 test.describe('Third-party API Recipe', () => {
   test.beforeEach(async ({page}) => {
     await page.goto('/');
@@ -60,13 +66,11 @@ test.describe('Third-party API Recipe', () => {
   test('preserves existing homepage sections alongside third-party content', async ({
     page,
   }) => {
-    // The skeleton's FeaturedCollection renders the most-recently-updated
-    // collection title as an <h1> inside a link to /collections/. We verify
-    // structure rather than a specific name, because the store's data may change.
-    const featuredCollectionLink = page.getByRole('link', {name: /.+/}).filter({
-      has: page.getByRole('heading', {level: 1}),
+    const featuredCollectionHeading = page.getByRole('heading', {
+      level: 1,
+      name: KNOWN_FEATURED_COLLECTION.title,
     });
-    await expect(featuredCollectionLink).toBeVisible();
+    await expect(featuredCollectionHeading).toBeVisible();
 
     const recommendedProductsSection = page.getByRole('region', {
       name: 'Recommended Products',
