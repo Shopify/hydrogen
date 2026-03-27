@@ -204,6 +204,7 @@ type HydrogenClientProps<TI18n> = {
   logErrors?: boolean | ((error?: Error) => boolean);
 };
 
+/** @publicDocs */
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> =
   HydrogenClientProps<TI18n> & StorefrontClientProps;
 

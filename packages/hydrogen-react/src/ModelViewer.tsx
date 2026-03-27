@@ -22,7 +22,11 @@ type ModelViewerProps = Omit<
 > &
   ModelViewerBaseProps;
 
-type ModelViewerBaseProps = {
+/**
+ * The `ModelViewer` component renders a 3D model (with the `model-viewer` custom element) for the Storefront API's [Model3d object](https://shopify.dev/api/storefront/reference/products/model3d). The `model-viewer` custom element is lazily downloaded through a dynamically-injected `<script type='module'>` tag when the `<ModelViewer />` component is rendered. ModelViewer is using version `1.21.1` of the `@google/model-viewer` library.
+ * @publicDocs
+ */
+export type ModelViewerBaseProps = {
   /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2025-07/objects/model3d). */
   data: PartialDeep<Model3d, {recurseIntoArrays: true}>;
   /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */
@@ -60,6 +64,7 @@ type ModelViewerBaseProps = {
  * The `model-viewer` custom element is lazily downloaded through a dynamically-injected `<script type="module">` tag when the `<ModelViewer />` component is rendered
  *
  * ModelViewer is using version `1.21.1` of the `@google/model-viewer` library.
+ * @publicDocs
  */
 export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
   const [modelViewer, setModelViewer] = useState<undefined | HTMLElement>(

@@ -16,6 +16,7 @@ export type CartGiftCardCodesUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
+/** @publicDocs */
 export function cartGiftCardCodesUpdateDefault(
   options: CartQueryOptions,
 ): CartGiftCardCodesUpdateFunction {
