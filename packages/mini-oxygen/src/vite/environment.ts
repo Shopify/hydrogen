@@ -94,7 +94,7 @@ export function createMiniOxygenDevEnvironment(
         toMiniflareRequest(request),
       );
 
-      return new Response(response.body as unknown as BodyInit, {
+      return new Response(response.body as ReadableStream | null, {
         status: response.status,
         statusText: response.statusText,
         headers: Array.from(response.headers.entries()),
