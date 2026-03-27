@@ -14,7 +14,7 @@ index c416c2b3..e6a35150 100644
 +} from '@shopify/hydrogen';
  import {redirectIfHandleIsLocalized} from '~/lib/redirect';
  import {ProductItem} from '~/components/ProductItem';
-+import {useEffect} from 'react';
++import {useState, useEffect, useRef} from 'react';
 +import {useInView} from 'react-intersection-observer';
  import type {ProductItemFragment} from 'storefrontapi.generated';
  
@@ -91,7 +91,14 @@ index c416c2b3..e6a35150 100644
 +  inView: boolean;
 +  hasNextPage: boolean;
 +  nextPageUrl: string;
-+  state: any;
++  state: {
++    nodes: Array<ProductItemFragment>;
++    pageInfo: {
++      endCursor: string | null | undefined;
++      startCursor: string | null | undefined;
++      hasPreviousPage: boolean;
++    };
++  };
 +}) {
 +  const navigate = useNavigate();
 +
@@ -107,9 +114,7 @@ index c416c2b3..e6a35150 100644
 +
 +  return (
 +    <div aria-label="Products" role="region" className="products-grid">
-+      <div aria-live="polite" aria-atomic="true" className="sr-only">
-+        {`Showing ${products.length} products`}
-+      </div>
++      <ProductsGridStatus productCount={products.length} />
 +      {products.map((product, index) => {
 +        return (
 +          <ProductItem
@@ -119,6 +124,28 @@ index c416c2b3..e6a35150 100644
 +          />
 +        );
 +      })}
++    </div>
++  );
++}
++
++/**
++ * Announces product count changes to screen readers.
++ * Renders empty on initial mount to avoid an unprompted announcement.
++ */
++function ProductsGridStatus({productCount}: {productCount: number}) {
++  const [message, setMessage] = useState('');
++  const prevCountRef = useRef(productCount);
++
++  useEffect(() => {
++    if (productCount !== prevCountRef.current) {
++      setMessage(`Showing ${productCount} products`);
++      prevCountRef.current = productCount;
++    }
++  }, [productCount]);
++
++  return (
++    <div aria-live="polite" aria-atomic="true" className="sr-only">
++      {message}
 +    </div>
 +  );
 +}
