@@ -23,7 +23,7 @@ test.describe('Markets Recipe', () => {
       const recipe = new MarketsUtil(page);
       await page.goto('/');
 
-      await recipe.assertNoLocalePrefix();
+      expect(new URL(page.url()).pathname).toBe('/');
 
       await page.goto(`/products/${KNOWN_SKELETON_PRODUCT.handle}`);
       const priceElement = recipe.getPriceElement();

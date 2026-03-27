@@ -17,12 +17,6 @@ export class MarketsUtil {
     );
   }
 
-  async assertNoLocalePrefix() {
-    const pathname = new URL(this.page.url()).pathname;
-    // Checks that the path doesn't start with a locale prefix (e.g., /FR-CA/)
-    expect(pathname).not.toMatch(/^\/[A-Z]{2}-[A-Z]{2}(\/|$)/i);
-  }
-
   async assertPriceFormat(priceLocator: Locator, expectedFormat: RegExp) {
     await expect(priceLocator).toBeVisible();
     await expect(priceLocator).toHaveText(expectedFormat);
