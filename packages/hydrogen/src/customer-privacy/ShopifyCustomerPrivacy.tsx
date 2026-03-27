@@ -340,6 +340,21 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
     let customShopify: {customerPrivacy: CustomerPrivacy} | undefined | object =
       window.Shopify || undefined;
 
+    const shopifyDescriptor = Object.getOwnPropertyDescriptor(
+      window,
+      'Shopify',
+    );
+    if (shopifyDescriptor && !shopifyDescriptor.configurable) {
+      customShopify = window.Shopify || undefined;
+      const pollForCustomerPrivacy = setInterval(() => {
+        if (window.Shopify?.customerPrivacy) {
+          setLoaded.customerPrivacy();
+          clearInterval(pollForCustomerPrivacy);
+        }
+      }, 100);
+      return () => clearInterval(pollForCustomerPrivacy);
+    }
+
     // monitor for when window.Shopify = {} is first set
     Object.defineProperty(window, 'Shopify', {
       configurable: true,
