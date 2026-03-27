@@ -17,6 +17,10 @@ export type CartAttributesUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
+/**
+ * Creates a function that accepts an array of AttributeInput and updates attributes to a cart.
+ * @publicDocs
+ */
 export function cartAttributesUpdateDefault(
   options: CartQueryOptions,
 ): CartAttributesUpdateFunction {

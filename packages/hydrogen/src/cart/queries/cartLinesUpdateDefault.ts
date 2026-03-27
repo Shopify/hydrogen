@@ -18,6 +18,10 @@ export type CartLinesUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
+/**
+ * Creates a function that accepts an array of CartLineUpdateInput and updates the line items in a cart.
+ * @publicDocs
+ */
 export function cartLinesUpdateDefault(
   options: CartQueryOptions,
 ): CartLinesUpdateFunction {
