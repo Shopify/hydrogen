@@ -3,6 +3,83 @@
   "version": "1",
   "releases": [
     {
+      "title": "Accessibility improvements, CLI fixes, and dependency updates",
+      "version": "2026.1.3",
+      "date": "2026-03-27",
+      "hash": "fcfbcaa299f46788d2fbabf24d021b8a8dcaadae",
+      "commit": "https://github.com/Shopify/hydrogen/pull/3584/commits/fcfbcaa299f46788d2fbabf24d021b8a8dcaadae",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3584",
+      "dependencies": {
+        "@shopify/hydrogen": "2026.1.3"
+      },
+      "devDependencies": {},
+      "removeDependencies": [
+        "@shopify/hydrogen"
+      ],
+      "fixes": [
+        {
+          "title": "Improve screen reader experience in paginated product grids",
+          "info": "Hide decorative arrow characters from screen readers by adding aria-hidden attributes to improve accessibility for users of assistive technology.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3557",
+          "id": "3557"
+        },
+        {
+          "title": "Fix hydrogen dev --port 0 with --customer-account-push tunnel",
+          "info": "Resolved issue where using port 0 (OS-assigned) with --customer-account-push caused cloudflared to target the wrong origin. The port is now resolved upfront so both cloudflared and Vite bind to the same address.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3532",
+          "id": "3532"
+        },
+        {
+          "title": "Fix broken aria-label on territory code input in address form",
+          "info": "The territory code input was displaying the raw developer string 'territoryCode' instead of the human-readable label 'Country code'.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3607",
+          "id": "3607"
+        },
+        {
+          "title": "Fix h2 upgrade failing with yarn and pnpm",
+          "info": "The hydrogen upgrade command now uses the correct package-specific install subcommand: 'add' for yarn/pnpm and 'install' for npm/bun when upgrading dependencies.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3462",
+          "id": "3462"
+        },
+        {
+          "title": "Fix h2 upgrade to correctly handle dependency removals across versions",
+          "info": "When upgrading across multiple versions, dependencies removed in intermediate releases are now properly removed even when jumping versions.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3527",
+          "id": "3527"
+        },
+        {
+          "title": "Add aria-label to ProductPrice for improved screen reader accessibility",
+          "info": "The ProductPrice component now includes an aria-label to better describe price information to users of assistive technology.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3558",
+          "id": "3558"
+        },
+        {
+          "title": "Fix multi-version upgrades to accumulate intermediate dependency bumps",
+          "info": "When upgrading across multiple Hydrogen versions, dependency version bumps from intermediate releases are now properly accumulated. Also applies --legacy-peer-deps for npm to resolve ERESOLVE conflicts during upgrade.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3507",
+          "id": "3507"
+        },
+        {
+          "title": "Inline useMachine hook and remove @xstate/react dependency",
+          "info": "The useMachine hook from @xstate/react/fsm is now inlined directly in @shopify/hydrogen-react, eliminating the @xstate/react dependency which had no version supporting both React 19 and @xstate/fsm. This also removes transitive dependencies use-sync-external-store and use-isomorphic-layout-effect, and cleans up Vite config workarounds.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3594",
+          "id": "3594"
+        },
+        {
+          "title": "Remove engines field from @shopify/hydrogen-react",
+          "info": "Removed the engines field from package.json to avoid blocking installation on newer Node.js versions.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3596",
+          "id": "3596"
+        },
+        {
+          "title": "Security: Bump undici from 7.21.0 to 7.24.0",
+          "info": "Updated undici dependency to address known security vulnerabilities.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3581",
+          "id": "3581"
+        }
+      ],
+      "features": []
+    },
       "title": "Storefront API 2026-01 and Customer Account API 2026-01",
       "version": "2026.1.0",
       "date": "2026-02-09",
