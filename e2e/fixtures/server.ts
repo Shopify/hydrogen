@@ -35,7 +35,7 @@ export class DevServer {
   port: number | undefined;
   projectPath: string;
   customerAccountPush: boolean;
-  capturedUrl?: string;
+  private capturedUrl: Promise<string> | null = null;
   id?: number;
   envFile?: string;
   storeKey?: string;
@@ -52,21 +52,25 @@ export class DevServer {
     this.entry = options.entry;
   }
 
-  getUrl() {
-    if (this.capturedUrl) return this.capturedUrl;
-    if (this.port === undefined) {
+  async getUrl(): Promise<string> {
+    if (!this.capturedUrl) {
       throw new Error(
-        `Server ${this.id} has not started yet — cannot determine URL with dynamic port allocation`,
+        `Server ${this.id} has not been started — call start() first`,
       );
     }
-    return `http://localhost:${this.port}`;
+    return this.capturedUrl;
   }
 
-  async start() {
+  async start(): Promise<void> {
     if (this.process) {
       throw new Error(`Server ${this.id} is already running`);
     }
+    this.capturedUrl = this.spawnAndWait();
+    this.capturedUrl.catch(() => {});
+    await this.capturedUrl;
+  }
 
+  private async spawnAndWait(): Promise<string> {
     // Tunnel-based tests need a known port so cloudflared and Vite bind to
     // the same origin. Pre-allocate one to avoid depending on port 3000 being
     // free. Non-tunnel tests use port 0 (OS-assigned) for parallel safety.
@@ -80,7 +84,7 @@ export class DevServer {
       );
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
       const args = ['shopify', 'hydrogen', 'dev'];
       if (this.customerAccountPush) {
         args.push('--customer-account-push');
@@ -138,10 +142,21 @@ export class DevServer {
         }
 
         if (!started && output.includes('View') && output.includes('app:')) {
+          const resolvedUrl = tunnelUrl || localUrl;
+          if (!resolvedUrl) {
+            clearTimeout(timeout);
+            this.stop();
+            reject(
+              new Error(
+                `Server ${this.id} started but no URL was captured from output`,
+              ),
+            );
+            return;
+          }
+
           started = true;
           clearTimeout(timeout);
-          this.capturedUrl = tunnelUrl || localUrl;
-          const port = this.capturedUrl?.match(/:(\d+)/)?.[1];
+          const port = resolvedUrl.match(/:(\d+)/)?.[1];
           if (port) {
             this.port = parseInt(port, 10);
           }
@@ -150,12 +165,15 @@ export class DevServer {
               this.port || parseInt((Math.random() * 1000).toFixed(0), 10);
           }
           console.log(
-            `[test-server ${this.id}] Server started on ${this.capturedUrl} [${this.storeKey}]`,
+            `[test-server ${this.id}] Server started on ${resolvedUrl} [${this.storeKey}]`,
           );
           if (tunnelUrl) {
-            waitForTunnelReady(tunnelUrl).then(resolve, reject);
+            waitForTunnelReady(tunnelUrl).then(
+              () => resolve(resolvedUrl),
+              reject,
+            );
           } else {
-            resolve(undefined);
+            resolve(resolvedUrl);
           }
         }
 

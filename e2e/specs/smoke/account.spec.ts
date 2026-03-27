@@ -16,9 +16,7 @@ test.describe('Account route with MSW Customer Account mocks', () => {
     await expect(
       page.getByRole('heading', {level: 1, name: 'Welcome, Taylor'}),
     ).toBeVisible();
-    await expect(
-      page.getByRole('form', {name: 'Search orders'}),
-    ).toBeVisible();
+    await expect(page.getByRole('form', {name: 'Search orders'})).toBeVisible();
     await expect(
       page.getByText("You haven't placed any orders yet."),
     ).toBeVisible();
