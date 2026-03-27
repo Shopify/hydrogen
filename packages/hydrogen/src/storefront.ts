@@ -632,6 +632,8 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
       /**
        * Forwards the request to the Storefront MCP endpoint.
+       * CORS headers are intentionally omitted — the Storefront MCP
+       * server is server-to-server only (OPTIONS preflight returns 404).
        */
       async forwardMcp(request) {
         const forwardedHeaders = new Headers([
@@ -648,13 +650,14 @@ export function createStorefrontClient<TI18n extends I18nBase>(
               'user-agent',
             ],
           ),
-          // Add headers for shop identification and geolocalization
           ...extractHeaders(
             (key) => defaultHeaders[key],
             [
               SHOPIFY_CLIENT_IP_HEADER,
               SHOPIFY_CLIENT_IP_SIG_HEADER,
               STOREFRONT_ACCESS_TOKEN_HEADER,
+              STOREFRONT_REQUEST_GROUP_ID_HEADER,
+              SHOPIFY_STOREFRONT_ID_HEADER,
             ],
           ),
         ]);
@@ -665,14 +668,31 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
         const mcpUrl = `${getShopifyDomain()}/api/mcp`;
 
-        const mcpResponse = await fetch(mcpUrl, {
-          method: request.method,
-          body: request.body,
-          headers: forwardedHeaders,
-        });
+        try {
+          const mcpResponse = await fetch(mcpUrl, {
+            method: request.method,
+            body: request.body,
+            headers: forwardedHeaders,
+          });
 
-        // Create a new response to allow modifying headers
-        return new Response(mcpResponse.body, mcpResponse);
+          return new Response(mcpResponse.body, mcpResponse);
+        } catch (error) {
+          const JSON_RPC_INTERNAL_ERROR = -32603;
+          const message =
+            error instanceof Error ? error.message : 'Internal proxy error';
+
+          return new Response(
+            JSON.stringify({
+              jsonrpc: '2.0',
+              error: {code: JSON_RPC_INTERNAL_ERROR, message},
+              id: null,
+            }),
+            {
+              status: 502,
+              headers: {'content-type': 'application/json'},
+            },
+          );
+        }
       },
 
       setCollectedSubrequestHeaders: (response: {headers: Headers}) => {

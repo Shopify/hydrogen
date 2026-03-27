@@ -278,10 +278,45 @@ describe('createStorefrontClient', () => {
       );
     });
 
-    it.todo(
-      'forwards observability headers (request group ID and storefront ID)',
-    );
+    it('forwards observability headers (request group ID and storefront ID)', async () => {
+      const {storefront} = createClientWithMcp();
 
-    it.todo('returns JSON-RPC error when upstream fetch fails');
+      const request = new Request('https://my-store.com/api/mcp', {
+        method: 'POST',
+        body: '{}',
+      });
+
+      await storefront.forwardMcp(request);
+
+      const forwardedHeaders = new Headers(mockFetch.mock.calls[0]![1].headers);
+      expect(forwardedHeaders.get(STOREFRONT_REQUEST_GROUP_ID_HEADER)).toBe(
+        storefrontHeaders.requestGroupId,
+      );
+      expect(forwardedHeaders.get(SHOPIFY_STOREFRONT_ID_HEADER)).toBe(
+        storefrontId,
+      );
+    });
+
+    it('returns JSON-RPC error when upstream fetch fails', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('DNS resolution failed'));
+      const {storefront} = createClientWithMcp();
+
+      const request = new Request('https://my-store.com/api/mcp', {
+        method: 'POST',
+        body: '{}',
+      });
+
+      const response = await storefront.forwardMcp(request);
+
+      expect(response.status).toBe(502);
+      expect(response.headers.get('content-type')).toBe('application/json');
+
+      const body = await response.json();
+      expect(body).toEqual({
+        jsonrpc: '2.0',
+        error: {code: -32603, message: 'DNS resolution failed'},
+        id: null,
+      });
+    });
   });
 });

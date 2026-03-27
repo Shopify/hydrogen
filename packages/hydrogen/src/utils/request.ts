@@ -48,7 +48,12 @@ export function getStorefrontHeaders(
 /** Regular expression to match Storefront API GraphQL endpoint paths */
 export const SFAPI_RE = /^\/api\/(unstable|2\d{3}-\d{2})\/graphql\.json$/;
 
-/** Regular expression to match Storefront MCP endpoint path */
+/**
+ * Matches the Storefront MCP endpoint path exactly.
+ * Shopify's MCP server currently only serves /api/mcp (no sub-paths).
+ * If MCP's Streamable HTTP transport adds sub-paths (e.g. /api/mcp/sse),
+ * this regex will need to be loosened to a prefix match.
+ */
 export const MCP_RE = /^\/api\/mcp$/;
 
 export const getSafePathname = (url: string) => {
