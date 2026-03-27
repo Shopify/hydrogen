@@ -24,6 +24,9 @@ describe('third-party-api recipe', () => {
 
       const result = minifyQuery(query);
 
+      // Supplementary to the positive assertions below; the .toContain checks
+      // confirm the output still has the expected content, while this verifies
+      // no comment markers survived minification.
       expect(result).not.toContain('#');
       expect(result).toContain('query Characters');
       expect(result).toContain('results { name }');
@@ -42,6 +45,8 @@ describe('third-party-api recipe', () => {
 
       const result = minifyQuery(query);
 
+      // Supplementary to the exact .toBe() match below, which is the
+      // primary guard against whitespace collapsing regressions.
       expect(result).not.toMatch(/\s{2,}/);
       expect(result).toBe(
         'query Characters { characters { results { name } } }',
@@ -81,8 +86,11 @@ describe('third-party-api recipe', () => {
   });
 
   describe('display name extraction', () => {
-    // The createRickAndMortyClient extracts display names via this regex
-    // on the minified query string. We test the combined behavior.
+    // This regex is intentionally duplicated from createRickAndMortyClient.server.ts
+    // (line ~47). Exporting it from the source would mean adding a public API surface
+    // just for testing. The duplication is acceptable because (a) the regex is simple
+    // and stable, and (b) these tests verify the combined minifyQuery + extraction
+    // behavior rather than the regex in isolation.
     const extractDisplayName = (query: string) =>
       query.match(/^(query|mutation)\s\w+/)?.[0];
 

@@ -21,7 +21,7 @@ describe('gtm recipe', () => {
     const match = patchFiles.find((f) => f.startsWith(prefix));
     if (!match) {
       throw new Error(
-        `Expected ${prefix} patch file to exist in patches directory`,
+        `Expected ${prefix} patch file to exist in patches directory. Found: [${patchFiles.join(', ')}]`,
       );
     }
     return match;

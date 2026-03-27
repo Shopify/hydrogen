@@ -20,7 +20,7 @@ describe('express recipe', () => {
     const match = patchFiles.find((f) => f.startsWith(prefix));
     if (!match) {
       throw new Error(
-        `Expected ${prefix} patch file to exist in patches directory`,
+        `Expected ${prefix} patch file to exist in patches directory. Found: [${patchFiles.join(', ')}]`,
       );
     }
     return match;
@@ -77,8 +77,10 @@ describe('express recipe', () => {
 
     it('AppSession implements required session methods', () => {
       const classMatch = serverContent.match(/class AppSession[\s\S]*?^}/m);
-      expect(classMatch).not.toBeNull();
-      const classBody = classMatch![0];
+      if (!classMatch) {
+        throw new Error('Expected AppSession class to be found in server.mjs');
+      }
+      const classBody = classMatch[0];
 
       const requiredMethods = [
         'get(',
