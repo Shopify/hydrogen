@@ -1,30 +1,19 @@
 import {describe, expect, it, beforeAll} from 'vitest';
-import {readFile, readdir} from 'node:fs/promises';
+import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
+import {loadRecipePatch} from '../../__test-utils__/index';
 
 const RECIPE_DIR = join(__dirname, '..');
 
 describe('express recipe', () => {
   let serverContent: string;
-  let patchFiles: string[];
 
   beforeAll(async () => {
     serverContent = await readFile(
       join(RECIPE_DIR, 'ingredients/templates/skeleton/server.mjs'),
       'utf8',
     );
-    patchFiles = await readdir(join(RECIPE_DIR, 'patches'));
   });
-
-  function findPatchFile(prefix: string): string {
-    const match = patchFiles.find((f) => f.startsWith(prefix));
-    if (!match) {
-      throw new Error(
-        `Expected ${prefix} patch file to exist in patches directory. Found: [${patchFiles.join(', ')}]`,
-      );
-    }
-    return match;
-  }
 
   describe('recipe structure', () => {
     it('has a valid recipe.yaml', async () => {
@@ -51,20 +40,12 @@ describe('express recipe', () => {
     });
 
     it('uses renderToPipeableStream for Node.js streaming', async () => {
-      const patchFile = findPatchFile('entry.server.tsx');
-      const content = await readFile(
-        join(RECIPE_DIR, 'patches', patchFile),
-        'utf8',
-      );
+      const content = await loadRecipePatch(RECIPE_DIR, 'entry.server.tsx');
       expect(content).toContain('renderToPipeableStream');
     });
 
-    it('removes oxygen plugin from vite config', async () => {
-      const patchFile = findPatchFile('vite.config.ts');
-      const content = await readFile(
-        join(RECIPE_DIR, 'patches', patchFile),
-        'utf8',
-      );
+    it('vite config patch references oxygen plugin', async () => {
+      const content = await loadRecipePatch(RECIPE_DIR, 'vite.config.ts');
       expect(content).toContain('oxygen');
     });
   });

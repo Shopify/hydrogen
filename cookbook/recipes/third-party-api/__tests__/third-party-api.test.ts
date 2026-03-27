@@ -1,12 +1,17 @@
-import {describe, expect, it, vi} from 'vitest';
+import {describe, expect, it, vi, beforeEach} from 'vitest';
 
 // Mock @shopify/hydrogen since it's not available in the cookbook test context
+const mockFetch = vi.fn();
 vi.mock('@shopify/hydrogen', () => ({
-  createWithCache: vi.fn(),
+  createWithCache: vi.fn(() => ({fetch: mockFetch})),
   CacheLong: vi.fn(),
 }));
 
-import {minifyQuery} from '../ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server';
+import {
+  minifyQuery,
+  OPERATION_NAME_PATTERN,
+  createRickAndMortyClient,
+} from '../ingredients/templates/skeleton/app/lib/createRickAndMortyClient.server';
 
 describe('third-party-api recipe', () => {
   describe('minifyQuery', () => {
@@ -86,13 +91,8 @@ describe('third-party-api recipe', () => {
   });
 
   describe('display name extraction', () => {
-    // This regex is intentionally duplicated from createRickAndMortyClient.server.ts
-    // (line ~47). Exporting it from the source would mean adding a public API surface
-    // just for testing. The duplication is acceptable because (a) the regex is simple
-    // and stable, and (b) these tests verify the combined minifyQuery + extraction
-    // behavior rather than the regex in isolation.
     const extractDisplayName = (query: string) =>
-      query.match(/^(query|mutation)\s\w+/)?.[0];
+      query.match(OPERATION_NAME_PATTERN)?.[0];
 
     it('extracts query display name from minified query', () => {
       const minified = minifyQuery(`#graphql:rickAndMorty
@@ -107,6 +107,62 @@ describe('third-party-api recipe', () => {
 
     it('returns undefined for non-operation strings', () => {
       expect(extractDisplayName('{ characters { name } }')).toBeUndefined();
+    });
+  });
+
+  describe('createRickAndMortyClient', () => {
+    const TEST_QUERY =
+      `#graphql:rickAndMorty query Characters { characters { results { name } } }` as const;
+
+    function buildClient() {
+      return createRickAndMortyClient({
+        cache: {} as Cache,
+        waitUntil: vi.fn() as unknown as ExecutionContext['waitUntil'],
+        request: new Request('http://localhost'),
+      });
+    }
+
+    beforeEach(() => {
+      mockFetch.mockReset();
+    });
+
+    it('returns data.data on a successful response', async () => {
+      const expected = {characters: {results: [{name: 'Rick'}]}};
+      mockFetch.mockResolvedValue({
+        data: {data: expected},
+        response: {ok: true},
+      });
+
+      const client = buildClient();
+      const result = await client.query(TEST_QUERY, {});
+
+      expect(result).toEqual(expected);
+    });
+
+    it('throws with data.error message when response contains an error', async () => {
+      mockFetch.mockResolvedValue({
+        data: {error: 'Rate limit exceeded'},
+        response: {ok: true},
+      });
+
+      const client = buildClient();
+
+      await expect(client.query(TEST_QUERY, {})).rejects.toThrow(
+        'Rate limit exceeded',
+      );
+    });
+
+    it('throws with statusText when response is not ok', async () => {
+      mockFetch.mockResolvedValue({
+        data: null,
+        response: {ok: false, statusText: 'Service Unavailable'},
+      });
+
+      const client = buildClient();
+
+      await expect(client.query(TEST_QUERY, {})).rejects.toThrow(
+        'Error fetching from rick and morty api: Service Unavailable',
+      );
     });
   });
 });
