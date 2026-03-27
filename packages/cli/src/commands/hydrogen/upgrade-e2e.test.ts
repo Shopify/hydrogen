@@ -89,7 +89,7 @@ function validateDependencyVersion(
   actualVersion: string,
   expectedVersion: string,
   depName: string,
-  depType: 'dependency' | 'devDependency',
+  depType: string,
 ): void {
   const expectedBase = stripVersionPrefix(String(expectedVersion));
   const actualBase = stripVersionPrefix(actualVersion);
@@ -505,6 +505,12 @@ async function testUpgrade(
 
     // Verify cumulative intermediate dependencies are applied (not just toRelease).
     // This exercises the core getCumulativeRelease logic for multi-version jumps.
+    //
+    // Known limitation: if multiple intermediate releases update the same dep
+    // (e.g., release A sets foo@1.0 then release B sets foo@2.0), we validate
+    // against A's version even though the project has B's. This produces a
+    // false test failure, not a false pass, so it fails loudly. A future
+    // improvement could skip deps superseded by later intermediate releases.
     for (const intermediateRelease of intermediateReleases) {
       for (const [dep, expectedVersion] of Object.entries(
         intermediateRelease.dependencies ?? {},
@@ -513,6 +519,9 @@ async function testUpgrade(
         if (toRelease.removeDependencies?.includes(dep)) continue;
 
         const actualVersion = upgradedPackageJson.dependencies?.[dep];
+        // Skip deps not present in the upgraded project. An intermediate
+        // release may declare deps that don't apply to every starting version
+        // (e.g., the project never had the dep in the first place).
         if (actualVersion) {
           validateDependencyVersion(
             actualVersion,
@@ -530,6 +539,7 @@ async function testUpgrade(
         if (toRelease.removeDevDependencies?.includes(dep)) continue;
 
         const actualVersion = upgradedPackageJson.devDependencies?.[dep];
+        // Same rationale as above: skip deps absent from the project.
         if (actualVersion) {
           validateDependencyVersion(
             actualVersion,

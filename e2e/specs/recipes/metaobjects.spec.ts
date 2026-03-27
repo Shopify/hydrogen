@@ -169,13 +169,19 @@ test.describe('Metaobjects Recipe', () => {
 
       // Tab until a store link is focused (skip header/nav links)
       const maxTabPresses = MAX_TAB_PRESSES_TO_REACH_CONTENT;
+      let tabPressCount = 0;
       for (let i = 0; i < maxTabPresses; i++) {
+        tabPressCount = i;
         if (await firstLink.evaluate((el) => el === document.activeElement)) {
           break;
         }
         await page.keyboard.press('Tab');
       }
 
+      expect(
+        tabPressCount,
+        `Tab loop exhausted after ${maxTabPresses} presses before reaching first store link`,
+      ).toBeLessThan(maxTabPresses - 1);
       await expect(firstLink).toBeFocused();
       await page.keyboard.press('Enter');
       await expect(page).toHaveURL(/\/stores\/.+$/);
@@ -190,13 +196,19 @@ test.describe('Metaobjects Recipe', () => {
       await page.keyboard.press('Tab');
 
       const maxTabPresses = MAX_TAB_PRESSES_TO_REACH_CONTENT;
+      let tabPressCount = 0;
       for (let i = 0; i < maxTabPresses; i++) {
+        tabPressCount = i;
         if (await backLink.evaluate((el) => el === document.activeElement)) {
           break;
         }
         await page.keyboard.press('Tab');
       }
 
+      expect(
+        tabPressCount,
+        `Tab loop exhausted after ${maxTabPresses} presses before reaching back link`,
+      ).toBeLessThan(maxTabPresses - 1);
       await expect(backLink).toBeFocused();
       await page.keyboard.press('Enter');
       await expect(page).toHaveURL(/\/stores$/);

@@ -2,7 +2,7 @@ import {test, expect, setRecipeFixture} from '../../fixtures';
 import assert from '../../fixtures/assertions';
 import {CartUtil} from '../../fixtures/cart-utils';
 import {CustomCartMethodUtil} from '../../fixtures/custom-cart-method-utils';
-import {KNOWN_PRODUCT as KNOWN_PRODUCT_WITH_VARIANTS} from '../../fixtures/known-products';
+import {KNOWN_SKELETON_PRODUCT as KNOWN_PRODUCT_WITH_VARIANTS} from '../../fixtures/known-products';
 
 setRecipeFixture({
   recipeName: 'custom-cart-method',

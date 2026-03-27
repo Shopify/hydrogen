@@ -1,5 +1,5 @@
 import {test, expect, setRecipeFixture} from '../../fixtures';
-import {KNOWN_PRODUCT as KNOWN_REGULAR_PRODUCT} from '../../fixtures/known-products';
+import {KNOWN_SKELETON_PRODUCT as KNOWN_REGULAR_PRODUCT} from '../../fixtures/known-products';
 
 setRecipeFixture({
   recipeName: 'combined-listings',
