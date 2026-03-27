@@ -54,13 +54,13 @@ import {LanguageCode} from '@shopify/hydrogen-react/customer-account-api-types';
 
 const HYDROGEN_TUNNEL_DOMAIN_SUFFIX = '.tryhydrogen.dev';
 
-function throwIfNotTunnelled(hostname: string) {
+function throwIfNotSecureOrigin(protocol: string, hostname: string) {
   if (process.env.NODE_ENV === 'development') {
     // Keep this suffix in sync with the domain used by --customer-account-push.
-    if (!hostname.endsWith(HYDROGEN_TUNNEL_DOMAIN_SUFFIX)) {
+    if (protocol !== 'https:' || hostname === 'localhost') {
       throw new Response(
         [
-          'Customer Account API OAuth requires a Hydrogen tunnel in local development.',
+          'Customer Account API OAuth requires HTTPS in local development.',
           'Run the development server with the `--customer-account-push` flag,',
           `then open the tunnel URL shown in your terminal (\`https://*${HYDROGEN_TUNNEL_DOMAIN_SUFFIX}\`) instead of localhost.`,
         ].join('\n\n'),
@@ -81,8 +81,8 @@ function defaultAuthStatusHandler(
 ) {
   if (!request.url) return defaultLoginUrl;
 
-  const {hostname, pathname} = new URL(request.url);
-  throwIfNotTunnelled(hostname);
+  const {hostname, protocol, pathname} = new URL(request.url);
+  throwIfNotSecureOrigin(protocol, hostname);
 
   /**
    * Remix (single-fetch) request objects have different url
@@ -318,7 +318,7 @@ export function createCustomerAccountClient({
     mutation: Parameters<CustomerAccount['mutate']>[0],
     options?: Parameters<CustomerAccount['mutate']>[1],
   ) {
-    throwIfNotTunnelled(requestUrl.hostname);
+    throwIfNotSecureOrigin(requestUrl.protocol, requestUrl.hostname);
     ifInvalidCredentialThrowError();
 
     mutation = minifyQuery(mutation);
@@ -334,7 +334,7 @@ export function createCustomerAccountClient({
     query: Parameters<CustomerAccount['query']>[0],
     options?: Parameters<CustomerAccount['query']>[1],
   ) {
-    throwIfNotTunnelled(requestUrl.hostname);
+    throwIfNotSecureOrigin(requestUrl.protocol, requestUrl.hostname);
     ifInvalidCredentialThrowError();
 
     query = minifyQuery(query);
@@ -366,7 +366,7 @@ export function createCustomerAccountClient({
   return {
     i18n: {language: language ?? ('EN' as LanguageCode)},
     login: async (options?: LoginOptions) => {
-      throwIfNotTunnelled(requestUrl.hostname);
+      throwIfNotSecureOrigin(requestUrl.protocol, requestUrl.hostname);
       ifInvalidCredentialThrowError();
 
       const loginUrl = new URL(getCustomerAccountUrl(URL_TYPE.AUTH));
@@ -435,7 +435,7 @@ export function createCustomerAccountClient({
     },
 
     logout: async (options?: LogoutOptions) => {
-      throwIfNotTunnelled(requestUrl.hostname);
+      throwIfNotSecureOrigin(requestUrl.protocol, requestUrl.hostname);
       ifInvalidCredentialThrowError();
 
       const idToken = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken;
@@ -482,7 +482,7 @@ export function createCustomerAccountClient({
     mutate: mutate as CustomerAccount['mutate'],
     query: query as CustomerAccount['query'],
     authorize: async () => {
-      throwIfNotTunnelled(requestUrl.hostname);
+      throwIfNotSecureOrigin(requestUrl.protocol, requestUrl.hostname);
       ifInvalidCredentialThrowError();
 
       const code = requestUrl.searchParams.get('code');
