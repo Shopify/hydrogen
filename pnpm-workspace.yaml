@@ -15,7 +15,7 @@ overrides:
   '@shopify/cli-kit': '3.80.4'
   form-data: '>=4.0.4'
   '@types/node': 'catalog:'
-  vite: '^6.2.1'
+  vite: '^7.0.0'
   cookie: '^0.7.0'
 
 catalog:
@@ -24,4 +24,5 @@ catalog:
   '@types/react-dom': '^18.3.7'
   react: '^18.3.1'
   react-dom: '^18.3.1'
+  vite: '^7.0.0'
   '@shopify/prettier-config': '^1.1.2'
