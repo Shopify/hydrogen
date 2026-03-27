@@ -72,7 +72,9 @@ vi.mock('../../lib/shell.js', () => ({getCliCommand: vi.fn(() => 'h2')}));
 
 const commitCache = new Map<string, string | null>();
 const DEFAULT_LOOKBACK_PERIOD_IN_DAYS = 365;
-// Cap git log lookback to avoid scanning the entire commit history
+// Cap git log lookback to avoid scanning the entire commit history.
+// 200 comfortably exceeds the total Hydrogen release count, so this
+// captures every release without an unbounded scan.
 const MAX_RELEASE_LOOKBACK_COUNT = 200;
 
 beforeEach(() => {
