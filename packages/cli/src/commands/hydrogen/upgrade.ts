@@ -631,8 +631,8 @@ export function getCumulativeRelease({
   const removedDepsAt = new Map<string, number>();
   const removedDevDepsAt = new Map<string, number>();
 
-  // Last-write-wins: If a dep is removed in multiple releases, the map stores the *last* removal index.
-  // This ensures that a re-addition between two removal occurrences won't suppress the later removal.
+  // Last-write-wins: the map stores the index of the final removal for each dep.
+  // A re-addition only suppresses a removal if it occurs at or after that final removal index.
   releasesByVersion.forEach((release, i) => {
     release.removeDependencies?.forEach((dep) => {
       removedDepsAt.set(dep, i);
@@ -1003,8 +1003,7 @@ export async function upgradeNodeModules({
 }) {
   const tasks: Array<{title: string; task: () => Promise<void>}> = [];
 
-  // Cumulative removals cover intermediate releases (multi-version jumps).
-  // Defaults to the target release's own removals when not upgrading across multiple versions.
+  // Cumulative removals cover all intermediate releases when upgrading across multiple versions.
   const depsToRemove = [
     ...cumulativeRemoveDependencies,
     ...cumulativeRemoveDevDependencies,

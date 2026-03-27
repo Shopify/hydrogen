@@ -57,10 +57,7 @@ test.describe('Third-party API Recipe', () => {
     await expect(characters.first()).toContainText(/[A-Za-z]/);
   });
 
-  test('preserves existing homepage sections alongside third-party content', async ({
-    page,
-  }) => {
-
+  test('shows Recommended Products on homepage', async ({page}) => {
     const recommendedProductsSection = page.getByRole('region', {
       name: 'Recommended Products',
     });
