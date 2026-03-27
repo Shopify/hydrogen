@@ -72,6 +72,8 @@ function LocaleForm({locale}: {locale: Locale}) {
 
   return (
     <Form method="POST" action={action}>
+      {/* Hidden inputs are not focusable per HTML spec (type="hidden" elements
+          are excluded from the tab order), so tabIndex={-1} is unnecessary. */}
       <input type="hidden" name="redirectTo" value={newPath} />
       <input
         type="hidden"
