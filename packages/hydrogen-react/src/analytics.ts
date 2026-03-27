@@ -24,6 +24,7 @@ import {getTrackingValues} from './tracking-utils.js';
  * @param event - The analytics event.
  * @param shopDomain - The Online Store domain to sent Shopify analytics under the same
  *   top level domain.
+ * @publicDocs
  */
 export function sendShopifyAnalytics(
   event: ShopifyAnalytics,
@@ -135,6 +136,10 @@ function sendToShopify(
   }
 }
 
+/**
+ * Gathers client browser values commonly used for analytics.
+ * @publicDocs
+ */
 export function getClientBrowserParameters(): ClientBrowserParameters {
   if (errorIfServer('getClientBrowserParameters')) {
     return {

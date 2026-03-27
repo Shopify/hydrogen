@@ -24,6 +24,10 @@ export interface SeoHandleFunction<
   }): Partial<SeoConfig>;
 }
 
+/**
+ * The `<Seo />` component renders SEO meta tags in the document `head`. Add it to your `root.jsx` before the `<Meta />` and `<Link />` components. SEO metadata is set on a per-route basis using route loaders.
+ * @publicDocs
+ */
 interface SeoProps {
   /** Enable debug mode that prints SEO properties for route in the console */
   debug?: boolean;

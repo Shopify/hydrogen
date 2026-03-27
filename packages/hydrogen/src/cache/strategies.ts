@@ -46,6 +46,10 @@ const optionMapping: {
   staleIfError: 'stale-if-error',
 };
 
+/**
+ * Accepts a CachingStrategy object and returns a string with the corresponding `cache-control` header.
+ * @publicDocs
+ */
 export function generateCacheControlHeader(
   cacheOptions: CachingStrategy,
 ): string {
@@ -63,8 +67,9 @@ export function generateCacheControlHeader(
 }
 
 /**
- *
+ * The CacheNone() strategy instructs caches not to store any data.
  * @public
+ * @publicDocs
  */
 export function CacheNone(): NoStoreStrategy {
   return {
@@ -83,8 +88,9 @@ function guardExpirableModeType(overrideOptions?: CachingStrategy) {
 }
 
 /**
- *
+ * The CacheShort() strategy instructs caches to store data for 1 second, and `staleWhileRevalidate` data for an additional 9 seconds.
  * @public
+ * @publicDocs
  */
 export function CacheShort(overrideOptions?: CachingStrategy): AllCacheOptions {
   guardExpirableModeType(overrideOptions);
@@ -97,8 +103,9 @@ export function CacheShort(overrideOptions?: CachingStrategy): AllCacheOptions {
 }
 
 /**
- *
+ * The CacheLong() strategy instructs caches to store data for 1 hour, and `staleWhileRevalidate` data for an additional 23 hours.
  * @public
+ * @publicDocs
  */
 export function CacheLong(overrideOptions?: CachingStrategy): AllCacheOptions {
   guardExpirableModeType(overrideOptions);
@@ -127,8 +134,9 @@ export function CacheDefault(
 }
 
 /**
- *
+ * Allows you to create your own caching strategy using any of the options available in a CachingStrategy object.
  * @public
+ * @publicDocs
  */
 export function CacheCustom(overrideOptions: CachingStrategy): AllCacheOptions {
   return overrideOptions as AllCacheOptions;

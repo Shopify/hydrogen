@@ -144,6 +144,7 @@ export type CustomerAccount = {
   UNSTABLE_getBuyer: () => Promise<Buyer>;
 };
 
+/** @publicDocs */
 export type CustomerAccountOptions = {
   /** The client requires a session to persist the auth and refresh token. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */
   session: HydrogenSession;
