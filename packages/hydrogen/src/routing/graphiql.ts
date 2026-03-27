@@ -2,8 +2,16 @@ import type {LoaderFunctionArgs} from 'react-router';
 import type {Storefront} from '../storefront';
 import type {CustomerAccount} from '../customer/types';
 
+/**
+ * A loader function type for the GraphiQL route in Hydrogen apps.
+ * @publicDocs
+ */
 type GraphiQLLoader = (args: LoaderFunctionArgs) => Promise<Response>;
 
+/**
+ * Creates an instance of GraphiQL in your Hydrogen app when running on a development server, enabling you to explore the Storefront API schema and test queries.
+ * @publicDocs
+ */
 export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
   request,
   context,

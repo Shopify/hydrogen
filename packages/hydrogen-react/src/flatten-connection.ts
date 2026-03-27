@@ -5,6 +5,7 @@ import type {PartialDeep} from 'type-fest';
  * The utility works with either `nodes` or `edges.node`.
  *
  * If `connection` is null or undefined, will return an empty array instead in production. In development, an error will be thrown.
+ * @publicDocs
  */
 export function flattenConnection<
   ConnectionGeneric extends
@@ -86,7 +87,15 @@ type ConnectionNodes = {
 };
 
 // This is only for documentation purposes, and it is not used in the code.
+/**
+ * The `flattenConnection` utility transforms a connection object from the Storefront API (for example, [Product-related connections](https://shopify.dev/api/storefront/reference/products/product)) into a flat array of nodes. The utility works with either `nodes` or `edges.node`. If `connection` is null or undefined, will return an empty array instead in production. In development, an error will be thrown.
+ * @publicDocs
+ */
 export interface ConnectionGenericForDoc {
   connection?: ConnectionEdges | ConnectionNodes;
 }
+/**
+ * The return type of the `flattenConnection` utility: a flat array of nodes extracted from a Storefront API connection object.
+ * @publicDocs
+ */
 export type FlattenConnectionReturnForDoc = unknown[];

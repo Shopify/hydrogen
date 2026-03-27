@@ -2,6 +2,10 @@ import type {ExternalVideo as ExternalVideoType} from './storefront-api-types.js
 import type {Entries, PartialDeep} from 'type-fest';
 import {forwardRef, IframeHTMLAttributes} from 'react';
 
+/**
+ * The `ExternalVideo` component renders an embedded video for the Storefront API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).
+ * @publicDocs
+ */
 export interface ExternalVideoBaseProps {
   /**
    * An object with fields that correspond to the Storefront API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).
@@ -23,6 +27,7 @@ export type ExternalVideoProps = Omit<
 /**
  * The `ExternalVideo` component renders an embedded video for the Storefront
  * API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).
+ * @publicDocs
  */
 export const ExternalVideo = forwardRef<HTMLIFrameElement, ExternalVideoProps>(
   (props, ref): JSX.Element => {
