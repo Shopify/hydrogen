@@ -506,48 +506,58 @@ async function testUpgrade(
     // Verify cumulative intermediate dependencies are applied (not just toRelease).
     // This exercises the core getCumulativeRelease logic for multi-version jumps.
     //
-    // Known limitation: if multiple intermediate releases update the same dep
-    // (e.g., release A sets foo@1.0 then release B sets foo@2.0), we validate
-    // against A's version even though the project has B's. This produces a
-    // false test failure, not a false pass, so it fails loudly. A future
-    // improvement could skip deps superseded by later intermediate releases.
-    for (const intermediateRelease of intermediateReleases) {
-      for (const [dep, expectedVersion] of Object.entries(
-        intermediateRelease.dependencies ?? {},
-      )) {
-        if (toRelease.dependencies?.[dep]) continue;
-        if (toRelease.removeDependencies?.includes(dep)) continue;
+    // Multiple intermediate releases may update the same dep (e.g., release A
+    // sets foo@1.0, then release B sets foo@2.0). The production code uses
+    // last-write-wins in chronological order, so we mirror that here: build
+    // maps of the final expected version for each dep, then validate once.
+    // Note: intermediateReleases is newest-first (changelog order), so we
+    // reverse to iterate oldest-first and let the newest version win via
+    // last-write-wins.
+    const finalIntermediateDeps = new Map<string, string>();
+    const finalIntermediateDevDeps = new Map<string, string>();
 
-        const actualVersion = upgradedPackageJson.dependencies?.[dep];
-        // Skip deps not present in the upgraded project. An intermediate
-        // release may declare deps that don't apply to every starting version
-        // (e.g., the project never had the dep in the first place).
-        if (actualVersion) {
-          validateDependencyVersion(
-            actualVersion,
-            expectedVersion,
-            dep,
-            `cumulative dependency from ${intermediateRelease.version}`,
-          );
-        }
+    for (const release of [...intermediateReleases].reverse()) {
+      for (const [dep, version] of Object.entries(release.dependencies ?? {})) {
+        finalIntermediateDeps.set(dep, version);
       }
-
-      for (const [dep, expectedVersion] of Object.entries(
-        intermediateRelease.devDependencies ?? {},
+      for (const [dep, version] of Object.entries(
+        release.devDependencies ?? {},
       )) {
-        if (toRelease.devDependencies?.[dep]) continue;
-        if (toRelease.removeDevDependencies?.includes(dep)) continue;
+        finalIntermediateDevDeps.set(dep, version);
+      }
+    }
 
-        const actualVersion = upgradedPackageJson.devDependencies?.[dep];
-        // Same rationale as above: skip deps absent from the project.
-        if (actualVersion) {
-          validateDependencyVersion(
-            actualVersion,
-            expectedVersion,
-            dep,
-            `cumulative devDependency from ${intermediateRelease.version}`,
-          );
-        }
+    for (const [dep, expectedVersion] of finalIntermediateDeps) {
+      if (toRelease.dependencies?.[dep]) continue;
+      if (toRelease.removeDependencies?.includes(dep)) continue;
+
+      const actualVersion = upgradedPackageJson.dependencies?.[dep];
+      // Skip deps not present in the upgraded project. An intermediate
+      // release may declare deps that don't apply to every starting version
+      // (e.g., the project never had the dep in the first place).
+      if (actualVersion) {
+        validateDependencyVersion(
+          actualVersion,
+          expectedVersion,
+          dep,
+          'cumulative dependency',
+        );
+      }
+    }
+
+    for (const [dep, expectedVersion] of finalIntermediateDevDeps) {
+      if (toRelease.devDependencies?.[dep]) continue;
+      if (toRelease.removeDevDependencies?.includes(dep)) continue;
+
+      const actualVersion = upgradedPackageJson.devDependencies?.[dep];
+      // Same rationale as above: skip deps absent from the project.
+      if (actualVersion) {
+        validateDependencyVersion(
+          actualVersion,
+          expectedVersion,
+          dep,
+          'cumulative devDependency',
+        );
       }
     }
 
