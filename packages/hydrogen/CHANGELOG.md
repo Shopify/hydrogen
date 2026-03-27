@@ -1,5 +1,22 @@
 # @shopify/hydrogen
 
+## 2026.1.3
+
+### Patch Changes
+
+- Inline `useMachine` hook from `@xstate/react/fsm`, removing the `@xstate/react` dependency ([#3594](https://github.com/Shopify/hydrogen/pull/3594)) by [@fredericoo](https://github.com/fredericoo)
+
+  The `@xstate/react` package had no version supporting both React 19 and `@xstate/fsm`. By inlining the
+  React binding from `@xstate/react/fsm`, we eliminate this dependency (and its React version peer dep constraint) while
+  keeping `@xstate/fsm` and the cart state machine definition completely unchanged.
+
+  This also removes `use-sync-external-store` and `use-isomorphic-layout-effect` (which existed solely
+  as transitive deps of `@xstate/react`) and cleans up the Vite config workarounds that were needed
+  because `@xstate/react/fsm` had broken ESM resolution.
+
+- Updated dependencies [[`60bd93cd2eccd2d95fe809ee8c225b40568e133b`](https://github.com/Shopify/hydrogen/commit/60bd93cd2eccd2d95fe809ee8c225b40568e133b), [`108243003a7f36349a446478f4e8ab0cade3e13a`](https://github.com/Shopify/hydrogen/commit/108243003a7f36349a446478f4e8ab0cade3e13a)]:
+  - @shopify/hydrogen-react@2026.1.2
+
 ## 2026.1.2
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @shopify/mini-oxygen
 
+## 4.0.2
+
+### Patch Changes
+
+- Bumps undici from 7.21.0 to 7.24.0 to address security vulnerabilities ([#3581](https://github.com/Shopify/hydrogen/pull/3581)) by [@dependabot](https://github.com/apps/dependabot)
+
 ## 4.0.1
 
 ### Patch Changes
