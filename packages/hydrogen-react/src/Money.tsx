@@ -14,6 +14,10 @@ import type {PartialDeep} from 'type-fest';
  */
 type MoneyV2 = StorefrontApiMoneyV2 | CustomerAccountApiMoneyV2;
 
+/**
+ * The `Money` component renders a string of the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) according to the `locale` in the `ShopifyProvider` component.
+ * @publicDocs
+ */
 export interface MoneyPropsBase<ComponentGeneric extends React.ElementType> {
   /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */
   as?: ComponentGeneric;
@@ -71,6 +75,7 @@ export type MoneyProps<ComponentGeneric extends React.ElementType> =
  *   measurementSeparator=" per "
  * />
  * ```
+ * @publicDocs
  */
 export function Money<ComponentGeneric extends React.ElementType = 'div'>({
   data,

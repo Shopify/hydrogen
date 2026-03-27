@@ -56,6 +56,10 @@ type CartGetOptions = CartQueryOptions & {
   customerAccount?: CustomerAccount;
 };
 
+/**
+ * Creates a function that returns a cart.
+ * @publicDocs
+ */
 export function cartGetDefault({
   storefront,
   customerAccount,
