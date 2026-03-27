@@ -1,5 +1,18 @@
 # skeleton
 
+## 2026.1.3
+
+### Patch Changes
+
+- Improve screen reader experience for paginated product grids by hiding decorative arrow characters from assistive technology. ([#3557](https://github.com/Shopify/hydrogen/pull/3557)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Fix broken `aria-label` on territory code input in address form. The label was the raw developer string `"territoryCode"` instead of a human-readable `"Country code"`. ([#3607](https://github.com/Shopify/hydrogen/pull/3607)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Add aria-label to ProductPrice for improved screen reader accessibility ([#3558](https://github.com/Shopify/hydrogen/pull/3558)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Updated dependencies [[`108243003a7f36349a446478f4e8ab0cade3e13a`](https://github.com/Shopify/hydrogen/commit/108243003a7f36349a446478f4e8ab0cade3e13a)]:
+  - @shopify/hydrogen@2026.1.3
+
 ## 2026.1.2
 
 ### Patch Changes
