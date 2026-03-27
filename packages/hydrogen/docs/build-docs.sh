@@ -1,11 +1,27 @@
-COMPILE_DOCS="generate-docs --overridePath ./docs/typeOverride.json --input ./src ../hydrogen-react/src --output ./docs/generated"
+OUTPUT_DIR="./docs/generated"
+V2_TEMP_DIR="./docs/generated_v2_temp"
+
+COMPILE_DOCS_V2="generate-docs --overridePath ./docs/typeOverride.json --input ./src ../hydrogen-react/src --output $V2_TEMP_DIR"
+COMPILE_DOCS="pnpm exec tsc --project docs/tsconfig.docs.json --types react --moduleResolution node --target esNext && generate-docs --overridePath ./docs/typeOverride.json --input ./src --output $OUTPUT_DIR && rm -rf src/**/**/*.doc.js src/**/*.doc.js src/*.doc.js"
+COMPILE_STATIC_PAGES="pnpm exec tsc docs/staticPages/*.doc.ts --types react --moduleResolution node --target esNext && generate-docs --isLandingPage --input ./docs/staticPages --output $OUTPUT_DIR && rm -rf docs/staticPages/*.doc.js"
 
 if [ "$1" = "isTest" ];
 then
-COMPILE_DOCS="generate-docs --overridePath ./docs/typeOverride.json --input ./src ../hydrogen-react/src --output ./docs/temp"
+OUTPUT_DIR="./docs/temp"
+V2_TEMP_DIR="./docs/temp_v2"
+COMPILE_DOCS_V2="generate-docs --overridePath ./docs/typeOverride.json --input ./src ../hydrogen-react/src --output $V2_TEMP_DIR"
+COMPILE_DOCS="pnpm exec tsc --project docs/tsconfig.docs.json --types react --moduleResolution node  --target esNext && generate-docs --overridePath ./docs/typeOverride.json --input ./src --output $OUTPUT_DIR && rm -rf src/**/*.doc.js src/*.doc.js"
+COMPILE_STATIC_PAGES="pnpm exec tsc docs/staticPages/*.doc.ts --types react --moduleResolution node  --target esNext && generate-docs --isLandingPage --input ./docs/staticPages --output $OUTPUT_DIR && rm -rf docs/staticPages/*.doc.js"
 fi
 
+eval $COMPILE_DOCS_V2
 eval $COMPILE_DOCS
+eval $COMPILE_STATIC_PAGES
+
+node ./docs/copy-hydrogen-react-docs.cjs
+
+cp "$V2_TEMP_DIR/generated_docs_data_v2.json" "$OUTPUT_DIR/generated_docs_data_v2.json"
+rm -rf "$V2_TEMP_DIR"
 
 if [ "$1" != "isTest" ];
 then
