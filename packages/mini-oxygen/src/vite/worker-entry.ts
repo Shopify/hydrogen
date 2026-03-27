@@ -112,8 +112,10 @@ function fetchEntryModule(env: ViteEnv) {
               payload.event === 'vite:invoke' &&
               isViteInvokePayload(payload.data)
             ) {
+              // TODO: Remove this shim when Vite 6 support is dropped.
               // workerd has no Node builtins; return empty list directly
               // so Vite 6 servers (which have no getBuiltins handler) still work.
+              // Vite 7+ handles getBuiltins internally.
               if (payload.data.name === 'getBuiltins') {
                 return Promise.resolve({result: []});
               }
