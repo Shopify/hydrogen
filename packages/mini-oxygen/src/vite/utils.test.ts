@@ -1,9 +1,7 @@
 import {describe, it, expect, vi} from 'vitest';
 import {Readable, Writable} from 'node:stream';
-import {ReadableStream} from 'node:stream/web';
 import {IncomingMessage, ServerResponse} from 'node:http';
 import {pipeFromWeb, toWeb, toURL} from './utils.js';
-import {Response} from '../worker/index.js';
 import * as nodeFetchServer from '@mjackson/node-fetch-server';
 
 // Mock the sendResponse function from @mjackson/node-fetch-server
@@ -52,11 +50,12 @@ describe('utils', () => {
 
       // Mock the Readable.toWeb method
       const mockBody = new ReadableStream();
-      vi.spyOn(Readable, 'toWeb').mockReturnValue(mockBody);
+      vi.spyOn(Readable, 'toWeb').mockReturnValue(
+        mockBody as unknown as ReturnType<typeof Readable.toWeb>,
+      );
 
       const webReq = toWeb(nodeReq);
 
-      // The Request constructor being used is from ../worker/index.js
       expect(webReq.constructor.name).toBe('Request');
       expect(webReq.method).toBe('POST');
       expect(webReq.headers.get('content-type')).toBe('application/json');

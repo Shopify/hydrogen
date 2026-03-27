@@ -2,7 +2,6 @@ import type {ServerResponse} from 'node:http';
 import {readFile} from 'node:fs/promises';
 import type {ViteDevServer} from 'vite';
 import {getErrorPage} from '../common/error-page.js';
-import type {Response} from '../worker/index.js';
 
 export function isEntrypointError(webResponse: Response) {
   return (
