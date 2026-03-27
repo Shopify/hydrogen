@@ -106,7 +106,7 @@
     "@types/source-map-support": "^0.5.10",
     "formdata-polyfill": "^4.0.10",
     "graphql": "^16.12.0",
-    "happy-dom": "^20.0.0",
+    "happy-dom": "^20.8.8",
     "react": "catalog:",
     "react-dom": "catalog:",
     "schema-dts": "^1.1.2",
