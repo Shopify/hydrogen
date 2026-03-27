@@ -123,7 +123,8 @@ export function createMiniOxygenDevEnvironment(
   async function warmup() {
     // Give Vite a brief moment to settle after listen/config reload before
     // sending the synthetic first request that boots MiniOxygen eagerly.
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    const WARMUP_SETTLE_DELAY_MS = 200;
+    await new Promise((resolve) => setTimeout(resolve, WARMUP_SETTLE_DELAY_MS));
 
     const viteUrl = viteDevServer && getViteUrl(viteDevServer);
     if (!viteUrl) return;
