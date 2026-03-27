@@ -170,6 +170,13 @@ steps:
       - file: app/routes/account.tsx
         patchFile: account.tsx.30f6e3.patch
   - type: PATCH
+    step: "19"
+    name: app/routes/account_.login.tsx
+    description: Replace Customer Account API login with form-based Storefront API login
+    diffs:
+      - file: app/routes/account_.login.tsx
+        patchFile: account_.login.tsx.cf1415.patch
+  - type: PATCH
     step: "20"
     name: app/routes/account_.logout.tsx
     description: Implement session-based logout

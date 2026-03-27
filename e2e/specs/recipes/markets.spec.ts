@@ -2,6 +2,7 @@ import {test, expect, setRecipeFixture} from '../../fixtures';
 import {MarketsUtil} from '../../fixtures/markets-utils';
 import {CartUtil} from '../../fixtures/cart-utils';
 import {CURRENCY_FORMATS} from '../../fixtures/currency-formats';
+import {KNOWN_PRODUCT} from '../../fixtures/known-products';
 
 setRecipeFixture({
   recipeName: 'markets',
@@ -15,13 +16,6 @@ setRecipeFixture({
  * text like "Add to cart" stays in English. Localization is routing- and
  * API-driven, not client-side string substitution.
  */
-
-// Stable product in the hydrogenPreviewStorefront used for price assertions.
-// If this product is removed from the store, these tests will need updating.
-const KNOWN_PRODUCT = {
-  handle: 'the-ascend',
-  name: 'The Ascend',
-} as const;
 
 test.describe('Markets Recipe', () => {
   test.describe('Default Locale (USD)', () => {
