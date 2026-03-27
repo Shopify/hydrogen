@@ -132,6 +132,10 @@ function logMissingConfig(fieldName: string) {
   );
 }
 
+/**
+ * A hook that loads the Customer Privacy API and sets up consent management for your Hydrogen storefront.
+ * @publicDocs
+ */
 export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   const {
     withPrivacyBanner = false,

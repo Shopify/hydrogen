@@ -11,6 +11,10 @@ import {generateNonce} from './nonce';
 export const NonceContext = createContext<string | undefined>(undefined);
 export const NonceProvider = NonceContext.Provider;
 
+/**
+ * The `useNonce` hook returns the content security policy nonce. Use the hook to manually add a nonce to third-party scripts.
+ * @publicDocs
+ */
 export const useNonce = () => useContext(NonceContext);
 
 type ContentSecurityPolicy = {
@@ -63,7 +67,9 @@ type ShopProp = {
 };
 
 /**
+ * Create a content security policy to secure your application. The default content security policy includes exclusions for cdn.shopify.com and specific Shopify domains.
  * @param directives - Pass custom [content security policy directives](https://content-security-policy.com/). This is important if you load content in your app from third-party domains.
+ * @publicDocs
  */
 export function createContentSecurityPolicy(
   props?: CreateContentSecurityPolicy & ShopProp,
