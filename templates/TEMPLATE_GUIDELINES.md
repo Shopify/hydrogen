@@ -126,10 +126,7 @@ Remix-specific route API functions should be ordered and consistent in style, to
 
 ```tsx
 /* module imports... */
-import type {
-  LoaderFunctionArgs,
-  ActionFunctionArgs,
-} from '@shopify/remix-oxygen';
+import type {LoaderFunctionArgs, ActionFunctionArgs} from 'react-router';
 
 /* local type defintions */
 
@@ -180,7 +177,7 @@ Use the correct return type in `loader()`, `action()`, etc.
 
 - Return raw json object by default
 - Use `await` if you want the data to be streamed in later
-- Use `redirect()` from the `@shopify/remix-oxygen` package to redirect
+- Use `redirect()` from `react-router` to redirect
 - Use `data()` for errors (like 404s)
 - Use `new Response()` for unique document responses like `.xml` and `.txt`
 - Use capitalized and kebab-cased headers in responses, like `Cache-Control`
@@ -194,7 +191,7 @@ export async function loader() {
 ```
 
 ```tsx
-import {redirect} from ''@shopify/remix-oxygen';';
+import {redirect} from 'react-router';
 export async function loader() {
   return redirect('/');
 }

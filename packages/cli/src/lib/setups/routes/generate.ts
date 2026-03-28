@@ -336,7 +336,10 @@ export async function generateProjectFile(
 }
 
 function replaceAdapters(templateContent: string, adapter: string) {
-  return templateContent.replace(/@shopify\/remix-oxygen/g, adapter);
+  return templateContent.replace(
+    /(from\s+['"])react-router(['"])/g,
+    `$1${adapter}$2`,
+  );
 }
 
 /**
