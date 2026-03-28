@@ -215,6 +215,24 @@ button:active.primary {
   margin-top: 0.5rem;
 }
 
+/* Anchor styled to match button.primary — used when semantic link is needed over button */
+.primary-link {
+  display: inline-block;
+  border-radius: 0.375rem;
+  background-color: #0554f2;
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.primary-link:hover {
+  background-color: #0c54e6;
+  color: #fff;
+}
+
 #options-and-legend {
   height: 4rem;
 }
