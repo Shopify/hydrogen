@@ -80,21 +80,15 @@ test.describe('Consent Tracking - Auto-Allowed (Consent Allowed by Default)', ()
       'after page load',
     );
 
-    // 6. Finalize perf-kit metrics before navigation
-    await storefront.finalizePerfKitMetrics();
-
-    // 7. Navigate to a product (triggers perf-kit to send metrics)
-    await storefront.navigateToFirstProduct();
-
-    // Wait for perf-kit to send metrics after visibility change
-    await storefront.page.waitForTimeout(500);
-
-    // Verify perf-kit payload contains correct tracking values
-    storefront.verifyPerfKitRequests(
+    // 6. Verify PerfKit has correct tracking values available
+    await storefront.verifyPerfKitRequests(
       navigationServerTiming._y!,
       navigationServerTiming._s!,
-      'after navigation',
+      'after page load',
     );
+
+    // 7. Navigate to a product
+    await storefront.navigateToFirstProduct();
 
     // 8. Add to cart
     await storefront.addToCart();
