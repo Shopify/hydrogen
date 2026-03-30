@@ -67,7 +67,7 @@
       "version": "2026.1.2",
       "date": "2026-03-13",
       "hash": "f3b9b4fef8ea1bc60544132051f97346f29c6b2d",
-      "commit": "https://github.com/Shopify/hydrogen/pull/3524/commits/f3b9b4fef8ea1bc60544132051f97346f29c6b2d",
+      "commit": "https://github.com/Shopify/hydrogen/commit/f3b9b4fef8ea1bc60544132051f97346f29c6b2d",
       "pr": "https://github.com/Shopify/hydrogen/pull/3524",
       "dependencies": {
         "@shopify/hydrogen": "2026.1.2"
@@ -115,7 +115,7 @@
       "version": "2026.1.1",
       "date": "2026-02-26",
       "hash": "6c966328355bde1301cdfe6117a088213e3a442f",
-      "commit": "https://github.com/Shopify/hydrogen/pull/3468/commits/6c966328355bde1301cdfe6117a088213e3a442f",
+      "commit": "https://github.com/Shopify/hydrogen/commit/6c966328355bde1301cdfe6117a088213e3a442f",
       "pr": "https://github.com/Shopify/hydrogen/pull/3468",
       "dependencies": {
         "@shopify/hydrogen": "2026.1.1"
