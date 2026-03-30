@@ -954,15 +954,10 @@ async function extractSkeletonTemplate(
 
     // pnpm pack natively resolves workspace:* and catalog: protocols,
     // matching the strategy in template-pack.ts (getPackedTemplatePackageJson).
-    // --ignore-scripts prevents lifecycle hooks from failing in historical commits.
-    await exec(
-      'pnpm',
-      ['pack', '--pack-destination', packOutputDir, '--ignore-scripts'],
-      {
-        cwd: join(worktreeDir, 'templates', 'skeleton'),
-        signal: timeoutSignal(PNPM_PACK_TIMEOUT_IN_MS),
-      },
-    );
+    await exec('pnpm', ['pack', '--pack-destination', packOutputDir], {
+      cwd: join(worktreeDir, 'templates', 'skeleton'),
+      signal: timeoutSignal(PNPM_PACK_TIMEOUT_IN_MS),
+    });
 
     const files = await readdir(packOutputDir);
     const tarball = files.find((f) => f.endsWith('.tgz'));
