@@ -3,11 +3,11 @@
   "version": "1",
   "releases": [
     {
-      "title": "Accessibility improvements, CLI fixes, and dependency updates",
+      "title": "CLI fixes and dependency updates",
       "version": "2026.1.3",
       "date": "2026-03-27",
       "hash": "fcfbcaa299f46788d2fbabf24d021b8a8dcaadae",
-      "commit": "https://github.com/Shopify/hydrogen/pull/3584/commits/fcfbcaa299f46788d2fbabf24d021b8a8dcaadae",
+      "commit": "https://github.com/Shopify/hydrogen/commit/fcfbcaa299f46788d2fbabf24d021b8a8dcaadae",
       "pr": "https://github.com/Shopify/hydrogen/pull/3584",
       "dependencies": {
         "@shopify/hydrogen": "2026.1.3"
@@ -18,22 +18,10 @@
       ],
       "fixes": [
         {
-          "title": "Improve screen reader experience in paginated product grids",
-          "info": "Hide decorative arrow characters from screen readers by adding aria-hidden attributes to improve accessibility for users of assistive technology.",
-          "pr": "https://github.com/Shopify/hydrogen/pull/3557",
-          "id": "3557"
-        },
-        {
           "title": "Fix hydrogen dev --port 0 with --customer-account-push tunnel",
           "info": "Resolved issue where using port 0 (OS-assigned) with --customer-account-push caused cloudflared to target the wrong origin. The port is now resolved upfront so both cloudflared and Vite bind to the same address.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3532",
           "id": "3532"
-        },
-        {
-          "title": "Fix broken aria-label on territory code input in address form",
-          "info": "The territory code input was displaying the raw developer string 'territoryCode' instead of the human-readable label 'Country code'.",
-          "pr": "https://github.com/Shopify/hydrogen/pull/3607",
-          "id": "3607"
         },
         {
           "title": "Fix h2 upgrade failing with yarn and pnpm",
@@ -46,12 +34,6 @@
           "info": "When upgrading across multiple versions, dependencies removed in intermediate releases are now properly removed even when jumping versions.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3527",
           "id": "3527"
-        },
-        {
-          "title": "Add aria-label to ProductPrice for improved screen reader accessibility",
-          "info": "The ProductPrice component now includes an aria-label to better describe price information to users of assistive technology.",
-          "pr": "https://github.com/Shopify/hydrogen/pull/3558",
-          "id": "3558"
         },
         {
           "title": "Fix multi-version upgrades to accumulate intermediate dependency bumps",
