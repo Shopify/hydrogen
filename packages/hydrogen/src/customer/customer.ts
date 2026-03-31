@@ -54,25 +54,39 @@ import {LanguageCode} from '@shopify/hydrogen-react/customer-account-api-types';
 
 const HYDROGEN_TUNNEL_DOMAIN_SUFFIX = '.tryhydrogen.dev';
 
-function throwIfNotTunnelled(hostname: string) {
-  if (process.env.NODE_ENV === 'development') {
-    // Keep this suffix in sync with the domain used by --customer-account-push.
-    if (!hostname.endsWith(HYDROGEN_TUNNEL_DOMAIN_SUFFIX)) {
-      throw new Response(
-        [
-          'Customer Account API OAuth requires a Hydrogen tunnel in local development.',
-          'Run the development server with the `--customer-account-push` flag,',
-          `then open the tunnel URL shown in your terminal (\`https://*${HYDROGEN_TUNNEL_DOMAIN_SUFFIX}\`) instead of localhost.`,
-        ].join('\n\n'),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'text/plain; charset=utf-8',
-          },
-        },
-      );
-    }
+function checkTunnelDomain(
+  hostname: string,
+  useCustomAuthDomain?: boolean,
+  redirectUri?: string,
+) {
+  if (process.env.NODE_ENV !== 'development') return;
+  // Keep this suffix in sync with the domain used by --customer-account-push.
+  if (hostname.endsWith(HYDROGEN_TUNNEL_DOMAIN_SUFFIX)) return;
+
+  if (useCustomAuthDomain) {
+    const redirectHint = redirectUri ? ` (${redirectUri})` : '';
+    warnOnce(
+      `[h2:warn:customerAccount] You are using a custom domain (${hostname}) instead of a Hydrogen dev tunnel. ` +
+        `Make sure you have manually registered your redirect_uri${redirectHint} ` +
+        `in your Customer Account API settings in the Shopify admin. ` +
+        `See https://shopify.dev/docs/api/customer for details.`,
+    );
+    return;
   }
+
+  throw new Response(
+    [
+      'Customer Account API OAuth requires a Hydrogen tunnel in local development.',
+      'Run the development server with the `--customer-account-push` flag,',
+      `then open the tunnel URL shown in your terminal (\`https://*${HYDROGEN_TUNNEL_DOMAIN_SUFFIX}\`) instead of localhost.`,
+    ].join('\n\n'),
+    {
+      status: 400,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+      },
+    },
+  );
 }
 
 function defaultAuthStatusHandler(
@@ -81,8 +95,7 @@ function defaultAuthStatusHandler(
 ) {
   if (!request.url) return defaultLoginUrl;
 
-  const {hostname, pathname} = new URL(request.url);
-  throwIfNotTunnelled(hostname);
+  const {pathname} = new URL(request.url);
 
   /**
    * Remix (single-fetch) request objects have different url
@@ -120,6 +133,7 @@ export function createCustomerAccountClient({
   authorizePath = '/account/authorize',
   defaultRedirectPath = '/account',
   language,
+  useCustomAuthDomain,
 }: CustomerAccountOptions): CustomerAccount {
   if (customerApiVersion !== DEFAULT_CUSTOMER_API_VERSION) {
     console.warn(
@@ -139,10 +153,6 @@ export function createCustomerAccountClient({
     );
   }
 
-  const authStatusHandler = customAuthStatusHandler
-    ? customAuthStatusHandler
-    : () => defaultAuthStatusHandler(request, loginPath);
-
   const requestUrl = new URL(request.url);
   const httpsOrigin =
     requestUrl.protocol === 'http:'
@@ -153,6 +163,16 @@ export function createCustomerAccountClient({
     defaultUrl: authorizePath,
     redirectUrl: authUrl,
   });
+
+  const ensureTunnel = (hostname: string) =>
+    checkTunnelDomain(hostname, useCustomAuthDomain, redirectUri);
+
+  const authStatusHandler = customAuthStatusHandler
+    ? customAuthStatusHandler
+    : () => {
+        ensureTunnel(requestUrl.hostname);
+        return defaultAuthStatusHandler(request, loginPath);
+      };
 
   const getCustomerAccountUrl = createCustomerAccountHelper(
     customerApiVersion,
@@ -318,7 +338,7 @@ export function createCustomerAccountClient({
     mutation: Parameters<CustomerAccount['mutate']>[0],
     options?: Parameters<CustomerAccount['mutate']>[1],
   ) {
-    throwIfNotTunnelled(requestUrl.hostname);
+    ensureTunnel(requestUrl.hostname);
     ifInvalidCredentialThrowError();
 
     mutation = minifyQuery(mutation);
@@ -334,7 +354,7 @@ export function createCustomerAccountClient({
     query: Parameters<CustomerAccount['query']>[0],
     options?: Parameters<CustomerAccount['query']>[1],
   ) {
-    throwIfNotTunnelled(requestUrl.hostname);
+    ensureTunnel(requestUrl.hostname);
     ifInvalidCredentialThrowError();
 
     query = minifyQuery(query);
@@ -366,7 +386,7 @@ export function createCustomerAccountClient({
   return {
     i18n: {language: language ?? ('EN' as LanguageCode)},
     login: async (options?: LoginOptions) => {
-      throwIfNotTunnelled(requestUrl.hostname);
+      ensureTunnel(requestUrl.hostname);
       ifInvalidCredentialThrowError();
 
       const loginUrl = new URL(getCustomerAccountUrl(URL_TYPE.AUTH));
@@ -435,7 +455,7 @@ export function createCustomerAccountClient({
     },
 
     logout: async (options?: LogoutOptions) => {
-      throwIfNotTunnelled(requestUrl.hostname);
+      ensureTunnel(requestUrl.hostname);
       ifInvalidCredentialThrowError();
 
       const idToken = session.get(CUSTOMER_ACCOUNT_SESSION_KEY)?.idToken;
@@ -482,7 +502,7 @@ export function createCustomerAccountClient({
     mutate: mutate as CustomerAccount['mutate'],
     query: query as CustomerAccount['query'],
     authorize: async () => {
-      throwIfNotTunnelled(requestUrl.hostname);
+      ensureTunnel(requestUrl.hostname);
       ifInvalidCredentialThrowError();
 
       const code = requestUrl.searchParams.get('code');
