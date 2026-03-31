@@ -13,8 +13,8 @@
     "directory": "packages/create-hydrogen"
   },
   "scripts": {
-    "build": "tsup --clean",
-    "dev": "tsup --watch src --watch ../cli/src",
+    "build": "tsdown --clean",
+    "dev": "tsdown --watch src --watch ../cli/src",
     "test": "vitest run --test-timeout=60000",
     "typecheck": "tsc --noEmit"
   },

@@ -13,8 +13,8 @@
     "directory": "packages/cli-hydrogen"
   },
   "scripts": {
-    "build": "tsup && node scripts/build-check.mjs",
-    "dev": "tsup --watch ./src --watch ../../templates/skeleton",
+    "build": "tsdown --config-loader unrun && node scripts/build-check.mjs",
+    "dev": "tsdown --config-loader unrun --watch ./src --watch ../../templates/skeleton",
     "typecheck": "tsc --noEmit",
     "generate:manifest": "node scripts/generate-manifest.mjs",
     "test": "cross-env SHOPIFY_UNIT_TEST=1 LANG=en-US.UTF-8 vitest run --test-timeout=60000",

@@ -430,7 +430,7 @@ function setupMonorepoReload(
     // We watch the plugin file for example and restart Vite server,
     // which also restarts the MiniOxygen worker.
     // The only exception is worker-entry because it follows a separate
-    // build in TSUP.
+    // build in tsdown.
     viteServer.watcher.add(
       monorepoPackagesPath + 'mini-oxygen/dist/vite/plugin.js',
     );

@@ -18,8 +18,8 @@
     "directory": "packages/mini-oxygen"
   },
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "typecheck": "tsc --noEmit",
     "prepack": "pnpm run build",
     "test": "NODE_OPTIONS=--experimental-vm-modules vitest run --test-timeout=60000"

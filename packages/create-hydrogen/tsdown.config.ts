@@ -1,7 +1,7 @@
 import {createRequire} from 'node:module';
 import fs from 'node:fs/promises';
 import {existsSync} from 'node:fs';
-import {defineConfig} from 'tsup';
+import {defineConfig} from 'tsdown';
 
 const MAX_WAIT_MS = 10_000;
 const INITIAL_DELAY_MS = 100;
@@ -14,19 +14,19 @@ export default defineConfig({
   sourcemap: false,
   dts: false,
   minify: true,
-  splitting: true, // Async/await breaks without splitting
-
-  // -- Bundle:
-  bundle: true,
-  external: [
-    '@ast-grep/napi', // Required binary
-    'react-devtools-core', // Not used but breaks the build otherwise
-  ],
+  fixedExtension: false,
   // Needed for some CJS dependencies:
   shims: true,
   banner: {
     js: "import { createRequire as __createRequire } from 'module';globalThis.require = __createRequire(import.meta.url);",
   },
+  deps: {
+    neverBundle: [
+      '@ast-grep/napi', // Required binary
+      'react-devtools-core', // Not used but breaks the build otherwise
+    ],
+  },
+  target: false,
   async onSuccess() {
     const cliAssetsPath = '../cli/dist/assets';
 
