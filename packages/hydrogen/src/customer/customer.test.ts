@@ -294,6 +294,26 @@ describe('customer', () => {
         warnSpy.mockRestore();
       });
 
+      it('Does not warn or throw in production even with useCustomAuthDomain', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        process.env.NODE_ENV = 'production';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request('https://my-ngrok-tunnel.ngrok.io'),
+          waitUntil: vi.fn(),
+          useCustomAuthDomain: true,
+        });
+
+        const response = await customer.login();
+
+        expect(response.status).toBe(302);
+        expect(warnSpy).not.toHaveBeenCalled();
+        warnSpy.mockRestore();
+      });
+
       it('Redirects to the customer account api login url with authUrl as param', async () => {
         const origin = 'https://localhost';
         const authUrl = '/customer-account/auth';
