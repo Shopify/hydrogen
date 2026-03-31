@@ -19,7 +19,7 @@
  *   CI=1                          - Enable CI mode (set by tests)
  *
  * Key design decisions:
- *   - Scaffolds from git history (worktree + pnpm pack) instead of npm registry because
+ *   - Scaffolds from git history (worktree + npm pack) instead of npm registry because
  *     packages may not exist for older/unpublished versions, and git gives us exact state
  *   - Skips build validation when manual steps or breaking changes are present
  *     because developers must apply those steps before the project will build
@@ -29,15 +29,13 @@
 
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {execFile} from 'node:child_process';
-import {
-  access,
-  readFile,
-  rename,
-  writeFile,
-  mkdir,
-  readdir,
-} from 'node:fs/promises';
+import {readFile, rename, writeFile, mkdir, readdir} from 'node:fs/promises';
 import {join} from 'node:path';
+import {
+  parseCatalogFromWorkspaceYaml,
+  parseWorkspacePackagesFromYaml,
+  resolveWorkspaceProtocols,
+} from '../../lib/upgrade-e2e-utils.js';
 import {promisify} from 'node:util';
 import {exec} from '@shopify/cli-kit/node/system';
 import {inTemporaryDirectory} from '@shopify/cli-kit/node/fs';
@@ -55,7 +53,7 @@ type ChangeLog = Awaited<ReturnType<typeof upgradeModule.getChangelog>>;
 // Subprocess timeouts prevent CI hangs when git or npm encounters corrupted
 // objects or unexpected state in historical commits.
 const GIT_TIMEOUT_IN_MS = 60_000;
-const PNPM_PACK_TIMEOUT_IN_MS = 120_000;
+const NPM_PACK_TIMEOUT_IN_MS = 120_000;
 
 // cli-kit re-exports AbortSignal from node-abort-controller (polyfill) whose
 // type is incompatible with Node's native AbortSignal. This helper bridges them.
@@ -928,6 +926,32 @@ async function resolveSkeletonCommit(
   return {commit, skeletonVersion};
 }
 
+/**
+ * Builds a map of workspace package name → version by reading package.json
+ * files at the paths listed in pnpm-workspace.yaml.
+ */
+async function buildWorkspaceVersionMap(
+  worktreeDir: string,
+  workspaceYamlContent: string,
+): Promise<Map<string, string>> {
+  const versionMap = new Map<string, string>();
+  const workspacePaths = parseWorkspacePackagesFromYaml(workspaceYamlContent);
+
+  for (const wsPath of workspacePaths) {
+    const pkgJsonPath = join(worktreeDir, wsPath, 'package.json');
+    try {
+      const pkg = JSON.parse(await readFile(pkgJsonPath, 'utf8'));
+      if (pkg.name && pkg.version) {
+        versionMap.set(pkg.name, pkg.version);
+      }
+    } catch {
+      // package.json may not exist at this path in historical commits
+    }
+  }
+
+  return versionMap;
+}
+
 async function extractSkeletonTemplate(
   tempDir: string,
   commit: string,
@@ -945,25 +969,34 @@ async function extractSkeletonTemplate(
 
   try {
     // Worktree gives filesystem access to the full monorepo at the historical
-    // commit so pnpm can read pnpm-workspace.yaml and resolve protocols.
+    // commit for reading workspace package versions and catalog config.
     await exec('git', ['worktree', 'add', worktreeDir, commit], {
       cwd: repoRoot,
       signal: timeoutSignal(GIT_TIMEOUT_IN_MS),
     });
     await mkdir(packOutputDir, {recursive: true});
 
-    // pnpm pack natively resolves workspace:* and catalog: protocols,
-    // matching the strategy in template-pack.ts (getPackedTemplatePackageJson).
-    await exec('pnpm', ['pack', '--pack-destination', packOutputDir], {
-      cwd: join(worktreeDir, 'templates', 'skeleton'),
-      signal: timeoutSignal(PNPM_PACK_TIMEOUT_IN_MS),
-    });
+    // npm pack is protocol-agnostic — it tars whatever is on disk without
+    // trying to resolve pnpm-specific protocols (workspace:*, catalog:).
+    // We resolve those manually after extraction via resolveWorkspaceProtocols.
+    // --ignore-scripts prevents the prepare hook from failing in historical commits.
+    await exec(
+      'npm',
+      [
+        'pack',
+        './templates/skeleton',
+        '--pack-destination',
+        packOutputDir,
+        '--ignore-scripts',
+      ],
+      {cwd: worktreeDir, signal: timeoutSignal(NPM_PACK_TIMEOUT_IN_MS)},
+    );
 
     const files = await readdir(packOutputDir);
     const tarball = files.find((f) => f.endsWith('.tgz'));
     if (!tarball) {
       throw new Error(
-        `pnpm pack did not generate a tarball in ${packOutputDir}`,
+        `npm pack did not generate a tarball in ${packOutputDir}`,
       );
     }
 
@@ -985,16 +1018,53 @@ async function extractSkeletonTemplate(
       {signal: timeoutSignal(GIT_TIMEOUT_IN_MS)},
     );
 
-    // pnpm pack tarballs extract to a "package/" subdirectory
+    // npm pack tarballs extract to a "package/" subdirectory
     const skeletonPath = join(extractDir, 'package');
+    const packageJsonPath = join(skeletonPath, 'package.json');
 
+    let packageJson: Record<string, unknown>;
     try {
-      await access(join(skeletonPath, 'package.json'));
+      packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
     } catch {
       throw new Error(
         `Skeleton template was not extracted successfully from commit ${commit} (version ${skeletonVersion}).\n` +
           `Expected path ${skeletonPath} does not exist or is missing package.json.\n` +
           `This might indicate templates/skeleton doesn't exist at that commit.`,
+      );
+    }
+
+    // Resolve pnpm-specific protocols (workspace:*, catalog:) that npm pack
+    // left as-is. Post-pnpm-migration commits (2026.1.1+) have these;
+    // pre-pnpm commits have plain version strings and skip this step.
+    const workspaceYamlPath = join(worktreeDir, 'pnpm-workspace.yaml');
+    let workspaceYaml: string | null = null;
+    try {
+      workspaceYaml = await readFile(workspaceYamlPath, 'utf8');
+    } catch {
+      // Pre-pnpm commits have no pnpm-workspace.yaml — no protocols to resolve
+    }
+
+    if (workspaceYaml) {
+      const catalogVersions = parseCatalogFromWorkspaceYaml(workspaceYaml);
+      const workspaceVersions = await buildWorkspaceVersionMap(
+        worktreeDir,
+        workspaceYaml,
+      );
+
+      const resolved = await resolveWorkspaceProtocols({
+        packageJson: packageJson as Parameters<
+          typeof resolveWorkspaceProtocols
+        >[0]['packageJson'],
+        catalogVersions,
+        resolveWorkspaceVersion: async (name) => {
+          return workspaceVersions.get(name) ?? null;
+        },
+        fallbackVersion: skeletonVersion,
+      });
+
+      await writeFile(
+        packageJsonPath,
+        JSON.stringify(resolved, null, 2) + '\n',
       );
     }
 
