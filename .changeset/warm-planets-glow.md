@@ -7,7 +7,7 @@
 '@shopify/create-hydrogen': patch
 ---
 
-Add support for Vite 7 and Vite 8. Hydrogen, Mini Oxygen, the Hydrogen CLI, and Hydrogen React now accept Vite 7 and 8 as peer dependencies while remaining backwards-compatible with Vite 5 and 6.
+Add support for Vite 7 and Vite 8. Hydrogen remains backwards-compatible with Vite 5+, while Mini Oxygen, the Hydrogen CLI, and Hydrogen React require Vite 6 or newer.
 
 Mini Oxygen's dev server has been refactored to use the [Vite Environment API](https://vite.dev/guide/api-environment), which is the standard way to run non-browser runtimes in Vite. This replaces the previous custom middleware approach with a first-class `FetchableDevEnvironment`, improving compatibility with Vite's built-in HMR and module invalidation.
 
