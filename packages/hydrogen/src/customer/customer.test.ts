@@ -952,6 +952,30 @@ describe('customer', () => {
             CUSTOMER_ACCOUNT_SESSION_KEY,
           );
         });
+
+        it('Warns with useCustomAuthDomain when calling logout in development', async () => {
+          const warnSpy = vi
+            .spyOn(console, 'warn')
+            .mockImplementation(() => {});
+          process.env.NODE_ENV = 'development';
+
+          const customer = createCustomerAccountClient({
+            session,
+            customerAccountId: 'customerAccountId',
+            shopId: '1',
+            request: new Request('https://logout-test.ngrok.io'),
+            waitUntil: vi.fn(),
+            useCustomAuthDomain: true,
+          });
+
+          const response = await customer.logout();
+
+          expect(response.status).toBe(302);
+          expect(warnSpy).toHaveBeenCalledWith(
+            expect.stringContaining('redirect_uri'),
+          );
+          warnSpy.mockRestore();
+        });
       });
 
       it('Saved redirectPath to session by default if `return_to` param was found', async () => {
@@ -1299,6 +1323,28 @@ describe('customer', () => {
             refreshToken: 'shcrt_refresh_token',
           }),
         );
+      });
+
+      it('Warns with useCustomAuthDomain when calling authorize in development', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        process.env.NODE_ENV = 'development';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request('https://authorize-test.ngrok.io'),
+          waitUntil: vi.fn(),
+          useCustomAuthDomain: true,
+        });
+
+        // authorize() will warn via checkTunnelDomain, then throw because
+        // no code or state params are present — that's expected.
+        await expect(customer.authorize()).rejects.toThrow();
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('redirect_uri'),
+        );
+        warnSpy.mockRestore();
       });
     });
   });
@@ -1681,6 +1727,37 @@ describe('customer', () => {
       } catch {
         expect(customAuthStatusHandler).toHaveBeenCalledOnce();
       }
+    });
+  });
+
+  describe('mutate', () => {
+    it('Warns with useCustomAuthDomain when calling mutate in development', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      process.env.NODE_ENV = 'development';
+
+      const customer = createCustomerAccountClient({
+        session,
+        customerAccountId: 'customerAccountId',
+        shopId: '1',
+        request: new Request('https://mutate-test.ngrok.io'),
+        waitUntil: vi.fn(),
+        useCustomAuthDomain: true,
+      });
+
+      (session.get as any).mockImplementation(() => ({
+        ...mockCustomerAccountSession,
+        expiresAt: new Date().getTime() + 10000 + '',
+      }));
+
+      const someJson = {data: 'json'};
+      fetch.mockResolvedValue(createFetchResponse(someJson, {ok: true}));
+
+      const response = await customer.mutate(`mutation {...}`);
+      expect(response).toStrictEqual({data: 'json'});
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('redirect_uri'),
+      );
+      warnSpy.mockRestore();
     });
   });
 
