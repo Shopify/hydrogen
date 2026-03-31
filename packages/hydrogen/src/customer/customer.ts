@@ -54,40 +54,39 @@ import {LanguageCode} from '@shopify/hydrogen-react/customer-account-api-types';
 
 const HYDROGEN_TUNNEL_DOMAIN_SUFFIX = '.tryhydrogen.dev';
 
-function throwIfNotTunnelled(
+function checkTunnelDomain(
   hostname: string,
   useCustomAuthDomain?: boolean,
   redirectUri?: string,
 ) {
-  if (process.env.NODE_ENV === 'development') {
-    // Keep this suffix in sync with the domain used by --customer-account-push.
-    if (!hostname.endsWith(HYDROGEN_TUNNEL_DOMAIN_SUFFIX)) {
-      if (useCustomAuthDomain) {
-        const redirectHint = redirectUri ? ` (${redirectUri})` : '';
-        warnOnce(
-          `[h2:warn:customerAccount] You are using a custom domain (${hostname}) instead of a Hydrogen dev tunnel. ` +
-            `Make sure you have manually registered your redirect_uri${redirectHint} ` +
-            `in your Customer Account API settings in the Shopify admin. ` +
-            `See https://shopify.dev/docs/api/customer for details.`,
-        );
-        return;
-      }
+  if (process.env.NODE_ENV !== 'development') return;
+  // Keep this suffix in sync with the domain used by --customer-account-push.
+  if (hostname.endsWith(HYDROGEN_TUNNEL_DOMAIN_SUFFIX)) return;
 
-      throw new Response(
-        [
-          'Customer Account API OAuth requires a Hydrogen tunnel in local development.',
-          'Run the development server with the `--customer-account-push` flag,',
-          `then open the tunnel URL shown in your terminal (\`https://*${HYDROGEN_TUNNEL_DOMAIN_SUFFIX}\`) instead of localhost.`,
-        ].join('\n\n'),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'text/plain; charset=utf-8',
-          },
-        },
-      );
-    }
+  if (useCustomAuthDomain) {
+    const redirectHint = redirectUri ? ` (${redirectUri})` : '';
+    warnOnce(
+      `[h2:warn:customerAccount] You are using a custom domain (${hostname}) instead of a Hydrogen dev tunnel. ` +
+        `Make sure you have manually registered your redirect_uri${redirectHint} ` +
+        `in your Customer Account API settings in the Shopify admin. ` +
+        `See https://shopify.dev/docs/api/customer for details.`,
+    );
+    return;
   }
+
+  throw new Response(
+    [
+      'Customer Account API OAuth requires a Hydrogen tunnel in local development.',
+      'Run the development server with the `--customer-account-push` flag,',
+      `then open the tunnel URL shown in your terminal (\`https://*${HYDROGEN_TUNNEL_DOMAIN_SUFFIX}\`) instead of localhost.`,
+    ].join('\n\n'),
+    {
+      status: 400,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+      },
+    },
+  );
 }
 
 function defaultAuthStatusHandler(
@@ -166,7 +165,7 @@ export function createCustomerAccountClient({
   });
 
   const ensureTunnel = (hostname: string) =>
-    throwIfNotTunnelled(hostname, useCustomAuthDomain, redirectUri);
+    checkTunnelDomain(hostname, useCustomAuthDomain, redirectUri);
 
   const authStatusHandler = customAuthStatusHandler
     ? customAuthStatusHandler
