@@ -1,5 +1,6 @@
 {
   "name": "cookbook",
+  "private": true,
   "version": "1.0.1",
   "description": "A CLI tool to generate and apply recipes to the Hydrogen skeleton template.",
   "scripts": {
