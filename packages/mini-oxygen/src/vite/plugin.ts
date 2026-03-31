@@ -1,9 +1,13 @@
 import {defaultClientConditions} from 'vite';
-import path from 'node:path';
-import type {Plugin, ResolvedConfig} from 'vite';
+import type {Plugin} from 'vite';
+import {
+  createMiniOxygenDevEnvironment,
+  type MiniOxygenDevEnvironment,
+  type MiniOxygenRuntimeOptions,
+  mergeMiniOxygenRuntimeOptions,
+} from './environment.js';
 import {
   setupOxygenMiddleware,
-  type InternalMiniOxygenOptions,
   type MiniOxygenViteOptions,
 } from './server-middleware.js';
 
@@ -17,10 +21,7 @@ export type OxygenPluginOptions = Partial<
   >
 >;
 
-type OxygenApiOptions = OxygenPluginOptions &
-  InternalMiniOxygenOptions & {
-    envPromise?: Promise<Record<string, any>>;
-  };
+type OxygenApiOptions = MiniOxygenRuntimeOptions;
 
 /**
  * For internal use only.
@@ -30,14 +31,46 @@ export type OxygenPlugin = Plugin<{
   registerPluginOptions(newOptions: OxygenApiOptions): void;
 }>;
 
+export type {MiniOxygenDevEnvironment};
+
 /**
  * Runs backend code in an Oxygen worker instead of Node.js during development.
  * If used with `remix`, place it before it in the Vite plugin list.
  */
 export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
-  let resolvedConfig: ResolvedConfig;
-  let absoluteWorkerEntryFile: string;
   let apiOptions: OxygenApiOptions = {};
+  let miniOxygenEnvironment: MiniOxygenDevEnvironment | undefined;
+
+  const resolveMiniOxygenOptions = async (
+    runtimeOptions: MiniOxygenRuntimeOptions,
+    viteDevServer: MiniOxygenViteOptions['viteDevServer'],
+  ): Promise<MiniOxygenViteOptions> => {
+    const entry =
+      runtimeOptions.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
+    const remoteEnv = await Promise.resolve(runtimeOptions.envPromise);
+
+    return {
+      entry,
+      viteDevServer,
+      crossBoundarySetup: runtimeOptions.crossBoundarySetup,
+      env: {...remoteEnv, ...runtimeOptions.env, ...pluginOptions.env},
+      debug: runtimeOptions.debug ?? pluginOptions.debug ?? false,
+      inspectorPort:
+        runtimeOptions.inspectorPort ?? pluginOptions.inspectorPort,
+      requestHook: runtimeOptions.requestHook,
+      entryPointErrorHandler: runtimeOptions.entryPointErrorHandler,
+      compatibilityDate: runtimeOptions.compatibilityDate,
+      logRequestLine:
+        // Give priority to the plugin option over the CLI option here,
+        // since the CLI one is just a default, not a user-provided flag.
+        pluginOptions.logRequestLine ?? runtimeOptions.logRequestLine,
+    };
+  };
+
+  const applyRuntimeOptions = (newOptions: OxygenApiOptions) => {
+    miniOxygenEnvironment?.configureRuntime(newOptions);
+    apiOptions = mergeMiniOxygenRuntimeOptions(apiOptions, newOptions);
+  };
 
   return [
     {
@@ -72,56 +105,46 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
             }),
         };
       },
+      configEnvironment(name) {
+        if (name !== 'ssr') return;
+
+        return {
+          resolve: {
+            conditions: ['worker', 'workerd', ...defaultClientConditions],
+          },
+          dev: {
+            createEnvironment(name, config) {
+              // Vite can recreate environments on server restart. Keep this
+              // pointer on the latest SSR environment so late runtime options
+              // are applied to the active instance, and let Vite close the
+              // previous environment through its normal restart lifecycle.
+              return (miniOxygenEnvironment = createMiniOxygenDevEnvironment(
+                name,
+                config,
+                apiOptions,
+                resolveMiniOxygenOptions,
+              ));
+            },
+          },
+        };
+      },
       api: {
         registerPluginOptions(newOptions) {
-          apiOptions = {
-            ...apiOptions,
-            ...newOptions,
-            env: {...apiOptions.env, ...newOptions.env},
-            crossBoundarySetup: [
-              ...(apiOptions.crossBoundarySetup || []),
-              ...(newOptions.crossBoundarySetup || []),
-            ],
-          };
+          applyRuntimeOptions(newOptions);
         },
       },
       configureServer: {
         order: 'pre',
         handler: (viteDevServer) => {
-          const entry =
-            apiOptions.entry ?? pluginOptions.entry ?? DEFAULT_SSR_ENTRY;
-
-          // For transform hook:
-          resolvedConfig = viteDevServer.config;
-          absoluteWorkerEntryFile = path.isAbsolute(entry)
-            ? entry
-            : path.resolve(resolvedConfig.root, entry);
-
           return () => {
-            setupOxygenMiddleware(viteDevServer, async () => {
-              const remoteEnv = await Promise.resolve(apiOptions.envPromise);
-
-              return {
-                entry,
-                viteDevServer,
-                crossBoundarySetup: apiOptions.crossBoundarySetup,
-                env: {...remoteEnv, ...apiOptions.env, ...pluginOptions.env},
-                debug: apiOptions.debug ?? pluginOptions.debug ?? false,
-                inspectorPort:
-                  apiOptions.inspectorPort ?? pluginOptions.inspectorPort,
-                requestHook: apiOptions.requestHook,
-                entryPointErrorHandler: apiOptions.entryPointErrorHandler,
-                compatibilityDate: apiOptions.compatibilityDate,
-                logRequestLine:
-                  // Give priority to the plugin option over the CLI option here,
-                  // since the CLI one is just a default, not a user-provided flag.
-                  pluginOptions?.logRequestLine ?? apiOptions.logRequestLine,
-              };
-            });
+            setupOxygenMiddleware(
+              viteDevServer,
+              () => apiOptions.entryPointErrorHandler,
+            );
           };
         },
       },
-      generateBundle(_, bundle) {
+      generateBundle() {
         if (apiOptions.compatibilityDate) {
           if (!/^\d{4}-\d{2}-\d{2}$/.test(apiOptions.compatibilityDate)) {
             throw new Error(
@@ -135,18 +158,11 @@ export function oxygen(pluginOptions: OxygenPluginOptions = {}): Plugin[] {
             compatibility_date: apiOptions.compatibilityDate,
           };
 
-          bundle[oxygenJsonFile] = {
+          this.emitFile({
             type: 'asset',
             fileName: oxygenJsonFile,
-            needsCodeReference: false,
             source: JSON.stringify(oxygenJsonContent, null, 2),
-            names: [oxygenJsonFile],
-            originalFileNames: [oxygenJsonFile],
-            // name and originalFileName should be deprecated .. but
-            // for some reason, removing them breaks typescript check
-            name: oxygenJsonFile,
-            originalFileName: oxygenJsonFile,
-          };
+          });
         }
       },
     } satisfies Plugin<{

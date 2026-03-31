@@ -2,12 +2,12 @@ import path from 'node:path';
 import {EventEmitter} from 'node:events';
 import {ReadableStream} from 'node:stream/web';
 import {getGraphiQLUrl} from './graphiql-url.js';
-import type {Request, Response} from '@shopify/mini-oxygen/node';
+import type {Request, Response} from '~/mini-oxygen/node/index.js';
 import type {
   Request as WorkerdRequest,
   Response as WorkerdResponse,
   ResponseInit,
-} from '@shopify/mini-oxygen';
+} from '~/mini-oxygen/worker/index.js';
 import {mapSourcePosition} from 'source-map-support';
 
 export const H2O_BINDING_NAME = 'H2O_LOG_EVENT';
