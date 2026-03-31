@@ -19,8 +19,8 @@
  *   CI=1                          - Enable CI mode (set by tests)
  *
  * Key design decisions:
- *   - Uses git archive instead of npm for scaffolding because npm packages may not
- *     exist for older/unpublished versions, and git gives us exact skeleton state
+ *   - Scaffolds from git history (worktree + pnpm pack) instead of npm registry because
+ *     packages may not exist for older/unpublished versions, and git gives us exact state
  *   - Skips build validation when manual steps or breaking changes are present
  *     because developers must apply those steps before the project will build
  *   - Falls back through multiple git search strategies (tags → release commits →
@@ -29,7 +29,14 @@
 
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {execFile} from 'node:child_process';
-import {readFile, rename, unlink, writeFile} from 'node:fs/promises';
+import {
+  access,
+  readFile,
+  rename,
+  writeFile,
+  mkdir,
+  readdir,
+} from 'node:fs/promises';
 import {join} from 'node:path';
 import {promisify} from 'node:util';
 import {exec} from '@shopify/cli-kit/node/system';
@@ -38,12 +45,25 @@ import {inTemporaryDirectory} from '@shopify/cli-kit/node/fs';
 const execFileAsync = promisify(execFile) as (
   file: string,
   args: string[],
-  options: {cwd: string},
+  options: {cwd: string; timeout?: number},
 ) => Promise<{stdout: string; stderr: string}>;
 import * as upgradeModule from './upgrade.js';
 import type {Release} from './upgrade.js';
 
 type ChangeLog = Awaited<ReturnType<typeof upgradeModule.getChangelog>>;
+
+// Subprocess timeouts prevent CI hangs when git or npm encounters corrupted
+// objects or unexpected state in historical commits.
+const GIT_TIMEOUT_IN_MS = 60_000;
+const PNPM_PACK_TIMEOUT_IN_MS = 120_000;
+
+// cli-kit re-exports AbortSignal from node-abort-controller (polyfill) whose
+// type is incompatible with Node's native AbortSignal. This helper bridges them.
+function timeoutSignal(timeoutInMs: number) {
+  return AbortSignal.timeout(
+    timeoutInMs,
+  ) as unknown as import('@shopify/cli-kit/node/abort').AbortSignal;
+}
 
 class ScaffoldNotFoundError extends Error {}
 
@@ -787,14 +807,30 @@ async function isMatchingSkeletonCommit({
     const {stdout: packageContent} = await execFileAsync(
       'git',
       ['show', `${commit}:templates/skeleton/package.json`],
-      {cwd: repoRoot},
+      {cwd: repoRoot, timeout: GIT_TIMEOUT_IN_MS},
     );
     const packageJson = JSON.parse(packageContent);
 
-    return (
-      packageJson.dependencies?.['@shopify/hydrogen'] === version &&
-      packageJson.version === version
-    );
+    let hydrogenVersion = packageJson.dependencies?.['@shopify/hydrogen'] as
+      | string
+      | undefined;
+
+    // Historical commits use workspace:* — resolve to the actual version
+    // by reading the hydrogen package.json at the same commit.
+    if (hydrogenVersion?.startsWith('workspace:')) {
+      try {
+        const {stdout} = await execFileAsync(
+          'git',
+          ['show', `${commit}:packages/hydrogen/package.json`],
+          {cwd: repoRoot, timeout: GIT_TIMEOUT_IN_MS},
+        );
+        hydrogenVersion = JSON.parse(stdout).version ?? undefined;
+      } catch {
+        hydrogenVersion = undefined;
+      }
+    }
+
+    return hydrogenVersion === version && packageJson.version === version;
   } catch {
     return false;
   }
@@ -903,30 +939,66 @@ async function extractSkeletonTemplate(
       `Could not find git repository root for scaffolding. Ensure tests run from within the Hydrogen monorepo.`,
     );
   }
-  const archivePath = join(tempDir, 'skeleton.tar');
+
+  const worktreeDir = join(tempDir, 'worktree');
+  const packOutputDir = join(tempDir, 'pack');
 
   try {
+    // Worktree gives filesystem access to the full monorepo at the historical
+    // commit so pnpm can read pnpm-workspace.yaml and resolve protocols.
+    await exec('git', ['worktree', 'add', worktreeDir, commit], {
+      cwd: repoRoot,
+      signal: timeoutSignal(GIT_TIMEOUT_IN_MS),
+    });
+    await mkdir(packOutputDir, {recursive: true});
+
+    // pnpm pack natively resolves workspace:* and catalog: protocols,
+    // matching the strategy in template-pack.ts (getPackedTemplatePackageJson).
+    await exec('pnpm', ['pack', '--pack-destination', packOutputDir], {
+      cwd: join(worktreeDir, 'templates', 'skeleton'),
+      signal: timeoutSignal(PNPM_PACK_TIMEOUT_IN_MS),
+    });
+
+    const files = await readdir(packOutputDir);
+    const tarball = files.find((f) => f.endsWith('.tgz'));
+    if (!tarball) {
+      throw new Error(
+        `pnpm pack did not generate a tarball in ${packOutputDir}`,
+      );
+    }
+
+    const tarballPath = join(packOutputDir, tarball);
+    const extractDir = join(tempDir, 'extracted');
+    await mkdir(extractDir, {recursive: true});
+
     await exec(
-      'git',
+      'tar',
       [
-        'archive',
-        '--format=tar',
-        commit,
-        '--output',
-        archivePath,
-        '--',
-        'templates/skeleton',
+        '-x',
+        '-z',
+        '-f',
+        tarballPath,
+        '-C',
+        extractDir,
+        '--exclude=package/.cursor',
       ],
-      {cwd: repoRoot},
+      {signal: timeoutSignal(GIT_TIMEOUT_IN_MS)},
     );
-    await exec('tar', [
-      '-x',
-      '-f',
-      archivePath,
-      '-C',
-      tempDir,
-      '--exclude=templates/skeleton/.cursor',
-    ]);
+
+    // pnpm pack tarballs extract to a "package/" subdirectory
+    const skeletonPath = join(extractDir, 'package');
+
+    try {
+      await access(join(skeletonPath, 'package.json'));
+    } catch {
+      throw new Error(
+        `Skeleton template was not extracted successfully from commit ${commit} (version ${skeletonVersion}).\n` +
+          `Expected path ${skeletonPath} does not exist or is missing package.json.\n` +
+          `This might indicate templates/skeleton doesn't exist at that commit.`,
+      );
+    }
+
+    return skeletonPath;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(
@@ -935,24 +1007,14 @@ async function extractSkeletonTemplate(
         `Original error: ${message}`,
     );
   } finally {
-    await unlink(archivePath).catch(() => {
-      /* Expected: archive file might already be deleted */
+    // Clean up worktree
+    await exec('git', ['worktree', 'remove', worktreeDir], {
+      cwd: repoRoot,
+      signal: timeoutSignal(GIT_TIMEOUT_IN_MS),
+    }).catch(() => {
+      /* Best effort cleanup */
     });
   }
-
-  const skeletonPath = join(tempDir, 'templates/skeleton');
-
-  try {
-    await readFile(join(skeletonPath, 'package.json'), 'utf8');
-  } catch (error) {
-    throw new Error(
-      `Skeleton template was not extracted successfully from commit ${commit} (version ${skeletonVersion}).\n` +
-        `Expected path ${skeletonPath} does not exist or is missing package.json.\n` +
-        `This might indicate templates/skeleton doesn't exist at that commit.`,
-    );
-  }
-
-  return skeletonPath;
 }
 
 async function initializeTestProject(projectDir: string): Promise<void> {
