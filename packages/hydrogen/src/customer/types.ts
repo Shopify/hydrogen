@@ -173,6 +173,10 @@ export type CustomerAccountOptions = {
   unstableB2b?: boolean;
   /** Localization data. */
   language?: LanguageCode;
+  /** Set to true when using a custom HTTPS domain (e.g., ngrok, local proxy)
+   * instead of the default Hydrogen tunnel for local development.
+   * You must manually register your redirect_uri in Customer Account API settings. */
+  useCustomAuthDomain?: boolean;
 };
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */

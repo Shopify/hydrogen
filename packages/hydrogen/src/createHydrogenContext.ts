@@ -76,6 +76,8 @@ export type HydrogenContextOptions<
     customAuthStatusHandler?: CustomerAccountOptions['customAuthStatusHandler'];
     /** Deprecated. `unstableB2b` is now stable. Please remove. */
     unstableB2b?: CustomerAccountOptions['unstableB2b'];
+    /** Set to true when using a custom HTTPS domain (e.g., ngrok, local proxy) instead of the default Hydrogen tunnel. */
+    useCustomAuthDomain?: CustomerAccountOptions['useCustomAuthDomain'];
   };
   /** Cart handler overwrite options. See documentation for createCartHandler for more information. */
   cart?: {
@@ -210,6 +212,7 @@ export function createHydrogenContext<
     customerApiVersion: customerAccountOptions?.apiVersion,
     authUrl: customerAccountOptions?.authUrl,
     customAuthStatusHandler: customerAccountOptions?.customAuthStatusHandler,
+    useCustomAuthDomain: customerAccountOptions?.useCustomAuthDomain,
 
     // locale - i18n.language is a union of StorefrontLanguageCode | CustomerLanguageCode
     // We cast here because createCustomerAccountClient expects CustomerLanguageCode specifically,
@@ -359,6 +362,8 @@ export type HydrogenContextOptionsForDocs<
     customAuthStatusHandler?: () => Response | NonNullable<unknown> | null;
     /** Deprecated. `unstableB2b` is now stable. Please remove. */
     unstableB2b?: boolean;
+    /** Set to true when using a custom HTTPS domain (e.g., ngrok, local proxy) instead of the default Hydrogen tunnel. */
+    useCustomAuthDomain?: boolean;
   };
   /** Cart handler overwrite options. See documentation for createCartHandler for more information. */
   cart?: {

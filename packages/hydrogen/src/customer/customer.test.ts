@@ -170,6 +170,130 @@ describe('customer', () => {
         );
       });
 
+      it('Warns instead of throwing when useCustomAuthDomain is true in development', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        process.env.NODE_ENV = 'development';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request('https://my-ngrok-tunnel.ngrok.io'),
+          waitUntil: vi.fn(),
+          useCustomAuthDomain: true,
+        });
+
+        const response = await customer.login();
+        const url = new URL(response.headers.get('location')!);
+
+        expect(response.status).toBe(302);
+        expect(url.origin).toBe('https://shopify.com');
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('redirect_uri'),
+        );
+
+        warnSpy.mockRestore();
+      });
+
+      it('Still throws 400 when useCustomAuthDomain is false in development', async () => {
+        expect.assertions(2);
+        process.env.NODE_ENV = 'development';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request('https://my-custom-domain.example'),
+          waitUntil: vi.fn(),
+          useCustomAuthDomain: false,
+        });
+
+        try {
+          await customer.login();
+        } catch (error) {
+          const response = error as Response & {message?: string};
+          expect(response.status).toBe(400);
+          expect(response.message).toContain('.tryhydrogen.dev');
+        }
+      });
+
+      it('Still throws 400 when useCustomAuthDomain is omitted in development', async () => {
+        expect.assertions(2);
+        process.env.NODE_ENV = 'development';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request('https://my-other-domain.example'),
+          waitUntil: vi.fn(),
+        });
+
+        try {
+          await customer.login();
+        } catch (error) {
+          const response = error as Response & {message?: string};
+          expect(response.status).toBe(400);
+          expect(response.message).toContain('.tryhydrogen.dev');
+        }
+      });
+
+      it('Allows query with useCustomAuthDomain in development', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        process.env.NODE_ENV = 'development';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request('https://query-test.ngrok.io'),
+          waitUntil: vi.fn(),
+          useCustomAuthDomain: true,
+        });
+
+        (session.get as any).mockImplementation(() => ({
+          ...mockCustomerAccountSession,
+          expiresAt: new Date().getTime() + 10000 + '',
+        }));
+
+        const someJson = {data: 'json'};
+        fetch.mockResolvedValue(createFetchResponse(someJson, {ok: true}));
+
+        const response = await customer.query(`query {...}`);
+        expect(response).toStrictEqual({data: 'json'});
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('redirect_uri'),
+        );
+
+        warnSpy.mockRestore();
+      });
+
+      it('warnOnce fires exactly once across multiple method calls with useCustomAuthDomain', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        process.env.NODE_ENV = 'development';
+
+        const customer = createCustomerAccountClient({
+          session,
+          customerAccountId: 'customerAccountId',
+          shopId: '1',
+          request: new Request('https://unique-warn-once-test.ngrok.io'),
+          waitUntil: vi.fn(),
+          useCustomAuthDomain: true,
+        });
+
+        await customer.login();
+        await customer.login();
+
+        const tunnelWarnings = warnSpy.mock.calls.filter(
+          (call) =>
+            typeof call[0] === 'string' &&
+            call[0].includes('unique-warn-once-test.ngrok.io'),
+        );
+        expect(tunnelWarnings).toHaveLength(1);
+
+        warnSpy.mockRestore();
+      });
+
       it('Redirects to the customer account api login url with authUrl as param', async () => {
         const origin = 'https://localhost';
         const authUrl = '/customer-account/auth';
@@ -1325,6 +1449,42 @@ describe('customer', () => {
         expect(response.message).toContain('--customer-account-push');
         expect(response.message).toContain('.tryhydrogen.dev');
       }
+    });
+
+    it('Warns instead of throwing when useCustomAuthDomain is true in development', async () => {
+      expect.assertions(3);
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      process.env.NODE_ENV = 'development';
+
+      const customer = createCustomerAccountClient({
+        session,
+        customerAccountId: 'customerAccountId',
+        shopId: '1',
+        request: new Request(
+          'https://handle-auth-status-test.ngrok.io/account/orders',
+        ),
+        waitUntil: vi.fn(),
+        useCustomAuthDomain: true,
+      });
+
+      (session.get as any).mockReturnValueOnce(undefined);
+
+      try {
+        await customer.handleAuthStatus();
+      } catch (error) {
+        const response = error as Response;
+        // Should get a 302 redirect, NOT a 400 tunnel error
+        expect(response.status).toBe(302);
+        expect(response.headers.get('location')).toBe(
+          '/account/login?return_to=%2Faccount%2Forders',
+        );
+      }
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('redirect_uri'),
+      );
+
+      warnSpy.mockRestore();
     });
 
     it('throw redirect to login path and current path as param if logged out', async () => {
