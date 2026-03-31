@@ -63,7 +63,7 @@
       "features": []
     },
     {
-      "title": "Accessibility, CLI, and template improvements",
+      "title": "CLI and auth improvements",
       "version": "2026.1.2",
       "date": "2026-03-13",
       "hash": "f3b9b4fef8ea1bc60544132051f97346f29c6b2d",
@@ -78,22 +78,10 @@
       ],
       "fixes": [
         {
-          "title": "Improve gift card accessibility in skeleton template",
-          "info": "Enhanced accessibility of gift card components in the default skeleton template for better screen reader support.",
-          "pr": "https://github.com/Shopify/hydrogen/pull/3518",
-          "id": "3518"
-        },
-        {
           "title": "Improved local Customer Account OAuth errors",
           "info": "In development, if you are not on a *.tryhydrogen.dev tunnel URL, Hydrogen now shows clear guidance to run shopify hydrogen dev --customer-account-push and continue from the tunnel URL.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3504",
           "id": "3504"
-        },
-        {
-          "title": "Update robots.txt defaults in skeleton template",
-          "info": "Removed disallow rules specific to Shopify themes that are not part of a new Hydrogen app by default, reducing confusion when reviewing or customizing robots rules.",
-          "pr": "https://github.com/Shopify/hydrogen/pull/3526",
-          "id": "3526"
         },
         {
           "title": "Fix --package-manager flag being ignored",
@@ -111,7 +99,7 @@
       "features": []
     },
     {
-      "title": "Security, vulnerability, and template improvements",
+      "title": "Security and dependency updates",
       "version": "2026.1.1",
       "date": "2026-02-26",
       "hash": "6c966328355bde1301cdfe6117a088213e3a442f",
@@ -158,12 +146,6 @@
         {
           "title": "Auto-generate routes in hydrogen init",
           "info": "Route scaffolding now runs automatically during hydrogen init. The --routes flag and confirmation prompt have been removed since routes are always generated.",
-          "pr": "https://github.com/Shopify/hydrogen/pull/3448",
-          "id": "3448"
-        },
-        {
-          "title": "Add store linking notice in skeleton template",
-          "info": "Added a notice with relevant information on how to link a store in case there is no store linked yet.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3448",
           "id": "3448"
         }
