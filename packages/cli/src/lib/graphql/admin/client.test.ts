@@ -72,6 +72,30 @@ describe('adminRequest', () => {
     });
   });
 
+  describe("when the user doesn't have access to hydrogenStorefronts", () => {
+    it('throws an AbortError', async () => {
+      const fakeGraphqlError = {
+        errors: [
+          {
+            message: 'Access denied for hydrogenStorefronts field',
+          },
+        ],
+      };
+
+      vi.mocked(graphqlRequest).mockRejectedValue(fakeGraphqlError);
+
+      const response = adminRequest<TestSchema>('', {
+        token: '',
+        storeFqdn: '',
+      });
+
+      await expect(response).rejects.toThrowError(AbortError);
+      await expect(response).rejects.toMatchInlineSnapshot(
+        `[Error: Couldn't access Hydrogen storefronts]`,
+      );
+    });
+  });
+
   describe("when the user doesn't have access to hydrogenStorefrontCreate", () => {
     it('throws an AbortError', async () => {
       const fakeGraphqlError = {
