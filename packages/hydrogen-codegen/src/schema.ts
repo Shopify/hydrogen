@@ -6,9 +6,7 @@ type Options<T extends boolean> = {throwIfMissing?: T};
 
 /**
  * Resolves a schema path for the provided API type. Only the API types currently
- * bundled in Hydrogen are allowed: "storefront" and "customer".
- * @param api
- * @returns
+ * bundled in Hydrogen are allowed: "storefront" and "customer-account".
  */
 export function getSchema(api: Api, options?: Options<true>): string;
 export function getSchema(
