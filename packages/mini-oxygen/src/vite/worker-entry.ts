@@ -155,11 +155,11 @@ function createUserEnv(env: ViteEnv) {
 let runtime: ModuleRunner | undefined;
 
 /**
- * Shared recovery promise that deduplicates concurrent prebundle
- * mismatch recovery. When multiple parallel requests detect a mismatch
- * simultaneously, only the first starts the reset+delay cycle; the
- * others await the same promise instead of racing to destroy each
- * other's newly-created ModuleRunner.
+ * Shared recovery promise that deduplicates the reset+delay phase of
+ * concurrent prebundle mismatch recovery. When multiple parallel requests
+ * detect a mismatch simultaneously, only the first starts the
+ * reset+delay cycle; others await the same delay but each retries the
+ * import independently afterward.
  */
 let recoveryPromise: Promise<void> | undefined;
 
@@ -178,8 +178,9 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
       // runs with hmr:false. Recreate the ModuleRunner and retry once
       // so the current request picks up the updated version hashes.
       if (isPrebundleVersionMismatch(error)) {
-        // Deduplicate: only one recovery runs at a time. Concurrent
-        // requests share the same reset+delay cycle.
+        // Deduplicate the reset+delay: only the first request resets
+        // the runtime. Others share the same delay, then each retries
+        // the import independently.
         if (!recoveryPromise) {
           recoveryPromise = (async () => {
             resetRuntime();
