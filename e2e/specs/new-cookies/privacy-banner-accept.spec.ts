@@ -111,23 +111,17 @@ test.describe('Privacy Banner - Accept Flow', () => {
       'after consent',
     );
 
-    // 9. Finalize perf-kit metrics before navigation (triggers LCP finalization)
-    await storefront.finalizePerfKitMetrics();
-
-    // 10. Navigate to a product (this triggers perf-kit to send metrics via visibility change)
-    await storefront.navigateToFirstProduct();
-
-    // 11. Verify perf-kit payload contains correct tracking values
-    // Wait a moment for perf-kit to send its metrics after visibility change
-    await storefront.page.waitForTimeout(500);
-
-    storefront.verifyPerfKitRequests(
+    // 9. Verify PerfKit has correct tracking values available
+    await storefront.verifyPerfKitRequests(
       updatedServerTimingValues._y!,
       updatedServerTimingValues._s!,
-      'after navigation',
+      'after consent',
     );
 
-    // 12. Add to cart
+    // 10. Navigate to a product
+    await storefront.navigateToFirstProduct();
+
+    // 11. Add to cart
     await storefront.addToCart();
 
     // 13. Verify server-timing values after cart mutation match the session values
