@@ -45,46 +45,50 @@ const PREBUNDLE_RECOVERY_DELAY_MS = 500;
  * Fetches a module from Vite's dev server with retry logic.
  * Retries on transient failures: 5xx server errors, timeouts, and
  * network errors. Client errors (4xx) fail immediately.
+ * @internal Exported for unit testing — not part of the public API.
  */
-async function fetchModuleWithRetry(url: URL) {
+export async function fetchModuleWithRetry(url: URL) {
   let lastError: Error | undefined;
 
   for (let attempt = 1; attempt <= MODULE_FETCH_MAX_ATTEMPTS; attempt++) {
-    let isClientError = false;
-
+    // Narrow try/catch to the network call only — response handling
+    // lives outside so 4xx throws propagate without string matching.
+    let res: globalThis.Response | undefined;
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(
         () => controller.abort(),
         MODULE_FETCH_TIMEOUT_MS,
       );
-
-      let res: globalThis.Response;
       try {
         res = await fetch(url, {signal: controller.signal});
       } finally {
         clearTimeout(timeoutId);
       }
+    } catch (error) {
+      // Network/timeout errors are transient — fall through to retry
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
 
+    if (res) {
       if (res.ok) {
         // Vite's transport invoke contract expects {result: Thenable<...>}
         return {result: res.json()};
       }
 
-      // Client errors (4xx) are deterministic — retrying won't help
-      isClientError = res.status < 500;
       const body = await res.text();
-      lastError = new Error(
+      const error = new Error(
         `${O2_PREFIX} Module fetch failed (${res.status}): ${body}`,
       );
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // Client errors (4xx) are deterministic — retrying won't help
+      if (res.status < 500) throw error;
+
+      // Server errors (5xx) are transient — fall through to retry
+      lastError = error;
     }
 
-    if (isClientError) throw lastError!;
-
-    // Retry transient failures (5xx, timeout, network) with backoff +
-    // jitter to avoid synchronized retry storms under parallel load
+    // Backoff with jitter to avoid synchronized retry storms
     if (attempt < MODULE_FETCH_MAX_ATTEMPTS) {
       const baseDelayInMs = attempt * MODULE_FETCH_BASE_DELAY_MS;
       const jitterInMs = Math.random() * baseDelayInMs * 0.5;
@@ -151,6 +155,15 @@ function createUserEnv(env: ViteEnv) {
 let runtime: ModuleRunner | undefined;
 
 /**
+ * Shared recovery promise that deduplicates concurrent prebundle
+ * mismatch recovery. When multiple parallel requests detect a mismatch
+ * simultaneously, only the first starts the reset+delay cycle; the
+ * others await the same promise instead of racing to destroy each
+ * other's newly-created ModuleRunner.
+ */
+let recoveryPromise: Promise<void> | undefined;
+
+/**
  * Setup the whole Vite runtime and HMR the first time this function is called.
  * Note: we can use the `env` object that comes from the first request even
  * for subsequent requests, so there's no need to refresh the pointer.
@@ -165,10 +178,19 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
       // runs with hmr:false. Recreate the ModuleRunner and retry once
       // so the current request picks up the updated version hashes.
       if (isPrebundleVersionMismatch(error)) {
-        resetRuntime();
-        await new Promise((resolve) =>
-          setTimeout(resolve, PREBUNDLE_RECOVERY_DELAY_MS),
-        );
+        // Deduplicate: only one recovery runs at a time. Concurrent
+        // requests share the same reset+delay cycle.
+        if (!recoveryPromise) {
+          recoveryPromise = (async () => {
+            resetRuntime();
+            await new Promise((resolve) =>
+              setTimeout(resolve, PREBUNDLE_RECOVERY_DELAY_MS),
+            );
+          })().finally(() => {
+            recoveryPromise = undefined;
+          });
+        }
+        await recoveryPromise;
         return importEntryModule(publicUrl, env);
       }
 
@@ -290,8 +312,9 @@ function resetRuntime() {
  * If Vite changes this message, the recovery path silently stops working
  * and falls back to returning a 503 error page (same as before this fix).
  * Verify this string still exists after Vite upgrades.
+ * @internal Exported for unit testing — not part of the public API.
  */
-function isPrebundleVersionMismatch(error: Error): boolean {
+export function isPrebundleVersionMismatch(error: Error): boolean {
   const message = error?.message ?? error?.stack ?? '';
   return message.includes('new version of the pre-bundle');
 }
