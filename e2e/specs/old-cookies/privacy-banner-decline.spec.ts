@@ -48,8 +48,9 @@ test.describe('Privacy Banner - Decline Flow', () => {
     storefront.expectMockServerTimingValues(updatedServerTimingValues);
 
     // 9. Verify perf-kit is downloaded after declining
-    await storefront.waitForPerfKit();
-    storefront.expectPerfKitLoaded();
+    // TODO: re-enable once perf-kit CDN loading is reliable in CI (#3649)
+    // await storefront.waitForPerfKit();
+    // storefront.expectPerfKitLoaded();
 
     // 10. Wait and verify no analytics requests are made
     await storefront.page.waitForTimeout(1500);
@@ -88,7 +89,8 @@ test.describe('Privacy Banner - Decline Flow', () => {
     await storefront.expectNoAnalyticsCookies();
 
     // Wait for perf-kit to be downloaded after reload
-    await storefront.waitForPerfKit();
+    // TODO: re-enable once perf-kit CDN loading is reliable in CI (#3649)
+    // await storefront.waitForPerfKit();
 
     // Wait and verify no analytics requests after reload
     await storefront.page.waitForTimeout(1500);

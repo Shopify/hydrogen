@@ -228,20 +228,12 @@ jobs:
           go install github.com/Shopify/ejson/cmd/ejson@latest
           echo "$HOME/go/bin" >> $GITHUB_PATH
 
-      - name: 🧪 Run E2E tests (non-consent)
+      - name: 🧪 Run E2E tests
         # Customer Account tests are run separately in a different job
         # because they require a static redirect URL so we have a different CI
         # job to test Customer Account specific features.
         # The @customer-account tag is defined in e2e/specs/skeleton/customerAccount.spec.ts
-        run: pnpm exec playwright test --grep-invert "@customer-account" --project=skeleton --project=smoke --project=recipes
-        env:
-          EJSON_PRIVATE_KEY: ${{ secrets.EJSON_PRIVATE_KEY }}
-
-      - name: 🧪 Run consent E2E tests (sequential)
-        # Consent tests depend on CDN-loaded scripts (privacy banner, perf-kit)
-        # that go through a multi-step async loading chain. Running with 1 worker
-        # avoids CPU/network contention on CI's 2 vCPUs that causes timeouts.
-        run: pnpm exec playwright test --project=new-cookies --project=old-cookies --workers=1
+        run: pnpm exec playwright test --grep-invert "@customer-account"
         env:
           EJSON_PRIVATE_KEY: ${{ secrets.EJSON_PRIVATE_KEY }}
 
