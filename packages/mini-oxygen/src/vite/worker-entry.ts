@@ -285,8 +285,8 @@ function resetRuntime() {
 /**
  * Detects Vite's dep optimizer prebundle invalidation error.
  * This string comes from Vite's optimizer — see:
- * https://github.com/vitejs/vite/blob/v6.4.1/packages/vite/src/node/optimizer/optimizer.ts
- * ("new version of the pre-bundle" message in depsOptimizer).
+ * https://github.com/vitejs/vite/blob/v6.4.1/packages/vite/src/node/plugins/optimizedDeps.ts
+ * (throwOutdatedRequest function).
  * If Vite changes this message, the recovery path silently stops working
  * and falls back to returning a 503 error page (same as before this fix).
  * Verify this string still exists after Vite upgrades.
