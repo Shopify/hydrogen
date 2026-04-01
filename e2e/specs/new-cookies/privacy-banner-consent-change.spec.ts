@@ -48,7 +48,8 @@ test.describe('Privacy Banner - Consent Change', () => {
       ).toBeDefined();
 
       // 5. Wait for analytics to fire to confirm tracking is working
-      await storefront.waitForPerfKit();
+      // TODO: re-enable once perf-kit CDN loading is reliable in CI (#3649)
+      // await storefront.waitForPerfKit();
       await storefront.waitForMonorailRequests();
 
       // Verify analytics requests have correct tracking values
@@ -107,7 +108,8 @@ test.describe('Privacy Banner - Consent Change', () => {
       await storefront.expectEssentialCookiePresent();
 
       // Wait and verify no analytics requests after reload
-      await storefront.waitForPerfKit();
+      // TODO: re-enable once perf-kit CDN loading is reliable in CI (#3649)
+      // await storefront.waitForPerfKit();
       await storefront.page.waitForTimeout(1500);
       storefront.expectNoMonorailRequests();
     });
@@ -139,7 +141,8 @@ test.describe('Privacy Banner - Consent Change', () => {
       storefront.expectMockServerTimingValues(initialServerTiming);
 
       // 6. Wait for perf-kit to load but verify no analytics requests
-      await storefront.waitForPerfKit();
+      // TODO: re-enable once perf-kit CDN loading is reliable in CI (#3649)
+      // await storefront.waitForPerfKit();
       await storefront.page.waitForTimeout(1500);
       storefront.expectNoMonorailRequests();
 
@@ -197,7 +200,8 @@ test.describe('Privacy Banner - Consent Change', () => {
       );
 
       // 11. Navigate to a product page
-      await storefront.finalizePerfKitMetrics();
+      // TODO: re-enable once perf-kit CDN loading is reliable in CI (#3649)
+      // await storefront.finalizePerfKitMetrics();
       await storefront.navigateToFirstProduct();
 
       // Note: We skip perf-kit request verification here because it captures Y/S values
