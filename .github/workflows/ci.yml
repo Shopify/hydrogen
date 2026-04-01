@@ -139,6 +139,45 @@ jobs:
       - name: 🔬 Check Formatting
         run: pnpm run format:check
 
+  package-validation:
+    name: 📦 Package Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ci-package-validation-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          run_install: false
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔨 Build packages
+        run: pnpm run build:pkg
+
+      - name: 🔍 Validate published packages with publint
+        run: |
+          npx publint packages/hydrogen-codegen
+          npx publint packages/hydrogen-react
+          npx publint packages/hydrogen
+          npx publint packages/mini-oxygen
+          npx publint packages/remix-oxygen
+          npx publint packages/cli
+          npx publint packages/create-hydrogen
+
   typecheck:
     name: Typescript
     runs-on: ubuntu-latest

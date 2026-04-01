@@ -22,6 +22,14 @@ The entire contents of `hydrogen-react` are re-exported in Hydrogen. Any changes
 
 If forgotten: Hydrogen consumers will not get the `hydrogen-react` update until a separate Hydrogen release happens to include it.
 
+### Rule 3: hydrogen-codegen Changes
+
+Any change to `packages/hydrogen-codegen` (source code OR dependency versions in `package.json`) must include a changeset for `@shopify/hydrogen-codegen`. Unlike skeleton (Rule 1), this does **not** require bumping `cli-hydrogen` or `create-hydrogen` — the codegen package is dynamically loaded from the merchant's `node_modules` via `importLocal`, not bundled into the CLI.
+
+**CI caveat**: Monorepo CI tests workspace-linked dependencies, not what npm actually resolves for merchants. A dependency version bump in `package.json` without a changeset will pass all CI checks but never reach merchants. Always create a changeset when modifying this package's dependencies.
+
+If forgotten: merchants will be stuck on stale dependency versions with no way to get the fix until someone creates a changeset.
+
 For the full release process (standard, back-fix, snapshot, failure recovery), see the `hydrogen-release-process` skill. For versioning semantics, see the `hydrogen-versioning` skill.
 
 ### CLI Dependency Graph

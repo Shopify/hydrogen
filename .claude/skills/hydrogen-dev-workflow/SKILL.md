@@ -137,6 +137,17 @@ The Hydrogen CLI source code lives at `packages/cli-hydrogen` in the Hydrogen re
 
 **How to update**: A `shopify-cli-update` command exists in the Hydrogen repo at `.claude/commands/shopify-cli-update.md`. This is a Claude Code command — invoke it with `/shopify-cli-update` when working in the Hydrogen repo. It documents the full, nuanced, multi-step process. Always reference this command when performing the update — do not try to wing it from memory.
 
+## GraphQL Codegen
+
+The `--codegen` flag on `shopify hydrogen dev` and `shopify hydrogen build` triggers automatic TypeScript type generation from GraphQL queries. This involves two packages:
+
+- **`@shopify/hydrogen-codegen`** (`packages/hydrogen-codegen/`) — Thin config wrapper providing Hydrogen-specific defaults (SFAPI/CAAPI namespaces, type import paths, `declare module` augmentation). See the package's own `CLAUDE.md` for architecture details.
+- **`@shopify/graphql-codegen`** — Core codegen logic, lives in a **separate repo** ([`github.com/Shopify/graphql-codegen`](https://github.com/Shopify/graphql-codegen)). Low-activity; changes require a release in that repo first.
+
+**How it works**: The CLI spawns `shopify hydrogen codegen --watch` as a child process. The orchestration logic lives in `packages/cli/src/lib/codegen.ts`, which dynamically imports `@shopify/hydrogen-codegen` from the merchant's project via `importLocal` (not a static dependency).
+
+**Changeset rule**: Changes to `packages/hydrogen-codegen` (including dependency version bumps in `package.json`) require a changeset for `@shopify/hydrogen-codegen`. See Rule 3 in the root `CLAUDE.md`.
+
 ## Project Scaffolding
 
 There are two ways to scaffold a new Hydrogen project:
