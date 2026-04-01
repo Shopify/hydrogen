@@ -1,5 +1,16 @@
 # skeleton
 
+## 2026.1.4
+
+### Patch Changes
+
+- Remove redundant Storefront API proxy route from skeleton template. The server now automatically proxies requests to `/api/:version/graphql.json` via `createRequestHandler` with `proxyStandardRoutes: true` (enabled by default since December 2025). ([#3572](https://github.com/Shopify/hydrogen/pull/3572)) by [@itsjustriley](https://github.com/itsjustriley)
+
+  Developers no longer need a manual route file for the tokenless Storefront API. Existing apps with this route can safely delete it - the server-level proxy provides the same functionality with better cookie forwarding and analytics integration.
+
+- Updated dependencies [[`b0a75c1d759706931876f056662de2497cb3e688`](https://github.com/Shopify/hydrogen/commit/b0a75c1d759706931876f056662de2497cb3e688), [`a44ee3566b9bb9a7f43f05dfaae6f1f2ab1d548f`](https://github.com/Shopify/hydrogen/commit/a44ee3566b9bb9a7f43f05dfaae6f1f2ab1d548f)]:
+  - @shopify/hydrogen@2026.2.0
+
 ## 2026.1.3
 
 ### Patch Changes
