@@ -43,56 +43,61 @@ const PREBUNDLE_RECOVERY_DELAY_MS = 500;
 
 /**
  * Fetches a module from Vite's dev server with retry logic.
- * Only retries on 5xx server errors (transient under parallel load).
- * Client errors (4xx) fail immediately — they won't resolve on retry.
+ * Retries on transient failures: 5xx server errors, timeouts, and
+ * network errors. Client errors (4xx) fail immediately.
  */
 async function fetchModuleWithRetry(url: URL) {
+  let lastError: Error | undefined;
+
   for (let attempt = 1; attempt <= MODULE_FETCH_MAX_ATTEMPTS; attempt++) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(
-      () => controller.abort(),
-      MODULE_FETCH_TIMEOUT_MS,
-    );
+    let isClientError = false;
 
-    let res: globalThis.Response;
     try {
-      res = await fetch(url, {signal: controller.signal});
-    } finally {
-      clearTimeout(timeoutId);
-    }
+      const controller = new AbortController();
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        MODULE_FETCH_TIMEOUT_MS,
+      );
 
-    if (res.ok) {
-      return {result: res.json()};
-    }
+      let res: globalThis.Response;
+      try {
+        res = await fetch(url, {signal: controller.signal});
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
-    // Client errors (4xx) are deterministic — retrying won't help
-    if (res.status < 500) {
+      if (res.ok) {
+        // Vite's transport invoke contract expects {result: Thenable<...>}
+        return {result: res.json()};
+      }
+
+      // Client errors (4xx) are deterministic — retrying won't help
+      isClientError = res.status < 500;
       const body = await res.text();
-      throw new Error(
+      lastError = new Error(
         `${O2_PREFIX} Module fetch failed (${res.status}): ${body}`,
       );
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
     }
 
-    // On the last attempt, report the failure with context
-    if (attempt === MODULE_FETCH_MAX_ATTEMPTS) {
-      const body = await res.text();
-      throw new Error(
-        `${O2_PREFIX} Module fetch failed after ${MODULE_FETCH_MAX_ATTEMPTS} attempts ` +
-          `(${res.status}): ${body}`,
+    if (isClientError) throw lastError!;
+
+    // Retry transient failures (5xx, timeout, network) with backoff +
+    // jitter to avoid synchronized retry storms under parallel load
+    if (attempt < MODULE_FETCH_MAX_ATTEMPTS) {
+      const baseDelayInMs = attempt * MODULE_FETCH_BASE_DELAY_MS;
+      const jitterInMs = Math.random() * baseDelayInMs * 0.5;
+      await new Promise((resolve) =>
+        setTimeout(resolve, baseDelayInMs + jitterInMs),
       );
     }
-
-    // Retry 5xx with backoff + jitter to avoid synchronized retry storms
-    // when parallel workers all fail at the same moment
-    const baseDelayInMs = attempt * MODULE_FETCH_BASE_DELAY_MS;
-    const jitterInMs = Math.random() * baseDelayInMs * 0.5;
-    await new Promise((resolve) =>
-      setTimeout(resolve, baseDelayInMs + jitterInMs),
-    );
   }
 
-  // Unreachable, but satisfies TypeScript
-  throw new Error(`${O2_PREFIX} Module fetch exhausted retries`);
+  throw new Error(
+    `${O2_PREFIX} Module fetch failed after ${MODULE_FETCH_MAX_ATTEMPTS} attempts: ` +
+      (lastError?.message ?? 'unknown error'),
+  );
 }
 
 export default {
