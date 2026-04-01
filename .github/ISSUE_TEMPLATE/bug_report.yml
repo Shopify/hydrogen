@@ -37,7 +37,7 @@ body:
       required: true
   - type: input
     attributes:
-      label: What version of Remix are you using?
+      label: What version of React Router 7 are you using?
     validations:
       required: false
   - type: textarea
