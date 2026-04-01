@@ -1,4 +1,4 @@
-import {execSync} from 'child_process';
+import {execFileSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import {ZodError} from 'zod';
@@ -134,7 +134,8 @@ export function applyRecipe(params: {
       const destPath = path.join(templatePath, diff.file);
 
       try {
-        execSync(`patch '${destPath}' '${patchPath}'`, {stdio: 'inherit'});
+        // Avoid shell interpolation by passing file paths as argv values.
+        execFileSync('patch', [destPath, patchPath], {stdio: 'inherit'});
       } catch (error) {
         console.error(
           `  ⚠️  Patch command failed or returned non-zero exit code`,
