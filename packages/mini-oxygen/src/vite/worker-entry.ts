@@ -35,18 +35,42 @@ const O2_PREFIX = '[o2:runtime]';
 
 const MODULE_FETCH_MAX_ATTEMPTS = 3;
 const MODULE_FETCH_BASE_DELAY_MS = 200;
+const MODULE_FETCH_TIMEOUT_MS = 10_000;
+// Time for Vite's optimizer to finish re-bundling after a prebundle
+// invalidation. The optimizer typically completes in <100ms for cached
+// deps, but under heavy parallel load it can take longer.
+const PREBUNDLE_RECOVERY_DELAY_MS = 500;
 
 /**
  * Fetches a module from Vite's dev server with retry logic.
- * Vite's fetchModule can fail transiently under parallel load
- * (multiple dev servers running concurrently in e2e tests).
+ * Only retries on 5xx server errors (transient under parallel load).
+ * Client errors (4xx) fail immediately — they won't resolve on retry.
  */
 async function fetchModuleWithRetry(url: URL) {
   for (let attempt = 1; attempt <= MODULE_FETCH_MAX_ATTEMPTS; attempt++) {
-    const res = await fetch(url);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      MODULE_FETCH_TIMEOUT_MS,
+    );
+
+    let res: globalThis.Response;
+    try {
+      res = await fetch(url, {signal: controller.signal});
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (res.ok) {
       return {result: res.json()};
+    }
+
+    // Client errors (4xx) are deterministic — retrying won't help
+    if (res.status < 500) {
+      const body = await res.text();
+      throw new Error(
+        `${O2_PREFIX} Module fetch failed (${res.status}): ${body}`,
+      );
     }
 
     // On the last attempt, report the failure with context
@@ -58,9 +82,12 @@ async function fetchModuleWithRetry(url: URL) {
       );
     }
 
-    // Retry with linear backoff for transient server errors
+    // Retry 5xx with backoff + jitter to avoid synchronized retry storms
+    // when parallel workers all fail at the same moment
+    const baseDelayInMs = attempt * MODULE_FETCH_BASE_DELAY_MS;
+    const jitterInMs = Math.random() * baseDelayInMs * 0.5;
     await new Promise((resolve) =>
-      setTimeout(resolve, attempt * MODULE_FETCH_BASE_DELAY_MS),
+      setTimeout(resolve, baseDelayInMs + jitterInMs),
     );
   }
 
@@ -116,7 +143,7 @@ function createUserEnv(env: ViteEnv) {
  * The Vite runtime instance. It's a singleton because it's shared
  * across all the requests to workerd and it's stateful (module cache).
  */
-let runtime: ModuleRunner;
+let runtime: ModuleRunner | undefined;
 
 /**
  * Setup the whole Vite runtime and HMR the first time this function is called.
@@ -134,8 +161,9 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
       // so the current request picks up the updated version hashes.
       if (isPrebundleVersionMismatch(error)) {
         resetRuntime();
-        // Give Vite's optimizer time to finish re-bundling before retrying
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) =>
+          setTimeout(resolve, PREBUNDLE_RECOVERY_DELAY_MS),
+        );
         return importEntryModule(publicUrl, env);
       }
 
@@ -242,11 +270,22 @@ function importEntryModule(publicUrl: URL, env: ViteEnv) {
 
 function resetRuntime() {
   if (runtime) {
-    runtime.close().catch(() => {});
-    runtime = undefined!;
+    runtime.close().catch((err) => {
+      console.warn(`${O2_PREFIX} Failed to close stale ModuleRunner:`, err);
+    });
+    runtime = undefined;
   }
 }
 
+/**
+ * Detects Vite's dep optimizer prebundle invalidation error.
+ * This string comes from Vite's optimizer — see:
+ * https://github.com/vitejs/vite/blob/v6.4.1/packages/vite/src/node/optimizer/optimizer.ts
+ * ("new version of the pre-bundle" message in depsOptimizer).
+ * If Vite changes this message, the recovery path silently stops working
+ * and falls back to returning a 503 error page (same as before this fix).
+ * Verify this string still exists after Vite upgrades.
+ */
 function isPrebundleVersionMismatch(error: Error): boolean {
   const message = error?.message ?? error?.stack ?? '';
   return message.includes('new version of the pre-bundle');
