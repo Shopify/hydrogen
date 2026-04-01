@@ -115,7 +115,7 @@ test.describe('Privacy Banner - Accept Flow', () => {
     await storefront.finalizePerfKitMetrics();
 
     // 10. Navigate to a product (this triggers perf-kit to send metrics via visibility change)
-    await storefront.navigateToFirstProduct();
+    await storefront.navigateToInStockProduct();
 
     // 11. Verify perf-kit payload contains correct tracking values
     // Wait a moment for perf-kit to send its metrics after visibility change

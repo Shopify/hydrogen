@@ -460,22 +460,63 @@ export class StorefrontPage {
   }
 
   /**
-   * Navigate to the first product on the page
+   * Navigate to an in-stock product by trying product links sequentially.
+   * Skips sold-out products (no "Add to cart" button) so that tests only
+   * fail when every product on the page is unavailable.
    */
+  async navigateToInStockProduct() {
+    const listingUrl = this.page.url();
+    const productLinks = this.page.locator('a[href*="/products/"]');
+    const linkCount = await productLinks.count();
+    expect(linkCount, 'At least one product link should exist').toBeGreaterThan(
+      0,
+    );
+
+    // Cap attempts to avoid slow failure on pages with many products
+    const MAX_PRODUCT_ATTEMPTS = 10;
+    const attemptsToMake = Math.min(linkCount, MAX_PRODUCT_ATTEMPTS);
+    // Shorter timeout than addToCart — just checking presence, not waiting
+    // for a slow action. Long enough for SSR pages to render the button.
+    const IN_STOCK_CHECK_TIMEOUT_MS = 5000;
+
+    for (let i = 0; i < attemptsToMake; i++) {
+      const link = productLinks.nth(i);
+      if (!(await link.isVisible())) continue;
+
+      await link.click();
+
+      const isInStock = await this.getAddToCartButton()
+        .isVisible({timeout: IN_STOCK_CHECK_TIMEOUT_MS})
+        .catch(() => false);
+
+      if (isInStock) return;
+
+      // Product is sold out — return to listing and try the next one
+      await this.page.goto(listingUrl);
+      await expect(productLinks.first()).toBeVisible();
+    }
+
+    throw new Error(
+      `No in-stock products found at ${listingUrl} ` +
+        `(checked ${attemptsToMake} of ${linkCount} product links). ` +
+        'All products appear to be sold out.',
+    );
+  }
+
+  /** @deprecated Use {@link navigateToInStockProduct} instead */
   async navigateToFirstProduct() {
-    const productLink = this.page.locator('a[href*="/products/"]').first();
-    await expect(productLink).toBeVisible();
-    await productLink.click();
-    await this.page.waitForLoadState('networkidle');
+    return this.navigateToInStockProduct();
+  }
+
+  private getAddToCartButton() {
+    return this.page.getByRole('button', {name: /add to cart/i});
   }
 
   /**
    * Click the "Add to cart" button and wait for cart drawer with checkout URL
    */
   async addToCart() {
-    const addToCartButton = this.page.locator(
-      'button:has-text("Add to cart"), button:has-text("Add to Cart")',
-    );
+    const addToCartButton = this.getAddToCartButton();
     await expect(addToCartButton).toBeVisible({timeout: 10000});
     await addToCartButton.click();
 

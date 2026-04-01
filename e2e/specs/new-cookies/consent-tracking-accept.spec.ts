@@ -84,7 +84,7 @@ test.describe('Consent Tracking - Auto-Allowed (Consent Allowed by Default)', ()
     await storefront.finalizePerfKitMetrics();
 
     // 7. Navigate to a product (triggers perf-kit to send metrics)
-    await storefront.navigateToFirstProduct();
+    await storefront.navigateToInStockProduct();
 
     // Wait for perf-kit to send metrics after visibility change
     await storefront.page.waitForTimeout(500);
