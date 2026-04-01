@@ -475,9 +475,11 @@ export class StorefrontPage {
     // Cap attempts to avoid slow failure on pages with many products
     const MAX_PRODUCT_ATTEMPTS = 10;
     const attemptsToMake = Math.min(linkCount, MAX_PRODUCT_ATTEMPTS);
-    // Shorter timeout than addToCart — just checking presence, not waiting
-    // for a slow action. Long enough for SSR pages to render the button.
-    const IN_STOCK_CHECK_TIMEOUT_MS = 5000;
+    // Shorter timeout than addToCart — just checking button presence, not
+    // waiting for a slow action. SSR pages include the button in initial
+    // HTML, so 2s is generous. Keeps worst-case (10 sold-out products)
+    // under 20s — well within typical Playwright test timeouts.
+    const IN_STOCK_CHECK_TIMEOUT_MS = 2000;
 
     for (let i = 0; i < attemptsToMake; i++) {
       const link = productLinks.nth(i);
@@ -486,7 +488,8 @@ export class StorefrontPage {
       await link.click();
 
       const isInStock = await this.getAddToCartButton()
-        .isVisible({timeout: IN_STOCK_CHECK_TIMEOUT_MS})
+        .waitFor({state: 'visible', timeout: IN_STOCK_CHECK_TIMEOUT_MS})
+        .then(() => true)
         .catch(() => false);
 
       if (isInStock) return;
