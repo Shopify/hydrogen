@@ -1,5 +1,5 @@
 ---
-"@shopify/hydrogen": minor
+"@shopify/hydrogen": major
 ---
 
 Make Storefront API proxy mandatory and enable backend consent mode, supporting the deprecation of the `_tracking_consent` cookie in favor of server-set cookies via the SF API proxy.
