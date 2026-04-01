@@ -1,5 +1,15 @@
 # @shopify/hydrogen
 
+## 2026.1.4
+
+### Minor Changes
+
+- Add Storefront MCP proxy support to enable AI agent integration. Hydrogen now automatically proxies requests to `/api/mcp` to Shopify's Storefront MCP server, which implements the Model Context Protocol specification. This feature is automatically available when `proxyStandardRoutes` is enabled in `createRequestHandler` (the default) — no code changes required. AI assistants like Claude and ChatGPT can connect to Hydrogen storefronts to help customers browse products, manage carts, and access store policies. ([#3572](https://github.com/Shopify/hydrogen/pull/3572)) by [@itsjustriley](https://github.com/itsjustriley)
+
+### Patch Changes
+
+- Add `useCustomAuthDomain` option to `createCustomerAccountClient` and `createHydrogenContext`. When set to `true`, the development tunnel domain check logs a warning instead of throwing, enabling use of custom HTTPS setups like ngrok or local HTTPS proxies for Customer Account API OAuth. ([#3642](https://github.com/Shopify/hydrogen/pull/3642)) by [@fredericoo](https://github.com/fredericoo)
+
 ## 2026.1.3
 
 ### Patch Changes
