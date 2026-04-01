@@ -124,7 +124,7 @@
                 "isOptional": true
               }
             ],
-            "value": "export interface AddToCartButtonPropsForDocs<\n  AsType extends React.ElementType = 'button',\n> extends AddToCartButtonPropsBase,\n    CustomBaseButtonProps<AsType> {}"
+            "value": "export interface AddToCartButtonPropsForDocs<\n  AsType extends React.ElementType = 'button',\n>\n  extends AddToCartButtonPropsBase, CustomBaseButtonProps<AsType> {}"
           }
         }
       }
@@ -237,7 +237,7 @@
                 "description": "The ID of the variant."
               }
             ],
-            "value": "export interface BuyNowButtonPropsForDocs<\n  AsType extends React.ElementType = 'button',\n> extends BuyNowButtonPropsBase,\n    CustomBaseButtonProps<AsType> {}"
+            "value": "export interface BuyNowButtonPropsForDocs<\n  AsType extends React.ElementType = 'button',\n>\n  extends BuyNowButtonPropsBase, CustomBaseButtonProps<AsType> {}"
           }
         }
       }
@@ -412,7 +412,7 @@
                 "isOptional": true
               }
             ],
-            "value": "export interface CartCostPropsForDocs<AsType extends React.ElementType = 'div'>\n  extends Omit<MoneyPropsBase<AsType>, 'data'>,\n    CartCostPropsBase {}"
+            "value": "export interface CartCostPropsForDocs<AsType extends React.ElementType = 'div'>\n  extends Omit<MoneyPropsBase<AsType>, 'data'>, CartCostPropsBase {}"
           }
         }
       }
@@ -483,7 +483,7 @@
             "filePath": "src/CartLineProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartLinePartialDeep",
-            "value": "PartialDeep<\n  CartLine | ComponentizableCartLine,\n  {recurseIntoArrays: true}\n>",
+            "value": "any",
             "description": ""
           }
         }
@@ -4283,7 +4283,7 @@
                 "isOptional": true
               }
             ],
-            "value": "export interface ProductPricePropsForDocs<\n  AsType extends React.ElementType = 'div',\n> extends Omit<MoneyPropsBase<AsType>, 'data' | 'measurement'>,\n    ProductPriceProps {}"
+            "value": "export interface ProductPricePropsForDocs<\n  AsType extends React.ElementType = 'div',\n>\n  extends\n    Omit<MoneyPropsBase<AsType>, 'data' | 'measurement'>,\n    ProductPriceProps {}"
           }
         }
       }
@@ -4454,7 +4454,7 @@
                 "filePath": "src/RichText.components.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "heading",
-                "value": "({ node, }: { node: { type: \"heading\"; level: number; children?: ReactNode[]; }; }) => ReactNode",
+                "value": "({ node, }: { node: { type: \"heading\"; level: number; children?: any[]; }; }) => any",
                 "description": "Customize the headings. Each heading has a `level` property from 1-6. Defaults to `<h1>` to `<h6>`",
                 "isOptional": true
               },
@@ -4462,7 +4462,7 @@
                 "filePath": "src/RichText.components.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "link",
-                "value": "({ node, }: { node: { type: \"link\"; url: string; title?: string; target?: string; children?: ReactNode[]; }; }) => ReactNode",
+                "value": "({ node, }: { node: { type: \"link\"; url: string; title?: string; target?: string; children?: any[]; }; }) => any",
                 "description": "Customize links. Defaults to a React Router `<Link>` component in Hydrogen and a `<a>` in Hydrogen React.",
                 "isOptional": true
               },
@@ -4470,7 +4470,7 @@
                 "filePath": "src/RichText.components.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "list",
-                "value": "({ node, }: { node: { type: \"list\"; listType: \"unordered\" | \"ordered\"; children?: ReactNode[]; }; }) => ReactNode",
+                "value": "({ node, }: { node: { type: \"list\"; listType: \"unordered\" | \"ordered\"; children?: any[]; }; }) => any",
                 "description": "Customize lists. They can be either ordered or unordered. Defaults to `<ol>` or `<ul>`",
                 "isOptional": true
               },
@@ -4478,7 +4478,7 @@
                 "filePath": "src/RichText.components.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "listItem",
-                "value": "({ node, }: { node: { type: \"list-item\"; children?: ReactNode[]; }; }) => ReactNode",
+                "value": "({ node, }: { node: { type: \"list-item\"; children?: any[]; }; }) => any",
                 "description": "Customize list items. Defaults to `<li>`.",
                 "isOptional": true
               },
@@ -4486,7 +4486,7 @@
                 "filePath": "src/RichText.components.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "paragraph",
-                "value": "({ node, }: { node: { type: \"paragraph\"; children?: ReactNode[]; }; }) => ReactNode",
+                "value": "({ node, }: { node: { type: \"paragraph\"; children?: any[]; }; }) => any",
                 "description": "Customize paragraphs. Defaults to `<p>`",
                 "isOptional": true
               },
@@ -4494,7 +4494,7 @@
                 "filePath": "src/RichText.components.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "root",
-                "value": "({ node, }: { node: { type: \"root\"; children?: ReactNode[]; }; }) => ReactNode",
+                "value": "({ node, }: { node: { type: \"root\"; children?: any[]; }; }) => any",
                 "description": "The root node of the rich text. Defaults to `<div>`",
                 "isOptional": true
               },
@@ -4502,7 +4502,7 @@
                 "filePath": "src/RichText.components.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "text",
-                "value": "({ node, }: { node: { type: \"text\"; italic?: boolean; bold?: boolean; value?: string; }; }) => ReactNode",
+                "value": "({ node, }: { node: { type: \"text\"; italic?: boolean; bold?: boolean; value?: string; }; }) => any",
                 "description": "Customize how text nodes. They can either be bold or italic. Defaults to `<em>`, `<strong>` or text.",
                 "isOptional": true
               }
@@ -5252,7 +5252,7 @@
                 "description": "Shopify session token: Value of `_shopify_s` cookie.\n\nUse `getClientBrowserParameters()` to collect this value."
               }
             ],
-            "value": "export interface ShopifyPageViewPayload\n  extends ShopifyAnalyticsBase,\n    ClientBrowserParameters {\n  /** Canonical url. */\n  canonicalUrl?: string;\n  /** Shopify page type. */\n  pageType?: string;\n  /** Shopify resource id in the form of `gid://shopify/<type>/<id>`. */\n  resourceId?: string;\n  /** Shopify collection handle. */\n  collectionHandle?: string;\n  /** Shopify collection id. */\n  collectionId?: string;\n  /** Search term used on a search results page. */\n  searchString?: string;\n}"
+            "value": "export interface ShopifyPageViewPayload\n  extends ShopifyAnalyticsBase, ClientBrowserParameters {\n  /** Canonical url. */\n  canonicalUrl?: string;\n  /** Shopify page type. */\n  pageType?: string;\n  /** Shopify resource id in the form of `gid://shopify/<type>/<id>`. */\n  resourceId?: string;\n  /** Shopify collection handle. */\n  collectionHandle?: string;\n  /** Shopify collection id. */\n  collectionId?: string;\n  /** Search term used on a search results page. */\n  searchString?: string;\n}"
           },
           "CurrencyCode": {
             "filePath": "src/useMoney.tsx",
@@ -5582,7 +5582,7 @@
                 "description": "Shopify session token: Value of `_shopify_s` cookie.\n\nUse `getClientBrowserParameters()` to collect this value."
               }
             ],
-            "value": "export interface ShopifyAddToCartPayload\n  extends ShopifyAnalyticsBase,\n    ClientBrowserParameters {\n  /** Shopify cart id in the form of `gid://shopify/Cart/<id>`. */\n  cartId: string;\n}"
+            "value": "export interface ShopifyAddToCartPayload\n  extends ShopifyAnalyticsBase, ClientBrowserParameters {\n  /** Shopify cart id in the form of `gid://shopify/Cart/<id>`. */\n  cartId: string;\n}"
           }
         }
       },
@@ -6633,7 +6633,7 @@
               {
                 "name": "metafield",
                 "description": "",
-                "value": "PartialObjectDeep<Metafield, { recurseIntoArrays: true; }>",
+                "value": "any",
                 "filePath": "src/parse-metafield.ts"
               }
             ],
@@ -6732,7 +6732,7 @@
               "name": "StorefrontClientReturn",
               "value": "StorefrontClientReturn"
             },
-            "value": "export function createStorefrontClient({\n  storeDomain,\n  privateStorefrontToken,\n  publicStorefrontToken,\n  storefrontApiVersion = SFAPI_VERSION,\n  contentType,\n}: StorefrontClientProps): StorefrontClientReturn {\n  if (!storeDomain) {\n    if (__HYDROGEN_DEV__) {\n      storeDomain = MOCK_SHOP_DOMAIN;\n      warnOnce(\n        `storeDomain missing, defaulting to ${MOCK_SHOP_DOMAIN}`,\n        'info',\n      );\n    } else {\n      throw new Error(\n        H2_PREFIX_ERROR +\n          `\\`storeDomain\\` is required when creating a new Storefront client in production.`,\n      );\n    }\n  }\n\n  if (storefrontApiVersion !== SFAPI_VERSION) {\n    warnOnce(\n      `The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting.` +\n        `\\nYou may run into unexpected errors if these versions don't match. Received version: \"${storefrontApiVersion}\"; expected version \"${SFAPI_VERSION}\"`,\n    );\n  }\n\n  // only warn if not in a browser environment\n  if (\n    __HYDROGEN_DEV__ &&\n    !privateStorefrontToken &&\n    !globalThis.document &&\n    !isMockShop(storeDomain)\n  ) {\n    warnOnce(\n      `Using a private storefront token is recommended for server environments.` +\n        `\\nRefer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`,\n    );\n  }\n\n  // only warn if in a browser environment and you're using the privateStorefrontToken\n  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis.document) {\n    warnOnce(\n      'You are attempting to use a private token in an environment where it can be easily accessed by anyone.' +\n        '\\nThis is a security risk; please use the public token and the `publicStorefrontToken` prop',\n    );\n  }\n\n  const getShopifyDomain: StorefrontClientReturn['getShopifyDomain'] = (\n    overrideProps,\n  ) => {\n    const domain = overrideProps?.storeDomain ?? storeDomain;\n    return domain.includes('://') ? domain : `https://${domain}`;\n  };\n\n  return {\n    getShopifyDomain,\n    getStorefrontApiUrl(overrideProps): string {\n      const domain = getShopifyDomain(overrideProps);\n      const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');\n\n      if (isMockShop(domain)) return apiUrl;\n\n      return `${apiUrl}/${\n        overrideProps?.storefrontApiVersion ?? storefrontApiVersion\n      }/graphql.json`;\n    },\n    getPrivateTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !privateStorefrontToken &&\n        !overrideProps?.privateStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          H2_PREFIX_ERROR +\n            'You did not pass in a `privateStorefrontToken` while using `createStorefrontClient()` or `getPrivateTokenHeaders()`',\n        );\n      }\n\n      if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {\n        warnOnce(\n          'It is recommended to pass in the `buyerIp` property which improves analytics and data in the admin.',\n        );\n      }\n\n      const finalContentType = overrideProps?.contentType ?? contentType;\n\n      return {\n        // default to json\n        'content-type':\n          finalContentType === 'graphql'\n            ? 'application/graphql'\n            : 'application/json',\n        'X-SDK-Variant': 'hydrogen-react',\n        'X-SDK-Variant-Source': 'react',\n        'X-SDK-Version': storefrontApiVersion,\n        'Shopify-Storefront-Private-Token':\n          overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',\n        ...(overrideProps?.buyerIp\n          ? {'Shopify-Storefront-Buyer-IP': overrideProps.buyerIp}\n          : {}),\n      };\n    },\n    getPublicTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !publicStorefrontToken &&\n        !overrideProps?.publicStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          H2_PREFIX_ERROR +\n            'You did not pass in a `publicStorefrontToken` while using `createStorefrontClient()` or `getPublicTokenHeaders()`',\n        );\n      }\n\n      const finalContentType =\n        overrideProps?.contentType ?? contentType ?? 'json';\n\n      return getPublicTokenHeadersRaw(\n        finalContentType,\n        storefrontApiVersion,\n        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? '',\n      );\n    },\n  };\n}"
+            "value": "export function createStorefrontClient({\n  storeDomain,\n  privateStorefrontToken,\n  publicStorefrontToken,\n  storefrontApiVersion = SFAPI_VERSION,\n  contentType,\n}: StorefrontClientProps): StorefrontClientReturn {\n  if (!storeDomain) {\n    if (__HYDROGEN_DEV__) {\n      storeDomain = MOCK_SHOP_DOMAIN;\n      warnOnce(\n        `storeDomain missing, defaulting to ${MOCK_SHOP_DOMAIN}`,\n        'info',\n      );\n    } else {\n      throw new Error(\n        H2_PREFIX_ERROR +\n          `\\`storeDomain\\` is required when creating a new Storefront client in production.`,\n      );\n    }\n  }\n\n  if (storefrontApiVersion !== SFAPI_VERSION) {\n    warnOnce(\n      `The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting.` +\n        `\\nYou may run into unexpected errors if these versions don't match. Received version: \"${storefrontApiVersion}\"; expected version \"${SFAPI_VERSION}\"`,\n    );\n  }\n\n  // only warn if not in a browser environment\n  if (\n    __HYDROGEN_DEV__ &&\n    !privateStorefrontToken &&\n    !globalThis.document &&\n    !isMockShop(storeDomain)\n  ) {\n    warnOnce(\n      `Using a private storefront token is recommended for server environments.` +\n        `\\nRefer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`,\n    );\n  }\n\n  // only warn if in a browser environment and you're using the privateStorefrontToken\n  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis.document) {\n    warnOnce(\n      'You are attempting to use a private token in an environment where it can be easily accessed by anyone.' +\n        '\\nThis is a security risk; please use the public token and the `publicStorefrontToken` prop',\n    );\n  }\n\n  const getShopifyDomain: StorefrontClientReturn['getShopifyDomain'] = (\n    overrideProps,\n  ) => {\n    const domain = overrideProps?.storeDomain ?? storeDomain;\n    return domain.includes('://') ? domain : `https://${domain}`;\n  };\n\n  return {\n    getShopifyDomain,\n    getStorefrontApiUrl(overrideProps): string {\n      const domain = getShopifyDomain(overrideProps);\n      const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');\n\n      return `${apiUrl}/${\n        overrideProps?.storefrontApiVersion ?? storefrontApiVersion\n      }/graphql.json`;\n    },\n    getPrivateTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !privateStorefrontToken &&\n        !overrideProps?.privateStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          H2_PREFIX_ERROR +\n            'You did not pass in a `privateStorefrontToken` while using `createStorefrontClient()` or `getPrivateTokenHeaders()`',\n        );\n      }\n\n      if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {\n        warnOnce(\n          'It is recommended to pass in the `buyerIp` property which improves analytics and data in the admin.',\n        );\n      }\n\n      const finalContentType = overrideProps?.contentType ?? contentType;\n\n      return {\n        // default to json\n        'content-type':\n          finalContentType === 'graphql'\n            ? 'application/graphql'\n            : 'application/json',\n        'X-SDK-Variant': 'hydrogen-react',\n        'X-SDK-Variant-Source': 'react',\n        'X-SDK-Version': storefrontApiVersion,\n        'Shopify-Storefront-Private-Token':\n          overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',\n        ...(overrideProps?.buyerIp\n          ? {'Shopify-Storefront-Buyer-IP': overrideProps.buyerIp}\n          : {}),\n      };\n    },\n    getPublicTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !publicStorefrontToken &&\n        !overrideProps?.publicStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          H2_PREFIX_ERROR +\n            'You did not pass in a `publicStorefrontToken` while using `createStorefrontClient()` or `getPublicTokenHeaders()`',\n        );\n      }\n\n      const finalContentType =\n        overrideProps?.contentType ?? contentType ?? 'json';\n\n      return getPublicTokenHeadersRaw(\n        finalContentType,\n        storefrontApiVersion,\n        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? '',\n      );\n    },\n  };\n}"
           },
           "StorefrontClientProps": {
             "filePath": "src/storefront-client.ts",
@@ -7180,9 +7180,8 @@
             "filePath": "src/cart-types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Cart",
-            "value": "PartialDeep<CartBase, {recurseIntoArrays: true}>",
-            "description": "",
-            "members": []
+            "value": "any",
+            "description": ""
           }
         }
       }
@@ -7242,7 +7241,7 @@
             "filePath": "src/CartLineProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartLinePartialDeep",
-            "value": "PartialDeep<\n  CartLine | ComponentizableCartLine,\n  {recurseIntoArrays: true}\n>",
+            "value": "any",
             "description": ""
           }
         }
@@ -7500,7 +7499,7 @@
                 "filePath": "src/useMoney.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "parts",
-                "value": "NumberFormatPart[]",
+                "value": "Intl.NumberFormatPart[]",
                 "description": "All parts returned by `Intl.NumberFormat.formatToParts`."
               },
               {
@@ -7721,14 +7720,14 @@
                 "filePath": "src/ProductProvider.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "setSelectedSellingPlan",
-                "value": "(sellingPlan: PartialObjectDeep<SellingPlan, { recurseIntoArrays: true; }>) => void",
+                "value": "(sellingPlan: any) => void",
                 "description": "A callback to set the selected selling plan to the one passed as an argument."
               },
               {
                 "filePath": "src/ProductProvider.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "setSelectedVariant",
-                "value": "(variant: PartialObjectDeep<ProductVariant, { recurseIntoArrays: true; }>) => void",
+                "value": "(variant: any) => void",
                 "description": "A callback to set the selected variant to the variant passed as an argument."
               }
             ]
@@ -7898,7 +7897,7 @@
                 "description": "The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details."
               }
             ],
-            "value": "export interface ShopifyContextValue\n  extends ShopifyProviderBase,\n    ShopifyContextReturn {}"
+            "value": "export interface ShopifyContextValue\n  extends ShopifyProviderBase, ShopifyContextReturn {}"
           },
           "GetPublicTokenHeadersProps": {
             "filePath": "src/ShopifyProvider.tsx",
