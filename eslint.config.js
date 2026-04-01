@@ -95,6 +95,7 @@ const localPlugin = {
 
 const lintedTSPackages = [
   'packages/hydrogen-react',
+  'packages/hydrogen-codegen',
   'examples/express',
   'templates/skeleton',
   'docs/previews',
