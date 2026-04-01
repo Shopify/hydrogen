@@ -2599,7 +2599,6 @@ Configure Vite for Express deployment with Node.js module externalization
 - [`templates/skeleton/app/routes/account_.authorize.tsx`](templates/skeleton/app/routes/account_.authorize.tsx)
 - [`templates/skeleton/app/routes/account_.login.tsx`](templates/skeleton/app/routes/account_.login.tsx)
 - [`templates/skeleton/app/routes/account_.logout.tsx`](templates/skeleton/app/routes/account_.logout.tsx)
-- [`templates/skeleton/app/routes/api.$version.[graphql.json].tsx`](templates/skeleton/app/routes/api.$version.[graphql.json].tsx)
 - [`templates/skeleton/app/routes/blogs.$blogHandle.$articleHandle.tsx`](templates/skeleton/app/routes/blogs.$blogHandle.$articleHandle.tsx)
 - [`templates/skeleton/app/routes/blogs.$blogHandle._index.tsx`](templates/skeleton/app/routes/blogs.$blogHandle._index.tsx)
 - [`templates/skeleton/app/routes/blogs._index.tsx`](templates/skeleton/app/routes/blogs._index.tsx)

@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest';
-import {getHeader, extractHeaders} from './request';
+import {getHeader, extractHeaders, MCP_RE, getSafePathname} from './request';
 import {IncomingMessage} from 'node:http';
 import type {Socket} from 'node:net';
 
@@ -18,6 +18,34 @@ describe('request utils', () => {
       request.headers['purpose'] = 'test';
 
       expect(getHeader(request, 'purpose')).toEqual('test');
+    });
+  });
+
+  describe('MCP_RE via getSafePathname', () => {
+    const isMcpPath = (url: string) => MCP_RE.test(getSafePathname(url));
+
+    it('matches /api/mcp', () => {
+      expect(isMcpPath('/api/mcp')).toBe(true);
+    });
+
+    it('rejects sub-paths like /api/mcp/foo', () => {
+      expect(isMcpPath('/api/mcp/foo')).toBe(false);
+    });
+
+    it('rejects suffix matches like /api/mcps', () => {
+      expect(isMcpPath('/api/mcps')).toBe(false);
+    });
+
+    it('rejects SFAPI paths like /api/2024-10/graphql.json', () => {
+      expect(isMcpPath('/api/2024-10/graphql.json')).toBe(false);
+    });
+
+    it('rejects trailing slash /api/mcp/', () => {
+      expect(isMcpPath('/api/mcp/')).toBe(false);
+    });
+
+    it('matches full URLs with query parameters', () => {
+      expect(isMcpPath('https://store.com/api/mcp?session=abc')).toBe(true);
     });
   });
 
