@@ -2,4 +2,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Throw AbortError for hydrogenStorefronts GraphQL Access Denied Error
+GraphQL access denied error is now handled as an expected user error
