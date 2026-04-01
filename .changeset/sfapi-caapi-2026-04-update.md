@@ -2,6 +2,7 @@
 '@shopify/hydrogen': major
 '@shopify/hydrogen-react': major
 '@shopify/cli-hydrogen': patch
+'@shopify/create-hydrogen': patch
 'skeleton': major
 ---
 
