@@ -6,7 +6,6 @@ Hydrogen functionality including GraphQL codegen and Storefront API integration 
 Oxygen-specific features with Express equivalents.
 
 Key changes:
-
 - Replaces Oxygen server with Express server
 - Uses Vite for development with hot module replacement
 - Implements session management through Express middleware
@@ -14,7 +13,6 @@ Key changes:
 - Keeps GraphQL codegen functionality intact
 
 Technical details:
-
 - Uses nodemon for development server with automatic restarts
 - Environment variables are loaded from .env file using dotenv
 - Session management is handled through Express middleware with SESSION_SECRET
@@ -24,7 +22,7 @@ Technical details:
 
 ## Requirements
 
-- Node.js 20 or higher (less than 22.0.0) for production deployment
+- Node.js 20 or higher for production deployment
 - npm or yarn package manager
 - Shopify Storefront API credentials
 
@@ -32,12 +30,12 @@ Technical details:
 
 _New files added to the template by this recipe._
 
-| File                                                                                                                                                                               | Description                                     |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| [app/env.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)                 | Environment type definitions for Express server |
-| [public/favicon.svg](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg) | Favicon for Express template                    |
-| [scripts/dev.mjs](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)       | Development orchestration script                |
-| [server.mjs](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)                 | Express server with Hydrogen context and SSR    |
+| File | Description |
+| --- | --- |
+| [app/env.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts) | Environment type definitions for Express server |
+| [public/favicon.svg](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg) | Favicon for Express template |
+| [scripts/dev.mjs](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs) | Development orchestration script |
+| [server.mjs](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs) | Express server with Hydrogen context and SSR |
 
 ## Steps
 
@@ -45,16 +43,16 @@ _New files added to the template by this recipe._
 
 Comment out customer account GraphQL configuration
 
-#### File: [.graphqlrc.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/.graphqlrc.ts)
+#### File: [.graphqlrc.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/.graphqlrc.ts)
 
-```diff
-index 62df7710..44994a7c 100644
+~~~diff
+index b1b5e85a..9fefa34a 100644
 --- a/templates/skeleton/.graphqlrc.ts
 +++ b/templates/skeleton/.graphqlrc.ts
-@@ -17,10 +17,11 @@ export default {
+@@ -17,10 +17,11 @@ const graphqlConfig: IGraphQLConfig = {
        ],
      },
-
+ 
 -    customer: {
 -      schema: getSchema('customer-account'),
 -      documents: ['./app/graphql/customer-account/*.{ts,tsx,js,jsx}'],
@@ -64,38 +62,38 @@ index 62df7710..44994a7c 100644
 +    //   schema: getSchema('customer-account'),
 +    //   documents: ['./app/graphql/customer-account/*.{ts,tsx,js,jsx}'],
 +    // },
-
+ 
      // Add your own GraphQL projects here for CMS, Shopify Admin API, etc.
    },
-```
+~~~
 
 ### Step 2: Update README for Express deployment
 
 Update README with Express-specific setup and deployment instructions
 
-#### File: [README.md](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/README.md)
+#### File: [README.md](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/README.md)
 
 <details>
 
-````diff
+~~~diff
 index c584e537..4cecca6d 100644
 --- a/templates/skeleton/README.md
 +++ b/templates/skeleton/README.md
 @@ -1,45 +1,89 @@
 -# Hydrogen template: Skeleton
 +# Hydrogen Express Skeleton
-
+ 
 -Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework. This template contains a **minimal setup** of components, queries and tooling to get started with Hydrogen.
-+This is a Hydrogen skeleton template configured to run with NodeJS [Express](https://expressjs.com/) instead of Shopify Oxygen.
++This is a Hydrogen skeleton template configured to run with NodeJS [Express](https://expressjs.com/) instead of Shopify Oxygen. 
 +
 +Hydrogen is Shopify's stack for headless commerce, designed to dovetail with [React Router](https://reactrouter.com/), the full stack web framework. This template contains a **minimal Express setup** with basic components and routes to get started with Hydrogen on Node.js.
-
+ 
  [Check out Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen)
 -[Get familiar with Remix](https://remix.run/docs/en/v1)
 +[Get familiar with React Router](https://reactrouter.com/en/main)
-
+ 
  ## What's included
-
+ 
 -- Remix
 +- React Router 7
  - Hydrogen
@@ -109,7 +107,7 @@ index c584e537..4cecca6d 100644
 -- GraphQL generator
 -- TypeScript and JavaScript flavors
  - Minimal setup of components and routes
-
+ 
 +## Important Notes
 +
 +This Express setup differs from the standard Hydrogen template:
@@ -119,9 +117,9 @@ index c584e537..4cecca6d 100644
 +3. **Minimal Routes**: Only includes index and product routes. Add more routes as needed.
 +
  ## Getting started
-
+ 
  **Requirements:**
-
+ 
 -- Node.js version 18.0.0 or higher
 +- Node.js version 18.0.0 or higher (but less than 22.0.0)
 +
@@ -139,33 +137,33 @@ index c584e537..4cecca6d 100644
 +## Local development
 +
 +Start the Express development server:
-
+ 
  ```bash
 -npm create @shopify/hydrogen@latest
 +npm run dev
  ```
-
+ 
 +This starts your app in development mode with hot module replacement.
 +
  ## Building for production
-
+ 
  ```bash
  npm run build
  ```
-
+ 
 -## Local development
 +## Production deployment
 +
 +Run the app in production mode:
-
+ 
  ```bash
 -npm run dev
 +npm start
  ```
-
+ 
 -## Setup for using Customer Account API (`/account` section)
 +### Deployment
-
+ 
 -Follow step 1 and 2 of <https://shopify.dev/docs/custom-storefronts/building-with-the-customer-account-api/hydrogen#step-1-set-up-a-public-domain-for-local-development>
 +When deploying your Express application, ensure you deploy:
 +
@@ -187,7 +185,7 @@ index c584e537..4cecca6d 100644
 +  - `routes/` - Application routes
 +- `build/` - Production build output (generated)
 \ No newline at end of file
-````
+~~~
 
 </details>
 
@@ -195,11 +193,11 @@ index c584e537..4cecca6d 100644
 
 Add environment type definitions for Hydrogen on Express
 
-#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
+#### File: [env.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/app/env.ts)
 
 <details>
 
-```ts
+~~~ts
 // This file extends the Hydrogen types for this project
 // The types are automatically available via @shopify/hydrogen/react-router-types
 
@@ -230,7 +228,7 @@ declare global {
 
 // Required to make this file a module and enable the augmentation
 export {};
-```
+~~~
 
 </details>
 
@@ -238,24 +236,23 @@ export {};
 
 Update client entry to use React Router hydration without Oxygen-specific code
 
-#### File: [app/entry.client.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/entry.client.tsx)
+#### File: [app/entry.client.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/app/entry.client.tsx)
 
-```diff
-index 9b7b86cb..c1aa68ad 100644
+~~~diff
+index a1267215..c1aa68ad 100644
 --- a/templates/skeleton/app/entry.client.tsx
 +++ b/templates/skeleton/app/entry.client.tsx
-@@ -1,21 +1,13 @@
+@@ -1,20 +1,13 @@
  import {HydratedRouter} from 'react-router/dom';
  import {startTransition, StrictMode} from 'react';
  import {hydrateRoot} from 'react-dom/client';
 -import {NonceProvider} from '@shopify/hydrogen';
-
+ 
  if (!window.location.origin.includes('webcache.googleusercontent.com')) {
    startTransition(() => {
 -    // Extract nonce from existing script tags
--    const existingNonce = document
--      .querySelector<HTMLScriptElement>('script[nonce]')
--      ?.nonce;
+-    const existingNonce =
+-      document.querySelector<HTMLScriptElement>('script[nonce]')?.nonce;
 -
      hydrateRoot(
        document,
@@ -267,17 +264,17 @@ index 9b7b86cb..c1aa68ad 100644
        </StrictMode>,
      );
    });
-```
+~~~
 
 ### Step 5: Add the Express template favicon
 
 Add Express template favicon
 
-#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
+#### File: [favicon.svg](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/public/favicon.svg)
 
 <details>
 
-```svg
+~~~svg
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none">
   <style>
     .stroke {
@@ -307,7 +304,7 @@ Add Express template favicon
   />
 </svg>
 
-```
+~~~
 
 </details>
 
@@ -315,11 +312,11 @@ Add Express template favicon
 
 Replace Oxygen server rendering with Express-compatible Node.js SSR using PassThrough streams
 
-#### File: [app/entry.server.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/entry.server.tsx)
+#### File: [app/entry.server.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/app/entry.server.tsx)
 
 <details>
 
-```diff
+~~~diff
 index 6f5c4abf..a407bed6 100644
 --- a/templates/skeleton/app/entry.server.tsx
 +++ b/templates/skeleton/app/entry.server.tsx
@@ -337,7 +334,7 @@ index 6f5c4abf..a407bed6 100644
    type HydrogenRouterContextProvider,
  } from '@shopify/hydrogen';
 -import type {EntryContext} from 'react-router';
-
+ 
 -export default async function handleRequest(
 +const ABORT_DELAY = 5_000;
 +
@@ -378,18 +375,18 @@ index 6f5c4abf..a407bed6 100644
 -    },
 -  );
 +    });
-
+ 
 -  if (isbot(request.headers.get('user-agent'))) {
 -    await body.allReady;
 -  }
 +    let shellRendered = false;
 +    const userAgent = request.headers.get('user-agent');
-
+ 
 -  responseHeaders.set('Content-Type', 'text/html');
 -  responseHeaders.set('Content-Security-Policy', header);
 +    const readyOption: keyof RenderToPipeableStreamOptions =
 +      userAgent && isbot(userAgent) ? 'onAllReady' : 'onShellReady';
-
+ 
 -  return new Response(body, {
 -    headers: responseHeaders,
 -    status: responseStatusCode,
@@ -437,7 +434,7 @@ index 6f5c4abf..a407bed6 100644
 -}
 +}
 \ No newline at end of file
-```
+~~~
 
 </details>
 
@@ -445,11 +442,11 @@ index 6f5c4abf..a407bed6 100644
 
 Add development server orchestration script for Vite and nodemon
 
-#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
+#### File: [dev.mjs](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/scripts/dev.mjs)
 
 <details>
 
-```mjs
+~~~mjs
 #!/usr/bin/env node
 
 import {spawn} from 'child_process';
@@ -485,7 +482,7 @@ initialTypegen.stderr?.on('data', (data) => {
 
 initialTypegen.on('close', () => {
   console.log('✅ Initial types generated');
-
+  
   // Show dev server URL
   const port = process.env.PORT || 3000;
   console.log('\n🚀 Express server ready!\n');
@@ -509,7 +506,7 @@ const runTypegen = () => {
       shell: true,
       cwd: rootDir,
     });
-
+    
     // Filter out WebSocket errors
     typegen.stderr?.on('data', (data) => {
       const message = data.toString();
@@ -517,7 +514,7 @@ const runTypegen = () => {
         process.stderr.write(data);
       }
     });
-
+    
     typegen.on('close', (code) => {
       if (code === 0) {
         console.log('✅ Types regenerated');
@@ -551,7 +548,7 @@ process.on('SIGTERM', () => {
   server.kill();
   process.exit(0);
 });
-```
+~~~
 
 </details>
 
@@ -559,11 +556,11 @@ process.on('SIGTERM', () => {
 
 Simplify root layout for Express template by removing complex components
 
-#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/root.tsx)
+#### File: [app/root.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/app/root.tsx)
 
 <details>
 
-```diff
+~~~diff
 index df87425c..1ba9888f 100644
 --- a/templates/skeleton/app/root.tsx
 +++ b/templates/skeleton/app/root.tsx
@@ -577,9 +574,9 @@ index df87425c..1ba9888f 100644
 -import appStyles from '~/styles/app.css?url';
 -import {PageLayout} from './components/PageLayout';
 +import styles from './styles/app.css?url';
-
+ 
  export type RootLoader = typeof loader;
-
+ 
 -/**
 - * This is important to avoid re-fetching root queries on sub-navigations
 - */
@@ -601,7 +598,7 @@ index df87425c..1ba9888f 100644
 -  // For more details see: https://remix.run/docs/en/main/route/should-revalidate
    return false;
  };
-
+ 
 -/**
 - * The main and reset stylesheets are added in the Layout component
 - * to prevent a bug in development HMR updates.
@@ -623,7 +620,7 @@ index df87425c..1ba9888f 100644
 +    {rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg'},
    ];
  }
-
+ 
 -export async function loader(args: Route.LoaderArgs) {
 -  // Start fetching non-critical data without blocking time to first byte
 -  const deferredData = loadDeferredData(args);
@@ -631,15 +628,15 @@ index df87425c..1ba9888f 100644
 +  const [customerAccessToken, cartId] = await Promise.all([
 +    context.session.get('customerAccessToken'),
 +  ]);
-
+ 
 -  // Await the critical data required to render initial state of the page
 -  const criticalData = await loadCriticalData(args);
 +  const deferredData = loadDeferredData({context});
 +  const criticalData = await loadCriticalData({context});
-
+ 
 -  const {storefront, env} = args.context;
 +  const {storefront, env} = context;
-
+ 
    return {
      ...deferredData,
 @@ -86,59 +61,29 @@ export async function loader(args: Route.LoaderArgs) {
@@ -655,7 +652,7 @@ index df87425c..1ba9888f 100644
 +    isLoggedIn: Boolean(customerAccessToken),
    };
  }
-
+ 
 -/**
 - * Load data necessary for rendering content above the fold. This is the critical data
 - * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
@@ -663,7 +660,7 @@ index df87425c..1ba9888f 100644
 -async function loadCriticalData({context}: Route.LoaderArgs) {
 +async function loadCriticalData({context}: Pick<Route.LoaderArgs, 'context'>) {
    const {storefront} = context;
-
+ 
 -  const [header] = await Promise.all([
 -    storefront.query(HEADER_QUERY, {
 -      cache: storefront.CacheLong(),
@@ -676,11 +673,11 @@ index df87425c..1ba9888f 100644
 +  const layout = await storefront.query(LAYOUT_QUERY, {
 +    cache: storefront.CacheLong(),
 +  });
-
+ 
 -  return {header};
 +  return {layout};
  }
-
+ 
 -/**
 - * Load data for rendering content below the fold. This data is deferred and will be
 - * fetched after the initial page load. If it's unavailable, the page should still 200.
@@ -692,7 +689,7 @@ index df87425c..1ba9888f 100644
 +  context,
 +}: Pick<Route.LoaderArgs, 'context'> & {cartId?: string}) {
 +  const {storefront, cart} = context;
-
+ 
 -  // defer the footer query (below the fold)
 -  const footer = storefront
 -    .query(FOOTER_QUERY, {
@@ -713,7 +710,7 @@ index df87425c..1ba9888f 100644
 -  };
 +  return {cart: cart.get()};
  }
-
+ 
  export function Layout({children}: {children?: React.ReactNode}) {
 @@ -149,8 +94,7 @@ export function Layout({children}: {children?: React.ReactNode}) {
        <head>
@@ -759,7 +756,7 @@ index df87425c..1ba9888f 100644
 +    }
 +  }
 +` as const;
-```
+~~~
 
 </details>
 
@@ -767,11 +764,12 @@ index df87425c..1ba9888f 100644
 
 Add Express server with Hydrogen context, session management, and SSR support
 
-#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
+#### File: [server.mjs](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/cookbook/recipes/express/ingredients/templates/skeleton/server.mjs)
 
 <details>
 
-```mjs
+~~~mjs
+import 'dotenv/config';
 import {createRequestHandler} from '@react-router/express';
 import {createCookieSessionStorage} from 'react-router';
 import compression from 'compression';
@@ -779,7 +777,6 @@ import express from 'express';
 import morgan from 'morgan';
 import {createHydrogenContext, InMemoryCache} from '@shopify/hydrogen';
 
-// Don't capture process.env too early - it needs to be accessed after dotenv loads
 const getEnv = () => process.env;
 
 let vite;
@@ -813,6 +810,13 @@ if (vite) {
   );
 }
 app.use(express.static('build/client', {maxAge: '1h'}));
+
+// Serve public folder (favicon, etc.) so requests don't hit the React Router catch-all
+app.use(express.static('public', {maxAge: '1d'}));
+// Browsers often request /favicon.ico by default; serve our SVG favicon for that request
+app.get('/favicon.ico', (_req, res) => {
+  res.redirect(302, '/favicon.svg');
+});
 
 // Create the request handler
 app.all('*', async (req, res, next) => {
@@ -1031,7 +1035,8 @@ class AppSession {
     return this.sessionStorage.commitSession(this.session);
   }
 }
-```
+
+~~~
 
 </details>
 
@@ -1039,9 +1044,9 @@ class AppSession {
 
 Update routes configuration to work with Hydrogen on Express
 
-#### File: [app/routes.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/routes.ts)
+#### File: [app/routes.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/app/routes.ts)
 
-```diff
+~~~diff
 index 7df8a1b9..a1610c2b 100644
 --- a/templates/skeleton/app/routes.ts
 +++ b/templates/skeleton/app/routes.ts
@@ -1049,7 +1054,7 @@ index 7df8a1b9..a1610c2b 100644
  import {flatRoutes} from '@react-router/fs-routes';
  import {type RouteConfig} from '@react-router/dev/routes';
 -import {hydrogenRoutes} from '@shopify/hydrogen';
-
+ 
 -export default hydrogenRoutes([
 -  ...(await flatRoutes()),
 -  // Manual route definitions can be added to this array, in addition to or instead of using the `flatRoutes` file-based routing convention.
@@ -1060,26 +1065,22 @@ index 7df8a1b9..a1610c2b 100644
 +  const routes = await flatRoutes();
 +  return hydrogenRoutes([...routes]);
 +})() satisfies Promise<RouteConfig>;
-```
+~~~
 
 ### Step 11: Create a basic homepage
 
 Simplify homepage route to basic Express example content
 
-#### File: [app/routes/\_index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/routes/_index.tsx)
+#### File: [app/routes/_index.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/app/routes/_index.tsx)
 
 <details>
 
-```diff
-index 28102dbe..dc121c80 100644
+~~~diff
+index 237edc91..dc121c80 100644
 --- a/templates/skeleton/app/routes/_index.tsx
 +++ b/templates/skeleton/app/routes/_index.tsx
-@@ -1,171 +1,28 @@
--import {
--  Await,
--  useLoaderData,
--  Link,
--} from 'react-router';
+@@ -1,177 +1,28 @@
+-import {Await, useLoaderData, Link} from 'react-router';
 -import type {Route} from './+types/_index';
 -import {Suspense} from 'react';
 -import {Image} from '@shopify/hydrogen';
@@ -1088,8 +1089,9 @@ index 28102dbe..dc121c80 100644
 -  RecommendedProductsQuery,
 -} from 'storefrontapi.generated';
 -import {ProductItem} from '~/components/ProductItem';
+-import {MockShopNotice} from '~/components/MockShopNotice';
 +import {useRouteError, isRouteErrorResponse, Link} from 'react-router';
-
+ 
 -export const meta: Route.MetaFunction = () => {
 -  return [{title: 'Hydrogen | Home'}];
 -};
@@ -1115,6 +1117,7 @@ index 28102dbe..dc121c80 100644
 -  ]);
 -
 -  return {
+-    isShopLinked: Boolean(context.env.PUBLIC_STORE_DOMAIN),
 -    featuredCollection: collections.nodes[0],
 -  };
 -}
@@ -1143,6 +1146,7 @@ index 28102dbe..dc121c80 100644
 +export default function Index() {
    return (
 -    <div className="home">
+-      {data.isShopLinked ? null : <MockShopNotice />}
 -      <FeaturedCollection collection={data.featuredCollection} />
 -      <RecommendedProducts products={data.recommendedProducts} />
 -    </div>
@@ -1158,7 +1162,7 @@ index 28102dbe..dc121c80 100644
 +    </>
    );
  }
-
+ 
 -function FeaturedCollection({
 -  collection,
 -}: {
@@ -1173,7 +1177,11 @@ index 28102dbe..dc121c80 100644
 -    >
 -      {image && (
 -        <div className="featured-collection-image">
--          <Image data={image} sizes="100vw" />
+-          <Image
+-            data={image}
+-            sizes="100vw"
+-            alt={image.altText || collection.title}
+-          />
 -        </div>
 -      )}
 -      <h1>{collection.title}</h1>
@@ -1197,8 +1205,11 @@ index 28102dbe..dc121c80 100644
 -  products: Promise<RecommendedProductsQuery | null>;
 -}) {
 -  return (
--    <div className="recommended-products">
--      <h2>Recommended Products</h2>
+-    <section
+-      className="recommended-products"
+-      aria-labelledby="recommended-products"
+-    >
+-      <h2 id="recommended-products">Recommended Products</h2>
 -      <Suspense fallback={<div>Loading...</div>}>
 -        <Await resolve={products}>
 -          {(response) => (
@@ -1213,7 +1224,7 @@ index 28102dbe..dc121c80 100644
 -        </Await>
 -      </Suspense>
 -      <br />
--    </div>
+-    </section>
 -  );
 -}
 -
@@ -1268,7 +1279,7 @@ index 28102dbe..dc121c80 100644
 -    }
 -  }
 -` as const;
-```
+~~~
 
 </details>
 
@@ -1276,19 +1287,16 @@ index 28102dbe..dc121c80 100644
 
 Simplify product route to minimal implementation without cart functionality
 
-#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/routes/products.$handle.tsx)
+#### File: [app/routes/products.$handle.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/app/routes/products.$handle.tsx)
 
 <details>
 
-```diff
-index 422a2eb9..061b059c 100644
+~~~diff
+index 99730d41..061b059c 100644
 --- a/templates/skeleton/app/routes/products.$handle.tsx
 +++ b/templates/skeleton/app/routes/products.$handle.tsx
-@@ -1,50 +1,7 @@
--import {
--  redirect,
--  useLoaderData,
--} from 'react-router';
+@@ -1,43 +1,7 @@
+-import {redirect, useLoaderData} from 'react-router';
 +import {useLoaderData} from 'react-router';
  import type {Route} from './+types/products.$handle';
 -import {
@@ -1303,7 +1311,7 @@ index 422a2eb9..061b059c 100644
 -import {ProductImage} from '~/components/ProductImage';
 -import {ProductForm} from '~/components/ProductForm';
 -import {redirectIfHandleIsLocalized} from '~/lib/redirect';
-
+ 
 -export const meta: Route.MetaFunction = ({data}) => {
 -  return [
 -    {title: `Hydrogen | ${data?.product.title ?? ''}`},
@@ -1328,19 +1336,15 @@ index 422a2eb9..061b059c 100644
 - * Load data necessary for rendering content above the fold. This is the critical data
 - * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
 - */
--async function loadCriticalData({
--  context,
--  params,
--  request,
--}: Route.LoaderArgs) {
+-async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
 +export async function loader({params, context}: Route.LoaderArgs) {
    const {handle} = params;
    const {storefront} = context;
-
-@@ -52,188 +9,42 @@ async function loadCriticalData({
+ 
+@@ -45,188 +9,42 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
      throw new Error('Expected product handle to be defined');
    }
-
+ 
 -  const [{product}] = await Promise.all([
 -    storefront.query(PRODUCT_QUERY, {
 -      variables: {handle, selectedOptions: getSelectedProductOptions(request)},
@@ -1350,11 +1354,11 @@ index 422a2eb9..061b059c 100644
 +  const {product} = await storefront.query(PRODUCT_QUERY, {
 +    variables: {handle},
 +  });
-
+ 
    if (!product?.id) {
      throw new Response(null, {status: 404});
    }
-
+ 
 -  // The API handle might be localized, so redirect to the localized handle
 -  redirectIfHandleIsLocalized(request, {handle, data: product});
 -
@@ -1375,7 +1379,7 @@ index 422a2eb9..061b059c 100644
 -  return {};
 +  return {product};
  }
-
+ 
  export default function Product() {
 -  const {product} = useLoaderData<typeof loader>();
 -
@@ -1399,7 +1403,7 @@ index 422a2eb9..061b059c 100644
 +  const {
 +    product: {title, descriptionHtml},
 +  } = useLoaderData<typeof loader>();
-
+ 
    return (
      <div className="product">
 -      <ProductImage image={selectedVariant?.image} />
@@ -1449,7 +1453,7 @@ index 422a2eb9..061b059c 100644
      </div>
    );
  }
-
+ 
 -const PRODUCT_VARIANT_FRAGMENT = `#graphql
 -  fragment ProductVariant on ProductVariant {
 -    availableForSale
@@ -1545,7 +1549,7 @@ index 422a2eb9..061b059c 100644
    }
 -  ${PRODUCT_FRAGMENT}
  ` as const;
-```
+~~~
 
 </details>
 
@@ -1553,15 +1557,15 @@ index 422a2eb9..061b059c 100644
 
 Replace skeleton styles with minimal Express template styling
 
-#### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/app/styles/app.css)
+#### File: [app/styles/app.css](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/app/styles/app.css)
 
 <details>
 
-```diff
-index cbe697e4..db47a463 100644
+~~~diff
+index 3be08d31..313080f1 100644
 --- a/templates/skeleton/app/styles/app.css
 +++ b/templates/skeleton/app/styles/app.css
-@@ -1,574 +1,44 @@
+@@ -1,645 +1,44 @@
 -:root {
 -  --aside-width: 400px;
 -  --cart-aside-summary-height-with-discount: 300px;
@@ -1584,6 +1588,58 @@ index cbe697e4..db47a463 100644
 -.link:hover {
 -  text-decoration: underline;
 -  cursor: pointer;
+-}
+-
+-/*
+-* --------------------------------------------------
+-* components/MockShopNotice
+-* --------------------------------------------------
+-*/
+-.mock-shop-notice {
+-  background: var(--color-light);
+-  border: 1px solid var(--color-dark);
+-  border-left-width: 0.5rem;
+-  margin: 1rem 0;
++body {
+   padding: 0;
+-
+-  .inner {
+-    padding: 0.875rem 1rem;
+-  }
+-
+-  h2 {
+-    font-size: 1.6rem;
+-    font-weight: 700;
+-    line-height: 1.4;
+-  }
+-
+-  p {
+-    font-size: 1rem;
+-    line-height: 1.4;
+-    margin-bottom: 0.5rem;
+-  }
+-
+-  footer {
+-    background: rgba(0, 0, 0, 0.06);
+-    padding: 0.5rem 1rem;
+-  }
+-
+-  .small {
+-    font-size: 0.875rem;
+-    line-height: 1.4;
+-    margin-bottom: 0.5rem;
+-  }
+-
+-  code {
+-    background: rgba(0, 0, 0, 0.06);
+-    border-radius: 0.25rem;
+-    padding: 0.1em 0.3em;
+-  }
+-
+-  a {
+-    text-decoration: underline;
+-    text-underline-offset: 6px;
+-  }
 -}
 -
 -/*
@@ -1618,14 +1674,12 @@ index cbe697e4..db47a463 100644
 -}
 -
 -aside header h3 {
-+body {
-+  padding: 0;
    margin: 0;
 +  background: rgb(245, 245, 241);
 +  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
 +    Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
  }
-
+ 
 -aside header .close {
 -  font-weight: bold;
 -  opacity: 0.8;
@@ -1656,13 +1710,24 @@ index cbe697e4..db47a463 100644
 +h2,
 +p {
    margin: 0;
-+  padding: 0;
- }
-
+-}
+-
 -aside li {
 -  margin-bottom: 0.125rem;
 -}
 -
+-.sr-only {
+-  position: absolute;
+-  width: 1px;
+-  height: 1px;
+   padding: 0;
+-  margin: -1px;
+-  overflow: hidden;
+-  clip-path: inset(50%);
+-  white-space: nowrap;
+-  border-width: 0;
+ }
+ 
 -.overlay {
 -  background: rgba(0, 0, 0, 0.2);
 -  bottom: 0;
@@ -1823,8 +1888,11 @@ index cbe697e4..db47a463 100644
 -}
 -
 -.cart-line {
--  display: flex;
 -  padding: 0.75rem 0;
+-}
+-
+-.cart-line-inner {
+-  display: flex;
 -}
 -
 -.cart-line img {
@@ -1848,6 +1916,11 @@ index cbe697e4..db47a463 100644
 -
 -.cart-line-quantity {
 -  display: flex;
+-}
+-
+-/* Child line components (warranties, gift wrapping, etc.) */
+-.cart-line-children {
+-  padding-left: 2rem;
 -}
 -
 -.cart-discount {
@@ -1982,7 +2055,7 @@ index cbe697e4..db47a463 100644
 -  }
 +  line-height: 1.4;
  }
-
+ 
 -.products-grid {
 -  display: grid;
 -  grid-gap: 1.5rem;
@@ -1994,7 +2067,7 @@ index cbe697e4..db47a463 100644
 +  margin-bottom: 1rem;
 +  line-height: 1.4;
  }
-
+ 
 -.product-item img {
 -  height: auto;
 -  width: 100%;
@@ -2052,7 +2125,7 @@ index cbe697e4..db47a463 100644
 -  font-family: inherit;
 +  line-height: 1.4;
  }
-
+ 
 -.product-option-label-swatch {
 -  width: 1.25rem;
 -  height: 1.25rem;
@@ -2065,12 +2138,11 @@ index cbe697e4..db47a463 100644
 +  padding: 2rem;
 +  max-width: 25rem;
  }
-
+ 
  /*
- * --------------------------------------------------
+-* --------------------------------------------------
 -* routes/blog._index.tsx
-+* Express template styling
- * --------------------------------------------------
+-* --------------------------------------------------
 -*/
 -.blog-grid {
 -  display: grid;
@@ -2160,9 +2232,11 @@ index cbe697e4..db47a463 100644
 -  gap: 0.75rem;
 -  flex-wrap: wrap;
 -}
-+*/
-\ No newline at end of file
-```
++ * --------------------------------------------------
++ * Express template styling
++ * --------------------------------------------------
++ */
+~~~
 
 </details>
 
@@ -2170,15 +2244,15 @@ index cbe697e4..db47a463 100644
 
 Simplify ESLint configuration for Express template
 
-#### File: [eslint.config.js](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/eslint.config.js)
+#### File: [eslint.config.js](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/eslint.config.js)
 
 <details>
 
-```diff
-index 6c972c78..fa805477 100644
+~~~diff
+index 8bfe5484..fa805477 100644
 --- a/templates/skeleton/eslint.config.js
 +++ b/templates/skeleton/eslint.config.js
-@@ -1,246 +1,2 @@
+@@ -1,247 +1,2 @@
 -import {fixupConfigRules, fixupPluginRules} from '@eslint/compat';
 -import eslintComments from 'eslint-plugin-eslint-comments';
 -import react from 'eslint-plugin-react';
@@ -2392,6 +2466,7 @@ index 6c972c78..fa805477 100644
 -      '@typescript-eslint/no-floating-promises': 'error',
 -      '@typescript-eslint/no-misused-promises': 'error',
 -      'react/prop-types': 'off',
+-      'import/no-unresolved': ['error', {ignore: ['^virtual:']}],
 -    },
 -  },
 -  {
@@ -2428,7 +2503,7 @@ index 6c972c78..fa805477 100644
 +// Minimal ESLint configuration for Express template
 +export default [];
 \ No newline at end of file
-```
+~~~
 
 </details>
 
@@ -2436,16 +2511,16 @@ index 6c972c78..fa805477 100644
 
 Update dependencies and scripts for Express server deployment (add express, nodemon, compression, remove Oxygen packages)
 
-#### File: [package.json](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/package.json)
+#### File: [package.json](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/package.json)
 
 <details>
 
-```diff
-index e9ebd1d3..00a7b42d 100644
+~~~diff
+index e971ba7e..ae934ffd 100644
 --- a/templates/skeleton/package.json
 +++ b/templates/skeleton/package.json
-@@ -5,58 +5,51 @@
-   "version": "2025.7.0",
+@@ -5,59 +5,52 @@
+   "version": "2026.1.1",
    "type": "module",
    "scripts": {
 -    "build": "shopify hydrogen build --codegen",
@@ -2461,10 +2536,10 @@ index e9ebd1d3..00a7b42d 100644
    },
    "prettier": "@shopify/prettier-config",
    "dependencies": {
-+    "@react-router/express": "7.9.2",
-+    "@react-router/node": "7.9.2",
++    "@react-router/express": "7.12.0",
++    "@react-router/node": "7.12.0",
 +    "@remix-run/eslint-config": "^2.16.1",
-     "@shopify/hydrogen": "2025.7.0",
+     "@shopify/hydrogen": "2026.1.1",
 +    "compression": "^1.7.4",
 +    "cross-env": "^7.0.3",
 +    "express": "^4.19.2",
@@ -2472,21 +2547,21 @@ index e9ebd1d3..00a7b42d 100644
      "graphql-tag": "^2.12.6",
      "isbot": "^5.1.22",
 +    "morgan": "^1.10.0",
-     "react": "18.3.1",
-     "react-dom": "18.3.1",
-     "react-router": "7.9.2",
-     "react-router-dom": "7.9.2"
+     "react": "^18.3.1",
+     "react-dom": "^18.3.1",
+     "react-router": "7.12.0",
+     "react-router-dom": "7.12.0"
    },
    "devDependencies": {
 -    "@eslint/compat": "^1.2.5",
 -    "@eslint/eslintrc": "^3.2.0",
      "@eslint/js": "^9.18.0",
      "@graphql-codegen/cli": "5.0.2",
-     "@react-router/dev": "7.9.2",
-     "@react-router/fs-routes": "7.9.2",
+     "@react-router/dev": "7.12.0",
+     "@react-router/fs-routes": "7.12.0",
      "@shopify/cli": "3.85.4",
-     "@shopify/hydrogen-codegen": "^0.3.3",
--    "@shopify/mini-oxygen": "^4.0.0",
+     "@shopify/hydrogen-codegen": "0.3.3",
+-    "@shopify/mini-oxygen": "4.0.1",
 -    "@shopify/oxygen-workers-types": "^4.1.6",
 -    "@shopify/prettier-config": "^1.1.2",
 -    "@total-typescript/ts-reset": "^0.6.1",
@@ -2494,8 +2569,8 @@ index e9ebd1d3..00a7b42d 100644
 +    "@types/compression": "^1.7.2",
 +    "@types/express": "^4.17.17",
 +    "@types/morgan": "^1.9.4",
-     "@types/react": "^18.2.22",
-     "@types/react-dom": "^18.2.7",
+     "@types/react": "^18.3.28",
+     "@types/react-dom": "^18.3.7",
 -    "@typescript-eslint/eslint-plugin": "^8.21.0",
 -    "@typescript-eslint/parser": "^8.21.0",
 -    "eslint": "^9.18.0",
@@ -2508,8 +2583,9 @@ index e9ebd1d3..00a7b42d 100644
 -    "eslint-plugin-react": "^7.37.4",
 -    "eslint-plugin-react-hooks": "^5.1.0",
 -    "globals": "^15.14.0",
--    "prettier": "^3.4.2",
 +    "dotenv": "^16.0.3",
+     "graphql-config": "^5.0.3",
+-    "prettier": "^3.4.2",
 +    "nodemon": "^2.0.22",
 +    "npm-run-all": "^4.1.5",
      "typescript": "^5.9.2",
@@ -2517,11 +2593,11 @@ index e9ebd1d3..00a7b42d 100644
      "vite-tsconfig-paths": "^4.3.1"
    },
    "engines": {
--    "node": ">=18.0.0"
-+    "node": ">=20.0.0 <22.0.0"
+-    "node": "^22 || ^24"
++    "node": ">=20.0.0"
    }
  }
-```
+~~~
 
 </details>
 
@@ -2529,13 +2605,17 @@ index e9ebd1d3..00a7b42d 100644
 
 Configure Vite for Express deployment with Node.js module externalization
 
-#### File: [vite.config.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/vite.config.ts)
+#### File: [vite.config.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/vite.config.ts)
 
-```diff
+~~~diff
 index a1702446..058b559d 100644
 --- a/templates/skeleton/vite.config.ts
 +++ b/templates/skeleton/vite.config.ts
-@@ -5,13 +5,15 @@ import {reactRouter} from '@react-router/dev/vite';
+@@ -1,16 +1,17 @@
+ import {defineConfig} from 'vite';
+ import {hydrogen} from '@shopify/hydrogen/vite';
+-import {oxygen} from '@shopify/mini-oxygen/vite';
+ import {reactRouter} from '@react-router/dev/vite';
  import tsconfigPaths from 'vite-tsconfig-paths';
 
  export default defineConfig({
@@ -2552,7 +2632,7 @@ index a1702446..058b559d 100644
      optimizeDeps: {
        /**
         * Include dependencies here if they throw CJS<>ESM errors.
-@@ -23,10 +25,7 @@ export default defineConfig({
+@@ -23,10 +24,7 @@ export default defineConfig({
         * Include 'example-dep' in the array below.
         * @see https://vitejs.dev/config/dep-optimization-options
         */
@@ -2564,82 +2644,98 @@ index a1702446..058b559d 100644
 -    allowedHosts: ['.tryhydrogen.dev'],
 -  },
  });
-```
+~~~
+
+### Step 17: Update TypeScript configuration
+
+Remove Oxygen worker types from tsconfig since Express replaces Oxygen
+
+#### File: [tsconfig.json](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/tsconfig.json)
+
+~~~diff
+--- a/templates/skeleton/tsconfig.json
++++ b/templates/skeleton/tsconfig.json
+@@ -26,7 +26,6 @@
+     "skipLibCheck": true,
+     "baseUrl": ".",
+     "types": [
+-      "@shopify/oxygen-workers-types",
+       "react-router",
+       "@shopify/hydrogen/react-router-types",
+       "vite/client"
+~~~
 
 ## Deleted Files
 
-- [templates/skeleton/app/components/AddToCartButton.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/AddToCartButton.tsx)
-- [templates/skeleton/app/components/Aside.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/Aside.tsx)
-- [templates/skeleton/app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/CartLineItem.tsx)
-- [templates/skeleton/app/components/CartMain.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/CartMain.tsx)
-- [templates/skeleton/app/components/CartSummary.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/CartSummary.tsx)
-- [templates/skeleton/app/components/Footer.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/Footer.tsx)
-- [templates/skeleton/app/components/Header.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/Header.tsx)
-- [templates/skeleton/app/components/PageLayout.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/PageLayout.tsx)
-- [templates/skeleton/app/components/PaginatedResourceSection.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/PaginatedResourceSection.tsx)
-- [templates/skeleton/app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/ProductForm.tsx)
-- [templates/skeleton/app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/ProductImage.tsx)
-- [templates/skeleton/app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/ProductItem.tsx)
-- [templates/skeleton/app/components/ProductPrice.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/ProductPrice.tsx)
-- [templates/skeleton/app/components/SearchForm.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/SearchForm.tsx)
-- [templates/skeleton/app/components/SearchFormPredictive.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/SearchFormPredictive.tsx)
-- [templates/skeleton/app/components/SearchResults.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/SearchResults.tsx)
-- [templates/skeleton/app/components/SearchResultsPredictive.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/components/SearchResultsPredictive.tsx)
-- [templates/skeleton/app/graphql/customer-account/CustomerAddressMutations.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/graphql/customer-account/CustomerAddressMutations.ts)
-- [templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts)
-- [templates/skeleton/app/graphql/customer-account/CustomerOrderQuery.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/graphql/customer-account/CustomerOrderQuery.ts)
-- [templates/skeleton/app/graphql/customer-account/CustomerOrdersQuery.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/graphql/customer-account/CustomerOrdersQuery.ts)
-- [templates/skeleton/app/graphql/customer-account/CustomerUpdateMutation.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/graphql/customer-account/CustomerUpdateMutation.ts)
-- [templates/skeleton/app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/lib/context.ts)
-- [templates/skeleton/app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/lib/fragments.ts)
-- [templates/skeleton/app/lib/redirect.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/lib/redirect.ts)
-- [templates/skeleton/app/lib/search.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/lib/search.ts)
-- [templates/skeleton/app/lib/session.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/lib/session.ts)
-- [templates/skeleton/app/lib/variants.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/lib/variants.ts)
-- [templates/skeleton/app/routes/$.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/$.tsx)
-- [templates/skeleton/app/routes/[robots.txt].tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/[robots.txt].tsx)
-- [templates/skeleton/app/routes/[sitemap.xml].tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/[sitemap.xml].tsx)
-- [templates/skeleton/app/routes/account.$.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/account.$.tsx)
-- [templates/skeleton/app/routes/account.\_index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/account._index.tsx)
-- [templates/skeleton/app/routes/account.addresses.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/account.addresses.tsx)
-- [templates/skeleton/app/routes/account.orders.$id.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/account.orders.$id.tsx)
-- [templates/skeleton/app/routes/account.orders.\_index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/account.orders._index.tsx)
-- [templates/skeleton/app/routes/account.profile.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/account.profile.tsx)
-- [templates/skeleton/app/routes/account.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/account.tsx)
-- [templates/skeleton/app/routes/account\_.authorize.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/account_.authorize.tsx)
-- [templates/skeleton/app/routes/account\_.login.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/account_.login.tsx)
-- [templates/skeleton/app/routes/account\_.logout.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/account_.logout.tsx)
-- [templates/skeleton/app/routes/api.$version.[graphql.json].tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/api.$version.[graphql.json].tsx)
-- [templates/skeleton/app/routes/blogs.$blogHandle.$articleHandle.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/blogs.$blogHandle.$articleHandle.tsx)
-- [templates/skeleton/app/routes/blogs.$blogHandle.\_index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/blogs.$blogHandle._index.tsx)
-- [templates/skeleton/app/routes/blogs.\_index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/blogs._index.tsx)
-- [templates/skeleton/app/routes/cart.$lines.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/cart.$lines.tsx)
-- [templates/skeleton/app/routes/cart.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/cart.tsx)
-- [templates/skeleton/app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/collections.$handle.tsx)
-- [templates/skeleton/app/routes/collections.\_index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/collections._index.tsx)
-- [templates/skeleton/app/routes/collections.all.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/collections.all.tsx)
-- [templates/skeleton/app/routes/discount.$code.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/discount.$code.tsx)
-- [templates/skeleton/app/routes/pages.$handle.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/pages.$handle.tsx)
-- [templates/skeleton/app/routes/policies.$handle.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/policies.$handle.tsx)
-- [templates/skeleton/app/routes/policies.\_index.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/policies._index.tsx)
-- [templates/skeleton/app/routes/search.tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/search.tsx)
-- [templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx)
-- [templates/skeleton/app/styles/reset.css](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/app/styles/reset.css)
-- [templates/skeleton/customer-accountapi.generated.d.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/customer-accountapi.generated.d.ts)
-- [templates/skeleton/env.d.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/env.d.ts)
-- [templates/skeleton/server.ts](https://github.com/Shopify/hydrogen/blob/4f5db289f8a9beb5c46dda9416a7ae8151f7e08e/templates/skeleton/templates/skeleton/server.ts)
+- [templates/skeleton/app/components/AddToCartButton.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/AddToCartButton.tsx)
+- [templates/skeleton/app/components/Aside.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/Aside.tsx)
+- [templates/skeleton/app/components/CartLineItem.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/CartLineItem.tsx)
+- [templates/skeleton/app/components/CartMain.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/CartMain.tsx)
+- [templates/skeleton/app/components/CartSummary.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/CartSummary.tsx)
+- [templates/skeleton/app/components/Footer.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/Footer.tsx)
+- [templates/skeleton/app/components/Header.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/Header.tsx)
+- [templates/skeleton/app/components/PageLayout.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/PageLayout.tsx)
+- [templates/skeleton/app/components/PaginatedResourceSection.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/PaginatedResourceSection.tsx)
+- [templates/skeleton/app/components/ProductForm.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/ProductForm.tsx)
+- [templates/skeleton/app/components/ProductImage.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/ProductImage.tsx)
+- [templates/skeleton/app/components/ProductItem.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/ProductItem.tsx)
+- [templates/skeleton/app/components/ProductPrice.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/ProductPrice.tsx)
+- [templates/skeleton/app/components/SearchForm.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/SearchForm.tsx)
+- [templates/skeleton/app/components/SearchFormPredictive.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/SearchFormPredictive.tsx)
+- [templates/skeleton/app/components/SearchResults.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/SearchResults.tsx)
+- [templates/skeleton/app/components/SearchResultsPredictive.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/components/SearchResultsPredictive.tsx)
+- [templates/skeleton/app/graphql/customer-account/CustomerAddressMutations.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/graphql/customer-account/CustomerAddressMutations.ts)
+- [templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/graphql/customer-account/CustomerDetailsQuery.ts)
+- [templates/skeleton/app/graphql/customer-account/CustomerOrderQuery.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/graphql/customer-account/CustomerOrderQuery.ts)
+- [templates/skeleton/app/graphql/customer-account/CustomerOrdersQuery.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/graphql/customer-account/CustomerOrdersQuery.ts)
+- [templates/skeleton/app/graphql/customer-account/CustomerUpdateMutation.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/graphql/customer-account/CustomerUpdateMutation.ts)
+- [templates/skeleton/app/lib/context.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/lib/context.ts)
+- [templates/skeleton/app/lib/fragments.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/lib/fragments.ts)
+- [templates/skeleton/app/lib/redirect.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/lib/redirect.ts)
+- [templates/skeleton/app/lib/search.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/lib/search.ts)
+- [templates/skeleton/app/lib/session.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/lib/session.ts)
+- [templates/skeleton/app/lib/variants.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/lib/variants.ts)
+- [templates/skeleton/app/routes/$.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/$.tsx)
+- [templates/skeleton/app/routes/[robots.txt].tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/[robots.txt].tsx)
+- [templates/skeleton/app/routes/[sitemap.xml].tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/[sitemap.xml].tsx)
+- [templates/skeleton/app/routes/account.$.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/account.$.tsx)
+- [templates/skeleton/app/routes/account._index.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/account._index.tsx)
+- [templates/skeleton/app/routes/account.addresses.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/account.addresses.tsx)
+- [templates/skeleton/app/routes/account.orders.$id.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/account.orders.$id.tsx)
+- [templates/skeleton/app/routes/account.orders._index.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/account.orders._index.tsx)
+- [templates/skeleton/app/routes/account.profile.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/account.profile.tsx)
+- [templates/skeleton/app/routes/account.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/account.tsx)
+- [templates/skeleton/app/routes/account_.authorize.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/account_.authorize.tsx)
+- [templates/skeleton/app/routes/account_.login.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/account_.login.tsx)
+- [templates/skeleton/app/routes/account_.logout.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/account_.logout.tsx)
+- [templates/skeleton/app/routes/blogs.$blogHandle.$articleHandle.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/blogs.$blogHandle.$articleHandle.tsx)
+- [templates/skeleton/app/routes/blogs.$blogHandle._index.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/blogs.$blogHandle._index.tsx)
+- [templates/skeleton/app/routes/blogs._index.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/blogs._index.tsx)
+- [templates/skeleton/app/routes/cart.$lines.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/cart.$lines.tsx)
+- [templates/skeleton/app/routes/cart.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/cart.tsx)
+- [templates/skeleton/app/routes/collections.$handle.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/collections.$handle.tsx)
+- [templates/skeleton/app/routes/collections._index.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/collections._index.tsx)
+- [templates/skeleton/app/routes/collections.all.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/collections.all.tsx)
+- [templates/skeleton/app/routes/discount.$code.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/discount.$code.tsx)
+- [templates/skeleton/app/routes/pages.$handle.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/pages.$handle.tsx)
+- [templates/skeleton/app/routes/policies.$handle.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/policies.$handle.tsx)
+- [templates/skeleton/app/routes/policies._index.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/policies._index.tsx)
+- [templates/skeleton/app/routes/search.tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/search.tsx)
+- [templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/routes/sitemap.$type.$page[.xml].tsx)
+- [templates/skeleton/app/styles/reset.css](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/app/styles/reset.css)
+- [templates/skeleton/customer-accountapi.generated.d.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/customer-accountapi.generated.d.ts)
+- [templates/skeleton/env.d.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/env.d.ts)
+- [templates/skeleton/server.ts](https://github.com/Shopify/hydrogen/blob/14d09107663313bae8eac3c701b90a7bc49819e4/templates/skeleton/templates/skeleton/server.ts)
 
 ## Next steps
 
 1. Create a `.env` file with your Shopify Storefront API credentials:
-
-```
-PUBLIC_STOREFRONT_API_TOKEN="your-token"
-PUBLIC_STORE_DOMAIN="your-store.myshopify.com"
-PUBLIC_STOREFRONT_ID="your-storefront-id"
-SESSION_SECRET="your-session-secret-at-least-32-chars"
-```
-
+  ```
+  PUBLIC_STOREFRONT_API_TOKEN="your-token"
+  PUBLIC_STORE_DOMAIN="your-store.myshopify.com"
+  PUBLIC_STOREFRONT_ID="your-storefront-id"
+  SESSION_SECRET="your-session-secret-at-least-32-chars"
+  ```
 2. Run `npm install` to install Express and other Node.js dependencies
 3. Run `npm run dev` to start the development server with hot reload
 4. For production, run `npm run build` followed by `npm start`

@@ -98,6 +98,12 @@ export function createRequestHandler<Context = unknown>({
         appendPoweredByHeader?.(response);
         return response;
       }
+
+      if (storefront?.isMcpUrl(request)) {
+        const response = await storefront.forwardMcp(request);
+        appendPoweredByHeader?.(response);
+        return response;
+      }
     }
 
     const response = await handleRequest(request, context);
