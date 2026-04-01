@@ -2,6 +2,11 @@
 
 A self-contained specification for scaffolding a Shopify storefront from scratch. Uses only the Storefront API — no Shopify packages. Framework-agnostic: works with any React-based framework that supports server-side rendering.
 
+### Implementation Notes
+
+- **Testing**: Focus on getting the storefront functional first. The verification checklist in Section 12 covers all acceptance criteria. Automated tests can be added in a follow-up iteration once the core storefront is working end-to-end.
+- **Scope**: This spec covers a complete but minimal storefront. It intentionally does not cover customer accounts, search, blog, SEO meta tags, privacy banners, or internationalization.
+
 ---
 
 ## 1. Environment & API Version
@@ -1043,6 +1048,58 @@ new Intl.NumberFormat(locale, {
 ---
 
 ## 11. Pages
+
+### Homepage
+
+**Route**: `/`
+
+The homepage should feature a curated entry point into the store. Fetch the first collection (sorted by `UPDATED_AT`, reversed) and the first 4 products (sorted by `UPDATED_AT`, reversed) using these queries:
+
+```graphql
+query FeaturedCollection($country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+  collections(first: 1, sortKey: UPDATED_AT, reverse: true) {
+    nodes {
+      id
+      title
+      handle
+      image {
+        id
+        url
+        altText
+        width
+        height
+      }
+    }
+  }
+}
+
+query RecommendedProducts($country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+  products(first: 4, sortKey: UPDATED_AT, reverse: true) {
+    nodes {
+      id
+      title
+      handle
+      priceRange {
+        minVariantPrice {
+          amount
+          currencyCode
+        }
+      }
+      featuredImage {
+        id
+        url
+        altText
+        width
+        height
+      }
+    }
+  }
+}
+```
+
+Display a hero section with the featured collection (image + title + "Shop now" link to `/collections/{handle}`), followed by a grid of recommended products (each linking to `/products/{handle}`).
 
 ### Collections Index
 
