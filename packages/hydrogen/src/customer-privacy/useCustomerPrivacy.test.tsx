@@ -177,6 +177,21 @@ describe(`useCustomerPrivacy`, () => {
     });
   });
 
+  it('sets backendConsentEnabled on window.Shopify.customerPrivacy', () => {
+    renderHook(() =>
+      useCustomerPrivacy({
+        checkoutDomain: 'checkout.shopify.com',
+        storefrontAccessToken: '3b580e70970c4528da70c98e097c2fa0',
+      }),
+    );
+
+    expect(window.Shopify).toBeDefined();
+    expect(window.Shopify.customerPrivacy).toBeDefined();
+    expect((window.Shopify.customerPrivacy as any).backendConsentEnabled).toBe(
+      true,
+    );
+  });
+
   it('triggers the onReady callback when both APIs are ready', async () => {
     const onReady = vi.fn();
 

@@ -169,6 +169,13 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   const initialTrackingValues = useMemo(getTrackingValues, [cookiesReady]);
   const {revalidate} = useRevalidator();
 
+  // Enable backend consent mode so the Customer Privacy API uses
+  // server-set cookies via the SF API proxy instead of the legacy
+  // _tracking_consent JS cookie.
+  window.Shopify ||= {} as Window['Shopify'];
+  window.Shopify.customerPrivacy ||= {};
+  window.Shopify.customerPrivacy.backendConsentEnabled = true;
+
   // Load the Shopify customer privacy API with or without the privacy banner
   // NOTE: We no longer use the status because we need `ready` to be not when the script is loaded
   // but instead when both `privacyBanner` (optional) and customerPrivacy are loaded in the window
@@ -354,6 +361,14 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
           Object.keys(value).length === 0
         ) {
           customShopify = value as object;
+
+          // Keep backendConsentEnabled readable between CDN's window.Shopify = {}
+          // reset and its window.Shopify.customerPrivacy = <full API> assignment.
+          // This stub mirrors the render-phase pre-population at lines 175–177; if
+          // that assignment moves or is removed, this stub must be updated in tandem.
+          customCustomerPrivacy = {
+            backendConsentEnabled: true,
+          } as unknown as CustomerPrivacy;
 
           // monitor for when window.Shopify.customerPrivacy is set
           Object.defineProperty(window.Shopify, 'customerPrivacy', {
@@ -630,9 +645,10 @@ function overridePrivacyBannerMethods({
  */
 export function getCustomerPrivacy() {
   try {
-    return window.Shopify && window.Shopify.customerPrivacy
-      ? (window.Shopify?.customerPrivacy as CustomerPrivacy)
-      : null;
+    const cp = window.Shopify?.customerPrivacy;
+    // Only return the API when the consent library has fully loaded —
+    // the pre-initialized {backendConsentEnabled} config object is not the usable API.
+    return cp && 'setTrackingConsent' in cp ? (cp as CustomerPrivacy) : null;
   } catch (e) {
     return null;
   }
