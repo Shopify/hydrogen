@@ -47,7 +47,7 @@ Fixes #0000 <!-- link to issue if one exists -->
 
 - [ ] I've read the [Contributing Guidelines](https://github.com/Shopify/hydrogen/blob/main/CONTRIBUTING.md)
 - [ ] I've considered possible cross-platform impacts (Mac, Linux, Windows)
-- [ ] I've added a [changeset](https://github.com/Shopify/hydrogen/blob/main/CONTRIBUTING.md#changesets) if this PR contains user-facing or noteworthy changes
+- [ ] I've added a [changeset](https://github.com/Shopify/hydrogen/blob/main/CONTRIBUTING.md#changesets) if this PR contains user-facing or functional changes. Test changes or internal-only config changes do not require a changeset. 
 - [ ] I've added [tests](https://github.com/Shopify/hydrogen/blob/main/CONTRIBUTING.md#testing) to cover my changes
 - [ ] I've added or updated the documentation
 
