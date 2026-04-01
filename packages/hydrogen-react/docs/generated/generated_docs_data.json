@@ -94,6 +94,14 @@
               {
                 "filePath": "src/AddToCartButton.tsx",
                 "syntaxKind": "PropertySignature",
+                "name": "parent",
+                "value": "CartLineParentInput",
+                "description": "The parent line item of the item being added to the cart. Used for nested cart lines.",
+                "isOptional": true
+              },
+              {
+                "filePath": "src/AddToCartButton.tsx",
+                "syntaxKind": "PropertySignature",
                 "name": "quantity",
                 "value": "number",
                 "description": "The item quantity.",
@@ -888,7 +896,8 @@
           "ExternalVideoBaseProps": {
             "filePath": "src/ExternalVideo.tsx",
             "name": "ExternalVideoBaseProps",
-            "description": "",
+            "description": "The `ExternalVideo` component renders an embedded video for the Storefront API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/ExternalVideo.tsx",
@@ -1388,7 +1397,7 @@
               "name": "string",
               "value": "string"
             },
-            "value": "export type Loader = (params: LoaderParams) => string;"
+            "value": "(params: LoaderParams) => string"
           },
           "LoaderParams": {
             "filePath": "src/Image.tsx",
@@ -1528,7 +1537,8 @@
           "MediaFileProps": {
             "filePath": "src/MediaFile.tsx",
             "name": "MediaFileProps",
-            "description": "",
+            "description": "MediaFile renders an `Image`, `Video`, `ExternalVideo`, or `ModelViewer` component. Use the `mediaOptions` prop to customize the props sent to each of these components.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/MediaFile.tsx",
@@ -3815,7 +3825,7 @@
               "name": "string",
               "value": "string"
             },
-            "value": "export type Loader = (params: LoaderParams) => string;"
+            "value": "(params: LoaderParams) => string"
           },
           "LoaderParams": {
             "filePath": "src/Image.tsx",
@@ -3942,7 +3952,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ModelViewerBaseProps",
             "value": "{\n  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2025-10/objects/model3d). */\n  data: PartialDeep<Model3d, {recurseIntoArrays: true}>;\n  /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */\n  onError?: (event: Event) => void;\n  /** The callback to invoke when the `load` event is triggered. Refer to [load in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-load). */\n  onLoad?: (event: Event) => void;\n  /** The callback to invoke when the 'preload' event is triggered. Refer to [preload in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-preload). */\n  onPreload?: (event: Event) => void;\n  /** The callback to invoke when the 'model-visibility' event is triggered. Refer to [model-visibility in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-modelVisibility). */\n  onModelVisibility?: (event: Event) => void;\n  /** The callback to invoke when the 'progress' event is triggered. Refer to [progress in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-progress). */\n  onProgress?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-status' event is triggered. Refer to [ar-status in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arStatus). */\n  onArStatus?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-tracking' event is triggered. Refer to [ar-tracking in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arTracking). */\n  onArTracking?: (event: Event) => void;\n  /** The callback to invoke when the 'quick-look-button-tapped' event is triggered. Refer to [quick-look-button-tapped in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-quickLookButtonTapped). */\n  onQuickLookButtonTapped?: (event: Event) => void;\n  /** The callback to invoke when the 'camera-change' event is triggered. Refer to [camera-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-stagingandcameras-events-cameraChange). */\n  onCameraChange?: (event: Event) => void;\n  /** The callback to invoke when the 'environment-change' event is triggered. Refer to [environment-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-lightingandenv-events-environmentChange).  */\n  onEnvironmentChange?: (event: Event) => void;\n  /**  The callback to invoke when the 'play' event is triggered. Refer to [play in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-play). */\n  onPlay?: (event: Event) => void;\n  /**  The callback to invoke when the 'pause' event is triggered. Refer to [pause in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-pause). */\n  onPause?: (event: Event) => void;\n  /** The callback to invoke when the 'scene-graph-ready' event is triggered. Refer to [scene-graph-ready in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-scenegraph-events-sceneGraphReady). */\n  onSceneGraphReady?: (event: Event) => void;\n}",
-            "description": "",
+            "description": "The `ModelViewer` component renders a 3D model (with the `model-viewer` custom element) for the Storefront API's [Model3d object](https://shopify.dev/api/storefront/reference/products/model3d). The `model-viewer` custom element is lazily downloaded through a dynamically-injected `<script type='module'>` tag when the `<ModelViewer />` component is rendered. ModelViewer is using version `1.21.1` of the `@google/model-viewer` library.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/ModelViewer.tsx",
@@ -4072,7 +4083,7 @@
         "url": "/api/hydrogen-react/hooks/useMoney"
       }
     ],
-    "description": "The `Money` component renders a string of the Storefront API's[MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) according to the `locale` in the [`ShopifyProvider` component](/api/hydrogen/components/global/shopifyprovider).\nThe component outputs a `<div>`. You can [customize this component](https://api/hydrogen/components#customizing-hydrogen-components) using passthrough props.",
+    "description": "The `Money` component renders a string of the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) according to the `locale` in the [`ShopifyProvider` component](/api/hydrogen/components/global/shopifyprovider).\nThe component outputs a `<div>`. You can [customize this component](https://api/hydrogen/components#customizing-hydrogen-components) using passthrough props.",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
@@ -4101,7 +4112,8 @@
           "MoneyPropsBase": {
             "filePath": "src/Money.tsx",
             "name": "MoneyPropsBase",
-            "description": "",
+            "description": "The `Money` component renders a string of the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) according to the `locale` in the `ShopifyProvider` component.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/Money.tsx",
@@ -4400,7 +4412,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "RichTextPropsForDocs",
             "value": "RichTextPropsBase<AsType>",
-            "description": "",
+            "description": "The `RichText` component renders a metafield of type `rich_text_field`. By default the rendered output uses semantic HTML tags. Customize how nodes are rendered with the `components` prop.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/RichText.tsx",
@@ -4563,7 +4576,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopPayButtonProps",
             "value": "ShopPayButtonStyleProps & ShopPayDomainProps & ShopPayChannelAttribution & (ShopPayVariantIds | ShopPayVariantAndQuantities)",
-            "description": ""
+            "description": "The `ShopPayButton` component renders a button that redirects to the Shop Pay checkout. It renders a [`<shop-pay-button>`](https://shopify.dev/custom-storefronts/tools/web-components) custom element, for which it will lazy-load the source code automatically.",
+            "isPublicDocs": true
           },
           "ShopPayButtonStyleProps": {
             "filePath": "src/ShopPayButton.tsx",
@@ -4830,7 +4844,8 @@
           "VideoProps": {
             "filePath": "src/Video.tsx",
             "name": "VideoProps",
-            "description": "",
+            "description": "The `Video` component renders a video for the Storefront API's [Video object](https://shopify.dev/api/storefront/reference/products/video). The component outputs a `video` element.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/Video.tsx",
@@ -4958,6 +4973,7 @@
             "filePath": "src/analytics.ts",
             "name": "SendShopifyAnalyticsGeneratedType",
             "description": "Set user and session cookies and refresh the expiry time",
+            "isPublicDocs": true,
             "params": [
               {
                 "name": "event",
@@ -5346,14 +5362,14 @@
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "headless",
-                "value": "\"headless\"",
+                "value": "'headless'",
                 "description": "Shopify Headless sales channel"
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "hydrogen",
-                "value": "\"hydrogen\"",
+                "value": "'hydrogen'",
                 "description": "Shopify Hydrogen sales channel"
               }
             ],
@@ -5592,14 +5608,14 @@
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "ADD_TO_CART",
-                "value": "\"ADD_TO_CART\"",
+                "value": "'ADD_TO_CART'",
                 "description": "Add to cart"
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "PAGE_VIEW",
-                "value": "\"PAGE_VIEW\"",
+                "value": "'PAGE_VIEW'",
                 "description": "Page view"
               }
             ],
@@ -5621,154 +5637,154 @@
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "article",
-                "value": "\"article\"",
+                "value": "'article'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "blog",
-                "value": "\"blog\"",
+                "value": "'blog'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "captcha",
-                "value": "\"captcha\"",
+                "value": "'captcha'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cart",
-                "value": "\"cart\"",
+                "value": "'cart'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "collection",
-                "value": "\"collection\"",
+                "value": "'collection'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "customersAccount",
-                "value": "\"customers/account\"",
+                "value": "'customers/account'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "customersActivateAccount",
-                "value": "\"customers/activate_account\"",
+                "value": "'customers/activate_account'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "customersAddresses",
-                "value": "\"customers/addresses\"",
+                "value": "'customers/addresses'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "customersLogin",
-                "value": "\"customers/login\"",
+                "value": "'customers/login'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "customersOrder",
-                "value": "\"customers/order\"",
+                "value": "'customers/order'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "customersRegister",
-                "value": "\"customers/register\"",
+                "value": "'customers/register'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "customersResetPassword",
-                "value": "\"customers/reset_password\"",
+                "value": "'customers/reset_password'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "forbidden",
-                "value": "\"403\"",
+                "value": "'403'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "giftCard",
-                "value": "\"gift_card\"",
+                "value": "'gift_card'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "home",
-                "value": "\"index\"",
+                "value": "'index'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "listCollections",
-                "value": "\"list-collections\"",
+                "value": "'list-collections'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "notFound",
-                "value": "\"404\"",
+                "value": "'404'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "page",
-                "value": "\"page\"",
+                "value": "'page'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "password",
-                "value": "\"password\"",
+                "value": "'password'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "policy",
-                "value": "\"policy\"",
+                "value": "'policy'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "product",
-                "value": "\"product\"",
+                "value": "'product'",
                 "description": ""
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "search",
-                "value": "\"search\"",
+                "value": "'search'",
                 "description": ""
               }
             ],
@@ -5790,14 +5806,14 @@
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "headless",
-                "value": "\"headless\"",
+                "value": "'headless'",
                 "description": "Shopify Headless sales channel"
               },
               {
                 "filePath": "src/analytics-constants.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "hydrogen",
-                "value": "\"hydrogen\"",
+                "value": "'hydrogen'",
                 "description": "Shopify Hydrogen sales channel"
               }
             ],
@@ -5874,7 +5890,8 @@
           "ConnectionGenericForDoc": {
             "filePath": "src/flatten-connection.ts",
             "name": "ConnectionGenericForDoc",
-            "description": "",
+            "description": "The `flattenConnection` utility transforms a connection object from the Storefront API (for example, [Product-related connections](https://shopify.dev/api/storefront/reference/products/product)) into a flat array of nodes. The utility works with either `nodes` or `edges.node`. If `connection` is null or undefined, will return an empty array instead in production. In development, an error will be thrown.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/flatten-connection.ts",
@@ -5931,7 +5948,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "FlattenConnectionReturnForDoc",
             "value": "unknown[]",
-            "description": ""
+            "description": "The return type of the `flattenConnection` utility: a flat array of nodes extracted from a Storefront API connection object.",
+            "isPublicDocs": true
           }
         }
       }
@@ -5984,7 +6002,8 @@
           "GetClientBrowserParametersGeneratedType": {
             "filePath": "src/analytics.ts",
             "name": "GetClientBrowserParametersGeneratedType",
-            "description": "",
+            "description": "Gathers client browser values commonly used for analytics.",
+            "isPublicDocs": true,
             "params": [],
             "returns": {
               "filePath": "src/analytics.ts",
@@ -6125,6 +6144,7 @@
             "filePath": "src/cookies-utils.tsx",
             "name": "GetShopifyCookiesGeneratedType",
             "description": "Gets the values of _shopify_y and _shopify_s cookies from the provided cookie string.",
+            "isPublicDocs": true,
             "params": [
               {
                 "name": "cookies",
@@ -6146,7 +6166,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyCookies",
             "value": "{\n  /** Shopify unique user token: Value of `_shopify_y` cookie. */\n  [SHOPIFY_Y]: string;\n  /** Shopify session token: Value of `_shopify_s` cookie. */\n  [SHOPIFY_S]: string;\n}",
-            "description": "",
+            "description": "The Shopify analytics cookie values containing the unique user token and session token.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/analytics-types.ts",
@@ -6176,7 +6197,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyCookies",
             "value": "{\n  /** Shopify unique user token: Value of `_shopify_y` cookie. */\n  [SHOPIFY_Y]: string;\n  /** Shopify session token: Value of `_shopify_s` cookie. */\n  [SHOPIFY_S]: string;\n}",
-            "description": "",
+            "description": "The Shopify analytics cookie values containing the unique user token and session token.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/analytics-types.ts",
@@ -6353,7 +6375,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "LoadScriptParams",
             "value": "[src: string, options?: LoadScriptOptions]",
-            "description": ""
+            "description": "The `useLoadScript` hook loads an external script tag in the browser. It allows React components to lazy-load third-party dependencies.",
+            "isPublicDocs": true
           },
           "LoadScriptOptions": {
             "filePath": "src/load-script.tsx",
@@ -6428,6 +6451,7 @@
             "filePath": "src/optionValueDecoder.ts",
             "name": "DecodeEncodedVariantGeneratedType",
             "description": "For an encoded option value string, decode into option value combinations. Entries represent a valid combination formatted as an array of option value positions.",
+            "isPublicDocs": true,
             "params": [
               {
                 "name": "encodedVariantField",
@@ -6490,7 +6514,8 @@
           "IsOptionValueCombinationInEncodedVariant": {
             "filePath": "src/optionValueDecoder.ts",
             "name": "IsOptionValueCombinationInEncodedVariant",
-            "description": "",
+            "description": "A function type that determines whether a given option value combination is present in an encoded variant field from the Storefront API.",
+            "isPublicDocs": true,
             "params": [
               {
                 "name": "targetOptionValueCombination",
@@ -6511,7 +6536,7 @@
               "name": "boolean",
               "value": "boolean"
             },
-            "value": "export type IsOptionValueCombinationInEncodedVariant = (\n  targetOptionValueCombination: number[],\n  encodedVariantField: string,\n) => boolean;"
+            "value": "(\n  targetOptionValueCombination: number[],\n  encodedVariantField: string,\n) => boolean"
           }
         }
       }
@@ -6547,6 +6572,7 @@
             "filePath": "src/analytics-utils.ts",
             "name": "ParseGidGeneratedType",
             "description": "Parses global id (gid) and returns the resource type and id.",
+            "isPublicDocs": true,
             "params": [
               {
                 "name": "gid",
@@ -6621,6 +6647,7 @@
             "filePath": "src/parse-metafield.ts",
             "name": "ParseMetafieldGeneratedType",
             "description": "A function that uses `metafield.type` to parse the Metafield's `value` or `reference` or `references` (depending on the `metafield.type`) and places the result in `metafield.parsedValue`\n\nTypeScript developers can use the type `ParsedMetafields` from this package to get the returned object's type correct. For example:\n\n``` parseMetafield<ParsedMetafields['boolean']>({type: 'boolean', value: 'false'} ```",
+            "isPublicDocs": true,
             "params": [
               {
                 "name": "metafield",
@@ -6635,7 +6662,7 @@
               "name": "ReturnGeneric",
               "value": "ReturnGeneric"
             },
-            "value": "export function parseMetafield<ReturnGeneric>(\n  metafield: PartialDeep<MetafieldBaseType, {recurseIntoArrays: true}>,\n): ReturnGeneric {\n  if (!metafield.type) {\n    const noTypeError = `parseMetafield(): The 'type' field is required in order to parse the Metafield.`;\n    if (__HYDROGEN_DEV__) {\n      throw new Error(noTypeError);\n    } else {\n      console.error(`${noTypeError} Returning 'parsedValue' of 'null'`);\n      return {\n        ...metafield,\n        parsedValue: null,\n      } as ReturnGeneric;\n    }\n  }\n\n  switch (metafield.type) {\n    case 'boolean':\n      return {\n        ...metafield,\n        parsedValue: metafield.value === 'true',\n      } as ReturnGeneric;\n\n    case 'collection_reference':\n    case 'file_reference':\n    case 'page_reference':\n    case 'product_reference':\n    case 'variant_reference':\n      return {\n        ...metafield,\n        parsedValue: metafield.reference,\n      } as ReturnGeneric;\n\n    case 'color':\n    case 'multi_line_text_field':\n    case 'single_line_text_field':\n    case 'url':\n      return {\n        ...metafield,\n        parsedValue: metafield.value,\n      } as ReturnGeneric;\n\n    // TODO: 'money' should probably be parsed even further to like `useMoney()`, but that logic needs to be extracted first so it's not a hook\n    case 'money': {\n      let parsedValue: MoneyV2 | null = null;\n      try {\n        const parsed = parseJSON(metafield.value ?? '');\n        // Transform currency_code from Storefront API to currencyCode to match MoneyV2 type\n        if (parsed && typeof parsed === 'object' && 'currency_code' in parsed) {\n          const moneyData = parsed as {amount: string; currency_code: string};\n          parsedValue = {\n            amount: moneyData.amount,\n            currencyCode: moneyData.currency_code as CurrencyCode,\n          };\n        } else if (\n          parsed &&\n          typeof parsed === 'object' &&\n          'currencyCode' in parsed\n        ) {\n          // Already in correct format (for backward compatibility)\n          parsedValue = parsed as MoneyV2;\n        } else {\n          parsedValue = parsed as MoneyV2 | null;\n        }\n      } catch (err) {\n        const parseError = `parseMetafield(): attempted to JSON.parse the 'metafield.value' property, but failed.`;\n        if (__HYDROGEN_DEV__) {\n          throw new Error(parseError);\n        } else {\n          console.error(`${parseError} Returning 'null' for 'parsedValue'`);\n        }\n        parsedValue = null;\n      }\n      return {\n        ...metafield,\n        parsedValue,\n      } as ReturnGeneric;\n    }\n\n    case 'dimension':\n    case 'json':\n    case 'rating':\n    case 'volume':\n    case 'weight':\n    case 'rich_text_field':\n    case 'list.color':\n    case 'list.dimension':\n    case 'list.number_integer':\n    case 'list.number_decimal':\n    case 'list.rating':\n    case 'list.single_line_text_field':\n    case 'list.url':\n    case 'list.volume':\n    case 'list.weight': {\n      let parsedValue = null;\n      try {\n        parsedValue = parseJSON(metafield.value ?? '');\n      } catch (err) {\n        const parseError = `parseMetafield(): attempted to JSON.parse the 'metafield.value' property, but failed.`;\n        if (__HYDROGEN_DEV__) {\n          throw new Error(parseError);\n        } else {\n          console.error(`${parseError} Returning 'null' for 'parsedValue'`);\n        }\n        parsedValue = null;\n      }\n      return {\n        ...metafield,\n        parsedValue,\n      } as ReturnGeneric;\n    }\n\n    case 'date':\n    case 'date_time':\n      return {\n        ...metafield,\n        parsedValue: new Date(metafield.value ?? ''),\n      } as ReturnGeneric;\n\n    case 'list.date':\n    case 'list.date_time': {\n      const jsonParseValue = parseJSON(metafield?.value ?? '') as string[];\n      return {\n        ...metafield,\n        parsedValue: jsonParseValue.map((dateString) => new Date(dateString)),\n      } as ReturnGeneric;\n    }\n\n    case 'number_decimal':\n    case 'number_integer':\n      return {\n        ...metafield,\n        parsedValue: Number(metafield.value),\n      } as ReturnGeneric;\n\n    case 'list.collection_reference':\n    case 'list.file_reference':\n    case 'list.page_reference':\n    case 'list.product_reference':\n    case 'list.variant_reference':\n      return {\n        ...metafield,\n        parsedValue: flattenConnection(metafield.references ?? undefined),\n      } as ReturnGeneric;\n\n    default: {\n      const typeNotFoundError = `parseMetafield(): the 'metafield.type' you passed in is not supported. Your type: \"${metafield.type}\". If you believe this is an error, please open an issue on GitHub.`;\n      if (__HYDROGEN_DEV__) {\n        throw new Error(typeNotFoundError);\n      } else {\n        console.error(\n          `${typeNotFoundError}  Returning 'parsedValue' of 'null'`,\n        );\n        return {\n          ...metafield,\n          parsedValue: null,\n        } as ReturnGeneric;\n      }\n    }\n  }\n}"
+            "value": "export function parseMetafield<ReturnGeneric>(\n  metafield: PartialDeep<MetafieldBaseType, {recurseIntoArrays: true}>,\n): ReturnGeneric {\n  if (!metafield.type) {\n    const noTypeError = `parseMetafield(): The 'type' field is required in order to parse the Metafield.`;\n    if (__HYDROGEN_DEV__) {\n      throw new Error(noTypeError);\n    } else {\n      console.error(`${noTypeError} Returning 'parsedValue' of 'null'`);\n      return {\n        ...metafield,\n        parsedValue: null,\n      } as ReturnGeneric;\n    }\n  }\n\n  switch (metafield.type) {\n    case 'boolean':\n      return {\n        ...metafield,\n        parsedValue: metafield.value === 'true',\n      } as ReturnGeneric;\n\n    case 'article_reference':\n    case 'collection_reference':\n    case 'file_reference':\n    case 'page_reference':\n    case 'product_reference':\n    case 'variant_reference':\n      return {\n        ...metafield,\n        parsedValue: metafield.reference,\n      } as ReturnGeneric;\n\n    case 'color':\n    case 'multi_line_text_field':\n    case 'single_line_text_field':\n    case 'url':\n      return {\n        ...metafield,\n        parsedValue: metafield.value,\n      } as ReturnGeneric;\n\n    // TODO: 'money' should probably be parsed even further to like `useMoney()`, but that logic needs to be extracted first so it's not a hook\n    case 'money': {\n      let parsedValue: MoneyV2 | null = null;\n      try {\n        const parsed = parseJSON(metafield.value ?? '');\n        // Transform currency_code from Storefront API to currencyCode to match MoneyV2 type\n        if (parsed && typeof parsed === 'object' && 'currency_code' in parsed) {\n          const moneyData = parsed as {amount: string; currency_code: string};\n          parsedValue = {\n            amount: moneyData.amount,\n            currencyCode: moneyData.currency_code as CurrencyCode,\n          };\n        } else if (\n          parsed &&\n          typeof parsed === 'object' &&\n          'currencyCode' in parsed\n        ) {\n          // Already in correct format (for backward compatibility)\n          parsedValue = parsed as MoneyV2;\n        } else {\n          parsedValue = parsed as MoneyV2 | null;\n        }\n      } catch (err) {\n        const parseError = `parseMetafield(): attempted to JSON.parse the 'metafield.value' property, but failed.`;\n        if (__HYDROGEN_DEV__) {\n          throw new Error(parseError);\n        } else {\n          console.error(`${parseError} Returning 'null' for 'parsedValue'`);\n        }\n        parsedValue = null;\n      }\n      return {\n        ...metafield,\n        parsedValue,\n      } as ReturnGeneric;\n    }\n\n    case 'dimension':\n    case 'json':\n    case 'rating':\n    case 'volume':\n    case 'weight':\n    case 'rich_text_field':\n    case 'list.color':\n    case 'list.dimension':\n    case 'list.number_integer':\n    case 'list.number_decimal':\n    case 'list.rating':\n    case 'list.single_line_text_field':\n    case 'list.url':\n    case 'list.volume':\n    case 'list.weight': {\n      let parsedValue = null;\n      try {\n        parsedValue = parseJSON(metafield.value ?? '');\n      } catch (err) {\n        const parseError = `parseMetafield(): attempted to JSON.parse the 'metafield.value' property, but failed.`;\n        if (__HYDROGEN_DEV__) {\n          throw new Error(parseError);\n        } else {\n          console.error(`${parseError} Returning 'null' for 'parsedValue'`);\n        }\n        parsedValue = null;\n      }\n      return {\n        ...metafield,\n        parsedValue,\n      } as ReturnGeneric;\n    }\n\n    case 'date':\n    case 'date_time':\n      return {\n        ...metafield,\n        parsedValue: new Date(metafield.value ?? ''),\n      } as ReturnGeneric;\n\n    case 'list.date':\n    case 'list.date_time': {\n      const jsonParseValue = parseJSON(metafield?.value ?? '') as string[];\n      return {\n        ...metafield,\n        parsedValue: jsonParseValue.map((dateString) => new Date(dateString)),\n      } as ReturnGeneric;\n    }\n\n    case 'number_decimal':\n    case 'number_integer':\n      return {\n        ...metafield,\n        parsedValue: Number(metafield.value),\n      } as ReturnGeneric;\n\n    case 'list.article_reference':\n    case 'list.collection_reference':\n    case 'list.file_reference':\n    case 'list.page_reference':\n    case 'list.product_reference':\n    case 'list.variant_reference':\n      return {\n        ...metafield,\n        parsedValue: flattenConnection(metafield.references ?? undefined),\n      } as ReturnGeneric;\n\n    default: {\n      const typeNotFoundError = `parseMetafield(): the 'metafield.type' you passed in is not supported. Your type: \"${metafield.type}\". If you believe this is an error, please open an issue on GitHub.`;\n      if (__HYDROGEN_DEV__) {\n        throw new Error(typeNotFoundError);\n      } else {\n        console.error(\n          `${typeNotFoundError}  Returning 'parsedValue' of 'null'`,\n        );\n        return {\n          ...metafield,\n          parsedValue: null,\n        } as ReturnGeneric;\n      }\n    }\n  }\n}"
           }
         }
       }
@@ -6724,7 +6751,7 @@
               "name": "StorefrontClientReturn",
               "value": "StorefrontClientReturn"
             },
-            "value": "export function createStorefrontClient({\n  storeDomain,\n  privateStorefrontToken,\n  publicStorefrontToken,\n  storefrontApiVersion = SFAPI_VERSION,\n  contentType,\n}: StorefrontClientProps): StorefrontClientReturn {\n  if (!storeDomain) {\n    if (__HYDROGEN_DEV__) {\n      storeDomain = MOCK_SHOP_DOMAIN;\n      warnOnce(\n        `storeDomain missing, defaulting to ${MOCK_SHOP_DOMAIN}`,\n        'info',\n      );\n    } else {\n      throw new Error(\n        H2_PREFIX_ERROR +\n          `\\`storeDomain\\` is required when creating a new Storefront client in production.`,\n      );\n    }\n  }\n\n  if (storefrontApiVersion !== SFAPI_VERSION) {\n    warnOnce(\n      `The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting.` +\n        `\\nYou may run into unexpected errors if these versions don't match. Received version: \"${storefrontApiVersion}\"; expected version \"${SFAPI_VERSION}\"`,\n    );\n  }\n\n  // only warn if not in a browser environment\n  if (\n    __HYDROGEN_DEV__ &&\n    !privateStorefrontToken &&\n    !globalThis.document &&\n    !isMockShop(storeDomain)\n  ) {\n    warnOnce(\n      `Using a private storefront token is recommended for server environments.` +\n        `\\nRefer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`,\n    );\n  }\n\n  // only warn if in a browser environment and you're using the privateStorefrontToken\n  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis.document) {\n    warnOnce(\n      'You are attempting to use a private token in an environment where it can be easily accessed by anyone.' +\n        '\\nThis is a security risk; please use the public token and the `publicStorefrontToken` prop',\n    );\n  }\n\n  const getShopifyDomain: StorefrontClientReturn['getShopifyDomain'] = (\n    overrideProps,\n  ) => {\n    const domain = overrideProps?.storeDomain ?? storeDomain;\n    return domain.includes('://') ? domain : `https://${domain}`;\n  };\n\n  return {\n    getShopifyDomain,\n    getStorefrontApiUrl(overrideProps): string {\n      const domain = getShopifyDomain(overrideProps);\n      const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');\n\n      if (isMockShop(domain)) return apiUrl;\n\n      return `${apiUrl}/${\n        overrideProps?.storefrontApiVersion ?? storefrontApiVersion\n      }/graphql.json`;\n    },\n    getPrivateTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !privateStorefrontToken &&\n        !overrideProps?.privateStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          H2_PREFIX_ERROR +\n            'You did not pass in a `privateStorefrontToken` while using `createStorefrontClient()` or `getPrivateTokenHeaders()`',\n        );\n      }\n\n      if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {\n        warnOnce(\n          'It is recommended to pass in the `buyerIp` property which improves analytics and data in the admin.',\n        );\n      }\n\n      const finalContentType = overrideProps?.contentType ?? contentType;\n\n      return {\n        // default to json\n        'content-type':\n          finalContentType === 'graphql'\n            ? 'application/graphql'\n            : 'application/json',\n        'X-SDK-Variant': 'hydrogen-react',\n        'X-SDK-Variant-Source': 'react',\n        'X-SDK-Version': storefrontApiVersion,\n        'Shopify-Storefront-Private-Token':\n          overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',\n        ...(overrideProps?.buyerIp\n          ? {'Shopify-Storefront-Buyer-IP': overrideProps.buyerIp}\n          : {}),\n      };\n    },\n    getPublicTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !publicStorefrontToken &&\n        !overrideProps?.publicStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          H2_PREFIX_ERROR +\n            'You did not pass in a `publicStorefrontToken` while using `createStorefrontClient()` or `getPublicTokenHeaders()`',\n        );\n      }\n\n      const finalContentType =\n        overrideProps?.contentType ?? contentType ?? 'json';\n\n      return getPublicTokenHeadersRaw(\n        finalContentType,\n        storefrontApiVersion,\n        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? '',\n      );\n    },\n  };\n}"
+            "value": "export function createStorefrontClient({\n  storeDomain,\n  privateStorefrontToken,\n  publicStorefrontToken,\n  storefrontApiVersion = SFAPI_VERSION,\n  contentType,\n}: StorefrontClientProps): StorefrontClientReturn {\n  if (!storeDomain) {\n    if (__HYDROGEN_DEV__) {\n      storeDomain = MOCK_SHOP_DOMAIN;\n      warnOnce(\n        `storeDomain missing, defaulting to ${MOCK_SHOP_DOMAIN}`,\n        'info',\n      );\n    } else {\n      throw new Error(\n        H2_PREFIX_ERROR +\n          `\\`storeDomain\\` is required when creating a new Storefront client in production.`,\n      );\n    }\n  }\n\n  if (storefrontApiVersion !== SFAPI_VERSION) {\n    warnOnce(\n      `The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting.` +\n        `\\nYou may run into unexpected errors if these versions don't match. Received version: \"${storefrontApiVersion}\"; expected version \"${SFAPI_VERSION}\"`,\n    );\n  }\n\n  // only warn if not in a browser environment\n  if (\n    __HYDROGEN_DEV__ &&\n    !privateStorefrontToken &&\n    !globalThis.document &&\n    !isMockShop(storeDomain)\n  ) {\n    warnOnce(\n      `Using a private storefront token is recommended for server environments.` +\n        `\\nRefer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`,\n    );\n  }\n\n  // only warn if in a browser environment and you're using the privateStorefrontToken\n  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis.document) {\n    warnOnce(\n      'You are attempting to use a private token in an environment where it can be easily accessed by anyone.' +\n        '\\nThis is a security risk; please use the public token and the `publicStorefrontToken` prop',\n    );\n  }\n\n  const getShopifyDomain: StorefrontClientReturn['getShopifyDomain'] = (\n    overrideProps,\n  ) => {\n    const domain = overrideProps?.storeDomain ?? storeDomain;\n    return domain.includes('://') ? domain : `https://${domain}`;\n  };\n\n  return {\n    getShopifyDomain,\n    getStorefrontApiUrl(overrideProps): string {\n      const domain = getShopifyDomain(overrideProps);\n      const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');\n\n      return `${apiUrl}/${\n        overrideProps?.storefrontApiVersion ?? storefrontApiVersion\n      }/graphql.json`;\n    },\n    getPrivateTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !privateStorefrontToken &&\n        !overrideProps?.privateStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          H2_PREFIX_ERROR +\n            'You did not pass in a `privateStorefrontToken` while using `createStorefrontClient()` or `getPrivateTokenHeaders()`',\n        );\n      }\n\n      if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {\n        warnOnce(\n          'It is recommended to pass in the `buyerIp` property which improves analytics and data in the admin.',\n        );\n      }\n\n      const finalContentType = overrideProps?.contentType ?? contentType;\n\n      return {\n        // default to json\n        'content-type':\n          finalContentType === 'graphql'\n            ? 'application/graphql'\n            : 'application/json',\n        'X-SDK-Variant': 'hydrogen-react',\n        'X-SDK-Variant-Source': 'react',\n        'X-SDK-Version': storefrontApiVersion,\n        'Shopify-Storefront-Private-Token':\n          overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',\n        ...(overrideProps?.buyerIp\n          ? {'Shopify-Storefront-Buyer-IP': overrideProps.buyerIp}\n          : {}),\n      };\n    },\n    getPublicTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !publicStorefrontToken &&\n        !overrideProps?.publicStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          H2_PREFIX_ERROR +\n            'You did not pass in a `publicStorefrontToken` while using `createStorefrontClient()` or `getPublicTokenHeaders()`',\n        );\n      }\n\n      const finalContentType =\n        overrideProps?.contentType ?? contentType ?? 'json';\n\n      return getPublicTokenHeadersRaw(\n        finalContentType,\n        storefrontApiVersion,\n        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? '',\n      );\n    },\n  };\n}"
           },
           "StorefrontClientProps": {
             "filePath": "src/storefront-client.ts",
@@ -6897,6 +6924,7 @@
             "filePath": "src/tracking-utils.ts",
             "name": "GetTrackingValuesGeneratedType",
             "description": "Retrieves user session tracking values for analytics and marketing from the browser environment.",
+            "isPublicDocs": true,
             "params": [],
             "returns": {
               "filePath": "src/tracking-utils.ts",
@@ -6988,7 +7016,7 @@
               "name": "CartWithActionsDocs",
               "value": "CartWithActionsDocs"
             },
-            "value": "type UseCartDocs = () => CartWithActionsDocs;"
+            "value": "() => CartWithActionsDocs"
           },
           "CartWithActionsDocs": {
             "filePath": "src/cart-types.ts",
@@ -7158,23 +7186,8 @@
             "filePath": "src/cart-types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartStatus",
-            "value": "CartState['status']",
+            "value": "'uninitialized' | 'fetching' | 'creating' | 'updating' | 'idle'",
             "description": ""
-          },
-          "CartState": {
-            "filePath": "src/cart-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartState",
-            "value": "{status: 'uninitialized'; error?: string} | {status: 'fetching'} | {status: 'creating'} | {status: 'updating'; cart: Cart; lastValidCart: Cart} | {status: 'idle'; cart: Cart; error?: string}",
-            "description": ""
-          },
-          "Cart": {
-            "filePath": "src/cart-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "Cart",
-            "value": "PartialDeep<CartBase, {recurseIntoArrays: true}>",
-            "description": "",
-            "members": []
           }
         }
       }
@@ -7282,6 +7295,7 @@
             "filePath": "src/useMoney.tsx",
             "name": "UseMoneyGeneratedType",
             "description": "The `useMoney` hook takes a [MoneyV2 object from the Storefront API](https://shopify.dev/docs/api/storefront/2025-10/objects/MoneyV2) or a [MoneyV2 object from the Customer Account API](https://shopify.dev/docs/api/customer/2025-10/objects/moneyv2) and returns a default-formatted string of the amount with the correct currency indicator, along with some of the parts provided by [Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat). Uses `locale` from `ShopifyProvider` &nbsp;",
+            "isPublicDocs": true,
             "params": [
               {
                 "name": "money",
@@ -8016,6 +8030,7 @@
             "filePath": "src/useShopifyCookies.tsx",
             "name": "UseShopifyCookiesGeneratedType",
             "description": "Sets the `shopify_y` and `shopify_s` cookies in the browser based on user consent for backward compatibility support.\n\nIf `fetchTrackingValues` is true, it makes a request to Storefront API to fetch or refresh Shopiy analytics and marketing cookies and tracking values. Generally speaking, this should only be needed if you're not using Hydrogen's built-in analytics components and hooks that already handle this automatically. For example, set it to `true` if you are using `hydrogen-react` only with a different framework and still need to make a same-domain request to Storefront API to set cookies.\n\nIf `ignoreDeprecatedCookies` is true, it skips setting the deprecated cookies entirely. Useful when you only want to use the newer tracking values and not rely on the deprecated ones.",
+            "isPublicDocs": true,
             "params": [
               {
                 "name": "options",
