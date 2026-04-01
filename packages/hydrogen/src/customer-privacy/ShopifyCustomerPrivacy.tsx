@@ -362,6 +362,14 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
         ) {
           customShopify = value as object;
 
+          // Keep backendConsentEnabled readable between CDN's window.Shopify = {}
+          // reset and its window.Shopify.customerPrivacy = <full API> assignment.
+          // This stub mirrors the render-phase pre-population at lines 175–177; if
+          // that assignment moves or is removed, this stub must be updated in tandem.
+          customCustomerPrivacy = {
+            backendConsentEnabled: true,
+          } as unknown as CustomerPrivacy;
+
           // monitor for when window.Shopify.customerPrivacy is set
           Object.defineProperty(window.Shopify, 'customerPrivacy', {
             configurable: true,
