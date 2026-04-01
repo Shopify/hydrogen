@@ -54,6 +54,7 @@ export type CartDeliveryAddressesUpdateFunction = (
       "validationStrategy": "COUNTRY_CODE_ONLY"
     }
   ],{ someOptionalParam: 'value' });
+ * @publicDocs
  */
 export function cartDeliveryAddressesUpdateDefault(
   options: CartQueryOptions,

@@ -17,6 +17,10 @@ export type CartLinesAddFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
+/**
+ * Creates a function that accepts an array of CartLineInput and adds the line items to a cart.
+ * @publicDocs
+ */
 export function cartLinesAddDefault(
   options: CartQueryOptions,
 ): CartLinesAddFunction {

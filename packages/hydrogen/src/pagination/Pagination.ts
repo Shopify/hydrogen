@@ -102,6 +102,7 @@ type PaginationRenderProp<NodesType> = FC<PaginationInfo<NodesType>>;
  *
  * @prop connection The response from `storefront.query` for a paginated request. Make sure the query is passed pagination variables and that the query has `pageInfo` with `hasPreviousPage`, `hasNextpage`, `startCursor`, and `endCursor` defined.
  * @prop children A render prop that includes pagination data and helpers.
+ * @publicDocs
  */
 export function Pagination<NodesType>({
   connection,
@@ -423,10 +424,12 @@ export function usePagination<NodesType>(
 }
 
 /**
+ * The `getPaginationVariables` function is used with the `<Pagination>` component to generate the variables needed to fetch paginated data from the Storefront API.
  * @param request The request object passed to your Remix loader function.
  * @param options Options for how to configure the pagination variables. Includes the ability to change how many nodes are within each page as well as a namespace to avoid URL param conflicts when using multiple `Pagination` components on a single page.
  *
  * @returns Variables to be used with the `storefront.query` function
+ * @publicDocs
  */
 export function getPaginationVariables(
   request: Request,

@@ -67,6 +67,10 @@ export type Consent = Partial<
   >
 > & {language?: LanguageCode}; // the privacyBanner SDKs refers to "language" as "locale" :(
 
+/**
+ * Provides a context for tracking page views and cart events to send as analytics data to Shopify. This component is integrated with the Customer Privacy API for consent management.
+ * @publicDocs
+ */
 export type AnalyticsProviderProps = {
   /** React children to render. */
   children?: ReactNode;
@@ -445,6 +449,10 @@ type ShopAnalyticsProps = {
   publicStorefrontId: string;
 };
 
+/**
+ * A function that queries for shop required analytics data to be used in the Analytics.Provider component.
+ * @publicDocs
+ */
 export async function getShopAnalytics({
   storefront,
   publicStorefrontId = '0',
@@ -495,6 +503,10 @@ export const Analytics = {
 
 type DefaultCart = Promise<CartReturn | null> | CartReturn | null;
 
+/**
+ * The analytics context value returned by the `useAnalytics` hook, providing access to cart state, tracking consent, and publish/subscribe methods.
+ * @publicDocs
+ */
 export type AnalyticsContextValueForDoc<UserCart> = {
   /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
   canTrack?: () => boolean;

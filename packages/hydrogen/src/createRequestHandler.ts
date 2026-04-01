@@ -132,6 +132,10 @@ export function createRequestHandler<Context = unknown>({
   };
 }
 
+/**
+ * Creates a request handler for Hydrogen apps. It wraps React Router's request handler and adds Hydrogen-specific functionality such as proxying Storefront API requests and collecting tracking information.
+ * @publicDocs
+ */
 export type CreateRequestHandlerOptionsForDocs = {
   /** React Router's server build */
   build: ServerBuild;

@@ -16,6 +16,10 @@ export type CartDiscountCodesUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
+/**
+ * Creates a function that accepts an array of discount codes and updates them on a cart.
+ * @publicDocs
+ */
 export function cartDiscountCodesUpdateDefault(
   options: CartQueryOptions,
 ): CartDiscountCodesUpdateFunction {
