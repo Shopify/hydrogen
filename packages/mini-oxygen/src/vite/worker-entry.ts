@@ -33,6 +33,41 @@ export interface ViteEnv {
 
 const O2_PREFIX = '[o2:runtime]';
 
+const MODULE_FETCH_MAX_ATTEMPTS = 3;
+const MODULE_FETCH_BASE_DELAY_MS = 200;
+
+/**
+ * Fetches a module from Vite's dev server with retry logic.
+ * Vite's fetchModule can fail transiently under parallel load
+ * (multiple dev servers running concurrently in e2e tests).
+ */
+async function fetchModuleWithRetry(url: URL) {
+  for (let attempt = 1; attempt <= MODULE_FETCH_MAX_ATTEMPTS; attempt++) {
+    const res = await fetch(url);
+
+    if (res.ok) {
+      return {result: res.json()};
+    }
+
+    // On the last attempt, report the failure with context
+    if (attempt === MODULE_FETCH_MAX_ATTEMPTS) {
+      const body = await res.text();
+      throw new Error(
+        `${O2_PREFIX} Module fetch failed after ${MODULE_FETCH_MAX_ATTEMPTS} attempts ` +
+          `(${res.status}): ${body}`,
+      );
+    }
+
+    // Retry with linear backoff for transient server errors
+    await new Promise((resolve) =>
+      setTimeout(resolve, attempt * MODULE_FETCH_BASE_DELAY_MS),
+    );
+  }
+
+  // Unreachable, but satisfies TypeScript
+  throw new Error(`${O2_PREFIX} Module fetch exhausted retries`);
+}
+
 export default {
   /**
    * Worker entry module that wraps the user app's entry module.
@@ -90,6 +125,42 @@ let runtime: ModuleRunner;
  * @returns The app's entry module.
  */
 function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
+  return importEntryModule(publicUrl, env)
+    .catch(async (error: Error) => {
+      // Vite's optimizer can invalidate pre-bundled deps mid-request
+      // (e.g. "There is a new version of the pre-bundle"). In a browser
+      // Vite would trigger a full-page reload via HMR, but MiniOxygen
+      // runs with hmr:false. Recreate the ModuleRunner and retry once
+      // so the current request picks up the updated version hashes.
+      if (isPrebundleVersionMismatch(error)) {
+        resetRuntime();
+        // Give Vite's optimizer time to finish re-bundling before retrying
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return importEntryModule(publicUrl, env);
+      }
+
+      throw error;
+    })
+    .catch((error: Error) => {
+      // If retry also failed (or error was not a version mismatch),
+      // reset runtime for the next request and return error page.
+      if (isPrebundleVersionMismatch(error)) {
+        resetRuntime();
+      }
+
+      return {
+        errorResponse: new globalThis.Response(
+          error?.stack ?? error?.message ?? 'Internal error',
+          {
+            status: 503,
+            statusText: 'executeEntrypoint error',
+          },
+        ),
+      };
+    });
+}
+
+function importEntryModule(publicUrl: URL, env: ViteEnv) {
   if (!runtime) {
     runtime = new ModuleRunner(
       {
@@ -106,7 +177,7 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
               if (customData.data)
                 url.searchParams.set('importer', customData.name);
 
-              return fetch(url).then((res) => ({result: res.json()}));
+              return fetchModuleWithRetry(url);
             }
             return Promise.resolve({
               error: `Error - invoke: ${JSON.stringify(data)}`,
@@ -164,19 +235,19 @@ function fetchEntryModule(publicUrl: URL, env: ViteEnv) {
     );
   }
 
-  return (
-    runtime.import(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
-      default: {fetch: ExportedHandlerFetchHandler};
-    }>
-  ).catch((error: Error) => {
-    return {
-      errorResponse: new globalThis.Response(
-        error?.stack ?? error?.message ?? 'Internal error',
-        {
-          status: 503,
-          statusText: 'executeEntrypoint error',
-        },
-      ),
-    };
-  });
+  return runtime.import(env.__VITE_RUNTIME_EXECUTE_URL) as Promise<{
+    default: {fetch: ExportedHandlerFetchHandler};
+  }>;
+}
+
+function resetRuntime() {
+  if (runtime) {
+    runtime.close().catch(() => {});
+    runtime = undefined!;
+  }
+}
+
+function isPrebundleVersionMismatch(error: Error): boolean {
+  const message = error?.message ?? error?.stack ?? '';
+  return message.includes('new version of the pre-bundle');
 }
