@@ -8,11 +8,41 @@ import {
 import {describe, it, expect, vi, beforeAll, afterAll} from 'vitest';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
-import {runBuild} from './build.js';
+import {runBuild, rethrowAsUserError} from './build.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
 import {setupTemplate} from '../../lib/onboarding/index.js';
 import {BUNDLE_ANALYZER_HTML_FILE} from '../../lib/bundle/analyzer.js';
 import path from 'node:path';
 import {mkdirSync} from 'node:fs';
+
+describe('rethrowAsUserError', () => {
+  it('converts known user-code Vite errors to AbortError', () => {
+    const error = new Error(
+      'Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.',
+    );
+    error.stack = 'Error: ...\n    at something.js:1:1';
+
+    expect(() => rethrowAsUserError(error)).toThrow(AbortError);
+    try {
+      rethrowAsUserError(error);
+    } catch (e) {
+      expect(e).toBeInstanceOf(AbortError);
+      expect((e as AbortError).message).toBe(error.message);
+      expect((e as AbortError).stack).toBe(error.stack);
+    }
+  });
+
+  it('re-throws unknown errors unchanged', () => {
+    const error = new Error('some unexpected vite internal error');
+
+    try {
+      rethrowAsUserError(error);
+    } catch (e) {
+      expect(e).toBe(error);
+      expect(e).not.toBeInstanceOf(AbortError);
+    }
+  });
+});
 
 describe('build', () => {
   const outputMock = mockAndCaptureOutput();
