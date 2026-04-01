@@ -173,7 +173,7 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   // server-set cookies via the SF API proxy instead of the legacy
   // _tracking_consent JS cookie.
   window.Shopify ||= {} as Window['Shopify'];
-  window.Shopify.customerPrivacy ||= {} as CustomerPrivacy;
+  window.Shopify.customerPrivacy ||= {};
   window.Shopify.customerPrivacy.backendConsentEnabled = true;
 
   // Load the Shopify customer privacy API with or without the privacy banner
