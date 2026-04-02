@@ -286,6 +286,12 @@ Optimistic UI must mirror this behavior. When adding an item to the cart:
 
 Failing to do this causes a visual glitch: the user momentarily sees a duplicate line (e.g., "T-Shirt x2" and "T-Shirt x1") that snaps into a single merged line (e.g., "T-Shirt x3") when the server response arrives.
 
+#### Line Ordering
+
+The cart `lines` field returns newest lines first by default. This means a newly added item appears at the top of the server response, but an optimistic append puts it at the bottom — causing the list to visually reorder when the server response arrives.
+
+To avoid this, pass `reverse: true` to the `lines` field in the cart query so that newest items appear last. This way optimistic appends and server responses are in the same order. See the cart query fragment in Section 6.5.
+
 ### 5.2 Cart as a Drawer
 
 The cart must be a **drawer/aside** (overlay panel) that slides in from the side of the page. It must NOT be a separate route/page. The user should be able to add items and view their cart without leaving the current page.
@@ -646,7 +652,7 @@ fragment CartApiQuery on Cart {
     email
     phone
   }
-  lines(first: $numCartLines) {
+  lines(first: $numCartLines, reverse: true) {
     nodes {
       ...CartLine
     }
