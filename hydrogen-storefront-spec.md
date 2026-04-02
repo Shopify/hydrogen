@@ -152,11 +152,23 @@ Cart interactions must feel instant. The underlying mutations still execute serv
 
 | Action | Immediate (optimistic) | Pending (wait for server) |
 |---|---|---|
-| **Add to cart** | Show the item in the cart drawer with the variant data already available (title, image, price, quantity) | Cart subtotal/total (grey out or spinner) |
+| **Add to cart** | Update the cart lines optimistically (see line-merging rule below) and open the drawer | Cart subtotal/total (grey out or spinner) |
 | **Change quantity** | Update the displayed quantity number | All monetary amounts on that line and cart totals |
 | **Remove line** | Hide the line item from the cart | Cart totals |
 
 If a mutation fails, revert the optimistic state and show an error.
+
+#### Line-Merging Rule for Add to Cart
+
+The Storefront API merges cart lines with the same `merchandiseId`. If you add a variant that already exists in the cart, the API increments the existing line's quantity — it does NOT create a duplicate line.
+
+Optimistic UI must mirror this behavior. When adding an item to the cart:
+
+1. Check if a line with the same `merchandiseId` already exists in the current cart state
+2. **If it exists**: increment that line's `quantity` by the added amount
+3. **If it does not exist**: append a new line using the variant data available client-side (title, image, price, quantity)
+
+Failing to do this causes a visual glitch: the user momentarily sees a duplicate line (e.g., "T-Shirt x2" and "T-Shirt x1") that snaps into a single merged line (e.g., "T-Shirt x3") when the server response arrives.
 
 ### 4.2 Cart as a Drawer
 
