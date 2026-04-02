@@ -667,9 +667,10 @@ The `selectedOptions` are parsed from URL search params (e.g., `?Color=Red&Size=
 
 This is the full cart query fragment. It includes all fields needed for both the cart UI and analytics.
 
-**Two important gotchas:**
+**Three important gotchas:**
 - **`merchandise.product.vendor`** is critical for analytics — omitting it silently prevents monorail events from firing.
 - **`cart.lines.nodes` returns a union of `CartLine | ComponentizableCartLine`.** Some stores (including `mock.shop`) return `ComponentizableCartLine` for all lines. If you only spread `...CartLine`, the response will have `__typename` but no fields — the cart drawer will appear empty even though `totalQuantity` shows items. Both fragment types must be included.
+- **Do not add `__typename` runtime checks on `merchandise`.** The `... on ProductVariant` syntax in the fragment is a GraphQL inline fragment spread — it tells the API which fields to return, but it does NOT add a `__typename` field to the response. If your code filters lines with `merchandise.__typename === "ProductVariant"`, every line will be silently filtered out because `__typename` is `undefined`. The `merchandise` field in the Storefront API always resolves to `ProductVariant` — no runtime discriminator is needed. Access `merchandise.id`, `merchandise.title`, etc. directly.
 
 ```graphql
 fragment Money on MoneyV2 {
