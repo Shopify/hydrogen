@@ -665,7 +665,11 @@ The `selectedOptions` are parsed from URL search params (e.g., `?Color=Red&Size=
 
 ### 7.5 Cart Query Fragment
 
-This is the full cart query fragment. It includes all fields needed for both the cart UI and analytics. **The `merchandise.product.vendor` field is critical for analytics — omitting it silently prevents monorail events from firing.**
+This is the full cart query fragment. It includes all fields needed for both the cart UI and analytics.
+
+**Two important gotchas:**
+- **`merchandise.product.vendor`** is critical for analytics — omitting it silently prevents monorail events from firing.
+- **`cart.lines.nodes` returns a union of `CartLine | ComponentizableCartLine`.** Some stores (including `mock.shop`) return `ComponentizableCartLine` for all lines. If you only spread `...CartLine`, the response will have `__typename` but no fields — the cart drawer will appear empty even though `totalQuantity` shows items. Both fragment types must be included.
 
 ```graphql
 fragment Money on MoneyV2 {
@@ -722,6 +726,59 @@ fragment CartLine on CartLine {
     }
   }
 }
+fragment CartLineComponent on ComponentizableCartLine {
+  id
+  quantity
+  attributes {
+    key
+    value
+  }
+  cost {
+    totalAmount {
+      ...Money
+    }
+    amountPerQuantity {
+      ...Money
+    }
+    compareAtAmountPerQuantity {
+      ...Money
+    }
+  }
+  merchandise {
+    ... on ProductVariant {
+      id
+      availableForSale
+      compareAtPrice {
+        ...Money
+      }
+      price {
+        ...Money
+      }
+      requiresShipping
+      title
+      image {
+        id
+        url
+        altText
+        width
+        height
+      }
+      product {
+        handle
+        title
+        id
+        vendor
+      }
+      selectedOptions {
+        name
+        value
+      }
+    }
+  }
+  lineComponents {
+    ...CartLine
+  }
+}
 fragment CartApiQuery on Cart {
   updatedAt
   id
@@ -742,6 +799,9 @@ fragment CartApiQuery on Cart {
   lines(first: $numCartLines, reverse: true) {
     nodes {
       ...CartLine
+    }
+    nodes {
+      ...CartLineComponent
     }
   }
   cost {
