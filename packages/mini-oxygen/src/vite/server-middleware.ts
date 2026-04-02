@@ -200,8 +200,13 @@ export function setupOxygenMiddleware(
           .then((ssrModule) => res.end(JSON.stringify(ssrModule)))
           .catch((error) => {
             console.error('Error during module fetch:', error);
-            res.writeHead(500, {'Content-Type': 'text/plain'});
-            res.end('Internal server error');
+            res.writeHead(500, {'Content-Type': 'application/json'});
+            res.end(
+              JSON.stringify({
+                error: String(error?.message ?? error),
+                ...(error?.code && {code: error.code}),
+              }),
+            );
           });
       } else {
         res.writeHead(400, {'Content-Type': 'text/plain'});
