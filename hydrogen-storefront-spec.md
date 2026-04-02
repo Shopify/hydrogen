@@ -1,6 +1,6 @@
-# Hydrogen Storefront Specification
+# Headless Storefront Implementation Guide
 
-A self-contained specification for scaffolding a Shopify storefront from scratch. Uses only the Storefront API — no Shopify packages. Framework-agnostic: works with any React-based framework that supports server-side rendering.
+This guide will lead you into implementing a Shopify Headless Storefront making use of all the best practices into an existing or new codebase.
 
 ### Implementation Notes
 
@@ -1277,6 +1277,8 @@ The cart is a **drawer** (Section 5.2), not a standalone page. See Section 8 for
 ---
 
 ## 13. Verification Checklist
+
+You must have a browser use tool to be able to verify this. If you do not, ask the user to verify it themselves and repeat this checklist back to them.
 
 - [ ] Collections page shows collection tiles with images and titles
 - [ ] Collection page shows title, description, and product grid with prices
