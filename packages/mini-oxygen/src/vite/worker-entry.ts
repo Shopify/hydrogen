@@ -42,6 +42,24 @@ const MODULE_FETCH_TIMEOUT_MS = 10_000;
 const PREBUNDLE_RECOVERY_DELAY_MS = 500;
 
 /**
+ * Wraps `fetch` with an AbortController-based timeout so every
+ * network call has a bounded wait time.
+ * @internal Exported for unit testing — not part of the public API.
+ */
+export async function fetchWithTimeout(
+  url: URL,
+  timeoutInMs: number,
+): Promise<globalThis.Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutInMs);
+  try {
+    return await fetch(url, {signal: controller.signal});
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+/**
  * Fetches a module from Vite's dev server with retry logic.
  * Retries on transient failures: 5xx server errors, timeouts, and
  * network errors. Client errors (4xx) fail immediately.
@@ -51,20 +69,9 @@ export async function fetchModuleWithRetry(url: URL) {
   let lastError: Error | undefined;
 
   for (let attempt = 1; attempt <= MODULE_FETCH_MAX_ATTEMPTS; attempt++) {
-    // Narrow try/catch to the network call only — response handling
-    // lives outside so 4xx throws propagate without string matching.
     let res: globalThis.Response | undefined;
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(
-        () => controller.abort(),
-        MODULE_FETCH_TIMEOUT_MS,
-      );
-      try {
-        res = await fetch(url, {signal: controller.signal});
-      } finally {
-        clearTimeout(timeoutId);
-      }
+      res = await fetchWithTimeout(url, MODULE_FETCH_TIMEOUT_MS);
     } catch (error) {
       // Network/timeout errors are transient — fall through to retry
       lastError = error instanceof Error ? error : new Error(String(error));
@@ -88,9 +95,10 @@ export async function fetchModuleWithRetry(url: URL) {
       lastError = error;
     }
 
-    // Backoff with jitter to avoid synchronized retry storms
+    // Exponential backoff with jitter to avoid synchronized retry storms
     if (attempt < MODULE_FETCH_MAX_ATTEMPTS) {
-      const baseDelayInMs = attempt * MODULE_FETCH_BASE_DELAY_MS;
+      const baseDelayInMs =
+        MODULE_FETCH_BASE_DELAY_MS * Math.pow(2, attempt - 1);
       const jitterInMs = Math.random() * baseDelayInMs * 0.5;
       await new Promise((resolve) =>
         setTimeout(resolve, baseDelayInMs + jitterInMs),

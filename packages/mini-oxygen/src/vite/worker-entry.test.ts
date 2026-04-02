@@ -11,6 +11,7 @@ vi.mock('../worker/handler.js', () => ({
 }));
 
 import {
+  fetchWithTimeout,
   fetchModuleWithRetry,
   isPrebundleVersionMismatch,
 } from './worker-entry.js';
@@ -46,6 +47,52 @@ describe('isPrebundleVersionMismatch', () => {
   it('handles fully nullish error properties gracefully', () => {
     const error = {message: undefined, stack: undefined} as unknown as Error;
     expect(isPrebundleVersionMismatch(error)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// fetchWithTimeout
+// ---------------------------------------------------------------------------
+describe('fetchWithTimeout', () => {
+  let mockFetch: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    mockFetch = vi.fn();
+    vi.stubGlobal('fetch', mockFetch);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('returns the response on success', async () => {
+    const expected = new Response('ok', {status: 200});
+    mockFetch.mockResolvedValueOnce(expected);
+
+    const res = await fetchWithTimeout(
+      new URL('http://localhost:5173/test'),
+      5000,
+    );
+
+    expect(res).toBe(expected);
+  });
+
+  it('passes an AbortSignal to fetch', async () => {
+    mockFetch.mockResolvedValueOnce(new Response('ok'));
+
+    await fetchWithTimeout(new URL('http://localhost:5173/test'), 5000);
+
+    const fetchCall = mockFetch.mock.calls[0];
+    expect(fetchCall[1]).toHaveProperty('signal');
+    expect(fetchCall[1].signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('propagates network errors from fetch', async () => {
+    mockFetch.mockRejectedValueOnce(new TypeError('fetch failed'));
+
+    await expect(
+      fetchWithTimeout(new URL('http://localhost:5173/test'), 5000),
+    ).rejects.toThrow('fetch failed');
   });
 });
 
@@ -164,7 +211,7 @@ describe('fetchModuleWithRetry', () => {
     ).rejects.toThrow(/connection refused/);
   });
 
-  it('passes AbortSignal to fetch', async () => {
+  it('delegates to fetchWithTimeout which wires AbortSignal', async () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({code: 'ok'}));
 
     await fetchModuleWithRetry(
@@ -176,3 +223,12 @@ describe('fetchModuleWithRetry', () => {
     expect(fetchCall[1].signal).toBeInstanceOf(AbortSignal);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Not tested here: fetchEntryModule / recoveryPromise deduplication
+// ---------------------------------------------------------------------------
+// The prebundle recovery flow (fetchEntryModule → resetRuntime →
+// recoveryPromise → importEntryModule retry) depends on ModuleRunner
+// and module-level singleton state that is impractical to unit test.
+// This path is exercised by the E2E test suite when parallel Playwright
+// workers trigger Vite's dep optimizer invalidation during dev server runs.
