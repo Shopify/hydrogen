@@ -1,4 +1,5 @@
-index c416c2b3..e6a35150 100644
+diff --git a/templates/skeleton/app/routes/collections.$handle.tsx b/templates/skeleton/app/routes/collections.$handle.tsx
+index d6285de8..98c6081c 100644
 --- a/templates/skeleton/app/routes/collections.$handle.tsx
 +++ b/templates/skeleton/app/routes/collections.$handle.tsx
 @@ -1,9 +1,14 @@
@@ -17,9 +18,9 @@ index c416c2b3..e6a35150 100644
 +import {useEffect} from 'react';
 +import {useInView} from 'react-intersection-observer';
  import type {ProductItemFragment} from 'storefrontapi.generated';
- 
- export const meta: Route.MetaFunction = ({data}) => {
-@@ -67,23 +72,41 @@ function loadDeferredData({context}: Route.LoaderArgs) {
+ import {parseFiltersFromParams} from '~/lib/product-filters';
+ import {parseSortParam, COLLECTION_SORT_OPTIONS} from '~/lib/product-sort';
+@@ -84,6 +89,7 @@ function loadDeferredData({context}: Route.LoaderArgs) {
  
  export default function Collection() {
    const {collection} = useLoaderData<typeof loader>();
@@ -27,8 +28,10 @@ index c416c2b3..e6a35150 100644
  
    return (
      <div className="collection">
-       <h1>{collection.title}</h1>
-       <p className="collection-description">{collection.description}</p>
+@@ -95,18 +101,35 @@ export default function Collection() {
+       {collection.products?.filters && (
+         <CollectionFilters filters={collection.products.filters} />
+       )}
 -      <PaginatedResourceSection<ProductItemFragment>
 -        connection={collection.products}
 -        resourcesClassName="products-grid"
@@ -72,7 +75,7 @@ index c416c2b3..e6a35150 100644
        <Analytics.CollectionView
          data={{
            collection: {
-@@ -96,6 +119,47 @@ export default function Collection() {
+@@ -119,6 +142,47 @@ export default function Collection() {
    );
  }
  
