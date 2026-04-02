@@ -63,15 +63,47 @@ Body:
 
 ### Client Pattern
 
-Create a reusable utility for making Storefront API requests:
+Create a reusable utility for making Storefront API requests. The client must use `TypedDocumentNode` from the codegen output so that return types are inferred automatically — callers should never need to pass a generic or manually type the response.
 
-1. Accept a GraphQL query string and optional variables object
+**Signature pattern:**
+
+```typescript
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+
+async function storefront<TResult, TVariables>(
+  query: TypedDocumentNode<TResult, TVariables>,
+  ...[variables]: TVariables extends Record<string, never> ? [] : [TVariables]
+): Promise<TResult>
+```
+
+This signature means:
+- `TResult` and `TVariables` are inferred from the `TypedDocumentNode` — no manual generics at the call site
+- If the query has no variables, the second argument is omitted entirely
+- The return type is the exact shape of the query's selected fields
+
+**Usage at call sites looks like:**
+
+```typescript
+import { graphql } from "../gql";
+
+const PRODUCT_QUERY = graphql(`query Product(...) { ... }`);
+
+// `data` is fully typed — no generic, no manual type annotation
+const data = await storefront(PRODUCT_QUERY, { handle, selectedOptions });
+// data.product.title  ← autocomplete works, typos are caught at compile time
+```
+
+**Implementation responsibilities:**
+
+1. Extract the query string from the `TypedDocumentNode` (it has a `.loc?.source.body` or can be printed with `print()` from `graphql`)
 2. POST to the endpoint above with the correct headers
 3. Return the parsed `data` field from the JSON response
 4. Throw on GraphQL errors (check `response.errors`)
 5. Auto-inject `country: "US"` and `language: "EN"` variables if the query declares `$country: CountryCode` or `$language: LanguageCode` parameters and they are not explicitly provided — this powers the `@inContext` directive
 
 Every query in this spec uses `@inContext(country: $country, language: $language)` for localization. The client should handle injecting defaults.
+
+**Important:** The storefront client must NEVER accept a plain `string` query. Accepting strings bypasses type inference and forces callers to manually specify generics or cast return types. Always require `TypedDocumentNode`.
 
 ---
 
@@ -138,7 +170,44 @@ Add to `package.json`:
 }
 ```
 
-Run `npm run codegen` after adding or modifying any GraphQL query. Use the generated types for all query return values — never manually type API responses.
+Run `npm run codegen` after adding or modifying any GraphQL query.
+
+### How It Works: The `graphql()` Function
+
+The `client-preset` generates a `graphql()` function (in the output directory, e.g., `src/gql/gql.ts`) with overloads for every query found in the codebase. This is the bridge between your queries and TypeScript.
+
+**Defining queries:**
+
+```typescript
+import { graphql } from "../gql";
+
+// The graphql() function returns a TypedDocumentNode with inferred result and variable types
+export const PRODUCT_QUERY = graphql(`
+  query Product($handle: String!, $selectedOptions: [SelectedOptionInput!]!) {
+    product(handle: $handle) {
+      id
+      title
+    }
+  }
+`);
+```
+
+The generated `graphql()` function recognizes this exact query string (matched at codegen time) and returns a `TypedDocumentNode<ProductQuery, ProductQueryVariables>` — both types are generated automatically.
+
+**Consuming queries:**
+
+```typescript
+// The storefront client infers types from the TypedDocumentNode — no generics needed
+const data = await storefront(PRODUCT_QUERY, { handle: "t-shirt", selectedOptions: [] });
+data.product?.title; // ← string | undefined — fully typed
+```
+
+**Rules:**
+
+1. **Always define queries with the generated `graphql()` function**, not as plain strings. Plain strings produce `unknown` return types.
+2. **Never manually type query results.** If you find yourself writing `type ProductData = { product: { ... } }`, you're doing it wrong — codegen should generate this.
+3. **Never pass generics to the storefront client.** If you're writing `storefront<SomeType>(...)`, the client signature is wrong — `TypedDocumentNode` should handle inference.
+4. **Re-run `npm run codegen`** whenever you add or modify a query. The generated `graphql()` overloads must be up to date.
 
 ---
 
@@ -201,7 +270,16 @@ Variant selection, image switching, and cart interactions must never trigger a f
 
 ## 5. GraphQL Queries
 
-All queries in this section are exact strings for the Storefront API. They use the `@inContext` directive for localization.
+All queries in this section are the exact GraphQL operations for the Storefront API. They use the `@inContext` directive for localization.
+
+**Each query must be defined using the generated `graphql()` function** (see Section 3) so that its return type and variables are automatically inferred. For example:
+
+```typescript
+import { graphql } from "../gql";
+export const SHOP_QUERY = graphql(`query ShopData(...) { ... }`);
+```
+
+The query strings below show the GraphQL content to pass to `graphql()`. Do not use them as raw strings.
 
 ### 5.1 Shop Analytics Query
 
