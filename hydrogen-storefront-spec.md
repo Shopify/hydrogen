@@ -48,7 +48,11 @@ A UI primitive library is required. The storefront needs interactive components 
 - Quantity input controls
 - Any modal or overlay UI
 
-### 1.3 Existing Patterns
+### 1.3 Package Manager
+
+Detect which package manager the project uses: look for `pnpm-lock.yaml` (pnpm), `yarn.lock` (yarn), `bun.lockb` (bun), or `package-lock.json` (npm). Use the detected package manager for all install and script commands throughout the project. If starting fresh, ask the user which they prefer.
+
+### 1.4 Existing Patterns
 
 Scan the codebase for established conventions and follow them. Specifically:
 
@@ -115,7 +119,7 @@ Body:
 
 ### Client Pattern
 
-Create a reusable utility for making Storefront API requests. The client must use `TypedDocumentNode` from the codegen output so that return types are inferred automatically — callers should never need to pass a generic or manually type the response.
+Create a reusable utility for making Storefront API requests. The client must use `TypedDocumentNode` from the codegen output (4) so that return types are inferred automatically — callers should never need to pass a generic or manually type the response.
 
 **Signature pattern:**
 
@@ -181,9 +185,9 @@ import type { CodegenConfig } from "@graphql-codegen/cli";
 const config: CodegenConfig = {
   overwrite: true,
   schema: {
-    [`https://hydrogen-preview.myshopify.com/api/${SFAPI_VERSION}/graphql.json`]: {
+    [`https://${PUBLIC_STORE_DOMAIN}/api/${SFAPI_VERSION}/graphql.json`]: {
       headers: {
-        "X-Shopify-Storefront-Access-Token": "3b580e70970c4528da70c98e097c2fa0",
+        "X-Shopify-Storefront-Access-Token": PUBLIC_STOREFRONT_API_TOKEN,
         "content-type": "application/json",
       },
     },
@@ -209,20 +213,11 @@ const config: CodegenConfig = {
 export default config;
 ```
 
-The `SFAPI_VERSION` must reference the same constant from Section 2. The schema URL uses a public demo store for introspection — replace with the project's own store domain and token for production.
-
 ### Usage
 
-Add to `package.json`:
-```json
-{
-  "scripts": {
-    "codegen": "graphql-codegen --config codegen.ts"
-  }
-}
-```
+Add a `codegen` script to the project that runs `graphql-codegen --config codegen.ts`.
 
-Run `npm run codegen` after adding or modifying any GraphQL query.
+Run the `codegen` script after adding or modifying any GraphQL query.
 
 ### How It Works: The `graphql()` Function
 
@@ -259,7 +254,7 @@ data.product?.title; // ← string | undefined — fully typed
 1. **Always define queries with the generated `graphql()` function**, not as plain strings. Plain strings produce `unknown` return types.
 2. **Never manually type query results.** If you find yourself writing `type ProductData = { product: { ... } }`, you're doing it wrong — codegen should generate this.
 3. **Never pass generics to the storefront client.** If you're writing `storefront<SomeType>(...)`, the client signature is wrong — `TypedDocumentNode` should handle inference.
-4. **Re-run `npm run codegen`** whenever you add or modify a query. The generated `graphql()` overloads must be up to date.
+4. **Re-run the `codegen` script** whenever you add or modify a query. The generated `graphql()` overloads must be up to date.
 
 ---
 
@@ -1289,7 +1284,7 @@ The cart is a **drawer** (Section 5.2), not a standalone page. See Section 8 for
 - [ ] Remove button immediately hides the line item
 - [ ] No monetary calculations exist in the codebase (search for `*` operator near price/money variables)
 - [ ] Checkout link navigates to Shopify hosted checkout
-- [ ] `npm run codegen` generates types, and all query return values use generated types
+- [ ] The `codegen` script generates types, and all query return values use generated types
 - [ ] DevTools Network: `monorail-edge.shopifysvc.com` receives POST on page navigations
 - [ ] DevTools Network: product pages send `product_page_rendered`, collection pages send `collection_page_rendered`
 - [ ] DevTools Network: add-to-cart sends `product_added_to_cart`
