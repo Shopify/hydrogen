@@ -4,8 +4,9 @@ This guide will lead you into implementing a Shopify Headless Storefront making 
 
 ### Implementation Notes
 
-- **Testing**: Focus on getting the storefront functional first. The verification checklist in Section 13 covers all acceptance criteria. Automated tests can be added in a follow-up iteration once the core storefront is working end-to-end.
+- **Testing**: Focus on getting the storefront functional first. Automated tests can be added in a follow-up iteration once the core storefront is working end-to-end.
 - **Scope**: This spec covers a complete but minimal storefront. It intentionally does not cover customer accounts, search, blog, SEO meta tags, privacy banners, or internationalization.
+- **Phased delivery**: This spec is structured as implementation phases (Section 2). Complete each phase and verify it works before moving to the next. The reference material (Sections 3+) is the knowledge base that phases point into.
 
 ---
 
@@ -65,7 +66,93 @@ If the project is freshly scaffolded with no patterns yet, follow the framework'
 
 ---
 
-## 2. Environment & API Version
+## 2. Implementation Phases
+
+**Complete each phase and verify it before starting the next.** Do not proceed if the current phase fails verification. Each phase builds on the previous one's verified output.
+
+### Phase 1: Foundation — "Can we talk to Shopify?"
+
+**Build:**
+- Environment variables and API version constant (Section 3)
+- Storefront API client utility (Section 4)
+- GraphQL codegen setup (Section 5)
+
+**Verify:**
+- [ ] The `codegen` script runs without errors and generates types
+- [ ] A test query for `shop { name }` returns the store name (log it to the console or render it)
+- [ ] The API version is defined as a constant in exactly one file
+
+*If this fails, nothing else will work. Debug the client before proceeding.*
+
+### Phase 2: Browse Products — "Can we see products?"
+
+**Build:**
+- Homepage with featured collection + recommended products (Section 13)
+- Collections index page (Section 13)
+- Single collection page with product grid (Section 13)
+- Product page displaying the default variant — no variant selection or add-to-cart yet (Section 13)
+- Image rendering with Shopify CDN (Section 12)
+- Price formatting with `Intl.NumberFormat` (Section 12)
+
+**Verify:**
+- [ ] `/` shows a featured collection and product cards with images and prices
+- [ ] `/collections` shows a grid of collection cards
+- [ ] `/collections/{handle}` shows the collection's products
+- [ ] `/products/{handle}` shows the product image, title, price, and description
+- [ ] All prices are formatted as currency (not raw numbers)
+- [ ] All images load from the Shopify CDN
+- [ ] All query return types come from codegen (no manual type annotations)
+
+### Phase 3: Variant Selection — "Can we pick options?"
+
+**Build:**
+- URL-based variant selection on the product page (Section 8)
+- Option picker UI using the chosen primitive library
+- Client-side image/price switching from `adjacentVariants`
+
+**Verify:**
+- [ ] On a product with multiple variants, clicking an option updates the image and price
+- [ ] The URL search params update (e.g., `?Color=Red&Size=L`)
+- [ ] No full page navigation occurs when selecting a variant
+- [ ] Refreshing the page preserves the selected variant
+- [ ] Unavailable combinations are visually disabled
+
+### Phase 4: Cart — "Can we buy things?"
+
+**Build:**
+- Cart cookie management (Section 9)
+- Cart mutations: create, add lines, update quantity, remove lines (Sections 7.5–7.10)
+- Cart drawer UI using the chosen primitive library (Sections 6.1–6.3, 9)
+- Optimistic UI with line-merging and correct line ordering (Section 6.1)
+
+**Verify:**
+- [ ] Adding an item **immediately** shows it in the cart drawer (optimistic)
+- [ ] Cart drawer opens on add-to-cart and on cart icon click
+- [ ] Adding the same item again increments quantity (no duplicate line)
+- [ ] Quantity +/- updates the number instantly; monetary values show a pending state then update from the API
+- [ ] Remove hides the line immediately
+- [ ] No monetary calculations exist in the codebase (search for arithmetic near price/money variables)
+- [ ] Checkout link navigates to Shopify hosted checkout
+- [ ] A `cart` cookie is set after the first cart mutation
+
+### Phase 5: Analytics — "Is Shopify tracking this?"
+
+**Build:**
+- Monorail event sending with both schemas (Section 10)
+- Tracking token extraction from Server-Timing headers (Section 10)
+- PerfKit script loading with correct attributes (Section 11)
+- Collection view and product view events on respective pages
+
+**Verify:**
+- [ ] DevTools Network: POSTs to `monorail-edge.shopifysvc.com` appear on page navigations
+- [ ] Product pages send `product_page_rendered` in the event payload
+- [ ] Collection pages send `collection_page_rendered`
+- [ ] Adding to cart sends `product_added_to_cart`
+- [ ] DevTools Elements: PerfKit `<script>` tag has correct `data-*` attributes
+
+---
+
+## 3. Environment & API Version
 
 ### Storefront API Version
 
@@ -95,7 +182,7 @@ PUBLIC_STOREFRONT_ID=""
 
 ---
 
-## 3. Storefront API Client
+## 4. Storefront API Client
 
 ### Endpoint
 
@@ -163,7 +250,7 @@ Every query in this spec uses `@inContext(country: $country, language: $language
 
 ---
 
-## 4. GraphQL Codegen
+## 5. GraphQL Codegen
 
 Set up automatic TypeScript type generation from GraphQL queries. This prevents manual typing of API responses and catches type drift when the SFAPI version changes.
 
@@ -258,17 +345,17 @@ data.product?.title; // ← string | undefined — fully typed
 
 ---
 
-## 5. UX Patterns
+## 6. UX Patterns
 
 These rules apply across the entire storefront. They ensure the UI feels responsive and correct.
 
-### 5.1 Optimistic UI
+### 6.1 Optimistic UI
 
 Cart interactions must feel instant. The underlying mutations still execute server-side, but the UI should not wait for them.
 
 | Action | Immediate (optimistic) | Pending (wait for server) |
 |---|---|---|
-| **Add to cart** | Update the cart lines optimistically (see line-merging rule below) and open the drawer | Cart subtotal/total (grey out or spinner) |
+| **Add to cart** | Open the cart drawer **instantly** and update the cart lines optimistically (see line-merging rule below). The drawer must not wait for the mutation response to open. | Cart subtotal/total (grey out or spinner) |
 | **Change quantity** | Update the displayed quantity number | All monetary amounts on that line and cart totals |
 | **Remove line** | Hide the line item from the cart | Cart totals |
 
@@ -290,9 +377,9 @@ Failing to do this causes a visual glitch: the user momentarily sees a duplicate
 
 The cart `lines` field returns newest lines first by default. This means a newly added item appears at the top of the server response, but an optimistic append puts it at the bottom — causing the list to visually reorder when the server response arrives.
 
-To avoid this, pass `reverse: true` to the `lines` field in the cart query so that newest items appear last. This way optimistic appends and server responses are in the same order. See the cart query fragment in Section 6.5.
+To avoid this, pass `reverse: true` to the `lines` field in the cart query so that newest items appear last. This way optimistic appends and server responses are in the same order. See the cart query fragment in Section 7.5.
 
-### 5.2 Cart as a Drawer
+### 6.2 Cart as a Drawer
 
 The cart must be a **drawer/aside** (overlay panel) that slides in from the side of the page. It must NOT be a separate route/page. The user should be able to add items and view their cart without leaving the current page.
 
@@ -302,7 +389,7 @@ The drawer should:
 - Close when clicking outside or pressing a close button
 - Show the checkout link at the bottom
 
-### 5.3 Money Handling
+### 6.3 Money Handling
 
 **The codebase must NEVER perform arithmetic on monetary values.** No `price * quantity`, no summing line totals, no currency conversion.
 
@@ -315,17 +402,17 @@ All money values must come directly from the Storefront API:
 
 When a cart mutation is in-flight, any monetary value that may have become stale (line totals, cart subtotal, cart total) should show a loading/pending indicator (greyed out, spinner, or skeleton). Non-monetary data (product title, image, quantity number) can be shown optimistically since it is known client-side.
 
-### 5.4 Client-Side Navigation
+### 6.4 Client-Side Navigation
 
 Variant selection, image switching, and cart interactions must never trigger a full page navigation. Use client-side state updates and URL param changes (via `history.replaceState()` or equivalent) to keep the experience snappy.
 
 ---
 
-## 6. GraphQL Queries
+## 7. GraphQL Queries
 
 All queries in this section are the exact GraphQL operations for the Storefront API. They use the `@inContext` directive for localization.
 
-**Each query must be defined using the generated `graphql()` function** (see Section 4) so that its return type and variables are automatically inferred. For example:
+**Each query must be defined using the generated `graphql()` function** (see Section 5) so that its return type and variables are automatically inferred. For example:
 
 ```typescript
 import { graphql } from "../gql";
@@ -334,7 +421,7 @@ export const SHOP_QUERY = graphql(`query ShopData(...) { ... }`);
 
 The query strings below show the GraphQL content to pass to `graphql()`. Do not use them as raw strings.
 
-### 6.1 Shop Analytics Query
+### 7.1 Shop Analytics Query
 
 Fetches shop ID and localization data for analytics. Call once on app initialization and cache the result.
 
@@ -369,7 +456,7 @@ type ShopAnalytics = {
 };
 ```
 
-### 6.2 Collections List Query
+### 7.2 Collections List Query
 
 Fetches collections. For simplicity, fetches the first 12. The query shape supports cursor-based pagination via `first`/`last`/`startCursor`/`endCursor` for future enhancement.
 
@@ -415,7 +502,7 @@ query StoreCollections(
 
 Call with `variables: { first: 12 }`.
 
-### 6.3 Single Collection with Products Query
+### 7.3 Single Collection with Products Query
 
 ```graphql
 fragment MoneyProductItem on MoneyV2 {
@@ -478,7 +565,7 @@ query Collection(
 
 Call with `variables: { handle: "the-handle", first: 12 }`.
 
-### 6.4 Product Query with Variant Selection
+### 7.4 Product Query with Variant Selection
 
 The most important query. Uses `$selectedOptions` to resolve the correct variant server-side, and `adjacentVariants` for the option picker UI.
 
@@ -576,7 +663,7 @@ query Product(
 
 The `selectedOptions` are parsed from URL search params (e.g., `?Color=Red&Size=L`). When no params are set, pass an empty array — the API returns the first available variant.
 
-### 6.5 Cart Query Fragment
+### 7.5 Cart Query Fragment
 
 This is the full cart query fragment. It includes all fields needed for both the cart UI and analytics. **The `merchandise.product.vendor` field is critical for analytics — omitting it silently prevents monorail events from firing.**
 
@@ -683,7 +770,7 @@ fragment CartApiQuery on Cart {
 }
 ```
 
-### 6.6 Cart Get Query
+### 7.6 Cart Get Query
 
 ```graphql
 query CartQuery(
@@ -700,7 +787,7 @@ query CartQuery(
 
 Use the `CartApiQuery` fragment from 5.5. Pass the full cart GID as `$cartId`.
 
-### 6.7 Cart Create Mutation
+### 7.7 Cart Create Mutation
 
 ```graphql
 mutation cartCreate(
@@ -737,7 +824,7 @@ mutation cartCreate(
 }
 ```
 
-### 6.8 Cart Lines Add Mutation
+### 7.8 Cart Lines Add Mutation
 
 ```graphql
 mutation cartLinesAdd(
@@ -761,7 +848,7 @@ mutation cartLinesAdd(
 }
 ```
 
-### 6.9 Cart Lines Update Mutation
+### 7.9 Cart Lines Update Mutation
 
 ```graphql
 mutation cartLinesUpdate(
@@ -793,7 +880,7 @@ mutation cartLinesUpdate(
 }
 ```
 
-### 6.10 Cart Lines Remove Mutation
+### 7.10 Cart Lines Remove Mutation
 
 ```graphql
 mutation cartLinesRemove(
@@ -819,7 +906,7 @@ mutation cartLinesRemove(
 
 ---
 
-## 7. Product Variant Selection
+## 8. Product Variant Selection
 
 Variant selection uses URL search params as the source of truth. All variant and image switching must happen client-side — no full page navigations.
 
@@ -856,7 +943,7 @@ For each option in `product.options`:
 
 ---
 
-## 8. Cart System
+## 9. Cart System
 
 ### Cart Cookie
 
@@ -876,9 +963,9 @@ The cart ID is stored in a browser cookie:
 
 #### Creating a Cart / Adding Lines
 
-When no cart cookie exists yet, use the `cartCreate` mutation (6.7) with the line items as input. After creation, set the `cart` cookie from the response's `cart.id`.
+When no cart cookie exists yet, use the `cartCreate` mutation (7.7) with the line items as input. After creation, set the `cart` cookie from the response's `cart.id`.
 
-When a cart already exists, use `cartLinesAdd` (6.8) with the cart GID and new lines. The pattern for lazy creation:
+When a cart already exists, use `cartLinesAdd` (7.8) with the cart GID and new lines. The pattern for lazy creation:
 
 ```
 if (no cart cookie) {
@@ -891,15 +978,15 @@ set cart cookie from result.cart.id
 
 #### Updating Quantity
 
-Use `cartLinesUpdate` (6.9). Pass the cart line ID and the new quantity.
+Use `cartLinesUpdate` (7.9). Pass the cart line ID and the new quantity.
 
 #### Removing a Line
 
-Use `cartLinesRemove` (6.10). Pass the cart line ID(s) to remove.
+Use `cartLinesRemove` (7.10). Pass the cart line ID(s) to remove.
 
 #### Getting the Cart
 
-Use the cart get query (6.6) with the cart GID from the cookie. If no cookie exists, the cart is empty — no API call needed.
+Use the cart get query (7.6) with the cart GID from the cookie. If no cookie exists, the cart is empty — no API call needed.
 
 ### Cart UI (Drawer)
 
@@ -921,7 +1008,7 @@ The cart is a **slide-out drawer**, not a separate page. It overlays the current
 - Subtotal from `cart.cost.subtotalAmount`
 - Checkout link: `<a href={cart.checkoutUrl}>Continue to Checkout</a>` — a plain link to Shopify's hosted checkout
 
-**Optimistic behavior** (see Section 5.1):
+**Optimistic behavior** (see Section 6.1):
 - When adding an item: immediately show it in the drawer using client-side data. Mark monetary totals as pending.
 - When changing quantity: immediately update the quantity number. Mark all monetary values as pending.
 - When removing: immediately hide the line. Mark totals as pending.
@@ -933,7 +1020,7 @@ The `checkoutUrl` field on the cart object is a fully-qualified URL to Shopify's
 
 ---
 
-## 9. Analytics — Monorail Events
+## 10. Analytics — Monorail Events
 
 Shopify analytics events are sent to a monorail endpoint. This enables merchant analytics dashboards.
 
@@ -1114,7 +1201,7 @@ Parse `gid://shopify/Product/123` by treating it as a URL:
 
 ---
 
-## 10. Analytics — PerfKit
+## 11. Analytics — PerfKit
 
 PerfKit tracks storefront performance metrics (Core Web Vitals, TTFB).
 
@@ -1155,7 +1242,7 @@ window.PerfKit?.setPageType('cart');        // cart (if using a cart page)
 
 ---
 
-## 11. Image and Price Rendering
+## 12. Image and Price Rendering
 
 ### Shopify CDN Images
 
@@ -1190,7 +1277,7 @@ new Intl.NumberFormat(locale, {
 
 ---
 
-## 12. Pages
+## 13. Pages
 
 ### Homepage
 
@@ -1248,53 +1335,32 @@ Display a hero section with the featured collection (image + title + "Shop now" 
 
 **Route**: `/collections`
 
-Fetch using the Collections List Query (6.2) with `{ first: 12 }`. Render a grid of collection cards with images and titles. Each card links to `/collections/{handle}`.
+Fetch using the Collections List Query (7.2) with `{ first: 12 }`. Render a grid of collection cards with images and titles. Each card links to `/collections/{handle}`.
 
 ### Single Collection
 
 **Route**: `/collections/:handle`
 
-Fetch using the Collection Query (6.3). Display the collection title, description, and a product grid. Each product card shows the featured image, title, and `priceRange.minVariantPrice`.
+Fetch using the Collection Query (7.3). Display the collection title, description, and a product grid. Each product card shows the featured image, title, and `priceRange.minVariantPrice`.
 
-Fire a collection view analytics event (Section 9).
+Fire a collection view analytics event (Section 10).
 
 ### Product
 
 **Route**: `/products/:handle`
 
-Fetch using the Product Query (6.4). Parse selected options from URL search params.
+Fetch using the Product Query (7.4). Parse selected options from URL search params.
 
-Display: product image, title, price (with compare-at if on sale), variant selector (Section 7), Add to Cart button, description HTML.
+Display: product image, title, price (with compare-at if on sale), variant selector (Section 8), Add to Cart button, description HTML.
 
 The Add to Cart button submits `merchandiseId` (the selected variant's ID) and `quantity: 1`. It should be disabled when `!selectedVariant.availableForSale`. On click, it triggers the cart add operation and opens the cart drawer.
 
-Fire a product view analytics event (Section 9).
+Fire a product view analytics event (Section 10).
 
 ### Cart
 
-The cart is a **drawer** (Section 5.2), not a standalone page. See Section 8 for the full cart UI specification.
+The cart is a **drawer** (Section 6.2), not a standalone page. See Section 9 for the full cart UI specification.
 
 ---
 
-## 13. Verification Checklist
-
-You must have a browser use tool to be able to verify this. If you do not, ask the user to verify it themselves and repeat this checklist back to them.
-
-- [ ] Collections page shows collection tiles with images and titles
-- [ ] Collection page shows title, description, and product grid with prices
-- [ ] Product page shows image, title, price, description
-- [ ] Variant selection updates image and price **without full page navigation**
-- [ ] URL search params update when selecting variants
-- [ ] Add to cart **immediately** shows item in cart drawer (optimistic)
-- [ ] Cart drawer opens on add-to-cart and on cart icon click
-- [ ] Cart monetary values show pending state during mutations, then update from API response
-- [ ] Quantity +/- buttons update quantity immediately (optimistic), monetary values update after server response
-- [ ] Remove button immediately hides the line item
-- [ ] No monetary calculations exist in the codebase (search for `*` operator near price/money variables)
-- [ ] Checkout link navigates to Shopify hosted checkout
-- [ ] The `codegen` script generates types, and all query return values use generated types
-- [ ] DevTools Network: `monorail-edge.shopifysvc.com` receives POST on page navigations
-- [ ] DevTools Network: product pages send `product_page_rendered`, collection pages send `collection_page_rendered`
-- [ ] DevTools Network: add-to-cart sends `product_added_to_cart`
-- [ ] DevTools Elements: PerfKit script tag has correct `data-*` attributes
-- [ ] The Storefront API version appears in exactly one place as a constant
+Verification is embedded in each implementation phase (Section 2). Complete and verify each phase before moving to the next.
