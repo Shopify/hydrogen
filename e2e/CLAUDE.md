@@ -56,7 +56,7 @@ Per [Playwright best practices](https://playwright.dev/docs/best-practices#make-
 test.describe('Quantity Management', () => {
   test.beforeEach(async ({storefront}) => {
     await storefront.goto('/');
-    await storefront.navigateToFirstProduct();
+    await storefront.navigateToInStockProduct();
     await storefront.addToCart();
   });
 
@@ -70,7 +70,7 @@ test.describe('Quantity Management', () => {
 // ACCEPTABLE: Duplicate simple 1-2 line setups when it improves clarity
 test('adds item to empty cart', async ({storefront}) => {
   await storefront.goto('/');
-  await storefront.navigateToFirstProduct();
+  await storefront.navigateToInStockProduct();
   await storefront.addToCart();
 
   await expect(storefront.getCartLineItems()).toHaveCount(1);
@@ -79,7 +79,7 @@ test('adds item to empty cart', async ({storefront}) => {
 // AVOID: Repeating 3+ lines in every test
 test('increases quantity', async ({storefront}) => {
   await storefront.goto('/'); // Repeated
-  await storefront.navigateToFirstProduct(); // Repeated
+  await storefront.navigateToInStockProduct(); // Repeated
   await storefront.addToCart(); // Repeated
   // Use beforeEach instead
 });

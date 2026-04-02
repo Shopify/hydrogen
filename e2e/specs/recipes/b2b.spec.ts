@@ -123,7 +123,7 @@ test.describe('B2B Recipe', () => {
       storefront,
     }) => {
       await storefront.goto('/');
-      await storefront.navigateToFirstProduct();
+      await storefront.navigateToInStockProduct();
 
       await expect(page.getByRole('heading', {level: 1})).toBeVisible();
       await expect(
@@ -137,7 +137,7 @@ test.describe('B2B Recipe', () => {
       b2b,
     }) => {
       await storefront.goto('/');
-      await storefront.navigateToFirstProduct();
+      await storefront.navigateToInStockProduct();
 
       await expect(page.getByRole('heading', {level: 1})).toBeVisible();
       await b2b.assertQuantityRulesHidden();
