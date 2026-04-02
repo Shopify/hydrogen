@@ -1,5 +1,6 @@
 import {describe, beforeAll, beforeEach, expect, it, vi} from 'vitest';
 import {render, screen, act} from '@testing-library/react';
+import '@testing-library/jest-dom/vitest';
 import {
   Analytics,
   AnalyticsContextValue,
