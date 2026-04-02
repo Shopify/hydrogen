@@ -33,6 +33,12 @@ export interface ViteEnv {
 
 const O2_PREFIX = '[o2:runtime]';
 
+// Vite's dep optimizer sets this code on errors thrown when a prebundled
+// dependency is invalidated mid-request. Defined in Vite's source at
+// packages/vite/src/shared/constants.ts — not part of Vite's public API,
+// but stable since Vite 2.9 and used by Vite's own transform middleware.
+const VITE_ERR_OUTDATED_OPTIMIZED_DEP = 'ERR_OUTDATED_OPTIMIZED_DEP';
+
 const MODULE_FETCH_MAX_ATTEMPTS = 3;
 const MODULE_FETCH_BASE_DELAY_MS = 200;
 const MODULE_FETCH_TIMEOUT_MS = 10_000;
@@ -88,6 +94,16 @@ export async function fetchModuleWithRetry(url: URL) {
         `${O2_PREFIX} Module fetch failed (${res.status}): ${body}`,
       );
 
+      // Propagate error code from the server response (e.g.,
+      // Vite's ERR_OUTDATED_OPTIMIZED_DEP) so callers can identify
+      // specific error types without string matching on the message.
+      try {
+        const parsed = JSON.parse(body);
+        if (parsed?.code) (error as any).code = parsed.code;
+      } catch {
+        // Body wasn't JSON — no code to propagate
+      }
+
       // Client errors (4xx) are deterministic — retrying won't help
       if (res.status < 500) throw error;
 
@@ -106,10 +122,17 @@ export async function fetchModuleWithRetry(url: URL) {
     }
   }
 
-  throw new Error(
+  const finalError = new Error(
     `${O2_PREFIX} Module fetch failed after ${MODULE_FETCH_MAX_ATTEMPTS} attempts: ` +
       (lastError?.message ?? 'unknown error'),
   );
+
+  // Preserve error code from the last attempt so callers can identify
+  // specific error types (e.g., prebundle invalidation) after retries.
+  const lastErrorCode = (lastError as any)?.code;
+  if (lastErrorCode) (finalError as any).code = lastErrorCode;
+
+  throw finalError;
 }
 
 export default {
@@ -314,16 +337,13 @@ function resetRuntime() {
 }
 
 /**
- * Detects Vite's dep optimizer prebundle invalidation error.
- * This string comes from Vite's optimizer — see:
- * https://github.com/vitejs/vite/blob/v6.4.1/packages/vite/src/node/plugins/optimizedDeps.ts
- * (throwOutdatedRequest function).
- * If Vite changes this message, the recovery path silently stops working
- * and falls back to returning a 503 error page (same as before this fix).
- * Verify this string still exists after Vite upgrades.
+ * Detects Vite's dep optimizer prebundle invalidation error by checking
+ * the error code propagated from the server middleware. Vite's
+ * `throwOutdatedRequest` sets `error.code = 'ERR_OUTDATED_OPTIMIZED_DEP'`
+ * (see packages/vite/src/node/plugins/optimizedDeps.ts), and our
+ * server-middleware preserves it in the JSON error response.
  * @internal Exported for unit testing — not part of the public API.
  */
 export function isPrebundleVersionMismatch(error: Error): boolean {
-  const message = error?.message ?? error?.stack ?? '';
-  return message.includes('new version of the pre-bundle');
+  return (error as any)?.code === VITE_ERR_OUTDATED_OPTIMIZED_DEP;
 }

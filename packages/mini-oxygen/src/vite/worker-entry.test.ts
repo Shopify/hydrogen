@@ -20,33 +20,28 @@ import {
 // isPrebundleVersionMismatch
 // ---------------------------------------------------------------------------
 describe('isPrebundleVersionMismatch', () => {
-  it('detects the Vite prebundle invalidation message', () => {
-    const error = new Error(
-      'There is a new version of the pre-bundle for "react"',
-    );
+  it('detects errors with the Vite outdated dep error code', () => {
+    const error = new Error('anything') as any;
+    error.code = 'ERR_OUTDATED_OPTIMIZED_DEP';
     expect(isPrebundleVersionMismatch(error)).toBe(true);
   });
 
-  it('returns false for unrelated errors', () => {
+  it('returns false for errors without the code', () => {
     expect(isPrebundleVersionMismatch(new Error('Module not found'))).toBe(
       false,
     );
     expect(isPrebundleVersionMismatch(new Error('syntax error'))).toBe(false);
   });
 
-  it('falls back to error.stack when message is nullish', () => {
-    // The function uses `??` (nullish coalescing) — only null/undefined
-    // triggers the stack fallback, not empty string.
-    const error = {
-      message: undefined,
-      stack: 'Error: new version of the pre-bundle detected\n  at foo.ts:1',
-    } as unknown as Error;
-    expect(isPrebundleVersionMismatch(error)).toBe(true);
+  it('returns false for errors with a different code', () => {
+    const error = new Error('some error') as any;
+    error.code = 'ERR_SOMETHING_ELSE';
+    expect(isPrebundleVersionMismatch(error)).toBe(false);
   });
 
-  it('handles fully nullish error properties gracefully', () => {
-    const error = {message: undefined, stack: undefined} as unknown as Error;
-    expect(isPrebundleVersionMismatch(error)).toBe(false);
+  it('handles nullish error gracefully', () => {
+    expect(isPrebundleVersionMismatch(null as any)).toBe(false);
+    expect(isPrebundleVersionMismatch(undefined as any)).toBe(false);
   });
 });
 
@@ -209,6 +204,46 @@ describe('fetchModuleWithRetry', () => {
         new URL('http://localhost:5173/__vite_fetch_module?id=test'),
       ),
     ).rejects.toThrow(/connection refused/);
+  });
+
+  it('propagates error code from JSON error response', async () => {
+    const errorBody = JSON.stringify({
+      error: 'There is a new version of the pre-bundle for "react"',
+      code: 'ERR_OUTDATED_OPTIMIZED_DEP',
+    });
+    mockFetch.mockResolvedValueOnce(
+      new Response(errorBody, {
+        status: 500,
+        headers: {'Content-Type': 'application/json'},
+      }),
+    );
+    // All attempts fail with the same error
+    mockFetch.mockResolvedValueOnce(new Response(errorBody, {status: 500}));
+    mockFetch.mockResolvedValueOnce(new Response(errorBody, {status: 500}));
+
+    try {
+      await fetchModuleWithRetry(
+        new URL('http://localhost:5173/__vite_fetch_module?id=test'),
+      );
+      expect.unreachable('should have thrown');
+    } catch (error: any) {
+      expect(error.code).toBe('ERR_OUTDATED_OPTIMIZED_DEP');
+    }
+  });
+
+  it('handles non-JSON error bodies without propagating code', async () => {
+    mockFetch.mockResolvedValueOnce(textResponse('plain text error', 500));
+    mockFetch.mockResolvedValueOnce(textResponse('plain text error', 500));
+    mockFetch.mockResolvedValueOnce(textResponse('plain text error', 500));
+
+    try {
+      await fetchModuleWithRetry(
+        new URL('http://localhost:5173/__vite_fetch_module?id=test'),
+      );
+      expect.unreachable('should have thrown');
+    } catch (error: any) {
+      expect(error.code).toBeUndefined();
+    }
   });
 
   it('delegates to fetchWithTimeout which wires AbortSignal', async () => {
