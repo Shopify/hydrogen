@@ -481,11 +481,16 @@ export class StorefrontPage {
     // under 20s — well within typical Playwright test timeouts.
     const IN_STOCK_CHECK_TIMEOUT_MS = 2000;
 
+    const triedUrls: string[] = [];
+
     for (let i = 0; i < attemptsToMake; i++) {
       const link = productLinks.nth(i);
+      // Fast-path skip: avoids a full navigation + timeout wait for links
+      // that aren't actionable (e.g., hidden by CSS or not yet in the DOM).
       if (!(await link.isVisible())) continue;
 
       await link.click();
+      triedUrls.push(this.page.url());
 
       const isInStock = await this.getAddToCartButton()
         .waitFor({state: 'visible', timeout: IN_STOCK_CHECK_TIMEOUT_MS})
@@ -502,13 +507,8 @@ export class StorefrontPage {
     throw new Error(
       `No in-stock products found at ${listingUrl} ` +
         `(checked ${attemptsToMake} of ${linkCount} product links). ` +
-        'All products appear to be sold out.',
+        `All products appear to be sold out. Tried: ${triedUrls.join(', ')}`,
     );
-  }
-
-  /** @deprecated Use {@link navigateToInStockProduct} instead */
-  async navigateToFirstProduct() {
-    return this.navigateToInStockProduct();
   }
 
   private getAddToCartButton() {
