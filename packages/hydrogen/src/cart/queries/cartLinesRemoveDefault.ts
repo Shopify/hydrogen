@@ -17,6 +17,7 @@ export type CartLinesRemoveFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
+/** @publicDocs */
 export function cartLinesRemoveDefault(
   options: CartQueryOptions,
 ): CartLinesRemoveFunction {

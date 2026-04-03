@@ -16,6 +16,7 @@ export type CartGiftCardCodesRemoveFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
+/** @publicDocs */
 export function cartGiftCardCodesRemoveDefault(
   options: CartQueryOptions,
 ): CartGiftCardCodesRemoveFunction {

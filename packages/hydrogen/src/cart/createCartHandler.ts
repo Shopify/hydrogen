@@ -322,6 +322,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   }
 }
 
+/** @publicDocs */
 export type CartHandlerOptionsForDocs<
   TCustomMethods extends CustomMethodsBase,
 > = {

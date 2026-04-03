@@ -148,6 +148,7 @@ export const IMAGE_FRAGMENT = `#graphql
  * ```
  *
  * {@link https://shopify.dev/docs/api/hydrogen-react/components/image}
+ * @publicDocs
  */
 export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
   (
