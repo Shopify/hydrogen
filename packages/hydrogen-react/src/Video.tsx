@@ -3,6 +3,10 @@ import {shopifyLoader} from './Image.js';
 import type {Video as VideoType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 
+/**
+ * The `Video` component renders a video for the Storefront API's [Video object](https://shopify.dev/api/storefront/reference/products/video). The component outputs a `video` element.
+ * @publicDocs
+ */
 export interface VideoProps {
   /** An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2025-10/objects/video). */
   data: PartialDeep<VideoType, {recurseIntoArrays: true}>;
@@ -16,6 +20,7 @@ export interface VideoProps {
 
 /**
  * The `Video` component renders a `video` for the Storefront API's [Video object](https://shopify.dev/api/storefront/reference/products/video).
+ * @publicDocs
  */
 export const Video = forwardRef<
   HTMLVideoElement,

@@ -40,9 +40,11 @@ export type OptimisticCart<T = CartReturn> = T extends undefined | null
     };
 
 /**
+ * The `useOptimisticCart` hook takes an existing cart object, processes all pending cart actions, and locally mutates the cart with optimistic state. An optimistic cart makes cart actions immediately render in the browser while actions sync to the server.
  * @param cart The cart object from `context.cart.get()` returned by a server loader.
  *
  * @returns A new cart object augmented with optimistic state for `lines` and `totalQuantity`. Each cart line item that is optimistically added includes an `isOptimistic` property. Also if the cart has _any_ optimistic state, a root property `isOptimistic` will be set to `true`.
+ * @publicDocs
  */
 export function useOptimisticCart<
   DefaultCart = {

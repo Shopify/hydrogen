@@ -30,6 +30,7 @@ interface SitemapIndexOptions {
 
 /**
  * Generate a sitemap index that links to separate sitemaps for each resource type. Returns a standard Response object.
+ * @publicDocs
  */
 export async function getSitemapIndex(
   options: SitemapIndexOptions,
@@ -124,6 +125,7 @@ interface GetSiteMapOptions {
 
 /**
  * Generate a sitemap for a specific resource type.
+ * @publicDocs
  */
 export async function getSitemap(
   options: GetSiteMapOptions,
