@@ -46,7 +46,7 @@ describe('storefrontRedirect', () => {
     );
 
     expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
-      variables: {query: 'path:/some-page'},
+      variables: {query: 'path:"/some-page"'},
     });
   });
 
@@ -67,7 +67,7 @@ describe('storefrontRedirect', () => {
       }),
     );
     expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
-      variables: {query: 'path:/some-page'},
+      variables: {query: 'path:"/some-page"'},
     });
   });
 
@@ -89,7 +89,7 @@ describe('storefrontRedirect', () => {
     );
 
     expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
-      variables: {query: 'path:/some-page'},
+      variables: {query: 'path:"/some-page"'},
     });
   });
 
@@ -116,7 +116,7 @@ describe('storefrontRedirect', () => {
     );
 
     expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
-      variables: {query: 'path:/some-page'},
+      variables: {query: 'path:"/some-page"'},
     });
   });
 
@@ -144,7 +144,7 @@ describe('storefrontRedirect', () => {
     );
 
     expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
-      variables: {query: 'path:/some-page?test=true'},
+      variables: {query: 'path:"/some-page?test=true"'},
     });
   });
 
@@ -177,7 +177,7 @@ describe('storefrontRedirect', () => {
     );
 
     expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
-      variables: {query: 'path:/some-page'},
+      variables: {query: 'path:"/some-page"'},
     });
   });
 
@@ -207,7 +207,7 @@ describe('storefrontRedirect', () => {
     );
 
     expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
-      variables: {query: 'path:/some-page'},
+      variables: {query: 'path:"/some-page"'},
     });
   });
 
@@ -227,7 +227,7 @@ describe('storefrontRedirect', () => {
     ).resolves.toEqual(response);
 
     expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
-      variables: {query: 'path:/some-page'},
+      variables: {query: 'path:"/some-page"'},
     });
   });
 
@@ -244,7 +244,87 @@ describe('storefrontRedirect', () => {
     ).resolves.toEqual(response);
 
     expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
-      variables: {query: 'path:/some-page'},
+      variables: {query: 'path:"/some-page"'},
+    });
+  });
+
+  describe('query syntax injection prevention', () => {
+    it('wraps path in phrase quotes to prevent wildcard injection', async () => {
+      queryMock.mockResolvedValueOnce({urlRedirects: {edges: []}});
+      const response = new Response('Not Found', {status: 404});
+
+      await storefrontRedirect({
+        response,
+        storefront: storefrontMock,
+        request: new Request('https://domain.com/a*'),
+      });
+
+      expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+        variables: {query: 'path:"/a*"'},
+      });
+    });
+
+    it('wraps paths containing percent-encoded operators in phrase quotes', async () => {
+      queryMock.mockResolvedValueOnce({urlRedirects: {edges: []}});
+      const response = new Response('Not Found', {status: 404});
+
+      await storefrontRedirect({
+        response,
+        storefront: storefrontMock,
+        request: new Request('https://domain.com/anything%20OR%20path:*'),
+      });
+
+      expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+        variables: {query: 'path:"/anything%20or%20path:*"'},
+      });
+    });
+
+    it('wraps paths containing colons in phrase quotes', async () => {
+      queryMock.mockResolvedValueOnce({urlRedirects: {edges: []}});
+      const response = new Response('Not Found', {status: 404});
+
+      await storefrontRedirect({
+        response,
+        storefront: storefrontMock,
+        request: new Request('https://domain.com/field:value*'),
+      });
+
+      expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+        variables: {query: 'path:"/field:value*"'},
+      });
+    });
+
+    it('wraps query params containing injection characters in phrase quotes with matchQueryParams', async () => {
+      queryMock.mockResolvedValueOnce({urlRedirects: {edges: []}});
+      const response = new Response('Not Found', {status: 404});
+
+      await storefrontRedirect({
+        response,
+        storefront: storefrontMock,
+        request: new Request(
+          'https://domain.com/some-page?param=value*%20OR%20path:*',
+        ),
+        matchQueryParams: true,
+      });
+
+      expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+        variables: {query: 'path:"/some-page?param=value*+or+path%3a*"'},
+      });
+    });
+
+    it('wraps paths containing percent-encoded quotes in phrase quotes', async () => {
+      queryMock.mockResolvedValueOnce({urlRedirects: {edges: []}});
+      const response = new Response('Not Found', {status: 404});
+
+      await storefrontRedirect({
+        response,
+        storefront: storefrontMock,
+        request: new Request('https://domain.com/page%22breakout'),
+      });
+
+      expect(queryMock).toHaveBeenCalledWith(expect.anything(), {
+        variables: {query: 'path:"/page\\"breakout"'},
+      });
     });
   });
 
