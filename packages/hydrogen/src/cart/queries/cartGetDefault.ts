@@ -63,7 +63,7 @@ export function cartGetDefault({
   cartFragment,
 }: CartGetOptions): CartGetFunction {
   return async (cartInput?: CartGetProps) => {
-    const cartId = getCartId();
+    const cartId = cartInput?.cartId ?? getCartId();
 
     if (!cartId) return null;
 
