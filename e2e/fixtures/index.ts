@@ -176,7 +176,7 @@ export const configureDevServer = (options: DevServerLifecycleOptions) => {
 
   test.use({
     baseURL: async ({}, use) => {
-      await use(isLocal ? server?.getUrl() : storeKey);
+      await use(isLocal ? await server?.getUrl() : storeKey);
     },
   });
 
