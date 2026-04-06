@@ -7,9 +7,12 @@ up:
       package_manager: pnpm@10.16.1
   - packages:
       - ejson
+  # The build runs as met? (not meet) so dev-up re-verifies by re-running it.
+  # TURBO_FORCE bypasses turbo's shared worktree cache, which can serve
+  # corrupted entries that replay logs without restoring output files.
   - custom:
       name: Build packages
-      met?: pnpm run build
+      met?: TURBO_FORCE=true pnpm run build
       meet: 'true'
 
 # So the Shopify CLI loads the local @shopify/cli-hydrogen plugin when running

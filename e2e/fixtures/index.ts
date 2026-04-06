@@ -209,7 +209,7 @@ export const configureDevServer = (options: DevServerLifecycleOptions) => {
       mockEnvDir = mockEnvFiles.mockEnvDir;
     }
 
-    server = new DevServer({
+    const devServer = new DevServer({
       storeKey,
       customerAccountPush: options.customerAccountPush ?? false,
       envFile: runtimeEnvFile,
@@ -219,7 +219,8 @@ export const configureDevServer = (options: DevServerLifecycleOptions) => {
       projectPath,
     });
 
-    await server.start();
+    await devServer.start();
+    server = devServer;
   });
 };
 
