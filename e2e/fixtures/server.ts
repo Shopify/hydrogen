@@ -167,7 +167,7 @@ export class DevServer {
           this.stop();
           reject(
             new Error(
-              'Not logged in to Shopify CLI. Run: cd templates/skeleton && npx shopify auth login',
+              'Not logged in to Shopify CLI. Run: cd templates/skeleton && pnpm exec shopify auth login',
             ),
           );
         } else if (
@@ -178,7 +178,7 @@ export class DevServer {
           this.stop();
           reject(
             new Error(
-              'Storefront not linked. Run: cd templates/skeleton && npx shopify hydrogen link',
+              'Storefront not linked. Run: cd templates/skeleton && pnpm exec shopify hydrogen link',
             ),
           );
         }

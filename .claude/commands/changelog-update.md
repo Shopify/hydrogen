@@ -200,7 +200,7 @@ git show COMMIT_HASH --name-only | grep templates/skeleton | grep -v "CHANGELOG.
   ````bash
   echo <<EOF | base64 -w 0
   ```diff
-  npx codemod remix/2/react-router/upgrade
+  pnpm dlx codemod remix/2/react-router/upgrade
   ````
 
 - **Use git diff format** with `+` and `-` prefixes for changes

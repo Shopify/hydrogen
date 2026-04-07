@@ -18,7 +18,7 @@ fi
 # 2. Find affected recipes (one name per line)
 #    Capture stderr separately so errors surface as warnings without mixing into output.
 STDERR_FILE=$(mktemp)
-AFFECTED=$(cd "$REPO_ROOT/cookbook" && npm run --silent cookbook -- affected-recipes "${STAGED_ARGS[@]}" 2>"$STDERR_FILE")
+AFFECTED=$(cd "$REPO_ROOT/cookbook" && pnpm run --silent cookbook -- affected-recipes "${STAGED_ARGS[@]}" 2>"$STDERR_FILE")
 STATUS=$?
 STDERR_CONTENT=$(cat "$STDERR_FILE")
 rm -f "$STDERR_FILE"
@@ -43,7 +43,7 @@ done <<< "$AFFECTED"
 echo ""
 echo "  After committing your skeleton changes, run the following to update affected recipes:"
 while IFS= read -r recipe; do
-  echo "    cd cookbook && npm run cookbook -- regenerate --recipe $recipe --format github"
+  echo "    cd cookbook && pnpm run cookbook -- regenerate --recipe $recipe --format github"
 done <<< "$AFFECTED"
 echo ""
 echo "  Note: the regenerate command requires a clean working tree — run it after committing."
