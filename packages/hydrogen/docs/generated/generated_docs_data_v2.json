@@ -554,7 +554,7 @@
         {
           "filePath": "src/utils/graphql.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@218393",
+          "name": "__@toStringTag@109539",
           "value": "string",
           "description": ""
         },
@@ -13814,7 +13814,7 @@
     "../hydrogen-react/src/parse-metafield.ts": {
       "filePath": "../hydrogen-react/src/parse-metafield.ts",
       "name": "ParseMetafieldGeneratedType",
-      "description": "Use the `ParsedMetafields` type as the returned type of `parseMetafield(metafield)`",
+      "description": "A function that uses `metafield.type` to parse the Metafield's `value` or `reference` or `references` (depending on the `metafield.type`) and places the result in `metafield.parsedValue`\n\nTypeScript developers can use the type `ParsedMetafields` from this package to get the returned object's type correct. For example:\n\n``` parseMetafield<ParsedMetafields['boolean']>({type: 'boolean', value: 'false'} ```",
       "isPublicDocs": true,
       "params": [
         {
