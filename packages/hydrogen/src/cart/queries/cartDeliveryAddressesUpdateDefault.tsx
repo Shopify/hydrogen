@@ -17,45 +17,7 @@ export type CartDeliveryAddressesUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-/**
- * Updates delivery addresses in the cart.
- *
- * Pass an empty array to clear all delivery addresses from the cart.
- *
- * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
- * @returns {CartDeliveryAddressUpdateFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
- *
- * @example Clear all delivery addresses
- * const updateAddresses = cartDeliveryAddressesUpdateDefault(cartQueryOptions);
- * await updateAddresses([]);
- *
- * @example Update specific delivery addresses
- * const updateAddresses = cartDeliveryAddressesUpdateDefault(cartQueryOptions);
- * await updateAddresses([
-    {
-      "address": {
-        "copyFromCustomerAddressId": "gid://shopify/<objectName>/10079785100",
-        "deliveryAddress": {
-          "address1": "<your-address1>",
-          "address2": "<your-address2>",
-          "city": "<your-city>",
-          "company": "<your-company>",
-          "countryCode": "AC",
-          "firstName": "<your-firstName>",
-          "lastName": "<your-lastName>",
-          "phone": "<your-phone>",
-          "provinceCode": "<your-provinceCode>",
-          "zip": "<your-zip>"
-        }
-      },
-      "id": "gid://shopify/<objectName>/10079785100",
-      "oneTimeUse": true,
-      "selected": true,
-      "validationStrategy": "COUNTRY_CODE_ONLY"
-    }
-  ],{ someOptionalParam: 'value' });
- * @publicDocs
- */
+/** @publicDocs */
 export function cartDeliveryAddressesUpdateDefault(
   options: CartQueryOptions,
 ): CartDeliveryAddressesUpdateFunction {

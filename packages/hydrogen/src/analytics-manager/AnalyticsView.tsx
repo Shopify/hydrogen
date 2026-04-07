@@ -213,42 +213,27 @@ export function AnalyticsPageView(props: BasicViewProps) {
   return <AnalyticsView {...props} type="page_viewed" />;
 }
 
-/**
- * Publishes a `product_viewed` event to the Analytics.Provider component.
- * @publicDocs
- */
+/** @publicDocs */
 export function AnalyticsProductView(props: ProductViewProps) {
   return <AnalyticsView {...props} type="product_viewed" />;
 }
 
-/**
- * Publishes a `collection_viewed` event to the Analytics.Provider component.
- * @publicDocs
- */
+/** @publicDocs */
 export function AnalyticsCollectionView(props: CollectionViewProps) {
   return <AnalyticsView {...props} type="collection_viewed" />;
 }
 
-/**
- * Publishes a `cart_viewed` event to the Analytics.Provider component.
- * @publicDocs
- */
+/** @publicDocs */
 export function AnalyticsCartView(props: BasicViewProps) {
   return <AnalyticsView {...props} type="cart_viewed" />;
 }
 
-/**
- * Publishes a `search_viewed` event to the Analytics.Provider component.
- * @publicDocs
- */
+/** @publicDocs */
 export function AnalyticsSearchView(props: SearchViewProps) {
   return <AnalyticsView {...props} type="search_viewed" />;
 }
 
-/**
- * Publishes a custom page view event to the Analytics.Provider component. The `type` prop must be preceded by `custom_`.
- * @publicDocs
- */
+/** @publicDocs */
 export function AnalyticsCustomView(props: CustomViewProps) {
   return <AnalyticsView {...props} />;
 }

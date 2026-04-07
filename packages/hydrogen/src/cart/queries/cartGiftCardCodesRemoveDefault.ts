@@ -16,10 +16,7 @@ export type CartGiftCardCodesRemoveFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-/**
- * Creates a function that removes gift card codes from the cart.
- * @publicDocs
- */
+/** @publicDocs */
 export function cartGiftCardCodesRemoveDefault(
   options: CartQueryOptions,
 ): CartGiftCardCodesRemoveFunction {
