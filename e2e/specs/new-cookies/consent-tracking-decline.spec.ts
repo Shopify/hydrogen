@@ -53,7 +53,7 @@ test.describe('Consent Tracking - No Banner (Declined by Default)', () => {
     storefront.expectNoMonorailRequests();
 
     // 10. Navigate to first product and add to cart
-    await storefront.navigateToFirstProduct();
+    await storefront.navigateToInStockProduct();
     await storefront.addToCart();
 
     // 11. Check server-timing from cart mutation - should be mock values

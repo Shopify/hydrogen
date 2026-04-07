@@ -56,7 +56,7 @@ test.describe('Privacy Banner - Decline Flow', () => {
     storefront.expectNoMonorailRequests();
 
     // 11. Navigate to first product and add to cart to verify server-timing mock values
-    await storefront.navigateToFirstProduct();
+    await storefront.navigateToInStockProduct();
 
     // Add item to cart
     await storefront.addToCart();
