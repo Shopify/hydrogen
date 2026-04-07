@@ -153,6 +153,7 @@ export interface ShopifyProviderBase {
 
 /**
  * Shopify-specific values that are used in various Hydrogen React components and hooks.
+ * @publicDocs
  */
 export interface ShopifyProviderProps extends ShopifyProviderBase {
   /** React children to render. */
