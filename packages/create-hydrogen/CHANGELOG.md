@@ -1,5 +1,23 @@
 # @shopify/create-hydrogen
 
+## 5.0.31
+
+### Patch Changes
+
+- Improve screen reader experience for paginated product grids by hiding decorative arrow characters from assistive technology. ([#3557](https://github.com/Shopify/hydrogen/pull/3557)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Fix broken `aria-label` on territory code input in address form. The label was the raw developer string `"territoryCode"` instead of a human-readable `"Country code"`. ([#3607](https://github.com/Shopify/hydrogen/pull/3607)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Add aria-label to ProductPrice for improved screen reader accessibility ([#3558](https://github.com/Shopify/hydrogen/pull/3558)) by [@itsjustriley](https://github.com/itsjustriley)
+
+## 5.0.30
+
+### Patch Changes
+
+- Improve gift card accessibility in Skeleton template ([#3518](https://github.com/Shopify/hydrogen/pull/3518)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Updated shopify/cli dependencies for cli-hydrogen ([#3553](https://github.com/Shopify/hydrogen/pull/3553)) by [@andguy95](https://github.com/andguy95)
+
 ## 5.0.29
 
 ### Patch Changes

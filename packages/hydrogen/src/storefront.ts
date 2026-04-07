@@ -57,7 +57,12 @@ import {
   type StackInfo,
 } from './utils/callsites';
 import type {WaitUntil, StorefrontHeaders} from './types';
-import {extractHeaders, getSafePathname, SFAPI_RE} from './utils/request';
+import {
+  extractHeaders,
+  getSafePathname,
+  MCP_RE,
+  SFAPI_RE,
+} from './utils/request';
 import {
   appendServerTimingHeader,
   extractServerTimingHeader,
@@ -174,6 +179,10 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
    */
   isStorefrontApiUrl: (request: {url?: string}) => boolean;
   /**
+   * Checks if the request URL matches the Storefront MCP endpoint.
+   */
+  isMcpUrl: (request: {url?: string}) => boolean;
+  /**
    * Forwards the request to the Storefront API.
    * It reads the API version from the request URL.
    */
@@ -181,6 +190,10 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
     request: Request,
     options?: Pick<StorefrontCommonExtraParams, 'storefrontApiVersion'>,
   ) => Promise<Response>;
+  /**
+   * Forwards the request to the Storefront MCP endpoint.
+   */
+  forwardMcp: (request: Request) => Promise<Response>;
   /**
    * Sets the collected subrequest headers in the response.
    * Useful to forward the cookies and server-timing headers
@@ -608,6 +621,78 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
         // Create a new response to allow modifying headers
         return new Response(sfapiResponse.body, sfapiResponse);
+      },
+
+      /**
+       * Checks if the request is targeting the Storefront MCP endpoint.
+       */
+      isMcpUrl(request) {
+        return MCP_RE.test(getSafePathname(request.url ?? ''));
+      },
+
+      /**
+       * Forwards the request to the Storefront MCP endpoint.
+       * CORS headers are intentionally omitted — the Storefront MCP
+       * server is server-to-server only (OPTIONS preflight returns 404).
+       */
+      async forwardMcp(request) {
+        const forwardedHeaders = new Headers([
+          ...extractHeaders(
+            (key) => request.headers.get(key),
+            [
+              'accept',
+              'accept-encoding',
+              'accept-language',
+              'content-type',
+              'cookie',
+              'origin',
+              'referer',
+              'user-agent',
+            ],
+          ),
+          ...extractHeaders(
+            (key) => defaultHeaders[key],
+            [
+              SHOPIFY_CLIENT_IP_HEADER,
+              SHOPIFY_CLIENT_IP_SIG_HEADER,
+              STOREFRONT_ACCESS_TOKEN_HEADER,
+              STOREFRONT_REQUEST_GROUP_ID_HEADER,
+              SHOPIFY_STOREFRONT_ID_HEADER,
+            ],
+          ),
+        ]);
+
+        if (storefrontHeaders?.buyerIp) {
+          forwardedHeaders.set('x-forwarded-for', storefrontHeaders.buyerIp);
+        }
+
+        const mcpUrl = `${getShopifyDomain()}/api/mcp`;
+
+        try {
+          const mcpResponse = await fetch(mcpUrl, {
+            method: request.method,
+            body: request.body,
+            headers: forwardedHeaders,
+          });
+
+          return new Response(mcpResponse.body, mcpResponse);
+        } catch (error) {
+          const JSON_RPC_INTERNAL_ERROR = -32603;
+          const message =
+            error instanceof Error ? error.message : 'Internal proxy error';
+
+          return new Response(
+            JSON.stringify({
+              jsonrpc: '2.0',
+              error: {code: JSON_RPC_INTERNAL_ERROR, message},
+              id: null,
+            }),
+            {
+              status: 502,
+              headers: {'content-type': 'application/json'},
+            },
+          );
+        }
       },
 
       setCollectedSubrequestHeaders: (response: {headers: Headers}) => {

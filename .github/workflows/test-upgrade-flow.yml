@@ -1,30 +1,22 @@
 # Test Upgrade Flow Workflow
 #
 # Purpose:
-# This workflow validates that the Hydrogen CLI upgrade command works correctly when
-# changelog.json is modified. It ensures that users can successfully upgrade their
-# Hydrogen projects to new versions without encountering dependency conflicts or
-# runtime errors.
+# Run the upgrade E2E suite whenever changelog entries change so release-time
+# upgrade paths stay valid.
 #
 # What it tests:
-# 1. Dynamic version detection from local changelog.json
-# 2. Scaffolds a historical Hydrogen project from git history
-# 3. Runs the actual `hydrogen upgrade` command with the latest version
-# 4. Validates that pnpm install succeeds without dependency conflicts
-# 5. Verifies the dev server starts without import/module errors
-# 6. Makes HTTP requests to ensure the app serves HTML without errors
+# 1. Selects upgrade paths from changelog.json (with optional env overrides)
+# 2. Scaffolds historical skeletons from git history
+# 3. Runs the real `h2 upgrade` command
+# 4. Validates dependency updates and package installation
+# 5. Validates upgrade guide file behavior when manual steps exist
+# 6. Validates build only when no manual steps and no breaking changes
 #
 # When it runs:
 # - On push/PR when docs/changelog.json is modified
 # - Manual trigger via workflow_dispatch
 #
-# Key validations:
-# - No pnpm dependency resolution errors (ERESOLVE, peer deps, etc.)
-# - No missing module or import errors during runtime
-# - Dev server successfully serves pages
-# - Build and typecheck commands succeed
-#
-# This is critical for ensuring new releases don't break the upgrade path for users.
+# This is critical for catching incomplete changelog entries before release.
 
 name: Test Upgrade Flow
 
@@ -32,9 +24,13 @@ on:
   push:
     paths:
       - 'docs/changelog.json'
+      - 'packages/cli/src/commands/hydrogen/upgrade*.ts'
+      - 'packages/cli/vitest.e2e.config.ts'
   pull_request:
     paths:
       - 'docs/changelog.json'
+      - 'packages/cli/src/commands/hydrogen/upgrade*.ts'
+      - 'packages/cli/vitest.e2e.config.ts'
   workflow_dispatch:
 
 jobs:
@@ -43,9 +39,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
         with:
           run_install: false
 
@@ -65,7 +63,7 @@ jobs:
       - name: Run upgrade flow tests
         run: |
           cd packages/cli
-          pnpm test upgrade-flow.test.ts
+          pnpm exec vitest run --config vitest.e2e.config.ts
         env:
           FORCE_CHANGELOG_SOURCE: local
           SHOPIFY_HYDROGEN_FLAG_FORCE: 1

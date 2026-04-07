@@ -226,6 +226,21 @@ describe('createHydrogenContext', () => {
         }),
       );
     });
+
+    it('passes useCustomAuthDomain to createCustomerAccountClient', async () => {
+      createHydrogenContext({
+        ...defaultOptions,
+        customerAccount: {
+          useCustomAuthDomain: true,
+        },
+      });
+
+      expect(vi.mocked(createCustomerAccountClient)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          useCustomAuthDomain: true,
+        }),
+      );
+    });
   });
 
   describe('cart client', () => {

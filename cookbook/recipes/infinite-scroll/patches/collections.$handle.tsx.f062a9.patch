@@ -103,7 +103,7 @@ index c416c2b3..e6a35150 100644
 +  }, [inView, navigate, state, nextPageUrl, hasNextPage]);
 +
 +  return (
-+    <div className="products-grid">
++    <div aria-label="Products" role="region" className="products-grid">
 +      {products.map((product, index) => {
 +        return (
 +          <ProductItem

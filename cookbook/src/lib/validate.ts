@@ -5,12 +5,14 @@ import {
   TEMPLATE_PATH,
   COOKBOOK_PATH,
   LLMS_PATH,
+  REPO_ROOT,
   RENDER_FILENAME_GITHUB,
 } from './constants';
 import {loadRecipe, Recipe} from './recipe';
 import path from 'path';
 import YAML from 'yaml';
 import {ZodError} from 'zod';
+import {withResolvedCatalog} from './workspace';
 
 export type ValidationError = {
   validator: string;
@@ -423,79 +425,85 @@ export function validateRecipe(params: {
       return false;
     }
 
-    console.log(`- 🧑‍🍳 Applying recipe '${recipeTitle}'`);
-    applyRecipe({
-      recipeTitle,
+    const validationResult = withResolvedCatalog(() => {
+      console.log(`- 🧑‍🍳 Applying recipe '${recipeTitle}'`);
+      applyRecipe({
+        recipeTitle,
+      });
+
+      try {
+        const conflictFiles = execSync(
+          `find ${TEMPLATE_PATH} -name "*.orig" -o -name "*.rej"`,
+          {
+            encoding: 'utf-8',
+            stdio: 'pipe',
+          },
+        )
+          .trim()
+          .split('\n')
+          .filter(Boolean);
+
+        if (conflictFiles.length > 0) {
+          console.error(`\n❌ Conflict files detected in template directory:`);
+          conflictFiles.forEach((file) => {
+            console.error(`   - ${file}`);
+          });
+          console.error(
+            `\nThese files will cause TypeScript errors during validation.`,
+          );
+          console.error(
+            `Please resolve patch conflicts before running validation.`,
+          );
+          return false;
+        }
+      } catch (e) {
+        // Ignore errors from find command (e.g., if template directory doesn't exist).
+        // This is an optional safety check; subsequent validation commands (typecheck, build) will catch any real issues.
+      }
+
+      const validationCommands: Command[] = [
+        ...(hydrogenPackagesVersion != null
+          ? [installHydrogenPackages(hydrogenPackagesVersion)]
+          : []),
+        installDependencies(),
+        runCodegen(),
+        runTypecheck(),
+        buildSkeleton(),
+      ];
+
+      for (const {command, options} of validationCommands) {
+        console.log(`- 🔬 Running ${command}…`);
+        try {
+          const result = execSync(command, options);
+          if (process.env.VERBOSE) {
+            console.log(result.toString());
+          }
+        } catch (error: any) {
+          console.log(`❌ Command failed: ${command}`);
+          if (error.stdout) {
+            console.log('❌ === Command stdout ===');
+            const stdout = Buffer.isBuffer(error.stdout)
+              ? error.stdout.toString('utf-8')
+              : error.stdout.toString();
+            console.log(stdout);
+            console.log('❌ === End stdout ===');
+          }
+          if (error.stderr) {
+            console.log('❌ === Command stderr ===');
+            const stderr = Buffer.isBuffer(error.stderr)
+              ? error.stderr.toString('utf-8')
+              : error.stderr.toString();
+            console.log(stderr);
+            console.log('❌ === End stderr ===');
+          }
+          throw error;
+        }
+      }
+
+      return true;
     });
 
-    try {
-      const conflictFiles = execSync(
-        `find ${TEMPLATE_PATH} -name "*.orig" -o -name "*.rej"`,
-        {
-          encoding: 'utf-8',
-          stdio: 'pipe',
-        },
-      )
-        .trim()
-        .split('\n')
-        .filter(Boolean);
-
-      if (conflictFiles.length > 0) {
-        console.error(`\n❌ Conflict files detected in template directory:`);
-        conflictFiles.forEach((file) => {
-          console.error(`   - ${file}`);
-        });
-        console.error(
-          `\nThese files will cause TypeScript errors during validation.`,
-        );
-        console.error(
-          `Please resolve patch conflicts before running validation.`,
-        );
-        return false;
-      }
-    } catch (e) {
-      // Ignore errors from find command (e.g., if template directory doesn't exist).
-      // This is an optional safety check; subsequent validation commands (typecheck, build) will catch any real issues.
-    }
-
-    const validationCommands: Command[] = [
-      ...(hydrogenPackagesVersion != null
-        ? [installHydrogenPackages(hydrogenPackagesVersion)]
-        : []),
-      installDependencies(),
-      runCodegen(),
-      runTypecheck(),
-      buildSkeleton(),
-    ];
-
-    for (const {command, options} of validationCommands) {
-      console.log(`- 🔬 Running ${command}…`);
-      try {
-        const result = execSync(command, options);
-        if (process.env.VERBOSE) {
-          console.log(result.toString());
-        }
-      } catch (error: any) {
-        console.log(`❌ Command failed: ${command}`);
-        if (error.stdout) {
-          console.log('❌ === Command stdout ===');
-          const stdout = Buffer.isBuffer(error.stdout)
-            ? error.stdout.toString('utf-8')
-            : error.stdout.toString();
-          console.log(stdout);
-          console.log('❌ === End stdout ===');
-        }
-        if (error.stderr) {
-          console.log('❌ === Command stderr ===');
-          const stderr = Buffer.isBuffer(error.stderr)
-            ? error.stderr.toString('utf-8')
-            : error.stderr.toString();
-          console.log(stderr);
-          console.log('❌ === End stderr ===');
-        }
-        throw error;
-      }
-    }
+    if (!validationResult) return false;
 
     const duration = Date.now() - start;
     console.log(`\n✅ Recipe '${recipeTitle}' is valid (${duration}ms)`);
@@ -517,43 +525,81 @@ type Command = {
   options: ExecSyncOptionsWithBufferEncoding;
 };
 
+type PackageManager = 'npm' | 'pnpm';
+
+function getPackageManager(): PackageManager {
+  try {
+    const packageJsonPath = path.join(REPO_ROOT, 'package.json');
+    const packageJson = JSON.parse(
+      fs.readFileSync(packageJsonPath, 'utf-8'),
+    ) as {
+      packageManager?: string;
+    };
+
+    if (packageJson.packageManager?.startsWith('pnpm')) {
+      return 'pnpm';
+    }
+  } catch {
+    // Fall back to npm if package manager metadata is unavailable.
+  }
+
+  return 'npm';
+}
+
+const packageManager = getPackageManager();
+
+function runScriptCommand(script: string): string {
+  if (packageManager === 'pnpm') {
+    return `pnpm run ${script}`;
+  }
+
+  return `npm run ${script}`;
+}
+
 function installDependencies(): Command {
   return {
-    command: 'npm install',
+    command: packageManager === 'pnpm' ? 'pnpm install' : 'npm install',
     options: {cwd: TEMPLATE_PATH, encoding: 'buffer'},
   };
 }
 
 function runCodegen(): Command {
   return {
-    command: 'npm run codegen',
+    command: runScriptCommand('codegen'),
     options: {cwd: TEMPLATE_PATH, encoding: 'buffer'},
   };
 }
 
 function runTypecheck(): Command {
   return {
-    command: 'npm run typecheck',
+    command: runScriptCommand('typecheck'),
     options: {cwd: TEMPLATE_PATH, encoding: 'buffer'},
   };
 }
 
 function buildSkeleton(): Command {
   return {
-    command: 'npm run build',
+    command: runScriptCommand('build'),
     options: {cwd: TEMPLATE_PATH, encoding: 'buffer'},
   };
 }
 
 function installHydrogenPackages(version: string): Command {
   rmSync(path.join(TEMPLATE_PATH, 'package-lock.json'), {force: true});
+  rmSync(path.join(TEMPLATE_PATH, 'pnpm-lock.yaml'), {force: true});
   const packages = [
     'https://registry.npmjs.org/@shopify/cli-hydrogen/-/cli-hydrogen',
     'https://registry.npmjs.org/@shopify/hydrogen/-/hydrogen',
     'https://registry.npmjs.org/@shopify/remix-oxygen/-/remix-oxygen',
   ];
+
+  const packageTarballs = packages.map((p) => `${p}-${version}.tgz`).join(' ');
+
   return {
-    command: `npm install ${packages.map((p) => `${p}-${version}.tgz`).join(' ')}`,
+    command:
+      packageManager === 'pnpm'
+        ? `pnpm add ${packageTarballs}`
+        : `npm install ${packageTarballs}`,
     options: {cwd: TEMPLATE_PATH, encoding: 'buffer'},
   };
 }

@@ -3,12 +3,7 @@ import type {
   SubscriptionDiscountFragmentFragment,
   SubscriptionsContractsQueryQuery,
 } from 'customer-accountapi.generated';
-import {
-  data,
-  useActionData,
-  useFetcher,
-  useLoaderData,
-} from 'react-router';
+import {data, useActionData, useFetcher, useLoaderData} from 'react-router';
 import type {Route} from './+types/account.subscriptions';
 import {SUBSCRIPTIONS_CONTRACTS_QUERY} from '../graphql/customer-account/CustomerSubscriptionsQuery';
 import {SUBSCRIPTION_CANCEL_MUTATION} from '../graphql/customer-account/CustomerSubscriptionsMutations';
@@ -91,14 +86,14 @@ export default function AccountProfile() {
           </mark>
         </p>
       ) : null}
-      <div className="account-subscriptions">
+      <ul className="account-subscriptions" aria-label="Subscriptions">
         {subscriptions?.customer?.subscriptionContracts.nodes.map(
           (subscription) => {
             const isBeingCancelled =
               fetcher.state !== 'idle' &&
               fetcher.formData?.get('subId') === subscription.id;
             return (
-              <div key={subscription.id} className="subscription-row">
+              <li key={subscription.id} className="subscription-row">
                 <div className="subscription-row-content">
                   <div>
                     {subscription.lines.nodes.map((line) => (
@@ -149,11 +144,11 @@ export default function AccountProfile() {
                     </fetcher.Form>
                   )}
                 </div>
-              </div>
+              </li>
             );
           },
         )}
-      </div>
+      </ul>
     </div>
   );
 }

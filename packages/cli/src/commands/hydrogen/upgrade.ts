@@ -23,7 +23,6 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {
   getDependencies,
-  installNodeModules,
   getPackageManager,
   type PackageJson,
 } from '@shopify/cli-kit/node/node-package-manager';
@@ -78,6 +77,10 @@ type ChangeLog = {
 export type CumulativeRelease = {
   features: Array<ReleaseItem>;
   fixes: Array<ReleaseItem>;
+  removeDependencies: string[];
+  removeDevDependencies: string[];
+  dependencies: Record<string, string>;
+  devDependencies: Record<string, string>;
 };
 
 const INSTRUCTIONS_FOLDER = '.hydrogen';
@@ -204,7 +207,7 @@ export async function runUpgrade({
     });
 
     // Get an aggregate list of features and fixes included in the upgrade versions range
-    cumulativeRelease = getCummulativeRelease({
+    cumulativeRelease = getCumulativeRelease({
       availableUpgrades,
       currentVersion,
       currentDependencies,
@@ -231,6 +234,10 @@ export async function runUpgrade({
     selectedRelease,
     currentDependencies,
     targetVersion,
+    cumulativeRemoveDependencies: cumulativeRelease.removeDependencies,
+    cumulativeRemoveDevDependencies: cumulativeRelease.removeDevDependencies,
+    cumulativeDependencies: cumulativeRelease.dependencies,
+    cumulativeDevDependencies: cumulativeRelease.devDependencies,
   });
   await validateUpgrade({
     appPath,
@@ -553,9 +560,9 @@ export async function getSelectedRelease({
 }
 
 /**
- * Gets an aggregate list of features and fixes included in the upgrade versions range
+ * Gets an aggregate list of features, fixes, and dependency removals included in the upgrade versions range
  */
-export function getCummulativeRelease({
+export function getCumulativeRelease({
   availableUpgrades,
   selectedRelease,
   currentVersion,
@@ -568,15 +575,29 @@ export function getCummulativeRelease({
 }): CumulativeRelease {
   const currentPinnedVersion = getAbsoluteVersion(currentVersion);
 
-  if (!availableUpgrades?.length) {
-    return {features: [], fixes: []};
-  }
+  const empty: CumulativeRelease = {
+    features: [],
+    fixes: [],
+    removeDependencies: [],
+    removeDevDependencies: [],
+    dependencies: {},
+    devDependencies: {},
+  };
 
-  // For synthetic next releases, return features/fixes directly
+  if (!availableUpgrades?.length) return empty;
+
+  // For synthetic next releases, return features/fixes directly without accumulation.
+  // Synthetic "next" releases are constructed from the latest real release and already
+  // carry all necessary removals, so no additional accumulation is needed.
   if (selectedRelease.dependencies?.['@shopify/hydrogen'] === 'next') {
     return {
+      ...empty,
       features: selectedRelease.features || [],
       fixes: selectedRelease.fixes || [],
+      removeDependencies: selectedRelease.removeDependencies ?? [],
+      removeDevDependencies: selectedRelease.removeDevDependencies ?? [],
+      dependencies: selectedRelease.dependencies ?? {},
+      devDependencies: selectedRelease.devDependencies ?? {},
     };
   }
 
@@ -595,14 +616,95 @@ export function getCummulativeRelease({
     return hasOutdatedDependencies({release, currentDependencies});
   });
 
-  return upgradingReleases.reduce(
-    (acc, release) => {
-      acc.features = [...acc.features, ...release.features];
-      acc.fixes = [...acc.fixes, ...release.fixes];
-      return acc;
-    },
-    {features: [], fixes: []} as CumulativeRelease,
+  const features = upgradingReleases.flatMap((r) => r.features);
+  const fixes = upgradingReleases.flatMap((r) => r.fixes);
+
+  const releasesByVersion = [...upgradingReleases].sort((a, b) =>
+    semver.compare(a.version, b.version),
   );
+
+  // Track deps that are re-added after being removed in the upgrade range.
+  // A dep removed in one release but re-added in a later release (e.g. react-router
+  // renamed/upgraded) should not appear in the cumulative removal list.
+  // Use chronological ordering so this is independent from changelog input order.
+  // Track each dependency type separately to handle cross-type moves correctly.
+  const removedDepsAt = new Map<string, number>();
+  const removedDevDepsAt = new Map<string, number>();
+
+  // Last-write-wins: the map stores the index of the final removal for each dep.
+  // A re-addition only suppresses a removal if it occurs at or after that final removal index.
+  releasesByVersion.forEach((release, i) => {
+    release.removeDependencies?.forEach((dep) => {
+      removedDepsAt.set(dep, i);
+    });
+    release.removeDevDependencies?.forEach((dep) => {
+      removedDevDepsAt.set(dep, i);
+    });
+  });
+
+  const reinstalledDeps = new Set<string>();
+  const reinstalledDevDeps = new Set<string>();
+
+  for (let i = 0; i < releasesByVersion.length; i++) {
+    const release = releasesByVersion[i];
+
+    if (!release) continue;
+
+    const dependencies = release.dependencies ?? {};
+    const devDependencies = release.devDependencies ?? {};
+
+    // Only mark as reinstalled if it returns to the same dependency type
+    Object.keys(dependencies).forEach((dep) => {
+      const removalI = removedDepsAt.get(dep);
+      // >= allows same-release remove+add (e.g., react-router upgraded in 2025.7.0)
+      if (removalI !== undefined && i >= removalI) {
+        reinstalledDeps.add(dep);
+      }
+    });
+
+    Object.keys(devDependencies).forEach((dep) => {
+      const removalI = removedDevDepsAt.get(dep);
+      // >= allows same-release remove+add
+      if (removalI !== undefined && i >= removalI) {
+        reinstalledDevDeps.add(dep);
+      }
+    });
+  }
+
+  const removeDependencies = [
+    ...new Set(
+      releasesByVersion
+        .flatMap((r) => r.removeDependencies ?? [])
+        .filter((dep) => !reinstalledDeps.has(dep)),
+    ),
+  ];
+
+  const removeDevDependencies = [
+    ...new Set(
+      releasesByVersion
+        .flatMap((r) => r.removeDevDependencies ?? [])
+        .filter((dep) => !reinstalledDevDeps.has(dep)),
+    ),
+  ];
+
+  // Accumulate dep additions/bumps across all upgrading releases (last-write-wins
+  // by ascending version order). This ensures intermediate bumps — e.g. @react-router/dev
+  // upgraded in 2025.7.1 — are applied when the target release doesn't repeat them.
+  const dependencies: Record<string, string> = {};
+  const devDependencies: Record<string, string> = {};
+  for (const release of releasesByVersion) {
+    Object.assign(dependencies, release.dependencies ?? {});
+    Object.assign(devDependencies, release.devDependencies ?? {});
+  }
+
+  return {
+    features,
+    fixes,
+    removeDependencies,
+    removeDevDependencies,
+    dependencies,
+    devDependencies,
+  };
 }
 
 /**
@@ -623,7 +725,7 @@ export function displayConfirmation({
   if (features.length || fixes.length) {
     renderInfo({
       headline: `Included in this upgrade:`,
-      //@ts-ignore we know that filter(Boolean) will always return an array
+      // @ts-expect-error - filter(Boolean) removes falsy values, leaving only objects
       customSections: [
         features.length && {
           title: 'Features',
@@ -761,15 +863,31 @@ export function buildUpgradeCommandArgs({
   selectedRelease,
   currentDependencies,
   targetVersion,
+  cumulativeDependencies,
+  cumulativeDevDependencies,
 }: {
   selectedRelease: Release;
   currentDependencies: Record<string, string>;
   targetVersion?: string;
+  cumulativeDependencies?: Record<string, string>;
+  cumulativeDevDependencies?: Record<string, string>;
 }) {
   const args: string[] = [];
 
+  // Merge cumulative deps (from intermediate releases) with the target release's deps.
+  // selectedRelease wins for any dep it declares; cumulative fills in the gaps for
+  // packages bumped in intermediate releases but absent from the target entry.
+  const effectiveDependencies = {
+    ...(cumulativeDependencies ?? {}),
+    ...selectedRelease.dependencies,
+  };
+  const effectiveDevDependencies = {
+    ...(cumulativeDevDependencies ?? {}),
+    ...selectedRelease.devDependencies,
+  };
+
   // upgrade dependencies
-  for (const dependency of Object.entries(selectedRelease.dependencies)) {
+  for (const dependency of Object.entries(effectiveDependencies)) {
     const shouldUpgradeDep = maybeIncludeDependency({
       currentDependencies,
       dependency,
@@ -788,7 +906,7 @@ export function buildUpgradeCommandArgs({
   }
 
   // upgrade devDependencies
-  for (const dependency of Object.entries(selectedRelease.devDependencies)) {
+  for (const dependency of Object.entries(effectiveDevDependencies)) {
     const shouldUpgradeDep = maybeIncludeDependency({
       currentDependencies,
       dependency,
@@ -809,7 +927,7 @@ export function buildUpgradeCommandArgs({
   // Maybe upgrade Remix dependencies
   const currentRemix =
     Object.entries(currentDependencies).find(isRemixDependency);
-  const selectedRemix = Object.entries(selectedRelease.dependencies).find(
+  const selectedRemix = Object.entries(effectiveDependencies).find(
     isRemixDependency,
   );
 
@@ -830,7 +948,7 @@ export function buildUpgradeCommandArgs({
   const currentReactRouter = Object.entries(currentDependencies).find(
     isReactRouterDependency,
   );
-  const selectedReactRouter = Object.entries(selectedRelease.dependencies).find(
+  const selectedReactRouter = Object.entries(effectiveDependencies).find(
     isReactRouterDependency,
   );
 
@@ -859,24 +977,36 @@ export function buildUpgradeCommandArgs({
 
 /**
  * Installs the new Hydrogen dependencies
+ *
+ * Callers must pass cumulative removal lists from `getCumulativeRelease()` to ensure
+ * dependencies removed in intermediate releases are properly cleaned up when upgrading
+ * across multiple versions.
  */
 export async function upgradeNodeModules({
   appPath,
   selectedRelease,
   currentDependencies,
   targetVersion,
+  cumulativeRemoveDependencies,
+  cumulativeRemoveDevDependencies,
+  cumulativeDependencies,
+  cumulativeDevDependencies,
 }: {
   appPath: string;
   selectedRelease: Release;
   currentDependencies: Record<string, string>;
   targetVersion?: string;
+  cumulativeRemoveDependencies: string[];
+  cumulativeRemoveDevDependencies: string[];
+  cumulativeDependencies?: Record<string, string>;
+  cumulativeDevDependencies?: Record<string, string>;
 }) {
   const tasks: Array<{title: string; task: () => Promise<void>}> = [];
 
-  // Remove deprecated dependencies first if specified
+  // Cumulative removals cover all intermediate releases when upgrading across multiple versions.
   const depsToRemove = [
-    ...(selectedRelease.removeDependencies || []),
-    ...(selectedRelease.removeDevDependencies || []),
+    ...cumulativeRemoveDependencies,
+    ...cumulativeRemoveDevDependencies,
   ].filter((dep) => dep in currentDependencies);
 
   if (depsToRemove.length > 0) {
@@ -892,22 +1022,49 @@ export async function upgradeNodeModules({
     });
   }
 
-  // Then install/upgrade dependencies
+  // Install/upgrade dependencies using exec() directly instead of cli-kit's
+  // installNodeModules(), which runs `<pm> install` and doesn't support adding
+  // specific packages with version specifiers (yarn/pnpm require `add`).
   const upgradeArgs = buildUpgradeCommandArgs({
     selectedRelease,
     currentDependencies,
     targetVersion,
+    cumulativeDependencies,
+    cumulativeDevDependencies,
   });
 
   if (upgradeArgs.length > 0) {
     tasks.push({
       title: `Upgrading dependencies`,
       task: async () => {
-        await installNodeModules({
-          directory: appPath,
-          packageManager: await getPackageManager(appPath),
-          args: upgradeArgs,
-        });
+        const packageManager = await getPackageManager(appPath);
+        const command =
+          packageManager === 'npm'
+            ? 'install'
+            : packageManager === 'yarn'
+              ? 'add'
+              : packageManager === 'pnpm'
+                ? 'add'
+                : packageManager === 'bun'
+                  ? 'install'
+                  : 'install'; // fallback to npm for 'unknown'
+        // npm v7+ strict peer dep resolution rejects installing packages
+        // that conflict with currently-installed versions, even when those
+        // old versions are being replaced in the same command. --legacy-peer-deps
+        // reverts to npm v6 behavior, which resolves correctly for upgrade
+        // scenarios where peer dep versions are changing. pnpm/yarn handle
+        // this without special flags.
+        const extraArgs =
+          packageManager === 'npm' || packageManager === 'unknown'
+            ? ['--legacy-peer-deps']
+            : [];
+        await exec(
+          resolvePackageManagerName(packageManager),
+          [command, ...extraArgs, ...upgradeArgs],
+          {
+            cwd: appPath,
+          },
+        );
       },
     });
   }
@@ -915,6 +1072,15 @@ export async function upgradeNodeModules({
   if (tasks.length > 0) {
     await renderTasks(tasks, {});
   }
+}
+
+/**
+ * Normalizes the package manager name, falling back to npm for 'unknown'.
+ */
+function resolvePackageManagerName(
+  packageManager: 'npm' | 'yarn' | 'pnpm' | 'unknown' | 'bun',
+): 'npm' | 'yarn' | 'pnpm' | 'bun' {
+  return packageManager === 'unknown' ? 'npm' : packageManager;
 }
 
 /**
@@ -942,10 +1108,19 @@ async function uninstallNodeModules({
             ? 'remove'
             : 'uninstall'; // fallback to npm for 'unknown'
 
-  const actualPackageManager =
-    packageManager === 'unknown' ? 'npm' : packageManager;
+  // npm v7+ runs full peer dep resolution during uninstall too, which can
+  // reject the operation when old and new peer dep ranges conflict. Mirror
+  // the --legacy-peer-deps flag used by installNodeModules for consistency.
+  const extraArgs =
+    packageManager === 'npm' || packageManager === 'unknown'
+      ? ['--legacy-peer-deps']
+      : [];
 
-  await exec(actualPackageManager, [command, ...args], {cwd: directory});
+  await exec(
+    resolvePackageManagerName(packageManager),
+    [command, ...extraArgs, ...args],
+    {cwd: directory},
+  );
 }
 
 /**

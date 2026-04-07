@@ -832,7 +832,7 @@
       "aliases": [],
       "args": {
         "routeName": {
-          "description": "The route to generate. One of home,page,cart,products,collections,policies,blogs,account,search,robots,sitemap,tokenlessApi,all.",
+          "description": "The route to generate. One of home,page,cart,products,collections,policies,blogs,account,search,robots,sitemap,all.",
           "name": "routeName",
           "options": [
             "home",
@@ -846,7 +846,6 @@
             "search",
             "robots",
             "sitemap",
-            "tokenlessApi",
             "all"
           ],
           "required": true
@@ -1676,5 +1675,5 @@
       ]
     }
   },
-  "version": "11.1.10"
+  "version": "11.1.12"
 }

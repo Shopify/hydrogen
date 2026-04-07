@@ -1,5 +1,35 @@
 # skeleton
 
+## 2026.1.3
+
+### Patch Changes
+
+- Improve screen reader experience for paginated product grids by hiding decorative arrow characters from assistive technology. ([#3557](https://github.com/Shopify/hydrogen/pull/3557)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Fix broken `aria-label` on territory code input in address form. The label was the raw developer string `"territoryCode"` instead of a human-readable `"Country code"`. ([#3607](https://github.com/Shopify/hydrogen/pull/3607)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Add aria-label to ProductPrice for improved screen reader accessibility ([#3558](https://github.com/Shopify/hydrogen/pull/3558)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Updated dependencies [[`108243003a7f36349a446478f4e8ab0cade3e13a`](https://github.com/Shopify/hydrogen/commit/108243003a7f36349a446478f4e8ab0cade3e13a)]:
+  - @shopify/hydrogen@2026.1.3
+
+## 2026.1.2
+
+### Patch Changes
+
+- Improve gift card accessibility in Skeleton template ([#3518](https://github.com/Shopify/hydrogen/pull/3518)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Updated shopify/cli dependencies for cli-hydrogen ([#3553](https://github.com/Shopify/hydrogen/pull/3553)) by [@andguy95](https://github.com/andguy95)
+
+- Updated loaders that used `customerAccount.handleAuthStatus()` to now await it. ([#3523](https://github.com/Shopify/hydrogen/pull/3523)) by [@fredericoo](https://github.com/fredericoo)
+
+  ### Migration
+
+  If you call `handleAuthStatus()` in your own loaders, update those callsites to use `await`.
+
+- Updated dependencies [[`16b0e7baca0dfd1fb330d12dac924c7593d169a8`](https://github.com/Shopify/hydrogen/commit/16b0e7baca0dfd1fb330d12dac924c7593d169a8), [`1c19b87782818dbdb4252754d2d44eb9a44fe50f`](https://github.com/Shopify/hydrogen/commit/1c19b87782818dbdb4252754d2d44eb9a44fe50f), [`029fa2d0e2297f67b37c650ba8e875ee5dee81b3`](https://github.com/Shopify/hydrogen/commit/029fa2d0e2297f67b37c650ba8e875ee5dee81b3)]:
+  - @shopify/hydrogen@2026.1.2
+
 ## 2026.1.1
 
 ### Patch Changes

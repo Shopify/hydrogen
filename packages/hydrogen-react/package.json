@@ -1,12 +1,9 @@
 {
   "name": "@shopify/hydrogen-react",
-  "version": "2026.1.1",
+  "version": "2026.1.2",
   "description": "React components, hooks, and utilities for creating custom Shopify storefronts",
   "homepage": "https://github.com/Shopify/hydrogen/tree/main/packages/hydrogen-react",
   "license": "MIT",
-  "engines": {
-    "node": "^22 || ^24"
-  },
   "publishConfig": {
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
@@ -99,9 +96,7 @@
   "types": "./dist/types/index.d.ts",
   "unpkg": "./dist/umd/hydrogen-react.prod.js",
   "jsdelivr": "./dist/umd/hydrogen-react.prod.js",
-  "sideEffects": [
-    "dist/*/node_modules/use-sync-external-store/shim/with-selector.*js"
-  ],
+  "sideEffects": false,
   "scripts": {
     "build-docs": "sh ./docs/build-docs.sh && pnpm run format",
     "clean-dist": "rimraf ./dist",
@@ -117,9 +112,9 @@
     "build:vite:node-prod": "vite build --ssr",
     "build:vite:umddev": "vite build --mode umdbuilddev",
     "build:vite:umdprod": "vite build --mode umdbuild",
-    "build:tsc:cjs": "cpy ./dist/types/index.d.ts ./dist/types/ --rename='index.d.cts' --flat",
+    "build:tsc:cjs": "cpy ./dist/types/index.d.ts ./dist/types/ --rename=index.d.cts --flat",
     "build:tsc:es": "tsc --emitDeclarationOnly --project tsconfig.typeoutput.json",
-    "copy-api-types": "cpy './src/storefront-api-types.d.ts' './src/customer-account-api-types.d.ts' ./dist/types/ --flat",
+    "copy-api-types": "cpy ./src/storefront-api-types.d.ts ./src/customer-account-api-types.d.ts ./dist/types/ --flat",
     "format": "prettier --write \"{src,docs}/**/*\" --ignore-unknown",
     "graphql-types": "graphql-codegen --config codegen.ts && pnpm run format",
     "test": "vitest run --coverage",
@@ -158,7 +153,7 @@
     "eslint-plugin-react-hooks": "5.1.0",
     "eslint-plugin-simple-import-sort": "12.1.1",
     "eslint-plugin-tsdoc": "0.2.14",
-    "happy-dom": "^20.0.0",
+    "happy-dom": "^20.8.9",
     "npm-run-all": "^4.1.5",
     "react": "catalog:",
     "react-dom": "catalog:",
@@ -176,12 +171,9 @@
   "dependencies": {
     "@google/model-viewer": "^4.0.0",
     "@xstate/fsm": "2.0.0",
-    "@xstate/react": "3.2.1",
     "ast-v8-to-istanbul": "^0.3.11",
     "graphql": "^16.10.0",
     "type-fest": "^4.33.0",
-    "use-isomorphic-layout-effect": "1.2.1",
-    "use-sync-external-store": "1.6.0",
     "worktop": "^0.7.3"
   },
   "repository": {

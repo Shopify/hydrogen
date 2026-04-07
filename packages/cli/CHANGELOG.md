@@ -1,5 +1,44 @@
 # @shopify/cli-hydrogen
 
+## 11.1.12
+
+### Patch Changes
+
+- Improve screen reader experience for paginated product grids by hiding decorative arrow characters from assistive technology. ([#3557](https://github.com/Shopify/hydrogen/pull/3557)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Fix `hydrogen dev` with `--port 0` when using `--customer-account-push`. Port 0 (OS-assigned) caused cloudflared to target `localhost:0` while Vite resolved to a concrete port internally. The port is now resolved upfront via `findPort` so both cloudflared and Vite bind to the same origin. ([#3532](https://github.com/Shopify/hydrogen/pull/3532)) by [@andguy95](https://github.com/andguy95)
+
+- Fix broken `aria-label` on territory code input in address form. The label was the raw developer string `"territoryCode"` instead of a human-readable `"Country code"`. ([#3607](https://github.com/Shopify/hydrogen/pull/3607)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Fix `hydrogen upgrade` failing with yarn and pnpm by using the correct package-specific install subcommand (`add` for yarn/pnpm, `install` for npm/bun) when upgrading dependencies ([#3462](https://github.com/Shopify/hydrogen/pull/3462)) by [@umxr](https://github.com/umxr)
+
+- Fixed `h2 upgrade` to correctly handle dependency removals when upgrading across multiple versions. Dependencies removed in intermediate releases are now properly removed even when jumping versions. ([#3527](https://github.com/Shopify/hydrogen/pull/3527)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Add aria-label to ProductPrice for improved screen reader accessibility ([#3558](https://github.com/Shopify/hydrogen/pull/3558)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Fix multi-version upgrades to accumulate intermediate dependency bumps across all versions between source and target; apply `--legacy-peer-deps` for npm to resolve ERESOLVE conflicts during upgrade ([#3507](https://github.com/Shopify/hydrogen/pull/3507)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Updated dependencies [[`577f48f82ef260cf0f7bb69b9b3846c05dc450b2`](https://github.com/Shopify/hydrogen/commit/577f48f82ef260cf0f7bb69b9b3846c05dc450b2)]:
+  - @shopify/mini-oxygen@4.0.2
+
+## 11.1.11
+
+### Patch Changes
+
+- Improve gift card accessibility in Skeleton template ([#3518](https://github.com/Shopify/hydrogen/pull/3518)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Updated shopify/cli dependencies for cli-hydrogen ([#3553](https://github.com/Shopify/hydrogen/pull/3553)) by [@andguy95](https://github.com/andguy95)
+
+- Updated the skeleton `robots.txt` defaults to remove disallow rules that are specific to Shopify themes and not part of a new Hydrogen app by default. This reduces confusion when reviewing or customizing robots rules in scaffolded projects. ([#3526](https://github.com/Shopify/hydrogen/pull/3526)) by [@fredericoo](https://github.com/fredericoo)
+
+- Fixed `--package-manager` flag being ignored when `--install-deps` was explicitly passed. Projects now correctly use the specified package manager for dependency installation. ([#3458](https://github.com/Shopify/hydrogen/pull/3458)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Updated loaders that used `customerAccount.handleAuthStatus()` to now await it. ([#3523](https://github.com/Shopify/hydrogen/pull/3523)) by [@fredericoo](https://github.com/fredericoo)
+
+  ### Migration
+
+  If you call `handleAuthStatus()` in your own loaders, update those callsites to use `await`.
+
 ## 11.1.10
 
 ### Patch Changes
