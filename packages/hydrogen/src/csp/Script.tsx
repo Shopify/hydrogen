@@ -14,10 +14,7 @@ interface HydrogenScriptProps {
 
 interface ScriptAttributes extends ScriptHTMLAttributes<HTMLScriptElement> {}
 
-/**
- * Use the Script component to add third-party scripts to your app. It automatically adds a nonce attribute from your content security policy.
- * @publicDocs
- */
+/** @publicDocs */
 export const Script = forwardRef<HTMLScriptElement, ScriptProps>(
   (props, ref) => {
     const {waitForHydration, src, ...rest} = props;

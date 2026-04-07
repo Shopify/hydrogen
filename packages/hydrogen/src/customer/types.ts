@@ -180,7 +180,7 @@ export type CustomerAccountOptions = {
   useCustomAuthDomain?: boolean;
 };
 
-/** Below are types meant for documentation only. Ensure it stay in sync with the type above. */
+// Below are types meant for documentation only. Ensure it stay in sync with the type above.
 
 /** @publicDocs */
 export type CustomerAccountForDocs = {

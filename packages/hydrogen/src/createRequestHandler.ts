@@ -118,9 +118,7 @@ export function createRequestHandler<Context = unknown>({
   };
 }
 
-/**
- * @publicDocs
- */
+/** @publicDocs */
 export type CreateRequestHandlerOptionsForDocs = {
   /** React Router's server build */
   build: ServerBuild;

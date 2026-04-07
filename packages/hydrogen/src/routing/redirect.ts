@@ -15,7 +15,15 @@ type StorefrontRedirect = {
   matchQueryParams?: boolean;
 };
 
-/** @publicDocs */
+/**
+ * Queries the Storefront API to see if there is any redirect
+ * created for the current route and performs it. Otherwise,
+ * it returns the response passed in the parameters. Useful for
+ * conditionally redirecting after a 404 response.
+ *
+ * @see {@link https://help.shopify.com/en/manual/online-store/menus-and-links/url-redirect Creating URL redirects in Shopify}
+ * @publicDocs
+ */
 export async function storefrontRedirect(
   options: StorefrontRedirect,
 ): Promise<Response> {

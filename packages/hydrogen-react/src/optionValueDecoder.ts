@@ -20,10 +20,7 @@ const V1_CONTROL_CHARS = {
   RANGE: '-',
 };
 
-/**
- * A function type that determines whether a given option value combination is present in an encoded variant field from the Storefront API.
- * @publicDocs
- */
+/** @publicDocs */
 export type IsOptionValueCombinationInEncodedVariant = (
   targetOptionValueCombination: number[],
   encodedVariantField: string,

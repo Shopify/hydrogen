@@ -19,7 +19,14 @@ import {
 } from './analytics-schema-custom-storefront-customer-tracking.js';
 import {getTrackingValues} from './tracking-utils.js';
 
-/** @publicDocs */
+/**
+ * Set user and session cookies and refresh the expiry time
+ * @param event - The analytics event.
+ * @param shopDomain - The Online Store domain to sent Shopify analytics under the same
+ *   top level domain.
+ * @publicDocs
+ */
+
 export function sendShopifyAnalytics(
   event: ShopifyAnalytics,
   shopDomain?: string,

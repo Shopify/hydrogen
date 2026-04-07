@@ -347,10 +347,7 @@ type CartFormProps = CartActionInputProps & CartFormCommonProps;
 
 const INPUT_NAME = 'cartFormInput';
 
-/**
- * A Remix/React Router form that removes the complexity of building cart functionality.
- * @publicDocs
- */
+/** @publicDocs */
 export function CartForm({
   children,
   action,
