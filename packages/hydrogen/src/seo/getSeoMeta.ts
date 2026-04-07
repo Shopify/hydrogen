@@ -10,10 +10,7 @@ import {MetaFunction} from 'react-router';
 
 export type GetSeoMetaReturn = ReturnType<MetaFunction>;
 
-/**
- * Generate a Remix meta array from one or more SEO configuration objects. Pass SEO configuration for the parent route(s) and the current route to preserve meta tags across routes.
- * @publicDocs
- */
+/** @publicDocs */
 type GetSeoMetaTypeForDocs = {
   /** `getSeoMeta` takes an arbitrary number of configuration object parameters. Values in each object are overwritten based on the object order. \`jsonLd\` properties are preserved between each configuration object. */
   seoInputs: SeoConfig[];

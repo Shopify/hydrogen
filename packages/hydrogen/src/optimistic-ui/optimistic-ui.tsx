@@ -1,9 +1,6 @@
 import {useFetchers} from 'react-router';
 
-/**
- * Gets the latest optimistic data with matching optimistic id from actions. Use `OptimisticInput` to add optimistic data to a form action.
- * @publicDocs
- */
+/** @publicDocs */
 export function useOptimisticData<T>(identifier: string) {
   const fetchers = useFetchers();
   const data: Record<string, unknown> = {};
@@ -39,10 +36,7 @@ export type OptimisticInputProps = {
   data: Record<string, unknown>;
 };
 
-/**
- * Creates a form input for optimistic UI updates. Use `useOptimisticData` to update the UI with the latest optimistic data from actions.
- * @publicDocs
- */
+/** @publicDocs */
 export function OptimisticInput({id, data}: OptimisticInputProps) {
   return (
     <>

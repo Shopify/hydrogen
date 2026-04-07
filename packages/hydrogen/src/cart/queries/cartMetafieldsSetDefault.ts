@@ -15,10 +15,7 @@ export type CartMetafieldsSetFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-/**
- * Creates a function that accepts an array of CartMetafieldsSetInput without `ownerId` and sets the metafields on a cart.
- * @publicDocs
- */
+/** @publicDocs */
 export function cartMetafieldsSetDefault(
   options: CartQueryOptions,
 ): CartMetafieldsSetFunction {

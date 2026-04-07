@@ -499,10 +499,7 @@ export const Analytics = {
 
 type DefaultCart = Promise<CartReturn | null> | CartReturn | null;
 
-/**
- * The analytics context value returned by the `useAnalytics` hook, providing access to cart state, tracking consent, and publish/subscribe methods.
- * @publicDocs
- */
+/** @publicDocs */
 export type AnalyticsContextValueForDoc<UserCart> = {
   /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
   canTrack?: () => boolean;

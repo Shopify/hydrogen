@@ -116,7 +116,10 @@ export function ShopifyProvider({
   );
 }
 
-/** @publicDocs */
+/**
+ * Provides access to the `shopifyConfig` prop of `<ShopifyProvider/>`. Must be a descendent of `<ShopifyProvider/>`.
+ * @publicDocs
+ */
 export function useShop(): ShopifyContextValue {
   const shopContext = useContext(ShopifyContext);
   if (!shopContext) {
@@ -149,7 +152,10 @@ export interface ShopifyProviderBase {
   sameDomainForStorefrontApi?: boolean;
 }
 
-/** @publicDocs */
+/**
+ * Shopify-specific values that are used in various Hydrogen React components and hooks.
+ * @publicDocs
+ */
 export interface ShopifyProviderProps extends ShopifyProviderBase {
   /** React children to render. */
   children?: ReactNode;

@@ -91,8 +91,5 @@ type ConnectionNodes = {
 export interface ConnectionGenericForDoc {
   connection?: ConnectionEdges | ConnectionNodes;
 }
-/**
- * The return type of the `flattenConnection` utility: a flat array of nodes extracted from a Storefront API connection object.
- * @publicDocs
- */
+/** @publicDocs */
 export type FlattenConnectionReturnForDoc = unknown[];
