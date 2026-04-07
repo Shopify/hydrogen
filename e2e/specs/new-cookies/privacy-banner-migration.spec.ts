@@ -126,8 +126,7 @@ test.describe('Privacy Banner - Session Migration', () => {
       ).toBe(originalSValue);
 
       // 10. Wait for analytics requests and verify they use original tracking values
-      // TODO: re-enable once perf-kit CDN loading is reliable in CI (#3649)
-      // await storefront.waitForPerfKit();
+      await storefront.waitForPerfKit();
       await storefront.waitForMonorailRequests();
 
       storefront.verifyMonorailRequests(
@@ -206,8 +205,7 @@ test.describe('Privacy Banner - Session Migration', () => {
       await storefront.expectNoAnalyticsCookies();
 
       // 10. Wait for perf-kit to load (it should still load for performance metrics)
-      // TODO: re-enable once perf-kit CDN loading is reliable in CI (#3649)
-      // await storefront.waitForPerfKit();
+      await storefront.waitForPerfKit();
 
       // 11. Wait and verify NO Monorail analytics requests are made
       await storefront.page.waitForTimeout(1500);
