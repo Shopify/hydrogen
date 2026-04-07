@@ -137,7 +137,7 @@ describe(`createStorefrontClient`, () => {
         'Shopify-Storefront-Private-Token': 'privateToken',
         'X-SDK-Variant': 'hydrogen-react',
         'X-SDK-Variant-Source': 'react',
-        'X-SDK-Version': '2026-04',
+        'X-SDK-Version': SFAPI_VERSION,
         'content-type': 'application/json',
       });
     });

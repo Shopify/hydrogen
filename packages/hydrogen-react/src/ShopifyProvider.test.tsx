@@ -7,6 +7,7 @@ import {
   type ShopifyProviderProps,
 } from './ShopifyProvider.js';
 import type {PartialDeep} from 'type-fest';
+import {SFAPI_VERSION} from './storefront-api-constants.js';
 
 const SHOPIFY_CONFIG: ShopifyProviderProps = {
   storeDomain: 'https://notashop.myshopify.com',
@@ -233,6 +234,6 @@ export function getShopifyConfig(
     languageIsoCode: config.languageIsoCode ?? 'EN',
     storeDomain: config.storeDomain ?? 'https://notashop.myshopify.io',
     storefrontToken: config.storefrontToken ?? 'abc123',
-    storefrontApiVersion: config.storefrontApiVersion ?? '2026-04',
+    storefrontApiVersion: config.storefrontApiVersion ?? SFAPI_VERSION,
   };
 }
