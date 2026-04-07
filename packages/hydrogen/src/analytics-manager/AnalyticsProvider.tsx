@@ -67,10 +67,7 @@ export type Consent = Partial<
   >
 > & {language?: LanguageCode}; // the privacyBanner SDKs refers to "language" as "locale" :(
 
-/**
- * Provides a context for tracking page views and cart events to send as analytics data to Shopify. This component is integrated with the Customer Privacy API for consent management.
- * @publicDocs
- */
+/** @publicDocs */
 export type AnalyticsProviderProps = {
   /** React children to render. */
   children?: ReactNode;
@@ -451,10 +448,7 @@ type ShopAnalyticsProps = {
   publicStorefrontId: string;
 };
 
-/**
- * A function that queries for shop required analytics data to be used in the Analytics.Provider component.
- * @publicDocs
- */
+/** @publicDocs */
 export async function getShopAnalytics({
   storefront,
   publicStorefrontId = '0',

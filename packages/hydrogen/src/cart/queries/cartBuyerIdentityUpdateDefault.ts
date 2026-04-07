@@ -17,10 +17,7 @@ export type CartBuyerIdentityUpdateFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-/**
- * Creates a function that accepts an object of CartBuyerIdentityInput and updates the buyer identity of a cart.
- * @publicDocs
- */
+/** @publicDocs */
 export function cartBuyerIdentityUpdateDefault(
   options: CartQueryOptions,
 ): CartBuyerIdentityUpdateFunction {

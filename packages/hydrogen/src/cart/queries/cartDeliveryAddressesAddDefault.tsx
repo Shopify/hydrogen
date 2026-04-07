@@ -17,28 +17,7 @@ export type CartDeliveryAddressesAddFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-/**
- * Adds delivery addresses to the cart.
- *
- * This function sends a mutation to the storefront API to add one or more delivery addresses to the cart.
- * It returns the result of the mutation, including any errors that occurred.
- *
- * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
- * @returns {CartDeliveryAddressAddFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
- *
- * @example
- * const addDeliveryAddresses = cartDeliveryAddressesAddDefault({ storefront, getCartId });
- * const result = await addDeliveryAddresses([
- *    {
- *      address1: '123 Main St',
- *      city: 'Anytown',
- *      countryCode: 'US'
- *      // other address fields...
- *    }
- *  ], { someOptionalParam: 'value' }
- * );
- * @publicDocs
- */
+/** @publicDocs */
 export function cartDeliveryAddressesAddDefault(
   options: CartQueryOptions,
 ): CartDeliveryAddressesAddFunction {

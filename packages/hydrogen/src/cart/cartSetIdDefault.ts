@@ -11,10 +11,7 @@ export type CookieOptions = {
   path?: string;
 };
 
-/**
- * Creates a function that returns a header with a Set-Cookie on the cart ID.
- * @publicDocs
- */
+/** @publicDocs */
 export const cartSetIdDefault = (cookieOptions?: CookieOptions) => {
   return (cartId: string) => {
     const headers = new Headers();

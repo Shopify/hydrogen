@@ -55,10 +55,7 @@ export type WithCache = {
   ) => Promise<{data: T | null; response: Response}>;
 };
 
-/**
- * Creates a utility function that caches data fetched from a loader or query.
- * @publicDocs
- */
+/** @publicDocs */
 export function createWithCache(
   cacheOptions: CreateWithCacheOptions,
 ): WithCache {
