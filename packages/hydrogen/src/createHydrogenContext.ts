@@ -104,6 +104,7 @@ export type HydrogenContextOptions<
   buyerIdentity?: CartBuyerIdentityInput;
 };
 
+/** @publicDocs */
 export interface HydrogenContext<
   TSession extends HydrogenSession = HydrogenSession,
   TCustomMethods extends CustomMethodsBase | undefined = {},

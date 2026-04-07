@@ -101,6 +101,7 @@ export function ProductPrice<
 }
 
 // This is only for documentation purposes, and it is not used in the code.
+/** @publicDocs */
 export interface ProductPricePropsForDocs<
   AsType extends React.ElementType = 'div',
 >

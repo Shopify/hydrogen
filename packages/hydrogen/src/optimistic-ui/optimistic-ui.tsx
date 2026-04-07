@@ -25,6 +25,7 @@ export function useOptimisticData<T>(identifier: string) {
   return data as T;
 }
 
+/** @publicDocs */
 export type OptimisticInputProps = {
   /**
    * A unique identifier for the optimistic input. Use the same identifier in `useOptimisticData`

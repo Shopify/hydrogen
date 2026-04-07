@@ -136,20 +136,7 @@ export type HydrogenCart = {
   addDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesAddDefault>;
   /**
    * Removes delivery addresses from the cart.
-   *
-   * This function sends a mutation to the storefront API to remove one or more delivery addresses from the cart.
-   * It returns the result of the mutation, including any errors that occurred.
-   *
-   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
-   * @returns {CartDeliveryAddressRemoveFunction} - A function that takes an array of address IDs and optional parameters, and returns the result of the API call.
-   *
-   * @example
-   * const result = await cart.removeDeliveryAddresses([
-   *   "gid://shopify/<objectName>/10079785100"
-   * ],
-   * { someOptionalParam: 'value' });
    */
-
   removeDeliveryAddresses: ReturnType<
     typeof cartDeliveryAddressesRemoveDefault
   >;
@@ -402,6 +389,10 @@ export type CartHandlerOptionsForDocs<
   buyerIdentity?: CartBuyerIdentityInput;
 };
 
+/**
+ * The handler returns the following default methods. Any [custom](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) or overwritten methods will also be available in the returned cart instance.
+ * @publicDocs
+ */
 export type HydrogenCartForDocs = {
   /**
    * Adds items to the cart.

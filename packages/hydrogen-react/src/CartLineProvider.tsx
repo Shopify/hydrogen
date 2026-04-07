@@ -14,6 +14,7 @@ export const CartLineContext = createContext<CartLinePartialDeep | null>(null);
 
 /**
  * The `useCartLine` hook provides access to the [CartLine object](https://shopify.dev/api/storefront/2026-04/objects/cartline) from the Storefront API. It must be a descendent of a `CartProvider` component.
+ * @publicDocs
  */
 export function useCartLine(): CartLinePartialDeep {
   const context = useContext(CartLineContext);
@@ -25,6 +26,7 @@ export function useCartLine(): CartLinePartialDeep {
   return context;
 }
 
+/** @publicDocs */
 type CartLineProviderProps = {
   /** Any `ReactNode` elements. */
   children: ReactNode;

@@ -17,23 +17,7 @@ export type CartDeliveryAddressesRemoveFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-/**
- * Removes delivery addresses from the cart.
- *
- * This function sends a mutation to the storefront API to remove one or more delivery addresses from the cart.
- * It returns the result of the mutation, including any errors that occurred.
- *
- * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
- * @returns {CartDeliveryAddressRemoveFunction} - A function that takes an array of address IDs and optional parameters, and returns the result of the API call.
- *
- * @example
- * const removeDeliveryAddresses = cartDeliveryAddressesRemoveDefault({ storefront, getCartId });
- * const result = await removeDeliveryAddresses([
- *   "gid://shopify/<objectName>/10079785100"
- * ],
- * { someOptionalParam: 'value' });
- * @publicDocs
- */
+/** @publicDocs */
 export function cartDeliveryAddressesRemoveDefault(
   options: CartQueryOptions,
 ): CartDeliveryAddressesRemoveFunction {

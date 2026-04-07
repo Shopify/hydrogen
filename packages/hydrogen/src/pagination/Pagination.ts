@@ -84,6 +84,7 @@ interface PaginationInfo<NodesType> {
   };
 }
 
+/** @publicDocs */
 type PaginationProps<NodesType> = {
   /** The response from `storefront.query` for a paginated request. Make sure the query is passed pagination variables and that the query has `pageInfo` with `hasPreviousPage`, `hasNextpage`, `startCursor`, and `endCursor` defined. */
   connection: Connection<NodesType>;

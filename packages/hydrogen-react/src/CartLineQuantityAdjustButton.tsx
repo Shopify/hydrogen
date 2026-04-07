@@ -4,6 +4,7 @@ import {useCartLine} from './CartLineProvider.js';
 import {BaseButton, type BaseButtonProps} from './BaseButton.js';
 import type {CartLineUpdateInput} from './storefront-api-types.js';
 
+/** @publicDocs */
 interface CartLineQuantityAdjustButtonBaseProps {
   /** The adjustment for a cart line's quantity. Valid values: `increase` (default), `decrease`, or `remove`. */
   adjust?: 'increase' | 'decrease' | 'remove';

@@ -3509,7 +3509,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartFormProps",
             "value": "CartActionInputProps & CartFormCommonProps",
-            "description": ""
+            "description": "",
+            "isPublicDocs": true
           },
           "CartActionInputProps": {
             "filePath": "src/cart/CartForm.tsx",
@@ -4046,11 +4047,7 @@
                 "filePath": "src/cart/CartForm.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "action",
-<<<<<<< HEAD
                 "value": "\"DeliveryAddressesReplace\"",
-=======
-                "value": "'DeliveryAddressesReplace'",
->>>>>>> d01e4dd9 (fix script for 1.0.1 gen docs upgrade)
                 "description": ""
               },
               {
@@ -4881,7 +4878,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "HydrogenCartForDocs",
             "value": "{\n  /**\n   * Adds items to the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  addLines?: CartLinesAddFunction;\n  /**\n   * Adds a delivery address to the cart.\n   */\n  addDeliveryAddresses?: CartDeliveryAddressesAddFunction;\n  /**\n   * Creates a new cart.\n   */\n  create?: CartCreateFunction;\n  /**\n   * Removes a custom field (metafield) from the cart.\n   */\n  deleteMetafield?: CartMetafieldDeleteFunction;\n  /**\n   * Retrieves the cart information.\n   */\n  get?: CartGetFunction;\n  /**\n   * Retrieves the unique identifier of the cart.\n   * By default, it gets the ID from the request cookie.\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * Removes a delivery address from the cart\n   */\n  removeDeliveryAddresses?: CartDeliveryAddressesRemoveFunction;\n  /**\n   * Removes items from the cart.\n   */\n  removeLines?: CartLinesRemoveFunction;\n  /**\n   * Sets the unique identifier of the cart.\n   * By default, it sets the ID in the header cookie.\n   */\n  setCartId?: (cartId: string) => Headers;\n  /**\n   * Adds extra information (metafields) to the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  setMetafields?: CartMetafieldsSetFunction;\n  /**\n   * Update cart delivery addresses.\n   */\n  updateDeliveryAddresses?: CartDeliveryAddressesUpdateFunction;\n  /**\n   * Replace all delivery addresses on the cart.\n   */\n  replaceDeliveryAddresses?: CartDeliveryAddressesReplaceFunction;\n  /**\n   * Updates additional information (attributes) in the cart.\n   */\n  updateAttributes?: CartAttributesUpdateFunction;\n  /**\n   * Updates the buyer's information in the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  updateBuyerIdentity?: CartBuyerIdentityUpdateFunction;\n  /**\n   * Updates discount codes in the cart.\n   */\n  updateDiscountCodes?: CartDiscountCodesUpdateFunction;\n  /**\n   * Updates gift card codes in the cart.\n   */\n  updateGiftCardCodes?: CartGiftCardCodesUpdateFunction;\n  /**\n   * Adds gift card codes to the cart without replacing existing ones.\n   */\n  addGiftCardCodes?: CartGiftCardCodesAddFunction;\n  /**\n   * Removes gift card codes from the cart.\n   */\n  removeGiftCardCodes?: CartGiftCardCodesRemoveFunction;\n  /**\n   * Updates items in the cart.\n   */\n  updateLines?: CartLinesUpdateFunction;\n  /**\n   * Updates the note in the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  updateNote?: CartNoteUpdateFunction;\n  /**\n   * Updates the selected delivery options in the cart.\n   * Only available for carts associated with a customer access token.\n   */\n  updateSelectedDeliveryOption?: CartSelectedDeliveryOptionsUpdateFunction;\n}",
-            "description": "",
+            "description": "The handler returns the following default methods. Any [custom](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) or overwritten methods will also be available in the returned cart instance.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/cart/createCartHandler.ts",
@@ -6757,6 +6755,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -6764,6 +6763,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -7765,6 +7767,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -7772,6 +7775,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -8773,6 +8779,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -8780,6 +8787,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -9793,6 +9803,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -9800,6 +9811,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -10458,35 +10472,23 @@
           "CartDeliveryAddressesRemoveDefaultGeneratedType": {
             "filePath": "src/cart/queries/cartDeliveryAddressesRemoveDefault.tsx",
             "name": "CartDeliveryAddressesRemoveDefaultGeneratedType",
-            "description": "Removes delivery addresses from the cart.\n\nThis function sends a mutation to the storefront API to remove one or more delivery addresses from the cart. It returns the result of the mutation, including any errors that occurred.",
+            "description": "",
             "isPublicDocs": true,
             "params": [
               {
                 "name": "options",
-                "description": "The options for the cart query, including the storefront API client and cart fragment.",
+                "description": "",
                 "value": "CartQueryOptions",
                 "filePath": "src/cart/queries/cartDeliveryAddressesRemoveDefault.tsx"
               }
             ],
             "returns": {
               "filePath": "src/cart/queries/cartDeliveryAddressesRemoveDefault.tsx",
-              "description": "- A function that takes an array of address IDs and optional parameters, and returns the result of the API call.",
+              "description": "",
               "name": "CartDeliveryAddressesRemoveFunction",
               "value": "CartDeliveryAddressesRemoveFunction"
             },
-            "value": "export function cartDeliveryAddressesRemoveDefault(\n  options: CartQueryOptions,\n): CartDeliveryAddressesRemoveFunction {\n  return async (\n    addressIds: Array<Scalars['ID']['input']> | string[],\n    optionalParams,\n  ) => {\n    const {cartDeliveryAddressesRemove, errors} =\n      await options.storefront.mutate<{\n        cartDeliveryAddressesRemove: CartQueryData;\n        errors: StorefrontApiErrors;\n      }>(CART_DELIVERY_ADDRESSES_REMOVE_MUTATION(options.cartFragment), {\n        variables: {\n          cartId: options.getCartId(),\n          addressIds,\n          ...optionalParams,\n        },\n      });\n\n    return formatAPIResult(cartDeliveryAddressesRemove, errors);\n  };\n}",
-            "examples": [
-              {
-                "title": "Example",
-                "description": "",
-                "tabs": [
-                  {
-                    "code": "const removeDeliveryAddresses = cartDeliveryAddressesRemoveDefault({ storefront, getCartId });\nconst result = await removeDeliveryAddresses([\n  \"gid://shopify/<objectName>/10079785100\"\n],\n{ someOptionalParam: 'value' });",
-                    "title": "Example"
-                  }
-                ]
-              }
-            ]
+            "value": "export function cartDeliveryAddressesRemoveDefault(\n  options: CartQueryOptions,\n): CartDeliveryAddressesRemoveFunction {\n  return async (\n    addressIds: Array<Scalars['ID']['input']> | string[],\n    optionalParams,\n  ) => {\n    const {cartDeliveryAddressesRemove, errors} =\n      await options.storefront.mutate<{\n        cartDeliveryAddressesRemove: CartQueryData;\n        errors: StorefrontApiErrors;\n      }>(CART_DELIVERY_ADDRESSES_REMOVE_MUTATION(options.cartFragment), {\n        variables: {\n          cartId: options.getCartId(),\n          addressIds,\n          ...optionalParams,\n        },\n      });\n\n    return formatAPIResult(cartDeliveryAddressesRemove, errors);\n  };\n}"
           },
           "CartQueryOptions": {
             "filePath": "src/cart/queries/cart-types.ts",
@@ -10806,6 +10808,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -10813,6 +10816,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -11479,34 +11485,23 @@
           "CartDeliveryAddressesReplaceDefaultGeneratedType": {
             "filePath": "src/cart/queries/cartDeliveryAddressesReplaceDefault.tsx",
             "name": "CartDeliveryAddressesReplaceDefaultGeneratedType",
-            "description": "Replaces all delivery addresses on the cart.\n\nThis function sends a mutation to the storefront API to replace all delivery addresses on the cart with the provided addresses. It returns the result of the mutation, including any errors that occurred.",
+            "description": "",
+            "isPublicDocs": true,
             "params": [
               {
                 "name": "options",
-                "description": "The options for the cart query, including the storefront API client and cart fragment.",
+                "description": "",
                 "value": "CartQueryOptions",
                 "filePath": "src/cart/queries/cartDeliveryAddressesReplaceDefault.tsx"
               }
             ],
             "returns": {
               "filePath": "src/cart/queries/cartDeliveryAddressesReplaceDefault.tsx",
-              "description": "- A function that takes an array of addresses and optional parameters, and returns the result of the API call.",
+              "description": "",
               "name": "CartDeliveryAddressesReplaceFunction",
               "value": "CartDeliveryAddressesReplaceFunction"
             },
-            "value": "export function cartDeliveryAddressesReplaceDefault(\n  options: CartQueryOptions,\n): CartDeliveryAddressesReplaceFunction {\n  return async (\n    addresses: Array<CartSelectableAddressInput>,\n    optionalParams,\n  ) => {\n    const {cartDeliveryAddressesReplace, errors} =\n      await options.storefront.mutate<{\n        cartDeliveryAddressesReplace: CartQueryData;\n        errors: StorefrontApiErrors;\n      }>(CART_DELIVERY_ADDRESSES_REPLACE_MUTATION(options.cartFragment), {\n        variables: {\n          cartId: options.getCartId(),\n          addresses,\n          ...optionalParams,\n        },\n      });\n\n    return formatAPIResult(cartDeliveryAddressesReplace, errors);\n  };\n}",
-            "examples": [
-              {
-                "title": "Example",
-                "description": "",
-                "tabs": [
-                  {
-                    "code": "const replaceDeliveryAddresses = cartDeliveryAddressesReplaceDefault({ storefront, getCartId });\nconst result = await replaceDeliveryAddresses([\n   {\n     address: {\n       deliveryAddress: {\n         address1: '123 Main St',\n         city: 'Anytown',\n         countryCode: 'US'\n       }\n     },\n     selected: true\n   }\n ], { someOptionalParam: 'value' }\n);",
-                    "title": "Example"
-                  }
-                ]
-              }
-            ]
+            "value": "export function cartDeliveryAddressesReplaceDefault(\n  options: CartQueryOptions,\n): CartDeliveryAddressesReplaceFunction {\n  return async (\n    addresses: Array<CartSelectableAddressInput>,\n    optionalParams,\n  ) => {\n    const {cartDeliveryAddressesReplace, errors} =\n      await options.storefront.mutate<{\n        cartDeliveryAddressesReplace: CartQueryData;\n        errors: StorefrontApiErrors;\n      }>(CART_DELIVERY_ADDRESSES_REPLACE_MUTATION(options.cartFragment), {\n        variables: {\n          cartId: options.getCartId(),\n          addresses,\n          ...optionalParams,\n        },\n      });\n\n    return formatAPIResult(cartDeliveryAddressesReplace, errors);\n  };\n}"
           },
           "CartQueryOptions": {
             "filePath": "src/cart/queries/cart-types.ts",
@@ -11826,6 +11821,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -11833,6 +11829,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -13817,7 +13816,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@18841",
+                "name": "__@toStringTag@18849",
                 "value": "string",
                 "description": ""
               },
@@ -13857,7 +13856,7 @@
             "filePath": "src/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n  getHeaders: () => Record<string, string>;\n  /**\n   * Checks if the request URL matches the Storefront API GraphQL endpoint.\n   */\n  isStorefrontApiUrl: (request: {url?: string}) => boolean;\n  /**\n   * Forwards the request to the Storefront API.\n   * It reads the API version from the request URL.\n   */\n  forward: (\n    request: Request,\n    options?: Pick<StorefrontCommonExtraParams, 'storefrontApiVersion'>,\n  ) => Promise<Response>;\n  /**\n   * Sets the collected subrequest headers in the response.\n   * Useful to forward the cookies and server-timing headers\n   * from server subrequests to the browser.\n   */\n  setCollectedSubrequestHeaders: (response: {headers: Headers}) => void;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n  getHeaders: () => Record<string, string>;\n  /**\n   * Checks if the request URL matches the Storefront API GraphQL endpoint.\n   */\n  isStorefrontApiUrl: (request: {url?: string}) => boolean;\n  /**\n   * Checks if the request URL matches the Storefront MCP endpoint.\n   */\n  isMcpUrl: (request: {url?: string}) => boolean;\n  /**\n   * Forwards the request to the Storefront API.\n   * It reads the API version from the request URL.\n   */\n  forward: (\n    request: Request,\n    options?: Pick<StorefrontCommonExtraParams, 'storefrontApiVersion'>,\n  ) => Promise<Response>;\n  /**\n   * Forwards the request to the Storefront MCP endpoint.\n   */\n  forwardMcp: (request: Request) => Promise<Response>;\n  /**\n   * Sets the collected subrequest headers in the response.\n   * Useful to forward the cookies and server-timing headers\n   * from server subrequests to the browser.\n   */\n  setCollectedSubrequestHeaders: (response: {headers: Headers}) => void;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -13902,6 +13901,13 @@
                 "name": "forward",
                 "value": "(request: Request, options?: Pick<StorefrontCommonExtraParams, \"storefrontApiVersion\">) => Promise<Response>",
                 "description": "Forwards the request to the Storefront API. It reads the API version from the request URL."
+              },
+              {
+                "filePath": "src/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "forwardMcp",
+                "value": "(request: Request) => Promise<Response>",
+                "description": "Forwards the request to the Storefront MCP endpoint."
               },
               {
                 "filePath": "src/storefront.ts",
@@ -13951,6 +13957,13 @@
                 "name": "i18n",
                 "value": "TI18n",
                 "description": ""
+              },
+              {
+                "filePath": "src/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "isMcpUrl",
+                "value": "(request: { url?: string; }) => boolean",
+                "description": "Checks if the request URL matches the Storefront MCP endpoint."
               },
               {
                 "filePath": "src/storefront.ts",
@@ -14798,6 +14811,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -14805,6 +14819,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -15806,6 +15823,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -15813,6 +15831,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -16437,34 +16458,23 @@
           "CartGiftCardCodesAddDefaultGeneratedType": {
             "filePath": "src/cart/queries/cartGiftCardCodesAddDefault.ts",
             "name": "CartGiftCardCodesAddDefaultGeneratedType",
-            "description": "Adds gift card codes to the cart without replacing existing ones.\n\nThis function sends a mutation to the Storefront API to add one or more gift card codes to the cart. Unlike `cartGiftCardCodesUpdate` which replaces all codes, this mutation appends new codes to existing ones.",
+            "description": "",
+            "isPublicDocs": true,
             "params": [
               {
                 "name": "options",
-                "description": "The options for the cart query, including the storefront API client and cart fragment.",
+                "description": "",
                 "value": "CartQueryOptions",
                 "filePath": "src/cart/queries/cartGiftCardCodesAddDefault.ts"
               }
             ],
             "returns": {
               "filePath": "src/cart/queries/cartGiftCardCodesAddDefault.ts",
-              "description": "- A function that takes an array of gift card codes and optional parameters, and returns the result of the API call.",
+              "description": "",
               "name": "CartGiftCardCodesAddFunction",
               "value": "CartGiftCardCodesAddFunction"
             },
-            "value": "export function cartGiftCardCodesAddDefault(\n  options: CartQueryOptions,\n): CartGiftCardCodesAddFunction {\n  return async (giftCardCodes, optionalParams) => {\n    const {cartGiftCardCodesAdd, errors} = await options.storefront.mutate<{\n      cartGiftCardCodesAdd: CartQueryData;\n      errors: StorefrontApiErrors;\n    }>(CART_GIFT_CARD_CODES_ADD_MUTATION(options.cartFragment), {\n      variables: {\n        cartId: options.getCartId(),\n        giftCardCodes,\n        ...optionalParams,\n      },\n    });\n    return formatAPIResult(cartGiftCardCodesAdd, errors);\n  };\n}",
-            "examples": [
-              {
-                "title": "Example",
-                "description": "",
-                "tabs": [
-                  {
-                    "code": "Add gift card codes\nconst addGiftCardCodes = cartGiftCardCodesAddDefault({ storefront, getCartId });\nawait addGiftCardCodes(['SUMMER2025', 'WELCOME10']);",
-                    "title": "Example"
-                  }
-                ]
-              }
-            ]
+            "value": "export function cartGiftCardCodesAddDefault(\n  options: CartQueryOptions,\n): CartGiftCardCodesAddFunction {\n  return async (giftCardCodes, optionalParams) => {\n    const {cartGiftCardCodesAdd, errors} = await options.storefront.mutate<{\n      cartGiftCardCodesAdd: CartQueryData;\n      errors: StorefrontApiErrors;\n    }>(CART_GIFT_CARD_CODES_ADD_MUTATION(options.cartFragment), {\n      variables: {\n        cartId: options.getCartId(),\n        giftCardCodes,\n        ...optionalParams,\n      },\n    });\n    return formatAPIResult(cartGiftCardCodesAdd, errors);\n  };\n}"
           },
           "CartQueryOptions": {
             "filePath": "src/cart/queries/cart-types.ts",
@@ -16782,7 +16792,7 @@
               {
                 "filePath": "src/utils/graphql.ts",
                 "syntaxKind": "GetAccessor",
-                "name": "__@toStringTag@18841",
+                "name": "__@toStringTag@18849",
                 "value": "string",
                 "description": ""
               },
@@ -16822,7 +16832,7 @@
             "filePath": "src/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n  getHeaders: () => Record<string, string>;\n  /**\n   * Checks if the request URL matches the Storefront API GraphQL endpoint.\n   */\n  isStorefrontApiUrl: (request: {url?: string}) => boolean;\n  /**\n   * Forwards the request to the Storefront API.\n   * It reads the API version from the request URL.\n   */\n  forward: (\n    request: Request,\n    options?: Pick<StorefrontCommonExtraParams, 'storefrontApiVersion'>,\n  ) => Promise<Response>;\n  /**\n   * Sets the collected subrequest headers in the response.\n   * Useful to forward the cookies and server-timing headers\n   * from server subrequests to the browser.\n   */\n  setCollectedSubrequestHeaders: (response: {headers: Headers}) => void;\n}",
+            "value": "{\n  query: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    query: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontQueries,\n      RawGqlString,\n      StorefrontCommonExtraParams & Pick<StorefrontQueryOptions, 'cache'>,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontQueries, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  mutate: <\n    OverrideReturnType extends any = never,\n    RawGqlString extends string = string,\n  >(\n    mutation: RawGqlString,\n    ...options: ClientVariablesInRestParams<\n      StorefrontMutations,\n      RawGqlString,\n      StorefrontCommonExtraParams,\n      AutoAddedVariableNames\n    >\n  ) => Promise<\n    ClientReturn<StorefrontMutations, RawGqlString, OverrideReturnType> &\n      StorefrontError\n  >;\n  cache?: Cache;\n  CacheNone: typeof CacheNone;\n  CacheLong: typeof CacheLong;\n  CacheShort: typeof CacheShort;\n  CacheCustom: typeof CacheCustom;\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  i18n: TI18n;\n  getHeaders: () => Record<string, string>;\n  /**\n   * Checks if the request URL matches the Storefront API GraphQL endpoint.\n   */\n  isStorefrontApiUrl: (request: {url?: string}) => boolean;\n  /**\n   * Checks if the request URL matches the Storefront MCP endpoint.\n   */\n  isMcpUrl: (request: {url?: string}) => boolean;\n  /**\n   * Forwards the request to the Storefront API.\n   * It reads the API version from the request URL.\n   */\n  forward: (\n    request: Request,\n    options?: Pick<StorefrontCommonExtraParams, 'storefrontApiVersion'>,\n  ) => Promise<Response>;\n  /**\n   * Forwards the request to the Storefront MCP endpoint.\n   */\n  forwardMcp: (request: Request) => Promise<Response>;\n  /**\n   * Sets the collected subrequest headers in the response.\n   * Useful to forward the cookies and server-timing headers\n   * from server subrequests to the browser.\n   */\n  setCollectedSubrequestHeaders: (response: {headers: Headers}) => void;\n}",
             "description": "Interface to interact with the Storefront API.",
             "members": [
               {
@@ -16867,6 +16877,13 @@
                 "name": "forward",
                 "value": "(request: Request, options?: Pick<StorefrontCommonExtraParams, \"storefrontApiVersion\">) => Promise<Response>",
                 "description": "Forwards the request to the Storefront API. It reads the API version from the request URL."
+              },
+              {
+                "filePath": "src/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "forwardMcp",
+                "value": "(request: Request) => Promise<Response>",
+                "description": "Forwards the request to the Storefront MCP endpoint."
               },
               {
                 "filePath": "src/storefront.ts",
@@ -16916,6 +16933,13 @@
                 "name": "i18n",
                 "value": "TI18n",
                 "description": ""
+              },
+              {
+                "filePath": "src/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "isMcpUrl",
+                "value": "(request: { url?: string; }) => boolean",
+                "description": "Checks if the request URL matches the Storefront MCP endpoint."
               },
               {
                 "filePath": "src/storefront.ts",
@@ -17804,6 +17828,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -17811,6 +17836,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -19784,6 +19812,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -19791,6 +19820,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -20785,6 +20817,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -20792,6 +20825,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -21793,6 +21829,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -21800,6 +21837,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -22794,6 +22834,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -22801,6 +22842,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -23802,6 +23846,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -23809,6 +23854,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -24803,6 +24851,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -24810,6 +24859,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -25833,6 +25885,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -25840,6 +25893,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -26834,6 +26890,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -26841,6 +26898,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -27707,6 +27767,7 @@
             "filePath": "src/createHydrogenContext.ts",
             "name": "HydrogenContext",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/createHydrogenContext.ts",
@@ -27773,7 +27834,7 @@
             "filePath": "src/cart/createCartHandler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "HydrogenCart",
-            "value": "{\n  get: ReturnType<typeof cartGetDefault>;\n  getCartId: () => string | undefined;\n  setCartId: (cartId: string) => Headers;\n  create: ReturnType<typeof cartCreateDefault>;\n  addLines: ReturnType<typeof cartLinesAddDefault>;\n  updateLines: ReturnType<typeof cartLinesUpdateDefault>;\n  removeLines: ReturnType<typeof cartLinesRemoveDefault>;\n  updateDiscountCodes: ReturnType<typeof cartDiscountCodesUpdateDefault>;\n  updateGiftCardCodes: ReturnType<typeof cartGiftCardCodesUpdateDefault>;\n  addGiftCardCodes: ReturnType<typeof cartGiftCardCodesAddDefault>;\n  removeGiftCardCodes: ReturnType<typeof cartGiftCardCodesRemoveDefault>;\n  updateBuyerIdentity: ReturnType<typeof cartBuyerIdentityUpdateDefault>;\n  updateNote: ReturnType<typeof cartNoteUpdateDefault>;\n  updateSelectedDeliveryOption: ReturnType<\n    typeof cartSelectedDeliveryOptionsUpdateDefault\n  >;\n  updateAttributes: ReturnType<typeof cartAttributesUpdateDefault>;\n  setMetafields: ReturnType<typeof cartMetafieldsSetDefault>;\n  deleteMetafield: ReturnType<typeof cartMetafieldDeleteDefault>;\n  /**\n   * Adds delivery addresses to the cart.\n   *\n   * This function sends a mutation to the storefront API to add one or more delivery addresses to the cart.\n   * It returns the result of the mutation, including any errors that occurred.\n   *\n   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.\n   * @returns {ReturnType<typeof cartDeliveryAddressesAddDefault>} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.\n   *\n   * @example\n   * const result = await cart.addDeliveryAddresses(\n   *   [\n   *     {\n   *       address1: '123 Main St',\n   *       city: 'Anytown',\n   *       countryCode: 'US'\n   *     }\n   *   ],\n   *   { someOptionalParam: 'value' }\n   * );\n   */\n  addDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesAddDefault>;\n  /**\n   * Removes delivery addresses from the cart.\n   *\n   * This function sends a mutation to the storefront API to remove one or more delivery addresses from the cart.\n   * It returns the result of the mutation, including any errors that occurred.\n   *\n   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.\n   * @returns {CartDeliveryAddressRemoveFunction} - A function that takes an array of address IDs and optional parameters, and returns the result of the API call.\n   *\n   * @example\n   * const result = await cart.removeDeliveryAddresses([\n   *   \"gid://shopify/<objectName>/10079785100\"\n   * ],\n   * { someOptionalParam: 'value' });\n   */\n\n  removeDeliveryAddresses: ReturnType<\n    typeof cartDeliveryAddressesRemoveDefault\n  >;\n  /**\n  * Updates delivery addresses in the cart.\n  *\n  * This function sends a mutation to the storefront API to update one or more delivery addresses in the cart.\n  * It returns the result of the mutation, including any errors that occurred.\n  *\n  * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.\n  * @returns {CartDeliveryAddressUpdateFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.\n  *\n  * const result = await cart.updateDeliveryAddresses([\n      {\n        \"address\": {\n          \"copyFromCustomerAddressId\": \"gid://shopify/<objectName>/10079785100\",\n          \"deliveryAddress\": {\n            \"address1\": \"<your-address1>\",\n            \"address2\": \"<your-address2>\",\n            \"city\": \"<your-city>\",\n            \"company\": \"<your-company>\",\n            \"countryCode\": \"AC\",\n            \"firstName\": \"<your-firstName>\",\n            \"lastName\": \"<your-lastName>\",\n            \"phone\": \"<your-phone>\",\n            \"provinceCode\": \"<your-provinceCode>\",\n            \"zip\": \"<your-zip>\"\n          }\n        },\n        \"id\": \"gid://shopify/<objectName>/10079785100\",\n        \"oneTimeUse\": true,\n        \"selected\": true,\n        \"validationStrategy\": \"COUNTRY_CODE_ONLY\"\n      }\n    ],{ someOptionalParam: 'value' });\n  */\n  updateDeliveryAddresses: ReturnType<\n    typeof cartDeliveryAddressesUpdateDefault\n  >;\n  /**\n   * Replaces all delivery addresses on the cart.\n   *\n   * This function sends a mutation to the storefront API to replace all delivery addresses on the cart\n   * with the provided addresses. It returns the result of the mutation, including any errors that occurred.\n   *\n   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.\n   * @returns {CartDeliveryAddressesReplaceFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.\n   *\n   * @example\n   * const result = await cart.replaceDeliveryAddresses([\n   *   {\n   *     address: {\n   *       deliveryAddress: {\n   *         address1: '123 Main St',\n   *         city: 'Anytown',\n   *         countryCode: 'US'\n   *       }\n   *     },\n   *     selected: true\n   *   }\n   * ], { someOptionalParam: 'value' });\n   */\n  replaceDeliveryAddresses: ReturnType<\n    typeof cartDeliveryAddressesReplaceDefault\n  >;\n}",
+            "value": "{\n  get: ReturnType<typeof cartGetDefault>;\n  getCartId: () => string | undefined;\n  setCartId: (cartId: string) => Headers;\n  create: ReturnType<typeof cartCreateDefault>;\n  addLines: ReturnType<typeof cartLinesAddDefault>;\n  updateLines: ReturnType<typeof cartLinesUpdateDefault>;\n  removeLines: ReturnType<typeof cartLinesRemoveDefault>;\n  updateDiscountCodes: ReturnType<typeof cartDiscountCodesUpdateDefault>;\n  updateGiftCardCodes: ReturnType<typeof cartGiftCardCodesUpdateDefault>;\n  addGiftCardCodes: ReturnType<typeof cartGiftCardCodesAddDefault>;\n  removeGiftCardCodes: ReturnType<typeof cartGiftCardCodesRemoveDefault>;\n  updateBuyerIdentity: ReturnType<typeof cartBuyerIdentityUpdateDefault>;\n  updateNote: ReturnType<typeof cartNoteUpdateDefault>;\n  updateSelectedDeliveryOption: ReturnType<\n    typeof cartSelectedDeliveryOptionsUpdateDefault\n  >;\n  updateAttributes: ReturnType<typeof cartAttributesUpdateDefault>;\n  setMetafields: ReturnType<typeof cartMetafieldsSetDefault>;\n  deleteMetafield: ReturnType<typeof cartMetafieldDeleteDefault>;\n  /**\n   * Adds delivery addresses to the cart.\n   *\n   * This function sends a mutation to the storefront API to add one or more delivery addresses to the cart.\n   * It returns the result of the mutation, including any errors that occurred.\n   *\n   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.\n   * @returns {ReturnType<typeof cartDeliveryAddressesAddDefault>} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.\n   *\n   * @example\n   * const result = await cart.addDeliveryAddresses(\n   *   [\n   *     {\n   *       address1: '123 Main St',\n   *       city: 'Anytown',\n   *       countryCode: 'US'\n   *     }\n   *   ],\n   *   { someOptionalParam: 'value' }\n   * );\n   */\n  addDeliveryAddresses: ReturnType<typeof cartDeliveryAddressesAddDefault>;\n  /**\n   * Removes delivery addresses from the cart.\n   */\n  removeDeliveryAddresses: ReturnType<\n    typeof cartDeliveryAddressesRemoveDefault\n  >;\n  /**\n  * Updates delivery addresses in the cart.\n  *\n  * This function sends a mutation to the storefront API to update one or more delivery addresses in the cart.\n  * It returns the result of the mutation, including any errors that occurred.\n  *\n  * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.\n  * @returns {CartDeliveryAddressUpdateFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.\n  *\n  * const result = await cart.updateDeliveryAddresses([\n      {\n        \"address\": {\n          \"copyFromCustomerAddressId\": \"gid://shopify/<objectName>/10079785100\",\n          \"deliveryAddress\": {\n            \"address1\": \"<your-address1>\",\n            \"address2\": \"<your-address2>\",\n            \"city\": \"<your-city>\",\n            \"company\": \"<your-company>\",\n            \"countryCode\": \"AC\",\n            \"firstName\": \"<your-firstName>\",\n            \"lastName\": \"<your-lastName>\",\n            \"phone\": \"<your-phone>\",\n            \"provinceCode\": \"<your-provinceCode>\",\n            \"zip\": \"<your-zip>\"\n          }\n        },\n        \"id\": \"gid://shopify/<objectName>/10079785100\",\n        \"oneTimeUse\": true,\n        \"selected\": true,\n        \"validationStrategy\": \"COUNTRY_CODE_ONLY\"\n      }\n    ],{ someOptionalParam: 'value' });\n  */\n  updateDeliveryAddresses: ReturnType<\n    typeof cartDeliveryAddressesUpdateDefault\n  >;\n  /**\n   * Replaces all delivery addresses on the cart.\n   *\n   * This function sends a mutation to the storefront API to replace all delivery addresses on the cart\n   * with the provided addresses. It returns the result of the mutation, including any errors that occurred.\n   *\n   * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.\n   * @returns {CartDeliveryAddressesReplaceFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.\n   *\n   * @example\n   * const result = await cart.replaceDeliveryAddresses([\n   *   {\n   *     address: {\n   *       deliveryAddress: {\n   *         address1: '123 Main St',\n   *         city: 'Anytown',\n   *         countryCode: 'US'\n   *       }\n   *     },\n   *     selected: true\n   *   }\n   * ], { someOptionalParam: 'value' });\n   */\n  replaceDeliveryAddresses: ReturnType<\n    typeof cartDeliveryAddressesReplaceDefault\n  >;\n}",
             "description": "",
             "members": [
               {
@@ -27842,19 +27903,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "removeDeliveryAddresses",
                 "value": "ReturnType<\n    typeof cartDeliveryAddressesRemoveDefault\n  >",
-                "description": "Removes delivery addresses from the cart.\n\nThis function sends a mutation to the storefront API to remove one or more delivery addresses from the cart. It returns the result of the mutation, including any errors that occurred.",
-                "examples": [
-                  {
-                    "title": "Example",
-                    "description": "",
-                    "tabs": [
-                      {
-                        "code": "const result = await cart.removeDeliveryAddresses([\n  \"gid://shopify/<objectName>/10079785100\"\n],\n{ someOptionalParam: 'value' });",
-                        "title": "Example"
-                      }
-                    ]
-                  }
-                ]
+                "description": "Removes delivery addresses from the cart."
               },
               {
                 "filePath": "src/cart/createCartHandler.ts",
@@ -28247,6 +28296,7 @@
                 "syntaxKind": "GetAccessor",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "name": "__@toStringTag@488",
 =======
                 "name": "__@toStringTag@18833",
@@ -28254,6 +28304,9 @@
 =======
                 "name": "__@toStringTag@18841",
 >>>>>>> f2e90569 (initial gen docs v1 set up)
+=======
+                "name": "__@toStringTag@18849",
+>>>>>>> 4403f022 (match descriptions to prod)
                 "value": "string",
                 "description": ""
               },
@@ -28737,7 +28790,7 @@
             "description": "",
 =======
             "value": "{\n  /** React Router's server build */\n  build: ServerBuild;\n  /** React Router's mode */\n  mode?: string;\n  /**\n   * Function to provide the load context for each request.\n   * It must contain Hydrogen's storefront client instance\n   * for other Hydrogen utilities to work properly.\n   */\n  getLoadContext?: (request: Request) => Promise<unknown> | unknown;\n  /**\n   * Whether to include the `powered-by` header in responses.\n   * @default true\n   */\n  poweredByHeader?: boolean;\n  /**\n   * Collect tracking information from subrequests such as cookies\n   * and forward them to the browser. Disable this if you are not\n   * using Hydrogen's built-in analytics.\n   * @default true\n   */\n  collectTrackingInformation?: boolean;\n  /**\n   * Whether to proxy standard routes such as `/api/.../graphql.json` (Storefront API).\n   * You can disable this if you are handling these routes yourself. Ensure that\n   * the proxy works if you rely on Hydrogen's built-in behaviors such as analytics.\n   * @default true\n   */\n  proxyStandardRoutes?: boolean;\n}",
-            "description": "Creates a request handler for Hydrogen apps. It wraps React Router's request handler and adds Hydrogen-specific functionality such as proxying Storefront API requests and collecting tracking information.",
+            "description": "",
             "isPublicDocs": true,
 >>>>>>> d01e4dd9 (fix script for 1.0.1 gen docs upgrade)
             "members": [
@@ -28923,6 +28976,7 @@
             "name": "CreateStorefrontClientForDocs",
             "value": "{\n  storefront?: StorefrontForDoc<TI18n>;\n}",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/storefront.ts",
@@ -29377,7 +29431,7 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ScriptProps",
             "value": "HydrogenScriptProps & ScriptAttributes",
-            "description": "Props for the Script component, which adds third-party scripts with automatic nonce support from the content security policy.",
+            "description": "",
             "isPublicDocs": true
           },
           "HydrogenScriptProps": {
@@ -32428,7 +32482,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerAccountForDocs",
             "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login?: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus?: () => Promise<void>;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl?: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.\n   *\n   * @param options.postLogoutRedirectUri - The url to redirect customer to after logout, should be a relative URL. This url will need to included in Customer Account API's application setup for logout URI. The default value is current app origin, which is automatically setup in admin when using `--customer-account-push` flag with dev.\n   * @param options.headers - These will be passed along to the logout redirect. You can use these to set/clear cookies on logout, like the cart.\n   * @param options.keepSession - If true, custom data in the session will not be cleared on logout.\n   * */\n  logout?: (options?: LogoutOptions) => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
-            "description": "Below are types meant for documentation only. Ensure it stay in sync with the type above.",
+            "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/customer/types.ts",
@@ -32703,6 +32758,7 @@
             "name": "OptimisticInputProps",
             "value": "{\n  /**\n   * A unique identifier for the optimistic input. Use the same identifier in `useOptimisticData`\n   * to retrieve the optimistic data from actions.\n   */\n  id: string;\n  /**\n   * The data to be stored in the optimistic input. Use for creating an optimistic successful state\n   * of this form action.\n   */\n  data: Record<string, unknown>;\n}",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/optimistic-ui/optimistic-ui.tsx",
@@ -32823,6 +32879,7 @@
             "name": "PaginationProps",
             "value": "{\n  /** The response from `storefront.query` for a paginated request. Make sure the query is passed pagination variables and that the query has `pageInfo` with `hasPreviousPage`, `hasNextpage`, `startCursor`, and `endCursor` defined. */\n  connection: Connection<NodesType>;\n  /** A render prop that includes pagination data and helpers. */\n  children: PaginationRenderProp<NodesType>;\n  /** A namespace for the pagination component to avoid URL param conflicts when using multiple `Pagination` components on a single page. */\n  namespace?: string;\n}",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/pagination/Pagination.ts",
@@ -33067,6 +33124,7 @@
             "name": "VariantSelectorProps",
             "value": "{\n  /** The product handle for all of the variants */\n  handle: string;\n  /** Product options from the [Storefront API](/docs/api/storefront/2026-01/objects/ProductOption). Make sure both `name` and `values` are a part of your query. */\n  options: Array<PartialProductOption> | undefined;\n  /** Product variants from the [Storefront API](/docs/api/storefront/2026-01/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */\n  variants?:\n    | PartialDeep<ProductVariantConnection>\n    | Array<PartialDeep<ProductVariant>>;\n  /** By default all products are under /products. Use this prop to provide a custom path. */\n  productPath?: string;\n  /** Should the VariantSelector wait to update until after the browser navigates to a variant. */\n  waitForNavigation?: boolean;\n  /** An optional selected variant to use for the initial state if no URL parameters are set */\n  selectedVariant?: Maybe<PartialDeep<ProductVariant>>;\n  children: ({option}: {option: VariantOption}) => ReactNode;\n}",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/product/VariantSelector.ts",
