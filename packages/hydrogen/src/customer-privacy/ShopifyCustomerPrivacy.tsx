@@ -169,13 +169,6 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
   const initialTrackingValues = useMemo(getTrackingValues, [cookiesReady]);
   const {revalidate} = useRevalidator();
 
-  // Enable backend consent mode so the Customer Privacy API uses
-  // server-set cookies via the SF API proxy instead of the legacy
-  // _tracking_consent JS cookie.
-  window.Shopify ||= {} as Window['Shopify'];
-  window.Shopify.customerPrivacy ||= {};
-  window.Shopify.customerPrivacy.backendConsentEnabled = true;
-
   // Load the Shopify customer privacy API with or without the privacy banner
   // NOTE: We no longer use the status because we need `ready` to be not when the script is loaded
   // but instead when both `privacyBanner` (optional) and customerPrivacy are loaded in the window
@@ -364,8 +357,8 @@ export function useCustomerPrivacy(props: CustomerPrivacyApiProps) {
 
           // Keep backendConsentEnabled readable between CDN's window.Shopify = {}
           // reset and its window.Shopify.customerPrivacy = <full API> assignment.
-          // This stub mirrors the render-phase pre-population at lines 175–177; if
-          // that assignment moves or is removed, this stub must be updated in tandem.
+          // The CDN reads this flag before assigning the full API, so the stub
+          // must be present when the CDN executes.
           customCustomerPrivacy = {
             backendConsentEnabled: true,
           } as unknown as CustomerPrivacy;

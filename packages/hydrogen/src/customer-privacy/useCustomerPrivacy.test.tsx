@@ -177,7 +177,7 @@ describe(`useCustomerPrivacy`, () => {
     });
   });
 
-  it('sets backendConsentEnabled on window.Shopify.customerPrivacy', () => {
+  it('installs backendConsentEnabled stub when CDN resets window.Shopify', () => {
     renderHook(() =>
       useCustomerPrivacy({
         checkoutDomain: 'checkout.shopify.com',
@@ -185,6 +185,13 @@ describe(`useCustomerPrivacy`, () => {
       }),
     );
 
+    // Simulate the CDN's conditional assignment: window.Shopify = window.Shopify ? window.Shopify : {}
+    // With no pre-populated window.Shopify, CDN assigns an empty object through the outer setter.
+    // @ts-ignore
+    global.window.Shopify = {};
+
+    // The outer setter should have installed the stub with backendConsentEnabled = true so
+    // the CDN reads the flag before it assigns the full API.
     expect(window.Shopify).toBeDefined();
     expect(window.Shopify.customerPrivacy).toBeDefined();
     expect((window.Shopify.customerPrivacy as any).backendConsentEnabled).toBe(
