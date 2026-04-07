@@ -22,10 +22,7 @@ type ModelViewerProps = Omit<
 > &
   ModelViewerBaseProps;
 
-/**
- * The `ModelViewer` component renders a 3D model (with the `model-viewer` custom element) for the Storefront API's [Model3d object](https://shopify.dev/api/storefront/reference/products/model3d). The `model-viewer` custom element is lazily downloaded through a dynamically-injected `<script type='module'>` tag when the `<ModelViewer />` component is rendered. ModelViewer is using version `1.21.1` of the `@google/model-viewer` library.
- * @publicDocs
- */
+/** @publicDocs */
 export type ModelViewerBaseProps = {
   /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2026-04/objects/model3d). */
   data: PartialDeep<Model3d, {recurseIntoArrays: true}>;

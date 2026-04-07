@@ -33,10 +33,7 @@ type UseShopifyCookiesOptions = CoreShopifyCookiesOptions & {
   ignoreDeprecatedCookies?: boolean;
 };
 
-/**
- * Manages Shopify cookies. If `hasUserConsent` option is false, deprecated cookies will be removed. Returns `true` when cookies are ready.
- * @publicDocs
- */
+/** @publicDocs */
 export function useShopifyCookies(options?: UseShopifyCookiesOptions): boolean {
   const {
     hasUserConsent,

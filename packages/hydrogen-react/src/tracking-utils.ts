@@ -18,10 +18,7 @@ export const cachedTrackingValues: {
   current: null | TrackingValues;
 } = {current: null};
 
-/**
- * Returns an object containing `uniqueToken`, `visitToken`, and `consent` values.
- * @publicDocs
- */
+/** @publicDocs */
 export function getTrackingValues(): TrackingValues {
   // Overall behavior: Tracking values are returned in Server-Timing headers from
   // Storefront API responses, and we want to find and return these tracking values.

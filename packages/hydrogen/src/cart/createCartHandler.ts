@@ -386,10 +386,7 @@ export type CartHandlerOptionsForDocs<
   buyerIdentity?: CartBuyerIdentityInput;
 };
 
-/**
- * The handler returns the following default methods. Any [custom](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) or overwritten methods will also be available in the returned cart instance.
- * @publicDocs
- */
+/** @publicDocs */
 export type HydrogenCartForDocs = {
   /**
    * Adds items to the cart.

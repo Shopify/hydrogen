@@ -13,10 +13,7 @@ import type {PartialDeep, Simplify} from 'type-fest';
 import {flattenConnection} from './flatten-connection.js';
 import {RootASTNode as RichTextRootASTNode} from './RichText.types.js';
 
-/**
- * Use the `ParsedMetafields` type as the returned type of `parseMetafield(metafield)`
- * @publicDocs
- */
+/** @publicDocs */
 export function parseMetafield<ReturnGeneric>(
   metafield: PartialDeep<MetafieldBaseType, {recurseIntoArrays: true}>,
 ): ReturnGeneric {
