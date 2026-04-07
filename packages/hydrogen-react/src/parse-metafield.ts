@@ -14,7 +14,13 @@ import {flattenConnection} from './flatten-connection.js';
 import {RootASTNode as RichTextRootASTNode} from './RichText.types.js';
 
 /**
- * Use the `ParsedMetafields` type as the returned type of `parseMetafield(metafield)`
+ * A function that uses `metafield.type` to parse the Metafield's `value` or `reference` or `references` (depending on the `metafield.type`) and places the result in `metafield.parsedValue`
+ *
+ * TypeScript developers can use the type `ParsedMetafields` from this package to get the returned object's type correct. For example:
+ *
+ * ```
+ * parseMetafield<ParsedMetafields['boolean']>({type: 'boolean', value: 'false'}
+ * ```
  * @publicDocs
  */
 export function parseMetafield<ReturnGeneric>(
