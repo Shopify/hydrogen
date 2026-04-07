@@ -107,7 +107,7 @@ declare global {
   interface Window {
     privacyBanner: PrivacyBanner;
     Shopify: {
-      customerPrivacy: Partial<CustomerPrivacy> & {
+      customerPrivacy?: Partial<CustomerPrivacy> & {
         backendConsentEnabled?: boolean;
       };
     };

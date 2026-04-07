@@ -282,7 +282,7 @@ function register(key: string) {
 function shopifyCanTrack(): boolean {
   try {
     return (
-      window.Shopify.customerPrivacy.analyticsProcessingAllowed?.() ?? false
+      window.Shopify.customerPrivacy?.analyticsProcessingAllowed?.() ?? false
     );
   } catch (e) {}
   return false;

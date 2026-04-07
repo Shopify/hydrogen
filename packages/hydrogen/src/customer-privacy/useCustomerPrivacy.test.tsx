@@ -57,6 +57,7 @@ describe(`useCustomerPrivacy`, () => {
     head.innerHTML = '';
     body.innerHTML = '';
     document.querySelectorAll('script').forEach((node) => node.remove());
+    delete (global.window as any).Shopify;
   });
 
   it('By default, loads just the customerPrivacy script', () => {
@@ -187,7 +188,6 @@ describe(`useCustomerPrivacy`, () => {
 
     // Simulate the CDN's conditional assignment: window.Shopify = window.Shopify ? window.Shopify : {}
     // With no pre-populated window.Shopify, CDN assigns an empty object through the outer setter.
-    // @ts-ignore
     global.window.Shopify = {};
 
     // The outer setter should have installed the stub with backendConsentEnabled = true so
