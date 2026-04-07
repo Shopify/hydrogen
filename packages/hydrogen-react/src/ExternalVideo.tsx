@@ -2,10 +2,7 @@ import type {ExternalVideo as ExternalVideoType} from './storefront-api-types.js
 import type {Entries, PartialDeep} from 'type-fest';
 import {forwardRef, IframeHTMLAttributes} from 'react';
 
-/**
- * Takes in the same props as a native `<iframe>` element, except for `src`.
- * @publicDocs
- */
+/** @publicDocs */
 export interface ExternalVideoBaseProps {
   /**
    * An object with fields that correspond to the Storefront API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).

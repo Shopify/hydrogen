@@ -59,7 +59,6 @@ export function hexTime(): string {
 }
 
 /**
- * If the Shopify cookies doesn't exist, this method will return empty string for each missing cookie.
  * @deprecated Use getTrackingValues instead.
  * @publicDocs
  */

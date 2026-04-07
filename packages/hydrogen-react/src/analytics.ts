@@ -19,10 +19,7 @@ import {
 } from './analytics-schema-custom-storefront-customer-tracking.js';
 import {getTrackingValues} from './tracking-utils.js';
 
-/**
- * If `event.payload.hasUserConsent` is false, no analytics event will happen.
- * @publicDocs
- */
+/** @publicDocs */
 export function sendShopifyAnalytics(
   event: ShopifyAnalytics,
   shopDomain?: string,
@@ -133,10 +130,7 @@ function sendToShopify(
   }
 }
 
-/**
- * If executed on server, this method will return empty string for each field.
- * @publicDocs
- */
+/** @publicDocs */
 export function getClientBrowserParameters(): ClientBrowserParameters {
   if (errorIfServer('getClientBrowserParameters')) {
     return {

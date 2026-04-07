@@ -35,10 +35,7 @@ import {useShop} from './ShopifyProvider.js';
 
 export const CartContext = createContext<CartWithActions | null>(null);
 
-/**
- * `useCart` hook must be a descendent of a `CartProvider` component.
- * @publicDocs
- */
+/** @publicDocs */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type UseCartDocs = () => CartWithActionsDocs;
 
