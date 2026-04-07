@@ -48,6 +48,7 @@ type Crop = 'center' | 'top' | 'bottom' | 'left' | 'right';
 export type HydrogenImageProps = React.ComponentPropsWithRef<'img'> &
   HydrogenImageBaseProps;
 
+/** @publicDocs */
 type HydrogenImageBaseProps = {
   /** The aspect ratio of the image, in the format of `width/height`.
    *

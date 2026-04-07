@@ -781,6 +781,7 @@ export function formatAPIResult<T>(
   };
 }
 
+/** @publicDocs */
 export type CreateStorefrontClientForDocs<TI18n extends I18nBase> = {
   storefront?: StorefrontForDoc<TI18n>;
 };

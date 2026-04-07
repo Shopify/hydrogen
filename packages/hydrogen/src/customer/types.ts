@@ -182,6 +182,7 @@ export type CustomerAccountOptions = {
 
 /** Below are types meant for documentation only. Ensure it stay in sync with the type above. */
 
+/** @publicDocs */
 export type CustomerAccountForDocs = {
   /** Start the OAuth login flow. This function should be called and returned from a Remix action.
    * It redirects the customer to a Shopify login domain. It also defined the final path the customer

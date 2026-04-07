@@ -35,6 +35,10 @@ import {useShop} from './ShopifyProvider.js';
 
 export const CartContext = createContext<CartWithActions | null>(null);
 
+/**
+ * `useCart` hook must be a descendent of a `CartProvider` component.
+ * @publicDocs
+ */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type UseCartDocs = () => CartWithActionsDocs;
 
@@ -51,6 +55,7 @@ export function useCart(): CartWithActions {
   return context;
 }
 
+/** @publicDocs */
 type CartProviderProps = {
   /** Any `ReactNode` elements. */
   children: React.ReactNode;

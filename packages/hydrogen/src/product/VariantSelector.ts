@@ -43,6 +43,7 @@ export type VariantOptionValue = {
  * and [useSelectedOptionInUrlParam](https://shopify.dev/docs/api/hydrogen/latest/utilities/useselectedoptioninurlparam)
  * For a full implementation see the Skeleton template [routes/product.$handle.tsx](https://github.com/Shopify/hydrogen/blob/main/templates/skeleton/app/routes/products.%24handle.tsx).
  */
+/** @publicDocs */
 type VariantSelectorProps = {
   /** The product handle for all of the variants */
   handle: string;

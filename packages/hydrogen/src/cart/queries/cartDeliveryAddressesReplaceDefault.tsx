@@ -17,31 +17,7 @@ export type CartDeliveryAddressesReplaceFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-/**
- * Replaces all delivery addresses on the cart.
- *
- * This function sends a mutation to the storefront API to replace all delivery addresses on the cart
- * with the provided addresses. It returns the result of the mutation, including any errors that occurred.
- *
- * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
- * @returns {CartDeliveryAddressesReplaceFunction} - A function that takes an array of addresses and optional parameters, and returns the result of the API call.
- *
- * @example
- * const replaceDeliveryAddresses = cartDeliveryAddressesReplaceDefault({ storefront, getCartId });
- * const result = await replaceDeliveryAddresses([
- *    {
- *      address: {
- *        deliveryAddress: {
- *          address1: '123 Main St',
- *          city: 'Anytown',
- *          countryCode: 'US'
- *        }
- *      },
- *      selected: true
- *    }
- *  ], { someOptionalParam: 'value' }
- * );
- */
+/** @publicDocs */
 export function cartDeliveryAddressesReplaceDefault(
   options: CartQueryOptions,
 ): CartDeliveryAddressesReplaceFunction {

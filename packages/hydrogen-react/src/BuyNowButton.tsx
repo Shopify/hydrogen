@@ -77,6 +77,7 @@ export function BuyNowButton<AsType extends React.ElementType = 'button'>(
 }
 
 // This is only for documentation purposes, and it is not used in the code.
+/** @publicDocs */
 export interface BuyNowButtonPropsForDocs<
   AsType extends React.ElementType = 'button',
 >

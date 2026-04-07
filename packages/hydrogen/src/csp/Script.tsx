@@ -3,7 +3,6 @@ import {useNonce} from './csp';
 import {useLoadScript} from '@shopify/hydrogen-react';
 
 /**
- * Props for the Script component, which adds third-party scripts with automatic nonce support from the content security policy.
  * @publicDocs
  */
 type ScriptProps = HydrogenScriptProps & ScriptAttributes;

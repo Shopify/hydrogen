@@ -16,19 +16,7 @@ export type CartGiftCardCodesAddFunction = (
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryDataReturn>;
 
-/**
- * Adds gift card codes to the cart without replacing existing ones.
- *
- * This function sends a mutation to the Storefront API to add one or more gift card codes to the cart.
- * Unlike `cartGiftCardCodesUpdate` which replaces all codes, this mutation appends new codes to existing ones.
- *
- * @param {CartQueryOptions} options - The options for the cart query, including the storefront API client and cart fragment.
- * @returns {CartGiftCardCodesAddFunction} - A function that takes an array of gift card codes and optional parameters, and returns the result of the API call.
- *
- * @example Add gift card codes
- * const addGiftCardCodes = cartGiftCardCodesAddDefault({ storefront, getCartId });
- * await addGiftCardCodes(['SUMMER2025', 'WELCOME10']);
- */
+/** @publicDocs */
 export function cartGiftCardCodesAddDefault(
   options: CartQueryOptions,
 ): CartGiftCardCodesAddFunction {
