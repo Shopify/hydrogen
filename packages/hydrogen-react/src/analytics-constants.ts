@@ -1,3 +1,7 @@
+/**
+ * Analytics event names accepted by Shopify analytics.
+ * @publicDocs
+ */
 export const AnalyticsEventName = {
   PAGE_VIEW: 'PAGE_VIEW',
   ADD_TO_CART: 'ADD_TO_CART',
@@ -7,6 +11,10 @@ export const AnalyticsEventName = {
   SEARCH_VIEW: 'SEARCH_VIEW',
 } as const;
 
+/**
+ * Analytics page type values accepted by Shopify analytics.
+ * @publicDocs
+ */
 export const AnalyticsPageType: AnalyticsPageType = {
   article: 'article',
   blog: 'blog',
@@ -32,6 +40,10 @@ export const AnalyticsPageType: AnalyticsPageType = {
   search: 'search',
 } as const;
 
+/**
+ * Analytics sales channel values accepted by Shopify analytics.
+ * @publicDocs
+ */
 export const ShopifySalesChannel: ShopifySalesChannel = {
   hydrogen: 'hydrogen',
   headless: 'headless',

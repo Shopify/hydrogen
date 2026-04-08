@@ -137,7 +137,7 @@ function sendToShopify(
 }
 
 /**
- * Gathers client browser values commonly used for analytics.
+ * If executed on server, this method will return empty string for each field.
  * @publicDocs
  */
 export function getClientBrowserParameters(): ClientBrowserParameters {
