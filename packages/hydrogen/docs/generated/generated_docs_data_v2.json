@@ -554,7 +554,7 @@
         {
           "filePath": "src/utils/graphql.ts",
           "syntaxKind": "GetAccessor",
-          "name": "__@toStringTag@218394",
+          "name": "__@toStringTag@109539",
           "value": "string",
           "description": ""
         },
@@ -9547,7 +9547,7 @@
     "../hydrogen-react/src/ExternalVideo.tsx": {
       "filePath": "../hydrogen-react/src/ExternalVideo.tsx",
       "name": "ExternalVideoBaseProps",
-      "description": "The `ExternalVideo` component renders an embedded video for the Storefront API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).",
+      "description": "Takes in the same props as a native `<iframe>` element, except for `src`.",
       "isPublicDocs": true,
       "members": [
         {
@@ -13633,7 +13633,7 @@
     "../hydrogen-react/src/analytics.ts": {
       "filePath": "../hydrogen-react/src/analytics.ts",
       "name": "GetClientBrowserParametersGeneratedType",
-      "description": "Gathers client browser values commonly used for analytics.",
+      "description": "If executed on server, this method will return empty string for each field.",
       "isPublicDocs": true,
       "params": [],
       "returns": {
