@@ -14,9 +14,9 @@ test.describe('Collections', () => {
 
       await expect(page.getByRole('heading', {level: 1})).toBeVisible();
 
-      // Products should render in the grid
-      const productLinks = page.locator('.products-grid .product-item');
-      await expect(productLinks.first()).toBeVisible();
+      // Products should render (each product item has an h4 title)
+      const productItems = page.getByRole('heading', {level: 4});
+      await expect(productItems.first()).toBeVisible();
     });
   });
 
@@ -69,8 +69,8 @@ test.describe('Collections', () => {
       await page.goto(COLLECTION_URL);
 
       // The store should have at least one filter configured.
-      // Filter groups are rendered as headings inside .product-filter-group.
-      const filterGroup = page.locator('.product-filter-group');
+      // Each filter group renders an <h3> heading with the filter label.
+      const filterGroup = page.getByRole('heading', {level: 3});
       await expect(filterGroup.first()).toBeVisible();
     });
 
@@ -78,7 +78,9 @@ test.describe('Collections', () => {
       await page.goto(COLLECTION_URL);
 
       // Click the first available filter option
-      const filterButton = page.locator('.product-filter-option').first();
+      const filterButton = page
+        .getByRole('button', {name: /products$/i})
+        .first();
       await expect(filterButton).toBeVisible();
       await filterButton.click();
 
@@ -96,7 +98,9 @@ test.describe('Collections', () => {
       await expect(clearButton).not.toBeVisible();
 
       // Apply a filter
-      const filterButton = page.locator('.product-filter-option').first();
+      const filterButton = page
+        .getByRole('button', {name: /products$/i})
+        .first();
       await filterButton.click();
 
       await expect(clearButton).toBeVisible();
@@ -108,7 +112,9 @@ test.describe('Collections', () => {
       await page.goto(COLLECTION_URL);
 
       // Apply a filter first
-      const filterButton = page.locator('.product-filter-option').first();
+      const filterButton = page
+        .getByRole('button', {name: /products$/i})
+        .first();
       await filterButton.click();
       await expect(page).toHaveURL(/filter\./);
 
@@ -124,7 +130,9 @@ test.describe('Collections', () => {
     test('sets aria-pressed on active filter buttons', async ({page}) => {
       await page.goto(COLLECTION_URL);
 
-      const filterButton = page.locator('.product-filter-option').first();
+      const filterButton = page
+        .getByRole('button', {name: /products$/i})
+        .first();
       await expect(filterButton).toHaveAttribute('aria-pressed', 'false');
 
       await filterButton.click();
@@ -138,7 +146,9 @@ test.describe('Collections', () => {
       await page.goto(COLLECTION_URL);
 
       // Apply a filter
-      const filterButton = page.locator('.product-filter-option').first();
+      const filterButton = page
+        .getByRole('button', {name: /products$/i})
+        .first();
       await filterButton.click();
       await expect(page).toHaveURL(/filter\./);
 
@@ -155,7 +165,9 @@ test.describe('Collections', () => {
       await page.goto(`${COLLECTION_URL}?sort_by=PRICE_LOW_TO_HIGH`);
 
       // Apply a filter
-      const filterButton = page.locator('.product-filter-option').first();
+      const filterButton = page
+        .getByRole('button', {name: /products$/i})
+        .first();
       await filterButton.click();
 
       // Both should be in the URL

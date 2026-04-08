@@ -69,14 +69,16 @@ test.describe('Search', () => {
     test('displays product filters when results exist', async ({page}) => {
       await page.goto(`/search?q=${SEARCH_TERM}`);
 
-      const filterGroup = page.locator('.product-filter-group');
+      const filterGroup = page.getByRole('heading', {level: 3});
       await expect(filterGroup.first()).toBeVisible();
     });
 
     test('applies a filter and updates the URL', async ({page}) => {
       await page.goto(`/search?q=${SEARCH_TERM}`);
 
-      const filterButton = page.locator('.product-filter-option').first();
+      const filterButton = page
+        .getByRole('button', {name: /products$/i})
+        .first();
       await expect(filterButton).toBeVisible();
       await filterButton.click();
 
@@ -89,7 +91,9 @@ test.describe('Search', () => {
       await page.goto(`/search?q=${SEARCH_TERM}`);
 
       // Apply a filter
-      const filterButton = page.locator('.product-filter-option').first();
+      const filterButton = page
+        .getByRole('button', {name: /products$/i})
+        .first();
       await filterButton.click();
       await expect(page).toHaveURL(/filter\./);
 
@@ -118,12 +122,9 @@ test.describe('Search', () => {
       // Only test article links if the store has articles
       if (await articlesSection.isVisible()) {
         const articleLink = page
-          .locator('.search-results-item')
-          .filter({
-            has: page.locator('a[href*="/blogs/"]'),
-          })
-          .first()
-          .getByRole('link');
+          .getByRole('link')
+          .and(page.locator('[href*="/blogs/"]'))
+          .first();
 
         if (await articleLink.isVisible()) {
           const href = await articleLink.getAttribute('href');
