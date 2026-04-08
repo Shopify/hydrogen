@@ -145,7 +145,7 @@ if (!opts.skipChangesets) {
   if (opts.dryRun) {
     console.log('  [DRY RUN] Would run: pnpm exec changeset version');
   } else {
-    execSync('pnpm exec changeset version', {stdio: 'inherit'});
+    execSync('pnpm exec @changesets/cli version', {stdio: 'inherit'});
   }
 } else {
   console.log('\n⏭️  Skipping changeset version');
