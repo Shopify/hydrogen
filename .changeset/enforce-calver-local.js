@@ -143,7 +143,7 @@ CALVER_PACKAGES.forEach((pkgName) => {
 if (!opts.skipChangesets) {
   console.log('\n🦋 Running changeset version...');
   if (opts.dryRun) {
-    console.log('  [DRY RUN] Would run: pnpm exec changeset version');
+    console.log('  [DRY RUN] Would run: pnpm exec @changesets/cli version');
   } else {
     execSync('pnpm exec @changesets/cli version', {stdio: 'inherit'});
   }
