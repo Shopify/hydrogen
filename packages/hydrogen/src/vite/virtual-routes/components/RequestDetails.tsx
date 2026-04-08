@@ -2,7 +2,7 @@ import {useState, useRef, useEffect} from 'react';
 import {type ServerEvents} from '../lib/useDebugNetworkServer.js';
 import {Link} from 'react-router';
 import {IconClose} from './IconClose.jsx';
-import {useResizeObserver} from './useResizeObserver.js';
+import {useResizeObserver} from './useResizeObserver.jsx';
 
 const TABS: Record<number, string> = {
   1: 'General',
