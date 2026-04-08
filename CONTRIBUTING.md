@@ -11,9 +11,9 @@ Run the following commands to get started working on Hydrogen.
 | Command                                         | Description                                   |
 | ----------------------------------------------- | --------------------------------------------- |
 | `git clone git@github.com:Shopify/hydrogen.git` | Clones the repo to your local computer        |
-| `npm install`                                   | Installs the dependencies with `npm`          |
-| `npm run dev`                                   | Runs the `dev` command in all packages        |
-| `npm run build`                                 | `build`s packages for production distribution |
+| `pnpm install`                                  | Installs the dependencies with `pnpm`         |
+| `ppnpm run dev`                                  | Runs the `dev` command in all packages        |
+| `pnpm run build`                                | `build`s packages for production distribution |
 
 ### Shopify Contributors
 
@@ -46,7 +46,7 @@ Hydrogen is a monorepo built with [Turborepo](https://turbo.build/) and consists
 - `packages/cli`: A plugin for the [Shopify CLI](https://github.com/Shopify/cli) to provide specific commands for working on Hydrogen storefronts.
 - `templates`: Full working implementations of Hydrogen storefronts. Used for scaffolding new starter Hydrogen apps, testing, and feature development.
 
-Running `npm run dev` at the root of the monorepo is the most common way to develop in Hydrogen. With this task running, each package will be rebuilt when files change. In a different terminal, change directory to any project inside `templates` and serve with `npm run dev`. The preview URL will be printed in the terminal.
+Running `pnpm run dev` at the root of the monorepo is the most common way to develop in Hydrogen. With this task running, each package will be rebuilt when files change. In a different terminal, change directory to any project inside `templates` and serve with `pnpm run dev`. The preview URL will be printed in the terminal.
 
 The `Readme.md` files in the directories of individual packages and templates contain more specific information for developing in that workspace.
 
@@ -56,9 +56,9 @@ The Hydrogen monorepo provides commands for linting and formatting, and uses [Hu
 
 | Command             | Description                               |
 | ------------------- | ----------------------------------------- |
-| `npm run typecheck` | Checks source-code for invalid TypeScript |
-| `npm run lint`      | Lints the code with ESLint                |
-| `npm run format`    | Formats the code with prettier            |
+| `pnpm run typecheck` | Checks source-code for invalid TypeScript |
+| `pnpm run lint`      | Lints the code with ESLint                |
+| `pnpm run format`    | Formats the code with prettier            |
 
 ## Naming conventions
 
@@ -85,7 +85,7 @@ If you are contributing a user-facing or noteworthy change to Hydrogen that shou
 
 | Command                 | Description             |
 | ----------------------- | ----------------------- |
-| `npm run changeset add` | Add a changeset locally |
+| `pnpm run changeset add` | Add a changeset locally |
 
 Follow the prompts to select which package(s) are affected by your change, and whether the change is a major, minor or patch change. This will create a file in the `.changesets` directory of the repo. This change should be committed and included with your PR.
 
@@ -103,8 +103,8 @@ Hydrogen tests are run using [vitest](https://vitest.dev). You can run the tests
 
 | Command              | Description                                             |
 | -------------------- | ------------------------------------------------------- |
-| `npm run test`       | Run the tests once                                      |
-| `npm run test:watch` | Run the tests once and re-run them when files are saved |
+| `pnpm run test`       | Run the tests once                                      |
+| `pnpm run test:watch` | Run the tests once and re-run them when files are saved |
 
 ### Debugging tests in Github Actions
 
@@ -136,7 +136,7 @@ In both cases, the reference documentation is stored in the Hydrogen repo in `*.
 ### Generate the docs
 
 1. From the command line, `cd` to either `packages/hydrogen` or `packages/hydrogen-react`.
-1. Run `npm run build-docs` (view [build script](https://github.com/Shopify/hydrogen/blob/-/packages/hydrogen-react/docs/build-docs.sh))
+1. Run `pnpm run build-docs` (view [build script](https://github.com/Shopify/hydrogen/blob/-/packages/hydrogen-react/docs/build-docs.sh))
 1. The script compiles and formats either one or both JSON files:
    - `packages/{PACKAGE}/docs/generated/generated_docs_data.json`
    - `packages/{PACKAGE}/docs/generated/generated_static_pages.json`
@@ -175,7 +175,7 @@ Consider how to provide the best developer experience when using this component 
 
 ## Secrets
 
-We use the ejson file `secrets.ejson` to store all our secrets. You can add new secrets to this file and they will be automatically encrypted when you commit the changes. Secrets can also be manually encrypted by running `npm run encrypt`. The public key (which is inside the `secrets.ejson` file) is used to encrypt secrets.
+We use the ejson file `secrets.ejson` to store all our secrets. You can add new secrets to this file and they will be automatically encrypted when you commit the changes. Secrets can also be manually encrypted by running `pnpm run encrypt`. The public key (which is inside the `secrets.ejson` file) is used to encrypt secrets.
 
 Secrets can only be decrypted if you have the private key. If you are new to the Shopify Hydrogen team, ask one of the other team members to send you a hush link with the private key.
 
