@@ -701,7 +701,7 @@ describe('validateReadmeExists', () => {
     expect(result.errors[0]).toMatchObject({
       validator: 'validateReadmeExists',
       message: expect.stringContaining(
-        'Run: npm run cookbook render nonexistent-recipe',
+        'Run: pnpm run cookbook render nonexistent-recipe',
       ),
     });
   });
@@ -735,7 +735,7 @@ describe('validateLlmPromptExists', () => {
     expect(result.errors[0]).toMatchObject({
       validator: 'validateLlmPromptExists',
       message: expect.stringContaining(
-        'Run: npm run cookbook render nonexistent-recipe',
+        'Run: pnpm run cookbook render nonexistent-recipe',
       ),
     });
   });

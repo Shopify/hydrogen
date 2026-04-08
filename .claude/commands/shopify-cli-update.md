@@ -227,7 +227,7 @@ EOF
 
    a. **Decrypt webhook URL**
       ```bash
-      npm run decrypt
+      pnpm run decrypt
       ```
       - If this fails, abort and notify user
       - The webhook URL is stored in `secrets.ejson` as `slack_cli_release_request_webhook_url`

@@ -1,23 +1,23 @@
 # Automated Playwright End-to-End Test Suite
 
 ## 1. Introduction / Overview
-Hydrogen’s skeleton template currently relies on manual smoke-testing to catch regressions. Missed issues have reached production, forcing lengthy post-hoc debugging and `git bisect` sessions. This project introduces an automated Playwright test suite that PR authors, reviewers, and CI pipelines can execute locally (`npm run e2e`) and on GitHub Actions. The first iteration delivers a fast smoke test against the skeleton template and a single scaffolded project; later iterations will cover every permutation of the `npm create @shopify/hydrogen` options and all available recipes.
+Hydrogen’s skeleton template currently relies on manual smoke-testing to catch regressions. Missed issues have reached production, forcing lengthy post-hoc debugging and `git bisect` sessions. This project introduces an automated Playwright test suite that PR authors, reviewers, and CI pipelines can execute locally (`pnpm run e2e`) and on GitHub Actions. The first iteration delivers a fast smoke test against the skeleton template and a single scaffolded project; later iterations will cover every permutation of the `npm create @shopify/hydrogen` options and all available recipes.
 
 ## 2. Goals
 1. Eliminate regressions that previously escaped manual review.
-2. Provide a single command (`npm run e2e`) that passes locally on macOS/Linux and in CI.
+2. Provide a single command (`pnpm run e2e`) that passes locally on macOS/Linux and in CI.
 3. Integrate the suite with GitHub Actions so failures block merges.
 4. Keep the “basic smoke” subset under **60 s** and the full matrix under **20 min**.
 5. Maintain **<1 %** flake rate across 100 sequential runs.
 
 ## 3. User Stories
-* **PR Author**: I can run `npm run e2e` locally to verify my changes did not break critical storefront flows.
+* **PR Author**: I can run `pnpm run e2e` locally to verify my changes did not break critical storefront flows.
 * **Reviewer**: CI executes the same suite and surfaces failures directly in the pull request, so I don’t need to test manually.
 * **Maintainer**: Failures provide readable output plus screenshots/videos/logs, enabling quick diagnosis.
 * **Future Contributor**: Clear setup docs let me onboard and run the suite without friction.
 
 ## 4. Functional Requirements
-1. `npm run e2e` spins up the dev server for the target project and executes Playwright tests.
+1. `pnpm run e2e` spins up the dev server for the target project and executes Playwright tests.
 2. A **Smoke Test Pack** (≤60 s) must:
    1. Run against the repository’s existing skeleton template without scaffolding a new project.
    2. Navigate to `/` and assert the main hero image, product grid, and “Add to Cart” buttons are present with no client/server errors.
@@ -39,11 +39,11 @@ Hydrogen’s skeleton template currently relies on manual smoke-testing to catch
 
 ## 5. Non-Goals / Out of Scope
 * Validating checkout, payment, discount codes, gift cards, or third-party integrations.
-* Testing production bundles (`npm run build && npm run preview`).
+* Testing production bundles (`pnpm run build && pnpm run preview`).
 * Mobile-viewport coverage (can be added later).
 * Performance benchmarking.
 * Recipes are **deferred** to a future phase—they are **out of scope** for this iteration.
-* Testing production bundles (`npm run build && npm run preview`
+* Testing production bundles (`pnpm run build && pnpm run preview`
 
 ## 6. Design Considerations (Optional)
 * **Playwright Test Structure**: Place tests under `e2e/`, separate “smoke” vs “matrix” folders.

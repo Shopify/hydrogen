@@ -56,7 +56,7 @@ Per [Playwright best practices](https://playwright.dev/docs/best-practices#make-
 test.describe('Quantity Management', () => {
   test.beforeEach(async ({storefront}) => {
     await storefront.goto('/');
-    await storefront.navigateToFirstProduct();
+    await storefront.navigateToInStockProduct();
     await storefront.addToCart();
   });
 
@@ -70,7 +70,7 @@ test.describe('Quantity Management', () => {
 // ACCEPTABLE: Duplicate simple 1-2 line setups when it improves clarity
 test('adds item to empty cart', async ({storefront}) => {
   await storefront.goto('/');
-  await storefront.navigateToFirstProduct();
+  await storefront.navigateToInStockProduct();
   await storefront.addToCart();
 
   await expect(storefront.getCartLineItems()).toHaveCount(1);
@@ -79,7 +79,7 @@ test('adds item to empty cart', async ({storefront}) => {
 // AVOID: Repeating 3+ lines in every test
 test('increases quantity', async ({storefront}) => {
   await storefront.goto('/'); // Repeated
-  await storefront.navigateToFirstProduct(); // Repeated
+  await storefront.navigateToInStockProduct(); // Repeated
   await storefront.addToCart(); // Repeated
   // Use beforeEach instead
 });
@@ -256,10 +256,10 @@ The Playwright config does not specify a headed mode by default, so tests run he
 
 ```bash
 # CORRECT: Run tests (headless by default)
-npx playwright test --project=skeleton
+pnpm exec playwright test --project=skeleton
 
 # AVOID: Running with headed browser
-npx playwright test --project=skeleton --headed  # Don't do this
+pnpm exec playwright test --project=skeleton --headed  # Don't do this
 ```
 
 If you need to debug visually, use Playwright's trace viewer or UI mode temporarily, but never commit headed configuration.
@@ -315,22 +315,22 @@ getCartLineItems() {
 ### Running Locally
 
 **Prerequisites:**
-- Shopify CLI authenticated: `cd templates/skeleton && npx shopify auth login`
-- Skeleton linked to benchmark store: `cd templates/skeleton && npx shopify hydrogen link`
+- Shopify CLI authenticated: `cd templates/skeleton && pnpm exec shopify auth login`
+- Skeleton linked to benchmark store: `cd templates/skeleton && pnpm exec shopify hydrogen link`
 - ejson configured (`./scripts/setup-ejson-private-key.sh`) — required for both the test email and the loadtest header (OTP bypass)
 
 ```bash
 # With ejson configured:
-npx playwright test --project=skeleton e2e/specs/skeleton/customerAccount.spec.ts
+pnpm exec playwright test --project=skeleton e2e/specs/skeleton/customerAccount.spec.ts
 
 # Override test email (ejson is still required for the loadtest header):
 CUSTOMER_ACCOUNT_TEST_EMAIL="hydrogen-e2e-test@example.com" \
-  npx playwright test --project=skeleton e2e/specs/skeleton/customerAccount.spec.ts
+  pnpm exec playwright test --project=skeleton e2e/specs/skeleton/customerAccount.spec.ts
 
 # Against an existing Oxygen deployment (skips tunnel):
 CUSTOMER_ACCOUNT_URL=https://your-oxygen-deployment.oxygen.myshopify.com \
 OXYGEN_AUTH_BYPASS_TOKEN=your-token \
-  npx playwright test --project=skeleton e2e/specs/skeleton/customerAccount.spec.ts
+  pnpm exec playwright test --project=skeleton e2e/specs/skeleton/customerAccount.spec.ts
 ```
 
 Without `CUSTOMER_ACCOUNT_URL`, the test starts a local dev server with `--customer-account-push` which creates a Cloudflare quick-tunnel.

@@ -17,7 +17,7 @@ Hydrogen uses an automated release system built on Changesets, GitHub Actions (`
 
 1. **Developer creates PR with changes**
    - If changes affect `packages/*/src/**` or `packages/*/package.json`, a changeset is required
-   - Run `npm run changeset add` to create a changeset file **(MANUAL)**
+   - Run `pnpm run changeset add` to create a changeset file **(MANUAL)**
    - Changeset specifies which packages are affected and version bump type (patch/minor/major)
 
 2. **On merge to main, TWO parallel processes occur:**
@@ -108,7 +108,7 @@ Hydrogen uses an automated release system built on Changesets, GitHub Actions (`
 ### Manual Steps (Human Intervention Required)
 
 1. **Developer Actions**
-   - **Create changesets**: Run `npm run changeset add` for any PR with code changes
+   - **Create changesets**: Run `pnpm run changeset add` for any PR with code changes
    - **Skeleton changes**: MUST include all three packages in changeset: `skeleton`, `@shopify/cli-hydrogen`, AND `@shopify/create-hydrogen` — see changeset rules in CLAUDE.md
    - **Write PR descriptions**: Include clear explanations of changes
    - **Request snapshot builds**: Comment `/snapit` on PR to test changes

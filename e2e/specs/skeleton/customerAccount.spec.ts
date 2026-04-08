@@ -10,7 +10,7 @@ import {
 } from '../../fixtures';
 
 // Pass CUSTOMER_ACCOUNT_URL to skip the tunnel and use an existing dev server, e.g.:
-//   CUSTOMER_ACCOUNT_URL=https://xyz.tryhydrogen.dev npx playwright test --project=skeleton
+//   CUSTOMER_ACCOUNT_URL=https://xyz.tryhydrogen.dev pnpm exec playwright test --project=skeleton
 const externalUrl = process.env.CUSTOMER_ACCOUNT_URL;
 
 if (externalUrl) {
