@@ -20,12 +20,12 @@ To test anything in Hydrogen that requires a customer login (order history, acco
 1. **Start the dev server with the customer account push flag:**
    ```bash
    # Using npm
-   npm run dev -- --customer-account-push
+   pnpm run dev -- --customer-account-push
 
    # Using Hydrogen CLI directly (h2 is the Hydrogen CLI binary)
    h2 dev --customer-account-push
    ```
-   Note the `--` separator when using `npm run dev`.
+   Note the `--` separator when using `pnpm run dev`.
 
 2. **Place a test order** using the [bogus gateway test payment details](https://help.shopify.com/en/manual/checkout-settings/test-orders/payments-test-mode#bogus-gateway-test-payment-details).
 
@@ -46,8 +46,8 @@ Each recipe has two layers that need to stay in sync:
 **Generated documentation** (`cookbook/recipes/{name}/README.md` and `cookbook/llms/{name}.prompt.md`): These files are **auto-generated** from the ingredient source files. They inline the full route source code, so if you fix the ingredient `.tsx` files, you MUST also regenerate the docs:
 
 ```bash
-npm run cookbook -- render --recipe {name}
-npm run cookbook -- validate --recipe {name}
+pnpm run cookbook -- render --recipe {name}
+pnpm run cookbook -- validate --recipe {name}
 ```
 
 Both the `README.md` and `llms/{name}.prompt.md` must be committed as part of the same fix. Failing to regenerate means the docs teach the wrong pattern even after the ingredient files are correct.
@@ -74,7 +74,7 @@ Recipe patch files can break when the skeleton template changes. Two approaches:
 The best way to upgrade a Hydrogen storefront is the [`upgrade` CLI command](https://shopify.dev/docs/api/shopify-cli/hydrogen/hydrogen-upgrade):
 
 ```bash
-npx shopify hydrogen upgrade
+pnpm exec shopify hydrogen upgrade
 ```
 
 This command:

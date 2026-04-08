@@ -36,7 +36,7 @@ const config: CodegenConfig = {
               /**
                * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
                * Based on Storefront API ${SF_API_VERSION}
-               * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run \`npm run graphql-types\`.
+               * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run \`pnpm run graphql-types\`.
                * Except custom Scalars, which are defined in the \`codegen.ts\` file
                */
               /* eslint-disable */`,
@@ -75,7 +75,7 @@ const config: CodegenConfig = {
               /**
                * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
                * Based on Customer Account API ${CA_API_VERSION}
-               * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run \`npm run graphql-types\`.
+               * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run \`pnpm run graphql-types\`.
                * Except custom Scalars, which are defined in the \`codegen.ts\` file
                */
               /* eslint-disable */`,

@@ -100,7 +100,7 @@ Before starting, verify:
 
 #### Step 3a: Generate New Types in hydrogen-react
 1. Navigate to `packages/hydrogen-react/`
-2. Run: `npm run graphql-types`
+2. Run: `pnpm run graphql-types`
 3. **IMPORTANT**: Return to the root directory: `cd ../..`
 4. This will fetch the latest schemas and generate:
    - `src/storefront-api-types.d.ts` - TypeScript types for SFAPI
@@ -123,14 +123,14 @@ ls -la packages/hydrogen-react/*.schema.json
 
 ```bash
 cd packages/hydrogen-react
-npm run build
+pnpm run build
 cd ../..
 ```
 
 **Common Build Issues & Solutions:**
 - **Network timeout**: Retry the graphql-types command
 - **TypeScript errors**: Expected at this stage, continue with process
-- **Missing dependencies**: Run `npm install` from root directory
+- **Missing dependencies**: Run `pnpm install` from root directory
 - **Permission errors**: Check file permissions or try with sudo
 - **Build hangs**: Kill process and retry, might be resource issue
 
@@ -142,7 +142,7 @@ ls -la packages/hydrogen-react/dist/types/storefront-api-types.d.ts
 
 #### Step 3c: Build All Packages
 ```bash
-npm run build:pkg
+pnpm run build:pkg
 ```
 
 **Validation**: Verify build completes without errors:
@@ -156,7 +156,7 @@ npm run build:pkg
 **TODO TRACKING**: Mark Step 4 complete, add and mark Step 5 as in_progress.
 Run the documentation build to update any auto-generated docs:
 ```bash
-npm run build-docs --workspace=@shopify/hydrogen-react
+pnpm run build-docs --workspace=@shopify/hydrogen-react
 ```
 This will update generated documentation based on component changes.
 
@@ -170,10 +170,10 @@ This will update generated documentation based on component changes.
 After building packages, regenerate the skeleton template's GraphQL types:
 ```bash
 cd templates/skeleton
-npm run codegen
+pnpm run codegen
 cd ../..
 ```
-**Note**: This step MUST be done after `npm run build:pkg` as the skeleton depends on the built hydrogen-react types.
+**Note**: This step MUST be done after `pnpm run build:pkg` as the skeleton depends on the built hydrogen-react types.
 
 **Validation**: Verify these files were regenerated:
 - `templates/skeleton/storefrontapi.generated.d.ts`
@@ -181,7 +181,7 @@ cd ../..
 
 **Common Issues**: 
 - If you see errors about unknown types (e.g., `LanguageCode`), this indicates breaking changes in the API that need to be addressed
-- The skeleton codegen depends on the built packages, so ensure `npm run build:pkg` completed successfully first
+- The skeleton codegen depends on the built packages, so ensure `pnpm run build:pkg` completed successfully first
 
 **✅ CHECKPOINT**: Pause and ask the user to confirm before moving to the next task.
 **Summary**: Regenerated skeleton template's GraphQL types. Note any codegen errors that may indicate breaking API changes.
@@ -218,13 +218,13 @@ find . -name "*test*" -o -name "*spec*" | xargs grep -l "$OLD_VERSION"
 **Validation**: After updating all references, run initial validation and capture all errors:
 ```bash
 # Capture TypeScript errors
-npm run typecheck 2>&1 | tee typecheck_errors.log
+pnpm run typecheck 2>&1 | tee typecheck_errors.log
 
 # Capture test failures
-npm test 2>&1 | tee test_failures.log
+pnpm test 2>&1 | tee test_failures.log
 
 # Capture lint issues (usually less critical)
-npm run lint 2>&1 | tee lint_issues.log
+pnpm run lint 2>&1 | tee lint_issues.log
 ```
 **Important**: Save these error logs - they will be analyzed and included in the PR description for visibility.
 
@@ -533,7 +533,7 @@ query CustomerWithNewField {
 ### 1. Run Type Generation
 ```bash
 cd packages/hydrogen-react
-npm run graphql-types
+pnpm run graphql-types
 cd ../..
 ```
 - Verify no errors occur
@@ -545,7 +545,7 @@ cd ../..
 
 ### 2. Build Documentation
 ```bash
-npm run build-docs --workspace=@shopify/hydrogen-react
+pnpm run build-docs --workspace=@shopify/hydrogen-react
 ```
 
 **✅ CHECKPOINT**: Pause and ask the user to confirm before moving to the next task.
@@ -568,34 +568,34 @@ grep -r "YYYY-MM" --include="*.ts" --include="*.tsx" --include="*.js" --include=
 #### Step 4a: Test hydrogen-react types
 ```bash
 cd packages/hydrogen-react
-npm run typecheck
+pnpm run typecheck
 cd ../..
 ```
 
 #### Step 4b: Test hydrogen package types
 ```bash
 cd packages/hydrogen
-npm run typecheck
+pnpm run typecheck
 cd ../..
 ```
 
 **Common Issues and Solutions**:
 - If you see `Cannot find module '@shopify/hydrogen-react/storefront-api-types'`:
-  - Ensure you ran `npm run build` in `packages/hydrogen-react` first
+  - Ensure you ran `pnpm run build` in `packages/hydrogen-react` first
   - Verify `packages/hydrogen-react/dist/types/storefront-api-types.d.ts` exists
 - If typecheck fails with many errors, the packages may need rebuilding:
   ```bash
   cd packages/hydrogen-react
-  npm run graphql-types
-  npm run build
+  pnpm run graphql-types
+  pnpm run build
   cd ../..
-  npm run build:pkg
+  pnpm run build:pkg
   ```
 
 #### Step 4c: Run Full Test Suite
 ```bash
-npm test
-npm run lint
+pnpm test
+pnpm run lint
 ```
 
 **✅ CHECKPOINT**: Pause and ask the user to confirm before moving to the next task.
@@ -605,7 +605,7 @@ npm run lint
 
 1. **Type Resolution Failures**: The hydrogen package depends on built types from hydrogen-react
    - **Problem**: `Cannot find module '@shopify/hydrogen-react/storefront-api-types'`
-   - **Solution**: ALWAYS build hydrogen-react (`npm run build`) after generating types and before building other packages
+   - **Solution**: ALWAYS build hydrogen-react (`pnpm run build`) after generating types and before building other packages
    - **Order matters**: graphql-types → build hydrogen-react → build all packages
 
 2. **Missing API feature implementations**: Always check the API changelog for new features that need implementation
@@ -614,7 +614,7 @@ npm run lint
 
 4. **Version consistency**: SFAPI and CAAPI versions MUST match for quarterly releases
 
-5. **Generated files**: Never manually edit generated type files - always use `npm run graphql-types`
+5. **Generated files**: Never manually edit generated type files - always use `pnpm run graphql-types`
 
 6. **Test updates**: Tests must be updated to work with new API versions
 
@@ -693,7 +693,7 @@ For each issue discovered, provide:
 **Summary**: Customer Account API queries fail with "Unknown type LanguageCode" error
 
 **Details**: 
-- Discovered during: `npm run codegen` in templates/skeleton
+- Discovered during: `pnpm run codegen` in templates/skeleton
 - Error locations: 
   - app/graphql/customer-account/CustomerAddressMutations.ts:6:16
   - app/graphql/customer-account/CustomerDetailsQuery.ts:2:36
@@ -1215,9 +1215,9 @@ See [`API_CHANGES_REPORT_YYYY-MM.md`](./API_CHANGES_REPORT_YYYY-MM.md) for compl
 - [ ] Tests: Add coverage for cart warning features
 
 ### Build & Documentation Status
-- [ ] `npm run typecheck` - Currently: Failed (X errors)
-- [ ] `npm run test` - Currently: Failed (Y failures)
-- [ ] `npm run build:pkg` - Currently: Pass/Fail
+- [ ] `pnpm run typecheck` - Currently: Failed (X errors)
+- [ ] `pnpm run test` - Currently: Failed (Y failures)
+- [ ] `pnpm run build:pkg` - Currently: Pass/Fail
 - [ ] Skeleton builds - Currently: Pass/Fail
 - [ ] API version references updated
 - [ ] Examples use new API version
@@ -1225,9 +1225,9 @@ See [`API_CHANGES_REPORT_YYYY-MM.md`](./API_CHANGES_REPORT_YYYY-MM.md) for compl
 
 [IF no validation errors, include:]
 ## Build & Documentation Status
-- [x] `npm run typecheck` - Passing
-- [x] `npm run test` - All tests passing
-- [x] `npm run build:pkg` - Successful
+- [x] `pnpm run typecheck` - Passing
+- [x] `pnpm run test` - All tests passing
+- [x] `pnpm run build:pkg` - Successful
 - [x] Skeleton builds - Successful
 - [x] API version references updated
 - [x] Examples use new API version
@@ -1513,7 +1513,7 @@ echo "PR description generated: $OUTPUT_FILE"
 - [ ] Asked user about Cloudflare Workers compat date
 - [ ] Type generation completed successfully
 - [ ] hydrogen-react built successfully (critical for type resolution)
-- [ ] Documentation built with `npm run build-docs --workspace=@shopify/hydrogen-react`
+- [ ] Documentation built with `pnpm run build-docs --workspace=@shopify/hydrogen-react`
 - [ ] No references to old API versions remain
 - [ ] All tests pass with new API versions
 - [ ] Build completes successfully
@@ -1550,24 +1550,24 @@ curl --silent --request POST \
 
 # 2. Generate new types in hydrogen-react
 cd packages/hydrogen-react
-npm run graphql-types
+pnpm run graphql-types
 
 # 3. BUILD HYDROGEN-REACT (CRITICAL - DO NOT SKIP)
-npm run build
+pnpm run build
 cd ../..
 
 # 4. Verify hydrogen-react types are built
 ls -la packages/hydrogen-react/dist/types/storefront-api-types.d.ts
 
 # 5. Build all packages
-npm run build:pkg
+pnpm run build:pkg
 
 # 6. Build documentation
-npm run build-docs --workspace=@shopify/hydrogen-react
+pnpm run build-docs --workspace=@shopify/hydrogen-react
 
 # 7. Regenerate skeleton types
 cd templates/skeleton
-npm run codegen
+pnpm run codegen
 cd ../..
 
 # 8. Search for old versions and update (replace YYYY-MM with actual old version)
@@ -1575,20 +1575,20 @@ grep -r "YYYY-MM" --include="*.ts" --include="*.tsx" --include="*.js" --include=
 # Update all found references
 
 # 9. Verify type checking works (CRITICAL VALIDATION)
-cd packages/hydrogen-react && npm run typecheck && cd ../..
-cd packages/hydrogen && npm run typecheck && cd ../..
+cd packages/hydrogen-react && pnpm run typecheck && cd ../..
+cd packages/hydrogen && pnpm run typecheck && cd ../..
 
 # 10. Run full validation suite
-npm run typecheck
-npm run lint
-npm test
+pnpm run typecheck
+pnpm run lint
+pnpm test
 # Keep track of any errors for final review
 
 # 11. Format the code
-npm run format
+pnpm run format
 
 # 12. Create changeset
-npm run changeset add
+pnpm run changeset add
 
 # 13. Commit changes
 git add -A

@@ -23,12 +23,12 @@ The cookbook system applies patches to the skeleton template (`templates/skeleto
 
 ```bash
 cd cookbook
-SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npx ts-node src/index.ts validate --recipe {name}
+SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm exec ts-node src/index.ts validate --recipe {name}
 ```
 
 If `$ARGUMENTS` is `all`, run without `--recipe` to validate everything:
 ```bash
-SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npx ts-node src/index.ts validate
+SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm exec ts-node src/index.ts validate
 ```
 
 ### 2. Classify the validation output
@@ -62,7 +62,7 @@ These occur after patches apply. They may indicate the recipe's code changes are
 ❌ README.md  validateReadmeExists: README.md not found
 ❌ LLM prompt  validateLlmPromptExists: LLM prompt not found
 ```
-Fix by running `npm run cookbook -- render --recipe {name}` for README, or creating the LLM prompt file.
+Fix by running `pnpm run cookbook -- render --recipe {name}` for README, or creating the LLM prompt file.
 
 ### 3. If validation passes with no errors, skip to Phase 4
 
@@ -83,7 +83,7 @@ rm -f {any ingredient files listed in recipe.yaml}
 
 ```bash
 cd cookbook
-npx ts-node src/index.ts apply --recipe {name} 2>&1
+pnpm exec ts-node src/index.ts apply --recipe {name} 2>&1
 ```
 
 The command will fail with "PATCH CONFLICTS DETECTED" if there are `.orig` files, but the patches DO apply (just with offsets). That's exactly what we want.
@@ -146,7 +146,7 @@ Edit `recipe.yaml` directly:
 ```bash
 # Regenerate README
 cd cookbook
-npx ts-node src/index.ts render --recipe {name}
+pnpm exec ts-node src/index.ts render --recipe {name}
 
 # For missing LLM prompts, check if other recipes have them as reference
 ls llms/
@@ -158,7 +158,7 @@ Run validation again to confirm the fix:
 
 ```bash
 cd cookbook
-SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false npx ts-node src/index.ts validate --recipe {name}
+SHOPIFY_HYDROGEN_FLAG_LOCKFILE_CHECK=false pnpm exec ts-node src/index.ts validate --recipe {name}
 ```
 
 **Expected success output:**

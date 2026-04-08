@@ -327,7 +327,7 @@ export function validateReadmeExists(recipeName: string): ValidationResult {
   if (!fs.existsSync(readmePath)) {
     errors.push({
       validator: 'validateReadmeExists',
-      message: `README.md not found. Run: npm run cookbook render ${recipeName}`,
+      message: `README.md not found. Run: pnpm run cookbook render ${recipeName}`,
       location: RENDER_FILENAME_GITHUB,
     });
   }
@@ -344,7 +344,7 @@ export function validateLlmPromptExists(recipeName: string): ValidationResult {
   if (!fs.existsSync(promptPath)) {
     errors.push({
       validator: 'validateLlmPromptExists',
-      message: `LLM prompt file not found at llms/${recipeName}.prompt.md. Run: npm run cookbook render ${recipeName}`,
+      message: `LLM prompt file not found at llms/${recipeName}.prompt.md. Run: pnpm run cookbook render ${recipeName}`,
       location: `llms/${recipeName}.prompt.md`,
     });
   }

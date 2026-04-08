@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Changeset Rules
 
-Changesets track what packages need new releases and at what version bump level. They can be added via `npx changeset add` or by manually creating a markdown file with proper YAML frontmatter (either method is fine).
+Changesets track what packages need new releases and at what version bump level. They can be added via `pnpm changeset add` or by manually creating a markdown file with proper YAML frontmatter (either method is fine).
 
 If changes affect `packages/*/src/**` or `packages/*/package.json`, a changeset is required.
 
@@ -104,7 +104,7 @@ The `dist` branch also receives compiled templates for alternative distribution 
 - `@shopify/cli-hydrogen` — bundles skeleton into its dist
 - `@shopify/create-hydrogen` — bundles cli-hydrogen into its dist
 
-⚠️ **Important**: When you run `npm run changeset add`, it only shows packages with
+⚠️ **Important**: When you run `pnpm run changeset add`, it only shows packages with
 actual code changes. You must **manually select** cli-hydrogen and create-hydrogen
 even though you didn't change their code. Alternatively, manually add those lines
 to the changeset file after creation.

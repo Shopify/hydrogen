@@ -45,7 +45,7 @@ Examples:
 ## Verification Commands
 
 ```bash
-npx playwright test --project=skeleton
+pnpm exec playwright test --project=skeleton
 ```
 
 Use narrower test paths during iteration, then run the appropriate full project suite before finishing.

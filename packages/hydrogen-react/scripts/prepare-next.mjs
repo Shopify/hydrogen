@@ -8,7 +8,7 @@ packageJson.version = version;
 fs.writeFileSync('../package.json', JSON.stringify(packageJson, null, 2));
 
 try {
-  execSync('npm publish --tag next');
+  execSync('pnpm publish --tag next');
 } catch (e) {
   console.log(e);
   console.log('Publish failed');
