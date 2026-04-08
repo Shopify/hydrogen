@@ -12,10 +12,10 @@ endpoint to retrieve search results based on a search term.
 
 ## Components
 
-| File                                                                                 | Description                                                                                                                 |
-| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| [`app/components/SearchForm.tsx`](../../app/components/SearchForm.tsx)               | A fully customizable form component configured to make (server-side) form `GET` requests to the `/search` route.            |
-| [`app/components/SearchResults.tsx`](../../app/components/SearchResults.tsx)         | A fully customizable search results wrapper, that provides compound components to render `articles`, `pages` and `products` |
+| File                                                                           | Description                                                                                                                 |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| [`app/components/SearchForm.tsx`](../../app/components/SearchForm.tsx)         | A fully customizable form component configured to make (server-side) form `GET` requests to the `/search` route.            |
+| [`app/components/SearchResults.tsx`](../../app/components/SearchResults.tsx)   | A fully customizable search results wrapper, that provides compound components to render `articles`, `pages` and `products` |
 | [`app/components/ProductSort.tsx`](../../app/components/ProductSort.tsx)       | A sort dropdown reused on both collection and search pages                                                                  |
 | [`app/components/ProductFilters.tsx`](../../app/components/ProductFilters.tsx) | Product filters (list, swatch, and price range) reused on both collection and search pages                                  |
 
