@@ -314,6 +314,27 @@ Commands:
   }
 }
 
+/**
+ * Replaces stale package@version references in a CHANGELOG body string.
+ *
+ * When the CalVer override corrects a semver-computed version (e.g., changesets
+ * says 2026.2.0 for a "minor" bump but CalVer requires 2026.1.4), the
+ * "Updated dependencies" lines that changesets wrote into dependent packages'
+ * CHANGELOGs will reference the stale semver version. This function corrects
+ * those body references given a map of stale → correct version strings.
+ *
+ * @param {string} content - CHANGELOG file content
+ * @param {Map<string, string>} staleToCorrect - e.g., Map { "@shopify/hydrogen@2026.2.0" => "@shopify/hydrogen@2026.1.4" }
+ * @returns {string} Updated content with stale references replaced
+ */
+function replaceChangelogBodyVersions(content, staleToCorrect) {
+  let result = content;
+  for (const [stale, correct] of staleToCorrect) {
+    result = result.replaceAll(stale, correct);
+  }
+  return result;
+}
+
 module.exports = {
   QUARTERS,
   CALVER_PACKAGES,
@@ -332,4 +353,5 @@ module.exports = {
   getAllPackagePaths,
   updateInternalDependencies,
   updateChangelogs,
+  replaceChangelogBodyVersions,
 };

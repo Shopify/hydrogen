@@ -18,6 +18,7 @@ const {
   getNextVersion,
   parseVersion,
   hasMajorChangesets,
+  replaceChangelogBodyVersions,
 } = require('./calver-shared.js');
 const {
   detectBumpType,
@@ -544,6 +545,54 @@ function testWriteAndCleanup() {
   cleanupTestChangesets();
 }
 
+function testReplaceChangelogBodyVersions() {
+  console.log('\n📝 Testing replaceChangelogBodyVersions()...\n');
+
+  // Reproduces the PR #3645 scenario: "minor" changeset on @shopify/hydrogen causes
+  // changesets to compute 2026.2.0, but CalVer corrects it to 2026.1.4. The skeleton
+  // CHANGELOG body then contains "Updated dependencies: @shopify/hydrogen@2026.2.0"
+  // which must be replaced.
+  console.log('Test 1: Replaces stale dependency reference in CHANGELOG body');
+  const skeletonChangelog = `## 2026.1.4\n\n### Patch Changes\n\n- Updated dependencies [abc123]:\n  - @shopify/hydrogen@2026.2.0\n`;
+  const staleToCorrect = new Map([
+    ['@shopify/hydrogen@2026.2.0', '@shopify/hydrogen@2026.1.4'],
+  ]);
+  const result = replaceChangelogBodyVersions(
+    skeletonChangelog,
+    staleToCorrect,
+  );
+  assert(
+    result.includes('@shopify/hydrogen@2026.1.4'),
+    'Stale version replaced with CalVer version',
+  );
+  assert(
+    !result.includes('@shopify/hydrogen@2026.2.0'),
+    'Stale version no longer present',
+  );
+
+  console.log(
+    '\nTest 2: No-op when changesetVersion equals newVersion (patch bump)',
+  );
+  const changelog = `## 2026.1.4\n\n- Updated dependencies:\n  - @shopify/hydrogen@2026.1.4\n`;
+  const emptyMap = new Map();
+  const unchanged = replaceChangelogBodyVersions(changelog, emptyMap);
+  assertEqual(unchanged, changelog, 'Content unchanged when map is empty');
+
+  console.log('\nTest 3: Replaces multiple packages in one pass');
+  const multiChangelog = `## 2026.1.4\n\n- @shopify/hydrogen@2026.2.0\n- @shopify/hydrogen-react@2026.2.0\n`;
+  const multiMap = new Map([
+    ['@shopify/hydrogen@2026.2.0', '@shopify/hydrogen@2026.1.4'],
+    ['@shopify/hydrogen-react@2026.2.0', '@shopify/hydrogen-react@2026.1.4'],
+  ]);
+  const multiResult = replaceChangelogBodyVersions(multiChangelog, multiMap);
+  assert(
+    multiResult.includes('@shopify/hydrogen@2026.1.4') &&
+      multiResult.includes('@shopify/hydrogen-react@2026.1.4'),
+    'Both packages replaced',
+  );
+  assert(!multiResult.includes('2026.2.0'), 'No stale versions remain');
+}
+
 function main() {
   console.log(
     '═══════════════════════════════════════════════════════════════',
@@ -562,6 +611,7 @@ function main() {
     testHasMajorChangesets();
     testSkeletonMajorBugScenario();
     testWriteAndCleanup();
+    testReplaceChangelogBodyVersions();
   } finally {
     cleanupTestChangesets();
     restoreBackedUpChangesets();
