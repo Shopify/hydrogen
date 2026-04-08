@@ -7,8 +7,8 @@ import {ProductItem} from '~/components/ProductItem';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {parseFiltersFromParams} from '~/lib/product-filters';
 import {parseSortParam, COLLECTION_SORT_OPTIONS} from '~/lib/product-sort';
-import {CollectionFilters} from '~/components/CollectionFilters';
-import {CollectionSort} from '~/components/CollectionSort';
+import {ProductFilters} from '~/components/ProductFilters';
+import {ProductSort} from '~/components/ProductSort';
 
 export const meta: Route.MetaFunction = ({data}) => {
   return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
@@ -89,11 +89,11 @@ export default function Collection() {
     <div className="collection">
       <h1>{collection.title}</h1>
       <p className="collection-description">{collection.description}</p>
-      <div className="collection-controls">
-        <CollectionSort sortOptions={COLLECTION_SORT_OPTIONS} />
+      <div className="product-controls">
+        <ProductSort sortOptions={COLLECTION_SORT_OPTIONS} />
       </div>
       {collection.products?.filters && (
-        <CollectionFilters filters={collection.products.filters} />
+        <ProductFilters filters={collection.products.filters} />
       )}
       <PaginatedResourceSection<ProductItemFragment>
         connection={collection.products}

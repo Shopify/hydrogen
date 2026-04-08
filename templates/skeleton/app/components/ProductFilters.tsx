@@ -4,11 +4,11 @@ import type {ProductFilter} from '@shopify/hydrogen/storefront-api-types';
 import {PriceRangeFilter} from './PriceRangeFilter';
 import type {CollectionQuery} from 'storefrontapi.generated';
 
-type CollectionFilter = NonNullable<
+type Filter = NonNullable<
   CollectionQuery['collection']
 >['products']['filters'][number];
 
-export function CollectionFilters({filters}: {filters: CollectionFilter[]}) {
+export function ProductFilters({filters}: {filters: Filter[]}) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -74,11 +74,11 @@ export function CollectionFilters({filters}: {filters: CollectionFilter[]}) {
   ].some((k) => k.startsWith('filter.'));
 
   return (
-    <div className="collection-filters">
+    <div className="product-filters">
       {hasActiveFilters && (
         <button
           type="button"
-          className="collection-filters-clear"
+          className="product-filters-clear"
           onClick={clearAllFilters}
         >
           Clear All Filters
@@ -99,7 +99,7 @@ export function CollectionFilters({filters}: {filters: CollectionFilter[]}) {
           }
 
           return (
-            <div key={filter.id} className="collection-filter-group">
+            <div key={filter.id} className="product-filter-group">
               <h3>{filter.label}</h3>
               <PriceRangeFilter maxPrice={maxPrice} />
             </div>
@@ -113,9 +113,9 @@ export function CollectionFilters({filters}: {filters: CollectionFilter[]}) {
         );
 
         return (
-          <div key={filter.id} className="collection-filter-group">
+          <div key={filter.id} className="product-filter-group">
             <h3>{filter.label}</h3>
-            <div className="collection-filter-options">
+            <div className="product-filter-options">
               {filter.values.map((value) => {
                 const inputString = String(value.input);
                 const isApplied = isFilterApplied(inputString);
@@ -125,7 +125,7 @@ export function CollectionFilters({filters}: {filters: CollectionFilter[]}) {
                   <button
                     key={value.id}
                     type="button"
-                    className={`collection-filter-option${hasSwatches ? ' has-swatch' : ''}`}
+                    className={`product-filter-option${hasSwatches ? ' has-swatch' : ''}`}
                     onClick={() => toggleFilter(inputString)}
                     style={{
                       border: isApplied ? '2px solid black' : '1px solid #ccc',

@@ -14,8 +14,8 @@ import type {
 } from 'storefrontapi.generated';
 import {parseFiltersFromParams} from '~/lib/product-filters';
 import {parseSortParam, SEARCH_SORT_OPTIONS} from '~/lib/product-sort';
-import {CollectionFilters} from '~/components/CollectionFilters';
-import {CollectionSort} from '~/components/CollectionSort';
+import {ProductFilters} from '~/components/ProductFilters';
+import {ProductSort} from '~/components/ProductSort';
 
 export const meta: Route.MetaFunction = () => {
   return [{title: `Hydrogen | Search`}];
@@ -65,11 +65,11 @@ export default function SearchPage() {
       {error && <p style={{color: 'red'}}>{error}</p>}
       {term && result?.total ? (
         <>
-          <div className="collection-controls">
-            <CollectionSort sortOptions={SEARCH_SORT_OPTIONS} />
+          <div className="product-controls">
+            <ProductSort sortOptions={SEARCH_SORT_OPTIONS} />
           </div>
           {result?.productFilters && result.productFilters.length > 0 && (
-            <CollectionFilters filters={result.productFilters} />
+            <ProductFilters filters={result.productFilters} />
           )}
         </>
       ) : null}

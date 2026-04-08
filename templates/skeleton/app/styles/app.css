@@ -477,7 +477,7 @@ button.reset:hover:not(:has(> *)) {
   }
 }
 
-.collection-controls {
+.product-controls {
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
@@ -486,21 +486,21 @@ button.reset:hover:not(:has(> *)) {
 
 /*
 * --------------------------------------------------
-* components/CollectionSort
+* components/ProductSort
 * --------------------------------------------------
 */
-.collection-sort {
+.product-sort {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.collection-sort label {
+.product-sort label {
   font-size: 0.875rem;
   color: #666;
 }
 
-.collection-sort select {
+.product-sort select {
   padding: 0.5rem 2rem 0.5rem 0.75rem;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -513,25 +513,25 @@ button.reset:hover:not(:has(> *)) {
   background-position: right 0.5rem center;
 }
 
-.collection-sort select:hover {
+.product-sort select:hover {
   border-color: #999;
 }
 
-.collection-sort select:focus {
+.product-sort select:focus {
   outline: 2px solid black;
   outline-offset: 2px;
 }
 
 /*
 * --------------------------------------------------
-* components/CollectionFilters
+* components/ProductFilters
 * --------------------------------------------------
 */
-.collection-filters {
+.product-filters {
   margin-bottom: 2rem;
 }
 
-.collection-filters-clear {
+.product-filters-clear {
   padding: 0.5rem 1rem;
   background: black;
   color: white;
@@ -542,32 +542,32 @@ button.reset:hover:not(:has(> *)) {
   margin-bottom: 1rem;
 }
 
-.collection-filters-clear:hover {
+.product-filters-clear:hover {
   background: #333;
 }
 
-.collection-filter-group {
+.product-filter-group {
   margin-bottom: 1.5rem;
 }
 
-.collection-filter-group h3 {
+.product-filter-group h3 {
   margin-bottom: 0.5rem;
 }
 
-.collection-filter-options {
+.product-filter-options {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.collection-filter-option {
+.product-filter-option {
   padding: 0.5rem 1rem;
   cursor: pointer;
   background: white;
   border-radius: 4px;
 }
 
-.collection-filter-option.has-swatch {
+.product-filter-option.has-swatch {
   padding: 0.375rem;
   min-width: 3rem;
   min-height: 3rem;

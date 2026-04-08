@@ -1,7 +1,7 @@
 import {useNavigate, useLocation} from 'react-router';
 import {applySortParam, type SortOption} from '~/lib/product-sort';
 
-export function CollectionSort({
+export function ProductSort({
   sortOptions,
 }: {
   sortOptions: Record<string, SortOption>;
@@ -24,7 +24,7 @@ export function CollectionSort({
   };
 
   return (
-    <div className="collection-sort">
+    <div className="product-sort">
       <label htmlFor="sort-select">Sort by:</label>
       <select
         id="sort-select"

@@ -30,7 +30,7 @@ index d6285de8..98c6081c 100644
      <div className="collection">
 @@ -95,18 +101,35 @@ export default function Collection() {
        {collection.products?.filters && (
-         <CollectionFilters filters={collection.products.filters} />
+         <ProductFilters filters={collection.products.filters} />
        )}
 -      <PaginatedResourceSection<ProductItemFragment>
 -        connection={collection.products}

@@ -16,8 +16,8 @@ endpoint to retrieve search results based on a search term.
 | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
 | [`app/components/SearchForm.tsx`](../../app/components/SearchForm.tsx)               | A fully customizable form component configured to make (server-side) form `GET` requests to the `/search` route.            |
 | [`app/components/SearchResults.tsx`](../../app/components/SearchResults.tsx)         | A fully customizable search results wrapper, that provides compound components to render `articles`, `pages` and `products` |
-| [`app/components/CollectionSort.tsx`](../../app/components/CollectionSort.tsx)       | A sort dropdown reused on both collection and search pages                                                                  |
-| [`app/components/CollectionFilters.tsx`](../../app/components/CollectionFilters.tsx) | Product filters (list, swatch, and price range) reused on both collection and search pages                                  |
+| [`app/components/ProductSort.tsx`](../../app/components/ProductSort.tsx)       | A sort dropdown reused on both collection and search pages                                                                  |
+| [`app/components/ProductFilters.tsx`](../../app/components/ProductFilters.tsx) | Product filters (list, swatch, and price range) reused on both collection and search pages                                  |
 
 ## Filtering and sorting
 
@@ -309,8 +309,8 @@ and the search results.
 ```ts
 import {SearchForm} from '~/components/SearchForm';
 import {SearchResults} from '~/components/SearchResults';
-import {CollectionFilters} from '~/components/CollectionFilters';
-import {CollectionSort} from '~/components/CollectionSort';
+import {ProductFilters} from '~/components/ProductFilters';
+import {ProductSort} from '~/components/ProductSort';
 import {SEARCH_SORT_OPTIONS} from '~/lib/product-sort';
 
 /**
@@ -341,11 +341,11 @@ export default function SearchPage() {
       {error && <p style={{color: 'red'}}>{error}</p>}
       {term && result?.total ? (
         <>
-          <div className="collection-controls">
-            <CollectionSort sortOptions={SEARCH_SORT_OPTIONS} />
+          <div className="product-controls">
+            <ProductSort sortOptions={SEARCH_SORT_OPTIONS} />
           </div>
           {result?.productFilters && result.productFilters.length > 0 && (
-            <CollectionFilters filters={result.productFilters} />
+            <ProductFilters filters={result.productFilters} />
           )}
         </>
       ) : null}
@@ -428,9 +428,9 @@ SearchResults.Pages = function({
 
 ### How to customize filters?
 
-The `CollectionFilters` component renders all filter types returned by the Storefront API.
+The `ProductFilters` component renders all filter types returned by the Storefront API.
 To show only specific filter types or rearrange them, modify the `.map()` inside
-`CollectionFilters.tsx`. For example, to hide price range filters:
+`ProductFilters.tsx`. For example, to hide price range filters:
 
 ```diff
   {filters.map((filter) => {

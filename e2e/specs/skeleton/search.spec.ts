@@ -69,14 +69,14 @@ test.describe('Search', () => {
     test('displays product filters when results exist', async ({page}) => {
       await page.goto(`/search?q=${SEARCH_TERM}`);
 
-      const filterGroup = page.locator('.collection-filter-group');
+      const filterGroup = page.locator('.product-filter-group');
       await expect(filterGroup.first()).toBeVisible();
     });
 
     test('applies a filter and updates the URL', async ({page}) => {
       await page.goto(`/search?q=${SEARCH_TERM}`);
 
-      const filterButton = page.locator('.collection-filter-option').first();
+      const filterButton = page.locator('.product-filter-option').first();
       await expect(filterButton).toBeVisible();
       await filterButton.click();
 
@@ -89,7 +89,7 @@ test.describe('Search', () => {
       await page.goto(`/search?q=${SEARCH_TERM}`);
 
       // Apply a filter
-      const filterButton = page.locator('.collection-filter-option').first();
+      const filterButton = page.locator('.product-filter-option').first();
       await filterButton.click();
       await expect(page).toHaveURL(/filter\./);
 
