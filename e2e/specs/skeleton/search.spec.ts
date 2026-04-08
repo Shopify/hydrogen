@@ -111,29 +111,26 @@ test.describe('Search', () => {
 
   test.describe('Article Search Results', () => {
     test('article links include blog handle in URL', async ({page}) => {
-      // Search for a term that returns articles
+      // Search for a term that returns articles in the preview store
       await page.goto('/search?q=journal');
 
-      const articlesSection = page.getByRole('heading', {
-        level: 2,
-        name: 'Articles',
-      });
+      // The preview store (hydrogen.shop) has articles — assert they appear
+      await expect(
+        page.getByRole('heading', {level: 2, name: 'Articles'}),
+      ).toBeVisible();
 
-      // Only test article links if the store has articles
-      if (await articlesSection.isVisible()) {
-        const articleLink = page
-          .getByRole('link')
-          .and(page.locator('[href*="/blogs/"]'))
-          .first();
+      const articleLink = page
+        .getByRole('link')
+        .and(page.locator('[href*="/blogs/"]'))
+        .first();
 
-        if (await articleLink.isVisible()) {
-          const href = await articleLink.getAttribute('href');
-          // URL should be /blogs/{blogHandle}/{articleHandle}, not /blogs/{articleHandle}
-          // This means there should be at least 3 path segments after /blogs/
-          const blogPath = href?.match(/\/blogs\/([^?]+)/)?.[1] ?? '';
-          expect(blogPath.split('/').length).toBeGreaterThanOrEqual(2);
-        }
-      }
+      await expect(articleLink).toBeVisible();
+
+      const href = await articleLink.getAttribute('href');
+      // URL should be /blogs/{blogHandle}/{articleHandle}, not /blogs/{articleHandle}
+      // This means there should be at least 2 path segments after /blogs/
+      const blogPath = href?.match(/\/blogs\/([^?]+)/)?.[1] ?? '';
+      expect(blogPath.split('/').length).toBeGreaterThanOrEqual(2);
     });
   });
 });
