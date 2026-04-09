@@ -1,6 +1,9 @@
 import {useNavigate, useLocation} from 'react-router';
-import {applyFilter, removeFilter} from '~/lib/product-filters';
-import type {ProductFilter} from '@shopify/hydrogen/storefront-api-types';
+import {
+  applyFilter,
+  removeFilter,
+  parseFilterInput,
+} from '~/lib/product-filters';
 import {PriceRangeFilter} from './PriceRangeFilter';
 import type {CollectionQuery} from 'storefrontapi.generated';
 
@@ -17,40 +20,36 @@ export function ProductFilters({filters}: {filters: Filter[]}) {
   const toggleFilter = (filterInput: string) => {
     const searchParams = new URLSearchParams(location.search);
 
-    try {
-      const filter = JSON.parse(filterInput) as ProductFilter;
-      const [[filterKey, filterValue]] = Object.entries(filter);
-      const paramKey = `filter.${filterKey}`;
-      const paramValue = JSON.stringify(filterValue);
+    const filter = parseFilterInput(filterInput);
+    if (!filter) return;
 
-      if (searchParams.getAll(paramKey).includes(paramValue)) {
-        void navigate(`?${removeFilter(filter, searchParams).toString()}`, {
-          replace: true,
-          preventScrollReset: true,
-        });
-      } else {
-        void navigate(`?${applyFilter(filter, searchParams).toString()}`, {
-          replace: true,
-          preventScrollReset: true,
-        });
-      }
-    } catch (error) {
-      console.error('Failed to toggle filter:', error);
+    const [[filterKey, filterValue]] = Object.entries(filter);
+    const paramKey = `filter.${filterKey}`;
+    const paramValue = JSON.stringify(filterValue);
+
+    if (searchParams.getAll(paramKey).includes(paramValue)) {
+      void navigate(`?${removeFilter(filter, searchParams).toString()}`, {
+        replace: true,
+        preventScrollReset: true,
+      });
+    } else {
+      void navigate(`?${applyFilter(filter, searchParams).toString()}`, {
+        replace: true,
+        preventScrollReset: true,
+      });
     }
   };
 
   const isFilterApplied = (filterInput: string): boolean => {
     const searchParams = new URLSearchParams(location.search);
 
-    try {
-      const filter = JSON.parse(filterInput) as ProductFilter;
-      const [[filterKey, filterValue]] = Object.entries(filter);
-      return searchParams
-        .getAll(`filter.${filterKey}`)
-        .includes(JSON.stringify(filterValue));
-    } catch {
-      return false;
-    }
+    const filter = parseFilterInput(filterInput);
+    if (!filter) return false;
+
+    const [[filterKey, filterValue]] = Object.entries(filter);
+    return searchParams
+      .getAll(`filter.${filterKey}`)
+      .includes(JSON.stringify(filterValue));
   };
 
   const clearAllFilters = () => {
@@ -88,14 +87,8 @@ export function ProductFilters({filters}: {filters: Filter[]}) {
         if (filter.type === 'PRICE_RANGE') {
           let maxPrice: number | undefined;
           for (const value of filter.values) {
-            try {
-              const parsed = JSON.parse(String(value.input)) as {
-                price?: {max?: number};
-              };
-              if (parsed.price?.max !== undefined) maxPrice = parsed.price.max;
-            } catch {
-              /* ignore */
-            }
+            const parsed = parseFilterInput(String(value.input));
+            if (parsed?.price?.max !== undefined) maxPrice = parsed.price.max;
           }
 
           return (

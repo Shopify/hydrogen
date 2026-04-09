@@ -1,6 +1,10 @@
 import {useState, useEffect} from 'react';
 import {useNavigate, useLocation} from 'react-router';
-import {applyFilter, removeFilter} from '~/lib/product-filters';
+import {
+  applyFilter,
+  removeFilter,
+  parsePriceParam,
+} from '~/lib/product-filters';
 import type {ProductFilter} from '@shopify/hydrogen/storefront-api-types';
 
 /**
@@ -21,14 +25,9 @@ export function PriceRangeFilter({maxPrice}: {maxPrice?: number}) {
     const priceParam = searchParams.get('filter.price');
 
     if (priceParam) {
-      try {
-        const parsed = JSON.parse(priceParam) as {min?: number; max?: number};
-        setMin(parsed.min?.toString() ?? '');
-        setMax(parsed.max?.toString() ?? '');
-      } catch {
-        setMin('');
-        setMax('');
-      }
+      const parsed = parsePriceParam(priceParam);
+      setMin(parsed?.min?.toString() ?? '');
+      setMax(parsed?.max?.toString() ?? '');
     } else {
       setMin('');
       setMax('');
@@ -41,13 +40,9 @@ export function PriceRangeFilter({maxPrice}: {maxPrice?: number}) {
     // Remove existing price filter first.
     const existing = searchParams.get('filter.price');
     if (existing) {
-      try {
-        searchParams = removeFilter(
-          {price: JSON.parse(existing)} as ProductFilter,
-          searchParams,
-        );
-      } catch {
-        /* ignore */
+      const priceValue = parsePriceParam(existing);
+      if (priceValue) {
+        searchParams = removeFilter({price: priceValue}, searchParams);
       }
     }
 
@@ -78,17 +73,13 @@ export function PriceRangeFilter({maxPrice}: {maxPrice?: number}) {
     const existing = searchParams.get('filter.price');
 
     if (existing) {
-      try {
-        const newParams = removeFilter(
-          {price: JSON.parse(existing)} as ProductFilter,
-          searchParams,
-        );
+      const priceValue = parsePriceParam(existing);
+      if (priceValue) {
+        const newParams = removeFilter({price: priceValue}, searchParams);
         void navigate(`?${newParams.toString()}`, {
           replace: true,
           preventScrollReset: true,
         });
-      } catch {
-        /* ignore */
       }
     }
   };

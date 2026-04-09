@@ -3,6 +3,44 @@ import type {ProductFilter} from '@shopify/hydrogen/storefront-api-types';
 const FILTER_URL_PREFIX = 'filter.';
 
 /**
+ * Safely parse a JSON filter input string from the Storefront API.
+ * Returns null if parsing fails or the result is not a valid object.
+ */
+export function parseFilterInput(input: string): ProductFilter | null {
+  try {
+    const parsed: unknown = JSON.parse(input);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return null;
+    }
+    return parsed as ProductFilter;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Safely parse a price filter JSON string (from URL search params) into
+ * min/max values. Returns null if parsing fails or the result is invalid.
+ */
+export function parsePriceParam(
+  value: string,
+): {min?: number; max?: number} | null {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return null;
+    }
+    const obj = parsed as Record<string, unknown>;
+    return {
+      ...(typeof obj.min === 'number' ? {min: obj.min} : {}),
+      ...(typeof obj.max === 'number' ? {max: obj.max} : {}),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Parse filter parameters from URL search params into Storefront API
  * ProductFilter objects.
  *
