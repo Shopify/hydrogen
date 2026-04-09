@@ -3,6 +3,45 @@
   "version": "1",
   "releases": [
     {
+      "title": "Add Storefront MCP proxy for AI agent integration",
+      "version": "2026.1.4",
+      "date": "2026-04-09",
+      "hash": "1e74e2c412c0237083f7e3a8b24d5a524efe8562",
+      "commit": "https://github.com/Shopify/hydrogen/pull/3645/commits/1e74e2c412c0237083f7e3a8b24d5a524efe8562",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3645",
+      "dependencies": {
+        "@shopify/hydrogen": "2026.1.4"
+      },
+      "devDependencies": {
+        "vite": "^6.4.2"
+      },
+      "removeDependencies": [
+        "@shopify/hydrogen"
+      ],
+      "fixes": [
+        {
+          "title": "Fix GraphQL access denied error surfaced as unexpected error",
+          "info": "GraphQL access denied errors from the Storefront API are now handled as expected user errors instead of being reported as unexpected failures.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3654",
+          "id": "3654"
+        }
+      ],
+      "features": [
+        {
+          "title": "Add Storefront MCP proxy for AI agent integration",
+          "info": "Hydrogen now automatically proxies requests to /api/mcp to Shopify's Storefront MCP server, enabling AI assistants like Claude and ChatGPT to connect to your storefront to browse products, manage carts, and access store policies. No code changes required — the proxy is available automatically when using the default createRequestHandler configuration. If your app has a manual /api/:version/graphql.json route file, you can optionally delete it as the server-level proxy now handles those requests automatically.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3572",
+          "id": "3572"
+        },
+        {
+          "title": "Add useCustomAuthDomain option for custom HTTPS setups",
+          "info": "createCustomerAccountClient and createHydrogenContext now accept a useCustomAuthDomain option. When set to true, the development tunnel domain check logs a warning instead of throwing an error, enabling Customer Account API OAuth with custom HTTPS setups like ngrok or local HTTPS proxies.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3642",
+          "id": "3642"
+        }
+      ]
+    },
+    {
       "title": "CLI fixes and dependency updates",
       "version": "2026.1.3",
       "date": "2026-03-27",
