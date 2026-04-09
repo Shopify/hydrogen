@@ -26,22 +26,22 @@
       "features": [
         {
           "title": "Update Storefront API and Customer Account API to 2026-04",
-          "info": "Quarterly API version update from 2026-01 to 2026-04. JSON metafield writes are now limited to 128KB for new apps (apps using metafields before April 1, 2026 are grandfathered at 2MB). Cart operations now return MERCHANDISE_LINE_TRANSFORMERS_RUN_ERROR instead of the generic INVALID code when a Cart Transform Function fails.",
+          "info": "Quarterly API version update from 2026-01 to 2026-04. JSON metafield writes are now limited to 128KB for storefronts created after April 1, 2026 (existing storefronts are grandfathered at 2MB). Cart operations now return MERCHANDISE_LINE_TRANSFORMERS_RUN_ERROR instead of the generic INVALID code when a Cart Transform Function fails. No Customer Account API changes require code updates.",
           "breaking": true,
           "pr": "https://github.com/Shopify/hydrogen/pull/3651",
           "id": "3651"
         },
         {
           "title": "Remove proxyStandardRoutes option from createRequestHandler",
-          "info": "The proxyStandardRoutes option has been removed — the Storefront API proxy is now always enabled. Remove this option if you were passing it. If your load context does not include a storefront instance, the request handler will now throw instead of warn.",
+          "info": "The proxyStandardRoutes option has been removed — the Storefront API proxy is now always enabled and cannot be disabled. Remove this option if you were passing it. If you were intentionally disabling the proxy (proxyStandardRoutes: false), there is no workaround; the proxy is required for Hydrogen analytics and backend consent to function. If your load context does not include a storefront instance, the request handler will now throw instead of warn.",
           "breaking": true,
-          "code": "YGBgZGlmZgotIHByb3h5U3RhbmRhcmRSb3V0ZXM6IGZhbHNlLCAvLyBvciB0cnVlCmBgYAo=",
+          "code": "YGBgZGlmZgogY3JlYXRlUmVxdWVzdEhhbmRsZXIoewogICBidWlsZCwKICAgZ2V0TG9hZENvbnRleHQsCi0gIHByb3h5U3RhbmRhcmRSb3V0ZXM6IGZhbHNlLAogfSk7CmBgYAo=",
           "pr": "https://github.com/Shopify/hydrogen/pull/3649",
           "id": "3649"
         },
         {
           "title": "Enable backend consent mode for Customer Privacy API",
-          "info": "window.Shopify.customerPrivacy.backendConsentEnabled is now set to true automatically before the Customer Privacy API script loads, switching the consent library to server-set cookies via the Storefront API proxy instead of the legacy _tracking_consent JS cookie.",
+          "info": "window.Shopify.customerPrivacy.backendConsentEnabled is now set to true automatically before the Customer Privacy API script loads, switching the consent library to server-set cookies via the Storefront API proxy instead of the legacy _tracking_consent JS cookie. No action is required — consent banners and tracking will continue to work as before.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3649",
           "id": "3649"
         }
