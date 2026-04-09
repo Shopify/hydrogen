@@ -1,5 +1,34 @@
 # @shopify/hydrogen
 
+## 2026.4.0
+
+### Major Changes
+
+- Make Storefront API proxy mandatory and enable backend consent mode, supporting the deprecation of the `_tracking_consent` cookie in favor of server-set cookies via the SF API proxy. ([#3649](https://github.com/Shopify/hydrogen/pull/3649)) by [@itsjustriley](https://github.com/itsjustriley)
+  - **Breaking**: `proxyStandardRoutes` option has been removed from `createRequestHandler`. The Storefront API proxy is now always enabled. If your load context does not include a `storefront` instance, the request handler will now throw an error instead of logging a warning.
+  - **New**: `window.Shopify.customerPrivacy.backendConsentEnabled` is now set to `true` before the Customer Privacy API script loads. This tells the consent library to use the new server-set cookie mode instead of the legacy `_tracking_consent` JS cookie. The flag is installed via a `window.Shopify` property interceptor so it survives the CDN's `window.Shopify = {}` reset cycle and is readable before the full API is assigned.
+
+- Update Storefront API and Customer Account API from 2026-01 to 2026-04. ([#3651](https://github.com/Shopify/hydrogen/pull/3651)) by [@itsjustriley](https://github.com/itsjustriley)
+
+  ## Breaking changes
+
+  **JSON metafield values limited to 128KB**: When using API version 2026-04 or later, the Storefront API limits JSON type metafield writes to 128KB. This limit applies at the API level - Hydrogen passes through to the Storefront API without additional restriction. Apps that used JSON metafields before April 1, 2026 are grandfathered at the existing 2MB limit. Large metafield values continue to be readable by all API versions.
+
+  ## New features
+
+  **New `MERCHANDISE_LINE_TRANSFORMERS_RUN_ERROR` cart error code**: Cart operations (`cartCreate`, `cartLinesAdd`, etc.) now return a specific `MERCHANDISE_LINE_TRANSFORMERS_RUN_ERROR` error code when a Cart Transform Function fails at runtime, instead of the previous generic `INVALID` error code. If you handle cart errors in your storefront code, you may want to add handling for this new code.
+
+  ## Changelog links
+  - [Storefront API 2026-04 changelog](https://shopify.dev/changelog?filter=api&api_version=2026-04&api_type=storefront-graphql)
+  - [Customer Account API 2026-04 changelog](https://shopify.dev/changelog?filter=api&api_version=2026-04&api_type=customer-account-graphql)
+
+### Patch Changes
+
+- Widen React Router peer dependencies from exact versions to caret ranges (`^7.12.0`). This allows Hydrogen projects to use newer React Router minor versions without peer dependency conflicts, particularly with npm's strict resolver. Hydrogen only uses stable public APIs from React Router, so minor version updates are backwards-compatible. ([#3677](https://github.com/Shopify/hydrogen/pull/3677)) by [@fredericoo](https://github.com/fredericoo)
+
+- Updated dependencies [[`b0caa5c013380c7837f049f48da089a1671e2c6d`](https://github.com/Shopify/hydrogen/commit/b0caa5c013380c7837f049f48da089a1671e2c6d)]:
+  - @shopify/hydrogen-react@2026.4.0
+
 ## 2026.1.4
 
 ### Minor Changes
