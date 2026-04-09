@@ -16,6 +16,16 @@ export const CartLineAdd = (cartFragment: string): string => /* GraphQL */ `
       cart {
         ...CartFragment
       }
+      userErrors {
+        code
+        field
+        message
+      }
+      warnings {
+        code
+        message
+        target
+      }
     }
   }
 
@@ -38,6 +48,16 @@ export const CartCreate = (cartFragment: string): string => /* GraphQL */ `
     cartCreate(input: $input) {
       cart {
         ...CartFragment
+      }
+      userErrors {
+        code
+        field
+        message
+      }
+      warnings {
+        code
+        message
+        target
       }
     }
   }
@@ -63,6 +83,16 @@ export const CartLineRemove = (cartFragment: string): string => /* GraphQL */ `
       cart {
         ...CartFragment
       }
+      userErrors {
+        code
+        field
+        message
+      }
+      warnings {
+        code
+        message
+        target
+      }
     }
   }
 
@@ -87,6 +117,16 @@ export const CartLineUpdate = (cartFragment: string): string => /* GraphQL */ `
       cart {
         ...CartFragment
       }
+      userErrors {
+        code
+        field
+        message
+      }
+      warnings {
+        code
+        message
+        target
+      }
     }
   }
 
@@ -110,6 +150,16 @@ export const CartNoteUpdate = (cartFragment: string): string => /* GraphQL */ `
     cartNoteUpdate(cartId: $cartId, note: $note) {
       cart {
         ...CartFragment
+      }
+      userErrors {
+        code
+        field
+        message
+      }
+      warnings {
+        code
+        message
+        target
       }
     }
   }
@@ -137,6 +187,16 @@ export const CartBuyerIdentityUpdate = (
       cart {
         ...CartFragment
       }
+      userErrors {
+        code
+        field
+        message
+      }
+      warnings {
+        code
+        message
+        target
+      }
     }
   }
 
@@ -163,6 +223,16 @@ export const CartAttributesUpdate = (
       cart {
         ...CartFragment
       }
+      userErrors {
+        code
+        field
+        message
+      }
+      warnings {
+        code
+        message
+        target
+      }
     }
   }
 
@@ -188,6 +258,16 @@ export const CartDiscountCodesUpdate = (
     cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
       cart {
         ...CartFragment
+      }
+      userErrors {
+        code
+        field
+        message
+      }
+      warnings {
+        code
+        message
+        target
       }
     }
   }

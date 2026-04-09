@@ -9,6 +9,7 @@ import {
   CartMachineFetchResultEvent,
   CartMachineTypeState,
 } from './cart-types.js';
+import type {CartUserError, CartWarning} from './storefront-api-types.js';
 import {flattenConnection} from './flatten-connection.js';
 import {useCartActions} from './useCartActions.js';
 import {useMemo} from 'react';
@@ -49,6 +50,8 @@ function invokeCart(
             rawCartResult: (_, event) => event?.payload?.rawCartResult,
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             errors: (_) => undefined,
+            userErrors: (_, event) => event?.payload?.userErrors,
+            warnings: (_, event) => event?.payload?.warnings,
           }),
         ],
       },
@@ -59,6 +62,10 @@ function invokeCart(
             prevCart: (context) => context?.lastValidCart,
             cart: (context) => context?.lastValidCart,
             errors: (_, event) => event?.payload?.errors,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            userErrors: (_) => undefined,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            warnings: (_) => undefined,
           }),
         ],
       },
@@ -75,6 +82,10 @@ function invokeCart(
           rawCartResult: (_) => undefined,
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           errors: (_) => undefined,
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          userErrors: (_) => undefined,
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          warnings: (_) => undefined,
         }),
       },
     },
@@ -254,6 +265,8 @@ export function useCartAPIStateMachine({
           event,
           data?.cartCreate?.cart,
           errors,
+          data?.cartCreate?.userErrors,
+          data?.cartCreate?.warnings,
         );
         send(resultEvent);
       },
@@ -270,6 +283,8 @@ export function useCartAPIStateMachine({
           event,
           data?.cartLinesAdd?.cart,
           errors,
+          data?.cartLinesAdd?.userErrors,
+          data?.cartLinesAdd?.warnings,
         );
 
         send(resultEvent);
@@ -286,6 +301,8 @@ export function useCartAPIStateMachine({
           event,
           data?.cartLinesUpdate?.cart,
           errors,
+          data?.cartLinesUpdate?.userErrors,
+          data?.cartLinesUpdate?.warnings,
         );
 
         send(resultEvent);
@@ -302,6 +319,8 @@ export function useCartAPIStateMachine({
           event,
           data?.cartLinesRemove?.cart,
           errors,
+          data?.cartLinesRemove?.userErrors,
+          data?.cartLinesRemove?.warnings,
         );
 
         send(resultEvent);
@@ -318,6 +337,8 @@ export function useCartAPIStateMachine({
           event,
           data?.cartNoteUpdate?.cart,
           errors,
+          data?.cartNoteUpdate?.userErrors,
+          data?.cartNoteUpdate?.warnings,
         );
 
         send(resultEvent);
@@ -335,6 +356,8 @@ export function useCartAPIStateMachine({
           event,
           data?.cartBuyerIdentityUpdate?.cart,
           errors,
+          data?.cartBuyerIdentityUpdate?.userErrors,
+          data?.cartBuyerIdentityUpdate?.warnings,
         );
 
         send(resultEvent);
@@ -352,6 +375,8 @@ export function useCartAPIStateMachine({
           event,
           data?.cartAttributesUpdate?.cart,
           errors,
+          data?.cartAttributesUpdate?.userErrors,
+          data?.cartAttributesUpdate?.warnings,
         );
 
         send(resultEvent);
@@ -368,6 +393,8 @@ export function useCartAPIStateMachine({
           event,
           data?.cartDiscountCodesUpdate?.cart,
           errors,
+          data?.cartDiscountCodesUpdate?.userErrors,
+          data?.cartDiscountCodesUpdate?.warnings,
         );
 
         send(resultEvent);
@@ -411,6 +438,12 @@ function eventFromFetchResult(
   cartActionEvent: CartMachineActionEvent,
   cart?: PartialDeep<CartType, {recurseIntoArrays: true}> | null,
   errors?: unknown,
+  userErrors?: Array<
+    PartialDeep<CartUserError, {recurseIntoArrays: true}> | undefined
+  >,
+  warnings?: Array<
+    PartialDeep<CartWarning, {recurseIntoArrays: true}> | undefined
+  >,
 ): CartMachineFetchResultEvent {
   if (errors) {
     return {type: 'ERROR', payload: {errors, cartActionEvent}};
@@ -431,6 +464,8 @@ function eventFromFetchResult(
       cart: cartFromGraphQL(cart),
       rawCartResult: cart,
       cartActionEvent,
+      userErrors: userErrors?.filter((e): e is CartUserError => e != null),
+      warnings: warnings?.filter((w): w is CartWarning => w != null),
     },
   };
 }

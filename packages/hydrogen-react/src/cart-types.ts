@@ -8,6 +8,8 @@ import {
   CartBuyerIdentityInput,
   MutationCartAttributesUpdateArgs,
   ComponentizableCartLine,
+  CartUserError,
+  CartWarning,
 } from './storefront-api-types.js';
 import {StateMachine} from '@xstate/fsm';
 import type {PartialDeep} from 'type-fest';
@@ -40,6 +42,10 @@ interface CartActions {
   status: CartStatus;
   /** If an error occurred on the previous cart action, then `error` will exist and `cart` will be put back into the last valid status it was in. */
   error?: unknown;
+  /** The list of errors returned from the last cart mutation, if any. These are user-facing errors from the Storefront API (e.g., invalid quantity, missing required field). */
+  userErrors?: CartUserError[];
+  /** The list of warnings returned from the last cart mutation, if any. These are non-fatal warnings from the Storefront API (e.g., discount not applicable). */
+  warnings?: CartWarning[];
   /** A callback that creates a cart. Expects the same input you would provide to the Storefront API's `cartCreate` mutation. */
   cartCreate: (cart: CartInput) => void;
   /** A callback that adds lines to the cart. Expects the same `lines` input that you would provide to the Storefront API's `cartLinesAdd` mutation. If a cart doesn't already exist, then it will create the cart for you. */
@@ -111,6 +117,8 @@ export type CartMachineContext = {
   rawCartResult?: PartialDeep<CartType, {recurseIntoArrays: true}>;
   prevCart?: PartialDeep<Cart, {recurseIntoArrays: true}>;
   errors?: unknown;
+  userErrors?: CartUserError[];
+  warnings?: CartWarning[];
 };
 
 export type CartFetchEvent = {
@@ -201,6 +209,8 @@ export type CartMachineFetchResultEvent =
         cartActionEvent: CartMachineActionEvent;
         cart: Cart;
         rawCartResult: PartialDeep<CartType, {recurseIntoArrays: true}>;
+        userErrors?: CartUserError[];
+        warnings?: CartWarning[];
       };
     }
   | {
