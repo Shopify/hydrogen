@@ -245,17 +245,10 @@ function updateChangelogs(updates) {
     .filter((p) => fs.existsSync(p));
 
   for (const changelogPath of allChangelogPaths) {
-    let content = fs.readFileSync(changelogPath, 'utf-8');
-    let modified = false;
-
+    const content = fs.readFileSync(changelogPath, 'utf-8');
     const updated = replaceChangelogBodyVersions(content, staleToCorrect);
     if (updated !== content) {
-      content = updated;
-      modified = true;
-    }
-
-    if (modified) {
-      fs.writeFileSync(changelogPath, content);
+      fs.writeFileSync(changelogPath, updated);
     }
   }
 }
