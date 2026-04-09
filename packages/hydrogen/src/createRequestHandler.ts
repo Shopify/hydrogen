@@ -7,7 +7,6 @@ import {
 import {storefrontContext} from './context-keys';
 import {HYDROGEN_SFAPI_PROXY_KEY} from './constants';
 import {appendServerTimingHeader} from './utils/server-timing';
-import {warnOnce} from './utils/warning';
 
 type CreateRequestHandlerOptions<Context = unknown> = {
   /** React Router's server build */
@@ -32,13 +31,6 @@ type CreateRequestHandlerOptions<Context = unknown> = {
    * @default true
    */
   collectTrackingInformation?: boolean;
-  /**
-   * Whether to proxy standard routes such as `/api/.../graphql.json` (Storefront API).
-   * You can disable this if you are handling these routes yourself. Ensure that
-   * the proxy works if you rely on Hydrogen's built-in behaviors such as analytics.
-   * @default true
-   */
-  proxyStandardRoutes?: boolean;
 };
 
 /**
@@ -50,7 +42,6 @@ export function createRequestHandler<Context = unknown>({
   poweredByHeader = true,
   getLoadContext,
   collectTrackingInformation = true,
-  proxyStandardRoutes = true,
 }: CreateRequestHandlerOptions<Context>) {
   const handleRequest = createReactRouterRequestHandler(build, mode);
 
@@ -85,45 +76,40 @@ export function createRequestHandler<Context = unknown>({
 
     const storefront = context?.storefront || context?.get?.(storefrontContext);
 
-    if (proxyStandardRoutes) {
-      if (!storefront) {
-        // TODO: this should throw error in future major version
-        warnOnce(
-          '[h2:createRequestHandler] Storefront instance is required to proxy standard routes.',
-        );
-      }
+    if (!storefront) {
+      throw new Error(
+        '[h2:createRequestHandler] Storefront instance is required in the load context. ' +
+          'Make sure to use createHydrogenContext() or provide a storefront instance via getLoadContext.',
+      );
+    }
 
-      if (storefront?.isStorefrontApiUrl(request)) {
-        const response = await storefront.forward(request);
-        appendPoweredByHeader?.(response);
-        return response;
-      }
+    if (storefront.isStorefrontApiUrl(request)) {
+      const response = await storefront.forward(request);
+      appendPoweredByHeader?.(response);
+      return response;
+    }
 
-      if (storefront?.isMcpUrl(request)) {
-        const response = await storefront.forwardMcp(request);
-        appendPoweredByHeader?.(response);
-        return response;
-      }
+    if (storefront.isMcpUrl(request)) {
+      const response = await storefront.forwardMcp(request);
+      appendPoweredByHeader?.(response);
+      return response;
     }
 
     const response = await handleRequest(request, context);
 
-    if (storefront && proxyStandardRoutes) {
-      if (collectTrackingInformation) {
-        storefront.setCollectedSubrequestHeaders(response);
-      }
+    if (collectTrackingInformation) {
+      storefront.setCollectedSubrequestHeaders(response);
+    }
 
-      // TODO: assume SFAPI proxy is available in future major version
-      // Signal that SFAPI proxy is enabled for document requests.
-      // Note: sec-fetch-dest is automatically added by modern browsers,
-      // but we also check the Accept header for other clients.
-      const fetchDest = request.headers.get('sec-fetch-dest');
-      if (
-        (fetchDest && fetchDest === 'document') ||
-        request.headers.get('accept')?.includes('text/html')
-      ) {
-        appendServerTimingHeader(response, {[HYDROGEN_SFAPI_PROXY_KEY]: '1'});
-      }
+    // Signal that SFAPI proxy is enabled for document requests.
+    // Note: sec-fetch-dest is automatically added by modern browsers,
+    // but we also check the Accept header for other clients.
+    const fetchDest = request.headers.get('sec-fetch-dest');
+    if (
+      (fetchDest && fetchDest === 'document') ||
+      request.headers.get('accept')?.includes('text/html')
+    ) {
+      appendServerTimingHeader(response, {[HYDROGEN_SFAPI_PROXY_KEY]: '1'});
     }
 
     appendPoweredByHeader?.(response);
@@ -155,11 +141,4 @@ export type CreateRequestHandlerOptionsForDocs = {
    * @default true
    */
   collectTrackingInformation?: boolean;
-  /**
-   * Whether to proxy standard routes such as `/api/.../graphql.json` (Storefront API).
-   * You can disable this if you are handling these routes yourself. Ensure that
-   * the proxy works if you rely on Hydrogen's built-in behaviors such as analytics.
-   * @default true
-   */
-  proxyStandardRoutes?: boolean;
 };

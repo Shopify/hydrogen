@@ -14,6 +14,10 @@ import type {BuyerInput} from '@shopify/hydrogen-react/storefront-api-types';
 import type {StorefrontClient, I18nBase} from './storefront';
 import type {CustomerAccount} from './customer/types';
 import type {
+  CustomerPrivacy,
+  PrivacyBanner,
+} from './customer-privacy/ShopifyCustomerPrivacy';
+import type {
   HydrogenCart,
   HydrogenCartCustom,
   CustomMethodsBase,
@@ -103,7 +107,9 @@ declare global {
   interface Window {
     privacyBanner: PrivacyBanner;
     Shopify: {
-      customerPrivacy: CustomerPrivacy;
+      customerPrivacy?: Partial<CustomerPrivacy> & {
+        backendConsentEnabled?: boolean;
+      };
     };
   }
   interface Document {
