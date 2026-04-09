@@ -22,6 +22,7 @@ const {
   getPackagePath,
   readPackage,
   writePackage,
+  replaceChangelogBodyVersions,
 } = require('./calver-shared.js');
 const {CALVER_BUMP_FILE} = require('./detect-calver-bump-type.js');
 
@@ -179,6 +180,8 @@ function calculateNewVersions(versions, preComputedBumpType) {
       path: data.path,
       pkg: data.pkg,
       oldVersion: data.oldVersion,
+      // Capture what changesets computed before applyUpdates mutates pkg.version.
+      changesetVersion: data.pkg.version,
       bumpType: effectiveBumpType,
       newVersion,
     });
@@ -196,26 +199,57 @@ function applyUpdates(updates) {
   }
 }
 
-// Update CHANGELOG headers
+// Update CHANGELOG headers and body references to use CalVer versions.
+//
+// Changesets writes two things we need to correct:
+//   1. The section header (e.g., "## 2026.2.0") in each package's own CHANGELOG
+//   2. "Updated dependencies" lines (e.g., "@shopify/hydrogen@2026.2.0") in the
+//      CHANGELOGs of packages that depend on a bumped CalVer package
+//
+// The package.json files are already corrected by applyUpdates and
+// updateInternalDependencies, but the CHANGELOG bodies are not touched by those.
 function updateChangelogs(updates) {
   for (const update of updates) {
-    const dir = path.dirname(update.path);
-    const changelogPath = path.join(dir, 'CHANGELOG.md');
-
+    const changelogPath = path.join(path.dirname(update.path), 'CHANGELOG.md');
     if (!fs.existsSync(changelogPath)) continue;
 
     let content = fs.readFileSync(changelogPath, 'utf-8');
 
-    // Replace the version that changesets generated with our CalVer version
     const regex = new RegExp(`^## \\d+\\.\\d+\\.\\d+`, 'gm');
     content = content.replace(regex, (match) => {
-      // Only replace if it's a recent addition (first occurrence)
       return content.indexOf(match) === content.search(regex)
         ? `## ${update.newVersion}`
         : match;
     });
 
     fs.writeFileSync(changelogPath, content);
+  }
+
+  // Build a map of stale package@version strings → correct package@version strings.
+  // A stale reference exists when changesets computed a different version than CalVer
+  // (e.g., "minor" on 2026.1.3 → changesets says 2026.2.0, CalVer says 2026.1.4).
+  const staleToCorrect = new Map();
+  for (const update of updates) {
+    if (update.changesetVersion !== update.newVersion) {
+      staleToCorrect.set(
+        `${update.name}@${update.changesetVersion}`,
+        `${update.name}@${update.newVersion}`,
+      );
+    }
+  }
+
+  if (staleToCorrect.size === 0) return;
+
+  const allChangelogPaths = getAllPackageJsonPaths()
+    .map((p) => path.join(path.dirname(p), 'CHANGELOG.md'))
+    .filter((p) => fs.existsSync(p));
+
+  for (const changelogPath of allChangelogPaths) {
+    const content = fs.readFileSync(changelogPath, 'utf-8');
+    const updated = replaceChangelogBodyVersions(content, staleToCorrect);
+    if (updated !== content) {
+      fs.writeFileSync(changelogPath, updated);
+    }
   }
 }
 
