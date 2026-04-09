@@ -27,7 +27,7 @@
         },
         {
           "title": "Fix useMachine bundling regression with @xstate/fsm",
-          "info": "Restores @xstate/fsm bundling in hydrogen-react's dist output, fixing a regression introduced in 2026.1.3. In strict pnpm setups, useMachine from @shopify/hydrogen-react could fail with an unresolvable @xstate/fsm import. The Vite external configuration is now restored to ensure @xstate/fsm is bundled into the dist rather than referenced as a bare import specifier.",
+          "info": "Fixed a bundling regression from 2026.1.3 where useMachine from @shopify/hydrogen-react could fail with an unresolvable @xstate/fsm import in strict pnpm setups.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3672",
           "id": "3672"
         }
@@ -35,7 +35,7 @@
       "features": [
         {
           "title": "Add Storefront MCP proxy for AI agent integration",
-          "info": "Hydrogen now automatically proxies requests to /api/mcp to Shopify's Storefront MCP server, enabling AI assistants like Claude and ChatGPT to connect to your storefront to browse products, manage carts, and access store policies. No configuration changes are needed — the proxy activates automatically with the default createRequestHandler setup. To connect an MCP client, point it at your storefront's /api/mcp path (for example, http://localhost:3000/api/mcp in development). For full setup instructions, see the Storefront MCP server documentation at https://shopify.dev/docs/apps/build/storefront-mcp/servers/storefront. Separately, if your app has a manual /api/:version/graphql.json route file from an earlier Hydrogen version, you can safely delete it — Hydrogen has automatically handled these GraphQL requests since December 2025 and the route file is no longer needed.",
+          "info": "Hydrogen now automatically proxies requests to /api/mcp to Shopify's Storefront MCP server, enabling AI assistants like Claude and ChatGPT to connect to your storefront to browse products, manage carts, and access store policies. No configuration changes are needed — the proxy activates automatically with the default createRequestHandler setup, and MCP clients can connect to your storefront at the /api/mcp path.",
           "pr": "https://github.com/Shopify/hydrogen/pull/3572",
           "id": "3572"
         },
