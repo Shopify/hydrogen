@@ -209,14 +209,12 @@ function applyUpdates(updates) {
 // The package.json files are already corrected by applyUpdates and
 // updateInternalDependencies, but the CHANGELOG bodies are not touched by those.
 function updateChangelogs(updates) {
-  // Fix each CalVer package's own CHANGELOG header.
   for (const update of updates) {
     const changelogPath = path.join(path.dirname(update.path), 'CHANGELOG.md');
     if (!fs.existsSync(changelogPath)) continue;
 
     let content = fs.readFileSync(changelogPath, 'utf-8');
 
-    // Replace the first ## X.X.X header (the one changesets just added).
     const regex = new RegExp(`^## \\d+\\.\\d+\\.\\d+`, 'gm');
     content = content.replace(regex, (match) => {
       return content.indexOf(match) === content.search(regex)
@@ -242,7 +240,6 @@ function updateChangelogs(updates) {
 
   if (staleToCorrect.size === 0) return;
 
-  // Apply body replacements across every package's CHANGELOG.
   const allChangelogPaths = getAllPackageJsonPaths()
     .map((p) => path.join(path.dirname(p), 'CHANGELOG.md'))
     .filter((p) => fs.existsSync(p));
