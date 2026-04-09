@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Customer Account API 2026-01
+ * Based on Customer Account API 2026-04
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -2906,6 +2906,8 @@ export type DraftOrder = Node & {
   currencyCode: CurrencyCode;
   /** The customer who placed the order. */
   customer?: Maybe<Customer>;
+  /** List of discounts applied to the draft order. */
+  discountApplications: DiscountApplicationConnection;
   /** The discount information for the draft order. */
   discountInformation: DraftOrderDiscountInformation;
   /** The email address of the customer, which is used to send notifications to. */
@@ -2966,10 +2968,20 @@ export type DraftOrder = Node & {
 };
 
 /** A draft order for the customer. Any fields related to money are in the presentment currency. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
+export type DraftOrderDiscountApplicationsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  reverse?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+/** A draft order for the customer. Any fields related to money are in the presentment currency. Apps using the Customer Account API must meet the protected customer data [requirements](https://shopify.dev/docs/apps/launch/protected-customer-data). */
 export type DraftOrderLineItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  flattenComponents?: InputMaybe<Scalars['Boolean']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   reverse?: InputMaybe<Scalars['Boolean']['input']>;
 };
@@ -3037,6 +3049,10 @@ export type DraftOrderConnection = {
 /** The discount information associated with a draft order. */
 export type DraftOrderDiscountInformation = {
   __typename?: 'DraftOrderDiscountInformation';
+  /** The discount information for the draft order, including line_level discount applications. */
+  allAppliedDiscounts: Array<OrderAllDiscounts>;
+  /** The order level discount information for the draft order. */
+  allOrderLevelAppliedDiscounts: Array<OrderAllDiscounts>;
   /** The order-level discount applied to the draft order. */
   appliedDiscount?: Maybe<DraftOrderAppliedDiscount>;
   /** The total discounts applied to the draft order. */
@@ -3055,6 +3071,12 @@ export type DraftOrderEdge = {
 /** A line item included in a draft order. */
 export type DraftOrderLineItem = Node & {
   __typename?: 'DraftOrderLineItem';
+  /** The discounted total divided by the quantity, resulting in an average per-unit price reduction. */
+  approximateDiscountedUnitPrice: MoneyV2;
+  /** The list of components for this draft order line item. */
+  components: Array<DraftOrderLineItem>;
+  /** List of discounts allocated to the draft order line item. */
+  discountAllocations: Array<DiscountAllocation>;
   /** The discount information for the draft order line item. */
   discountInformation: DraftOrderLineItemDiscountInformation;
   /** The total price of the line item after discounts have been applied. */

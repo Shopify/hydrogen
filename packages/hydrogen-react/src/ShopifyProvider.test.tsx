@@ -7,11 +7,12 @@ import {
   type ShopifyProviderProps,
 } from './ShopifyProvider.js';
 import type {PartialDeep} from 'type-fest';
+import {SFAPI_VERSION} from './storefront-api-constants.js';
 
 const SHOPIFY_CONFIG: ShopifyProviderProps = {
   storeDomain: 'https://notashop.myshopify.com',
   storefrontToken: 'abc123',
-  storefrontApiVersion: '2026-01',
+  storefrontApiVersion: '2026-04',
   countryIsoCode: 'CA',
   languageIsoCode: 'EN',
 };
@@ -41,7 +42,7 @@ describe('<ShopifyProvider/>', () => {
       });
 
       expect(result.current.getStorefrontApiUrl()).toBe(
-        'https://notashop.myshopify.com/api/2026-01/graphql.json',
+        'https://notashop.myshopify.com/api/2026-04/graphql.json',
       );
     });
 
@@ -84,7 +85,7 @@ describe('<ShopifyProvider/>', () => {
       ).toEqual({
         'X-SDK-Variant': 'hydrogen-react',
         'X-SDK-Variant-Source': 'react',
-        'X-SDK-Version': '2026-01',
+        'X-SDK-Version': '2026-04',
         'X-Shopify-Storefront-Access-Token': 'abc123',
         'content-type': 'application/json',
       });
@@ -110,7 +111,7 @@ describe('<ShopifyProvider/>', () => {
       ).toEqual({
         'X-SDK-Variant': 'hydrogen-react',
         'X-SDK-Variant-Source': 'react',
-        'X-SDK-Version': '2026-01',
+        'X-SDK-Version': '2026-04',
         'X-Shopify-Storefront-Access-Token': 'newtoken',
         'content-type': 'application/graphql',
       });
@@ -183,7 +184,7 @@ describe('<ShopifyProvider/>', () => {
       });
 
       expect(result.current.getStorefrontApiUrl()).toBe(
-        'https://notashop.myshopify.com/api/2026-01/graphql.json',
+        'https://notashop.myshopify.com/api/2026-04/graphql.json',
       );
     });
 
@@ -203,7 +204,7 @@ describe('<ShopifyProvider/>', () => {
         result.current.getStorefrontApiUrl({
           storeDomain: 'https://test.myshopify.com',
         }),
-      ).toBe('https://test.myshopify.com/api/2026-01/graphql.json');
+      ).toBe('https://test.myshopify.com/api/2026-04/graphql.json');
     });
 
     it(`handles when a '/' is at the end of the url and doesn't add an extra one`, () => {
@@ -219,7 +220,7 @@ describe('<ShopifyProvider/>', () => {
       });
 
       expect(result.current.getStorefrontApiUrl()).toBe(
-        'https://notashop.myshopify.com/api/2026-01/graphql.json',
+        'https://notashop.myshopify.com/api/2026-04/graphql.json',
       );
     });
   });
@@ -233,6 +234,6 @@ export function getShopifyConfig(
     languageIsoCode: config.languageIsoCode ?? 'EN',
     storeDomain: config.storeDomain ?? 'https://notashop.myshopify.io',
     storefrontToken: config.storefrontToken ?? 'abc123',
-    storefrontApiVersion: config.storefrontApiVersion ?? '2026-01',
+    storefrontApiVersion: config.storefrontApiVersion ?? SFAPI_VERSION,
   };
 }
