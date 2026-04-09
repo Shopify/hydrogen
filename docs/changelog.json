@@ -3,6 +3,51 @@
   "version": "1",
   "releases": [
     {
+      "title": "Update Storefront API to 2026-04 and enable backend consent mode",
+      "version": "2026.4.0",
+      "date": "2026-04-09",
+      "hash": "e115ebaa0f38ceccf76cf7e47b0e4e8088c6edd2",
+      "commit": "https://github.com/Shopify/hydrogen/pull/3676/commits/e115ebaa0f38ceccf76cf7e47b0e4e8088c6edd2",
+      "pr": "https://github.com/Shopify/hydrogen/pull/3676",
+      "dependencies": {
+        "@shopify/hydrogen": "2026.4.0"
+      },
+      "removeDependencies": [
+        "@shopify/hydrogen"
+      ],
+      "fixes": [
+        {
+          "title": "Widen React Router peer dependency ranges to caret",
+          "info": "React Router peer dependencies are now specified as caret ranges (^7.12.0) instead of exact versions. This allows Hydrogen projects to use newer React Router minor versions without peer dependency conflicts, particularly with npm's strict resolver.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3677",
+          "id": "3677"
+        }
+      ],
+      "features": [
+        {
+          "title": "Update Storefront API and Customer Account API to 2026-04",
+          "info": "Quarterly API version update from 2026-01 to 2026-04. Notable changes: JSON metafield writes are now limited to 128KB for new apps using 2026-04 (apps using metafields before April 1, 2026 are grandfathered at 2MB). Cart operations now return a specific MERCHANDISE_LINE_TRANSFORMERS_RUN_ERROR error code when a Cart Transform Function fails, instead of the previous generic INVALID code.",
+          "breaking": true,
+          "pr": "https://github.com/Shopify/hydrogen/pull/3651",
+          "id": "3651"
+        },
+        {
+          "title": "Remove proxyStandardRoutes option — Storefront API proxy is now always enabled",
+          "info": "The proxyStandardRoutes option has been removed from createRequestHandler. The Storefront API proxy is now always on. If you were passing this option, remove it. If your load context does not include a storefront instance, the request handler will now throw an error instead of logging a warning.",
+          "breaking": true,
+          "code": "YGBgZGlmZgotIHByb3h5U3RhbmRhcmRSb3V0ZXM6IGZhbHNlLCAvLyBvciB0cnVlCmBgYAo=",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3649",
+          "id": "3649"
+        },
+        {
+          "title": "Enable backend consent mode for Customer Privacy API",
+          "info": "window.Shopify.customerPrivacy.backendConsentEnabled is now set to true before the Customer Privacy API script loads. This tells the consent library to use server-set cookies via the Storefront API proxy instead of the legacy _tracking_consent JS cookie. No code changes are required — this behavior is automatic.",
+          "pr": "https://github.com/Shopify/hydrogen/pull/3649",
+          "id": "3649"
+        }
+      ]
+    },
+    {
       "title": "Add Storefront MCP proxy for AI agent integration",
       "version": "2026.1.4",
       "date": "2026-04-09",
