@@ -90,14 +90,12 @@ describe('formatCode', () => {
     expect(result.trim()).toBe('const x = 1;');
   });
 
-  it('formats without plugins in config', async () => {
-    // Verify that formatCode works when config has no plugins
-    // (the normal path after getCodeFormatOptions strips them)
+  it('formats TSX code with the typescript parser', async () => {
     const result = await formatCode(
-      'const x=1',
+      'const x = <div/>',
       {singleQuote: true},
-      'file.ts',
+      'file.tsx',
     );
-    expect(result.trim()).toBe('const x = 1;');
+    expect(result.trim()).toBe('const x = <div />;');
   });
 });
