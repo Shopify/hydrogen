@@ -493,6 +493,114 @@ describe('<CartProvider />', () => {
         });
       });
 
+      it('surfaces userErrors from the mutation response', async () => {
+        const mockUserErrors = [
+          {
+            code: 'INVALID',
+            field: ['lines', '0', 'quantity'],
+            message: 'Quantity must be greater than 0',
+          },
+        ];
+
+        const cartLineAddSpy = vi.fn(() => ({
+          data: {
+            cartLinesAdd: {
+              cart: cartMock,
+              userErrors: mockUserErrors,
+              warnings: [],
+            },
+          },
+        }));
+
+        const result = await useCartWithInitializedCart({
+          cartLineAdd: cartLineAddSpy,
+        });
+
+        void act(() => {
+          result.current.linesAdd([{merchandiseId: '123'}]);
+        });
+
+        await act(async () => {});
+
+        expect(result.current.userErrors).toEqual(mockUserErrors);
+        expect(result.current.warnings).toEqual([]);
+      });
+
+      it('surfaces warnings from the mutation response', async () => {
+        const mockWarnings = [
+          {
+            code: 'DISCOUNT_NOT_FOUND',
+            message: 'Discount code not found',
+            target: 'gid://shopify/CartLine/123',
+          },
+        ];
+
+        const cartLineAddSpy = vi.fn(() => ({
+          data: {
+            cartLinesAdd: {
+              cart: cartMock,
+              userErrors: [],
+              warnings: mockWarnings,
+            },
+          },
+        }));
+
+        const result = await useCartWithInitializedCart({
+          cartLineAdd: cartLineAddSpy,
+        });
+
+        void act(() => {
+          result.current.linesAdd([{merchandiseId: '123'}]);
+        });
+
+        await act(async () => {});
+
+        expect(result.current.warnings).toEqual(mockWarnings);
+        expect(result.current.userErrors).toEqual([]);
+      });
+
+      it('clears userErrors and warnings on subsequent successful mutation', async () => {
+        const mockUserErrors = [
+          {
+            code: 'INVALID',
+            field: ['lines', '0', 'quantity'],
+            message: 'Quantity must be greater than 0',
+          },
+        ];
+
+        let callCount = 0;
+        const cartLineAddSpy = vi.fn(() => {
+          callCount++;
+          return {
+            data: {
+              cartLinesAdd: {
+                cart: cartMock,
+                userErrors: callCount === 1 ? mockUserErrors : [],
+                warnings: [],
+              },
+            },
+          };
+        });
+
+        const result = await useCartWithInitializedCart({
+          cartLineAdd: cartLineAddSpy,
+        });
+
+        // First mutation with errors
+        void act(() => {
+          result.current.linesAdd([{merchandiseId: '123'}]);
+        });
+        await act(async () => {});
+        expect(result.current.userErrors).toEqual(mockUserErrors);
+
+        // Second mutation without errors
+        void act(() => {
+          result.current.linesAdd([{merchandiseId: '456'}]);
+        });
+        await act(async () => {});
+        expect(result.current.userErrors).toEqual([]);
+      });
+
       it('deletes local storage on complete', async () => {
         const cartLineAddSpy = vi.fn(() => ({
           data: {cartLinesAdd: {cart: null}},
