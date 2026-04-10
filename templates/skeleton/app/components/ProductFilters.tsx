@@ -64,7 +64,7 @@ export function ProductFilters({filters}: {filters: Filter[]}) {
           let maxPrice: number | undefined;
           for (const value of filter.values) {
             const parsed = parseFilterInput(String(value.input));
-            if (parsed?.price?.max !== undefined) maxPrice = parsed.price.max;
+            if (parsed?.price?.max != null) maxPrice = parsed.price.max;
           }
 
           return (
