@@ -66,7 +66,7 @@ export function BuyNowButton<AsType extends React.ElementType = 'button'>(
   return (
     <BaseButton
       // Only certain 'as' types such as 'button' contain `disabled`
-      disabled={loading ?? (passthroughProps as {disabled?: boolean}).disabled}
+      disabled={loading || (passthroughProps as {disabled?: boolean}).disabled}
       {...passthroughProps}
       onClick={onClick}
       defaultOnClick={handleBuyNow}
