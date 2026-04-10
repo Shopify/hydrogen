@@ -33,7 +33,6 @@ export function ProductSort({
         id={sortId}
         value={currentSort}
         onChange={(e) => handleSortChange(e.target.value)}
-        aria-label="Sort products"
       >
         {Object.entries(sortOptions).map(([key, option]) => (
           <option key={key} value={key}>

@@ -24,7 +24,7 @@ test.describe('Collections', () => {
     test('displays the sort dropdown on collection pages', async ({page}) => {
       await page.goto(COLLECTION_URL);
 
-      const sortSelect = page.getByLabel('Sort products');
+      const sortSelect = page.getByLabel('Sort by:');
       await expect(sortSelect).toBeVisible();
     });
 
@@ -33,7 +33,7 @@ test.describe('Collections', () => {
     }) => {
       await page.goto(COLLECTION_URL);
 
-      const sortSelect = page.getByLabel('Sort products');
+      const sortSelect = page.getByLabel('Sort by:');
       await sortSelect.selectOption('PRICE_LOW_TO_HIGH');
 
       await expect(page).toHaveURL(/sort_by=PRICE_LOW_TO_HIGH/);
@@ -44,7 +44,7 @@ test.describe('Collections', () => {
     }) => {
       await page.goto(`${COLLECTION_URL}?sort_by=PRICE_LOW_TO_HIGH`);
 
-      const sortSelect = page.getByLabel('Sort products');
+      const sortSelect = page.getByLabel('Sort by:');
       await expect(sortSelect).toHaveValue('PRICE_LOW_TO_HIGH');
 
       await sortSelect.selectOption('FEATURED');
@@ -55,7 +55,7 @@ test.describe('Collections', () => {
     test('preserves sort selection after page reload', async ({page}) => {
       await page.goto(`${COLLECTION_URL}?sort_by=PRICE_HIGH_TO_LOW`);
 
-      const sortSelect = page.getByLabel('Sort products');
+      const sortSelect = page.getByLabel('Sort by:');
       await expect(sortSelect).toHaveValue('PRICE_HIGH_TO_LOW');
 
       await page.reload();
@@ -153,7 +153,7 @@ test.describe('Collections', () => {
       await expect(page).toHaveURL(/filter\./);
 
       // Change sort
-      const sortSelect = page.getByLabel('Sort products');
+      const sortSelect = page.getByLabel('Sort by:');
       await sortSelect.selectOption('PRICE_LOW_TO_HIGH');
 
       // Both should be in the URL
