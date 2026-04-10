@@ -41,21 +41,21 @@ test.describe('Search', () => {
     test('displays sort dropdown when results exist', async ({page}) => {
       await page.goto(`/search?q=${SEARCH_TERM}`);
 
-      const sortSelect = page.getByLabel('Sort by:');
+      const sortSelect = page.getByRole('combobox', {name: 'Sort by:'});
       await expect(sortSelect).toBeVisible();
     });
 
     test('does not display sort dropdown with no results', async ({page}) => {
       await page.goto('/search?q=xyznonexistentproduct123');
 
-      const sortSelect = page.getByLabel('Sort by:');
+      const sortSelect = page.getByRole('combobox', {name: 'Sort by:'});
       await expect(sortSelect).not.toBeVisible();
     });
 
     test('changes sort order and updates URL', async ({page}) => {
       await page.goto(`/search?q=${SEARCH_TERM}`);
 
-      const sortSelect = page.getByLabel('Sort by:');
+      const sortSelect = page.getByRole('combobox', {name: 'Sort by:'});
       await sortSelect.selectOption('PRICE_LOW_TO_HIGH');
 
       // Wait for navigation to complete after sort change
@@ -111,8 +111,8 @@ test.describe('Search', () => {
 
   test.describe('Article Search Results', () => {
     test('article links include blog handle in URL', async ({page}) => {
-      // Search for a term that returns articles in the preview store
-      await page.goto('/search?q=journal');
+      // Use the same broad search term that returns products AND articles
+      await page.goto(`/search?q=${SEARCH_TERM}`);
 
       // The preview store (hydrogen.shop) has articles — assert they appear
       await expect(
