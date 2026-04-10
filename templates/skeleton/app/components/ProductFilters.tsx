@@ -1,9 +1,10 @@
-import {useNavigate, useLocation} from 'react-router';
+import {useLocation} from 'react-router';
 import {
   applyFilter,
   removeFilter,
   parseFilterInput,
   isFilterActive,
+  useFilterNavigation,
 } from '~/lib/product-filters';
 import {PriceRangeFilter} from './PriceRangeFilter';
 import type {CollectionQuery} from 'storefrontapi.generated';
@@ -13,7 +14,7 @@ type Filter = NonNullable<
 >['products']['filters'][number];
 
 export function ProductFilters({filters}: {filters: Filter[]}) {
-  const navigate = useNavigate();
+  const navigateFilters = useFilterNavigation();
   const location = useLocation();
 
   if (!filters || filters.length === 0) return null;
@@ -27,10 +28,7 @@ export function ProductFilters({filters}: {filters: Filter[]}) {
       ? removeFilter(filter, searchParams)
       : applyFilter(filter, searchParams);
 
-    void navigate(`?${updated.toString()}`, {
-      replace: true,
-      preventScrollReset: true,
-    });
+    navigateFilters(updated);
   };
 
   const clearAllFilters = () => {
@@ -43,10 +41,7 @@ export function ProductFilters({filters}: {filters: Filter[]}) {
     searchParams.delete('cursor');
     searchParams.delete('direction');
 
-    void navigate(`?${searchParams.toString()}`, {
-      replace: true,
-      preventScrollReset: true,
-    });
+    navigateFilters(searchParams);
   };
 
   const hasActiveFilters = [

@@ -1,11 +1,12 @@
 import {useState, useEffect} from 'react';
-import {useNavigate, useLocation} from 'react-router';
+import {useLocation} from 'react-router';
 import {
   applyFilter,
   removeFilter,
   parsePriceParam,
 } from '~/lib/product-filters';
 import type {ProductFilter} from '@shopify/hydrogen/storefront-api-types';
+import {useFilterNavigation} from '~/lib/product-filters';
 
 /**
  * A simple price-range filter with min/max inputs and an explicit Apply button.
@@ -13,7 +14,7 @@ import type {ProductFilter} from '@shopify/hydrogen/storefront-api-types';
  * (e.g. "Clear All Filters") is reflected immediately.
  */
 export function PriceRangeFilter({maxPrice}: {maxPrice?: number}) {
-  const navigate = useNavigate();
+  const navigateFilters = useFilterNavigation();
   const location = useLocation();
 
   const [min, setMin] = useState('');
@@ -59,10 +60,7 @@ export function PriceRangeFilter({maxPrice}: {maxPrice?: number}) {
       searchParams = applyFilter(priceFilter, searchParams);
     }
 
-    void navigate(`?${searchParams.toString()}`, {
-      replace: true,
-      preventScrollReset: true,
-    });
+    navigateFilters(searchParams);
   };
 
   const handleClear = () => {
@@ -76,10 +74,7 @@ export function PriceRangeFilter({maxPrice}: {maxPrice?: number}) {
       const priceValue = parsePriceParam(existing);
       if (priceValue) {
         const newParams = removeFilter({price: priceValue}, searchParams);
-        void navigate(`?${newParams.toString()}`, {
-          replace: true,
-          preventScrollReset: true,
-        });
+        navigateFilters(newParams);
       }
     }
   };

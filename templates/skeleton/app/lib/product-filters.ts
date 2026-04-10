@@ -1,3 +1,4 @@
+import {useNavigate} from 'react-router';
 import type {ProductFilter} from '@shopify/hydrogen/storefront-api-types';
 
 const FILTER_URL_PREFIX = 'filter.';
@@ -162,4 +163,20 @@ export function removeFilter(
   params.delete('direction');
 
   return params;
+}
+
+/**
+ * Centralises the navigation behaviour for filter and sort changes.
+ * Uses `replace` to avoid polluting the browser history stack and
+ * `preventScrollReset` so the page doesn't jump on every interaction.
+ */
+export function useFilterNavigation() {
+  const navigate = useNavigate();
+
+  return (searchParams: URLSearchParams) => {
+    void navigate(`?${searchParams.toString()}`, {
+      replace: true,
+      preventScrollReset: true,
+    });
+  };
 }

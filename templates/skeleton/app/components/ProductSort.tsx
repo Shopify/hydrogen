@@ -1,13 +1,14 @@
 import {useId} from 'react';
-import {useNavigate, useLocation} from 'react-router';
+import {useLocation} from 'react-router';
 import {applySortParam, type SortOption} from '~/lib/product-sort';
+import {useFilterNavigation} from '~/lib/product-filters';
 
 export function ProductSort({
   sortOptions,
 }: {
   sortOptions: Record<string, SortOption>;
 }) {
-  const navigate = useNavigate();
+  const navigateFilters = useFilterNavigation();
   const location = useLocation();
 
   const searchParams = new URLSearchParams(location.search);
@@ -20,10 +21,7 @@ export function ProductSort({
   const sortId = useId();
 
   const handleSortChange = (sortKey: string) => {
-    void navigate(`?${applySortParam(sortKey, searchParams).toString()}`, {
-      replace: true,
-      preventScrollReset: true,
-    });
+    navigateFilters(applySortParam(sortKey, searchParams));
   };
 
   return (
