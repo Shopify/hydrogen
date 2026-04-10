@@ -47,14 +47,20 @@ export function PriceRangeFilter({maxPrice}: {maxPrice?: number}) {
       }
     }
 
-    const minNum = min ? parseFloat(min) : undefined;
-    const maxNum = max ? parseFloat(max) : undefined;
+    const minNum = min ? Math.max(0, parseFloat(min)) : undefined;
+    const maxNum = max ? Math.max(0, parseFloat(max)) : undefined;
 
-    if (minNum !== undefined || maxNum !== undefined) {
+    // Ignore invalid input (NaN, Infinity)
+    const validMin =
+      minNum !== undefined && Number.isFinite(minNum) ? minNum : undefined;
+    const validMax =
+      maxNum !== undefined && Number.isFinite(maxNum) ? maxNum : undefined;
+
+    if (validMin !== undefined || validMax !== undefined) {
       const priceFilter: ProductFilter = {
         price: {
-          ...(minNum !== undefined && {min: minNum}),
-          ...(maxNum !== undefined && {max: maxNum}),
+          ...(validMin !== undefined && {min: validMin}),
+          ...(validMax !== undefined && {max: validMax}),
         },
       };
       searchParams = applyFilter(priceFilter, searchParams);
