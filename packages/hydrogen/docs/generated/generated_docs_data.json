@@ -6317,7 +6317,7 @@
     "subCategory": "cart",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an array of [AttributeInput](/docs/api/storefront/2026-01/input-objects/AttributeInput) and updates attributes to a cart",
+    "description": "Creates a function that accepts an array of [AttributeInput](/docs/api/storefront/2026-04/input-objects/AttributeInput) and updates attributes to a cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -7317,7 +7317,7 @@
     "subCategory": "cart",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an object of [CartBuyerIdentityInput](/docs/api/storefront/2026-01/input-objects/CartBuyerIdentityInput) and updates the buyer identity of a cart",
+    "description": "Creates a function that accepts an object of [CartBuyerIdentityInput](/docs/api/storefront/2026-04/input-objects/CartBuyerIdentityInput) and updates the buyer identity of a cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -8317,7 +8317,7 @@
     "subCategory": "cart",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an object of [CartInput](/docs/api/storefront/2026-01/input-objects/CartInput) and returns a new cart",
+    "description": "Creates a function that accepts an object of [CartInput](/docs/api/storefront/2026-04/input-objects/CartInput) and returns a new cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -9317,7 +9317,7 @@
     "subCategory": "cart",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an array of [CartSelectableAddressInput](/docs/api/storefront/2026-01/input-objects/CartSelectableAddressInput) to add to a cart",
+    "description": "Creates a function that accepts an array of [CartSelectableAddressInput](/docs/api/storefront/2026-04/input-objects/CartSelectableAddressInput) to add to a cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -10322,7 +10322,7 @@
     "subCategory": "cart",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an array of delivery address IDs [ID](/docs/api/storefront/2026-01/scalars/ID) to remove from a cart",
+    "description": "Creates a function that accepts an array of delivery address IDs [ID](/docs/api/storefront/2026-04/scalars/ID) to remove from a cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -11327,7 +11327,7 @@
     "subCategory": "cart",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an array of [CartSelectableAddressInput](/docs/api/storefront/2026-01/input-objects/CartSelectableAddressInput) to replace all delivery addresses on a cart",
+    "description": "Creates a function that accepts an array of [CartSelectableAddressInput](/docs/api/storefront/2026-04/input-objects/CartSelectableAddressInput) to replace all delivery addresses on a cart",
     "type": "utility",
     "defaultExample": {
       "description": "Replace all delivery addresses on a cart with a new set of addresses",
@@ -12332,7 +12332,7 @@
     "subCategory": "cart",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an array of selectable delivery addresses [CartSelectableAddressUpdateInput](/docs/api/storefront/2026-01/input-objects/CartSelectableAddressUpdateInput) to update in a cart",
+    "description": "Creates a function that accepts an array of selectable delivery addresses [CartSelectableAddressUpdateInput](/docs/api/storefront/2026-04/input-objects/CartSelectableAddressUpdateInput) to update in a cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -18323,7 +18323,7 @@
     "subCategory": "cart",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an array of [CartLineInput](/docs/api/storefront/2026-01/input-objects/CartLineInput) and adds the line items to a cart",
+    "description": "Creates a function that accepts an array of [CartLineInput](/docs/api/storefront/2026-04/input-objects/CartLineInput) and adds the line items to a cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -20316,7 +20316,7 @@
     "subCategory": "cart",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an array of [CartLineUpdateInput](/docs/api/storefront/2026-01/input-objects/CartLineUpdateInput) and updates the line items in a cart",
+    "description": "Creates a function that accepts an array of [CartLineUpdateInput](/docs/api/storefront/2026-04/input-objects/CartLineUpdateInput) and updates the line items in a cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -22309,7 +22309,7 @@
     "subCategory": "cart",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an array of [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2026-01/input-objects/CartMetafieldsSetInput) without `ownerId` and set the metafields to a cart",
+    "description": "Creates a function that accepts an array of [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2026-04/input-objects/CartMetafieldsSetInput) without `ownerId` and set the metafields to a cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -24324,7 +24324,7 @@
     "subCategory": "cart",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts an object of [CartSelectedDeliveryOptionInput](/docs/api/storefront/2026-01/input-objects/CartSelectedDeliveryOptionInput) and updates the selected delivery option of a cart",
+    "description": "Creates a function that accepts an object of [CartSelectedDeliveryOptionInput](/docs/api/storefront/2026-04/input-objects/CartSelectedDeliveryOptionInput) and updates the selected delivery option of a cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -25326,7 +25326,7 @@
       {
         "name": "createHydrogenContext",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2026-01/utilities/createhydrogencontext"
+        "url": "/docs/api/hydrogen/2026-04/utilities/createhydrogencontext"
       }
     ],
     "description": "\n    A grouped export of all Hydrogen context keys for use with React Router's `context.get()` pattern. This enables type-safe access to Hydrogen services in loaders, actions, and middleware.\n\n    The proxy-based implementation in `createHydrogenContext` supports both direct property access and the `context.get()` pattern, giving you flexibility in how you access Hydrogen services.\n  ",
@@ -26760,7 +26760,7 @@
             "filePath": "src/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontForDoc",
-            "value": "{\n  /** The function to run a query on Storefront API. */\n  query?: <TData = any>(\n    query: string,\n    options: StorefrontQueryOptionsForDocs,\n  ) => Promise<TData & StorefrontError>;\n  /** The function to run a mutation on Storefront API. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: StorefrontMutationOptionsForDocs,\n  ) => Promise<TData & StorefrontError>;\n  /** The cache instance passed in from the `createStorefrontClient` argument. */\n  cache?: Cache;\n  /** Re-export of [`CacheNone`](/docs/api/hydrogen/utilities/cachenone). */\n  CacheNone?: typeof CacheNone;\n  /** Re-export of [`CacheLong`](/docs/api/hydrogen/utilities/cachelong). */\n  CacheLong?: typeof CacheLong;\n  /** Re-export of [`CacheShort`](/docs/api/hydrogen/utilities/cacheshort). */\n  CacheShort?: typeof CacheShort;\n  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/utilities/cachecustom). */\n  CacheCustom?: typeof CacheCustom;\n  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/utilities/generatecachecontrolheader). */\n  generateCacheControlHeader?: typeof generateCacheControlHeader;\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2026-01/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */\n  getPublicTokenHeaders?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2026-01/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/\n  getPrivateTokenHeaders?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2026-01/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */\n  getShopifyDomain?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2026-01/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/\n  getApiUrl?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  /** The `i18n` object passed in from the `createStorefrontClient` argument. */\n  i18n?: TI18n;\n}",
+            "value": "{\n  /** The function to run a query on Storefront API. */\n  query?: <TData = any>(\n    query: string,\n    options: StorefrontQueryOptionsForDocs,\n  ) => Promise<TData & StorefrontError>;\n  /** The function to run a mutation on Storefront API. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: StorefrontMutationOptionsForDocs,\n  ) => Promise<TData & StorefrontError>;\n  /** The cache instance passed in from the `createStorefrontClient` argument. */\n  cache?: Cache;\n  /** Re-export of [`CacheNone`](/docs/api/hydrogen/utilities/cachenone). */\n  CacheNone?: typeof CacheNone;\n  /** Re-export of [`CacheLong`](/docs/api/hydrogen/utilities/cachelong). */\n  CacheLong?: typeof CacheLong;\n  /** Re-export of [`CacheShort`](/docs/api/hydrogen/utilities/cacheshort). */\n  CacheShort?: typeof CacheShort;\n  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/utilities/cachecustom). */\n  CacheCustom?: typeof CacheCustom;\n  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/utilities/generatecachecontrolheader). */\n  generateCacheControlHeader?: typeof generateCacheControlHeader;\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2026-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */\n  getPublicTokenHeaders?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2026-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/\n  getPrivateTokenHeaders?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2026-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */\n  getShopifyDomain?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2026-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/\n  getApiUrl?: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  /** The `i18n` object passed in from the `createStorefrontClient` argument. */\n  i18n?: TI18n;\n}",
             "description": "",
             "members": [
               {
@@ -26816,7 +26816,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storefrontApiVersion\" | \"storeDomain\">>) => string",
-                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2026-01/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.",
+                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2026-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.",
                 "isOptional": true
               },
               {
@@ -26824,7 +26824,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
-                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2026-01/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.",
+                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2026-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.",
                 "isOptional": true
               },
               {
@@ -26832,7 +26832,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
-                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2026-01/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details.",
+                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2026-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details.",
                 "isOptional": true
               },
               {
@@ -26840,7 +26840,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
-                "description": "Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2026-01/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details.",
+                "description": "Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2026-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details.",
                 "isOptional": true
               },
               {
@@ -30890,7 +30890,7 @@
             "filePath": "src/product/VariantSelector.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "VariantSelectorProps",
-            "value": "{\n  /** The product handle for all of the variants */\n  handle: string;\n  /** Product options from the [Storefront API](/docs/api/storefront/2026-01/objects/ProductOption). Make sure both `name` and `values` are a part of your query. */\n  options: Array<PartialProductOption> | undefined;\n  /** Product variants from the [Storefront API](/docs/api/storefront/2026-01/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */\n  variants?:\n    | PartialDeep<ProductVariantConnection>\n    | Array<PartialDeep<ProductVariant>>;\n  /** By default all products are under /products. Use this prop to provide a custom path. */\n  productPath?: string;\n  /** Should the VariantSelector wait to update until after the browser navigates to a variant. */\n  waitForNavigation?: boolean;\n  /** An optional selected variant to use for the initial state if no URL parameters are set */\n  selectedVariant?: Maybe<PartialDeep<ProductVariant>>;\n  children: ({option}: {option: VariantOption}) => ReactNode;\n}",
+            "value": "{\n  /** The product handle for all of the variants */\n  handle: string;\n  /** Product options from the [Storefront API](/docs/api/storefront/2026-04/objects/ProductOption). Make sure both `name` and `values` are a part of your query. */\n  options: Array<PartialProductOption> | undefined;\n  /** Product variants from the [Storefront API](/docs/api/storefront/2026-04/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */\n  variants?:\n    | PartialDeep<ProductVariantConnection>\n    | Array<PartialDeep<ProductVariant>>;\n  /** By default all products are under /products. Use this prop to provide a custom path. */\n  productPath?: string;\n  /** Should the VariantSelector wait to update until after the browser navigates to a variant. */\n  waitForNavigation?: boolean;\n  /** An optional selected variant to use for the initial state if no URL parameters are set */\n  selectedVariant?: Maybe<PartialDeep<ProductVariant>>;\n  children: ({option}: {option: VariantOption}) => ReactNode;\n}",
             "description": "",
             "isPublicDocs": true,
             "members": [
@@ -30913,7 +30913,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "options",
                 "value": "Array<PartialProductOption> | undefined",
-                "description": "Product options from the [Storefront API](/docs/api/storefront/2026-01/objects/ProductOption). Make sure both `name` and `values` are a part of your query."
+                "description": "Product options from the [Storefront API](/docs/api/storefront/2026-04/objects/ProductOption). Make sure both `name` and `values` are a part of your query."
               },
               {
                 "filePath": "src/product/VariantSelector.ts",
@@ -30936,7 +30936,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "variants",
                 "value": "| PartialDeep<ProductVariantConnection>\n    | Array<PartialDeep<ProductVariant>>",
-                "description": "Product variants from the [Storefront API](/docs/api/storefront/2026-01/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`.",
+                "description": "Product variants from the [Storefront API](/docs/api/storefront/2026-04/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`.",
                 "isOptional": true
               },
               {
@@ -31147,7 +31147,7 @@
         "url": "/docs/api/hydrogen/components/variantselector"
       }
     ],
-    "description": "The `getSelectedProductOptions` returns the selected options from the Request search parameters. The selected options can then be easily passed to your GraphQL query with [`variantBySelectedOptions`](https://shopify.dev/docs/api/storefront/2026-01/objects/product#field-product-variantbyselectedoptions).",
+    "description": "The `getSelectedProductOptions` returns the selected options from the Request search parameters. The selected options can then be easily passed to your GraphQL query with [`variantBySelectedOptions`](https://shopify.dev/docs/api/storefront/2026-04/objects/product#field-product-variantbyselectedoptions).",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
@@ -37105,7 +37105,7 @@
                 "filePath": "src/RichText.components.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "heading",
-                "value": "({ node, }: { node: { type: \"heading\"; level: number; children?: ReactNode[]; }; }) => ReactNode",
+                "value": "({ node, }: { node: { type: \"heading\"; level: number; children?: any[]; }; }) => any",
                 "description": "Customize the headings. Each heading has a `level` property from 1-6. Defaults to `<h1>` to `<h6>`",
                 "isOptional": true
               },
@@ -37113,7 +37113,7 @@
                 "filePath": "src/RichText.components.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "link",
-                "value": "({ node, }: { node: { type: \"link\"; url: string; title?: string; target?: string; children?: ReactNode[]; }; }) => ReactNode",
+                "value": "({ node, }: { node: { type: \"link\"; url: string; title?: string; target?: string; children?: any[]; }; }) => any",
                 "description": "Customize links. Defaults to a React Router `<Link>` component in Hydrogen and a `<a>` in Hydrogen React.",
                 "isOptional": true
               },
@@ -37121,7 +37121,7 @@
                 "filePath": "src/RichText.components.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "list",
-                "value": "({ node, }: { node: { type: \"list\"; listType: \"unordered\" | \"ordered\"; children?: ReactNode[]; }; }) => ReactNode",
+                "value": "({ node, }: { node: { type: \"list\"; listType: \"unordered\" | \"ordered\"; children?: any[]; }; }) => any",
                 "description": "Customize lists. They can be either ordered or unordered. Defaults to `<ol>` or `<ul>`",
                 "isOptional": true
               },
@@ -37129,7 +37129,7 @@
                 "filePath": "src/RichText.components.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "listItem",
-                "value": "({ node, }: { node: { type: \"list-item\"; children?: ReactNode[]; }; }) => ReactNode",
+                "value": "({ node, }: { node: { type: \"list-item\"; children?: any[]; }; }) => any",
                 "description": "Customize list items. Defaults to `<li>`.",
                 "isOptional": true
               },
@@ -37137,7 +37137,7 @@
                 "filePath": "src/RichText.components.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "paragraph",
-                "value": "({ node, }: { node: { type: \"paragraph\"; children?: ReactNode[]; }; }) => ReactNode",
+                "value": "({ node, }: { node: { type: \"paragraph\"; children?: any[]; }; }) => any",
                 "description": "Customize paragraphs. Defaults to `<p>`",
                 "isOptional": true
               },
@@ -37145,7 +37145,7 @@
                 "filePath": "src/RichText.components.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "root",
-                "value": "({ node, }: { node: { type: \"root\"; children?: ReactNode[]; }; }) => ReactNode",
+                "value": "({ node, }: { node: { type: \"root\"; children?: any[]; }; }) => any",
                 "description": "The root node of the rich text. Defaults to `<div>`",
                 "isOptional": true
               },
@@ -37153,7 +37153,7 @@
                 "filePath": "src/RichText.components.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "text",
-                "value": "({ node, }: { node: { type: \"text\"; italic?: boolean; bold?: boolean; value?: string; }; }) => ReactNode",
+                "value": "({ node, }: { node: { type: \"text\"; italic?: boolean; bold?: boolean; value?: string; }; }) => any",
                 "description": "Customize how text nodes. They can either be bold or italic. Defaults to `<em>`, `<strong>` or text.",
                 "isOptional": true
               }
@@ -37542,7 +37542,7 @@
                 "filePath": "src/useMoney.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "parts",
-                "value": "NumberFormatPart[]",
+                "value": "Intl.NumberFormatPart[]",
                 "description": "All parts returned by `Intl.NumberFormat.formatToParts`."
               },
               {
@@ -38576,7 +38576,7 @@
               {
                 "name": "metafield",
                 "description": "",
-                "value": "{ id?: string; __typename?: \"Metafield\"; createdAt?: string; description?: string; key?: string; namespace?: string; parentResource?: { metafield?: { id?: string; __typename?: \"Metafield\"; createdAt?: string; ... 8 more ...; value?: string; }; ... 29 more ...; weightUnit?: WeightUnit; } | ... 13 more ... | { ...; };...",
+                "value": "any",
                 "filePath": "src/parse-metafield.ts"
               }
             ],
