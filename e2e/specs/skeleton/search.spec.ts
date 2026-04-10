@@ -119,9 +119,11 @@ test.describe('Search', () => {
         page.getByRole('heading', {level: 2, name: 'Articles'}),
       ).toBeVisible();
 
+      // Scope to the Articles section to avoid matching nav links like /blogs/journal
       const articleLink = page
+        .getByRole('heading', {level: 2, name: 'Articles'})
+        .locator('..')
         .getByRole('link')
-        .and(page.locator('[href*="/blogs/"]'))
         .first();
 
       await expect(articleLink).toBeVisible();
