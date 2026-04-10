@@ -278,7 +278,7 @@ describe('generateSeoTags', () => {
             key: 'meta-og:image',
             props: {
               content: 'https://example.com/image.jpg',
-              name: 'og:image',
+              property: 'og:image',
             },
             tag: 'meta',
           },
@@ -305,7 +305,7 @@ describe('generateSeoTags', () => {
             key: 'meta-og:image',
             props: {
               content: 'https://example.com/image-1.jpg',
-              name: 'og:image',
+              property: 'og:image',
             },
             tag: 'meta',
           },
@@ -313,7 +313,7 @@ describe('generateSeoTags', () => {
             key: 'meta-og:image',
             props: {
               content: 'https://example.com/image-2.jpg',
-              name: 'og:image',
+              property: 'og:image',
             },
             tag: 'meta',
           },
