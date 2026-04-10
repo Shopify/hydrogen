@@ -202,7 +202,8 @@ function createRequestMiddleware(
       let autoReloadScript = autoReloadScriptTemplate;
 
       const shouldAutoreload =
-        autoReload && response.headers.get('content-type') === 'text/html';
+        autoReload &&
+        response.headers.get('content-type')?.startsWith('text/html');
 
       if (shouldAutoreload) {
         const csp = response.headers.get('content-security-policy');
