@@ -1,3 +1,4 @@
+import {useId} from 'react';
 import {useNavigate, useLocation} from 'react-router';
 import {applySortParam, type SortOption} from '~/lib/product-sort';
 
@@ -16,6 +17,8 @@ export function ProductSort({
       ? sortParam
       : Object.keys(sortOptions)[0];
 
+  const sortId = useId();
+
   const handleSortChange = (sortKey: string) => {
     void navigate(`?${applySortParam(sortKey, searchParams).toString()}`, {
       replace: true,
@@ -25,9 +28,9 @@ export function ProductSort({
 
   return (
     <div className="product-sort">
-      <label htmlFor="sort-select">Sort by:</label>
+      <label htmlFor={sortId}>Sort by:</label>
       <select
-        id="sort-select"
+        id={sortId}
         value={currentSort}
         onChange={(e) => handleSortChange(e.target.value)}
         aria-label="Sort products"
