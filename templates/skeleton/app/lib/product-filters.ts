@@ -41,6 +41,26 @@ export function parsePriceParam(
 }
 
 /**
+ * Check whether a filter (given as a JSON input string from the Storefront API)
+ * is currently active in the URL search params.
+ */
+export function isFilterActive(
+  filterInput: string,
+  searchParams: URLSearchParams,
+): boolean {
+  const filter = parseFilterInput(filterInput);
+  if (!filter) return false;
+
+  for (const [key, value] of Object.entries(filter)) {
+    const paramKey = `${FILTER_URL_PREFIX}${key}`;
+    if (searchParams.getAll(paramKey).includes(JSON.stringify(value))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Parse filter parameters from URL search params into Storefront API
  * ProductFilter objects.
  *

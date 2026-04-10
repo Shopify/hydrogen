@@ -3,6 +3,7 @@ import {
   applyFilter,
   removeFilter,
   parseFilterInput,
+  isFilterActive,
 } from '~/lib/product-filters';
 import {PriceRangeFilter} from './PriceRangeFilter';
 import type {CollectionQuery} from 'storefrontapi.generated';
@@ -19,37 +20,17 @@ export function ProductFilters({filters}: {filters: Filter[]}) {
 
   const toggleFilter = (filterInput: string) => {
     const searchParams = new URLSearchParams(location.search);
-
     const filter = parseFilterInput(filterInput);
     if (!filter) return;
 
-    const [[filterKey, filterValue]] = Object.entries(filter);
-    const paramKey = `filter.${filterKey}`;
-    const paramValue = JSON.stringify(filterValue);
+    const updated = isFilterActive(filterInput, searchParams)
+      ? removeFilter(filter, searchParams)
+      : applyFilter(filter, searchParams);
 
-    if (searchParams.getAll(paramKey).includes(paramValue)) {
-      void navigate(`?${removeFilter(filter, searchParams).toString()}`, {
-        replace: true,
-        preventScrollReset: true,
-      });
-    } else {
-      void navigate(`?${applyFilter(filter, searchParams).toString()}`, {
-        replace: true,
-        preventScrollReset: true,
-      });
-    }
-  };
-
-  const isFilterApplied = (filterInput: string): boolean => {
-    const searchParams = new URLSearchParams(location.search);
-
-    const filter = parseFilterInput(filterInput);
-    if (!filter) return false;
-
-    const [[filterKey, filterValue]] = Object.entries(filter);
-    return searchParams
-      .getAll(`filter.${filterKey}`)
-      .includes(JSON.stringify(filterValue));
+    void navigate(`?${updated.toString()}`, {
+      replace: true,
+      preventScrollReset: true,
+    });
   };
 
   const clearAllFilters = () => {
@@ -111,7 +92,8 @@ export function ProductFilters({filters}: {filters: Filter[]}) {
             <div className="product-filter-options">
               {filter.values.map((value) => {
                 const inputString = String(value.input);
-                const isApplied = isFilterApplied(inputString);
+                const searchParams = new URLSearchParams(location.search);
+                const isApplied = isFilterActive(inputString, searchParams);
                 const swatch = value.swatch;
 
                 return (
