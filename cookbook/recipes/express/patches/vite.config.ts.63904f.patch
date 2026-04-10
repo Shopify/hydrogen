@@ -7,7 +7,7 @@ index 050b6ed7..ef18f2fc 100644
 -import {oxygen} from '@shopify/mini-oxygen/vite';
  import {reactRouter} from '@react-router/dev/vite';
  import tsconfigPaths from 'vite-tsconfig-paths';
- 
+
  export default defineConfig({
 -  plugins: [hydrogen(), oxygen(), reactRouter(), tsconfigPaths()],
 +  plugins: [hydrogen(), reactRouter(), tsconfigPaths()],
@@ -22,11 +22,15 @@ index 050b6ed7..ef18f2fc 100644
      optimizeDeps: {
        /**
         * Include dependencies here if they throw CJS<>ESM errors.
-@@ -23,10 +24,7 @@ export default defineConfig({
+@@ -23,14 +24,7 @@ export default defineConfig({
         * Include 'example-dep' in the array below.
         * @see https://vitejs.dev/config/dep-optimization-options
         */
--      include: ['set-cookie-parser', 'cookie', 'react-router'],
+-      include: [
+-        'react-router > set-cookie-parser',
+-        'react-router > cookie',
+-        'react-router',
+-      ],
 +      include: ['@react-router/node', '@react-router/express'],
      },
    },
