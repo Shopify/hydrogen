@@ -88,7 +88,7 @@ export function PriceRangeFilter({maxPrice}: {maxPrice?: number}) {
   const hasValue = min || max;
 
   return (
-    <div className="price-range-filter" data-max={maxPrice}>
+    <div className="price-range-filter">
       <div className="price-inputs">
         <input
           type="number"
@@ -96,16 +96,18 @@ export function PriceRangeFilter({maxPrice}: {maxPrice?: number}) {
           value={min}
           onChange={(e) => setMin(e.target.value)}
           min="0"
+          max={maxPrice}
           step="0.01"
           aria-label="Minimum price"
         />
         <span className="price-separator">to</span>
         <input
           type="number"
-          placeholder="Max"
+          placeholder={maxPrice !== undefined ? `Max ($${maxPrice})` : 'Max'}
           value={max}
           onChange={(e) => setMax(e.target.value)}
           min="0"
+          max={maxPrice}
           step="0.01"
           aria-label="Maximum price"
         />
