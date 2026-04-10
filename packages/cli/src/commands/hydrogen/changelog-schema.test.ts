@@ -2,7 +2,7 @@ import {readFile} from 'node:fs/promises';
 import {join, dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import semver from 'semver';
-import {describe, expect, it} from 'vitest';
+import {beforeAll, describe, expect, it} from 'vitest';
 import * as upgradeModule from './upgrade.js';
 
 /**
@@ -12,6 +12,11 @@ import * as upgradeModule from './upgrade.js';
  * upgrade-flow.test.ts (~270 lines). These tests guard against malformed
  * changelog entries that could break the upgrade command at runtime.
  */
+
+function assertDefined<T>(value: T): asserts value is NonNullable<T> {
+  expect(value).toBeDefined();
+}
+
 describe('Changelog validation', () => {
   const allowedReleaseFields = new Set([
     'title',
@@ -69,6 +74,12 @@ describe('Changelog validation', () => {
     'changelog.json',
   );
 
+  let changelog: Awaited<ReturnType<typeof upgradeModule.getChangelog>>;
+
+  beforeAll(async () => {
+    changelog = await upgradeModule.getChangelog();
+  });
+
   it('is valid JSON and matches getChangelog() output', async () => {
     const changelogContent = await readFile(changelogPath, 'utf8');
 
@@ -81,12 +92,10 @@ describe('Changelog validation', () => {
       );
     }
 
-    const changelog = await upgradeModule.getChangelog();
     expect(changelog).toEqual(parsedChangelog);
   });
 
-  it('has only allowed top-level fields', async () => {
-    const changelog = await upgradeModule.getChangelog();
+  it('has only allowed top-level fields', () => {
     const allowedChangelogFields = ['url', 'version', 'releases'];
     const rogueChangelogFields = Object.keys(changelog).filter(
       (key) => !allowedChangelogFields.includes(key),
@@ -94,13 +103,9 @@ describe('Changelog validation', () => {
     expect(rogueChangelogFields).toEqual([]);
   });
 
-  it('has required fields and valid formats in every release', async () => {
-    const changelog = await upgradeModule.getChangelog();
-
+  it('has required fields and valid formats in every release', () => {
     for (const release of changelog.releases) {
-      // Fail fast on malformed entries rather than silently skipping them
-      expect(release).toBeDefined();
-      if (!release) continue;
+      assertDefined(release);
 
       expect(release.title).toBeDefined();
       expect(release.version).toBeDefined();
@@ -124,13 +129,9 @@ describe('Changelog validation', () => {
     }
   });
 
-  it('has no rogue fields in any release', async () => {
-    const changelog = await upgradeModule.getChangelog();
-
+  it('has no rogue fields in any release', () => {
     for (const release of changelog.releases) {
-      // Fail fast on malformed entries rather than silently skipping them
-      expect(release).toBeDefined();
-      if (!release) continue;
+      assertDefined(release);
 
       const rogueReleaseFields = Object.keys(release).filter(
         (key) => !allowedReleaseFields.has(key),
@@ -139,9 +140,7 @@ describe('Changelog validation', () => {
     }
   });
 
-  it('has valid feature/fix items with no rogue fields', async () => {
-    const changelog = await upgradeModule.getChangelog();
-
+  it('has valid feature/fix items with no rogue fields', () => {
     const allItems = changelog.releases.flatMap((r) => [
       ...(r.features ?? []),
       ...(r.fixes ?? []),
@@ -149,9 +148,7 @@ describe('Changelog validation', () => {
     expect(allItems.length).toBeGreaterThan(0);
 
     for (const release of changelog.releases) {
-      // Fail fast on malformed entries rather than silently skipping them
-      expect(release).toBeDefined();
-      if (!release) continue;
+      assertDefined(release);
 
       for (const item of [
         ...(release.features ?? []),
@@ -172,9 +169,7 @@ describe('Changelog validation', () => {
     }
   });
 
-  it('has valid steps with decodable base64 code', async () => {
-    const changelog = await upgradeModule.getChangelog();
-
+  it('has valid steps with decodable base64 code', () => {
     const allSteps = changelog.releases.flatMap((r) =>
       [...(r.features ?? []), ...(r.fixes ?? [])].flatMap(
         (item) => item?.steps ?? [],
@@ -183,9 +178,7 @@ describe('Changelog validation', () => {
     expect(allSteps.length).toBeGreaterThan(0);
 
     for (const release of changelog.releases) {
-      // Fail fast on malformed entries rather than silently skipping them
-      expect(release).toBeDefined();
-      if (!release) continue;
+      assertDefined(release);
 
       for (const item of [
         ...(release.features ?? []),
@@ -213,9 +206,7 @@ describe('Changelog validation', () => {
     }
   });
 
-  it('has valid semver versions for all dependencies', async () => {
-    const changelog = await upgradeModule.getChangelog();
-
+  it('has valid semver versions for all dependencies', () => {
     const allDeps = changelog.releases.flatMap((r) => [
       ...Object.entries(r.dependencies ?? {}),
       ...Object.entries(r.devDependencies ?? {}),
@@ -223,9 +214,7 @@ describe('Changelog validation', () => {
     expect(allDeps.length).toBeGreaterThan(0);
 
     for (const release of changelog.releases) {
-      // Fail fast on malformed entries rather than silently skipping them
-      expect(release).toBeDefined();
-      if (!release) continue;
+      assertDefined(release);
 
       for (const [pkg, version] of Object.entries(release.dependencies ?? {})) {
         expect(typeof pkg).toBe('string');
@@ -243,9 +232,7 @@ describe('Changelog validation', () => {
     }
   });
 
-  it('has valid dependenciesMeta structure', async () => {
-    const changelog = await upgradeModule.getChangelog();
-
+  it('has valid dependenciesMeta structure', () => {
     for (const release of changelog.releases) {
       if (!release?.dependenciesMeta) continue;
 
@@ -261,13 +248,9 @@ describe('Changelog validation', () => {
     }
   });
 
-  it('has valid removeDependencies and removeDevDependencies arrays', async () => {
-    const changelog = await upgradeModule.getChangelog();
-
+  it('has valid removeDependencies and removeDevDependencies arrays', () => {
     for (const release of changelog.releases) {
-      // Fail fast on malformed entries rather than silently skipping them
-      expect(release).toBeDefined();
-      if (!release) continue;
+      assertDefined(release);
 
       if (release.removeDependencies) {
         expect(Array.isArray(release.removeDependencies)).toBe(true);
