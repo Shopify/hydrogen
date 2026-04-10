@@ -11,7 +11,7 @@ import {
 
 import {Args} from '@oclif/core';
 
-export default class GenerateRoute extends Command {
+export default class Check extends Command {
   static descriptionWithMarkdown = `Checks whether your Hydrogen app includes a set of standard Shopify routes.`;
 
   static description =
