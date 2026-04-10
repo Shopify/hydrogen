@@ -67,6 +67,13 @@ export async function login(root?: string, shop?: string | true) {
       shop &&
       userAccount.activeShops.find(({fqdn}) => shop === fqdn);
 
+    if (!preselected && userAccount.activeShops.length === 0) {
+      throw new AbortError(
+        'No shops found for your Shopify account.',
+        "If you're just getting started, create a free dev store in your Shopify Dev Dashboard, then run the command again.",
+      );
+    }
+
     const selected =
       preselected ||
       (await renderSelectPrompt({
