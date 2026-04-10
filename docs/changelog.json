@@ -12,6 +12,9 @@
       "dependencies": {
         "@shopify/hydrogen": "2026.4.0"
       },
+      "devDependencies": {
+        "@shopify/cli": "3.93.2"
+      },
       "removeDependencies": [
         "@shopify/hydrogen"
       ],
