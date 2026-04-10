@@ -39,7 +39,7 @@ export function createRequestHandler<Context = unknown>({
       return new Response(null, {
         status: 301,
         headers: {
-          location: url.pathname.replace(/\/+/g, '/'),
+          location: url.pathname.replace(/\/+/g, '/') + url.search,
         },
       });
     }
