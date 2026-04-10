@@ -40,7 +40,7 @@ async function copyGeneratedToShopifyDev() {
 
   const destDir = path.join(
     shopifyDevDBPath,
-    'hydrogen-react',
+    'hydrogen_react',
     HYDROGEN_REACT_VERSION,
   );
   const destFile = path.join(destDir, 'generated_docs_data_v2.json');
