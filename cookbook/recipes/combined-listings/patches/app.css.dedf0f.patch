@@ -2,7 +2,7 @@ diff --git a/templates/skeleton/app/styles/app.css b/templates/skeleton/app/styl
 index 86c54680..42928dce 100644
 --- a/templates/skeleton/app/styles/app.css
 +++ b/templates/skeleton/app/styles/app.css
-@@ -662,6 +662,11 @@ button.reset:hover:not(:has(> *)) {
+@@ -667,6 +667,11 @@ button.reset:hover:not(:has(> *)) {
    width: 100%;
  }
  
