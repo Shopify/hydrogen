@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 11.1.15
+
+### Patch Changes
+
+- Update skeleton template to use @shopify/cli 3.93.2 ([#3699](https://github.com/Shopify/hydrogen/pull/3699)) by [@itsjustriley](https://github.com/itsjustriley)
+
 ## 11.1.14
 
 ### Patch Changes
