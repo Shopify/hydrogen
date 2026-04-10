@@ -56,7 +56,7 @@ export type Release = {
   commit: `https://${string}`;
   date: string;
   dependencies: Record<string, string>;
-  devDependencies: Record<string, string>;
+  devDependencies?: Record<string, string>;
   dependenciesMeta?: Record<string, {required: boolean}>;
   removeDependencies?: string[];
   removeDevDependencies?: string[];
@@ -299,7 +299,7 @@ export async function isRunningFromHydrogenMonorepo(): Promise<boolean> {
 function createNextRelease(latestRelease: Release): Release {
   // Use latest release as base and override specific @shopify packages to "next"
   const dependencies = {...latestRelease.dependencies};
-  const devDependencies = {...latestRelease.devDependencies};
+  const devDependencies = {...(latestRelease.devDependencies ?? {})};
 
   // Override @shopify/hydrogen and @shopify/mini-oxygen to "next" if they exist
   if (dependencies['@shopify/hydrogen']) {
@@ -446,7 +446,7 @@ function hasOutdatedDependencies({
 }) {
   return Object.entries({
     ...release.dependencies,
-    ...release.devDependencies,
+    ...(release.devDependencies ?? {}),
   }).some(([name, version]) => {
     // Skip checking the bundled CLI for now because it's always outdated.
     // (we release a new version of the CLI after every Hydrogen release)
@@ -883,7 +883,7 @@ export function buildUpgradeCommandArgs({
   };
   const effectiveDevDependencies = {
     ...(cumulativeDevDependencies ?? {}),
-    ...selectedRelease.devDependencies,
+    ...(selectedRelease.devDependencies ?? {}),
   };
 
   // upgrade dependencies
