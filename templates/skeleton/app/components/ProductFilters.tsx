@@ -97,9 +97,6 @@ export function ProductFilters({filters}: {filters: Filter[]}) {
                     type="button"
                     className={`product-filter-option${hasSwatches ? ' has-swatch' : ''}`}
                     onClick={() => toggleFilter(inputString)}
-                    style={{
-                      border: isApplied ? '2px solid black' : '1px solid #ccc',
-                    }}
                     title={`${value.label} (${value.count})`}
                     aria-label={`${value.label}, ${value.count} products`}
                     aria-pressed={isApplied}

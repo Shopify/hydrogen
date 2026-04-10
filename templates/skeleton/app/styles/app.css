@@ -564,7 +564,12 @@ button.reset:hover:not(:has(> *)) {
   padding: 0.5rem 1rem;
   cursor: pointer;
   background: white;
+  border: 1px solid #ccc;
   border-radius: 4px;
+}
+
+.product-filter-option[aria-pressed='true'] {
+  border: 2px solid black;
 }
 
 .product-filter-option.has-swatch {
