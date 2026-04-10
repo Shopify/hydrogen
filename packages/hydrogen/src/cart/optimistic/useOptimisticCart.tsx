@@ -47,7 +47,7 @@ export type OptimisticCart<T = CartReturn> = T extends undefined | null
 export function useOptimisticCart<
   DefaultCart = {
     lines?: {
-      nodes: Array<{id: string; quantity: number; merchandise: {is: string}}>;
+      nodes: Array<{id: string; quantity: number; merchandise: {id: string}}>;
     };
   },
 >(cart?: DefaultCart): OptimisticCart<DefaultCart> {
