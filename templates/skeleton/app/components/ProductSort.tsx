@@ -13,15 +13,14 @@ export function ProductSort({
 
   const searchParams = new URLSearchParams(location.search);
   const sortParam = searchParams.get('sort_by');
+  const defaultKey = Object.keys(sortOptions)[0];
   const currentSort =
-    sortParam && sortParam in sortOptions
-      ? sortParam
-      : Object.keys(sortOptions)[0];
+    sortParam && sortParam in sortOptions ? sortParam : defaultKey;
 
   const sortId = useId();
 
   const handleSortChange = (sortKey: string) => {
-    navigateFilters(applySortParam(sortKey, searchParams));
+    navigateFilters(applySortParam(sortKey, searchParams, defaultKey));
   };
 
   return (

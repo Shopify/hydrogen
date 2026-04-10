@@ -113,9 +113,9 @@ export function parseSortParam(
 }
 
 /**
- * Apply a sort key to URL search params. Default sort values (`FEATURED` for
- * collections, `RELEVANCE` for search) are represented by the absence of the
- * parameter rather than an explicit value.
+ * Apply a sort key to URL search params. When the selected key matches
+ * `defaultKey`, the parameter is removed from the URL rather than set
+ * explicitly — the absence of the parameter signals the default sort.
  *
  * Clears pagination cursors so stale cursors from a previous sort order don't
  * cause API errors.
@@ -123,10 +123,11 @@ export function parseSortParam(
 export function applySortParam(
   sortKey: string,
   searchParams: URLSearchParams,
+  defaultKey?: string,
 ): URLSearchParams {
   const params = new URLSearchParams(searchParams);
 
-  if (sortKey === 'FEATURED' || sortKey === 'RELEVANCE') {
+  if (defaultKey && sortKey === defaultKey) {
     params.delete(SORT_PARAM);
   } else {
     params.set(SORT_PARAM, sortKey);
