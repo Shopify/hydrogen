@@ -88,6 +88,14 @@ Hydrogen uses an automated release system built on Changesets, GitHub Actions (`
   - Each gets appropriate version bump
   - Published together when Version PR merged
 
+### Note: @shopify/hydrogen-codegen
+
+`@shopify/hydrogen-codegen` is an independently-versioned **SemVer** package (not CalVer). It releases through the same changeset/Version PR flow as other packages, but:
+
+- It needs its own changeset when its source or dependency versions change (see Rule 3 in root `CLAUDE.md`)
+- It does **not** require bumping `cli-hydrogen` or `create-hydrogen` (it is dynamically loaded, not bundled)
+- Its dependency on `@shopify/graphql-codegen` (a separate repo) is invisible to CI workspace linking — always create a changeset when bumping it
+
 ## Other Release Types
 
 ### Snapshot Testing (`/snapit`)
