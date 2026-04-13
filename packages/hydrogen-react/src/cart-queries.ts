@@ -1,3 +1,16 @@
+const CART_MUTATION_FIELDS = /* GraphQL */ `
+  userErrors {
+    code
+    field
+    message
+  }
+  warnings {
+    code
+    message
+    target
+  }
+`;
+
 export const CartLineAdd = (cartFragment: string): string => /* GraphQL */ `
   mutation CartLineAdd(
     $cartId: ID!
@@ -16,16 +29,7 @@ export const CartLineAdd = (cartFragment: string): string => /* GraphQL */ `
       cart {
         ...CartFragment
       }
-      userErrors {
-        code
-        field
-        message
-      }
-      warnings {
-        code
-        message
-        target
-      }
+      ${CART_MUTATION_FIELDS}
     }
   }
 
@@ -49,16 +53,7 @@ export const CartCreate = (cartFragment: string): string => /* GraphQL */ `
       cart {
         ...CartFragment
       }
-      userErrors {
-        code
-        field
-        message
-      }
-      warnings {
-        code
-        message
-        target
-      }
+      ${CART_MUTATION_FIELDS}
     }
   }
 
@@ -83,16 +78,7 @@ export const CartLineRemove = (cartFragment: string): string => /* GraphQL */ `
       cart {
         ...CartFragment
       }
-      userErrors {
-        code
-        field
-        message
-      }
-      warnings {
-        code
-        message
-        target
-      }
+      ${CART_MUTATION_FIELDS}
     }
   }
 
@@ -117,16 +103,7 @@ export const CartLineUpdate = (cartFragment: string): string => /* GraphQL */ `
       cart {
         ...CartFragment
       }
-      userErrors {
-        code
-        field
-        message
-      }
-      warnings {
-        code
-        message
-        target
-      }
+      ${CART_MUTATION_FIELDS}
     }
   }
 
@@ -151,16 +128,7 @@ export const CartNoteUpdate = (cartFragment: string): string => /* GraphQL */ `
       cart {
         ...CartFragment
       }
-      userErrors {
-        code
-        field
-        message
-      }
-      warnings {
-        code
-        message
-        target
-      }
+      ${CART_MUTATION_FIELDS}
     }
   }
 
@@ -187,16 +155,7 @@ export const CartBuyerIdentityUpdate = (
       cart {
         ...CartFragment
       }
-      userErrors {
-        code
-        field
-        message
-      }
-      warnings {
-        code
-        message
-        target
-      }
+      ${CART_MUTATION_FIELDS}
     }
   }
 
@@ -223,16 +182,7 @@ export const CartAttributesUpdate = (
       cart {
         ...CartFragment
       }
-      userErrors {
-        code
-        field
-        message
-      }
-      warnings {
-        code
-        message
-        target
-      }
+      ${CART_MUTATION_FIELDS}
     }
   }
 
@@ -259,16 +209,7 @@ export const CartDiscountCodesUpdate = (
       cart {
         ...CartFragment
       }
-      userErrors {
-        code
-        field
-        message
-      }
-      warnings {
-        code
-        message
-        target
-      }
+      ${CART_MUTATION_FIELDS}
     }
   }
 
