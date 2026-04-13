@@ -17,9 +17,10 @@ export type StorefrontClientProps = {
   contentType?: 'json' | 'graphql';
 };
 
-const MOCK_SHOP_DOMAIN = 'mock.shop';
+const MOCK_SHOP_DOMAIN = 'mockdotshop.myshopify.com';
+const LEGACY_MOCK_SHOP_DOMAIN = 'mock.shop';
 const isMockShop = (domain: string): boolean =>
-  domain.includes(MOCK_SHOP_DOMAIN);
+  domain.includes(MOCK_SHOP_DOMAIN) || domain.includes(LEGACY_MOCK_SHOP_DOMAIN);
 
 /**
  * The `createStorefrontClient()` function creates helpers that enable you to quickly query the Shopify Storefront API.
@@ -36,10 +37,7 @@ export function createStorefrontClient({
   if (!storeDomain) {
     if (__HYDROGEN_DEV__) {
       storeDomain = MOCK_SHOP_DOMAIN;
-      warnOnce(
-        `storeDomain missing, defaulting to ${MOCK_SHOP_DOMAIN}`,
-        'info',
-      );
+      warnOnce(`storeDomain missing, defaulting to Mock Shop`, 'info');
     } else {
       throw new Error(
         H2_PREFIX_ERROR +
