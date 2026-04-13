@@ -516,6 +516,9 @@ describe('<CartProvider />', () => {
           cartLineAdd: cartLineAddSpy,
         });
 
+        expect(result.current.userErrors).toBeUndefined();
+        expect(result.current.warnings).toBeUndefined();
+
         void act(() => {
           result.current.linesAdd([{merchandiseId: '123'}]);
         });
@@ -548,6 +551,9 @@ describe('<CartProvider />', () => {
         const result = await useCartWithInitializedCart({
           cartLineAdd: cartLineAddSpy,
         });
+
+        expect(result.current.userErrors).toBeUndefined();
+        expect(result.current.warnings).toBeUndefined();
 
         void act(() => {
           result.current.linesAdd([{merchandiseId: '123'}]);
@@ -585,6 +591,9 @@ describe('<CartProvider />', () => {
         const result = await useCartWithInitializedCart({
           cartLineAdd: cartLineAddSpy,
         });
+
+        expect(result.current.userErrors).toBeUndefined();
+        expect(result.current.warnings).toBeUndefined();
 
         // First mutation with errors
         void act(() => {
