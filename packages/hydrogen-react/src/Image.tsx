@@ -45,6 +45,7 @@ export type Loader = (params: LoaderParams) => string;
  */
 type Crop = 'center' | 'top' | 'bottom' | 'left' | 'right';
 
+/** @publicDocs */
 export type HydrogenImageProps = React.ComponentPropsWithRef<'img'> &
   HydrogenImageBaseProps;
 

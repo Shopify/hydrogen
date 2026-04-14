@@ -33775,7 +33775,7 @@
           "ExternalVideoBaseProps": {
             "filePath": "src/ExternalVideo.tsx",
             "name": "ExternalVideoBaseProps",
-            "description": "",
+            "description": "Takes in the same props as a native `<iframe>` element, except for `src`.",
             "isPublicDocs": true,
             "members": [
               {
@@ -34191,7 +34191,8 @@
           "MediaFileProps": {
             "filePath": "src/MediaFile.tsx",
             "name": "MediaFileProps",
-            "description": "",
+            "description": "MediaFile renders an `Image`, `Video`, `ExternalVideo`, or `ModelViewer` component. Use the `mediaOptions` prop to customize the props sent to each of these components.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/MediaFile.tsx",
@@ -36373,7 +36374,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "HydrogenImageProps",
             "value": "React.ComponentPropsWithRef<'img'> & HydrogenImageBaseProps",
-            "description": ""
+            "description": "",
+            "isPublicDocs": true
           },
           "HydrogenImageBaseProps": {
             "filePath": "src/Image.tsx",
