@@ -70,7 +70,7 @@ export function cartGetDefault({
     const [isCustomerLoggedIn, {cart, errors}] = await Promise.all([
       customerAccount ? customerAccount.isLoggedIn() : false,
       storefront.query<{cart: Cart | null}>(CART_QUERY(cartFragment), {
-        variables: {cartId, ...cartInput},
+        variables: {...cartInput, cartId},
         cache: storefront.CacheNone(),
       }),
     ]);
