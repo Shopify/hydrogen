@@ -72,7 +72,7 @@ export type AnalyticsProviderProps = {
   children?: ReactNode;
   /** The cart or cart promise to track for cart analytics. When there is a difference between the state of the cart, `AnalyticsProvider` will trigger a `cart_updated` event. It will also produce `product_added_to_cart` and `product_removed_from_cart` based on cart line quantity and cart line id changes. */
   cart: Promise<CartReturn | null> | CartReturn | null;
-  /** An optional function to set wether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
+  /** An optional function to set whether the user can be tracked. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
   canTrack?: () => boolean;
   /** An optional custom payload to pass to all events. e.g language/locale/currency. */
   customData?: Record<string, unknown>;
