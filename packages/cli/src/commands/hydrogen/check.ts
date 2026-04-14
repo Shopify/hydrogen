@@ -31,7 +31,7 @@ export default class Check extends Command {
   };
 
   async run(): Promise<void> {
-    const {flags, args} = await this.parse(GenerateRoute);
+    const {flags, args} = await this.parse(Check);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
     if (args.resource === 'routes') {
