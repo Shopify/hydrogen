@@ -45,7 +45,7 @@ describe('create-hydrogen', () => {
         │                                                                              │
         │  Storefront setup complete!                                                  │
         │                                                                              │
-        │    Shopify:   Mock.shop                                                      │
+        │    Shopify:   Mock Shop                                                      │
         │    Language:  JavaScript                                                     │
         │    Routes:                                                                   │
         │      • Home (/ & /:catchAll)                                                 │
