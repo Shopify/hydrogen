@@ -11,6 +11,10 @@ import type {
   CartQueryDataReturn,
 } from './cart-types';
 import type {CartInput} from '@shopify/hydrogen-react/storefront-api-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+} from './cart-query-helpers';
 
 export type CartCreateFunction = (
   input: CartInput,
@@ -26,10 +30,11 @@ export function cartCreateDefault(
       : undefined;
     const {cartId, ...restOfOptionalParams} = optionalParams || {};
     const {buyerIdentity, ...restOfInput} = input;
+    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
     const {cartCreate, errors} = await options.storefront.mutate<{
       cartCreate: CartQueryData;
       errors: StorefrontApiErrors;
-    }>(CART_CREATE_MUTATION(options.cartFragment), {
+    }>(CART_CREATE_MUTATION(options.cartFragment, {includeVisitorConsent}), {
       variables: {
         input: {
           ...restOfInput,
@@ -45,16 +50,19 @@ export function cartCreateDefault(
   };
 }
 
+type CartMutationBuilderOptions = {
+  includeVisitorConsent?: boolean;
+};
+
 //! @see: https://shopify.dev/docs/api/storefront/latest/mutations/cartCreate
 export const CART_CREATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartMutationBuilderOptions = {},
 ) => `#graphql
   mutation cartCreate(
     $input: CartInput!
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
+  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartCreate(input: $input) {
       cart {
         ...CartApiMutation

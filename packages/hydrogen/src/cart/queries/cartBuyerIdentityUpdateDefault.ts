@@ -11,6 +11,10 @@ import type {
   CartQueryOptions,
 } from './cart-types';
 import type {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+} from './cart-query-helpers';
 
 export type CartBuyerIdentityUpdateFunction = (
   buyerIdentity: CartBuyerIdentityInput,
@@ -31,34 +35,43 @@ export function cartBuyerIdentityUpdateDefault(
       ? await options.customerAccount.getBuyer()
       : undefined;
 
+    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
     const {cartBuyerIdentityUpdate, errors} = await options.storefront.mutate<{
       cartBuyerIdentityUpdate: CartQueryData;
       errors: StorefrontApiErrors;
-    }>(CART_BUYER_IDENTITY_UPDATE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        buyerIdentity: {
-          ...buyer,
-          ...buyerIdentity,
+    }>(
+      CART_BUYER_IDENTITY_UPDATE_MUTATION(options.cartFragment, {
+        includeVisitorConsent,
+      }),
+      {
+        variables: {
+          cartId: options.getCartId(),
+          buyerIdentity: {
+            ...buyer,
+            ...buyerIdentity,
+          },
+          ...optionalParams,
         },
-        ...optionalParams,
       },
-    });
+    );
     return formatAPIResult(cartBuyerIdentityUpdate, errors);
   };
 }
 
+type CartMutationBuilderOptions = {
+  includeVisitorConsent?: boolean;
+};
+
 //! @see https://shopify.dev/docs/api/storefront/latest/mutations/cartBuyerIdentityUpdate
 export const CART_BUYER_IDENTITY_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartMutationBuilderOptions = {},
 ) => `#graphql
   mutation cartBuyerIdentityUpdate(
     $cartId: ID!
     $buyerIdentity: CartBuyerIdentityInput!
-    $language: LanguageCode
-    $country: CountryCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
+  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
       cart {
         ...CartApiMutation

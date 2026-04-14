@@ -11,6 +11,10 @@ import type {
   CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+} from './cart-query-helpers';
 
 export type CartDeliveryAddressesRemoveFunction = (
   addressIds: Array<Scalars['ID']['input']> | Array<string>,
@@ -40,33 +44,42 @@ export function cartDeliveryAddressesRemoveDefault(
     addressIds: Array<Scalars['ID']['input']> | string[],
     optionalParams,
   ) => {
+    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
     const {cartDeliveryAddressesRemove, errors} =
       await options.storefront.mutate<{
         cartDeliveryAddressesRemove: CartQueryData;
         errors: StorefrontApiErrors;
-      }>(CART_DELIVERY_ADDRESSES_REMOVE_MUTATION(options.cartFragment), {
-        variables: {
-          cartId: options.getCartId(),
-          addressIds,
-          ...optionalParams,
+      }>(
+        CART_DELIVERY_ADDRESSES_REMOVE_MUTATION(options.cartFragment, {
+          includeVisitorConsent,
+        }),
+        {
+          variables: {
+            cartId: options.getCartId(),
+            addressIds,
+            ...optionalParams,
+          },
         },
-      });
+      );
 
     return formatAPIResult(cartDeliveryAddressesRemove, errors);
   };
 }
 
+type CartMutationBuilderOptions = {
+  includeVisitorConsent?: boolean;
+};
+
 //! @see: https://shopify.dev/docs/api/storefront/latest/mutations/cartDeliveryAddressesRemove
 export const CART_DELIVERY_ADDRESSES_REMOVE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartMutationBuilderOptions = {},
 ) => `#graphql
   mutation cartDeliveryAddressesRemove(
     $cartId: ID!
     $addressIds: [ID!]!,
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
+  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartDeliveryAddressesRemove(addressIds: $addressIds, cartId: $cartId) {
       cart {
         ...CartApiMutation

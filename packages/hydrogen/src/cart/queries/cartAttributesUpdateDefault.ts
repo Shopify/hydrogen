@@ -11,6 +11,10 @@ import type {
   CartQueryOptions,
 } from './cart-types';
 import type {AttributeInput} from '@shopify/hydrogen-react/storefront-api-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+} from './cart-query-helpers';
 
 export type CartAttributesUpdateFunction = (
   attributes: AttributeInput[],
@@ -21,30 +25,39 @@ export function cartAttributesUpdateDefault(
   options: CartQueryOptions,
 ): CartAttributesUpdateFunction {
   return async (attributes, optionalParams) => {
+    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
     const {cartAttributesUpdate, errors} = await options.storefront.mutate<{
       cartAttributesUpdate: CartQueryData;
       errors: StorefrontApiErrors;
-    }>(CART_ATTRIBUTES_UPDATE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: optionalParams?.cartId || options.getCartId(),
-        attributes,
-        ...optionalParams,
+    }>(
+      CART_ATTRIBUTES_UPDATE_MUTATION(options.cartFragment, {
+        includeVisitorConsent,
+      }),
+      {
+        variables: {
+          cartId: optionalParams?.cartId || options.getCartId(),
+          attributes,
+          ...optionalParams,
+        },
       },
-    });
+    );
     return formatAPIResult(cartAttributesUpdate, errors);
   };
 }
 
+type CartMutationBuilderOptions = {
+  includeVisitorConsent?: boolean;
+};
+
 export const CART_ATTRIBUTES_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartMutationBuilderOptions = {},
 ) => `#graphql
   mutation cartAttributesUpdate(
     $cartId: ID!
     $attributes: [AttributeInput!]!
-    $language: LanguageCode
-    $country: CountryCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
+  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartAttributesUpdate(cartId: $cartId, attributes: $attributes) {
       cart {
         ...CartApiMutation

@@ -10,6 +10,10 @@ import type {
   CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+} from './cart-query-helpers';
 
 export type CartNoteUpdateFunction = (
   note: string,
@@ -20,31 +24,38 @@ export function cartNoteUpdateDefault(
   options: CartQueryOptions,
 ): CartNoteUpdateFunction {
   return async (note, optionalParams) => {
+    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
     const {cartNoteUpdate, errors} = await options.storefront.mutate<{
       cartNoteUpdate: CartQueryData;
       errors: StorefrontApiErrors;
-    }>(CART_NOTE_UPDATE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        note,
-        ...optionalParams,
+    }>(
+      CART_NOTE_UPDATE_MUTATION(options.cartFragment, {includeVisitorConsent}),
+      {
+        variables: {
+          cartId: options.getCartId(),
+          note,
+          ...optionalParams,
+        },
       },
-    });
+    );
     return formatAPIResult(cartNoteUpdate, errors);
   };
 }
 
+type CartMutationBuilderOptions = {
+  includeVisitorConsent?: boolean;
+};
+
 //! @see https://shopify.dev/docs/api/storefront/latest/mutations/cartNoteUpdate
 export const CART_NOTE_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartMutationBuilderOptions = {},
 ) => `#graphql
   mutation cartNoteUpdate(
     $cartId: ID!
     $note: String!
-    $language: LanguageCode
-    $country: CountryCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
+  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartNoteUpdate(cartId: $cartId, note: $note) {
       cart {
         ...CartApiMutation
