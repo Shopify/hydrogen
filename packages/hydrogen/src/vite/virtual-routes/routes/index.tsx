@@ -44,10 +44,9 @@ export async function loader({
   context: AppLoadContext;
 }) {
   const layout = await storefront.query<{shop: Shop}>(LAYOUT_QUERY);
-  const apiUrl = storefront.getApiUrl();
-  const isMockShop =
-    apiUrl.includes('mockdotshop.myshopify.com') ||
-    apiUrl.includes('mock.shop');
+  const isMockShop = storefront
+    .getApiUrl()
+    .includes('mockdotshop.myshopify.com');
   return {layout, isMockShop};
 }
 

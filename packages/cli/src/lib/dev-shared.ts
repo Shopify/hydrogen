@@ -17,13 +17,11 @@ import {getConfig} from './shopify-config.js';
 import {getGraphiQLUrl} from './graphiql-url.js';
 
 const MOCK_SHOP_DOMAIN = 'mockdotshop.myshopify.com';
-const LEGACY_MOCK_SHOP_DOMAIN = 'mock.shop';
 
 export function isMockShop(envVariables: Record<string, string>) {
   const domain = envVariables.PUBLIC_STORE_DOMAIN;
   return (
     domain === MOCK_SHOP_DOMAIN ||
-    domain === LEGACY_MOCK_SHOP_DOMAIN ||
     // We fallback to Mock Shop if the env var is falsy.
     // When it's undefined, it might be overwritten by remote variables.
     domain === ''

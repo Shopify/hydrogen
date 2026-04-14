@@ -18,9 +18,8 @@ export type StorefrontClientProps = {
 };
 
 const MOCK_SHOP_DOMAIN = 'mockdotshop.myshopify.com';
-const LEGACY_MOCK_SHOP_DOMAIN = 'mock.shop';
 const isMockShop = (domain: string): boolean =>
-  domain.includes(MOCK_SHOP_DOMAIN) || domain.includes(LEGACY_MOCK_SHOP_DOMAIN);
+  domain.includes(MOCK_SHOP_DOMAIN);
 
 /**
  * The `createStorefrontClient()` function creates helpers that enable you to quickly query the Shopify Storefront API.

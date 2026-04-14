@@ -5,4 +5,4 @@
 '@shopify/create-hydrogen': minor
 ---
 
-Replace deprecated `mock.shop` domain with `mockdotshop.myshopify.com` as the default demo storefront for newly scaffolded Hydrogen projects. Existing projects using `mock.shop` in their environment variables will continue to work — both domains are recognized during the transition period.
+Replace deprecated `mock.shop` domain with `mockdotshop.myshopify.com` as the default demo storefront. The `mock.shop` domain is no longer recognized as a mock shop — if you had it set explicitly in your `.env`, update it to `mockdotshop.myshopify.com` or remove it to use the new default automatically.
