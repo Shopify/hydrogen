@@ -220,7 +220,7 @@ const generateFixture = async ({
     // recipeFixturePath is constructed from controlled paths. Safe for test environment.
     // Using exec (not execFile) because pnpm run requires shell for script resolution.
     await execAsync(
-      `pnpm --filter cookbook run cookbook -- apply --recipe ${recipeName} --template ${stagingPath}`,
+      `pnpm --filter cookbook run cookbook apply --recipe ${recipeName} --template ${stagingPath}`,
       {
         cwd: repoRoot,
         env: {...process.env, ...envOverrides, CI: 'true'},

@@ -2,6 +2,7 @@ import {vi, describe, it, beforeEach, afterEach, expect} from 'vitest';
 import {renderHook, act} from '@testing-library/react';
 import {
   useCustomerPrivacy,
+  getCustomerPrivacy,
   CONSENT_API,
   CONSENT_API_WITH_BANNER,
 } from './ShopifyCustomerPrivacy.js';
@@ -57,6 +58,7 @@ describe(`useCustomerPrivacy`, () => {
     head.innerHTML = '';
     body.innerHTML = '';
     document.querySelectorAll('script').forEach((node) => node.remove());
+    delete (global.window as any).Shopify;
   });
 
   it('By default, loads just the customerPrivacy script', () => {
@@ -175,6 +177,48 @@ describe(`useCustomerPrivacy`, () => {
         showPreferences: expect.any(Function),
       }),
     });
+  });
+
+  it('installs backendConsentEnabled stub when CDN resets window.Shopify', () => {
+    renderHook(() =>
+      useCustomerPrivacy({
+        checkoutDomain: 'checkout.shopify.com',
+        storefrontAccessToken: '3b580e70970c4528da70c98e097c2fa0',
+      }),
+    );
+
+    // Simulate the CDN's conditional assignment: window.Shopify = window.Shopify ? window.Shopify : {}
+    // With no pre-populated window.Shopify, CDN assigns an empty object through the outer setter.
+    global.window.Shopify = {};
+
+    // The outer setter should have installed the stub with backendConsentEnabled = true so
+    // the CDN reads the flag before it assigns the full API.
+    expect(window.Shopify).toBeDefined();
+    expect(window.Shopify.customerPrivacy).toBeDefined();
+    expect((window.Shopify.customerPrivacy as any).backendConsentEnabled).toBe(
+      true,
+    );
+  });
+
+  it('getCustomerPrivacy returns null when only the backendConsent stub is present', () => {
+    renderHook(() =>
+      useCustomerPrivacy({
+        checkoutDomain: 'checkout.shopify.com',
+        storefrontAccessToken: '3b580e70970c4528da70c98e097c2fa0',
+      }),
+    );
+
+    // CDN resets Shopify — stub is installed, full API not yet assigned
+    global.window.Shopify = {};
+
+    // Stub is present but is not the usable CustomerPrivacy API
+    expect(window.Shopify.customerPrivacy).toBeDefined();
+    expect((window.Shopify.customerPrivacy as any).backendConsentEnabled).toBe(
+      true,
+    );
+    // The stub must NOT be exposed to callers as a usable CustomerPrivacy —
+    // it lacks all API methods and would crash callers that call e.g. setTrackingConsent()
+    expect(getCustomerPrivacy()).toBeNull();
   });
 
   it('triggers the onReady callback when both APIs are ready', async () => {

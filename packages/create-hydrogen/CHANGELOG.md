@@ -1,5 +1,39 @@
 # @shopify/create-hydrogen
 
+## 5.0.34
+
+### Patch Changes
+
+- Update skeleton template to use @shopify/cli 3.93.2 ([#3699](https://github.com/Shopify/hydrogen/pull/3699)) by [@itsjustriley](https://github.com/itsjustriley)
+
+## 5.0.33
+
+### Patch Changes
+
+- Update Storefront API and Customer Account API from 2026-01 to 2026-04. ([#3651](https://github.com/Shopify/hydrogen/pull/3651)) by [@itsjustriley](https://github.com/itsjustriley)
+
+  ## Breaking changes
+
+  **JSON metafield values limited to 128KB**: When using API version 2026-04 or later, the Storefront API limits JSON type metafield writes to 128KB. This limit applies at the API level - Hydrogen passes through to the Storefront API without additional restriction. Apps that used JSON metafields before April 1, 2026 are grandfathered at the existing 2MB limit. Large metafield values continue to be readable by all API versions.
+
+  ## New features
+
+  **New `MERCHANDISE_LINE_TRANSFORMERS_RUN_ERROR` cart error code**: Cart operations (`cartCreate`, `cartLinesAdd`, etc.) now return a specific `MERCHANDISE_LINE_TRANSFORMERS_RUN_ERROR` error code when a Cart Transform Function fails at runtime, instead of the previous generic `INVALID` error code. If you handle cart errors in your storefront code, you may want to add handling for this new code.
+
+  ## Changelog links
+  - [Storefront API 2026-04 changelog](https://shopify.dev/changelog?filter=api&api_version=2026-04&api_type=storefront-graphql)
+  - [Customer Account API 2026-04 changelog](https://shopify.dev/changelog?filter=api&api_version=2026-04&api_type=customer-account-graphql)
+
+## 5.0.32
+
+### Patch Changes
+
+- Add Storefront MCP proxy support to enable AI agent integration. Hydrogen now automatically proxies requests to `/api/mcp` to Shopify's Storefront MCP server, which implements the Model Context Protocol specification. This feature is automatically available when `proxyStandardRoutes` is enabled in `createRequestHandler` (the default) — no code changes required. AI assistants like Claude and ChatGPT can connect to Hydrogen storefronts to help customers browse products, manage carts, and access store policies. ([#3572](https://github.com/Shopify/hydrogen/pull/3572)) by [@itsjustriley](https://github.com/itsjustriley)
+
+- Remove redundant Storefront API proxy route from skeleton template. The server now automatically proxies requests to `/api/:version/graphql.json` via `createRequestHandler` with `proxyStandardRoutes: true` (enabled by default since December 2025). ([#3572](https://github.com/Shopify/hydrogen/pull/3572)) by [@itsjustriley](https://github.com/itsjustriley)
+
+  Developers no longer need a manual route file for the tokenless Storefront API. Existing apps with this route can safely delete it - the server-level proxy provides the same functionality with better cookie forwarding and analytics integration.
+
 ## 5.0.31
 
 ### Patch Changes

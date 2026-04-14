@@ -1,5 +1,39 @@
 # skeleton
 
+## 2026.4.0
+
+### Major Changes
+
+- Update Storefront API and Customer Account API from 2026-01 to 2026-04. ([#3651](https://github.com/Shopify/hydrogen/pull/3651)) by [@itsjustriley](https://github.com/itsjustriley)
+
+  ## Breaking changes
+
+  **JSON metafield values limited to 128KB**: When using API version 2026-04 or later, the Storefront API limits JSON type metafield writes to 128KB. This limit applies at the API level - Hydrogen passes through to the Storefront API without additional restriction. Apps that used JSON metafields before April 1, 2026 are grandfathered at the existing 2MB limit. Large metafield values continue to be readable by all API versions.
+
+  ## New features
+
+  **New `MERCHANDISE_LINE_TRANSFORMERS_RUN_ERROR` cart error code**: Cart operations (`cartCreate`, `cartLinesAdd`, etc.) now return a specific `MERCHANDISE_LINE_TRANSFORMERS_RUN_ERROR` error code when a Cart Transform Function fails at runtime, instead of the previous generic `INVALID` error code. If you handle cart errors in your storefront code, you may want to add handling for this new code.
+
+  ## Changelog links
+  - [Storefront API 2026-04 changelog](https://shopify.dev/changelog?filter=api&api_version=2026-04&api_type=storefront-graphql)
+  - [Customer Account API 2026-04 changelog](https://shopify.dev/changelog?filter=api&api_version=2026-04&api_type=customer-account-graphql)
+
+### Patch Changes
+
+- Updated dependencies [[`e7215ed0d7a74cacfa8c935f414c1cf32fc2ccd0`](https://github.com/Shopify/hydrogen/commit/e7215ed0d7a74cacfa8c935f414c1cf32fc2ccd0), [`92ab8e8b59807bbdb5dbecaa18629292d5566135`](https://github.com/Shopify/hydrogen/commit/92ab8e8b59807bbdb5dbecaa18629292d5566135), [`b0caa5c013380c7837f049f48da089a1671e2c6d`](https://github.com/Shopify/hydrogen/commit/b0caa5c013380c7837f049f48da089a1671e2c6d)]:
+  - @shopify/hydrogen@2026.4.0
+
+## 2026.1.4
+
+### Patch Changes
+
+- Remove redundant Storefront API proxy route from skeleton template. The server now automatically proxies requests to `/api/:version/graphql.json` via `createRequestHandler` with `proxyStandardRoutes: true` (enabled by default since December 2025). ([#3572](https://github.com/Shopify/hydrogen/pull/3572)) by [@itsjustriley](https://github.com/itsjustriley)
+
+  Developers no longer need a manual route file for the tokenless Storefront API. Existing apps with this route can safely delete it - the server-level proxy provides the same functionality with better cookie forwarding and analytics integration.
+
+- Updated dependencies [[`b0a75c1d759706931876f056662de2497cb3e688`](https://github.com/Shopify/hydrogen/commit/b0a75c1d759706931876f056662de2497cb3e688), [`a44ee3566b9bb9a7f43f05dfaae6f1f2ab1d548f`](https://github.com/Shopify/hydrogen/commit/a44ee3566b9bb9a7f43f05dfaae6f1f2ab1d548f)]:
+  - @shopify/hydrogen@2026.1.4
+
 ## 2026.1.3
 
 ### Patch Changes

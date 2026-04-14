@@ -375,7 +375,6 @@ describe('upgrade', async () => {
         expect(latestRelease).toHaveProperty('hash');
         expect(latestRelease).toHaveProperty('commit');
         expect(latestRelease).toHaveProperty('dependencies');
-        expect(latestRelease).toHaveProperty('devDependencies');
         expect(latestRelease).toHaveProperty('features');
         expect(latestRelease).toHaveProperty('fixes');
 
@@ -389,7 +388,9 @@ describe('upgrade', async () => {
 
         // Verify dependencies are objects
         expect(typeof latestRelease.dependencies).toBe('object');
-        expect(typeof latestRelease.devDependencies).toBe('object');
+        if (latestRelease.devDependencies !== undefined) {
+          expect(typeof latestRelease.devDependencies).toBe('object');
+        }
 
         // Verify features and fixes are arrays
         expect(Array.isArray(latestRelease.features)).toBe(true);
@@ -423,11 +424,12 @@ describe('upgrade', async () => {
 
       expect(sampleRelease.version).toBeDefined();
       expect(sampleRelease.dependencies).toBeDefined();
-      expect(sampleRelease.devDependencies).toBeDefined();
 
       // Test that the structure matches what upgrade functions expect
       expect(typeof sampleRelease.dependencies).toBe('object');
-      expect(typeof sampleRelease.devDependencies).toBe('object');
+      if (sampleRelease.devDependencies !== undefined) {
+        expect(typeof sampleRelease.devDependencies).toBe('object');
+      }
       expect(Array.isArray(sampleRelease.features)).toBe(true);
       expect(Array.isArray(sampleRelease.fixes)).toBe(true);
     });
@@ -2200,7 +2202,7 @@ describe('--version=next functionality', () => {
       });
 
       expect(result.dependencies['@shopify/hydrogen']).toBe('next');
-      expect(result.devDependencies['@shopify/mini-oxygen']).toBe('next');
+      expect(result.devDependencies?.['@shopify/mini-oxygen']).toBe('next');
       expect(result.dependencies['react-router']).toBe('7.9.2');
       expect(result.title).toContain('(next versions)');
     });
@@ -2242,7 +2244,7 @@ describe('--version=next functionality', () => {
       });
 
       expect(result.dependencies['@shopify/hydrogen']).toBe('next');
-      expect(result.devDependencies['@shopify/mini-oxygen']).toBe('next');
+      expect(result.devDependencies?.['@shopify/mini-oxygen']).toBe('next');
       expect(result.dependencies['react-router']).toBe('7.9.2'); // Non-Shopify packages unchanged
     });
 
