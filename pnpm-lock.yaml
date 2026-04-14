@@ -468,8 +468,8 @@ importers:
         specifier: 7.12.0
         version: 7.12.0(@react-router/serve@7.13.0(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2))(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.9.2)(vite@6.4.2(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.30.2)(yaml@2.8.3))(yaml@2.8.3)
       '@shopify/generate-docs':
-        specifier: 0.16.4
-        version: 0.16.4
+        specifier: 1.1.2
+        version: 1.1.2
       '@shopify/hydrogen-codegen':
         specifier: workspace:*
         version: link:../hydrogen-codegen
@@ -584,8 +584,8 @@ importers:
         specifier: ^5.0.1
         version: 5.1.1(@types/node@22.19.15)(@types/react@18.3.28)(jiti@2.6.1)(lightningcss@1.30.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.2)(yaml@2.8.3)
       '@shopify/generate-docs':
-        specifier: 0.16.4
-        version: 0.16.4
+        specifier: 1.1.2
+        version: 1.1.2
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -2964,8 +2964,8 @@ packages:
     os: [darwin, linux, win32]
     hasBin: true
 
-  '@shopify/generate-docs@0.16.4':
-    resolution: {integrity: sha512-lYtnB2gPPSBf73YvbrNM9u6p1cm/qbg1uEqkMW9sG4/dORb5tBPDDC/KkckaCaMF7soHg9PsinNXHAa0/Hlf4g==, tarball: https://registry.npmjs.org/@shopify/generate-docs/-/generate-docs-0.16.4.tgz}
+  '@shopify/generate-docs@1.1.2':
+    resolution: {integrity: sha512-IEorNlulHXpY1qIuE4/QiT+3L3zzM57fz4GFcD5rBETwirMXMz2jzQL5XA1MKk1LY09u0udkDOHOypainmhHwA==, tarball: https://registry.npmjs.org/@shopify/generate-docs/-/generate-docs-1.1.2.tgz}
     hasBin: true
 
   '@shopify/graphql-client@1.4.1':
@@ -11229,7 +11229,7 @@ snapshots:
       esbuild: 0.27.4
       global-agent: 3.0.0
 
-  '@shopify/generate-docs@0.16.4':
+  '@shopify/generate-docs@1.1.2':
     dependencies:
       '@types/react': 18.3.28
       globby: 11.1.0
