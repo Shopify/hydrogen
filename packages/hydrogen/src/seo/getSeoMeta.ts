@@ -10,7 +10,8 @@ import {MetaFunction} from 'react-router';
 
 export type GetSeoMetaReturn = ReturnType<MetaFunction>;
 
-type GetSeoMetaTypeForDocs = {
+/** @publicDocs */
+export type GetSeoMetaTypeForDocs = {
   /** `getSeoMeta` takes an arbitrary number of configuration object parameters. Values in each object are overwritten based on the object order. \`jsonLd\` properties are preserved between each configuration object. */
   seoInputs: SeoConfig[];
 };

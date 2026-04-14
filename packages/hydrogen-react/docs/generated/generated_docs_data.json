@@ -35,6 +35,7 @@
             "filePath": "src/AddToCartButton.tsx",
             "name": "AddToCartButtonPropsForDocs",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/AddToCartButton.tsx",
@@ -165,6 +166,7 @@
             "filePath": "src/BuyNowButton.tsx",
             "name": "BuyNowButtonPropsForDocs",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/BuyNowButton.tsx",
@@ -279,6 +281,7 @@
             "filePath": "src/CartCheckoutButton.tsx",
             "name": "CartCheckoutButtonPropsForDocs",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/CartCheckoutButton.tsx",
@@ -354,6 +357,7 @@
             "filePath": "src/CartCost.tsx",
             "name": "CartCostPropsForDocs",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/CartCost.tsx",
@@ -4221,6 +4225,7 @@
             "filePath": "src/ProductPrice.tsx",
             "name": "ProductPricePropsForDocs",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/ProductPrice.tsx",
@@ -4412,6 +4417,7 @@
             "name": "RichTextPropsForDocs",
             "value": "RichTextPropsBase<AsType>",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/RichText.tsx",
@@ -4969,7 +4975,7 @@
           "SendShopifyAnalyticsGeneratedType": {
             "filePath": "src/analytics.ts",
             "name": "SendShopifyAnalyticsGeneratedType",
-            "description": "Set user and session cookies and refresh the expiry time",
+            "description": "Set user and session cookies and refresh the expiry time. If `event.payload.hasUserConsent` is false, no analytics event will happen.",
             "isPublicDocs": true,
             "params": [
               {
@@ -5353,7 +5359,8 @@
           "ShopifySalesChannel": {
             "filePath": "src/analytics-constants.ts",
             "name": "ShopifySalesChannel",
-            "description": "",
+            "description": "Analytics sales channel values accepted by Shopify analytics.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/analytics-constants.ts",
@@ -5599,7 +5606,8 @@
           "AnalyticsEventName": {
             "filePath": "src/analytics-constants.ts",
             "name": "AnalyticsEventName",
-            "description": "These duplicated interface declaration is so that we can generate proper documentation for these public facing constants",
+            "description": "Analytics event names accepted by Shopify analytics.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/analytics-constants.ts",
@@ -5628,7 +5636,8 @@
           "AnalyticsPageType": {
             "filePath": "src/analytics-constants.ts",
             "name": "AnalyticsPageType",
-            "description": "",
+            "description": "Analytics page type values accepted by Shopify analytics.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/analytics-constants.ts",
@@ -5797,7 +5806,8 @@
           "ShopifySalesChannel": {
             "filePath": "src/analytics-constants.ts",
             "name": "ShopifySalesChannel",
-            "description": "",
+            "description": "Analytics sales channel values accepted by Shopify analytics.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/analytics-constants.ts",
@@ -5888,6 +5898,7 @@
             "filePath": "src/flatten-connection.ts",
             "name": "ConnectionGenericForDoc",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/flatten-connection.ts",
@@ -5944,7 +5955,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "FlattenConnectionReturnForDoc",
             "value": "unknown[]",
-            "description": ""
+            "description": "",
+            "isPublicDocs": true
           }
         }
       }
@@ -5997,7 +6009,7 @@
           "GetClientBrowserParametersGeneratedType": {
             "filePath": "src/analytics.ts",
             "name": "GetClientBrowserParametersGeneratedType",
-            "description": "",
+            "description": "If executed on server, this method will return empty string for each field.",
             "isPublicDocs": true,
             "params": [],
             "returns": {
@@ -6138,7 +6150,7 @@
           "GetShopifyCookiesGeneratedType": {
             "filePath": "src/cookies-utils.tsx",
             "name": "GetShopifyCookiesGeneratedType",
-            "description": "Gets the values of _shopify_y and _shopify_s cookies from the provided cookie string.",
+            "description": "Gets the values of _shopify_y and _shopify_s cookies from the provided cookie string. If the Shopify cookies doesn't exist, this method will return empty string for each missing cookie.",
             "isPublicDocs": true,
             "params": [
               {
@@ -6161,7 +6173,7 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyCookies",
             "value": "{\n  /** Shopify unique user token: Value of `_shopify_y` cookie. */\n  [SHOPIFY_Y]: string;\n  /** Shopify session token: Value of `_shopify_s` cookie. */\n  [SHOPIFY_S]: string;\n}",
-            "description": "",
+            "description": "Shopify cookies names",
             "members": [
               {
                 "filePath": "src/analytics-types.ts",
@@ -6191,7 +6203,7 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyCookies",
             "value": "{\n  /** Shopify unique user token: Value of `_shopify_y` cookie. */\n  [SHOPIFY_Y]: string;\n  /** Shopify session token: Value of `_shopify_s` cookie. */\n  [SHOPIFY_S]: string;\n}",
-            "description": "",
+            "description": "Shopify cookies names",
             "members": [
               {
                 "filePath": "src/analytics-types.ts",
@@ -6368,7 +6380,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "LoadScriptParams",
             "value": "[src: string, options?: LoadScriptOptions]",
-            "description": ""
+            "description": "",
+            "isPublicDocs": true
           },
           "LoadScriptOptions": {
             "filePath": "src/load-script.tsx",
@@ -6507,6 +6520,7 @@
             "filePath": "src/optionValueDecoder.ts",
             "name": "IsOptionValueCombinationInEncodedVariant",
             "description": "",
+            "isPublicDocs": true,
             "params": [
               {
                 "name": "targetOptionValueCombination",

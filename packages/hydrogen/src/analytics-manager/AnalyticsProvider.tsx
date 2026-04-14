@@ -500,6 +500,7 @@ export const Analytics = {
 
 type DefaultCart = Promise<CartReturn | null> | CartReturn | null;
 
+/** @publicDocs */
 export type AnalyticsContextValueForDoc<UserCart> = {
   /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */
   canTrack?: () => boolean;

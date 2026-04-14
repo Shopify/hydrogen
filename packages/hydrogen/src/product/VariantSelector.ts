@@ -204,7 +204,10 @@ export function VariantSelector({
   );
 }
 
-type GetSelectedProductOptions = (request: Request) => SelectedOptionInput[];
+/** @publicDocs */
+export type GetSelectedProductOptions = (
+  request: Request,
+) => SelectedOptionInput[];
 
 /**
  * Extract searchParams from a Request instance and return an array of selected options.

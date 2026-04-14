@@ -2,6 +2,7 @@ import {forwardRef, ScriptHTMLAttributes, HTMLAttributes} from 'react';
 import {useNonce} from './csp';
 import {useLoadScript} from '@shopify/hydrogen-react';
 
+/** @publicDocs */
 type ScriptProps = HydrogenScriptProps & ScriptAttributes;
 
 interface HydrogenScriptProps {

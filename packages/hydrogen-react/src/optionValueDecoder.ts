@@ -20,6 +20,7 @@ const V1_CONTROL_CHARS = {
   RANGE: '-',
 };
 
+/** @publicDocs */
 export type IsOptionValueCombinationInEncodedVariant = (
   targetOptionValueCombination: number[],
   encodedVariantField: string,

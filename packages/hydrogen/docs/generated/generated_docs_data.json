@@ -1572,6 +1572,7 @@
             "name": "AnalyticsContextValueForDoc",
             "value": "{\n  /** A function to tell you the current state of if the user can be tracked by analytics. Defaults to Customer Privacy API's `window.Shopify.customerPrivacy.analyticsProcessingAllowed()`. */\n  canTrack?: () => boolean;\n  /** The current cart state. You can overwrite the type by passing a generic */\n  cart?: UserCart | DefaultCart;\n  /** The custom data passed in from the `AnalyticsProvider`. */\n  customData?: Record<string, unknown>;\n  /** The previous cart state. You can overwrite the type by passing a generic */\n  prevCart?: UserCart | DefaultCart;\n  /** A function to publish an analytics event. */\n  publish?: AnalyticsContextPublishForDoc;\n  /** A function to register with the analytics provider. It holds the first browser load events until all registered key has executed the supplied `ready` function. [See example register  usage](/docs/api/hydrogen/hooks/useanalytics#example-useanalytics.register). */\n  register?: (key: string) => {ready: () => void};\n  /** The shop configuration required to publish events to Shopify. */\n  shop?: Promise<ShopAnalytics | null> | ShopAnalytics | null;\n  /** A function to subscribe to analytics events. */\n  subscribe?: AnalyticsContextSubscribeForDoc;\n}",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/analytics-manager/AnalyticsProvider.tsx",
@@ -4376,6 +4377,7 @@
             "name": "CartHandlerOptionsForDocs",
             "value": "{\n  /**\n   * A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.\n   */\n  getCartId: () => string | undefined;\n  /**\n   * A function that sets the cart ID.\n   */\n  setCartId: (cartId: string) => Headers;\n  /**\n   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/utilities/createstorefrontclient).\n   */\n  storefront: Storefront;\n  /**\n   * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartMutateFragment?: string;\n  /**\n   * The cart query fragment used by `cart.get()`.\n   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or override existing methods for your cart API instance.\n   * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) in the documentation.\n   */\n  customMethods?: TCustomMethods;\n\n  /**\n   * Buyer identity. Default buyer identity is passed to cartCreate.\n   */\n  buyerIdentity?: CartBuyerIdentityInput;\n}",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/cart/createCartHandler.ts",
@@ -4851,7 +4853,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "HydrogenCartForDocs",
             "value": "{\n  /**\n   * Adds items to the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  addLines?: CartLinesAddFunction;\n  /**\n   * Adds a delivery address to the cart.\n   */\n  addDeliveryAddresses?: CartDeliveryAddressesAddFunction;\n  /**\n   * Creates a new cart.\n   */\n  create?: CartCreateFunction;\n  /**\n   * Removes a custom field (metafield) from the cart.\n   */\n  deleteMetafield?: CartMetafieldDeleteFunction;\n  /**\n   * Retrieves the cart information.\n   */\n  get?: CartGetFunction;\n  /**\n   * Retrieves the unique identifier of the cart.\n   * By default, it gets the ID from the request cookie.\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * Removes a delivery address from the cart\n   */\n  removeDeliveryAddresses?: CartDeliveryAddressesRemoveFunction;\n  /**\n   * Removes items from the cart.\n   */\n  removeLines?: CartLinesRemoveFunction;\n  /**\n   * Sets the unique identifier of the cart.\n   * By default, it sets the ID in the header cookie.\n   */\n  setCartId?: (cartId: string) => Headers;\n  /**\n   * Adds extra information (metafields) to the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  setMetafields?: CartMetafieldsSetFunction;\n  /**\n   * Update cart delivery addresses.\n   */\n  updateDeliveryAddresses?: CartDeliveryAddressesUpdateFunction;\n  /**\n   * Replace all delivery addresses on the cart.\n   */\n  replaceDeliveryAddresses?: CartDeliveryAddressesReplaceFunction;\n  /**\n   * Updates additional information (attributes) in the cart.\n   */\n  updateAttributes?: CartAttributesUpdateFunction;\n  /**\n   * Updates the buyer's information in the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  updateBuyerIdentity?: CartBuyerIdentityUpdateFunction;\n  /**\n   * Updates discount codes in the cart.\n   */\n  updateDiscountCodes?: CartDiscountCodesUpdateFunction;\n  /**\n   * Updates gift card codes in the cart.\n   */\n  updateGiftCardCodes?: CartGiftCardCodesUpdateFunction;\n  /**\n   * Adds gift card codes to the cart without replacing existing ones.\n   */\n  addGiftCardCodes?: CartGiftCardCodesAddFunction;\n  /**\n   * Removes gift card codes from the cart.\n   */\n  removeGiftCardCodes?: CartGiftCardCodesRemoveFunction;\n  /**\n   * Updates items in the cart.\n   */\n  updateLines?: CartLinesUpdateFunction;\n  /**\n   * Updates the note in the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  updateNote?: CartNoteUpdateFunction;\n  /**\n   * Updates the selected delivery options in the cart.\n   * Only available for carts associated with a customer access token.\n   */\n  updateSelectedDeliveryOption?: CartSelectedDeliveryOptionsUpdateFunction;\n}",
-            "description": "",
+            "description": "The handler returns the following default methods. Any [custom](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) or overwritten methods will also be available in the returned cart instance.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/cart/createCartHandler.ts",
@@ -25390,6 +25393,7 @@
             "name": "HydrogenContextOptionsForDocs",
             "value": "{\n  /* Environment variables from the fetch function */\n  env: TEnv;\n  /* Request object from the fetch function */\n  request: CrossRuntimeRequest;\n  /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */\n  cache?: Cache;\n  /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */\n  waitUntil?: WaitUntil;\n  /** Any cookie implementation. By default Hydrogen ships with cookie session storage, but you can use [another session storage](https://remix.run/docs/en/main/utils/sessions) implementation.  */\n  session: TSession;\n  /** An object containing a country code and language code */\n  i18n?: TI18n;\n  /** Whether it should print GraphQL errors automatically. Defaults to true */\n  logErrors?: boolean | ((error?: Error) => boolean);\n  /** Storefront client overwrite options. See documentation for createStorefrontClient for more information. */\n  storefront?: {\n    /** Storefront API headers. Default values set from request header.  */\n    headers?: StorefrontHeaders;\n    /** Override the Storefront API version for this query. */\n    apiVersion?: string;\n  };\n  /** Customer Account client overwrite options. See documentation for createCustomerAccountClient for more information. */\n  customerAccount?: {\n    /** Override the version of the API */\n    apiVersion?: string;\n    /** This is the route in your app that authorizes the customer after logging in. Make sure to call `customer.authorize()` within the loader on this route. It defaults to `/account/authorize`. */\n    authUrl?: string;\n    /** Use this method to overwrite the default logged-out redirect behavior. The default handler [throws a redirect](https://remix.run/docs/en/main/utils/redirect#:~:text=!session) to `/account/login` with current path as `return_to` query param. */\n    customAuthStatusHandler?: () => Response | NonNullable<unknown> | null;\n    /** Deprecated. `unstableB2b` is now stable. Please remove. */\n    unstableB2b?: boolean;\n    /** Set to true when using a custom HTTPS domain (e.g., ngrok, local proxy) instead of the default Hydrogen tunnel. */\n    useCustomAuthDomain?: boolean;\n  };\n  /** Cart handler overwrite options. See documentation for createCartHandler for more information. */\n  cart?: {\n    /** A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`. */\n    getId?: () => string | undefined;\n    /** A function that sets the cart ID. */\n    setId?: (cartId: string) => Headers;\n    /**\n     * The cart query fragment used by `cart.get()`.\n     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n     */\n    queryFragment?: string;\n    /**\n     * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-cart-fragments) in the documentation.\n     */\n    mutateFragment?: string;\n    /**\n     * Define custom methods or override existing methods for your cart API instance.\n     * See the [example usage](/docs/api/hydrogen/utilities/createcarthandler#example-custom-methods) in the documentation.\n     */\n    customMethods?: Record<string, Function>;\n  };\n  /**\n   * Buyer identity. Default buyer identity is passed to cartCreate.\n   */\n  buyerIdentity?: CartBuyerIdentityInput;\n}",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/createHydrogenContext.ts",
@@ -26554,6 +26558,7 @@
             "name": "CreateRequestHandlerOptionsForDocs",
             "value": "{\n  /** React Router's server build */\n  build: ServerBuild;\n  /** React Router's mode */\n  mode?: string;\n  /**\n   * Function to provide the load context for each request.\n   * It must contain Hydrogen's storefront client instance\n   * for other Hydrogen utilities to work properly.\n   */\n  getLoadContext?: (request: Request) => Promise<unknown> | unknown;\n  /**\n   * Whether to include the `powered-by` header in responses.\n   * @default true\n   */\n  poweredByHeader?: boolean;\n  /**\n   * Collect tracking information from subrequests such as cookies\n   * and forward them to the browser. Disable this if you are not\n   * using Hydrogen's built-in analytics.\n   * @default true\n   */\n  collectTrackingInformation?: boolean;\n}",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/createRequestHandler.ts",
@@ -26736,6 +26741,7 @@
             "name": "CreateStorefrontClientForDocs",
             "value": "{\n  storefront?: StorefrontForDoc<TI18n>;\n}",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/storefront.ts",
@@ -27190,7 +27196,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ScriptProps",
             "value": "HydrogenScriptProps & ScriptAttributes",
-            "description": ""
+            "description": "",
+            "isPublicDocs": true
           },
           "HydrogenScriptProps": {
             "filePath": "src/csp/Script.tsx",
@@ -30239,7 +30246,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CustomerAccountForDocs",
             "value": "{\n  /** Start the OAuth login flow. This function should be called and returned from a Remix action.\n   * It redirects the customer to a Shopify login domain. It also defined the final path the customer\n   * lands on at the end of the oAuth flow with the value of the `return_to` query param. (This is\n   * automatically setup unless `customAuthStatusHandler` option is in use)\n   *\n   * @param options.uiLocales - The displayed language of the login page. Only support for the following languages:\n   * `en`, `fr`, `cs`, `da`, `de`, `es`, `fi`, `it`, `ja`, `ko`, `nb`, `nl`, `pl`, `pt-BR`, `pt-PT`,\n   * `sv`, `th`, `tr`, `vi`, `zh-CN`, `zh-TW`. If supplied any other language code, it will default to `en`.\n   * */\n  login?: (options?: LoginOptions) => Promise<Response>;\n  /** On successful login, the customer redirects back to your app. This function validates the OAuth response and exchanges the authorization code for an access token and refresh token. It also persists the tokens on your session. This function should be called and returned from the Remix loader configured as the redirect URI within the Customer Account API settings in admin. */\n  authorize?: () => Promise<Response>;\n  /** Returns if the customer is logged in. It also checks if the access token is expired and refreshes it if needed. */\n  isLoggedIn?: () => Promise<boolean>;\n  /** Check for a not logged in customer and redirect customer to login page. The redirect can be overwritten with `customAuthStatusHandler` option. */\n  handleAuthStatus?: () => Promise<void>;\n  /** Returns CustomerAccessToken if the customer is logged in. It also run a expiry check and does a token refresh if needed. */\n  getAccessToken?: () => Promise<string | undefined>;\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint.*/\n  getApiUrl?: () => string;\n  /** Logout the customer by clearing the session and redirecting to the login domain. It should be called and returned from a Remix action. The path app should redirect to after logout can be setup in Customer Account API settings in admin.\n   *\n   * @param options.postLogoutRedirectUri - The url to redirect customer to after logout, should be a relative URL. This url will need to included in Customer Account API's application setup for logout URI. The default value is current app origin, which is automatically setup in admin when using `--customer-account-push` flag with dev.\n   * @param options.headers - These will be passed along to the logout redirect. You can use these to set/clear cookies on logout, like the cart.\n   * @param options.keepSession - If true, custom data in the session will not be cleared on logout.\n   * */\n  logout?: (options?: LogoutOptions) => Promise<Response>;\n  /** Execute a GraphQL query against the Customer Account API. This method execute `handleAuthStatus()` ahead of query. */\n  query?: <TData = any>(\n    query: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n  /** Execute a GraphQL mutation against the Customer Account API. This method execute `handleAuthStatus()` ahead of mutation. */\n  mutate?: <TData = any>(\n    mutation: string,\n    options: CustomerAccountQueryOptionsForDocs,\n  ) => Promise<TData>;\n}",
-            "description": "Below are types meant for documentation only. Ensure it stay in sync with the type above.",
+            "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/customer/types.ts",
@@ -31162,6 +31170,7 @@
             "filePath": "src/product/VariantSelector.ts",
             "name": "GetSelectedProductOptions",
             "description": "",
+            "isPublicDocs": true,
             "params": [
               {
                 "name": "request",
@@ -31176,7 +31185,7 @@
               "name": "SelectedOptionInput[]",
               "value": "SelectedOptionInput[]"
             },
-            "value": "(request: Request) => SelectedOptionInput[]"
+            "value": "(\n  request: Request,\n) => SelectedOptionInput[]"
           }
         }
       }
@@ -31537,6 +31546,7 @@
             "filePath": "src/routing/graphiql.ts",
             "name": "GraphiQLLoader",
             "description": "",
+            "isPublicDocs": true,
             "params": [
               {
                 "name": "args",
@@ -32120,6 +32130,7 @@
             "name": "GetSeoMetaTypeForDocs",
             "value": "{\n  /** `getSeoMeta` takes an arbitrary number of configuration object parameters. Values in each object are overwritten based on the object order. \\`jsonLd\\` properties are preserved between each configuration object. */\n  seoInputs: SeoConfig[];\n}",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/seo/getSeoMeta.ts",
@@ -37038,6 +37049,7 @@
             "name": "RichTextPropsForDocs",
             "value": "RichTextPropsBase<AsType>",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/RichText.tsx",
@@ -37586,7 +37598,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "LoadScriptParams",
             "value": "[src: string, options?: LoadScriptOptions]",
-            "description": ""
+            "description": "",
+            "isPublicDocs": true
           },
           "LoadScriptOptions": {
             "filePath": "src/load-script.tsx",
@@ -37840,6 +37853,7 @@
             "filePath": "src/flatten-connection.ts",
             "name": "ConnectionGenericForDoc",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/flatten-connection.ts",
@@ -37896,7 +37910,8 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "FlattenConnectionReturnForDoc",
             "value": "unknown[]",
-            "description": ""
+            "description": "",
+            "isPublicDocs": true
           }
         }
       }
@@ -37987,7 +38002,7 @@
           "GetClientBrowserParametersGeneratedType": {
             "filePath": "src/analytics.ts",
             "name": "GetClientBrowserParametersGeneratedType",
-            "description": "",
+            "description": "If executed on server, this method will return empty string for each field.",
             "isPublicDocs": true,
             "params": [],
             "returns": {
@@ -38171,7 +38186,7 @@
           "GetShopifyCookiesGeneratedType": {
             "filePath": "src/cookies-utils.tsx",
             "name": "GetShopifyCookiesGeneratedType",
-            "description": "Gets the values of _shopify_y and _shopify_s cookies from the provided cookie string.",
+            "description": "Gets the values of _shopify_y and _shopify_s cookies from the provided cookie string. If the Shopify cookies doesn't exist, this method will return empty string for each missing cookie.",
             "isPublicDocs": true,
             "params": [
               {
@@ -38194,7 +38209,7 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyCookies",
             "value": "{\n  /** Shopify unique user token: Value of `_shopify_y` cookie. */\n  [SHOPIFY_Y]: string;\n  /** Shopify session token: Value of `_shopify_s` cookie. */\n  [SHOPIFY_S]: string;\n}",
-            "description": "",
+            "description": "Shopify cookies names",
             "members": [
               {
                 "filePath": "src/analytics-types.ts",
@@ -38224,7 +38239,7 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyCookies",
             "value": "{\n  /** Shopify unique user token: Value of `_shopify_y` cookie. */\n  [SHOPIFY_Y]: string;\n  /** Shopify session token: Value of `_shopify_s` cookie. */\n  [SHOPIFY_S]: string;\n}",
-            "description": "",
+            "description": "Shopify cookies names",
             "members": [
               {
                 "filePath": "src/analytics-types.ts",
@@ -38374,6 +38389,7 @@
             "filePath": "src/optionValueDecoder.ts",
             "name": "IsOptionValueCombinationInEncodedVariant",
             "description": "",
+            "isPublicDocs": true,
             "params": [
               {
                 "name": "targetOptionValueCombination",
@@ -38611,7 +38627,7 @@
           "SendShopifyAnalyticsGeneratedType": {
             "filePath": "src/analytics.ts",
             "name": "SendShopifyAnalyticsGeneratedType",
-            "description": "Set user and session cookies and refresh the expiry time",
+            "description": "Set user and session cookies and refresh the expiry time. If `event.payload.hasUserConsent` is false, no analytics event will happen.",
             "isPublicDocs": true,
             "params": [
               {
@@ -38995,7 +39011,8 @@
           "ShopifySalesChannel": {
             "filePath": "src/analytics-constants.ts",
             "name": "ShopifySalesChannel",
-            "description": "",
+            "description": "Analytics sales channel values accepted by Shopify analytics.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/analytics-constants.ts",
@@ -39241,7 +39258,8 @@
           "AnalyticsEventName": {
             "filePath": "src/analytics-constants.ts",
             "name": "AnalyticsEventName",
-            "description": "These duplicated interface declaration is so that we can generate proper documentation for these public facing constants",
+            "description": "Analytics event names accepted by Shopify analytics.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/analytics-constants.ts",
@@ -39270,7 +39288,8 @@
           "AnalyticsPageType": {
             "filePath": "src/analytics-constants.ts",
             "name": "AnalyticsPageType",
-            "description": "",
+            "description": "Analytics page type values accepted by Shopify analytics.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/analytics-constants.ts",
@@ -39439,7 +39458,8 @@
           "ShopifySalesChannel": {
             "filePath": "src/analytics-constants.ts",
             "name": "ShopifySalesChannel",
-            "description": "",
+            "description": "Analytics sales channel values accepted by Shopify analytics.",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/analytics-constants.ts",

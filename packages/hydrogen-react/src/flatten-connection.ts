@@ -87,7 +87,9 @@ type ConnectionNodes = {
 };
 
 // This is only for documentation purposes, and it is not used in the code.
+/** @publicDocs */
 export interface ConnectionGenericForDoc {
   connection?: ConnectionEdges | ConnectionNodes;
 }
+/** @publicDocs */
 export type FlattenConnectionReturnForDoc = unknown[];
