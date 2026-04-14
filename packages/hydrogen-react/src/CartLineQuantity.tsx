@@ -1,6 +1,7 @@
 import type {ComponentPropsWithoutRef, ElementType} from 'react';
 import {useCartLine} from './CartLineProvider.js';
 
+/** @publicDocs */
 interface CartLineQuantityBaseProps<
   ComponentGeneric extends ElementType = 'span',
 > {

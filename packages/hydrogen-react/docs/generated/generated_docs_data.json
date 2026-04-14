@@ -541,6 +541,7 @@
             "filePath": "src/CartLineQuantity.tsx",
             "name": "CartLineQuantityBaseProps",
             "description": "",
+            "isPublicDocs": true,
             "members": [
               {
                 "filePath": "src/CartLineQuantity.tsx",
@@ -6150,7 +6151,7 @@
           "GetShopifyCookiesGeneratedType": {
             "filePath": "src/cookies-utils.tsx",
             "name": "GetShopifyCookiesGeneratedType",
-            "description": "Gets the values of _shopify_y and _shopify_s cookies from the provided cookie string. If the Shopify cookies doesn't exist, this method will return empty string for each missing cookie.",
+            "description": "Gets the values of _shopify_y and _shopify_s cookies from the provided cookie string. If the Shopify cookies doesn't exist, this method will return an empty string for each missing cookie.",
             "isPublicDocs": true,
             "params": [
               {
@@ -7014,7 +7015,8 @@
           "UseCartDocs": {
             "filePath": "src/CartProvider.tsx",
             "name": "UseCartDocs",
-            "description": "",
+            "description": "`useCart` hook must be a descendent of a `CartProvider` component.",
+            "isPublicDocs": true,
             "params": [],
             "returns": {
               "filePath": "src/CartProvider.tsx",
