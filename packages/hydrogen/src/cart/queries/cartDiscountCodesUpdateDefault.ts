@@ -10,6 +10,10 @@ import type {
   CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+} from './cart-query-helpers';
 
 export type CartDiscountCodesUpdateFunction = (
   discountCodes: string[],
@@ -25,31 +29,40 @@ export function cartDiscountCodesUpdateDefault(
       return array.indexOf(value) === index;
     });
 
+    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
     const {cartDiscountCodesUpdate, errors} = await options.storefront.mutate<{
       cartDiscountCodesUpdate: CartQueryData;
       errors: StorefrontApiErrors;
-    }>(CART_DISCOUNT_CODE_UPDATE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        discountCodes: uniqueCodes,
-        ...optionalParams,
+    }>(
+      CART_DISCOUNT_CODE_UPDATE_MUTATION(options.cartFragment, {
+        includeVisitorConsent,
+      }),
+      {
+        variables: {
+          cartId: options.getCartId(),
+          discountCodes: uniqueCodes,
+          ...optionalParams,
+        },
       },
-    });
+    );
     return formatAPIResult(cartDiscountCodesUpdate, errors);
   };
 }
 
+type CartMutationBuilderOptions = {
+  includeVisitorConsent?: boolean;
+};
+
 //! @see https://shopify.dev/docs/api/storefront/latest/mutations/cartDiscountCodesUpdate
 export const CART_DISCOUNT_CODE_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartMutationBuilderOptions = {},
 ) => `#graphql
   mutation cartDiscountCodesUpdate(
     $cartId: ID!
     $discountCodes: [String!]!
-    $language: LanguageCode
-    $country: CountryCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
+  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
       ... @defer {
         cart {

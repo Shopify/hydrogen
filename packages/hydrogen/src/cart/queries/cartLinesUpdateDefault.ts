@@ -12,6 +12,10 @@ import type {
   CartQueryOptions,
 } from './cart-types';
 import type {CartLineUpdateInput} from '@shopify/hydrogen-react/storefront-api-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+} from './cart-query-helpers';
 
 export type CartLinesUpdateFunction = (
   lines: CartLineUpdateInput[],
@@ -24,31 +28,38 @@ export function cartLinesUpdateDefault(
   return async (lines, optionalParams) => {
     throwIfLinesAreOptimistic('updateLines', lines);
 
+    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
     const {cartLinesUpdate, errors} = await options.storefront.mutate<{
       cartLinesUpdate: CartQueryData;
       errors: StorefrontApiErrors;
-    }>(CART_LINES_UPDATE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        lines,
-        ...optionalParams,
+    }>(
+      CART_LINES_UPDATE_MUTATION(options.cartFragment, {includeVisitorConsent}),
+      {
+        variables: {
+          cartId: options.getCartId(),
+          lines,
+          ...optionalParams,
+        },
       },
-    });
+    );
     return formatAPIResult(cartLinesUpdate, errors);
   };
 }
 
+type CartMutationBuilderOptions = {
+  includeVisitorConsent?: boolean;
+};
+
 //! @see: https://shopify.dev/docs/api/storefront/latest/mutations/cartLinesUpdate
 export const CART_LINES_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartMutationBuilderOptions = {},
 ) => `#graphql
   mutation cartLinesUpdate(
     $cartId: ID!
     $lines: [CartLineUpdateInput!]!
-    $language: LanguageCode
-    $country: CountryCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
+  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
       cart {
         ...CartApiMutation

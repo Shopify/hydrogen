@@ -11,6 +11,10 @@ import type {
   CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+} from './cart-query-helpers';
 
 export type CartLinesRemoveFunction = (
   lineIds: string[],
@@ -23,31 +27,38 @@ export function cartLinesRemoveDefault(
   return async (lineIds, optionalParams) => {
     throwIfLinesAreOptimistic('removeLines', lineIds);
 
+    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
     const {cartLinesRemove, errors} = await options.storefront.mutate<{
       cartLinesRemove: CartQueryData;
       errors: StorefrontApiErrors;
-    }>(CART_LINES_REMOVE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        lineIds,
-        ...optionalParams,
+    }>(
+      CART_LINES_REMOVE_MUTATION(options.cartFragment, {includeVisitorConsent}),
+      {
+        variables: {
+          cartId: options.getCartId(),
+          lineIds,
+          ...optionalParams,
+        },
       },
-    });
+    );
     return formatAPIResult(cartLinesRemove, errors);
   };
 }
 
+type CartMutationBuilderOptions = {
+  includeVisitorConsent?: boolean;
+};
+
 //! @see: https://shopify.dev/docs/api/storefront/latest/mutations/cartLinesRemove
 export const CART_LINES_REMOVE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartMutationBuilderOptions = {},
 ) => `#graphql
   mutation cartLinesRemove(
     $cartId: ID!
     $lineIds: [ID!]!
-    $language: LanguageCode
-    $country: CountryCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
+  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
       cart {
         ...CartApiMutation

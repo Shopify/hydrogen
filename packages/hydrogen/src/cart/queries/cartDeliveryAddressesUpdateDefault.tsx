@@ -11,6 +11,10 @@ import type {
   CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+} from './cart-query-helpers';
 
 export type CartDeliveryAddressesUpdateFunction = (
   addresses: Array<CartSelectableAddressUpdateInput>,
@@ -62,33 +66,42 @@ export function cartDeliveryAddressesUpdateDefault(
     addresses: Array<CartSelectableAddressUpdateInput>,
     optionalParams,
   ) => {
+    const includeVisitorConsent = optionalParams?.visitorConsent !== undefined;
     const {cartDeliveryAddressesUpdate, errors} =
       await options.storefront.mutate<{
         cartDeliveryAddressesUpdate: CartQueryData;
         errors: StorefrontApiErrors;
-      }>(CART_DELIVERY_ADDRESSES_UPDATE_MUTATION(options.cartFragment), {
-        variables: {
-          cartId: options.getCartId(),
-          addresses,
-          ...optionalParams,
+      }>(
+        CART_DELIVERY_ADDRESSES_UPDATE_MUTATION(options.cartFragment, {
+          includeVisitorConsent,
+        }),
+        {
+          variables: {
+            cartId: options.getCartId(),
+            addresses,
+            ...optionalParams,
+          },
         },
-      });
+      );
 
     return formatAPIResult(cartDeliveryAddressesUpdate, errors);
   };
 }
 
+type CartMutationBuilderOptions = {
+  includeVisitorConsent?: boolean;
+};
+
 //! @see: https://shopify.dev/docs/api/storefront/latest/mutations/cartDeliveryAddressesUpdate
 export const CART_DELIVERY_ADDRESSES_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartMutationBuilderOptions = {},
 ) => `#graphql
   mutation cartDeliveryAddressesUpdate(
     $cartId: ID!
     $addresses: [CartSelectableAddressUpdateInput!]!,
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent ?? false)}
+  ) ${getInContextDirective(options.includeVisitorConsent ?? false)} {
     cartDeliveryAddressesUpdate(addresses: $addresses, cartId: $cartId) {
       cart {
         ...CartApiMutation
