@@ -224,6 +224,7 @@ export type CartHandlerReturn<TCustomMethods extends CustomMethodsBase> =
   | HydrogenCartCustom<TCustomMethods>
   | HydrogenCart;
 
+/** @publicDocs */
 export function createCartHandler(options: CartHandlerOptions): HydrogenCart;
 export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   options: CartHandlerOptionsWithCustom<TCustomMethods>,

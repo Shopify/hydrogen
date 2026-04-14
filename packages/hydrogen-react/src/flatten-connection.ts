@@ -5,6 +5,7 @@ import type {PartialDeep} from 'type-fest';
  * The utility works with either `nodes` or `edges.node`.
  *
  * If `connection` is null or undefined, will return an empty array instead in production. In development, an error will be thrown.
+ * @publicDocs
  */
 export function flattenConnection<
   ConnectionGeneric extends

@@ -16,6 +16,7 @@ export interface RichTextPropsBase<ComponentGeneric extends React.ElementType> {
   plain?: boolean;
 }
 
+/** @publicDocs */
 export function RichText<ComponentGeneric extends React.ElementType = 'div'>({
   as,
   data,

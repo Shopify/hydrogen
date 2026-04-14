@@ -67,6 +67,7 @@ export type Consent = Partial<
   >
 > & {language?: LanguageCode}; // the privacyBanner SDKs refers to "language" as "locale" :(
 
+/** @publicDocs */
 export type AnalyticsProviderProps = {
   /** React children to render. */
   children?: ReactNode;
@@ -407,6 +408,7 @@ function AnalyticsProvider({
   );
 }
 
+/** @publicDocs */
 export function useAnalytics(): AnalyticsContextValue {
   const analyticsContext = useContext(AnalyticsContext);
   if (!analyticsContext) {
@@ -447,6 +449,7 @@ type ShopAnalyticsProps = {
   publicStorefrontId: string;
 };
 
+/** @publicDocs */
 export async function getShopAnalytics({
   storefront,
   publicStorefrontId = '0',

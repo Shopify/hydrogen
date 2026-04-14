@@ -21,6 +21,7 @@ type Optional<T> = T | null | undefined;
 
 /**
  * Generate a Remix meta array from one or more SEO configuration objects. This is useful to pass SEO configuration for the parent route(s) and the current route. Similar to `Object.assign()`, each property is overwritten based on the object order. The exception is `jsonLd`, which is preserved so that each route has it's own independent jsonLd meta data.
+ * @publicDocs
  */
 export function getSeoMeta(
   ...seoInputs: Optional<SeoConfig>[]

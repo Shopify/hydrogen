@@ -28,6 +28,7 @@ export type CartGiftCardCodesAddFunction = (
  * @example Add gift card codes
  * const addGiftCardCodes = cartGiftCardCodesAddDefault({ storefront, getCartId });
  * await addGiftCardCodes(['SUMMER2025', 'WELCOME10']);
+ * @publicDocs
  */
 export function cartGiftCardCodesAddDefault(
   options: CartQueryOptions,

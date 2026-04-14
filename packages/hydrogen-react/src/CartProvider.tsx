@@ -40,6 +40,7 @@ type UseCartDocs = () => CartWithActionsDocs;
 
 /**
  * The `useCart` hook provides access to the cart object. It must be a descendent of a `CartProvider` component.
+ * @publicDocs
  */
 export function useCart(): CartWithActions {
   const context = useContext(CartContext);
@@ -109,6 +110,7 @@ type CartProviderProps = {
  * There are also props that trigger when a call to the Storefront API is completed, such as `onLineAddComplete={}` when the fetch request for adding a line to the cart completes.
  *
  * The `CartProvider` component must be a descendant of the `ShopifyProvider` component.
+ * @publicDocs
  */
 export function CartProvider({
   children,

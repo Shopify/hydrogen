@@ -35,6 +35,7 @@ type CreateRequestHandlerOptions<Context = unknown> = {
 
 /**
  * Creates a request handler for Hydrogen apps using React Router.
+ * @publicDocs
  */
 export function createRequestHandler<Context = unknown>({
   build,

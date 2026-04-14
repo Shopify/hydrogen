@@ -4,6 +4,7 @@ import type {CustomerAccount} from '../customer/types';
 
 type GraphiQLLoader = (args: LoaderFunctionArgs) => Promise<Response>;
 
+/** @publicDocs */
 export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
   request,
   context,

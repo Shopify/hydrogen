@@ -77,6 +77,7 @@ function mapProductOptions(options: ProductOption[]): ProductOptionsMapping {
  *    Color: 'Red',
  *    Size: 'Medium',
  *  \}
+ * @publicDocs
  */
 export function mapSelectedProductOptionToObject(
   options: Pick<SelectedOption, 'name' | 'value'>[],
@@ -349,6 +350,7 @@ function checkProductVariantParam(
 /**
  * Finds all the variants provided by adjacentVariants, options.optionValues.firstAvailableVariant,
  * and selectedOrFirstAvailableVariant and return them in a single array
+ * @publicDocs
  */
 export function getAdjacentAndFirstAvailableVariants(
   product: RecursivePartial<Product>,
@@ -391,6 +393,7 @@ export function getAdjacentAndFirstAvailableVariants(
 /**
  * Returns a product options array with its relevant information
  * about the variant
+ * @publicDocs
  */
 export function getProductOptions(
   product: RecursivePartial<Product>,
