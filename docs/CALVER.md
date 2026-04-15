@@ -224,7 +224,7 @@ The release workflow now operates with zero manual intervention:
 ### Semver Packages (X.Y.Z format)
 - `@shopify/cli-hydrogen`
 - `@shopify/mini-oxygen`
-- `@shopify/remix-oxygen`
+- `@shopify/remix-oxygen` (deprecated — no longer actively versioned)
 - All other packages
 
 ## Version Transformation Process

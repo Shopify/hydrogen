@@ -76,7 +76,7 @@ function normalizeType(type: string) {
     .replace(/typeof import\("[^"]+"\)\./, 'typeof ');
 
   return normalizedType === 'SerializeFrom<any>'
-    ? `{SerializeFrom<loader>}` // Fix inference for loaders outisde of routes
+    ? `{ReturnType<typeof useLoaderData<typeof loader>>}` // Fix inference for loaders outside of routes
     : `{${normalizedType}}`;
 }
 

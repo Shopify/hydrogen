@@ -1,5 +1,6 @@
 {
   "name": "@shopify/remix-oxygen",
+  "deprecated": "Import types/utilities from 'react-router'. Use createRequestHandler from '@shopify/hydrogen/oxygen' instead.",
   "publishConfig": {
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"

@@ -22,7 +22,6 @@ const EVENT_MAP: Record<string, string> = {
 };
 
 export type RequestEventPayload = {
-  __fromVite?: boolean;
   url: string;
   eventType: 'request' | 'subrequest';
   requestId?: string | null;
@@ -74,14 +73,6 @@ export function emitRequestEvent(payload: RequestEventPayload, root: string) {
     // Ignore incorrect events, although this should not happen.
     return;
   }
-
-  if (payload.eventType === 'request' && !payload.__fromVite) {
-    // Filter out events that come from @shopify/remix-oxygen,
-    // which is a deprecated way to send events.
-    return;
-  }
-
-  delete payload.__fromVite;
 
   const {pathname} = new URL(payload.url, 'http://localhost');
   if (IGNORED_ROUTES.has(pathname)) return;
