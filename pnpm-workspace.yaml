@@ -4,6 +4,7 @@ packages:
   - packages/cli
   - packages/create-hydrogen
   - packages/hydrogen-codegen
+  - packages/hydrogen-api
   - packages/hydrogen-core
   - packages/hydrogen-react
   - packages/hydrogen

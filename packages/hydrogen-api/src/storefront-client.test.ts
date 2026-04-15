@@ -1,0 +1,209 @@
+import {vi, beforeEach, describe, expect, it} from 'vitest';
+
+import {createStorefrontClient} from './storefront-client.js';
+import {SFAPI_VERSION} from './storefront-api-constants.js';
+
+describe(`createStorefrontClient`, () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  describe(`constructor`, () => {
+    it(`defaults to "application/json" for the content-type`, () => {
+      const client = createStorefrontClient(
+        generateConfig(
+          generateConfig({
+            privateStorefrontToken: 'privateToken',
+            publicStorefrontToken: 'public',
+          }),
+        ),
+      );
+
+      expect(client.getPrivateTokenHeaders()['content-type']).toBe(
+        'application/json',
+      );
+      expect(client.getPublicTokenHeaders()['content-type']).toBe(
+        'application/json',
+      );
+    });
+
+    it(`allows override for content-type`, () => {
+      const client = createStorefrontClient(
+        generateConfig(
+          generateConfig({
+            publicStorefrontToken: 'public',
+            privateStorefrontToken: 'privateToken',
+            contentType: 'graphql',
+          }),
+        ),
+      );
+
+      expect(client.getPrivateTokenHeaders()['content-type']).toBe(
+        'application/graphql',
+      );
+      expect(client.getPublicTokenHeaders()['content-type']).toBe(
+        'application/graphql',
+      );
+    });
+  });
+
+  describe(`getShopifyDomain`, () => {
+    it(`generates a URL`, () => {
+      const client = createStorefrontClient(generateConfig());
+
+      expect(client.getShopifyDomain()).toBe(`https://testing.myshopify.com`);
+    });
+
+    it(`allows overrides`, () => {
+      const client = createStorefrontClient(generateConfig());
+
+      expect(
+        client.getShopifyDomain({
+          storeDomain: 'https://newdomain.myshopify.com',
+        }),
+      ).toBe(`https://newdomain.myshopify.com`);
+    });
+
+    it(`automatically adds protocol if missing`, () => {
+      const client = createStorefrontClient(
+        generateConfig({storeDomain: 'newdomain.myshopify.com'}),
+      );
+
+      expect(client.getShopifyDomain()).toBe(`https://newdomain.myshopify.com`);
+    });
+  });
+
+  describe(`getStorefrontApiUrl`, () => {
+    it(`generates a URL`, () => {
+      const client = createStorefrontClient(generateConfig());
+
+      expect(client.getStorefrontApiUrl()).toBe(
+        `https://testing.myshopify.com/api/${SFAPI_VERSION}/graphql.json`,
+      );
+    });
+
+    it(`allows overrides`, () => {
+      const client = createStorefrontClient(generateConfig());
+
+      expect(
+        client.getStorefrontApiUrl({
+          storeDomain: 'https://newdomain.myshopify.com',
+          storefrontApiVersion: '2000-01',
+        }),
+      ).toBe(`https://newdomain.myshopify.com/api/2000-01/graphql.json`);
+    });
+
+    it(`handles when a '/' is at the end of the url and doesn't add an extra one`, () => {
+      const defaultConfig = generateConfig();
+      const client = createStorefrontClient({
+        ...defaultConfig,
+        storeDomain: defaultConfig.storeDomain + '/',
+      });
+
+      expect(client.getStorefrontApiUrl()).toBe(
+        `https://testing.myshopify.com/api/${SFAPI_VERSION}/graphql.json`,
+      );
+    });
+
+    it(`automatically adds protocol if missing`, () => {
+      const client = createStorefrontClient(
+        generateConfig({storeDomain: 'newdomain.myshopify.com'}),
+      );
+
+      expect(client.getStorefrontApiUrl()).toBe(
+        `https://newdomain.myshopify.com/api/${SFAPI_VERSION}/graphql.json`,
+      );
+    });
+
+    it(`generates a URL correctly for mock.shop`, () => {
+      const client = createStorefrontClient(
+        generateConfig({storeDomain: 'mock.shop'}),
+      );
+
+      expect(client.getStorefrontApiUrl()).toBe(
+        `https://mock.shop/api/${SFAPI_VERSION}/graphql.json`,
+      );
+    });
+  });
+
+  describe(`getPrivateTokenHeaders`, () => {
+    it(`generates the headers`, () => {
+      const client = createStorefrontClient(
+        generateConfig({privateStorefrontToken: 'privateToken'}),
+      );
+
+      expect(client.getPrivateTokenHeaders()).toEqual({
+        'Shopify-Storefront-Private-Token': 'privateToken',
+        'X-SDK-Variant': 'hydrogen-api',
+        'X-SDK-Variant-Source': 'api',
+        'X-SDK-Version': SFAPI_VERSION,
+        'content-type': 'application/json',
+      });
+    });
+
+    it(`allows overrides`, () => {
+      const client = createStorefrontClient(
+        generateConfig({privateStorefrontToken: 'privateToken'}),
+      );
+
+      expect(
+        client.getPrivateTokenHeaders({
+          privateStorefrontToken: 'newPrivate',
+          buyerIp: '1.1.1.1',
+          contentType: 'graphql',
+        }),
+      ).toEqual({
+        'Shopify-Storefront-Buyer-IP': '1.1.1.1',
+        'Shopify-Storefront-Private-Token': 'newPrivate',
+        'X-SDK-Variant': 'hydrogen-api',
+        'X-SDK-Variant-Source': 'api',
+        'X-SDK-Version': SFAPI_VERSION,
+        'content-type': 'application/graphql',
+      });
+    });
+  });
+
+  describe(`getPublicTokenHeaders`, () => {
+    it(`generates the headers`, () => {
+      const client = createStorefrontClient(
+        generateConfig({publicStorefrontToken: 'publicToken'}),
+      );
+
+      expect(client.getPublicTokenHeaders()).toEqual({
+        'X-Shopify-Storefront-Access-Token': 'publicToken',
+        'X-SDK-Version': SFAPI_VERSION,
+        'X-SDK-Variant': 'hydrogen-api',
+        'X-SDK-Variant-Source': 'api',
+        'content-type': 'application/json',
+      });
+    });
+
+    it(`allows overrides`, () => {
+      const client = createStorefrontClient(
+        generateConfig({publicStorefrontToken: 'publicToken'}),
+      );
+
+      expect(
+        client.getPublicTokenHeaders({
+          publicStorefrontToken: 'newPublic',
+          contentType: 'graphql',
+        }),
+      ).toEqual({
+        'X-Shopify-Storefront-Access-Token': 'newPublic',
+        'X-SDK-Version': SFAPI_VERSION,
+        'X-SDK-Variant': 'hydrogen-api',
+        'X-SDK-Variant-Source': 'api',
+        'content-type': 'application/graphql',
+      });
+    });
+  });
+});
+
+type StorefrontClientProps = Parameters<typeof createStorefrontClient>[0];
+
+function generateConfig(props?: Partial<StorefrontClientProps>) {
+  return {
+    storeDomain: 'https://testing.myshopify.com',
+    ...props,
+  } satisfies StorefrontClientProps;
+}
