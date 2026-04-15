@@ -168,11 +168,14 @@ export {
   parseGid,
   parseMetafield,
   sendShopifyAnalytics,
+  ShopifyProvider,
   ShopifySalesChannel,
   storefrontApiCustomScalars,
   useLoadScript,
   useMoney,
   useSelectedOptionInUrlParam,
+  useShop,
   useShopifyCookies,
   Video,
 } from '@shopify/hydrogen-react';
+export {SFAPI_VERSION} from '@shopify/hydrogen-react/storefront-api-constants';

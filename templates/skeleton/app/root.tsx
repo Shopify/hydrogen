@@ -1,4 +1,9 @@
-import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
+import {
+  Analytics,
+  getShopAnalytics,
+  ShopifyProvider,
+  useNonce,
+} from '@shopify/hydrogen';
 import {
   Outlet,
   useRouteError,
@@ -78,6 +83,9 @@ export async function loader(args: Route.LoaderArgs) {
     ...deferredData,
     ...criticalData,
     publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
+    publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+    storefrontApiVersion: storefront.apiVersion,
+    i18n: storefront.i18n,
     shop: getShopAnalytics({
       storefront,
       publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
@@ -143,9 +151,11 @@ function loadDeferredData({context}: Route.LoaderArgs) {
 
 export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
+  const data = useRouteLoaderData<RootLoader>('root');
+  const locale = data?.i18n?.language?.toLowerCase() ?? 'en';
 
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -171,15 +181,23 @@ export default function App() {
   }
 
   return (
-    <Analytics.Provider
-      cart={data.cart}
-      shop={data.shop}
-      consent={data.consent}
+    <ShopifyProvider
+      storeDomain={data.publicStoreDomain}
+      storefrontToken={data.publicStorefrontToken}
+      storefrontApiVersion={data.storefrontApiVersion}
+      countryIsoCode={data.i18n.country}
+      languageIsoCode={data.i18n.language}
     >
-      <PageLayout {...data}>
-        <Outlet />
-      </PageLayout>
-    </Analytics.Provider>
+      <Analytics.Provider
+        cart={data.cart}
+        shop={data.shop}
+        consent={data.consent}
+      >
+        <PageLayout {...data}>
+          <Outlet />
+        </PageLayout>
+      </Analytics.Provider>
+    </ShopifyProvider>
   );
 }
 
