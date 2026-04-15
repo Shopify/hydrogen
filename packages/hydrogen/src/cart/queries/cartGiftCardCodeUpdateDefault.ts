@@ -10,6 +10,12 @@ import type {
   CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
+} from './cart-query-helpers';
 
 export type CartGiftCardCodesUpdateFunction = (
   giftCardCodes: string[],
@@ -32,16 +38,22 @@ export function cartGiftCardCodesUpdateDefault(
   options: CartQueryOptions,
 ): CartGiftCardCodesUpdateFunction {
   return async (giftCardCodes, optionalParams) => {
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartGiftCardCodesUpdate, errors} = await options.storefront.mutate<{
       cartGiftCardCodesUpdate: CartQueryData;
       errors: StorefrontApiErrors;
-    }>(CART_GIFT_CARD_CODE_UPDATE_MUTATION(options.cartFragment), {
-      variables: {
-        cartId: options.getCartId(),
-        giftCardCodes,
-        ...optionalParams,
+    }>(
+      CART_GIFT_CARD_CODE_UPDATE_MUTATION(options.cartFragment, {
+        includeVisitorConsent,
+      }),
+      {
+        variables: {
+          cartId: options.getCartId(),
+          giftCardCodes,
+          ...optionalParams,
+        },
       },
-    });
+    );
     return formatAPIResult(cartGiftCardCodesUpdate, errors);
   };
 }
@@ -49,14 +61,13 @@ export function cartGiftCardCodesUpdateDefault(
 //! @see https://shopify.dev/docs/api/storefront/latest/mutations/cartGiftCardCodesUpdate
 export const CART_GIFT_CARD_CODE_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartGiftCardCodesUpdate(
     $cartId: ID!
     $giftCardCodes: [String!]!
-    $language: LanguageCode
-    $country: CountryCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartGiftCardCodesUpdate(cartId: $cartId, giftCardCodes: $giftCardCodes) {
       cart {
         ...CartApiMutation
