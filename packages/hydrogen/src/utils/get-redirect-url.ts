@@ -49,18 +49,18 @@ export function ensureLocalRedirectUrl({
   redirectUrl?: string;
 }): string {
   const fromUrl = requestUrl;
-  const defautlUrl = buildURLObject(requestUrl, defaultUrl);
+  const parsedDefaultUrl = buildURLObject(requestUrl, defaultUrl);
   const toUrl = redirectUrl
     ? buildURLObject(requestUrl, redirectUrl)
-    : defautlUrl;
+    : parsedDefaultUrl;
 
   if (isLocalPath(requestUrl, toUrl.toString())) {
     return toUrl.toString();
   } else {
     console.warn(
-      `Cross-domain redirects are not supported. Tried to redirect from ${fromUrl} to ${toUrl}. Default url ${defautlUrl} is used instead.`,
+      `Cross-domain redirects are not supported. Tried to redirect from ${fromUrl} to ${toUrl}. Default url ${parsedDefaultUrl} is used instead.`,
     );
-    return defautlUrl.toString();
+    return parsedDefaultUrl.toString();
   }
 }
 
