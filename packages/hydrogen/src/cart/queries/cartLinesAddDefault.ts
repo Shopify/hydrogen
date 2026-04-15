@@ -11,6 +11,12 @@ import type {
   CartQueryDataReturn,
   CartQueryOptions,
 } from './cart-types';
+import {
+  getInContextVariables,
+  getInContextDirective,
+  CartBuilderOptions,
+  shouldIncludeVisitorConsent,
+} from './cart-query-helpers';
 
 export type CartLinesAddFunction = (
   lines: Array<CartLineInput>,
@@ -21,10 +27,11 @@ export function cartLinesAddDefault(
   options: CartQueryOptions,
 ): CartLinesAddFunction {
   return async (lines, optionalParams) => {
+    const includeVisitorConsent = shouldIncludeVisitorConsent(optionalParams);
     const {cartLinesAdd, errors} = await options.storefront.mutate<{
       cartLinesAdd: CartQueryData;
       errors: StorefrontApiErrors;
-    }>(CART_LINES_ADD_MUTATION(options.cartFragment), {
+    }>(CART_LINES_ADD_MUTATION(options.cartFragment, {includeVisitorConsent}), {
       variables: {
         cartId: options.getCartId(),
         lines,
@@ -39,14 +46,13 @@ export function cartLinesAddDefault(
 //! @see: https://shopify.dev/docs/api/storefront/latest/mutations/cartLinesAdd
 export const CART_LINES_ADD_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
+  options: CartBuilderOptions = {},
 ) => `#graphql
   mutation cartLinesAdd(
     $cartId: ID!
     $lines: [CartLineInput!]!
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-    $visitorConsent: VisitorConsent
-  ) @inContext(country: $country, language: $language, visitorConsent: $visitorConsent) {
+    ${getInContextVariables(options.includeVisitorConsent)}
+  ) ${getInContextDirective(options.includeVisitorConsent)} {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
       cart {
         ...CartApiMutation
