@@ -2,11 +2,7 @@ import {useState, useRef, useEffect} from 'react';
 import {type ServerEvents} from '../lib/useDebugNetworkServer.js';
 import {Link} from 'react-router';
 import {IconClose} from './IconClose.jsx';
-
-// Type is broken in use-resize-observer
-import _useResizeObserver from 'use-resize-observer';
-const useResizeObserver =
-  _useResizeObserver as unknown as typeof import('use-resize-observer').default;
+import {useResizeObserver} from './useResizeObserver.jsx';
 
 const TABS: Record<number, string> = {
   1: 'General',

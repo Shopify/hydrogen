@@ -11,11 +11,7 @@ import type {
   Timeseries,
   FlameChart,
 } from 'flame-chart-js';
-
-// Type is broken in use-resize-observer
-import _useResizeObserver from 'use-resize-observer';
-const useResizeObserver =
-  _useResizeObserver as unknown as typeof import('use-resize-observer').default;
+import {useResizeObserver} from './useResizeObserver.jsx';
 
 declare global {
   // Downloaded via CDN

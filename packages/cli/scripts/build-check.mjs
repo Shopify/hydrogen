@@ -16,7 +16,7 @@ for (const srcEntry of srcEntries) {
   // skip .DS_Store files
   if (srcEntry.endsWith('.DS_Store')) continue;
 
-  const distEntry = srcEntry.replace('src', 'dist').replace('.tsx', '.jsx');
+  const distEntry = srcEntry.replace(/\.tsx?$/, '.jsx');
   if (!distEntries.includes(distEntry)) {
     throw new Error('CLI build check failed! Missing: ' + distEntry);
   }

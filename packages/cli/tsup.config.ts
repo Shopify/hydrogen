@@ -72,7 +72,7 @@ export default defineConfig([
   {
     ...commonConfig,
     // TODO remove virtual routes copy when deprecating classic compiler
-    entry: ['../hydrogen/src/vite/virtual-routes/**/*.tsx'],
+    entry: ['../hydrogen/src/vite/virtual-routes/**/*.{ts,tsx}'],
     outDir: `${outDir}/${ASSETS_DIR_PREFIX}/virtual-routes`,
     outExtension: () => ({js: '.jsx'}),
     dts: false,
