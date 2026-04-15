@@ -32,10 +32,8 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "dependencies": {
-  },
-  "peerDependencies": {
-  },
+  "dependencies": {},
+  "peerDependencies": {},
   "devDependencies": {
     "tsup": "^8.4.0",
     "@types/node": "catalog:",

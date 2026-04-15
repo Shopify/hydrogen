@@ -12,19 +12,18 @@ Run the following commands to get started working on Hydrogen.
 | ----------------------------------------------- | --------------------------------------------- |
 | `git clone git@github.com:Shopify/hydrogen.git` | Clones the repo to your local computer        |
 | `pnpm install`                                  | Installs the dependencies with `pnpm`         |
-| `ppnpm run dev`                                  | Runs the `dev` command in all packages        |
+| `ppnpm run dev`                                 | Runs the `dev` command in all packages        |
 | `pnpm run build`                                | `build`s packages for production distribution |
 
 ### Shopify Contributors
 
 If you have access to Shopify's `dev` CLI tool, you can use these commands instead:
 
-| Command      | Description                                                |
-| ------------ | ---------------------------------------------------------- |
+| Command      | Description                                                                     |
+| ------------ | ------------------------------------------------------------------------------- |
 | `dev up`     | Sets up the development environment (installs dependencies and builds packages) |
-| `dev server` | Starts the skeleton template dev server                    |
-| `dev watch`  | Starts a server to automatically rebuild changes in packages upon saving |
-
+| `dev server` | Starts the skeleton template dev server                                         |
+| `dev watch`  | Starts a server to automatically rebuild changes in packages upon saving        |
 
 > **Note:** When running `dev up`, if prompted about git hooks, select **"no"** to preserve the existing Husky hooks configuration. The project uses Husky for pre-commit hooks, and overriding this would disable important checks.
 
@@ -55,8 +54,8 @@ The `Readme.md` files in the directories of individual packages and templates co
 
 The Hydrogen monorepo provides commands for linting and formatting, and uses [Husky](https://typicode.github.io/husky/) to run checks on staged commits automatically.
 
-| Command             | Description                               |
-| ------------------- | ----------------------------------------- |
+| Command              | Description                               |
+| -------------------- | ----------------------------------------- |
 | `pnpm run typecheck` | Checks source-code for invalid TypeScript |
 | `pnpm run lint`      | Lints the code with ESLint                |
 | `pnpm run format`    | Formats the code with prettier            |
@@ -84,8 +83,8 @@ Hydrogen follows common React naming conventions for filenames, component names,
 
 If you are contributing a user-facing or noteworthy change to Hydrogen that should be added to the changelog, you should include a changeset with your PR by running the following command.
 
-| Command                 | Description             |
-| ----------------------- | ----------------------- |
+| Command                  | Description             |
+| ------------------------ | ----------------------- |
 | `pnpm run changeset add` | Add a changeset locally |
 
 Follow the prompts to select which package(s) are affected by your change, and whether the change is a major, minor or patch change. This will create a file in the `.changesets` directory of the repo. This change should be committed and included with your PR.
@@ -102,8 +101,8 @@ When merging PRs, please select the **Squash and Merge** option, which consolida
 
 Hydrogen tests are run using [vitest](https://vitest.dev). You can run the tests with the following commands.
 
-| Command              | Description                                             |
-| -------------------- | ------------------------------------------------------- |
+| Command               | Description                                             |
+| --------------------- | ------------------------------------------------------- |
 | `pnpm run test`       | Run the tests once                                      |
 | `pnpm run test:watch` | Run the tests once and re-run them when files are saved |
 
@@ -181,6 +180,7 @@ We use the ejson file `secrets.ejson` to store all our secrets. You can add new 
 Secrets can only be decrypted if you have the private key. If you are new to the Shopify Hydrogen team, ask one of the other team members to send you a hush link with the private key.
 
 Once you have the hush link, paste this command in your terminal **WITHOUT running it yet**, then copy the private key value (from the hush link) to your clipboard and run the command:
+
 ```
 ./scripts/setup-ejson-private-key.sh
 ```
