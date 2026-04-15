@@ -1420,6 +1420,7 @@ describe('upgrade', async () => {
 
           expect(mdContent).toContain('## Removed packages');
           expect(mdContent).toContain('- `@remix-run/react`');
+          expect(mdContent).not.toContain('----\n\n----');
         },
         {
           cleanGitRepo: true,

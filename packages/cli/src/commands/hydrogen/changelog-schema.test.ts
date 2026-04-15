@@ -154,7 +154,7 @@ describe('Changelog validation', () => {
         ...(release.features ?? []),
         ...(release.fixes ?? []),
       ]) {
-        if (!item) continue;
+        assertDefined(item);
 
         const rogueItemFields = Object.keys(item).filter(
           (key) => !allowedItemFields.has(key),
@@ -188,7 +188,7 @@ describe('Changelog validation', () => {
 
         expect(Array.isArray(item.steps)).toBe(true);
         for (const step of item.steps) {
-          if (!step) continue;
+          assertDefined(step);
 
           const rogueStepFields = Object.keys(step).filter(
             (key) => !allowedStepFields.has(key),

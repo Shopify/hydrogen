@@ -1484,7 +1484,8 @@ export async function generateUpgradeInstructionsFile({
   }
 
   if (allRemovedPackages.length) {
-    md += `\n----\n\n## Removed packages\n\nThe following packages have been removed as part of this upgrade:\n\n`;
+    md += fixesMd.length ? '\n\n----\n\n' : '\n';
+    md += `## Removed packages\n\nThe following packages have been removed as part of this upgrade:\n\n`;
     md += allRemovedPackages.map((dep) => `- \`${dep}\``).join('\n');
     md += '\n';
   }
