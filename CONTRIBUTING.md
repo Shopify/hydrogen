@@ -87,7 +87,7 @@ If you are contributing a user-facing or noteworthy change to Hydrogen that shou
 | ----------------------- | ----------------------- |
 | `pnpm run changeset add` | Add a changeset locally |
 
-Follow the prompts to select which package(s) are affected by your change, and whether the change is a major, minor or patch change. This will create a file in the `.changesets` directory of the repo. This change should be committed and included with your PR.
+Follow the prompts to select which package(s) are affected by your change, and whether the change is a major, minor or patch change. This will create a file in the `.changeset` directory of the repo. This change should be committed and included with your PR.
 
 **Considerations:**
 
@@ -106,19 +106,19 @@ Hydrogen tests are run using [vitest](https://vitest.dev). You can run the tests
 | `pnpm run test`       | Run the tests once                                      |
 | `pnpm run test:watch` | Run the tests once and re-run them when files are saved |
 
-### Debugging tests in Github Actions
+### Debugging tests in GitHub Actions
 
-Tests that fail **only** in CI can be difficult and time-consuming to debug. If you find yourself in this situation, you can use [tmate](https://tmate.io/) to pause the Github Action on a given step and `ssh` into the container. Once in the container you can use `vim`, inspect the file system and try determining what might be diverging from running tests on your local computer and leading to the failure.
+Tests that fail **only** in CI can be difficult and time-consuming to debug. If you find yourself in this situation, you can use [tmate](https://tmate.io/) to pause the GitHub Action on a given step and `ssh` into the container. Once in the container you can use `vim`, inspect the file system and try determining what might be diverging from running tests on your local computer and leading to the failure.
 
-- Add the following `step` in your Github Actions workflow:
+- Add the following `step` in your GitHub Actions workflow:
 
 ```yaml
 - name: Setup tmate session
   uses: mxschmitt/action-tmate@v3
 ```
 
-- Commit and push your changes to Github.
-- The testing Github Action will run automatically and you will see it paused with both a Web Shell address and SSH address.
+- Commit and push your changes to GitHub.
+- The testing GitHub Action will run automatically and you will see it paused with both a Web Shell address and SSH address.
 - Copy and paste the SSH address into your terminal.
 
 ## Generate API reference docs for Hydrogen and Hydrogen React
@@ -167,7 +167,7 @@ Consider what commerce concepts you’ll be working with for the component or ab
 
 ### Determine sensible defaults
 
-Consider what a sensible default would be for the component or abstraction. Look at high GMV commerce websites and check if there is a common pattern for how this information is displayed -be sure to examine both Shopify and non-Shopify storefronts. Browse through the [Liquid documentation](https://shopify.dev/api/liquid), look for[filters](https://shopify.dev/api/liquid/filters) related to your component or abstraction, and consider what defaults those provide and the customizations they support.
+Consider what a sensible default would be for the component or abstraction. Look at high GMV commerce websites and check if there is a common pattern for how this information is displayed -be sure to examine both Shopify and non-Shopify storefronts. Browse through the [Liquid documentation](https://shopify.dev/api/liquid), look for [filters](https://shopify.dev/api/liquid/filters) related to your component or abstraction, and consider what defaults those provide and the customizations they support.
 
 ### Prioritize developer experience
 
