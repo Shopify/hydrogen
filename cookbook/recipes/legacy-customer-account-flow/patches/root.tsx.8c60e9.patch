@@ -27,7 +27,7 @@ index b7eb81513..7205a0143 100644
  export async function loader(args: Route.LoaderArgs) {
    // Start fetching non-critical data without blocking time to first byte
    const deferredData = loadDeferredData(args);
-@@ -79,26 +84,45 @@ export async function loader(args: Route.LoaderArgs) {
+@@ -79,26 +84,41 @@ export async function loader(args: Route.LoaderArgs) {
  
    const {storefront, env} = args.context;
  
@@ -85,14 +85,10 @@ index b7eb81513..7205a0143 100644
 +    // @description Include headers for legacy authentication flow
 +    {headers},
 +  );
-+    },
-+    // @description Include headers for legacy authentication flow
-+    {headers},
-+  );
  }
  
  /**
-@@ -225,3 +249,39 @@ export function ErrorBoundary() {
+@@ -225,3 +245,39 @@ export function ErrorBoundary() {
      </div>
    );
  }

@@ -48,7 +48,7 @@ test.describe('Markets Recipe', () => {
       await page.goto(`/FR-CA/products/${KNOWN_PRODUCT.handle}`);
 
       const priceElement = recipe.getPriceElement();
-      await recipe.assertPriceFormat(priceElement, CURRENCY_FORMATS.CAD);
+      await recipe.assertPriceFormat(priceElement, CURRENCY_FORMATS.CAD_FR);
     });
 
     test('collection page URL includes locale prefix and products link with locale', async ({
@@ -75,12 +75,12 @@ test.describe('Markets Recipe', () => {
 
       // CAD in the drawer proves AddToCartButton posted to /FR-CA/cart rather than /cart,
       // creating the cart with the correct market context.
-      await recipe.assertCartSubtotalFormat(CURRENCY_FORMATS.CAD);
+      await recipe.assertCartSubtotalFormat(CURRENCY_FORMATS.CAD_FR);
 
       await page.goto('/FR-CA/cart');
       await page.waitForURL(/\/FR-CA\/cart$/);
 
-      await recipe.assertCartSubtotalFormat(CURRENCY_FORMATS.CAD);
+      await recipe.assertCartSubtotalFormat(CURRENCY_FORMATS.CAD_FR);
     });
   });
 
